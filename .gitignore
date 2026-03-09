@@ -15,11 +15,9 @@ venv/
 logs/
 *.log
 
-# Runtime / sessions / db locali
+# Runtime / sessions 
 *.session
-db/
-*.sqlite
-*.sqlite3
+
 
 # OS / editor
 .DS_Store

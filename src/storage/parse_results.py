@@ -30,6 +30,7 @@ class ParseResultRecord:
     linkage_status: str | None
     warning_text: str | None
     notes: str | None
+    parse_result_normalized_json: str | None
     created_at: str
     updated_at: str
 
@@ -63,10 +64,11 @@ class ParseResultStore:
               linkage_status,
               warning_text,
               notes,
+              parse_result_normalized_json,
               created_at,
               updated_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(raw_message_id) DO UPDATE SET
               eligibility_status=excluded.eligibility_status,
               eligibility_reason=excluded.eligibility_reason,
@@ -89,6 +91,7 @@ class ParseResultStore:
               linkage_status=excluded.linkage_status,
               warning_text=excluded.warning_text,
               notes=excluded.notes,
+              parse_result_normalized_json=excluded.parse_result_normalized_json,
               updated_at=excluded.updated_at
         """
         with sqlite3.connect(self._db_path) as conn:
@@ -117,6 +120,7 @@ class ParseResultStore:
                     record.linkage_status,
                     record.warning_text,
                     record.notes,
+                    record.parse_result_normalized_json,
                     record.created_at,
                     record.updated_at,
                 ),

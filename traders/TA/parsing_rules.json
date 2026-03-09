@@ -30,5 +30,8 @@
   ],
   "ignore_if_contains": [
     "#admin"
-  ]
+  ],
+  "parser_mode": "hybrid_auto",
+  "llm_provider": "gemini",
+  "llm_model": "gemini-2.5-flash"
 }

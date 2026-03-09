@@ -6,6 +6,7 @@ import argparse
 from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import json
 import os
 from pathlib import Path
 import sqlite3
@@ -22,6 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.core.config_loader import load_config
 from src.core.migrations import apply_migrations
+from src.parser.parser_config import normalize_parser_mode
 from src.parser.pipeline import MinimalParserPipeline, ParserInput
 from src.storage.parse_results import ParseResultStore
 from src.storage.raw_messages import RawMessageStore
@@ -36,6 +38,7 @@ class ReplayRawMessage:
     source_chat_id: str
     source_chat_title: str | None
     source_chat_username: str | None
+    telegram_message_id: int
     reply_to_message_id: int | None
     raw_text: str | None
     message_ts: str
@@ -57,6 +60,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--trader", default=None, help="Filter by resolved trader id (e.g. TA, TB).")
     parser.add_argument("--from-date", default=None, help="Inclusive lower bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--to-date", default=None, help="Inclusive upper bound (YYYY-MM-DD or ISO timestamp).")
+    parser.add_argument("--parser-mode", default=None, help="Parser mode override: regex_only | llm_only | hybrid_auto")
+    parser.add_argument(
+        "--show-normalized-samples",
+        type=int,
+        default=3,
+        help="How many normalized parse_result examples to print (default: 3, 0 to disable).",
+    )
     return parser.parse_args()
 
 
@@ -106,7 +116,11 @@ def main() -> None:
         known_trader_ids=set(config.traders.keys()),
     )
     eligibility_evaluator = MessageEligibilityEvaluator(raw_store=raw_store)
-    parser_pipeline = MinimalParserPipeline(trader_aliases=config.trader_aliases)
+    parser_pipeline = MinimalParserPipeline(
+        trader_aliases=config.trader_aliases,
+        global_parser_mode=normalize_parser_mode(args.parser_mode or os.getenv("PARSER_MODE", "regex_only")),
+        trader_parser_modes={},
+    )
     parse_results_store = ParseResultStore(db_path=db_path)
 
     raws = fetch_raw_messages(
@@ -122,8 +136,10 @@ def main() -> None:
     processed = 0
     skipped = 0
     by_message_type: Counter[str] = Counter()
+    by_normalized_event_type: Counter[str] = Counter()
     by_resolved_trader_id: Counter[str] = Counter()
     by_eligibility_status: Counter[str] = Counter()
+    normalized_samples: list[dict[str, object]] = []
 
     for item in selected:
         row = item.row
@@ -149,6 +165,9 @@ def main() -> None:
                     resolved_trader_id=item.resolved_trader_id,
                     trader_resolution_method=item.trader_resolution_method,
                     linkage_method=eligibility.strong_link_method,
+                    source_chat_id=row.source_chat_id,
+                    source_message_id=row.telegram_message_id,
+                    linkage_reference_id=eligibility.referenced_message_id,
                 )
             )
             parse_results_store.upsert(parse_record)
@@ -156,6 +175,11 @@ def main() -> None:
             by_message_type[parse_record.message_type] += 1
             by_resolved_trader_id[parse_record.resolved_trader_id or "UNRESOLVED"] += 1
             by_eligibility_status[parse_record.eligibility_status] += 1
+            normalized_obj = _parse_normalized_json(parse_record.parse_result_normalized_json)
+            event_type = str(normalized_obj.get("event_type", "UNKNOWN"))
+            by_normalized_event_type[event_type] += 1
+            if args.show_normalized_samples > 0 and len(normalized_samples) < args.show_normalized_samples:
+                normalized_samples.append(normalized_obj)
         except Exception:
             skipped += 1
 
@@ -164,8 +188,13 @@ def main() -> None:
     print(f"total processed: {processed}")
     print(f"total skipped: {skipped}")
     print_counter("counts by message_type", by_message_type)
+    print_counter("counts by normalized event_type", by_normalized_event_type)
     print_counter("counts by resolved_trader_id", by_resolved_trader_id)
     print_counter("counts by eligibility_status", by_eligibility_status)
+    if normalized_samples:
+        print("normalized parse_result samples:")
+        for index, sample in enumerate(normalized_samples, start=1):
+            print(f"  sample #{index}: {json.dumps(sample, ensure_ascii=False, sort_keys=True)}")
 
 
 def fetch_raw_messages(
@@ -183,6 +212,7 @@ def fetch_raw_messages(
           rm.source_chat_id,
           rm.source_chat_title,
           NULL as source_chat_username,
+          rm.telegram_message_id,
           rm.reply_to_message_id,
           rm.raw_text,
           rm.message_ts
@@ -221,9 +251,10 @@ def fetch_raw_messages(
             source_chat_id=str(row[1]),
             source_chat_title=row[2],
             source_chat_username=row[3],
-            reply_to_message_id=int(row[4]) if row[4] is not None else None,
-            raw_text=row[5],
-            message_ts=row[6],
+            telegram_message_id=int(row[4]),
+            reply_to_message_id=int(row[5]) if row[5] is not None else None,
+            raw_text=row[6],
+            message_ts=row[7],
         )
         for row in rows
     ]
@@ -267,6 +298,18 @@ def print_counter(title: str, counts: Counter[str]) -> None:
         print(f"  {key}: {counts[key]}")
 
 
+def _parse_normalized_json(raw: str | None) -> dict[str, object]:
+    if not raw:
+        return {}
+    try:
+        parsed = json.loads(raw)
+        if isinstance(parsed, dict):
+            return parsed
+    except json.JSONDecodeError:
+        return {}
+    return {}
+
+
 def _normalize_cli_date(value: str, end_of_day: bool) -> str:
     text = value.strip()
     if "T" not in text:
@@ -304,3 +347,5 @@ def _load_env_file(path: Path) -> None:
 
 if __name__ == "__main__":
     main()
+
+

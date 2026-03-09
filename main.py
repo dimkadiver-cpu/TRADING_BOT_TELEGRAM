@@ -66,7 +66,11 @@ def main() -> None:
         known_trader_ids=set(config.traders.keys()),
     )
     eligibility_evaluator = build_eligibility_evaluator(db_path=db_path)
-    parser_pipeline = build_minimal_parser_pipeline(trader_aliases=config.trader_aliases)
+    parser_pipeline = build_minimal_parser_pipeline(
+        trader_aliases=config.trader_aliases,
+        global_parser_mode=os.getenv("PARSER_MODE", "regex_only"),
+        traders=config.traders,
+    )
     parse_results_store = build_parse_results_store(db_path=db_path)
     with TelegramClient(session_name, api_id, api_hash) as client:
         register_message_listener(
@@ -104,3 +108,4 @@ def _parse_allowed_chat_ids(raw: str | None) -> set[int]:
 
 if __name__ == "__main__":
     main()
+

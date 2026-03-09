@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Literal
 
+from src.parser.normalization import ParseResultNormalized
+
 ParseIntent = Literal["SIGNAL_NEW", "SIGNAL_UPDATE", "UNLINKED_UPDATE", "NOTE"]
 
 

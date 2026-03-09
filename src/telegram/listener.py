@@ -7,11 +7,20 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import logging
+import os
 from typing import Iterable
 
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
 
+from src.parser.parser_config import (
+    build_trader_llm_model_overrides,
+    build_trader_llm_provider_overrides,
+    build_trader_parser_mode_overrides,
+    normalize_llm_model,
+    normalize_llm_provider,
+    normalize_parser_mode,
+)
 from src.parser.pipeline import MinimalParserPipeline, ParserInput
 from src.storage.parse_results import ParseResultStore
 from src.storage.raw_messages import RawMessageStore
@@ -50,8 +59,22 @@ def build_parse_results_store(db_path: str) -> ParseResultStore:
     return ParseResultStore(db_path=db_path)
 
 
-def build_minimal_parser_pipeline(trader_aliases: dict[str, str]) -> MinimalParserPipeline:
-    return MinimalParserPipeline(trader_aliases=trader_aliases)
+def build_minimal_parser_pipeline(
+    trader_aliases: dict[str, str],
+    global_parser_mode: str = "regex_only",
+    traders: dict[str, dict[str, object]] | None = None,
+) -> MinimalParserPipeline:
+    global_llm_provider = normalize_llm_provider(os.getenv("LLM_PROVIDER", "openai"))
+    global_llm_model = normalize_llm_model(os.getenv("LLM_MODEL"), provider=global_llm_provider)
+    return MinimalParserPipeline(
+        trader_aliases=trader_aliases,
+        global_parser_mode=normalize_parser_mode(global_parser_mode),
+        trader_parser_modes=build_trader_parser_mode_overrides(traders),
+        global_llm_provider=global_llm_provider,
+        global_llm_model=global_llm_model,
+        trader_llm_provider_overrides=build_trader_llm_provider_overrides(traders),
+        trader_llm_model_overrides=build_trader_llm_model_overrides(traders),
+    )
 
 
 def register_message_listener(
@@ -168,6 +191,9 @@ def register_message_listener(
                 resolved_trader_id=trader_resolution.trader_id,
                 trader_resolution_method=trader_resolution.method,
                 linkage_method=eligibility.strong_link_method,
+                source_chat_id=source_chat_id,
+                source_message_id=int(message.id),
+                linkage_reference_id=eligibility.referenced_message_id,
             )
         )
         parse_results_store.upsert(parse_record)

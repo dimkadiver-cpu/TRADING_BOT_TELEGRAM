@@ -8,6 +8,7 @@ Harness separato per rieseguire il parser sul database di test senza toccare il 
 - rileggere `raw_messages` storici
 - rieseguire parser + trader resolution + eligibility
 - aggiornare/inserire `parse_results`
+- mostrare anche il parse normalizzato (`parse_result_normalized_json`)
 
 ## Setup rapido
 
@@ -35,6 +36,7 @@ python parser_test/scripts/replay_parser.py --only-unparsed --limit 200
 - `--only-new`
 - `--db-path <path-db-test>`
 
+- `replay_parser.py`
 - `--db-path` path del DB test (default da `.env` oppure `parser_test/db/parser_test.sqlite3`)
 - `--only-unparsed`
 - `--limit N`
@@ -42,6 +44,7 @@ python parser_test/scripts/replay_parser.py --only-unparsed --limit 200
 - `--trader <TRADER_ID>`
 - `--from-date <YYYY-MM-DD o ISO>`
 - `--to-date <YYYY-MM-DD o ISO>`
+- `--show-normalized-samples N` (default 3, 0 disabilita la stampa esempi)
 
 ## Note
 

@@ -8,8 +8,12 @@ import re
 from typing import TYPE_CHECKING
 
 from src.core.trader_tags import first_normalized_trader_tag, normalize_trader_aliases
-from src.parser.trader_profiles.ta_profile import classify_ta_message, extract_ta_fields
 from src.core.timeutils import utc_now_iso
+from src.parser.dispatcher import ParserDispatcher
+from src.parser.llm_adapter import LLMInvalidResponse, LLMNotConfigured, LLMParseError, LLMRequestFailed
+from src.parser.normalization import ParseResultNormalized, build_parse_result_normalized
+from src.parser.parser_config import ParserModeResolver
+from src.parser.trader_profiles.ta_profile import classify_ta_message, extract_ta_fields
 from src.storage.parse_results import ParseResultRecord
 
 if TYPE_CHECKING:
@@ -53,6 +57,12 @@ class ParserInput:
     resolved_trader_id: str | None
     trader_resolution_method: str
     linkage_method: str | None
+    source_chat_id: str | None = None
+    source_message_id: int | None = None
+    linkage_reference_id: int | None = None
+    parser_mode: str | None = None
+    llm_provider: str | None = None
+    llm_model: str | None = None
 
 
 @dataclass(slots=True)
@@ -68,29 +78,143 @@ class ExtractedFields:
 
 
 class MinimalParserPipeline:
-    def __init__(self, trader_aliases: dict[str, str]) -> None:
+    def __init__(
+        self,
+        trader_aliases: dict[str, str],
+        global_parser_mode: str = "regex_only",
+        trader_parser_modes: dict[str, str] | None = None,
+        global_llm_provider: str = "openai",
+        global_llm_model: str | None = None,
+        trader_llm_provider_overrides: dict[str, str] | None = None,
+        trader_llm_model_overrides: dict[str, str] | None = None,
+        dispatcher: ParserDispatcher | None = None,
+    ) -> None:
         self._trader_aliases = normalize_trader_aliases(trader_aliases)
+        self._mode_resolver = ParserModeResolver(
+            global_parser_mode=global_parser_mode,
+            trader_overrides=trader_parser_modes or {},
+            global_llm_provider=global_llm_provider,
+            trader_llm_provider_overrides=trader_llm_provider_overrides or {},
+            global_llm_model=global_llm_model,
+            trader_llm_model_overrides=trader_llm_model_overrides or {},
+        )
+        self._dispatcher = dispatcher or ParserDispatcher()
 
     def parse(self, payload: ParserInput) -> ParseResultRecord:
-        text = (payload.raw_text or "").strip()
+        effective_mode = payload.parser_mode or self._mode_resolver.get_effective_parser_mode(payload.resolved_trader_id)
+        effective_llm_provider = payload.llm_provider or self._mode_resolver.get_effective_llm_provider(payload.resolved_trader_id)
+        effective_llm_model = payload.llm_model or self._mode_resolver.get_effective_llm_model(payload.resolved_trader_id)
+
+        dispatch_payload = payload
+        if (
+            dispatch_payload.parser_mode != effective_mode
+            or dispatch_payload.llm_provider != effective_llm_provider
+            or dispatch_payload.llm_model != effective_llm_model
+        ):
+            dispatch_payload = ParserInput(
+                raw_message_id=payload.raw_message_id,
+                raw_text=payload.raw_text,
+                eligibility_status=payload.eligibility_status,
+                eligibility_reason=payload.eligibility_reason,
+                resolved_trader_id=payload.resolved_trader_id,
+                trader_resolution_method=payload.trader_resolution_method,
+                linkage_method=payload.linkage_method,
+                source_chat_id=payload.source_chat_id,
+                source_message_id=payload.source_message_id,
+                linkage_reference_id=payload.linkage_reference_id,
+                parser_mode=effective_mode,
+                llm_provider=effective_llm_provider,
+                llm_model=effective_llm_model,
+            )
+
+        declared_tag = self._extract_declared_trader_tag((payload.raw_text or "").strip())
+
+        try:
+            decision = self._dispatcher.dispatch_parse(
+                parser_input=dispatch_payload,
+                parser_mode=effective_mode,
+                parse_with_regex=self._parse_with_regex_normalized,
+            )
+            normalized_result = decision.selected
+            selection_reason = decision.selection_reason
+        except (LLMNotConfigured, LLMParseError, LLMRequestFailed, LLMInvalidResponse):
+            # llm_only may be requested while adapter is unavailable.
+            normalized_result = self._parse_with_regex_normalized(dispatch_payload, effective_mode)
+            selection_reason = "llm_only_unavailable_regex_fallback"
+            normalized_result.selection_metadata = {
+                "llm_attempted": True,
+                "fallback_from_regex": True,
+                "selection_reason": selection_reason,
+            }
+            if "llm_unavailable" not in normalized_result.validation_warnings:
+                normalized_result.validation_warnings.append("llm_unavailable")
+            normalized_result.status = "PARSED_WITH_WARNINGS"
+
+        legacy_message_type = _legacy_message_type(normalized_result)
+        completeness = "COMPLETE" if legacy_message_type == "NEW_SIGNAL" else "INCOMPLETE"
+        parse_status = "PARSED"
+        is_executable = (
+            legacy_message_type == "NEW_SIGNAL"
+            and payload.resolved_trader_id is not None
+            and payload.eligibility_status == "ACQUIRED_ELIGIBLE"
+        )
+        linkage_status = "LINKED" if payload.linkage_method else "UNLINKED"
+        if legacy_message_type in ("INFO_ONLY", "UNCLASSIFIED"):
+            linkage_status = "N/A"
+
+        warnings = list(normalized_result.validation_warnings)
+        if selection_reason:
+            warnings.append(f"selection_reason={selection_reason}")
+
+        now = utc_now_iso()
+        return ParseResultRecord(
+            raw_message_id=payload.raw_message_id,
+            eligibility_status=payload.eligibility_status,
+            eligibility_reason=payload.eligibility_reason,
+            declared_trader_tag=declared_tag,
+            resolved_trader_id=payload.resolved_trader_id,
+            trader_resolution_method=payload.trader_resolution_method,
+            message_type=legacy_message_type,
+            parse_status=parse_status,
+            completeness=completeness,
+            is_executable=is_executable,
+            symbol=normalized_result.symbol,
+            direction=_legacy_direction(normalized_result.direction),
+            entry_raw=_legacy_entry_raw(normalized_result.entries),
+            stop_raw=_legacy_stop_raw(normalized_result.stop_loss),
+            target_raw_list=json.dumps(_legacy_target_raw_list(normalized_result.take_profits), ensure_ascii=False),
+            leverage_hint=None,
+            risk_hint=None,
+            risky_flag=bool(any(marker in (payload.raw_text or "").lower() for marker in _RISKY_MARKERS)),
+            linkage_method=payload.linkage_method,
+            linkage_status=linkage_status,
+            warning_text="; ".join(warnings) if warnings else None,
+            notes="; ".join(normalized_result.notes) if normalized_result.notes else None,
+            parse_result_normalized_json=json.dumps(normalized_result.as_dict(), ensure_ascii=False, sort_keys=True),
+            created_at=now,
+            updated_at=now,
+        )
+
+    def _parse_with_regex_normalized(self, payload: object, parser_mode: str) -> ParseResultNormalized:
+        data = payload if isinstance(payload, ParserInput) else ParserInput(**payload.__dict__)
+        text = (data.raw_text or "").strip()
         normalized = text.lower()
-        declared_tag = self._extract_declared_trader_tag(text)
         extracted = self._extract_fields(text, normalized)
         message_type = self._classify_message(
             normalized=normalized,
-            has_strong_link=payload.linkage_method is not None,
+            has_strong_link=data.linkage_method is not None,
             extracted=extracted,
         )
         warnings: list[str] = []
         notes_parts = [f"classified={message_type}"]
 
-        if payload.resolved_trader_id == "TA":
+        if data.resolved_trader_id == "TA":
             ta_fields = extract_ta_fields(text=text, normalized=normalized)
             extracted = self._merge_extracted_fields(extracted, ta_fields)
             message_type = classify_ta_message(
                 normalized=normalized,
                 extracted=extracted,
-                has_strong_link=payload.linkage_method is not None,
+                has_strong_link=data.linkage_method is not None,
                 ta_fields=ta_fields,
             )
             notes_parts[0] = f"classified={message_type}"
@@ -113,52 +237,31 @@ class MinimalParserPipeline:
             message_type = "SETUP_INCOMPLETE"
             notes_parts[0] = f"classified={message_type}"
 
-        completeness = "COMPLETE" if message_type == "NEW_SIGNAL" else "INCOMPLETE"
-        parse_status = "PARSED"
-
-        if payload.resolved_trader_id is None:
+        if data.resolved_trader_id is None:
             warnings.append("unresolved trader")
-        if message_type == "UPDATE" and payload.linkage_method is None:
+        if message_type == "UPDATE" and data.linkage_method is None:
             warnings.append("update without strong link")
         if message_type == "SETUP_INCOMPLETE":
             warnings.append("missing mandatory setup fields")
 
-        is_executable = (
-            message_type == "NEW_SIGNAL"
-            and payload.resolved_trader_id is not None
-            and payload.eligibility_status == "ACQUIRED_ELIGIBLE"
-        )
-
-        linkage_status = "LINKED" if payload.linkage_method else "UNLINKED"
-        if message_type in ("INFO_ONLY", "UNCLASSIFIED"):
-            linkage_status = "N/A"
-
-        now = utc_now_iso()
-        return ParseResultRecord(
-            raw_message_id=payload.raw_message_id,
-            eligibility_status=payload.eligibility_status,
-            eligibility_reason=payload.eligibility_reason,
-            declared_trader_tag=declared_tag,
-            resolved_trader_id=payload.resolved_trader_id,
-            trader_resolution_method=payload.trader_resolution_method,
+        return build_parse_result_normalized(
             message_type=message_type,
-            parse_status=parse_status,
-            completeness=completeness,
-            is_executable=is_executable,
-            symbol=extracted.symbol,
-            direction=extracted.direction,
+            normalized_text=normalized,
+            trader_id=data.resolved_trader_id,
+            source_chat_id=data.source_chat_id,
+            source_message_id=data.source_message_id,
+            raw_text=text,
+            parser_used="regex",
+            parser_mode=parser_mode,
+            parse_status="PARSED",
+            instrument=extracted.symbol,
+            side=extracted.direction,
             entry_raw=extracted.entry_raw,
             stop_raw=extracted.stop_raw,
-            target_raw_list=json.dumps(extracted.targets) if extracted.targets else "[]",
-            leverage_hint=extracted.leverage_hint,
-            risk_hint=extracted.risk_hint,
-            risky_flag=extracted.risky_flag,
-            linkage_method=payload.linkage_method,
-            linkage_status=linkage_status,
-            warning_text="; ".join(warnings) if warnings else None,
-            notes="; ".join(notes_parts),
-            created_at=now,
-            updated_at=now,
+            targets=extracted.targets,
+            root_ref=data.linkage_reference_id,
+            existing_warnings=warnings,
+            notes=notes_parts,
         )
 
     def _extract_declared_trader_tag(self, text: str) -> str | None:
@@ -259,3 +362,57 @@ class MinimalParserPipeline:
     @staticmethod
     def _to_note_safe(value: str) -> str:
         return value.encode("unicode_escape").decode("ascii")
+
+
+def _legacy_message_type(result: ParseResultNormalized) -> str:
+    if result.message_type in {"NEW_SIGNAL", "UPDATE", "INFO_ONLY", "SETUP_INCOMPLETE", "UNCLASSIFIED"}:
+        return result.message_type
+    by_event = {
+        "NEW_SIGNAL": "NEW_SIGNAL",
+        "SETUP_INCOMPLETE": "SETUP_INCOMPLETE",
+        "INFO_ONLY": "INFO_ONLY",
+        "INVALID": "UNCLASSIFIED",
+        "UPDATE": "UPDATE",
+        "MOVE_STOP": "UPDATE",
+        "CANCEL_PENDING": "UPDATE",
+        "TAKE_PROFIT": "UPDATE",
+        "CLOSE_POSITION": "UPDATE",
+    }
+    return by_event.get(result.event_type, "UNCLASSIFIED")
+
+
+def _legacy_direction(direction: str | None) -> str | None:
+    if direction == "LONG":
+        return "BUY"
+    if direction == "SHORT":
+        return "SELL"
+    return None
+
+
+def _legacy_entry_raw(entries: list[dict[str, object]]) -> str | None:
+    raws = [str(entry.get("raw")) for entry in entries if entry.get("raw")]
+    if not raws:
+        return None
+    return "-".join(raws)
+
+
+def _legacy_stop_raw(stop_loss: dict[str, object] | None) -> str | None:
+    if not stop_loss:
+        return None
+    raw = stop_loss.get("raw")
+    return str(raw) if raw else None
+
+
+def _legacy_target_raw_list(take_profits: list[dict[str, object]]) -> list[str]:
+    values: list[str] = []
+    for item in take_profits:
+        raw = item.get("raw")
+        if raw:
+            values.append(str(raw))
+    return values
+
+
+
+
+
+

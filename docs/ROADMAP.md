@@ -1,223 +1,70 @@
-# ROADMAP
+﻿# ROADMAP
 
 ## Phase status
 - Fase 0: COMPLETATA
 - Fase 1: COMPLETATA
-- Fase 2: IN CORSO
+- Fase 2: COMPLETATA (schema parser persistence allineato)
 - Fase 3: VALIDATA
-- Fase 4: IN CORSO AVANZATA
+- Fase 4: IMPLEMENTATA (in validazione estesa)
 - Fase 5: IN ANALISI
 - Fase 6: IN ANALISI
-- Fase 7: NON INIZIATA
-- Fase 8: NON INIZIATA
-- Fase 9: IN ANALISI
-- Fase 10: NON INIZIATA
-- Fase 11: NON INIZIATA
-- Fase 12: NON INIZIATA
-- Fase 13: NON INIZIATA
-
----
-
-## Fase 0. Fondazioni del repo
-**Stato:** COMPLETATA
-
-Completato:
-- struttura repo riallineata
-- documentazione principale ordinata
-- file guida per sviluppo assistito
-
----
-
-## Fase 1. Modello dati interno
-**Stato:** COMPLETATA
-
-Completato:
-- definite le entità principali:
-  - Raw Message
-  - Parse Result
-  - Trade
-  - Update Match
-- chiarita la separazione tra:
-  - sorgente Telegram
-  - trader dichiarato
-  - trader risolto
-  - valori raw
-  - valori finali
+- Fase 7+: NON INIZIATE
 
 ---
 
 ## Fase 2. Database e persistenza
-**Stato:** IN CORSO
+Stato: COMPLETATA
 
-Già definito:
-- schema logico minimo
-- tabelle principali:
-  - `raw_messages`
-  - `parse_results`
-  - `trades`
-  - `update_matches`
-  - `trade_state_events`
-  - `resolution_logs` consigliata
-
-Ancora da completare:
-- allineamento pieno dello schema reale ai docs
-- persistenza completa di `parse_results`
-- campi linkage e trader resolution persistiti in modo definitivo
+Completato:
+- tabelle parser minime operative
+- persistenza `raw_messages`
+- persistenza `parse_results`
+- colonna additiva `parse_result_normalized_json`
+- compatibilita mantenuta con campi legacy
 
 ---
 
 ## Fase 3. Telegram ingestion
-**Stato:** VALIDATA
+Stato: VALIDATA
 
-Validato in test reale:
-- filtro `allowed_chat_ids`
-- persistenza `raw_messages`
+Validato:
+- filtro chat
+- raw ingestion
 - deduplica minima
-- mapping sorgente
-- comportamento runtime corretto con `.env`
-
-Nota importante:
-il mapping sorgente resta utile per:
-- filtrare il canale corretto
-- identificare il contenitore Telegram
-- eventuale fallback solo per sorgenti davvero mono-trader
-
-In un canale multi-trader, la sorgente **non** rappresenta da sola il trader effettivo.
+- source mapping
 
 ---
 
 ## Fase 4. Parser minimo operativo
-**Stato:** IN CORSO AVANZATA
+Stato: IMPLEMENTATA (in validazione estesa)
 
-Obiettivo:
-trasformare ogni `raw_message` in un `parse_result` minimo, prudente e persistito.
-
-Già avviato / parzialmente implementato:
+Completato:
 - eligibility pre-check
-- effective trader resolution iniziale
-- reply inheritance iniziale
-- strong-link pre-check per update brevi
-- distinzione preliminare tra messaggi eligibili, review-only, unknown-trader
+- trader resolution minima
+- classificazione minima
+- estrazione campi base
+- persistenza parse result
+- normalizzazione parse result (`ParseResultNormalized`)
+- validator minimo non bloccante
+- script replay con esempi output normalizzato
 
-Ancora da completare:
-- classificazione minima:
-  - `NEW_SIGNAL`
-  - `SETUP_INCOMPLETE`
-  - `UPDATE`
-  - `INFO_ONLY`
-  - `UNCLASSIFIED`
-- estrazione campi base:
-  - symbol
-  - direction
-  - entry
-  - stop
-  - target list
-  - leverage hint
-  - risk hint
-  - risky flag
-- validazione minima `NEW_SIGNAL` vs `SETUP_INCOMPLETE`
-- persistenza completa `parse_results`
-- supporto linkage minimo tramite reply e campi linkage persistiti
-
-Checkpoint principali della fase:
-- [ ] eligibility rules definite e persistite
-- [ ] trader tag extraction implementata
-- [ ] trader resolution con `DIRECT_TAG` / `REPLY_INHERIT` stabile
-- [ ] update brevi trattati con strong-link prudente
-- [ ] parse result persistito
-- [ ] admin/stats/service esclusi dal flusso operativo
+In validazione:
+- copertura casi reali per update subtype
+- qualita `root_ref` e linkage debole
 
 ---
 
 ## Fase 5. Matching update -> trade
-**Stato:** IN ANALISI
+Stato: IN ANALISI
 
-Obiettivo:
-collegare gli update al trade corretto solo con linkage affidabile.
-
-Metodi previsti:
-- `REPLY`
-- `MESSAGE_LINK`
-- `EXPLICIT_MESSAGE_ID`
-- `CONTEXT_FALLBACK` solo con prudenza
-
-Regola forte:
-gli update brevi non devono auto-applicarsi con puro contesto debole.
+Focus previsto:
+- linking robusto update->segnale/trade
+- riduzione ambiguita
+- regole forti per auto-apply
 
 ---
 
-## Fase 6. Resolver policy
-**Stato:** IN ANALISI
-
-Obiettivo:
-risolvere valori finali usando:
-- hint da messaggio
-- regole trader
-- regole globali
-
-Parametri principali:
-- leverage
-- risk
-- TP allocation
-- motivazione decisionale
-
----
-
-## Fase 7. Level normalizer
-**Stato:** NON INIZIATA
-
-Obiettivo:
-applicare:
-- rounding
-- Number Theory
-- precisione
-- normalizzazione livelli
-
----
-
-## Fase 8. Trade planner
-**Stato:** NON INIZIATA
-
-Obiettivo:
-costruire il piano operativo finale a partire da:
-- parse result
-- linkage
-- policy
-- normalizer
-
----
-
-## Fase 9. State machine reale
-**Stato:** IN ANALISI
-
-Obiettivo:
-governare il lifecycle del trade in modo coerente e verificabile.
-
----
-
-## Fase 10. Exchange integration
-**Stato:** NON INIZIATA
-
-## Fase 11. Reconciliation e sicurezza
-**Stato:** NON INIZIATA
-
-## Fase 12. Bot comandi e monitoraggio
-**Stato:** NON INIZIATA
-
-## Fase 13. Test, simulazione, hardening
-**Stato:** NON INIZIATA
-
----
-
-## Priorità attuale
-Prossimo target:
-completare la Fase 4 minima con:
-- classificazione messaggi
-- estrazione campi base
-- validazione setup
-- persistenza `parse_results`
-
-Solo dopo:
-- matching update completo
-- planner
-- exchange
+## Priorita attuale
+1. Consolidare validazione Fase 4 su dataset piu ampi
+2. Ridurre casi `UPDATE` generici con subtype piu precisi
+3. Entrare in Fase 5 con base parser stabile

@@ -57,6 +57,34 @@ Relevant fields for this project:
 - risk hint
 - risky flag
 - warning text
+- parse result normalized json (`parse_result_normalized_json`)
+
+#### Legacy + semantic contract in `parse_result_normalized_json`
+The normalized payload is additive and backward-compatible.
+
+Legacy/event-like envelope fields remain available:
+- `event_type`
+- `instrument`
+- `side`
+- `status`
+- `entries` / `stop_loss` / `take_profits`
+
+Semantic parser contract fields are now included for regex/llm/hybrid alignment:
+- `parser_used` (`regex` | `llm` | null)
+- `parser_mode` (`regex_only` | `llm_only` | `hybrid_auto` | null)
+- `message_type` (`NEW_SIGNAL` | `UPDATE` | `INFO_ONLY` | `SETUP_INCOMPLETE` | `UNCLASSIFIED` | null)
+- `message_subtype`
+- `symbol`
+- `direction` (`LONG` | `SHORT` | null)
+- `entry_main`, `entry_mode`, `average_entry`
+- `stop_loss_price`
+- `take_profit_prices`
+- `actions`
+- `target_refs`
+- `reported_results`
+- `notes`
+- `raw_entities`
+- `validation_warnings`
 
 For updates:
 - `linkage_method`

@@ -1,12 +1,12 @@
-# MASTER PLAN
+﻿# MASTER PLAN
 
 ## System goal
 Build a robust Telegram-to-trade pipeline that:
 - saves all source messages
-- understands which messages are operational
-- resolves which trader each message represents
-- links updates to the correct signal/trade
-- applies operational logic only when confidence is strong
+- classifies operational vs non-operational content
+- resolves the effective trader per message
+- links updates to the correct signal/trade with strong evidence
+- keeps an auditable parser output in both legacy and normalized form
 
 ---
 
@@ -14,91 +14,92 @@ Build a robust Telegram-to-trade pipeline that:
 A single Telegram source may contain messages from multiple traders.
 
 Therefore:
-- the source chat identifies the publishing container
-- the trader must often be resolved from the message content or inherited from a replied parent message
-
-This affects:
-- parser design
-- DB schema
-- update linkage
-- validation rules
+- source chat identifies the publishing container
+- trader identity must be resolved from message content and reply inheritance
+- update linkage must follow strict priority and confidence rules
 
 ---
 
 ## Main rules
 
 ### Rule 1. Save raw first
-Every message from the allowed source must be saved as a raw message.
+Every allowed message must be persisted into `raw_messages`.
 
 ### Rule 2. Eligibility before operations
-Before any operational parsing, the system must decide whether the message is operationally eligible.
+Operational promotion requires eligibility checks first.
 
-### Rule 3. Trader resolution is separate from source resolution
-A source chat is not automatically the trader.
-Trader resolution uses:
+### Rule 3. Source is not trader identity
+Trader resolution is independent from source mapping and uses:
 - direct tag
-- reply inheritance
-- source default only when truly safe
+- reply inherit
+- source default only if safe
 
 ### Rule 4. Updates need strong linkage
-Short updates may be auto-applied only if linkage is strong:
+Short updates may auto-apply only with strong references:
 - direct reply
 - Telegram message link
 - explicit message reference
 
 ### Rule 5. New signals require complete setup
-A new signal is operational only if it has:
+A `NEW_SIGNAL` is operational only with:
 - symbol
 - direction
 - entry
 - stop
 - at least one target
 
-Otherwise it is saved as incomplete or informational.
-
 ---
 
 ## Parser backbone
 
-### Eligibility filter
-Exclude admin/stats/service content from the operational flow.
+### Legacy parse result (backward compatibility)
+The existing `parse_results` columns remain supported (`message_type`, extracted raw fields, linkage, flags, warnings).
 
-### Trader resolution
-Resolve:
-- `declared_trader_tag`
-- `resolved_trader_id`
-- `trader_resolution_method`
+### Normalized parse result (new standard)
+A normalized JSON payload is now persisted in `parse_results.parse_result_normalized_json`.
 
-### Intent classification
-Classify:
+Minimum normalized fields:
+- `event_type`
+- `trader_id`
+- `source_chat_id`
+- `source_message_id`
+- `raw_text`
+- `parser_mode`
+- `confidence`
+- `instrument`
+- `side`
+- `market_type`
+- `entries`
+- `stop_loss`
+- `take_profits`
+- `root_ref`
+- `status`
+
+Canonical event types:
 - `NEW_SIGNAL`
-- `SETUP_INCOMPLETE`
 - `UPDATE`
+- `CANCEL_PENDING`
+- `MOVE_STOP`
+- `TAKE_PROFIT`
+- `CLOSE_POSITION`
 - `INFO_ONLY`
-- `UNCLASSIFIED`
-
-### Linkage resolution
-Resolve update target using:
-- `REPLY`
-- `MESSAGE_LINK`
-- `EXPLICIT_MESSAGE_ID`
-- cautious context fallback
-
-### Validation
-Promote to operational flow only if:
-- eligible
-- trader resolved
-- data complete for new signals
-- confirmed linkage for updates
+- `SETUP_INCOMPLETE`
+- `INVALID`
 
 ---
 
-## Immediate next implementation focus
-Phase 4 minimum parser must include:
-- eligibility filter
-- trader tag extraction
-- trader resolution with reply inheritance
-- minimal intent classification
-- minimal field extraction
-- minimal linkage support for replies
-- parse result persistence
+## Current implementation status
+Phase 4 minimum parser is implemented with:
+- eligibility + trader resolution + minimal classification
+- raw field extraction
+- strong-link pre-check
+- normalized parse result generation
+- non-blocking normalized validator warnings
+- parser replay support with normalized output samples
+
+---
+
+## Immediate next focus
+- validate normalized output on larger real message samples
+- improve multilingual update subtype mapping
+- prepare Phase 5 update-to-trade matching with stronger root linkage

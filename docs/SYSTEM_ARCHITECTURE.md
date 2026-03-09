@@ -1,17 +1,16 @@
-# SYSTEM ARCHITECTURE
+﻿# SYSTEM ARCHITECTURE
 
 ## Goal
-Provide a clear high-level architecture aligned with the current project reality:
+Provide a clear high-level architecture aligned with current implementation:
 - Telegram source ingestion
-- multi-trader source support
-- cautious parsing
-- strong-link update handling
-- later policy, planning, execution, and monitoring
+- multi-trader support
+- cautious parsing and linkage
+- backward-compatible parser persistence
+- normalized parser output for future modules
 
 ---
 
 ## High-level pipeline
-
 `Telegram Message`
 -> `Raw Ingestion`
 -> `Eligibility Filter`
@@ -19,7 +18,7 @@ Provide a clear high-level architecture aligned with the current project reality
 -> `Intent Classification`
 -> `Entity Extraction`
 -> `Linkage Resolution`
--> `Parse Result Persistence`
+-> `Parse Result Persistence (Legacy + Normalized)`
 -> `Policy Resolver`
 -> `Level Normalizer`
 -> `Trade Planner`
@@ -30,221 +29,88 @@ Provide a clear high-level architecture aligned with the current project reality
 ---
 
 ## 1. Telegram ingestion
-
-Purpose:
-- receive Telegram messages
-- filter by allowed sources
-- persist raw messages
-- avoid trivial duplicates
-
-Output:
-- `raw_messages`
+Output: `raw_messages`.
 
 Important:
-The source chat identifies where the message was published, but not always which trader it belongs to.
+- source chat identifies message origin
+- source chat does not always identify effective trader
 
 ---
 
 ## 2. Eligibility filter
+Purpose: decide operational promotion eligibility.
 
-Purpose:
-decide whether a message may enter the operational parsing flow.
-
-Examples of excluded content:
-- admin messages
-- statistics
-- reports
-- service announcements
-- other excluded patterns
-
-Important:
-excluded messages are still saved as raw data, but must not be promoted to operational parsing.
+Messages may still be stored even if not operationally promotable.
 
 ---
 
 ## 3. Trader resolution
+Purpose: resolve effective trader from content/reply context.
 
-Purpose:
-resolve the effective trader represented by the message.
-
-In this project a single source may publish multiple traders.
-Therefore trader resolution must use:
-- direct trader tag in message content
-- reply inheritance from parent message
-- source default only when truly safe
-
-Key logical outputs:
+Outputs:
 - `declared_trader_tag`
 - `resolved_trader_id`
 - `trader_resolution_method`
 
 ---
 
-## 4. Intent classification
-
-Purpose:
-classify the message into a minimum internal category.
-
-Minimum categories:
+## 4. Intent classification and extraction
+Legacy classification output (`message_type`):
 - `NEW_SIGNAL`
 - `SETUP_INCOMPLETE`
 - `UPDATE`
 - `INFO_ONLY`
 - `UNCLASSIFIED`
 
----
-
-## 5. Entity extraction
-
-Purpose:
-extract operational raw fields when present.
-
-Typical fields:
-- symbol
-- direction
-- entry
-- stop
-- target list
-- leverage hint
-- risk hint
-- risky flag
-
-Important:
-extraction reads message content, but does not yet decide final operational values.
+Extraction output includes raw levels and hints.
 
 ---
 
-## 6. Linkage resolution
+## 5. Linkage resolution
+Strong linkage methods:
+- direct reply
+- message link
+- explicit message id
 
-Purpose:
-resolve which previous message or trade an update refers to.
-
-Strong methods:
-- `REPLY`
-- `MESSAGE_LINK`
-- `EXPLICIT_MESSAGE_ID`
-
-Weak method:
-- cautious contextual fallback
-
-Critical rule:
-short updates such as `cancel`, `close`, `breakeven`, `move sl`
-must not become operational by weak context alone.
+Short updates must not auto-apply with weak context only.
 
 ---
 
-## 7. Parse result persistence
+## 6. Parse result persistence
+`parse_results` now stores:
+- legacy columns (existing behavior)
+- normalized JSON payload in `parse_result_normalized_json`
 
-Purpose:
-persist what the parser understood separately from raw data.
-
-Typical stored elements:
-- eligibility outcome
-- trader resolution outcome
-- message type
-- extracted fields
-- linkage info
-- executability flags
-- warnings
-
-Output:
-- `parse_results`
+Normalized schema aligns regex parser and future LLM parser contract.
 
 ---
 
-## 8. Policy resolver
+## 7. Normalized parser contract
+Normalized payload minimum fields:
+- `event_type`, `trader_id`, `source_chat_id`, `source_message_id`
+- `raw_text`, `parser_mode`, `confidence`
+- `instrument`, `side`, `market_type`
+- `entries`, `stop_loss`, `take_profits`
+- `root_ref`, `status`, `validation_warnings`
 
-Purpose:
-resolve final operational parameters using:
-- message hints
-- trader defaults
-- global defaults
-
-Typical decisions:
-- leverage
-- risk
-- TP allocation
-
----
-
-## 9. Level normalizer
-
-Purpose:
-transform raw levels into final levels using:
-- rounding
-- precision rules
-- Number Theory
-- tick-size adaptation
-
-Important:
-raw and final values must remain distinguishable.
+Canonical event types:
+- `NEW_SIGNAL`, `UPDATE`, `CANCEL_PENDING`, `MOVE_STOP`
+- `TAKE_PROFIT`, `CLOSE_POSITION`, `INFO_ONLY`
+- `SETUP_INCOMPLETE`, `INVALID`
 
 ---
 
-## 10. Trade planner
-
-Purpose:
-build the operational trade object from parse result, policy, and normalized levels.
-
-Output:
-- `trades`
-- initial operational state
+## 8. Validator behavior
+Normalized validator is non-blocking:
+- emits warnings
+- does not block persistence
+- keeps audit trail in parse warnings/normalized warnings
 
 ---
 
-## 11. State machine
-
-Purpose:
-manage the lifecycle of the trade in a controlled way.
-
-Core states include:
-- `PARSED`
-- `INCOMPLETE`
-- `READY`
-- `PLANNED`
-- `PENDING_ENTRY`
-- `OPEN`
-- `PARTIALLY_CLOSED`
-- `CLOSED`
-- `CANCELED`
-- `REJECTED`
-
-Important:
-state compatibility is mandatory for update application.
-
----
-
-## 12. Exchange adapter
-
-Purpose:
-translate internal trade actions into real exchange operations.
-
-Not in current minimum scope.
-
----
-
-## 13. Monitoring and reconciliation
-
-Purpose:
-compare internal state with external reality and detect inconsistencies.
-
-Not in current minimum scope.
-
----
-
-## Architectural rules
-
-### Rule 1
-Raw messages are always saved first.
-
-### Rule 2
-Eligibility is checked before operational parsing.
-
-### Rule 3
-Source chat is not always the effective trader.
-
-### Rule 4
-Updates require strong linkage before operational promotion.
-
-### Rule 5
-Final operational values are resolved after parsing, not during raw extraction.
+## 9. Architectural rules
+1. Raw messages are always saved first.
+2. Eligibility is checked before operational promotion.
+3. Source chat is not effective trader identity.
+4. Updates require strong linkage before auto-apply.
+5. Legacy parse result contract remains valid while normalized schema is adopted.
