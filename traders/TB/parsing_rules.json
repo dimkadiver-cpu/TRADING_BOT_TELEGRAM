@@ -1,34 +1,82 @@
 {
-  "meta": {
-    "trader_id": "TB"
+  "profile_options": {
+    "language": "ru",
+    "parser_mode": "regex_only",
+    "allows_multi_intent": true,
+    "prefer_reply_linkage": false,
+    "prefer_telegram_linkage": false
   },
-  "triggers": {
-    "signal_id_regex": "SIGNAL\\s*ID\\s*:\\s*#(\\d+)"
-  },
-  "symbol_patterns": [
-    "\\$?([A-Z]{2,10})/?USDT",
-    "([A-Z]{2,10})USDT(\\.P)?"
-  ],
-  "side_keywords": {
-    "LONG": [
-      "LONG",
-      "BUY"
+  "message_type_markers": {
+    "NEW_SIGNAL": [
+      "Сделка на споте",
+      "Вход:",
+      "Тейк профит:",
+      "Стоп лосс:",
+      "Риск на сделку",
+      "Соотношение",
+      "Лонг",
+      "Шорт"
     ],
-    "SHORT": [
-      "SHORT",
-      "SELL"
+    "UPDATE": [
+      "Стоп лосс переносим в БУ",
+      "Стоп лосс в БУ переводим",
+      "Стоп лосс переводим в БУ",
+      "Закрываю в БУ",
+      "Закрыта вручную"
+    ],
+    "INFO_ONLY": [],
+    "RESULT_REPORT": [
+      "Закрыта в БУ",
+      "Сделка закрыта в БУ",
+      "Закрыта в районе БУ",
+      "Закрыта в +",
+      "Стоп (-",
+      "Стоп лосс (-",
+      "вручную"
     ]
   },
-  "tp_keywords": [
-    "TP",
-    "TARGET"
-  ],
-  "sl_keywords": [
-    "SL",
-    "STOP",
-    "STOP LOSS"
-  ],
-  "ignore_if_contains": [
-    "#admin"
-  ]
+  "intent_keywords": {
+    "U_MOVE_STOP_TO_BE": [
+      "Стоп лосс переносим в БУ",
+      "Стоп лосс в БУ переводим",
+      "Стоп лосс переводим в БУ"
+    ],
+    "U_CLOSE_FULL": [
+      "Закрываю в БУ",
+      "Закрыта вручную"
+    ],
+    "U_STOP_HIT": [
+      "Стоп (-",
+      "Стоп лосс (-"
+    ],
+    "U_REPORT_FINAL_RESULT": [
+      "Закрыта в БУ",
+      "Сделка закрыта в БУ",
+      "Закрыта в районе БУ",
+      "Закрыта в +",
+      "Закрыта вручную"
+    ]
+  },
+  "regex_patterns": {
+    "symbol": [
+      "\\$?([A-Z0-9]{2,20}USDT(?:\\.P)?)"
+    ],
+    "percent": [
+      "([+-]?\\d+(?:[.,]\\d+)?)%"
+    ]
+  },
+  "ignore_if_contains": [],
+  "phrase_templates": {
+    "spot_trade": [
+      "Сделка на споте"
+    ],
+    "be_close": [
+      "Закрыта в БУ",
+      "Сделка закрыта в БУ",
+      "Закрыта в районе БУ"
+    ],
+    "manual_close": [
+      "Закрыта вручную"
+    ]
+  }
 }
