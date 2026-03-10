@@ -1,34 +1,89 @@
 {
-  "meta": {
-    "trader_id": "T3"
+  "profile_options": {
+    "language": "en",
+    "parser_mode": "regex_only",
+    "allows_multi_intent": true,
+    "prefer_reply_linkage": false,
+    "prefer_telegram_linkage": false
   },
-  "triggers": {
-    "signal_id_regex": "SIGNAL\\s*ID\\s*:\\s*#(\\d+)"
-  },
-  "symbol_patterns": [
-    "\\$?([A-Z]{2,10})/?USDT",
-    "([A-Z]{2,10})USDT(\\.P)?"
-  ],
-  "side_keywords": {
-    "LONG": [
-      "LONG",
-      "BUY"
+  "message_type_markers": {
+    "NEW_SIGNAL": [
+      "SIGNAL ID",
+      "COIN:",
+      "Direction:",
+      "ENTRY:",
+      "TARGETS:",
+      "STOP LOSS:"
     ],
-    "SHORT": [
-      "SHORT",
-      "SELL"
+    "UPDATE": [
+      "Adding more",
+      "Buying more here",
+      "book profits"
+    ],
+    "INFO_ONLY": [
+      "VIP MARKET UPDATE",
+      "Market is very volatile now"
+    ],
+    "RESULT_REPORT": [
+      "Target 1:",
+      "Target 2:",
+      "Profit",
+      "Loss"
     ]
   },
-  "tp_keywords": [
-    "TP",
-    "TARGET"
-  ],
-  "sl_keywords": [
-    "SL",
-    "STOP",
-    "STOP LOSS"
-  ],
-  "ignore_if_contains": [
-    "#admin"
-  ]
+  "intent_keywords": {
+    "U_ADD_ENTRY": [
+      "Adding more",
+      "Buying more here"
+    ],
+    "U_TP_HIT": [
+      "Target 1:",
+      "Target 2:",
+      "Target 3:",
+      "done nicely"
+    ],
+    "U_REPORT_FINAL_RESULT": [
+      "Profit",
+      "Loss"
+    ],
+    "I_MARKET_COMMENTARY": [
+      "VIP MARKET UPDATE",
+      "Market is very volatile now"
+    ]
+  },
+  "regex_patterns": {
+    "signal_id": [
+      "SIGNAL ID:\\s*#?(\\d+)"
+    ],
+    "symbol": [
+      "COIN:\\s*\\$?([A-Z0-9]{2,20})/USDT",
+      "#([A-Z0-9]{2,20}USDT)"
+    ],
+    "direction": [
+      "Direction:\\s*(LONG|SHORT)"
+    ],
+    "tp_index": [
+      "Target\\s*([1-5])\\s*:"
+    ],
+    "profit_pct": [
+      "(\\d+(?:\\.\\d+)?)%\\s*(?:Profit|Loss)"
+    ]
+  },
+  "ignore_if_contains": [],
+  "phrase_templates": {
+    "signal_template": [
+      "SIGNAL ID",
+      "COIN:",
+      "Direction:",
+      "ENTRY:",
+      "TARGETS:",
+      "STOP LOSS:"
+    ],
+    "market_update": [
+      "VIP MARKET UPDATE"
+    ],
+    "risk_warning": [
+      "Market is very volatile now"
+    ]
+  }
 }
