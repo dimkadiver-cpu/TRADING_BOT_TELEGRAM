@@ -82,7 +82,8 @@ def build_trader_parser_mode_overrides(traders: Mapping[str, Mapping[str, object
     for trader_id, payload in traders.items():
         parsing = payload.get("parsing") if isinstance(payload, Mapping) else None
         if isinstance(parsing, Mapping):
-            mode = parsing.get("parser_mode")
+            profile_options = parsing.get("profile_options") if isinstance(parsing.get("profile_options"), Mapping) else {}
+            mode = profile_options.get("parser_mode") if profile_options else parsing.get("parser_mode")
             normalized = normalize_parser_mode(str(mode) if mode is not None else None)
             if mode is not None:
                 overrides[str(trader_id)] = normalized
@@ -97,7 +98,8 @@ def build_trader_llm_provider_overrides(traders: Mapping[str, Mapping[str, objec
         parsing = payload.get("parsing") if isinstance(payload, Mapping) else None
         if not isinstance(parsing, Mapping):
             continue
-        provider = parsing.get("llm_provider")
+        profile_options = parsing.get("profile_options") if isinstance(parsing.get("profile_options"), Mapping) else {}
+        provider = profile_options.get("llm_provider") if profile_options else parsing.get("llm_provider")
         if provider is None:
             continue
         overrides[str(trader_id)] = normalize_llm_provider(str(provider))
@@ -112,7 +114,8 @@ def build_trader_llm_model_overrides(traders: Mapping[str, Mapping[str, object]]
         parsing = payload.get("parsing") if isinstance(payload, Mapping) else None
         if not isinstance(parsing, Mapping):
             continue
-        model = parsing.get("llm_model")
+        profile_options = parsing.get("profile_options") if isinstance(parsing.get("profile_options"), Mapping) else {}
+        model = profile_options.get("llm_model") if profile_options else parsing.get("llm_model")
         if model is None:
             continue
         model_text = str(model).strip()

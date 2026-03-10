@@ -222,6 +222,8 @@ class MinimalParserPipeline:
                 notes_parts.append(f"ta_secondary_entry={self._to_note_safe(ta_fields.secondary_entry_raw)}")
             if ta_fields.entry_cancel_rule_raw is not None:
                 notes_parts.append(f"ta_entry_cancel_rule={self._to_note_safe(ta_fields.entry_cancel_rule_raw)}")
+            if ta_fields.intents:
+                notes_parts.append(f"ta_intents={','.join(ta_fields.intents)}")
             if ta_fields.multi_symbol_update or ta_fields.multi_action_update:
                 warnings.append("ta complex update preserved without multi-action split")
                 notes_parts.append(f"ta_update_complex=multi_symbol:{int(ta_fields.multi_symbol_update)},update_hits:{ta_fields.update_hits}")
@@ -410,7 +412,6 @@ def _legacy_target_raw_list(take_profits: list[dict[str, object]]) -> list[str]:
         if raw:
             values.append(str(raw))
     return values
-
 
 
 

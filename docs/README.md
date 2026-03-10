@@ -34,7 +34,10 @@ Questa cartella contiene la documentazione autorevole del progetto.
 10. `TASKS.md`
     Roadmap pratica di implementazione.
 
-11. `CODEX_BOOTSTRAP.md`
+11. `DOCUMENTATION_COHERENCE_AUDIT.md`
+    Audit di coerenza tra documentazione e stato reale del codice.
+
+12. `CODEX_BOOTSTRAP.md`
     Regole operative per sviluppare con Codex senza creare caos.
 
 ## Nota
