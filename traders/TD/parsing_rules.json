@@ -1,34 +1,85 @@
 {
-  "meta": {
-    "trader_id": "TD"
+  "profile_options": {
+    "language": "ru",
+    "parser_mode": "hybrid_auto",
+    "allows_multi_intent": true,
+    "prefer_reply_linkage": true,
+    "prefer_telegram_linkage": true
   },
-  "triggers": {
-    "signal_id_regex": "SIGNAL\\s*ID\\s*:\\s*#(\\d+)"
-  },
-  "symbol_patterns": [
-    "\\$?([A-Z]{2,10})/?USDT",
-    "([A-Z]{2,10})USDT(\\.P)?"
-  ],
-  "side_keywords": {
-    "LONG": [
-      "LONG",
-      "BUY"
+  "message_type_markers": {
+    "NEW_SIGNAL": [
+      "LONG вход с текущих",
+      "SHORT вход с текущих",
+      "рыночный",
+      "риск 0.5% депо",
+      "Стоп",
+      "Тейки",
+      "TP1",
+      "TP2"
     ],
-    "SHORT": [
-      "SHORT",
-      "SELL"
+    "UPDATE": [
+      "Перевод в безубыток",
+      "Перевод в бу",
+      "tp1+"
+    ],
+    "INFO_ONLY": [
+      "У нас прибавление",
+      "Встречайте",
+      "Следите за его результатами"
+    ],
+    "RESULT_REPORT": [
+      "позиция ушла в бу",
+      "позиция закрыта",
+      "ТП2",
+      "стоп"
     ]
   },
-  "tp_keywords": [
-    "TP",
-    "TARGET"
-  ],
-  "sl_keywords": [
-    "SL",
-    "STOP",
-    "STOP LOSS"
-  ],
+  "intent_keywords": {
+    "U_MOVE_STOP_TO_BE": [
+      "Перевод в безубыток",
+      "Перевод в бу",
+      "tp1+"
+    ],
+    "U_TP_HIT": [
+      "TP1",
+      "ТП1",
+      "TP2",
+      "ТП2"
+    ],
+    "U_STOP_HIT": [
+      "стоп"
+    ],
+    "U_REPORT_FINAL_RESULT": [
+      "позиция закрыта",
+      "позиция ушла в бу"
+    ]
+  },
+  "regex_patterns": {
+    "symbol": [
+      "\\b([A-Za-z0-9]{2,20})\\s+(?:LONG|SHORT)\\b",
+      "\\$?([A-Z0-9]{2,20}USDT(?:\\.P)?)"
+    ],
+    "percent": [
+      "([+-]?\\d+(?:[.,]\\d+)?)"
+    ]
+  },
   "ignore_if_contains": [
+    "У нас прибавление",
+    "Встречайте",
+    "Следите за его результатами",
     "#admin"
-  ]
+  ],
+  "phrase_templates": {
+    "market_entry": [
+      "вход с текущих",
+      "рыночный"
+    ],
+    "be_update": [
+      "Перевод в безубыток",
+      "tp1+\nПеревод в бу"
+    ],
+    "be_event": [
+      "позиция ушла в бу"
+    ]
+  }
 }
