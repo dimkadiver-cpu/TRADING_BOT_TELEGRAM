@@ -2,11 +2,16 @@
 
 ## Scopo
 
-Il risk engine decide se un segnale può essere trasformato in un trade attivo senza violare i limiti del sistema.
+Il risk engine decide se un segnale puo essere trasformato in un trade attivo senza violare i limiti del sistema.
+
+## Stato implementazione
+
+Questo documento descrive il comportamento atteso del modulo.
+Nel codice attuale `src/execution/risk_gate.py` e ancora TODO e il risk engine non e attivo nel runtime.
 
 ## Logica base
 
-Il rischio è espresso come percentuale del capitale.
+Il rischio e espresso come percentuale del capitale.
 
 Schema concettuale:
 
@@ -25,11 +30,11 @@ Se un nuovo trade supera questi limiti, viene bloccato.
 
 ### Regole trader-specific
 
-Ogni trader può avere:
+Ogni trader puo avere:
 
 - rischio per trade diverso
 - leva diversa
-- modalità di esecuzione diversa
+- modalita di esecuzione diversa
 
 ## Output atteso
 
@@ -41,4 +46,4 @@ Deve restituire una decisione chiara:
 - trade bloccato
 - trade da mettere in attesa
 
-più le motivazioni utili per audit e debug.
+piu le motivazioni utili per audit e debug.

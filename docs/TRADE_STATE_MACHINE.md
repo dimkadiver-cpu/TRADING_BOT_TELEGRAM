@@ -9,6 +9,11 @@ This project distinguishes:
 
 The state machine below refers to the **trade lifecycle**, not to the raw Telegram message itself.
 
+## Stato implementazione
+
+Questo documento descrive la state machine target.
+Nel codice attuale `src/execution/state_machine.py` e ancora un placeholder e nessuna transizione lifecycle viene applicata automaticamente nel runtime corrente.
+
 ---
 
 ## Core states

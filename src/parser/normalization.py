@@ -25,11 +25,27 @@ _PARSER_USED = {"regex", "llm", None}
 _PARSER_MODES = {"regex_only", "llm_only", "hybrid_auto", None}
 _MESSAGE_TYPES = {"NEW_SIGNAL", "UPDATE", "INFO_ONLY", "SETUP_INCOMPLETE", "UNCLASSIFIED", None}
 _DIRECTIONS = {"LONG", "SHORT", None}
+_UPDATE_INTENTS = {
+    "U_MOVE_STOP",
+    "U_MOVE_STOP_TO_BE",
+    "U_TP_HIT",
+    "U_CLOSE_PARTIAL",
+    "U_CLOSE_FULL",
+    "U_STOP_HIT",
+    "U_CANCEL_PENDING_ORDERS",
+    "U_INVALIDATE_SETUP",
+    "U_ADD_ENTRY",
+    "U_MANUAL_CLOSE",
+    "U_MARK_FILLED",
+    "U_REPORT_FINAL_RESULT",
+}
 
 _LINK_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)
 _HASH_REF_RE = re.compile(r"#(?P<id>\d{3,})")
 _EXPLICIT_REF_RE = re.compile(r"(?:msg|message|ref|id)\s*#?:?\s*(?P<id>\d{2,})", re.IGNORECASE)
 _HASHTAG_RE = re.compile(r"#([A-Za-z0-9_]{2,64})")
+_PERCENT_RE = re.compile(r"\b(?P<value>\d{1,3}(?:[.,]\d+)?)%")
+_TP_INDEX_RE = re.compile(r"\btp(?P<index>\d+)\b", re.IGNORECASE)
 _RESULT_R_RE = re.compile(
     r"\b(?P<symbol>[A-Z]{2,20}(?:USDT|USDC|USD|BTC|ETH)?)\s*[-:=]\s*(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*R\b",
     re.IGNORECASE,
@@ -38,7 +54,7 @@ _RESULT_R_RE = re.compile(
 
 @dataclass(slots=True)
 class ParseResultNormalized:
-    # Legacy/event envelope fields (kept for backward compatibility)
+    # Legacy compatibility envelope fields (derived from semantic fields).
     event_type: str
     trader_id: str | None
     source_chat_id: str | None
@@ -56,21 +72,44 @@ class ParseResultNormalized:
     status: str = "PARSED"
     validation_warnings: list[str] = field(default_factory=list)
 
-    # Semantic parser contract fields (hybrid-ready)
+    # Semantic source-of-truth fields.
     parser_used: str | None = None
     message_type: str | None = None
+    intents: list[str] = field(default_factory=list)
+    actions: list[str] = field(default_factory=list)
+    # Legacy/derived compatibility alias.
     message_subtype: str | None = None
     symbol: str | None = None
     direction: str | None = None
     entry_main: float | None = None
     entry_mode: str | None = None
     average_entry: float | None = None
+    entry_plan_type: str | None = None
+    entry_structure: str | None = None
+    has_averaging_plan: bool = False
     stop_loss_price: float | None = None
     take_profit_prices: list[float] = field(default_factory=list)
-    actions: list[str] = field(default_factory=list)
     target_refs: list[int] = field(default_factory=list)
     reported_results: list[dict[str, Any]] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    entities: dict[str, Any] = field(
+        default_factory=lambda: {
+            "hashtags": [],
+            "links": [],
+            "time_hint": None,
+            "new_stop_level": None,
+            "close_fraction": None,
+            "close_scope": None,
+            "hit_target": None,
+            "fill_state": None,
+            "result_mode": None,
+            "cancel_scope": None,
+            "entry_plan_entries": [],
+            "entry_plan_type": None,
+            "entry_structure": None,
+            "has_averaging_plan": False,
+        }
+    )
     raw_entities: dict[str, Any] = field(
         default_factory=lambda: {
             "hashtags": [],
@@ -103,18 +142,23 @@ class ParseResultNormalized:
             "validation_warnings": self.validation_warnings,
             "parser_used": self.parser_used,
             "message_type": self.message_type,
+            "intents": self.intents,
+            "actions": self.actions,
             "message_subtype": self.message_subtype,
             "symbol": self.symbol,
             "direction": self.direction,
             "entry_main": self.entry_main,
             "entry_mode": self.entry_mode,
             "average_entry": self.average_entry,
+            "entry_plan_type": self.entry_plan_type,
+            "entry_structure": self.entry_structure,
+            "has_averaging_plan": self.has_averaging_plan,
             "stop_loss_price": self.stop_loss_price,
             "take_profit_prices": self.take_profit_prices,
-            "actions": self.actions,
             "target_refs": self.target_refs,
             "reported_results": self.reported_results,
             "notes": self.notes,
+            "entities": self.entities,
             "raw_entities": self.raw_entities,
             "parser_mode_legacy": self.parser_mode_legacy,
             "selection_metadata": self.selection_metadata,
@@ -140,14 +184,24 @@ def build_parse_result_normalized(
     root_ref: int | None,
     existing_warnings: list[str],
     notes: list[str],
+    intents: list[str] | None = None,
+    actions: list[str] | None = None,
+    entities: dict[str, Any] | None = None,
 ) -> ParseResultNormalized:
-    event_type = _map_to_canonical_event_type(message_type=message_type, normalized_text=normalized_text)
-    semantic_entries = _parse_entries(entry_raw)
+    existing_warning_list = _normalize_warning_list(existing_warnings)
+    semantic_message_type = _to_semantic_message_type(message_type)
+    semantic_intents = _normalize_intents(intents)
+    semantic_actions = _normalize_actions(actions)
+
+    event_type = _map_to_canonical_event_type(
+        message_type=message_type,
+    )
+    semantic_entries = _parse_entries(entry_raw, entities)
     stop_loss = _parse_level(stop_raw, label="SL", kind="STOP_LOSS")
     take_profits = [_parse_level(value, label=f"TP{index + 1}", kind="TAKE_PROFIT") for index, value in enumerate(targets)]
     take_profits = [value for value in take_profits if value is not None]
     confidence = _estimate_confidence(
-        event_type=event_type,
+        message_type=semantic_message_type,
         trader_id=trader_id,
         instrument=instrument,
         side=side,
@@ -158,20 +212,39 @@ def build_parse_result_normalized(
     )
 
     semantic_direction = _map_direction(side)
-    semantic_message_type = _to_semantic_message_type(message_type)
-    actions = _extract_actions(normalized_text)
-    message_subtype = _infer_message_subtype(event_type=event_type, semantic_message_type=semantic_message_type, actions=actions)
+    if semantic_message_type == "UPDATE" and not semantic_intents:
+        semantic_intents = _infer_update_intents_from_legacy_actions(semantic_actions)
+    message_subtype = _infer_message_subtype(
+        semantic_message_type=semantic_message_type,
+        intents=semantic_intents,
+        actions=semantic_actions,
+    )
     links = _extract_links(raw_text)
     target_refs = _extract_target_refs(raw_text=raw_text, root_ref=root_ref)
     reported_results = _extract_reported_results(raw_text)
-    notes_out = _build_notes(notes=notes, raw_text=raw_text, semantic_message_type=semantic_message_type, reported_results=reported_results)
-    raw_entities = {
+    entities_out = entities or {
         "hashtags": _extract_hashtags(raw_text),
         "links": links,
         "time_hint": _extract_time_hint(normalized_text),
     }
+    entities_out = _normalize_entities(entities_out)
+    entities_out = _enrich_operational_entities(
+        entities=entities_out,
+        message_type=semantic_message_type,
+        intents=semantic_intents,
+        actions=semantic_actions,
+        raw_text=raw_text,
+        normalized_text=normalized_text,
+        stop_raw=stop_raw,
+        reported_results=reported_results,
+    )
+    notes_out = _build_notes(notes=notes, raw_text=raw_text, semantic_message_type=semantic_message_type, reported_results=reported_results)
 
     entry_prices = [value.get("price") for value in semantic_entries if isinstance(value.get("price"), float)]
+    averaging_price = _extract_averaging_price(semantic_entries)
+    entry_plan_type = _infer_entry_plan_type(semantic_entries)
+    entry_structure = _infer_entry_structure(semantic_entries)
+    has_averaging_plan = averaging_price is not None
     stop_loss_price = stop_loss.get("price") if stop_loss else None
     take_profit_prices = [value.get("price") for value in take_profits if isinstance(value.get("price"), float)]
 
@@ -193,27 +266,33 @@ def build_parse_result_normalized(
         stop_loss=stop_loss,
         take_profits=take_profits,
         root_ref=root_ref,
-        status="PARSED_WITH_WARNINGS" if existing_warnings else parse_status,
+        status="PARSED_WITH_WARNINGS" if existing_warning_list else parse_status,
         parser_used=parser_used,
         message_type=semantic_message_type,
+        intents=semantic_intents,
+        actions=semantic_actions,
         message_subtype=message_subtype,
         symbol=instrument,
         direction=semantic_direction,
         entry_main=entry_prices[0] if entry_prices else None,
         entry_mode=_infer_entry_mode(semantic_entries),
-        average_entry=round(sum(entry_prices) / len(entry_prices), 8) if entry_prices else None,
+        average_entry=averaging_price if averaging_price is not None else (round(sum(entry_prices) / len(entry_prices), 8) if entry_prices else None),
+        entry_plan_type=entry_plan_type,
+        entry_structure=entry_structure,
+        has_averaging_plan=has_averaging_plan,
         stop_loss_price=stop_loss_price if isinstance(stop_loss_price, float) else None,
         take_profit_prices=take_profit_prices,
-        actions=actions,
         target_refs=target_refs,
         reported_results=reported_results,
         notes=notes_out,
-        raw_entities=raw_entities,
+        entities=entities_out,
+        raw_entities=entities_out,
         parser_mode_legacy=parser_mode_legacy,
     )
     validation_warnings = validate_parse_result_normalized(result)
-    if validation_warnings:
-        result.validation_warnings = validation_warnings
+    merged_warnings = _merge_ordered_unique(existing_warning_list, validation_warnings)
+    if merged_warnings:
+        result.validation_warnings = merged_warnings
         result.status = "PARSED_WITH_WARNINGS"
     return result
 
@@ -252,14 +331,19 @@ def validate_parse_result_normalized(result: ParseResultNormalized) -> list[str]
             warnings.append("normalized_new_signal_missing_take_profits")
 
     if result.message_type == "UPDATE":
-        if not result.actions and not result.message_subtype:
-            warnings.append("normalized_update_missing_actions_or_subtype")
+        if not result.intents:
+            warnings.append("normalized_update_missing_intents")
+        if not result.actions:
+            warnings.append("normalized_update_missing_actions")
         if result.root_ref is None and not result.target_refs:
             warnings.append("normalized_update_missing_target_ref")
+        for intent in result.intents:
+            if intent not in _UPDATE_INTENTS:
+                warnings.append(f"normalized_update_intent_unknown:{intent}")
 
     if result.message_type == "INFO_ONLY":
         has_notes = any((note or "").strip() for note in result.notes)
-        if not result.message_subtype and not result.reported_results and not has_notes and not result.target_refs:
+        if not result.reported_results and not has_notes and not result.target_refs:
             warnings.append("normalized_info_only_missing_supporting_content")
 
     return warnings
@@ -273,7 +357,12 @@ def _to_semantic_message_type(message_type: str) -> str | None:
     return None
 
 
-def _map_to_canonical_event_type(*, message_type: str, normalized_text: str) -> str:
+def _map_to_canonical_event_type(
+    *,
+    message_type: str,
+) -> str:
+    # Legacy projection only: keep a stable backward-compatible envelope
+    # without driving semantic decisions.
     if message_type == "NEW_SIGNAL":
         return "NEW_SIGNAL"
     if message_type == "SETUP_INCOMPLETE":
@@ -281,30 +370,21 @@ def _map_to_canonical_event_type(*, message_type: str, normalized_text: str) -> 
     if message_type == "INFO_ONLY":
         return "INFO_ONLY"
     if message_type == "UPDATE":
-        if any(marker in normalized_text for marker in ("cancel", "remove limit", "delete entry", "cancel pending")):
-            return "CANCEL_PENDING"
-        if any(marker in normalized_text for marker in ("move sl", "move stop", "breakeven", "move to be", "to entry")):
-            return "MOVE_STOP"
-        if any(marker in normalized_text for marker in ("tp", "take", "target hit", "profit")):
-            return "TAKE_PROFIT"
-        if any(marker in normalized_text for marker in ("close", "exit", "fixed 100", "close all")):
-            return "CLOSE_POSITION"
         return "UPDATE"
     if message_type == "UNCLASSIFIED":
         return "INVALID"
     return "INVALID"
 
 
-def _infer_message_subtype(*, event_type: str, semantic_message_type: str | None, actions: list[str]) -> str | None:
+def _infer_message_subtype(
+    *,
+    semantic_message_type: str | None,
+    intents: list[str],
+    actions: list[str],
+) -> str | None:
     if semantic_message_type == "UPDATE":
-        by_event = {
-            "MOVE_STOP": "MOVE_STOP",
-            "CANCEL_PENDING": "CANCEL_PENDING",
-            "TAKE_PROFIT": "TAKE_PROFIT",
-            "CLOSE_POSITION": "CLOSE_POSITION",
-        }
-        if event_type in by_event:
-            return by_event[event_type]
+        if intents:
+            return intents[0]
         if actions:
             return "ACTIONABLE_UPDATE"
     if semantic_message_type == "INFO_ONLY":
@@ -314,7 +394,7 @@ def _infer_message_subtype(*, event_type: str, semantic_message_type: str | None
 
 def _estimate_confidence(
     *,
-    event_type: str,
+    message_type: str | None,
     trader_id: str | None,
     instrument: str | None,
     side: str | None,
@@ -323,32 +403,28 @@ def _estimate_confidence(
     take_profits: list[dict[str, Any]],
     root_ref: int | None,
 ) -> float:
-    base_by_event = {
+    base_by_message_type = {
         "NEW_SIGNAL": 0.92,
         "UPDATE": 0.78,
-        "CANCEL_PENDING": 0.8,
-        "MOVE_STOP": 0.82,
-        "TAKE_PROFIT": 0.84,
-        "CLOSE_POSITION": 0.84,
         "INFO_ONLY": 0.75,
         "SETUP_INCOMPLETE": 0.55,
-        "INVALID": 0.2,
+        "UNCLASSIFIED": 0.2,
     }
-    confidence = base_by_event.get(event_type, 0.5)
+    confidence = base_by_message_type.get(message_type, 0.5)
     if trader_id is None:
         confidence -= 0.15
     if instrument is None:
         confidence -= 0.1
-    if side is None and event_type == "NEW_SIGNAL":
+    if side is None and message_type == "NEW_SIGNAL":
         confidence -= 0.1
-    if event_type == "NEW_SIGNAL":
+    if message_type == "NEW_SIGNAL":
         if not entries:
             confidence -= 0.15
         if stop_loss is None:
             confidence -= 0.15
         if not take_profits:
             confidence -= 0.1
-    if event_type in {"UPDATE", "CANCEL_PENDING", "MOVE_STOP", "TAKE_PROFIT", "CLOSE_POSITION"} and root_ref is None:
+    if message_type == "UPDATE" and root_ref is None:
         confidence -= 0.2
     return max(0.0, min(1.0, round(confidence, 4)))
 
@@ -364,7 +440,10 @@ def _infer_market_type(instrument: str | None) -> str | None:
     return "UNKNOWN"
 
 
-def _parse_entries(raw: str | None) -> list[dict[str, Any]]:
+def _parse_entries(raw: str | None, entities: dict[str, Any] | None = None) -> list[dict[str, Any]]:
+    canonical_entries = _extract_canonical_entries_from_entities(entities)
+    if canonical_entries:
+        return canonical_entries
     if raw is None:
         return []
     chunks = [part.strip() for part in raw.split("-") if part.strip()]
@@ -374,8 +453,54 @@ def _parse_entries(raw: str | None) -> list[dict[str, Any]]:
     for index, value in enumerate(chunks):
         parsed = _parse_level(value, label=f"E{index + 1}", kind="ENTRY")
         if parsed is not None:
-            values.append(parsed)
+            values.append(
+                {
+                    **parsed,
+                    "sequence": index + 1,
+                    "role": "PRIMARY" if index == 0 else "AVERAGING",
+                    "order_type": "UNKNOWN",
+                    "raw_label": "ENTRY" if index == 0 else "AVERAGING",
+                    "source_style": "SINGLE" if len(chunks) == 1 else "UNKNOWN",
+                    "is_optional": index > 0,
+                }
+            )
     return values
+
+
+def _extract_canonical_entries_from_entities(entities: dict[str, Any] | None) -> list[dict[str, Any]]:
+    if not isinstance(entities, dict):
+        return []
+    raw_entries = entities.get("entry_plan_entries")
+    if not isinstance(raw_entries, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for index, item in enumerate(raw_entries, start=1):
+        if not isinstance(item, dict):
+            continue
+        price = item.get("price")
+        if not isinstance(price, (int, float)):
+            continue
+        sequence = item.get("sequence")
+        role = item.get("role")
+        order_type = item.get("order_type")
+        raw_label = item.get("raw_label")
+        source_style = item.get("source_style")
+        is_optional = item.get("is_optional")
+        out.append(
+            {
+                "label": f"E{int(sequence) if isinstance(sequence, int) else index}",
+                "price": float(price),
+                "kind": "ENTRY",
+                "raw": str(float(price)),
+                "sequence": int(sequence) if isinstance(sequence, int) else index,
+                "role": role if isinstance(role, str) else ("PRIMARY" if index == 1 else "AVERAGING"),
+                "order_type": order_type if isinstance(order_type, str) else "UNKNOWN",
+                "raw_label": raw_label if isinstance(raw_label, str) else None,
+                "source_style": source_style if isinstance(source_style, str) else "UNKNOWN",
+                "is_optional": bool(is_optional) if isinstance(is_optional, bool) else index > 1,
+            }
+        )
+    return out
 
 
 def _parse_level(raw: str | None, *, label: str | None, kind: str | None) -> dict[str, Any] | None:
@@ -435,17 +560,144 @@ def _to_legacy_parser_mode(parser_mode: str | None) -> str | None:
     return None
 
 
-def _extract_actions(normalized_text: str) -> list[str]:
-    actions: list[str] = []
-    if any(marker in normalized_text for marker in ("move sl", "move stop", "breakeven", "to entry", "move to be")):
-        actions.append("MOVE_SL_TO_ENTRY")
-    if any(marker in normalized_text for marker in ("cancel", "remove limit", "delete entry", "cancel pending")):
-        actions.append("CANCEL_PENDING_ORDERS")
-    if any(marker in normalized_text for marker in ("close", "close all", "exit", "fixed 100")):
-        actions.append("CLOSE_ALL_OPEN_POSITIONS_AT_MARKET")
-    if any(marker in normalized_text for marker in ("hold", "keep running", "continues", "in work")):
-        actions.append("HOLD_CONTINUES")
-    return _unique(actions)
+def _normalize_intents(intents: list[str] | None) -> list[str]:
+    if not intents:
+        return []
+    return _unique([item.strip() for item in intents if isinstance(item, str) and item.strip()])
+
+
+def _normalize_actions(actions: list[str] | None) -> list[str]:
+    if not actions:
+        return []
+    return _unique([item.strip() for item in actions if isinstance(item, str) and item.strip()])
+
+
+def _normalize_warning_list(warnings: list[str] | None) -> list[str]:
+    if not warnings:
+        return []
+    out: list[str] = []
+    for warning in warnings:
+        if not isinstance(warning, str):
+            continue
+        value = warning.strip()
+        if value:
+            out.append(value)
+    return _unique(out)
+
+
+def _merge_ordered_unique(primary: list[str], secondary: list[str]) -> list[str]:
+    out: list[str] = []
+    seen: set[str] = set()
+    for value in [*primary, *secondary]:
+        if value in seen:
+            continue
+        seen.add(value)
+        out.append(value)
+    return out
+
+
+def _normalize_entities(value: dict[str, Any] | None) -> dict[str, Any]:
+    base = {
+        "hashtags": [],
+        "links": [],
+        "time_hint": None,
+        "new_stop_level": None,
+        "close_fraction": None,
+        "close_scope": None,
+        "hit_target": None,
+        "fill_state": None,
+            "result_mode": None,
+            "cancel_scope": None,
+            "entry_plan_entries": [],
+            "entry_plan_type": None,
+            "entry_structure": None,
+            "has_averaging_plan": False,
+        }
+    if not isinstance(value, dict):
+        return base
+    out = dict(base)
+    out.update(value)
+    return out
+
+
+def _enrich_operational_entities(
+    *,
+    entities: dict[str, Any],
+    message_type: str | None,
+    intents: list[str],
+    actions: list[str],
+    raw_text: str,
+    normalized_text: str,
+    stop_raw: str | None,
+    reported_results: list[dict[str, Any]],
+) -> dict[str, Any]:
+    out = dict(entities)
+    if "U_REPORT_FINAL_RESULT" in intents:
+        out["result_mode"] = "R_MULTIPLE" if reported_results else "TEXT_SUMMARY"
+    if message_type != "UPDATE":
+        return out
+
+    if "U_MOVE_STOP_TO_BE" in intents:
+        out["new_stop_level"] = "ENTRY"
+    elif "U_MOVE_STOP" in intents and stop_raw:
+        out["new_stop_level"] = stop_raw
+
+    if "U_CLOSE_FULL" in intents:
+        out["close_scope"] = "FULL"
+    if "U_CLOSE_PARTIAL" in intents:
+        out["close_scope"] = "PARTIAL"
+        out["close_fraction"] = _extract_close_fraction(raw_text=raw_text, normalized_text=normalized_text)
+
+    if "U_TP_HIT" in intents:
+        out["hit_target"] = _extract_hit_target(raw_text=raw_text) or "TP"
+    if "U_STOP_HIT" in intents:
+        out["hit_target"] = "STOP"
+
+    if "U_MARK_FILLED" in intents:
+        out["fill_state"] = "FILLED"
+
+    if "U_CANCEL_PENDING_ORDERS" in intents or "ACT_CANCEL_ALL_PENDING_ENTRIES" in actions:
+        out["cancel_scope"] = "ALL_PENDING_ENTRIES"
+
+    return out
+
+
+def _extract_close_fraction(*, raw_text: str, normalized_text: str) -> float | None:
+    match = _PERCENT_RE.search(raw_text)
+    if match:
+        text = match.group("value").replace(",", ".")
+        try:
+            value = float(text)
+        except ValueError:
+            value = None
+        if value is not None:
+            return round(max(0.0, min(1.0, value / 100.0)), 6)
+    if any(marker in normalized_text for marker in ("half", "1/2", "50-50")):
+        return 0.5
+    return None
+
+
+def _extract_hit_target(*, raw_text: str) -> str | None:
+    match = _TP_INDEX_RE.search(raw_text)
+    if match:
+        return f"TP{match.group('index')}"
+    return None
+
+
+def _infer_update_intents_from_legacy_actions(actions: list[str]) -> list[str]:
+    mapped: list[str] = []
+    for action in actions:
+        if action == "ACT_MOVE_STOP_LOSS":
+            mapped.append("U_MOVE_STOP")
+        elif action == "ACT_CANCEL_ALL_PENDING_ENTRIES":
+            mapped.append("U_CANCEL_PENDING_ORDERS")
+        elif action == "ACT_CLOSE_FULL":
+            mapped.append("U_CLOSE_FULL")
+        elif action == "ACT_MARK_TP_HIT":
+            mapped.append("U_TP_HIT")
+        elif action == "ACT_MARK_STOP_HIT":
+            mapped.append("U_STOP_HIT")
+    return _unique(mapped)
 
 
 def _extract_target_refs(*, raw_text: str, root_ref: int | None) -> list[int]:
@@ -514,11 +766,48 @@ def _build_notes(*, notes: list[str], raw_text: str, semantic_message_type: str 
 def _infer_entry_mode(entries: list[dict[str, Any]]) -> str | None:
     if not entries:
         return None
-    if any((entry.get("raw") or "").upper() == "MARKET_CURRENT" for entry in entries):
+    if any(str(entry.get("order_type") or "").upper() == "MARKET" for entry in entries):
         return "MARKET"
     if len(entries) > 1:
         return "RANGE"
     return "SINGLE"
+
+
+def _extract_averaging_price(entries: list[dict[str, Any]]) -> float | None:
+    for item in entries:
+        role = str(item.get("role") or "").upper()
+        if role != "AVERAGING":
+            continue
+        price = item.get("price")
+        if isinstance(price, (int, float)):
+            return float(price)
+    return None
+
+
+def _infer_entry_structure(entries: list[dict[str, Any]]) -> str | None:
+    if not entries:
+        return None
+    if len(entries) > 1:
+        return "TWO_STEP"
+    return "SINGLE"
+
+
+def _infer_entry_plan_type(entries: list[dict[str, Any]]) -> str | None:
+    if not entries:
+        return None
+    first_order_type = str(entries[0].get("order_type") or "").upper()
+    has_averaging = _extract_averaging_price(entries) is not None
+    if has_averaging:
+        if first_order_type == "MARKET":
+            return "MARKET_WITH_LIMIT_AVERAGING"
+        if first_order_type == "LIMIT":
+            return "LIMIT_WITH_LIMIT_AVERAGING"
+        return "UNKNOWN"
+    if first_order_type == "MARKET":
+        return "SINGLE_MARKET"
+    if first_order_type == "LIMIT":
+        return "SINGLE_LIMIT"
+    return "UNKNOWN"
 
 
 def _unique(values: list[str]) -> list[str]:

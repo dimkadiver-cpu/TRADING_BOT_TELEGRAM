@@ -36,7 +36,7 @@ def _semantic_payload(*, message_type: str = "NEW_SIGNAL", notes: list[str] | No
         "target_refs": [],
         "reported_results": [],
         "notes": notes or ["llm_valid"],
-        "raw_entities": {"hashtags": [], "links": [], "time_hint": None},
+        "entities": {"hashtags": [], "links": [], "time_hint": None},
         "confidence": 0.87,
         "validation_warnings": [],
     }
@@ -312,3 +312,4 @@ class ParserDispatcherModeTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+

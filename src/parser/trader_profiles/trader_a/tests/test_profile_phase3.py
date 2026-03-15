@@ -1,0 +1,86 @@
+from __future__ import annotations
+
+import unittest
+
+from src.parser.trader_profiles.base import ParserContext
+from src.parser.trader_profiles.trader_a.profile import TraderAProfileParser
+
+
+def _context(*, text: str, reply_to: int | None = None) -> ParserContext:
+    return ParserContext(
+        trader_code="trader_a",
+        message_id=3000,
+        reply_to_message_id=reply_to,
+        channel_id="-1001",
+        raw_text=text,
+        extracted_links=[],
+        hashtags=[],
+    )
+
+
+class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.parser = TraderAProfileParser()
+
+    def test_move_stop_to_be_entities(self) -> None:
+        text = "move stop to be"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=701))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertEqual(result.entities.get("new_stop_level"), "ENTRY")
+
+    def test_close_full_entities(self) -> None:
+        text = "close all now"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=702))
+        self.assertEqual(result.entities.get("close_scope"), "FULL")
+
+    def test_close_partial_entities_with_fraction(self) -> None:
+        text = "partial close 50%"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=703))
+        self.assertEqual(result.entities.get("close_scope"), "PARTIAL")
+        self.assertEqual(result.entities.get("close_fraction"), 0.5)
+
+    def test_tp_and_stop_hit_entities(self) -> None:
+        tp_text = "tp1 hit https://t.me/c/9/704"
+        tp_result = self.parser.parse_message(tp_text, _context(text=tp_text))
+        self.assertEqual(tp_result.message_type, "UPDATE")
+        self.assertTrue(any(item.get("kind") == "telegram_link" for item in tp_result.target_refs))
+        self.assertEqual(tp_result.entities.get("hit_target"), "TP1")
+
+        stop_text = "stopped out"
+        stop_result = self.parser.parse_message(stop_text, _context(text=stop_text, reply_to=705))
+        self.assertEqual(stop_result.entities.get("hit_target"), "STOP")
+
+    def test_mark_filled_entities(self) -> None:
+        text = "entry filled"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=706))
+        self.assertEqual(result.entities.get("fill_state"), "FILLED")
+
+    def test_cancel_pending_entities(self) -> None:
+        text = "cancel pending orders"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=707))
+        self.assertEqual(result.entities.get("cancel_scope"), "ALL_PENDING_ENTRIES")
+
+    def test_reported_results_and_result_mode(self) -> None:
+        text = "Final result BTCUSDT - 1.2R ETHUSDT - -0.3R"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.entities.get("result_mode"), "R_MULTIPLE")
+        self.assertEqual(
+            result.reported_results,
+            [
+                {"symbol": "BTCUSDT", "value": 1.2, "unit": "R"},
+                {"symbol": "ETHUSDT", "value": -0.3, "unit": "R"},
+            ],
+        )
+
+    def test_report_mode_text_summary_when_no_structured_r(self) -> None:
+        text = "final result summary for this week"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.reported_results, [])
+        self.assertEqual(result.entities.get("result_mode"), "TEXT_SUMMARY")
+
+
+if __name__ == "__main__":
+    unittest.main()

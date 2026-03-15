@@ -121,9 +121,13 @@ class LLMAdapter:
             root_ref=getattr(parser_input, "linkage_reference_id", None),
             existing_warnings=list(semantic["validation_warnings"]),
             notes=list(semantic["notes"]) + [f"llm_backend={settings.provider}", f"llm_model={settings.model}"],
+            intents=list(semantic["intents"]),
+            actions=list(semantic["actions"]),
+            entities=dict(semantic["entities"]),
         )
 
         result.message_type = semantic["message_type"]
+        result.intents = semantic["intents"]
         result.message_subtype = semantic["message_subtype"]
         result.symbol = semantic["symbol"]
         result.direction = semantic["direction"]
@@ -137,7 +141,8 @@ class LLMAdapter:
         result.target_refs = semantic["target_refs"]
         result.reported_results = semantic["reported_results"]
         result.notes = semantic["notes"]
-        result.raw_entities = semantic["raw_entities"]
+        result.entities = semantic["entities"]
+        result.raw_entities = semantic["entities"]
         result.confidence = semantic["confidence"]
 
         result.instrument = result.symbol
@@ -277,8 +282,8 @@ def _build_user_prompt(payload: dict[str, Any]) -> str:
         "Input telegram message context as JSON:\n"
         f"{json.dumps(payload, ensure_ascii=False, sort_keys=True)}\n\n"
         "Return ONLY one valid JSON object with these keys exactly: "
-        "message_type, message_subtype, symbol, direction, entries, entry_main, entry_mode, average_entry, "
-        "stop_loss_price, take_profit_prices, actions, target_refs, reported_results, notes, raw_entities, "
+        "message_type, intents, message_subtype, symbol, direction, entries, entry_main, entry_mode, average_entry, "
+        "stop_loss_price, take_profit_prices, actions, target_refs, reported_results, notes, entities, "
         "confidence, validation_warnings."
     )
 
@@ -288,8 +293,7 @@ def _system_prompt() -> str:
         "You are a structured Telegram trading parser. Return ONLY valid JSON. "
         "Do not add prose. Do not invent missing values. Use null or [] when unsure. "
         "Classify message_type in NEW_SIGNAL, UPDATE, INFO_ONLY, SETUP_INCOMPLETE, UNCLASSIFIED. "
-        "Use actions only from MOVE_SL_TO_ENTRY, CANCEL_PENDING_ORDERS, "
-        "CLOSE_ALL_OPEN_POSITIONS_AT_MARKET, HOLD_CONTINUES when recognized."
+        "For UPDATE messages provide intents and canonical actions."
     )
 
 
@@ -299,6 +303,7 @@ def _json_schema() -> dict[str, Any]:
         "additionalProperties": False,
         "properties": {
             "message_type": {"type": ["string", "null"]},
+            "intents": {"type": "array", "items": {"type": "string"}},
             "message_subtype": {"type": ["string", "null"]},
             "symbol": {"type": ["string", "null"]},
             "direction": {"type": ["string", "null"]},
@@ -336,7 +341,7 @@ def _json_schema() -> dict[str, Any]:
                 },
             },
             "notes": {"type": "array", "items": {"type": "string"}},
-            "raw_entities": {
+            "entities": {
                 "type": "object",
                 "additionalProperties": False,
                 "properties": {
@@ -351,6 +356,7 @@ def _json_schema() -> dict[str, Any]:
         },
         "required": [
             "message_type",
+            "intents",
             "message_subtype",
             "symbol",
             "direction",
@@ -364,7 +370,7 @@ def _json_schema() -> dict[str, Any]:
             "target_refs",
             "reported_results",
             "notes",
-            "raw_entities",
+            "entities",
             "confidence",
             "validation_warnings",
         ],
@@ -444,6 +450,7 @@ def _parse_llm_json_response(raw_text: str) -> dict[str, Any]:
 def _coerce_semantic_payload(data: dict[str, Any]) -> dict[str, Any]:
     out: dict[str, Any] = {
         "message_type": _as_message_type(data.get("message_type")),
+        "intents": _as_str_list(data.get("intents")),
         "message_subtype": _as_opt_str(data.get("message_subtype")),
         "symbol": _as_opt_str(data.get("symbol")),
         "direction": _as_direction(data.get("direction")),
@@ -457,7 +464,7 @@ def _coerce_semantic_payload(data: dict[str, Any]) -> dict[str, Any]:
         "target_refs": _as_int_list(data.get("target_refs")),
         "reported_results": _as_reported_results(data.get("reported_results")),
         "notes": _as_str_list(data.get("notes")),
-        "raw_entities": _as_raw_entities(data.get("raw_entities")),
+        "entities": _as_raw_entities(data.get("entities") or data.get("raw_entities")),
         "confidence": _as_confidence(data.get("confidence")),
         "validation_warnings": _as_str_list(data.get("validation_warnings")),
     }

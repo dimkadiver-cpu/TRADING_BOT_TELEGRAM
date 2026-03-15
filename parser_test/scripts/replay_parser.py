@@ -25,6 +25,7 @@ from src.core.config_loader import load_config
 from src.core.migrations import apply_migrations
 from src.parser.parser_config import normalize_parser_mode
 from src.parser.pipeline import MinimalParserPipeline, ParserInput
+from src.parser.trader_profiles.registry import canonicalize_trader_code
 from src.storage.parse_results import ParseResultStore
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
@@ -57,7 +58,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--only-unparsed", action="store_true", help="Replay only rows without parse_results.")
     parser.add_argument("--limit", type=int, default=None, help="Max rows to process.")
     parser.add_argument("--chat-id", default=None, help="Filter by raw_messages.source_chat_id.")
-    parser.add_argument("--trader", default=None, help="Filter by resolved trader id (e.g. TA, TB).")
+    parser.add_argument(
+        "--trader",
+        default=None,
+        help="Filter by resolved trader id alias/canonical (e.g. TA, A, trader_a, TB).",
+    )
     parser.add_argument("--from-date", default=None, help="Inclusive lower bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--to-date", default=None, help="Inclusive upper bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--parser-mode", default=None, help="Parser mode override: regex_only | llm_only | hybrid_auto")
@@ -266,7 +271,7 @@ def select_rows(
     trader_resolver: EffectiveTraderResolver,
 ) -> list[SelectedRaw]:
     selected: list[SelectedRaw] = []
-    normalized_trader_filter = trader_filter.strip() if trader_filter else None
+    normalized_trader_filter = canonicalize_trader_code(trader_filter) if trader_filter else None
     for row in raws:
         resolved = trader_resolver.resolve(
             EffectiveTraderContext(
@@ -277,12 +282,13 @@ def select_rows(
                 reply_to_message_id=row.reply_to_message_id,
             )
         )
-        if normalized_trader_filter and resolved.trader_id != normalized_trader_filter:
+        resolved_canonical = canonicalize_trader_code(resolved.trader_id) or resolved.trader_id
+        if normalized_trader_filter and resolved_canonical != normalized_trader_filter:
             continue
         selected.append(
             SelectedRaw(
                 row=row,
-                resolved_trader_id=resolved.trader_id,
+                resolved_trader_id=resolved_canonical,
                 trader_resolution_method=resolved.method,
             )
         )

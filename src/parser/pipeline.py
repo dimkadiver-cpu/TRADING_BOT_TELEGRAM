@@ -5,19 +5,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 import json
 import re
-from typing import TYPE_CHECKING
 
 from src.core.trader_tags import first_normalized_trader_tag, normalize_trader_aliases
 from src.core.timeutils import utc_now_iso
 from src.parser.dispatcher import ParserDispatcher
+from src.parser.intent_action_map import infer_update_intents_from_text, map_intents_to_actions
 from src.parser.llm_adapter import LLMInvalidResponse, LLMNotConfigured, LLMParseError, LLMRequestFailed
 from src.parser.normalization import ParseResultNormalized, build_parse_result_normalized
 from src.parser.parser_config import ParserModeResolver
-from src.parser.trader_profiles.ta_profile import classify_ta_message, extract_ta_fields
+from src.parser.trader_profiles.base import ParserContext
+from src.parser.trader_profiles.common_utils import extract_hashtags, extract_telegram_links
+from src.parser.trader_profiles.registry import canonicalize_trader_code, get_profile_parser
 from src.storage.parse_results import ParseResultRecord
-
-if TYPE_CHECKING:
-    from src.parser.trader_profiles.ta_profile import TAExtractedFields
 
 _ADMIN_MARKERS = ("#admin", "weekly stats", "performance recap", "stats")
 _UPDATE_ACTION_MARKERS = (
@@ -101,22 +100,54 @@ class MinimalParserPipeline:
         self._dispatcher = dispatcher or ParserDispatcher()
 
     def parse(self, payload: ParserInput) -> ParseResultRecord:
-        effective_mode = payload.parser_mode or self._mode_resolver.get_effective_parser_mode(payload.resolved_trader_id)
-        effective_llm_provider = payload.llm_provider or self._mode_resolver.get_effective_llm_provider(payload.resolved_trader_id)
-        effective_llm_model = payload.llm_model or self._mode_resolver.get_effective_llm_model(payload.resolved_trader_id)
+        source_trader_label = payload.resolved_trader_id
+        canonical_trader_id = canonicalize_trader_code(source_trader_label) or source_trader_label
+        if payload.parser_mode is not None:
+            effective_mode = payload.parser_mode
+        elif (
+            source_trader_label
+            and self._mode_resolver.trader_overrides
+            and source_trader_label in self._mode_resolver.trader_overrides
+        ):
+            effective_mode = self._mode_resolver.get_effective_parser_mode(source_trader_label)
+        else:
+            effective_mode = self._mode_resolver.get_effective_parser_mode(canonical_trader_id)
+
+        if payload.llm_provider is not None:
+            effective_llm_provider = payload.llm_provider
+        elif (
+            source_trader_label
+            and self._mode_resolver.trader_llm_provider_overrides
+            and source_trader_label in self._mode_resolver.trader_llm_provider_overrides
+        ):
+            effective_llm_provider = self._mode_resolver.get_effective_llm_provider(source_trader_label)
+        else:
+            effective_llm_provider = self._mode_resolver.get_effective_llm_provider(canonical_trader_id)
+
+        if payload.llm_model is not None:
+            effective_llm_model = payload.llm_model
+        elif (
+            source_trader_label
+            and self._mode_resolver.trader_llm_model_overrides
+            and source_trader_label in self._mode_resolver.trader_llm_model_overrides
+        ):
+            effective_llm_model = self._mode_resolver.get_effective_llm_model(source_trader_label)
+        else:
+            effective_llm_model = self._mode_resolver.get_effective_llm_model(canonical_trader_id)
 
         dispatch_payload = payload
         if (
             dispatch_payload.parser_mode != effective_mode
             or dispatch_payload.llm_provider != effective_llm_provider
             or dispatch_payload.llm_model != effective_llm_model
+            or dispatch_payload.resolved_trader_id != canonical_trader_id
         ):
             dispatch_payload = ParserInput(
                 raw_message_id=payload.raw_message_id,
                 raw_text=payload.raw_text,
                 eligibility_status=payload.eligibility_status,
                 eligibility_reason=payload.eligibility_reason,
-                resolved_trader_id=payload.resolved_trader_id,
+                resolved_trader_id=canonical_trader_id,
                 trader_resolution_method=payload.trader_resolution_method,
                 linkage_method=payload.linkage_method,
                 source_chat_id=payload.source_chat_id,
@@ -149,22 +180,23 @@ class MinimalParserPipeline:
             if "llm_unavailable" not in normalized_result.validation_warnings:
                 normalized_result.validation_warnings.append("llm_unavailable")
             normalized_result.status = "PARSED_WITH_WARNINGS"
+        metadata = dict(normalized_result.selection_metadata or {})
+        if source_trader_label is not None:
+            metadata["source_trader_label"] = source_trader_label
+        if canonical_trader_id is not None:
+            metadata["canonical_trader_id"] = canonical_trader_id
+        normalized_result.selection_metadata = metadata
 
-        legacy_message_type = _legacy_message_type(normalized_result)
-        completeness = "COMPLETE" if legacy_message_type == "NEW_SIGNAL" else "INCOMPLETE"
-        parse_status = "PARSED"
+        normalized_message_type = normalized_result.message_type or "UNCLASSIFIED"
+        completeness = _derive_completeness(normalized_result)
+        parse_status = normalized_result.status or "PARSED"
         is_executable = (
-            legacy_message_type == "NEW_SIGNAL"
-            and payload.resolved_trader_id is not None
+            normalized_message_type == "NEW_SIGNAL"
+            and canonical_trader_id is not None
             and payload.eligibility_status == "ACQUIRED_ELIGIBLE"
         )
         linkage_status = "LINKED" if payload.linkage_method else "UNLINKED"
-        if legacy_message_type in ("INFO_ONLY", "UNCLASSIFIED"):
-            linkage_status = "N/A"
-
         warnings = list(normalized_result.validation_warnings)
-        if selection_reason:
-            warnings.append(f"selection_reason={selection_reason}")
 
         now = utc_now_iso()
         return ParseResultRecord(
@@ -172,9 +204,9 @@ class MinimalParserPipeline:
             eligibility_status=payload.eligibility_status,
             eligibility_reason=payload.eligibility_reason,
             declared_trader_tag=declared_tag,
-            resolved_trader_id=payload.resolved_trader_id,
+            resolved_trader_id=canonical_trader_id,
             trader_resolution_method=payload.trader_resolution_method,
-            message_type=legacy_message_type,
+            message_type=normalized_message_type,
             parse_status=parse_status,
             completeness=completeness,
             is_executable=is_executable,
@@ -207,26 +239,41 @@ class MinimalParserPipeline:
         )
         warnings: list[str] = []
         notes_parts = [f"classified={message_type}"]
-
-        if data.resolved_trader_id == "TA":
-            ta_fields = extract_ta_fields(text=text, normalized=normalized)
-            extracted = self._merge_extracted_fields(extracted, ta_fields)
-            message_type = classify_ta_message(
-                normalized=normalized,
-                extracted=extracted,
-                has_strong_link=data.linkage_method is not None,
-                ta_fields=ta_fields,
-            )
-            notes_parts[0] = f"classified={message_type}"
-            if ta_fields.secondary_entry_raw is not None:
-                notes_parts.append(f"ta_secondary_entry={self._to_note_safe(ta_fields.secondary_entry_raw)}")
-            if ta_fields.entry_cancel_rule_raw is not None:
-                notes_parts.append(f"ta_entry_cancel_rule={self._to_note_safe(ta_fields.entry_cancel_rule_raw)}")
-            if ta_fields.intents:
-                notes_parts.append(f"ta_intents={','.join(ta_fields.intents)}")
-            if ta_fields.multi_symbol_update or ta_fields.multi_action_update:
-                warnings.append("ta complex update preserved without multi-action split")
-                notes_parts.append(f"ta_update_complex=multi_symbol:{int(ta_fields.multi_symbol_update)},update_hits:{ta_fields.update_hits}")
+        intents: list[str] = []
+        profile_entities: dict[str, object] | None = None
+        profile_target_ids: list[int] = []
+        profile_reported_results: list[dict[str, object]] = []
+        profile_confidence: float | None = None
+        profile_used = False
+        profile_code = _resolve_profile_code(data.resolved_trader_id)
+        profile_parser = get_profile_parser(profile_code) if profile_code else None
+        if profile_parser is not None:
+            try:
+                profile_result = profile_parser.parse_message(
+                    text=text,
+                    context=ParserContext(
+                        trader_code=profile_code,
+                        message_id=data.source_message_id,
+                        reply_to_message_id=data.linkage_reference_id,
+                        channel_id=data.source_chat_id,
+                        raw_text=text,
+                        extracted_links=extract_telegram_links(text),
+                        hashtags=extract_hashtags(text),
+                    ),
+                )
+                profile_used = True
+                message_type = profile_result.message_type or message_type
+                intents = list(profile_result.intents)
+                profile_entities = dict(profile_result.entities)
+                profile_target_ids = _profile_target_ids(profile_result.target_refs)
+                profile_reported_results = _normalize_profile_reported_results(profile_result.reported_results)
+                profile_confidence = profile_result.confidence
+                warnings.extend(profile_result.warnings)
+                notes_parts.append(f"profile_parser={profile_code}")
+            except Exception:
+                warnings.append(f"profile_parser_failed:{profile_code}")
+        if profile_used:
+            extracted = _apply_profile_entities_to_extracted(extracted, profile_entities)
 
         has_complete_setup = (
             extracted.symbol is not None
@@ -235,18 +282,22 @@ class MinimalParserPipeline:
             and extracted.stop_raw is not None
             and len(extracted.targets) > 0
         )
-        if message_type == "NEW_SIGNAL" and not has_complete_setup:
+        if message_type == "NEW_SIGNAL" and not has_complete_setup and not profile_used:
             message_type = "SETUP_INCOMPLETE"
             notes_parts[0] = f"classified={message_type}"
 
         if data.resolved_trader_id is None:
             warnings.append("unresolved trader")
-        if message_type == "UPDATE" and data.linkage_method is None:
-            warnings.append("update without strong link")
         if message_type == "SETUP_INCOMPLETE":
             warnings.append("missing mandatory setup fields")
+        if message_type == "UPDATE" and not intents:
+            intents = infer_update_intents_from_text(normalized)
 
-        return build_parse_result_normalized(
+        actions = map_intents_to_actions(intents)
+        if message_type == "UPDATE" and not actions:
+            actions = ["ACT_REQUEST_MANUAL_REVIEW"]
+
+        normalized_result = build_parse_result_normalized(
             message_type=message_type,
             normalized_text=normalized,
             trader_id=data.resolved_trader_id,
@@ -264,7 +315,27 @@ class MinimalParserPipeline:
             root_ref=data.linkage_reference_id,
             existing_warnings=warnings,
             notes=notes_parts,
+            intents=intents,
+            actions=actions,
+            entities=profile_entities,
         )
+        if profile_target_ids:
+            normalized_result.target_refs = _merge_unique_ints(normalized_result.target_refs, profile_target_ids)
+        if profile_reported_results:
+            normalized_result.reported_results = profile_reported_results
+        if isinstance(profile_confidence, float) and 0.0 <= profile_confidence <= 1.0:
+            normalized_result.confidence = round(profile_confidence, 4)
+        normalized_result = _refine_semantics(normalized_result)
+        # Keep a single policy for weak updates: warn and request review only when no concrete target refs.
+        if normalized_result.message_type == "UPDATE":
+            has_target_refs = bool(normalized_result.target_refs)
+            if not has_target_refs and "update without strong link" not in normalized_result.validation_warnings:
+                normalized_result.validation_warnings.append("update without strong link")
+            if not normalized_result.actions and "ACT_REQUEST_MANUAL_REVIEW" not in normalized_result.actions:
+                normalized_result.actions = [*normalized_result.actions, "ACT_REQUEST_MANUAL_REVIEW"]
+        if normalized_result.validation_warnings:
+            normalized_result.status = "PARSED_WITH_WARNINGS"
+        return normalized_result
 
     def _extract_declared_trader_tag(self, text: str) -> str | None:
         extracted = first_normalized_trader_tag(text)
@@ -304,19 +375,6 @@ class MinimalParserPipeline:
             risky_flag=any(marker in normalized for marker in _RISKY_MARKERS),
         )
 
-    def _merge_extracted_fields(self, generic: ExtractedFields, ta: "TAExtractedFields") -> ExtractedFields:
-        targets = ta.targets if ta.targets else generic.targets
-        return ExtractedFields(
-            symbol=ta.symbol or generic.symbol,
-            direction=ta.direction or generic.direction,
-            entry_raw=ta.primary_entry_raw or generic.entry_raw,
-            stop_raw=ta.stop_raw or generic.stop_raw,
-            targets=targets,
-            leverage_hint=generic.leverage_hint,
-            risk_hint=ta.risk_hint or generic.risk_hint,
-            risky_flag=generic.risky_flag,
-        )
-
     def _classify_message(
         self,
         normalized: str,
@@ -348,8 +406,17 @@ class MinimalParserPipeline:
         if has_info_update_marker and not has_strong_link and not has_update_action and setup_fields_count < 2:
             return "INFO_ONLY"
 
-        if setup_fields_count >= 2:
+        has_complete_setup = (
+            extracted.symbol is not None
+            and extracted.direction is not None
+            and extracted.entry_raw is not None
+            and extracted.stop_raw is not None
+            and bool(extracted.targets)
+        )
+        if has_complete_setup:
             return "NEW_SIGNAL"
+        if setup_fields_count >= 2:
+            return "SETUP_INCOMPLETE"
 
         if has_update_word and not has_update_action and not has_strong_link and setup_fields_count < 2:
             return "INFO_ONLY"
@@ -360,28 +427,6 @@ class MinimalParserPipeline:
         if "admin" in normalized or "stats" in normalized:
             return "INFO_ONLY"
         return "UNCLASSIFIED"
-
-    @staticmethod
-    def _to_note_safe(value: str) -> str:
-        return value.encode("unicode_escape").decode("ascii")
-
-
-def _legacy_message_type(result: ParseResultNormalized) -> str:
-    if result.message_type in {"NEW_SIGNAL", "UPDATE", "INFO_ONLY", "SETUP_INCOMPLETE", "UNCLASSIFIED"}:
-        return result.message_type
-    by_event = {
-        "NEW_SIGNAL": "NEW_SIGNAL",
-        "SETUP_INCOMPLETE": "SETUP_INCOMPLETE",
-        "INFO_ONLY": "INFO_ONLY",
-        "INVALID": "UNCLASSIFIED",
-        "UPDATE": "UPDATE",
-        "MOVE_STOP": "UPDATE",
-        "CANCEL_PENDING": "UPDATE",
-        "TAKE_PROFIT": "UPDATE",
-        "CLOSE_POSITION": "UPDATE",
-    }
-    return by_event.get(result.event_type, "UNCLASSIFIED")
-
 
 def _legacy_direction(direction: str | None) -> str | None:
     if direction == "LONG":
@@ -412,6 +457,147 @@ def _legacy_target_raw_list(take_profits: list[dict[str, object]]) -> list[str]:
         if raw:
             values.append(str(raw))
     return values
+
+
+def _derive_completeness(normalized_result: ParseResultNormalized) -> str:
+    message_type = normalized_result.message_type or "UNCLASSIFIED"
+    if message_type in {"UNCLASSIFIED", "SETUP_INCOMPLETE"}:
+        return "INCOMPLETE"
+    return "COMPLETE"
+
+
+def _refine_semantics(result: ParseResultNormalized) -> ParseResultNormalized:
+    if result.message_type == "NEW_SIGNAL":
+        if "NS_CREATE_SIGNAL" not in result.intents:
+            result.intents = [*result.intents, "NS_CREATE_SIGNAL"]
+        entities = dict(result.entities or {})
+        if entities.get("symbol") is None and result.symbol:
+            entities["symbol"] = result.symbol
+        if entities.get("side") is None and result.direction:
+            entities["side"] = result.direction
+        if entities.get("entry") is None and result.entries:
+            entries = [value.get("price") for value in result.entries if isinstance(value.get("price"), float)]
+            if entries:
+                entities["entry"] = entries
+        if entities.get("stop_loss") is None and isinstance(result.stop_loss_price, float):
+            entities["stop_loss"] = result.stop_loss_price
+        if entities.get("take_profits") is None and result.take_profit_prices:
+            entities["take_profits"] = list(result.take_profit_prices)
+        if entities.get("averaging") is None and isinstance(result.average_entry, float) and isinstance(result.entry_main, float):
+            if result.average_entry != result.entry_main:
+                entities["averaging"] = result.average_entry
+        if entities.get("entry_plan_entries") is None and result.entries:
+            entities["entry_plan_entries"] = list(result.entries)
+        if entities.get("entry_plan_type") is None and result.entry_plan_type:
+            entities["entry_plan_type"] = result.entry_plan_type
+        if entities.get("entry_structure") is None and result.entry_structure:
+            entities["entry_structure"] = result.entry_structure
+        if entities.get("has_averaging_plan") is None:
+            entities["has_averaging_plan"] = bool(result.has_averaging_plan)
+        averaging = entities.get("averaging")
+        if isinstance(averaging, (int, float)):
+            result.average_entry = float(averaging)
+        result.entities = entities
+        result.raw_entities = dict(entities)
+    else:
+        result.intents = [intent for intent in result.intents if intent != "NS_CREATE_SIGNAL"]
+    return result
+
+
+def _resolve_profile_code(resolved_trader_id: str | None) -> str | None:
+    return canonicalize_trader_code(resolved_trader_id)
+
+
+def _profile_target_ids(target_refs: list[dict[str, object]]) -> list[int]:
+    values: list[int] = []
+    for item in target_refs:
+        if not isinstance(item, dict):
+            continue
+        kind = item.get("kind")
+        ref = item.get("ref")
+        if kind in {"reply", "message_id"} and isinstance(ref, int):
+            values.append(ref)
+    return _merge_unique_ints([], values)
+
+
+def _normalize_profile_reported_results(results: list[dict[str, object]]) -> list[dict[str, object]]:
+    out: list[dict[str, object]] = []
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        symbol = item.get("symbol")
+        value = item.get("value")
+        unit = item.get("unit")
+        if isinstance(symbol, str) and isinstance(value, (int, float)) and str(unit).upper() == "R":
+            out.append({"symbol": symbol.upper(), "r_multiple": float(value)})
+    return out
+
+
+def _apply_profile_entities_to_extracted(extracted: ExtractedFields, entities: dict[str, object] | None) -> ExtractedFields:
+    if not isinstance(entities, dict):
+        return extracted
+
+    symbol = extracted.symbol
+    direction = extracted.direction
+    entry_raw = extracted.entry_raw
+    stop_raw = extracted.stop_raw
+    targets = list(extracted.targets)
+
+    raw_symbol = entities.get("symbol")
+    if isinstance(raw_symbol, str) and raw_symbol.strip():
+        profile_symbol = raw_symbol.strip().upper()
+        if symbol is None:
+            symbol = profile_symbol
+        elif profile_symbol.endswith(".P") and symbol == profile_symbol[:-2]:
+            symbol = profile_symbol
+        elif not symbol.endswith(("USDT", "USDC", "USD", "BTC", "ETH")) and profile_symbol.endswith(("USDT", "USDC", "USD", "BTC", "ETH")):
+            symbol = profile_symbol
+
+    raw_side = entities.get("side")
+    if direction is None and isinstance(raw_side, str):
+        side = raw_side.strip().upper()
+        if side == "LONG":
+            direction = "BUY"
+        elif side == "SHORT":
+            direction = "SELL"
+
+    entry = entities.get("entry")
+    if entry_raw is None and isinstance(entry, list) and entry:
+        first = entry[0]
+        if isinstance(first, (int, float)):
+            entry_raw = str(float(first))
+
+    raw_stop = entities.get("stop_loss")
+    if stop_raw is None and isinstance(raw_stop, (int, float)):
+        stop_raw = str(float(raw_stop))
+
+    raw_tps = entities.get("take_profits")
+    if not targets and isinstance(raw_tps, list):
+        normalized_targets = [str(float(value)) for value in raw_tps if isinstance(value, (int, float))]
+        if normalized_targets:
+            targets = normalized_targets
+
+    return ExtractedFields(
+        symbol=symbol,
+        direction=direction,
+        entry_raw=entry_raw,
+        stop_raw=stop_raw,
+        targets=targets,
+        leverage_hint=extracted.leverage_hint,
+        risk_hint=extracted.risk_hint,
+        risky_flag=extracted.risky_flag,
+    )
+
+
+def _merge_unique_ints(left: list[int], right: list[int]) -> list[int]:
+    out: list[int] = []
+    seen: set[int] = set()
+    for value in [*left, *right]:
+        if value in seen:
+            continue
+        seen.add(value)
+        out.append(value)
+    return out
 
 
 

@@ -8,9 +8,22 @@ Provide a clear high-level architecture aligned with current implementation:
 - backward-compatible parser persistence
 - normalized parser output for future modules
 
+Important:
+- sections 1-6 reflect the runtime path implemented today
+- sections after parse persistence describe planned downstream modules, not active runtime behavior yet
+
 ---
 
 ## High-level pipeline
+Implemented runtime flow today:
+`Telegram Message`
+-> `Trader Resolution`
+-> `Eligibility Filter`
+-> `Raw Ingestion`
+-> `Minimal Parser Pipeline`
+-> `Parse Result Persistence (Legacy + Normalized)`
+
+Target modular flow:
 `Telegram Message`
 -> `Raw Ingestion`
 -> `Eligibility Filter`
@@ -55,6 +68,10 @@ Outputs:
 ---
 
 ## 4. Intent classification and extraction
+Current implementation note:
+- the live listener currently uses a compact parser pipeline that classifies and extracts in one place
+- dedicated classifier/extractor modules exist only partially and are not the active end-to-end runtime path yet
+
 Legacy classification output (`message_type`):
 - `NEW_SIGNAL`
 - `SETUP_INCOMPLETE`
@@ -114,3 +131,7 @@ Normalized validator is non-blocking:
 3. Source chat is not effective trader identity.
 4. Updates require strong linkage before auto-apply.
 5. Legacy parse result contract remains valid while normalized schema is adopted.
+
+Runtime clarification:
+- the listener resolves effective trader before persistence so that `raw_messages.source_trader_id` is captured at ingest time
+- the current system stops after parse persistence; planner, state machine, exchange, and reconciliation are not active runtime stages yet

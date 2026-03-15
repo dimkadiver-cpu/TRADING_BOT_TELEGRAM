@@ -35,10 +35,17 @@ Questa cartella contiene la documentazione autorevole del progetto.
     Roadmap pratica di implementazione.
 
 11. `DOCUMENTATION_COHERENCE_AUDIT.md`
-    Audit di coerenza tra documentazione e stato reale del codice.
+     Audit di coerenza tra documentazione e stato reale del codice.
 
-12. `CODEX_BOOTSTRAP.md`
-    Regole operative per sviluppare con Codex senza creare caos.
+12. `IMPLEMENTATION_STATUS.md`
+13. `PARSER_RUNTIME_FLOW.md`
+    Mappa rapida tra funzionalita implementate, presenti ma non attive, e target design.
+
+13. `PROJECT_FILE_INDEX.md`
+    Snapshot dei file presenti nel progetto (indice completo aggiornato).
+
+14. `CODEX_BOOTSTRAP.md`
+     Regole operative per sviluppare con Codex senza creare caos.
 
 ## Nota
 

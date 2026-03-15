@@ -8,6 +8,11 @@ The database must preserve:
 - update linkage decisions
 - resolution decisions
 
+Implementation status:
+- `raw_messages` and `parse_results` below are implemented in current migrations
+- `signals`, `events`, `warnings`, and `trades` also exist in current migrations as legacy/H1 tables
+- `update_matches`, `trade_state_events`, and `resolution_logs` are design targets and are not created by current migrations yet
+
 ---
 
 ## Core tables
@@ -101,6 +106,11 @@ It must not be assumed from `source_chat_id` alone in a multi-trader source.
 ### `trades`
 Stores the operational trade object.
 
+Current status:
+- a `trades` table exists in `001_init.sql`
+- its actual columns differ from the target shape described below
+- current runtime does not populate or manage this table yet
+
 Minimum fields:
 - internal trade id
 - origin raw message id
@@ -127,6 +137,10 @@ Minimum fields:
 ### `update_matches`
 Stores the linkage decision for update messages.
 
+Current status:
+- not implemented in current migrations
+- documented here as target schema for future lifecycle/linking work
+
 Minimum fields:
 - internal id
 - update raw message id
@@ -147,6 +161,10 @@ A received update is not the same as an applied update.
 ### `trade_state_events`
 Stores state transition history.
 
+Current status:
+- not implemented in current migrations
+- documented here as target schema for future lifecycle work
+
 Minimum fields:
 - internal id
 - trade id
@@ -161,6 +179,10 @@ Minimum fields:
 
 ### `resolution_logs`
 Strongly recommended.
+
+Current status:
+- not implemented in current migrations
+- documented here as target schema for future planner/risk audit work
 
 Stores how final values were chosen.
 
@@ -201,12 +223,12 @@ This distinction is mandatory for correct parsing and update linkage.
 ### New signal path
 `raw_messages`
 -> `parse_results`
--> `trades`
--> `trade_state_events`
+-> optional future `trades`
+-> optional future `trade_state_events`
 
 ### Update path
 `raw_messages`
 -> `parse_results`
--> `update_matches`
--> optional trade update
--> `trade_state_events`
+-> optional future `update_matches`
+-> optional future trade update
+-> optional future `trade_state_events`

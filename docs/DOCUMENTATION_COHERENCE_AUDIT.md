@@ -1,10 +1,12 @@
 # DOCUMENTATION COHERENCE AUDIT
 
 ## Obiettivo
+
 Verificare la coerenza tra documentazione e stato reale del codice nel repository.
 
 ## Data
-Audit eseguito su branch corrente.
+
+Audit aggiornato sul branch corrente.
 
 ---
 
@@ -13,8 +15,9 @@ Audit eseguito su branch corrente.
 Stato complessivo: **parzialmente coerente**.
 
 - **Area parser + ingestion + persistenza parse**: buona coerenza.
-- **Area execution/risk/state machine/bot commands**: documentazione più avanzata dell'implementazione reale (moduli ancora TODO).
-- **Area parser_test**: piccola incoerenza operativa (README richiede un file `.env.example` non presente).
+- **Area execution/risk/state machine/bot commands**: documentazione piu avanzata dell'implementazione reale.
+- **Area DB schema**: il documento include sia tabelle gia migrate sia tabelle target future.
+- **Area parser_test**: setup documentato coerente, ma restano gap nei test TA attuali.
 
 ---
 
@@ -30,61 +33,81 @@ La documentazione descrive una pipeline che esiste davvero nel codice:
 - pipeline parser minima con output normalizzato
 - persistenza in `parse_results`
 
----
-
 ### 2) Contratto canonico eventi e normalizzazione
 **Valutazione: coerente.**
 
 I tipi evento canonici documentati sono allineati alla normalizzazione implementata:
-- `NEW_SIGNAL`, `UPDATE`, `CANCEL_PENDING`, `MOVE_STOP`, `TAKE_PROFIT`, `CLOSE_POSITION`, `INFO_ONLY`, `SETUP_INCOMPLETE`, `INVALID`.
+- `NEW_SIGNAL`
+- `UPDATE`
+- `CANCEL_PENDING`
+- `MOVE_STOP`
+- `TAKE_PROFIT`
+- `CLOSE_POSITION`
+- `INFO_ONLY`
+- `SETUP_INCOMPLETE`
+- `INVALID`
 
 Sono presenti anche validazioni non bloccanti e warning, in linea con i documenti tecnici.
 
----
-
 ### 3) Execution, risk engine, planner, state machine, bot commands
-**Valutazione: parzialmente coerente (documentazione in anticipo sul codice).**
+**Valutazione: documentazione in anticipo sul codice.**
 
-I documenti di dominio sono utili e ben strutturati, ma nel codice i moduli sono ancora placeholder/TODO:
+I documenti di dominio sono utili, ma i moduli runtime corrispondenti sono ancora placeholder o TODO:
 - `src/execution/risk_gate.py`
 - `src/execution/planner.py`
 - `src/execution/state_machine.py`
 - `src/telegram/bot.py`
+- `src/exchange/adapter.py`
 
-Quindi la documentazione va interpretata come **target design** più che come comportamento già disponibile end-to-end.
+Questi documenti vanno quindi letti come **target design** e non come comportamento gia disponibile end-to-end.
 
----
+### 4) Schema DB documentato vs migration reali
+**Valutazione: parzialmente coerente.**
 
-### 4) Harness parser_test
-**Valutazione: quasi coerente con una discrepanza puntuale.**
+Le migration reali creano:
+- `signals`
+- `events`
+- `warnings`
+- `trades`
+- `raw_messages`
+- `parse_results`
 
-`parser_test/README.md` indica di copiare `parser_test/.env.example`, ma il file non è tracciato nel repository.
+La documentazione DB descrive anche tabelle target non ancora migrate:
+- `update_matches`
+- `trade_state_events`
+- `resolution_logs`
 
-Impatto:
-- basso (gli script possono usare variabili ambiente anche senza template)
-- ma può rallentare onboarding e setup rapido.
+### 5) Harness parser_test
+**Valutazione: coerente lato setup, con gap nei test.**
+
+`parser_test/.env.example` e presente nel repository, quindi il setup documentato e eseguibile.
+Resta pero un mismatch applicativo: sul branch corrente alcuni test TA non sono verdi.
 
 ---
 
 ## Rischi residui
 
-1. **Rischio di aspettative errate operative**: chi legge `BOT_COMMANDS.md`, `RISK_ENGINE.md` o `TRADE_STATE_MACHINE.md` può assumere feature runtime non ancora implementate.
-2. **Rischio onboarding parser_test**: istruzione iniziale non eseguibile alla lettera per assenza `.env.example`.
-3. **Rischio drift documentale**: roadmap e docs architetturali possono divergere rapidamente se non aggiornati insieme ai TODO in `src/execution/*`.
+1. Chi legge i documenti execution, risk, bot o lifecycle puo assumere feature runtime non ancora implementate.
+2. Chi legge `DB_SCHEMA.md` puo assumere tabelle non ancora migrate nel database reale.
+3. La documentazione puo divergere rapidamente se non viene aggiornata insieme ai TODO dei moduli runtime.
+4. I test TA oggi segnalano un disallineamento tra comportamento atteso e comportamento reale.
 
 ---
 
 ## Follow-up consigliati
 
-1. Aggiungere etichetta chiara nei documenti execution/bot: **"Spec di progetto (non ancora implementata runtime)"**.
-2. Creare `parser_test/.env.example` minimale coerente con gli script.
-3. Introdurre un breve file `docs/IMPLEMENTATION_STATUS.md` con matrice `documentato vs implementato` per modulo.
+1. Mantenere nei documenti execution/bot la dicitura esplicita di specifica target.
+2. Mantenere `DB_SCHEMA.md` esplicito su tabelle migrate oggi vs tabelle target.
+3. Usare `docs/IMPLEMENTATION_STATUS.md` come indice rapido di stato.
+4. Decidere se correggere il parser TA o aggiornare i test per riallineare il comportamento atteso.
 
 ---
 
 ## Conclusione
-La documentazione è in gran parte utile e strutturalmente corretta, ma al momento rappresenta un mix di:
-- parti già implementate (ingestion + parser + persistenza)
-- parti ancora a livello di design (execution/risk/state machine/bot).
 
-Per evitare ambiguità operative conviene esplicitare in ogni doc se descrive **stato attuale** o **stato target**.
+La documentazione e utile e in buona parte corretta, ma descrive un mix di:
+- parti gia implementate
+- parti presenti nel repository ma non nel flusso runtime principale
+- parti ancora a livello di design target
+
+Per evitare ambiguita operative, ogni documento deve dichiarare esplicitamente se descrive stato attuale o stato target.
