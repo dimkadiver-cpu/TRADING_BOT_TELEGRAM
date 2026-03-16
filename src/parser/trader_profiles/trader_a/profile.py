@@ -189,6 +189,7 @@ class TraderAProfileParser:
             prepared=prepared,
             context=context,
             intents=intents,
+            target_refs=target_refs,
             reported_results=reported_results,
         )
         warnings = self._build_warnings(
@@ -419,6 +420,7 @@ class TraderAProfileParser:
         prepared: dict[str, Any],
         context: ParserContext,
         intents: list[str],
+        target_refs: list[dict[str, Any]],
         reported_results: list[dict[str, Any]],
     ) -> dict[str, Any]:
         normalized = str(prepared.get("normalized_text") or "")
@@ -465,7 +467,7 @@ class TraderAProfileParser:
         if "U_MARK_FILLED" in intents:
             entities["fill_state"] = "FILLED"
         if "U_CANCEL_PENDING_ORDERS" in intents:
-            entities["cancel_scope"] = "ALL_PENDING_ENTRIES"
+            entities["cancel_scope"] = self._resolve_cancel_scope(prepared=prepared, target_refs=target_refs)
         if "U_REPORT_FINAL_RESULT" in intents:
             entities["result_mode"] = "R_MULTIPLE" if reported_results else "TEXT_SUMMARY"
         _ = context
@@ -569,17 +571,39 @@ class TraderAProfileParser:
         return {}
 
     def _has_global_target_scope(self, *, prepared: dict[str, Any]) -> bool:
+        return self._resolve_global_target_scope(prepared=prepared) is not None
+
+    def _resolve_cancel_scope(self, *, prepared: dict[str, Any], target_refs: list[dict[str, Any]]) -> str:
+        if target_refs:
+            return "TARGETED"
+        global_scope = self._resolve_global_target_scope(prepared=prepared)
+        if global_scope == "ALL_LONGS":
+            return "ALL_LONG"
+        if global_scope == "ALL_SHORTS":
+            return "ALL_SHORT"
+        return "ALL_ALL"
+
+    def _resolve_global_target_scope(self, *, prepared: dict[str, Any]) -> str | None:
         normalized = str(prepared.get("normalized_text") or "")
         markers = self._rules.get("global_target_markers") if isinstance(self._rules, dict) else {}
         all_longs = _merge_markers(
             markers.get("ALL_LONGS") if isinstance(markers, dict) else None,
-            ("все лонги", "all longs"),
+            ("\u0432\u0441\u0435 \u043b\u043e\u043d\u0433\u0438", "all longs"),
         )
         all_shorts = _merge_markers(
             markers.get("ALL_SHORTS") if isinstance(markers, dict) else None,
-            ("все шорты", "всем моим оставшимся шортам", "моим шортам", "all shorts"),
+            (
+                "\u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b",
+                "\u0432\u0441\u0435\u043c \u043c\u043e\u0438\u043c \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u043c\u0441\u044f \u0448\u043e\u0440\u0442\u0430\u043c",
+                "\u043c\u043e\u0438\u043c \u0448\u043e\u0440\u0442\u0430\u043c",
+                "all shorts",
+            ),
         )
-        return _contains_any(normalized, tuple(all_longs)) or _contains_any(normalized, tuple(all_shorts))
+        if _contains_any(normalized, tuple(all_longs)):
+            return "ALL_LONGS"
+        if _contains_any(normalized, tuple(all_shorts)):
+            return "ALL_SHORTS"
+        return None
 
 
 def _as_str_list(value: Any) -> list[str]:

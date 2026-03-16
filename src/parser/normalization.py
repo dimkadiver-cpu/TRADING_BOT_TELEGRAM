@@ -657,7 +657,8 @@ def _enrich_operational_entities(
         out["fill_state"] = "FILLED"
 
     if "U_CANCEL_PENDING_ORDERS" in intents or "ACT_CANCEL_ALL_PENDING_ENTRIES" in actions:
-        out["cancel_scope"] = "ALL_PENDING_ENTRIES"
+        if not isinstance(out.get("cancel_scope"), str) or not str(out.get("cancel_scope")).strip():
+            out["cancel_scope"] = "ALL_ALL"
 
     return out
 

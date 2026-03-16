@@ -41,10 +41,28 @@ class UpdateApplierTests(unittest.TestCase):
             )
             conn.execute(
                 """
+                INSERT INTO signals(
+                  attempt_key, env, channel_id, root_telegram_id, trader_id, trader_prefix,
+                  trader_signal_id, symbol, side, entry_json, sl, tp_json, status, confidence, raw_text, created_at, updated_at
+                ) VALUES ('atk2', 'T', '-1001', '102', 'TA', 'TA', 102, 'ETHUSDT', 'SELL', ?, 2300.0, ?, 'ACTIVE', 0.9, 'seed', ?, ?)
+                """,
+                (json.dumps([2200.0]), json.dumps([2100.0]), now, now),
+            )
+            conn.execute(
+                """
                 INSERT INTO trades(
                   env, attempt_key, trader_id, symbol, side, execution_mode, state,
                   entry_zone_policy, non_chase_policy, opened_at, meta_json, created_at, updated_at
                 ) VALUES ('T', 'atk1', 'TA', 'BTCUSDT', 'BUY', 'PAPER', 'OPEN', 'Z1', 'NI3', ?, '{}', ?, ?)
+                """,
+                (now, now, now),
+            )
+            conn.execute(
+                """
+                INSERT INTO trades(
+                  env, attempt_key, trader_id, symbol, side, execution_mode, state,
+                  entry_zone_policy, non_chase_policy, opened_at, meta_json, created_at, updated_at
+                ) VALUES ('T', 'atk2', 'TA', 'ETHUSDT', 'SELL', 'PAPER', 'OPEN', 'Z1', 'NI3', ?, '{}', ?, ?)
                 """,
                 (now, now, now),
             )
@@ -56,9 +74,12 @@ class UpdateApplierTests(unittest.TestCase):
                 ) VALUES
                 ('T', 'atk1', 'BTCUSDT', 'BUY', 'LIMIT', 'ENTRY', 0, 1.0, 100.0, NULL, 0, 'coid-entry-1', NULL, 'NEW', ?, ?),
                 ('T', 'atk1', 'BTCUSDT', 'SELL', 'STOP', 'SL', 0, 1.0, NULL, 90.0, 1, 'coid-sl-1', NULL, 'NEW', ?, ?),
-                ('T', 'atk1', 'BTCUSDT', 'SELL', 'LIMIT', 'TP', 0, 1.0, 110.0, NULL, 1, 'coid-tp-1', NULL, 'NEW', ?, ?)
+                ('T', 'atk1', 'BTCUSDT', 'SELL', 'LIMIT', 'TP', 0, 1.0, 110.0, NULL, 1, 'coid-tp-1', NULL, 'NEW', ?, ?),
+                ('T', 'atk2', 'ETHUSDT', 'SELL', 'LIMIT', 'ENTRY', 0, 1.0, 2200.0, NULL, 0, 'coid-entry-2', NULL, 'NEW', ?, ?),
+                ('T', 'atk2', 'ETHUSDT', 'BUY', 'STOP', 'SL', 0, 1.0, NULL, 2300.0, 1, 'coid-sl-2', NULL, 'NEW', ?, ?),
+                ('T', 'atk2', 'ETHUSDT', 'BUY', 'LIMIT', 'TP', 0, 1.0, 2100.0, NULL, 1, 'coid-tp-2', NULL, 'NEW', ?, ?)
                 """,
-                (now, now, now, now, now, now),
+                (now, now, now, now, now, now, now, now, now, now, now, now),
             )
             conn.execute(
                 """
@@ -96,7 +117,7 @@ class UpdateApplierTests(unittest.TestCase):
             {
                 "message_type": "UPDATE",
                 "actions": ["ACT_CANCEL_ALL_PENDING_ENTRIES"],
-                "entities": {"cancel_scope": "ALL_PENDING_ENTRIES"},
+                "entities": {"cancel_scope": "ALL_ALL"},
                 "target_refs": [101],
             }
         )
@@ -107,6 +128,27 @@ class UpdateApplierTests(unittest.TestCase):
                 "SELECT status FROM orders WHERE attempt_key='atk1' AND purpose='ENTRY'"
             ).fetchone()[0]
         self.assertEqual(status, "CANCELLED")
+
+    def test_cancel_pending_all_short_entries_by_trader_scope(self) -> None:
+        plan = build_update_plan(
+            {
+                "message_type": "UPDATE",
+                "actions": ["ACT_CANCEL_ALL_PENDING_ENTRIES"],
+                "entities": {"cancel_scope": "ALL_SHORT"},
+                "target_refs": [],
+            }
+        )
+        result = apply_update_plan(plan, self.db_path, trader_id="TA")
+        self.assertFalse(result.errors)
+        with sqlite3.connect(self.db_path) as conn:
+            long_entry = conn.execute(
+                "SELECT status FROM orders WHERE attempt_key='atk1' AND purpose='ENTRY'"
+            ).fetchone()[0]
+            short_entry = conn.execute(
+                "SELECT status FROM orders WHERE attempt_key='atk2' AND purpose='ENTRY'"
+            ).fetchone()[0]
+        self.assertEqual(long_entry, "NEW")
+        self.assertEqual(short_entry, "CANCELLED")
 
     def test_close_full_updates_trade(self) -> None:
         plan = build_update_plan(
