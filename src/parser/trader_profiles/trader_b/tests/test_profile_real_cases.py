@@ -103,6 +103,15 @@ class TraderBProfileRealCasesTests(unittest.TestCase):
         self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
         self.assertEqual(result.entities.get("cancel_scope"), "ALL_PENDING_ENTRIES")
 
+
+    def test_update_with_telegram_link_extracts_targets(self) -> None:
+        text = "Закрыта вручную https://t.me/c/123/456"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn({"kind": "telegram_link", "ref": "https://t.me/c/123/456"}, result.target_refs)
+        self.assertIn({"kind": "message_id", "ref": 456}, result.target_refs)
+        self.assertNotIn("trader_b_update_missing_target", result.warnings)
+
     def test_missing_target_warning_when_update_without_reply_link_symbol(self) -> None:
         text = "Закрыта вручную"
         result = self.parser.parse_message(text, _context(text=text))
