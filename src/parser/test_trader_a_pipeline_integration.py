@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import unittest
 
+from src.parser.intent_action_map import build_actions_structured, derive_primary_intent
 from src.parser.pipeline import MinimalParserPipeline, ParserInput
 
 
@@ -258,6 +259,121 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertIn(normalized.get("target_scope", {}).get("scope"), {"ALL_SHORTS", "GLOBAL"})
         self.assertTrue(normalized.get("linking", {}).get("targeted"))
         self.assertIn(normalized.get("linking", {}).get("strategy"), {"global_scope", "reply_or_link"})
+
+    def test_v2_diagnostics_fallbacks_present_and_false_when_semantics_already_present(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9011,
+            raw_text="tp hit move stop to be",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="UNKNOWN",
+            trader_resolution_method="tag",
+            linkage_method="direct_reply",
+            source_chat_id="-100123",
+            source_message_id=911,
+            linkage_reference_id=500,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        fallbacks = normalized.get("diagnostics", {}).get("v2_fallbacks_used", {})
+        self.assertIsInstance(fallbacks, dict)
+        self.assertFalse(fallbacks.get("actions_structured"))
+        self.assertFalse(fallbacks.get("target_scope"))
+        self.assertFalse(fallbacks.get("risk_plan"))
+        self.assertFalse(fallbacks.get("results_v2"))
+
+    def test_v2_diagnostics_fallbacks_true_for_profile_only_reported_results_rr(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9012,
+            raw_text=(
+                "BTCUSDT - 1.2RR"
+            ),
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="trader_a",
+            trader_resolution_method="tag",
+            linkage_method=None,
+            source_chat_id="-100123",
+            source_message_id=912,
+            linkage_reference_id=None,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertTrue(normalized.get("reported_results"))
+        self.assertTrue(normalized.get("results_v2"))
+        fallbacks = normalized.get("diagnostics", {}).get("v2_fallbacks_used", {})
+        self.assertTrue(fallbacks.get("results_v2"))
+
+    def test_primary_intent_uses_canonical_shared_derivation_contract(self) -> None:
+        # Shared derivation should prefer known update intents over unknown leading noise.
+        derived = derive_primary_intent(["NOISE", "U_TP_HIT", "U_MOVE_STOP_TO_BE"])
+        self.assertEqual(derived, "U_TP_HIT")
+
+        # Pipeline output follows the same canonical derivation path.
+        payload = ParserInput(
+            raw_message_id=9013,
+            raw_text="1 тейк, стоп в бу",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="trader_a",
+            trader_resolution_method="tag",
+            linkage_method="direct_reply",
+            source_chat_id="-100123",
+            source_message_id=913,
+            linkage_reference_id=500,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+        self.assertTrue(normalized.get("primary_intent"))
+        self.assertEqual(normalized.get("primary_intent"), derive_primary_intent(normalized.get("intents", [])))
+
+    def test_structured_multi_action_output_and_applies_to_shape(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9014,
+            raw_text="tp hit move stop to be",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="UNKNOWN",
+            trader_resolution_method="tag",
+            linkage_method="direct_reply",
+            source_chat_id="-100123",
+            source_message_id=914,
+            linkage_reference_id=500,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertEqual(normalized.get("message_class"), "UPDATE")
+        actions_structured = normalized.get("actions_structured", [])
+        self.assertGreaterEqual(len(actions_structured), 2)
+        action_types = {item.get("action_type") for item in actions_structured}
+        self.assertIn("MOVE_STOP_TO_BE", action_types)
+        self.assertIn("TP_HIT", action_types)
+        for item in actions_structured:
+            applies_to = item.get("applies_to")
+            self.assertIsInstance(applies_to, dict)
+            self.assertIn("scope_type", applies_to)
+            self.assertIn("scope_value", applies_to)
+            self.assertEqual(applies_to.get("scope_type"), "signal")
+
+    def test_applies_to_normalization_for_global_scope_and_unknown_scope(self) -> None:
+        global_actions = build_actions_structured(
+            intents=["U_CLOSE_FULL"],
+            entities={"close_scope": "ALL_SHORTS"},
+            raw_text="все шорты закрываю",
+            target_scope={"kind": "portfolio_side", "scope": "ALL_SHORTS"},
+        )
+        self.assertEqual(global_actions[0]["applies_to"], {"scope_type": "close_scope", "scope_value": "ALL_SHORTS"})
+
+        unknown_actions = build_actions_structured(
+            intents=["U_TP_HIT"],
+            entities={},
+            raw_text="tp hit",
+            target_scope=None,
+        )
+        self.assertEqual(unknown_actions[0]["applies_to"], {"scope_type": None, "scope_value": None})
 
 
 

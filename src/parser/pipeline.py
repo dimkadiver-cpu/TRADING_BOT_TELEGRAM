@@ -9,7 +9,7 @@ import re
 from src.core.trader_tags import first_normalized_trader_tag, normalize_trader_aliases
 from src.core.timeutils import utc_now_iso
 from src.parser.dispatcher import ParserDispatcher
-from src.parser.intent_action_map import infer_update_intents_from_text, map_intents_to_actions
+from src.parser.intent_action_map import derive_primary_intent, infer_update_intents_from_text, map_intents_to_actions
 from src.parser.llm_adapter import LLMInvalidResponse, LLMNotConfigured, LLMParseError, LLMRequestFailed
 from src.parser.normalization import ParseResultNormalized, build_parse_result_normalized
 from src.parser.parser_config import ParserModeResolver
@@ -440,14 +440,15 @@ class MinimalParserPipeline:
 
 
 
-def _derive_primary_intent_from_intents(intents: list[str]) -> str | None:
-    for intent in intents:
-        if isinstance(intent, str) and intent.startswith("NS_"):
-            return intent
-    for intent in intents:
-        if isinstance(intent, str) and intent.startswith("U_"):
-            return intent
-    return next((intent for intent in intents if isinstance(intent, str) and intent), None)
+def _is_meaningful_v2_field(value: object) -> bool:
+    if value is None:
+        return False
+    if isinstance(value, str):
+        return bool(value.strip())
+    if isinstance(value, (list, tuple, set, dict)):
+        return len(value) > 0
+    return True
+
 
 def _enrich_v2_semantics(
     normalized_result: ParseResultNormalized,
@@ -458,14 +459,28 @@ def _enrich_v2_semantics(
     if not normalized_result.message_class:
         normalized_result.message_class = normalized_result.message_type
     if not normalized_result.primary_intent:
-        normalized_result.primary_intent = _derive_primary_intent_from_intents(normalized_result.intents)
-    if not normalized_result.actions_structured:
+        normalized_result.primary_intent = derive_primary_intent(normalized_result.intents)
+
+    v2_fallbacks_used = {
+        "actions_structured": False,
+        "instrument_obj": False,
+        "position_obj": False,
+        "entry_plan": False,
+        "risk_plan": False,
+        "results_v2": False,
+        "target_scope": False,
+        "linking": False,
+    }
+
+    if not _is_meaningful_v2_field(normalized_result.actions_structured):
+        v2_fallbacks_used["actions_structured"] = True
         normalized_result.actions_structured = [
             {"action": action, "kind": "legacy_action"}
             for action in normalized_result.actions
             if isinstance(action, str) and action
         ]
-    if not normalized_result.instrument_obj:
+    if not _is_meaningful_v2_field(normalized_result.instrument_obj):
+        v2_fallbacks_used["instrument_obj"] = True
         normalized_result.instrument_obj = {
             "symbol": normalized_result.instrument,
             "symbol_raw": normalized_result.instrument,
@@ -474,7 +489,8 @@ def _enrich_v2_semantics(
             "market_type": normalized_result.market_type,
             "exchange_hint": None,
         }
-    if not normalized_result.position_obj:
+    if not _is_meaningful_v2_field(normalized_result.position_obj):
+        v2_fallbacks_used["position_obj"] = True
         normalized_result.position_obj = {
             "side": normalized_result.side,
             "direction": normalized_result.side,
@@ -483,14 +499,16 @@ def _enrich_v2_semantics(
             "entry_structure": normalized_result.entry_structure,
             "has_averaging_plan": normalized_result.has_averaging_plan,
         }
-    if not normalized_result.entry_plan:
+    if not _is_meaningful_v2_field(normalized_result.entry_plan):
+        v2_fallbacks_used["entry_plan"] = True
         normalized_result.entry_plan = {
             "entries": list(normalized_result.entries),
             "entry_plan_type": normalized_result.entry_plan_type,
             "entry_structure": normalized_result.entry_structure,
             "has_averaging_plan": normalized_result.has_averaging_plan,
         }
-    if not normalized_result.risk_plan:
+    if not _is_meaningful_v2_field(normalized_result.risk_plan):
+        v2_fallbacks_used["risk_plan"] = True
         normalized_result.risk_plan = {
             "stop_loss": normalized_result.stop_loss,
             "take_profits": normalized_result.take_profits,
@@ -498,7 +516,8 @@ def _enrich_v2_semantics(
             "risk_hint": normalized_result.entities.get("risk_hint") if isinstance(normalized_result.entities, dict) else None,
             "risk_percent": normalized_result.entities.get("risk_percent") if isinstance(normalized_result.entities, dict) else None,
         }
-    if not normalized_result.results_v2 and normalized_result.reported_results:
+    if not _is_meaningful_v2_field(normalized_result.results_v2) and normalized_result.reported_results:
+        v2_fallbacks_used["results_v2"] = True
         normalized_result.results_v2 = [
             {
                 "symbol": item.get("symbol"),
@@ -511,14 +530,16 @@ def _enrich_v2_semantics(
             for item in normalized_result.reported_results
             if isinstance(item, dict)
         ]
-    if not normalized_result.target_scope:
+    if not _is_meaningful_v2_field(normalized_result.target_scope):
+        v2_fallbacks_used["target_scope"] = True
         normalized_result.target_scope = {
             "kind": "signal",
             "scope": "single" if normalized_result.target_refs else "unknown",
             "target_refs": list(normalized_result.target_refs),
             "root_ref": normalized_result.root_ref,
         }
-    if not normalized_result.linking:
+    if not _is_meaningful_v2_field(normalized_result.linking):
+        v2_fallbacks_used["linking"] = True
         normalized_result.linking = {
             "targeted": bool(normalized_result.target_refs or normalized_result.root_ref is not None),
             "target_refs_count": len(normalized_result.target_refs),
@@ -531,6 +552,7 @@ def _enrich_v2_semantics(
             "has_warnings": bool(normalized_result.validation_warnings),
             "warning_count": len(normalized_result.validation_warnings),
         }
+    normalized_result.diagnostics["v2_fallbacks_used"] = v2_fallbacks_used
 
     if not isinstance(profile_v2_fields, dict):
         return normalized_result

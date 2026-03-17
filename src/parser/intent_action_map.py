@@ -128,14 +128,30 @@ def _extract_result_unit(entities: dict[str, Any]) -> str | None:
     return None
 
 
-def _extract_applies_to(entities: dict[str, Any], target_scope: dict[str, Any]) -> str | None:
+def _extract_applies_to(entities: dict[str, Any], target_scope: dict[str, Any]) -> dict[str, Any]:
+    default = {"scope_type": None, "scope_value": None}
+
     close_scope = entities.get("close_scope")
     if isinstance(close_scope, str) and close_scope.strip():
-        return close_scope.strip().upper()
-    scope = target_scope.get("scope")
-    if isinstance(scope, str) and scope.strip():
-        return scope.strip().upper()
-    return None
+        return {"scope_type": "close_scope", "scope_value": close_scope.strip().upper()}
+
+    if isinstance(target_scope, dict) and target_scope:
+        if "scope_type" in target_scope or "scope_value" in target_scope:
+            return {
+                "scope_type": target_scope.get("scope_type"),
+                "scope_value": target_scope.get("scope_value"),
+            }
+        kind = target_scope.get("kind")
+        scope = target_scope.get("scope")
+        if kind is not None or scope is not None:
+            return {
+                "scope_type": str(kind) if kind is not None else None,
+                "scope_value": scope,
+            }
+        if "target_entry_id" in target_scope and target_scope.get("target_entry_id") is not None:
+            return {"scope_type": "entry", "scope_value": target_scope.get("target_entry_id")}
+
+    return default
 
 
 def _extract_raw_fragment(*, intent: str, raw_text: str) -> str | None:

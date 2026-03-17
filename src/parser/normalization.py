@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 import re
 from typing import Any
 
+from src.parser.intent_action_map import build_actions_structured, derive_primary_intent
+
 _CANONICAL_EVENT_TYPES = {
     "NEW_SIGNAL",
     "UPDATE",
@@ -378,14 +380,13 @@ def _derive_v2_fields(
     parse_status: str,
 ) -> dict[str, Any]:
     message_class = _derive_message_class(message_type=message_type)
-    primary_intent = _derive_primary_intent(intents)
+    primary_intent = derive_primary_intent(intents)
     target_scope = _derive_target_scope(entities=entities, target_refs=target_refs, root_ref=root_ref, raw_text=raw_text)
-    actions_structured = _build_actions_structured(
+    actions_structured = build_actions_structured(
         intents=intents,
         entities=entities,
         raw_text=raw_text,
         target_scope=target_scope,
-        legacy_actions=actions,
     )
     base_asset, quote_asset = _split_symbol_assets(instrument)
     instrument_obj = {
@@ -450,55 +451,6 @@ def _derive_message_class(*, message_type: str | None) -> str | None:
     return None
 
 
-def _derive_primary_intent(intents: list[str]) -> str | None:
-    for intent in intents:
-        if isinstance(intent, str) and intent.startswith("NS_"):
-            return intent
-    for intent in intents:
-        if isinstance(intent, str) and intent.startswith("U_"):
-            return intent
-    for intent in intents:
-        if isinstance(intent, str) and intent.strip():
-            return intent
-    return None
-
-
-def _build_actions_structured(
-    *,
-    intents: list[str],
-    entities: dict[str, Any],
-    raw_text: str,
-    target_scope: dict[str, Any],
-    legacy_actions: list[str],
-) -> list[dict[str, Any]]:
-    actions: list[dict[str, Any]] = []
-    for intent in intents:
-        if intent == "NS_CREATE_SIGNAL":
-            actions.append({"action": "CREATE_SIGNAL"})
-        elif intent == "U_MOVE_STOP_TO_BE":
-            actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
-        elif intent == "U_MOVE_STOP":
-            actions.append({"action": "MOVE_STOP", "new_stop_level": entities.get("new_stop_level")})
-        elif intent == "U_CLOSE_PARTIAL":
-            actions.append({"action": "CLOSE_POSITION", "scope": "PARTIAL", "close_fraction": entities.get("close_fraction")})
-        elif intent == "U_CLOSE_FULL":
-            actions.append({"action": "CLOSE_POSITION", "scope": entities.get("close_scope", "FULL")})
-        elif intent == "U_TP_HIT":
-            actions.append({"action": "TAKE_PROFIT", "target": entities.get("hit_target", "TP")})
-        elif intent == "U_STOP_HIT":
-            actions.append({"action": "CLOSE_POSITION", "target": "STOP"})
-        elif intent == "U_CANCEL_PENDING_ORDERS":
-            actions.append({"action": "CANCEL_PENDING", "scope": entities.get("cancel_scope", "ALL_PENDING_ENTRIES")})
-        elif intent == "U_MARK_FILLED":
-            actions.append({"action": "MARK_FILLED", "fill_state": entities.get("fill_state", "FILLED")})
-        elif intent == "U_REPORT_FINAL_RESULT":
-            actions.append({"action": "REPORT_RESULT", "mode": entities.get("result_mode", "TEXT_SUMMARY")})
-    if not actions:
-        actions = [{"action": action, "kind": "legacy_action"} for action in legacy_actions if isinstance(action, str) and action]
-    for item in actions:
-        item.setdefault("target_scope", target_scope)
-        item.setdefault("raw_fragment", raw_text[:160])
-    return actions
 
 
 def _split_symbol_assets(symbol: str | None) -> tuple[str | None, str | None]:
