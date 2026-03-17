@@ -26,6 +26,12 @@ class TraderParseResult:
     reported_results: list[dict[str, Any]] = field(default_factory=list)
     warnings: list[str] = field(default_factory=list)
     confidence: float = 0.0
+    # v2 semantic envelope (additive, backward compatible)
+    primary_intent: str | None = None
+    actions_structured: list[dict[str, Any]] = field(default_factory=list)
+    target_scope: dict[str, Any] = field(default_factory=dict)
+    linking: dict[str, Any] = field(default_factory=dict)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
 class TraderProfileParser(Protocol):
