@@ -1,0 +1,205 @@
+{
+  "total_messages": 398,
+  "distribution": {
+    "message_class": {
+      "INFO_ONLY": 21,
+      "NEW_SIGNAL": 290,
+      "UNCLASSIFIED": 28,
+      "UPDATE": 58,
+      "SETUP_INCOMPLETE": 1
+    },
+    "primary_intent_top": [
+      [
+        "NS_CREATE_SIGNAL",
+        291
+      ],
+      [
+        "U_MOVE_STOP_TO_BE",
+        26
+      ],
+      [
+        "U_CLOSE_FULL",
+        17
+      ],
+      [
+        "U_TP_HIT",
+        10
+      ],
+      [
+        "U_CANCEL_PENDING_ORDERS",
+        7
+      ],
+      [
+        "U_STOP_HIT",
+        5
+      ],
+      [
+        "U_REPORT_FINAL_RESULT",
+        3
+      ],
+      [
+        "U_MARK_FILLED",
+        2
+      ]
+    ]
+  },
+  "v2_population_quality": {
+    "primary_intent_populated": {
+      "count": 361,
+      "pct": 90.7
+    },
+    "actions_structured_non_empty": {
+      "count": 361,
+      "pct": 90.7
+    },
+    "target_scope_populated": {
+      "count": 398,
+      "pct": 100.0
+    },
+    "results_v2_populated": {
+      "count": 8,
+      "pct": 2.01
+    },
+    "new_signal_entry_plan_entries": {
+      "count": 290,
+      "pct": 100.0
+    },
+    "new_signal_risk_plan_stop_loss": {
+      "count": 290,
+      "pct": 100.0
+    },
+    "new_signal_risk_plan_take_profits": {
+      "count": 290,
+      "pct": 100.0
+    }
+  },
+  "v2_fallback_observability": {
+    "actions_structured": {
+      "count": 327,
+      "pct": 82.16
+    },
+    "instrument_obj": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "position_obj": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "entry_plan": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "risk_plan": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "results_v2": {
+      "count": 1,
+      "pct": 0.25
+    },
+    "target_scope": {
+      "count": 0,
+      "pct": 0.0
+    },
+    "linking": {
+      "count": 0,
+      "pct": 0.0
+    }
+  },
+  "update_quality": {
+    "total_updates": 58,
+    "with_primary_intent": {
+      "count": 58,
+      "pct": 100.0
+    },
+    "with_actions_structured": {
+      "count": 58,
+      "pct": 100.0
+    },
+    "avg_actions_structured": 1.9828,
+    "top_action_types": [
+      [
+        "MOVE_STOP",
+        46
+      ],
+      [
+        "TAKE_PROFIT",
+        27
+      ],
+      [
+        "CLOSE_POSITION",
+        24
+      ],
+      [
+        "CANCEL_PENDING",
+        10
+      ],
+      [
+        "REPORT_RESULT",
+        5
+      ],
+      [
+        "MARK_FILLED",
+        3
+      ]
+    ],
+    "applies_to_dict_shape": {
+      "count": 0,
+      "pct": 0.0
+    }
+  },
+  "new_signal_quality": {
+    "total_new_signal": 290,
+    "instrument_symbol": {
+      "count": 290,
+      "pct": 100.0
+    },
+    "position_side": {
+      "count": 290,
+      "pct": 100.0
+    },
+    "entry_plan_entries": {
+      "count": 290,
+      "pct": 100.0
+    },
+    "risk_plan_stop_loss": {
+      "count": 290,
+      "pct": 100.0
+    },
+    "risk_plan_take_profits": {
+      "count": 290,
+      "pct": 100.0
+    }
+  },
+  "results_quality": {
+    "total_candidates": 11,
+    "with_results_v2": {
+      "count": 8,
+      "pct": 72.73
+    },
+    "top_units": [
+      [
+        "R",
+        38
+      ]
+    ],
+    "direction_populated_pct": 0.0,
+    "raw_fragment_populated_pct": 92.11
+  },
+  "samples": {
+    "update_without_primary_intent": [],
+    "update_empty_actions_structured": [],
+    "new_signal_without_entry_plan_entries": [],
+    "target_scope_fallback_used": [],
+    "results_v2_fallback_used": [
+      {
+        "message_id": 1804,
+        "message_class": "UPDATE",
+        "primary_intent": "U_CLOSE_FULL",
+        "warnings": [],
+        "raw_text": "[trader#A]\n\n\nhttps://t.me/c/3171748254/1685 MOVR\nhttps://t.me/c/3171748254/1738 CYBER\nhttps://t.me/c/3171748254/1706 ZEC\n\nзакрываю по текущим ценам\nMOVR - 1.35RR\nCYBER - 1.37RR\nZEC - 1.43RR"
+      }
+    ]
+  }
+}

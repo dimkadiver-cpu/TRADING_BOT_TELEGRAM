@@ -4,12 +4,10 @@ from __future__ import annotations
 
 import re
 
+from src.parser.text_utils import normalize_text
+
 _LINK_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/\d+", re.IGNORECASE)
 _HASHTAG_RE = re.compile(r"#([A-Za-z0-9_]{2,64})")
-
-
-def normalize_text(text: str) -> str:
-    return (text or "").strip().lower()
 
 
 def split_lines(text: str) -> list[str]:

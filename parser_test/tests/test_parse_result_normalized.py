@@ -1,9 +1,10 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 import json
 import unittest
 
 from src.parser.pipeline import MinimalParserPipeline, ParserInput
+from src.parser.text_utils import normalize_text
 
 
 class ParseResultNormalizedTests(unittest.TestCase):
@@ -16,7 +17,7 @@ class ParseResultNormalizedTests(unittest.TestCase):
             raw_text="BTCUSDT long entry 90000-90100 sl 89500 tp1 91000 tp2 92000",
             eligibility_status="ACQUIRED_ELIGIBLE",
             eligibility_reason="eligible",
-            resolved_trader_id="TB",
+            resolved_trader_id="TA",
             trader_resolution_method="tag",
             linkage_method=None,
             source_chat_id="-100123",
@@ -45,7 +46,7 @@ class ParseResultNormalizedTests(unittest.TestCase):
             raw_text="move sl to breakeven and cancel pending orders https://t.me/c/123/265",
             eligibility_status="ACQUIRED_ELIGIBLE",
             eligibility_reason="eligible",
-            resolved_trader_id="TB",
+            resolved_trader_id="TA",
             trader_resolution_method="tag",
             linkage_method="direct_reply",
             source_chat_id="-100123",
@@ -64,7 +65,7 @@ class ParseResultNormalizedTests(unittest.TestCase):
         self.assertEqual(normalized.get("event_type"), "UPDATE")
         self.assertIn("entities", normalized)
         self.assertEqual(normalized.get("entities", {}).get("new_stop_level"), "ENTRY")
-        self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "ALL_PENDING_ENTRIES")
+        self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "TARGETED")
         self.assertEqual(sorted(normalized.get("target_refs", [])), [265, 266])
         self.assertEqual(normalized.get("validation_warnings", []), [])
 
@@ -74,7 +75,7 @@ class ParseResultNormalizedTests(unittest.TestCase):
             raw_text="weekly update BTC - 1.2R DOGE - -0.4R",
             eligibility_status="ACQUIRED_ELIGIBLE",
             eligibility_reason="eligible",
-            resolved_trader_id="TB",
+            resolved_trader_id="TA",
             trader_resolution_method="tag",
             linkage_method=None,
             source_chat_id="-100123",
@@ -129,6 +130,42 @@ class ParseResultNormalizedTests(unittest.TestCase):
         self.assertEqual(normalized.get("entry_main"), 0.1882)
         self.assertEqual(normalized.get("average_entry"), 0.19)
 
+    def test_market_entry_without_price_keeps_primary_market_entry(self) -> None:
+        payload = ParserInput(
+            raw_message_id=5,
+            raw_text=(
+                "BTCUSDT SHORT\n"
+                "вход с текущих\n"
+                "SL: 101000\n"
+                "TP1: 98000"
+            ),
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="TA",
+            trader_resolution_method="tag",
+            linkage_method=None,
+            source_chat_id="-100123",
+            source_message_id=101,
+            linkage_reference_id=None,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertEqual(normalized.get("message_type"), "NEW_SIGNAL")
+        self.assertEqual(normalized.get("entry_mode"), "MARKET")
+        self.assertIsNone(normalized.get("entry_main"))
+        self.assertEqual(normalized.get("average_entry"), None)
+        self.assertEqual(normalized.get("entry_plan_type"), "SINGLE_MARKET")
+        self.assertEqual(normalized.get("entry_structure"), "SINGLE")
+        self.assertEqual(normalized.get("entries")[0].get("order_type"), "MARKET")
+        self.assertIsNone(normalized.get("entries")[0].get("price"))
+
+    def test_normalize_text_collapses_inner_whitespace(self) -> None:
+        self.assertEqual(normalize_text("  Вход   с \n текущих \t:  1.23 "), "вход с текущих : 1.23")
+
 
 if __name__ == "__main__":
     unittest.main()
+
+
+

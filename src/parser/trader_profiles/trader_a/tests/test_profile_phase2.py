@@ -60,6 +60,12 @@ class TraderAProfilePhase2IntentTests(unittest.TestCase):
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_STOP_HIT", result.intents)
 
+    def test_stop_hit_intent_with_russian_spacing_variant(self) -> None:
+        text = "Очень не приятный стоп."
+        result = self.parser.parse_message(text, _context(text=text, reply_to=605))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_STOP_HIT", result.intents)
+
     def test_mark_filled_intent(self) -> None:
         text = "entry filled now"
         result = self.parser.parse_message(text, _context(text=text, reply_to=606))
@@ -70,6 +76,33 @@ class TraderAProfilePhase2IntentTests(unittest.TestCase):
         text = "Final result BTCUSDT - 1.2R ETHUSDT - -0.3R"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+
+    def test_passive_closure_reports_are_info_only(self) -> None:
+        text = "После первого тейка, цена вернулась на точку входа и закрылась в безубыток. Сетап полностью закрыт."
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "INFO_ONLY")
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertNotIn("U_CLOSE_FULL", result.intents)
+
+        text2 = "Все тейки, сделка закрыта"
+        result2 = self.parser.parse_message(text2, _context(text=text2))
+        self.assertEqual(result2.message_type, "INFO_ONLY")
+        self.assertIn("U_REPORT_FINAL_RESULT", result2.intents)
+        self.assertNotIn("U_CLOSE_FULL", result2.intents)
+
+    def test_fix_profit_with_links_is_update(self) -> None:
+        text = (
+            "хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам\n"
+            "https://t.me/c/3171748254/2361 https://t.me/c/3171748254/2359 "
+            "https://t.me/c/3171748254/2275 https://t.me/c/3171748254/2261\n"
+            "результаты в RR дополню этот пост  fart - 0.38R ldo - 0.14R zil - 0.32R haedal - 0.91R"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(len(result.target_refs), 8)
+        self.assertEqual(sum(1 for item in result.target_refs if item.get("kind") == "message_id"), 4)
+        self.assertEqual(len(result.reported_results), 4)
 
     def test_multi_intent_update(self) -> None:
         text = "move stop to be and cancel pending orders"

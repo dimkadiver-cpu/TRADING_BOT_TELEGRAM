@@ -33,6 +33,20 @@ class TraderAProfilePhase1Tests(unittest.TestCase):
         self.assertEqual(result.entities.get("stop_loss"), 61000.0)
         self.assertEqual(result.entities.get("take_profits"), [63000.0, 64000.0])
 
+    def test_new_signal_with_auto_entry_invalidation_condition(self) -> None:
+        text = (
+            "#DOGEUSDT \u0428\u043e\u0440\u0442 (\u0432\u0445\u043e\u0434 \u043b\u0438\u043c\u0438\u0442\u043a\u043e\u0439)\n\n"
+            "Отмена входа: если 15m закрепится выше 0,10570 или цена уйдёт к 0,10230 без ретеста лимитки\n\n"
+            "SL: 0,10676\nTP1: 0,10354\nTP2: 0,10230\nTP3: 0,10120"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertIn("NS_CREATE_SIGNAL", result.intents)
+        self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
+        self.assertIn("U_INVALIDATE_SETUP", result.intents)
+        self.assertEqual(result.entities.get("setup_invalidation"), "если 15m закрепится выше 0,10570 или цена уйдёт к 0,10230 без ретеста лимитки")
+        self.assertEqual(result.actions_structured[0].get("setup_invalidation"), result.entities.get("setup_invalidation"))
+
     def test_update_with_reply_classification(self) -> None:
         text = "move stop to breakeven"
         result = self.parser.parse_message(text, _context(text=text, reply_to=555))

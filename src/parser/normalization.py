@@ -269,6 +269,11 @@ def build_parse_result_normalized(
     notes_out = _build_notes(notes=notes, raw_text=raw_text, semantic_message_type=semantic_message_type, reported_results=reported_results)
 
     entry_prices = [value.get("price") for value in semantic_entries if isinstance(value.get("price"), float)]
+    primary_entry_prices = [
+        value.get("price")
+        for value in semantic_entries
+        if str(value.get("role") or "").upper() == "PRIMARY" and isinstance(value.get("price"), float)
+    ]
     averaging_price = _extract_averaging_price(semantic_entries)
     entry_plan_type = _infer_entry_plan_type(semantic_entries)
     entry_structure = _infer_entry_structure(semantic_entries)
@@ -322,7 +327,7 @@ def build_parse_result_normalized(
         message_subtype=message_subtype,
         symbol=instrument,
         direction=semantic_direction,
-        entry_main=entry_prices[0] if entry_prices else None,
+        entry_main=primary_entry_prices[0] if primary_entry_prices else None,
         entry_mode=_infer_entry_mode(semantic_entries),
         average_entry=averaging_price if averaging_price is not None else (round(sum(entry_prices) / len(entry_prices), 8) if entry_prices else None),
         entry_plan_type=entry_plan_type,
@@ -711,14 +716,29 @@ def _extract_canonical_entries_from_entities(entities: dict[str, Any] | None) ->
         if not isinstance(item, dict):
             continue
         price = item.get("price")
-        if not isinstance(price, (int, float)):
-            continue
         sequence = item.get("sequence")
         role = item.get("role")
         order_type = item.get("order_type")
         raw_label = item.get("raw_label")
         source_style = item.get("source_style")
         is_optional = item.get("is_optional")
+        if not isinstance(price, (int, float)):
+            if str(role or "").upper() == "PRIMARY" and str(order_type or "").upper() == "MARKET":
+                out.append(
+                    {
+                        "label": f"E{int(sequence) if isinstance(sequence, int) else index}",
+                        "price": None,
+                        "kind": "ENTRY",
+                        "raw": None,
+                        "sequence": int(sequence) if isinstance(sequence, int) else index,
+                        "role": role if isinstance(role, str) else "PRIMARY",
+                        "order_type": order_type if isinstance(order_type, str) else "MARKET",
+                        "raw_label": raw_label if isinstance(raw_label, str) else None,
+                        "source_style": source_style if isinstance(source_style, str) else "UNKNOWN",
+                        "is_optional": bool(is_optional) if isinstance(is_optional, bool) else False,
+                    }
+                )
+            continue
         out.append(
             {
                 "label": f"E{int(sequence) if isinstance(sequence, int) else index}",

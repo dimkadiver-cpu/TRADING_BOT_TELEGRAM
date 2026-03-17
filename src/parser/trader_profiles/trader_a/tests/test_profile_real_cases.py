@@ -180,6 +180,29 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "NEW_SIGNAL")
         self.assertEqual(result.entities.get("entry"), [591.59])
 
+    def test_market_entry_with_percentage_risk_keeps_primary_price(self) -> None:
+        text = (
+            "[trader#A]\n"
+            "#FARTCOINUSDT.P ШОРТ (вход с текущих)\n"
+            "\n"
+            "Вход с текущих: 0.3053 (70% риска)\n"
+            "Усреднение: 0.3171 (≤30% риска, объём ≤50% A)\n"
+            "SL: 0.3307\n"
+            "TP1: 0.2899"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        entries = result.entities.get("entry_plan_entries", [])
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry"), [0.3053])
+        self.assertEqual(result.entities.get("averaging"), 0.3171)
+        self.assertEqual(result.entities.get("entry_plan_type"), "MARKET_WITH_LIMIT_AVERAGING")
+        self.assertEqual(len(entries), 2)
+        self.assertEqual(entries[0]["role"], "PRIMARY")
+        self.assertEqual(entries[0]["order_type"], "MARKET")
+        self.assertEqual(entries[0]["price"], 0.3053)
+        self.assertEqual(entries[1]["role"], "AVERAGING")
+        self.assertEqual(entries[1]["order_type"], "LIMIT")
+
     def test_global_close_with_r_results_is_update_and_extracts_intents(self) -> None:
         text = (
             "\u0417\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u0432\u0441\u0435 \u043f\u043e\u0437\u0438\u0446\u0438\u0438 \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c, \u0447\u0442\u043e\u0431\u044b \u0437\u0430\u043a\u0440\u044b\u0442\u044c \u043c\u0435\u0441\u044f\u0446\n"

@@ -46,6 +46,19 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("take_profits"), [0.1445, 0.138])
         self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
 
+    def test_new_signal_vhod_s_tekushchikh_without_price_is_market(self) -> None:
+        text = (
+            "Brev SHORT вход с текущих\n"
+            "рыночный — риск 0.5% депо\n"
+            "Стоп 0.5358\n"
+            "TP1: 0.4283\n"
+            "TP2: 0.3485"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
+        self.assertEqual(result.entities.get("entry"), [])
+
     def test_new_signal_rynochnyi_without_numeric_entry(self) -> None:
         text = (
             "Brev SHORT вход с текущих\n"

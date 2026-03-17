@@ -49,6 +49,35 @@ class TraderBProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("entry_structure"), "ONE_SHOT")
         self.assertFalse(result.entities.get("has_averaging_plan"))
 
+    def test_new_signal_vhod_s_tekushchikh_is_market(self) -> None:
+        text = (
+            "$FARTCOINUSDT.P - Шорт (вход с текущих)\n"
+            "Вход с текущих: 0.3053\n"
+            "Тейк профит: 0.2737\n"
+            "Стоп лосс: 0.3307"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
+        self.assertEqual(result.entities.get("entry"), [0.3053])
+        self.assertEqual(result.entities.get("entry_plan_entries")[0]["role"], "PRIMARY")
+        self.assertEqual(result.entities.get("entry_plan_entries")[0]["order_type"], "MARKET")
+
+    def test_new_signal_vhod_s_tekushchikh_without_price_keeps_market_context(self) -> None:
+        text = (
+            "$COAIUSDT - Шорт (вход с текущих)\n"
+            "Вход с текущих\n"
+            "Тейк профит: 0.8627\n"
+            "Стоп лосс: 1.2769"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
+        self.assertEqual(result.entities.get("entry"), [])
+        self.assertEqual(result.entities.get("entry_plan_entries")[0]["role"], "PRIMARY")
+        self.assertEqual(result.entities.get("entry_plan_entries")[0]["order_type"], "MARKET")
+        self.assertIsNone(result.entities.get("entry_plan_entries")[0]["price"])
+
     def test_new_signal_limit_default_and_tp_list(self) -> None:
         text = (
             "$SOLUSDT - Лонг\n"

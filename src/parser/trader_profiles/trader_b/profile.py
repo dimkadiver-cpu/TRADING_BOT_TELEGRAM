@@ -13,7 +13,7 @@ from src.parser.trader_profiles.common_utils import extract_telegram_links, norm
 _RULES_PATH = Path(__file__).resolve().parent / "parsing_rules.json"
 _LINK_ID_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)
 _SYMBOL_RE = re.compile(r"\$?(?P<symbol>[A-Z0-9]{2,20}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b", re.IGNORECASE)
-_ENTRY_RE = re.compile(r"(?:вход|entry)\s*[:=]\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
+_ENTRY_RE = re.compile(r"(?:вход(?:\s+с\s+текущих)?|entry)\s*[:=]\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
 _STOP_RE = re.compile(r"(?:стоп\s*лосс|sl|stop)\s*[:=]\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
 _TP_RE = re.compile(r"(?:тейк\s*профит|tp\d*|тп\d*|target\s*\d*)\s*[:=]\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
 _RISK_RE = re.compile(r"риск\s*на\s*сделку\s*(?P<value>[+-]?\d+(?:[.,]\d+)?)%", re.IGNORECASE)
@@ -38,7 +38,7 @@ _DEFAULT_SETUP_INCOMPLETE_MARKERS = ("тейк", "tp", "target", "тп")
 _DEFAULT_CLOSE_FULL_EXTRA_MARKERS = ("сделка полностью закрыта", "закрыта", "закрываю", "закрыть позицию")
 _DEFAULT_TP_HIT_EXPLICIT_MARKERS = ("тейк достиг", "take profit hit", "tp hit", "target hit")
 _DEFAULT_MARKET_CONTEXT_SPOT_MARKERS = ("сделка на споте",)
-_DEFAULT_ENTRY_ORDER_MARKET_MARKERS = ("по текущим",)
+_DEFAULT_ENTRY_ORDER_MARKET_MARKERS = ("по текущим", "вход с текущих")
 _DEFAULT_SIDE_LONG_MARKERS = ("лонг", "long", "buy")
 _DEFAULT_SIDE_SHORT_MARKERS = ("шорт", "short", "sell")
 
@@ -83,7 +83,8 @@ class TraderBProfileParser:
             long_markers=_merge_markers(self._as_markers("side_markers", "long"), _DEFAULT_SIDE_LONG_MARKERS),
             short_markers=_merge_markers(self._as_markers("side_markers", "short"), _DEFAULT_SIDE_SHORT_MARKERS),
         ) is not None
-        has_entry = _extract_entry(raw_text) is not None
+        has_market_entry_marker = self._contains_any(normalized, _merge_markers(self._as_markers("entry_order_markers", "market"), _DEFAULT_ENTRY_ORDER_MARKET_MARKERS))
+        has_entry = _extract_entry(raw_text) is not None or has_market_entry_marker
         has_stop = _extract_stop(raw_text) is not None
         has_tp = bool(_extract_take_profits(raw_text))
 
@@ -198,13 +199,13 @@ class TraderBProfileParser:
                             "sequence": 1,
                             "role": "PRIMARY",
                             "order_type": order_type,
-                            "price": entry,
+                            "price": entry if isinstance(entry, float) else None,
                             "raw_label": "ENTRY",
-                            "source_style": "SINGLE",
+                            "source_style": "SINGLE" if isinstance(entry, float) else "ENTRY_AVERAGING",
                             "is_optional": False,
                         }
                     ]
-                    if isinstance(entry, float)
+                    if is_market_entry or isinstance(entry, float)
                     else [],
                 }
             )
@@ -248,7 +249,7 @@ class TraderBProfileParser:
         has_symbol = _extract_symbol(str(prepared.get("raw_text") or "")) is not None
         if target_refs or has_symbol:
             return []
-        return ["trader_b_update_missing_target"]
+        return [f"{self.trader_code}_update_missing_target"]
 
     @staticmethod
     def _estimate_confidence(*, message_type: str, warnings: list[str]) -> float:

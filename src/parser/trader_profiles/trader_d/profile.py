@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
 
@@ -14,6 +16,9 @@ class TraderDProfileParser(TraderBProfileParser):
     """
 
     trader_code = "trader_d"
+
+    def __init__(self, rules_path: Path | None = None) -> None:
+        super().__init__(rules_path=rules_path or Path(__file__).resolve().parent / "parsing_rules.json")
 
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
         base_result = super().parse_message(text=text, context=context)

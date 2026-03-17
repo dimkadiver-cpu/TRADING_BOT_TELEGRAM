@@ -74,6 +74,28 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         short_result = self.parser.parse_message(short_text, _context(text=short_text))
         self.assertEqual(short_result.entities.get("cancel_scope"), "ALL_SHORT")
 
+    def test_global_target_scopes_are_recognized(self) -> None:
+        short_text = "По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно."
+        short_result = self.parser.parse_message(short_text, _context(text=short_text))
+        self.assertEqual(short_result.entities.get("close_scope"), None)
+        self.assertEqual(short_result.target_scope.get("scope"), "ALL_SHORTS")
+        self.assertEqual(short_result.target_scope.get("kind"), "portfolio_side")
+
+        reply_short_text = "1 тейк. поздравляю\n\nхоть немного минуса прикрыли\n\nпо шортам стоп на точку входа"
+        reply_short_result = self.parser.parse_message(reply_short_text, _context(text=reply_short_text, reply_to=485))
+        self.assertEqual(reply_short_result.target_scope.get("scope"), "ALL_SHORTS")
+        self.assertTrue(any(item.get("ref") == 485 for item in reply_short_result.target_refs))
+
+        all_positions_text = "Закрываю все позиции, результаты по каждой обновлю в этом посте, нужно подождать, посмотреть на рынок"
+        all_positions_result = self.parser.parse_message(all_positions_text, _context(text=all_positions_text))
+        self.assertEqual(all_positions_result.target_scope.get("scope"), "ALL_ALL")
+        self.assertEqual(all_positions_result.entities.get("close_scope"), "ALL_ALL")
+
+        my_positions_text = "зафиксирую все свои позиции по текущим, не будет возможности контролировать сделки"
+        my_positions_result = self.parser.parse_message(my_positions_text, _context(text=my_positions_text))
+        self.assertEqual(my_positions_result.target_scope.get("scope"), "ALL_ALL")
+        self.assertEqual(my_positions_result.entities.get("close_scope"), "ALL_ALL")
+
     def test_reported_results_and_result_mode(self) -> None:
         text = "Final result BTCUSDT - 1.2R ETHUSDT - -0.3R"
         result = self.parser.parse_message(text, _context(text=text))
@@ -86,6 +108,12 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
                 {"symbol": "ETHUSDT", "value": -0.3, "unit": "R"},
             ],
         )
+
+    def test_report_final_result_natural_language_take_summary(self) -> None:
+        text = "2 тейк 29% чистыми поздравляю"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "INFO_ONLY")
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
 
     def test_report_mode_text_summary_when_no_structured_r(self) -> None:
         text = "final result summary for this week"
