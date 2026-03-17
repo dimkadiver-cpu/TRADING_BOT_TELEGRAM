@@ -32,7 +32,7 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertIn("ACT_MOVE_STOP_LOSS", normalized.get("actions", []))
         self.assertIn("ACT_CANCEL_ALL_PENDING_ENTRIES", normalized.get("actions", []))
         self.assertEqual(normalized.get("entities", {}).get("new_stop_level"), "ENTRY")
-        self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "ALL_PENDING_ENTRIES")
+        self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "TARGETED")
         self.assertEqual(sorted(normalized.get("target_refs", [])), [265, 266])
         notes = normalized.get("notes", [])
         self.assertTrue(any("profile_parser=trader_a" in note for note in notes))
