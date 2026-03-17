@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 import re
 from typing import Any
 
+from src.parser.intent_action_map import build_actions_structured, derive_primary_intent
+
 _CANONICAL_EVENT_TYPES = {
     "NEW_SIGNAL",
     "UPDATE",
@@ -122,6 +124,20 @@ class ParseResultNormalized:
     parser_mode_legacy: str | None = None
     selection_metadata: dict[str, Any] = field(default_factory=dict)
 
+    # v2 semantic source-of-truth envelope (additive, backward compatible).
+    schema_version: str = "2.0"
+    message_class: str | None = None
+    primary_intent: str | None = None
+    actions_structured: list[dict[str, Any]] = field(default_factory=list)
+    instrument_obj: dict[str, Any] = field(default_factory=dict)
+    position_obj: dict[str, Any] = field(default_factory=dict)
+    entry_plan: dict[str, Any] = field(default_factory=dict)
+    risk_plan: dict[str, Any] = field(default_factory=dict)
+    results_v2: list[dict[str, Any]] = field(default_factory=list)
+    target_scope: dict[str, Any] = field(default_factory=dict)
+    linking: dict[str, Any] = field(default_factory=dict)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "event_type": self.event_type,
@@ -162,6 +178,18 @@ class ParseResultNormalized:
             "raw_entities": self.raw_entities,
             "parser_mode_legacy": self.parser_mode_legacy,
             "selection_metadata": self.selection_metadata,
+            "schema_version": self.schema_version,
+            "message_class": self.message_class,
+            "primary_intent": self.primary_intent,
+            "actions_structured": self.actions_structured,
+            "instrument_obj": self.instrument_obj,
+            "position_obj": self.position_obj,
+            "entry_plan": self.entry_plan,
+            "risk_plan": self.risk_plan,
+            "results_v2": self.results_v2,
+            "target_scope": self.target_scope,
+            "linking": self.linking,
+            "diagnostics": self.diagnostics,
         }
 
 
@@ -250,6 +278,26 @@ def build_parse_result_normalized(
 
     semantic_parser_mode = parser_mode if parser_mode in _PARSER_MODES else _normalize_parser_mode(parser_mode)
     parser_mode_legacy = _to_legacy_parser_mode(semantic_parser_mode)
+    v2 = _derive_v2_fields(
+        raw_text=raw_text,
+        message_type=semantic_message_type,
+        intents=semantic_intents,
+        actions=semantic_actions,
+        entities=entities_out,
+        entries=semantic_entries,
+        stop_loss=stop_loss,
+        take_profits=take_profits,
+        reported_results=reported_results,
+        target_refs=target_refs,
+        instrument=instrument,
+        side=side,
+        market_type=_infer_market_type(instrument),
+        root_ref=root_ref,
+        parser_mode=semantic_parser_mode,
+        parser_used=parser_used,
+        confidence=confidence,
+        parse_status=parse_status,
+    )
 
     result = ParseResultNormalized(
         event_type=event_type,
@@ -288,13 +336,198 @@ def build_parse_result_normalized(
         entities=entities_out,
         raw_entities=entities_out,
         parser_mode_legacy=parser_mode_legacy,
+        schema_version=v2["schema_version"],
+        message_class=v2["message_class"],
+        primary_intent=v2["primary_intent"],
+        actions_structured=v2["actions_structured"],
+        instrument_obj=v2["instrument_obj"],
+        position_obj=v2["position_obj"],
+        entry_plan=v2["entry_plan"],
+        risk_plan=v2["risk_plan"],
+        results_v2=v2["results_v2"],
+        target_scope=v2["target_scope"],
+        linking=v2["linking"],
+        diagnostics=v2["diagnostics"],
     )
     validation_warnings = validate_parse_result_normalized(result)
     merged_warnings = _merge_ordered_unique(existing_warning_list, validation_warnings)
     if merged_warnings:
         result.validation_warnings = merged_warnings
         result.status = "PARSED_WITH_WARNINGS"
+        result.diagnostics["validation_warnings"] = list(merged_warnings)
     return result
+
+
+def _derive_v2_fields(
+    *,
+    raw_text: str,
+    message_type: str | None,
+    intents: list[str],
+    actions: list[str],
+    entities: dict[str, Any],
+    entries: list[dict[str, Any]],
+    stop_loss: dict[str, Any] | None,
+    take_profits: list[dict[str, Any]],
+    reported_results: list[dict[str, Any]],
+    target_refs: list[int],
+    instrument: str | None,
+    side: str | None,
+    market_type: str | None,
+    root_ref: int | None,
+    parser_mode: str | None,
+    parser_used: str | None,
+    confidence: float,
+    parse_status: str,
+) -> dict[str, Any]:
+    message_class = _derive_message_class(message_type=message_type)
+    primary_intent = derive_primary_intent(intents)
+    target_scope = _derive_target_scope(entities=entities, target_refs=target_refs, root_ref=root_ref, raw_text=raw_text)
+    actions_structured = build_actions_structured(
+        intents=intents,
+        entities=entities,
+        raw_text=raw_text,
+        target_scope=target_scope,
+    )
+    base_asset, quote_asset = _split_symbol_assets(instrument)
+    instrument_obj = {
+        "symbol": instrument,
+        "symbol_raw": entities.get("symbol_raw") or instrument,
+        "base_asset": base_asset,
+        "quote_asset": quote_asset,
+        "market_type": market_type,
+        "exchange_hint": entities.get("exchange_hint"),
+    }
+    position_obj = {
+        "side": side,
+        "direction": side,
+        "entry_mode": entities.get("entry_mode"),
+        "entry_plan_type": entities.get("entry_plan_type"),
+        "entry_structure": entities.get("entry_structure"),
+        "has_averaging_plan": bool(entities.get("has_averaging_plan")),
+    }
+    entry_plan = {
+        "entries": entries,
+        "entry_plan_type": entities.get("entry_plan_type"),
+        "entry_structure": entities.get("entry_structure"),
+        "has_averaging_plan": bool(entities.get("has_averaging_plan")),
+    }
+    risk_plan = {
+        "stop_loss": stop_loss,
+        "take_profits": take_profits,
+        "invalidation": entities.get("invalidation") or entities.get("new_stop_level"),
+        "risk_hint": entities.get("risk_hint"),
+        "risk_percent": entities.get("risk_percent"),
+    }
+    results_v2 = _derive_results_v2(reported_results, raw_text=raw_text, side=side)
+    linking = _derive_linking(target_refs=target_refs, root_ref=root_ref, raw_text=raw_text)
+    diagnostics = {
+        "parser_mode": parser_mode,
+        "parser_used": parser_used,
+        "confidence": confidence,
+        "parse_status_input": parse_status,
+        "intents_count": len(intents),
+        "actions_count": len(actions),
+    }
+    return {
+        "schema_version": "2.0",
+        "message_class": message_class,
+        "primary_intent": primary_intent,
+        "actions_structured": actions_structured,
+        "instrument_obj": instrument_obj,
+        "position_obj": position_obj,
+        "entry_plan": entry_plan,
+        "risk_plan": risk_plan,
+        "results_v2": results_v2,
+        "target_scope": target_scope,
+        "linking": linking,
+        "diagnostics": diagnostics,
+    }
+
+
+def _derive_message_class(*, message_type: str | None) -> str | None:
+    # v2 message_class stays aligned with canonical parser message types.
+    if message_type in {"NEW_SIGNAL", "UPDATE", "INFO_ONLY", "SETUP_INCOMPLETE", "UNCLASSIFIED"}:
+        return message_type
+    return None
+
+
+
+
+def _split_symbol_assets(symbol: str | None) -> tuple[str | None, str | None]:
+    if not isinstance(symbol, str) or not symbol:
+        return None, None
+    upper = symbol.upper()
+    for quote in ("USDT", "USDC", "USD", "BTC", "ETH"):
+        if upper.endswith(quote) and len(upper) > len(quote):
+            return upper[: -len(quote)], quote
+    return upper, None
+
+
+def _derive_target_scope(*, entities: dict[str, Any], target_refs: list[int], root_ref: int | None, raw_text: str) -> dict[str, Any]:
+    links = _extract_links(raw_text)
+    extracted_refs = _extract_target_refs(raw_text=raw_text, root_ref=root_ref)
+    close_scope = entities.get("close_scope")
+    if close_scope in {"ALL_LONGS", "ALL_SHORTS"}:
+        kind = "portfolio_side"
+        scope = close_scope
+    elif _extract_hashtags(raw_text):
+        kind = "signal_group"
+        scope = "hashtag"
+    else:
+        kind = "signal"
+        scope = "single" if (target_refs or root_ref is not None or extracted_refs) else "unknown"
+    return {
+        "kind": kind,
+        "scope": scope,
+        "target_refs": target_refs,
+        "root_ref": root_ref,
+        "link_count": len(links),
+        "extracted_target_refs": extracted_refs,
+    }
+
+
+def _derive_linking(*, target_refs: list[int], root_ref: int | None, raw_text: str) -> dict[str, Any]:
+    links = _extract_links(raw_text)
+    extracted_refs = _extract_target_refs(raw_text=raw_text, root_ref=root_ref)
+    strategy = "reply_or_link" if (root_ref is not None or links or target_refs) else "unresolved"
+    return {
+        "targeted": bool(target_refs or root_ref is not None or extracted_refs),
+        "has_target_refs": bool(target_refs),
+        "target_ref_count": len(target_refs),
+        "root_ref": root_ref,
+        "link_count": len(links),
+        "extracted_target_refs": extracted_refs,
+        "strategy": strategy,
+    }
+
+
+def _derive_results_v2(reported_results: list[dict[str, Any]], *, raw_text: str, side: str | None) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    fragments: dict[tuple[str, float], str] = {}
+    for match in _RESULT_R_RE.finditer(raw_text):
+        symbol = str(match.group("symbol") or "").upper()
+        value = _to_float(match.group("value"))
+        if symbol and value is not None:
+            fragments[(symbol, float(value))] = match.group(0)
+    for item in reported_results:
+        symbol = item.get("symbol")
+        value = item.get("r_multiple")
+        unit = item.get("unit") or "R"
+        sym_norm = str(symbol).upper() if isinstance(symbol, str) else None
+        raw_fragment = None
+        if sym_norm is not None and isinstance(value, (int, float)):
+            raw_fragment = fragments.get((sym_norm, float(value)))
+        out.append(
+            {
+                "symbol": sym_norm,
+                "value": value,
+                "unit": str(unit).upper() if unit is not None else None,
+                "direction": side,
+                "raw_fragment": raw_fragment,
+                "result_type": "R_MULTIPLE" if str(unit).upper() == "R" else "UNKNOWN",
+            }
+        )
+    return out
 
 
 def validate_parse_result_normalized(result: ParseResultNormalized) -> list[str]:
@@ -830,4 +1063,3 @@ def _unique_ints(values: list[int]) -> list[int]:
         seen.add(value)
         output.append(value)
     return output
-
