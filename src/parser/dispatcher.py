@@ -103,7 +103,11 @@ class ParserDispatcher:
 
 
 def should_fallback_to_llm(result: ParseResultNormalized) -> bool:
-    """Conservative fallback policy for hybrid_auto mode."""
+    """Conservative fallback policy for hybrid_auto mode.
+
+    Legacy checks remain authoritative; v2 semantic checks are additive so we
+    do not reduce fallback safety for under-specified parses.
+    """
     if result.message_type in {"UNCLASSIFIED", "SETUP_INCOMPLETE"}:
         return True
     if result.confidence < 0.6:
@@ -117,13 +121,41 @@ def should_fallback_to_llm(result: ParseResultNormalized) -> bool:
         if not result.entries and result.entry_main is None:
             return True
 
+        # v2 additive safety checks
+        if isinstance(result.instrument_obj, dict) and not result.instrument_obj.get("symbol"):
+            return True
+        if isinstance(result.position_obj, dict):
+            if not result.position_obj.get("side"):
+                return True
+            if not result.position_obj.get("take_profits"):
+                return True
+        if isinstance(result.entry_plan, dict):
+            if not result.entry_plan.get("entries") and not result.entries:
+                return True
+
     if result.message_type == "UPDATE":
         if not result.actions and not result.message_subtype:
+            return True
+
+        # v2 additive safety checks
+        if result.primary_intent is not None and not str(result.primary_intent).strip():
+            return True
+        if isinstance(result.actions_structured, list) and not result.actions_structured and result.actions:
             return True
 
     if result.message_type == "INFO_ONLY":
         has_notes = any((note or "").strip() for note in result.notes)
         if not result.message_subtype and not result.reported_results and not has_notes and not result.target_refs:
+            return True
+
+    # Generic v2 consistency checks (additive only).
+    if isinstance(result.instrument_obj, dict) and result.instrument_obj:
+        instrument_symbol = result.instrument_obj.get("symbol")
+        if instrument_symbol is not None and result.instrument is not None and str(instrument_symbol).strip().upper() != str(result.instrument).strip().upper():
+            return True
+    if isinstance(result.risk_plan, dict) and result.risk_plan:
+        risk_conf = result.risk_plan.get("confidence")
+        if isinstance(risk_conf, (int, float)) and risk_conf < 0.6:
             return True
 
     return False
