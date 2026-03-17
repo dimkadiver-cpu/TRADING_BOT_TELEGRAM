@@ -11,13 +11,13 @@ class UpdatePlannerTests(unittest.TestCase):
             {
                 "message_type": "UPDATE",
                 "actions": ["ACT_MOVE_STOP_LOSS", "ACT_CANCEL_ALL_PENDING_ENTRIES"],
-                "entities": {"new_stop_level": "ENTRY", "cancel_scope": "ALL_PENDING_ENTRIES"},
+                "entities": {"new_stop_level": "ENTRY", "cancel_scope": "ALL_ALL"},
                 "target_refs": [],
             }
         )
         self.assertIn({"field": "stop_loss", "op": "SET_FROM_ENTRY", "value": "ENTRY"}, plan.position_updates)
         self.assertIn(
-            {"selector": "ALL_PENDING_ENTRIES", "field": "status", "op": "SET", "value": "CANCELLED"},
+            {"selector": "ALL_ALL", "field": "status", "op": "SET", "value": "CANCELLED"},
             plan.order_updates,
         )
         self.assertIn("STOP_MOVED_TO_BE", plan.events)
@@ -65,6 +65,21 @@ class UpdatePlannerTests(unittest.TestCase):
             },
             plan.result_updates,
         )
+
+    def test_cancel_pending_global_scope_without_target_refs(self) -> None:
+        plan = build_update_plan(
+            {
+                "message_type": "UPDATE",
+                "actions": ["ACT_CANCEL_ALL_PENDING_ENTRIES"],
+                "entities": {"cancel_scope": "ALL_SHORT"},
+                "target_refs": [],
+            }
+        )
+        self.assertEqual(
+            plan.order_updates,
+            [{"selector": "ALL_SHORT", "field": "status", "op": "SET", "value": "CANCELLED"}],
+        )
+        self.assertNotIn("update_plan_missing_target_refs", plan.warnings)
 
 
 if __name__ == "__main__":

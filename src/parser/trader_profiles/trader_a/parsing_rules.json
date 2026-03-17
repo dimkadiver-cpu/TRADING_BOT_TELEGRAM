@@ -63,7 +63,6 @@
         "поставить на точку входа",
         "стоп переводим в бу",
         "стоять в безубытке"
-        
       ],
       "weak": []
     },
@@ -181,15 +180,20 @@
   "global_target_markers": {
     "ALL_LONGS": [
       "все лонги",
-      "Все лонги",
       "all longs"
     ],
     "ALL_SHORTS": [
       "все шорты",
       "all shorts",
       "всем моим оставшимся шортам",
-      "моим шортам",
-      "по шортам"
+      "моим шортам"
+    ],
+    "ALL_ALL": [ 
     ]
+  },
+  "cancel_scope_vocabulary": {
+    "all_all": "ALL_ALL",
+    "all_long": "ALL_LONG",
+    "all_short": "ALL_SHORT"
   }
 }
