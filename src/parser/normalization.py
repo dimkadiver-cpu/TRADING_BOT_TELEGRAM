@@ -122,6 +122,20 @@ class ParseResultNormalized:
     parser_mode_legacy: str | None = None
     selection_metadata: dict[str, Any] = field(default_factory=dict)
 
+    # v2 semantic source-of-truth envelope (additive, backward compatible).
+    schema_version: str = "2.0"
+    message_class: str | None = None
+    primary_intent: str | None = None
+    actions_structured: list[dict[str, Any]] = field(default_factory=list)
+    instrument_obj: dict[str, Any] = field(default_factory=dict)
+    position_obj: dict[str, Any] = field(default_factory=dict)
+    entry_plan: dict[str, Any] = field(default_factory=dict)
+    risk_plan: dict[str, Any] = field(default_factory=dict)
+    results_v2: list[dict[str, Any]] = field(default_factory=list)
+    target_scope: dict[str, Any] = field(default_factory=dict)
+    linking: dict[str, Any] = field(default_factory=dict)
+    diagnostics: dict[str, Any] = field(default_factory=dict)
+
     def as_dict(self) -> dict[str, Any]:
         return {
             "event_type": self.event_type,
@@ -162,6 +176,18 @@ class ParseResultNormalized:
             "raw_entities": self.raw_entities,
             "parser_mode_legacy": self.parser_mode_legacy,
             "selection_metadata": self.selection_metadata,
+            "schema_version": self.schema_version,
+            "message_class": self.message_class,
+            "primary_intent": self.primary_intent,
+            "actions_structured": self.actions_structured,
+            "instrument_obj": self.instrument_obj,
+            "position_obj": self.position_obj,
+            "entry_plan": self.entry_plan,
+            "risk_plan": self.risk_plan,
+            "results_v2": self.results_v2,
+            "target_scope": self.target_scope,
+            "linking": self.linking,
+            "diagnostics": self.diagnostics,
         }
 
 
@@ -250,6 +276,25 @@ def build_parse_result_normalized(
 
     semantic_parser_mode = parser_mode if parser_mode in _PARSER_MODES else _normalize_parser_mode(parser_mode)
     parser_mode_legacy = _to_legacy_parser_mode(semantic_parser_mode)
+    v2 = _derive_v2_fields(
+        message_type=semantic_message_type,
+        intents=semantic_intents,
+        actions=semantic_actions,
+        entities=entities_out,
+        entries=semantic_entries,
+        stop_loss=stop_loss,
+        take_profits=take_profits,
+        reported_results=reported_results,
+        target_refs=target_refs,
+        instrument=instrument,
+        side=side,
+        market_type=_infer_market_type(instrument),
+        root_ref=root_ref,
+        parser_mode=semantic_parser_mode,
+        parser_used=parser_used,
+        confidence=confidence,
+        parse_status=parse_status,
+    )
 
     result = ParseResultNormalized(
         event_type=event_type,
@@ -288,13 +333,131 @@ def build_parse_result_normalized(
         entities=entities_out,
         raw_entities=entities_out,
         parser_mode_legacy=parser_mode_legacy,
+        schema_version=v2["schema_version"],
+        message_class=v2["message_class"],
+        primary_intent=v2["primary_intent"],
+        actions_structured=v2["actions_structured"],
+        instrument_obj=v2["instrument_obj"],
+        position_obj=v2["position_obj"],
+        entry_plan=v2["entry_plan"],
+        risk_plan=v2["risk_plan"],
+        results_v2=v2["results_v2"],
+        target_scope=v2["target_scope"],
+        linking=v2["linking"],
+        diagnostics=v2["diagnostics"],
     )
     validation_warnings = validate_parse_result_normalized(result)
     merged_warnings = _merge_ordered_unique(existing_warning_list, validation_warnings)
     if merged_warnings:
         result.validation_warnings = merged_warnings
         result.status = "PARSED_WITH_WARNINGS"
+        result.diagnostics["validation_warnings"] = list(merged_warnings)
     return result
+
+
+def _derive_v2_fields(
+    *,
+    message_type: str | None,
+    intents: list[str],
+    actions: list[str],
+    entities: dict[str, Any],
+    entries: list[dict[str, Any]],
+    stop_loss: dict[str, Any] | None,
+    take_profits: list[dict[str, Any]],
+    reported_results: list[dict[str, Any]],
+    target_refs: list[int],
+    instrument: str | None,
+    side: str | None,
+    market_type: str | None,
+    root_ref: int | None,
+    parser_mode: str | None,
+    parser_used: str | None,
+    confidence: float,
+    parse_status: str,
+) -> dict[str, Any]:
+    message_class = _derive_message_class(message_type=message_type)
+    primary_intent = intents[0] if intents else None
+    actions_structured = [{"action": action, "kind": "legacy_action"} for action in actions]
+    instrument_obj = {
+        "symbol": instrument,
+        "side": side,
+        "market_type": market_type,
+    }
+    position_obj = {
+        "stop_loss": stop_loss,
+        "take_profits": take_profits,
+    }
+    entry_plan = {
+        "entries": entries,
+        "entry_plan_type": entities.get("entry_plan_type"),
+        "entry_structure": entities.get("entry_structure"),
+        "has_averaging_plan": bool(entities.get("has_averaging_plan")),
+    }
+    risk_plan = {
+        "risk_hint": entities.get("risk_hint"),
+        "risk_percent": entities.get("risk_percent"),
+    }
+    results_v2 = _derive_results_v2(reported_results)
+    target_scope = {
+        "target_refs": target_refs,
+        "root_ref": root_ref,
+    }
+    linking = {
+        "has_target_refs": bool(target_refs),
+        "target_ref_count": len(target_refs),
+        "root_ref": root_ref,
+    }
+    diagnostics = {
+        "parser_mode": parser_mode,
+        "parser_used": parser_used,
+        "confidence": confidence,
+        "parse_status_input": parse_status,
+        "intents_count": len(intents),
+        "actions_count": len(actions),
+    }
+    return {
+        "schema_version": "2.0",
+        "message_class": message_class,
+        "primary_intent": primary_intent,
+        "actions_structured": actions_structured,
+        "instrument_obj": instrument_obj,
+        "position_obj": position_obj,
+        "entry_plan": entry_plan,
+        "risk_plan": risk_plan,
+        "results_v2": results_v2,
+        "target_scope": target_scope,
+        "linking": linking,
+        "diagnostics": diagnostics,
+    }
+
+
+def _derive_message_class(*, message_type: str | None) -> str | None:
+    if message_type == "NEW_SIGNAL":
+        return "SIGNAL"
+    if message_type == "UPDATE":
+        return "POSITION_UPDATE"
+    if message_type == "INFO_ONLY":
+        return "INFO"
+    if message_type == "SETUP_INCOMPLETE":
+        return "INCOMPLETE"
+    if message_type == "UNCLASSIFIED":
+        return "UNCLASSIFIED"
+    return None
+
+
+def _derive_results_v2(reported_results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    out: list[dict[str, Any]] = []
+    for item in reported_results:
+        symbol = item.get("symbol")
+        r_multiple = item.get("r_multiple")
+        out.append(
+            {
+                "symbol": symbol,
+                "result_type": "R_MULTIPLE" if isinstance(r_multiple, (int, float)) else "UNKNOWN",
+                "value": r_multiple,
+            }
+        )
+    return out
 
 
 def validate_parse_result_normalized(result: ParseResultNormalized) -> list[str]:
@@ -830,4 +993,3 @@ def _unique_ints(values: list[int]) -> list[int]:
         seen.add(value)
         output.append(value)
     return output
-
