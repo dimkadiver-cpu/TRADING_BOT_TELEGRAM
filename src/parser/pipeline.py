@@ -270,7 +270,7 @@ class MinimalParserPipeline:
                 profile_reported_results = _normalize_profile_reported_results(profile_result.reported_results)
                 profile_confidence = profile_result.confidence
                 profile_v2_fields = {
-                    "message_class": getattr(profile_result, "message_type", None),
+                    "message_class": getattr(profile_result, "message_class", None) or getattr(profile_result, "message_type", None),
                     "primary_intent": getattr(profile_result, "primary_intent", None),
                     "actions_structured": getattr(profile_result, "actions_structured", None),
                     "target_scope": getattr(profile_result, "target_scope", None),
@@ -508,18 +508,20 @@ def _enrich_v2_semantics(
 
     actions_structured = profile_v2_fields.get("actions_structured")
     if isinstance(actions_structured, list):
-        normalized_result.actions_structured = [item for item in actions_structured if isinstance(item, dict)]
+        filtered_actions_structured = [item for item in actions_structured if isinstance(item, dict)]
+        if filtered_actions_structured:
+            normalized_result.actions_structured = filtered_actions_structured
 
     target_scope = profile_v2_fields.get("target_scope")
-    if isinstance(target_scope, dict):
+    if isinstance(target_scope, dict) and target_scope:
         normalized_result.target_scope = dict(target_scope)
 
     linking = profile_v2_fields.get("linking")
-    if isinstance(linking, dict):
+    if isinstance(linking, dict) and linking:
         normalized_result.linking = dict(linking)
 
     diagnostics = profile_v2_fields.get("diagnostics")
-    if isinstance(diagnostics, dict):
+    if isinstance(diagnostics, dict) and diagnostics:
         merged_diagnostics = dict(normalized_result.diagnostics)
         merged_diagnostics.update(diagnostics)
         normalized_result.diagnostics = merged_diagnostics
