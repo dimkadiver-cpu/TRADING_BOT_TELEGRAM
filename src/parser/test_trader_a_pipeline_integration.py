@@ -34,6 +34,12 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertEqual(normalized.get("entities", {}).get("new_stop_level"), "ENTRY")
         self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "TARGETED")
         self.assertEqual(sorted(normalized.get("target_refs", [])), [265, 266])
+        # v2 semantic assertions (additive to legacy checks)
+        self.assertEqual(normalized.get("primary_intent"), "U_MOVE_STOP_TO_BE")
+        self.assertTrue(normalized.get("actions_structured"))
+        self.assertEqual(normalized.get("target_scope", {}).get("kind"), "signal")
+        self.assertTrue(normalized.get("linking", {}).get("targeted"))
+        self.assertEqual(normalized.get("linking", {}).get("strategy"), "reply_or_link")
         notes = normalized.get("notes", [])
         self.assertTrue(any("profile_parser=trader_a" in note for note in notes))
 
@@ -61,6 +67,11 @@ class TraderAIntegrationTests(unittest.TestCase):
                 {"symbol": "ETHUSDT", "r_multiple": -0.3},
             ],
         )
+        self.assertEqual(normalized.get("primary_intent"), "U_REPORT_FINAL_RESULT")
+        self.assertTrue(normalized.get("results_v2"))
+        self.assertIn("result_type", normalized.get("results_v2", [])[0])
+        self.assertIsInstance(normalized.get("entry_plan"), dict)
+        self.assertIsInstance(normalized.get("risk_plan"), dict)
 
     def test_unknown_trader_keeps_fallback_flow(self) -> None:
         payload = ParserInput(
@@ -100,6 +111,9 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertEqual(normalized.get("message_type"), "UPDATE")
         self.assertIn("U_CLOSE_FULL", normalized.get("intents", []))
         self.assertIn("ACT_CLOSE_FULL", normalized.get("actions", []))
+        self.assertEqual(normalized.get("primary_intent"), "U_CLOSE_FULL")
+        self.assertTrue(normalized.get("actions_structured"))
+        self.assertEqual(normalized.get("actions_structured", [])[0].get("action"), "CLOSE_POSITION")
 
     def test_trader_a_update_with_targets_and_cancel_pending_ru(self) -> None:
         payload = ParserInput(
@@ -125,6 +139,8 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertIn(2243, normalized.get("target_refs", []))
         self.assertIn(2242, normalized.get("target_refs", []))
         self.assertNotIn("trader_a_update_missing_target", normalized.get("validation_warnings", []))
+        self.assertEqual(normalized.get("target_scope", {}).get("kind"), "signal")
+        self.assertEqual(normalized.get("linking", {}).get("strategy"), "reply_or_link")
 
     def test_trader_a_update_close_with_report_and_targets_ru(self) -> None:
         payload = ParserInput(
@@ -151,6 +167,98 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertIn("U_REPORT_FINAL_RESULT", normalized.get("intents", []))
         self.assertTrue(normalized.get("reported_results"))
         self.assertIn(1685, normalized.get("target_refs", []))
+
+    def test_trader_a_new_signal_includes_v2_signal_semantics(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9007,
+            raw_text="BTCUSDT long entry: 100000 sl: 99000 tp1: 101000",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="trader_a",
+            trader_resolution_method="tag",
+            linkage_method=None,
+            source_chat_id="-100123",
+            source_message_id=907,
+            linkage_reference_id=None,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertEqual(normalized.get("message_type"), "NEW_SIGNAL")
+        self.assertEqual(normalized.get("primary_intent"), "NS_CREATE_SIGNAL")
+        self.assertTrue(normalized.get("actions_structured"))
+        self.assertEqual(normalized.get("actions_structured", [])[0].get("action"), "CREATE_SIGNAL")
+        self.assertEqual(normalized.get("target_scope", {}).get("scope"), "single")
+        self.assertTrue(normalized.get("entry_plan", {}).get("entries"))
+        self.assertIsInstance(normalized.get("risk_plan"), dict)
+
+    def test_trader_a_update_tp_hit_and_move_stop_to_be_has_v2_actions(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9008,
+            raw_text="tp1 hit, move stop to be",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="trader_a",
+            trader_resolution_method="tag",
+            linkage_method="direct_reply",
+            source_chat_id="-100123",
+            source_message_id=908,
+            linkage_reference_id=500,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertEqual(normalized.get("message_type"), "UPDATE")
+        self.assertIn("U_TP_HIT", normalized.get("intents", []))
+        self.assertIn("U_MOVE_STOP_TO_BE", normalized.get("intents", []))
+        actions_structured = normalized.get("actions_structured", [])
+        self.assertTrue(any(item.get("action") == "MOVE_STOP" for item in actions_structured))
+        self.assertTrue(any(item.get("action") == "TAKE_PROFIT" for item in actions_structured))
+        self.assertEqual(normalized.get("primary_intent"), "U_MOVE_STOP_TO_BE")
+
+    def test_trader_a_partial_close_has_v2_primary_and_actions(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9009,
+            raw_text="close 50% now",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="trader_a",
+            trader_resolution_method="tag",
+            linkage_method="direct_reply",
+            source_chat_id="-100123",
+            source_message_id=909,
+            linkage_reference_id=500,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertEqual(normalized.get("message_type"), "UPDATE")
+        self.assertIn("U_CLOSE_PARTIAL", normalized.get("intents", []))
+        self.assertEqual(normalized.get("primary_intent"), "U_CLOSE_PARTIAL")
+        self.assertTrue(normalized.get("actions_structured"))
+
+    def test_trader_a_global_target_scope_in_v2_from_global_markers(self) -> None:
+        payload = ParserInput(
+            raw_message_id=9010,
+            raw_text="все шорты закрываю на текущих",
+            eligibility_status="ACQUIRED_ELIGIBLE",
+            eligibility_reason="eligible",
+            resolved_trader_id="trader_a",
+            trader_resolution_method="tag",
+            linkage_method=None,
+            source_chat_id="-100123",
+            source_message_id=910,
+            linkage_reference_id=None,
+        )
+        result = self.pipeline.parse(payload)
+        normalized = json.loads(result.parse_result_normalized_json or "{}")
+
+        self.assertEqual(normalized.get("message_type"), "UPDATE")
+        self.assertEqual(normalized.get("target_scope", {}).get("kind"), "portfolio_side")
+        self.assertIn(normalized.get("target_scope", {}).get("scope"), {"ALL_SHORTS", "GLOBAL"})
+        self.assertTrue(normalized.get("linking", {}).get("targeted"))
+        self.assertIn(normalized.get("linking", {}).get("strategy"), {"global_scope", "reply_or_link"})
+
 
 
 if __name__ == "__main__":
