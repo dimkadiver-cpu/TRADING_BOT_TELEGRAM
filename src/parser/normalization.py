@@ -277,6 +277,7 @@ def build_parse_result_normalized(
     semantic_parser_mode = parser_mode if parser_mode in _PARSER_MODES else _normalize_parser_mode(parser_mode)
     parser_mode_legacy = _to_legacy_parser_mode(semantic_parser_mode)
     v2 = _derive_v2_fields(
+        raw_text=raw_text,
         message_type=semantic_message_type,
         intents=semantic_intents,
         actions=semantic_actions,
@@ -357,6 +358,7 @@ def build_parse_result_normalized(
 
 def _derive_v2_fields(
     *,
+    raw_text: str,
     message_type: str | None,
     intents: list[str],
     actions: list[str],
@@ -376,16 +378,31 @@ def _derive_v2_fields(
     parse_status: str,
 ) -> dict[str, Any]:
     message_class = _derive_message_class(message_type=message_type)
-    primary_intent = intents[0] if intents else None
-    actions_structured = [{"action": action, "kind": "legacy_action"} for action in actions]
+    primary_intent = _derive_primary_intent(intents)
+    target_scope = _derive_target_scope(entities=entities, target_refs=target_refs, root_ref=root_ref, raw_text=raw_text)
+    actions_structured = _build_actions_structured(
+        intents=intents,
+        entities=entities,
+        raw_text=raw_text,
+        target_scope=target_scope,
+        legacy_actions=actions,
+    )
+    base_asset, quote_asset = _split_symbol_assets(instrument)
     instrument_obj = {
         "symbol": instrument,
-        "side": side,
+        "symbol_raw": entities.get("symbol_raw") or instrument,
+        "base_asset": base_asset,
+        "quote_asset": quote_asset,
         "market_type": market_type,
+        "exchange_hint": entities.get("exchange_hint"),
     }
     position_obj = {
-        "stop_loss": stop_loss,
-        "take_profits": take_profits,
+        "side": side,
+        "direction": side,
+        "entry_mode": entities.get("entry_mode"),
+        "entry_plan_type": entities.get("entry_plan_type"),
+        "entry_structure": entities.get("entry_structure"),
+        "has_averaging_plan": bool(entities.get("has_averaging_plan")),
     }
     entry_plan = {
         "entries": entries,
@@ -394,19 +411,14 @@ def _derive_v2_fields(
         "has_averaging_plan": bool(entities.get("has_averaging_plan")),
     }
     risk_plan = {
+        "stop_loss": stop_loss,
+        "take_profits": take_profits,
+        "invalidation": entities.get("invalidation") or entities.get("new_stop_level"),
         "risk_hint": entities.get("risk_hint"),
         "risk_percent": entities.get("risk_percent"),
     }
-    results_v2 = _derive_results_v2(reported_results)
-    target_scope = {
-        "target_refs": target_refs,
-        "root_ref": root_ref,
-    }
-    linking = {
-        "has_target_refs": bool(target_refs),
-        "target_ref_count": len(target_refs),
-        "root_ref": root_ref,
-    }
+    results_v2 = _derive_results_v2(reported_results, raw_text=raw_text, side=side)
+    linking = _derive_linking(target_refs=target_refs, root_ref=root_ref, raw_text=raw_text)
     diagnostics = {
         "parser_mode": parser_mode,
         "parser_used": parser_used,
@@ -432,29 +444,135 @@ def _derive_v2_fields(
 
 
 def _derive_message_class(*, message_type: str | None) -> str | None:
-    if message_type == "NEW_SIGNAL":
-        return "SIGNAL"
-    if message_type == "UPDATE":
-        return "POSITION_UPDATE"
-    if message_type == "INFO_ONLY":
-        return "INFO"
-    if message_type == "SETUP_INCOMPLETE":
-        return "INCOMPLETE"
-    if message_type == "UNCLASSIFIED":
-        return "UNCLASSIFIED"
+    # v2 message_class stays aligned with canonical parser message types.
+    if message_type in {"NEW_SIGNAL", "UPDATE", "INFO_ONLY", "SETUP_INCOMPLETE", "UNCLASSIFIED"}:
+        return message_type
     return None
 
 
-def _derive_results_v2(reported_results: list[dict[str, Any]]) -> list[dict[str, Any]]:
+def _derive_primary_intent(intents: list[str]) -> str | None:
+    for intent in intents:
+        if isinstance(intent, str) and intent.startswith("NS_"):
+            return intent
+    for intent in intents:
+        if isinstance(intent, str) and intent.startswith("U_"):
+            return intent
+    for intent in intents:
+        if isinstance(intent, str) and intent.strip():
+            return intent
+    return None
+
+
+def _build_actions_structured(
+    *,
+    intents: list[str],
+    entities: dict[str, Any],
+    raw_text: str,
+    target_scope: dict[str, Any],
+    legacy_actions: list[str],
+) -> list[dict[str, Any]]:
+    actions: list[dict[str, Any]] = []
+    for intent in intents:
+        if intent == "NS_CREATE_SIGNAL":
+            actions.append({"action": "CREATE_SIGNAL"})
+        elif intent == "U_MOVE_STOP_TO_BE":
+            actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
+        elif intent == "U_MOVE_STOP":
+            actions.append({"action": "MOVE_STOP", "new_stop_level": entities.get("new_stop_level")})
+        elif intent == "U_CLOSE_PARTIAL":
+            actions.append({"action": "CLOSE_POSITION", "scope": "PARTIAL", "close_fraction": entities.get("close_fraction")})
+        elif intent == "U_CLOSE_FULL":
+            actions.append({"action": "CLOSE_POSITION", "scope": entities.get("close_scope", "FULL")})
+        elif intent == "U_TP_HIT":
+            actions.append({"action": "TAKE_PROFIT", "target": entities.get("hit_target", "TP")})
+        elif intent == "U_STOP_HIT":
+            actions.append({"action": "CLOSE_POSITION", "target": "STOP"})
+        elif intent == "U_CANCEL_PENDING_ORDERS":
+            actions.append({"action": "CANCEL_PENDING", "scope": entities.get("cancel_scope", "ALL_PENDING_ENTRIES")})
+        elif intent == "U_MARK_FILLED":
+            actions.append({"action": "MARK_FILLED", "fill_state": entities.get("fill_state", "FILLED")})
+        elif intent == "U_REPORT_FINAL_RESULT":
+            actions.append({"action": "REPORT_RESULT", "mode": entities.get("result_mode", "TEXT_SUMMARY")})
+    if not actions:
+        actions = [{"action": action, "kind": "legacy_action"} for action in legacy_actions if isinstance(action, str) and action]
+    for item in actions:
+        item.setdefault("target_scope", target_scope)
+        item.setdefault("raw_fragment", raw_text[:160])
+    return actions
+
+
+def _split_symbol_assets(symbol: str | None) -> tuple[str | None, str | None]:
+    if not isinstance(symbol, str) or not symbol:
+        return None, None
+    upper = symbol.upper()
+    for quote in ("USDT", "USDC", "USD", "BTC", "ETH"):
+        if upper.endswith(quote) and len(upper) > len(quote):
+            return upper[: -len(quote)], quote
+    return upper, None
+
+
+def _derive_target_scope(*, entities: dict[str, Any], target_refs: list[int], root_ref: int | None, raw_text: str) -> dict[str, Any]:
+    links = _extract_links(raw_text)
+    extracted_refs = _extract_target_refs(raw_text=raw_text, root_ref=root_ref)
+    close_scope = entities.get("close_scope")
+    if close_scope in {"ALL_LONGS", "ALL_SHORTS"}:
+        kind = "portfolio_side"
+        scope = close_scope
+    elif _extract_hashtags(raw_text):
+        kind = "signal_group"
+        scope = "hashtag"
+    else:
+        kind = "signal"
+        scope = "single" if (target_refs or root_ref is not None or extracted_refs) else "unknown"
+    return {
+        "kind": kind,
+        "scope": scope,
+        "target_refs": target_refs,
+        "root_ref": root_ref,
+        "link_count": len(links),
+        "extracted_target_refs": extracted_refs,
+    }
+
+
+def _derive_linking(*, target_refs: list[int], root_ref: int | None, raw_text: str) -> dict[str, Any]:
+    links = _extract_links(raw_text)
+    extracted_refs = _extract_target_refs(raw_text=raw_text, root_ref=root_ref)
+    strategy = "reply_or_link" if (root_ref is not None or links or target_refs) else "unresolved"
+    return {
+        "targeted": bool(target_refs or root_ref is not None or extracted_refs),
+        "has_target_refs": bool(target_refs),
+        "target_ref_count": len(target_refs),
+        "root_ref": root_ref,
+        "link_count": len(links),
+        "extracted_target_refs": extracted_refs,
+        "strategy": strategy,
+    }
+
+
+def _derive_results_v2(reported_results: list[dict[str, Any]], *, raw_text: str, side: str | None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
+    fragments: dict[tuple[str, float], str] = {}
+    for match in _RESULT_R_RE.finditer(raw_text):
+        symbol = str(match.group("symbol") or "").upper()
+        value = _to_float(match.group("value"))
+        if symbol and value is not None:
+            fragments[(symbol, float(value))] = match.group(0)
     for item in reported_results:
         symbol = item.get("symbol")
-        r_multiple = item.get("r_multiple")
+        value = item.get("r_multiple")
+        unit = item.get("unit") or "R"
+        sym_norm = str(symbol).upper() if isinstance(symbol, str) else None
+        raw_fragment = None
+        if sym_norm is not None and isinstance(value, (int, float)):
+            raw_fragment = fragments.get((sym_norm, float(value)))
         out.append(
             {
-                "symbol": symbol,
-                "result_type": "R_MULTIPLE" if isinstance(r_multiple, (int, float)) else "UNKNOWN",
-                "value": r_multiple,
+                "symbol": sym_norm,
+                "value": value,
+                "unit": str(unit).upper() if unit is not None else None,
+                "direction": side,
+                "raw_fragment": raw_fragment,
+                "result_type": "R_MULTIPLE" if str(unit).upper() == "R" else "UNKNOWN",
             }
         )
     return out

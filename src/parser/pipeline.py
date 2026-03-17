@@ -439,6 +439,16 @@ class MinimalParserPipeline:
         return "UNCLASSIFIED"
 
 
+
+def _derive_primary_intent_from_intents(intents: list[str]) -> str | None:
+    for intent in intents:
+        if isinstance(intent, str) and intent.startswith("NS_"):
+            return intent
+    for intent in intents:
+        if isinstance(intent, str) and intent.startswith("U_"):
+            return intent
+    return next((intent for intent in intents if isinstance(intent, str) and intent), None)
+
 def _enrich_v2_semantics(
     normalized_result: ParseResultNormalized,
     *,
@@ -448,23 +458,30 @@ def _enrich_v2_semantics(
     if not normalized_result.message_class:
         normalized_result.message_class = normalized_result.message_type
     if not normalized_result.primary_intent:
-        normalized_result.primary_intent = next((intent for intent in normalized_result.intents if intent), None)
+        normalized_result.primary_intent = _derive_primary_intent_from_intents(normalized_result.intents)
     if not normalized_result.actions_structured:
         normalized_result.actions_structured = [
-            {"action": action}
+            {"action": action, "kind": "legacy_action"}
             for action in normalized_result.actions
             if isinstance(action, str) and action
         ]
     if not normalized_result.instrument_obj:
         normalized_result.instrument_obj = {
             "symbol": normalized_result.instrument,
+            "symbol_raw": normalized_result.instrument,
+            "base_asset": None,
+            "quote_asset": None,
             "market_type": normalized_result.market_type,
+            "exchange_hint": None,
         }
     if not normalized_result.position_obj:
         normalized_result.position_obj = {
             "side": normalized_result.side,
-            "stop_loss": normalized_result.stop_loss,
-            "take_profits": normalized_result.take_profits,
+            "direction": normalized_result.side,
+            "entry_mode": normalized_result.entry_mode,
+            "entry_plan_type": normalized_result.entry_plan_type,
+            "entry_structure": normalized_result.entry_structure,
+            "has_averaging_plan": normalized_result.has_averaging_plan,
         }
     if not normalized_result.entry_plan:
         normalized_result.entry_plan = {
@@ -475,17 +492,38 @@ def _enrich_v2_semantics(
         }
     if not normalized_result.risk_plan:
         normalized_result.risk_plan = {
-            "confidence": normalized_result.confidence,
+            "stop_loss": normalized_result.stop_loss,
+            "take_profits": normalized_result.take_profits,
+            "invalidation": normalized_result.entities.get("new_stop_level") if isinstance(normalized_result.entities, dict) else None,
+            "risk_hint": normalized_result.entities.get("risk_hint") if isinstance(normalized_result.entities, dict) else None,
+            "risk_percent": normalized_result.entities.get("risk_percent") if isinstance(normalized_result.entities, dict) else None,
         }
     if not normalized_result.results_v2 and normalized_result.reported_results:
-        normalized_result.results_v2 = list(normalized_result.reported_results)
+        normalized_result.results_v2 = [
+            {
+                "symbol": item.get("symbol"),
+                "value": item.get("r_multiple"),
+                "unit": item.get("unit") or "R",
+                "direction": normalized_result.side,
+                "raw_fragment": None,
+                "result_type": "R_MULTIPLE" if str(item.get("unit") or "R").upper() == "R" else "UNKNOWN",
+            }
+            for item in normalized_result.reported_results
+            if isinstance(item, dict)
+        ]
     if not normalized_result.target_scope:
-        normalized_result.target_scope = {"kind": "signal", "scope": "single"}
+        normalized_result.target_scope = {
+            "kind": "signal",
+            "scope": "single" if normalized_result.target_refs else "unknown",
+            "target_refs": list(normalized_result.target_refs),
+            "root_ref": normalized_result.root_ref,
+        }
     if not normalized_result.linking:
         normalized_result.linking = {
-            "targeted": bool(normalized_result.target_refs),
+            "targeted": bool(normalized_result.target_refs or normalized_result.root_ref is not None),
             "target_refs_count": len(normalized_result.target_refs),
-            "strategy": "reply_or_link" if normalized_result.target_refs else "unresolved",
+            "root_ref": normalized_result.root_ref,
+            "strategy": "reply_or_link" if (normalized_result.target_refs or normalized_result.root_ref is not None) else "unresolved",
         }
     if not normalized_result.diagnostics:
         normalized_result.diagnostics = {
