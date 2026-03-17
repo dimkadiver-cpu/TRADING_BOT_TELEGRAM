@@ -1,0 +1,100 @@
+1)
+
+[trader#d]
+
+Storjusdt SHORT вход с текущих //  "Storjusdt" - symbol; "SHORT" - direzione
+
+рыночный— риск 0.5% депо   //  "риск 0.5%" rischio per posizione
+
+
+Стоп 0.16134          // Stop
+ 
+
+Тейки            // T profit
+• TP1: 0.1445
+TP2; 0,138
+
+Commento: segnale completo
+
+
+
+2)
+
+
+[trader#d]
+
+Brev SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.5358
+
+
+Тейки 
+• TP1: 0.4283
+• TP2:0.3485
+
+Commento: segnale completo
+
+3)
+
+[trader#d]
+Перевод в безубыток
+
+Commento: segnale completo
+
+4) 
+
+[Trader#d]
+tp1+
+Перевод в бу
+
+Commento: Update TP_HIT + U_MOVE_STOP_TO_BE
+
+
+5)
+
+[trader #D]
+Sent short риск 0,5 // "Sent" - simbolo, "short", direzione; "риск 0,5" - rischio per la posizione
+sl 0.034094         // Stop loss
+tp 0.027789         // tp 1
+tp2 0.026276        // tp 2
+
+6)
+
+
+[trader #D]
+upd:50% срежем rr 1;1 стоп в бу
+
+Commento: Update, U_CLOSE_PARTIAL: "срежем" , "50%"  meta della posizione, "стоп в бу" - "U_MOVE_STOP_TO_BE"
+
+
+
+
+7)
+[trader #D]
+Enj шорт риск 0,5
+sl 0.02832
+тп1 0,02751
+тп 2 0,0270
+тп3 0,02669
+
+Commento: segnale completo
+
+
+8)
+
+[trader #D]
+стоп переставляем в + на 1,2453
+
+
+Commento: Update,
+
+9)
+
+[trader #D]
+JTO закрываем полностью 0,307
++1р
+
+Commento: Update, "U_CLOSE_FULL"

@@ -59,7 +59,20 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
     def test_cancel_pending_entities(self) -> None:
         text = "cancel pending orders"
         result = self.parser.parse_message(text, _context(text=text, reply_to=707))
-        self.assertEqual(result.entities.get("cancel_scope"), "ALL_PENDING_ENTRIES")
+        self.assertEqual(result.entities.get("cancel_scope"), "TARGETED")
+
+    def test_cancel_pending_global_scopes(self) -> None:
+        all_text = "cancel pending all limit orders"
+        all_result = self.parser.parse_message(all_text, _context(text=all_text))
+        self.assertEqual(all_result.entities.get("cancel_scope"), "ALL_ALL")
+
+        long_text = "cancel pending all longs"
+        long_result = self.parser.parse_message(long_text, _context(text=long_text))
+        self.assertEqual(long_result.entities.get("cancel_scope"), "ALL_LONG")
+
+        short_text = "cancel pending all shorts"
+        short_result = self.parser.parse_message(short_text, _context(text=short_text))
+        self.assertEqual(short_result.entities.get("cancel_scope"), "ALL_SHORT")
 
     def test_reported_results_and_result_mode(self) -> None:
         text = "Final result BTCUSDT - 1.2R ETHUSDT - -0.3R"
