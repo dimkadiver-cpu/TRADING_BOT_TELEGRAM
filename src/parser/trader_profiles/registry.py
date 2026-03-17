@@ -6,16 +6,21 @@ from typing import Callable
 
 from src.parser.trader_profiles.base import TraderProfileParser
 from src.parser.trader_profiles.trader_a import TraderAProfileParser
+from src.parser.trader_profiles.trader_b import TraderBProfileParser
 
 _CANONICAL_TRADER_CODE = "trader_a"
 _TRADER_ALIASES: dict[str, str] = {
     "ta": _CANONICAL_TRADER_CODE,
     "a": _CANONICAL_TRADER_CODE,
     "trader_a": _CANONICAL_TRADER_CODE,
+    "tb": "trader_b",
+    "b": "trader_b",
+    "trader_b": "trader_b",
 }
 
 _PARSER_FACTORIES: dict[str, Callable[[], TraderProfileParser]] = {
     _CANONICAL_TRADER_CODE: TraderAProfileParser,
+    "trader_b": TraderBProfileParser,
 }
 
 
