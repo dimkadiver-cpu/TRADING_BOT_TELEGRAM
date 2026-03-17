@@ -244,6 +244,7 @@ class MinimalParserPipeline:
         profile_target_ids: list[int] = []
         profile_reported_results: list[dict[str, object]] = []
         profile_confidence: float | None = None
+        profile_v2_fields: dict[str, object] | None = None
         profile_used = False
         profile_code = _resolve_profile_code(data.resolved_trader_id)
         profile_parser = get_profile_parser(profile_code) if profile_code else None
@@ -268,6 +269,14 @@ class MinimalParserPipeline:
                 profile_target_ids = _profile_target_ids(profile_result.target_refs)
                 profile_reported_results = _normalize_profile_reported_results(profile_result.reported_results)
                 profile_confidence = profile_result.confidence
+                profile_v2_fields = {
+                    "message_class": getattr(profile_result, "message_class", None) or getattr(profile_result, "message_type", None),
+                    "primary_intent": getattr(profile_result, "primary_intent", None),
+                    "actions_structured": getattr(profile_result, "actions_structured", None),
+                    "target_scope": getattr(profile_result, "target_scope", None),
+                    "linking": getattr(profile_result, "linking", None),
+                    "diagnostics": getattr(profile_result, "diagnostics", None),
+                }
                 warnings.extend(profile_result.warnings)
                 notes_parts.append(f"profile_parser={profile_code}")
             except Exception:
@@ -326,6 +335,7 @@ class MinimalParserPipeline:
         if isinstance(profile_confidence, float) and 0.0 <= profile_confidence <= 1.0:
             normalized_result.confidence = round(profile_confidence, 4)
         normalized_result = _refine_semantics(normalized_result)
+        normalized_result = _enrich_v2_semantics(normalized_result, profile_v2_fields=profile_v2_fields)
         # Keep a single policy for weak updates: warn and request review only when no concrete target refs.
         if normalized_result.message_type == "UPDATE":
             has_target_refs = bool(normalized_result.target_refs)
@@ -427,6 +437,96 @@ class MinimalParserPipeline:
         if "admin" in normalized or "stats" in normalized:
             return "INFO_ONLY"
         return "UNCLASSIFIED"
+
+
+def _enrich_v2_semantics(
+    normalized_result: ParseResultNormalized,
+    *,
+    profile_v2_fields: dict[str, object] | None,
+) -> ParseResultNormalized:
+    # Default to normalized semantic values from v1/v2 builder.
+    if not normalized_result.message_class:
+        normalized_result.message_class = normalized_result.message_type
+    if not normalized_result.primary_intent:
+        normalized_result.primary_intent = next((intent for intent in normalized_result.intents if intent), None)
+    if not normalized_result.actions_structured:
+        normalized_result.actions_structured = [
+            {"action": action}
+            for action in normalized_result.actions
+            if isinstance(action, str) and action
+        ]
+    if not normalized_result.instrument_obj:
+        normalized_result.instrument_obj = {
+            "symbol": normalized_result.instrument,
+            "market_type": normalized_result.market_type,
+        }
+    if not normalized_result.position_obj:
+        normalized_result.position_obj = {
+            "side": normalized_result.side,
+            "stop_loss": normalized_result.stop_loss,
+            "take_profits": normalized_result.take_profits,
+        }
+    if not normalized_result.entry_plan:
+        normalized_result.entry_plan = {
+            "entries": list(normalized_result.entries),
+            "entry_plan_type": normalized_result.entry_plan_type,
+            "entry_structure": normalized_result.entry_structure,
+            "has_averaging_plan": normalized_result.has_averaging_plan,
+        }
+    if not normalized_result.risk_plan:
+        normalized_result.risk_plan = {
+            "confidence": normalized_result.confidence,
+        }
+    if not normalized_result.results_v2 and normalized_result.reported_results:
+        normalized_result.results_v2 = list(normalized_result.reported_results)
+    if not normalized_result.target_scope:
+        normalized_result.target_scope = {"kind": "signal", "scope": "single"}
+    if not normalized_result.linking:
+        normalized_result.linking = {
+            "targeted": bool(normalized_result.target_refs),
+            "target_refs_count": len(normalized_result.target_refs),
+            "strategy": "reply_or_link" if normalized_result.target_refs else "unresolved",
+        }
+    if not normalized_result.diagnostics:
+        normalized_result.diagnostics = {
+            "pipeline": "minimal",
+            "has_warnings": bool(normalized_result.validation_warnings),
+            "warning_count": len(normalized_result.validation_warnings),
+        }
+
+    if not isinstance(profile_v2_fields, dict):
+        return normalized_result
+
+    # When profile provides v2 semantics, prefer profile-level trader-specific precision.
+    message_class = profile_v2_fields.get("message_class")
+    if isinstance(message_class, str) and message_class:
+        normalized_result.message_class = message_class
+
+    primary_intent = profile_v2_fields.get("primary_intent")
+    if isinstance(primary_intent, str) and primary_intent:
+        normalized_result.primary_intent = primary_intent
+
+    actions_structured = profile_v2_fields.get("actions_structured")
+    if isinstance(actions_structured, list):
+        filtered_actions_structured = [item for item in actions_structured if isinstance(item, dict)]
+        if filtered_actions_structured:
+            normalized_result.actions_structured = filtered_actions_structured
+
+    target_scope = profile_v2_fields.get("target_scope")
+    if isinstance(target_scope, dict) and target_scope:
+        normalized_result.target_scope = dict(target_scope)
+
+    linking = profile_v2_fields.get("linking")
+    if isinstance(linking, dict) and linking:
+        normalized_result.linking = dict(linking)
+
+    diagnostics = profile_v2_fields.get("diagnostics")
+    if isinstance(diagnostics, dict) and diagnostics:
+        merged_diagnostics = dict(normalized_result.diagnostics)
+        merged_diagnostics.update(diagnostics)
+        normalized_result.diagnostics = merged_diagnostics
+
+    return normalized_result
 
 def _legacy_direction(direction: str | None) -> str | None:
     if direction == "LONG":

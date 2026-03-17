@@ -205,6 +205,19 @@ class TraderAProfileParser:
             intents=intents,
             warnings=warnings,
         )
+        # Legacy message_type/intents/entities/target_refs stay unchanged.
+        # The v2 semantic envelope below is additive for backward compatibility.
+        primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
+        actions_structured = self._build_actions_structured(message_type=message_type, intents=intents, entities=entities)
+        linking = self._build_linking(target_refs=target_refs, context=context, has_global_target=has_global_target)
+        target_scope = self._build_target_scope(entities=entities, has_global_target=has_global_target)
+        diagnostics = self._build_diagnostics(
+            prepared=prepared,
+            message_type=message_type,
+            intents=intents,
+            warnings=warnings,
+            has_global_target=has_global_target,
+        )
         return TraderParseResult(
             message_type=message_type,
             intents=intents,
@@ -213,7 +226,100 @@ class TraderAProfileParser:
             reported_results=reported_results,
             warnings=warnings,
             confidence=confidence,
+            primary_intent=primary_intent,
+            actions_structured=actions_structured,
+            target_scope=target_scope,
+            linking=linking,
+            diagnostics=diagnostics,
         )
+
+    @staticmethod
+    def _derive_primary_intent(*, message_type: str, intents: list[str]) -> str | None:
+        if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
+            return "NS_CREATE_SIGNAL"
+        for intent in intents:
+            if intent.startswith("U_"):
+                return intent
+        return intents[0] if intents else None
+
+    @staticmethod
+    def _build_actions_structured(*, message_type: str, intents: list[str], entities: dict[str, Any]) -> list[dict[str, Any]]:
+        if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
+            return [
+                {
+                    "action": "CREATE_SIGNAL",
+                    "instrument": entities.get("symbol"),
+                    "side": entities.get("side"),
+                    "entries": entities.get("entry", []),
+                    "stop_loss": entities.get("stop_loss"),
+                    "take_profits": entities.get("take_profits", []),
+                }
+            ]
+
+        actions: list[dict[str, Any]] = []
+        for intent in intents:
+            if intent == "U_MOVE_STOP_TO_BE":
+                actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
+            elif intent == "U_MOVE_STOP":
+                actions.append({"action": "MOVE_STOP", "new_stop_level": entities.get("new_stop_level")})
+            elif intent == "U_CLOSE_PARTIAL":
+                actions.append(
+                    {
+                        "action": "CLOSE_POSITION",
+                        "scope": "PARTIAL",
+                        "close_fraction": entities.get("close_fraction"),
+                    }
+                )
+            elif intent == "U_CLOSE_FULL":
+                actions.append({"action": "CLOSE_POSITION", "scope": entities.get("close_scope", "FULL")})
+            elif intent == "U_CANCEL_PENDING_ORDERS":
+                actions.append({"action": "CANCEL_PENDING", "scope": entities.get("cancel_scope", "ALL_PENDING_ENTRIES")})
+            elif intent == "U_TP_HIT":
+                actions.append({"action": "TAKE_PROFIT", "target": entities.get("hit_target", "TP")})
+            elif intent == "U_STOP_HIT":
+                actions.append({"action": "CLOSE_POSITION", "target": "STOP"})
+            elif intent == "U_MARK_FILLED":
+                actions.append({"action": "MARK_FILLED", "fill_state": entities.get("fill_state", "FILLED")})
+            elif intent == "U_REPORT_FINAL_RESULT":
+                actions.append({"action": "REPORT_RESULT", "mode": entities.get("result_mode", "TEXT_SUMMARY")})
+        return actions
+
+    @staticmethod
+    def _build_linking(*, target_refs: list[dict[str, Any]], context: ParserContext, has_global_target: bool) -> dict[str, Any]:
+        return {
+            "targeted": bool(target_refs or has_global_target),
+            "reply_to_message_id": context.reply_to_message_id,
+            "target_refs_count": len(target_refs),
+            "has_global_target_scope": has_global_target,
+            "strategy": "reply_or_link" if target_refs else ("global_scope" if has_global_target else "unresolved"),
+        }
+
+    @staticmethod
+    def _build_target_scope(*, entities: dict[str, Any], has_global_target: bool) -> dict[str, Any]:
+        close_scope = entities.get("close_scope")
+        if close_scope in {"ALL_LONGS", "ALL_SHORTS"}:
+            return {"kind": "portfolio_side", "scope": close_scope}
+        if has_global_target:
+            return {"kind": "portfolio_side", "scope": "GLOBAL"}
+        return {"kind": "signal", "scope": "single"}
+
+    @staticmethod
+    def _build_diagnostics(
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        intents: list[str],
+        warnings: list[str],
+        has_global_target: bool,
+    ) -> dict[str, Any]:
+        return {
+            "parser_version": "trader_a_v2_compatible",
+            "message_type": message_type,
+            "intent_count": len(intents),
+            "warning_count": len(warnings),
+            "has_global_target_scope": has_global_target,
+            "raw_text_length": len(str(prepared.get("raw_text") or "")),
+        }
 
     def _preprocess(self, *, text: str, context: ParserContext) -> dict[str, Any]:
         raw_text = text or context.raw_text
