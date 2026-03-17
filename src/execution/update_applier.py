@@ -54,6 +54,19 @@ def apply_update_plan(
     try:
         with sqlite3.connect(db_path) as conn:
             resolved_attempt_keys = target_attempt_keys or _resolve_attempt_keys(conn, env=env, target_refs=state_plan.target_refs)
+            cancel_scope = _cancel_scope_from_plan(state_plan)
+            if (
+                not resolved_attempt_keys
+                and "ACT_CANCEL_ALL_PENDING_ENTRIES" in state_plan.actions
+                and cancel_scope in {"ALL_PENDING_ENTRIES", "ALL_PENDING_LONG_ENTRIES", "ALL_PENDING_SHORT_ENTRIES"}
+            ):
+                resolved_attempt_keys = _resolve_attempt_keys_by_trader_scope(
+                    conn,
+                    env=env,
+                    trader_id=trader_id,
+                    trader_prefix=trader_prefix,
+                    cancel_scope=cancel_scope,
+                )
             result.target_attempt_keys = resolved_attempt_keys
             if not resolved_attempt_keys:
                 result.warnings.append("apply_missing_target_attempt_keys")
@@ -93,6 +106,7 @@ def apply_update_plan(
                         close_reason="FULL_CLOSE_REQUESTED",
                     )
                 elif action == "ACT_CANCEL_ALL_PENDING_ENTRIES":
+                    side_filter = _entry_side_filter_for_scope(cancel_scope)
                     _apply_order_status(
                         conn=conn,
                         result=result,
@@ -100,6 +114,7 @@ def apply_update_plan(
                         env=env,
                         status="CANCELLED",
                         purpose="ENTRY",
+                        side=side_filter,
                         now=now,
                     )
                 elif action == "ACT_MARK_ORDER_FILLED":
@@ -110,6 +125,7 @@ def apply_update_plan(
                         env=env,
                         status="FILLED",
                         purpose="ENTRY",
+                        side=None,
                         now=now,
                     )
                 elif action == "ACT_MARK_TP_HIT":
@@ -120,6 +136,7 @@ def apply_update_plan(
                         env=env,
                         status="FILLED",
                         purpose="TP",
+                        side=None,
                         now=now,
                     )
                 elif action == "ACT_MARK_STOP_HIT":
@@ -130,6 +147,7 @@ def apply_update_plan(
                         env=env,
                         status="FILLED",
                         purpose="SL",
+                        side=None,
                         now=now,
                     )
                     _apply_trade_state(
@@ -338,32 +356,116 @@ def _apply_order_status(
     env: str,
     status: str,
     purpose: str,
+    side: str | None,
     now: str,
 ) -> None:
     if not attempt_keys:
         result.warnings.append("apply_order_status_missing_target")
         return
     purpose_values = {"ENTRY": ["ENTRY"], "TP": ["TP", "TAKE_PROFIT"], "SL": ["SL", "STOP_LOSS"]}.get(purpose, [purpose])
+    side_filter = side.strip().upper() if isinstance(side, str) and side.strip() else None
     for attempt_key in attempt_keys:
-        cursor = conn.execute(
-            """
-            UPDATE orders
-            SET status = ?, updated_at = ?
-            WHERE env = ?
-              AND attempt_key = ?
-              AND purpose IN ({placeholders})
-            """.format(placeholders=",".join("?" for _ in purpose_values)),
-            [status, now, env, attempt_key, *purpose_values],
-        )
+        if side_filter is None:
+            cursor = conn.execute(
+                """
+                UPDATE orders
+                SET status = ?, updated_at = ?
+                WHERE env = ?
+                  AND attempt_key = ?
+                  AND purpose IN ({placeholders})
+                """.format(placeholders=",".join("?" for _ in purpose_values)),
+                [status, now, env, attempt_key, *purpose_values],
+            )
+        else:
+            cursor = conn.execute(
+                """
+                UPDATE orders
+                SET status = ?, updated_at = ?
+                WHERE env = ?
+                  AND attempt_key = ?
+                  AND purpose IN ({placeholders})
+                  AND side = ?
+                """.format(placeholders=",".join("?" for _ in purpose_values)),
+                [status, now, env, attempt_key, *purpose_values, side_filter],
+            )
         if cursor.rowcount:
             result.applied_order_updates.append(
                 {
                     "attempt_key": attempt_key,
                     "purpose": purpose,
                     "status": status,
+                    "side": side_filter,
                     "rows": cursor.rowcount,
                 }
             )
+
+
+def _cancel_scope_from_plan(plan: StateUpdatePlan) -> str:
+    for update in plan.order_updates:
+        selector = update.get("selector")
+        if isinstance(selector, str) and selector.strip():
+            return _normalize_cancel_scope(selector)
+    return "ALL_PENDING_ENTRIES"
+
+
+def _entry_side_filter_for_scope(cancel_scope: str | None) -> str | None:
+    scope = cancel_scope.strip().upper() if isinstance(cancel_scope, str) else ""
+    if scope == "ALL_PENDING_LONG_ENTRIES":
+        return "BUY"
+    if scope == "ALL_PENDING_SHORT_ENTRIES":
+        return "SELL"
+    return None
+
+
+def _normalize_cancel_scope(value: str | None) -> str:
+    scope = value.strip().upper() if isinstance(value, str) and value.strip() else "ALL_ALL"
+    aliases = {
+        "ALL_ALL": "ALL_PENDING_ENTRIES",
+        "ALL_LONG": "ALL_PENDING_LONG_ENTRIES",
+        "ALL_SHORT": "ALL_PENDING_SHORT_ENTRIES",
+        "TARGETED": "TARGETED_PENDING_ENTRIES",
+        "ALL_PENDING_ENTRIES": "ALL_PENDING_ENTRIES",
+        "ALL_PENDING_LONG_ENTRIES": "ALL_PENDING_LONG_ENTRIES",
+        "ALL_PENDING_SHORT_ENTRIES": "ALL_PENDING_SHORT_ENTRIES",
+        "TARGETED_PENDING_ENTRIES": "TARGETED_PENDING_ENTRIES",
+    }
+    return aliases.get(scope, "ALL_PENDING_ENTRIES")
+
+
+def _resolve_attempt_keys_by_trader_scope(
+    conn: sqlite3.Connection,
+    *,
+    env: str,
+    trader_id: str | None,
+    trader_prefix: str | None,
+    cancel_scope: str,
+) -> list[str]:
+    clauses = ["env = ?"]
+    params: list[Any] = [env]
+    if isinstance(trader_id, str) and trader_id.strip():
+        clauses.append("trader_id = ?")
+        params.append(trader_id.strip())
+    elif isinstance(trader_prefix, str) and trader_prefix.strip():
+        clauses.append("trader_prefix = ?")
+        params.append(trader_prefix.strip())
+    else:
+        return []
+
+    scope = cancel_scope.strip().upper()
+    if scope == "ALL_PENDING_LONG_ENTRIES":
+        clauses.append("side = 'BUY'")
+    elif scope == "ALL_PENDING_SHORT_ENTRIES":
+        clauses.append("side = 'SELL'")
+
+    rows = conn.execute(
+        f"""
+        SELECT attempt_key
+        FROM signals
+        WHERE {' AND '.join(clauses)}
+        """,
+        params,
+    ).fetchall()
+    return [str(row[0]) for row in rows if row and row[0]]
 
 
 def _apply_move_stop(
