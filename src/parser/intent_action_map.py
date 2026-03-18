@@ -10,6 +10,7 @@ _INTENT_TO_ACTIONS: dict[str, tuple[str, ...]] = {
     "U_CLOSE_PARTIAL": ("ACT_CLOSE_PARTIAL",),
     "U_CLOSE_FULL": ("ACT_CLOSE_FULL", "ACT_MARK_POSITION_CLOSED"),
     "U_CANCEL_PENDING_ORDERS": ("ACT_CANCEL_ALL_PENDING_ENTRIES",),
+    "U_REMOVE_PENDING_ENTRY": ("ACT_REMOVE_PENDING_ENTRY",),
     "U_INVALIDATE_SETUP": ("ACT_MARK_SIGNAL_INVALID",),
     "U_MARK_FILLED": ("ACT_MARK_ORDER_FILLED",),
     "U_TP_HIT": ("ACT_MARK_TP_HIT",),
@@ -20,10 +21,11 @@ _INTENT_TO_ACTIONS: dict[str, tuple[str, ...]] = {
 }
 
 
-def map_intents_to_actions(intents: Iterable[str]) -> list[str]:
+def map_intents_to_actions(intents: Iterable[str], entities: dict[str, Any] | None = None) -> list[str]:
+    payload = entities if isinstance(entities, dict) else {}
     actions: list[str] = []
     for intent in intents:
-        mapped = _INTENT_TO_ACTIONS.get(intent, ())
+        mapped = _intent_to_actions(intent, payload)
         for action in mapped:
             if action not in actions:
                 actions.append(action)
@@ -49,7 +51,7 @@ def build_actions_structured(
 
     out: list[dict[str, Any]] = []
     for intent in intents:
-        action_type = _intent_to_action_type(intent)
+        action_type = _intent_to_action_type(intent, payload)
         if action_type is None:
             continue
         out.append(
@@ -69,13 +71,15 @@ def build_actions_structured(
     return out
 
 
-def _intent_to_action_type(intent: str) -> str | None:
+def _intent_to_action_type(intent: str, entities: dict[str, Any] | None = None) -> str | None:
+    payload = entities if isinstance(entities, dict) else {}
     mapping = {
         "U_MOVE_STOP": "MOVE_STOP",
         "U_MOVE_STOP_TO_BE": "MOVE_STOP_TO_BE",
         "U_CLOSE_PARTIAL": "CLOSE_PARTIAL",
         "U_CLOSE_FULL": "CLOSE_FULL",
         "U_CANCEL_PENDING_ORDERS": "CANCEL_PENDING",
+        "U_REMOVE_PENDING_ENTRY": "REMOVE_PENDING_ENTRY",
         "U_INVALIDATE_SETUP": "INVALIDATE_SETUP",
         "U_MARK_FILLED": "MARK_FILLED",
         "U_TP_HIT": "TP_HIT",
@@ -83,8 +87,20 @@ def _intent_to_action_type(intent: str) -> str | None:
         "U_REPORT_FINAL_RESULT": "REPORT_RESULT",
         "U_MANUAL_CLOSE": "MANUAL_CLOSE",
         "U_ADD_ENTRY": "ADD_ENTRY",
+        "U_EXIT_BE": "MARK_POSITION_CLOSED",
     }
+    if intent == "U_CLOSE_FULL" and payload.get("close_status_passive"):
+        return "MARK_POSITION_CLOSED"
     return mapping.get(intent)
+
+
+def _intent_to_actions(intent: str, entities: dict[str, Any] | None = None) -> tuple[str, ...]:
+    payload = entities if isinstance(entities, dict) else {}
+    if intent == "U_CLOSE_FULL" and payload.get("close_status_passive"):
+        return ("ACT_MARK_POSITION_CLOSED",)
+    if intent == "U_EXIT_BE":
+        return ("ACT_MARK_POSITION_CLOSED",)
+    return _INTENT_TO_ACTIONS.get(intent, ())
 
 
 def _extract_target_tp_level(entities: dict[str, Any]) -> int | None:

@@ -40,6 +40,12 @@ _UPDATE_INTENTS = {
     "U_MANUAL_CLOSE",
     "U_MARK_FILLED",
     "U_REPORT_FINAL_RESULT",
+    "U_ACTIVATION",
+    "U_EXIT_BE",
+    "U_REMOVE_PENDING_ENTRY",
+    "U_UPDATE_PENDING_ENTRY",
+    "U_UPDATE_TAKE_PROFITS",
+    "U_UPDATE_STOP",
 }
 
 _LINK_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)

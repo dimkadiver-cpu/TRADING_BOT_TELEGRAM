@@ -302,7 +302,7 @@ class MinimalParserPipeline:
         if message_type == "UPDATE" and not intents:
             intents = infer_update_intents_from_text(normalized)
 
-        actions = map_intents_to_actions(intents)
+        actions = map_intents_to_actions(intents, entities=profile_entities)
         if message_type == "UPDATE" and not actions:
             actions = ["ACT_REQUEST_MANUAL_REVIEW"]
 

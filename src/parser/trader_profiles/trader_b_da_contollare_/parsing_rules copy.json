@@ -1,0 +1,82 @@
+{
+  "classification_markers": {
+    "new_signal": [
+      "вход:",
+      "тейк профит",
+      "стоп лосс",
+      "риск на сделку"
+    ],
+    "setup_incomplete": [
+      "тейк",
+      "тп",
+      "tp",
+      "target"
+    ],
+    "update": [
+      "стоп лосс переносим",
+      "закрыта вручную",
+      "закрылись по стопу",
+      "тут не актуально",
+      "закрываю",
+      "cancel pending"
+    ]
+  },
+  "side_markers": {
+    "long": ["лонг", "long", "buy"],
+    "short": ["шорт", "short", "sell"]
+  },
+  "market_context_markers": {
+    "spot": ["сделка на споте", "сделка на споте⭐️"]
+  },
+  "entry_order_markers": {
+    "market": ["по текущим", "вход с текущих"]
+  },
+  "intent_markers": {
+    "U_MOVE_STOP_TO_BE": [ 
+      "передвигаем в БУ",
+      "без рисковой",
+      "переносим в бу"
+    ],
+    "U_MOVE_STOP": [
+      "переносим на",
+      "на уровень",
+      "на отмет",
+      "стоп лосс переносим в"
+    ],
+    "U_CLOSE_FULL": [
+      "эту сделку закрываем",
+      "сделка закрывается",
+      "сделку пока закрываем",
+      "закрываем сделку",
+      "закрыта вручную",
+      "закрыть позицию",
+      "закрываю сделки",
+      "закрываем сделку по текущим"
+    ],
+    "U_STOP_HIT": ["закрылись по стопу", "по стопу", "stop hit"],
+    "U_TP_HIT": ["тейк", "target hit", "tp hit"],
+    "U_TP_HIT_EXPLICIT": ["тейк достиг", "tp hit", "target hit"],
+    "U_CANCEL_PENDING_ORDERS": [
+      "не актуально",
+      "лонгов открытых нет",
+      "отмен",
+      "снимаем лимитки",
+      "cancel pending",
+      "cancel limit",
+      "не актуально"
+    ],
+    "U_REPORT_FINAL_RESULT": ["итог", "результат", "сделка полностью реализована"]
+  },
+  "global_target_markers": {
+    "ALL_LONGS": ["все лонги", "all longs", "all long"],
+    "ALL_SHORTS": ["все шорты", "all shorts", "all short"],
+    "ALL_ALL": ["все шорты", "all shorts", "all short"]
+  },
+  "cancel_scope_vocabulary": {
+    "all_all": "ALL_ALL",
+    "all_long": "ALL_LONG",
+    "all_short": "ALL_SHORT"
+  },
+  "ignore_markers": ["#админ", "#admin"]
+}
+

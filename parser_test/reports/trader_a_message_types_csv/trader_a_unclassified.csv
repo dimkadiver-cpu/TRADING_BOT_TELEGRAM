@@ -1,4 +1,4 @@
-raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
 1955,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,263,202,2025-11-11T07:13:53+00:00,"[trader#A]
 
 К сожалению стоп. Словили -1,5%",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
@@ -23,21 +23,6 @@ raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,teleg
 Скорее всего сделаем перерыв по сделкам на пару дней. Биток уже в зоне разворота, а так как ллмка торгует по тренду и тренд локально медвежий, он будет давать только шорт. С очень плохим RR. Поэтому, лучше переждем.
 
 Итак в работе 4 сделки. Wif, Ltc, hype и лонг aster",llm_unavailable,RR,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1830,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,395,200,2025-11-16T10:07:25+00:00,"[trader#A]
-
-Очередной тейк. Чистыми 19% 
-
-Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",trader_a_ambiguous_update_without_target; llm_unavailable,,,,,,[],,,False,"[""U_MOVE_STOP_TO_BE"", ""U_MOVE_STOP"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]","[""ACT_MOVE_STOP_LOSS"", ""ACT_CANCEL_ALL_PENDING_ENTRIES"", ""ACT_MARK_TP_HIT""]",[],[],"{""cancel_scope"": ""ALL_ALL"", ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": ""TP"", ""links"": [], ""new_stop_level"": ""ENTRY"", ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
-1808,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,432,391,2025-11-18T03:59:25+00:00,"[trader#A]
-
-Очень не приятный стоп.",llm_unavailable,,,,,,[],,,False,[],[],[391],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1799,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,443,200,2025-11-18T09:42:02+00:00,"[trader#A]
-
-
-2 тейк 
-29%  чистыми
-
-поздравляю",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
 1656,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,686,,2025-11-30T12:48:17+00:00,"[trader#A]
 
 🎈MLNUSDT 

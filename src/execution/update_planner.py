@@ -56,7 +56,9 @@ def build_update_plan(normalized: ParseResultNormalized | Mapping[str, Any]) -> 
 
     if message_type == "UPDATE" and not target_refs:
         cancel_scope = entities.get("cancel_scope")
-        only_cancel_action = bool(actions) and all(action == "ACT_CANCEL_ALL_PENDING_ENTRIES" for action in actions)
+        only_cancel_action = bool(actions) and all(
+            action in {"ACT_CANCEL_ALL_PENDING_ENTRIES", "ACT_REMOVE_PENDING_ENTRY"} for action in actions
+        )
         is_global_cancel = isinstance(cancel_scope, str) and cancel_scope in {
             "ALL_ALL",
             "ALL_LONG",
@@ -86,6 +88,16 @@ def build_update_plan(normalized: ParseResultNormalized | Mapping[str, Any]) -> 
                 }
             )
             plan.events.append("PENDING_ENTRIES_CANCELLED")
+        elif action == "ACT_REMOVE_PENDING_ENTRY":
+            plan.order_updates.append(
+                {
+                    "selector": entities.get("cancel_scope") or "TARGETED",
+                    "field": "status",
+                    "op": "SET",
+                    "value": "CANCELLED",
+                }
+            )
+            plan.events.append("PENDING_ENTRY_REMOVED")
         elif action == "ACT_MARK_ORDER_FILLED":
             plan.order_updates.append(
                 {

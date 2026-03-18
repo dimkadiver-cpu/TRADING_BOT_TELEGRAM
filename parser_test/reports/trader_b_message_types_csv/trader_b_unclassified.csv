@@ -1,0 +1,19 @@
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1867,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,354,314,2025-11-14T08:17:51+00:00,"[trader#В]
+
+Как и ожидалось по btc, мы сняли 98k$, сейчас рассматриваю для вас новые возможности для открытия позиций, следующий пост",llm_unavailable,,,,,,[],,,False,[],[],[314],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1448,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,965,947,2025-12-15T17:12:58+00:00,"[trader#В]
+
+К сожалению стоп лосс, рынок прям медвежий, не дает шансов быкам
+
+BTC с большей вероятностью собирается снимать ликвидность с 83822, и далее 80600 поэтому пока сложно с Лонгами, но ничего, риск менеджмент и дисциплина всегда решает на дистанции",llm_unavailable,BTC,,,,,[],,,False,[],[],[947],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+894,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1755,,2026-01-19T07:47:55+00:00,"[trader#B]
+
+https://t.me/c/3171748254/1745 (-1%)
+
+https://t.me/c/3171748254/1744 (-1%)
+
+https://t.me/c/3171748254/1729 БУ",llm_unavailable,,,,,,[],,,False,[],[],"[1745, 1744, 1729]",[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [""https://t.me/c/3171748254/1745"", ""https://t.me/c/3171748254/1744"", ""https://t.me/c/3171748254/1729""], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+558,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2308,2300,2026-02-11T13:00:34+00:00,"[trader #B]
+
+Небольшие изменения!",llm_unavailable,,,,,,[],,,False,[],[],[2300],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"

@@ -9,7 +9,7 @@ from typing import Any
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
 
-_NAKED_SYMBOL_RE = re.compile(r"^\s*\$?(?P<symbol>[A-Za-z]{2,12}(?:USDT)?)\b")
+_NAKED_SYMBOL_RE = re.compile(r"\b\$?(?P<symbol>[A-Za-z]{2,12}(?:USDT)?)\b")
 _SIDE_RE = re.compile(r"\b(?P<side>long|short|лонг|шорт)\b", re.IGNORECASE)
 _LIMIT_ENTRY_RE = re.compile(r"вход\s+лимит\s+(?P<price>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
 _TP_HIT_IDX_RE = re.compile(r"\b(?:tp|тп)\s*(?P<idx>\d)\+?\b", re.IGNORECASE)
@@ -19,11 +19,12 @@ _PERCENT_RESULT_RE = re.compile(r"(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*%", re.IGNOR
 _CLOSE_PRICE_RE = re.compile(r"закры\w*\s*(?:полностью)?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
 _RISK_RE = re.compile(r"риск\s*(?P<value>\d+(?:[.,]\d+)?)", re.IGNORECASE)
 _ENTRY_MARKET_MARKERS = ("вход с текущих", "вход по рынку", "рыночный")
-_TP_COMPACT_MARKERS = ("tp1+", "tp1", "tp 1", "тп1", "тп 1", "tp2", "тп2", "tp3", "тп3")
-_BE_EXIT_MARKERS = ("позиция ушла в бу", "остаток ушел в бу", "остаток ушел по бу", "остаток позиции ушел в бу", "ушел в бу+")
-_BE_MOVE_MARKERS = ("перевод в безубыток", "стоп в бу", "стоп переводим в бу", "стоп в бу+", "стоп переставляем в бу")
-_CLOSE_FULL_MARKERS = ("закрываем полностью", "закрываю по текущим", "позиция закрыта", "сделка закрыта")
+_TP_COMPACT_MARKERS = ("tp1+", "tp1", "tp 1", "тп1", "тп 1", "tp2", "tp 2", "тп2", "тп 2", "tp3", "tp 3", "тп3", "тп 3")
+_BE_EXIT_MARKERS = ("позиция ушла в бу", "остаток ушел в бу", "остаток ушел по бу", "остаток позиции ушел в бу", "ушел в бу+", "ушли в бу")
+_BE_MOVE_MARKERS = ("перевод в безубыток", "стоп в бу", "стоп переводим в бу", "стоп в бу+", "стоп переставляем в бу", "стоп сдвигаю в +")
+_CLOSE_FULL_MARKERS = ("закрываем полностью", "закрываю по текущим", "позиция закрыта", "сделка закрыта", "остаток позиции закрываем по текущим", "полный фикс", "не нравится")
 _UPDATE_TP_MARKERS = ("первый тейк убираем",)
+_PASSIVE_CLOSE_STATUS_MARKERS = ("позиция закрыта", "сделка закрыта")
 
 
 class TraderDProfileParser(TraderBProfileParser):
@@ -86,11 +87,21 @@ class TraderDProfileParser(TraderBProfileParser):
             entities.setdefault("symbol", inferred_symbol["symbol"])
 
         compact_new_signal = self._is_compact_new_signal(raw_text=raw_text, entities=entities)
-        operational_update = self._is_operational_update(raw_text=raw_text, normalized=normalized)
-        if compact_new_signal and message_type in {"UNCLASSIFIED", "SETUP_INCOMPLETE"}:
+        implicit_market_signal = self._looks_like_market_signal(raw_text=raw_text)
+        operational_update = self._is_operational_update(raw_text=raw_text, normalized=normalized) or self._looks_like_extra_operational_update(normalized=normalized)
+        passive_close_status = self._looks_like_passive_close_status(normalized=normalized)
+        passive_be_exit = self._looks_like_passive_be_exit(normalized=normalized)
+        if implicit_market_signal:
             message_type = "NEW_SIGNAL"
-        elif operational_update and message_type == "UNCLASSIFIED":
+        if compact_new_signal and (message_type in {"UNCLASSIFIED", "SETUP_INCOMPLETE"} or implicit_market_signal):
+            message_type = "NEW_SIGNAL"
+        elif operational_update and message_type in {"UNCLASSIFIED", "INFO_ONLY"}:
             message_type = "UPDATE"
+
+        if passive_close_status:
+            entities["close_status_passive"] = True
+        if passive_be_exit and "U_MOVE_STOP_TO_BE" in intents and not self._looks_like_operational_be_move(normalized=normalized):
+            intents = [intent for intent in intents if intent not in {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"}]
 
         if message_type == "NEW_SIGNAL":
             intents = ["NS_CREATE_SIGNAL"]
@@ -151,13 +162,17 @@ class TraderDProfileParser(TraderBProfileParser):
             ]
 
         actions: list[dict] = []
+        passive_close_status = bool(entities.get("close_status_passive"))
         for intent in intents:
             if intent == "U_MOVE_STOP_TO_BE":
                 actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
             elif intent == "U_MOVE_STOP":
                 actions.append({"action": "MOVE_STOP", "new_stop_level": entities.get("new_stop_level")})
             elif intent == "U_CLOSE_FULL":
-                actions.append({"action": "CLOSE_POSITION", "scope": "FULL"})
+                if passive_close_status:
+                    actions.append({"action": "MARK_POSITION_CLOSED"})
+                else:
+                    actions.append({"action": "CLOSE_POSITION", "scope": "FULL"})
             elif intent == "U_CANCEL_PENDING_ORDERS":
                 actions.append({"action": "CANCEL_PENDING", "scope": "ALL_PENDING_ENTRIES"})
             elif intent == "U_TP_HIT":
@@ -167,7 +182,7 @@ class TraderDProfileParser(TraderBProfileParser):
             elif intent == "U_CLOSE_PARTIAL":
                 actions.append({"action": "CLOSE_POSITION", "scope": "PARTIAL", "fraction": entities.get("close_fraction")})
             elif intent == "U_EXIT_BE":
-                actions.append({"action": "CLOSE_POSITION", "target": "BREAKEVEN"})
+                actions.append({"action": "MARK_POSITION_CLOSED"})
             elif intent == "U_UPDATE_TAKE_PROFITS":
                 actions.append({"action": "UPDATE_TAKE_PROFITS", "note": entities.get("take_profit_update_note")})
         return actions
@@ -203,6 +218,31 @@ class TraderDProfileParser(TraderBProfileParser):
                 "фикс 50%",
                 "переставляем в +",
             ]
+        )
+
+    @staticmethod
+    def _looks_like_extra_operational_update(*, normalized: str) -> bool:
+        return bool(
+            re.search(r"\b(?:tp|тп)\s*[23]\b", normalized)
+            or re.search(r"\bsl\b\s*-\s*\d", normalized)
+            or re.search(r"первый фикс", normalized)
+            or re.search(r"ушли по стопу в\s*\+\s*\d", normalized)
+            or re.search(r"\bстоп\b[\s\.\n-]*-\s*\d", normalized)
+            or re.search(r"остаток позиции закрываем по текущим", normalized)
+            or re.search(r"полный фикс", normalized)
+            or re.search(r"не нравится", normalized)
+        )
+
+    @staticmethod
+    def _looks_like_market_signal(*, raw_text: str) -> bool:
+        normalized = raw_text.lower()
+        return bool(
+            _extract_symbol_flexible(raw_text)
+            and _SIDE_RE.search(raw_text)
+            and ("риск" in normalized)
+            and ("стоп" in normalized or "сл" in normalized)
+            and ("tp" in normalized or "тп" in normalized or "тейк" in normalized)
+            and not re.search(r"\b(?:вход|entry)\b.*\d", normalized)
         )
 
     def _enrich_new_signal_entities(self, *, raw_text: str, entities: dict[str, Any]) -> dict[str, Any]:
@@ -245,7 +285,20 @@ class TraderDProfileParser(TraderBProfileParser):
             if take_profits:
                 out["take_profits"] = take_profits
 
-        out.setdefault("entry_plan_type", "SINGLE")
+        order_type = str(out.get("entry_order_type") or "MARKET").upper()
+        primary_entry_price = out["entry"][0] if out.get("entry") and isinstance(out["entry"][0], float) else None
+        out["entry_plan_entries"] = [
+            {
+                "sequence": 1,
+                "role": "PRIMARY",
+                "order_type": order_type,
+                "price": primary_entry_price,
+                "raw_label": "ENTRY",
+                "source_style": "SINGLE" if primary_entry_price is not None else "MARKET",
+                "is_optional": False,
+            }
+        ]
+        out.setdefault("entry_plan_type", "SINGLE_MARKET" if order_type == "MARKET" else "SINGLE_LIMIT")
         out.setdefault("entry_structure", "ONE_SHOT")
         out.setdefault("has_averaging_plan", False)
 
@@ -282,6 +335,14 @@ class TraderDProfileParser(TraderBProfileParser):
             out_intents.extend(["U_MOVE_STOP_TO_BE", "U_MOVE_STOP"])
             out_entities.setdefault("new_stop_level", "ENTRY")
             out_entities["new_stop_reference_text"] = "BREAKEVEN"
+            numeric_stop = _extract_move_stop_price(raw_text)
+            if numeric_stop is not None:
+                out_entities["new_stop_price"] = numeric_stop
+
+        if re.search(r"\bsl\b\s*-\s*\d", normalized):
+            out_intents.append("U_STOP_HIT")
+        if re.search(r"ушли по стопу в\s*\+\s*\d", normalized) or re.search(r"\bстоп\b[\s\.\n-]*-\s*\d", normalized):
+            out_intents.append("U_STOP_HIT")
 
         if any(marker in normalized for marker in _BE_EXIT_MARKERS):
             out_intents.append("U_EXIT_BE")
@@ -297,13 +358,26 @@ class TraderDProfileParser(TraderBProfileParser):
 
         if any(marker in normalized for marker in _CLOSE_FULL_MARKERS):
             out_intents.append("U_CLOSE_FULL")
+            out_entities["close_scope"] = "FULL"
             close_price = _extract_close_price(raw_text)
             if close_price is not None:
                 out_entities["reported_close_price"] = close_price
 
+        if "фикс" in normalized and "%" in normalized and "полный фикс" not in normalized:
+            out_intents.append("U_CLOSE_PARTIAL")
+            percent = _extract_partial_percent(raw_text)
+            if percent is not None:
+                out_entities["close_scope"] = "PARTIAL"
+                out_entities["close_fraction_percent"] = percent
+                out_entities["close_fraction"] = round(percent / 100.0, 4)
+                out_entities["partial_close_percent"] = percent
+
         if any(marker in normalized for marker in _UPDATE_TP_MARKERS):
             out_intents.append("U_UPDATE_TAKE_PROFITS")
             out_entities["take_profit_update_note"] = "FIRST_TP_REMOVED"
+        if "первый фикс" in normalized:
+            out_intents.append("U_UPDATE_TAKE_PROFITS")
+            out_entities["take_profit_update_note"] = "FIRST_FIX"
 
         profit_percent = _extract_percent_result(raw_text)
         if profit_percent is None and ("профит" in normalized or "закрыта" in normalized or "закрыта +" in normalized):
@@ -314,22 +388,50 @@ class TraderDProfileParser(TraderBProfileParser):
         if profit_r is not None:
             out_entities["reported_profit_r"] = profit_r
 
-        if "позиция закрыта" in normalized or "сделка закрыта" in normalized:
+        if re.search(r"\b(?:tp|тп)\s*\d\b", normalized) or ("профит" in normalized and (profit_r is not None or profit_percent is not None)):
+            out_intents.append("U_TP_HIT")
+
+        if "позиция закрыта" in normalized or "сделка закрыта" in normalized or "полный фикс" in normalized:
             out_intents.append("U_CLOSE_FULL")
+            out_entities.setdefault("close_scope", "FULL")
+            if "позиция закрыта" in normalized or "сделка закрыта" in normalized:
+                out_entities["close_status_passive"] = True
 
         return _unique(out_intents), out_entities
 
+    @staticmethod
+    def _looks_like_operational_be_move(*, normalized: str) -> bool:
+        return bool(
+            any(marker in normalized for marker in _BE_MOVE_MARKERS)
+            or "перевод в бу" in normalized
+        )
+
+    @staticmethod
+    def _looks_like_passive_be_exit(*, normalized: str) -> bool:
+        return bool(
+            any(marker in normalized for marker in _BE_EXIT_MARKERS)
+            or "закрыта в бу" in normalized
+            or "закрыта в безубыток" in normalized
+        )
+
+    @staticmethod
+    def _looks_like_passive_close_status(*, normalized: str) -> bool:
+        return bool(
+            any(marker in normalized for marker in _PASSIVE_CLOSE_STATUS_MARKERS)
+            or "закрыта в бу" in normalized
+            or "закрыта в безубыток" in normalized
+        )
+
 
 def _extract_symbol_flexible(raw_text: str) -> dict[str, str] | None:
-    match = _NAKED_SYMBOL_RE.search(raw_text)
-    if not match:
-        return None
-    token = match.group("symbol").upper()
-    if token in {"TP", "SL", "UPD"}:
-        return None
-    if token.endswith("USDT"):
-        return {"symbol_raw": token, "symbol": token}
-    return {"symbol_raw": token, "symbol": f"{token}USDT"}
+    for match in _NAKED_SYMBOL_RE.finditer(raw_text):
+        token = match.group("symbol").upper()
+        if token in {"TP", "SL", "UPD", "TRADER", "SHORT", "LONG", "FULL", "FIX", "PROFIT", "RISK", "STOP", "ENTRY", "MARKET", "CURRENT", "GUN", "HTTP", "HTTPS", "WWW", "COM", "TELEGRAM", "ME"}:
+            continue
+        if token.endswith("USDT"):
+            return {"symbol_raw": token, "symbol": token}
+        return {"symbol_raw": token, "symbol": f"{token}USDT"}
+    return None
 
 
 def _to_float(raw: str | None) -> float | None:
@@ -362,6 +464,8 @@ def _extract_r_result(raw_text: str) -> float | None:
 
 def _extract_move_stop_price(raw_text: str) -> float | None:
     match = re.search(r"на\s+(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE)
+    if not match:
+        match = re.search(r"в\s*\+\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE)
     return _to_float(match.group("value")) if match else None
 
 
@@ -376,16 +480,24 @@ def _extract_signed_value(raw_text: str) -> float | None:
 
 
 def _extract_stop_price_flexible(raw_text: str) -> float | None:
-    match = re.search(r"(?:\bsl\b|стоп(?:\s*лосс)?)\s*[:=]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE)
+    match = re.search(r"(?:\bsl\b|\bсл\b|стоп(?:\s*лосс)?)\s*[:=]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE)
     return _to_float(match.group("value")) if match else None
 
 
 def _extract_take_profits_flexible(raw_text: str) -> list[float]:
     out: list[float] = []
-    for match in re.finditer(r"(?:\btp\d*\b|тп\d*|тейк(?:\s*\d+)?)\s*[:=]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE):
-        value = _to_float(match.group("value"))
-        if value is not None and value not in out:
-            out.append(value)
+    pattern = re.compile(
+        r"(?:\btp\d+\b|\btp(?=\s)|\bтп\d+\b|\bтп(?=\s)|тейк(?:\s*\d+)?)\s*[:=;]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)",
+        re.IGNORECASE,
+    )
+    for line in raw_text.splitlines():
+        cleaned = line.strip()
+        if not cleaned or re.fullmatch(r"(?:tp|тп)\s*\d+\s*", cleaned, re.IGNORECASE):
+            continue
+        for match in pattern.finditer(cleaned):
+            value = _to_float(match.group("value"))
+            if value is not None and value not in out:
+                out.append(value)
     return out
 
 
