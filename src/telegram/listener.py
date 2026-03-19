@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timezone
 import logging
 import os
+import re
 from typing import Iterable
 
 from telethon import TelegramClient, events
@@ -31,6 +32,8 @@ from src.telegram.ingestion import (
     TelegramIncomingMessage,
 )
 from src.telegram.trader_mapping import TelegramSourceTraderMapper
+
+_SIGNAL_ID_RE = re.compile(r"\bSIGNAL\s*ID\s*:\s*#?\s*(?P<id>\d+)\b", re.IGNORECASE)
 
 
 def build_ingestion_service(db_path: str, logger: logging.Logger) -> RawMessageIngestionService:
@@ -182,6 +185,19 @@ def register_message_listener(
             )
             return
 
+        reply_raw_text = None
+        if reply_to_message_id is not None:
+            parent = ingestion_service.store.get_by_source_and_message_id(source_chat_id, reply_to_message_id)
+            if parent is not None:
+                reply_raw_text = parent.raw_text
+        if reply_raw_text is None:
+            signal_id = _extract_signal_id(message.message or "")
+            if signal_id is not None:
+                reply_raw_text = parse_results_store.get_raw_text_by_signal_id(
+                    resolved_trader_id=trader_resolution.trader_id or "",
+                    signal_id=signal_id,
+                )
+
         parse_record = parser_pipeline.parse(
             ParserInput(
                 raw_message_id=ingestion.raw_message_id,
@@ -194,6 +210,7 @@ def register_message_listener(
                 source_chat_id=source_chat_id,
                 source_message_id=int(message.id),
                 linkage_reference_id=eligibility.referenced_message_id,
+                reply_raw_text=reply_raw_text,
             )
         )
         parse_results_store.upsert(parse_record)
@@ -216,3 +233,13 @@ def _resolve_source_type(event: events.NewMessage.Event) -> str | None:
     if getattr(chat, "username", None) is not None and getattr(chat, "broadcast", None) is None:
         return "user"
     return chat.__class__.__name__.lower()
+
+
+def _extract_signal_id(raw_text: str) -> int | None:
+    match = _SIGNAL_ID_RE.search(raw_text or "")
+    if not match:
+        return None
+    try:
+        return int(match.group("id"))
+    except ValueError:
+        return None

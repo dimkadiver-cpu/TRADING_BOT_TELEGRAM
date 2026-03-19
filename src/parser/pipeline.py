@@ -10,7 +10,12 @@ from src.core.trader_tags import first_normalized_trader_tag, normalize_trader_a
 from src.core.timeutils import utc_now_iso
 from src.parser.dispatcher import ParserDispatcher
 from src.parser.canonical_schema import trader_intent_support
-from src.parser.intent_action_map import derive_primary_intent, infer_update_intents_from_text, map_intents_to_actions
+from src.parser.intent_action_map import (
+    derive_primary_intent,
+    infer_update_intents_from_text,
+    intent_policy_for_intent,
+    map_intents_to_actions,
+)
 from src.parser.llm_adapter import LLMInvalidResponse, LLMNotConfigured, LLMParseError, LLMRequestFailed
 from src.parser.normalization import ParseResultNormalized, build_parse_result_normalized
 from src.parser.parser_config import ParserModeResolver
@@ -60,6 +65,7 @@ class ParserInput:
     source_chat_id: str | None = None
     source_message_id: int | None = None
     linkage_reference_id: int | None = None
+    reply_raw_text: str | None = None
     parser_mode: str | None = None
     llm_provider: str | None = None
     llm_model: str | None = None
@@ -154,6 +160,7 @@ class MinimalParserPipeline:
                 source_chat_id=payload.source_chat_id,
                 source_message_id=payload.source_message_id,
                 linkage_reference_id=payload.linkage_reference_id,
+                reply_raw_text=payload.reply_raw_text,
                 parser_mode=effective_mode,
                 llm_provider=effective_llm_provider,
                 llm_model=effective_llm_model,
@@ -259,6 +266,7 @@ class MinimalParserPipeline:
                         reply_to_message_id=data.linkage_reference_id,
                         channel_id=data.source_chat_id,
                         raw_text=text,
+                        reply_raw_text=data.reply_raw_text,
                         extracted_links=extract_telegram_links(text),
                         hashtags=extract_hashtags(text),
                     ),
@@ -303,8 +311,22 @@ class MinimalParserPipeline:
         if message_type == "UPDATE" and not intents:
             intents = infer_update_intents_from_text(normalized)
 
+        if "U_REENTER" in intents and data.reply_raw_text:
+            parent_normalized = data.reply_raw_text.lower()
+            parent_extracted = self._extract_fields(data.reply_raw_text, parent_normalized)
+            if extracted.symbol is None and parent_extracted.symbol is not None:
+                extracted.symbol = parent_extracted.symbol
+            if extracted.direction is None and parent_extracted.direction is not None:
+                extracted.direction = parent_extracted.direction
+            if extracted.entry_raw is None and parent_extracted.entry_raw is not None:
+                extracted.entry_raw = parent_extracted.entry_raw
+            if extracted.stop_raw is None and parent_extracted.stop_raw is not None:
+                extracted.stop_raw = parent_extracted.stop_raw
+            if not extracted.targets and parent_extracted.targets:
+                extracted.targets = list(parent_extracted.targets)
+
         actions = map_intents_to_actions(intents, entities=profile_entities)
-        if message_type == "UPDATE" and not actions:
+        if message_type == "UPDATE" and not actions and not intents:
             actions = ["ACT_REQUEST_MANUAL_REVIEW"]
 
         normalized_result = build_parse_result_normalized(
@@ -342,7 +364,15 @@ class MinimalParserPipeline:
             has_target_refs = bool(normalized_result.target_refs)
             if not has_target_refs and "update without strong link" not in normalized_result.validation_warnings:
                 normalized_result.validation_warnings.append("update without strong link")
-            if not normalized_result.actions and "ACT_REQUEST_MANUAL_REVIEW" not in normalized_result.actions:
+            has_state_changing_intent = any(
+                intent_policy_for_intent(intent).get("state_change") for intent in normalized_result.intents
+            )
+            if (
+                not normalized_result.actions
+                and not has_state_changing_intent
+                and not normalized_result.intents
+                and "ACT_REQUEST_MANUAL_REVIEW" not in normalized_result.actions
+            ):
                 normalized_result.actions = [*normalized_result.actions, "ACT_REQUEST_MANUAL_REVIEW"]
         if normalized_result.validation_warnings:
             normalized_result.status = "PARSED_WITH_WARNINGS"

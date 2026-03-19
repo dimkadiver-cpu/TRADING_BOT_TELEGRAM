@@ -13,6 +13,7 @@ class ParserContext:
     reply_to_message_id: int | None
     channel_id: str | None
     raw_text: str
+    reply_raw_text: str | None = None
     extracted_links: list[str] = field(default_factory=list)
     hashtags: list[str] = field(default_factory=list)
 

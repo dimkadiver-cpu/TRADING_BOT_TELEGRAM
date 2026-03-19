@@ -9,6 +9,7 @@ from typing import Any
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
+from src.parser.intent_action_map import intent_policy_for_intent
 
 _RULES_PATH = Path(__file__).resolve().parent / "parsing_rules.json"
 _LINK_ID_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)
@@ -296,6 +297,8 @@ class TraderCProfileParser(TraderBProfileParser):
             return [{"action": "CREATE_SIGNAL", "instrument": entities.get("symbol"), "side": entities.get("side"), "entries": entities.get("entries", []), "stop_loss": entities.get("stop_loss"), "take_profits": entities.get("take_profits", [])}]
         actions: list[dict[str, Any]] = []
         for intent in intents:
+            if not intent_policy_for_intent(intent).get("state_change"):
+                continue
             actions.append({"action": intent})
         return actions
 

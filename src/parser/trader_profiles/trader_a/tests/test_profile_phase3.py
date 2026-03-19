@@ -78,8 +78,11 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         short_text = "По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно."
         short_result = self.parser.parse_message(short_text, _context(text=short_text))
         self.assertEqual(short_result.entities.get("close_scope"), None)
-        self.assertEqual(short_result.target_scope.get("scope"), "ALL_SHORTS")
+        self.assertEqual(short_result.target_scope.get("scope"), "ALL_OPEN_SHORTS")
         self.assertEqual(short_result.target_scope.get("kind"), "portfolio_side")
+        self.assertTrue(short_result.target_scope.get("applies_to_all"))
+        self.assertEqual(short_result.target_scope.get("position_side_filter"), "SHORT")
+        self.assertEqual(short_result.target_scope.get("position_status_filter"), "OPEN")
 
         reply_short_text = "1 тейк. поздравляю\n\nхоть немного минуса прикрыли\n\nпо шортам стоп на точку входа"
         reply_short_result = self.parser.parse_message(reply_short_text, _context(text=reply_short_text, reply_to=485))
@@ -113,7 +116,8 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         text = "2 тейк 29% чистыми поздравляю"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "INFO_ONLY")
-        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertNotIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.entities.get("result_percent"), 29.0)
 
     def test_report_mode_text_summary_when_no_structured_r(self) -> None:
         text = "final result summary for this week"

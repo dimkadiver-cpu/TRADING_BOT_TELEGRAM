@@ -4,6 +4,7 @@ import json
 import unittest
 
 from src.parser.canonical_schema import canonical_action_for_intent, load_canonical_intent_schema, normalize_intents, trader_intent_support
+from src.parser.intent_action_map import intent_policy_for_intent, load_intent_policy_map
 from src.parser.normalization import build_parse_result_normalized
 from src.parser.pipeline import MinimalParserPipeline, ParserInput
 
@@ -13,6 +14,17 @@ class CanonicalSchemaAlignmentTests(unittest.TestCase):
         schema = load_canonical_intent_schema()
         self.assertIn("NS_CREATE_SIGNAL", schema)
         self.assertEqual(canonical_action_for_intent("U_MOVE_STOP_TO_BE"), "ACT_MOVE_STOP_LOSS_TO_BE")
+        self.assertEqual(canonical_action_for_intent("U_REENTER"), "ACT_REENTER_POSITION")
+
+    def test_intent_policy_separates_state_change_from_intent_recognition(self) -> None:
+        policy_map = load_intent_policy_map()
+        self.assertIn("U_TP_HIT", policy_map)
+        self.assertFalse(intent_policy_for_intent("U_TP_HIT")["state_change"])
+        self.assertIsNone(intent_policy_for_intent("U_TP_HIT")["action"])
+        self.assertTrue(intent_policy_for_intent("U_MOVE_STOP_TO_BE")["state_change"])
+        self.assertEqual(intent_policy_for_intent("U_MOVE_STOP_TO_BE")["action"], "ACT_MOVE_STOP_LOSS")
+        self.assertTrue(policy_map["NS_CREATE_SIGNAL"]["state_change"])
+        self.assertEqual(policy_map["NS_CREATE_SIGNAL"]["action"], "ACT_CREATE_SIGNAL")
 
     def test_intent_aliases_are_normalized(self) -> None:
         normalized = normalize_intents(["U_UPDATE_STOP", "U_TP_HIT_EXPLICIT", "U_TP_HIT"])

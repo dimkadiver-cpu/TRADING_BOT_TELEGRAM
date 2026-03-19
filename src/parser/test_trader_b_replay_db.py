@@ -127,7 +127,7 @@ class TraderBReplayDbTests(unittest.TestCase):
 
         self._reset_entry_statuses()
         normalized, _, _ = self._run_e2e(text="cancel pending all")
-        self.assertEqual((normalized.get("entities") or {}).get("cancel_scope"), "ALL_ALL")
+        self.assertEqual((normalized.get("entities") or {}).get("cancel_scope"), "ALL_PENDING_ENTRIES")
         self.assertEqual(self._entry_status("atkB501"), "CANCELLED")
         self.assertEqual(self._entry_status("atkB502"), "CANCELLED")
 

@@ -230,11 +230,27 @@ def build_parse_result_normalized(
     semantic_message_type = _to_semantic_message_type(message_type)
     semantic_intents = _normalize_intents(intents)
     semantic_actions = _normalize_actions(actions)
+    default_entry_order_type = _default_entry_order_type_for_trader(trader_id)
 
     event_type = _map_to_canonical_event_type(
         message_type=message_type,
     )
-    semantic_entries = _parse_entries(entry_raw, entities)
+    semantic_entries = _parse_entries(entry_raw, entities, trader_id=trader_id)
+    if not semantic_entries and semantic_message_type == "NEW_SIGNAL" and default_entry_order_type in {"MARKET", "LIMIT"}:
+        semantic_entries = [
+            {
+                "label": "E1",
+                "price": None,
+                "kind": "ENTRY",
+                "raw": None,
+                "sequence": 1,
+                "role": "PRIMARY",
+                "order_type": default_entry_order_type,
+                "raw_label": "ENTRY",
+                "source_style": "MARKET" if default_entry_order_type == "MARKET" else "SINGLE",
+                "is_optional": False,
+            }
+        ]
     stop_loss = _parse_level(stop_raw, label="SL", kind="STOP_LOSS")
     take_profits = [_parse_level(value, label=f"TP{index + 1}", kind="TAKE_PROFIT") for index, value in enumerate(targets)]
     take_profits = [value for value in take_profits if value is not None]
@@ -285,7 +301,7 @@ def build_parse_result_normalized(
         if str(value.get("role") or "").upper() == "PRIMARY" and isinstance(value.get("price"), float)
     ]
     averaging_price = _extract_averaging_price(semantic_entries)
-    entry_plan_type = _infer_entry_plan_type(semantic_entries)
+    entry_plan_type = _infer_entry_plan_type(semantic_entries, trader_id=trader_id)
     entry_structure = _infer_entry_structure(semantic_entries)
     has_averaging_plan = averaging_price is not None
     stop_loss_price = stop_loss.get("price") if stop_loss else None
@@ -349,8 +365,8 @@ def build_parse_result_normalized(
         symbol=instrument,
         direction=semantic_direction,
         entry_main=primary_entry_prices[0] if primary_entry_prices else None,
-        entry_mode=_infer_entry_mode(semantic_entries),
-        average_entry=averaging_price if averaging_price is not None else (round(sum(entry_prices) / len(entry_prices), 8) if entry_prices else None),
+        entry_mode=_infer_entry_mode(semantic_entries, trader_id=trader_id),
+        average_entry=averaging_price if averaging_price is not None else (round(sum(entry_prices) / len(entry_prices), 8) if len(entry_prices) > 1 else None),
         entry_plan_type=entry_plan_type,
         entry_structure=entry_structure,
         has_averaging_plan=has_averaging_plan,
@@ -740,12 +756,18 @@ def _infer_market_type(instrument: str | None) -> str | None:
     return "UNKNOWN"
 
 
-def _parse_entries(raw: str | None, entities: dict[str, Any] | None = None) -> list[dict[str, Any]]:
-    canonical_entries = _extract_canonical_entries_from_entities(entities)
+def _parse_entries(
+    raw: str | None,
+    entities: dict[str, Any] | None = None,
+    *,
+    trader_id: str | None = None,
+) -> list[dict[str, Any]]:
+    canonical_entries = _extract_canonical_entries_from_entities(entities, trader_id=trader_id)
     if canonical_entries:
         return canonical_entries
     if raw is None:
         return []
+    default_order_type = _entry_order_type_override(entities, trader_id=trader_id)
     chunks = [part.strip() for part in raw.split("-") if part.strip()]
     if not chunks:
         return []
@@ -758,7 +780,7 @@ def _parse_entries(raw: str | None, entities: dict[str, Any] | None = None) -> l
                     **parsed,
                     "sequence": index + 1,
                     "role": "PRIMARY" if index == 0 else "AVERAGING",
-                    "order_type": "UNKNOWN",
+                    "order_type": default_order_type or "UNKNOWN",
                     "raw_label": "ENTRY" if index == 0 else "AVERAGING",
                     "source_style": "SINGLE" if len(chunks) == 1 else "UNKNOWN",
                     "is_optional": index > 0,
@@ -767,12 +789,17 @@ def _parse_entries(raw: str | None, entities: dict[str, Any] | None = None) -> l
     return values
 
 
-def _extract_canonical_entries_from_entities(entities: dict[str, Any] | None) -> list[dict[str, Any]]:
+def _extract_canonical_entries_from_entities(
+    entities: dict[str, Any] | None,
+    *,
+    trader_id: str | None = None,
+) -> list[dict[str, Any]]:
     if not isinstance(entities, dict):
         return []
     raw_entries = entities.get("entry_plan_entries")
     if not isinstance(raw_entries, list):
         return []
+    default_order_type = _entry_order_type_override(entities, trader_id=trader_id)
     out: list[dict[str, Any]] = []
     for index, item in enumerate(raw_entries, start=1):
         if not isinstance(item, dict):
@@ -784,8 +811,9 @@ def _extract_canonical_entries_from_entities(entities: dict[str, Any] | None) ->
         raw_label = item.get("raw_label")
         source_style = item.get("source_style")
         is_optional = item.get("is_optional")
+        normalized_order_type = _normalize_entry_order_type(order_type) or default_order_type
         if not isinstance(price, (int, float)):
-            if str(role or "").upper() == "PRIMARY" and str(order_type or "").upper() == "MARKET":
+            if str(role or "").upper() == "PRIMARY" and normalized_order_type == "MARKET":
                 out.append(
                     {
                         "label": f"E{int(sequence) if isinstance(sequence, int) else index}",
@@ -794,7 +822,7 @@ def _extract_canonical_entries_from_entities(entities: dict[str, Any] | None) ->
                         "raw": None,
                         "sequence": int(sequence) if isinstance(sequence, int) else index,
                         "role": role if isinstance(role, str) else "PRIMARY",
-                        "order_type": order_type if isinstance(order_type, str) else "MARKET",
+                        "order_type": normalized_order_type or "MARKET",
                         "raw_label": raw_label if isinstance(raw_label, str) else None,
                         "source_style": source_style if isinstance(source_style, str) else "UNKNOWN",
                         "is_optional": bool(is_optional) if isinstance(is_optional, bool) else False,
@@ -809,7 +837,7 @@ def _extract_canonical_entries_from_entities(entities: dict[str, Any] | None) ->
                 "raw": str(float(price)),
                 "sequence": int(sequence) if isinstance(sequence, int) else index,
                 "role": role if isinstance(role, str) else ("PRIMARY" if index == 1 else "AVERAGING"),
-                "order_type": order_type if isinstance(order_type, str) else "UNKNOWN",
+                "order_type": normalized_order_type or "UNKNOWN",
                 "raw_label": raw_label if isinstance(raw_label, str) else None,
                 "source_style": source_style if isinstance(source_style, str) else "UNKNOWN",
                 "is_optional": bool(is_optional) if isinstance(is_optional, bool) else index > 1,
@@ -1077,10 +1105,11 @@ def _build_notes(*, notes: list[str], raw_text: str, semantic_message_type: str 
     return _unique(values)
 
 
-def _infer_entry_mode(entries: list[dict[str, Any]]) -> str | None:
+def _infer_entry_mode(entries: list[dict[str, Any]], trader_id: str | None = None) -> str | None:
     if not entries:
         return None
-    if any(str(entry.get("order_type") or "").upper() == "MARKET" for entry in entries):
+    first_order_type = _normalize_entry_order_type(entries[0].get("order_type")) or _default_entry_order_type_for_trader(trader_id)
+    if first_order_type == "MARKET" or any(_normalize_entry_order_type(entry.get("order_type")) == "MARKET" for entry in entries):
         return "MARKET"
     if len(entries) > 1:
         return "RANGE"
@@ -1106,10 +1135,10 @@ def _infer_entry_structure(entries: list[dict[str, Any]]) -> str | None:
     return "SINGLE"
 
 
-def _infer_entry_plan_type(entries: list[dict[str, Any]]) -> str | None:
+def _infer_entry_plan_type(entries: list[dict[str, Any]], trader_id: str | None = None) -> str | None:
     if not entries:
         return None
-    first_order_type = str(entries[0].get("order_type") or "").upper()
+    first_order_type = _normalize_entry_order_type(entries[0].get("order_type")) or _default_entry_order_type_for_trader(trader_id)
     has_averaging = _extract_averaging_price(entries) is not None
     if has_averaging:
         if first_order_type == "MARKET":
@@ -1122,6 +1151,32 @@ def _infer_entry_plan_type(entries: list[dict[str, Any]]) -> str | None:
     if first_order_type == "LIMIT":
         return "SINGLE_LIMIT"
     return "UNKNOWN"
+
+
+def _default_entry_order_type_for_trader(trader_id: str | None) -> str | None:
+    normalized = (trader_id or "").strip().upper()
+    if normalized in {"T3", "TRADER_3"}:
+        return "LIMIT"
+    if normalized in {"TD", "TRADER_D"}:
+        return "MARKET"
+    return None
+
+
+def _normalize_entry_order_type(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip().upper()
+    if normalized in {"MARKET", "LIMIT"}:
+        return normalized
+    return None
+
+
+def _entry_order_type_override(entities: dict[str, Any] | None, *, trader_id: str | None = None) -> str | None:
+    if isinstance(entities, dict):
+        explicit = _normalize_entry_order_type(entities.get("entry_order_type"))
+        if explicit is not None:
+            return explicit
+    return _default_entry_order_type_for_trader(trader_id)
 
 
 def _unique(values: list[str]) -> list[str]:

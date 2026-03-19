@@ -18,6 +18,30 @@ _SYMBOL_IN_COIN_RE = re.compile(r"\$?(?P<base>[A-Z0-9]{2,20})\s*/\s*(?P<quote>[A
 _SYMBOL_FALLBACK_RE = re.compile(r"\$(?P<base>[A-Z0-9]{2,20})\b", re.IGNORECASE)
 _DIRECTION_RE = re.compile(r"\bDIRECTION?\s*:\s*(?P<side>LONG|SHORT)\b", re.IGNORECASE)
 _ENTRY_LINE_RE = re.compile(r"\bENTRY\s*:\s*(?P<value>[^\n]+)", re.IGNORECASE)
+_ENTRY_MARKET_MARKERS = (
+    "вход с текущих",
+    "(вход с текущих)",
+    "a (с текущих)",
+    "market entry",
+    "entry from market",
+)
+_ENTRY_LIMIT_MARKERS = (
+    "вход лимиткой",
+    "вход лимитным ордером",
+    "лимитным ордером",
+    "limit entry",
+    "a (лимит)",
+    "b (лимит)",
+    "buy zone",
+    "sell zone",
+)
+_ENTRY_AVERAGING_MARKERS = (
+    "усреднение",
+    "entry b",
+    "вход b",
+    "b (усреднение)",
+    "b (лимит)",
+)
 _TARGETS_BLOCK_RE = re.compile(r"\bTARGETS?\s*:\s*(?P<value>.+?)(?=\n\s*(?:STOP\s*LOSS|SL)\s*:|\Z)", re.IGNORECASE | re.DOTALL)
 _STOP_RE = re.compile(r"\b(?:STOP\s*LOSS|SL)\s*:\s*(?P<value>\d[\d\s,]*(?:\.\d+)?)", re.IGNORECASE)
 _TARGET_HIT_RE = re.compile(r"\bTarget\s*(?P<idx>\d+)\s*:\s*(?P<price>\d[\d\s,]*(?:\.\d+)?)\s*✅", re.IGNORECASE)
@@ -41,7 +65,7 @@ class Trader3ProfileParser(TraderBProfileParser):
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
         prepared = self._preprocess(text=text, context=context)
         message_type = self._classify_message(prepared=prepared)
-        entities = self._extract_entities(prepared=prepared, message_type=message_type)
+        entities = self._extract_entities(prepared=prepared, message_type=message_type, context=context)
         intents = self._extract_intents(message_type=message_type, entities=entities)
         target_refs = self._extract_targets(prepared=prepared, context=context, entities=entities)
         warnings = self._build_warnings(
@@ -86,7 +110,10 @@ class Trader3ProfileParser(TraderBProfileParser):
         has_signal_id = _extract_signal_id(raw_text) is not None
         has_coin = _extract_symbol_bundle(raw_text).get("symbol") is not None
         has_side = _extract_side(raw_text) is not None
-        has_entry = _extract_entry_range(raw_text) is not None
+        normalized = str(prepared.get("normalized_text") or "")
+        has_entry = bool(_extract_entry_values(raw_text)) or any(
+            marker in normalized for marker in (*_ENTRY_MARKET_MARKERS, *_ENTRY_LIMIT_MARKERS, *_ENTRY_AVERAGING_MARKERS)
+        )
         has_targets = bool(_extract_take_profits(raw_text)[0]) or bool(_TARGETS_BLOCK_RE.search(raw_text))
         has_stop = _extract_stop(raw_text)[1] is not None
 
@@ -102,7 +129,7 @@ class Trader3ProfileParser(TraderBProfileParser):
 
         return "UNCLASSIFIED"
 
-    def _extract_entities(self, *, prepared: dict[str, Any], message_type: str) -> dict[str, Any]:
+    def _extract_entities(self, *, prepared: dict[str, Any], message_type: str, context: ParserContext) -> dict[str, Any]:
         raw_text = str(prepared.get("raw_text") or "")
         entities: dict[str, Any] = {}
 
@@ -113,14 +140,29 @@ class Trader3ProfileParser(TraderBProfileParser):
         entities.update(_extract_symbol_bundle(raw_text))
 
         if message_type == "NEW_SIGNAL":
-            entry_range = _extract_entry_range(raw_text)
+            entry_values = _extract_entry_values(raw_text)
             stop_loss_raw, stop_loss = _extract_stop(raw_text)
             take_profits, targets_raw = _extract_take_profits(raw_text)
-            if entry_range is not None:
-                low, high = entry_range
+            entry_order_type = _infer_entry_order_type(raw_text)
+            if entry_values:
+                low, high = entry_values[0], entry_values[-1]
                 entities["entry_range_low"] = low
                 entities["entry_range_high"] = high
-                entities["entry"] = [low, high]
+                entities["entry"] = list(entry_values)
+                entities["entry_plan_entries"] = _build_entry_plan_entries(entry_values, entry_order_type=entry_order_type)
+            elif any(marker in normalize_text(raw_text) for marker in (*_ENTRY_MARKET_MARKERS, *_ENTRY_LIMIT_MARKERS, *_ENTRY_AVERAGING_MARKERS)):
+                entities["entry"] = []
+                entities["entry_plan_entries"] = [
+                    {
+                        "sequence": 1,
+                        "role": "PRIMARY",
+                        "order_type": entry_order_type,
+                        "price": None,
+                        "raw_label": "ENTRY",
+                        "source_style": "MARKET" if entry_order_type == "MARKET" else "SINGLE",
+                        "is_optional": False,
+                    }
+                ]
             entities.update(
                 {
                     "side": _extract_side(raw_text),
@@ -130,9 +172,7 @@ class Trader3ProfileParser(TraderBProfileParser):
                     "stop_loss_raw": stop_loss_raw,
                     "stop_loss": stop_loss,
                     "take_profits": take_profits,
-                    "entry_plan_type": "SINGLE",
-                    "entry_structure": "RANGE",
-                    "has_averaging_plan": False,
+                    "entry_order_type": entry_order_type,
                 }
             )
 
@@ -166,6 +206,27 @@ class Trader3ProfileParser(TraderBProfileParser):
                 if _SAME_SETUP_NOTE_RE.search(raw_text):
                     entities["reenter_note"] = "Same Entry level, Targets & SL"
 
+            if entities.get("reenter") and context.reply_raw_text:
+                parent_text = context.reply_raw_text
+                parent_entry_values = _extract_entry_values(parent_text)
+                parent_stop_raw, parent_stop = _extract_stop(parent_text)
+                parent_take_profits, parent_targets_raw = _extract_take_profits(parent_text)
+                parent_entry_order_type = _infer_entry_order_type(parent_text)
+                if parent_entry_values:
+                    low, high = parent_entry_values[0], parent_entry_values[-1]
+                    entities["entry_range_low"] = low
+                    entities["entry_range_high"] = high
+                    entities["entry"] = list(parent_entry_values)
+                    entities["entry_plan_entries"] = _build_entry_plan_entries(parent_entry_values, entry_order_type=parent_entry_order_type)
+                    entities["entry_order_type"] = parent_entry_order_type
+                    entities["entry_text_raw"] = _extract_entry_line(parent_text)
+                if parent_stop is not None:
+                    entities["stop_loss_raw"] = parent_stop_raw
+                    entities["stop_loss"] = parent_stop
+                if parent_take_profits:
+                    entities["take_profits"] = parent_take_profits
+                    entities["targets_text_raw"] = parent_targets_raw
+
         return {k: v for k, v in entities.items() if v is not None}
 
     def _extract_intents(self, *, message_type: str, entities: dict[str, Any]) -> list[str]:
@@ -182,6 +243,8 @@ class Trader3ProfileParser(TraderBProfileParser):
         if entities.get("hit_targets"):
             intents.append("U_TP_HIT")
         if entities.get("reported_loss_percent") is not None or entities.get("loss_close"):
+            intents.append("U_REPORT_FINAL_RESULT")
+        if (entities.get("reported_loss_percent") is not None or entities.get("loss_close")) and not entities.get("manual_close"):
             intents.append("U_STOP_HIT")
         return intents
 
@@ -409,21 +472,61 @@ def _extract_entry_line(raw_text: str) -> str | None:
 
 
 def _extract_entry_range(raw_text: str) -> tuple[float, float] | None:
+    values = _extract_entry_values(raw_text)
+    if len(values) < 2:
+        return None
+    return values[0], values[-1]
+
+
+def _extract_entry_values(raw_text: str) -> list[float]:
     line = _extract_entry_line(raw_text)
     if not line:
-        return None
+        return []
 
     normalized = _normalize_dash(line)
     match = re.search(r"(?P<low>\d[\d,]*(?:\.\d+)?)\s*-\s*(?P<high>\d[\d,]*(?:\.\d+)?)", normalized)
-    if not match:
-        return None
+    if match:
+        low = _to_float(match.group("low"))
+        high = _to_float(match.group("high"))
+        if low is not None and high is not None:
+            return [low, high]
 
-    low = _to_float(match.group("low"))
-    high = _to_float(match.group("high"))
-    if low is None or high is None:
-        return None
+    values: list[float] = []
+    for raw in re.findall(r"\d[\d,]*(?:\.\d+)?", normalized):
+        value = _to_float(raw)
+        if value is not None and value not in values:
+            values.append(value)
+    return values
 
-    return (low, high)
+
+def _infer_entry_order_type(raw_text: str) -> str:
+    normalized = normalize_text(raw_text)
+    has_market = any(marker in normalized for marker in _ENTRY_MARKET_MARKERS)
+    has_limit = any(marker in normalized for marker in _ENTRY_LIMIT_MARKERS)
+    if has_market and not has_limit:
+        return "MARKET"
+    if has_limit:
+        return "LIMIT"
+    if has_market:
+        return "MARKET"
+    return "LIMIT"
+
+
+def _build_entry_plan_entries(entry_values: list[float], *, entry_order_type: str) -> list[dict[str, object]]:
+    out: list[dict[str, object]] = []
+    for index, value in enumerate(entry_values, start=1):
+        out.append(
+            {
+                "sequence": index,
+                "role": "PRIMARY" if index == 1 else "AVERAGING",
+                "order_type": entry_order_type,
+                "price": float(value),
+                "raw_label": "ENTRY" if index == 1 else "AVERAGING",
+                "source_style": "SINGLE" if len(entry_values) == 1 else "RANGE",
+                "is_optional": index > 1,
+            }
+        )
+    return out
 
 
 def _extract_take_profits(raw_text: str) -> tuple[list[float], str | None]:

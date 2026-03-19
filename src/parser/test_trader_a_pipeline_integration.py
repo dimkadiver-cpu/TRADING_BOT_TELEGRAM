@@ -214,7 +214,7 @@ class TraderAIntegrationTests(unittest.TestCase):
         self.assertIn("U_MOVE_STOP_TO_BE", normalized.get("intents", []))
         actions_structured = normalized.get("actions_structured", [])
         self.assertTrue(any(item.get("action") == "MOVE_STOP" for item in actions_structured))
-        self.assertTrue(any(item.get("action") == "TAKE_PROFIT" for item in actions_structured))
+        self.assertFalse(any(item.get("action") == "TAKE_PROFIT" for item in actions_structured))
         self.assertEqual(normalized.get("primary_intent"), "U_MOVE_STOP_TO_BE")
 
     def test_trader_a_partial_close_has_v2_primary_and_actions(self) -> None:
@@ -347,10 +347,10 @@ class TraderAIntegrationTests(unittest.TestCase):
 
         self.assertEqual(normalized.get("message_class"), "UPDATE")
         actions_structured = normalized.get("actions_structured", [])
-        self.assertGreaterEqual(len(actions_structured), 2)
+        self.assertEqual(len(actions_structured), 1)
         action_types = {item.get("action_type") for item in actions_structured}
         self.assertIn("MOVE_STOP_TO_BE", action_types)
-        self.assertIn("TP_HIT", action_types)
+        self.assertNotIn("TP_HIT", action_types)
         for item in actions_structured:
             applies_to = item.get("applies_to")
             self.assertIsInstance(applies_to, dict)
@@ -373,7 +373,7 @@ class TraderAIntegrationTests(unittest.TestCase):
             raw_text="tp hit",
             target_scope=None,
         )
-        self.assertEqual(unknown_actions[0]["applies_to"], {"scope_type": None, "scope_value": None})
+        self.assertEqual(unknown_actions, [])
 
 
 

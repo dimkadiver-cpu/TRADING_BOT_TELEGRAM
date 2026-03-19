@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import json
 import sqlite3
 
 
@@ -38,6 +39,27 @@ class ParseResultRecord:
 class ParseResultStore:
     def __init__(self, db_path: str) -> None:
         self._db_path = db_path
+
+    def get_raw_text_by_signal_id(self, resolved_trader_id: str, signal_id: int) -> str | None:
+        query = """
+            SELECT rm.raw_text, pr.parse_result_normalized_json
+            FROM parse_results pr
+            JOIN raw_messages rm ON rm.raw_message_id = pr.raw_message_id
+            WHERE pr.resolved_trader_id = ? AND pr.message_type = 'NEW_SIGNAL'
+            ORDER BY rm.raw_message_id ASC
+        """
+        with sqlite3.connect(self._db_path) as conn:
+            rows = conn.execute(query, (resolved_trader_id,)).fetchall()
+        for row in rows:
+            payload = row[1] or "{}"
+            try:
+                data = json.loads(payload)
+            except json.JSONDecodeError:
+                continue
+            entities = data.get("entities") if isinstance(data, dict) else None
+            if isinstance(entities, dict) and entities.get("signal_id") == signal_id:
+                return row[0]
+        return None
 
     def upsert(self, record: ParseResultRecord) -> None:
         query = """

@@ -58,7 +58,24 @@ class Trader3ProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("entry_range_high"), 107878.0)
         self.assertEqual(result.entities.get("stop_loss"), 102450.0)
         self.assertEqual(result.entities.get("take_profits"), [109600.0, 112300.0, 115000.0])
+        self.assertEqual(result.entities.get("entry_order_type"), "LIMIT")
+        self.assertEqual(result.entities.get("entry_plan_entries", [])[0].get("order_type"), "LIMIT")
         self.assertIn({"kind": "signal_id", "ref": 1997}, result.target_refs)
+
+    def test_new_signal_market_marker_without_price_overrides_default(self) -> None:
+        text = (
+            "SIGNAL ID: #2003\n"
+            "COIN: $BTC/USDT\n"
+            "Direction: LONG\n"
+            "ENTRY: market entry\n"
+            "TARGETS: 109600, 112300\n"
+            "STOP LOSS: 102450"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
+        self.assertEqual(result.entities.get("entry_plan_entries", [])[0].get("order_type"), "MARKET")
+        self.assertIsNone(result.entities.get("entry_plan_entries", [])[0].get("price"))
 
     def test_new_signal_short_side(self) -> None:
         text = (
@@ -130,14 +147,41 @@ class Trader3ProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.primary_intent, "CLOSE_POSITION")
         self.assertTrue(result.entities.get("manual_close"))
         self.assertEqual(result.entities.get("reported_loss_percent"), 12.0)
+        self.assertIn("U_CLOSE_FULL", result.intents)
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertNotIn("U_STOP_HIT", result.intents)
 
     def test_reenter_update(self) -> None:
         text = "SIGNAL ID: #2001\nRe-Enter.\nSame Entry level ,Targets & SL"
-        result = self.parser.parse_message(text, _context(text=text))
+        parent_text = (
+            "SIGNAL ID: #2001\n"
+            "COIN: $LINK/USDT (2-5x)\n"
+            "Direction: LONG\n"
+            "ENTRY: 14.10 - 14.35\n"
+            "TARGETS: 14.80, 15.20\n"
+            "STOP LOSS: 13.70"
+        )
+        result = self.parser.parse_message(
+            text,
+            ParserContext(
+                trader_code="trader_3",
+                message_id=2012,
+                reply_to_message_id=2011,
+                channel_id="-1003",
+                raw_text=text,
+                reply_raw_text=parent_text,
+                extracted_links=[],
+                hashtags=[],
+            ),
+        )
         self.assertEqual(result.message_type, "UPDATE")
         self.assertEqual(result.primary_intent, "REENTER_POSITION")
         self.assertTrue(result.entities.get("reenter"))
         self.assertEqual(result.entities.get("reenter_note"), "Same Entry level, Targets & SL")
+        self.assertEqual(result.entities.get("entry_range_low"), 14.10)
+        self.assertEqual(result.entities.get("entry_range_high"), 14.35)
+        self.assertEqual(result.entities.get("stop_loss"), 13.70)
+        self.assertEqual(result.entities.get("take_profits"), [14.8, 15.2])
 
     def test_operational_update_without_strong_target_warns(self) -> None:
         text = "Target 1: 109600✅"

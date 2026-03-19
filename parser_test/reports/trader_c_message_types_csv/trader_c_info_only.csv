@@ -1,5 +1,5 @@
 ﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
-1383,INFO_ONLY,PARSED,trader_c,3171748254,1047,,2025-12-19T09:21:37+00:00,"Друзья, привет! Админ на связи 👋
+1383,INFO_ONLY,PARSED_WITH_WARNINGS,trader_c,3171748254,1047,,2025-12-19T09:21:37+00:00,"Друзья, привет! Админ на связи 👋
 У нас хорошие новости - пополнение в команде!
 
 Мы долго смотрели на пустое место [trader#4]. Всё-таки жаль этого добряка!🥲
@@ -36,8 +36,8 @@ BTC / ETH - бодрый интрадей
 В общем, встречайте наш C-class в новом кузове 😉
 Дальше - стандартно:
 смотрим в деле. Рынок, как всегда, рассудит лучше любых описаний 🫡
-#админ",,BTC,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": ""new_york_session""}",[]
-1135,INFO_ONLY,PARSED,trader_c,3171748254,1423,,2026-01-06T11:23:56+00:00,"Друзья, это снова #админ 👋
+#админ",llm_unavailable,BTC,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": ""new_york_session""}","[""llm_unavailable""]"
+1135,INFO_ONLY,PARSED_WITH_WARNINGS,trader_c,3171748254,1423,,2026-01-06T11:23:56+00:00,"Друзья, это снова #админ 👋
 По просьбам ТРЕЙДящихся - варианты фиксации прибыли по сигналам trader#C !
 
 Чтобы не создавалось впечатления, что у этого самурая нет цели - а есть только путь комиссия за фандинг. 😂
@@ -83,4 +83,4 @@ TP4 - 20%
 Понятные режимы  частичной фиксации, без особой жадности aka «Хатико и его последний тейк», но и не паникёрство из разряда «увидел зелёную свечу - зафиксировался, перекрестился и удалил приложение биржи». 😂
 Вот как-то так.
 
-#админ",,RR,,,,,"[1.0, 3.0, 30.0, 30.0, 40.0, 2.0, 1.0, 1.0, 4.0, 25.0, 25.0, 30.0, 20.0, 3.0, 1.0]",,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+#админ",llm_unavailable,RR,,,,,"[1.0, 3.0, 30.0, 30.0, 40.0, 2.0, 1.0, 1.0, 4.0, 25.0, 25.0, 30.0, 20.0, 3.0, 1.0]",,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
