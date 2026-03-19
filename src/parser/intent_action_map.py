@@ -4,28 +4,39 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from src.parser.canonical_schema import canonical_action_for_intent, normalize_intent_name
+
 _INTENT_TO_ACTIONS: dict[str, tuple[str, ...]] = {
     "U_MOVE_STOP": ("ACT_MOVE_STOP_LOSS",),
-    "U_MOVE_STOP_TO_BE": ("ACT_MOVE_STOP_LOSS",),
+    "U_MOVE_STOP_TO_BE": ("ACT_MOVE_STOP_LOSS_TO_BE",),
     "U_CLOSE_PARTIAL": ("ACT_CLOSE_PARTIAL",),
-    "U_CLOSE_FULL": ("ACT_CLOSE_FULL", "ACT_MARK_POSITION_CLOSED"),
+    "U_CLOSE_FULL": ("ACT_CLOSE_FULL_AND_MARK_CLOSED",),
     "U_CANCEL_PENDING_ORDERS": ("ACT_CANCEL_ALL_PENDING_ENTRIES",),
     "U_REMOVE_PENDING_ENTRY": ("ACT_REMOVE_PENDING_ENTRY",),
     "U_INVALIDATE_SETUP": ("ACT_MARK_SIGNAL_INVALID",),
     "U_MARK_FILLED": ("ACT_MARK_ORDER_FILLED",),
     "U_TP_HIT": ("ACT_MARK_TP_HIT",),
-    "U_STOP_HIT": ("ACT_MARK_STOP_HIT", "ACT_MARK_POSITION_CLOSED"),
+    "U_STOP_HIT": ("ACT_MARK_STOP_HIT_AND_CLOSE",),
     "U_REPORT_FINAL_RESULT": ("ACT_ATTACH_RESULT",),
-    "U_MANUAL_CLOSE": ("ACT_REQUEST_MANUAL_REVIEW",),
-    "U_ADD_ENTRY": ("ACT_REQUEST_MANUAL_REVIEW",),
+    "U_MANUAL_CLOSE": ("ACT_MANUAL_CLOSE_OR_REVIEW",),
+    "U_ADD_ENTRY": ("ACT_ADD_ENTRY",),
+    "U_ACTIVATION": ("ACT_MARK_SIGNAL_ACTIVE",),
+    "U_UPDATE_PENDING_ENTRY": ("ACT_UPDATE_PENDING_ENTRY",),
+    "U_UPDATE_TAKE_PROFITS": ("ACT_UPDATE_TAKE_PROFITS",),
+    "U_EXIT_BE": ("ACT_MARK_POSITION_CLOSED_AT_BE",),
+    "U_REENTER": ("ACT_REENTER_POSITION",),
+    "U_REVERSE_SIGNAL": ("ACT_REVERSE_SIGNAL_OR_CREATE_OPPOSITE",),
+    "U_RISK_NOTE": ("ACT_ATTACH_RISK_NOTE",),
 }
+
 
 
 def map_intents_to_actions(intents: Iterable[str], entities: dict[str, Any] | None = None) -> list[str]:
     payload = entities if isinstance(entities, dict) else {}
     actions: list[str] = []
     for intent in intents:
-        mapped = _intent_to_actions(intent, payload)
+        canonical_intent = normalize_intent_name(intent)
+        mapped = _intent_to_actions(canonical_intent, payload)
         for action in mapped:
             if action not in actions:
                 actions.append(action)
@@ -33,7 +44,7 @@ def map_intents_to_actions(intents: Iterable[str], entities: dict[str, Any] | No
 
 
 def derive_primary_intent(intents: Iterable[str]) -> str | None:
-    ordered = list(intents)
+    ordered = [normalize_intent_name(v) for v in intents]
     for value in ordered:
         if value in _INTENT_TO_ACTIONS:
             return value
@@ -51,7 +62,8 @@ def build_actions_structured(
 
     out: list[dict[str, Any]] = []
     for intent in intents:
-        action_type = _intent_to_action_type(intent, payload)
+        canonical_intent = normalize_intent_name(intent)
+        action_type = _intent_to_action_type(canonical_intent, payload)
         if action_type is None:
             continue
         out.append(
@@ -65,7 +77,7 @@ def build_actions_structured(
                 "result_value": _extract_result_value(payload),
                 "result_unit": _extract_result_unit(payload),
                 "applies_to": _extract_applies_to(payload, scope),
-                "raw_fragment": _extract_raw_fragment(intent=intent, raw_text=raw_text),
+                "raw_fragment": _extract_raw_fragment(intent=canonical_intent, raw_text=raw_text),
             }
         )
     return out
@@ -87,7 +99,13 @@ def _intent_to_action_type(intent: str, entities: dict[str, Any] | None = None) 
         "U_REPORT_FINAL_RESULT": "REPORT_RESULT",
         "U_MANUAL_CLOSE": "MANUAL_CLOSE",
         "U_ADD_ENTRY": "ADD_ENTRY",
-        "U_EXIT_BE": "MARK_POSITION_CLOSED",
+        "U_ACTIVATION": "ACTIVATION",
+        "U_UPDATE_PENDING_ENTRY": "UPDATE_PENDING_ENTRY",
+        "U_UPDATE_TAKE_PROFITS": "UPDATE_TAKE_PROFITS",
+        "U_EXIT_BE": "EXIT_BE",
+        "U_REENTER": "REENTER",
+        "U_REVERSE_SIGNAL": "REVERSE_SIGNAL",
+        "U_RISK_NOTE": "RISK_NOTE",
     }
     if intent == "U_CLOSE_FULL" and payload.get("close_status_passive"):
         return "MARK_POSITION_CLOSED"
@@ -97,9 +115,10 @@ def _intent_to_action_type(intent: str, entities: dict[str, Any] | None = None) 
 def _intent_to_actions(intent: str, entities: dict[str, Any] | None = None) -> tuple[str, ...]:
     payload = entities if isinstance(entities, dict) else {}
     if intent == "U_CLOSE_FULL" and payload.get("close_status_passive"):
-        return ("ACT_MARK_POSITION_CLOSED",)
-    if intent == "U_EXIT_BE":
-        return ("ACT_MARK_POSITION_CLOSED",)
+        return ("ACT_CLOSE_FULL_AND_MARK_CLOSED",)
+    csv_action = canonical_action_for_intent(intent)
+    if csv_action:
+        return (csv_action,)
     return _INTENT_TO_ACTIONS.get(intent, ())
 
 
