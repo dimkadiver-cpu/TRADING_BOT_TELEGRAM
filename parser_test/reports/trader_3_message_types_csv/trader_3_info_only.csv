@@ -1,102 +1,102 @@
 ﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
-1983,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,228,,2025-11-09T18:08:54+00:00,"[trader#3] VIP MARKET UPDATE: $BNB
+1983,INFO_ONLY,PARSED,trader_3,3171748254,228,,2025-11-09T18:08:54+00:00,"[trader#3] VIP MARKET UPDATE: $BNB
 ➖➖➖➖➖➖➖
 $BNB is  consolidating just below the  resistance zone, forming higher lows along an ascending trendline. Structure shows steady accumulation and building bullish momentum.
 
 A breakout and sustained move above $1000 could trigger continuation toward $1040–$1080, while holding above $980 keeps the bias bullish. A drop below $960 would weaken the structure.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1927,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,291,,2025-11-12T08:24:39+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1927,INFO_ONLY,PARSED,trader_3,3171748254,291,,2025-11-12T08:24:39+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
 ➖➖➖➖➖➖➖
 ETH is forming a potential bullish harmonic pattern on ETH (1H timeframe). The price is approaching the D point, near the completion zone around $3,390, which could act as a strong reversal area.
 
 As long as ETH holds above the invalidation point near $3,353, a bounce toward the $3,520-$3650 zone is likely. A breakdown below that invalidation level, however, would invalidate the bullish setup.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,LONG,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1920,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,298,,2025-11-12T10:55:49+00:00,"[trader#3] VIP MARKET UPDATE: $BTC DOMINANCE 🔥
+➖➖➖➖➖➖➖",,VIP,LONG,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1920,INFO_ONLY,PARSED,trader_3,3171748254,298,,2025-11-12T10:55:49+00:00,"[trader#3] VIP MARKET UPDATE: $BTC DOMINANCE 🔥
 ➖➖➖➖➖➖➖
 BTC.D has perfectly broken down from the triangle and is currently retesting below it. 
 
 A successful retest would confirm a bearish move, which is typically a bullish signal for altcoins, as they usually move in the opposite direction.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1902,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,319,,2025-11-13T08:40:37+00:00,"[trader#3] VIP MARKET UPDATE: $ETH 🔥
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1902,INFO_ONLY,PARSED,trader_3,3171748254,319,,2025-11-13T08:40:37+00:00,"[trader#3] VIP MARKET UPDATE: $ETH 🔥
 ➖➖➖➖➖➖➖
 ETH perfectly bounced after touching the reversal zone, just as predicted.
 
 It’s now facing the descending trendline, a breakout and retest above it would confirm further bullish momentum.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1893,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,328,,2025-11-13T17:10:01+00:00,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1893,INFO_ONLY,PARSED,trader_3,3171748254,328,,2025-11-13T17:10:01+00:00,"[trader#3] VIP MARKET UPDATE
 ➖➖➖➖➖➖➖
 The market appears to be quite volatile. It may be wise to consider slightly reducing position sizes in long trades to manage risk more effectively.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,LONG,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1888,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,333,,2025-11-13T18:18:03+00:00,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖",,VIP,LONG,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1888,INFO_ONLY,PARSED,trader_3,3171748254,333,,2025-11-13T18:18:03+00:00,"[trader#3] VIP MARKET UPDATE
 ➖➖➖➖➖➖➖
 The market remains highly volatile. As shared earlier, it's important to stick tightly to your stop losses. Consider closing half of your positions on SUI, AVAX & SOL to reduce exposure and protect capital. Risk management is key in these conditions.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1871,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,350,,2025-11-14T04:38:39+00:00,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1871,INFO_ONLY,PARSED,trader_3,3171748254,350,,2025-11-14T04:38:39+00:00,"[trader#3] VIP MARKET UPDATE: $BTC
 ➖➖➖➖➖➖➖
 $BTC faced rejection and struggling under the descending trendline, and price has now slipped back into the DEMAND ZONE, The repeated rejection near $103,000–$104,000 confirms that bulls are losing momentum for now.
 
 For strength to return, $BTC must break and reclaim $104,000–$106,000, which would open the door toward $108,000–$110,000. However, failure to bounce soon from the demand zone could expose price to a deeper move toward $96,000 –$93,000.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1868,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,353,,2025-11-14T05:32:24+00:00,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1868,INFO_ONLY,PARSED,trader_3,3171748254,353,,2025-11-14T05:32:24+00:00,"[trader#3] VIP MARKET UPDATE
 ➖➖➖➖➖➖➖
 Over $1,030,000,000 (1.03 BILLION) worth of crypto longs have been liquidated in the past 24 hours.
 
 This sharp flush signals aggressive selling pressure, shaking out leveraged positions. Volatility may remain elevated across the market in the short term.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,SHORT,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1863,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,358,,2025-11-14T09:54:09+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖",,VIP,SHORT,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1863,INFO_ONLY,PARSED,trader_3,3171748254,358,,2025-11-14T09:54:09+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
 ➖➖➖➖➖➖➖
 ETH is currently trying to hold above the trendline support while trading below the horizontal resistance. 
 
 Bulls need to reclaim the horizontal resistance for bullish confirmation, whereas a candle close below the trendline support would signal further bearish continuation.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1857,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,365,,2025-11-14T13:28:21+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1857,INFO_ONLY,PARSED,trader_3,3171748254,365,,2025-11-14T13:28:21+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
 ➖➖➖➖➖➖➖
 ETH has broken below the mid-range demand zone (~$3,350–$3,250), turning it into resistance. Sellers are currently in control, and the price is heading toward the next major demand zone around $3,050–$2,880, which is the strongest near-term support.
 
 If ETH holds and reacts bullishly from this lower demand zone, a bounce toward the previous breakdown zone (~$3,300) is likely. But a clean breakdown below $2,880 would open the door for a deeper drop toward the next major demand area around $2,480–$2,430.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1848,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,374,,2025-11-15T04:24:01+00:00,"[trader#3] VIP MARKET UPDATE: $IMX
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1848,INFO_ONLY,PARSED,trader_3,3171748254,374,,2025-11-15T04:24:01+00:00,"[trader#3] VIP MARKET UPDATE: $IMX
 ➖➖➖➖➖➖➖
 IMX is currently trading above the horizontal support. A bounce from this level followed by a breakout and retest of the descending trendline would confirm a bullish move.
 
 However, a breakdown and retest of the horizontal support would signal potential downside momentum.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1845,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,377,,2025-11-15T09:40:49+00:00,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1845,INFO_ONLY,PARSED,trader_3,3171748254,377,,2025-11-15T09:40:49+00:00,"[trader#3] VIP MARKET UPDATE
 ➖➖➖➖➖➖➖
 The market is currently in a state of extreme fear, and a bounce is likely soon.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1836,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,388,,2025-11-15T17:34:53+00:00,"[trader#3] VIP MARKET UPDATE: $ENA
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1836,INFO_ONLY,PARSED,trader_3,3171748254,388,,2025-11-15T17:34:53+00:00,"[trader#3] VIP MARKET UPDATE: $ENA
 ➖➖➖➖➖➖➖
 $ENA is currently holding above the $0.25–$0.28 SUPPORT zone, where buyers have reacted multiple times previously. This area continues to act as a strong DEMAND region after the pullback.
 
 If $ENA maintains SUPPORT and builds momentum, a bounce toward $0.32 - $0.42 looks likely. However, a breakdown below $0.23 may trigger deeper correction.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1787,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,455,,2025-11-18T17:15:41+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1787,INFO_ONLY,PARSED,trader_3,3171748254,455,,2025-11-18T17:15:41+00:00,"[trader#3] VIP MARKET UPDATE: $ETH
 ➖➖➖➖➖➖➖
 $ETH has perfectly followed our previous analysis, price broke above $3,150 and reclaimed $3,170. $ETH up +5.6% from yesterday’s lows, showing buyers stepping back in.🔥
 
 If $ETH holds above $3,100, continuation toward $3,300–$3,400 becomes likely as bullish momentum builds.
 However, a drop back below $3,000 may signal weakness and another retest of the $2,900–$2,850 region is possible.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": ""yesterday""}","[""llm_unavailable""]"
-1616,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,741,,2025-12-01T18:11:14+00:00,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": ""yesterday""}",[]
+1616,INFO_ONLY,PARSED,trader_3,3171748254,741,,2025-12-01T18:11:14+00:00,"[trader#3] VIP MARKET UPDATE: $BTC
 ➖➖➖➖➖➖➖
 BTC is attempting to regain momentum from the horizontal support. The RSI is in the oversold region and showing hidden bullish divergence, suggesting strengthening buyer interest. 
 
 A bounce is expected from the current support. However, if a breakdown and retest occur, the price may find its next rebound from the lower marked horizontal support.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1612,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,745,,2025-12-02T07:53:57+00:00,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1612,INFO_ONLY,PARSED,trader_3,3171748254,745,,2025-12-02T07:53:57+00:00,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
 ➖➖➖➖➖➖➖
 BTC perfectly bounced from the horizontal support after creating a hidden bullish divergence just as predicted.
 
 Holding above this support keeps the short-term outlook bullish.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1602,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,757,,2025-12-02T15:20:03+00:00,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+1602,INFO_ONLY,PARSED,trader_3,3171748254,757,,2025-12-02T15:20:03+00:00,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
 ➖➖➖➖➖➖➖
 We identified the perfect oversold region, and BTC pumped exactly from our marked reversal zone, right on target.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-42,INFO_ONLY,PARSED_WITH_WARNINGS,trader_3,3171748254,2995,,2026-03-06T01:09:36+00:00,"[trader#3] VIP MARKET UPDATE: $XAU
+➖➖➖➖➖➖➖",,VIP,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]
+42,INFO_ONLY,PARSED,trader_3,3171748254,2995,,2026-03-06T01:09:36+00:00,"[trader#3] VIP MARKET UPDATE: $XAU
 ➖➖➖➖➖➖➖
 $XAU is still trading like a headline market. The Israel-Iran conflict sparked a classic safe-haven rush, and we got a violent spike into the 5,500 area, followed by equally aggressive profit-taking and unwind. That kind of two-way volatility is exactly what geopolitics does to gold.
 
 Right now price is back around 5,080, sitting on the rising support line. As long as Gold holds this support, the structure stays constructive and dips keep getting absorbed. If it loses 5,080 with a clean break and hold, we can see a deeper cooldown before the next attempt higher.
-➖➖➖➖➖➖➖",llm_unavailable,VIP,LONG,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+➖➖➖➖➖➖➖",,VIP,LONG,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}",[]

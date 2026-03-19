@@ -5,4 +5,4 @@
 ""sl"": 0.008151
 риск 1%
 
-информация о тейках позже",missing mandatory setup fields; llm_unavailable,JASMYUSDT,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [""JASMYUSDT""], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""missing mandatory setup fields"", ""llm_unavailable""]"
+информация о тейках позже",missing mandatory setup fields,JASMYUSDT,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [""JASMYUSDT""], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""missing mandatory setup fields""]"
