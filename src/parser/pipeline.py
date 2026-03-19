@@ -9,6 +9,7 @@ import re
 from src.core.trader_tags import first_normalized_trader_tag, normalize_trader_aliases
 from src.core.timeutils import utc_now_iso
 from src.parser.dispatcher import ParserDispatcher
+from src.parser.canonical_schema import trader_intent_support
 from src.parser.intent_action_map import derive_primary_intent, infer_update_intents_from_text, map_intents_to_actions
 from src.parser.llm_adapter import LLMInvalidResponse, LLMNotConfigured, LLMParseError, LLMRequestFailed
 from src.parser.normalization import ParseResultNormalized, build_parse_result_normalized
@@ -661,6 +662,7 @@ def _refine_semantics(result: ParseResultNormalized) -> ParseResultNormalized:
         result.raw_entities = dict(entities)
     else:
         result.intents = [intent for intent in result.intents if intent != "NS_CREATE_SIGNAL"]
+    result.trader_metadata = {"intent_support": trader_intent_support(result.trader_id)}
     return result
 
 
