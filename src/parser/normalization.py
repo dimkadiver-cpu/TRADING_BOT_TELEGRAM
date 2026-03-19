@@ -10,6 +10,7 @@ from dataclasses import dataclass, field
 import re
 from typing import Any
 
+from src.parser.canonical_schema import canonical_intents, normalize_intents as normalize_canonical_intents, required_entities_for_intent
 from src.parser.intent_action_map import build_actions_structured, derive_primary_intent
 
 _CANONICAL_EVENT_TYPES = {
@@ -27,26 +28,7 @@ _PARSER_USED = {"regex", "llm", None}
 _PARSER_MODES = {"regex_only", "llm_only", "hybrid_auto", None}
 _MESSAGE_TYPES = {"NEW_SIGNAL", "UPDATE", "INFO_ONLY", "SETUP_INCOMPLETE", "UNCLASSIFIED", None}
 _DIRECTIONS = {"LONG", "SHORT", None}
-_UPDATE_INTENTS = {
-    "U_MOVE_STOP",
-    "U_MOVE_STOP_TO_BE",
-    "U_TP_HIT",
-    "U_CLOSE_PARTIAL",
-    "U_CLOSE_FULL",
-    "U_STOP_HIT",
-    "U_CANCEL_PENDING_ORDERS",
-    "U_INVALIDATE_SETUP",
-    "U_ADD_ENTRY",
-    "U_MANUAL_CLOSE",
-    "U_MARK_FILLED",
-    "U_REPORT_FINAL_RESULT",
-    "U_ACTIVATION",
-    "U_EXIT_BE",
-    "U_REMOVE_PENDING_ENTRY",
-    "U_UPDATE_PENDING_ENTRY",
-    "U_UPDATE_TAKE_PROFITS",
-    "U_UPDATE_STOP",
-}
+_UPDATE_INTENTS = canonical_intents()
 
 _LINK_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)
 _HASH_REF_RE = re.compile(r"#(?P<id>\d{3,})")
@@ -79,12 +61,23 @@ class ParseResultNormalized:
     root_ref: int | None = None
     status: str = "PARSED"
     validation_warnings: list[str] = field(default_factory=list)
+    resolved_trader_id: str | None = None
+    parser_version: str = "2.0"
 
     # Semantic source-of-truth fields.
     parser_used: str | None = None
     message_type: str | None = None
     intents: list[str] = field(default_factory=list)
     actions: list[str] = field(default_factory=list)
+    intent: str | None = None
+    new_stop: float | str | None = None
+    target_ref: int | None = None
+    close_fraction: float | None = None
+    result_value: float | None = None
+    result_unit: str | None = None
+    links: list[str] = field(default_factory=list)
+    parsing_notes: list[str] = field(default_factory=list)
+    trader_metadata: dict[str, Any] = field(default_factory=dict)
     # Legacy/derived compatibility alias.
     message_subtype: str | None = None
     symbol: str | None = None
@@ -153,6 +146,8 @@ class ParseResultNormalized:
             "raw_text": self.raw_text,
             "parser_mode": self.parser_mode,
             "confidence": self.confidence,
+            "resolved_trader_id": self.resolved_trader_id,
+            "parser_version": self.parser_version,
             "instrument": self.instrument,
             "side": self.side,
             "market_type": self.market_type,
@@ -166,6 +161,15 @@ class ParseResultNormalized:
             "message_type": self.message_type,
             "intents": self.intents,
             "actions": self.actions,
+            "intent": self.intent,
+            "new_stop": self.new_stop,
+            "target_ref": self.target_ref,
+            "close_fraction": self.close_fraction,
+            "result_value": self.result_value,
+            "result_unit": self.result_unit,
+            "links": self.links,
+            "parsing_notes": self.parsing_notes,
+            "trader_metadata": self.trader_metadata,
             "message_subtype": self.message_subtype,
             "symbol": self.symbol,
             "direction": self.direction,
@@ -318,6 +322,8 @@ def build_parse_result_normalized(
         raw_text=raw_text,
         parser_mode=semantic_parser_mode,
         confidence=confidence,
+        resolved_trader_id=trader_id,
+        parser_version="2.0",
         instrument=instrument,
         side=side,
         market_type=_infer_market_type(instrument),
@@ -330,6 +336,15 @@ def build_parse_result_normalized(
         message_type=semantic_message_type,
         intents=semantic_intents,
         actions=semantic_actions,
+        intent=derive_primary_intent(semantic_intents),
+        new_stop=entities_out.get("new_stop_level"),
+        target_ref=target_refs[0] if target_refs else root_ref,
+        close_fraction=entities_out.get("close_fraction") if isinstance(entities_out.get("close_fraction"), (int, float)) else None,
+        result_value=_derive_primary_result_value(reported_results, entities_out),
+        result_unit=_derive_primary_result_unit(reported_results, entities_out),
+        links=links,
+        parsing_notes=notes_out,
+        trader_metadata={},
         message_subtype=message_subtype,
         symbol=instrument,
         direction=semantic_direction,
@@ -585,12 +600,53 @@ def validate_parse_result_normalized(result: ParseResultNormalized) -> list[str]
             if intent not in _UPDATE_INTENTS:
                 warnings.append(f"normalized_update_intent_unknown:{intent}")
 
+    warnings.extend(_validate_intent_entity_requirements(result))
+
     if result.message_type == "INFO_ONLY":
         has_notes = any((note or "").strip() for note in result.notes)
         if not result.reported_results and not has_notes and not result.target_refs:
             warnings.append("normalized_info_only_missing_supporting_content")
 
     return warnings
+
+
+def _validate_intent_entity_requirements(result: ParseResultNormalized) -> list[str]:
+    warnings: list[str] = []
+    for intent in result.intents:
+        required = required_entities_for_intent(intent)
+        if not required:
+            continue
+        missing: list[str] = []
+        for entity in required:
+            if entity == "symbol" and not result.symbol:
+                if result.message_type == "UPDATE" and (result.target_refs or result.root_ref is not None):
+                    continue
+                missing.append(entity)
+            elif entity == "side" and not result.direction:
+                missing.append(entity)
+            elif entity.startswith("entries") and not result.entries:
+                missing.append(entity)
+            elif entity == "new_side" and not result.direction:
+                missing.append(entity)
+        if missing:
+            warnings.append(f"normalized_intent_missing_required:{intent}:{','.join(missing)}")
+    return warnings
+
+
+def _derive_primary_result_value(reported_results: list[dict[str, Any]], entities: dict[str, Any]) -> float | None:
+    if reported_results:
+        first = reported_results[0].get("r_multiple")
+        if isinstance(first, (int, float)):
+            return float(first)
+    value = entities.get("result_value")
+    return float(value) if isinstance(value, (int, float)) else None
+
+
+def _derive_primary_result_unit(reported_results: list[dict[str, Any]], entities: dict[str, Any]) -> str | None:
+    if reported_results:
+        return "R"
+    value = entities.get("result_unit")
+    return str(value).upper() if isinstance(value, str) and value else None
 
 
 def _to_semantic_message_type(message_type: str) -> str | None:
@@ -820,9 +876,7 @@ def _to_legacy_parser_mode(parser_mode: str | None) -> str | None:
 
 
 def _normalize_intents(intents: list[str] | None) -> list[str]:
-    if not intents:
-        return []
-    return _unique([item.strip() for item in intents if isinstance(item, str) and item.strip()])
+    return normalize_canonical_intents(intents)
 
 
 def _normalize_actions(actions: list[str] | None) -> list[str]:

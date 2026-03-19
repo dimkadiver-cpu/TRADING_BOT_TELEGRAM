@@ -60,7 +60,7 @@ class ParseResultNormalizedTests(unittest.TestCase):
         self.assertEqual(normalized.get("message_type"), "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", normalized.get("intents", []))
         self.assertIn("U_CANCEL_PENDING_ORDERS", normalized.get("intents", []))
-        self.assertIn("ACT_MOVE_STOP_LOSS", normalized.get("actions", []))
+        self.assertIn("ACT_MOVE_STOP_LOSS_TO_BE", normalized.get("actions", []))
         self.assertIn("ACT_CANCEL_ALL_PENDING_ENTRIES", normalized.get("actions", []))
         self.assertEqual(normalized.get("event_type"), "UPDATE")
         self.assertIn("entities", normalized)
