@@ -40,6 +40,7 @@ _DEFAULT_UPDATE_FALLBACK_MARKERS = (
     "stop on 1 tp",
     "stop on tp1",
     "не актуально",
+    "пока не актуально",
 )
 _DEFAULT_INFO_ONLY_MARKERS = (
     "сделка закрыта",
@@ -51,29 +52,62 @@ _DEFAULT_INFO_ONLY_MARKERS = (
     "закрылись по стоп лоссу",
 )
 _DEFAULT_SETUP_INCOMPLETE_MARKERS = ("тейк", "tp", "target", "тп")
-_DEFAULT_CLOSE_FULL_EXTRA_MARKERS = ("сделка полностью закрыта", "закрыта", "закрываю", "закрыть позицию")
-_DEFAULT_TP_HIT_EXPLICIT_MARKERS = ("тейк достиг", "take profit hit", "tp hit", "target hit")
+_DEFAULT_CLOSE_FULL_EXTRA_MARKERS = ("сделка полностью закрыта", "закрыта", "закрываю", "закрываем", "закрыть позицию")
+_DEFAULT_TP_HIT_EXPLICIT_MARKERS = (
+    "тейк достиг",
+    "тейк достигнут",
+    "тейк профит достигнут",
+    "цели достигнуты",
+    "с профитом",
+    "поздравляю с профитом",
+    "сделка полностью реализована",
+    "сделка полностью закрыта по тейк профиту",
+    "полностью закрыта по тейк профиту",
+    "закрыта в +",
+    "закрываю в +",
+    "take profit hit",
+    "tp hit",
+    "target hit",
+)
+_DEFAULT_STOP_HIT_EXPLICIT_MARKERS = (
+    "по стопу",
+    "по стоп лоссу",
+    "по стоп лосс",
+    "закрылись по стопу",
+    "закрылись по стоп лоссу",
+    "закрыта по стоп лоссу",
+    "тут стоп",
+    "обидный стоп",
+    "стоп (-",
+    "стоп лосс (-",
+)
 _DEFAULT_MARKET_CONTEXT_SPOT_MARKERS = ("сделка на споте",)
 _DEFAULT_ENTRY_ORDER_MARKET_MARKERS = ("по текущим", "вход с текущих")
 _DEFAULT_SIDE_LONG_MARKERS = ("лонг", "long", "buy")
 _DEFAULT_SIDE_SHORT_MARKERS = ("шорт", "short", "sell")
-_CANCEL_ONLY_MARKERS = (
-    "не актуально",
-    "пока не актуально",
-    "тут не актуально",
-    "цена ушла высоко",
-    "будем искать твх повторно",
-    "лонгов открытых нет",
+_DEFAULT_MOVE_STOP_TO_BE_FALLBACK_MARKERS = ("под минимум", "под локальный минимум")
+_DEFAULT_GLOBAL_CLOSE_SCOPE_MARKERS: dict[str, tuple[str, ...]] = {
+    "ALL_LONGS": ("все лонги", "все long", "all longs", "all long positions"),
+    "ALL_SHORTS": ("все шорты", "все short", "all shorts", "all short positions"),
+    "ALL_ALL": ("все позиции", "все сделки", "all positions", "all trades"),
+}
+_DEFAULT_ACTION_REQUEST_MARKERS = (
+    "закрываю",
+    "закрыть",
+    "переносим",
+    "перенести",
+    "закрываем",
 )
-_PASSIVE_OUTCOME_MARKERS = (
-    "сделка ушла в бу",
-    "закрыта в бу",
-    "сделка закрыта в бу",
-    "сделка закрыта по стоп лоссу",
-    "закрыта по стоп лоссу",
-    "закрыта в безубыток",
-    "закрылись по стоп лоссу",
+_DEFAULT_EVENT_REPORTED_MARKERS = (
+    "закрыта",
+    "закрылись",
+    "закрылся",
+    "ушла в бу",
+    "ушел в бу",
+    "сделка закрыта",
+    "закрылась",
 )
+_DEFAULT_CANCEL_PENDING_MARKERS = ("cancel pending", "cancel limit", "remove pending", "не актуально", "пока не актуально")
 
 
 class TraderBProfileParser:
@@ -86,28 +120,13 @@ class TraderBProfileParser:
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
         prepared = self._preprocess(text=text, context=context)
         target_refs = self._extract_targets(prepared=prepared, context=context)
-        global_target_scope = self._resolve_global_target_scope(prepared=prepared)
-        message_type = self._classify_message(prepared=prepared, global_target_scope=global_target_scope)
-        intents = self._extract_intents(
-            prepared=prepared,
-            message_type=message_type,
-            target_refs=target_refs,
-            global_target_scope=global_target_scope,
-        )
-        entities = self._extract_entities(
-            prepared=prepared,
-            intents=intents,
-            message_type=message_type,
-            target_refs=target_refs,
-            global_target_scope=global_target_scope,
-        )
-        warnings = self._build_warnings(
-            prepared=prepared,
-            message_type=message_type,
-            target_refs=target_refs,
-            intents=intents,
-            global_target_scope=global_target_scope,
-        )
+        message_type = self._classify_message(prepared=prepared)
+        intents = self._extract_intents(prepared=prepared, message_type=message_type)
+        entities = self._extract_entities(prepared=prepared, intents=intents, message_type=message_type)
+        global_target_scope = self._resolve_global_target_scope(prepared=prepared) if message_type == "UPDATE" else None
+        linking = self._build_linking(target_refs=target_refs, context=context, has_global_target=global_target_scope is not None)
+        target_scope = self._build_target_scope(linking=linking, global_target_scope=global_target_scope)
+        warnings = self._build_warnings(prepared=prepared, message_type=message_type, target_refs=target_refs, intents=intents)
         confidence = self._estimate_confidence(message_type=message_type, warnings=warnings)
         target_scope = self._build_target_scope(
             target_refs=target_refs,
@@ -135,7 +154,6 @@ class TraderBProfileParser:
             confidence=confidence,
             target_scope=target_scope,
             linking=linking,
-            diagnostics=diagnostics,
         )
 
     def _preprocess(self, *, text: str, context: ParserContext) -> dict[str, Any]:
@@ -171,21 +189,18 @@ class TraderBProfileParser:
         if has_symbol and has_side and has_entry and has_stop and not has_tp:
             return "SETUP_INCOMPLETE"
 
-        if self._is_cancel_only_message(normalized=normalized, global_target_scope=global_target_scope):
-            return "UPDATE"
-
-        if self._contains_any(normalized, self._operational_markers()):
-            return "UPDATE"
-
-        info_only_markers = _merge_markers(self._as_markers("classification_markers", "info_only"), _DEFAULT_INFO_ONLY_MARKERS)
-        if self._contains_any(normalized, info_only_markers) or self._contains_any(normalized, _PASSIVE_OUTCOME_MARKERS):
-            return "INFO_ONLY"
-
-        update_markers = _merge_markers(self._as_markers("classification_markers", "update"), _DEFAULT_UPDATE_FALLBACK_MARKERS)
-        if self._contains_any(normalized, update_markers) or (
-            self._contains_whole_word(normalized, "бу")
-            and self._contains_any(normalized, ("стоп", "перенос", "перевод", "entry", "точка", "безубыт", "безриск"))
-        ):
+        update_markers = self._as_markers("classification_markers", "update")
+        update_intent_markers = _merge_markers(
+            _merge_markers(
+                _merge_markers(
+                    _merge_markers(self._as_markers("intent_markers", "U_CLOSE_FULL"), _DEFAULT_CLOSE_FULL_EXTRA_MARKERS),
+                    _merge_markers(self._as_markers("intent_markers", "U_TP_HIT_EXPLICIT"), _DEFAULT_TP_HIT_EXPLICIT_MARKERS),
+                ),
+                _merge_markers(self._as_markers("intent_markers", "U_STOP_HIT"), _DEFAULT_STOP_HIT_EXPLICIT_MARKERS),
+            ),
+            _merge_markers(self._as_markers("intent_markers", "U_CANCEL_PENDING_ORDERS"), _DEFAULT_CANCEL_PENDING_MARKERS),
+        )
+        if self._contains_any(normalized, _merge_markers(_merge_markers(update_markers, _DEFAULT_UPDATE_FALLBACK_MARKERS), update_intent_markers)):
             return "UPDATE"
         return "UNCLASSIFIED"
 
@@ -227,8 +242,12 @@ class TraderBProfileParser:
         if message_type not in {"UPDATE", "UNCLASSIFIED"}:
             return intents
 
-        if self._is_cancel_only_message(normalized=normalized, global_target_scope=global_target_scope):
-            return ["U_CANCEL_PENDING_ORDERS"]
+        if self._contains_any(normalized, self._as_markers("intent_markers", "U_MOVE_STOP_TO_BE")):
+            intents.extend(["U_MOVE_STOP_TO_BE", "U_MOVE_STOP"])
+        elif self._contains_any(normalized, _DEFAULT_MOVE_STOP_TO_BE_FALLBACK_MARKERS):
+            intents.extend(["U_MOVE_STOP_TO_BE", "U_MOVE_STOP"])
+        elif self._contains_any(normalized, self._as_markers("intent_markers", "U_MOVE_STOP")):
+            intents.append("U_MOVE_STOP")
 
         close_full_markers = _merge_markers(
             self._as_markers("intent_markers", "U_CLOSE_FULL"),
@@ -252,15 +271,16 @@ class TraderBProfileParser:
             intents.append("U_CLOSE_FULL")
         if self._contains_any(normalized, self._as_markers("intent_markers", "U_STOP_HIT")):
             intents.append("U_STOP_HIT")
+        if self._contains_any(normalized, _DEFAULT_STOP_HIT_EXPLICIT_MARKERS):
+            intents.append("U_STOP_HIT")
         if self._contains_any(
             normalized,
             _merge_markers(self._as_markers("intent_markers", "U_TP_HIT_EXPLICIT"), _DEFAULT_TP_HIT_EXPLICIT_MARKERS),
         ):
             intents.append("U_TP_HIT")
-        if self._contains_any(normalized, self._as_markers("intent_markers", "U_CANCEL_PENDING_ORDERS")) or self._is_cancel_only_message(
-            normalized=normalized,
-            global_target_scope=global_target_scope,
-        ):
+        if self._contains_any(normalized, _merge_markers(self._as_markers("intent_markers", "U_CANCEL_PENDING_ORDERS"), _DEFAULT_CANCEL_PENDING_MARKERS)):
+            # Trader B policy: "не актуально" (and close variants) are treated
+            # pragmatically as cancel pending orders, without extra subclasses.
             intents.append("U_CANCEL_PENDING_ORDERS")
         if self._contains_any(normalized, self._as_markers("intent_markers", "U_REPORT_FINAL_RESULT")):
             intents.append("U_REPORT_FINAL_RESULT")
@@ -331,19 +351,19 @@ class TraderBProfileParser:
         if "U_MOVE_STOP_TO_BE" in intents:
             stop_level = _extract_stop_level(raw_text)
             entities["new_stop_level"] = stop_level if isinstance(stop_level, float) else "ENTRY"
-            if "U_MOVE_STOP" in intents and stop_level is not None:
-                entities["new_stop_level"] = stop_level
+            entities["new_stop_price"] = stop_level if isinstance(stop_level, float) else None
+            entities["new_stop_reference_text"] = "BREAKEVEN"
         elif "U_MOVE_STOP" in intents:
             stop_level = _extract_stop_level(raw_text)
             if stop_level is not None:
                 entities["new_stop_level"] = stop_level
+                entities["new_stop_price"] = stop_level
             else:
-                reference_text = self._extract_stop_reference_text(normalized=normalized)
-                if reference_text:
-                    entities["stop_reference_text"] = reference_text
+                entities["new_stop_reference_text"] = _extract_stop_reference_text(raw_text)
 
         if "U_CLOSE_FULL" in intents:
-            entities["close_scope"] = self._resolve_close_scope(global_target_scope=global_target_scope) or "FULL"
+            close_scope = self._resolve_global_target_scope(prepared=prepared)
+            entities["close_scope"] = close_scope or "FULL"
             result_percent = _extract_result_percent(raw_text)
             if result_percent is not None:
                 entities["result_percent"] = result_percent
@@ -361,11 +381,10 @@ class TraderBProfileParser:
                 entities["result_percent"] = result_percent
 
         if "U_CANCEL_PENDING_ORDERS" in intents:
-            entities["cancel_scope"] = self._resolve_cancel_scope(
-                prepared=prepared,
-                target_refs=target_refs,
-                global_target_scope=global_target_scope,
-            )
+            entities["cancel_scope"] = _derive_cancel_scope(raw_text)
+
+        if message_type == "UPDATE":
+            entities["update_tense"] = self._detect_update_tense(normalized=normalized)
 
         return entities
 
@@ -562,11 +581,36 @@ class TraderBProfileParser:
         lowered = text.lower()
         return any(marker in lowered for marker in markers if marker)
 
+    def _resolve_global_target_scope(self, *, prepared: dict[str, Any]) -> str | None:
+        normalized = str(prepared.get("normalized_text") or "")
+        for scope, markers in _DEFAULT_GLOBAL_CLOSE_SCOPE_MARKERS.items():
+            if self._contains_any(normalized, markers):
+                return scope
+        return None
+
+    def _detect_update_tense(self, *, normalized: str) -> str:
+        if self._contains_any(normalized, _DEFAULT_ACTION_REQUEST_MARKERS):
+            return "ACTION_REQUEST"
+        if self._contains_any(normalized, _DEFAULT_EVENT_REPORTED_MARKERS):
+            return "EVENT_REPORTED"
+        return "UNSPECIFIED"
+
     @staticmethod
-    def _contains_whole_word(text: str, token: str) -> bool:
-        if not token:
-            return False
-        return bool(re.search(rf"\b{re.escape(token)}\b", text, re.IGNORECASE))
+    def _build_linking(*, target_refs: list[dict[str, Any]], context: ParserContext, has_global_target: bool) -> dict[str, Any]:
+        strategy = "reply_or_link" if (target_refs or context.reply_to_message_id) else ("global_scope" if has_global_target else "unresolved")
+        return {
+            "targeted": bool(target_refs or context.reply_to_message_id or has_global_target),
+            "reply_to_message_id": context.reply_to_message_id,
+            "target_refs_count": len(target_refs),
+            "has_global_target_scope": has_global_target,
+            "strategy": strategy,
+        }
+
+    @staticmethod
+    def _build_target_scope(*, linking: dict[str, Any], global_target_scope: str | None) -> dict[str, Any]:
+        if global_target_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL"}:
+            return {"kind": "portfolio_side", "scope": global_target_scope}
+        return {"kind": "signal", "scope": "single" if linking.get("targeted") else "unknown"}
 
 
 def _to_float(raw: str | None) -> float | None:
@@ -629,6 +673,31 @@ def _extract_result_percent(raw_text: str) -> float | None:
         if value is not None:
             return value
     return None
+
+
+def _extract_stop_reference_text(raw_text: str) -> str | None:
+    match = re.search(
+        r"(?:переносим|перенести|переставляем|стоп\s*лосс\s*переносим)\s*(?:на|за|под|в)\s*(?P<value>[^\n.,;:]+)",
+        raw_text,
+        re.IGNORECASE,
+    )
+    if not match:
+        return None
+    value = str(match.group("value")).strip()
+    return value or None
+
+
+def _derive_cancel_scope(raw_text: str) -> str:
+    normalized = normalize_text(raw_text)
+    if extract_telegram_links(raw_text):
+        return "TARGETED"
+    if "all shorts" in normalized or "все шорты" in normalized:
+        return "ALL_SHORT"
+    if "all longs" in normalized or "все лонги" in normalized:
+        return "ALL_LONG"
+    if "all" in normalized or "все позиции" in normalized or "все сделки" in normalized:
+        return "ALL_ALL"
+    return "ALL_PENDING_ENTRIES"
 
 
 def _unique(values: list[str]) -> list[str]:

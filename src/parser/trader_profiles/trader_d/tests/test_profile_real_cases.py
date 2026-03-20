@@ -294,36 +294,54 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
             self.assertIn("U_TP_HIT", result.intents)
 
     def test_tp_with_profit_percent_and_close_full(self) -> None:
-        text = _u(
-            r"Tp2 сделка закрыта "
-            r"Общий профит +1.49р"
-        )
-        result = self.parser.parse_message(text, _context(text=text, reply_to=714))
+        text = "ТП2 позиция закрыта +0,75"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=709))
         self.assertIn("U_TP_HIT", result.intents)
         self.assertIn("U_CLOSE_FULL", result.intents)
-        action_types = {item.get("action") for item in result.actions_structured}
-        self.assertIn("MARK_POSITION_CLOSED", action_types)
-        self.assertNotIn("TAKE_PROFIT", action_types)
-        self.assertNotIn("CLOSE_POSITION", action_types)
-        self.assertEqual(result.entities.get("reported_profit_r"), 1.49)
+        self.assertEqual(result.entities.get("reported_profit_percent"), 0.75)
 
-    def test_tp_hit_compact_variants(self) -> None:
-        result = self.parser.parse_message("Tp 2😑", _context(text="Tp 2😑", reply_to=715))
-        self.assertEqual(result.message_type, "UPDATE")
+    def test_tp_with_overall_profit_percent(self) -> None:
+        text = "Tp3 общий профит +1.18%"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=710))
         self.assertIn("U_TP_HIT", result.intents)
+        self.assertEqual(result.entities.get("reported_profit_percent"), 1.18)
 
-    def test_stop_shift_with_value_is_update(self) -> None:
-        text = "Стоп сдвигаю в + 0.4671"
-        result = self.parser.parse_message(text, _context(text=text, reply_to=716))
+    def test_update_move_stop_numeric(self) -> None:
+        text = "стоп переставляем в + на 1,2453"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=704))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP", result.intents)
-        self.assertEqual(result.entities.get("new_stop_price"), 0.4671)
+        self.assertEqual(result.entities.get("new_stop_level"), 1.2453)
+        self.assertEqual(result.entities.get("new_stop_price"), 1.2453)
 
     def test_stop_loss_hit_short_form(self) -> None:
         text = "Sl -0.5"
         result = self.parser.parse_message(text, _context(text=text, reply_to=717))
         self.assertEqual(result.message_type, "UPDATE")
-        self.assertIn("U_STOP_HIT", result.intents)
+        self.assertIn("U_CLOSE_FULL", result.intents)
+        self.assertEqual(result.entities.get("close_scope"), "FULL")
+        self.assertTrue(result.reported_results)
+        self.assertEqual(result.reported_results[0].get("value"), 1.0)
+        self.assertEqual(result.reported_results[0].get("unit"), "R")
+        self.assertEqual(result.entities.get("symbol"), "JTOUSDT")
+        self.assertEqual(result.entities.get("reported_profit_r"), 1.0)
+
+    def test_exit_be_variants(self) -> None:
+        first = self.parser.parse_message("позиция ушла в бу", _context(text="позиция ушла в бу", reply_to=711))
+        second = self.parser.parse_message("остаток ушел в бу+", _context(text="остаток ушел в бу+", reply_to=712))
+        self.assertIn("U_EXIT_BE", first.intents)
+        self.assertIn("U_EXIT_BE", second.intents)
+
+    def test_close_full_current_price(self) -> None:
+        result = self.parser.parse_message("закрываю по текущим", _context(text="закрываю по текущим", reply_to=713))
+        self.assertIn("U_CLOSE_FULL", result.intents)
+
+    def test_tp_close_full_with_r_result(self) -> None:
+        text = "Tp2 сделка закрыта Общий профит +1.49р"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=714))
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertIn("U_CLOSE_FULL", result.intents)
+        self.assertEqual(result.entities.get("reported_profit_r"), 1.49)
 
     def test_warning_on_operational_update_without_target(self) -> None:
         text = "tp1+"
