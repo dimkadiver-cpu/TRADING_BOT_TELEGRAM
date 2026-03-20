@@ -225,6 +225,14 @@ class TraderAProfileParser:
         # The v2 semantic envelope below is additive for backward compatibility.
         primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
         actions_structured = self._build_actions_structured(message_type=message_type, intents=intents, entities=entities)
+        actions_structured = self._build_grouped_targeted_actions(
+            prepared=prepared,
+            message_type=message_type,
+            intents=intents,
+            target_refs=target_refs,
+            actions_structured=actions_structured,
+            global_target_scope=global_target_scope,
+        )
         linking = self._build_linking(target_refs=target_refs, context=context, has_global_target=has_global_target)
         target_scope = self._build_target_scope(
             entities=entities,
@@ -348,6 +356,99 @@ class TraderAProfileParser:
             "has_global_target_scope": has_global_target,
             "raw_text_length": len(str(prepared.get("raw_text") or "")),
         }
+
+    def _build_grouped_targeted_actions(
+        self,
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        intents: list[str],
+        target_refs: list[dict[str, Any]],
+        actions_structured: list[dict[str, Any]],
+        global_target_scope: str | None,
+    ) -> list[dict[str, Any]]:
+        if message_type != "UPDATE":
+            return actions_structured
+
+        raw_text = str(prepared.get("raw_text") or "")
+        per_target = self._extract_per_target_action_items(raw_text=raw_text)
+        if per_target is None:
+            return actions_structured
+        if per_target:
+            return self._group_action_items(per_target)
+
+        explicit_targets = [int(item.get("ref")) for item in target_refs if item.get("kind") == "message_id" and isinstance(item.get("ref"), int)]
+        if explicit_targets and "U_CLOSE_FULL" in intents:
+            return [
+                {
+                    "action": "CLOSE_POSITION",
+                    "scope": "FULL",
+                    "targeting": {"mode": "TARGET_GROUP", "targets": sorted(set(explicit_targets))},
+                }
+            ]
+
+        if not explicit_targets and "U_CLOSE_FULL" in intents and global_target_scope in {"ALL_SHORTS", "ALL_LONGS"}:
+            return [
+                {
+                    "action": "CLOSE_POSITION",
+                    "scope": "FULL",
+                    "targeting": {
+                        "mode": "SELECTOR",
+                        "selector": {
+                            "side": "SHORT" if global_target_scope == "ALL_SHORTS" else "LONG",
+                            "status": "OPEN",
+                        },
+                    },
+                }
+            ]
+        return actions_structured
+
+    def _extract_per_target_action_items(self, *, raw_text: str) -> list[dict[str, Any]] | None:
+        items: list[dict[str, Any]] = []
+        lines = split_lines(raw_text)
+        for line in lines:
+            link_match = _LINK_ID_RE.search(line)
+            if not link_match:
+                continue
+            try:
+                target = int(link_match.group("id"))
+            except ValueError:
+                continue
+            normalized_line = normalize_text(line)
+            if "стоп в бу" in normalized_line or "stop in be" in normalized_line:
+                items.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY", "target": target})
+            elif any(token in normalized_line for token in ("стоп на 1 тейк", "стоп на первый тейк", "стоп на tp1")):
+                items.append({"action": "MOVE_STOP", "new_stop_level": "TP1", "target": target})
+            elif "стоп" in normalized_line:
+                # ambiguous per-target stop command: force full legacy fallback
+                return None
+        return items
+
+    @staticmethod
+    def _group_action_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
+        grouped: dict[tuple[str, str], list[int]] = {}
+        for item in items:
+            action = str(item.get("action") or "")
+            level = str(item.get("new_stop_level") or "")
+            target = item.get("target")
+            if not action or not level or not isinstance(target, int):
+                continue
+            grouped.setdefault((action, level), []).append(target)
+
+        out: list[dict[str, Any]] = []
+        for (action, level), targets in grouped.items():
+            unique_targets = sorted(set(targets))
+            out.append(
+                {
+                    "action": action,
+                    "new_stop_level": level,
+                    "targeting": {
+                        "mode": "TARGET_GROUP" if len(unique_targets) > 1 else "EXPLICIT_TARGETS",
+                        "targets": unique_targets,
+                    },
+                }
+            )
+        return out
 
     def _preprocess(self, *, text: str, context: ParserContext) -> dict[str, Any]:
         raw_text = text or context.raw_text

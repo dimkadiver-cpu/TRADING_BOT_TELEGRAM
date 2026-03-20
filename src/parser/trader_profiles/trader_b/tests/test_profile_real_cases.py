@@ -132,6 +132,85 @@ class TraderBProfileRealCasesTests(unittest.TestCase):
         self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
         self.assertEqual(result.entities.get("cancel_scope"), "ALL_PENDING_ENTRIES")
 
+    def test_profit_vocabulary_cases_are_update(self) -> None:
+        for text in (
+            "Поздравляю с профитом",
+            "Сделка полностью реализована",
+            "Закрыта в +2.3%",
+            "Цели достигнуты",
+        ):
+            result = self.parser.parse_message(text, _context(text=text, reply_to=800))
+            self.assertEqual(result.message_type, "UPDATE")
+            self.assertIn("U_TP_HIT", result.intents)
+
+    def test_stop_loss_vocabulary_cases_are_update(self) -> None:
+        for text in (
+            "закрылись по стопу",
+            "закрыта по стоп лоссу (-1%)",
+            "тут стоп, (-1%)",
+            "обидный стоп (-1%)",
+        ):
+            result = self.parser.parse_message(text, _context(text=text, reply_to=801))
+            self.assertEqual(result.message_type, "UPDATE")
+            self.assertIn("U_STOP_HIT", result.intents)
+
+    def test_move_stop_to_be_with_in_noise_variant(self) -> None:
+        text = "стоп лосс переносим in БУ"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=802))
+        self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertEqual(result.entities.get("new_stop_level"), "ENTRY")
+        self.assertEqual(result.entities.get("new_stop_reference_text"), "BREAKEVEN")
+
+    def test_move_stop_plus_and_minimum_variants(self) -> None:
+        plus_result = self.parser.parse_message("Стоп лосс переносим в +", _context(text="Стоп лосс переносим в +", reply_to=803))
+        self.assertIn("U_MOVE_STOP", plus_result.intents)
+        self.assertNotIn("U_MOVE_STOP_TO_BE", plus_result.intents)
+
+        min_result = self.parser.parse_message(
+            "Стоп лосс переносим за указанный минимум",
+            _context(text="Стоп лосс переносим за указанный минимум", reply_to=804),
+        )
+        self.assertIn("U_MOVE_STOP", min_result.intents)
+        self.assertEqual(min_result.entities.get("new_stop_reference_text"), "указанный минимум")
+
+    def test_move_stop_under_minimum_fallbacks_to_be(self) -> None:
+        text = "Стоп лосс переносим под минимум"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=805))
+        self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+
+    def test_action_vs_reported_event_tense(self) -> None:
+        action_result = self.parser.parse_message("Закрываю в БУ", _context(text="Закрываю в БУ", reply_to=806))
+        self.assertEqual(action_result.entities.get("update_tense"), "ACTION_REQUEST")
+
+        closed_result = self.parser.parse_message("Закрыта в БУ", _context(text="Закрыта в БУ", reply_to=807))
+        self.assertEqual(closed_result.entities.get("update_tense"), "EVENT_REPORTED")
+
+        gone_result = self.parser.parse_message("ушла в БУ", _context(text="ушла в БУ", reply_to=808))
+        self.assertEqual(gone_result.entities.get("update_tense"), "EVENT_REPORTED")
+
+    def test_close_with_multi_links_collects_all_target_refs(self) -> None:
+        text = "Закрываю все https://t.me/c/100/1001 и https://t.me/c/100/1002"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn({"kind": "message_id", "ref": 1001}, result.target_refs)
+        self.assertIn({"kind": "message_id", "ref": 1002}, result.target_refs)
+
+    def test_close_all_long_short_all_scope_without_links(self) -> None:
+        all_long = self.parser.parse_message("Закрываем все лонги", _context(text="Закрываем все лонги"))
+        self.assertEqual(all_long.target_scope.get("scope"), "ALL_LONGS")
+        self.assertEqual(all_long.linking.get("strategy"), "global_scope")
+
+        all_short = self.parser.parse_message("Закрываем все шорты", _context(text="Закрываем все шорты"))
+        self.assertEqual(all_short.target_scope.get("scope"), "ALL_SHORTS")
+
+        all_all = self.parser.parse_message("Закрываем все позиции", _context(text="Закрываем все позиции"))
+        self.assertEqual(all_all.target_scope.get("scope"), "ALL_ALL")
+
+    def test_not_actual_policy_fixed_to_cancel_pending(self) -> None:
+        first = self.parser.parse_message("не актуально", _context(text="не актуально", reply_to=809))
+        second = self.parser.parse_message("пока не актуально", _context(text="пока не актуально", reply_to=810))
+        self.assertIn("U_CANCEL_PENDING_ORDERS", first.intents)
+        self.assertIn("U_CANCEL_PENDING_ORDERS", second.intents)
 
     def test_update_with_telegram_link_extracts_targets(self) -> None:
         text = "Закрыта вручную https://t.me/c/123/456"
