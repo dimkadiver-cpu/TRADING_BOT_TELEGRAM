@@ -1,4 +1,4 @@
-"""Trader A profile parser."""
+﻿"""Trader A profile parser."""
 
 from __future__ import annotations
 
@@ -9,6 +9,7 @@ from typing import Any
 
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text, split_lines
+from src.parser.intent_action_map import intent_policy_for_intent
 
 _RULES_PATH = Path(__file__).resolve().parent / "parsing_rules.json"
 _SYMBOL_RE = re.compile(r"\b[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?\b")
@@ -37,6 +38,7 @@ _TP2_HIT_RE = re.compile(
     re.IGNORECASE,
 )
 _TP1_HIT_RE = re.compile(r"(?:1\s+\u0442\u0435\u0439\u043a|\u043f\u0435\u0440\u0432\u044b\u0439\s+\u0442\u0435\u0439\u043a)", re.IGNORECASE)
+_RESULT_PERCENT_RE = re.compile(r"(?P<value>[+-]?\d{1,3}(?:[.,]\d+)?)%")
 _ENTRY_AB_VALUE_RE = re.compile(
     r"(?:^|\n)\s*(?:[-\u2014\u2022]\s*)?(?:\u0432\u0445\u043e\u0434\s*)?(?:\((?P<label_paren>[ab\u0430\u0431])\)|(?P<label>[ab\u0430\u0431]))(?:\s*\((?P<qual>[^)]*)\))?\s*[:=@-]\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)",
     re.IGNORECASE,
@@ -64,6 +66,10 @@ _DEFAULT_CLASSIFICATION_MARKERS: dict[str, tuple[str, ...]] = {
         "\u043e\u0441\u0442\u0430\u0442\u043e\u043a \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0435\u0439 \u0446\u0435\u043d\u0435",
         "\u0434\u043e\u0448\u043b\u0438 \u0434\u043e 2-\u0445 \u0442\u0435\u0439\u043a\u043e\u0432",
         "move stop",
+        "зафиксировать",
+        "хочу зафиксировать",
+        "фиксация 100%",
+        "фиксация 100% по текущим отметкам",
         "close all",
         "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u0432\u0441\u0435 \u043f\u043e\u0437\u0438\u0446\u0438\u0438",
         "\u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u0443\u044e \u0432\u0441\u0435 \u0441\u0432\u043e\u0438 \u043f\u043e\u0437\u0438\u0446\u0438\u0438 \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c",
@@ -79,6 +85,105 @@ _DEFAULT_CLASSIFICATION_MARKERS: dict[str, tuple[str, ...]] = {
         "tp later",
     ),
 }
+
+_DEFAULT_INTENT_MARKERS: dict[str, tuple[str, ...]] = {
+    "U_MOVE_STOP_TO_BE": (
+        "move stop to be",
+        "stop to breakeven",
+        "stop to entry",
+        "\u0441\u0442\u043e\u043f \u0432 \u0431\u0443",
+        "\u0441\u0442\u043e\u043f\u044b \u0432 \u0431\u0443",
+        "\u0441\u0442\u043e\u043f \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+        "\u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
+        "\u0441\u0442\u043e\u043f \u0434\u043e\u043b\u0436\u0435\u043d \u0441\u0442\u043e\u044f\u0442\u044c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043a\u0435",
+        "\u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u043e\u043f \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+    ),
+    "U_MOVE_STOP": (
+        "move stop",
+        "move sl",
+        "\u0441\u0442\u043e\u043f \u043d\u0430 1 \u0442\u0435\u0439\u043a",
+        "\u0441\u0442\u043e\u043f \u043d\u0430 \u043f\u0435\u0440\u0432\u044b\u0439 \u0442\u0435\u0439\u043a",
+        "\u0441\u0442\u043e\u043f \u043d\u0430 tp1",
+    ),
+    "U_CANCEL_PENDING_ORDERS": (
+        "cancel pending",
+        "cancel limit",
+        "\u0443\u0431\u0438\u0440\u0430\u0435\u043c \u043b\u0438\u043c\u0438\u0442\u043a\u0438",
+        "\u0443\u0431\u0435\u0440\u0435\u043c \u043b\u0438\u043c\u0438\u0442\u043a\u0438",
+        "\u0441\u043d\u0438\u043c\u0430\u0435\u043c \u043b\u0438\u043c\u0438\u0442\u043a\u0438",
+        "\u0441\u043d\u044f\u0442\u044c \u043b\u0438\u043c\u0438\u0442\u043a\u0438",
+        "\u043b\u0438\u043c\u0438\u0442\u043a\u0438 \u0443\u0431\u0438\u0440\u0430\u0435\u043c",
+        "\u043e\u0442\u043c\u0435\u043d\u044f\u0435\u043c \u043b\u0438\u043c\u0438\u0442\u043a\u0438",
+        "\u0441\u043d\u044f\u0442\u044c \u0432\u0441\u0435 \u043b\u0438\u043c\u0438\u0442\u043d\u044b\u0435 \u043e\u0440\u0434\u0435\u0440\u0430",
+        "\u0441\u043d\u044f\u0442\u044c \u043b\u0438\u043c\u0438\u0442\u043d\u044b\u0435 \u043e\u0440\u0434\u0435\u0440\u0430",
+        "\u0441\u043d\u044f\u0442\u044c \u043e\u0440\u0434\u0435\u0440\u0430",
+    ),
+    "U_INVALIDATE_SETUP": (
+        "\u043e\u0442\u043c\u0435\u043d\u0430 \u0432\u0445\u043e\u0434\u0430",
+        "\u0431\u0435\u0437 \u0440\u0435\u0442\u0435\u0441\u0442\u0430",
+        "without retest",
+        "\u0435\u0441\u043b\u0438 15m \u0437\u0430\u043a\u0440\u0435\u043f\u0438\u0442\u0441\u044f \u0432\u044b\u0448\u0435",
+        "\u0435\u0441\u043b\u0438 \u0446\u0435\u043d\u0430 \u0443\u0439\u0434\u0435\u0442 \u043a",
+        "\u0435\u0441\u043b\u0438 \u0446\u0435\u043d\u0430 \u0443\u0439\u0434\u0451\u0442 \u043a",
+        "\u0437\u0430\u043a\u0440\u0435\u043f\u0438\u0442\u0441\u044f \u0432\u044b\u0448\u0435",
+        "\u0437\u0430\u043a\u0440\u0435\u043f\u0438\u0442\u0441\u044f \u043d\u0438\u0436\u0435",
+        "\u0443\u0439\u0434\u0435\u0442 \u043a",
+        "\u0443\u0439\u0434\u0451\u0442 \u043a",
+        "price goes to",
+    ),
+    "U_CLOSE_FULL": (
+        "close all",
+        "close full",
+        "хочу зафиксировать",
+        "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u0432\u0441\u0435 \u043f\u043e\u0437\u0438\u0446\u0438\u0438 \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c",
+        "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u0432\u0441\u0435 \u043f\u043e\u0437\u0438\u0446\u0438\u0438",
+        "зафиксировать все позиции",
+        "\u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u0443\u044e \u0432\u0441\u0435 \u0441\u0432\u043e\u0438 \u043f\u043e\u0437\u0438\u0446\u0438\u0438 \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c",
+        "зафиксировать все шорты",
+        "зафиксировать все лонги",
+        "\u043e\u0441\u0442\u0430\u0442\u043e\u043a \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0435\u0439 \u0446\u0435\u043d\u0435",
+        "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c",
+        "\u0434\u0430\u0432\u0430\u0439\u0442\u0435 \u0438\u0445 \u043f\u0440\u0438\u043a\u0440\u043e\u0435\u043c",
+        "\u0432\u0441\u0435 \u043b\u043e\u043d\u0433\u0438 \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c",
+        "\u0432\u0441\u0435 \u043b\u043e\u043d\u0433\u0438 \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043d\u0430 \u0442\u0435\u043a\u0443\u0449\u0438\u0445",
+        "\u0432\u0441\u0435 \u043b\u043e\u043d\u0433\u0438 \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043d\u0430 \u0442\u0435\u043a\u0443\u0449\u0438\u0445 \u043e\u0442\u043c\u0435\u0442\u043a\u0430\u0445",
+        "\u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c",
+        "\u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043d\u0430 \u0442\u0435\u043a\u0443\u0449\u0438\u0445",
+        "\u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043d\u0430 \u0442\u0435\u043a\u0443\u0449\u0438\u0445 \u043e\u0442\u043c\u0435\u0442\u043a\u0430\u0445",
+        "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043d\u0430 \u0442\u0435\u043a\u0443\u0449\u0438\u0445 \u043e\u0442\u043c\u0435\u0442\u043a\u0430\u0445",
+        "\u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b",
+        "\u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432\u0441\u0435 \u043b\u043e\u043d\u0433\u0438",
+        "фиксация 100%",
+        "фиксация 100% по текущим отметкам",
+    ),
+    "U_CLOSE_PARTIAL": ("partial close", "close half", "\u0447\u0430\u0441\u0442\u0438\u0447\u043d\u043e", "\u043f\u043e\u043b\u043e\u0432\u0438\u043d\u0443"),
+    "U_TP_HIT": (
+        "tp hit",
+        "tp1 hit",
+        "\u0442\u0435\u0439\u043a \u0432\u0437\u044f\u0442",
+        "\u0434\u043e\u0448\u043b\u0438 \u0434\u043e 2-\u0445 \u0442\u0435\u0439\u043a\u043e\u0432",
+        "1 \u0442\u0435\u0439\u043a",
+        "\u0442\u0443\u0442 \u0442\u0435\u0439\u043a",
+    ),
+    "U_STOP_HIT": ("stop hit", "stopped out", "\u0432\u044b\u0431\u0438\u043b\u043e \u043f\u043e \u0441\u0442\u043e\u043f\u0443"),
+    "U_MARK_FILLED": (
+        "entry filled",
+        "filled",
+        "\u0432\u0445\u043e\u0434 \u0438\u0441\u043f\u043e\u043b\u043d\u0435\u043d",
+        "\u0432\u0437\u044f\u043b\u0438 \u043b\u0438\u043c\u0438\u0442\u043a\u0443",
+        "\u043b\u0438\u043c\u0438\u0442\u043a\u0430 \u0432\u0437\u044f\u043b\u0430\u0441\u044c",
+        "\u0432\u0437\u044f\u043b\u043e \u043b\u0438\u043c\u0438\u0442\u043a\u0443",
+    ),
+    "U_REPORT_FINAL_RESULT": ("final result", "results", "\u0438\u0442\u043e\u0433", "\u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b"),
+}
+
+_INTERMEDIATE_RESULT_MARKERS: tuple[str, ...] = (
+    "\u0447\u0438\u0441\u0442\u043e\u0433\u043e \u0434\u0432\u0438\u0436\u0435\u043d\u0438\u044f",
+    "\u0447\u0438\u0441\u0442\u044b\u043c\u0438",
+    "\u043f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u044e",
+    "\u043f\u0440\u043e\u0444\u0438\u0442",
+    "profit",
+)
 
 _DEFAULT_INTENT_MARKERS: dict[str, tuple[str, ...]] = {
     "U_MOVE_STOP_TO_BE": (
@@ -158,9 +263,17 @@ _DEFAULT_INTENT_MARKERS: dict[str, tuple[str, ...]] = {
     "U_REPORT_FINAL_RESULT": ("final result", "results", "\u0438\u0442\u043e\u0433", "\u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b"),
 }
 
+_INTERMEDIATE_RESULT_MARKERS: tuple[str, ...] = (
+    "\u0447\u0438\u0441\u0442\u043e\u0433\u043e \u0434\u0432\u0438\u0436\u0435\u043d\u0438\u044f",
+    "\u0447\u0438\u0441\u0442\u044b\u043c\u0438",
+    "\u043f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u044e",
+    "\u043f\u0440\u043e\u0444\u0438\u0442",
+    "profit",
+)
 
 class TraderAProfileParser:
     trader_code = "trader_a"
+    supports_targeted_actions_structured = True
 
     def __init__(self, rules_path: Path | None = None) -> None:
         self._rules_path = rules_path or _RULES_PATH
@@ -287,6 +400,8 @@ class TraderAProfileParser:
 
         actions: list[dict[str, Any]] = []
         for intent in intents:
+            if not intent_policy_for_intent(intent).get("state_change"):
+                continue
             if intent == "U_MOVE_STOP_TO_BE":
                 actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
             elif intent == "U_MOVE_STOP":
@@ -313,6 +428,137 @@ class TraderAProfileParser:
                 actions.append({"action": "REPORT_RESULT", "mode": entities.get("result_mode", "TEXT_SUMMARY")})
         return actions
 
+    def _build_actions_structured_granular(
+        self,
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        intents: list[str],
+        entities: dict[str, Any],
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None,
+        legacy_actions: list[dict[str, Any]],
+    ) -> list[dict[str, Any]] | None:
+        if not self.supports_targeted_actions_structured or message_type != "UPDATE":
+            return None
+
+        explicit_target_ids = self._explicit_target_message_ids(target_refs=target_refs)
+        raw_text = str(prepared.get("raw_text") or "")
+
+        granular_stop_actions = self._build_line_level_move_stop_actions(raw_text=raw_text)
+        if granular_stop_actions:
+            remaining = [item for item in legacy_actions if item.get("action") != "MOVE_STOP"]
+            return [*granular_stop_actions, *remaining]
+
+        if "U_CLOSE_FULL" in intents and len(explicit_target_ids) >= 2:
+            targeted_close = {
+                "action": "CLOSE_POSITION",
+                "scope": entities.get("close_scope", "FULL"),
+                "targeting": {
+                    "mode": "TARGET_GROUP",
+                    "targets": explicit_target_ids,
+                },
+            }
+            remaining = [item for item in legacy_actions if item.get("action") != "CLOSE_POSITION"]
+            return [targeted_close, *remaining]
+
+        selector = self._selector_from_global_scope(global_target_scope=global_target_scope)
+        if "U_CLOSE_FULL" in intents and selector:
+            targeted_close = {
+                "action": "CLOSE_POSITION",
+                "scope": entities.get("close_scope", "FULL"),
+                "targeting": {
+                    "mode": "SELECTOR",
+                    "selector": selector,
+                },
+            }
+            remaining = [item for item in legacy_actions if item.get("action") != "CLOSE_POSITION"]
+            return [targeted_close, *remaining]
+
+        return None
+
+    @staticmethod
+    def _explicit_target_message_ids(*, target_refs: list[dict[str, Any]]) -> list[int]:
+        out: list[int] = []
+        seen: set[int] = set()
+        for ref in target_refs:
+            if ref.get("kind") != "message_id":
+                continue
+            value = ref.get("ref")
+            if not isinstance(value, int) or value in seen:
+                continue
+            seen.add(value)
+            out.append(value)
+        return out
+
+    def _build_line_level_move_stop_actions(self, *, raw_text: str) -> list[dict[str, Any]]:
+        actions: list[dict[str, Any]] = []
+        seen_targets: set[int] = set()
+        for line in split_lines(raw_text):
+            level = self._line_stop_level(line=line)
+            if level is None:
+                continue
+            message_ids = self._extract_message_ids_from_line(line=line)
+            if not message_ids:
+                continue
+            for message_id in message_ids:
+                if message_id in seen_targets:
+                    continue
+                seen_targets.add(message_id)
+                actions.append(
+                    {
+                        "action": "MOVE_STOP",
+                        "new_stop_level": level,
+                        "targeting": {
+                            "mode": "EXPLICIT_TARGETS",
+                            "targets": [message_id],
+                        },
+                    }
+                )
+        return actions
+
+    @staticmethod
+    def _extract_message_ids_from_line(*, line: str) -> list[int]:
+        out: list[int] = []
+        seen: set[int] = set()
+        for link in extract_telegram_links(line):
+            match = _LINK_ID_RE.search(link)
+            if not match:
+                continue
+            message_id = int(match.group("id"))
+            if message_id in seen:
+                continue
+            seen.add(message_id)
+            out.append(message_id)
+        return out
+
+    @staticmethod
+    def _line_stop_level(*, line: str) -> str | None:
+        normalized = normalize_text(line)
+        if _STOP_TO_TP1_RE.search(line):
+            return "TP1"
+        if _contains_any(
+            normalized,
+            (
+                "стоп в бу",
+                "стопы в бу",
+                "стоп в безубыток",
+                "stop to be",
+                "stop to breakeven",
+                "stop to entry",
+            ),
+        ):
+            return "ENTRY"
+        return None
+
+    @staticmethod
+    def _selector_from_global_scope(*, global_target_scope: str | None) -> dict[str, str] | None:
+        if global_target_scope in {"ALL_REMAINING_SHORTS", "ALL_SHORTS"}:
+            return {"side": "SHORT", "status": "OPEN"}
+        if global_target_scope in {"ALL_REMAINING_LONGS", "ALL_LONGS"}:
+            return {"side": "LONG", "status": "OPEN"}
+        return None
+
     @staticmethod
     def _build_linking(*, target_refs: list[dict[str, Any]], context: ParserContext, has_global_target: bool) -> dict[str, Any]:
         return {
@@ -331,9 +577,35 @@ class TraderAProfileParser:
         global_target_scope: str | None,
     ) -> dict[str, Any]:
         close_scope = entities.get("close_scope")
-        if close_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
+        side = str(entities.get("side") or "").upper()
+        if global_target_scope in {"ALL_REMAINING_SHORTS", "ALL_REMAINING"}:
+            if side in {"SHORT", ""}:
+                return {
+                    "kind": "portfolio_side",
+                    "scope": "ALL_OPEN_SHORTS",
+                    "applies_to_all": True,
+                    "position_side_filter": "SHORT",
+                    "position_status_filter": "OPEN",
+                }
+        if global_target_scope == "ALL_REMAINING_LONGS":
+            if side in {"LONG", ""}:
+                return {
+                    "kind": "portfolio_side",
+                    "scope": "ALL_OPEN_LONGS",
+                    "applies_to_all": True,
+                    "position_side_filter": "LONG",
+                    "position_status_filter": "OPEN",
+                }
+        if global_target_scope == "ALL_REMAINING":
+            return {
+                "kind": "portfolio_side",
+                "scope": "ALL_OPEN",
+                "applies_to_all": True,
+                "position_status_filter": "OPEN",
+            }
+        if close_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING", "ALL_REMAINING_SHORTS", "ALL_REMAINING_LONGS"}:
             return {"kind": "portfolio_side", "scope": close_scope}
-        if global_target_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
+        if global_target_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING", "ALL_REMAINING_SHORTS", "ALL_REMAINING_LONGS"}:
             return {"kind": "portfolio_side", "scope": global_target_scope}
         if has_global_target:
             return {"kind": "portfolio_side", "scope": "GLOBAL"}
@@ -533,6 +805,39 @@ class TraderAProfileParser:
             )
         ):
             return "UPDATE"
+        if not has_target and (
+            _contains_any(normalized, tuple(update_markers))
+            or _contains_any(
+                normalized,
+                (
+                    "\u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
+                    "\u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u043e\u043f \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+                    "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+                    "\u0432\u0437\u044f\u043b\u0438 \u043b\u0438\u043c\u0438\u0442\u043a\u0443",
+                    "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u0442\u044c 80%",
+                    "\u043d\u0430 1 \u0442\u0435\u0439\u043a\u0435 \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u0442\u044c",
+                    "\u043f\u0440\u0438 \u0432\u0437\u044f\u0442\u0438\u0438 1 \u0442\u0435\u0439\u043a\u0430",
+                    "\u043f\u043e \u0432\u0441\u0435\u043c \u043c\u043e\u0438\u043c \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u043c\u0441\u044f \u0448\u043e\u0440\u0442\u0430\u043c",
+                    "\u043f\u043e \u0448\u043e\u0440\u0442\u0430\u043c \u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
+                    "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+                    "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c",
+                ),
+            )
+            or _contains_any(
+                normalized,
+                (
+                    "\u0432\u0437\u044f\u043b\u0438 \u043b\u0438\u043c\u0438\u0442\u043a\u0443",
+                    "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u0442\u044c 80%",
+                    "\u043d\u0430 1 \u0442\u0435\u0439\u043a\u0435 \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u0442\u044c",
+                    "\u043f\u0440\u0438 \u0432\u0437\u044f\u0442\u0438\u0438 1 \u0442\u0435\u0439\u043a\u0430",
+                    "\u043f\u043e \u0432\u0441\u0435\u043c \u043c\u043e\u0438\u043c \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u043c\u0441\u044f \u0448\u043e\u0440\u0442\u0430\u043c",
+                    "\u043f\u043e \u0448\u043e\u0440\u0442\u0430\u043c \u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
+                    "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+                    "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c",
+                ),
+            )
+        ):
+            return "UPDATE"
         if _contains_any(
             normalized,
             (
@@ -576,6 +881,21 @@ class TraderAProfileParser:
             ),
         ):
             return "UPDATE"
+        if _contains_any(
+            normalized,
+            (
+                "\u0432\u0437\u044f\u043b\u0438 \u043b\u0438\u043c\u0438\u0442\u043a\u0443",
+                "\u043b\u0438\u043c\u0438\u0442\u043a\u0430 \u0432\u0437\u044f\u043b\u0430\u0441\u044c",
+                "\u0432\u0437\u044f\u043b\u043e \u043b\u0438\u043c\u0438\u0442\u043a\u0443",
+                "entry filled",
+                "filled",
+                "\u0432\u0445\u043e\u0434 \u0438\u0441\u043f\u043e\u043b\u043d\u0435\u043d",
+                "\u043e\u0440\u0434\u0435\u0440 \u0438\u0441\u043f\u043e\u043b\u043d\u0435\u043d",
+            ),
+        ):
+            return "UPDATE"
+        if _has_intermediate_result_language(normalized):
+            return "INFO_ONLY"
         _ = context
         return "UNCLASSIFIED"
 
@@ -634,6 +954,8 @@ class TraderAProfileParser:
         move_markers = _merge_markers(_strong_only(marker_map.get("U_MOVE_STOP")), _DEFAULT_INTENT_MARKERS["U_MOVE_STOP"])
         cancel_markers = _merge_markers(marker_map.get("U_CANCEL_PENDING_ORDERS"), _DEFAULT_INTENT_MARKERS["U_CANCEL_PENDING_ORDERS"])
         invalidate_markers = _merge_markers(marker_map.get("U_INVALIDATE_SETUP"), _DEFAULT_INTENT_MARKERS["U_INVALIDATE_SETUP"])
+        filled_markers = _merge_markers(marker_map.get("U_MARK_FILLED"), _DEFAULT_INTENT_MARKERS["U_MARK_FILLED"])
+        future_management_context = False
         strong_move_without_target = _contains_any(normalized, tuple(move_to_be_markers)) or _contains_any(normalized, tuple(move_markers))
         strong_cancel_without_target = _contains_any(normalized, tuple(cancel_markers))
 
@@ -647,12 +969,11 @@ class TraderAProfileParser:
             close_full_markers = _merge_markers(marker_map.get("U_CLOSE_FULL"), _DEFAULT_INTENT_MARKERS["U_CLOSE_FULL"])
             tp_hit_markers = _merge_markers(_strong_only(marker_map.get("U_TP_HIT")), _DEFAULT_INTENT_MARKERS["U_TP_HIT"])
             stop_hit_markers = _merge_markers(_strong_only(marker_map.get("U_STOP_HIT")), _DEFAULT_INTENT_MARKERS["U_STOP_HIT"])
-            filled_markers = _merge_markers(marker_map.get("U_MARK_FILLED"), _DEFAULT_INTENT_MARKERS["U_MARK_FILLED"])
+            future_management_context = _has_future_management_language(normalized) and _contains_any(normalized, tuple(filled_markers))
 
             if message_type != "NEW_SIGNAL":
                 if _contains_any(normalized, tuple(move_to_be_markers)):
                     intents.append("U_MOVE_STOP_TO_BE")
-                    intents.append("U_MOVE_STOP")
                 elif _contains_any(normalized, tuple(move_markers)):
                     intents.append("U_MOVE_STOP")
 
@@ -660,39 +981,34 @@ class TraderAProfileParser:
                 intents.append("U_CANCEL_PENDING_ORDERS")
             if _contains_any(normalized, tuple(invalidate_markers)):
                 intents.append("U_INVALIDATE_SETUP")
-            if _contains_any(normalized, tuple(close_partial_markers)):
+            if not future_management_context and _contains_any(normalized, tuple(close_partial_markers)):
                 intents.append("U_CLOSE_PARTIAL")
-            elif _contains_any(normalized, tuple(close_full_markers)):
+            elif not future_management_context and _contains_any(normalized, tuple(close_full_markers)):
                 intents.append("U_CLOSE_FULL")
 
             stop_to_tp_context = bool(_STOP_TO_TP1_RE.search(raw_text))
-            if message_type != "NEW_SIGNAL" and not stop_to_tp_context and _contains_any(normalized, tuple(tp_hit_markers)):
+            if message_type != "NEW_SIGNAL" and not future_management_context and not stop_to_tp_context and _contains_any(normalized, tuple(tp_hit_markers)):
                 intents.append("U_TP_HIT")
-            if message_type != "NEW_SIGNAL" and _contains_any(normalized, tuple(stop_hit_markers)):
+            if message_type != "NEW_SIGNAL" and not future_management_context and _contains_any(normalized, tuple(stop_hit_markers)):
                 intents.append("U_STOP_HIT")
             if _contains_any(normalized, tuple(filled_markers)):
                 intents.append("U_MARK_FILLED")
 
-        report_markers = _merge_markers(marker_map.get("U_REPORT_FINAL_RESULT"), _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"])
-        if _RESULT_R_RE.search(raw_text):
-            intents.append("U_REPORT_FINAL_RESULT")
-        elif _contains_any(normalized, tuple(report_markers)) and _contains_any(
+        if message_type == "UNCLASSIFIED" and not report_only_context and _contains_any(
             normalized,
-            (
-                "final result",
-                "result summary",
-                "\u0438\u0442\u043e\u0433",
-                "\u0440\u0435\u0437\u0443\u043b\u044c\u0442\u0430\u0442\u044b",
-                "\u0442\u0435\u0439\u043a",
-                "\u043f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u044e",
-                "\u0447\u0438\u0441\u0442\u044b\u043c\u0438",
-                "\u043f\u0440\u043e\u0444\u0438\u0442",
-                "\u0443\u0431\u044b\u0442\u043e\u043a",
-            ),
+            tuple(move_to_be_markers) + tuple(move_markers) + tuple(cancel_markers) + tuple(filled_markers),
         ):
+            message_type = "UPDATE"
+        if message_type == "UNCLASSIFIED" and not report_only_context and _has_intermediate_result_language(normalized):
+            message_type = "INFO_ONLY"
+
+        report_markers = _merge_markers(marker_map.get("U_REPORT_FINAL_RESULT"), _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"])
+        if _should_emit_report_final_result(raw_text=raw_text, normalized=normalized, report_markers=report_markers):
             intents.append("U_REPORT_FINAL_RESULT")
 
-        if "U_CLOSE_FULL" in intents and "U_REPORT_FINAL_RESULT" in intents:
+        if future_management_context:
+            intents = [value for value in intents if value in {"NS_CREATE_SIGNAL", "U_MARK_FILLED", "U_CANCEL_PENDING_ORDERS", "U_INVALIDATE_SETUP"}]
+        elif "U_CLOSE_FULL" in intents and "U_REPORT_FINAL_RESULT" in intents:
             intents = [value for value in intents if value not in ("U_MOVE_STOP_TO_BE", "U_MOVE_STOP")]
 
         _ = context
@@ -759,6 +1075,9 @@ class TraderAProfileParser:
             invalidation = _extract_setup_invalidation(raw_text)
             if invalidation is not None:
                 entities["setup_invalidation"] = invalidation
+        result_percent = _extract_result_percent(raw_text, normalized)
+        if result_percent is not None:
+            entities["result_percent"] = result_percent
         if "U_REPORT_FINAL_RESULT" in intents:
             entities["result_mode"] = "R_MULTIPLE" if reported_results else "TEXT_SUMMARY"
         _ = context
@@ -878,8 +1197,8 @@ class TraderAProfileParser:
         if global_scope == "ALL_SHORTS":
             return "ALL_SHORT"
         if global_scope in {"ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
-            return global_scope
-        return "ALL_ALL"
+            return "ALL_PENDING_ENTRIES"
+        return "ALL_PENDING_ENTRIES"
 
     def _resolve_global_target_scope(self, *, prepared: dict[str, Any]) -> str | None:
         normalized = str(prepared.get("normalized_text") or "")
@@ -899,8 +1218,6 @@ class TraderAProfileParser:
         )
         if _contains_any(normalized, tuple(all_longs)):
             return "ALL_LONGS"
-        if _contains_any(normalized, tuple(all_shorts)):
-            return "ALL_SHORTS"
         all_all = _merge_markers(
             markers.get("ALL_ALL") if isinstance(markers, dict) else None,
             (
@@ -930,12 +1247,18 @@ class TraderAProfileParser:
                 "remaining shorts",
             ),
         )
+        if _contains_any(normalized, tuple(all_remaining)):
+            if _contains_any(normalized, tuple(all_shorts)):
+                return "ALL_REMAINING_SHORTS"
+            if _contains_any(normalized, tuple(all_longs)):
+                return "ALL_REMAINING_LONGS"
+            return "ALL_REMAINING"
+        if _contains_any(normalized, tuple(all_shorts)):
+            return "ALL_SHORTS"
         if _contains_any(normalized, tuple(all_all)):
             return "ALL_ALL"
         if _contains_any(normalized, tuple(all_open)):
             return "ALL_OPEN"
-        if _contains_any(normalized, tuple(all_remaining)):
-            return "ALL_REMAINING"
         return None
 
 
@@ -1012,6 +1335,93 @@ def _contains_any(text: str, markers: tuple[str, ...] | list[str]) -> bool:
     return False
 
 
+def _has_future_management_language(normalized: str) -> bool:
+    return _contains_any(
+        normalized,
+        (
+            "при взятии 1 тейка",
+            "при взятии первого тейка",
+            "на 1 тейке закрывать",
+            "закрывать 80%",
+            "закрывать",
+            "стоп переводим в безубыток",
+            "стоп переводим",
+            "перезайдем",
+            "если возьмет стоп",
+            "если возьмет стоп, значит",
+            "если стоп возьмет",
+            "если возьмет тейк",
+            "должны сегодня забрать",
+            "взяли лимитку",
+            "лимитка взялась",
+            "взяло лимитку",
+        ),
+    )
+
+
+def _has_intermediate_result_language(normalized: str) -> bool:
+    return _contains_any(
+        normalized,
+        (
+            "чистого движения",
+            "чистыми",
+            "поздравляю",
+            "профит",
+            "profit",
+        ),
+    )
+
+
+def _extract_result_percent(raw_text: str, normalized: str) -> float | None:
+    if not _has_intermediate_result_language(normalized):
+        return None
+    match = _RESULT_PERCENT_RE.search(raw_text)
+    if not match:
+        return None
+    return _to_float(match.group("value"))
+
+
+def _should_emit_report_final_result(*, raw_text: str, normalized: str, report_markers: tuple[str, ...] | list[str]) -> bool:
+    if _RESULT_R_RE.search(raw_text):
+        return True
+    if _contains_any(
+        normalized,
+        (
+            "закрылась в безубыток",
+            "сделка закрыта",
+            "позиция закрыта",
+            "сетап полностью закрыт",
+        ),
+    ):
+        return True
+    if _has_intermediate_result_language(normalized):
+        return False
+    if _contains_any(
+        normalized,
+        (
+            "итог",
+            "результаты",
+            "final result",
+            "results",
+            "общий профит",
+            "профит по сделке",
+            "заработали",
+            "trade result",
+            "net result",
+            "pnl",
+            "profit on trade",
+            "loss on trade",
+            "closed for profit",
+            "closed for loss",
+            "итого",
+            "результат",
+            "result summary",
+        ),
+    ):
+        return True
+    if _contains_any(normalized, tuple(report_markers)):
+        return False if _contains_any(normalized, ("убыток", "profit", "loss", "pnl")) else True
+    return False
 def _unique(values: list[str]) -> list[str]:
     out: list[str] = []
     seen: set[str] = set()

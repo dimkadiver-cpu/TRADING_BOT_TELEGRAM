@@ -72,8 +72,8 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         )
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "UPDATE")
-        self.assertIn("U_MOVE_STOP", result.intents)
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
         self.assertNotIn("U_TP_HIT", result.intents)
         self.assertNotIn("U_STOP_HIT", result.intents)
         self.assertIn(result.entities.get("new_stop_level"), ("ENTRY", "TP1"))
@@ -220,32 +220,48 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         self.assertTrue(result.reported_results)
 
     def test_stop_to_be_without_target_keeps_strong_intents(self) -> None:
-        text = "PYTH \u0442\u043e\u0436\u0435 \u0441\u0442\u043e\u043f \u0432 \u0431\u0443"
+        text = "стоп на точку входа"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
-        self.assertIn(result.message_type, ("UNCLASSIFIED", "UPDATE"))
-        self.assertIn("trader_a_ambiguous_update_without_target", result.warnings)
-
+        self.assertNotIn("U_MOVE_STOP", result.intents)
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("trader_a_update_missing_target", result.warnings)
     def test_global_shorts_stop_to_be_is_update_without_ambiguous_warning(self) -> None:
-        text = "\u041f\u043e \u0432\u0441\u0435\u043c \u043c\u043e\u0438\u043c \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u043c\u0441\u044f \u0448\u043e\u0440\u0442\u0430\u043c \u043d\u0443\u0436\u043d\u043e \u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u043e\u043f \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a, \u043e\u0431\u044f\u0437\u0430\u0442\u0435\u043b\u044c\u043d\u043e"
+        text = "По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
+        self.assertEqual(result.target_scope.get("scope"), "ALL_OPEN_SHORTS")
         self.assertNotIn("trader_a_ambiguous_update_without_target", result.warnings)
-
     def test_stop_to_be_plural_without_target_has_consistent_warning(self) -> None:
-        text = "WOO \u0438 ATP \u0441\u0442\u043e\u043f\u044b \u0432 \u0431\u0443"
+        text = "стопы в безубыток"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
         self.assertIn("trader_a_ambiguous_update_without_target", result.warnings)
-
     def test_cancel_pending_recommendation_without_target_extracts_intent(self) -> None:
         text = "\u0440\u0435\u043a\u043e\u043c\u0435\u043d\u0434\u0443\u044e \u0441\u043d\u044f\u0442\u044c \u0432\u0441\u0435 \u043b\u0438\u043c\u0438\u0442\u043d\u044b\u0435 \u043e\u0440\u0434\u0435\u0440\u0430"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
+
+    def test_averaging_limit_note_does_not_cancel_pending_orders(self) -> None:
+        text = "\u043a\u0442\u043e \u0432\u044b\u0441\u0442\u0430\u0432\u043b\u044f\u043b \u043b\u0438\u043c\u0438\u0442\u043a\u0438 \u043d\u0430 \u0443\u0441\u0440\u0435\u0434\u043d\u0435\u043d\u0438\u0435"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertNotIn("U_CANCEL_PENDING_ORDERS", result.intents)
+        self.assertFalse(any(item.get("action") == "CANCEL_PENDING" for item in result.actions_structured))
+
+    def test_cancel_pending_without_global_scope_uses_pending_entries_scope(self) -> None:
+        text = (
+            "[trader#A]\n\n"
+            "\u041e\u0447\u0435\u0440\u0435\u0434\u043d\u043e\u0439 \u0442\u0435\u0439\u043a. \u0427\u0438\u0441\u0442\u044b\u043c\u0438 19% \n\n"
+            "\u041f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u044e, \u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c \u0432 \u0431\u0443, "
+            "\u043b\u0438\u043c\u0438\u0442\u043a\u0443 \u0443\u0431\u0438\u0440\u0430\u0435\u043c, \u043e\u0447\u0435\u043d\u044c \u0436\u0430\u043b\u044c, \u0447\u0442\u043e \u0435\u0435 \u043d\u0435 \u0432\u0437\u044f\u043b\u0438."
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
+        self.assertEqual(result.entities.get("cancel_scope"), "ALL_PENDING_ENTRIES")
 
     def test_reporting_summary_with_r_results_is_not_unclassified(self) -> None:
         text = "\u0410\u043f\u0434\u0435\u0439\u0442 \u043f\u043e \u043c\u0430\u0440\u0430\u0444\u043e\u043d\u043e\u0432\u0441\u043a\u0438\u043c \u0441\u0434\u0435\u043b\u043a\u0430\u043c\nBTCUSDT - 0.4R\nETHUSDT - -0.2R"
@@ -341,16 +357,15 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
 
     def test_stopi_v_bu_with_multi_links_is_update(self) -> None:
         text = (
-            "\u0421\u0442\u043e\u043f\u044b \u0432 \u0431\u0443\n"
+            "стоп в бу\n"
             "https://t.me/c/100/91\n"
             "https://t.me/c/100/92"
         )
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
         self.assertNotIn("trader_a_ambiguous_update_without_target", result.warnings)
-
     def test_global_close_all_longs_is_update_close_full(self) -> None:
         text = "\u0412\u0441\u0435 \u043b\u043e\u043d\u0433\u0438 \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c"
         result = self.parser.parse_message(text, _context(text=text))
@@ -372,6 +387,18 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         self.assertIn("U_CLOSE_FULL", result.intents)
         self.assertEqual(result.entities.get("close_scope"), "ALL_SHORTS")
 
+    def test_fix_all_shorts_phrase_chooses_all_shorts_scope(self) -> None:
+        text = (
+            "\u043f\u0440\u0438\u043d\u0438\u043c\u0430\u044e \u0440\u0435\u0448\u0435\u043d\u0438\u0435 "
+            "\u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b. "
+            "\u0441\u043e\u0431\u0440\u0430\u043b\u0438 \u0432 \u0446\u0435\u043b\u043e\u043c \u043d\u0435 \u043f\u043b\u043e\u0445\u043e\u0439 \u043f\u0440\u043e\u0444\u0438\u0442. "
+            "\u0445\u043e\u0447\u0443 \u0437\u0430\u043a\u0440\u044b\u0442\u044c \u044f\u043d\u0432\u0430\u0440\u044c."
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_CLOSE_FULL", result.intents)
+        self.assertEqual(result.entities.get("close_scope"), "ALL_SHORTS")
+
     def test_rr_results_are_parsed_as_reported_results(self) -> None:
         text = (
             "\u0417\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u0432\u0441\u0435 \u043f\u043e\u0437\u0438\u0446\u0438\u0438 \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c\n"
@@ -383,6 +410,17 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         self.assertIn("U_CLOSE_FULL", result.intents)
         self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
         self.assertEqual(result.reported_results, [{"symbol": "BTCUSDT", "value": 1.2, "unit": "R"}, {"symbol": "ETHUSDT", "value": -0.4, "unit": "R"}])
+
+    def test_fix_all_positions_with_hundred_percent_is_close_full(self) -> None:
+        text = (
+            "\u0445\u043e\u0447\u0443 \u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u0442\u044c "
+            "\u043d\u0435\u043a\u043e\u0442\u043e\u0440\u044b\u0435 \u043c\u043e\u043d\u0435\u0442\u044b, "
+            "\u0444\u0438\u043a\u0441\u0430\u0446\u0438\u044f 100% \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c \u043e\u0442\u043c\u0435\u0442\u043a\u0430\u043c"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_CLOSE_FULL", result.intents)
+        self.assertEqual(result.entities.get("close_scope"), "FULL")
 
     def test_new_signal_limit_order_phrase_extracts_entry(self) -> None:
         text = (
@@ -525,7 +563,7 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
 
     def test_targeted_tut_teyk_is_update_with_tp_hit(self) -> None:
         text = (

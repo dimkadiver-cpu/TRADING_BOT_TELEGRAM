@@ -1,0 +1,1 @@
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings

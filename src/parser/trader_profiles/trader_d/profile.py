@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 from typing import Any
 
+from src.parser.intent_action_map import intent_policy_for_intent
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
 
@@ -39,6 +40,8 @@ class TraderDProfileParser(TraderBProfileParser):
         super().__init__(rules_path=rules_path or Path(__file__).resolve().parent / "parsing_rules.json")
 
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
+        raw_text = text or context.raw_text
+        global_target_scope = self._resolve_global_target_scope(raw_text=raw_text)
         base_result = super().parse_message(text=text, context=context)
         base_result = self._postprocess_result(base_result=base_result, text=text, context=context)
         primary_intent = self._derive_primary_intent(
@@ -50,8 +53,12 @@ class TraderDProfileParser(TraderBProfileParser):
             intents=base_result.intents,
             entities=base_result.entities,
         )
-        linking = self._build_linking(target_refs=base_result.target_refs, context=context)
-        target_scope = {"kind": "signal", "scope": "single" if linking["targeted"] else "unknown"}
+        linking = self._build_linking(target_refs=base_result.target_refs, context=context, global_target_scope=global_target_scope)
+        target_scope = self._build_target_scope(
+            target_refs=base_result.target_refs,
+            global_target_scope=global_target_scope,
+            intents=base_result.intents,
+        )
 
         return TraderParseResult(
             message_type=base_result.message_type,
@@ -151,13 +158,19 @@ class TraderDProfileParser(TraderBProfileParser):
             ]
 
         actions: list[dict] = []
+        passive_close_status = bool(entities.get("close_status_passive"))
         for intent in intents:
+            if not intent_policy_for_intent(intent).get("state_change"):
+                continue
             if intent == "U_MOVE_STOP_TO_BE":
                 actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
             elif intent == "U_MOVE_STOP":
                 actions.append({"action": "MOVE_STOP", "new_stop_level": entities.get("new_stop_level")})
             elif intent == "U_CLOSE_FULL":
-                actions.append({"action": "CLOSE_POSITION", "scope": "FULL"})
+                if passive_close_status:
+                    actions.append({"action": "MARK_POSITION_CLOSED"})
+                else:
+                    actions.append({"action": "CLOSE_POSITION", "scope": "FULL"})
             elif intent == "U_CANCEL_PENDING_ORDERS":
                 actions.append({"action": "CANCEL_PENDING", "scope": "ALL_PENDING_ENTRIES"})
             elif intent == "U_TP_HIT":

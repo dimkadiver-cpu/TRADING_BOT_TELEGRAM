@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import json
 import os
+import re
 from pathlib import Path
 import sqlite3
 import sys
@@ -31,6 +32,8 @@ from src.storage.raw_messages import RawMessageStore
 from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
 from src.telegram.trader_mapping import TelegramSourceTraderMapper
+
+_SIGNAL_ID_RE = re.compile(r"\bSIGNAL\s*ID\s*:\s*#?\s*(?P<id>\d+)\b", re.IGNORECASE)
 
 
 @dataclass(slots=True)
@@ -145,6 +148,7 @@ def main() -> None:
     by_resolved_trader_id: Counter[str] = Counter()
     by_eligibility_status: Counter[str] = Counter()
     normalized_samples: list[dict[str, object]] = []
+    raw_store = RawMessageStore(db_path=db_path)
 
     for item in selected:
         row = item.row
@@ -161,6 +165,19 @@ def main() -> None:
                 acquisition_status = "ACQUIRED_UNKNOWN_TRADER"
                 eligibility_reason = f"{eligibility_reason}; unresolved_trader"
 
+            reply_raw_text = None
+            if row.reply_to_message_id is not None:
+                parent = raw_store.get_by_source_and_message_id(row.source_chat_id, row.reply_to_message_id)
+                if parent is not None:
+                    reply_raw_text = parent.raw_text
+            if reply_raw_text is None:
+                signal_id = _extract_signal_id(row.raw_text or "")
+                if signal_id is not None:
+                    reply_raw_text = parse_results_store.get_raw_text_by_signal_id(
+                        resolved_trader_id=item.resolved_trader_id or "",
+                        signal_id=signal_id,
+                    )
+
             parse_record = parser_pipeline.parse(
                 ParserInput(
                     raw_message_id=row.raw_message_id,
@@ -173,6 +190,7 @@ def main() -> None:
                     source_chat_id=row.source_chat_id,
                     source_message_id=row.telegram_message_id,
                     linkage_reference_id=eligibility.referenced_message_id,
+                    reply_raw_text=reply_raw_text,
                 )
             )
             parse_results_store.upsert(parse_record)
@@ -314,6 +332,16 @@ def _parse_normalized_json(raw: str | None) -> dict[str, object]:
     except json.JSONDecodeError:
         return {}
     return {}
+
+
+def _extract_signal_id(raw_text: str) -> int | None:
+    match = _SIGNAL_ID_RE.search(raw_text or "")
+    if not match:
+        return None
+    try:
+        return int(match.group("id"))
+    except ValueError:
+        return None
 
 
 def _normalize_cli_date(value: str, end_of_day: bool) -> str:

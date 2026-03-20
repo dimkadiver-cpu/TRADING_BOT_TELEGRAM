@@ -32,8 +32,24 @@ _DEFAULT_UPDATE_FALLBACK_MARKERS = (
     "переносим",
     "в бу",
     "без рисковой",
+    "new sl",
+    "update stop",
+    "переносим стоп",
+    "стоп на 1 тейк",
+    "стоп на первый тейк",
+    "stop on 1 tp",
+    "stop on tp1",
     "не актуально",
     "пока не актуально",
+)
+_DEFAULT_INFO_ONLY_MARKERS = (
+    "сделка закрыта",
+    "закрыта в бу",
+    "сделка закрыта в бу",
+    "сделка закрыта по стоп лоссу",
+    "закрыта по стоп лоссу",
+    "закрыта в безубыток",
+    "закрылись по стоп лоссу",
 )
 _DEFAULT_SETUP_INCOMPLETE_MARKERS = ("тейк", "tp", "target", "тп")
 _DEFAULT_CLOSE_FULL_EXTRA_MARKERS = ("сделка полностью закрыта", "закрыта", "закрываю", "закрываем", "закрыть позицию")
@@ -112,6 +128,23 @@ class TraderBProfileParser:
         target_scope = self._build_target_scope(linking=linking, global_target_scope=global_target_scope)
         warnings = self._build_warnings(prepared=prepared, message_type=message_type, target_refs=target_refs, intents=intents)
         confidence = self._estimate_confidence(message_type=message_type, warnings=warnings)
+        target_scope = self._build_target_scope(
+            target_refs=target_refs,
+            global_target_scope=global_target_scope,
+            intents=intents,
+        )
+        linking = self._build_linking(
+            target_refs=target_refs,
+            context=context,
+            global_target_scope=global_target_scope,
+        )
+        diagnostics = self._build_diagnostics(
+            prepared=prepared,
+            message_type=message_type,
+            intents=intents,
+            warnings=warnings,
+            global_target_scope=global_target_scope,
+        )
         return TraderParseResult(
             message_type=message_type,
             intents=intents,
@@ -127,7 +160,7 @@ class TraderBProfileParser:
         raw_text = text or context.raw_text
         return {"raw_text": raw_text, "normalized_text": normalize_text(raw_text)}
 
-    def _classify_message(self, *, prepared: dict[str, Any]) -> str:
+    def _classify_message(self, *, prepared: dict[str, Any], global_target_scope: str | None = None) -> str:
         normalized = str(prepared.get("normalized_text") or "")
         raw_text = str(prepared.get("raw_text") or "")
         if self._contains_any(normalized, _merge_markers(self._as_markers("ignore_markers"), _DEFAULT_IGNORE_MARKERS)):
@@ -150,7 +183,10 @@ class TraderBProfileParser:
             self._as_markers("classification_markers", "setup_incomplete"),
             _DEFAULT_SETUP_INCOMPLETE_MARKERS,
         )
-        if has_symbol and has_side and has_entry and has_stop and self._contains_any(normalized, setup_incomplete_markers):
+        if has_symbol and has_side and has_entry and has_stop and (has_tp or self._contains_any(normalized, setup_incomplete_markers)):
+            if not has_tp:
+                return "SETUP_INCOMPLETE"
+        if has_symbol and has_side and has_entry and has_stop and not has_tp:
             return "SETUP_INCOMPLETE"
 
         update_markers = self._as_markers("classification_markers", "update")
@@ -190,8 +226,16 @@ class TraderBProfileParser:
                 _append("message_id", int(match.group("id")))
         return out
 
-    def _extract_intents(self, *, prepared: dict[str, Any], message_type: str) -> list[str]:
+    def _extract_intents(
+        self,
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None = None,
+    ) -> list[str]:
         normalized = str(prepared.get("normalized_text") or "")
+        raw_text = str(prepared.get("raw_text") or "")
         intents: list[str] = []
         if message_type == "NEW_SIGNAL":
             return ["NS_CREATE_SIGNAL"]
@@ -209,7 +253,21 @@ class TraderBProfileParser:
             self._as_markers("intent_markers", "U_CLOSE_FULL"),
             _DEFAULT_CLOSE_FULL_EXTRA_MARKERS,
         )
-        if self._contains_any(normalized, close_full_markers):
+        has_close_full = self._contains_any(normalized, close_full_markers)
+        be_markers = tuple(marker for marker in self._as_markers("intent_markers", "U_MOVE_STOP_TO_BE") if marker not in {"бу", "в бу"})
+        has_strong_be = self._contains_any(normalized, be_markers)
+        stop_level = _extract_stop_level(raw_text)
+        move_stop_markers = _merge_markers(self._as_markers("intent_markers", "U_MOVE_STOP"), ("stop on 1 tp", "stop on tp1", "stop on first tp", "stop on first тейк", "new sl", "update stop"))
+        has_structural_move_stop = self._contains_any(normalized, move_stop_markers)
+
+        if has_strong_be:
+            intents.append("U_MOVE_STOP_TO_BE")
+            if stop_level is not None or has_structural_move_stop:
+                intents.append("U_MOVE_STOP")
+        elif stop_level is not None or has_structural_move_stop:
+            intents.append("U_MOVE_STOP")
+
+        if has_close_full:
             intents.append("U_CLOSE_FULL")
         if self._contains_any(normalized, self._as_markers("intent_markers", "U_STOP_HIT")):
             intents.append("U_STOP_HIT")
@@ -228,7 +286,15 @@ class TraderBProfileParser:
             intents.append("U_REPORT_FINAL_RESULT")
         return _unique(intents)
 
-    def _extract_entities(self, *, prepared: dict[str, Any], intents: list[str], message_type: str) -> dict[str, Any]:
+    def _extract_entities(
+        self,
+        *,
+        prepared: dict[str, Any],
+        intents: list[str],
+        message_type: str,
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None = None,
+    ) -> dict[str, Any]:
         raw_text = str(prepared.get("raw_text") or "")
         normalized = str(prepared.get("normalized_text") or "")
         entities: dict[str, Any] = {}
@@ -306,6 +372,13 @@ class TraderBProfileParser:
             entities["hit_target"] = "STOP"
         elif "U_TP_HIT" in intents:
             entities["hit_target"] = "TP"
+            result_percent = _extract_result_percent(raw_text)
+            if result_percent is not None:
+                entities.setdefault("result_percent", result_percent)
+        if "U_REPORT_FINAL_RESULT" in intents:
+            result_percent = _extract_result_percent(raw_text)
+            if result_percent is not None:
+                entities["result_percent"] = result_percent
 
         if "U_CANCEL_PENDING_ORDERS" in intents:
             entities["cancel_scope"] = _derive_cancel_scope(raw_text)
@@ -322,13 +395,14 @@ class TraderBProfileParser:
         message_type: str,
         target_refs: list[dict[str, Any]],
         intents: list[str],
+        global_target_scope: str | None = None,
     ) -> list[str]:
         if message_type != "UPDATE":
             return []
         if not any(intent.startswith("U_") and intent != "U_REPORT_FINAL_RESULT" for intent in intents):
             return []
         has_symbol = _extract_symbol(str(prepared.get("raw_text") or "")) is not None
-        if target_refs or has_symbol:
+        if target_refs or has_symbol or global_target_scope:
             return []
         return [f"{self.trader_code}_update_missing_target"]
 
@@ -343,6 +417,144 @@ class TraderBProfileParser:
         if message_type == "INFO_ONLY":
             return 0.4
         return 0.2
+
+    def _marker_map(self, key: str) -> dict[str, tuple[str, ...]]:
+        node: Any = self._rules.get(key)
+        if not isinstance(node, dict):
+            return {}
+        out: dict[str, tuple[str, ...]] = {}
+        for subkey, values in node.items():
+            if isinstance(values, list):
+                markers = tuple(str(value).strip().lower() for value in values if str(value).strip())
+            elif isinstance(values, str):
+                markers = (values.strip().lower(),)
+            else:
+                markers = ()
+            if markers:
+                out[str(subkey)] = markers
+        return out
+
+    def _has_global_marker(self, *, normalized: str, scope_name: str) -> bool:
+        marker_map = self._marker_map("global_target_markers")
+        return self._contains_any(normalized, marker_map.get(scope_name, ()))
+
+    def _resolve_global_target_scope(self, *, prepared: dict[str, Any]) -> str | None:
+        normalized = str(prepared.get("normalized_text") or "")
+        if self._has_global_marker(normalized=normalized, scope_name="ALL_LONGS"):
+            return "ALL_LONGS"
+        if self._has_global_marker(normalized=normalized, scope_name="ALL_SHORTS"):
+            return "ALL_SHORTS"
+        if self._has_global_marker(normalized=normalized, scope_name="ALL_ALL"):
+            return "ALL_ALL"
+        if self._has_global_marker(normalized=normalized, scope_name="ALL_OPEN"):
+            return "ALL_OPEN"
+        if self._has_global_marker(normalized=normalized, scope_name="ALL_REMAINING"):
+            return "ALL_REMAINING"
+        return None
+
+    def _is_cancel_only_message(self, *, normalized: str, global_target_scope: str | None) -> bool:
+        if not self._contains_any(normalized, _CANCEL_ONLY_MARKERS):
+            return False
+        if self._contains_any(normalized, self._operational_markers()):
+            return False
+        return True
+
+    def _operational_markers(self) -> tuple[str, ...]:
+        markers = _merge_markers(
+            (
+                *self._as_markers("intent_markers", "U_MOVE_STOP_TO_BE"),
+                *self._as_markers("intent_markers", "U_MOVE_STOP"),
+                *self._as_markers("intent_markers", "U_CLOSE_FULL"),
+                *self._as_markers("intent_markers", "U_STOP_HIT"),
+                *self._as_markers("intent_markers", "U_TP_HIT_EXPLICIT"),
+                *self._as_markers("intent_markers", "U_CANCEL_PENDING_ORDERS"),
+                *self._as_markers("intent_markers", "U_REPORT_FINAL_RESULT"),
+            ),
+            (),
+        )
+        return tuple(marker for marker in markers if marker not in {"бу", "в бу"})
+
+    def _resolve_cancel_scope(
+        self,
+        *,
+        prepared: dict[str, Any],
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None,
+    ) -> str:
+        if target_refs:
+            return "TARGETED"
+        if global_target_scope == "ALL_LONGS":
+            return "ALL_LONG"
+        if global_target_scope == "ALL_SHORTS":
+            return "ALL_SHORT"
+        if global_target_scope in {"ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
+            return "ALL_PENDING_ENTRIES"
+        return "ALL_PENDING_ENTRIES"
+
+    def _resolve_close_scope(self, *, global_target_scope: str | None) -> str | None:
+        if global_target_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
+            return global_target_scope
+        return None
+
+    def _extract_stop_reference_text(self, *, normalized: str) -> str | None:
+        move_markers = self._as_markers("intent_markers", "U_MOVE_STOP")
+        for marker in move_markers:
+            if marker and marker in normalized:
+                return marker
+        return None
+
+    def _build_target_scope(
+        self,
+        *,
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None,
+        intents: list[str],
+    ) -> dict[str, Any]:
+        if global_target_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
+            return {
+                "kind": "portfolio_side",
+                "scope": global_target_scope,
+                "applies_to_all": True,
+                "target_count": len(target_refs),
+            }
+        if target_refs:
+            return {"kind": "signal", "scope": "single", "target_count": len(target_refs)}
+        if intents:
+            return {"kind": "signal", "scope": "unknown", "target_count": 0}
+        return {}
+
+    def _build_linking(
+        self,
+        *,
+        target_refs: list[dict[str, Any]],
+        context: ParserContext,
+        global_target_scope: str | None,
+    ) -> dict[str, Any]:
+        return {
+            "targeted": bool(target_refs),
+            "reply_targeted": context.reply_to_message_id is not None,
+            "target_ref_count": len(target_refs),
+            "has_global_target_scope": global_target_scope is not None,
+            "telegram_link_count": sum(1 for ref in target_refs if ref.get("kind") == "telegram_link"),
+        }
+
+    def _build_diagnostics(
+        self,
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        intents: list[str],
+        warnings: list[str],
+        global_target_scope: str | None,
+    ) -> dict[str, Any]:
+        return {
+            "parser_version": "trader_b_v2",
+            "message_type": message_type,
+            "intent_count": len(intents),
+            "warning_count": len(warnings),
+            "has_global_target_scope": global_target_scope is not None,
+            "raw_length": len(str(prepared.get("raw_text") or "")),
+        }
 
     def _load_rules(self, path: Path) -> dict[str, Any]:
         try:

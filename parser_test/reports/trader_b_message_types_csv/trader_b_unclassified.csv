@@ -1,0 +1,111 @@
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1867,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,354,314,2025-11-14T08:17:51+00:00,"[trader#В]
+
+Как и ожидалось по btc, мы сняли 98k$, сейчас рассматриваю для вас новые возможности для открытия позиций, следующий пост",llm_unavailable,,,,,,[],,,False,[],[],[314],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1522,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,857,846,2025-12-08T06:54:09+00:00,"[trader#В]
+
+Очень обидный стоп конечно же, идея в целом отработала себя, ошибки не вижу, единственное стоп можно было бы поставить за минимум, что есть то есть (-1%) 
+Стоп лосс это неотъемлемая часть работы трейдера",llm_unavailable,,,,,,[],,,False,[],[],[846],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1521,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,858,853,2025-12-08T06:56:36+00:00,"[trader#В]
+
+Так же по ICP - такой же обидный стоп в пипс (-1%) думаю в целом идея себя отработает",llm_unavailable,ICP,,,,,[],,,False,[],[],[853],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1478,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,922,911,2025-12-13T07:49:32+00:00,"[trader#В]
+
+Стоп лосс (-1%)",llm_unavailable,,,,,,[],,,False,[],[],[911],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1448,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,965,947,2025-12-15T17:12:58+00:00,"[trader#В]
+
+К сожалению стоп лосс, рынок прям медвежий, не дает шансов быкам
+
+BTC с большей вероятностью собирается снимать ликвидность с 83822, и далее 80600 поэтому пока сложно с Лонгами, но ничего, риск менеджмент и дисциплина всегда решает на дистанции",llm_unavailable,BTC,,,,,[],,,False,[],[],[947],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1259,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1234,1228,2025-12-28T05:40:17+00:00,"[trader#B]
+
+Сделка полностью реализована в +3.3%
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,,,,,,[],,,False,[],[],[1228],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1237,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1265,1238,2025-12-28T15:03:10+00:00,"[trader#B]
+
+Сделка полностью реализована в +2.5% 
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,,,,,,[],,,False,[],[],[1238],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1187,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1352,1323,2026-01-03T04:44:15+00:00,"[trader#B]
+
+Сделка полностью реализована в +5% 
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,,,,,,[],,,False,[],[],[1323],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1138,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1418,1321,2026-01-05T20:13:00+00:00,"[trader#B]
+
+$XRPUSDT Update:
+
+Сделка полностью реализована в +8% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,XRPUSDT,,,,,[],,,False,[],[],[1321],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1137,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1419,1394,2026-01-05T20:33:12+00:00,"[trader#B]
+
+$BTCUSDT Update:
+
+Сделка по биткоину не заставила нас долго ждать и она так же полностью реализована в +2% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,BTCUSDT,,,,,[],,,False,[],[],[1394],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1067,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1528,1517,2026-01-12T05:05:48+00:00,"[trader#B]
+
+$BCHUSDT Update:
+
+На Bybit, SL который переводили под указанный минимум снят не был, сделка закрывается по текущим в ≈ +1.4% к депозиту 
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,BCHUSDT,,,,,[],,,False,[],[],[1517],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+998,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1613,1602,2026-01-14T04:17:16+00:00,"[trader#B]
+
+$SOLUSDT Update:
+
+Сделка полностью реализована в +3% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,SOLUSDT,,,,,[],,,False,[],[],[1602],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+894,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1755,,2026-01-19T07:47:55+00:00,"[trader#B]
+
+https://t.me/c/3171748254/1745 (-1%)
+
+https://t.me/c/3171748254/1744 (-1%)
+
+https://t.me/c/3171748254/1729 БУ",llm_unavailable,,,,,,[],,,False,[],[],"[1745, 1744, 1729]",[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [""https://t.me/c/3171748254/1745"", ""https://t.me/c/3171748254/1744"", ""https://t.me/c/3171748254/1729""], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+829,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,1850,1841,2026-01-22T16:35:40+00:00,"[trader#B]
+
+Стоп (-1%)",llm_unavailable,,,,,,[],,,False,[],[],[1841],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+558,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2308,2300,2026-02-11T13:00:34+00:00,"[trader #B]
+
+Небольшие изменения!",llm_unavailable,,,,,,[],,,False,[],[],[2300],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+547,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2319,2314,2026-02-11T14:14:58+00:00,"[trader #B]
+
+Сделка полностью реализована в +2.5% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,,,,,,[],,,False,[],[],[2314],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+457,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2428,2420,2026-02-14T14:28:16+00:00,"[trader #B]
+
+Сделку пока закрываем в ≈ (+1%) 
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,,,,,,[],,,False,[],[],[2420],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+454,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2437,2272,2026-02-15T10:19:25+00:00,"[trader #B]
+
+
+Закрываем сделку по текущим(+0.3%) так как показывает слабость, ждём новые возможности",llm_unavailable,,,,,,[],,,False,[],[],[2272],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+200,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2785,2696,2026-02-27T10:05:59+00:00,"[trader #B]
+
+Закрываем сделку по SUI в +2.2% к депозиту 
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,SUI,,,,,[],,,False,[],[],[2696],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+198,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2787,2783,2026-02-27T10:13:13+00:00,"[trader #B]
+
+Тут стоп, (-1%)",llm_unavailable,,,,,,[],,,False,[],[],[2783],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+167,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2834,2827,2026-03-01T10:04:12+00:00,"[trader #B]
+
+Стоп (-1%)",llm_unavailable,,,,,,[],,,False,[],[],[2827],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+162,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2844,2840,2026-03-01T19:25:36+00:00,"[trader #B] 
+
+Стоп (-1%)",llm_unavailable,,,,,,[],,,False,[],[],[2840],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+79,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,2948,2934,2026-03-04T16:06:18+00:00,"[trader #B]
+
+Сделка полностью реализована в +5% к депозиту
+
+Поздравляю с профитом 💸💸💸",llm_unavailable,,,,,,[],,,False,[],[],[2934],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+37,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_b,3171748254,3002,2996,2026-03-06T08:12:15+00:00,"[trader #B]
+
+Стоп (-1%)",llm_unavailable,,,,,,[],,,False,[],[],[2996],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"

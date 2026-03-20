@@ -117,6 +117,17 @@ def apply_update_plan(
                         side=side_filter,
                         now=now,
                     )
+                elif action == "ACT_REMOVE_PENDING_ENTRY":
+                    _apply_order_status(
+                        conn=conn,
+                        result=result,
+                        attempt_keys=resolved_attempt_keys,
+                        env=env,
+                        status="CANCELLED",
+                        purpose="ENTRY",
+                        side=None,
+                        now=now,
+                    )
                 elif action == "ACT_MARK_ORDER_FILLED":
                     _apply_order_status(
                         conn=conn,

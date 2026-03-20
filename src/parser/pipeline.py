@@ -9,7 +9,13 @@ import re
 from src.core.trader_tags import first_normalized_trader_tag, normalize_trader_aliases
 from src.core.timeutils import utc_now_iso
 from src.parser.dispatcher import ParserDispatcher
-from src.parser.intent_action_map import derive_primary_intent, infer_update_intents_from_text, map_intents_to_actions
+from src.parser.canonical_schema import trader_intent_support
+from src.parser.intent_action_map import (
+    derive_primary_intent,
+    infer_update_intents_from_text,
+    intent_policy_for_intent,
+    map_intents_to_actions,
+)
 from src.parser.llm_adapter import LLMInvalidResponse, LLMNotConfigured, LLMParseError, LLMRequestFailed
 from src.parser.normalization import ParseResultNormalized, build_parse_result_normalized
 from src.parser.parser_config import ParserModeResolver
@@ -45,6 +51,7 @@ _STOP_RE = re.compile(r"(?:sl|stop(?:\s*loss)?)\s*[:=@-]?\s*([0-9][0-9.,]*)", re
 _TP_RE = re.compile(r"(?:tp\d*|target\s*\d*)\s*[:=@-]?\s*([0-9][0-9.,]*)", re.IGNORECASE)
 _LEVERAGE_RE = re.compile(r"\b([0-9]{1,3}(?:\.[0-9]+)?)\s*x\b", re.IGNORECASE)
 _RISK_RE = re.compile(r"(?:risk\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?%)|([0-9]+(?:\.[0-9]+)?%)\s*risk)", re.IGNORECASE)
+_TARGETING_MODES = {"EXPLICIT_TARGETS", "TARGET_GROUP", "SELECTOR"}
 
 
 @dataclass(slots=True)
@@ -59,6 +66,7 @@ class ParserInput:
     source_chat_id: str | None = None
     source_message_id: int | None = None
     linkage_reference_id: int | None = None
+    reply_raw_text: str | None = None
     parser_mode: str | None = None
     llm_provider: str | None = None
     llm_model: str | None = None
@@ -153,6 +161,7 @@ class MinimalParserPipeline:
                 source_chat_id=payload.source_chat_id,
                 source_message_id=payload.source_message_id,
                 linkage_reference_id=payload.linkage_reference_id,
+                reply_raw_text=payload.reply_raw_text,
                 parser_mode=effective_mode,
                 llm_provider=effective_llm_provider,
                 llm_model=effective_llm_model,
@@ -258,6 +267,7 @@ class MinimalParserPipeline:
                         reply_to_message_id=data.linkage_reference_id,
                         channel_id=data.source_chat_id,
                         raw_text=text,
+                        reply_raw_text=data.reply_raw_text,
                         extracted_links=extract_telegram_links(text),
                         hashtags=extract_hashtags(text),
                     ),
@@ -276,6 +286,9 @@ class MinimalParserPipeline:
                     "target_scope": getattr(profile_result, "target_scope", None),
                     "linking": getattr(profile_result, "linking", None),
                     "diagnostics": getattr(profile_result, "diagnostics", None),
+                    "supports_targeted_actions_structured": bool(
+                        getattr(profile_parser, "supports_targeted_actions_structured", False)
+                    ),
                 }
                 warnings.extend(profile_result.warnings)
                 notes_parts.append(f"profile_parser={profile_code}")
@@ -302,8 +315,22 @@ class MinimalParserPipeline:
         if message_type == "UPDATE" and not intents:
             intents = infer_update_intents_from_text(normalized)
 
-        actions = map_intents_to_actions(intents)
-        if message_type == "UPDATE" and not actions:
+        if "U_REENTER" in intents and data.reply_raw_text:
+            parent_normalized = data.reply_raw_text.lower()
+            parent_extracted = self._extract_fields(data.reply_raw_text, parent_normalized)
+            if extracted.symbol is None and parent_extracted.symbol is not None:
+                extracted.symbol = parent_extracted.symbol
+            if extracted.direction is None and parent_extracted.direction is not None:
+                extracted.direction = parent_extracted.direction
+            if extracted.entry_raw is None and parent_extracted.entry_raw is not None:
+                extracted.entry_raw = parent_extracted.entry_raw
+            if extracted.stop_raw is None and parent_extracted.stop_raw is not None:
+                extracted.stop_raw = parent_extracted.stop_raw
+            if not extracted.targets and parent_extracted.targets:
+                extracted.targets = list(parent_extracted.targets)
+
+        actions = map_intents_to_actions(intents, entities=profile_entities)
+        if message_type == "UPDATE" and not actions and not intents:
             actions = ["ACT_REQUEST_MANUAL_REVIEW"]
 
         normalized_result = build_parse_result_normalized(
@@ -341,7 +368,15 @@ class MinimalParserPipeline:
             has_target_refs = bool(normalized_result.target_refs)
             if not has_target_refs and "update without strong link" not in normalized_result.validation_warnings:
                 normalized_result.validation_warnings.append("update without strong link")
-            if not normalized_result.actions and "ACT_REQUEST_MANUAL_REVIEW" not in normalized_result.actions:
+            has_state_changing_intent = any(
+                intent_policy_for_intent(intent).get("state_change") for intent in normalized_result.intents
+            )
+            if (
+                not normalized_result.actions
+                and not has_state_changing_intent
+                and not normalized_result.intents
+                and "ACT_REQUEST_MANUAL_REVIEW" not in normalized_result.actions
+            ):
                 normalized_result.actions = [*normalized_result.actions, "ACT_REQUEST_MANUAL_REVIEW"]
         if normalized_result.validation_warnings:
             normalized_result.status = "PARSED_WITH_WARNINGS"
@@ -568,7 +603,13 @@ def _enrich_v2_semantics(
 
     actions_structured = profile_v2_fields.get("actions_structured")
     if isinstance(actions_structured, list):
-        filtered_actions_structured = [item for item in actions_structured if isinstance(item, dict)]
+        supports_targeted = bool(profile_v2_fields.get("supports_targeted_actions_structured"))
+        filtered_actions_structured = [
+            _sanitize_action_structured_item(item, supports_targeted=supports_targeted)
+            for item in actions_structured
+            if isinstance(item, dict)
+        ]
+        filtered_actions_structured = [item for item in filtered_actions_structured if item]
         if filtered_actions_structured:
             normalized_result.actions_structured = filtered_actions_structured
 
@@ -587,6 +628,48 @@ def _enrich_v2_semantics(
         normalized_result.diagnostics = merged_diagnostics
 
     return normalized_result
+
+
+def _sanitize_action_structured_item(item: dict[str, object], *, supports_targeted: bool) -> dict[str, object]:
+    sanitized = dict(item)
+    targeting = sanitized.get("targeting")
+    if not supports_targeted:
+        sanitized.pop("targeting", None)
+        return sanitized
+    if targeting is None:
+        return sanitized
+    if not isinstance(targeting, dict):
+        sanitized.pop("targeting", None)
+        return sanitized
+
+    mode = targeting.get("mode")
+    if not isinstance(mode, str) or mode not in _TARGETING_MODES:
+        sanitized.pop("targeting", None)
+        return sanitized
+
+    if mode in {"EXPLICIT_TARGETS", "TARGET_GROUP"}:
+        targets = targeting.get("targets")
+        if not isinstance(targets, list) or not targets:
+            sanitized.pop("targeting", None)
+            return sanitized
+        normalized_targets: list[int] = []
+        for target in targets:
+            if isinstance(target, int):
+                normalized_targets.append(target)
+            elif isinstance(target, str) and target.isdigit():
+                normalized_targets.append(int(target))
+        if not normalized_targets:
+            sanitized.pop("targeting", None)
+            return sanitized
+        sanitized["targeting"] = {"mode": mode, "targets": normalized_targets}
+        return sanitized
+
+    selector = targeting.get("selector")
+    if not isinstance(selector, dict) or not selector:
+        sanitized.pop("targeting", None)
+        return sanitized
+    sanitized["targeting"] = {"mode": mode, "selector": dict(selector)}
+    return sanitized
 
 def _legacy_direction(direction: str | None) -> str | None:
     if direction == "LONG":
@@ -661,6 +744,7 @@ def _refine_semantics(result: ParseResultNormalized) -> ParseResultNormalized:
         result.raw_entities = dict(entities)
     else:
         result.intents = [intent for intent in result.intents if intent != "NS_CREATE_SIGNAL"]
+    result.trader_metadata = {"intent_support": trader_intent_support(result.trader_id)}
     return result
 
 
@@ -758,8 +842,4 @@ def _merge_unique_ints(left: list[int], right: list[int]) -> list[int]:
         seen.add(value)
         out.append(value)
     return out
-
-
-
-
 

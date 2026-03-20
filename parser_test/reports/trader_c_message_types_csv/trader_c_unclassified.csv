@@ -1,0 +1,18 @@
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1203,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,1328,1327,2026-01-02T10:46:44+00:00,"На байбит стоп 89950!!!!!!
+ [trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[1327],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+1125,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,1441,1440,2026-01-07T15:48:18+00:00,"На байбит не закрыло,)
+
+[trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[1440],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+937,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,1691,1683,2026-01-16T10:49:41+00:00,"Остаток закрыт в бу
+[trader#C]",llm_unavailable,,,,,,[],,,False,[],[],[1683],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+441,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,2452,2410,2026-02-15T20:01:07+00:00,"Беру по текущим по 68300
+Средняя 66750 стоп в 66800
+Цель этого обьема 70000
+
+[trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[2410],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+303,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,2647,,2026-02-22T15:09:19+00:00,"На руках solusdt 
+
+Лимиток не каких нет актуальных
+
+[trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"

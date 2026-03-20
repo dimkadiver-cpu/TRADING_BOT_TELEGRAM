@@ -25,14 +25,28 @@
     ]
   },
   "side_markers": {
-    "long": ["лонг", "long", "buy"],
-    "short": ["шорт", "short", "sell"]
+    "long": [
+      "лонг",
+      "long",
+      "buy"
+    ],
+    "short": [
+      "шорт",
+      "short",
+      "sell"
+    ]
   },
   "market_context_markers": {
-    "spot": ["сделка на споте", "сделка на споте⭐️"]
+    "spot": [
+      "сделка на споте",
+      "сделка на споте⭐️"
+    ]
   },
   "entry_order_markers": {
-    "market": ["по текущим", "вход с текущих"]
+    "market": [
+      "по текущим",
+      "вход с текущих"
+    ]
   },
   "intent_markers": {
     "U_MOVE_STOP_TO_BE": ["в бу", "без рисковой", "переносим в бу", "переносим in бу", "ушла в бу", "в безубыток", "без риска", "безрисковая"],
@@ -44,5 +58,11 @@
     "U_CANCEL_PENDING_ORDERS": ["не актуально", "пока не актуально", "лонгов открытых нет", "отмен"],
     "U_REPORT_FINAL_RESULT": ["итог", "результат"]
   },
-  "ignore_markers": ["#админ", "#admin"]
+  "cancel_scope_vocabulary": {
+    "all_all": "ALL_PENDING_ENTRIES",
+    "all_long": "ALL_LONG",
+    "all_short": "ALL_SHORT",
+    "all_open": "ALL_PENDING_ENTRIES",
+    "all_remaining": "ALL_PENDING_ENTRIES"
+  }
 }

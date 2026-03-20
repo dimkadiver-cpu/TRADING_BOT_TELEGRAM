@@ -34,6 +34,10 @@ class RawMessageIngestionService:
         self._store = store
         self._logger = logger
 
+    @property
+    def store(self) -> RawMessageStore:
+        return self._store
+
     def ingest(self, incoming: TelegramIncomingMessage) -> IngestionResult:
         try:
             text = incoming.raw_text

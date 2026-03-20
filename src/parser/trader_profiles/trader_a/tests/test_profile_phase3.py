@@ -78,8 +78,11 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         short_text = "По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно."
         short_result = self.parser.parse_message(short_text, _context(text=short_text))
         self.assertEqual(short_result.entities.get("close_scope"), None)
-        self.assertEqual(short_result.target_scope.get("scope"), "ALL_SHORTS")
+        self.assertEqual(short_result.target_scope.get("scope"), "ALL_OPEN_SHORTS")
         self.assertEqual(short_result.target_scope.get("kind"), "portfolio_side")
+        self.assertTrue(short_result.target_scope.get("applies_to_all"))
+        self.assertEqual(short_result.target_scope.get("position_side_filter"), "SHORT")
+        self.assertEqual(short_result.target_scope.get("position_status_filter"), "OPEN")
 
         reply_short_text = "1 тейк. поздравляю\n\nхоть немного минуса прикрыли\n\nпо шортам стоп на точку входа"
         reply_short_result = self.parser.parse_message(reply_short_text, _context(text=reply_short_text, reply_to=485))
@@ -113,7 +116,8 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         text = "2 тейк 29% чистыми поздравляю"
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "INFO_ONLY")
-        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertNotIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.entities.get("result_percent"), 29.0)
 
     def test_report_mode_text_summary_when_no_structured_r(self) -> None:
         text = "final result summary for this week"
@@ -121,6 +125,61 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
         self.assertEqual(result.reported_results, [])
         self.assertEqual(result.entities.get("result_mode"), "TEXT_SUMMARY")
+
+    def test_actions_structured_supports_explicit_targets_for_multiline_stop_updates(self) -> None:
+        text = (
+            "LINK - https://t.me/c/3171748254/978 - стоп в бу\n"
+            "ALGO - https://t.me/c/3171748254/1002 стоп в бу\n"
+            "ARKM - https://t.me/c/3171748254/1003 стоп в бу\n"
+            "FART - https://t.me/c/3171748254/1005 стоп на 1 тейк\n"
+            "UNI - https://t.me/c/3171748254/1018 стоп в бу"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertEqual(
+            result.actions_structured,
+            [
+                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [978]}},
+                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1002]}},
+                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1003]}},
+                {"action": "MOVE_STOP", "new_stop_level": "TP1", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1005]}},
+                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1018]}},
+            ],
+        )
+
+    def test_actions_structured_supports_target_group_for_shared_close(self) -> None:
+        text = (
+            "XRP - https://t.me/c/3171748254/1015\n"
+            "ADA - https://t.me/c/3171748254/1017\n\n"
+            "А давайте их прикроем, пока они рядом с ТВХ"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertEqual(
+            result.actions_structured,
+            [
+                {
+                    "action": "CLOSE_POSITION",
+                    "scope": "FULL",
+                    "targeting": {"mode": "TARGET_GROUP", "targets": [1015, 1017]},
+                }
+            ],
+        )
+
+    def test_actions_structured_supports_selector_for_global_short_close(self) -> None:
+        text = "принимаю решение зафиксировать все шорты. собрали в целом не плохой профит. хочу закрыть январь."
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertEqual(
+            result.actions_structured,
+            [
+                {
+                    "action": "CLOSE_POSITION",
+                    "scope": "ALL_SHORTS",
+                    "targeting": {"mode": "SELECTOR", "selector": {"side": "SHORT", "status": "OPEN"}},
+                }
+            ],
+        )
 
 
 if __name__ == "__main__":

@@ -1,4 +1,4 @@
-raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
 1955,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,263,202,2025-11-11T07:13:53+00:00,"[trader#A]
 
 К сожалению стоп. Словили -1,5%",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
@@ -23,21 +23,6 @@ raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,teleg
 Скорее всего сделаем перерыв по сделкам на пару дней. Биток уже в зоне разворота, а так как ллмка торгует по тренду и тренд локально медвежий, он будет давать только шорт. С очень плохим RR. Поэтому, лучше переждем.
 
 Итак в работе 4 сделки. Wif, Ltc, hype и лонг aster",llm_unavailable,RR,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1830,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,395,200,2025-11-16T10:07:25+00:00,"[trader#A]
-
-Очередной тейк. Чистыми 19% 
-
-Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",trader_a_ambiguous_update_without_target; llm_unavailable,,,,,,[],,,False,"[""U_MOVE_STOP_TO_BE"", ""U_MOVE_STOP"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]","[""ACT_MOVE_STOP_LOSS"", ""ACT_CANCEL_ALL_PENDING_ENTRIES"", ""ACT_MARK_TP_HIT""]",[],[],"{""cancel_scope"": ""ALL_ALL"", ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": ""TP"", ""links"": [], ""new_stop_level"": ""ENTRY"", ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
-1808,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,432,391,2025-11-18T03:59:25+00:00,"[trader#A]
-
-Очень не приятный стоп.",llm_unavailable,,,,,,[],,,False,[],[],[391],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1799,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,443,200,2025-11-18T09:42:02+00:00,"[trader#A]
-
-
-2 тейк 
-29%  чистыми
-
-поздравляю",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
 1656,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,686,,2025-11-30T12:48:17+00:00,"[trader#A]
 
 🎈MLNUSDT 
@@ -118,12 +103,6 @@ TLM лонг с текущих.
 533,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2334,,2026-02-11T16:58:00+00:00,"trader #A
 
 пока ждем",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-523,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2345,,2026-02-11T19:14:10+00:00,"Trader #A
-
-финальная сделка марафона
-все сделки остаются в работе, утром посмотрим какой будет результат
-
-всем спасибо и хорошего вечера",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
 404,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2512,,2026-02-18T15:57:47+00:00,"Trader #A
 
 Всем, привет. Через 10 минут начинаем",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
@@ -143,18 +122,6 @@ TLM лонг с текущих.
 Сегодня аккуратно поторгуем интрадей, не в рамках марафона, а просто как обычные сделки, требования как и к среднесроку:
 - вход на 1%, если не укажу иное
 - фиксация на тейках 50/40/10",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-286,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2675,,2026-02-24T04:15:59+00:00,"Trader #A 
-
-пока новых сделок не будет. доведем до тейков те, что остались
-
-Открыты: 
-ETH
-ASTER
-BTC
-PAXG (стоп в бу стоит)
-JST (был 1 тейк, стоп в бу)
-BONK (был 1 тейк, стоп в бу)
-BNB",trader_a_ambiguous_update_without_target; llm_unavailable,ETH,,,,,[],,,False,"[""U_MOVE_STOP_TO_BE"", ""U_MOVE_STOP"", ""U_TP_HIT""]","[""ACT_MOVE_STOP_LOSS"", ""ACT_MARK_TP_HIT""]",[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": ""TP1"", ""links"": [], ""new_stop_level"": ""ENTRY"", ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
 262,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2708,2681,2026-02-25T12:09:48+00:00,"Trader #A
 
 Через 2 часа начинаем марафон",llm_unavailable,,,,,,[],,,False,[],[],[2681],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
@@ -162,36 +129,13 @@ BNB",trader_a_ambiguous_update_without_target; llm_unavailable,ETH,,,,,[],,,Fals
 
 на этом пока все, ожидаем лимитки и тейки
 
-Скорее всего лимитки будем переносить в ночь и уже завтра утром решу, что с ними делать, либо нас порадуют тейками😊",trader_a_ambiguous_update_without_target; llm_unavailable,,,,,,[],,,False,"[""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]","[""ACT_CANCEL_ALL_PENDING_ENTRIES"", ""ACT_MARK_TP_HIT""]",[],[],"{""cancel_scope"": ""ALL_ALL"", ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": ""TP"", ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
-226,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2746,,2026-02-25T19:09:13+00:00,"Trader #A
-
-Сегодняшний марафон подошел к концу, что делаем:
-1. Оставляем YGG в работе
-2. Оставляем лимитку по SXP
-3. Все остальные лимитки убираем
-
-на сейчас заработали 1.32R
-
-Всем спасибо",trader_a_ambiguous_update_without_target; llm_unavailable,YGG,,,,,[],,,False,"[""U_CANCEL_PENDING_ORDERS""]","[""ACT_CANCEL_ALL_PENDING_ENTRIES""]",[],[],"{""cancel_scope"": ""ALL_ALL"", ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
+Скорее всего лимитки будем переносить в ночь и уже завтра утром решу, что с ними делать, либо нас порадуют тейками😊",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
 104,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2922,,2026-03-04T09:30:15+00:00,"Trader #A 
 
-WOO и ATP стопы в бу",trader_a_ambiguous_update_without_target; llm_unavailable,WOO,,,,,[],,,False,"[""U_MOVE_STOP_TO_BE"", ""U_MOVE_STOP""]","[""ACT_MOVE_STOP_LOSS""]",[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": ""ENTRY"", ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
-103,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2923,,2026-03-04T09:31:01+00:00,"Trader #A 
-
-PYTH тоже стоп в бу",trader_a_ambiguous_update_without_target; llm_unavailable,PYTH,,,,,[],,,False,"[""U_MOVE_STOP_TO_BE"", ""U_MOVE_STOP""]","[""ACT_MOVE_STOP_LOSS""]",[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": ""ENTRY"", ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
+WOO и ATP стопы в бу",trader_a_ambiguous_update_without_target; llm_unavailable,WOO,,,,,[],,,False,"[""U_MOVE_STOP_TO_BE""]","[""ACT_MOVE_STOP_LOSS""]",[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": ""ENTRY"", ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"
 59,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2976,,2026-03-05T15:59:39+00:00,"Trader #A
 
 Давайте начинать 
 
 Фиксация 50/40/10
 Вернемся к штатному формату фиксации",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-46,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_a,3171748254,2991,,2026-03-05T19:16:40+00:00,"Trader #A
-
-Друзья, сегодня, видимо, рынок включил режим «лимитки? не слышал».🙂
-
-Из 6 лимиток - 2 взяли. А также поймали 1 стоп
-Чтобы не переносить лишний риск через ночь, рекомендую снять все лимитные ордера. 
-
-Я у себя лимитки оставлю - для полной картины стратегии интрадей и статистики по переносам.
-
-Если ночью что-то исполнится - обязательно сообщу и зафиксирую результат.🫡",trader_a_ambiguous_update_without_target; llm_unavailable,,,,,,[],,,False,"[""U_CANCEL_PENDING_ORDERS""]","[""ACT_CANCEL_ALL_PENDING_ENTRIES""]",[],[],"{""cancel_scope"": ""ALL_ALL"", ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""trader_a_ambiguous_update_without_target"", ""llm_unavailable""]"

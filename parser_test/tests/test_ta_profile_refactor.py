@@ -53,7 +53,7 @@ class TAProfileRefactorTests(unittest.TestCase):
         self.assertIn("ACT_MOVE_STOP_LOSS", normalized.get("actions", []))
         self.assertIn("ACT_CANCEL_ALL_PENDING_ENTRIES", normalized.get("actions", []))
         self.assertEqual(normalized.get("entities", {}).get("new_stop_level"), "ENTRY")
-        self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "ALL_PENDING_ENTRIES")
+        self.assertEqual(normalized.get("entities", {}).get("cancel_scope"), "TARGETED")
 
     def test_pipeline_update_close_full_maps_to_actions(self) -> None:
         payload = ParserInput(
@@ -111,7 +111,7 @@ class TAProfileRefactorTests(unittest.TestCase):
         tp_result = self.pipeline.parse(tp_payload)
         tp_normalized = json.loads(tp_result.parse_result_normalized_json or "{}")
         self.assertIn("U_TP_HIT", tp_normalized.get("intents", []))
-        self.assertIn("ACT_MARK_TP_HIT", tp_normalized.get("actions", []))
+        self.assertEqual(tp_normalized.get("actions", []), [])
         self.assertEqual(tp_normalized.get("entities", {}).get("hit_target"), "TP1")
 
         stop_payload = ParserInput(
@@ -129,7 +129,7 @@ class TAProfileRefactorTests(unittest.TestCase):
         stop_result = self.pipeline.parse(stop_payload)
         stop_normalized = json.loads(stop_result.parse_result_normalized_json or "{}")
         self.assertIn("U_STOP_HIT", stop_normalized.get("intents", []))
-        self.assertIn("ACT_MARK_STOP_HIT", stop_normalized.get("actions", []))
+        self.assertEqual(stop_normalized.get("actions", []), [])
         self.assertEqual(stop_normalized.get("entities", {}).get("hit_target"), "STOP")
 
     def test_pipeline_update_mark_filled_entities(self) -> None:
@@ -210,7 +210,7 @@ class TAProfileRefactorTests(unittest.TestCase):
         self.assertEqual(normalized.get("message_type"), "INFO_ONLY")
         self.assertEqual(len(normalized.get("reported_results", [])), 2)
         self.assertIn("U_REPORT_FINAL_RESULT", normalized.get("intents", []))
-        self.assertIn("ACT_ATTACH_RESULT", normalized.get("actions", []))
+        self.assertEqual(normalized.get("actions", []), [])
         self.assertEqual(normalized.get("entities", {}).get("result_mode"), "R_MULTIPLE")
 
 

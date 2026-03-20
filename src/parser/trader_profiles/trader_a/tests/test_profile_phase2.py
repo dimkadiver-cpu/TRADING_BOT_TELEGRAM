@@ -27,7 +27,7 @@ class TraderAProfilePhase2IntentTests(unittest.TestCase):
         result = self.parser.parse_message(text, _context(text=text, reply_to=501))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
 
     def test_cancel_pending_orders_intent(self) -> None:
         text = "cancel pending limits https://t.me/c/77/601"
@@ -90,6 +90,17 @@ class TraderAProfilePhase2IntentTests(unittest.TestCase):
         self.assertIn("U_REPORT_FINAL_RESULT", result2.intents)
         self.assertNotIn("U_CLOSE_FULL", result2.intents)
 
+    def test_intermediate_tp_commentary_stays_update_without_final_result(self) -> None:
+        text = "1 тейк, стоп на точку входа. Лимитку на усреднение обязательно убираем. Поздравляю с 2.48% чистого движения!"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.entities.get("result_percent"), 2.48)
+
     def test_fix_profit_with_links_is_update(self) -> None:
         text = (
             "хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам\n"
@@ -109,8 +120,23 @@ class TraderAProfilePhase2IntentTests(unittest.TestCase):
         result = self.parser.parse_message(text, _context(text=text, reply_to=607))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
         self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
+
+    def test_future_management_rules_after_fill_stay_mark_filled_only(self) -> None:
+        text = (
+            "Взяли лимитку. Моя средняя 0.2265. "
+            "На 1 тейке закрывать 80% и при взятии 1 тейка стоп переводим в безубыток"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertEqual(result.intents, ["U_MARK_FILLED"])
+        self.assertEqual(result.entities.get("fill_state"), "FILLED")
+        self.assertNotIn("U_TP_HIT", result.intents)
+        self.assertNotIn("U_CLOSE_PARTIAL", result.intents)
+        self.assertNotIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertNotIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_REPORT_FINAL_RESULT", result.intents)
 
     def test_ambiguous_without_target_has_no_aggressive_intents(self) -> None:
         text = "maybe close maybe move later"
