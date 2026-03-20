@@ -64,7 +64,7 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
     def test_cancel_pending_global_scopes(self) -> None:
         all_text = "cancel pending all limit orders"
         all_result = self.parser.parse_message(all_text, _context(text=all_text))
-        self.assertEqual(all_result.entities.get("cancel_scope"), "ALL_ALL")
+        self.assertEqual(all_result.entities.get("cancel_scope"), "ALL_PENDING_ENTRIES")
 
         long_text = "cancel pending all longs"
         long_result = self.parser.parse_message(long_text, _context(text=long_text))
@@ -139,11 +139,8 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
         self.assertEqual(
             result.actions_structured,
             [
-                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [978]}},
-                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1002]}},
-                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1003]}},
+                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "TARGET_GROUP", "targets": [978, 1002, 1003, 1018]}},
                 {"action": "MOVE_STOP", "new_stop_level": "TP1", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1005]}},
-                {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1018]}},
             ],
         )
 
@@ -175,7 +172,7 @@ class TraderAProfilePhase3EntitiesTests(unittest.TestCase):
             [
                 {
                     "action": "CLOSE_POSITION",
-                    "scope": "ALL_SHORTS",
+                    "scope": "FULL",
                     "targeting": {"mode": "SELECTOR", "selector": {"side": "SHORT", "status": "OPEN"}},
                 }
             ],

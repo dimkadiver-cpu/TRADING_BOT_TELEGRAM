@@ -27,7 +27,7 @@ class TraderAParsingRulesIntegrityTests(unittest.TestCase):
     def test_rules_file_is_utf8_and_contains_restored_markers(self) -> None:
         payload = json.loads(_RULES_PATH.read_text(encoding="utf-8"))
 
-        new_signal = payload["classification_markers"]["new_signal_strong"]
+        new_signal = payload["new_signal_strong"]
         self.assertIn("a (с текущих)", new_signal)
         self.assertIn("a (лимит)", new_signal)
         self.assertIn("b (усреднение)", new_signal)
@@ -48,9 +48,9 @@ class TraderAParsingRulesIntegrityTests(unittest.TestCase):
     def test_human_markers_do_not_contain_question_placeholders(self) -> None:
         payload = json.loads(_RULES_PATH.read_text(encoding="utf-8"))
         buckets: list[str] = []
-        buckets.extend(payload["classification_markers"]["new_signal_strong"])
-        buckets.extend(payload["classification_markers"]["update_strong"])
-        buckets.extend(payload["classification_markers"]["setup_incomplete"])
+        buckets.extend(payload["new_signal_strong"])
+        buckets.extend(payload["update_strong"])
+        buckets.extend(payload["setup_incomplete"])
         for item in payload["intent_markers"].values():
             if isinstance(item, dict):
                 buckets.extend(item.get("strong", []))
