@@ -7,11 +7,39 @@ from unittest.mock import patch
 from src.parser.dispatcher import ParserDispatcher
 from src.parser.llm_adapter import LLMAdapter
 from src.parser.normalization import build_parse_result_normalized
-from src.parser.pipeline import MinimalParserPipeline, ParserInput
+from src.parser.pipeline import MinimalParserPipeline, ParserInput, _sanitize_action_structured_item
 from src.parser.trader_profiles.registry import canonicalize_trader_code, get_profile_parser
 
 
 class PipelineSemanticConsistencyTests(unittest.TestCase):
+    def test_sanitize_action_structured_item_drops_invalid_targeting(self) -> None:
+        item = {
+            "action": "CLOSE_POSITION",
+            "targeting": {
+                "mode": "TARGET_GROUP",
+                "targets": [],
+            },
+        }
+        sanitized = _sanitize_action_structured_item(item, supports_targeted=True)
+        self.assertEqual(sanitized, {"action": "CLOSE_POSITION"})
+
+    def test_sanitize_action_structured_item_normalizes_selector_targeting(self) -> None:
+        item = {
+            "action": "CLOSE_POSITION",
+            "targeting": {
+                "mode": "SELECTOR",
+                "selector": {"side": "SHORT", "status": "OPEN"},
+            },
+        }
+        sanitized = _sanitize_action_structured_item(item, supports_targeted=True)
+        self.assertEqual(
+            sanitized,
+            {
+                "action": "CLOSE_POSITION",
+                "targeting": {"mode": "SELECTOR", "selector": {"side": "SHORT", "status": "OPEN"}},
+            },
+        )
+
     def test_warning_merge_keeps_upstream_and_validation(self) -> None:
         result = build_parse_result_normalized(
             message_type="UPDATE",
