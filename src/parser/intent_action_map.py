@@ -57,7 +57,7 @@ def map_intents_to_actions(intents: Iterable[str], entities: dict[str, Any] | No
         if not isinstance(action, str) or not action:
             continue
         if action == "ACT_CLOSE_FULL" and payload.get("close_status_passive"):
-            action = "ACT_CLOSE_FULL"
+            action = "ACT_CLOSE_FULL_AND_MARK_CLOSED"
         if action not in actions:
             actions.append(action)
     return actions
@@ -133,15 +133,6 @@ def _intent_to_action_type(intent: str, entities: dict[str, Any] | None = None) 
     }
     return mapping.get(intent)
 
-
-def _intent_to_actions(intent: str, entities: dict[str, Any] | None = None) -> tuple[str, ...]:
-    payload = entities if isinstance(entities, dict) else {}
-    if intent == "U_CLOSE_FULL" and payload.get("close_status_passive"):
-        return ("ACT_CLOSE_FULL_AND_MARK_CLOSED",)
-    csv_action = canonical_action_for_intent(intent)
-    if csv_action:
-        return (csv_action,)
-    return _INTENT_TO_ACTIONS.get(intent, ())
 
 
 def _extract_target_tp_level(entities: dict[str, Any]) -> int | None:

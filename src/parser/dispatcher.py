@@ -127,7 +127,7 @@ def should_fallback_to_llm(result: ParseResultNormalized) -> bool:
         if isinstance(result.position_obj, dict):
             if not result.position_obj.get("side"):
                 return True
-            if not result.position_obj.get("take_profits"):
+            if not result.risk_plan.get("take_profits"):
                 return True
         if isinstance(result.entry_plan, dict):
             if not result.entry_plan.get("entries") and not result.entries:
@@ -138,7 +138,7 @@ def should_fallback_to_llm(result: ParseResultNormalized) -> bool:
             return True
 
         # v2 additive safety checks
-        if result.primary_intent is not None and not str(result.primary_intent).strip():
+        if result.primary_intent is None or not str(result.primary_intent).strip():
             return True
         if isinstance(result.actions_structured, list) and not result.actions_structured and result.actions:
             return True
