@@ -273,6 +273,7 @@ _INTERMEDIATE_RESULT_MARKERS: tuple[str, ...] = (
 
 class TraderAProfileParser:
     trader_code = "trader_a"
+    supports_targeted_actions_structured = True
 
     def __init__(self, rules_path: Path | None = None) -> None:
         self._rules_path = rules_path or _RULES_PATH
@@ -336,7 +337,16 @@ class TraderAProfileParser:
         # Legacy message_type/intents/entities/target_refs stay unchanged.
         # The v2 semantic envelope below is additive for backward compatibility.
         primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
-        actions_structured = self._build_actions_structured(message_type=message_type, intents=intents, entities=entities)
+        legacy_actions_structured = self._build_actions_structured(message_type=message_type, intents=intents, entities=entities)
+        actions_structured = self._build_actions_structured_granular(
+            prepared=prepared,
+            message_type=message_type,
+            intents=intents,
+            entities=entities,
+            target_refs=target_refs,
+            global_target_scope=global_target_scope,
+            legacy_actions=legacy_actions_structured,
+        ) or legacy_actions_structured
         linking = self._build_linking(target_refs=target_refs, context=context, has_global_target=has_global_target)
         target_scope = self._build_target_scope(
             entities=entities,
@@ -418,6 +428,137 @@ class TraderAProfileParser:
             elif intent == "U_REPORT_FINAL_RESULT":
                 actions.append({"action": "REPORT_RESULT", "mode": entities.get("result_mode", "TEXT_SUMMARY")})
         return actions
+
+    def _build_actions_structured_granular(
+        self,
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        intents: list[str],
+        entities: dict[str, Any],
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None,
+        legacy_actions: list[dict[str, Any]],
+    ) -> list[dict[str, Any]] | None:
+        if not self.supports_targeted_actions_structured or message_type != "UPDATE":
+            return None
+
+        explicit_target_ids = self._explicit_target_message_ids(target_refs=target_refs)
+        raw_text = str(prepared.get("raw_text") or "")
+
+        granular_stop_actions = self._build_line_level_move_stop_actions(raw_text=raw_text)
+        if granular_stop_actions:
+            remaining = [item for item in legacy_actions if item.get("action") != "MOVE_STOP"]
+            return [*granular_stop_actions, *remaining]
+
+        if "U_CLOSE_FULL" in intents and len(explicit_target_ids) >= 2:
+            targeted_close = {
+                "action": "CLOSE_POSITION",
+                "scope": entities.get("close_scope", "FULL"),
+                "targeting": {
+                    "mode": "TARGET_GROUP",
+                    "targets": explicit_target_ids,
+                },
+            }
+            remaining = [item for item in legacy_actions if item.get("action") != "CLOSE_POSITION"]
+            return [targeted_close, *remaining]
+
+        selector = self._selector_from_global_scope(global_target_scope=global_target_scope)
+        if "U_CLOSE_FULL" in intents and selector:
+            targeted_close = {
+                "action": "CLOSE_POSITION",
+                "scope": entities.get("close_scope", "FULL"),
+                "targeting": {
+                    "mode": "SELECTOR",
+                    "selector": selector,
+                },
+            }
+            remaining = [item for item in legacy_actions if item.get("action") != "CLOSE_POSITION"]
+            return [targeted_close, *remaining]
+
+        return None
+
+    @staticmethod
+    def _explicit_target_message_ids(*, target_refs: list[dict[str, Any]]) -> list[int]:
+        out: list[int] = []
+        seen: set[int] = set()
+        for ref in target_refs:
+            if ref.get("kind") != "message_id":
+                continue
+            value = ref.get("ref")
+            if not isinstance(value, int) or value in seen:
+                continue
+            seen.add(value)
+            out.append(value)
+        return out
+
+    def _build_line_level_move_stop_actions(self, *, raw_text: str) -> list[dict[str, Any]]:
+        actions: list[dict[str, Any]] = []
+        seen_targets: set[int] = set()
+        for line in split_lines(raw_text):
+            level = self._line_stop_level(line=line)
+            if level is None:
+                continue
+            message_ids = self._extract_message_ids_from_line(line=line)
+            if not message_ids:
+                continue
+            for message_id in message_ids:
+                if message_id in seen_targets:
+                    continue
+                seen_targets.add(message_id)
+                actions.append(
+                    {
+                        "action": "MOVE_STOP",
+                        "new_stop_level": level,
+                        "targeting": {
+                            "mode": "EXPLICIT_TARGETS",
+                            "targets": [message_id],
+                        },
+                    }
+                )
+        return actions
+
+    @staticmethod
+    def _extract_message_ids_from_line(*, line: str) -> list[int]:
+        out: list[int] = []
+        seen: set[int] = set()
+        for link in extract_telegram_links(line):
+            match = _LINK_ID_RE.search(link)
+            if not match:
+                continue
+            message_id = int(match.group("id"))
+            if message_id in seen:
+                continue
+            seen.add(message_id)
+            out.append(message_id)
+        return out
+
+    @staticmethod
+    def _line_stop_level(*, line: str) -> str | None:
+        normalized = normalize_text(line)
+        if _STOP_TO_TP1_RE.search(line):
+            return "TP1"
+        if _contains_any(
+            normalized,
+            (
+                "стоп в бу",
+                "стопы в бу",
+                "стоп в безубыток",
+                "stop to be",
+                "stop to breakeven",
+                "stop to entry",
+            ),
+        ):
+            return "ENTRY"
+        return None
+
+    @staticmethod
+    def _selector_from_global_scope(*, global_target_scope: str | None) -> dict[str, str] | None:
+        if global_target_scope in {"ALL_REMAINING_SHORTS", "ALL_SHORTS"}:
+            return {"side": "SHORT", "status": "OPEN"}
+        if global_target_scope in {"ALL_REMAINING_LONGS", "ALL_LONGS"}:
+            return {"side": "LONG", "status": "OPEN"}
+        return None
 
     @staticmethod
     def _build_linking(*, target_refs: list[dict[str, Any]], context: ParserContext, has_global_target: bool) -> dict[str, Any]:
@@ -1512,4 +1653,3 @@ def _to_float(raw: str) -> float | None:
         return float(cleaned)
     except ValueError:
         return None
-

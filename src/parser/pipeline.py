@@ -51,6 +51,7 @@ _STOP_RE = re.compile(r"(?:sl|stop(?:\s*loss)?)\s*[:=@-]?\s*([0-9][0-9.,]*)", re
 _TP_RE = re.compile(r"(?:tp\d*|target\s*\d*)\s*[:=@-]?\s*([0-9][0-9.,]*)", re.IGNORECASE)
 _LEVERAGE_RE = re.compile(r"\b([0-9]{1,3}(?:\.[0-9]+)?)\s*x\b", re.IGNORECASE)
 _RISK_RE = re.compile(r"(?:risk\s*[:=]?\s*([0-9]+(?:\.[0-9]+)?%)|([0-9]+(?:\.[0-9]+)?%)\s*risk)", re.IGNORECASE)
+_TARGETING_MODES = {"EXPLICIT_TARGETS", "TARGET_GROUP", "SELECTOR"}
 
 
 @dataclass(slots=True)
@@ -285,6 +286,9 @@ class MinimalParserPipeline:
                     "target_scope": getattr(profile_result, "target_scope", None),
                     "linking": getattr(profile_result, "linking", None),
                     "diagnostics": getattr(profile_result, "diagnostics", None),
+                    "supports_targeted_actions_structured": bool(
+                        getattr(profile_parser, "supports_targeted_actions_structured", False)
+                    ),
                 }
                 warnings.extend(profile_result.warnings)
                 notes_parts.append(f"profile_parser={profile_code}")
@@ -599,7 +603,13 @@ def _enrich_v2_semantics(
 
     actions_structured = profile_v2_fields.get("actions_structured")
     if isinstance(actions_structured, list):
-        filtered_actions_structured = [item for item in actions_structured if isinstance(item, dict)]
+        supports_targeted = bool(profile_v2_fields.get("supports_targeted_actions_structured"))
+        filtered_actions_structured = [
+            _sanitize_action_structured_item(item, supports_targeted=supports_targeted)
+            for item in actions_structured
+            if isinstance(item, dict)
+        ]
+        filtered_actions_structured = [item for item in filtered_actions_structured if item]
         if filtered_actions_structured:
             normalized_result.actions_structured = filtered_actions_structured
 
@@ -618,6 +628,48 @@ def _enrich_v2_semantics(
         normalized_result.diagnostics = merged_diagnostics
 
     return normalized_result
+
+
+def _sanitize_action_structured_item(item: dict[str, object], *, supports_targeted: bool) -> dict[str, object]:
+    sanitized = dict(item)
+    targeting = sanitized.get("targeting")
+    if not supports_targeted:
+        sanitized.pop("targeting", None)
+        return sanitized
+    if targeting is None:
+        return sanitized
+    if not isinstance(targeting, dict):
+        sanitized.pop("targeting", None)
+        return sanitized
+
+    mode = targeting.get("mode")
+    if not isinstance(mode, str) or mode not in _TARGETING_MODES:
+        sanitized.pop("targeting", None)
+        return sanitized
+
+    if mode in {"EXPLICIT_TARGETS", "TARGET_GROUP"}:
+        targets = targeting.get("targets")
+        if not isinstance(targets, list) or not targets:
+            sanitized.pop("targeting", None)
+            return sanitized
+        normalized_targets: list[int] = []
+        for target in targets:
+            if isinstance(target, int):
+                normalized_targets.append(target)
+            elif isinstance(target, str) and target.isdigit():
+                normalized_targets.append(int(target))
+        if not normalized_targets:
+            sanitized.pop("targeting", None)
+            return sanitized
+        sanitized["targeting"] = {"mode": mode, "targets": normalized_targets}
+        return sanitized
+
+    selector = targeting.get("selector")
+    if not isinstance(selector, dict) or not selector:
+        sanitized.pop("targeting", None)
+        return sanitized
+    sanitized["targeting"] = {"mode": mode, "selector": dict(selector)}
+    return sanitized
 
 def _legacy_direction(direction: str | None) -> str | None:
     if direction == "LONG":
@@ -790,8 +842,4 @@ def _merge_unique_ints(left: list[int], right: list[int]) -> list[int]:
         seen.add(value)
         out.append(value)
     return out
-
-
-
-
 
