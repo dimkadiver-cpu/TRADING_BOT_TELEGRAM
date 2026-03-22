@@ -5,8 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Mapping
 
-from src.parser.normalization import ParseResultNormalized
-
 
 @dataclass(slots=True)
 class StateUpdatePlan:
@@ -36,7 +34,7 @@ class StateUpdatePlan:
         }
 
 
-def build_update_plan(normalized: ParseResultNormalized | Mapping[str, Any]) -> StateUpdatePlan:
+def build_update_plan(normalized: Mapping[str, Any]) -> StateUpdatePlan:
     data = _as_mapping(normalized)
     message_type = _as_str_or_none(data.get("message_type"))
     intents = _as_str_list(data.get("intents"))
@@ -169,8 +167,6 @@ def _handle_close_partial(plan: StateUpdatePlan, entities: Mapping[str, Any]) ->
 
 
 def _as_mapping(value: Any) -> Mapping[str, Any]:
-    if isinstance(value, ParseResultNormalized):
-        return value.as_dict()
     if isinstance(value, Mapping):
         return value
     return {}

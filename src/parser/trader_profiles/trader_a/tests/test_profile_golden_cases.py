@@ -168,7 +168,7 @@ class TraderAProfileGoldenCasesTests(unittest.TestCase):
                 case_id="g13_move_stop_be_without_target",
                 input_text="PYTH \u0442\u043e\u0436\u0435 \u0441\u0442\u043e\u043f \u0432 \u0431\u0443",
                 expected_message_type="UNCLASSIFIED",
-                expected_intents=("U_MOVE_STOP_TO_BE", "U_MOVE_STOP"),
+                expected_intents=("U_MOVE_STOP_TO_BE",),
                 expected_target_mode="NONE",
                 expected_warnings_contains=("trader_a_ambiguous_update_without_target",),
             ),
@@ -223,7 +223,7 @@ class TraderAProfileGoldenCasesTests(unittest.TestCase):
                     "https://t.me/c/100/52"
                 ),
                 expected_message_type="UPDATE",
-                expected_intents=("U_MOVE_STOP_TO_BE", "U_MOVE_STOP", "U_CANCEL_PENDING_ORDERS"),
+                expected_intents=("U_MOVE_STOP_TO_BE", "U_CANCEL_PENDING_ORDERS"),
                 expected_target_mode="MULTI_TARGET_LINKS",
             ),
         ]

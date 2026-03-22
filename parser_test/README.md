@@ -52,3 +52,14 @@ python parser_test/scripts/replay_parser.py --only-unparsed --limit 200
 - Non avvia listener Telegram e non dipende da Telethon runtime.
 - `import_history.py` scrive solo su `raw_messages` (nessun tocco a `parse_results`).
 - Risoluzione chat target: `--chat-id` > `PARSER_TEST_CHAT_ID`; se assenti entrambi lo script termina con errore esplicito.
+
+
+# Tutti i trader in un colpo
+python parser_test/scripts/generate_parser_reports.py --trader trader_all
+
+# Solo un trader
+python parser_test/scripts/generate_parser_reports.py --trader trader_a
+python parser_test/scripts/generate_parser_reports.py --trader TA
+
+# Solo esporta CSV senza rifare il parsing
+python parser_test/scripts/generate_parser_reports.py --skip-replay

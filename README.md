@@ -1,92 +1,101 @@
 # TeleSignalBot
 
-Trading bot modulare che acquisisce messaggi Telegram, li normalizza in eventi canonici e li persiste in modo auditabile.
+Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi, li parsa in formato canonico, e li esegue su exchange tramite freqtrade.
 
-## Stato attuale (2026-03-14)
+## Stato attuale
 
-Implementato nello stato corrente:
+Il progetto è in fase di **riprogettazione del parser** seguendo una nuova architettura più semplice e manutenibile. Il layer di acquisizione Telegram e storage esistono e funzionano. L'execution è pianificata per le fasi successive.
 
-- ingest Telegram live con Telethon (`main.py`, `src/telegram/listener.py`)
-- persistenza raw message con dedup e metadata sorgente (`src/storage/raw_messages.py`, migration `006_raw_messages.sql`)
-- risoluzione trader effettivo (tag nel testo -> reply inheritance -> source map) (`src/telegram/effective_trader.py`)
-- eligibility + strong linking (reply/link/ref espliciti) (`src/telegram/eligibility.py`)
-- parser pipeline minima con modalita `regex_only`, `llm_only`, `hybrid_auto` (`src/parser/pipeline.py`, `src/parser/dispatcher.py`)
-- normalizzazione su schema canonico con `message_type + intents + actions` e campi legacy derivati (`src/parser/normalization.py`)
-- mapping canonico `intent -> action` centralizzato (`src/parser/intent_action_map.py`)
-- persistenza parse results legacy + payload normalizzato JSON (`src/storage/parse_results.py`, migrations `007_parse_results.sql`, `008_parse_result_normalized.sql`)
-- profili trader-specific:
-  - TA (`src/parser/trader_profiles/ta_profile.py`)
-  - Trader A (`src/parser/trader_profiles/trader_a/profile.py`)
-  - base/registry comuni (`src/parser/trader_profiles/base.py`, `src/parser/trader_profiles/registry.py`)
-- planner e applier domain minimali per update (`src/execution/update_planner.py`, `src/execution/update_applier.py`)
-- test parser e replay in `parser_test/tests/` + test dedicati in `src/parser/` e `src/execution/`
+### Implementato e stabile
 
-Parzialmente implementato / non attivo end-to-end:
+- persistenza raw messages con dedup e metadata sorgente (`src/storage/raw_messages.py`)
+- risoluzione trader effettivo (`src/telegram/effective_trader.py`)
+- eligibility e strong linking (`src/telegram/eligibility.py`)
+- parser pipeline esistente — **in fase di riscrittura** (`src/parser/pipeline.py`)
+- profili trader esistenti — **in fase di migrazione** (`src/parser/trader_profiles/`)
+- harness replay e report CSV (`parser_test/`)
 
-- lifecycle state machine completa (`src/execution/state_machine.py`)
-- risk gate / sizing completo (`src/execution/risk_gate.py`)
-- execution planner runtime completo (`src/execution/planner.py`)
-- automazione exchange Bybit runtime (`src/exchange/adapter.py`, `src/exchange/bybit_rest.py`, `src/exchange/bybit_ws.py`)
+### In sviluppo ora — Fase 1: Parser
 
-## Flusso operativo reale (fase corrente)
+```
+Step 1  Pydantic models canonici     src/parser/models/
+Step 2  RulesEngine                  src/parser/rules_engine.py
+Step 3  Trader 3 profilo             primo profilo nuova architettura
+Step 4  Watch mode + CSV debug       parser_test/
+Step 5  Migrazione altri profili     trader_b → trader_c/d → trader_a
+Step 6  Cleanup legacy               eliminazione pipeline.py e normalization.py
+```
 
-1. `main.py` carica env, config e migrazioni DB.
-2. Il listener riceve `NewMessage` da Telegram.
-3. Salva il raw message con stato di acquisizione.
-4. Risolve trader effettivo e valuta eligibility/linking.
-5. Esegue parser (regex/llm/hybrid) e produce output normalizzato.
-6. Salva il risultato in `parse_results` (incluso `parse_result_normalized_json`).
+### Pianificato — Fasi successive
 
-Nota: il flusso live principale si ferma al parsing/persistenza. Il planner/applier esiste ma non e agganciato automaticamente al listener live.
+```
+Fase 2  Listener robusto             asyncio.Queue, recovery, hot reload
+Fase 3  Router / Pre-parser          blacklist, trader resolution, review queue
+Fase 4  Validazione + Operation rules + Target resolver
+Fase 5  Sistema 1 — freqtrade live
+Fase 6  Sistema 2 — backtesting
+```
 
-## Event types canonici supportati
+## Architettura
 
-- `NEW_SIGNAL`
-- `UPDATE`
-- `CANCEL_PENDING`
-- `MOVE_STOP`
-- `TAKE_PROFIT`
-- `CLOSE_POSITION`
-- `INFO_ONLY`
-- `SETUP_INCOMPLETE`
-- `INVALID`
+```
+Telegram channels
+      ↓
+Listener (Telethon)
+      ↓
+raw_messages (SQLite) — processing_status: pending → done | failed | blacklisted | review
+      ↓
+Router / Pre-parser
+      ↓
+Parser — RulesEngine + profile.py per trader → TraderParseResult (Pydantic)
+      ↓
+parse_results (SQLite)
+      ↓
+Validazione coerenza → Operation rules → Target resolver
+      ↓
+Sistema 1 (freqtrade live)    Sistema 2 (backtesting)
+```
 
-## Struttura repository
+## Nuova architettura parser
 
-- `src/telegram/`: listener, ingest, eligibility, trader mapping
-- `src/parser/`: classificazione, estrazione, normalizzazione, dispatcher LLM/regex, profili trader
-- `src/storage/`: persistenza `raw_messages` e `parse_results`
-- `src/execution/`: moduli lifecycle/risk/planner (da completare)
-- `src/exchange/`: adapter e client exchange (da completare)
-- `src/core/`: config loader, logger, migration runner, utility
-- `config/`: alias trader, source map Telegram, portfolio rules
-- `traders/`: regole parser/execution per singolo trader
-- `db/migrations/`: schema incrementale SQLite
-- `docs/`: documentazione architetturale e operativa
-- `parser_test/`: replay e test parser
+Il parser è stato riprogettato con un percorso unico per trader:
 
-## Inventario file (snapshot)
+```
+testo + ParserContext
+      ↓
+RulesEngine          legge parsing_rules.json per trader
+      ↓
+profile.py           estrae entità + intents
+      ↓
+Pydantic models      normalizza e valida
+      ↓
+TraderParseResult    output canonico unico
+```
 
-- Totale file progetto rilevati: `126`
-- Indice completo file: `docs/PROJECT_FILE_INDEX.md`
-- Breakdown top-level:
-  - `src`: 65
-  - `docs`: 17
-  - `parser_test`: 10
-  - `traders`: 10
-  - `db`: 9
-  - `skills`: 7
-  - `config`: 3
-  - root files: 5 (`README.md`, `README_CODEX.md`, `AGENTS.md`, `main.py`, `requirements.txt`)
+Output canonico:
+- `message_type`: `NEW_SIGNAL | UPDATE | INFO_ONLY | UNCLASSIFIED`
+- `completeness`: `COMPLETE | INCOMPLETE`
+- `entities`: `NewSignalEntities | UpdateEntities`
+- `intents`: lista con kind `CONTEXT | ACTION`
+- `target_ref`: `STRONG | SYMBOL | GLOBAL`
+- `confidence`, `warnings`, `trader_id`, `raw_text`
 
-## Setup rapido
+## Tecnologie
 
-Prerequisiti:
+| Componente | Tecnologia |
+|---|---|
+| Listener | Telethon |
+| Parser models | Pydantic v2 |
+| Profili trader | profile.py + parsing_rules.json |
+| DB | SQLite → Postgres in produzione |
+| Execution | freqtrade + ccxt |
+| UI controllo | FreqUI |
+| File watching | watchdog |
+| LLM hook | openai / anthropic / ollama (opzionale per trader) |
 
-- Python 3.11+
-- account Telegram API (api_id/api_hash)
+## Setup
 
-Installazione:
+Prerequisiti: Python 3.12+, account Telegram API
 
 ```bash
 python -m venv .venv
@@ -94,25 +103,14 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-Variabili ambiente minime:
-
-- `TELEGRAM_API_ID`
-- `TELEGRAM_API_HASH`
-
-Variabili utili:
-
-- `DB_PATH` (default `db/tele_signal_bot.sqlite3`)
-- `LOG_PATH` (default `logs/bot.log`)
-- `LOG_LEVEL` (default `INFO`)
-- `TELEGRAM_SESSION` (default `tele_signal_bot`)
-- `TELEGRAM_ALLOWED_CHAT_IDS` (csv chat ids consentiti)
-- `TELEGRAM_SOURCE_MAP_PATH` (default `config/telegram_source_map.json`)
-- `PARSER_MODE` (`regex_only` | `llm_only` | `hybrid_auto`)
-- `LLM_PROVIDER` (`openai` | `gemini`)
-- `LLM_MODEL` (default provider-specific)
+Variabili ambiente minime (`.env`):
+```
+TELEGRAM_API_ID=
+TELEGRAM_API_HASH=
+DB_PATH=db/tele_signal_bot.sqlite3
+```
 
 Avvio:
-
 ```bash
 python main.py --migrate
 python main.py
@@ -121,19 +119,60 @@ python main.py
 ## Test parser
 
 ```bash
-python -m unittest discover -s parser_test/tests -p "test_*.py"
+# test profilo specifico
+pytest src/parser/trader_profiles/trader_3/tests/
+
+# replay su DB test
+python parser_test/scripts/replay_parser.py --trader trader_3
+
+# watch mode debug (replay automatico su modifica file)
+python parser_test/scripts/watch_parser.py --trader trader_3
 ```
 
-## Documentazione consigliata
+## Struttura repository
 
-1. `docs/README.md`
-2. `docs/MASTER_PLAN.md`
-3. `docs/SYSTEM_ARCHITECTURE.md`
-4. `docs/PARSER_FLOW.md`
-5. `docs/SESSION_HANDOFF.md`
+```
+TeleSignalBot/
+├── CLAUDE.md                    → contesto per Claude Code
+├── docs/
+│   ├── PRD_generale.md          → architettura e tecnologie
+│   ├── PRD_listener.md          → Listener dettagliato
+│   ├── PRD_router.md            → Router / Pre-parser
+│   ├── PRD_parser.md            → Parser + sistema debug
+│   ├── AUDIT.md                 → stato progetto, file da toccare/non toccare
+│   └── old/                     → documentazione vecchia architettura (archivio)
+├── skills/                      → skill per Claude Code
+├── src/
+│   ├── core/                    → utilities condivise
+│   ├── storage/                 → persistenza DB
+│   ├── telegram/                → listener, ingestion, trader resolution
+│   ├── parser/
+│   │   ├── models/              → Pydantic models canonici [NUOVO]
+│   │   ├── rules_engine.py      → RulesEngine [NUOVO]
+│   │   ├── trader_profiles/
+│   │   │   ├── shared/          → vocabolari condivisi [NUOVO]
+│   │   │   ├── trader_3/        → primo profilo nuova arch
+│   │   │   ├── trader_a/
+│   │   │   ├── trader_b/
+│   │   │   ├── trader_c/
+│   │   │   └── trader_d/
+│   │   ├── pipeline.py          → LEGACY (eliminare dopo migrazione)
+│   │   └── normalization.py     → LEGACY (eliminare dopo migrazione)
+│   ├── execution/               → placeholder (Fase 5+)
+│   └── exchange/                → placeholder (Fase 5+)
+├── config/
+│   └── channels.yaml            → canali Telegram e trader attivi
+├── db/migrations/               → schema SQLite incrementale
+└── parser_test/                 → replay, debug CSV, watch mode
+```
 
-## Limiti aperti
+## Documentazione
 
-- Config validation ancora parziale in `src/core/config_loader.py`
-- Linking update->segnale non ancora consolidato in un modulo lifecycle dedicato
-- Mancano test end-to-end listener -> DB su feed Telegram reali
+La documentazione autorevole è in `docs/`:
+- `CLAUDE.md` — contesto per Claude Code (root del progetto)
+- `CODEX.md` — contesto per CODEX APP (root del progetto)
+- `docs/PRD_generale.md` — visione e architettura
+- `docs/PRD_parser.md` — parser dettagliato (priorità attuale)
+- `docs/AUDIT.md` — stato progetto aggiornato
+
+I file in `docs/old/` sono archivio della vecchia architettura — non usare come riferimento operativo.

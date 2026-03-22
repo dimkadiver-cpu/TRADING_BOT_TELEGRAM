@@ -73,7 +73,6 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
-        self.assertNotIn("U_MOVE_STOP", result.intents)
         self.assertNotIn("U_TP_HIT", result.intents)
         self.assertNotIn("U_STOP_HIT", result.intents)
         self.assertIn(result.entities.get("new_stop_level"), ("ENTRY", "TP1"))

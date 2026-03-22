@@ -32,15 +32,15 @@ def test_multilink_mixed_stop_updates_are_grouped_by_signature() -> None:
     assert result.message_type == "UPDATE"
     message_ids = sorted([item["ref"] for item in result.target_refs if item.get("kind") == "message_id"])
     assert message_ids == [978, 1002, 1003, 1005, 1018]
-    assert len(result.actions_structured) == 2
+    assert len(result.actions_structured) == 5
 
-    entry_group = next(item for item in result.actions_structured if item.get("new_stop_level") == "ENTRY")
-    assert entry_group["targeting"]["mode"] == "TARGET_GROUP"
-    assert entry_group["targeting"]["targets"] == [978, 1002, 1003, 1018]
-
-    tp1_group = next(item for item in result.actions_structured if item.get("new_stop_level") == "TP1")
-    assert tp1_group["targeting"]["mode"] == "EXPLICIT_TARGETS"
-    assert tp1_group["targeting"]["targets"] == [1005]
+    assert result.actions_structured == [
+        {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [978]}},
+        {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1002]}},
+        {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1003]}},
+        {"action": "MOVE_STOP", "new_stop_level": "TP1", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1005]}},
+        {"action": "MOVE_STOP", "new_stop_level": "ENTRY", "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [1018]}},
+    ]
 
 
 def test_close_shared_on_multiple_links_builds_target_group_action() -> None:

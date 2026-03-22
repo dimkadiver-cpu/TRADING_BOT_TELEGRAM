@@ -1,18 +1,61 @@
-﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
-1203,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,1328,1327,2026-01-02T10:46:44+00:00,"На байбит стоп 89950!!!!!!
- [trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[1327],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-1125,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,1441,1440,2026-01-07T15:48:18+00:00,"На байбит не закрыло,)
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
+1383,PARSED_WITH_WARNINGS,,"Друзья, привет! Админ на связи 👋
+У нас хорошие новости - пополнение в команде!
 
-[trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[1440],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-937,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,1691,1683,2026-01-16T10:49:41+00:00,"Остаток закрыт в бу
-[trader#C]",llm_unavailable,,,,,,[],,,False,[],[],[1683],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-441,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,2452,2410,2026-02-15T20:01:07+00:00,"Беру по текущим по 68300
-Средняя 66750 стоп в 66800
-Цель этого обьема 70000
+Мы долго смотрели на пустое место [trader#4]. Всё-таки жаль этого добряка!🥲
+Хотя...после его сигналов кто-то, возможно, до сих пор просыпается ночью с криком: «ГДЕ МОИ 27 ИКСОВ!?»😂
+В общем, уберите иконы, не нужно святой воды - мы решили: к цифре 4 пока не возвращаемся. 😇
+Оставим её жить в фольклоре нашего канала!
 
-[trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[2410],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
-303,UNCLASSIFIED,PARSED_WITH_WARNINGS,trader_c,3171748254,2647,,2026-02-22T15:09:19+00:00,"На руках solusdt 
+Но зато! 
+Без всяких реинкарнаций и теней призраков прошлого...
+Представляем вам нового трейдера под тегом [trader#C].
+
+Как вы поняли, буквам мы в команде доверяем больше.😉
+
+Теперь - коротко и по делу о работе с сигналами trader#C:
+
+По активам и формату:
+BTC / ETH - бодрый интрадей
+Альта - свинг, без суеты
+
+Таймфреймы:
+1h-4h, уточнение входа на 3м, по альте - 15м
+
+Риск:
+в рабочем диапазоне 1-5%
+
+По активности:
+в среднем около 10 сделок в неделю —
+не пулемёт, но и не «одна мысль в месяц»
+
+Ну и ещё!
+Интрадей часто будет выходить ближе к американской сессии (16:30-23.00 UTC+3) 
+Так что при желании можно садиться за терминал с фразой «Good morning, New Yorkers» и торговать под Фрэнка Синатру для полного погружения. 😎
+
+В общем, встречайте наш C-class в новом кузове 😉
+Дальше - стандартно:
+смотрим в деле. Рынок, как всегда, рассудит лучше любых описаний 🫡
+#админ",llm_unavailable,,,,,,0,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.2; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+1203,PARSED_WITH_WARNINGS,1327,"На байбит стоп 89950!!!!!!
+ [trader #C]",llm_unavailable,,,,,1327,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+1125,PARSED_WITH_WARNINGS,1440,"На байбит не закрыло,)
+
+[trader #C]",llm_unavailable,,,,,1440,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+1057,PARSED_WITH_WARNINGS,1526,"Тр 3🥳
+
+[trader #C]",llm_unavailable,,,,,1526,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+937,PARSED_WITH_WARNINGS,1683,"Остаток закрыт в бу
+[trader#C]",llm_unavailable,,,,,1683,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+303,PARSED_WITH_WARNINGS,,"На руках solusdt 
 
 Лимиток не каких нет актуальных
 
-[trader #C]",llm_unavailable,,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+[trader #C]",llm_unavailable,,,,,,0,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.2; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+72,PARSED_WITH_WARNINGS,2956,"Лимитка на 73400 на этот объем 
+0,3% то что скинули
+
+[trader #C]",llm_unavailable,,,,,2956,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+66,PARSED_WITH_WARNINGS,2965,"Новая лимитка на 73700 +0,3%
+
+[trader #С]",llm_unavailable,,,,,2965,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c

@@ -10,6 +10,7 @@ from typing import Any
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text, split_lines
 from src.parser.intent_action_map import intent_policy_for_intent
+from src.parser.rules_engine import RulesEngine
 
 _RULES_PATH = Path(__file__).resolve().parent / "parsing_rules.json"
 _SYMBOL_RE = re.compile(r"\b[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?\b")
@@ -311,6 +312,24 @@ class TraderAProfileParser:
             )
         ):
             message_type = "UPDATE"
+        # Downgrade UPDATE→UNCLASSIFIED when only stop-management intents with no target,
+        # unless the text contains authoritative specific-phrase update indicators.
+        if message_type == "UPDATE" and not target_refs and not has_global_target:
+            _stop_mgmt_only = set(intents) <= {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"} and bool(intents)
+            if _stop_mgmt_only:
+                _norm = str(prepared.get("normalized_text") or "")
+                _authoritative = _contains_any(
+                    _norm,
+                    (
+                        "\u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
+                        "\u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u043e\u043f \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+                        "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+                        "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c",
+                        "\u043f\u043e \u0448\u043e\u0440\u0442\u0430\u043c \u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
+                    ),
+                )
+                if not _authoritative:
+                    message_type = "UNCLASSIFIED"
         reported_results = self._extract_reported_results(prepared=prepared, context=context, intents=intents)
         entities = self._extract_entities(
             prepared=prepared,
@@ -663,7 +682,7 @@ class TraderAProfileParser:
             return [
                 {
                     "action": "CLOSE_POSITION",
-                    "scope": "FULL",
+                    "scope": global_target_scope,
                     "targeting": {
                         "mode": "SELECTOR",
                         "selector": {
@@ -698,25 +717,20 @@ class TraderAProfileParser:
 
     @staticmethod
     def _group_action_items(items: list[dict[str, Any]]) -> list[dict[str, Any]]:
-        grouped: dict[tuple[str, str], list[int]] = {}
+        out: list[dict[str, Any]] = []
         for item in items:
             action = str(item.get("action") or "")
             level = str(item.get("new_stop_level") or "")
             target = item.get("target")
             if not action or not level or not isinstance(target, int):
                 continue
-            grouped.setdefault((action, level), []).append(target)
-
-        out: list[dict[str, Any]] = []
-        for (action, level), targets in grouped.items():
-            unique_targets = sorted(set(targets))
             out.append(
                 {
                     "action": action,
                     "new_stop_level": level,
                     "targeting": {
-                        "mode": "TARGET_GROUP" if len(unique_targets) > 1 else "EXPLICIT_TARGETS",
-                        "targets": unique_targets,
+                        "mode": "EXPLICIT_TARGETS",
+                        "targets": [target],
                     },
                 }
             )
@@ -971,9 +985,12 @@ class TraderAProfileParser:
             stop_hit_markers = _merge_markers(_strong_only(marker_map.get("U_STOP_HIT")), _DEFAULT_INTENT_MARKERS["U_STOP_HIT"])
             future_management_context = _has_future_management_language(normalized) and _contains_any(normalized, tuple(filled_markers))
 
+            stop_to_tp_context = bool(_STOP_TO_TP1_RE.search(raw_text))
             if message_type != "NEW_SIGNAL":
                 if _contains_any(normalized, tuple(move_to_be_markers)):
                     intents.append("U_MOVE_STOP_TO_BE")
+                    if stop_to_tp_context:
+                        intents.append("U_MOVE_STOP")
                 elif _contains_any(normalized, tuple(move_markers)):
                     intents.append("U_MOVE_STOP")
 
@@ -981,15 +998,16 @@ class TraderAProfileParser:
                 intents.append("U_CANCEL_PENDING_ORDERS")
             if _contains_any(normalized, tuple(invalidate_markers)):
                 intents.append("U_INVALIDATE_SETUP")
+                if message_type == "NEW_SIGNAL" and "U_CANCEL_PENDING_ORDERS" not in intents:
+                    intents.append("U_CANCEL_PENDING_ORDERS")
             if not future_management_context and _contains_any(normalized, tuple(close_partial_markers)):
                 intents.append("U_CLOSE_PARTIAL")
             elif not future_management_context and _contains_any(normalized, tuple(close_full_markers)):
                 intents.append("U_CLOSE_FULL")
 
-            stop_to_tp_context = bool(_STOP_TO_TP1_RE.search(raw_text))
             if message_type != "NEW_SIGNAL" and not future_management_context and not stop_to_tp_context and _contains_any(normalized, tuple(tp_hit_markers)):
                 intents.append("U_TP_HIT")
-            if message_type != "NEW_SIGNAL" and not future_management_context and _contains_any(normalized, tuple(stop_hit_markers)):
+            if message_type != "NEW_SIGNAL" and not future_management_context and not stop_to_tp_context and _contains_any(normalized, tuple(stop_hit_markers)):
                 intents.append("U_STOP_HIT")
             if _contains_any(normalized, tuple(filled_markers)):
                 intents.append("U_MARK_FILLED")
@@ -1191,6 +1209,9 @@ class TraderAProfileParser:
     def _resolve_cancel_scope(self, *, prepared: dict[str, Any], target_refs: list[dict[str, Any]]) -> str:
         if target_refs:
             return "TARGETED"
+        raw_lower = str(prepared.get("raw_text") or "").lower()
+        if "all limit" in raw_lower:
+            return "ALL_ALL"
         global_scope = self._resolve_global_target_scope(prepared=prepared)
         if global_scope == "ALL_LONGS":
             return "ALL_LONG"

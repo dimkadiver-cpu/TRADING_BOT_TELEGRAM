@@ -1,8 +1,0 @@
-raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,validation_warnings
-1011,SETUP_INCOMPLETE,PARSED_WITH_WARNINGS,trader_a,3171748254,1598,,2026-01-13T19:06:36+00:00,"[trader#A]
-
-""#среднесрок #JASMYUSDT 🐂 Лонг (вход с текущих)
-""sl"": 0.008151
-риск 1%
-
-информация о тейках позже",missing mandatory setup fields,JASMYUSDT,,,,,[],,,0,[],[],[],[],"[""missing mandatory setup fields""]"

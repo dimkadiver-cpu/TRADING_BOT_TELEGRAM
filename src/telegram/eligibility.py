@@ -57,6 +57,10 @@ class MessageEligibilityEvaluator:
             parent = self._raw_store.get_by_source_and_message_id(source_chat_id, reply_to_message_id)
             if parent is not None:
                 return "direct_reply", reply_to_message_id
+            # NOTE: if parent is None it means the referenced message was sent
+            # before the history import started (or was deleted). This is EXPECTED
+            # and intentional — do NOT propagate reply_to_message_id as a link in
+            # this case. Missing target_refs for these messages is correct behaviour.
 
         text = (raw_text or "").strip()
         link_match = _TELEGRAM_LINK_RE.search(text)

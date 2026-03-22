@@ -6,24 +6,17 @@ Receives Telegram messages and sends them to raw ingestion service.
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import json
 import logging
-import os
 import re
 from typing import Iterable
 
 from telethon import TelegramClient, events
 from telethon.tl.custom.message import Message
 
-from src.parser.parser_config import (
-    build_trader_llm_model_overrides,
-    build_trader_llm_provider_overrides,
-    build_trader_parser_mode_overrides,
-    normalize_llm_model,
-    normalize_llm_provider,
-    normalize_parser_mode,
-)
-from src.parser.pipeline import MinimalParserPipeline, ParserInput
-from src.storage.parse_results import ParseResultStore
+from src.parser.trader_profiles.base import ParserContext, TraderParseResult
+from src.parser.trader_profiles.registry import get_profile_parser
+from src.storage.parse_results import ParseResultRecord, ParseResultStore
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
@@ -62,30 +55,11 @@ def build_parse_results_store(db_path: str) -> ParseResultStore:
     return ParseResultStore(db_path=db_path)
 
 
-def build_minimal_parser_pipeline(
-    trader_aliases: dict[str, str],
-    global_parser_mode: str = "regex_only",
-    traders: dict[str, dict[str, object]] | None = None,
-) -> MinimalParserPipeline:
-    global_llm_provider = normalize_llm_provider(os.getenv("LLM_PROVIDER", "openai"))
-    global_llm_model = normalize_llm_model(os.getenv("LLM_MODEL"), provider=global_llm_provider)
-    return MinimalParserPipeline(
-        trader_aliases=trader_aliases,
-        global_parser_mode=normalize_parser_mode(global_parser_mode),
-        trader_parser_modes=build_trader_parser_mode_overrides(traders),
-        global_llm_provider=global_llm_provider,
-        global_llm_model=global_llm_model,
-        trader_llm_provider_overrides=build_trader_llm_provider_overrides(traders),
-        trader_llm_model_overrides=build_trader_llm_model_overrides(traders),
-    )
-
-
 def register_message_listener(
     client: TelegramClient,
     ingestion_service: RawMessageIngestionService,
     effective_trader_resolver: EffectiveTraderResolver,
     eligibility_evaluator: MessageEligibilityEvaluator,
-    parser_pipeline: MinimalParserPipeline,
     parse_results_store: ParseResultStore,
     logger: logging.Logger,
     allowed_chat_ids: Iterable[int] | None = None,
@@ -198,21 +172,44 @@ def register_message_listener(
                     signal_id=signal_id,
                 )
 
-        parse_record = parser_pipeline.parse(
-            ParserInput(
+        now_ts = datetime.now(timezone.utc).isoformat()
+        raw_text = message.message or ""
+        trader_code = trader_resolution.trader_id or ""
+        profile_parser = get_profile_parser(trader_code)
+
+        if profile_parser is None:
+            parse_record = _build_skipped_record(
                 raw_message_id=ingestion.raw_message_id,
-                raw_text=message.message,
-                eligibility_status=acquisition_status,
-                eligibility_reason=eligibility_reason,
                 resolved_trader_id=trader_resolution.trader_id,
                 trader_resolution_method=trader_resolution.method,
+                acquisition_status=acquisition_status,
+                eligibility_reason=eligibility_reason,
                 linkage_method=eligibility.strong_link_method,
-                source_chat_id=source_chat_id,
-                source_message_id=int(message.id),
-                linkage_reference_id=eligibility.referenced_message_id,
-                reply_raw_text=reply_raw_text,
+                now_ts=now_ts,
             )
-        )
+        else:
+            context = ParserContext(
+                trader_code=trader_code,
+                message_id=int(message.id),
+                reply_to_message_id=reply_to_message_id,
+                channel_id=source_chat_id,
+                raw_text=raw_text,
+                reply_raw_text=reply_raw_text,
+                extracted_links=[],
+                hashtags=[],
+            )
+            result = profile_parser.parse_message(text=raw_text, context=context)
+            parse_record = _build_parse_result_record(
+                result=result,
+                raw_message_id=ingestion.raw_message_id,
+                resolved_trader_id=trader_resolution.trader_id,
+                trader_resolution_method=trader_resolution.method,
+                acquisition_status=acquisition_status,
+                eligibility_reason=eligibility_reason,
+                linkage_method=eligibility.strong_link_method,
+                now_ts=now_ts,
+            )
+
         parse_results_store.upsert(parse_record)
         logger.info(
             "parse result persisted | raw_message_id=%s type=%s executable=%s",
@@ -220,6 +217,100 @@ def register_message_listener(
             parse_record.message_type,
             parse_record.is_executable,
         )
+
+
+def _build_parse_result_record(
+    *,
+    result: TraderParseResult,
+    raw_message_id: int,
+    resolved_trader_id: str | None,
+    trader_resolution_method: str,
+    acquisition_status: str,
+    eligibility_reason: str,
+    linkage_method: str | None,
+    now_ts: str,
+) -> ParseResultRecord:
+    entities = result.entities or {}
+    completeness = "INCOMPLETE" if result.message_type == "SETUP_INCOMPLETE" else "COMPLETE"
+    normalized_json = json.dumps(
+        {
+            "message_type": result.message_type,
+            "intents": result.intents,
+            "entities": result.entities,
+            "target_refs": result.target_refs,
+            "actions_structured": result.actions_structured,
+            "warnings": result.warnings,
+            "confidence": result.confidence,
+        },
+        ensure_ascii=False,
+        default=str,
+    )
+    return ParseResultRecord(
+        raw_message_id=raw_message_id,
+        eligibility_status=acquisition_status,
+        eligibility_reason=eligibility_reason,
+        declared_trader_tag=None,
+        resolved_trader_id=resolved_trader_id,
+        trader_resolution_method=trader_resolution_method,
+        message_type=result.message_type,
+        parse_status="PARSED",
+        completeness=completeness,
+        is_executable=result.message_type == "NEW_SIGNAL" and completeness == "COMPLETE",
+        symbol=entities.get("symbol") or None,
+        direction=entities.get("side") or None,
+        entry_raw=entities.get("entry_raw") or None,
+        stop_raw=entities.get("stop_raw") or None,
+        target_raw_list=None,
+        leverage_hint=None,
+        risk_hint=None,
+        risky_flag=False,
+        linkage_method=linkage_method,
+        linkage_status=None,
+        warning_text=" | ".join(result.warnings) if result.warnings else None,
+        notes=None,
+        parse_result_normalized_json=normalized_json,
+        created_at=now_ts,
+        updated_at=now_ts,
+    )
+
+
+def _build_skipped_record(
+    *,
+    raw_message_id: int,
+    resolved_trader_id: str | None,
+    trader_resolution_method: str,
+    acquisition_status: str,
+    eligibility_reason: str,
+    linkage_method: str | None,
+    now_ts: str,
+) -> ParseResultRecord:
+    return ParseResultRecord(
+        raw_message_id=raw_message_id,
+        eligibility_status=acquisition_status,
+        eligibility_reason=eligibility_reason,
+        declared_trader_tag=None,
+        resolved_trader_id=resolved_trader_id,
+        trader_resolution_method=trader_resolution_method,
+        message_type="UNCLASSIFIED",
+        parse_status="SKIPPED",
+        completeness="COMPLETE",
+        is_executable=False,
+        symbol=None,
+        direction=None,
+        entry_raw=None,
+        stop_raw=None,
+        target_raw_list=None,
+        leverage_hint=None,
+        risk_hint=None,
+        risky_flag=False,
+        linkage_method=linkage_method,
+        linkage_status=None,
+        warning_text="no_profile_parser",
+        notes=None,
+        parse_result_normalized_json=None,
+        created_at=now_ts,
+        updated_at=now_ts,
+    )
 
 
 def _resolve_source_type(event: events.NewMessage.Event) -> str | None:

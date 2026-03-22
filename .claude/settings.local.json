@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m pytest src/parser/trader_profiles/ -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/tests/test_profile_smoke.py -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_a/tests/test_parsing_rules_integrity.py -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/tests/test_profile_smoke.py -v --tb=long)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_a/tests/test_parsing_rules_integrity.py -v --tb=long)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_a/tests/test_profile_phase1.py::TraderAProfilePhase1Tests::test_ambiguous_update_without_target_adds_warning -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_b_da_contollare_/tests/test_profile_real_cases.py::TraderBProfileRealCasesTests::test_cancel_pending -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_a/tests/test_profile_phase1.py::TraderAProfilePhase1Tests::test_ambiguous_update_without_target_adds_warning -v --tb=long)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_b_da_contollare_/tests/test_profile_real_cases.py::TraderBProfileRealCasesTests::test_cancel_pending -v --tb=long)",
+      "Bash(python -m pytest src/parser/trader_profiles/ -v)",
+      "Bash(python -m pytest src/parser/trader_profiles/ --tb=no -q)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/ -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/tests/test_profile_smoke.py src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_compact_new_signal_enj_russian_tp -v --tb=short)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/ --tb=line -q)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_new_signal_compact_current_entry_with_tp_block -v --tb=long)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_passive_be_outcome_is_info_only -v --tb=long)",
+      "Bash(python -m pytest src/parser/trader_profiles/trader_d/ --tb=short -q)",
+      "Bash(python -m pytest \"src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_stop_loss_hit_short_form\" \"src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_tp_close_full_with_r_result\" \"src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_close_full_remaining_current_price_extracts_close_price\" -v --tb=long)",
+      "Bash(python -m pytest \"src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_tp_close_full_with_r_result\" \"src/parser/trader_profiles/trader_d/tests/test_profile_real_cases.py::TraderDProfileRealCasesTests::test_close_full_remaining_current_price_extracts_close_price\" -v --tb=long)",
+      "Bash(python:*)",
+      "Bash(/dev/null head:*)",
+      "Bash(grep -rn \"MinimalParserPipeline\\\\|from src.parser.pipeline\\\\|from src.parser.parser_config\\\\|ParserInput\" C:/TeleSignalBot/src/ C:/TeleSignalBot/main.py C:/TeleSignalBot/parser_test/ --include=*.py)",
+      "Bash(grep -rn \"from src.execution\\\\|import src.execution\" C:/TeleSignalBot/src/ C:/TeleSignalBot/main.py C:/TeleSignalBot/parser_test/ --include=*.py)"
+    ]
+  }
+}

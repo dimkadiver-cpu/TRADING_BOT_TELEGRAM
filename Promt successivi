@@ -1,0 +1,5 @@
+  Leggi CLAUDE.md e docs/AUDIT.md. Step 8 è completato.
+  Il prossimo step è Step 9: listener robusto
+  (asyncio.Queue, recovery, hot reload come da PRD_listener.md).
+  Prima leggi docs/PRD_listener.md per capire i requisiti,
+  poi proponi un piano di implementazione.

@@ -1,86 +1,19 @@
-﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
-1383,INFO_ONLY,PARSED_WITH_WARNINGS,trader_c,3171748254,1047,,2025-12-19T09:21:37+00:00,"Друзья, привет! Админ на связи 👋
-У нас хорошие новости - пополнение в команде!
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,signal_id,linking_strategy,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1243,PARSED_WITH_WARNINGS,,"[trader#c]
 
-Мы долго смотрели на пустое место [trader#4]. Всё-таки жаль этого добряка!🥲
-Хотя...после его сигналов кто-то, возможно, до сих пор просыпается ночью с криком: «ГДЕ МОИ 27 ИКСОВ!?»😂
-В общем, уберите иконы, не нужно святой воды - мы решили: к цифре 4 пока не возвращаемся. 😇
-Оставим её жить в фольклоре нашего канала!
+Так, ребята, возникли вопросы по поводу вот этого сетапа: https://t.me/c/3171748254/1224
 
-Но зато! 
-Без всяких реинкарнаций и теней призраков прошлого...
-Представляем вам нового трейдера под тегом [trader#C].
+Дело в том, что прошедшей ночью (03:15 UTC+3) у меня сработал первый тейк по этой позиции. 
+В ночи не посмотрел цену закрытия и на автомате написал вам сообщение в канал о срабатывании тейка и переводе в БУ. 
+На деле же, мой тейк сработал на 87911 (проскальзывание или биржа дала сбой), тогда как в сигнале 1TP - 87950 и на Bybit, мы не дошли до тейка.
+Кого-то это могло смутить.
+Но!
+В данном случае ничего критичного не случилось:
+хотя в следующие полчаса после этого ""не произошедшего тейка"" произошёл откат до ≈ 87490 , - вас всё-равно не выбило бы в БУ ,если вы заходили в диапазоне 87400-87450 по сигналу.
 
-Как вы поняли, буквам мы в команде доверяем больше.😉
+А уже в 3 часа ночи вы бы зафиксировали тейк в любом случае, так как цена, наконец, достигла его на всех биржах.
 
-Теперь - коротко и по делу о работе с сигналами trader#C:
+Вот как-то так!👌
 
-По активам и формату:
-BTC / ETH - бодрый интрадей
-Альта - свинг, без суеты
-
-Таймфреймы:
-1h-4h, уточнение входа на 3м, по альте - 15м
-
-Риск:
-в рабочем диапазоне 1-5%
-
-По активности:
-в среднем около 10 сделок в неделю —
-не пулемёт, но и не «одна мысль в месяц»
-
-Ну и ещё!
-Интрадей часто будет выходить ближе к американской сессии (16:30-23.00 UTC+3) 
-Так что при желании можно садиться за терминал с фразой «Good morning, New Yorkers» и торговать под Фрэнка Синатру для полного погружения. 😎
-
-В общем, встречайте наш C-class в новом кузове 😉
-Дальше - стандартно:
-смотрим в деле. Рынок, как всегда, рассудит лучше любых описаний 🫡
-#админ",llm_unavailable,BTC,,,,,[],,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": ""new_york_session""}","[""llm_unavailable""]"
-1135,INFO_ONLY,PARSED_WITH_WARNINGS,trader_c,3171748254,1423,,2026-01-06T11:23:56+00:00,"Друзья, это снова #админ 👋
-По просьбам ТРЕЙДящихся - варианты фиксации прибыли по сигналам trader#C !
-
-Чтобы не создавалось впечатления, что у этого самурая нет цели - а есть только путь комиссия за фандинг. 😂
-Вот схема, которую он использует и рекомендует, если вы работаете с риском 1% на сделку.
-
-
-1️⃣ Если в сигнале 3 тейк-профита (TP1-TP3)
-
-Оптимальная фиксация:
-
-TP1 - 30%
-TP2 - 30%
-TP3 - 40%
-
-По R/R:
-
-Если забрали все тейки → RR ~ 1-3
-Если после TP2 перевели в БУ → RR ~ 1.47
-Если перевели в БУ уже после TP1 → RR ~ 1-0.5
-(Запомните и повторяйте себе перед сном: ""не трус, а консервативно распорядившийся депозитом...""😌)
-
----
-
-2️⃣ Если в сигнале 4 тейк-профита (TP1-TP4)
-
-Рекомендуемая фиксация:
-
-TP1 - 25%
-TP2 - 25%
-TP3 - 30%
-TP4 - 20%
-
-По R/R:
-
-Если забрали все тейки → RR ~ 1-3.4
-Если после TP3 перевели в БУ → RR ~ 1-2.45
-Если перевели в БУ уже после TP1 → RR ~ 1-0.6
-(Еще вариант для аффирмации: ""не бояка а долгосрочный участник рынка!"" 😂)
-
----
-
-Если коротко:
-Понятные режимы  частичной фиксации, без особой жадности aka «Хатико и его последний тейк», но и не паникёрство из разряда «увидел зелёную свечу - зафиксировался, перекрестился и удалил приложение биржи». 😂
-Вот как-то так.
-
-#админ",llm_unavailable,RR,,,,,"[1.0, 3.0, 30.0, 30.0, 40.0, 2.0, 1.0, 1.0, 4.0, 25.0, 25.0, 30.0, 20.0, 3.0, 1.0]",,,False,[],[],[],[],"{""cancel_scope"": null, ""close_fraction"": null, ""close_scope"": null, ""entry_plan_entries"": [], ""entry_plan_type"": null, ""entry_structure"": null, ""fill_state"": null, ""has_averaging_plan"": false, ""hashtags"": [], ""hit_target"": null, ""links"": [], ""new_stop_level"": null, ""result_mode"": null, ""time_hint"": null}","[""llm_unavailable""]"
+По итогу:  сделка в работе, первый тейк взяли, перевелись в БУ.
+Всем профита!✊️",llm_unavailable,,,,,UTC,,1224,reply_or_link,,,,classified=SETUP_INCOMPLETE | profile_parser=trader_c,1,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.75; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0
