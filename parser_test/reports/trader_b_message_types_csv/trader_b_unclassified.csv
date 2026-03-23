@@ -1,1 +1,10 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
+1761,PARSED,475,"Тут позиция закрылась по SL, -1%",,,,,,,475,1,0,0,0,,
+894,PARSED,,"[trader#B]
+
+https://t.me/c/3171748254/1745 (-1%)
+
+https://t.me/c/3171748254/1744 (-1%)
+
+https://t.me/c/3171748254/1729 БУ",,,,,,,,3,0,0,0,,
+559,PARSED,2300,,,,,,,,2300,1,0,0,0,,

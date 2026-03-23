@@ -1,1 +1,279 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1977,PARSED,196,"[trader#В]
+
+Сделка полностью закрыта в + 3.6% к депозиту
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,196,signal,single,196,1,,,FULL,,TP,,,,,,,,0,0,0,
+1965,PARSED,150,"[trader#В]
+
+В связи с приходом btc в зону сопротивления и возможного продолжения по нему нисходящего движения - принял решение закрыть позицию по ARB 1к1 (в +1%) 
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,150,signal,single,150,1,,,FULL,,TP,,,,,,,,0,0,0,
+1907,PARSED,179,"[trader#В]
+
+Тут не актуально, лонгов открытых нет - ждём биток по 98к$, после чего будут рассматриваться новые возможности",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,,,0.68,,,,179,signal,single,179,1,,,,,,,,TARGETED,,,,,0,0,0,
+1840,PARSED,355,"[trader#В]
+
+$LTCUSDT update 
+
+Все пока идет по плану, стоп лосс переносим в БУ",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,355,signal,single,355,1,,ENTRY,,,,,,,,,,,0,0,0,
+1828,PARSED,392,"Принял решение закрыть сделку в бу, не нравится как снизу копят ликвидность",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,392,signal,single,392,1,,,FULL,,,,,,,,,,0,0,0,
+1816,PARSED,384,"[trader#В]
+
+Эта сделка тоже у нас ушла в БУ, ничего страшного это часть работы, скоро будем искать новые позиции",,,,,,,,,,0.68,,,,384,signal,single,384,1,,,,,,,,,,,,,0,0,0,
+1670,PARSED,658,"[trader#В]
+
+Стоп лосс переносим в бу( как указано на изображении)",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,658,signal,single,658,1,,ENTRY,,,,,,,,,,,0,0,0,
+1668,PARSED,661,"Закрылись в бу, слабый все еще рынок",,,,,,,,,,0.68,,,,661,signal,single,661,1,,,,,,,,,,,,,0,0,0,
+1604,PARSED,752,"[trader#В] 
+
+Не актуально, цели достигнуты без теста точки входа",,,U_TP_HIT,U_TP_HIT | U_CANCEL_PENDING_ORDERS,,,,,,0.68,,,,752,signal,single,752,1,,,,,TP,,,TARGETED,,,,,0,0,0,
+1572,PARSED,783,"[trader#В]
+
+Стоп лосс переносим в БУ - как указанно на изображении",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,783,signal,single,783,1,,ENTRY,,,,,,,,,,,0,0,0,
+1565,PARSED,798,"[trader#В]
+
+Сделка полностью закрыта по тейк профиту, с прибылью в 3.68%
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,798,signal,single,798,1,,,FULL,,TP,,,,,,,,0,0,0,
+1525,PARSED,830,"[trader#В]
+
+$TONUSDT update:
+
+Стоп лосс переносим на 1.553 тем самым делая позицию полностью без рисковой (см. изображение)",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,,,0.68,,,,830,signal,single,830,1,,1.553,,,,,,,,,,,0,0,0,
+1524,PARSED,831,"[trader#В]
+
+$LTCUSDT update:
+
+Так же стоп лосс переносим можно сказать в БУ (на отмету 79.88 - как указано на изображении)",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,,,0.68,,,,831,signal,single,831,1,,79.88,,,,,,,,,,,0,0,0,
+1521,PARSED,853,"[trader#В]
+
+Так же по ICP - такой же обидный стоп в пипс (-1%) думаю в целом идея себя отработает",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,853,signal,single,853,1,,,FULL,,STOP,,,,,,,,0,0,0,
+1518,PARSED,,"[trader#В]
+
+У нас 4 открытые позиции, так как чарт показывает очень грязный прайс экшен принимаю решение закрыть все позиции по текущим, немного позже распишу итоги по позициям",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,,signal,unknown,,0,,,ALL_ALL,,,,,,,,,,0,0,0,
+1517,PARSED,852,"[trader#В]
+
+Закрыта вручную (-0.5%)",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,852,signal,single,852,1,,,FULL,,,,,,,,,,0,0,0,
+1516,PARSED,859,"[trader#В]
+
+Закрыта в районе БУ",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,859,signal,single,859,1,,,FULL,,,,,,,,,,0,0,0,
+1515,PARSED,830,"[trader#В]
+
+Закрыта в +2.3%",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,,,,,,0.68,,,,830,signal,single,830,1,,,FULL,,TP,,,,,,,,0,0,0,
+1514,PARSED,831,"[trader#В]
+
+Закрыта в + 0.5%
+
+В целом мы в плюсе, всех с профитом 💸💸💸
+Как только появится ясная картина будем искать новые возможности для открытия качественных позиций",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,,,,,,0.68,,,,831,signal,single,831,1,,,FULL,,TP,,,,,,,,0,0,0,
+1511,PARSED,869,"[trader#B]
+
+По эфиру у нас картина мне не нравится, копят много ликвидности снизу, для дальнейшего его снятия, поэтому думаю будет целесообразно закрыть позицию по текущим в -0.5% 
+
+И уже поэтом после снятия всей этой ликвидности искать новые возможности 
+
+Выше у нас так же много ликвидности и открытий FVG, поэтому еще будут возможности",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,869,signal,single,869,1,,,FULL,,,,,,,,,,0,0,0,
+1478,PARSED,911,"[trader#В]
+
+Стоп лосс (-1%)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,911,signal,single,911,1,,,FULL,,STOP,,,,,,,,0,0,0,
+1426,PARSED,988,"[trader#В]
+
+Стоп лосс переносим в БУ на уровень 2941 (см. изображение)",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,,,0.68,,,,988,signal,single,988,1,,2941.0,,,,,,,,,,,0,0,0,
+1424,PARSED,,"[trader#В]
+
+Эфир закрылся в БУ, zec по стоп лоссу",trader_b_update_missing_target,trader_b_update_missing_target,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.55,,,,,signal,unknown,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1421,PARSED,996,"Eth стоп
+
+Zec закрываю в +0.5",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,,,,,,0.68,,,,996,signal,single,996,1,,,FULL,,TP,,,,,,,,0,0,0,
+1386,PARSED,1039,"[trader#В]
+
+Стоп лосс переносим в БУ",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,1039,signal,single,1039,1,,ENTRY,,,,,,,,,,,0,0,0,
+1353,PARSED,,"[trader#B]
+
+https://t.me/c/3171748254/1075 
+
+https://t.me/c/3171748254/1076 
+
+Закрываю сделки, не нравится как они себя ведут, зажаты в консолидации , sol уходит в БУ , eth в -0.4%",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,,signal_group,multiple,1075 | 1076,2,,,FULL,,,,,,,,,,0,0,0,
+1344,PARSED,,"[trader#B]
+
+https://t.me/c/3171748254/1102
+
+https://t.me/c/3171748254/1100
+
+Закрылись по стопу (-1.5% в общем)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,,signal_group,multiple,1102 | 1100,2,,,FULL,,STOP,,,,,,,,0,0,0,
+1339,PARSED,1107,"[trader#B]
+
+Стоп лосс переносим под минимум (как указанно на изображении), тем самым сокращаем его до 0.5% 
+В остальном пока в принципе все актуально",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,1107,signal,single,1107,1,,ENTRY,,,,,,,,,,,0,0,0,
+1338,PARSED,1114,"[trader#B]
+
+Закрываю по текущим в небольшой + (≈0.2%), цена к сожалению немного не дошла до тейка и откатилась",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,1114,signal,single,1114,1,,,FULL,,,,,,,,,,0,0,0,
+1329,PARSED,1117,"[trader#B] 
+
+Закрываю в БУ",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,1117,signal,single,1117,1,,,FULL,,,,,,,,,,0,0,0,
+1318,PARSED,1127,"[trader#B]
+
+Стоп лосс переносим в БУ как указано на картине",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,1127,signal,single,1127,1,,ENTRY,,,,,,,,,,,0,0,0,
+1316,PARSED,1138,"[trader#B]
+
+Закрываю в +0.5%
+Очень слабо себя ведет",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,,,,,,0.68,,,,1138,signal,single,1138,1,,,FULL,,TP,,,,,,,,0,0,0,
+1306,PARSED,1118,"[trader#B]
+
+Тут у нас была еще сделка по Ltc, так нарратив по битку шортовый у меня, закрываю ее по текущим, это в -0.5% 
+
+Больше пока нет открытых сделок, слежу за рынком, ожидаю новые возможности",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,1118,signal,single,1118,1,,,FULL,,,,,,,,,,0,0,0,
+1282,PARSED,1181,"[trader#B]
+
+Стоп лосс в БУ переводим",,,,,,,,,,0.68,,,,1181,signal,single,1181,1,,,,,,,,,,,,,0,0,0,
+1263,PARSED,1225,"[trader#B]
+
+Не актуально, цена достигла цели, однако без теста нашей зоны интереса",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,,,0.68,,,,1225,signal,single,1225,1,,,,,,,,TARGETED,,,,,0,0,0,
+1259,PARSED,1228,"[trader#B]
+
+Сделка полностью реализована в +3.3%
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1228,signal,single,1228,1,,,FULL,,TP,,,,,,,,0,0,0,
+1237,PARSED,1238,"[trader#B]
+
+Сделка полностью реализована в +2.5% 
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1238,signal,single,1238,1,,,FULL,,TP,,,,,,,,0,0,0,
+1226,PARSED,1274,"[trader#B]
+
+Эту позицию закрываю в районе БУ) крипто рынок выглядит не однозначно, лучшее что можно сделать, это отдохнуть от графиков и подвести итоги в эти предновогодние дни",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1274,signal,single,1274,1,,,FULL,,,,,,,,,,0,0,0,
+1193,PARSED,,"[trader#B]
+
+https://t.me/c/3171748254/1321 - XRP
+
+https://t.me/c/3171748254/1323 - BCH
+
+По обоим сделкам - стопы переносим в БУ",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,,signal_group,multiple,1321 | 1323,2,,ENTRY,,,,,,,,,,,0,0,0,
+1187,PARSED,1323,"[trader#B]
+
+Сделка полностью реализована в +5% 
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1323,signal,single,1323,1,,,FULL,,TP,,,,,,,,0,0,0,
+1179,PARSED,1355,"[trader#B]
+
+Стоп лосс переводим в БУ",,,,,,,,,,0.68,,,,1355,signal,single,1355,1,,,,,,,,,,,,,0,0,0,
+1169,PARSED,1367,"[trader#B] 
+
+В итоге наша сделка полностью себя реализовала, (если бы не переносили стоп в БУ) однако тут «если бы» «кабы» не катят - риск менеджмент и дисциплина всегда все решает (ну и конечно же стратегия, знания) 
+
+Идем дальше … 🤝",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1367,signal,single,1367,1,,,,,,,,,,,,,0,0,0,
+1158,PARSED,1368,"[trader#B]
+
+Закрываю в БУ, очень слабо себя показывает",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,1368,signal,single,1368,1,,,FULL,,,,,,,,,,0,0,0,
+1146,PARSED,1394,"[trader#B]
+
+$BTCUSDT Update:
+
+Стоп лосс переносим за указанный минимум, тем самым сокращаем риск до 0.5%",,,U_MOVE_STOP,U_MOVE_STOP,,,,,,0.68,,,,1394,signal,single,1394,1,,,,,,,,,,,,,0,0,0,
+1138,PARSED,1321,"[trader#B]
+
+$XRPUSDT Update:
+
+Сделка полностью реализована в +8% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1321,signal,single,1321,1,,,FULL,,TP,,,,,,,,0,0,0,
+1137,PARSED,1394,"[trader#B]
+
+$BTCUSDT Update:
+
+Сделка по биткоину не заставила нас долго ждать и она так же полностью реализована в +2% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1394,signal,single,1394,1,,,FULL,,TP,,,,,,,,0,0,0,
+1073,PARSED,1488,"[trader#B]
+
+$BCHUSDT Update:
+
+Стоп лосс переносим в + как указанно на изображении",,,U_MOVE_STOP,U_MOVE_STOP,,,,,,0.68,,,,1488,signal,single,1488,1,,,,,,,,,,,,,0,0,0,
+1067,PARSED,1517,"[trader#B]
+
+$BCHUSDT Update:
+
+На Bybit, SL который переводили под указанный минимум снят не был, сделка закрывается по текущим в ≈ +1.4% к депозиту 
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1517,signal,single,1517,1,,,FULL,,TP,,,,,,,,0,0,0,
+1007,PARSED,1589,"[trader#B]
+
+$SOLUSDT Update:
+
+Стоп лосс переносим в БУ",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,1589,signal,single,1589,1,,ENTRY,,,,,,,,,,,0,0,0,
+998,PARSED,1602,"[trader#B]
+
+$SOLUSDT Update:
+
+Сделка полностью реализована в +3% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,1602,signal,single,1602,1,,,FULL,,TP,,,,,,,,0,0,0,
+910,PARSED,1715,"[trader#B]
+
+$ETHUSDT Update:
+
+Стоп лосс переносим за указанный минимум, в БУ",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,,,0.68,,,,1715,signal,single,1715,1,,ENTRY,,,,,,,,,,,0,0,0,
+829,PARSED,1841,"[trader#B]
+
+Стоп (-1%)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,1841,signal,single,1841,1,,,FULL,,STOP,,,,,,,,0,0,0,
+825,PARSED,1852,"[trader#B]
+
+$LTCUSDT Update:
+
+Стоп лосс переносим в БУ",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,1852,signal,single,1852,1,,ENTRY,,,,,,,,,,,0,0,0,
+552,PARSED,2300,"[trader #B]
+
+Стоп лосс переносим в БУ, как указано на изображении",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,,,,,,0.68,,,,2300,signal,single,2300,1,,ENTRY,,,,,,,,,,,0,0,0,
+550,PARSED,2272,"[trader #B]
+
+Эту сделку закрываем в БУ, открываем по нему новую",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,2272,signal,single,2272,1,,,FULL,,,,,,,,,,0,0,0,
+547,PARSED,2314,"[trader #B]
+
+Сделка полностью реализована в +2.5% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,2314,signal,single,2314,1,,,FULL,,TP,,,,,,,,0,0,0,
+502,PARSED,2362,"[trader #B]
+
+Стоп лосс передвигаем в БУ, как это указано на изображении",,,,,,,,,,0.68,,,,2362,signal,single,2362,1,,,,,,,,,,,,,0,0,0,
+457,PARSED,2420,"[trader #B]
+
+Сделку пока закрываем в ≈ (+1%) 
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,2420,signal,single,2420,1,,,FULL,,TP,,,,,,,,0,0,0,
+454,PARSED,2272,"[trader #B]
+
+
+Закрываем сделку по текущим(+0.3%) так как показывает слабость, ждём новые возможности",,,U_CLOSE_FULL,U_CLOSE_FULL,,,,,,0.68,,,,2272,signal,single,2272,1,,,FULL,,,,,,,,,,0,0,0,
+273,PARSED,2690,"[trader #B]
+
+Пока не актуально, цена ушла высоко, если далее появится ясная картина - будем искать твх повторно",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,,,0.68,,,,2690,signal,single,2690,1,,,,,,,,TARGETED,,,,,0,0,0,
+242,PARSED,2696,"[trader #B]
+
+Стоп лосс передвигаем в БУ",,,,,,,,,,0.68,,,,2696,signal,single,2696,1,,,,,,,,,,,,,0,0,0,
+200,PARSED,2696,"[trader #B]
+
+Закрываем сделку по SUI в +2.2% к депозиту 
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,2696,signal,single,2696,1,,,FULL,,TP,,,,,,,,0,0,0,
+198,PARSED,2783,"[trader #B]
+
+Тут стоп, (-1%)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,2783,signal,single,2783,1,,,FULL,,STOP,,,,,,,,0,0,0,
+167,PARSED,2827,"[trader #B]
+
+Стоп (-1%)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,2827,signal,single,2827,1,,,FULL,,STOP,,,,,,,,0,0,0,
+162,PARSED,2840,"[trader #B] 
+
+Стоп (-1%)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,2840,signal,single,2840,1,,,FULL,,STOP,,,,,,,,0,0,0,
+89,PARSED,2934,"[trader #B]
+
+Стоп передвигаем в БУ",,,,,,,,,,0.68,,,,2934,signal,single,2934,1,,,,,,,,,,,,,0,0,0,
+79,PARSED,2934,"[trader #B]
+
+Сделка полностью реализована в +5% к депозиту
+
+Поздравляю с профитом 💸💸💸",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.68,,,,2934,signal,single,2934,1,,,FULL,,TP,,,,,,,,0,0,0,
+37,PARSED,2996,"[trader #B]
+
+Стоп (-1%)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,,,,,,0.68,,,,2996,signal,single,2996,1,,,FULL,,STOP,,,,,,,,0,0,0,

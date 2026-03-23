@@ -1,1 +1,812 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,completeness,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1975,PARSED,,"[trader#В]
+
+$ARBUSDT - Лонг (сделка на споте)
+
+Вход: 0.3007
+
+Тейк профит: 0.316
+
+Стоп лосс: 0.2956
+
+Риск на сделку 1%, соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ARBUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.3007,0.2956,0.316,1,1975,,0,,,0,0,0,
+1866,PARSED,354,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 98
+
+Тейк профит: 115
+
+Стоп лосс: 93.2
+
+Риск на сделку 1%, соотношение РР 1:3.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:98,93.2,115,1,1866,354,1,,,0,0,0,
+1832,PARSED,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 95555
+
+Тейк профит: 97500
+
+Стоп лосс: 94840
+
+Риск на сделку выходит менее 1% - так как сделала на споте(т.е. заходить можно всем объемом, и тем самым риск будет менее 1%), потенциальная прибыль 2%
+
+Соотношение РР 1:2.7",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:95555,94840,97500,1,1832,,0,,,0,0,0,
+1775,PARSED,,"[trader#В]
+
+$NEARUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.3
+
+Тейк профит: 3.8
+
+Стоп лосс: 2.178
+
+Риск на сделку 1%, соотношение РР 1:12.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,NEARUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.3,2.178,3.8,1,1775,,0,,,0,0,0,
+1673,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 140.4
+
+Тейк профит: 145.76
+
+Стоп лосс: 138.95
+
+Риск на сделку 1%, соотношение РР 1:3.7",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:140.4,138.95,145.76,1,1673,,0,,,0,0,0,
+1606,PARSED,,"[trader#В]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.357
+
+Тейк профит: 1.42
+
+Стоп лосс: 1.336
+
+Риск на сделку 1%, соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.357,1.336,1.42,1,1606,,0,,,0,0,0,
+1582,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 139.9
+
+Тейк профит: 146
+
+Стоп лосс: 137.9
+
+Риск на сделку 1%, соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:139.9,137.9,146,1,1582,,0,,,0,0,0,
+1570,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 141.1
+
+Тейк профит: 146.3
+
+Стоп лосс: 140.05
+
+Риск на сделку менее 1%, потенциальная прибыль 3.6%
+Соотношение ≈ РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:141.1,140.05,146.3,1,1570,,0,,,0,0,0,
+1545,PARSED,,"[trader#В]
+
+$TONUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.533
+
+Тейк профит: 1.735
+
+Стоп лосс: 1.485
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,TONUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.533,1.485,1.735,1,1545,,0,,,0,0,0,
+1544,PARSED,,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 80.5
+
+Тейк профит: 97.55
+
+Стоп лосс: 75
+
+Риск на сделку 1%
+Соотношение РР 1:3.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:80.5,75,97.55,1,1544,,0,,,0,0,0,
+1533,PARSED,,"[trader#В]
+
+$APTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.705
+
+Тейк профит: 1.78
+
+Стоп лосс: 1.675
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,APTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.705,1.675,1.78,1,1533,,0,,,0,0,0,
+1527,PARSED,,"[trader#В]
+
+$TWTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.009
+
+Тейк профит: 1.1135
+
+Стоп лосс: 0.9841
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,TWTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.009,0.9841,1.1135,1,1527,,0,,,0,0,0,
+1526,PARSED,,"[trader#В]
+
+$ICPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3.475
+
+Тейк профит: 4.515
+
+Стоп лосс: 3.345
+
+Риск на сделку 1%
+Соотношение РР 1:8",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ICPUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:3.475,3.345,4.515,1,1526,,0,,,0,0,0,
+1520,PARSED,,"[trader#В]
+
+$ATOMUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.235
+
+Тейк профит: 2.572
+
+Стоп лосс: 2.155
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ATOMUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.235,2.155,2.572,1,1520,,0,,,0,0,0,
+1513,PARSED,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3125
+
+Тейк профит: 3260.5
+
+Стоп лосс: 3092
+
+Риск на сделку 1%
+Соотношение РР 1:4.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:3125,3092,3260.5,1,1513,,0,,,0,0,0,
+1498,PARSED,,"[trader#В]
+
+$TWTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.002
+
+Тейк профит: 1.1123
+
+Стоп лосс: 0.978
+
+Риск на сделку 1%
+Соотношение РР 1:4.6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,TWTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.002,0.978,1.1123,1,1498,,0,,,0,0,0,
+1486,PARSED,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 92370
+
+Тейк профит: 96350
+
+Стоп лосс: 91450
+
+Риск на сделку 1%
+Соотношение РР 1:4.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:92370,91450,96350,1,1486,,0,,,0,0,0,
+1462,PARSED,,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 79.5
+
+Тейк профит: 88.5
+
+Стоп лосс: 78
+
+Риск на сделку 1%
+Соотношение РР 1:6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:79.5,78,88.5,1,1462,,0,,,0,0,0,
+1428,PARSED,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2940
+
+Тейк профит: 3028.5
+
+Стоп лосс: 2913
+
+Риск на сделку 1%, потенциальная прибыль 3%
+Соотношение РР 1:3.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2940,2913,3028.5,1,1428,,0,,,0,0,0,
+1427,PARSED,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 404
+
+Тейк профит: 419.2
+
+Стоп лосс: 396.4
+
+Риск на сделку 1%
+Соотношение РР 1:2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:404,396.4,419.2,1,1427,,0,,,0,0,0,
+1423,PARSED,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 392.5
+
+Тейк профит: 420
+
+Стоп лосс: 387
+
+Риск на сделку 1%
+Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:392.5,387,420,1,1423,,0,,,0,0,0,
+1422,PARSED,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2945
+
+Тейк профит: 3025.5
+
+Стоп лосс: 2918.5
+
+Риск на сделку 1%
+Соотношение РР 1:3 (потенциальная прибыль 2.7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2945,2918.5,3025.5,1,1422,,0,,,0,0,0,
+1420,PARSED,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 398.15
+
+Тейк профит: 420
+
+Стоп лосс: 394
+
+Риск на сделку 1%
+Соотношение РР ≈1:5.3
+
+UPD: -1%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:398.15,394,420,1,1420,,0,,,0,0,0,
+1389,PARSED,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 400
+
+Тейк профит: 420
+
+Стоп лосс: 396
+
+Риск на сделку 1%
+Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:400,396,420,1,1389,,0,,,0,0,0,
+1365,PARSED,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2991
+
+Тейк профит: 3051
+
+Стоп лосс: 2974
+
+Риск на сделку 0.6%
+Потенциальная прибыль 2%
+Соотношение РР 1:3.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2991,2974,3051,1,1365,,0,,,0,0,0,
+1364,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 126.15
+
+Тейк профит: 129.31
+
+Стоп лосс: 125.52
+
+Риск на сделку 0.5%
+Потенциальная прибыль 2.5%
+Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:126.15,125.52,129.31,1,1364,,0,,,0,0,0,
+1347,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125.9
+
+Тейк профит: 129.7
+
+Стоп лосс: 124.8
+
+Риск на сделку 1%
+Потенциальная прибыль 3%
+Соотношение РР 1:3.45",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:125.9,124.8,129.7,1,1347,,0,,,0,0,0,
+1346,PARSED,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 88435
+
+Тейк профит: 90205
+
+Стоп лосс: 88055
+
+Риск на сделку 0.5%
+Потенциальная прибыль 2%
+Соотношение РР 1:4.66",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:88435,88055,90205,1,1346,,0,,,0,0,0,
+1343,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125(+- по текущим)
+
+Тейк профит: 129.4
+
+Стоп лосс: 124
+
+Риск на сделку 0.8%
+Потенциальная прибыль 3.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:125,124,129.4,1,1343,,0,,,0,0,0,
+1336,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125.15
+
+Тейк профит: 129.32
+
+Стоп лосс: 124.92
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:125.15,124.92,129.32,1,1336,,0,,,0,0,0,
+1335,PARSED,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 77.8 (+- по текущим)
+
+Тейк профит: 88
+
+Стоп лосс: 75.8
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:77.8,75.8,88,1,1335,,0,,,0,0,0,
+1327,PARSED,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 126.5
+
+Тейк профит: 129.67
+
+Стоп лосс: 125.5
+
+Риск на сделку 0.8%
+Потенциальная прибыль 2.5%
+
+Ps: Либо я его, либо он меня",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:126.5,125.5,129.67,1,1327,,0,,,0,0,0,
+1291,PARSED,,"[trader#B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 87400
+
+Тейк профит: 90900
+
+Стоп лосс: 86525
+
+Риск на сделку 1%
+Соотношение РР 1:4
+
+Upd: БУ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:87400,86525,90900,1,1291,,0,,,0,0,0,
+1264,PARSED,,"[trader#B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.405
+
+Тейк профит: 1.4335
+
+Стоп лосс: 1.394
+
+Риск на сделку 0.8%
+Потенциальная прибыль 2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.405,1.394,1.4335,1,1264,,0,,,0,0,0,
+1262,PARSED,,"[trader#B]
+
+$NEARUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.539
+
+Тейк профит: 1.59
+
+Стоп лосс: 1.524
+
+Риск на сделку 1%
+Соотношение РР 1:3.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,NEARUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.539,1.524,1.59,1,1262,,0,,,0,0,0,
+1256,PARSED,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 618.8
+
+Тейк профит: 634.3
+
+Стоп лосс: 612.7
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:618.8,612.7,634.3,1,1256,,0,,,0,0,0,
+1233,PARSED,,"[trader#B]
+
+$ZROUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.264
+
+Тейк профит: 1.381
+
+Стоп лосс: 1.238
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZROUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.264,1.238,1.381,1,1233,,0,,,0,0,0,
+1207,PARSED,,"[trader#B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.869
+
+Тейк профит: 2.31
+
+Стоп лосс: 1.814
+
+Риск на сделку 1%
+Соотношение РР 1:8",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,XRPUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.869,1.814,2.31,1,1207,,0,,,0,0,0,
+1205,PARSED,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 595
+
+Тейк профит: 640
+
+Стоп лосс: 586
+
+Риск на сделку 1%
+Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:595,586,640,1,1205,,0,,,0,0,0,
+1184,PARSED,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте ⭐️)
+
+Вход: 632
+
+Тейк профит: 651.6
+
+Стоп лосс: 626.3
+
+Риск на сделку 1%
+Соотношение РР 1:3.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:632,626.3,651.6,1,1184,,0,,,0,0,0,
+1173,PARSED,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 81.95
+
+Тейк профит: 87.95
+
+Стоп лосс: 80.77
+
+Риск на сделку 1%
+Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:81.95,80.77,87.95,1,1173,,0,,,0,0,0,
+1156,PARSED,,"[trader#B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 92850
+
+Тейк профит: 94740
+
+Стоп лосс: 92320
+
+Риск на сделку 0.6%
+Потенциальная прибыль 2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:92850,92320,94740,1,1156,,0,,,0,0,0,
+1092,PARSED,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 634.2
+
+Тейк профит: 673
+
+Стоп лосс: 624.5
+
+Риск на сделку 1%
+Соотношение РР 1:4",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:634.2,624.5,673,1,1092,,0,,,0,0,0,
+1019,PARSED,,"[trader#B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 142.7
+
+Тейк профит: 147.1
+
+Стоп лосс: 141.25
+
+Риск на сделку 1%
+Соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:142.7,141.25,147.1,1,1019,,0,,,0,0,0,
+994,PARSED,,"[trader#B]
+
+$DOTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.25
+
+Тейк профит: 2.41
+
+Стоп лосс: 2.215
+
+Риск на сделку 1%
+Соотношение РР 1:4.57",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,DOTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.25,2.215,2.41,1,994,,0,,,0,0,0,
+972,PARSED,,"[trader#B]
+
+$DOTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.233
+
+Тейк профит: 2.404
+
+Стоп лосс: 2.195
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,DOTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.233,2.195,2.404,1,972,,0,,,0,0,0,
+961,PARSED,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3380
+
+Тейк профит: 3465
+
+Стоп лосс: 3357
+
+Риск на сделку 0.7%
+Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:3380,3357,3465,1,961,,0,,,0,0,0,
+918,PARSED,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3290.5(+- с текущих)
+
+Тейк профит: 3455
+
+Стоп лосс: 3264.3
+
+Риск на сделку 0.8%
+Потенциальная прибыль 5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:3290.5,3264.3,3455,1,918,,0,,,0,0,0,
+902,PARSED,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 73.5
+
+Тейк профит: 88.5
+
+Стоп лосс: 71
+
+Риск на сделку 1%
+Потенциальная прибыль 6%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:73.5,71,88.5,1,902,,0,,,0,0,0,
+901,PARSED,,"[trader#B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 142.75
+
+Тейк профит: 149.2
+
+Стоп лосс: 141.5
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:142.75,141.5,149.2,1,901,,0,,,0,0,0,
+847,PARSED,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2955
+
+Тейк профит: 3060
+
+Стоп лосс: 2920
+
+Риск на сделку 1%
+Потенциальная прибыль 3%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2955,2920,3060,1,847,,0,,,0,0,0,
+834,PARSED,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68.88
+
+Тейк профит: 72
+
+Стоп лосс: 68.2
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:68.88,68.2,72,1,834,,0,,,0,0,0,
+827,PARSED,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68.3
+
+Тейк профит: 71.9
+
+Стоп лосс: 67.62
+
+Риск на сделку 1%
+Потенциальная прибыль 5.2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:68.3,67.62,71.9,1,827,,0,,,0,0,0,
+815,PARSED,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2965
+
+Тейк профит: 3084
+
+Стоп лосс: 2935.5
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2965,2935.5,3084,1,815,,0,,,0,0,0,
+795,PARSED,,"[trader#B]
+
+$ARBUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.171
+
+Тейк профит: 0.183
+
+Стоп лосс: 0.167
+
+Риск на сделку 1%
+Потенциальная прибыль 3%
+
+Upd: ожидания не подтвердились, (-1%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ARBUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.171,0.167,0.183,1,795,,0,,,0,0,0,
+583,PARSED,,"[trader #B]
+
+$ZKUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.022
+
+Тейк профит: 0.02725
+
+Стоп лосс: 0.0205
+
+Риск на сделку 1%
+Потенциальная прибыль 3.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZKUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.022,0.0205,0.02725,1,583,,0,,,0,0,0,
+565,PARSED,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 66840
+
+Тейк профит: 68510
+
+Стоп лосс: 66370
+
+Риск на сделку 0.7%
+Потенциальная прибыль 2.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:66840,66370,68510,1,565,,0,,,0,0,0,
+549,PARSED,,"[trader #B]
+
+$ZKUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.022
+
+Тейк профит: 0.0273
+
+Стоп лосс: 0.02085
+
+Риск на сделку 1%
+Потенциальная прибыль 4.7%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZKUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.022,0.02085,0.0273,1,549,,0,,,0,0,0,
+507,PARSED,,"[trader #B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 80.4
+
+Тейк профит: 90
+
+Стоп лосс: 78.8
+
+Риск на сделку 1%
+Потенциальная прибыль 6%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:80.4,78.8,90,1,507,,0,,,0,0,0,
+464,PARSED,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.972
+
+Тейк профит: 1.036
+
+Стоп лосс: 0.956
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.972,0.956,1.036,1,464,,0,,,0,0,0,
+274,PARSED,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 63200
+
+Тейк профит: 66670
+
+Стоп лосс: 62510
+
+Риск на сделку 1%
+Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:63200,62510,66670,1,274,,0,,,0,0,0,
+271,PARSED,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.885
+
+Тейк профит: 1.055
+
+Стоп лосс: 0.8572
+
+Риск на сделку 1%
+Соотношение РР 1:6.12",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.885,0.8572,1.055,1,271,,0,,,0,0,0,
+202,PARSED,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2035 (по текущим) 
+
+Тейк профит: 2162
+
+Стоп лосс: 2000
+
+Риск на сделку 1%
+Соотношение РР 1:3.63",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:2035,2000,2162,1,202,,0,,,0,0,0,
+173,PARSED,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 67400
+
+Тейк профит: 72600
+
+Стоп лосс: 66250
+
+Риск на сделку 1%
+Соотношение РР 1:4.52",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:67400,66250,72600,1,173,,0,,,0,0,0,
+163,PARSED,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: по текущим 
+
+Тейк профит: 2160
+
+Стоп лосс: 1972
+
+Риск на сделку 1%
+Соотношение РР 1:6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET,1972,2160,1,163,,0,,,0,0,0,
+93,PARSED,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2054 (по текущим)
+
+Тейк профит: 2160
+
+Стоп лосс: 2033
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:2054,2033,2160,1,93,,0,,,0,0,0,
+41,PARSED,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 71000
+
+Тейк профит: 74200
+
+Стоп лосс: 70350
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:71000,70350,74200,1,41,,0,,,0,0,0,
