@@ -68,20 +68,25 @@ def _derive_fields(normalized: dict[str, Any], *, raw_message_id: int | str | No
     linking = normalized.get("linking") if isinstance(normalized.get("linking"), dict) else {}
     risk_plan = normalized.get("risk_plan") if isinstance(normalized.get("risk_plan"), dict) else {}
     results_v2 = normalized.get("results_v2") if isinstance(normalized.get("results_v2"), list) else []
+    actions_structured = _as_list(normalized.get("actions_structured"))
 
     entries = _coerce_entries(
+        _entries_from_entity_range(entities),
+        _entries_from_actions(actions_structured),
         entry_plan.get("entries") if isinstance(entry_plan.get("entries"), list) else None,
         normalized.get("entries"),
         entities.get("entry_plan_entries"),
     )
     take_profits = _coerce_take_profits(
+        entities.get("take_profits"),
+        _take_profits_from_actions(actions_structured),
         risk_plan.get("take_profits") if isinstance(risk_plan.get("take_profits"), list) else None,
         normalized.get("take_profit_prices"),
         entities.get("take_profit_prices"),
     )
     target_refs = _canonical_target_refs(
         normalized=normalized,
-        actions_structured=_as_list(normalized.get("actions_structured")),
+        actions_structured=actions_structured,
         target_scope=target_scope,
         linking=linking,
         entities=entities,
@@ -92,6 +97,7 @@ def _derive_fields(normalized: dict[str, Any], *, raw_message_id: int | str | No
         target_refs=target_refs,
         target_scope=target_scope,
         linking=linking,
+        entities=entities,
     )
     target_scope_kind, target_scope_value = _derive_target_scope_summary(normalized=normalized, target_scope=target_scope, target_refs=target_refs)
     new_stop_level = _first_action_field(normalized, "new_stop_level") or _scalar(entities.get("new_stop_level"))
@@ -135,7 +141,7 @@ def _derive_fields(normalized: dict[str, Any], *, raw_message_id: int | str | No
         "has_averaging_plan": _bool_scalar(normalized.get("has_averaging_plan") if normalized.get("has_averaging_plan") is not None else entry_plan.get("has_averaging_plan") if entry_plan else entities.get("has_averaging_plan")),
         "entry_count": str(len(entries)),
         "entries_summary": _summarize_entries(entries),
-        "stop_loss_price": _format_float(normalized.get("stop_loss_price") or _risk_stop_price(risk_plan)),
+        "stop_loss_price": _format_float(_first_numeric_value(entities.get("stop_loss"), normalized.get("stop_loss_price"), _risk_stop_price(risk_plan))),
         "tp_prices": _join_number_list(take_profits),
         "tp_count": str(len(take_profits)),
         "signal_id": signal_id,
@@ -197,7 +203,11 @@ def _derive_signal_id(
     target_refs: list[int],
     target_scope: dict[str, Any],
     linking: dict[str, Any],
+    entities: dict[str, Any],
 ) -> str:
+    entity_signal_id = entities.get("signal_id")
+    if entity_signal_id is not None and _scalar(entity_signal_id):
+        return _scalar(entity_signal_id)
     if _scalar(normalized.get("message_type")) == "NEW_SIGNAL":
         return _scalar(normalized.get("root_ref") or raw_message_id)
     for candidate in (
@@ -276,6 +286,45 @@ def _coerce_entries(*values: Any) -> list[dict[str, Any]]:
     return []
 
 
+def _entries_from_entity_range(entities: dict[str, Any]) -> list[dict[str, Any]]:
+    if not isinstance(entities, dict):
+        return []
+    entry_range = entities.get("entry")
+    if isinstance(entry_range, list):
+        prices = [float(item) for item in entry_range if isinstance(item, (int, float))]
+        if len(prices) >= 2:
+            return [
+                {"role": "RANGE_LOW", "order_type": "LIMIT", "price": prices[0]},
+                {"role": "RANGE_HIGH", "order_type": "LIMIT", "price": prices[1]},
+            ]
+    low = entities.get("entry_range_low")
+    high = entities.get("entry_range_high")
+    if isinstance(low, (int, float)) and isinstance(high, (int, float)):
+        return [
+            {"role": "RANGE_LOW", "order_type": "LIMIT", "price": float(low)},
+            {"role": "RANGE_HIGH", "order_type": "LIMIT", "price": float(high)},
+        ]
+    return []
+
+
+def _entries_from_actions(actions_structured: list[Any]) -> list[dict[str, Any]]:
+    for action in actions_structured:
+        if not isinstance(action, dict):
+            continue
+        entries = action.get("entries")
+        if isinstance(entries, list) and any(isinstance(item, dict) for item in entries):
+            return [item for item in entries if isinstance(item, dict)]
+        entry_range = action.get("entry_range")
+        if isinstance(entry_range, list):
+            prices = [float(item) for item in entry_range if isinstance(item, (int, float))]
+            if len(prices) >= 2:
+                return [
+                    {"role": "RANGE_LOW", "order_type": "LIMIT", "price": prices[0]},
+                    {"role": "RANGE_HIGH", "order_type": "LIMIT", "price": prices[1]},
+                ]
+    return []
+
+
 def _coerce_take_profits(*values: Any) -> list[float]:
     for value in values:
         items = _coerce_list(value)
@@ -289,6 +338,19 @@ def _coerce_take_profits(*values: Any) -> list[float]:
                     prices.append(float(price))
             elif isinstance(item, (int, float)):
                 prices.append(float(item))
+        if prices:
+            return prices
+    return []
+
+
+def _take_profits_from_actions(actions_structured: list[Any]) -> list[float]:
+    for action in actions_structured:
+        if not isinstance(action, dict):
+            continue
+        items = action.get("take_profits")
+        if not isinstance(items, list):
+            continue
+        prices = [float(item) for item in items if isinstance(item, (int, float))]
         if prices:
             return prices
     return []
@@ -318,6 +380,22 @@ def _extract_int_list(value: Any) -> list[int]:
     items = _coerce_list(value)
     out: list[int] = []
     for item in items:
+        if isinstance(item, dict):
+            ref = item.get("ref")
+            if isinstance(ref, bool):
+                continue
+            if isinstance(ref, int):
+                out.append(ref)
+                continue
+            if isinstance(ref, float) and ref.is_integer():
+                out.append(int(ref))
+                continue
+            if isinstance(ref, str):
+                try:
+                    out.append(int(ref.strip()))
+                except ValueError:
+                    continue
+            continue
         if isinstance(item, bool):
             continue
         if isinstance(item, int):

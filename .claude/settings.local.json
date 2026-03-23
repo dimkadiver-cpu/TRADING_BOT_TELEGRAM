@@ -23,7 +23,12 @@
       "Bash(python:*)",
       "Bash(/dev/null head:*)",
       "Bash(grep -rn \"MinimalParserPipeline\\\\|from src.parser.pipeline\\\\|from src.parser.parser_config\\\\|ParserInput\" C:/TeleSignalBot/src/ C:/TeleSignalBot/main.py C:/TeleSignalBot/parser_test/ --include=*.py)",
-      "Bash(grep -rn \"from src.execution\\\\|import src.execution\" C:/TeleSignalBot/src/ C:/TeleSignalBot/main.py C:/TeleSignalBot/parser_test/ --include=*.py)"
+      "Bash(grep -rn \"from src.execution\\\\|import src.execution\" C:/TeleSignalBot/src/ C:/TeleSignalBot/main.py C:/TeleSignalBot/parser_test/ --include=*.py)",
+      "Bash(.venv/Scripts/python -c \"import yaml; import watchdog; print\\('ok'\\)\" 2>&1)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venv/Scripts/pytest src/telegram/tests/ -v 2>&1)",
+      "Bash(.venv/Scripts/pytest src/parser/trader_profiles/ parser_test/tests/ src/execution/ -q)",
+      "Bash(git stash:*)"
     ]
   }
 }

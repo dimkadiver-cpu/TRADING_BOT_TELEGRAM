@@ -78,12 +78,13 @@ parser_test/reporting/report_schema.py          → ✓ aggiornato Step 4 (warni
 parser_test/reporting/flatteners.py             → ✓ aggiornato Step 4 (new intent format, completeness, warnings)
 parser_test/scripts/replay_parser.py            → ✓ MIGRATO Step 8-MIGRATE/1 — usa get_profile_parser(), ParserContext, ParseResultRecord diretto
 parser_test/scripts/generate_parser_reports.py  → in uso
+src/core/trader_tags.py                         → ✓ aggiornato 2026-03-23, supporta varianti alias tipo `Trader [ #D]`
 ```
 
 ### REWRITE — da riscrivere con nuova architettura
 
 ```
-src/telegram/listener.py            → ✓ MIGRATO Step 8-MIGRATE/2 — usa get_profile_parser(), ParseResultRecord diretto; asyncio.Queue, recovery, hot reload da fare in Step 9
+src/telegram/listener.py            → ✓ RISCRITTO Step 9 — TelegramListener, asyncio.Queue, recovery, hot reload, blacklist, media skip
 src/parser/trader_profiles/trader_d/profile.py  → ✓ MIGRATO Step 6b (eredita RulesEngine da TraderB, 90/90 test pass)
 src/parser/trader_profiles/trader_b_da_contollare_/ → cartella eliminata (non più presente)
 ```
@@ -133,8 +134,8 @@ src/parser/models/update.py                     → ✓ CREATA (Step 1 completo)
 src/parser/rules_engine.py                      → ✓ IMPLEMENTATO (Step 2 completo)
 src/parser/trader_profiles/shared/russian_trading.json → ✗ non esiste
 src/parser/trader_profiles/shared/english_trading.json → ✗ non esiste
-src/telegram/router.py                          → ✗ non esiste (Fase 3)
-src/storage/review_queue.py                     → ✗ non esiste (Fase 3)
+src/telegram/router.py                          → ✓ IMPLEMENTATO (Step 10) — MessageRouter, QueueItem, blacklist, trader resolution, reply_raw_text, hashtag/link extraction
+src/storage/review_queue.py                     → ✓ IMPLEMENTATO (Step 10) — ReviewQueueStore, ReviewQueueEntry, insert/resolve/get_pending
 parser_test/scripts/watch_parser.py             → ✓ CREATO (Step 4 completo)
 ```
 
@@ -173,7 +174,8 @@ Comando: `pytest src/parser/trader_profiles/ parser_test/tests/ -q`
 | trader_d | 90 | 90 | 0 | ✓ 39 profilo + 51 RulesEngine — Step 6b completo |
 | parser_test/tests/ | 34 | 34 | 0 | ✓ (Step 8-SAFE + Step 8-DELETE: test_debug_report_smoke rimosso) |
 | src/execution/ | 11 | 11 | 0 | ✓ update_planner + update_applier test |
-| **TOTALE** | **391** | **391** | **0** | |
+| telegram/tests/ | 28 | 28 | 0 | ✓ channel_config + blacklist + media + recovery (Step 9) |
+| **TOTALE** | **419** | **419** | **0** | |
 
 ### Step 8-SAFE (✓ COMPLETO — 2026-03-22)
 
@@ -252,17 +254,15 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ## Conflitti architettura attuale vs nuova
 
-1. **`src/parser/models/` non esiste** — Step 1 non ancora avviato. I profili esistenti usano `base.py::TraderParseResult` (dataclass con dict raw), non Pydantic. La nuova architettura richiede Pydantic v2 con modelli tipizzati. Nessun profilo è ancora migrato alla nuova struttura.
+1. **Reply resolution ancora shallow** — Step 10 usa reply lookup, ma nei canali multi-trader serve ancestry transitiva: reply a reply a segnale. Questo è il principale gap residuo del Router.
 
-2. **`rules_engine.py` è solo un placeholder** — Step 2 non avviato. I profili attuali fanno classificazione internamente in `profile.py`. Il design prevede che la classificazione passi per `RulesEngine`.
+2. **`parser_test` è allineato al formato parser corrente, ma non riproduce ancora tutto il lifecycle live** — ora passa `hashtags` e `extracted_links` al `ParserContext`, ma non valida l'intero comportamento runtime di `processing_status` / `review_queue`.
 
-3. **`TraderDProfileParser` è rotto** — Eredita `_resolve_global_target_scope` da `TraderB` con signature incompatibile. Tutti i test falliscono. Da fixare immediatamente prima di qualsiasi lavoro su trader_d.
+3. **`src/execution/` e `src/exchange/` esistono ma non sono pianificati** — Questi moduli sono stati creati anticipatamente rispetto all'ordine di sviluppo (Fase 5+). Non integrati con il parser. Non testati nel contesto del flusso completo. Non modificare.
 
-4. **`src/execution/` e `src/exchange/` esistono ma non sono pianificati** — Questi moduli sono stati creati anticipatamente rispetto all'ordine di sviluppo (Fase 5+). Non integrati con il parser. Non testati nel contesto del flusso completo. Non modificare.
+4. **Canali multi-trader** — `telegram_source_map.json` può e deve marcare i chat id multi-trader, ma questo non elimina gli `UNRESOLVED` per update brevi senza alias; serve contesto reply-chain robusto.
 
-5. **`trader_b_da_contollare_/`** — Cartella WIP con nome non canonico, non registrata in `registry.py`, non nel CLAUDE.md. Probabilmente lavori in corso su trader_b. Va deciso se integrare, rinominare o eliminare.
-
-6. **`canonical_schema.py` carica da CSV** — `schema_consigliato_finale_parser.csv` è marcato come DELETE nel git status (`D schema_consigliato_finale_parser.csv`). Se il file viene eliminato, `canonical_schema.py` restituisce `{}` silenziosamente. Controllare prima di procedere.
+5. **`canonical_schema.py` carica da CSV** — `schema_consigliato_finale_parser.csv` è marcato come DELETE nel git status (`D schema_consigliato_finale_parser.csv`). Se il file viene eliminato, `canonical_schema.py` restituisce `{}` silenziosamente. Controllare prima di procedere.
 
 ---
 
@@ -294,11 +294,12 @@ Tutti i 100 test passano. Fix principali applicati:
 [✓] Step 6b — Migrazione trader_d
 [✓] Step 7 — Migrazione trader_a — 100/100 test pass
 [✓] Step 8 — Cleanup legacy completo: 8-SAFE (9 file), 8-MIGRATE/1 (replay_parser), 8-MIGRATE/2 (listener+main), Opzione-A (update_planner), 8-DELETE (14 file cluster legacy)
-[ ] Step 9 — Listener robusto (asyncio.Queue, recovery, hot reload)
-[ ] Step 10 — Router / Pre-parser
-[ ] Step 11+ — Validazione coerenza, operation rules, target resolver
-[ ] Step 12+ — freqtrade signal bridge (Sistema 1)
-[ ] Step 13+ — Backtesting (Sistema 2)
+[✓] Step 9 — Listener robusto (asyncio.Queue, recovery, hot reload) — 28/28 test
+[✓] Step 10 — Router / Pre-parser — già implementato, 8/8 test pass
+[✓] Step 11 — Validazione coerenza: src/validation/coherence.py, 25 test, integrato nel Router
+[ ] Step 12+ — Operation rules, target resolver
+[ ] Step 13+ — freqtrade signal bridge (Sistema 1)
+[ ] Step 14+ — Backtesting (Sistema 2)
 ```
 
 **Regola: non iniziare uno step prima che il precedente sia testato e funzionante.**
@@ -317,4 +318,4 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ---
 
-*Aggiornato: 2026-03-22 — Step 0b, Step 1 (Pydantic models), Step 2 (RulesEngine), Step 3 (trader_3 parsing_rules.json), Step 4 (watch mode + CSV debug), Step 5 (trader_b migrazione), Step 6a (trader_c migrazione), Step 6b (trader_d migrazione), Step 7 (trader_a migrazione 100/100), Step 8 COMPLETO (8-SAFE + 8-MIGRATE/1+2 + Opzione-A + 8-DELETE, 391/391 test) completati*
+*Aggiornato: 2026-03-23 — Step 11: validazione coerenza (src/validation/coherence.py) — semantic check UPDATE, structural check per intent, integrato nel Router con validation_status nel JSON — 25 test, 612/612 totali. Fix collaterali: trader_3/parsing_rules.json (% loss marker ripristinato), trader_a/parsing_rules.json (trailing comma JSON).*

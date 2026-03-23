@@ -1,0 +1,1195 @@
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1994,PARSED,,"[trader#3] 📍SIGNAL ID: #2002📍
+COIN: $TAO/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 380✅
+
+🔥40% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TAOUSDT,,,0.82,,,,2002,signal,single,2002,1,,,,,,,,,,40,5,,0,0,0,
+1981,PARSED,,"[trader#3] 📍SIGNAL ID: #2004📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.1300✅
+
+🔥35.4% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2004,signal,single,2004,1,,,,,,,,,,35.4,5,,0,0,0,
+1979,PARSED,,"[trader#3] 📍SIGNAL ID: #2004📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.1300✅
+Target 2: 0.1400✅
+Target 3: 0.1500✅
+
+🔥114.6% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2004,signal,single,2004,1,,,,,,,,,,114.6,5,,0,0,0,
+1978,PARSED,,"[trader#3] 📍SIGNAL ID: #2004📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.1300✅
+Target 2: 0.1400✅
+Target 3: 0.1500✅
+Target 4: 0.1600✅
+
+🔥182.45% Profit (5x)🔥
+
+Trail your SL at Target 1.
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2004,signal,single,2004,1,,,,,,,,,,182.45,5,,0,0,0,
+1974,PARSED,,"[trader#3] 📍SIGNAL ID: #2003📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+
+Target 1: 15.34✅
+Target 2: 15.6✅
+Target 3: 16✅
+
+🔥50% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2003,signal,single,2003,1,,,,,,,,,,50,5,,0,0,0,
+1900,PARSED,,"[trader#3] 📍SIGNAL ID: #2006📍
+COIN: $BTC/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 102,000✅
+Target 2 :103,000✅
+
+🔥15% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,BTCUSDT,,,0.82,,,,2006,signal,single,2006,1,,,,,,,,,,15,5,,0,0,0,
+1892,PARSED,,"[trader#3] 📍SIGNAL ID: #2008📍
+COIN: $ETH/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+Unfortunately, it broke down the S/R level.
+
+STOP LOSS: 3298
+
+🚫3.13% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,ETHUSDT,,,0.82,,,,2008,signal,single,2008,1,,,,,,,,,,,2,,0,0,0,
+1872,PARSED,,"[trader#3] 📍SIGNAL ID: #2007📍
+COIN: $SUI/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 1.83
+
+🚫15.1% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,SUIUSDT,,,0.82,,,,2007,signal,single,2007,1,,,,,,,,,,,2,,0,0,0,
+1862,PARSED,,"[trader#3] 📍SIGNAL ID: #2009📍
+COIN: $SOL/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 139
+
+🚫13% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,SOLUSDT,,,0.82,,,,2009,signal,single,2009,1,,,,,,,,,,,2,,0,0,0,
+1805,PARSED,,"[trader#3] 📍SIGNAL ID: #2012📍
+COIN: $SOL/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 132✅
+Target 2: 135✅
+
+🔥22% Profit (4x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2012,signal,single,2012,1,,,,,,,,,,22,4,,0,0,0,
+1804,PARSED,,"[trader#3] 📍SIGNAL ID: #2005📍
+COIN: $XVG/USDT (3-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Target 1: 0.0084✅
+Target 2: 0.0087✅
+Target 3: 0.0093✅
+
+🔥201% Profit (5x)🔥
+
+For those who held one, not a bad payday.
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XVGUSDT,,,0.82,,,,2005,signal,single,2005,1,,,,,,,,,,201,5,,0,0,0,
+1789,PARSED,,"[trader#3] 📍SIGNAL ID: #2013📍
+COIN: $XRP/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2.225✅
+
+🔥20% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XRPUSDT,,,0.82,,,,2013,signal,single,2013,1,,,,,,,,,,20,5,,0,0,0,
+1783,PARSED,,"[trader#3] 📍SIGNAL ID: #2012📍
+COIN: $SOL/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 132✅
+Target 2: 135✅
+Target 3: 140✅
+
+🔥38.8% Profit (4x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2012,signal,single,2012,1,,,,,,,,,,38.8,4,,0,0,0,
+1781,PARSED,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+
+Closed Manually
+
+🚫12% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,REPORT_LOSS | CLOSE_POSITION,REPORT_LOSS | CLOSE_POSITION,LINKUSDT,,,0.82,,,,2011,signal,single,2011,1,,,,,,,,,,,2,,0,0,0,
+1777,PARSED,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+
+Re-Enter.
+Same Entry level ,Targets & SL
+
+➖➖➖➖➖➖➖",,,U_REENTER,U_REENTER,REENTER_POSITION,REENTER_POSITION,LINKUSDT,,,0.82,,,,2011,signal,single,2011,1,,,,,,,,,,,,,0,0,0,
+1774,PARSED,,"[trader#3] 📍SIGNAL ID: #2014📍
+COIN: $ETH/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2920✅
+Target 2: 3000✅
+
+🔥25.8% Profit (4x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2014,signal,single,2014,1,,,,,,,,,,25.8,4,,0,0,0,
+1737,PARSED,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 12✅
+Target 2: 12.3✅
+
+🔥34.75% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2017,signal,single,2017,1,,,,,,,,,,34.75,5,,0,0,0,
+1736,PARSED,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 129.5✅
+
+🔥25.7% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2016,signal,single,2016,1,,,,,,,,,,25.7,5,,0,0,0,
+1734,PARSED,,"[trader#3] 📍SIGNAL ID: #2018📍
+COIN: $LTC/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 82.73✅
+Target 2: 84.00✅
+
+🔥13% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LTCUSDT,,,0.82,,,,2018,signal,single,2018,1,,,,,,,,,,13,5,,0,0,0,
+1728,PARSED,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 129.5✅
+Target 2: 132✅
+
+🔥32.6% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2016,signal,single,2016,1,,,,,,,,,,32.6,5,,0,0,0,
+1725,PARSED,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 12✅
+Target 2: 12.3✅
+Target 3: 12.8✅
+
+🔥45.6% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2017,signal,single,2017,1,,,,,,,,,,45.6,5,,0,0,0,
+1695,PARSED,,"[trader#3] 📍SIGNAL ID: #2004📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.1300✅
+Target 2: 0.1400✅
+Target 3: 0.1500✅
+Target 4: 0.1600✅
+Target 5: 0.1700✅
+
+🔥200% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2004,signal,single,2004,1,,,,,,,,,,200,5,,0,0,0,
+1694,PARSED,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 129.5✅
+Target 2: 132✅
+Target 3: 139✅
+
+🔥68.15% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2016,signal,single,2016,1,,,,,,,,,,68.15,5,,0,0,0,
+1681,PARSED,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 12✅
+Target 2: 12.3✅
+Target 3: 12.8✅
+Target 4: 13.5✅
+
+🔥75.3% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2017,signal,single,2017,1,,,,,,,,,,75.3,5,,0,0,0,
+1679,PARSED,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 129.5✅
+Target 2: 132✅
+Target 3: 139✅
+
+🔥84.7% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2016,signal,single,2016,1,,,,,,,,,,84.7,5,,0,0,0,
+1654,PARSED,,"[trader#3] 📍SIGNAL ID: #2021📍
+COIN: $UNI/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+
+Target 1: 6.27✅
+
+🔥25% Profit (5x)🔥
+
+Perfectly bounced after tapping the demand zone 🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,UNIUSDT,,,0.82,,,,2021,signal,single,2021,1,,,,,,,,,,25,5,,0,0,0,
+1617,PARSED,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 810
+
+🚫16% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,BNBUSDT,,,0.82,,,,2020,signal,single,2020,1,,,,,,,,,,,2,,0,0,0,
+1613,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+
+🔥13.75% Profit (5x)🔥
+
+Perfect entry 🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,13.75,5,,0,0,0,
+1605,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+Target 2: 2850✅
+
+🔥26.65% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,26.65,5,,0,0,0,
+1601,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+Target 2: 2850✅
+Target 3: 2950✅
+
+🔥47.1% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,47.1,5,,0,0,0,
+1569,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+Target 2: 2850✅
+Target 3: 2950✅
+
+🔥77.95% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,77.95,5,,0,0,0,
+1564,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+Target 2: 2850✅
+Target 3: 2950✅
+Target 4: 3150✅
+
+🔥95% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,95,5,,0,0,0,
+1562,PARSED,,"[trader#3] 📍SIGNAL ID: #2023📍
+COIN: $TRX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.283✅
+
+🔥15% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TRXUSDT,,,0.82,,,,2023,signal,single,2023,1,,,,,,,,,,15,5,,0,0,0,
+1541,PARSED,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 14.55✅
+
+🔥14.55% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,CRVUSDT,,,0.82,,,,2025,signal,single,2025,1,,,,,,,,,,14.55,5,,0,0,0,
+1540,PARSED,,"[trader#3] 📍SIGNAL ID: #2023📍
+COIN: $TRX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.283✅
+Target 2: 0.288✅
+
+🔥18.25% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TRXUSDT,,,0.82,,,,2023,signal,single,2023,1,,,,,,,,,,18.25,5,,0,0,0,
+1538,PARSED,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 12✅
+Target 2: 12.3✅
+Target 3: 12.8✅
+Target 4: 13.5✅
+
+🔥132.55% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2017,signal,single,2017,1,,,,,,,,,,132.55,5,,0,0,0,
+1532,PARSED,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.386✅
+Target 2: 0.393✅
+
+🔥34.8% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,CRVUSDT,,,0.82,,,,2025,signal,single,2025,1,,,,,,,,,,34.8,5,,0,0,0,
+1529,PARSED,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.386✅
+Target 2: 0.393✅
+Target 3: 0.40✅
+
+🔥35.3% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,CRVUSDT,,,0.82,,,,2025,signal,single,2025,1,,,,,,,,,,35.3,5,,0,0,0,
+1528,PARSED,,"[trader#3] 📍SIGNAL ID: #2026📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2.064✅
+Target 2: 2.1✅
+
+🔥23.45% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XRPUSDT,,,0.82,,,,2026,signal,single,2026,1,,,,,,,,,,23.45,5,,0,0,0,
+1509,PARSED,,"[trader#3] 📍SIGNAL ID: #2023📍
+COIN: $TRX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.283✅
+Target 2: 0.288✅
+
+🔥21.45% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TRXUSDT,,,0.82,,,,2023,signal,single,2023,1,,,,,,,,,,21.45,5,,0,0,0,
+1507,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+Target 2: 2850✅
+Target 3: 2950✅
+Target 4: 3150✅
+Target 5: 3300✅
+
+🔥106.9% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,106.9,5,,0,0,0,
+1506,PARSED,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 129.5✅
+Target 2: 132✅
+Target 3: 139✅
+
+🔥94.85% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SOLUSDT,,,0.82,,,,2016,signal,single,2016,1,,,,,,,,,,94.85,5,,0,0,0,
+1499,PARSED,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.386✅
+Target 2: 0.393✅
+Target 3: 0.40✅
+Target 4: 0.42✅
+
+🔥71.4% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,CRVUSDT,,,0.82,,,,2025,signal,single,2025,1,,,,,,,,,,71.4,5,,0,0,0,
+1489,PARSED,,"[trader#3] 📍SIGNAL ID: #2027📍
+COIN: $JUP/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.235✅
+Target 2: 0.238✅
+
+🔥25.1% Profit (5x)🔥
+
+Closed at SL after hitting 2 targets.
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,JUPUSDT,,,0.82,,,,2027,signal,single,2027,1,,,,,,,,,,25.1,5,,0,0,0,
+1488,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2780✅
+Target 2: 2850✅
+Target 3: 2950✅
+Target 4: 3150✅
+Target 5: 3300✅
+
+🔥132.9% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2022,signal,single,2022,1,,,,,,,,,,132.9,5,,0,0,0,
+1485,PARSED,,"[trader#3] 📍SIGNAL ID: #2028📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.279✅
+
+🔥31.95% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2028,signal,single,2028,1,,,,,,,,,,31.95,5,,0,0,0,
+1484,PARSED,,"[trader#3] 📍SIGNAL ID: #2026📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 2.064✅
+Target 2: 2.1✅
+
+🔥40.1% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XRPUSDT,,,0.82,,,,2026,signal,single,2026,1,,,,,,,,,,40.1,5,,0,0,0,
+1482,PARSED,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 12✅
+Target 2: 12.3✅
+Target 3: 12.8✅
+Target 4: 13.5✅
+Target 5: 15✅
+
+🔥137.2% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2017,signal,single,2017,1,,,,,,,,,,137.2,5,,0,0,0,
+1477,PARSED,,"[trader#3] 📍SIGNAL ID: #2029📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.251✅
+
+🔥14% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2029,signal,single,2029,1,,,,,,,,,,14,5,,0,0,0,
+1436,PARSED,,"[trader#3] 📍SIGNAL ID: #2031📍
+COIN: $XRP/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+Unfortunately, it broke down the reversal zone as market is very volatile.
+
+STOP LOSS: 1.86
+
+🚫3.85% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,XRPUSDT,,,0.82,,,,2031,signal,single,2031,1,,,,,,,,,,,2,,0,0,0,
+1405,PARSED,,"[trader#3] 📍SIGNAL ID: #2032📍
+COIN: $LTC/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 77.2✅
+Target 2: 78.5✅
+
+🔥20.04% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LTCUSDT,,,0.82,,,,2032,signal,single,2032,1,,,,,,,,,,20.04,5,,0,0,0,
+1377,PARSED,,"[trader#3] 📍SIGNAL ID: #2034📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.206✅
+Target 2: 0.21✅
+
+🔥19% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2034,signal,single,2034,1,,,,,,,,,,19,5,,0,0,0,
+1330,PARSED,,"[trader#3] 📍SIGNAL ID: #2034📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.206✅
+Target 2: 0.21✅
+
+🔥35% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2034,signal,single,2034,1,,,,,,,,,,35,5,,0,0,0,
+1301,PARSED,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.2266✅
+
+🔥21.5% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2036,signal,single,2036,1,,,,,,,,,,21.5,5,,0,0,0,
+1296,PARSED,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.2266✅
+Target 2: 0.23✅
+
+🔥35.85% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2036,signal,single,2036,1,,,,,,,,,,35.85,5,,0,0,0,
+1287,PARSED,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.2266✅
+Target 2: 0.23✅
+Target 3: 0.24✅
+
+🔥48.1% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2036,signal,single,2036,1,,,,,,,,,,48.1,5,,0,0,0,
+1273,PARSED,,"[trader#3] 📍SIGNAL ID: #2039📍
+COIN: $ARB/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+It grabbed liquidity by doing a fake out.
+
+STOP LOSS: 0.1854
+
+🚫4.37% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,ARBUSDT,,,0.82,,,,2039,signal,single,2039,1,,,,,,,,,,,2,,0,0,0,
+1247,PARSED,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.2266✅
+Target 2: 0.23✅
+Target 3: 0.24✅
+
+🔥56.34% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2036,signal,single,2036,1,,,,,,,,,,56.34,5,,0,0,0,
+1230,PARSED,,"[trader#3] 📍SIGNAL ID: #2041📍
+COIN: $DOT/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+Target 1: 1.86✅
+Target 2: 1.83✅
+
+🔥17.15% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOTUSDT,,,0.82,,,,2041,signal,single,2041,1,,,,,,,,,,17.15,5,,0,0,0,
+1224,PARSED,,"[trader#3] 📍SIGNAL ID: #2034📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 0.206✅
+Target 2: 0.21✅
+
+🔥65.85% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2034,signal,single,2034,1,,,,,,,,,,65.85,5,,0,0,0,
+1218,PARSED,,"[trader#3] 📍SIGNAL ID: #2041📍
+COIN: $DOT/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+Target 1: 1.86✅
+Target 2: 1.83✅
+Target 3: 1.80✅
+
+🔥29.43% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOTUSDT,,,0.82,,,,2041,signal,single,2041,1,,,,,,,,,,29.43,5,,0,0,0,
+1213,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+
+🔥15.8% Profit (5x)🔥
+
+Our VIPs know exactly what to do to maximize profits. Book your seat now and never miss another move!
+Message: t.me/BKCEO
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,15.8,5,,0,0,0,
+1211,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+Target 2: 0.51✅
+
+🔥36.8% Profit (5x)🔥
+
+Our VIPs know exactly what to do to maximize profits. Book your seat now and never miss another move!
+Message: t.me/BKCEO
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,36.8,5,,0,0,0,
+1206,PARSED,,"[trader#3] 📍SIGNAL ID: #2042📍
+COIN: $AVAX/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Target 1: 12.9✅
+Target 2: 13.1✅
+Target 3: 13.5✅
+
+🔥52.7% Profit (5x)🔥
+
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,AVAXUSDT,,,0.82,,,,2042,signal,single,2042,1,,,,,,,,,,52.7,5,,0,0,0,
+1202,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+Target 2: 0.51✅
+Target 3: 0.535✅
+
+🔥63.1% Profit (5x)🔥
+
+Our VIPs know exactly what to do to maximize profits. Book your seat now and never miss another move!",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,63.1,5,,0,0,0,
+1188,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+Target 2: 0.51✅
+Target 3: 0.535✅
+Target 4: 0.56✅
+
+🔥89.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,89.5,5,,0,0,0,
+1186,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+Target 2: 0.51✅
+Target 3: 0.535✅
+Target 4: 0.56✅
+Target 5: 0.58✅
+
+🔥110.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,110.5,5,,0,0,0,
+1162,PARSED,,"[trader#3] 📍SIGNAL ID: #2044 📍
+COIN: $XLM/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.235✅
+
+🔥10.9% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XLMUSDT,,,0.82,,,,2044,signal,single,2044,1,,,,,,,,,,10.9,5,,0,0,0,
+1159,PARSED,,"[trader#3] 📍SIGNAL ID: #2044 📍
+COIN: $XLM/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.235✅
+
+🔥10.9% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XLMUSDT,,,0.82,,,,2044,signal,single,2044,1,,,,,,,,,,10.9,5,,0,0,0,
+1153,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+Target 2: 0.51✅
+Target 3: 0.535✅
+Target 4: 0.56✅
+Target 5: 0.58✅
+Target 6: 0.61✅
+
+🔥142.1% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,142.1,5,,0,0,0,
+1143,PARSED,,"[trader#3] 📍SIGNAL ID: #2037  📍
+COIN: $WLD/USDT (3-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.49✅
+Target 2: 0.51✅
+Target 3: 0.535✅
+Target 4: 0.56✅
+Target 5: 0.58✅
+Target 6: 0.61✅
+Target 7: 0.65✅
+
+🔥184.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2037,signal,single,2037,1,,,,,,,,,,184.2,5,,0,0,0,
+1141,PARSED,,"[trader#3] 📍SIGNAL ID: #2044 📍
+COIN: $XLM/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.235✅
+Target 2: 0.245✅
+
+🔥32.6% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XLMUSDT,,,0.82,,,,2044,signal,single,2044,1,,,,,,,,,,32.6,5,,0,0,0,
+1131,PARSED,,"[trader#3] 📍SIGNAL ID: #2047  📍
+COIN: $DOT/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 2.250✅
+
+🔥20.8% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOTUSDT,,,0.82,,,,2047,signal,single,2047,1,,,,,,,,,,20.8,5,,0,0,0,
+1107,PARSED,,"[trader#3] 📍SIGNAL ID: #2046📍
+COIN: $ZEC/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 440
+
+🚫15% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,ZECUSDT,,,0.82,,,,2046,signal,single,2046,1,,,,,,,,,,,2,,0,0,0,
+1075,PARSED,,"[trader#3] 📍SIGNAL ID: #2051  📍
+COIN: $HYPE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 24.5✅
+
+🔥13% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,HYPEUSDT,,,0.82,,,,2051,signal,single,2051,1,,,,,,,,,,13,5,,0,0,0,
+1071,PARSED,,"[trader#3] 📍SIGNAL ID: #2050  📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 2.10✅
+
+🔥12.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XRPUSDT,,,0.82,,,,2050,signal,single,2050,1,,,,,,,,,,12.2,5,,0,0,0,
+1070,PARSED,,"[trader#3] 📍SIGNAL ID: #2050  📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 2.10✅
+
+🔥12.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,XRPUSDT,,,0.82,,,,2050,signal,single,2050,1,,,,,,,,,,12.2,5,,0,0,0,
+1047,PARSED,,"[trader#3] 📍SIGNAL ID: #2052  📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.139✅
+
+🔥12.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOGEUSDT,,,0.82,,,,2052,signal,single,2052,1,,,,,,,,,,12.2,5,,0,0,0,
+1009,PARSED,,"[trader#3] 📍SIGNAL ID: #2052  📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.139✅
+Target 2: 0.144✅
+
+🔥33.3% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOGEUSDT,,,0.82,,,,2052,signal,single,2052,1,,,,,,,,,,33.3,5,,0,0,0,
+1001,PARSED,,"[trader#3] 📍SIGNAL ID: #2052  📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.139✅
+Target 2: 0.144✅
+Target 3: 0.150✅
+
+🔥55.6% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOGEUSDT,,,0.82,,,,2052,signal,single,2052,1,,,,,,,,,,55.6,5,,0,0,0,
+1000,PARSED,,"[trader#3] 📍SIGNAL ID: #2051  📍
+COIN: $HYPE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 24.5✅
+Target 2: 25.75✅
+
+🔥39.8% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,HYPEUSDT,,,0.82,,,,2051,signal,single,2051,1,,,,,,,,,,39.8,5,,0,0,0,
+962,PARSED,,"[trader#3] 📍SIGNAL ID: #2048  📍
+COIN: $BCH/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 625✅
+
+🔥12.3% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,BCHUSDT,,,0.82,,,,2048,signal,single,2048,1,,,,,,,,,,12.3,5,,0,0,0,
+919,PARSED,,"[trader#3] 📍SIGNAL ID: #2055 📍
+COIN: $AAVE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 175✅
+
+🔥14.7% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,AAVEUSDT,,,0.82,,,,2055,signal,single,2055,1,,,,,,,,,,14.7,5,,0,0,0,
+852,PARSED,,"[trader#3] 📍SIGNAL ID: #2057 📍
+COIN: $ADA/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.362✅
+
+🔥17.1% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ADAUSDT,,,0.82,,,,2057,signal,single,2057,1,,,,,,,,,,17.1,5,,0,0,0,
+851,PARSED,,"[trader#3] 📍SIGNAL ID: #2058 📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 12.45✅
+
+🔥14.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2058,signal,single,2058,1,,,,,,,,,,14.5,5,,0,0,0,
+798,PARSED,,"[trader#3] 📍SIGNAL ID: #2061📍
+COIN: $WLD/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.4600✅
+
+🔥5.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2061,signal,single,2061,1,,,,,,,,,,5.5,5,,0,0,0,
+787,PARSED,,"[trader#3] 📍SIGNAL ID: #2061📍
+COIN: $WLD/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.4600✅
+Target 2: 0.4800✅
+Target 3: 0.5000✅
+Target 4: 0.5300✅
+Target 5: 0.5600✅
+
+🔥115.4% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2061,signal,single,2061,1,,,,,,,,,,115.4,5,,0,0,0,
+786,PARSED,,"[trader#3] 📍SIGNAL ID: #2061📍
+COIN: $WLD/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.4600✅
+Target 2: 0.4800✅
+Target 3: 0.5000✅
+Target 4: 0.5300✅
+Target 5: 0.5600✅
+Target 6: 0.6000✅
+
+🔥159.4% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2061,signal,single,2061,1,,,,,,,,,,159.4,5,,0,0,0,
+735,PARSED,,"[trader#3] 📍SIGNAL ID: #2065📍
+COIN: $SOL/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 97
+
+🚫15% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,SOLUSDT,,,0.82,,,,2065,signal,single,2065,1,,,,,,,,,,,2,,0,0,0,
+725,PARSED,,"[trader#3] 📍SIGNAL ID: #2067📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 2350✅
+
+🔥10.9% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ETHUSDT,,,0.82,,,,2067,signal,single,2067,1,,,,,,,,,,10.9,5,,0,0,0,
+702,PARSED,,"[trader#3] 📍SIGNAL ID: #2066📍
+COIN: $ADA/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.300✅
+
+🔥17.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ADAUSDT,,,0.82,,,,2066,signal,single,2066,1,,,,,,,,,,17.2,5,,0,0,0,
+531,PARSED,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1035✅
+
+🔥17.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2070,signal,single,2070,1,,,,,,,,,,17.5,5,,0,0,0,
+511,PARSED,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 150✅
+
+🔥17.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TAOUSDT,,,0.82,,,,2071,signal,single,2071,1,,,,,,,,,,17.2,5,,0,0,0,
+500,PARSED,,"[trader#3] 📍SIGNAL ID: #2069📍
+COIN: $WLD/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.3850✅
+
+🔥20.3% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2069,signal,single,2069,1,,,,,,,,,,20.3,5,,0,0,0,
+499,PARSED,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 150✅
+Target 2: 160✅
+
+🔥51.7% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TAOUSDT,,,0.82,,,,2071,signal,single,2071,1,,,,,,,,,,51.7,5,,0,0,0,
+498,PARSED,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1035✅
+Target 2: 0.1080✅
+
+🔥40.0% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2070,signal,single,2070,1,,,,,,,,,,40,5,,0,0,0,
+472,PARSED,,"[trader#3] 📍SIGNAL ID: #2068📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 8.80✅
+
+🔥17.7% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2068,signal,single,2068,1,,,,,,,,,,17.7,5,,0,0,0,
+466,PARSED,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 150✅
+Target 2: 160✅
+Target 3: 175✅
+
+🔥103.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TAOUSDT,,,0.82,,,,2071,signal,single,2071,1,,,,,,,,,,103.5,5,,0,0,0,
+465,PARSED,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 150✅
+Target 2: 160✅
+Target 3: 175✅
+Target 4: 190✅
+
+🔥155.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TAOUSDT,,,0.82,,,,2071,signal,single,2071,1,,,,,,,,,,155.2,5,,0,0,0,
+462,PARSED,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 150✅
+Target 2: 160✅
+Target 3: 175✅
+Target 4: 190✅
+Target 5: 205✅
+
+🔥206.9% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TAOUSDT,,,0.82,,,,2071,signal,single,2071,1,,,,,,,,,,206.9,5,,0,0,0,
+461,PARSED,,"[trader#3] 📍SIGNAL ID: #2069📍
+COIN: $WLD/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.3850✅
+Target 2: 0.4100✅
+
+🔥54.1% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLDUSDT,,,0.82,,,,2069,signal,single,2069,1,,,,,,,,,,54.1,5,,0,0,0,
+431,PARSED,,"[trader#3] 📍SIGNAL ID: #2072📍
+COIN: $TRX/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.284✅
+
+🔥12.7% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,TRXUSDT,,,0.82,,,,2072,signal,single,2072,1,,,,,,,,,,12.7,5,,0,0,0,
+416,PARSED,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1035✅
+Target 2: 0.1080✅
+Target 3: 0.1150✅
+
+🔥75.0% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2070,signal,single,2070,1,,,,,,,,,,75,5,,0,0,0,
+406,PARSED,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1035✅
+Target 2: 0.1080✅
+Target 3: 0.1150✅
+Target 3: 0.1250✅
+
+🔥125.0% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,WLFIUSDT,,,0.82,,,,2070,signal,single,2070,1,,,,,,,,,,125,5,,0,0,0,
+362,PARSED,,"[trader#3] 📍SIGNAL ID: #2074📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.160✅
+
+🔥16.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2074,signal,single,2074,1,,,,,,,,,,16.2,5,,0,0,0,
+335,PARSED,,"[trader#3] 📍SIGNAL ID: #2073📍
+COIN: $DASH/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 33
+
+🚫18% Loss (2x)🚫
+
+SL hit, but one doesn't define us. Risk managed. On to the next one!
+➖➖➖➖➖➖➖",,,U_STOP_HIT,U_STOP_HIT,REPORT_LOSS,REPORT_LOSS,DASHUSDT,,,0.82,,,,2073,signal,single,2073,1,,,,,,,,,,,2,,0,0,0,
+315,PARSED,,"[trader#3] 📍SIGNAL ID: #2074📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.160✅
+Target 2: 0.168✅
+
+🔥42.0% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2074,signal,single,2074,1,,,,,,,,,,42,5,,0,0,0,
+297,PARSED,,"[trader#3] 📍SIGNAL ID: #2075📍
+COIN: $SKY/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.064✅
+
+🔥16.1% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SKYUSDT,,,0.82,,,,2075,signal,single,2075,1,,,,,,,,,,16.1,5,,0,0,0,
+272,PARSED,,"[trader#3] 📍SIGNAL ID: #2075📍
+COIN: $SKY/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.064✅
+Target 2: 0.067✅
+
+🔥40.3% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,SKYUSDT,,,0.82,,,,2075,signal,single,2075,1,,,,,,,,,,40.3,5,,0,0,0,
+255,PARSED,,"[trader#3] 📍SIGNAL ID: #2076📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1040✅
+
+🔥20% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2076,signal,single,2076,1,,,,,,,,,,20,5,,0,0,0,
+237,PARSED,,"[trader#3] 📍SIGNAL ID: #2068📍
+COIN: $LINK/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 8.80✅
+Target 2: 9.35✅
+
+🔥50% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,LINKUSDT,,,0.82,,,,2068,signal,single,2068,1,,,,,,,,,,50,5,,0,0,0,
+235,PARSED,,"[trader#3] 📍SIGNAL ID: #2074📍
+COIN: $IMX/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.160✅
+Target 2: 0.168✅
+Target 3: 0.180✅
+
+🔥80.7% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,IMXUSDT,,,0.82,,,,2074,signal,single,2074,1,,,,,,,,,,80.7,5,,0,0,0,
+228,PARSED,,"[trader#3] 📍SIGNAL ID: #2076📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1040✅
+Target 2: 0.1100✅
+
+🔥50% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2076,signal,single,2076,1,,,,,,,,,,50,5,,0,0,0,
+219,PARSED,,"[trader#3] 📍SIGNAL ID: #2076📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.1040✅
+Target 2: 0.1100✅
+Target 3: 0.1180✅
+
+🔥90% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,ENAUSDT,,,0.82,,,,2076,signal,single,2076,1,,,,,,,,,,90,5,,0,0,0,
+174,PARSED,,"[trader#3] 📍SIGNAL ID: #2079📍
+COIN: $DOT/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 1.575✅
+
+🔥25% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOTUSDT,,,0.82,,,,2079,signal,single,2079,1,,,,,,,,,,25,5,,0,0,0,
+171,PARSED,,"[trader#3] 📍SIGNAL ID: #2079📍
+COIN: $DOT/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 1.575✅
+Target 2: 1.675✅
+
+🔥58.3% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOTUSDT,,,0.82,,,,2079,signal,single,2079,1,,,,,,,,,,58.3,5,,0,0,0,
+170,PARSED,,"[trader#3] 📍SIGNAL ID: #2078📍
+COIN: $CRO/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.0775✅
+
+🔥16.7% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,CROUSDT,,,0.82,,,,2078,signal,single,2078,1,,,,,,,,,,16.7,5,,0,0,0,
+88,PARSED,,"[trader#3] 📍SIGNAL ID: #2081📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.0940✅
+
+🔥22.2% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOGEUSDT,,,0.82,,,,2081,signal,single,2081,1,,,,,,,,,,22.2,5,,0,0,0,
+81,PARSED,,"[trader#3] 📍SIGNAL ID: #2077📍
+COIN: $BCH/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 470✅
+
+🔥16.5% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,BCHUSDT,,,0.82,,,,2077,signal,single,2077,1,,,,,,,,,,16.5,5,,0,0,0,
+80,PARSED,,"[trader#3] 📍SIGNAL ID: #2081📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 0.0940✅
+Target 2: 0.0990✅
+
+🔥50% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,DOGEUSDT,,,0.82,,,,2081,signal,single,2081,1,,,,,,,,,,50,5,,0,0,0,
+40,PARSED,,"[trader#3] 📍SIGNAL ID: #2083📍
+COIN: $NEAR/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 1.300✅
+
+🔥20% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,NEARUSDT,,,0.82,,,,2083,signal,single,2083,1,,,,,,,,,,20,5,,0,0,0,
+10,PARSED,,"[trader#3] 📍SIGNAL ID: #2082📍
+COIN: $HYPE/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+Target 1: 31.25✅
+
+🔥20.8% Profit (5x)🔥
+➖➖➖➖➖➖➖",,,U_TP_HIT,U_TP_HIT,REPORT_PROFIT,REPORT_PROFIT,HYPEUSDT,,,0.82,,,,2082,signal,single,2082,1,,,,,,,,,,20.8,5,,0,0,0,

@@ -1,5 +1,5 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,signal_id,linking_strategy,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1243,PARSED_WITH_WARNINGS,,"[trader#c]
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,signal_id,linking_strategy,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1243,PARSED,,"[trader#c]
 
 Так, ребята, возникли вопросы по поводу вот этого сетапа: https://t.me/c/3171748254/1224
 
@@ -16,4 +16,4 @@
 Вот как-то так!👌
 
 По итогу:  сделка в работе, первый тейк взяли, перевелись в БУ.
-Всем профита!✊️",llm_unavailable,,,,,UTC,,1224,reply_or_link,,,,classified=SETUP_INCOMPLETE | profile_parser=trader_c,1,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.75; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0
+Всем профита!✊️",,,,,,,,,1224,,,,,,1,0,0,0,

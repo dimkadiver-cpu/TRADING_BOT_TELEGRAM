@@ -82,6 +82,17 @@ def export_reports_csv_v2(
                     include_json_debug=include_json_debug,
                 )
                 results.append(ExportedReport(trader_id=trader_id, scope=scope, path=report_path, row_count=len(rows)))
+        unresolved_path = reports_dir_resolved / "unresolved_messages.csv"
+        unresolved_rows = _fetch_unresolved_rows(conn=conn)
+        _write_unresolved_csv(unresolved_path, unresolved_rows)
+        results.append(
+            ExportedReport(
+                trader_id="UNRESOLVED",
+                scope="UNRESOLVED_MESSAGES",
+                path=unresolved_path,
+                row_count=len(unresolved_rows),
+            )
+        )
         return results
 
 
@@ -198,3 +209,95 @@ def _normalized_obj(raw: str | None) -> dict[str, Any]:
 def _resolve_path(value: str | Path) -> Path:
     path = Path(value)
     return path if path.is_absolute() else (PROJECT_ROOT / path).resolve()
+
+
+def _fetch_unresolved_rows(*, conn: sqlite3.Connection) -> list[dict[str, str]]:
+    raw_columns = _table_columns(conn, "raw_messages")
+    parse_columns = _table_columns(conn, "parse_results")
+    source_chat_title_expr = "rm.source_chat_title" if "source_chat_title" in raw_columns else "''"
+    eligibility_status_expr = (
+        "pr.eligibility_status"
+        if "eligibility_status" in parse_columns
+        else "rm.acquisition_status"
+        if "acquisition_status" in raw_columns
+        else "''"
+    )
+    eligibility_reason_expr = (
+        "pr.eligibility_reason"
+        if "eligibility_reason" in parse_columns
+        else "rm.acquisition_reason"
+        if "acquisition_reason" in raw_columns
+        else "''"
+    )
+    trader_resolution_method_expr = "pr.trader_resolution_method" if "trader_resolution_method" in parse_columns else "''"
+    sql = f"""
+    SELECT
+      rm.raw_message_id,
+      rm.source_chat_id,
+      {source_chat_title_expr} AS source_chat_title,
+      rm.telegram_message_id,
+      COALESCE(pr.message_type, '') AS message_type,
+      COALESCE({eligibility_status_expr}, '') AS eligibility_status,
+      COALESCE({eligibility_reason_expr}, '') AS eligibility_reason,
+      COALESCE({trader_resolution_method_expr}, '') AS trader_resolution_method,
+      COALESCE(rm.raw_text, '') AS raw_text
+    FROM raw_messages rm
+    LEFT JOIN parse_results pr ON pr.raw_message_id = rm.raw_message_id
+    WHERE pr.raw_message_id IS NULL
+       OR pr.resolved_trader_id IS NULL
+       OR TRIM(pr.resolved_trader_id) = ''
+       OR UPPER(TRIM(pr.resolved_trader_id)) = 'UNRESOLVED'
+    ORDER BY rm.message_ts ASC, rm.raw_message_id ASC
+    """
+    rows: list[dict[str, str]] = []
+    for row in conn.execute(sql):
+        rows.append(
+            {
+                "raw_message_id": _csv_scalar(row["raw_message_id"]),
+                "source_chat_id": _csv_scalar(row["source_chat_id"]),
+                "source_chat_title": _csv_scalar(row["source_chat_title"]),
+                "telegram_message_id": _csv_scalar(row["telegram_message_id"]),
+                "message_type": _csv_scalar(row["message_type"]),
+                "eligibility_status": _csv_scalar(row["eligibility_status"]),
+                "eligibility_reason": _csv_scalar(row["eligibility_reason"]),
+                "trader_resolution_method": _csv_scalar(row["trader_resolution_method"]),
+                "raw_text_preview": _preview_text(row["raw_text"]),
+            }
+        )
+    return rows
+
+
+def _write_unresolved_csv(path: Path, rows: list[dict[str, str]]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = [
+        "raw_message_id",
+        "source_chat_id",
+        "source_chat_title",
+        "telegram_message_id",
+        "message_type",
+        "eligibility_status",
+        "eligibility_reason",
+        "trader_resolution_method",
+        "raw_text_preview",
+    ]
+    with path.open("w", encoding="utf-8-sig", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(rows)
+
+
+def _preview_text(value: str | None, *, limit: int = 200) -> str:
+    text = _csv_scalar(value).replace("\r", " ").replace("\n", " ").strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
+
+
+def _csv_scalar(value: object) -> str:
+    if value is None:
+        return ""
+    return str(value)
+
+
+def _table_columns(conn: sqlite3.Connection, table_name: str) -> set[str]:
+    return {str(row[1]) for row in conn.execute(f"PRAGMA table_info({table_name})")}

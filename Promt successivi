@@ -1,5 +1,4 @@
-  Leggi CLAUDE.md e docs/AUDIT.md. Step 8 è completato.
-  Il prossimo step è Step 9: listener robusto
-  (asyncio.Queue, recovery, hot reload come da PRD_listener.md).
-  Prima leggi docs/PRD_listener.md per capire i requisiti,
-  poi proponi un piano di implementazione.
+  Leggi CLAUDE.md e docs/AUDIT.md. Step 10 completamente verificato.
+  Procedi con Step 11: Validazione coerenza.
+  Prima leggi docs/PRD_generale.md per capire cosa si intende per "validazione coerenza"
+  e quali sono i requisiti del layer successivo al parser.

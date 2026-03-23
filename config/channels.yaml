@@ -1,0 +1,21 @@
+# TeleSignalBot — channels configuration
+# Il listener rilegge questo file senza restart (hot reload via watchdog).
+
+recovery:
+  max_hours: 4  # finestra temporale messaggi recuperati al restart
+
+blacklist_global:
+  - "#admin"
+  - "#info"
+  - "#pinned"
+  - "Админ на связи"
+
+channels: []
+# Aggiungere i canali qui. Esempio:
+#
+#  - chat_id: -1001234567890
+#    label: "trader_alpha"
+#    active: true
+#    trader_id: "trader_a"   # null se canale multi-trader
+#    blacklist:
+#      - "#weekly"

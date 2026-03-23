@@ -6,8 +6,10 @@ import re
 
 _CONTAINER_RE = re.compile(r"^\[\s*(.*?)\s*\]$")
 _SPACE_AROUND_HASH_RE = re.compile(r"\s*#\s*")
+_BRACKETED_TRADER_TAG_RE = re.compile(r"(?i)\btrade[rt]\s*\[\s*#\s*([A-Za-z0-9\u0400-\u04FF]+)\s*\]")
+_TRADER_WORD_TYPO_RE = re.compile(r"(?i)\btradet(?=\s*#)")
 _TRADER_TAG_RE = re.compile(
-    r"(?<![A-Za-z0-9_])(?:\[\s*)?trader\s*#\s*([A-Za-z0-9\u0400-\u04FF]+)(?:\s*\])?(?![A-Za-z0-9_])",
+    r"(?<![A-Za-z0-9_])(?:\[\s*)?trade[rt](?:\s*\[\s*)?\s*#\s*([A-Za-z0-9\u0400-\u04FF]+)(?:\s*\])?(?![A-Za-z0-9_])",
     re.IGNORECASE,
 )
 
@@ -39,6 +41,8 @@ def normalize_trader_tag(tag: str | None) -> str | None:
         normalized = container_match.group(1).strip()
 
     normalized = normalized.lower().translate(_CONFUSABLES)
+    normalized = _BRACKETED_TRADER_TAG_RE.sub(r"trader#\1", normalized)
+    normalized = _TRADER_WORD_TYPO_RE.sub("trader", normalized)
     normalized = _SPACE_AROUND_HASH_RE.sub("#", normalized)
     normalized = normalized.strip()
     return normalized or None

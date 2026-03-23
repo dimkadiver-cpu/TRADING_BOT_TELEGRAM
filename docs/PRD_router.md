@@ -6,7 +6,10 @@ Layer tra Listener e Parser. Decide se e a quale profilo parser passare ogni mes
 
 ## Stato
 
-Da implementare — Fase 3.
+Implementato in Step 10.
+
+Nota aperta: nei canali multi-trader la risoluzione via reply va considerata
+transitiva sulla catena delle reply, non solo sul parent diretto.
 
 ## Posizione nel flusso
 
@@ -51,9 +54,20 @@ Usa `effective_trader.py` esistente con priorità:
 
 ```
 1. alias/tag nel testo          (es. [trader#A])
-2. reply al messaggio padre     → cerca trader del messaggio padre in raw_messages
+2. reply-chain ancestry         → risale i parent in raw_messages fino a trovare
+                                  trader già risolto o alias nel testo del segnale
 3. mapping chat_id → trader_id  da channels.yaml
 ```
+
+Dettaglio robustezza richiesto per i canali multi-trader:
+- non fermarsi al solo parent diretto
+- cercare lungo la catena delle reply con profondità massima limitata
+- usare come fonti forti, in ordine:
+  - `source_trader_id` del parent
+  - trader già risolto/persistito per il parent
+  - alias/tag nel `raw_text` del parent
+- fermarsi appena viene trovato un trader affidabile
+- proteggersi da loop con `visited` set
 
 **Trader non risolto:**
 ```
@@ -93,6 +107,10 @@ ParserContext(
 ```
 
 `reply_raw_text` viene recuperato dal Router tramite query a `raw_messages`. Il parser non fa mai query al DB.
+
+Per i messaggi `UPDATE` brevi in canali multi-trader, il Router deve poter
+costruire il contesto anche quando il trader è noto solo nel segnale originario
+e non nel parent diretto.
 
 ## Step 5 — Chiamata parser e persistenza
 
@@ -136,12 +154,13 @@ review       → trader non risolto, in review_queue
 ```
 src/telegram/router.py           → NUOVO — logica Router
 src/storage/review_queue.py      → NUOVO — storage review_queue
+src/telegram/effective_trader.py → estensione robusta della reply resolution
+src/storage/...                  → accessor minimo per risalire la reply-chain
 ```
 
 ## File da NON toccare
 
 ```
-src/telegram/effective_trader.py → risoluzione trader, stabile
 src/telegram/eligibility.py      → stabile
 src/storage/raw_messages.py      → storage layer, non toccare
 src/storage/parse_results.py     → storage layer, non toccare
@@ -158,4 +177,7 @@ Nessuna dipendenza nuova — usa componenti esistenti.
 - test trader non risolto: va in review_queue con reason corretto
 - test trader inattivo: processing_status = done, raw preservato
 - test reply_raw_text: ParserContext ha testo messaggio padre
+- test reply-chain ancestry: child reply-to-reply eredita trader dal segnale originario
+- test reply-chain max-depth: si ferma senza loop o scansioni infinite
+- test reply-chain da alias parent: risolve trader da tag nel parent storico
 - test eccezione parser: processing_status = failed, loggato, non blocca

@@ -1,122 +1,52 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
-1148,PARSED_WITH_WARNINGS,1407,"[trader#d]
-Перевод в безубыток",profile_parser_failed:trader_d; llm_unavailable,,,,,1407,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1122,PARSED_WITH_WARNINGS,1439,"Trader#d
-Перевод в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1439,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1120,PARSED_WITH_WARNINGS,1443,"Trader#d
-Стоп.
--0.5%",profile_parser_failed:trader_d; llm_unavailable,,,,,1443,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1119,PARSED_WITH_WARNINGS,1439,"Trader#d
-Стоп сдвигаю в +
-0.4671",profile_parser_failed:trader_d; llm_unavailable,,,,,1439,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1113,PARSED_WITH_WARNINGS,1448,"Trader#d
-Ушли по стопу в + 0.1%
- обидно)",profile_parser_failed:trader_d; llm_unavailable,,,,,1448,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1110,PARSED_WITH_WARNINGS,,"Trader#d
-Btc long
-рыночный
-стоп 89586
-тп1 91332
-тп2 94371",profile_parser_failed:trader_d; llm_unavailable,,,,,,0,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1109,PARSED_WITH_WARNINGS,1461,"trader#d
-upd кину в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1461,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1108,PARSED_WITH_WARNINGS,1462,"trader#d
-upd#бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1462,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1099,PARSED_WITH_WARNINGS,1477,"[trader#d]
-ТП2
-позиция закрыта +0,75",profile_parser_failed:trader_d; llm_unavailable,,,,,1477,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1095,PARSED_WITH_WARNINGS,1481,"[Trader#d] 
-стоп
- -0,5",profile_parser_failed:trader_d; llm_unavailable,,,,,1481,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1090,PARSED_WITH_WARNINGS,1487,"Trader#d
-Перевел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1487,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1084,PARSED_WITH_WARNINGS,1496,"Trader#d
-Gmt остаток ушел в бу
-+0.15%",profile_parser_failed:trader_d; llm_unavailable,,,,,1496,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1083,PARSED_WITH_WARNINGS,1491,"Trader#d
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
+1108,PARSED,1462,"trader#d
+upd#бу",,,,,,,1462,1,0,0,0,,
+1083,PARSED,1491,"Trader#d
 Gun Полный фикс,не нравится.
-+0.5%",profile_parser_failed:trader_d; llm_unavailable,,,,,1491,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1052,PARSED_WITH_WARNINGS,1541,"trader#d
-btc в бу перевел",profile_parser_failed:trader_d; llm_unavailable,,,,,1541,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1050,PARSED_WITH_WARNINGS,1541,"Trader#d
++0.5%",,,,,,,1491,1,0,0,0,,
+1050,PARSED,1541,"Trader#d
 upd
-btc первый фикс сделаем на снятии Лондона 91591",profile_parser_failed:trader_d; llm_unavailable,,,,,1541,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1048,PARSED_WITH_WARNINGS,1545,"trader#d
-Link перевод в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1545,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1046,PARSED_WITH_WARNINGS,,"Trader#d
-Parti Шорт
-лимт 0,09287
-стоп 0,09494
-тп1 0,08977
-тп2 0,08584
-если достигнем тп1 то лимитку убираем",profile_parser_failed:trader_d; llm_unavailable,,,,,,0,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1044,PARSED_WITH_WARNINGS,1550,"Trader#d 
-Link ушел по бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1550,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1043,PARSED_WITH_WARNINGS,,"Trader#d
-Dolousdt Short 
-Вход по рынку риск 0.5%
-Стоп 0.07560
-Тп1 0.062
-Тп2 0.05562",profile_parser_failed:trader_d; llm_unavailable,,,,,,0,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1042,PARSED_WITH_WARNINGS,1556,"Trader#d
-Upd.Стоп в бу на ночь 🤝",profile_parser_failed:trader_d; llm_unavailable,,,,,1556,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1035,PARSED_WITH_WARNINGS,1544,"trader#D
-Zil перевожу в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1544,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1033,PARSED_WITH_WARNINGS,1570,"Trader#d
-Zil закрываю позицию полностью +0,35%",profile_parser_failed:trader_d; llm_unavailable,,,,,1570,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-1003,PARSED_WITH_WARNINGS,1585,"Trader#d
-Dash остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1585,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-920,PARSED_WITH_WARNINGS,,"Trader#d
-scrt short
-риск 0,5
-сл 0,13764
-тп1 0,12522
-тп2 0,11886",profile_parser_failed:trader_d; llm_unavailable,,,,,,0,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-842,PARSED_WITH_WARNINGS,1813,"Trader#d
-Фикс 70%
-Стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1813,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-776,PARSED_WITH_WARNINGS,1949,"[trader #D]
-upd:50% срежем rr 1;1 стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1949,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-774,PARSED_WITH_WARNINGS,1954,"[trader #D]
-Upd.остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1954,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-760,PARSED_WITH_WARNINGS,1976,"[trader #D]
-тп1 фикс 50% +0,35%
-стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,1976,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-754,PARSED_WITH_WARNINGS,1985,"[trader #D]
+btc первый фикс сделаем на снятии Лондона 91591",,,,,,,1541,1,0,0,0,,
+1049,PARSED,1548,"фикс +0,25",,,,,,,1548,1,0,0,0,,
+1045,PARSED,1552,"Upd : лимитку убрал
+Сделка не актуальна",,,,,,,1552,1,0,0,0,,
+1044,PARSED,1550,"Trader#d 
+Link ушел по бу",,,,,,,1550,1,0,0,0,,
+1041,PARSED,1557,Upd:бу,,,,,,,1557,1,0,0,0,,
+1005,PARSED,1582,"Upd:лимитку снимаем.
+Сделка не актуальна",,,,,,,1582,1,0,0,0,,
+1002,PARSED,1595,"Sl.-0,5%",,,,,,,1595,1,0,0,0,,
+990,PARSED,1621,бу,,,,,,,1621,1,0,0,0,,
+969,PARSED,1615,Upd: sl- 0.5,,,,,,,1615,1,0,0,0,,
+951,PARSED,1671,бу,,,,,,,1671,1,0,0,0,,
+876,PARSED,1784,бу,,,,,,,1784,1,0,0,0,,
+817,PARSED,,"https://t.me/c/3171748254/1864
+https://t.me/c/3171748254/1863
+Бу
+Trader#d",,,,,,,,2,0,0,0,,
+754,PARSED,1985,"[trader #D]
 Остаток позиции ушел по бу.
-Профит по сделке +0.25",profile_parser_failed:trader_d; llm_unavailable,,,,,1985,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-639,PARSED_WITH_WARNINGS,2086,"[trader #D]
-остаток ушел в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,2086,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-521,PARSED_WITH_WARNINGS,2320,"Trader#D
-Стоп в бу
-Срежем тут 60% чтобы отбить предидущий стоп)+0,59р",profile_parser_failed:trader_d; llm_unavailable,,,,,2320,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-489,PARSED_WITH_WARNINGS,2376,[trader #D] Стоп переставим в бу,profile_parser_failed:trader_d; llm_unavailable,,,,,2376,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-455,PARSED_WITH_WARNINGS,2395,"[ trader #D]
-Остаток ушел в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,2395,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-427,PARSED_WITH_WARNINGS,2475,"[trader #D]
-тп1 фикс 50% +0,29",profile_parser_failed:trader_d; llm_unavailable,,,,,2475,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-423,PARSED_WITH_WARNINGS,2479,"[trader #D]
-стоп переставляем в + на 1,2453",profile_parser_failed:trader_d; llm_unavailable,,,,,2479,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-421,PARSED_WITH_WARNINGS,2484,"[trader #D]
-Стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,2484,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-419,PARSED_WITH_WARNINGS,2484,"[trader #D]
-Срежем тут 50% +0,42р
-Первый тейк убираем",profile_parser_failed:trader_d; llm_unavailable,,,,,2484,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-417,PARSED_WITH_WARNINGS,2488,[trader #D] остаток ушел в бу+,profile_parser_failed:trader_d; llm_unavailable,,,,,2488,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-414,PARSED_WITH_WARNINGS,2497,[trader #D] стоп в бу,profile_parser_failed:trader_d; llm_unavailable,,,,,2497,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-411,PARSED_WITH_WARNINGS,2484,"[trader #D]
-JTO закрываем полностью 0,307
-+1р",profile_parser_failed:trader_d; llm_unavailable,,,,,2484,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.2; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-408,PARSED_WITH_WARNINGS,2501,[trader #D] стоп в бу,profile_parser_failed:trader_d; llm_unavailable,,,,,2501,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-319,PARSED_WITH_WARNINGS,2608,"[trader #D ]
-Стоп в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,2608,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-317,PARSED_WITH_WARNINGS,2593,"[trader #D ]
-Остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,2593,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-285,PARSED_WITH_WARNINGS,2664,"[trader #D ]
-Остаток позиции закрываем по текущим 31.57",profile_parser_failed:trader_d; llm_unavailable,,,,,2664,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-221,PARSED_WITH_WARNINGS,2689,"[trader #D ]
-Срезаем тут 50% +0.25R ,
-тп 1 убираем
-Стоп в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,2689,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
-205,PARSED_WITH_WARNINGS,2752,"[trader #D]
-Остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,2752,1,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0,classified=UNCLASSIFIED
+Профит по сделке +0.25",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,1985,1,0,0,0,,
+687,PARSED,2123,Sl:-0.5r,,,,,,,2123,1,0,0,0,,
+619,PARSED,2206,Upd:Бу,,,,,,,2206,1,0,0,0,,
+586,PARSED,2262,"Закрою полностью по текущим.
+Не очень нравится 
+Р +0.4%",,,,,,,2262,1,0,0,0,,
+554,PARSED,2310,sl -0.5 поторопился.Буду искать перезаход,,,,,,,2310,1,0,0,0,,
+436,PARSED,2462,Sl:-0.5,,,,,,,2462,1,0,0,0,,
+420,PARSED,2475,"[trader #D]
+Tp 2😑",,,,,,,2475,1,0,0,0,,
+413,PARSED,2498,бу.поищем перезаход,,,,,,,2498,1,0,0,0,,
+350,PARSED,2578,"Б.у 
+поищем перезаход",,,,,,,2578,1,0,0,0,,
+349,PARSED,2578,Перезаход,,,,,,,2578,1,0,0,0,,
+339,PARSED,2581,"Trader [ #D]
+tp фикс еще 25 %
+Остаток 25%",,,,,,,2581,1,0,0,0,,
+316,PARSED,2616,Тут тоже бу 🫡,,,,,,,2616,1,0,0,0,,
+282,PARSED,2679,бу,,,,,,,2679,1,0,0,0,,
+117,PARSED,2902,Бу,,,,,,,2902,1,0,0,0,,
+114,PARSED,2908,"День бу)
+Бу не минус,завтра глянем что нового дадут 🤝",,,,,,,2908,1,0,0,0,,
+43,PARSED,2993,Бу🤝,,,,,,,2993,1,0,0,0,,
+34,PARSED,3003,бу😂,,,,,,,3003,1,0,0,0,,

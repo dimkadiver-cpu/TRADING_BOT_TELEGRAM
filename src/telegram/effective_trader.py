@@ -8,6 +8,8 @@ from src.core.trader_tags import find_normalized_trader_tags, normalize_trader_a
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.trader_mapping import TelegramSource, TelegramSourceTraderMapper
 
+_MAX_REPLY_CHAIN_DEPTH = 10
+
 
 @dataclass(slots=True)
 class EffectiveTraderContext:
@@ -48,16 +50,12 @@ class EffectiveTraderResolver:
             return text_result
 
         if ctx.reply_to_message_id is not None:
-            parent = self._raw_store.get_by_source_and_message_id(
+            chain_result = self._resolve_from_reply_chain(
                 source_chat_id=ctx.source_chat_id,
-                telegram_message_id=ctx.reply_to_message_id,
+                start_message_id=ctx.reply_to_message_id,
             )
-            if parent and parent.source_trader_id:
-                return EffectiveTraderResult(
-                    trader_id=parent.source_trader_id,
-                    method="reply_parent",
-                    detail=str(parent.telegram_message_id),
-                )
+            if chain_result.trader_id:
+                return chain_result
 
         source_result = self._source_mapper.resolve(
             TelegramSource(
@@ -72,6 +70,55 @@ class EffectiveTraderResolver:
                 method=f"source_{source_result.matched_by}",
                 detail=source_result.matched_value,
             )
+
+        return EffectiveTraderResult(trader_id=None, method="unresolved")
+
+    def _resolve_from_reply_chain(
+        self,
+        source_chat_id: str,
+        start_message_id: int,
+    ) -> EffectiveTraderResult:
+        """Walk the reply chain transitively, up to _MAX_REPLY_CHAIN_DEPTH levels.
+
+        At each ancestor checks, in order:
+        1. source_trader_id stored at ingestion time (strongest signal)
+        2. trader alias/tag present in the ancestor's raw_text
+
+        Uses a visited set to break cycles. Stops as soon as a trader is found.
+        """
+        visited: set[int] = set()
+        current_id: int | None = start_message_id
+        depth = 0
+
+        while current_id is not None and depth < _MAX_REPLY_CHAIN_DEPTH:
+            if current_id in visited:
+                break
+            visited.add(current_id)
+
+            parent = self._raw_store.get_by_source_and_message_id(
+                source_chat_id=source_chat_id,
+                telegram_message_id=current_id,
+            )
+            if parent is None:
+                break
+
+            if parent.source_trader_id:
+                return EffectiveTraderResult(
+                    trader_id=parent.source_trader_id,
+                    method="reply_chain",
+                    detail=str(current_id),
+                )
+
+            text_result = self._from_text(parent.raw_text)
+            if text_result.trader_id:
+                return EffectiveTraderResult(
+                    trader_id=text_result.trader_id,
+                    method="reply_chain_alias",
+                    detail=str(current_id),
+                )
+
+            current_id = parent.reply_to_message_id
+            depth += 1
 
         return EffectiveTraderResult(trader_id=None, method="unresolved")
 

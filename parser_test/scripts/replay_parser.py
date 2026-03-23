@@ -27,6 +27,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.core.config_loader import load_config
 from src.core.migrations import apply_migrations
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
+from src.parser.trader_profiles.common_utils import extract_hashtags, extract_telegram_links
 from src.parser.trader_profiles.registry import canonicalize_trader_code, get_profile_parser
 from src.storage.parse_results import ParseResultRecord, ParseResultStore
 from src.storage.raw_messages import RawMessageStore
@@ -213,8 +214,8 @@ def _parse_one(
         channel_id=row.source_chat_id,
         raw_text=row.raw_text or "",
         reply_raw_text=reply_raw_text,
-        extracted_links=[],
-        hashtags=[],
+        extracted_links=_context_links(row.raw_text or ""),
+        hashtags=_context_hashtags(row.raw_text or ""),
     )
     result = profile_parser.parse_message(text=row.raw_text or "", context=context)
     return _build_parse_result_record(
@@ -473,6 +474,31 @@ def _parse_normalized_json(raw: str | None) -> dict[str, object]:
     return {}
 
 
+def _context_links(raw_text: str) -> list[str]:
+    links: list[str] = []
+    seen: set[str] = set()
+    for link in extract_telegram_links(raw_text):
+        normalized = link if link.startswith("http") else f"https://{link}"
+        if normalized in seen:
+            continue
+        seen.add(normalized)
+        links.append(normalized)
+    return links
+
+
+def _context_hashtags(raw_text: str) -> list[str]:
+    tags: list[str] = []
+    seen: set[str] = set()
+    for tag in extract_hashtags(raw_text):
+        rendered = f"#{tag}"
+        lowered = rendered.lower()
+        if lowered in seen:
+            continue
+        seen.add(lowered)
+        tags.append(rendered)
+    return tags
+
+
 def _extract_signal_id(raw_text: str) -> int | None:
     match = _SIGNAL_ID_RE.search(raw_text or "")
     if not match:
@@ -527,6 +553,7 @@ def replay_database(
     trader: str | None = None,
     from_date: str | None = None,
     to_date: str | None = None,
+    parser_mode: str | None = None,
     show_normalized_samples: int = 3,
 ) -> None:
     """Callable entry point for use by other scripts (e.g. generate_parser_reports.py)."""

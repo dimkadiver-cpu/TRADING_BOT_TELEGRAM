@@ -27,6 +27,7 @@ class StoredRawMessage:
     telegram_message_id: int
     source_trader_id: str | None
     raw_text: str | None
+    reply_to_message_id: int | None = None
 
 
 @dataclass(slots=True)
@@ -93,7 +94,8 @@ class RawMessageStore:
         telegram_message_id: int,
     ) -> StoredRawMessage | None:
         query = """
-            SELECT raw_message_id, source_chat_id, telegram_message_id, source_trader_id, raw_text
+            SELECT raw_message_id, source_chat_id, telegram_message_id,
+                   source_trader_id, raw_text, reply_to_message_id
             FROM raw_messages
             WHERE source_chat_id = ? AND telegram_message_id = ?
             LIMIT 1
@@ -108,4 +110,5 @@ class RawMessageStore:
                 telegram_message_id=int(row[2]),
                 source_trader_id=row[3],
                 raw_text=row[4],
+                reply_to_message_id=int(row[5]) if row[5] is not None else None,
             )

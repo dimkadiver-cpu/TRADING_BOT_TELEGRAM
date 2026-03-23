@@ -1,63 +1,63 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1378,PARSED_WITH_WARNINGS,,"[trader#C]
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1378,PARSED,,"[trader#C]
 https://t.me/c/3171748254/1054  
-В бу перевел",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1054,signal,single,1054,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1372,PARSED_WITH_WARNINGS,,"[trader#C]
+В бу перевел",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1054,signal,single,1054,1,,,,,,,,,,,,,0,0,0,
+1372,PARSED,,"[trader#C]
 
 https://t.me/c/3171748254/1054
-Ушли в б/у",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1054,signal,single,1054,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1369,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1062
+Ушли в б/у",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1054,signal,single,1054,1,,,,,,,,,,,,,0,0,0,
+1369,PARSED,,"https://t.me/c/3171748254/1062
 Добор убрал, в бу перевел 
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1062,signal,single,1062,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=2; warning_count=0
-1368,PARSED_WITH_WARNINGS,,"]https://t.me/c/3171748254/1062
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1062,signal,single,1062,1,,,,,,,,,,,,,0,0,0,
+1368,PARSED,,"]https://t.me/c/3171748254/1062
 🥳 Tp1
  
-[ trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1062,signal,single,1062,1,reply_or_link,,,,TP1,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1349,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1095
+[ trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1062,signal,single,1062,1,,,,,,,,,,,,,0,0,0,
+1349,PARSED,,"https://t.me/c/3171748254/1095
 Закрываю на точке входа,нет реакции
   
-[trader#C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1095,signal,single,1095,1,reply_or_link,,FULL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1348,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1095  
+[trader#C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1095,signal,single,1095,1,,,,,,,,,,,,,0,0,0,
+1348,PARSED,,"https://t.me/c/3171748254/1095  
 Не актуально 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1095,signal,single,1095,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1345,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1094
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1095,signal,single,1095,1,,,,,,,,,,,,,0,0,0,
+1345,PARSED,,"https://t.me/c/3171748254/1094
 Первая лимитка сработала
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1094,signal,single,1094,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1342,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1094
+[trader#C]",,,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,,,,0.8,,,,1094,signal,single,1094,1,,,,,,,,,,,,,0,0,0,
+1342,PARSED,,"https://t.me/c/3171748254/1094
 Тейк 1🥳
-[ trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1094,signal,single,1094,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1340,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1094
+[ trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1094,signal,single,1094,1,,,,,,,,,,,,,0,0,0,
+1340,PARSED,,"https://t.me/c/3171748254/1094
  В бу перевел 
 Доливку убрал 
-[trader#C ]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1094,signal,single,1094,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=2; warning_count=0
-1337,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1094
+[trader#C ]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1094,signal,single,1094,1,,,,,,,,,,,,,0,0,0,
+1337,PARSED,,"https://t.me/c/3171748254/1094
 Тейк 2🥳
-[trader#c]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1094,signal,single,1094,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1334,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1079
+[trader#c]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1094,signal,single,1094,1,,,,,,,,,,,,,0,0,0,
+1334,PARSED,,"https://t.me/c/3171748254/1079
  Не актуально 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1079,signal,single,1079,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1333,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1078
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1079,signal,single,1079,1,,,,,,,,,,,,,0,0,0,
+1333,PARSED,,"https://t.me/c/3171748254/1078
 Не актуально 
-[trader#c]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1078,signal,single,1078,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1319,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1094
+[trader#c]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1078,signal,single,1078,1,,,,,,,,,,,,,0,0,0,
+1319,PARSED,,"https://t.me/c/3171748254/1094
 90500 Позиция закрыта по тейку. Поздравляю! 🥳
 
-[trader#C ]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1094,signal,single,1094,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1310,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1151
+[trader#C ]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1094,signal,single,1094,1,,,,,,,,,,,,,0,0,0,
+1310,PARSED,,"https://t.me/c/3171748254/1151
  После первого тп в бу 
 
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1151,signal,single,1151,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1309,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1151  
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1151,signal,single,1151,1,,,,,,,,,,,,,0,0,0,
+1309,PARSED,,"https://t.me/c/3171748254/1151  
 Тп2 🥳
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1151,signal,single,1151,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1308,PARSED_WITH_WARNINGS,1151,"Остаток ушел в бу после 2 тп
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1151,signal,single,1151,1,,,,,,,,,,,,,0,0,0,
+1308,PARSED,1151,"Остаток ушел в бу после 2 тп
  
-[trader#C ]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1151,signal,single,1151,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1302,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1161
+[trader#C ]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1151,signal,single,1151,1,,,,,,,,,,,,,0,0,0,
+1302,PARSED,,"https://t.me/c/3171748254/1161
  Тп1🥳🥳🥳
 Доливку убрал в бу перевел 
-[trader#C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1161,signal,single,1161,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=4; actions_count=2; warning_count=0
-1299,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1161
+[trader#C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1161,signal,single,1161,1,,,,,,,,,,,,,0,0,0,
+1299,PARSED,,"https://t.me/c/3171748254/1161
 Доливаю сейчас по рынку объем.
 
 Средняя стала - 86950 
@@ -66,59 +66,59 @@ https://t.me/c/3171748254/1054
 87650
 88200
 90600
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1161,signal,single,1161,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1297,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1161
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1161,signal,single,1161,1,,,,,,,,,,,,,0,0,0,
+1297,PARSED,,"https://t.me/c/3171748254/1161
 Позиция закрыта в бу
- [trader#C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1161,signal,single,1161,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1294,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1175
+ [trader#C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1161,signal,single,1161,1,,,,,,,,,,,,,0,0,0,
+1294,PARSED,,"https://t.me/c/3171748254/1175
 
 🥳🥳🥳🥳
   Тп 1
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1175,signal,single,1175,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1293,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1175
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1175,signal,single,1175,1,,,,,,,,,,,,,0,0,0,
+1293,PARSED,,"https://t.me/c/3171748254/1175
 Изменения -
 Тп2 88150
  
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1175,signal,single,1175,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1290,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1122
+[trader#C]",,,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,,,,1175,signal,single,1175,1,,,,,,,,,,,,,0,0,0,
+1290,PARSED,,"https://t.me/c/3171748254/1122
  Не актуально не дошел до лимитки 😔
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1122,signal,single,1122,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1289,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1121
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1122,signal,single,1122,1,,,,,,,,,,,,,0,0,0,
+1289,PARSED,,"https://t.me/c/3171748254/1121
 Не актуально 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1121,signal,single,1121,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1286,PARSED_WITH_WARNINGS,1175,"В бу перевел 
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1121,signal,single,1121,1,,,,,,,,,,,,,0,0,0,
+1286,PARSED,1175,"В бу перевел 
  
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1175,signal,single,1175,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1281,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1178
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1175,signal,single,1175,1,,,,,,,,,,,,,0,0,0,
+1281,PARSED,,"https://t.me/c/3171748254/1178
 
 Тп 2 RR1-3+ 🥳🥳🥳
-[trader#c]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1178,signal,single,1178,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1274,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1175
+[trader#c]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1178,signal,single,1178,1,,,,,,,,,,,,,0,0,0,
+1274,PARSED,,"https://t.me/c/3171748254/1175
  
 Тп3 🥳🥳🥳 RR 1-4
 
-[trader#C ]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,RR,,UNKNOWN,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1175,signal,single,1175,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.78; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1271,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1214
+[trader#C ]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1175,signal,single,1175,1,,,,,,,,,,,,,0,0,0,
+1271,PARSED,,"https://t.me/c/3171748254/1214
 
 Стоп -1%
-[trader#c]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1214,signal,single,1214,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1270,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1175
+[trader#c]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1214,signal,single,1214,1,,,,,,,,,,,,,0,0,0,
+1270,PARSED,,"https://t.me/c/3171748254/1175
   Остаток в бу ушёл 
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1175,signal,single,1175,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1268,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1217
+[trader#C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1175,signal,single,1175,1,,,,,,,,,,,,,0,0,0,
+1268,PARSED,,"https://t.me/c/3171748254/1217
 
 Тп1🥳 RR1-1
  
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1217,signal,single,1217,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1267,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1217
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1217,signal,single,1217,1,,,,,,,,,,,,,0,0,0,
+1267,PARSED,,"https://t.me/c/3171748254/1217
  В бу перевел, добор убрал 
 
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1217,signal,single,1217,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=2; warning_count=0
-1261,PARSED_WITH_WARNINGS,1224,"Тп 1  RR1-2 🥳🥳🥳в бу перевел
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1217,signal,single,1217,1,,,,,,,,,,,,,0,0,0,
+1261,PARSED,1224,"Тп 1  RR1-2 🥳🥳🥳в бу перевел
   
-[trader#С]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1224,signal,single,1224,1,reply_or_link,ENTRY,,,TP,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-1257,PARSED_WITH_WARNINGS,,"[trader#С]
+[trader#С]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1224,signal,single,1224,1,,,,,,,,,,,,,0,0,0,
+1257,PARSED,,"[trader#С]
 
 $ETHUSDT - LONG в сущ позиции!
 
@@ -133,38 +133,38 @@ Tейк-профит
 
 1)2965
 
-2)2990",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE(applies_to=signal:single),ETHUSDT,LONG,LINEAR,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1217,signal,single,1217,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.78; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1235,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1237
+2)2990",,,,,,,ETHUSDT,,,0.8,,,,1217,signal,single,1217,1,,,,,,,,,,,,,0,0,0,
+1235,PARSED,,"https://t.me/c/3171748254/1237
  Закрыто в бу 
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1237,signal,single,1237,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1234,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1224
+[trader#C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1237,signal,single,1237,1,,,,,,,,,,,,,0,0,0,
+1234,PARSED,,"https://t.me/c/3171748254/1224
 
 Закрыт остаток в бу
  
-[trader#C]",llm_unavailable,U_EXIT_BE,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1224,signal,single,1224,1,reply_or_link,,FULL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1231,PARSED_WITH_WARNINGS,1275,"🥳 тп 1 в бу перевел , понаблюдаем 
+[trader#C]",,,U_EXIT_BE,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,,,,0.8,,,,1224,signal,single,1224,1,,,,,,,,,,,,,0,0,0,
+1231,PARSED,1275,"🥳 тп 1 в бу перевел , понаблюдаем 
 https://t.me/c/3171748254/1275
  
-[trader#C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1275,signal,single,1275,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-1229,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1275
+[trader#C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1275,signal,single,1275,1,,,,,,,,,,,,,0,0,0,
+1229,PARSED,,"https://t.me/c/3171748254/1275
  
 Тп2🥳 
- [trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1275,signal,single,1275,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1228,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1275
+ [trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1275,signal,single,1275,1,,,,,,,,,,,,,0,0,0,
+1228,PARSED,,"https://t.me/c/3171748254/1275
 
 Тп 3🥳🥳🥳
 
 Остаток объема везём дальше 
 87000
 86444
- [trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1275,signal,single,1275,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=0; warning_count=0
-1225,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1275
+ [trader#C]",,,U_TP_HIT,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,,,,0.8,,,,1275,signal,single,1275,1,,,,,,,,,,,,,0,0,0,
+1225,PARSED,,"https://t.me/c/3171748254/1275
   
 Тп 4 🥳🥳🥳 RR1-7
  
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1275,signal,single,1275,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1223,PARSED_WITH_WARNINGS,,"[trader #С]
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1275,signal,single,1275,1,,,,,,,,,,,,,0,0,0,
+1223,PARSED,,"[trader #С]
 
 Btcusdt SHORT 
 
@@ -172,77 +172,77 @@ Btcusdt SHORT
 Чтобы средняя оказалась в 88500 стоп в бу ,это чуть больше того что в позе для тех кто не закрыл остаток на 87000!!!Кто закрыл нечего делать не нужно 
 Тп1.  87222
 Тп2.  86666
-Тп3.  85888",normalized_update_missing_target_ref; update without strong link; llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,BTCUSDT,SHORT,LINEAR,0.8,regex,llm_only,PARSED_WITH_WARNINGS,,signal,single,,0,reply_or_link,ENTRY,,,TP,,,,,,,,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.58; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-1221,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1288
+Тп3.  85888",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,BTCUSDT,,,0.8,,,,,signal,unknown,,0,,,,,,,,,,,,,0,0,0,
+1221,PARSED,,"https://t.me/c/3171748254/1288
  
 🥳 Тп1
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1288,signal,single,1288,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1220,PARSED_WITH_WARNINGS,1288,"Закрываю по рынку 87450 остаток,не нравится реакция 
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1288,signal,single,1288,1,,,,,,,,,,,,,0,0,0,
+1220,PARSED,1288,"Закрываю по рынку 87450 остаток,не нравится реакция 
 
-[trader#C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1288,signal,single,1288,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1219,PARSED_WITH_WARNINGS,1287,"Тп 1 🥳
+[trader#C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1288,signal,single,1288,1,,,,,,,,,,,,,0,0,0,
+1219,PARSED,1287,"Тп 1 🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1287,signal,single,1287,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1215,PARSED_WITH_WARNINGS,1287,"Закрыт остаток в бу
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1287,signal,single,1287,1,,,,,,,,,,,,,0,0,0,
+1215,PARSED,1287,"Закрыт остаток в бу
 
-[trader #C]",llm_unavailable,U_EXIT_BE,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1287,signal,single,1287,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1200,PARSED_WITH_WARNINGS,1327,"Тп1🥳
- [trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1327,signal,single,1327,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1199,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1327
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,U_EXIT_BE | U_CLOSE_FULL,,,,0.8,,,,1287,signal,single,1287,1,,,,,,,,,,,,,0,0,0,
+1200,PARSED,1327,"Тп1🥳
+ [trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1327,signal,single,1327,1,,,,,,,,,,,,,0,0,0,
+1199,PARSED,,"https://t.me/c/3171748254/1327
  Тп2🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1327,signal,single,1327,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1198,PARSED_WITH_WARNINGS,1327,"[trader#C]
-В бу перевел 89650",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1327,signal,single,1327,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1197,PARSED_WITH_WARNINGS,1335,"[trader#C]
-  Остаток ушел в бу.",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1335,signal,single,1335,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1191,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1340
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1327,signal,single,1327,1,,,,,,,,,,,,,0,0,0,
+1198,PARSED,1327,"[trader#C]
+В бу перевел 89650",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1327,signal,single,1327,1,,,,,,,,,,,,,0,0,0,
+1197,PARSED,1335,"[trader#C]
+  Остаток ушел в бу.",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1335,signal,single,1335,1,,,,,,,,,,,,,0,0,0,
+1191,PARSED,,"https://t.me/c/3171748254/1340
 
 Тп1🥳
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1340,signal,single,1340,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1189,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1340
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1340,signal,single,1340,1,,,,,,,,,,,,,0,0,0,
+1189,PARSED,,"https://t.me/c/3171748254/1340
   В бу перевел,90500
   
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1340,signal,single,1340,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1185,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1340
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1340,signal,single,1340,1,,,,,,,,,,,,,0,0,0,
+1185,PARSED,,"https://t.me/c/3171748254/1340
 
 Тп 2🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1340,signal,single,1340,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1178,PARSED_WITH_WARNINGS,1340,"Закрываю по рынку остаток 
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1340,signal,single,1340,1,,,,,,,,,,,,,0,0,0,
+1178,PARSED,1340,"Закрываю по рынку остаток 
 90200-100
-[trader#C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1340,signal,single,1340,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1167,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1374
+[trader#C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1340,signal,single,1340,1,,,,,,,,,,,,,0,0,0,
+1167,PARSED,,"https://t.me/c/3171748254/1374
 
 Tp1🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1374,signal,single,1374,1,reply_or_link,,,,TP1,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1166,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1374
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1374,signal,single,1374,1,,,,,,,,,,,,,0,0,0,
+1166,PARSED,,"https://t.me/c/3171748254/1374
  
 Стоп в 91600, рискуем профитом с тп1
 
-[trader #C]",llm_unavailable,U_UPDATE_STOP,U_MOVE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1374,signal,single,1374,1,reply_or_link,,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1161,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1381
+[trader #C]",,,U_UPDATE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,,,,0.8,,,,1374,signal,single,1374,1,,,,,,,,,,,,,0,0,0,
+1161,PARSED,,"https://t.me/c/3171748254/1381
  Сэтап закрыт в 0
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1381,signal,single,1381,1,reply_or_link,,FULL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1152,PARSED_WITH_WARNINGS,,"[trader#C]
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1381,signal,single,1381,1,,,,,,,,,,,,,0,0,0,
+1152,PARSED,,"[trader#C]
 В бу перевел 92900
-https://t.me/c/3171748254/1390",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1390,signal,single,1390,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1151,PARSED_WITH_WARNINGS,1404,"Остаток ушел в бу
- [trader#C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1404,signal,single,1404,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1145,PARSED_WITH_WARNINGS,,"[trader#C]
+https://t.me/c/3171748254/1390",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1390,signal,single,1390,1,,,,,,,,,,,,,0,0,0,
+1151,PARSED,1404,"Остаток ушел в бу
+ [trader#C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1404,signal,single,1404,1,,,,,,,,,,,,,0,0,0,
+1145,PARSED,,"[trader#C]
 
 https://t.me/c/3171748254/1409
  До тп 0,1 пипс не дошли 
- Закрываю по рынку 93700",llm_unavailable,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,U_TP_HIT | U_CLOSE_FULL,U_TP_HIT | U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1409,signal,single,1409,1,reply_or_link,,FULL,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1139,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1416
+ Закрываю по рынку 93700",,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,U_TP_HIT | U_CLOSE_FULL,U_TP_HIT | U_CLOSE_FULL,,,,0.8,,,,1409,signal,single,1409,1,,,,,,,,,,,,,0,0,0,
+1139,PARSED,,"https://t.me/c/3171748254/1416
  
 Стоп -1% 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1416,signal,single,1416,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1135,PARSED_WITH_WARNINGS,,"Друзья, это снова #админ 👋
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1416,signal,single,1416,1,,,,,,,,,,,,,0,0,0,
+1135,PARSED,,"Друзья, это снова #админ 👋
 По просьбам ТРЕЙДящихся - варианты фиксации прибыли по сигналам trader#C !
 
 Чтобы не создавалось впечатления, что у этого самурая нет цели - а есть только путь комиссия за фандинг. 😂
@@ -288,194 +288,236 @@ TP4 - 20%
 Понятные режимы  частичной фиксации, без особой жадности aka «Хатико и его последний тейк», но и не паникёрство из разряда «увидел зелёную свечу - зафиксировался, перекрестился и удалил приложение биржи». 😂
 Вот как-то так.
 
-#админ",trader_c_update_missing_target; normalized_update_missing_actions; normalized_update_missing_target_ref; update without strong link; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,RR,,UNKNOWN,0.6,regex,llm_only,PARSED_WITH_WARNINGS,,signal,unknown,,0,unresolved,,,,TP1,,,,,,,30 | 30 | 40 | 25 | 25 | 30 | 20,0,0,5,parser_mode=llm_only; parser_used=regex; confidence=0.58; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=1
-1133,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1427
+#админ",trader_c_update_missing_target,trader_c_update_missing_target,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.6,,,,,signal,unknown,,0,,,,,,,,,,,,,0,0,0,
+1133,PARSED,,"https://t.me/c/3171748254/1427
 
 Стоп -1%
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1427,signal,single,1427,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1128,PARSED_WITH_WARNINGS,1436,"Стоп в бу на точку входа 92200
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1427,signal,single,1427,1,,,,,,,,,,,,,0,0,0,
+1128,PARSED,1436,"Стоп в бу на точку входа 92200
 
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1436,signal,single,1436,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1126,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1436
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1436,signal,single,1436,1,,,,,,,,,,,,,0,0,0,
+1126,PARSED,,"https://t.me/c/3171748254/1436
 
 Закрыто в бу 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1436,signal,single,1436,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1124,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1441
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1436,signal,single,1436,1,,,,,,,,,,,,,0,0,0,
+1124,PARSED,,"https://t.me/c/3171748254/1441
 Теперь закрыто до тп не дошли 30 пунктов (.
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1441,signal,single,1441,1,reply_or_link,,FULL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1117,PARSED_WITH_WARNINGS,1449,"Стоп -1%
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1441,signal,single,1441,1,,,,,,,,,,,,,0,0,0,
+1117,PARSED,1449,"Стоп -1%
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1449,signal,single,1449,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1116,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1446
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1449,signal,single,1449,1,,,,,,,,,,,,,0,0,0,
+1116,PARSED,,"https://t.me/c/3171748254/1446
 
 Tp1🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1446,signal,single,1446,1,reply_or_link,,,,TP1,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1114,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1449
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1446,signal,single,1446,1,,,,,,,,,,,,,0,0,0,
+1115,PARSED,1446,"https://t.me/c/3171748254/1446
+Тп 2 ,в бу перевел 3136
+
+[tradet#C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1446,signal,single,1446,1,,,,,,,,,,,,,0,0,0,
+1114,PARSED,,"https://t.me/c/3171748254/1449
    
 Перезашел стоп 90550, изменённо !!! тп тоже
 
-[trader#C]",llm_unavailable,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS | U_REENTER,U_UPDATE_TAKE_PROFITS | U_REENTER,U_UPDATE_TAKE_PROFITS | U_REENTER,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1449,signal,single,1449,1,reply_or_link,,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-1112,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1446
+[trader#C]",,,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS | U_REENTER,U_UPDATE_TAKE_PROFITS | U_REENTER,U_UPDATE_TAKE_PROFITS | U_REENTER,,,,0.8,,,,1449,signal,single,1449,1,,,,,,,,,,,,,0,0,0,
+1112,PARSED,,"https://t.me/c/3171748254/1446
  После тп 2 +0,6 в бу ушли
 
-[trader#C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1446,signal,single,1446,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-1111,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1456
+[trader#C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1446,signal,single,1446,1,,,,,,,,,,,,,0,0,0,
+1111,PARSED,,"https://t.me/c/3171748254/1456
  Стоп -1% 
- [trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1456,signal,single,1456,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1105,PARSED_WITH_WARNINGS,1467,"Тп1🥳
+ [trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1456,signal,single,1456,1,,,,,,,,,,,,,0,0,0,
+1105,PARSED,1467,"Тп1🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1467,signal,single,1467,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1104,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1467
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1467,signal,single,1467,1,,,,,,,,,,,,,0,0,0,
+1104,PARSED,,"https://t.me/c/3171748254/1467
   Тп 2🥳
  В бу перевел 89800
 
-[trader#C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1467,signal,single,1467,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-1103,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1467
+[trader#C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1467,signal,single,1467,1,,,,,,,,,,,,,0,0,0,
+1103,PARSED,,"https://t.me/c/3171748254/1467
 
 Тп3🥳 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1467,signal,single,1467,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1100,PARSED_WITH_WARNINGS,1467,"Остаток позы на последний ТП увеличиваю в два раза в диапазоне 90750-650 лимиткой, с учётом чтобы позиция осталась после увеличения в бу диапазоне до 90300 . 
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1467,signal,single,1467,1,,,,,,,,,,,,,0,0,0,
+1100,PARSED,1467,"Остаток позы на последний ТП увеличиваю в два раза в диапазоне 90750-650 лимиткой, с учётом чтобы позиция осталась после увеличения в бу диапазоне до 90300 . 
 ТП дополнительный - 91100
 
 Вход теперь на 90280 в БУ
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1467,signal,single,1467,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1098,PARSED_WITH_WARNINGS,1478,"Закрыт остаток 
+[trader #C]",,,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,,,,1467,signal,single,1467,1,,,,,,,,,,,,,0,0,0,
+1098,PARSED,1478,"Закрыт остаток 
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1478,signal,single,1478,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1069,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1505
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1478,signal,single,1478,1,,,,,,,,,,,,,0,0,0,
+1069,PARSED,,"https://t.me/c/3171748254/1505
 
 Скинул часть по текущим 0,0765 (30%)
 В бу перевел,доливку убрал 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_CLOSE_PARTIAL | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_CLOSE_PARTIAL | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_CLOSE_PARTIAL | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1505,signal,single,1505,1,reply_or_link,ENTRY,PARTIAL,0.3,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=4; actions_count=3; warning_count=0
-1066,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1526
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_CLOSE_PARTIAL | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_CLOSE_PARTIAL | U_REMOVE_PENDING_ENTRY,U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_CLOSE_PARTIAL | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1505,signal,single,1505,1,,,,,,,,,,,,,0,0,0,
+1066,PARSED,,"https://t.me/c/3171748254/1526
 
 Тп 1🥳
  
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1526,signal,single,1526,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1065,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1526
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1526,signal,single,1526,1,,,,,,,,,,,,,0,0,0,
+1065,PARSED,,"https://t.me/c/3171748254/1526
 
 Тп 2 🥳в бу перевел 
 
-[trader#C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1526,signal,single,1526,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-1064,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1525
+[trader#C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1526,signal,single,1526,1,,,,,,,,,,,,,0,0,0,
+1064,PARSED,,"https://t.me/c/3171748254/1525
 
 Остаток ушел в бу
 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1525,signal,single,1525,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1051,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1542
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1525,signal,single,1525,1,,,,,,,,,,,,,0,0,0,
+1055,PARSED,1540,"Доливаю по 90900 лимит объем то что остался цель 90200,89200
+Стоп в бу на 91500",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1540,signal,single,1540,1,,,,,,,,,,,,,0,0,0,
+1051,PARSED,,"https://t.me/c/3171748254/1542
  Закрыто в бу 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1542,signal,single,1542,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1031,PARSED_WITH_WARNINGS,1575,"Стоп -0,5 
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1542,signal,single,1542,1,,,,,,,,,,,,,0,0,0,
+1031,PARSED,1575,"Стоп -0,5 
  
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1575,signal,single,1575,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-1029,PARSED_WITH_WARNINGS,1504,"Не актуально 
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1575,signal,single,1575,1,,,,,,,,,,,,,0,0,0,
+1029,PARSED,1504,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1504,signal,single,1504,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-1026,PARSED_WITH_WARNINGS,1580,"Не актуально пока писал улители)
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1504,signal,single,1504,1,,,,,,,,,,,,,0,0,0,
+1026,PARSED,1580,"Не актуально пока писал улители)
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1580,signal,single,1580,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-999,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1596
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1580,signal,single,1580,1,,,,,,,,,,,,,0,0,0,
+999,PARSED,,"https://t.me/c/3171748254/1596
 
 [trader#C]    tp1🥳
 
-  В бу перевел,доливку убрал.",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1596,signal,single,1596,1,reply_or_link,ENTRY,,,TP1,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=4; actions_count=2; warning_count=0
-983,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1596
+  В бу перевел,доливку убрал.",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1596,signal,single,1596,1,,,,,,,,,,,,,0,0,0,
+983,PARSED,,"https://t.me/c/3171748254/1596
 
 Тп2🥳
 
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1596,signal,single,1596,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-975,PARSED_WITH_WARNINGS,1640,"Не актуально пошли без нас
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1596,signal,single,1596,1,,,,,,,,,,,,,0,0,0,
+975,PARSED,1640,"Не актуально пошли без нас
 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1640,signal,single,1640,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-970,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1596
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1640,signal,single,1640,1,,,,,,,,,,,,,0,0,0,
+970,PARSED,,"https://t.me/c/3171748254/1596
 
 Остаток в бу ушёл 
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1596,signal,single,1596,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-944,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1674
+[trader#C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1596,signal,single,1596,1,,,,,,,,,,,,,0,0,0,
+944,PARSED,,"https://t.me/c/3171748254/1674
 
 Закрываю по текущим 
 -0,05
 Доливку убрал 
 
 
-[trader#C]",llm_unavailable,U_REMOVE_PENDING_ENTRY,U_REMOVE_PENDING_ENTRY,U_REMOVE_PENDING_ENTRY,U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1674,signal,single,1674,1,reply_or_link,,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-940,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1683
+[trader#C]",,,U_REMOVE_PENDING_ENTRY,U_REMOVE_PENDING_ENTRY,U_REMOVE_PENDING_ENTRY,U_REMOVE_PENDING_ENTRY,,,,0.8,,,,1674,signal,single,1674,1,,,,,,,,,,,,,0,0,0,
+940,PARSED,,"https://t.me/c/3171748254/1683
 
 
 Тр1🥳
 
 
-[trader#C]",normalized_update_missing_intents; llm_unavailable,,,ACT_REQUEST_MANUAL_REVIEW,ACT_REQUEST_MANUAL_REVIEW,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1683,signal,single,1683,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=0; actions_count=1; warning_count=0
-939,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1683
+[trader#C]",,,,,,,,,,0.8,,,,1683,signal,single,1683,1,,,,,,,,,,,,,0,0,0,
+939,PARSED,,"https://t.me/c/3171748254/1683
  В бу перевел 95350 
-[trader#C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1683,signal,single,1683,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-932,PARSED_WITH_WARNINGS,1695,"Стоп -0,5
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1695,signal,single,1695,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-929,PARSED_WITH_WARNINGS,1699,"Стоп -1
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1699,signal,single,1699,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-927,PARSED_WITH_WARNINGS,1701,"Стоп -1
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1701,signal,single,1701,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-917,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1709
+[trader#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1683,signal,single,1683,1,,,,,,,,,,,,,0,0,0,
+932,PARSED,1695,"Стоп -0,5
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1695,signal,single,1695,1,,,,,,,,,,,,,0,0,0,
+929,PARSED,1699,"Стоп -1
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1699,signal,single,1699,1,,,,,,,,,,,,,0,0,0,
+927,PARSED,1701,"Стоп -1
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1701,signal,single,1701,1,,,,,,,,,,,,,0,0,0,
+917,PARSED,,"https://t.me/c/3171748254/1709
 
 Тп1🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1709,signal,single,1709,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-904,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1720
+[trader#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1709,signal,single,1709,1,,,,,,,,,,,,,0,0,0,
+904,PARSED,,"https://t.me/c/3171748254/1720
  Не актуально 
 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1720,signal,single,1720,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-903,PARSED_WITH_WARNINGS,1709,"[trader#C]
-В бу перевел",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1709,signal,single,1709,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-896,PARSED_WITH_WARNINGS,1741,"Остаток ушел в бу 
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1720,signal,single,1720,1,,,,,,,,,,,,,0,0,0,
+903,PARSED,1709,"[trader#C]
+В бу перевел",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1709,signal,single,1709,1,,,,,,,,,,,,,0,0,0,
+896,PARSED,1741,"Остаток ушел в бу 
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1741,signal,single,1741,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-895,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1690
-
-Стоп -1%
-
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1690,signal,single,1690,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-889,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1766
+[trader#C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1741,signal,single,1741,1,,,,,,,,,,,,,0,0,0,
+895,PARSED,,"https://t.me/c/3171748254/1690
 
 Стоп -1%
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1766,signal,single,1766,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-881,PARSED_WITH_WARNINGS,1770,"Закрыл по рынку 
+
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1690,signal,single,1690,1,,,,,,,,,,,,,0,0,0,
+889,PARSED,,"https://t.me/c/3171748254/1766
+
+Стоп -1%
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1766,signal,single,1766,1,,,,,,,,,,,,,0,0,0,
+881,PARSED,1770,"Закрыл по рынку 
 91000
 
-[ trader#C ]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1770,signal,single,1770,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-864,PARSED_WITH_WARNINGS,1792,"[trader#C]
-В бу перевел",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1792,signal,single,1792,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-858,PARSED_WITH_WARNINGS,1792,"Закрыл по текущим на комиссию 
+[ trader#C ]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1770,signal,single,1770,1,,,,,,,,,,,,,0,0,0,
+872,PARSED,,"https://t.me/c/3171748254/1781
 
-[trader#C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1792,signal,single,1792,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-849,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1802
+Стоп -1%
+
+[tradet #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1781,signal,single,1781,1,,,,,,,,,,,,,0,0,0,
+864,PARSED,1792,"[trader#C]
+В бу перевел",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1792,signal,single,1792,1,,,,,,,,,,,,,0,0,0,
+858,PARSED,1792,"Закрыл по текущим на комиссию 
+
+[trader#C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1792,signal,single,1792,1,,,,,,,,,,,,,0,0,0,
+850,PARSED,,"https://t.me/c/3171748254/1802
+
+Тп 1 🥳 , впереди Трамп так что в бу 88250
+
+[tradet#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1802,signal,single,1802,1,,,,,,,,,,,,,0,0,0,
+849,PARSED,,"https://t.me/c/3171748254/1802
 Изменения 89900 тп 2 
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1802,signal,single,1802,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-843,PARSED_WITH_WARNINGS,1824,"Стоп -0,5
+[trader#C]",,,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,,,,1802,signal,single,1802,1,,,,,,,,,,,,,0,0,0,
+848,PARSED,1820,"Тп 2🥳
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1824,signal,single,1824,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-832,PARSED_WITH_WARNINGS,1836,"Не актуально 
+[tradet#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1820,signal,single,1820,1,,,,,,,,,,,,,0,0,0,
+846,PARSED,,"https://t.me/c/3171748254/1802
 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1836,signal,single,1836,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-826,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1847
+Пробуем долить до объема того что был 
+ 
+Btcusdt Long 
+ 
+Лимитка 89250 
+
+Объем. 0,5 
+
+Средняя сместиться в 88770 стоп в бу 
+
+Тп на 90000 ,и на 93000 добавляем если все получится 
+
+[tradet#C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,BTCUSDT,,,0.8,,,,1802,signal,single,1802,1,,,,,,,,,,,,,0,0,0,
+843,PARSED,1824,"Стоп -0,5
+
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1824,signal,single,1824,1,,,,,,,,,,,,,0,0,0,
+832,PARSED,1836,"Не актуально 
+
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1836,signal,single,1836,1,,,,,,,,,,,,,0,0,0,
+831,PARSED,1844,"Стоп -1%
+
+[tradet#c]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1844,signal,single,1844,1,,,,,,,,,,,,,0,0,0,
+826,PARSED,,"https://t.me/c/3171748254/1847
 
 Стоп переносим на 88650 в -0,5 RR
 
-[trader #C]",llm_unavailable,U_UPDATE_STOP,U_MOVE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,RR,,UNKNOWN,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1847,signal,single,1847,1,reply_or_link,,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.78; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-818,PARSED_WITH_WARNINGS,1847,"Остаток закрыт по рынку 
+[trader #C]",,,U_UPDATE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,,,,0.8,,,,1847,signal,single,1847,1,,,,,,,,,,,,,0,0,0,
+824,PARSED,,"https://t.me/c/3171748254/1847
+ 
+Тп 1🥳. Стоп 88800
+
+[tradet#C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,1847,signal,single,1847,1,,,,,,,,,,,,,0,0,0,
+818,PARSED,1847,"Остаток закрыт по рынку 
 89100
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1847,signal,single,1847,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-812,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1884
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1847,signal,single,1847,1,,,,,,,,,,,,,0,0,0,
+812,PARSED,,"https://t.me/c/3171748254/1884
 
 Изменения!!!
 Тп 1 сейчас 88600 +
@@ -485,127 +527,132 @@ Tp1🥳
 
 Стоп 88300
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1884,signal,single,1884,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-811,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1884
+[trader #C]",,,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,,,,1884,signal,single,1884,1,,,,,,,,,,,,,0,0,0,
+811,PARSED,,"https://t.me/c/3171748254/1884
 
 Остаток ушел в бу
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1884,signal,single,1884,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-806,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1893
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,1884,signal,single,1884,1,,,,,,,,,,,,,0,0,0,
+806,PARSED,,"https://t.me/c/3171748254/1893
  
 Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1893,signal,single,1893,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-803,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1902
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1893,signal,single,1893,1,,,,,,,,,,,,,0,0,0,
+803,PARSED,,"https://t.me/c/3171748254/1902
 
 Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1902,signal,single,1902,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-796,PARSED_WITH_WARNINGS,,"Закрыл 2980 -
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1902,signal,single,1902,1,,,,,,,,,,,,,0,0,0,
+796,PARSED,,"Закрыл 2980 -
 
 https://t.me/c/3171748254/1916
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1916,signal,single,1916,1,reply_or_link,,FULL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-789,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1931
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1916,signal,single,1916,1,,,,,,,,,,,,,0,0,0,
+789,PARSED,,"https://t.me/c/3171748254/1931
 
 Фрс скоро. убрал лимитку
 
-[trader#C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1931,signal,single,1931,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-778,PARSED_WITH_WARNINGS,1929,"Стоп -0,5
+[trader#C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,1931,signal,single,1931,1,,,,,,,,,,,,,0,0,0,
+778,PARSED,1929,"Стоп -0,5
 
-[trader#C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1929,signal,single,1929,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-756,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1982
+[trader#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1929,signal,single,1929,1,,,,,,,,,,,,,0,0,0,
+775,PARSED,,"https://t.me/c/3171748254/1953
+
+Стоп -1% на бинанс не забрало (
+
+[tradet#C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,1953,signal,single,1953,1,,,,,,,,,,,,,0,0,0,
+756,PARSED,,"https://t.me/c/3171748254/1982
 
 В бу перевел 😴
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1982,signal,single,1982,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-753,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1982
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,1982,signal,single,1982,1,,,,,,,,,,,,,0,0,0,
+753,PARSED,,"https://t.me/c/3171748254/1982
 
 Ушли в бу 
 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE(applies_to=signal:single),,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1982,signal,single,1982,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-751,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1992
+[trader #C]",,,,,,,,,,0.8,,,,1982,signal,single,1982,1,,,,,,,,,,,,,0,0,0,
+751,PARSED,,"https://t.me/c/3171748254/1992
 
 Закрыл не нравится 82500
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,1992,signal,single,1992,1,reply_or_link,,FULL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-710,PARSED_WITH_WARNINGS,2090,"Тп 1 в бу перевел 🥳
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,1992,signal,single,1992,1,,,,,,,,,,,,,0,0,0,
+710,PARSED,2090,"Тп 1 в бу перевел 🥳
 4 пункта до стопа не дошло
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2090,signal,single,2090,1,reply_or_link,ENTRY,,,TP,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-709,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2090
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2090,signal,single,2090,1,,,,,,,,,,,,,0,0,0,
+709,PARSED,,"https://t.me/c/3171748254/2090
 
 Остаток ушел в бу, RR+0,21
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,RR,,UNKNOWN,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2090,signal,single,2090,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.78; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-707,PARSED_WITH_WARNINGS,2075,"Не актуально 
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,2090,signal,single,2090,1,,,,,,,,,,,,,0,0,0,
+707,PARSED,2075,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2075,signal,single,2075,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-706,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2062
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2075,signal,single,2075,1,,,,,,,,,,,,,0,0,0,
+706,PARSED,,"https://t.me/c/3171748254/2062
 Не актуально, шортовый наротив
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2062,signal,single,2062,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-642,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2182
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2062,signal,single,2062,1,,,,,,,,,,,,,0,0,0,
+642,PARSED,,"https://t.me/c/3171748254/2182
 
 Стоп -0,5
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2182,signal,single,2182,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-624,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2209
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,2182,signal,single,2182,1,,,,,,,,,,,,,0,0,0,
+624,PARSED,,"https://t.me/c/3171748254/2209
 
 Tp1 🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2209,signal,single,2209,1,reply_or_link,,,,TP1,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-622,PARSED_WITH_WARNINGS,2209,"В бу перевел 70800
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2209,signal,single,2209,1,,,,,,,,,,,,,0,0,0,
+622,PARSED,2209,"В бу перевел 70800
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2209,signal,single,2209,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-601,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2240
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2209,signal,single,2209,1,,,,,,,,,,,,,0,0,0,
+601,PARSED,,"https://t.me/c/3171748254/2240
 
 В бу перевел 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2240,signal,single,2240,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-600,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2240
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2240,signal,single,2240,1,,,,,,,,,,,,,0,0,0,
+600,PARSED,,"https://t.me/c/3171748254/2240
 
 Закрыл часть по  70950 
 
 Тп1 и Тп 2 актуально если придём 
 
-[trader #C]",llm_unavailable,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2240,signal,single,2240,1,reply_or_link,,PARTIAL,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-597,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2247
+[trader #C]",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,,,,0.8,,,,2240,signal,single,2240,1,,,,,,,,,,,,,0,0,0,
+597,PARSED,,"https://t.me/c/3171748254/2247
 
 Тп 1 🥳 остаток в бу ушёл ,+0,3RR
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT | U_EXIT_BE,U_TP_HIT | U_EXIT_BE,U_TP_HIT | U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2247,signal,single,2247,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=0; warning_count=0
-573,PARSED_WITH_WARNINGS,2283,"Закрыл в бу 68950
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_EXIT_BE,U_TP_HIT | U_EXIT_BE,U_TP_HIT | U_EXIT_BE,,,,0.8,,,,2247,signal,single,2247,1,,,,,,,,,,,,,0,0,0,
+573,PARSED,2283,"Закрыл в бу 68950
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2283,signal,single,2283,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-572,PARSED_WITH_WARNINGS,2284,"Закрыл -0,11 RR 
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,2283,signal,single,2283,1,,,,,,,,,,,,,0,0,0,
+572,PARSED,2284,"Закрыл -0,11 RR 
 2015
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,RR,,UNKNOWN,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2284,signal,single,2284,1,reply_or_link,,FULL,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.78; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-551,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2303
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,U_CLOSE_FULL,,,,0.8,,,,2284,signal,single,2284,1,,,,,,,,,,,,,0,0,0,
+551,PARSED,,"https://t.me/c/3171748254/2303
 
 Не актуально ушли без нас 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2303,signal,single,2303,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-505,PARSED_WITH_WARNINGS,2258,"Не актуально ушел без нас 
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2303,signal,single,2303,1,,,,,,,,,,,,,0,0,0,
+505,PARSED,2258,"Не актуально ушел без нас 
 
-[ trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2258,signal,single,2258,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-491,PARSED_WITH_WARNINGS,2380,"В бу перевел 68100
+[ trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2258,signal,single,2258,1,,,,,,,,,,,,,0,0,0,
+491,PARSED,2380,"В бу перевел 68100
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2380,signal,single,2380,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-485,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2387
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2380,signal,single,2380,1,,,,,,,,,,,,,0,0,0,
+485,PARSED,,"https://t.me/c/3171748254/2387
 
 В бу перевел 65250
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2387,signal,single,2387,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-479,PARSED_WITH_WARNINGS,2399,"Не актуально 
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2387,signal,single,2387,1,,,,,,,,,,,,,0,0,0,
+479,PARSED,2399,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2399,signal,single,2399,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-473,PARSED_WITH_WARNINGS,2387,"Тп 1🥳
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2399,signal,single,2399,1,,,,,,,,,,,,,0,0,0,
+473,PARSED,2387,"Тп 1🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2387,signal,single,2387,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-470,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2387
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2387,signal,single,2387,1,,,,,,,,,,,,,0,0,0,
+470,PARSED,,"https://t.me/c/3171748254/2387
 
 Лимитку с 63750 убираем 
 
@@ -616,102 +663,103 @@ Tp1 🥳
  
 Будет дополнения 
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY | U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2387,signal,single,2387,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=5; actions_count=2; warning_count=0
-456,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2427
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY | U_UPDATE_TAKE_PROFITS,,,,0.8,,,,2387,signal,single,2387,1,,,,,,,,,,,,,0,0,0,
+456,PARSED,,"https://t.me/c/3171748254/2427
 
 Тп 1 
 
 В бу перевел 
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2427,signal,single,2427,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-441,PARSED_WITH_WARNINGS,2410,"Беру по текущим по 68300
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2427,signal,single,2427,1,,,,,,,,,,,,,0,0,0,
+441,PARSED,2410,"Беру по текущим по 68300
 Средняя 66750 стоп в 66800
 Цель этого обьема 70000
 
-[trader #C]",llm_unavailable,U_UPDATE_STOP,U_MOVE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2410,signal,single,2410,1,reply_or_link,,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-440,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2452
+[trader #C]",,,U_UPDATE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,U_UPDATE_STOP,,,,0.8,,,,2410,signal,single,2410,1,,,,,,,,,,,,,0,0,0,
+440,PARSED,,"https://t.me/c/3171748254/2452
  С профитом 🥳🥳🥳 + RR 0,45
 
 [trader #C]. 
 остаток в позе 0,375
-Тп далее по сэтапу, будет дополнения",normalized_update_missing_intents; llm_unavailable,,,ACT_REQUEST_MANUAL_REVIEW,ACT_REQUEST_MANUAL_REVIEW,RR,,UNKNOWN,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2452,signal,single,2452,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.78; parse_status_input=PARSED; intents_count=0; actions_count=1; warning_count=0
-435,PARSED_WITH_WARNINGS,2459,"67330 добираю ,средняя 67030
+Тп далее по сэтапу, будет дополнения",,,,,,,,,,0.8,,,,2452,signal,single,2452,1,,,,,,,,,,,,,0,0,0,
+435,PARSED,2459,"67330 добираю ,средняя 67030
 Стоп 67080 в бу
 
 Тп 69500 если придём
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2459,signal,single,2459,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=0; warning_count=0
-434,PARSED_WITH_WARNINGS,2464,"Изменения делим объем который добрали 0,375
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_UPDATE_TAKE_PROFITS,,,,0.8,,,,2459,signal,single,2459,1,,,,,,,,,,,,,0,0,0,
+434,PARSED,2464,"Изменения делим объем который добрали 0,375
 На тп 
 68000-
 68750-
 69500-
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2464,signal,single,2464,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-433,PARSED_WITH_WARNINGS,2465,"Тп1
+[trader #C]",,,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,U_UPDATE_TAKE_PROFITS,,,,0.8,,,,2464,signal,single,2464,1,,,,,,,,,,,,,0,0,0,
+433,PARSED,2465,"Тп1
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2465,signal,single,2465,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-430,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2465
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2465,signal,single,2465,1,,,,,,,,,,,,,0,0,0,
+430,PARSED,,"https://t.me/c/3171748254/2465
 
 Tp2🥳
 
-[trader #С]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2465,signal,single,2465,1,reply_or_link,,,,TP2,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-424,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2471
+[trader #С]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2465,signal,single,2465,1,,,,,,,,,,,,,0,0,0,
+424,PARSED,,"https://t.me/c/3171748254/2471
 Остаток в бу закрыт 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE(applies_to=signal:single),,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2471,signal,single,2471,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-405,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2451
+[trader #C]",,,,,,,,,,0.8,,,,2471,signal,single,2471,1,,,,,,,,,,,,,0,0,0,
+405,PARSED,,"https://t.me/c/3171748254/2451
  
 Активировалась
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2451,signal,single,2451,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-375,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2490
+[trader #C]",,,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,U_ACTIVATION,,,,0.8,,,,2451,signal,single,2451,1,,,,,,,,,,,,,0,0,0,
+375,PARSED,,"https://t.me/c/3171748254/2490
 
 В бу перевел 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2490,signal,single,2490,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-374,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2490
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2490,signal,single,2490,1,,,,,,,,,,,,,0,0,0,
+374,PARSED,,"https://t.me/c/3171748254/2490
 
 Тп 1🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2490,signal,single,2490,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-367,PARSED_WITH_WARNINGS,2490,"Остаток ушел в бу 
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2490,signal,single,2490,1,,,,,,,,,,,,,0,0,0,
+367,PARSED,2490,"Остаток ушел в бу 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2490,signal,single,2490,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-363,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2451
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,2490,signal,single,2490,1,,,,,,,,,,,,,0,0,0,
+363,PARSED,,"https://t.me/c/3171748254/2451
 
 Средняя 80.92
 
 Доп тп на 85.4
 
-[trader #C]",normalized_update_missing_intents; llm_unavailable,,,ACT_REQUEST_MANUAL_REVIEW,ACT_REQUEST_MANUAL_REVIEW,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2451,signal,single,2451,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=0; actions_count=1; warning_count=0
-361,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2552
+[trader #C]",,,,,,,,,,0.8,,,,2451,signal,single,2451,1,,,,,,,,,,,,,0,0,0,
+361,PARSED,,"https://t.me/c/3171748254/2552
 
 Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2552,signal,single,2552,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-332,PARSED_WITH_WARNINGS,2587,"В бу перевел 
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2552,signal,single,2552,1,,,,,,,,,,,,,0,0,0,
+345,PARSED,2584,"Сори, не актуально!!!! У нас уже стоит сэтап",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2584,signal,single,2584,1,,,,,,,,,,,,,0,0,0,
+332,PARSED,2587,"В бу перевел 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2587,signal,single,2587,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-330,PARSED_WITH_WARNINGS,2451,"Так же в бу перевел 
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2587,signal,single,2587,1,,,,,,,,,,,,,0,0,0,
+330,PARSED,2451,"Так же в бу перевел 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2451,signal,single,2451,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-326,PARSED_WITH_WARNINGS,2587,"Закрыто в бу 
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2451,signal,single,2451,1,,,,,,,,,,,,,0,0,0,
+326,PARSED,2587,"Закрыто в бу 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2587,signal,single,2587,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-320,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2563
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,2587,signal,single,2587,1,,,,,,,,,,,,,0,0,0,
+320,PARSED,,"https://t.me/c/3171748254/2563
 
 Тп 1🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2563,signal,single,2563,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-314,PARSED_WITH_WARNINGS,2617,"Не актуально
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2563,signal,single,2563,1,,,,,,,,,,,,,0,0,0,
+314,PARSED,2617,"Не актуально
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2617,signal,single,2617,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-313,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2611
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2617,signal,single,2617,1,,,,,,,,,,,,,0,0,0,
+313,PARSED,,"https://t.me/c/3171748254/2611
 
 Тп 1 🥳 в бу перевел 
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2611,signal,single,2611,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-307,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2611
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2611,signal,single,2611,1,,,,,,,,,,,,,0,0,0,
+307,PARSED,,"https://t.me/c/3171748254/2611
 
 Доливаю обьем такой же по 68000
  
@@ -720,127 +768,127 @@ Tp2🥳
 Тп 68800
 
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2611,signal,single,2611,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=4; actions_count=1; warning_count=0
-304,PARSED_WITH_WARNINGS,2640,"Остаток ушел в бу
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_UPDATE_TAKE_PROFITS,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_UPDATE_TAKE_PROFITS,,,,0.8,,,,2611,signal,single,2611,1,,,,,,,,,,,,,0,0,0,
+304,PARSED,2640,"Остаток ушел в бу
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2640,signal,single,2640,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-291,PARSED_WITH_WARNINGS,2666,"Не актуально 
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,2640,signal,single,2640,1,,,,,,,,,,,,,0,0,0,
+291,PARSED,2666,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2666,signal,single,2666,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-268,PARSED_WITH_WARNINGS,2688,"Не актуально 
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2666,signal,single,2666,1,,,,,,,,,,,,,0,0,0,
+268,PARSED,2688,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2688,signal,single,2688,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-267,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2687
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2688,signal,single,2688,1,,,,,,,,,,,,,0,0,0,
+267,PARSED,,"https://t.me/c/3171748254/2687
 
 Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2687,signal,single,2687,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-250,PARSED_WITH_WARNINGS,2717,"Стоп -0,3
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2687,signal,single,2687,1,,,,,,,,,,,,,0,0,0,
+250,PARSED,2717,"Стоп -0,3
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2717,signal,single,2717,1,reply_or_link,,,,STOP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-222,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2747
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,2717,signal,single,2717,1,,,,,,,,,,,,,0,0,0,
+222,PARSED,,"https://t.me/c/3171748254/2747
 
 В бу либо в микро + закрыл по 68950
 Слабая реакция 
 
-[trader #C]",normalized_update_missing_intents; llm_unavailable,,,ACT_REQUEST_MANUAL_REVIEW,ACT_REQUEST_MANUAL_REVIEW,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2747,signal,single,2747,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=0; actions_count=1; warning_count=0
-212,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2765
+[trader #C]",,,,,,,,,,0.8,,,,2747,signal,single,2747,1,,,,,,,,,,,,,0,0,0,
+212,PARSED,,"https://t.me/c/3171748254/2765
 
 Стоп -0,3
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2765,signal,single,2765,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-208,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2769
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,2765,signal,single,2765,1,,,,,,,,,,,,,0,0,0,
+208,PARSED,,"https://t.me/c/3171748254/2769
 
 Стоп -0,3
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2769,signal,single,2769,1,reply_or_link,,,,STOP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-203,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2777
+[trader #C]",,,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,U_STOP_HIT,,,,0.8,,,,2769,signal,single,2769,1,,,,,,,,,,,,,0,0,0,
+203,PARSED,,"https://t.me/c/3171748254/2777
 
 В бу перевел 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2777,signal,single,2777,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-199,PARSED_WITH_WARNINGS,2760,"https://t.me/c/3171748254/2760
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2777,signal,single,2777,1,,,,,,,,,,,,,0,0,0,
+199,PARSED,2760,"https://t.me/c/3171748254/2760
 
 В бу перевел 
 0,311
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2760,signal,single,2760,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-185,PARSED_WITH_WARNINGS,2806,"В бу перевел 
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2760,signal,single,2760,1,,,,,,,,,,,,,0,0,0,
+185,PARSED,2806,"В бу перевел 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2806,signal,single,2806,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-181,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2806
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2806,signal,single,2806,1,,,,,,,,,,,,,0,0,0,
+181,PARSED,,"https://t.me/c/3171748254/2806
 
 Снял часть по текущим 1,475 ( 0,1%)
 
 И тп переставил 1,41
 
-[trader #C]",llm_unavailable,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2806,signal,single,2806,1,reply_or_link,,PARTIAL,0.001,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-175,PARSED_WITH_WARNINGS,2813,"Остаток ушел в бу 
+[trader #C]",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,,,,0.8,,,,2806,signal,single,2806,1,,,,,,,,,,,,,0,0,0,
+175,PARSED,2813,"Остаток ушел в бу 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2813,signal,single,2813,1,reply_or_link,,,,,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-164,PARSED_WITH_WARNINGS,,"[trader #C]
+[trader #C]",,,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,U_EXIT_BE,,,,0.8,,,,2813,signal,single,2813,1,,,,,,,,,,,,,0,0,0,
+164,PARSED,,"[trader #C]
 
 https://t.me/c/3171748254/2831
 
- В бу перевел,мутят что то",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2831,signal,single,2831,1,reply_or_link,ENTRY,,,,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-143,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2848
+ В бу перевел,мутят что то",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2831,signal,single,2831,1,,,,,,,,,,,,,0,0,0,
+143,PARSED,,"https://t.me/c/3171748254/2848
 Тп1🥳
 В бу перевел 
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2848,signal,single,2848,1,reply_or_link,ENTRY,,,TP,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=1; warning_count=0
-141,PARSED_WITH_WARNINGS,2848,"https://t.me/c/3171748254/2848
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2848,signal,single,2848,1,,,,,,,,,,,,,0,0,0,
+141,PARSED,2848,"https://t.me/c/3171748254/2848
 
 Тп 2 🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2848,signal,single,2848,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-139,PARSED_WITH_WARNINGS,2848,"Тп 3 🥳 
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2848,signal,single,2848,1,,,,,,,,,,,,,0,0,0,
+139,PARSED,2848,"Тп 3 🥳 
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2848,signal,single,2848,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-97,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2903
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2848,signal,single,2848,1,,,,,,,,,,,,,0,0,0,
+97,PARSED,,"https://t.me/c/3171748254/2903
   
 Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2903,signal,single,2903,1,reply_or_link,,,,,,,ALL_ALL,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-91,PARSED_WITH_WARNINGS,2901,"Не актуально 
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2903,signal,single,2903,1,,,,,,,,,,,,,0,0,0,
+91,PARSED,2901,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2901,signal,single,2901,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-90,PARSED_WITH_WARNINGS,2925,"Не актуально, будем наблюдать 
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2901,signal,single,2901,1,,,,,,,,,,,,,0,0,0,
+90,PARSED,2925,"Не актуально, будем наблюдать 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2925,signal,single,2925,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-67,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2959
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2925,signal,single,2925,1,,,,,,,,,,,,,0,0,0,
+67,PARSED,,"https://t.me/c/3171748254/2959
 
 Сократил -0,3% по 72800
 
 Средняя 73025
 
-[trader #C]",normalized_update_missing_intents; llm_unavailable,,,ACT_REQUEST_MANUAL_REVIEW,ACT_REQUEST_MANUAL_REVIEW,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2959,signal,single,2959,1,reply_or_link,,,,,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=0; actions_count=1; warning_count=0
-63,PARSED_WITH_WARNINGS,2970,"Не актуально 
+[trader #C]",,,,,,,,,,0.8,,,,2959,signal,single,2959,1,,,,,,,,,,,,,0,0,0,
+63,PARSED,2970,"Не актуально 
 
-[trader #C]",llm_unavailable,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2970,signal,single,2970,1,reply_or_link,,,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=1; warning_count=0
-60,PARSED_WITH_WARNINGS,2974,"Чуть не дошли в бу перевел 2118 у меня вход 
+[trader #C]",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,,,,0.8,,,,2970,signal,single,2970,1,,,,,,,,,,,,,0,0,0,
+60,PARSED,2974,"Чуть не дошли в бу перевел 2118 у меня вход 
 
-[trader #C]",llm_unavailable,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2974,signal,single,2974,1,reply_or_link,ENTRY,,,,,,,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=2; actions_count=1; warning_count=0
-57,PARSED_WITH_WARNINGS,2974,"Тп 1🥳
+[trader #C]",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,U_MOVE_STOP_TO_BE | U_MOVE_STOP,,,,0.8,,,,2974,signal,single,2974,1,,,,,,,,,,,,,0,0,0,
+57,PARSED,2974,"Тп 1🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2974,signal,single,2974,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-39,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2945
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2974,signal,single,2974,1,,,,,,,,,,,,,0,0,0,
+39,PARSED,,"https://t.me/c/3171748254/2945
 
 Tp1 🥳 В бу перевел лимитки убрал
 
-[trader #C]",llm_unavailable,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2945,signal,single,2945,1,reply_or_link,ENTRY,,,TP1,,,,,,,,1,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=4; actions_count=2; warning_count=0
-29,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/2945
+[trader #C]",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,U_TP_HIT | U_MOVE_STOP_TO_BE | U_MOVE_STOP | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,2945,signal,single,2945,1,,,,,,,,,,,,,0,0,0,
+29,PARSED,,"https://t.me/c/3171748254/2945
 
 Тп 2 🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2945,signal,single,2945,1,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-28,PARSED_WITH_WARNINGS,2974,"https://t.me/c/3171748254/2945
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2945,signal,single,2945,1,,,,,,,,,,,,,0,0,0,
+28,PARSED,2974,"https://t.me/c/3171748254/2945
 
 Тп 2🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2974,signal_group,multiple,2945 | 2974,2,reply_or_link,,,,TP,,,,,,,,1,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
-12,PARSED_WITH_WARNINGS,3023,"Закрыл в минус 67800,лимитку убрал слабая реакция ,на ночь не хочу оставилять.
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,,signal_group,multiple,2974 | 2945,2,,,,,,,,,,,,,0,0,0,
+12,PARSED,3023,"Закрыл в минус 67800,лимитку убрал слабая реакция ,на ночь не хочу оставилять.
 
-[trader #C]",llm_unavailable,U_CLOSE_FULL,U_CLOSE_FULL | U_CANCEL_PENDING_ORDERS | U_REMOVE_PENDING_ENTRY,U_CLOSE_FULL | U_CANCEL_PENDING_ORDERS | U_REMOVE_PENDING_ENTRY,U_CLOSE_FULL | U_CANCEL_PENDING_ORDERS | U_REMOVE_PENDING_ENTRY,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,3023,signal,single,3023,1,reply_or_link,,FULL,,,,,ALL_ALL,,,,,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=3; actions_count=3; warning_count=0
-7,PARSED_WITH_WARNINGS,2945,"Тп 3🥳
+[trader #C]",,,U_CLOSE_FULL,U_CLOSE_FULL | U_CANCEL_PENDING_ORDERS | U_REMOVE_PENDING_ENTRY,U_CLOSE_FULL | U_CANCEL_PENDING_ORDERS | U_REMOVE_PENDING_ENTRY,U_CLOSE_FULL | U_CANCEL_PENDING_ORDERS | U_REMOVE_PENDING_ENTRY,,,,0.8,,,,3023,signal,single,3023,1,,,,,,,,,,,,,0,0,0,
+7,PARSED,2945,"Тп 3🥳
 
-[trader #C]",normalized_update_missing_actions; llm_unavailable,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,regex,llm_only,PARSED_WITH_WARNINGS,2945,signal,single,2945,1,reply_or_link,,,,TP,,,,,,,,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.68; parse_status_input=PARSED; intents_count=1; actions_count=0; warning_count=0
+[trader #C]",,,U_TP_HIT,U_TP_HIT,U_TP_HIT,U_TP_HIT,,,,0.8,,,,2945,signal,single,2945,1,,,,,,,,,,,,,0,0,0,

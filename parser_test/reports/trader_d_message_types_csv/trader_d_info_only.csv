@@ -1,1 +1,21 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,signal_id,linking_strategy,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,signal_id,linking_strategy,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1084,PARSED,1496,"Trader#d
+Gmt остаток ушел в бу
++0.15%",,,,,,,,,1496,,,,,,1,0,0,0,
+1003,PARSED,1585,"Trader#d
+Dash остаток ушел в бу",,,,,,,,,1585,,,,,,1,0,0,0,
+971,PARSED,1639,Остаток ушел в бу,,,,,,,,,1639,,,,,,1,0,0,0,
+774,PARSED,1954,"[trader #D]
+Upd.остаток ушел в бу",,,,,,,,,1954,,,,,,1,0,0,0,
+639,PARSED,2086,"[trader #D]
+остаток ушел в бу.",,,,,,,,,2086,,,,,,1,0,0,0,
+584,PARSED,2265,Остаток ушел в бу,,,,,,,,,2265,,,,,,1,0,0,0,
+455,PARSED,2395,"[ trader #D]
+Остаток ушел в бу.",,,,,,,,,2395,,,,,,1,0,0,0,
+370,PARSED,2403,"Trader [ #D]
+Остаток ушел в бу
++0.6r по позиции",,,,,,,,,2403,,,,,,1,0,0,0,
+317,PARSED,2593,"[trader #D ]
+Остаток ушел в бу",,,,,,,,,2593,,,,,,1,0,0,0,
+205,PARSED,2752,"[trader #D]
+Остаток ушел в бу",,,,,,,,,2752,,,,,,1,0,0,0,

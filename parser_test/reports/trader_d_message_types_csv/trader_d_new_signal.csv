@@ -1,1 +1,586 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,completeness,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1149,PARSED,,"[trader#d]
+
+Storjusdt SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.16134
+
+
+Тейки 
+• TP1: 0.1445
+TP2; 0,138",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1445 | 0.138),STORJUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.16134,0.1445 | 0.138,2,1149,,0,,,0,0,0,
+1127,PARSED,,"[trader#d]
+
+Brev SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.5358
+
+
+Тейки 
+• TP1: 0.4283
+• TP2:0.3485",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.4283 | 0.3485),BREVUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.5358,0.4283 | 0.3485,2,1127,,0,,,0,0,0,
+1123,PARSED,,"[trader#d]
+
+Btc Long  вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 90939
+
+
+Тейки 
+• TP1: 92265
+• TP2:93704",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=92265 | 93704),BTCUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,90939,92265 | 93704,2,1123,,0,,,0,0,0,
+1110,PARSED,,"Trader#d
+Btc long
+рыночный
+стоп 89586
+тп1 91332
+тп2 94371",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=91332 | 94371),BTCUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,89586,91332 | 94371,2,1110,,0,,,0,0,0,
+1102,PARSED,,"[trader#d]
+
+Iotx SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.009023
+
+
+Тейки 
+• TP1: 0.008629
+• TP2: 0.008498",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.008629 | 0.008498),IOTXUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.009023,0.008629 | 0.008498,2,1102,,0,,,0,0,0,
+1097,PARSED,,"[trader#d]
+
+GUNUSDT SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.027288
+
+
+Тейки 
+• TP1: 0.024756
+• TP2: 0.021756",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.024756 | 0.021756),GUNUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.027288,0.024756 | 0.021756,2,1097,,0,,,0,0,0,
+1094,PARSED,1481,"Trader#d
+GUNUSDT SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.027848
+
+
+Тейки 
+• TP1: 0.0245
+• TP2: 0.021758",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0245 | 0.021758),GUNUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.027848,0.0245 | 0.021758,2,1094,1481,1,,,0,0,0,
+1093,PARSED,,"[trader#d]
+
+GMT SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.020705
+
+
+Тейки 
+• TP1: 0.018264
+• TP2:0.017349",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.018264 | 0.017349),GMTUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.020705,0.018264 | 0.017349,2,1093,,0,,,0,0,0,
+1061,PARSED,,"[trader#d]
+
+ALCH SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.14893
+
+
+Тейки 
+• TP1: 0.13983
+• TP2: 0.12775",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.13983 | 0.12775),ALCHUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.14893,0.13983 | 0.12775,2,1061,,0,,,0,0,0,
+1056,PARSED,,"[trader#d]
+
+BTC Long вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 90071
+
+
+Тейки 
+• TP1: 92488
+• TP2: 94763",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=92488 | 94763),BTCUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,90071,92488 | 94763,2,1056,,0,,,0,0,0,
+1054,PARSED,,"[trader#d]
+
+ZIL LONG вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.005080
+
+
+Тейки 
+• TP1:  0.00654",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.00654),ZILUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.00508,0.00654,1,1054,,0,,,0,0,0,
+1053,PARSED,,"[trader#d]
+
+Link LONG вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 12.916
+
+
+Тейки 
+• TP1:  13.517
+Tp2; 14.226",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=13.517 | 14.226),LINKUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,12.916,13.517 | 14.226,2,1053,,0,,,0,0,0,
+1046,PARSED,,"Trader#d
+Parti Шорт
+лимт 0,09287
+стоп 0,09494
+тп1 0,08977
+тп2 0,08584
+если достигнем тп1 то лимитку убираем",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.08977 | 0.08584; entries=0.09287),PARTIUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:LIMIT:0.09287,0.09494,0.08977 | 0.08584,2,1046,,0,,,0,0,0,
+1043,PARSED,,"Trader#d
+Dolousdt Short 
+Вход по рынку риск 0.5%
+Стоп 0.07560
+Тп1 0.062
+Тп2 0.05562",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.062 | 0.05562),DOLOUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.0756,0.062 | 0.05562,2,1043,,0,,,0,0,0,
+1038,PARSED,,"[trader#d]
+
+MTL SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.4382
+
+
+Тейки 
+• TP1: 0.4176
+• TP2:0.4054
+TP3; 0.3875",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.4176 | 0.4054 | 0.3875),MTLUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.4382,0.4176 | 0.4054 | 0.3875,3,1038,,0,,,0,0,0,
+1028,PARSED,,"[trader#d]
+
+Dash SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 62.74
+
+
+Тейки 
+• TP1: 52.39",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=52.39),DASHUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,62.74,52.39,1,1028,,0,,,0,0,0,
+1025,PARSED,,"[trader#d]
+
+AXS SHORT вход лимит 1,0573
+
+рыночный— риск 0.5% депо
+
+
+Стоп  1,1085
+
+
+Тейки 
+• TP1: 1,0049
+• TP2:0,9283",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.0049 | 0.9283; entries=1.0573),AXSUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:LIMIT:1.0573,1.1085,1.0049 | 0.9283,2,1025,,0,,,0,0,0,
+1013,PARSED,,"[trader#d]
+
+Pixel SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.009648
+
+
+Тейки 
+• TP1: 0.009
+• TP2: 0.008685",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.009 | 0.008685),PIXELUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.009648,0.009 | 0.008685,2,1013,,0,,,0,0,0,
+1008,PARSED,,"[trader#d]
+
+Aevo SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.04946
+
+
+Тейки 
+• TP1: 0.04146",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.04146),AEVOUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.04946,0.04146,1,1008,,0,,,0,0,0,
+996,PARSED,,"Trader#d
+среднесрок
+Ltc Long с текущих
+риск 0,5
+sl:75.16
+tp:93.49",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=93.49),LTCUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,75.16,93.49,1,996,,0,,,0,0,0,
+995,PARSED,,"[trader#d]
+
+AXS SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 1.3301
+
+
+Тейки 
+• TP1: 1.1337",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.1337),AXSUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,1.3301,1.1337,1,995,,0,,,0,0,0,
+984,PARSED,,"[trader#d]
+
+Bera SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.8872
+
+
+Тейки 
+• TP1:  0.772
+• TP2: 0.676",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.772 | 0.676),BERAUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.8872,0.772 | 0.676,2,984,,0,,,0,0,0,
+968,PARSED,,"trader#d
+dolo short
+вход по рынку риск 0,5
+sl 0.08116
+tp 0.05645",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.05645),DOLOUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.08116,0.05645,1,968,,0,,,0,0,0,
+963,PARSED,,"[trader#d]
+
+BTC SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 97968
+
+
+Тейки 
+• TP1: 94515
+• TP2:93530",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=94515 | 93530),BTCUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,97968,94515 | 93530,2,963,,0,,,0,0,0,
+954,PARSED,,"Trader#d
+XRP Long
+риск 0,5
+sl 2.0673
+tp1 2.2
+tp2 2.3184
+tp3 2.415",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.2 | 2.3184 | 2.415),XRPUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.0673,2.2 | 2.3184 | 2.415,3,954,,0,,,0,0,0,
+953,PARSED,,"trader#d
+Usual short
+риск 0,5
+sl 0.03143
+tp 0.03013
+tp2 0.02987
+tp3 0.02918",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03013 | 0.02987 | 0.02918),USUALUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.03143,0.03013 | 0.02987 | 0.02918,3,953,,0,,,0,0,0,
+950,PARSED,,"Trader#d
+Sol Long
+риск 0,5 
+sl 141.67
+tp1 145.95
+tp2 148.93
+tp3 151",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=145.95 | 148.93 | 151),SOLUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,141.67,145.95 | 148.93 | 151,3,950,,0,,,0,0,0,
+936,PARSED,,"Trader#d
+Dash Short 
+рыночный риск 0,5
+sl 96.69
+tp1 75.32",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=75.32),DASHUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,96.69,75.32,1,936,,0,,,0,0,0,
+926,PARSED,1692,"перезаход
+Trader#d
+Dash Short 
+рыночный риск 0,5
+sl 96.69
+tp1 75.32",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=75.32),DASHUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,96.69,75.32,1,926,1692,1,,,0,0,0,
+920,PARSED,,"Trader#d
+scrt short
+риск 0,5
+сл 0,13764
+тп1 0,12522
+тп2 0,11886",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.12522 | 0.11886),SCRTUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.13764,0.12522 | 0.11886,2,920,,0,,,0,0,0,
+887,PARSED,,"Trader#d
+Axs short
+рыночный,риск 0,5
+sl 2.0839
+tp1  1.9775
+tp2 1.8968",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.9775 | 1.8968),AXSUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.0839,1.9775 | 1.8968,2,887,,0,,,0,0,0,
+880,PARSED,,"Trader#d
+ xrp long
+sl 1.9052
+tp1 2.0294",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.0294),XRPUSDT,LONG,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,1.9052,2.0294,1,880,,0,,,0,0,0,
+878,PARSED,,"trader#d
+Dusk Short 0.5
+sl 0.24914
+tp1 0.18268",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.18268),DUSKUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.24914,0.18268,1,878,,0,,,0,0,0,
+856,PARSED,,"Trader#d
+Pha Short 0.5
+sl 0.04743
+tp1 0.03952
+tp2  0.03636",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03952 | 0.03636),PHAUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.04743,0.03952 | 0.03636,2,856,,0,,,0,0,0,
+854,PARSED,,"Trader#d
+Axs Short 0.5
+sl 2.56
+tp1 1.6367",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.6367),AXSUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.56,1.6367,1,854,,0,,,0,0,0,
+823,PARSED,,"Trader#d
+Stg short
+риск 0,5
+sl 0.20339
+tp1 0.17713
+tp2  0.16060",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.17713 | 0.1606),STGUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.20339,0.17713 | 0.1606,2,823,,0,,,0,0,0,
+822,PARSED,,"Trader#d
+Zro Short
+риск 0,,5
+sl 2.3656
+tp1 2.1225
+tp2 1.7373",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.1225 | 1.7373),ZROUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.3656,2.1225 | 1.7373,2,822,,0,,,0,0,0,
+780,PARSED,,"[trader #D]
+Sent short риск 0,5
+sl 0.034094
+tp 0.027789
+tp2 0.026276",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.027789 | 0.026276),SENTUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.034094,0.027789 | 0.026276,2,780,,0,,,0,0,0,
+762,PARSED,,"[trader #D]
+Enj шорт риск 0,5
+sl 0.02832
+тп1 0,02751
+тп 2 0,0270
+тп3 0,02669",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02751 | 20.027 | 0.02669),ENJUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.02832,0.02751 | 20.027 | 0.02669,3,762,,0,,,0,0,0,
+761,PARSED,,"[trader #D]
+Nmr шорт риск 0,5
+sl 10.294
+tp1 9.637
+tp2 9.307
+tp3 8.909",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=9.637 | 9.307 | 8.909),NMRUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,10.294,9.637 | 9.307 | 8.909,3,761,,0,,,0,0,0,
+724,PARSED,,"[trader #D]
+PAXG Long 
+Вход по рынку 4678 - риск 0,5
+Sl: 4457.3
+Tp1: 4895
+TP2: 4971
+TP3: 5282
+TP4: 5631",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=4895 | 4971 | 5282 | 5631; entries=4678),PAXGUSDT,LONG,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:4678,4457.3,4895 | 4971 | 5282 | 5631,4,724,,0,,,0,0,0,
+720,PARSED,,"[trader #D]
+ZILUSDT Short
+вход по рынку 0,006807
+SL : 0.007371
+Tp1:0.006241
+Tp2: 0.005524
+Tp3: 0.004666",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.006241 | 0.005524 | 0.004666; entries=0.006807),ZILUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.006807,0.007371,0.006241 | 0.005524 | 0.004666,3,720,,0,,,0,0,0,
+718,PARSED,,"[trader #D]
+ANKRUSDT Short
+вход по рынку 0,005723
+SL : 0.006233
+Tp1:0.00522
+Tp2: 0.005018
+Tp3: 0.004611",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.00522 | 0.005018 | 0.004611; entries=0.005723),ANKRUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.005723,0.006233,0.00522 | 0.005018 | 0.004611,3,718,,0,,,0,0,0,
+690,PARSED,,"[trader #D]
+BTCUSDT Long риск 0,5
+вход по рынку 75265
+SL : 72900
+Tp1: 79400
+Tp2: 81500
+Tp3: 86000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=79400 | 81500 | 86000; entries=75265),BTCUSDT,LONG,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:75265,72900,79400 | 81500 | 86000,3,690,,0,,,0,0,0,
+627,PARSED,,"[trader #D]
+PROVEUSDT SHORT риск 0,5
+вход по рынку 0.3653
+SL : 0.3946
+Tp1: 0.3388
+Tp2: 0.327
+Tp3: 0.2783",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.3388 | 0.327 | 0.2783; entries=0.3653),PROVEUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.3653,0.3946,0.3388 | 0.327 | 0.2783,3,627,,0,,,0,0,0,
+591,PARSED,,"[trader #D]
+VANAUSDT Short риск 0,5
+вход по рынку 1.7931
+SL : 1.9204
+Tp1: 1.66
+Tp2: 1.4933
+Tp3: 1.4224",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.66 | 1.4933 | 1.4224; entries=1.7931),VANAUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.7931,1.9204,1.66 | 1.4933 | 1.4224,3,591,,0,,,0,0,0,
+590,PARSED,,"[trader #D]
+GPSUSDT Short риск 0,5
+вход по рынку 0.013671
+SL : 0.014454
+Tp1: 0.012891
+Tp2: 0.012061
+Tp3: 0.010137",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.012891 | 0.012061 | 0.010137; entries=0.013671),GPSUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.013671,0.014454,0.012891 | 0.012061 | 0.010137,3,590,,0,,,0,0,0,
+581,PARSED,,"[trader #D]
+SOLUSDT LONG риск 0,5
+вход по рынку 84.43
+SL : 82.82
+Tp1: 86.2
+Tp2: 89.78
+TP3: 106.6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=86.2 | 89.78 | 106.6; entries=84.43),SOLUSDT,LONG,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:84.43,82.82,86.2 | 89.78 | 106.6,3,581,,0,,,0,0,0,
+566,PARSED,,"[trader #D]
+NILUSDT Short риск 0,5
+вход по рынку 0.06293
+SL : 0.0654
+Tp1: 0.05783
+TP2: 0.05623
+Tp3: 0.05226",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.05783 | 0.05623 | 0.05226; entries=0.06293),NILUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.06293,0.0654,0.05783 | 0.05623 | 0.05226,3,566,,0,,,0,0,0,
+556,PARSED,,"[trader #D]
+STGUSDT Short риск 0,5
+вход по рынку 0.21256
+SL : 0.21808
+TP1: 0.19023
+TP2: 0.18384
+TP3: 0.165",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.19023 | 0.18384 | 0.165; entries=0.21256),STGUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.21256,0.21808,0.19023 | 0.18384 | 0.165,3,556,,0,,,0,0,0,
+546,PARSED,,"[trader #D]
+STGUSDT Short риск 0,5
+вход по рынку 0.21714
+SL : 0.22575
+TP1: 0.19023
+TP2: 0.18384
+TP3: 0.165",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.19023 | 0.18384 | 0.165; entries=0.21714),STGUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.21714,0.22575,0.19023 | 0.18384 | 0.165,3,546,,0,,,0,0,0,
+496,PARSED,,"[trader #D]
+CVXUSDT Short риск 0,5
+вход по рынку 1.992
+SL : 2.0364
+Tp1: 1.9457
+TP2: 1.8936
+Tp3: 1.7608",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.9457 | 1.8936 | 1.7608; entries=1.992),CVXUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.992,2.0364,1.9457 | 1.8936 | 1.7608,3,496,,0,,,0,0,0,
+477,PARSED,,"Trader [ #D]
+CAKEUSDT LONG  РИСК 0,5
+Вход по рынку 1,2518
+Sl: 1.2324
+Tp1: 1.2985
+Tp2: 1.4185
+tp3; 1.6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.2985 | 1.4185 | 1.6; entries=1.2518),CAKEUSDT,LONG,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.2518,1.2324,1.2985 | 1.4185 | 1.6,3,477,,0,,,0,0,0,
+437,PARSED,,"[trader #D]
+UMAUSDT Short риск 0,5
+вход по рынку 0.5912
+SL : 0.6221
+Tp1: 0.5608
+TP2: 0.546
+Tp3: 0.525",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.5608 | 0.546 | 0.525; entries=0.5912),UMAUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.5912,0.6221,0.5608 | 0.546 | 0.525,3,437,,0,,,0,0,0,
+429,PARSED,,"[trader #D]
+ORCAUSDT Short риск 0,5
+вход по рынку 1.2628
+Sl: 1.3284
+Tp1: 1.1845
+Tp2: 1.1331
+Tp3: 1.0147",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.1845 | 1.1331 | 1.0147; entries=1.2628),ORCAUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.2628,1.3284,1.1845 | 1.1331 | 1.0147,3,429,,0,,,0,0,0,
+422,PARSED,,"[trader #D]
+JTOUSDT Short риск 0,5
+вход по рынку 0.3459
+Sl: 0.3614
+Tp1: 0.3166
+TP2: 0.2878",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.3166 | 0.2878; entries=0.3459),JTOUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.3459,0.3614,0.3166 | 0.2878,2,422,,0,,,0,0,0,
+415,PARSED,,"[trader #D]
+CyberUSDT Short риск 0,5
+вход по рынку 0.7346
+Sl: 0.7594
+Tp1: 0.6878
+TP2: 0.6506",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6878 | 0.6506; entries=0.7346),CYBERUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.7346,0.7594,0.6878 | 0.6506,2,415,,0,,,0,0,0,
+412,PARSED,,"[trader #D]
+ETHUSDT Short риск 0,5
+вход по рынку 2019.58
+Sl: 2038.35
+Tp1: 1991
+TP2: 1936",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1991 | 1936; entries=2019.58),ETHUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:2019.58,2038.35,1991 | 1936,2,412,,0,,,0,0,0,
+353,PARSED,,"Trader [ #D]
+BIOUSDT Short  РИСК 0,5
+Вход по рынку 0.0324
+Sl: 0.03413
+Tp1: 0.03064
+Tp2: 0.02777",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03064 | 0.02777; entries=0.0324),BIOUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.0324,0.03413,0.03064 | 0.02777,2,353,,0,,,0,0,0,
+348,PARSED,,"Trader [ #D]
+BIOUSDT Short  РИСК 0,5
+Вход по рынку 0.0331
+Sl: 0.03413
+Tp1: 0.03064
+Tp2: 0.02777",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03064 | 0.02777; entries=0.0331),BIOUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.0331,0.03413,0.03064 | 0.02777,2,348,,0,,,0,0,0,
+325,PARSED,,"Trader [ #D]
+ENSOUSDT Short  РИСК 0,5
+Вход по рынку 1.9193
+Sl: 2.1574
+Tp1: 1.67
+Tp2: 1.4454",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.67 | 1.4454; entries=1.9193),ENSOUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.9193,2.1574,1.67 | 1.4454,2,325,,0,,,0,0,0,
+298,PARSED,,"Trader [ #D]
+DashUSDT Short  РИСК 0,5
+Вход по рынку 33.34
+Sl: 33.78
+Tp1: 32.87
+Tp2: 32.05
+tp3; 31.03",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=32.87 | 32.05 | 31.03; entries=33.34),DASHUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:33.34,33.78,32.87 | 32.05 | 31.03,3,298,,0,,,0,0,0,
+284,PARSED,,"Trader [ #D]
+ESPUSDT Short  РИСК 0,5
+Вход по рынку 0.18105
+Sl: 0.19
+Tp1: 0.16618
+Tp2: 0.1335
+tp3; 0.11548",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.16618 | 0.1335 | 0.11548; entries=0.18105),ESPUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.18105,0.19,0.16618 | 0.1335 | 0.11548,3,284,,0,,,0,0,0,
+278,PARSED,,"Trader [ #D]
+перезаход
+ESPUSDT Short  РИСК 0,5
+Вход по рынку 0.177
+Sl: 0.197
+Tp1: 0.15011
+Tp2: 0.13595
+tp3; 0.12435",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.15011 | 0.13595 | 0.12435; entries=0.177),ESPUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.177,0.197,0.15011 | 0.13595 | 0.12435,3,278,,0,,,0,0,0,
+275,PARSED,,"Trader [ #D]
+
+ZKUSDT Long  РИСК 0,5
+Вход по рынку 0.0192
+Sl: 0.01783
+Tp1: 0.02082
+Tp2: 0.02477",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.02082 | 0.02477; entries=0.0192),ZKUSDT,LONG,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.0192,0.01783,0.02082 | 0.02477,2,275,,0,,,0,0,0,
+264,PARSED,,"Trader [ #D]
+
+PHAUSDT Short  РИСК 0,5
+Вход по рынку 0.02402
+Sl: 0.025
+Tp1: 0.02281
+Tp2: 0.02195
+tp3; 0.0214",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02281 | 0.02195 | 0.0214; entries=0.02402),PHAUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.02402,0.025,0.02281 | 0.02195 | 0.0214,3,264,,0,,,0,0,0,
+201,PARSED,,"Trader [ #D]
+
+ARBUSDT Short  РИСК 0,5
+Вход по рынку 0.11083
+Sl: 0.11294
+Tp1: 0.1082
+Tp2: 0.10375",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1082 | 0.10375; entries=0.11083),ARBUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.11083,0.11294,0.1082 | 0.10375,2,201,,0,,,0,0,0,
+122,PARSED,,"Trader [ #D]
+
+PHAUSDT Short  РИСК 0,5
+Вход по рынку  0,03645
+Sl: 0.039
+Tp1: 0.03344
+Tp2: 0.02868",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03344 | 0.02868; entries=0.03645),PHAUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.03645,0.039,0.03344 | 0.02868,2,122,,0,,,0,0,0,
+116,PARSED,,"Trader [ #D]
+
+MUBARAKUSDT Short  РИСК 0,5
+Вход по рынку  0.015245
+Sl: 0.015531
+Tp1: 0.014923
+Tp2: 0.013575",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.014923 | 0.013575; entries=0.015245),MUBARAKUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.015245,0.015531,0.014923 | 0.013575,2,116,,0,,,0,0,0,
+92,PARSED,,"Trader [ #D]
+
+AAVEUSDT Short  РИСК 0,5
+Вход по рынку  115.04
+Sl: 116.24
+Tp1: 112.9
+Tp2: 104.68",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=112.9 | 104.68; entries=115.04),AAVEUSDT,SHORT,,,0.82,,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:115.04,116.24,112.9 | 104.68,2,92,,0,,,0,0,0,
+45,PARSED,,"Trader [ #D]
+
+Kiteusdt Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.28281
+Tp1:0.26261
+Tp 2:0.2242
+Tp3: 0.18147",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.26261 | 2 | 0.18147),KITEUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.28281,0.26261 | 2 | 0.18147,3,45,,0,,,0,0,0,
+36,PARSED,,"Trader [ #D]
+
+CVXUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 2.099
+Tp1: 2.023
+Tp 2: 1.988",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.023 | 2),CVXUSDT,SHORT,,,0.82,,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.099,2.023 | 2,2,36,,0,,,0,0,0,

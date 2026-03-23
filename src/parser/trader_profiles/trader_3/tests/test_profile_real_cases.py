@@ -75,6 +75,20 @@ class Trader3ProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("entry_range_low"), 3840.0)
         self.assertEqual(result.entities.get("entry_range_high"), 3870.0)
 
+    def test_new_signal_entry_decimal_space_typo(self) -> None:
+        text = (
+            "SIGNAL ID: #2078\n"
+            "COIN: $CRO/USDT (2-5x)\n"
+            "DIRECTION: LONG\n"
+            "ENTRY: 0. 0745 - 0.0750\n"
+            "TARGETS: 0.0775 - 0.0800 - 0.0840\n"
+            "STOP LOSS: 0.0700"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry_range_low"), 0.0745)
+        self.assertEqual(result.entities.get("entry_range_high"), 0.0750)
+
     def test_tp_hit_single_target(self) -> None:
         text = (
             "SIGNAL ID: #1997\n"
@@ -114,7 +128,7 @@ class Trader3ProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("reported_loss_percent"), 3.13)
         self.assertEqual(result.entities.get("reported_leverage_hint"), 2.0)
         self.assertEqual(result.entities.get("stop_price"), 3298.0)
-        self.assertTrue(result.entities.get("loss_close"))
+        self.assertIn("U_STOP_HIT", result.intents)
 
     def test_loss_update_385(self) -> None:
         text = "SIGNAL ID: #2000\n🚫3.85% Loss (2x)🚫"
@@ -122,6 +136,7 @@ class Trader3ProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "UPDATE")
         self.assertEqual(result.entities.get("reported_loss_percent"), 3.85)
         self.assertEqual(result.primary_intent, "REPORT_LOSS")
+        self.assertNotIn("U_STOP_HIT", result.intents)
 
     def test_closed_manually(self) -> None:
         text = "SIGNAL ID: #2001\nClosed Manually\n🚫12% Loss (2x)🚫"
@@ -130,6 +145,7 @@ class Trader3ProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.primary_intent, "CLOSE_POSITION")
         self.assertTrue(result.entities.get("manual_close"))
         self.assertEqual(result.entities.get("reported_loss_percent"), 12.0)
+        self.assertNotIn("U_STOP_HIT", result.intents)
 
     def test_reenter_update(self) -> None:
         text = "SIGNAL ID: #2001\nRe-Enter.\nSame Entry level ,Targets & SL"

@@ -1,0 +1,935 @@
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,completeness,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1988,PARSED,,"[trader#3] 📍SIGNAL ID: #2003📍
+COIN: $WLFI/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 0.12 – 0.124
+
+TARGETS: 0.130 – 0.140 – 0.150 – 0.160 – 0.170 – 0.180 – 0.190 – 0.205 – 0.223
+
+STOP LOSS: 0.11
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.13 | 0.14 | 0.15 | 0.16 | 0.17 | 0.18 | 0.19 | 0.205 | 0.223),WLFIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.12 | RANGE_HIGH:LIMIT:0.124,0.11,0.13 | 0.14 | 0.15 | 0.16 | 0.17 | 0.18 | 0.19 | 0.205 | 0.223,9,2003,2003,1,,,0,0,0,
+1980,PARSED,,"[trader#3] 📍SIGNAL ID: #2005📍
+COIN: $AVAX/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 17.40 – 18.00
+
+TARGETS: 18.6 – 19.6 – 21.5 – 23.50 – 25.00 – 26.50 – 28.00 – 29.00 – 31.60
+
+STOP LOSS: 15.95
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=18.6 | 19.6 | 21.5 | 23.5 | 25 | 26.5 | 28 | 29 | 31.6),AVAXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:17.4 | RANGE_HIGH:LIMIT:18,15.95,18.6 | 19.6 | 21.5 | 23.5 | 25 | 26.5 | 28 | 29 | 31.6,9,2005,2005,1,,,0,0,0,
+1908,PARSED,,"[trader#3] 📍SIGNAL ID: #2006📍
+COIN: $BTC/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 100,000– 101,600
+
+TARGETS: 102,000 – 103,000 – 105,000 – 106,530 – 109,400 – 112,586  – 114,900 – 117,000 – 119,800 – 121,500 – 123,000 – 125,800
+
+STOP LOSS: 97,000
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=102000 | 103000 | 105000 | 106530 | 109400 | 112586 | 114900 | 117000 | 119800 | 121500 | 123000 | 125800),BTCUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:100000 | RANGE_HIGH:LIMIT:101600,97000,102000 | 103000 | 105000 | 106530 | 109400 | 112586 | 114900 | 117000 | 119800 | 121500 | 123000 | 125800,12,2006,2006,1,,,0,0,0,
+1897,PARSED,,"[trader#3] 📍SIGNAL ID: #2007📍
+COIN: $SUI/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 1.95 – 2.01
+
+TARGETS: 2.06 – 2.11 – 2.20 – 2.28 – 2.35 – 2.42 – 2.50 – 2.65 – 2.78– 2.89
+
+STOP LOSS: 1.83
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2.06 | 2.11 | 2.2 | 2.28 | 2.35 | 2.42 | 2.5 | 2.65 | 2.78 | 2.89),SUIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.95 | RANGE_HIGH:LIMIT:2.01,1.83,2.06 | 2.11 | 2.2 | 2.28 | 2.35 | 2.42 | 2.5 | 2.65 | 2.78 | 2.89,10,2007,2007,1,,,0,0,0,
+1896,PARSED,,"[trader#3] 📍SIGNAL ID: #2008📍
+COIN: $ETH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 3368 - 3333
+
+TARGETS: 3410 - 3500 - 3650 - 3800
+
+STOP LOSS: 3298
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=3410 | 3500 | 3650 | 3800),ETHUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:3368 | RANGE_HIGH:LIMIT:3333,3298,3410 | 3500 | 3650 | 3800,4,2008,2008,1,,,0,0,0,
+1894,PARSED,,"[trader#3] 📍SIGNAL ID: #2009📍
+COIN: $SOL/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 147.7 – 151
+
+TARGETS: 153 – 157 – 160 – 165 – 170 – 177 – 185 – 197 – 207 – 215 – 222 – 230
+
+STOP LOSS: 139
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=153 | 157 | 160 | 165 | 170 | 177 | 185 | 197 | 207 | 215 | 222 | 230),SOLUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:147.7 | RANGE_HIGH:LIMIT:151,139,153 | 157 | 160 | 165 | 170 | 177 | 185 | 197 | 207 | 215 | 222 | 230,12,2009,2009,1,,,0,0,0,
+1831,PARSED,,"[trader#3] 📍SIGNAL ID: #2010📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 15.129 - 15.685
+
+TARGETS: 15.95 - 16.2 - 17 - 20 - 23  -28
+
+STOP LOSS: 14.814
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=15.95 | 16.2 | 17 | 20 | 23 | 28),AVAXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:15.129 | RANGE_HIGH:LIMIT:15.685,14.814,15.95 | 16.2 | 17 | 20 | 23 | 28,6,2010,2010,1,,,0,0,0,
+1819,PARSED,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 13.40 – 13.95
+
+TARGETS: 14.50 – 15.20 – 16.00 – 17.20 – 18.50 – 19.80 – 21.00 – 22.30 – 23.50 – 24.47
+
+STOP LOSS: 12.5
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=14.5 | 15.2 | 16 | 17.2 | 18.5 | 19.8 | 21 | 22.3 | 23.5 | 24.47),LINKUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:13.4 | RANGE_HIGH:LIMIT:13.95,12.5,14.5 | 15.2 | 16 | 17.2 | 18.5 | 19.8 | 21 | 22.3 | 23.5 | 24.47,10,2011,2011,1,,,0,0,0,
+1809,PARSED,,"[trader#3] 📍SIGNAL ID: #2012📍
+COIN: $SOL/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Back above the horizontal support. Chances of a rebound.
+
+ENTRY: 126 - 130.20
+
+TARGETS: 132 - 135 - 140 - 150 - 175 - 200
+
+STOP LOSS: 124.74
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=132 | 135 | 140 | 150 | 175 | 200),SOLUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:126 | RANGE_HIGH:LIMIT:130.2,124.74,132 | 135 | 140 | 150 | 175 | 200,6,2012,2012,1,,,0,0,0,
+1791,PARSED,,"[trader#3] 📍SIGNAL ID: #2013📍
+COIN: $XRP/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 2.15 – 2.188
+
+TARGETS: 2.225 – 2.25 – 2.35 – 2.46 – 2.54 – 2.62 – 2.70 – 2.78 – 2.86 – 3.00
+
+STOP LOSS: 2.02
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2.225 | 2.25 | 2.35 | 2.46 | 2.54 | 2.62 | 2.7 | 2.78 | 2.86 | 3),XRPUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:2.15 | RANGE_HIGH:LIMIT:2.188,2.02,2.225 | 2.25 | 2.35 | 2.46 | 2.54 | 2.62 | 2.7 | 2.78 | 2.86 | 3,10,2013,2013,1,,,0,0,0,
+1780,PARSED,,"[trader#3] 📍SIGNAL ID: #2014📍
+COIN: $ETH/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Reached the S/R level. Chances of a bounce from this support.
+
+ENTRY: 2800 - 2880
+
+TARGETS: 2920 - 3000 - 3180 - 3500 - 3843
+
+STOP LOSS: 2753
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2920 | 3000 | 3180 | 3500 | 3843),ETHUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:2800 | RANGE_HIGH:LIMIT:2880,2753,2920 | 3000 | 3180 | 3500 | 3843,5,2014,2014,1,,,0,0,0,
+1760,PARSED,,"[trader#3] 📍SIGNAL ID: #2015📍
+COIN: $BTC/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Reached the order block zone.
+
+ENTRY: 83700 - 86300
+
+TARGETS: 88000 - 90000 - 93000 - 97000 - 102000 - 107482
+
+STOP LOSS: 82846
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=88000 | 90000 | 93000 | 97000 | 102000 | 107482),BTCUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:83700 | RANGE_HIGH:LIMIT:86300,82846,88000 | 90000 | 93000 | 97000 | 102000 | 107482,6,2015,2015,1,,,0,0,0,
+1756,PARSED,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 120 - 127.28
+
+TARGETS: 129.5 - 132 - 139 - 148 - 180 - 200 - 220
+
+STOP LOSS: 117.87
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=129.5 | 132 | 139 | 148 | 180 | 200 | 220),SOLUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:120 | RANGE_HIGH:LIMIT:127.28,117.87,129.5 | 132 | 139 | 148 | 180 | 200 | 220,7,2016,2016,1,,,0,0,0,
+1745,PARSED,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 11.45 - 11.79
+
+TARGETS: 12 - 12.3 - 12.8 - 13.5 - 15 - 17 - 19
+
+STOP LOSS: 11.281
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=12 | 12.3 | 12.8 | 13.5 | 15 | 17 | 19),LINKUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:11.45 | RANGE_HIGH:LIMIT:11.79,11.281,12 | 12.3 | 12.8 | 13.5 | 15 | 17 | 19,7,2017,2017,1,,,0,0,0,
+1741,PARSED,,"[trader#3] 📍SIGNAL ID: #2018📍
+COIN: $LTC/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 80.5 – 82
+
+TARGETS: 82.73 – 84 – 88 – 92 – 97.7 – 101.5 – 105.4 – 109.1 – 113.0 – 116.7
+
+STOP LOSS: 75.1
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=82.73 | 84 | 88 | 92 | 97.7 | 101.5 | 105.4 | 109.1 | 113 | 116.7),LTCUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:80.5 | RANGE_HIGH:LIMIT:82,75.1,82.73 | 84 | 88 | 92 | 97.7 | 101.5 | 105.4 | 109.1 | 113 | 116.7,10,2018,2018,1,,,0,0,0,
+1691,PARSED,,"[trader#3] 📍SIGNAL ID: #2019📍
+COIN: $NEAR/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 1.86 – 1.94
+
+TARGETS: 2.00 – 2.10 – 2.24 – 2.36 – 2.48 – 2.60 – 2.72 – 2.84 – 2.96 – 3.10
+
+STOP LOSS: 1.71
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2 | 2.1 | 2.24 | 2.36 | 2.48 | 2.6 | 2.72 | 2.84 | 2.96 | 3.1),NEARUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.86 | RANGE_HIGH:LIMIT:1.94,1.71,2 | 2.1 | 2.24 | 2.36 | 2.48 | 2.6 | 2.72 | 2.84 | 2.96 | 3.1,10,2019,2019,1,,,0,0,0,
+1689,PARSED,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 875 – 893
+
+TARGETS: 910 – 940 – 978 – 1,000 – 1,030 – 1,070 – 1,100– 1,150 – 1,220 – 1,275
+
+STOP LOSS: 810
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=910 | 940 | 978 | 1000 | 1030 | 1070 | 1100 | 1150 | 1220 | 1275),BNBUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:875 | RANGE_HIGH:LIMIT:893,810,910 | 940 | 978 | 1000 | 1030 | 1070 | 1100 | 1150 | 1220 | 1275,10,2020,2020,1,,,0,0,0,
+1682,PARSED,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 875 – 890
+
+TARGETS: 910 – 940 – 978 – 1,000 – 1,030 – 1,070 – 1,100– 1,150 – 1,220 – 1,275
+
+STOP LOSS: 810
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=910 | 940 | 978 | 1000 | 1030 | 1070 | 1100 | 1150 | 1220 | 1275),BNBUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:875 | RANGE_HIGH:LIMIT:890,810,910 | 940 | 978 | 1000 | 1030 | 1070 | 1100 | 1150 | 1220 | 1275,10,2020,2020,1,,,0,0,0,
+1666,PARSED,,"[trader#3] 📍SIGNAL ID: #2021📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.97 - 6.15
+
+TARGETS: 6.27 - 6.4 - 6.8 - 7.5 - 8.3 - 9.3 - 10.3
+
+STOP LOSS: 5.84
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=6.27 | 6.4 | 6.8 | 7.5 | 8.3 | 9.3 | 10.3),UNIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:5.97 | RANGE_HIGH:LIMIT:6.15,5.84,6.27 | 6.4 | 6.8 | 7.5 | 8.3 | 9.3 | 10.3,7,2021,2021,1,,,0,0,0,
+1618,PARSED,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Reaching the support zone, where a potential double-bottom formation is expected.
+
+ENTRY: 2600 - 2725
+
+TARGETS: 2780 - 2850 - 2950 - 3150 - 3300 - 3660
+
+STOP LOSS: 2598
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2780 | 2850 | 2950 | 3150 | 3300 | 3660),ETHUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:2600 | RANGE_HIGH:LIMIT:2725,2598,2780 | 2850 | 2950 | 3150 | 3300 | 3660,6,2022,2022,1,,,0,0,0,
+1574,PARSED,,"[trader#3] 📍SIGNAL ID: #2023📍
+COIN: $TRX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Completed the bullish bat pattern.
+
+ENTRY: 0.272 - 0.28
+
+TARGETS: 0.283 - 0.288 - 0.295 - 0.31 - 0.33 - 0.37
+
+STOP LOSS: 0.268
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.283 | 0.288 | 0.295 | 0.31 | 0.33 | 0.37),TRXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.272 | RANGE_HIGH:LIMIT:0.28,0.268,0.283 | 0.288 | 0.295 | 0.31 | 0.33 | 0.37,6,2023,2023,1,,,0,0,0,
+1542,PARSED,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.369 - 0.38
+
+TARGETS: 0.386 - 0.393 - 0.40 - 0.42 - 0.45 - 0.50 - 0.55
+
+STOP LOSS: 0.361
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.386 | 0.393 | 0.4 | 0.42 | 0.45 | 0.5 | 0.55),CRVUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.369 | RANGE_HIGH:LIMIT:0.38,0.361,0.386 | 0.393 | 0.4 | 0.42 | 0.45 | 0.5 | 0.55,7,2025,2025,1,,,0,0,0,
+1537,PARSED,,"[trader#3] 📍SIGNAL ID: #2026📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY:  1.996 - 2.032
+
+TARGETS: 2.064 - 2.1 - 2.2 - 2.35 - 2.45 - 2.60
+
+STOP LOSS: 1.9623
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2.064 | 2.1 | 2.2 | 2.35 | 2.45 | 2.6),XRPUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.996 | RANGE_HIGH:LIMIT:2.032,1.9623,2.064 | 2.1 | 2.2 | 2.35 | 2.45 | 2.6,6,2026,2026,1,,,0,0,0,
+1500,PARSED,,"[trader#3] 📍SIGNAL ID: #2027📍
+COIN: $JUP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2244 - 0.2318
+
+TARGETS: 0.235 - 0.238 - 0.243 - 0.252 - 0.26 - 0.28 - 0.30
+
+STOP LOSS: 0.2211
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.235 | 0.238 | 0.243 | 0.252 | 0.26 | 0.28 | 0.3),JUPUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.2244 | RANGE_HIGH:LIMIT:0.2318,0.2211,0.235 | 0.238 | 0.243 | 0.252 | 0.26 | 0.28 | 0.3,7,2027,2027,1,,,0,0,0,
+1490,PARSED,,"[trader#3] 📍SIGNAL ID: #2028📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.27 - 0.2747
+
+TARGETS: 0.279 - 0.29 - 0.30 - 0.315 - 0.33 - 0.36
+
+STOP LOSS: 0.2665
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.279 | 0.29 | 0.3 | 0.315 | 0.33 | 0.36),IMXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.27 | RANGE_HIGH:LIMIT:0.2747,0.2665,0.279 | 0.29 | 0.3 | 0.315 | 0.33 | 0.36,6,2028,2028,1,,,0,0,0,
+1480,PARSED,,"[trader#3] 📍SIGNAL ID: #2029📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2422 - 0.247
+
+TARGETS: 0.251 - 0.256 - 0.265 - 0.280 - 0.2934
+
+STOP LOSS: 0.239
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.251 | 0.256 | 0.265 | 0.28 | 0.2934),ENAUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.2422 | RANGE_HIGH:LIMIT:0.247,0.239,0.251 | 0.256 | 0.265 | 0.28 | 0.2934,5,2029,2029,1,,,0,0,0,
+1471,PARSED,,"[trader#3] 📍SIGNAL ID: #2030📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 0.13362 - 0.13651
+
+TARGETS: 0.139 - 0.142 - 0.147 - 0.155 - 0.165 - 0.186
+
+STOP LOSS: 0.13128
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.139 | 0.142 | 0.147 | 0.155 | 0.165 | 0.186),DOGEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.13362 | RANGE_HIGH:LIMIT:0.13651,0.13128,0.139 | 0.142 | 0.147 | 0.155 | 0.165 | 0.186,6,2030,2030,1,,,0,0,0,
+1452,PARSED,,"[trader#3] 📍SIGNAL ID: #2031📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 1.88 - 1.913
+
+TARGETS: 1.94 - 1.98 - 2 - 2.1 - 2.32
+
+STOP LOSS: 1.86
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.94 | 1.98 | 2 | 2.1 | 2.32),XRPUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.88 | RANGE_HIGH:LIMIT:1.913,1.86,1.94 | 1.98 | 2 | 2.1 | 2.32,5,2031,2031,1,,,0,0,0,
+1416,PARSED,,"[trader#3] 📍SIGNAL ID: #2032📍
+COIN: $LTC/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY:  74.63 - 76.2
+
+TARGETS: 77.2 - 78.5 - 82 - 88 - 100 - 113
+
+STOP LOSS: 73.05
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=77.2 | 78.5 | 82 | 88 | 100 | 113),LTCUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:74.63 | RANGE_HIGH:LIMIT:76.2,73.05,77.2 | 78.5 | 82 | 88 | 100 | 113,6,2032,2032,1,,,0,0,0,
+1384,PARSED,,"[trader#3] 📍SIGNAL ID: #2033📍
+COIN: $SUI/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+ENTRY: 1.4675 - 1.43
+
+TARGETS: 1.4072 - 1.38 - 1.34 - 1.29 - 1.22
+
+STOP LOSS: 1.4954
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=SHORT; take_profits=1.4072 | 1.38 | 1.34 | 1.29 | 1.22),SUIUSDT,SHORT,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.4675 | RANGE_HIGH:LIMIT:1.43,1.4954,1.4072 | 1.38 | 1.34 | 1.29 | 1.22,5,2033,2033,1,,,0,0,0,
+1382,PARSED,,"[trader#3] 📍SIGNAL ID: #2034📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 0.196 - 0.203
+
+TARGETS: 0.206 - 0.21 - 0.22 - 0.23 - 0.245 - 0.264
+
+STOP LOSS: 0.1903
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.206 | 0.21 | 0.22 | 0.23 | 0.245 | 0.264),ENAUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.196 | RANGE_HIGH:LIMIT:0.203,0.1903,0.206 | 0.21 | 0.22 | 0.23 | 0.245 | 0.264,6,2034,2034,1,,,0,0,0,
+1328,PARSED,,"[trader#3] 📍SIGNAL ID: #2035📍
+COIN: $LTC/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+Facing horizontal and the EMA 200 resistance. Risky scalp take it with low leverage.
+
+ENTRY: 79.3 - 77.73
+
+TARGETS: 76.5 - 75 - 73 - 70 - 67
+
+STOP LOSS: 80.46
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=SHORT; take_profits=76.5 | 75 | 73 | 70 | 67),LTCUSDT,SHORT,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:79.3 | RANGE_HIGH:LIMIT:77.73,80.46,76.5 | 75 | 73 | 70 | 67,5,2035,2035,1,,,0,0,0,
+1307,PARSED,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.218 - 0.223
+
+TARGETS: 0.2266 - 0.23 - 0.24 - 0.26 - 0.28 - 0.31
+
+STOP LOSS: 0.2134
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.2266 | 0.23 | 0.24 | 0.26 | 0.28 | 0.31),IMXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.218 | RANGE_HIGH:LIMIT:0.223,0.2134,0.2266 | 0.23 | 0.24 | 0.26 | 0.28 | 0.31,6,2036,2036,1,,,0,0,0,
+1292,PARSED,,"[trader#3] 📍SIGNAL ID: #2037 📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.4735 - 0.4750
+
+TARGETS: 0.49 - 0.51 - 0.535 - 0.56 - 0.58 - 0.61 - 0 .65  
+
+STOP LOSS: 0.46
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.49 | 0.51 | 0.535 | 0.56 | 0.58 | 0.61 | 0 | 65),WLDUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.4735 | RANGE_HIGH:LIMIT:0.475,0.46,0.49 | 0.51 | 0.535 | 0.56 | 0.58 | 0.61 | 0 | 65,8,2037,2037,1,,,0,0,0,
+1283,PARSED,,"[trader#3] 📍SIGNAL ID: #2038📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3470 - 0.3480
+
+TARGETS: 0.35 - 0.352 - 0.355 - 0.36 - 0.37 - 0.38 - 0.40  
+
+STOP LOSS: 0.3430
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.35 | 0.352 | 0.355 | 0.36 | 0.37 | 0.38 | 0.4),ADAUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.347 | RANGE_HIGH:LIMIT:0.348,0.343,0.35 | 0.352 | 0.355 | 0.36 | 0.37 | 0.38 | 0.4,7,2038,2038,1,,,0,0,0,
+1275,PARSED,,"[trader#3] 📍SIGNAL ID: #2039📍
+COIN: $ARB/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Breakout the triangle after a good consolidation.
+
+ENTRY: 0.1877 - 0.1913
+
+TARGETS: 0.1942 - 0.198 - 0.205 - 0.22 - 0.23
+
+STOP LOSS: 0.1854
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.1942 | 0.198 | 0.205 | 0.22 | 0.23),ARBUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.1877 | RANGE_HIGH:LIMIT:0.1913,0.1854,0.1942 | 0.198 | 0.205 | 0.22 | 0.23,5,2039,2039,1,,,0,0,0,
+1266,PARSED,,"[trader#3] 📍SIGNAL ID: #2040📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Key reaction zone.
+
+ENTRY: 0.2100 - 0.2110
+
+TARGETS: 0.2130 - 0.2160 - 0.2200 - 0.2260 - 0.2325 - 0.2400
+
+STOP LOSS: 0.2060
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.213 | 0.216 | 0.22 | 0.226 | 0.2325 | 0.24),XLMUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.21 | RANGE_HIGH:LIMIT:0.211,0.206,0.213 | 0.216 | 0.22 | 0.226 | 0.2325 | 0.24,6,2040,2040,1,,,0,0,0,
+1246,PARSED,,"[trader#3] 📍SIGNAL ID: #2041📍
+COIN: $DOT/USDT (2-5x)  
+Direction: SHORT
+➖➖➖➖➖➖➖  
+Getting rejected from the S/R level.
+
+ENTRY: 1.94 - 1.887
+
+TARGETS: 1.86 - 1.83 - 1.80 - 1.75 - 1.70 - 1.54
+
+STOP LOSS: 1.983
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=SHORT; take_profits=1.86 | 1.83 | 1.8 | 1.75 | 1.7 | 1.54),DOTUSDT,SHORT,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.94 | RANGE_HIGH:LIMIT:1.887,1.983,1.86 | 1.83 | 1.8 | 1.75 | 1.7 | 1.54,6,2041,2041,1,,,0,0,0,
+1227,PARSED,,"[trader#3] 📍SIGNAL ID: #2042📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 12.3 - 12.71
+
+TARGETS: 12.9 - 13.1 - 13.5 - 14 - 15 - 16
+
+STOP LOSS: 12.109
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=12.9 | 13.1 | 13.5 | 14 | 15 | 16),AVAXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:12.3 | RANGE_HIGH:LIMIT:12.71,12.109,12.9 | 13.1 | 13.5 | 14 | 15 | 16,6,2042,2042,1,,,0,0,0,
+1177,PARSED,,"[trader#3] 📍SIGNAL ID: #2043📍
+COIN: $LTC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 80 - 80.20
+
+TARGETS: 84 - 89 - 95 - 102 - 108 - 115
+
+STOP LOSS: 75
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=84 | 89 | 95 | 102 | 108 | 115),LTCUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:80 | RANGE_HIGH:LIMIT:80.2,75,84 | 89 | 95 | 102 | 108 | 115,6,2043,2043,1,,,0,0,0,
+1165,PARSED,,"[trader#3] 📍SIGNAL ID: #2044📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2280 - 0.23
+
+TARGETS: 0.235 - 0.245 - 0.26 - 0.28 - 0.30 - 0.32 - 0.34
+
+STOP LOSS: 0.22
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.235 | 0.245 | 0.26 | 0.28 | 0.3 | 0.32 | 0.34),XLMUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.228 | RANGE_HIGH:LIMIT:0.23,0.22,0.235 | 0.245 | 0.26 | 0.28 | 0.3 | 0.32 | 0.34,7,2044,2044,1,,,0,0,0,
+1163,PARSED,,"[trader#3] 📍SIGNAL ID: #2045📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.58 - 5.605
+
+TARGETS: 5.75 - 6.00 - 6.50 - 7.00 - 7.50 - 8.00
+
+STOP LOSS: 5.30
+
+Previous resistance is now acting as support.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=5.75 | 6 | 6.5 | 7 | 7.5 | 8),UNIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:5.58 | RANGE_HIGH:LIMIT:5.605,5.3,5.75 | 6 | 6.5 | 7 | 7.5 | 8,6,2045,2045,1,,,0,0,0,
+1150,PARSED,,"[trader#3] 📍SIGNAL ID: #2046 📍
+COIN: $ZEC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 470 - 480
+
+TARGETS: 500 - 530 - 570 - 625 - 680 - 750   
+
+STOP LOSS: 440
+
+Multiple resistance zones and a rising trend line from the lows.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=500 | 530 | 570 | 625 | 680 | 750),ZECUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:470 | RANGE_HIGH:LIMIT:480,440,500 | 530 | 570 | 625 | 680 | 750,6,2046,2046,1,,,0,0,0,
+1136,PARSED,,"[trader#3] 📍SIGNAL ID: #2047 📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.150 - 2.175
+
+TARGETS: 2.250 - 2.350 - 2.500 - 2.650 - 2.800 - 3.000   
+
+STOP LOSS: 2.050
+
+Strong confluence between support zones and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2.25 | 2.35 | 2.5 | 2.65 | 2.8 | 3),DOTUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:2.15 | RANGE_HIGH:LIMIT:2.175,2.05,2.25 | 2.35 | 2.5 | 2.65 | 2.8 | 3,6,2047,2047,1,,,0,0,0,
+1132,PARSED,,"[trader#3] 📍SIGNAL ID: #2048📍
+COIN: $BCH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 605 - 610
+
+TARGETS: 625 - 640 - 665 -690 - 720 - 750 
+
+STOP LOSS: 585
+
+Strong confluence between support zones, ascending trend line and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=625 | 640 | 665 | 690 | 720 | 750),BCHUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:605 | RANGE_HIGH:LIMIT:610,585,625 | 640 | 665 | 690 | 720 | 750,6,2048,2048,1,,,0,0,0,
+1130,PARSED,,"[trader#3] 📍SIGNAL ID: #2049📍
+COIN: $MNT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.01 - 1.02
+
+TARGETS: 1.05 - 1.10 - 1.16 - 1.23 - 1.31 - 1.40 - 1.50 
+
+STOP LOSS: 0.95
+
+Strong confluence between support zones, ascending trend line and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.05 | 1.1 | 1.16 | 1.23 | 1.31 | 1.4 | 1.5),MNTUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.01 | RANGE_HIGH:LIMIT:1.02,0.95,1.05 | 1.1 | 1.16 | 1.23 | 1.31 | 1.4 | 1.5,7,2049,2049,1,,,0,0,0,
+1087,PARSED,,"[trader#3] 📍SIGNAL ID: #2050📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.04 - 2.05
+
+TARGETS: 2.10 - 2.25 - 2.40 - 2.60 - 2.80 - 3.00 
+
+STOP LOSS: 1.95
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2.1 | 2.25 | 2.4 | 2.6 | 2.8 | 3),XRPUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:2.04 | RANGE_HIGH:LIMIT:2.05,1.95,2.1 | 2.25 | 2.4 | 2.6 | 2.8 | 3,6,2050,2050,1,,,0,0,0,
+1082,PARSED,,"[trader#3] 📍SIGNAL ID: #2051📍
+COIN: $HYPE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 23.825 - 23.875
+
+TARGETS: 24.5 - 25.75 - 27 - 28.25 - 30 - 32 
+
+STOP LOSS: 22.2
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=24.5 | 25.75 | 27 | 28.25 | 30 | 32),HYPEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:23.825 | RANGE_HIGH:LIMIT:23.875,22.2,24.5 | 25.75 | 27 | 28.25 | 30 | 32,6,2051,2051,1,,,0,0,0,
+1063,PARSED,,"[trader#3] 📍SIGNAL ID: #2052📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1350 - 0.1355
+
+TARGETS: 0.139 - 0.144 - 0.150 - 0.157 - 0.165 - 0.174 - 0.185  
+
+STOP LOSS: 0.125
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.139 | 0.144 | 0.15 | 0.157 | 0.165 | 0.174 | 0.185),DOGEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.135 | RANGE_HIGH:LIMIT:0.1355,0.125,0.139 | 0.144 | 0.15 | 0.157 | 0.165 | 0.174 | 0.185,7,2052,2052,1,,,0,0,0,
+987,PARSED,,"[trader#3] 📍SIGNAL ID: #2053📍
+COIN: $AAVE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 169 - 170
+
+TARGETS: 175 - 180 - 187 - 195 - 205 - 215 - 225
+
+STOP LOSS: 157.5
+
+Strong confluence between support zones.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=175 | 180 | 187 | 195 | 205 | 215 | 225),AAVEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:169 | RANGE_HIGH:LIMIT:170,157.5,175 | 180 | 187 | 195 | 205 | 215 | 225,7,2053,2053,1,,,0,0,0,
+958,PARSED,,"[trader#3] 📍SIGNAL ID: #2054📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.3 - 5.325
+
+TARGETS: 5.5 - 5.75 - 6.15 - 6.75 - 7.5 - 8.5
+
+STOP LOSS: 4.85
+
+Multiple support zones plus an order block.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=5.5 | 5.75 | 6.15 | 6.75 | 7.5 | 8.5),UNIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:5.3 | RANGE_HIGH:LIMIT:5.325,4.85,5.5 | 5.75 | 6.15 | 6.75 | 7.5 | 8.5,6,2054,2054,1,,,0,0,0,
+946,PARSED,,"[trader#3] 📍SIGNAL ID: #2055📍
+COIN: $ASTER/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.68 - 0.69
+
+TARGETS: 0.71 - 0.75 - 0.80 - 0.86 - 0.93 - 1.00
+
+STOP LOSS: 0.635
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.71 | 0.75 | 0.8 | 0.86 | 0.93 | 1),ASTERUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.68 | RANGE_HIGH:LIMIT:0.69,0.635,0.71 | 0.75 | 0.8 | 0.86 | 0.93 | 1,6,2055,2055,1,,,0,0,0,
+900,PARSED,,"[trader#3] 📍SIGNAL ID: #2056📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.520 - 0.525
+
+TARGETS: 0.540 - 0.570 - 0.600 - 0.640 - 0.690 - 0.750
+
+STOP LOSS: 0.480
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.54 | 0.57 | 0.6 | 0.64 | 0.69 | 0.75),WLDUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.52 | RANGE_HIGH:LIMIT:0.525,0.48,0.54 | 0.57 | 0.6 | 0.64 | 0.69 | 0.75,6,2056,2056,1,,,0,0,0,
+871,PARSED,,"[trader#3] 📍SIGNAL ID: #2057📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.348 - 0.350
+
+TARGETS: 0.362 - 0.375 - 0.390 - 0.410 - 0.435 - 0.465 - 0.500
+
+STOP LOSS: 0.325
+
+Support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.362 | 0.375 | 0.39 | 0.41 | 0.435 | 0.465 | 0.5),ADAUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.348 | RANGE_HIGH:LIMIT:0.35,0.325,0.362 | 0.375 | 0.39 | 0.41 | 0.435 | 0.465 | 0.5,7,2057,2057,1,,,0,0,0,
+870,PARSED,,"[trader#3] 📍SIGNAL ID: #2058📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 12.00 - 12.10
+
+TARGETS: 12.45 - 12.90 - 13.50 - 14.25 - 15.10 - 16.00
+
+STOP LOSS: 11.00
+
+Support zones along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=12.45 | 12.9 | 13.5 | 14.25 | 15.1 | 16),LINKUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:12 | RANGE_HIGH:LIMIT:12.1,11,12.45 | 12.9 | 13.5 | 14.25 | 15.1 | 16,6,2058,2058,1,,,0,0,0,
+828,PARSED,,"[trader#3] 📍SIGNAL ID: #2059📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.4750 - 1.4800
+
+TARGETS: 1.5400 - 1.6000 - 1.6800 - 1.7700 - 1.8800 - 2.0000 - 2.2500
+
+STOP LOSS: 1.3500
+
+Support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.54 | 1.6 | 1.68 | 1.77 | 1.88 | 2 | 2.25),SUIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.475 | RANGE_HIGH:LIMIT:1.48,1.35,1.54 | 1.6 | 1.68 | 1.77 | 1.88 | 2 | 2.25,7,2059,2059,1,,,0,0,0,
+816,PARSED,,"[trader#3] 📍SIGNAL ID: #2060📍
+COIN: $POL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1240 - 0.1250
+
+TARGETS: 0.1300 - 0.1370 - 0.1450 - 0.1550 - 0.1680 - 0.1840 - 0.2000 
+
+STOP LOSS: 0.1150
+
+High-confluence support zones along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.13 | 0.137 | 0.145 | 0.155 | 0.168 | 0.184 | 0.2),POLUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.124 | RANGE_HIGH:LIMIT:0.125,0.115,0.13 | 0.137 | 0.145 | 0.155 | 0.168 | 0.184 | 0.2,7,2060,2060,1,,,0,0,0,
+804,PARSED,,"[trader#3] 📍SIGNAL ID: #2061📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.4530 - 0.4550
+
+TARGETS: 0.4600 - 0.4800 - 0.5000 - 0.5300 - 0.5600 - 0.6000
+
+STOP LOSS: 0.4300
+
+High-confluence support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.46 | 0.48 | 0.5 | 0.53 | 0.56 | 0.6),WLDUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.453 | RANGE_HIGH:LIMIT:0.455,0.43,0.46 | 0.48 | 0.5 | 0.53 | 0.56 | 0.6,6,2061,2061,1,,,0,0,0,
+800,PARSED,,"[trader#3] 📍SIGNAL ID: #2062📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.510 - 1.520
+
+TARGETS: 1.550 - 1.590 - 1.650 - 1.720 - 1.800 - 1.890 - 2.000
+
+STOP LOSS: 1.420
+
+High-confluence support zones and FVGs along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.55 | 1.59 | 1.65 | 1.72 | 1.8 | 1.89 | 2),APTUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.51 | RANGE_HIGH:LIMIT:1.52,1.42,1.55 | 1.59 | 1.65 | 1.72 | 1.8 | 1.89 | 2,7,2062,2062,1,,,0,0,0,
+788,PARSED,,"[trader#3] 📍SIGNAL ID: #2063📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.895 - 1.900
+
+TARGETS: 1.960 - 2.050 - 2.150 - 2.250 - 2.360 - 2.480 - 2.600 
+
+STOP LOSS: 1.760
+
+Entry sits on a support cluster with an FVG backing it.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.96 | 2.05 | 2.15 | 2.25 | 2.36 | 2.48 | 2.6),XRPUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.895 | RANGE_HIGH:LIMIT:1.9,1.76,1.96 | 2.05 | 2.15 | 2.25 | 2.36 | 2.48 | 2.6,7,2063,2063,1,,,0,0,0,
+785,PARSED,,"[trader#3] 📍SIGNAL ID: #2064📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1195 - 0.1200
+
+TARGETS: 0.1235 - 0.1270 - 0.1320 -0.1380 - 0.1450 - 0.1525 - 0.1600  
+
+STOP LOSS: 0.1125
+
+High-confluence HTF support cluster influencing the current entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.1235 | 0.127 | 0.132 | 0.138 | 0.145 | 0.1525 | 0.16),DOGEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.1195 | RANGE_HIGH:LIMIT:0.12,0.1125,0.1235 | 0.127 | 0.132 | 0.138 | 0.145 | 0.1525 | 0.16,7,2064,2064,1,,,0,0,0,
+749,PARSED,,"[trader#3] 📍SIGNAL ID: #2065📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 105 - 105.5
+
+TARGETS: 109 - 115 - 122 - 130 - 139 - 150  
+
+STOP LOSS: 97
+
+High-confluence support cluster and a descending channel structure along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=109 | 115 | 122 | 130 | 139 | 150),SOLUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:105 | RANGE_HIGH:LIMIT:105.5,97,109 | 115 | 122 | 130 | 139 | 150,6,2065,2065,1,,,0,0,0,
+729,PARSED,,"[trader#3] 📍SIGNAL ID: #2066📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.290 - 0.291
+
+TARGETS: 0.300 - 0.315 - 0.335 - 0.355 - 0.375 - 0.400 
+
+STOP LOSS: 0.265
+
+Strong support confluence reinforced by an adjacent FVG.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.3 | 0.315 | 0.335 | 0.355 | 0.375 | 0.4),ADAUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.29 | RANGE_HIGH:LIMIT:0.291,0.265,0.3 | 0.315 | 0.335 | 0.355 | 0.375 | 0.4,6,2066,2066,1,,,0,0,0,
+728,PARSED,,"[trader#3] 📍SIGNAL ID: #2067📍
+COIN: $ETH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2290 - 2300
+
+TARGETS: 2350 - 2425 - 2500 - 2600 - 2725 - 2850 - 3000 
+
+STOP LOSS: 2150
+
+Confluent support zone backed by a higher-timeframe FVG and OB.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=2350 | 2425 | 2500 | 2600 | 2725 | 2850 | 3000),ETHUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:2290 | RANGE_HIGH:LIMIT:2300,2150,2350 | 2425 | 2500 | 2600 | 2725 | 2850 | 3000,7,2067,2067,1,,,0,0,0,
+585,PARSED,,"[trader#3] 📍SIGNAL ID: #2068📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 8.40 - 8.50
+
+TARGETS: 8.80 - 9.35 - 10.00 - 10.70 - 11.45 - 12.20 - 13.00 
+
+STOP LOSS: 7.85
+
+Post sell-off consolidation below resistance favors a short-term reaction.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=8.8 | 9.35 | 10 | 10.7 | 11.45 | 12.2 | 13),LINKUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:8.4 | RANGE_HIGH:LIMIT:8.5,7.85,8.8 | 9.35 | 10 | 10.7 | 11.45 | 12.2 | 13,7,2068,2068,1,,,0,0,0,
+580,PARSED,,"[trader#3] 📍SIGNAL ID: #2069📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3680 - 0.3700
+
+TARGETS: 0.3850 - 0.4100 - 0.4450 - 0.4800 - 0.5150 - 0.5500
+
+STOP LOSS: 0.3375
+
+Support area strengthened by confluence and a surrounding FVG.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.385 | 0.41 | 0.445 | 0.48 | 0.515 | 0.55),WLDUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.368 | RANGE_HIGH:LIMIT:0.37,0.3375,0.385 | 0.41 | 0.445 | 0.48 | 0.515 | 0.55,6,2069,2069,1,,,0,0,0,
+555,PARSED,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1035 - 0.1080 - 0.1150 - 0.1250 - 0.1375 - 0.1500
+
+STOP LOSS: 0.0925
+
+Support confluence and liquidity sweep favor a reaction bounce.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.1035 | 0.108 | 0.115 | 0.125 | 0.1375 | 0.15),WLFIUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.099 | RANGE_HIGH:LIMIT:0.1,0.0925,0.1035 | 0.108 | 0.115 | 0.125 | 0.1375 | 0.15,6,2070,2070,1,,,0,0,0,
+553,PARSED,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 144 - 145
+
+TARGETS: 150 - 160 - 175 - 190 - 205 - 225 - 250
+
+STOP LOSS: 135
+
+Strong support zones and liquidity sweep along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=150 | 160 | 175 | 190 | 205 | 225 | 250),TAOUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:144 | RANGE_HIGH:LIMIT:145,135,150 | 160 | 175 | 190 | 205 | 225 | 250,7,2071,2071,1,,,0,0,0,
+488,PARSED,,"[trader#3] 📍SIGNAL ID: #2072📍
+COIN: $TRX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2760 - 0.2770
+
+TARGETS: 0.2840 - 0.2940 - 0.3050 - 0.3180 - 0.3320 - 0.3500 - 0.3700
+
+STOP LOSS: 0.2600
+
+Strong support zones and a 4H FVG along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.284 | 0.294 | 0.305 | 0.318 | 0.332 | 0.35 | 0.37),TRXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.276 | RANGE_HIGH:LIMIT:0.277,0.26,0.284 | 0.294 | 0.305 | 0.318 | 0.332 | 0.35 | 0.37,7,2072,2072,1,,,0,0,0,
+368,PARSED,,"[trader#3] 📍SIGNAL ID: #2074📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.154 - 0.155
+
+TARGETS: 0.160 - 0.168 - 0.180 - 0.195 - 0.210 - 0.230 - 0.250
+
+STOP LOSS: 0.142
+
+Strong support zone and a 4H FVG along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.16 | 0.168 | 0.18 | 0.195 | 0.21 | 0.23 | 0.25),IMXUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.154 | RANGE_HIGH:LIMIT:0.155,0.142,0.16 | 0.168 | 0.18 | 0.195 | 0.21 | 0.23 | 0.25,7,2074,2074,1,,,0,0,0,
+324,PARSED,,"[trader#3] 📍SIGNAL ID: #2075📍
+COIN: $SKY/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0620 - 0.0622
+
+TARGETS: 0.0640 - 0.0670 - 0.0720 - 0.0790 - 0.0880 - 0.1000
+
+STOP LOSS: 0.0575
+
+Strong support zone within the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.064 | 0.067 | 0.072 | 0.079 | 0.088 | 0.1),SKYUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.062 | RANGE_HIGH:LIMIT:0.0622,0.0575,0.064 | 0.067 | 0.072 | 0.079 | 0.088 | 0.1,6,2075,2075,1,,,0,0,0,
+302,PARSED,,"[trader#3] 📍SIGNAL ID: #2076📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1040 - 0.1100 - 0.1180 - 0.1280 - 0.1390 - 0.1500
+
+STOP LOSS: 0.0925
+
+Liquidity sweep into support favors a short-term reaction while structure holds.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.104 | 0.11 | 0.118 | 0.128 | 0.139 | 0.15),ENAUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.099 | RANGE_HIGH:LIMIT:0.1,0.0925,0.104 | 0.11 | 0.118 | 0.128 | 0.139 | 0.15,6,2076,2076,1,,,0,0,0,
+194,PARSED,,"[trader#3] 📍SIGNAL ID: #2077📍
+COIN: $BCH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 450 - 455
+
+TARGETS: 470 - 490 - 520 - 560 - 620 - 700
+
+STOP LOSS: 420
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=470 | 490 | 520 | 560 | 620 | 700),BCHUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:450 | RANGE_HIGH:LIMIT:455,420,470 | 490 | 520 | 560 | 620 | 700,6,2077,2077,1,,,0,0,0,
+193,PARSED,,"[trader#3] 📍SIGNAL ID: #2078📍
+COIN: $CRO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0. 0745 - 0.0750
+
+TARGETS: 0.0775 - 0.0800 - 0.0840 - 0.0890 - 0.0940 - 0.1000 - 0.1100
+
+STOP LOSS: 0.0700
+
+Confluence of high-interest zones around the entry area.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.0775 | 0.08 | 0.084 | 0.089 | 0.094 | 0.1 | 0.11),CROUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.0745 | RANGE_HIGH:LIMIT:0.075,0.07,0.0775 | 0.08 | 0.084 | 0.089 | 0.094 | 0.1 | 0.11,7,2078,2078,1,,,0,0,0,
+192,PARSED,,"[trader#3] 📍SIGNAL ID: #2079📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.500 - 1.510
+
+TARGETS: 1.575 - 1.675 - 1.800 - 1.900 - 2.000 - 2.125 - 2.250
+
+STOP LOSS: 1.375
+
+Confluence between 4H FVG, support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.575 | 1.675 | 1.8 | 1.9 | 2 | 2.125 | 2.25),DOTUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.5 | RANGE_HIGH:LIMIT:1.51,1.375,1.575 | 1.675 | 1.8 | 1.9 | 2 | 2.125 | 2.25,7,2079,2079,1,,,0,0,0,
+180,PARSED,,"[trader#3] 📍SIGNAL ID: #2080📍
+COIN: $ETC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 8.00 - 8.10
+
+TARGETS: 8.30 - 8.75 - 9.25 - 10.00 - 11.00 - 12.00
+
+STOP LOSS: 7.35
+
+Confluence between 4H FVG, support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=8.3 | 8.75 | 9.25 | 10 | 11 | 12),ETCUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:8 | RANGE_HIGH:LIMIT:8.1,7.35,8.3 | 8.75 | 9.25 | 10 | 11 | 12,6,2080,2080,1,,,0,0,0,
+127,PARSED,,"[trader#3] 📍SIGNAL ID: #2081📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0895 - 0.0900
+
+TARGETS: 0.0940 - 0.0990 - 0.1050 - 0.1120 - 0.1200 - 0.1300
+
+STOP LOSS: 0.0825
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=0.094 | 0.099 | 0.105 | 0.112 | 0.12 | 0.13),DOGEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:0.0895 | RANGE_HIGH:LIMIT:0.09,0.0825,0.094 | 0.099 | 0.105 | 0.112 | 0.12 | 0.13,6,2081,2081,1,,,0,0,0,
+113,PARSED,,"[trader#3] 📍SIGNAL ID: #2082📍
+COIN: $HYPE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 29.90 - 30.00
+
+TARGETS: 31.25 - 33.00 - 35.00 - 37.50 - 41.00 - 45.00 - 50.00
+
+STOP LOSS: 27.50
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=31.25 | 33 | 35 | 37.5 | 41 | 45 | 50),HYPEUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:29.9 | RANGE_HIGH:LIMIT:30,27.5,31.25 | 33 | 35 | 37.5 | 41 | 45 | 50,7,2082,2082,1,,,0,0,0,
+62,PARSED,,"[trader#3] 📍SIGNAL ID: #2083📍
+COIN: $NEAR/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.240 - 1.250
+
+TARGETS: 1.300 - 1.375 - 1.475 - 1.600 - 1.750 - 1.900 - 50.00
+
+STOP LOSS: 1.150
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.3 | 1.375 | 1.475 | 1.6 | 1.75 | 1.9 | 50),NEARUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.24 | RANGE_HIGH:LIMIT:1.25,1.15,1.3 | 1.375 | 1.475 | 1.6 | 1.75 | 1.9 | 50,7,2083,2083,1,,,0,0,0,
+54,PARSED,,"[trader#3] 📍SIGNAL ID: #2084📍
+COIN: $BNB/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 640 - 645
+
+TARGETS: 665 - 700 - 740 - 790 - 850 - 920 - 1000
+
+STOP LOSS: 585
+
+Strong support confluence reinforced by a 4H FVG and the retest of the upper trendline from a previously broken descending channel at entry.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=665 | 700 | 740 | 790 | 850 | 920 | 1000),BNBUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:640 | RANGE_HIGH:LIMIT:645,585,665 | 700 | 740 | 790 | 850 | 920 | 1000,7,2084,2084,1,,,0,0,0,
+30,PARSED,,"[trader#3] 📍SIGNAL ID: #2085📍
+COIN: $TON/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.290 - 1.300
+
+TARGETS: 1.350 - 1.420 - 1.500 - 1.600 - 1.720 - 1.850 - 2.000
+
+STOP LOSS: 1.200
+
+Strong support confluence reinforced by a daily FVG and an ascending trendline at entry zone.
+➖➖➖➖➖➖➖",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,OPEN_POSITION,OPEN_POSITION(side=LONG; take_profits=1.35 | 1.42 | 1.5 | 1.6 | 1.72 | 1.85 | 2),TONUSDT,LONG,,,0.9,,,,SINGLE,RANGE,False,2,RANGE_LOW:LIMIT:1.29 | RANGE_HIGH:LIMIT:1.3,1.2,1.35 | 1.42 | 1.5 | 1.6 | 1.72 | 1.85 | 2,7,2085,2085,1,,,0,0,0,

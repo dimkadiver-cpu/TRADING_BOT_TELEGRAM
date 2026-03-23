@@ -20,20 +20,22 @@ class ReportingCsvExportTests(unittest.TestCase):
         db_path = Path(tmp.name)
         with sqlite3.connect(db_path) as conn:
             conn.execute(
-                'CREATE TABLE raw_messages (raw_message_id INTEGER PRIMARY KEY, raw_text TEXT, reply_to_message_id INTEGER, message_ts TEXT, source_chat_id TEXT, telegram_message_id TEXT)'
+                'CREATE TABLE raw_messages (raw_message_id INTEGER PRIMARY KEY, raw_text TEXT, reply_to_message_id INTEGER, message_ts TEXT, source_chat_id TEXT, source_chat_title TEXT, telegram_message_id TEXT, acquisition_status TEXT, acquisition_reason TEXT)'
             )
             conn.execute(
-                'CREATE TABLE parse_results (raw_message_id INTEGER, resolved_trader_id TEXT, message_type TEXT, parse_status TEXT, warning_text TEXT, parse_result_normalized_json TEXT)'
+                'CREATE TABLE parse_results (raw_message_id INTEGER, resolved_trader_id TEXT, message_type TEXT, parse_status TEXT, warning_text TEXT, parse_result_normalized_json TEXT, trader_resolution_method TEXT)'
             )
             conn.executemany(
-                'INSERT INTO raw_messages(raw_message_id, raw_text, reply_to_message_id, message_ts, source_chat_id, telegram_message_id) VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO raw_messages(raw_message_id, raw_text, reply_to_message_id, message_ts, source_chat_id, source_chat_title, telegram_message_id, acquisition_status, acquisition_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
-                    (1, 'BTCUSDT long entry 100 sl 90 tp1 110', None, '2026-01-01T10:00:00Z', '-100', '1'),
-                    (2, 'TAOUSDT tp1 hit https://t.me/c/1/17', 1, '2026-01-01T10:01:00Z', '-100', '2'),
+                    (1, 'BTCUSDT long entry 100 sl 90 tp1 110', None, '2026-01-01T10:00:00Z', '-100', 'Trader Alpha', '1', 'ACQUIRED_ELIGIBLE', ''),
+                    (2, 'TAOUSDT tp1 hit https://t.me/c/1/17', 1, '2026-01-01T10:01:00Z', '-100', 'Trader Alpha', '2', 'ACQUIRED_ELIGIBLE', ''),
+                    (3, '???? ? ??', 2, '2026-01-01T10:02:00Z', '3171748254', 'PifSignal', '3', 'ACQUIRED_UNKNOWN_TRADER', 'unknown_trader'),
+                    (4, '???????', 3, '2026-01-01T10:03:00Z', '3171748254', 'PifSignal', '4', 'ACQUIRED_UNKNOWN_TRADER', 'unknown_trader'),
                 ],
             )
             conn.executemany(
-                'INSERT INTO parse_results(raw_message_id, resolved_trader_id, message_type, parse_status, warning_text, parse_result_normalized_json) VALUES (?, ?, ?, ?, ?, ?)',
+                'INSERT INTO parse_results(raw_message_id, resolved_trader_id, message_type, parse_status, warning_text, parse_result_normalized_json, trader_resolution_method) VALUES (?, ?, ?, ?, ?, ?, ?)',
                 [
                     (
                         1,
@@ -74,6 +76,7 @@ class ReportingCsvExportTests(unittest.TestCase):
                             },
                             ensure_ascii=False,
                         ),
+                        'content_alias',
                     ),
                     (
                         2,
@@ -128,6 +131,16 @@ class ReportingCsvExportTests(unittest.TestCase):
                             },
                             ensure_ascii=False,
                         ),
+                        'reply',
+                    ),
+                    (
+                        3,
+                        'UNRESOLVED',
+                        'UNCLASSIFIED',
+                        'SKIPPED',
+                        '',
+                        json.dumps({}, ensure_ascii=False),
+                        'unresolved',
                     ),
                 ],
             )
@@ -258,6 +271,32 @@ class ReportingCsvExportTests(unittest.TestCase):
                 except (FileNotFoundError, PermissionError):
                     pass
 
+
+    def test_export_reports_csv_also_writes_unresolved_messages_csv(self) -> None:
+        db_path = self._make_db()
+        reports_dir = Path.cwd() / 'parser_test' / 'reports'
+        try:
+            with patch('parser_test.reporting.report_export.load_config') as load_config:
+                load_config.return_value = types.SimpleNamespace(traders={'trader_a': {}})
+                updated = export_reports_csv_v2(db_path=db_path, reports_dir=reports_dir, trader='all')
+            unresolved_csv = reports_dir / 'unresolved_messages.csv'
+            self.assertTrue(unresolved_csv.exists())
+            with unresolved_csv.open('r', encoding='utf-8-sig', newline='') as handle:
+                reader = csv.DictReader(handle)
+                rows = list(reader)
+            self.assertTrue(any(item.scope == 'UNRESOLVED_MESSAGES' for item in updated))
+            self.assertEqual([row['raw_message_id'] for row in rows], ['3', '4'])
+            self.assertEqual(rows[0]['source_chat_title'], 'PifSignal')
+            self.assertEqual(rows[0]['trader_resolution_method'], 'unresolved')
+            self.assertEqual(rows[1]['message_type'], '')
+            self.assertEqual(rows[1]['raw_text_preview'], '???????')
+        finally:
+            for suffix in ('', '-wal', '-shm'):
+                try:
+                    db_path.with_suffix(db_path.suffix + suffix).unlink()
+                except (FileNotFoundError, PermissionError):
+                    pass
+
     def test_build_report_row_handles_missing_structured_fields(self) -> None:
         row = build_report_row(
             raw_message_id=99,
@@ -273,6 +312,99 @@ class ReportingCsvExportTests(unittest.TestCase):
         self.assertEqual(row['actions_structured_summary'], '')
         self.assertNotIn('legacy_actions', row)
         self.assertNotIn('normalized_json_debug', row)
+
+    def test_build_report_row_supports_current_router_shape(self) -> None:
+        row = build_report_row(
+            raw_message_id=1988,
+            parse_status='PARSED',
+            reply_to_message_id=None,
+            raw_text='[trader#3] WLFI signal',
+            warning_text='',
+            normalized={
+                'message_type': 'NEW_SIGNAL',
+                'primary_intent': 'OPEN_POSITION',
+                'intents': ['NS_CREATE_SIGNAL'],
+                'confidence': 0.9,
+                'target_refs': [{'kind': 'signal_id', 'ref': 2003}],
+                'entities': {
+                    'symbol': 'WLFIUSDT',
+                    'side': 'LONG',
+                    'signal_id': 2003,
+                    'entry': [0.12, 0.124],
+                    'entry_range_low': 0.12,
+                    'entry_range_high': 0.124,
+                    'take_profits': [0.13, 0.14, 0.15],
+                    'stop_loss': 0.11,
+                    'hashtags': ['#swing', '#tp'],
+                    'links': ['https://t.me/test/1'],
+                    'entry_plan_type': 'SINGLE',
+                    'entry_structure': 'RANGE',
+                    'has_averaging_plan': False,
+                },
+                'actions_structured': [
+                    {
+                        'action': 'OPEN_POSITION',
+                        'entry_range': [0.12, 0.124],
+                        'take_profits': [0.13, 0.14, 0.15],
+                    }
+                ],
+                'warnings': [],
+            },
+            scope='NEW_SIGNAL',
+        )
+        self.assertEqual(row['signal_id'], '2003')
+        self.assertEqual(row['entry_count'], '2')
+        self.assertEqual(row['entries_summary'], 'RANGE_LOW:LIMIT:0.12 | RANGE_HIGH:LIMIT:0.124')
+        self.assertEqual(row['tp_prices'], '0.13 | 0.14 | 0.15')
+        self.assertEqual(row['stop_loss_price'], '0.11')
+        self.assertEqual(row['links_count'], '1')
+        self.assertEqual(row['hashtags_count'], '2')
+
+    def test_build_report_row_prefers_entities_over_broken_canonical_numbers(self) -> None:
+        row = build_report_row(
+            raw_message_id=1908,
+            parse_status='PARSED',
+            reply_to_message_id=None,
+            raw_text='BTC signal',
+            warning_text='',
+            normalized={
+                'message_type': 'NEW_SIGNAL',
+                'stop_loss_price': 97.0,
+                'entities': {
+                    'signal_id': 2006,
+                    'symbol': 'BTCUSDT',
+                    'side': 'LONG',
+                    'entry': [100000.0, 101600.0],
+                    'take_profits': [102000.0, 103000.0, 105000.0],
+                    'stop_loss': 97000.0,
+                    'entry_plan_type': 'SINGLE',
+                    'entry_structure': 'RANGE',
+                    'has_averaging_plan': False,
+                },
+                'entry_plan': {
+                    'entries': [{'role': 'PRIMARY', 'order_type': 'LIMIT', 'price': 100.0}],
+                    'entry_plan_type': 'SINGLE',
+                    'entry_structure': 'RANGE',
+                    'has_averaging_plan': False,
+                },
+                'take_profit_prices': [102.0, 0.0],
+                'risk_plan': {
+                    'stop_loss': {'price': 97.0},
+                    'take_profits': [{'price': 102.0}, {'price': 0.0}],
+                },
+                'actions_structured': [
+                    {
+                        'action': 'OPEN_POSITION',
+                        'entry_range': [100000.0, 101600.0],
+                        'take_profits': [102000.0, 103000.0, 105000.0],
+                    }
+                ],
+            },
+            scope='NEW_SIGNAL',
+        )
+        self.assertEqual(row['entries_summary'], 'RANGE_LOW:LIMIT:100000 | RANGE_HIGH:LIMIT:101600')
+        self.assertEqual(row['tp_prices'], '102000 | 103000 | 105000')
+        self.assertEqual(row['stop_loss_price'], '97000')
 
 
 if __name__ == '__main__':

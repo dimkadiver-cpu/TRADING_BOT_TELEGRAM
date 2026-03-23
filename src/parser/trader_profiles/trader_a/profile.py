@@ -20,9 +20,13 @@ _RESULT_R_CAPTURE_RE = re.compile(
     r"\b(?P<symbol>[A-Z]{2,20}(?:USDT|USDC|USD|BTC|ETH)?)\s*[-:=]\s*(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*R{1,2}\b",
     re.IGNORECASE,
 )
+_BARE_RESULT_R_RE = re.compile(r"\b(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*R{1,2}\b", re.IGNORECASE)
 _PERCENT_RE = re.compile(r"\b(?P<value>\d{1,3}(?:[.,]\d+)?)%")
 _TP_INDEX_RE = re.compile(r"\btp(?P<index>\d+)\b", re.IGNORECASE)
-_STOP_LEVEL_RE = re.compile(r"(?:move\s*(?:sl|stop)\s*(?:to)?|sl|stop)\s*[:=@-]?\s*(?P<value>\d+(?:[.,]\d+)?)", re.IGNORECASE)
+_STOP_LEVEL_RE = re.compile(
+    r"(?:move\s*(?:sl|stop)\s*(?:to)?|sl|stop|стоп\s*(?:переношу|переставляю|переносим|переставим)\s*на)\s*[:=@-]?\s*(?P<value>\d+(?:[.,]\d+)?)",
+    re.IGNORECASE,
+)
 _ENTRY_VALUE_RE = re.compile(
     r"(?:entry|entries|\u0432\u0445\u043e\u0434(?:\s+\u0441\s+\u0442\u0435\u043a\u0443\u0449\u0438\u0445|\s+\u043b\u0438\u043c\u0438\u0442\u043a\u043e\u0439|\s+\u043b\u0438\u043c\u0438\u0442\u043d\u044b\u043c\s+\u043e\u0440\u0434\u0435\u0440\u043e\u043c)?)\s*[:=@-]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)",
     re.IGNORECASE,
@@ -84,6 +88,12 @@ _DEFAULT_CLASSIFICATION_MARKERS: dict[str, tuple[str, ...]] = {
         "entry only",
         "sl later",
         "tp later",
+    ),
+    "info_only": (
+        "\u0437\u0430\u043a\u0440\u044b\u043b\u0430\u0441\u044c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
+        "\u0441\u0434\u0435\u043b\u043a\u0430 \u0437\u0430\u043a\u0440\u044b\u0442\u0430",
+        "\u043f\u043e\u0437\u0438\u0446\u0438\u044f \u0437\u0430\u043a\u0440\u044b\u0442\u0430",
+        "\u0441\u0435\u0442\u0430\u043f \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u0437\u0430\u043a\u0440\u044b\u0442",
     ),
 }
 
@@ -293,7 +303,18 @@ class TraderAProfileParser:
             target_refs=target_refs,
         )
         if message_type == "UNCLASSIFIED" and "U_REPORT_FINAL_RESULT" in intents:
-            if (target_refs or has_global_target) and any(intent in intents for intent in ("U_CLOSE_FULL", "U_CLOSE_PARTIAL", "U_CANCEL_PENDING_ORDERS", "U_MOVE_STOP_TO_BE", "U_MOVE_STOP")):
+            if (target_refs or has_global_target) and any(
+                intent in intents
+                for intent in (
+                    "U_CLOSE_FULL",
+                    "U_CLOSE_PARTIAL",
+                    "U_CANCEL_PENDING_ORDERS",
+                    "U_MOVE_STOP_TO_BE",
+                    "U_MOVE_STOP",
+                    "U_TP_HIT",
+                    "U_STOP_HIT",
+                )
+            ):
                 message_type = "UPDATE"
             else:
                 message_type = "INFO_ONLY"
@@ -361,6 +382,7 @@ class TraderAProfileParser:
             prepared=prepared,
             message_type=message_type,
             intents=intents,
+            entities=entities,
             target_refs=target_refs,
             actions_structured=actions_structured,
             global_target_scope=global_target_scope,
@@ -441,6 +463,8 @@ class TraderAProfileParser:
                 actions.append({"action": "TAKE_PROFIT", "target": entities.get("hit_target", "TP")})
             elif intent == "U_STOP_HIT":
                 actions.append({"action": "CLOSE_POSITION", "target": "STOP"})
+            elif intent == "U_EXIT_BE":
+                continue
             elif intent == "U_MARK_FILLED":
                 actions.append({"action": "MARK_FILLED", "fill_state": entities.get("fill_state", "FILLED")})
             elif intent == "U_REPORT_FINAL_RESULT":
@@ -654,6 +678,7 @@ class TraderAProfileParser:
         prepared: dict[str, Any],
         message_type: str,
         intents: list[str],
+        entities: dict[str, Any],
         target_refs: list[dict[str, Any]],
         actions_structured: list[dict[str, Any]],
         global_target_scope: str | None,
@@ -668,7 +693,53 @@ class TraderAProfileParser:
         if per_target:
             return self._group_action_items(per_target)
 
-        explicit_targets = [int(item.get("ref")) for item in target_refs if item.get("kind") == "message_id" and isinstance(item.get("ref"), int)]
+        explicit_targets = self._explicit_action_targets(target_refs=target_refs)
+        selector = None
+        if global_target_scope in {"ALL_SHORTS", "ALL_LONGS"}:
+            selector = {
+                "side": "SHORT" if global_target_scope == "ALL_SHORTS" else "LONG",
+                "status": "OPEN",
+            }
+
+        if explicit_targets and selector and any(intent in intents for intent in {"U_TP_HIT", "U_STOP_HIT"}) and any(
+            intent in intents for intent in {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"}
+        ):
+            mixed_actions: list[dict[str, Any]] = []
+            if "U_TP_HIT" in intents:
+                mixed_actions.append(
+                    {
+                        "action": "TAKE_PROFIT",
+                        "target": entities.get("hit_target", "TP"),
+                        "targeting": {"mode": "EXPLICIT_TARGETS", "targets": explicit_targets},
+                    }
+                )
+            if "U_STOP_HIT" in intents:
+                mixed_actions.append(
+                    {
+                        "action": "CLOSE_POSITION",
+                        "target": "STOP",
+                        "targeting": {"mode": "EXPLICIT_TARGETS", "targets": explicit_targets},
+                    }
+                )
+            if "U_MOVE_STOP_TO_BE" in intents:
+                mixed_actions.append(
+                    {
+                        "action": "MOVE_STOP",
+                        "new_stop_level": "ENTRY",
+                        "targeting": {"mode": "SELECTOR", "selector": selector},
+                    }
+                )
+            elif "U_MOVE_STOP" in intents:
+                mixed_actions.append(
+                    {
+                        "action": "MOVE_STOP",
+                        "new_stop_level": entities.get("new_stop_level"),
+                        "targeting": {"mode": "SELECTOR", "selector": selector},
+                    }
+                )
+            if mixed_actions:
+                return mixed_actions
+
         if explicit_targets and "U_CLOSE_FULL" in intents:
             return [
                 {
@@ -693,6 +764,20 @@ class TraderAProfileParser:
                 }
             ]
         return actions_structured
+
+    @staticmethod
+    def _explicit_action_targets(*, target_refs: list[dict[str, Any]]) -> list[int]:
+        out: list[int] = []
+        seen: set[int] = set()
+        for item in target_refs:
+            if item.get("kind") not in {"message_id", "reply"}:
+                continue
+            ref = item.get("ref")
+            if not isinstance(ref, int) or ref in seen:
+                continue
+            seen.add(ref)
+            out.append(ref)
+        return out
 
     def _extract_per_target_action_items(self, *, raw_text: str) -> list[dict[str, Any]] | None:
         items: list[dict[str, Any]] = []
@@ -758,12 +843,8 @@ class TraderAProfileParser:
         new_markers = _merge_markers(_class_markers(classification, "new_signal"), _DEFAULT_CLASSIFICATION_MARKERS["new_signal_strong"])
         update_markers = _merge_markers(_class_markers(classification, "update"), _DEFAULT_CLASSIFICATION_MARKERS["update_strong"])
         report_markers = _merge_markers(None, _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"])
-        info_only_markers = (
-            "\u0437\u0430\u043a\u0440\u044b\u043b\u0430\u0441\u044c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
-            "\u0441\u0434\u0435\u043b\u043a\u0430 \u0437\u0430\u043a\u0440\u044b\u0442\u0430",
-            "\u043f\u043e\u0437\u0438\u0446\u0438\u044f \u0437\u0430\u043a\u0440\u044b\u0442\u0430",
-            "\u0441\u0435\u0442\u0430\u043f \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u0437\u0430\u043a\u0440\u044b\u0442",
-        )
+        info_only_markers = _merge_markers(_class_markers(classification, "info_only"), _DEFAULT_CLASSIFICATION_MARKERS["info_only"])
+        exit_be_markers = _merge_markers(self._rules.get("intent_markers", {}).get("U_EXIT_BE") if isinstance(self._rules.get("intent_markers"), dict) else None, ())
         incomplete_markers = _merge_markers(
             classification.get("setup_incomplete") if isinstance(classification, dict) else None,
             _DEFAULT_CLASSIFICATION_MARKERS["setup_incomplete"],
@@ -802,6 +883,8 @@ class TraderAProfileParser:
             return "NEW_SIGNAL"
         if setup_parts >= 2 and _contains_any(normalized, tuple(incomplete_markers)):
             return "SETUP_INCOMPLETE"
+        if has_target and _contains_any(normalized, tuple(exit_be_markers)):
+            return "UPDATE"
         if _contains_any(normalized, info_only_markers):
             return "INFO_ONLY"
         if has_target and (
@@ -908,7 +991,7 @@ class TraderAProfileParser:
             ),
         ):
             return "UPDATE"
-        if _has_intermediate_result_language(normalized):
+        if not has_target and _has_intermediate_result_language(normalized):
             return "INFO_ONLY"
         _ = context
         return "UNCLASSIFIED"
@@ -958,6 +1041,15 @@ class TraderAProfileParser:
             "\u0441\u0435\u0442\u0430\u043f \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u0437\u0430\u043a\u0440\u044b\u0442",
         )
         report_only_context = _contains_any(normalized, report_only_markers)
+        report_explanation_context = _contains_any(
+            normalized,
+            (
+                "\u0434\u043b\u044f \u0441\u043f\u0440\u0430\u0432\u043a\u0438",
+                "\u0432\u043e \u0432\u0441\u0435\u0445 \u043f\u043e\u0441\u0442\u0430\u0445 \u043e \u0442\u0435\u0439\u043a\u0430\u0445 \u0438\u043b\u0438 \u0441\u0442\u043e\u043f\u0430\u0445",
+                "\u043e \u0442\u0435\u0439\u043a\u0430\u0445 \u0438\u043b\u0438 \u0441\u0442\u043e\u043f\u0430\u0445",
+                "r \u043d\u0430\u0440\u0430\u0441\u0442\u0430\u044e\u0449\u0438\u043c \u0438\u0442\u043e\u0433\u043e\u043c",
+            ),
+        )
         if _contains_any(normalized, tuple(_ignore_markers(self._rules))):
             _ = context
             return []
@@ -965,6 +1057,7 @@ class TraderAProfileParser:
             intents.append("NS_CREATE_SIGNAL")
 
         move_to_be_markers = _merge_markers(_strong_only(marker_map.get("U_MOVE_STOP_TO_BE")), _DEFAULT_INTENT_MARKERS["U_MOVE_STOP_TO_BE"])
+        exit_be_markers = _merge_markers(marker_map.get("U_EXIT_BE"), ())
         move_markers = _merge_markers(_strong_only(marker_map.get("U_MOVE_STOP")), _DEFAULT_INTENT_MARKERS["U_MOVE_STOP"])
         cancel_markers = _merge_markers(marker_map.get("U_CANCEL_PENDING_ORDERS"), _DEFAULT_INTENT_MARKERS["U_CANCEL_PENDING_ORDERS"])
         invalidate_markers = _merge_markers(marker_map.get("U_INVALIDATE_SETUP"), _DEFAULT_INTENT_MARKERS["U_INVALIDATE_SETUP"])
@@ -986,13 +1079,19 @@ class TraderAProfileParser:
             future_management_context = _has_future_management_language(normalized) and _contains_any(normalized, tuple(filled_markers))
 
             stop_to_tp_context = bool(_STOP_TO_TP1_RE.search(raw_text))
+            has_move_stop_context = False
             if message_type != "NEW_SIGNAL":
-                if _contains_any(normalized, tuple(move_to_be_markers)):
+                if _contains_any(normalized, tuple(exit_be_markers)):
+                    intents.append("U_EXIT_BE")
+                elif _contains_any(normalized, tuple(move_to_be_markers)):
                     intents.append("U_MOVE_STOP_TO_BE")
+                    has_move_stop_context = True
                     if stop_to_tp_context:
                         intents.append("U_MOVE_STOP")
+                        has_move_stop_context = True
                 elif _contains_any(normalized, tuple(move_markers)):
                     intents.append("U_MOVE_STOP")
+                    has_move_stop_context = True
 
             if _contains_any(normalized, tuple(cancel_markers)):
                 intents.append("U_CANCEL_PENDING_ORDERS")
@@ -1005,19 +1104,19 @@ class TraderAProfileParser:
             elif not future_management_context and _contains_any(normalized, tuple(close_full_markers)):
                 intents.append("U_CLOSE_FULL")
 
-            if message_type != "NEW_SIGNAL" and not future_management_context and not stop_to_tp_context and _contains_any(normalized, tuple(tp_hit_markers)):
+            if message_type != "NEW_SIGNAL" and not future_management_context and not report_explanation_context and not stop_to_tp_context and _contains_any(normalized, tuple(tp_hit_markers)):
                 intents.append("U_TP_HIT")
-            if message_type != "NEW_SIGNAL" and not future_management_context and not stop_to_tp_context and _contains_any(normalized, tuple(stop_hit_markers)):
+            if message_type != "NEW_SIGNAL" and not future_management_context and not report_explanation_context and not stop_to_tp_context and not has_move_stop_context and _contains_any(normalized, tuple(stop_hit_markers)):
                 intents.append("U_STOP_HIT")
             if _contains_any(normalized, tuple(filled_markers)):
                 intents.append("U_MARK_FILLED")
 
         if message_type == "UNCLASSIFIED" and not report_only_context and _contains_any(
             normalized,
-            tuple(move_to_be_markers) + tuple(move_markers) + tuple(cancel_markers) + tuple(filled_markers),
+            tuple(move_to_be_markers) + tuple(exit_be_markers) + tuple(move_markers) + tuple(cancel_markers) + tuple(filled_markers),
         ):
             message_type = "UPDATE"
-        if message_type == "UNCLASSIFIED" and not report_only_context and _has_intermediate_result_language(normalized):
+        if message_type == "UNCLASSIFIED" and not report_only_context and not has_target and _has_intermediate_result_language(normalized):
             message_type = "INFO_ONLY"
 
         report_markers = _merge_markers(marker_map.get("U_REPORT_FINAL_RESULT"), _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"])
@@ -1026,6 +1125,8 @@ class TraderAProfileParser:
 
         if future_management_context:
             intents = [value for value in intents if value in {"NS_CREATE_SIGNAL", "U_MARK_FILLED", "U_CANCEL_PENDING_ORDERS", "U_INVALIDATE_SETUP"}]
+        elif "U_EXIT_BE" in intents:
+            intents = [value for value in intents if value not in ("U_MOVE_STOP_TO_BE", "U_MOVE_STOP", "U_STOP_HIT", "U_CLOSE_FULL", "U_CLOSE_PARTIAL")]
         elif "U_CLOSE_FULL" in intents and "U_REPORT_FINAL_RESULT" in intents:
             intents = [value for value in intents if value not in ("U_MOVE_STOP_TO_BE", "U_MOVE_STOP")]
 
@@ -1067,6 +1168,8 @@ class TraderAProfileParser:
             stop_level = _extract_stop_level(raw_text)
             if stop_level is not None:
                 entities["new_stop_level"] = stop_level
+        if "U_EXIT_BE" in intents:
+            entities["result_mode"] = "BREAKEVEN"
         if "U_CLOSE_FULL" in intents:
             if global_target_scope in {"ALL_LONGS", "ALL_SHORTS", "ALL_ALL", "ALL_OPEN", "ALL_REMAINING"}:
                 entities["close_scope"] = global_target_scope
@@ -1096,7 +1199,7 @@ class TraderAProfileParser:
         result_percent = _extract_result_percent(raw_text, normalized)
         if result_percent is not None:
             entities["result_percent"] = result_percent
-        if "U_REPORT_FINAL_RESULT" in intents:
+        if "U_REPORT_FINAL_RESULT" in intents and "result_mode" not in entities:
             entities["result_mode"] = "R_MULTIPLE" if reported_results else "TEXT_SUMMARY"
         _ = context
         return entities
@@ -1389,6 +1492,8 @@ def _has_intermediate_result_language(normalized: str) -> bool:
             "поздравляю",
             "профит",
             "profit",
+            "убыток",
+            "loss",
         ),
     )
 
@@ -1405,10 +1510,16 @@ def _extract_result_percent(raw_text: str, normalized: str) -> float | None:
 def _should_emit_report_final_result(*, raw_text: str, normalized: str, report_markers: tuple[str, ...] | list[str]) -> bool:
     if _RESULT_R_RE.search(raw_text):
         return True
+    if _BARE_RESULT_R_RE.search(raw_text):
+        return True
     if _contains_any(
         normalized,
         (
             "закрылась в безубыток",
+            "закрылась в бу",
+            "закрыта в бу",
+            "закрылись в бу",
+            "также в бу закрылись",
             "сделка закрыта",
             "позиция закрыта",
             "сетап полностью закрыт",

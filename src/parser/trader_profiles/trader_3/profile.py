@@ -151,7 +151,6 @@ class Trader3ProfileParser(TraderBProfileParser):
             if loss_match:
                 entities["reported_loss_percent"] = _to_float(loss_match.group("percent"))
                 entities["reported_leverage_hint"] = _to_float(loss_match.group("lev"))
-                entities["loss_close"] = True
 
             stop_loss_raw, stop_loss = _extract_stop(raw_text)
             if stop_loss_raw is not None:
@@ -181,7 +180,7 @@ class Trader3ProfileParser(TraderBProfileParser):
             intents.append("U_REENTER")
         if entities.get("hit_targets"):
             intents.append("U_TP_HIT")
-        if entities.get("reported_loss_percent") is not None or entities.get("loss_close"):
+        if _is_explicit_stop_hit(entities):
             intents.append("U_STOP_HIT")
         return intents
 
@@ -271,7 +270,7 @@ class Trader3ProfileParser(TraderBProfileParser):
             return "REENTER_POSITION"
         if entities.get("manual_close"):
             return "CLOSE_POSITION"
-        if entities.get("reported_loss_percent") is not None or entities.get("loss_close"):
+        if entities.get("reported_loss_percent") is not None:
             return "REPORT_LOSS"
         if entities.get("hit_targets"):
             return "REPORT_PROFIT"
@@ -305,7 +304,7 @@ class Trader3ProfileParser(TraderBProfileParser):
                     "reported_profit_percent": entities.get("reported_profit_percent"),
                 }
             )
-        if entities.get("reported_loss_percent") is not None or entities.get("loss_close"):
+        if entities.get("reported_loss_percent") is not None:
             actions.append(
                 {
                     "action": "REPORT_LOSS",
@@ -413,7 +412,7 @@ def _extract_entry_range(raw_text: str) -> tuple[float, float] | None:
     if not line:
         return None
 
-    normalized = _normalize_dash(line)
+    normalized = _normalize_decimal_spaces(_normalize_dash(line))
     match = re.search(r"(?P<low>\d[\d,]*(?:\.\d+)?)\s*-\s*(?P<high>\d[\d,]*(?:\.\d+)?)", normalized)
     if not match:
         return None
@@ -455,6 +454,19 @@ def _extract_leverage_hint(raw_text: str) -> str | None:
     if loss:
         return f"{loss.group('lev')}x"
     return None
+
+
+def _is_explicit_stop_hit(entities: dict[str, Any]) -> bool:
+    return entities.get("stop_price") is not None and not entities.get("manual_close")
+
+
+def _normalize_decimal_spaces(value: str) -> str:
+    previous = value
+    while True:
+        updated = re.sub(r"(?P<int>\d)\.\s+(?P<frac>\d)", r"\g<int>.\g<frac>", previous)
+        if updated == previous:
+            return updated
+        previous = updated
 
 
 def _normalize_dash(value: str) -> str:

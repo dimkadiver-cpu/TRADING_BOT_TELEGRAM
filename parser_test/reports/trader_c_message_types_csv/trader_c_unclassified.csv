@@ -1,5 +1,5 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
-1383,PARSED_WITH_WARNINGS,,"Друзья, привет! Админ на связи 👋
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
+1383,PARSED,,"Друзья, привет! Админ на связи 👋
 У нас хорошие новости - пополнение в команде!
 
 Мы долго смотрели на пустое место [trader#4]. Всё-таки жаль этого добряка!🥲
@@ -36,26 +36,31 @@ BTC / ETH - бодрый интрадей
 В общем, встречайте наш C-class в новом кузове 😉
 Дальше - стандартно:
 смотрим в деле. Рынок, как всегда, рассудит лучше любых описаний 🫡
-#админ",llm_unavailable,,,,,,0,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.2; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-1203,PARSED_WITH_WARNINGS,1327,"На байбит стоп 89950!!!!!!
- [trader #C]",llm_unavailable,,,,,1327,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-1125,PARSED_WITH_WARNINGS,1440,"На байбит не закрыло,)
+#админ",,,,,,,,0,0,0,0,,
+1203,PARSED,1327,"На байбит стоп 89950!!!!!!
+ [trader #C]",,,,,,,1327,1,0,0,0,,
+1125,PARSED,1440,"На байбит не закрыло,)
 
-[trader #C]",llm_unavailable,,,,,1440,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-1057,PARSED_WITH_WARNINGS,1526,"Тр 3🥳
+[trader #C]",,,,,,,1440,1,0,0,0,,
+1057,PARSED,1526,"Тр 3🥳
 
-[trader #C]",llm_unavailable,,,,,1526,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-937,PARSED_WITH_WARNINGS,1683,"Остаток закрыт в бу
-[trader#C]",llm_unavailable,,,,,1683,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-303,PARSED_WITH_WARNINGS,,"На руках solusdt 
+[trader #C]",,,,,,,1526,1,0,0,0,,
+937,PARSED,1683,"Остаток закрыт в бу
+[trader#C]",,,,,,,1683,1,0,0,0,,
+844,PARSED,1823,"Увы ушли в бу 
+
+[tradet#C]",,,,,,,1823,1,0,0,0,,
+596,PARSED,2226,Актуально,,,,,,,2226,1,0,0,0,,
+568,PARSED,2226,Актуально,,,,,,,2226,1,0,0,0,,
+303,PARSED,,"На руках solusdt 
 
 Лимиток не каких нет актуальных
 
-[trader #C]",llm_unavailable,,,,,,0,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.2; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-72,PARSED_WITH_WARNINGS,2956,"Лимитка на 73400 на этот объем 
+[trader #C]",,,,,,,,0,0,0,0,,
+72,PARSED,2956,"Лимитка на 73400 на этот объем 
 0,3% то что скинули
 
-[trader #C]",llm_unavailable,,,,,2956,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
-66,PARSED_WITH_WARNINGS,2965,"Новая лимитка на 73700 +0,3%
+[trader #C]",,,,,,,2956,1,0,0,0,,
+66,PARSED,2965,"Новая лимитка на 73700 +0,3%
 
-[trader #С]",llm_unavailable,,,,,2965,1,0,0,1,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0; warning_count=0,classified=UNCLASSIFIED | profile_parser=trader_c
+[trader #С]",,,,,,,2965,1,0,0,0,,

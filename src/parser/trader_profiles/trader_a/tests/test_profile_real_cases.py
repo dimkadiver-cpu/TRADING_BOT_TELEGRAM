@@ -268,6 +268,12 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "INFO_ONLY")
         self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
 
+    def test_obzor_marker_from_json_is_info_only(self) -> None:
+        text = "[trader#A]\n\nBTCUSDT - \u043e\u0431\u0437\u043e\u0440 \u043d\u0430 11 \u043d\u043e\u044f\u0431\u0440\u044f\n\n\u0411\u0438\u0442\u043a\u043e\u0438\u043d \u0442\u043e\u0440\u0433\u0443\u0435\u0442\u0441\u044f \u0443 105 000 USDT"
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "INFO_ONLY")
+        self.assertEqual(result.intents, [])
+
     def test_new_signal_with_ab_entries_is_classified_and_extracted(self) -> None:
         text = (
             "TUSDT \u0428\u043e\u0440\u0442\n"
@@ -573,6 +579,113 @@ class TraderAProfileRealCasesTests(unittest.TestCase):
         result = self.parser.parse_message(text, _context(text=text))
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_TP_HIT", result.intents)
+
+    def test_reply_stop_short_message_is_update_stop_hit(self) -> None:
+        text = "\u0441\u0442\u043e\u043f"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=770))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_STOP_HIT", result.intents)
+        self.assertEqual(result.entities.get("hit_target"), "STOP")
+
+    def test_reply_stop_with_loss_percent_is_update_stop_hit(self) -> None:
+        text = "\u0441\u0442\u043e\u043f, \u0443\u0431\u044b\u0442\u043e\u043a 3.6%"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=768))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_STOP_HIT", result.intents)
+        self.assertEqual(result.entities.get("hit_target"), "STOP")
+        self.assertEqual(result.entities.get("result_percent"), 3.6)
+
+    def test_reply_teyk_with_r_result_is_update_tp_hit(self) -> None:
+        text = "\u0442\u0435\u0439\u043a\n0.89R"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2342))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.entities.get("hit_target"), "TP")
+
+    def test_reply_teyk_with_r_result_and_comment_is_update_tp_hit(self) -> None:
+        text = "\u0442\u0435\u0439\u043a\n0.87R\n\n\u0438\u0449\u0443 \u043d\u043e\u0432\u0443\u044e \u0441\u0434\u0435\u043b\u043a\u0443"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2739))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertEqual(result.entities.get("hit_target"), "TP")
+
+    def test_reply_tp_hit_and_global_be_move_split_targeting(self) -> None:
+        text = (
+            "[trader#A]\n\n"
+            "1 \u0442\u0435\u0439\u043a. \u043f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u044e\n\n"
+            "\u0445\u043e\u0442\u044c \u043d\u0435\u043c\u043d\u043e\u0433\u043e \u043c\u0438\u043d\u0443\u0441\u0430 \u043f\u0440\u0438\u043a\u0440\u044b\u043b\u0438\n\n"
+            "\u043f\u043e \u0448\u043e\u0440\u0442\u0430\u043c \u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430"
+        )
+        result = self.parser.parse_message(text, _context(text=text, reply_to=485))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertEqual(
+            result.actions_structured,
+            [
+                {
+                    "action": "TAKE_PROFIT",
+                    "target": "TP1",
+                    "targeting": {"mode": "EXPLICIT_TARGETS", "targets": [485]},
+                },
+                {
+                    "action": "MOVE_STOP",
+                    "new_stop_level": "ENTRY",
+                    "targeting": {"mode": "SELECTOR", "selector": {"side": "SHORT", "status": "OPEN"}},
+                },
+            ],
+        )
+
+    def test_reply_move_stop_price_is_not_stop_hit(self) -> None:
+        text = "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u043d\u043e\u0448\u0443 \u043d\u0430 65000"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2817))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_STOP_HIT", result.intents)
+        self.assertEqual(result.entities.get("new_stop_level"), 65000.0)
+
+    def test_reply_closed_in_be_is_exit_be_without_close_position_action(self) -> None:
+        text = "\u0437\u0430\u043a\u0440\u044b\u043b\u0430\u0441\u044c \u0432 \u0431\u0443"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=1599))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_EXIT_BE", result.intents)
+        self.assertNotIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertEqual(result.entities.get("result_mode"), "BREAKEVEN")
+        self.assertFalse(any(item.get("action") == "CLOSE_POSITION" for item in result.actions_structured))
+
+    def test_reply_also_closed_in_be_is_exit_be_without_close_position_action(self) -> None:
+        text = "\u0442\u0430\u043a\u0436\u0435 \u0432 \u0431\u0443 \u0437\u0430\u043a\u0440\u044b\u043b\u0438\u0441\u044c"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=1599))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_EXIT_BE", result.intents)
+        self.assertNotIn("U_MOVE_STOP_TO_BE", result.intents)
+        self.assertEqual(result.entities.get("result_mode"), "BREAKEVEN")
+        self.assertFalse(any(item.get("action") == "CLOSE_POSITION" for item in result.actions_structured))
+
+    def test_close_full_with_report_explanation_does_not_emit_tp_or_stop_hit(self) -> None:
+        text = (
+            "\u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043e\u0441\u0442\u0430\u0442\u043e\u043a \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c\n"
+            "\u0438\u0442\u043e\u0433 1.12R \n\n"
+            "\u0414\u043b\u044f \u0441\u043f\u0440\u0430\u0432\u043a\u0438, \u0437\u0434\u0435\u0441\u044c \u0438 \u0432\u043e \u0432\u0441\u0435\u0445 \u043f\u043e\u0441\u0442\u0430\u0445 \u043e \u0442\u0435\u0439\u043a\u0430\u0445 \u0438\u043b\u0438 \u0441\u0442\u043e\u043f\u0430\u0445 R \u043d\u0430\u0440\u0430\u0441\u0442\u0430\u044e\u0449\u0438\u043c \u0438\u0442\u043e\u0433\u043e\u043c"
+        )
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2862))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_CLOSE_FULL", result.intents)
+        self.assertIn("U_REPORT_FINAL_RESULT", result.intents)
+        self.assertNotIn("U_TP_HIT", result.intents)
+        self.assertNotIn("U_STOP_HIT", result.intents)
+        self.assertEqual(
+            result.actions_structured,
+            [
+                {
+                    "action": "CLOSE_POSITION",
+                    "scope": "FULL",
+                    "targeting": {"mode": "TARGET_GROUP", "targets": [2862]},
+                }
+            ],
+        )
 
     def test_bare_symbol_hashtag_complete_setup_gets_usdt_and_new_signal(self) -> None:
         text = (

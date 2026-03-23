@@ -1,2 +1,1055 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-2,PARSED,1,TAOUSDT tp1 hit https://t.me/c/1/17,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,MARK_TP_HIT | ATTACH_RESULT,MARK_TP_HIT(intent=U_TP_HIT; hit_target=TP1; result_mode=PERCENT; target_refs=17; target_refs_count=1) | ATTACH_RESULT(intent=U_REPORT_FINAL_RESULT; result_mode=PERCENT),TAOUSDT,,,0.83,regex,regex_only,PARSED,17,signal,single,17,1,reply_or_link,,,,TP1,,PERCENT,,TAOUSDT:15PERCENT,15,5,1.245 | 1.31,0,0,0,parser_mode=regex_only
+1956,PARSED,229,Можно переставить стоп на точку входа. С учетом усреднения у меня точка входа 1.1340,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,229,signal,single,229,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1955,PARSED,202,"[trader#A]
+
+К сожалению стоп. Словили -1,5%",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,202,signal,single,202,1,,,,,STOP,,,,,,,,0,0,0,
+1938,PARSED,229,"[trader#A]
+
+1 тейк, заработали 19.7% чистого движения. Стоп обязательно на точку входа, кто не закрывал позицию.
+
+Поздравляю!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,229,signal,single,229,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1937,PARSED,270,"[trader#A]
+
+1 тейк, стоп на точку входа. Лимитку на усреднение обязательно убираем
+
+Поздравляю с 2.48% чистого движения!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,270,signal,single,270,1,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1935,PARSED,282,"[trader#A]
+
+Лимитка. Моя средняя 0.1541",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,282,signal,single,282,1,,,,,,FILLED,,,,,,,0,0,0,
+1933,PARSED,,"[trader#A]
+
+https://t.me/c/3171748254/265
+https://t.me/c/3171748254/266
+
+по этим сетапам стоп нужно обязательно поставить на точку входа и убрать все лимитные ордера",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,265 | 266,2,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1930,PARSED,287,"На примере этого сигнала объясню как я работаю со сделкой. Делать также или нет - решение полностью ваше
+
+
+ SEIUSDT.P — ЛОНГ (с текущих). Как работать
+
+Что поставить сразу
+
+* Покупка-1: 0.1803
+* Покупка-2 (добавка, только если дадут откат): 0.1749
+* Стоп: 0.1659
+* Цели (по очереди): 0.1933 → 0.2019 → 0.2147 → 0.2289 → 0.2463
+
+Риск и плечо
+
+* На весь план — до 1% депозита, пока нет подтверждения — лучше 0.3–0.5%.
+* Плечо — не больше 5×.
+
+Объём
+
+* Делим 60% на Покупку-1 и 40% на Покупку-2.
+* Третьей добавки не бывает.
+
+Порядок действий
+
+1. Ставлю лимит на 0.1803 (60% объёма), сразу же — стоп 0.1659 и все 5 целей.
+2. Если взяли Покупку-2 — она на 40% объёма, стоп не двигаю.
+
+После первой цели
+
+* Как только сработала цель-1 (0.1933) — перевожу в безубыток
+  (чуть ниже средней цены входа) и дальше выхожу «лесенкой» по остальным целям.
+
+Если пошло против
+
+* Пробили 0.1659 — полный выход.
+  Никаких «геройств», повторных входов в этот же план — ждём новый.
+
+Запреты
+
+* Только 2 входа. Доборов «по пути» нет.
+* Стоп «в минус» не переносим. Тянем только после цели-1.",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,287,signal,single,287,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1929,PARSED,282,"[trader#A]
+
+К сожалению стоп - 4.8%",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,282,signal,single,282,1,,,,,STOP,,,,,,,,0,0,0,
+1917,PARSED,286,"[trader#A]
+
+1 тейк!
+Поздравляю, заработали 2.4% чистого движения
+
+Стоп обязательно на точку входа и убираем лимтку на усреднение",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,286,signal,single,286,1,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1895,PARSED,310,"[trader#A]
+
+тут был стоп, убыток -2.5%
+
+весь день уделил внимание этому стопу, нашел ошибку, в дальнейшем не должна повториться",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,310,signal,single,310,1,,,,,STOP,,,,,,,,0,0,0,
+1889,PARSED,309,"[trader#A]
+
+1 тейк!
+
+Поздравляю! Заработали чистыми 4.38%, а кто усреднял, около 6.5%
+
+Стоп на точку входа, обязательно!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,309,signal,single,309,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1881,PARSED,304,"[trader#A]
+
+1 тейк!
+
+Поздравляю, заработали 5.5%
+
+Стоп на точку входа. Лимитку на усреднение убираем",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,304,signal,single,304,1,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1877,PARSED,311,"[trader#A]
+
+Закрываю сделку у первого тейка, заработали 6%
+
+Поздравляю!",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,311,signal,single,311,1,,,FULL,,TP,,,,,,,,0,0,0,
+1875,PARSED,229,"Закрываю полностью сделку!
+
+Заработали чистыми 31.2%
+
+Поздравляю",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,229,signal,single,229,1,,,FULL,,,,,,,,,,0,0,0,
+1865,PARSED,309,"[trader#A]
+
+2 тейк. Итого 10,5% чистого движения
+
+Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,309,signal,single,309,1,,,,,TP2,,,,,,,,0,0,0,
+1861,PARSED,304,"[trader#A]
+
+2 тейк
+
+уже 8% чистого движения
+
+Поздравляю!",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,304,signal,single,304,1,,,,,TP2,,,,,,,,0,0,0,
+1849,PARSED,312,"[trader#A]
+
+1 тейк! 
+
+Забрали 10,5% процента
+
+Стоп на точку входа, лимитку убираем.
+
+Поздравляю!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,312,signal,single,312,1,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1842,PARSED,338,"[trader#A]
+
+К сожалению стоп. С учетом усреднения -11%
+
+Но самое обидное, что монета развернулась и идет в шорт
+
+Заходить повторно не будем.
+
+Всегда говорю, что стоп это защита от ликвидации",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,338,signal,single,338,1,,,,,STOP,,,,,,,,0,0,0,
+1835,PARSED,385,"[trader#A]
+
+1 тейк! Чистыми 22% 
+
+Стоп в бу и убираем лимитку
+
+Поздравляю",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,385,signal,single,385,1,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1830,PARSED,200,"[trader#A]
+
+Очередной тейк. Чистыми 19% 
+
+Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,200,signal,single,200,1,,ENTRY,,,STOP,,,TARGETED,,,,,0,0,0,
+1829,PARSED,391,"[trader#A]
+
+Взяли лимитку.
+
+Моя средняя 0.2265
+
+Стоп ставим обязательно. На 1 тейке, рекомендация, закрывать 80% позиции, касается всех сетапов, которые публикую. 
+
+Оставшуюся часть позиции тянуть по остальным тейкам. 
+
+При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,391,signal,single,391,1,,,,,,FILLED,,,,,,,0,0,0,
+1826,PARSED,357,"[trader#A]
+
+1 тейк, чистыми 8%
+
+Поздравляю. стоп в бу
+
+Спасибо за вашу поддержку в виде реакций на мои посты",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,357,signal,single,357,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1825,PARSED,383,"[trader#A]
+
+1 тейк 
+
+Стоп в бу
+
+Поздравляю",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,383,signal,single,383,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1824,PARSED,,"[trader#A]
+
+
+По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal,unknown,,0,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1823,PARSED,,"[trader#A]
+
+https://t.me/c/3171748254/379
+
+https://t.me/c/3171748254/290
+
+Вот по этим шортам стоп должен стоять в безубытке",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,379 | 290,2,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1820,PARSED,379,Закрылись в бу. Не перезаходим,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,379,signal,single,379,1,,ENTRY,,,,,,,,,,,0,0,0,
+1815,PARSED,410,"Взяли лимитку. Не забываем про стопы. Должны стоять обязателно
+
+Повторюсь: стоп - это защита от ликвидации",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,410,signal,single,410,1,,,,,,FILLED,,,,,,,0,0,0,
+1810,PARSED,417,"[trader#A]
+
+Так, тут тейк. 8.8%
+
+Поздравляю. Стоп на точку входа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,417,signal,single,417,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1808,PARSED,391,"[trader#A]
+
+Очень не приятный стоп.",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,391,signal,single,391,1,,,,,STOP,,,,,,,,0,0,0,
+1807,PARSED,410,"Давайте прикроем, после усреднения находится около точки входа, убыток будет меньше 1%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,410,signal,single,410,1,,,FULL,,,,,,,,,,0,0,0,
+1806,PARSED,290,"Закрылся в безубыток 
+
+https://t.me/c/3171748254/407 тут писал о том, что необходимо поставить стоп на точку входа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,290 | 407,2,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1799,PARSED,200,"[trader#A]
+
+
+2 тейк 
+29%  чистыми
+
+поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,200,signal,single,200,1,,,,,TP2,,,,,,,,0,0,0,
+1779,PARSED,444,"[trader#A]
+
+1 тейк.
+
+Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,444,signal,single,444,1,,,,,TP1,,,,,,,,0,0,0,
+1773,PARSED,444,"[trader#A]
+
+
+убираю 2 и 3 тейк, добавлю тейк спота, чтобы получить красивый pnl и немного заработать
+
+стоп поставить обязательно чуть выше точки входа",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,444,signal,single,444,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+1771,PARSED,478,"[trader#A]
+
+1 тейк, стоп на точку входа
+
+поздравляю",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,478,signal,single,478,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1768,PARSED,439,"[trader#A]
+
+закрываю в убыток. -1.5%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,439,signal,single,439,1,,,FULL,,,,,,,,,,0,0,0,
+1767,PARSED,450,"[trader#A]
+
+закрываю в убыток 3%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,450,signal,single,450,1,,,FULL,,,,,,,,,,0,0,0,
+1766,PARSED,470,"[trader#A]
+
+закрываю по текущим. чуть меньше 1% прибыли",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,470,signal,single,470,1,,,FULL,,,,,,,,,,0,0,0,
+1765,PARSED,452,"[trader#A]
+
+закрываю по текущим на точке входа",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,452,signal,single,452,1,,,FULL,,,,,,,,,,0,0,0,
+1764,PARSED,418,"[trader#A]
+
+закрываю. не приятный минус",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,418,signal,single,418,1,,,FULL,,,,,,,,,,0,0,0,
+1763,PARSED,484,"[trader#A]
+
+1 тейк. поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,484,signal,single,484,1,,,,,TP1,,,,,,,,0,0,0,
+1762,PARSED,485,"[trader#A]
+
+1 тейк. поздравляю
+
+хоть немного минуса прикрыли
+
+по шортам стоп на точку входа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,485,signal,single,485,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1758,PARSED,484,"[trader#A]
+
+2 тейк. Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,484,signal,single,484,1,,,,,TP2,,,,,,,,0,0,0,
+1757,PARSED,485,"[trader#A]
+
+2 тейк. Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,485,signal,single,485,1,,,,,TP2,,,,,,,,0,0,0,
+1754,PARSED,496,Взяли лимитку. Моя средняя 0.4770,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,496,signal,single,496,1,,,,,,FILLED,,,,,,,0,0,0,
+1753,PARSED,496,"[trader#A]
+
+Увы стоп. Была надежда на отскок. Но учитывая вход на 0.3% от депозита, то убыток хоть и не приятный, но не такой уж и большой, как мог быть",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,496,signal,single,496,1,,,,,STOP,,,,,,,,0,0,0,
+1751,PARSED,516,"Отбой, модель сбойнула и не учла важные параметры расчета сетапа
+
+3.2% убытка закрываю",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,516,signal,single,516,1,,,FULL,,,,,,,,,,0,0,0,
+1746,PARSED,484,"закрываю полностью сделку, заработали более 20%
+
+поздравляю",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,484,signal,single,484,1,,,FULL,,,,,,,,,,0,0,0,
+1739,PARSED,527,"[trader#A]
+
+Давайте стоп поставим на точку входа, точнее немного выше, чтобы отбить комиссию, 1 тейк должны сегодня забрать
+
+p.s. если возьмет стоп, значит чуть ниже перезайдем",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,527,signal,single,527,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1729,PARSED,527,"фиксирую 70% позиции. 4% чистого движения.
+
+поздравляю
+
+
+З.ы. Тейк был. Но засчитаю себе только 4%
+
+Лимитку на усреднение можно убрать. Стоп обязательно чуть выше точки входа",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,527,signal,single,527,1,,,,,STOP,,,,,,,,0,0,0,
+1722,PARSED,550,"Понедельник начинается не с плюса... -16%. Больно. Но у нас висят лонговые сделки, которые с лихвой перекроют эту убыточную сделку
+
+Такие минуса тоже нужны, чтобы отрезветь от постоянных плюсов.
+
+Продолжаем работать и ждать тейков по лонгам",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,550,signal,single,550,1,,,,,TP,,,,,,,,0,0,0,
+1721,PARSED,549,еще один стоп в копилку -8%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,549,signal,single,549,1,,,,,STOP,,,,,,,,0,0,0,
+1720,PARSED,520,"1 тейк. с учетом усреднения 10% 
+
+Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,520,signal,single,520,1,,,,,TP1,,,,,,,,0,0,0,
+1704,PARSED,518,"1  тейк. с учетом усреднения +13%
+
+Поздравляю. Стопы по ARB и FART вернули (с учетом тейка https://t.me/c/3171748254/566) и даже заработали сверху 4%
+
+обязательно стоп в безубыток",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,518 | 566,2,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1698,PARSED,,"[trader#A]
+
+Все лонги закрываю на текущих отметках, не нравится рынок.",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=SELECTOR}),,,,0.7,,,,,signal,unknown,,0,,,ALL_LONGS,,,,,,,,,,0,0,0,
+1659,PARSED,672,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,672,signal,single,672,1,,,,,TP1,,,,,,,,0,0,0,
+1655,PARSED,674,стоп 1.4%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,674,signal,single,674,1,,,,,STOP,,,,,,,,0,0,0,
+1649,PARSED,672,2 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,672,signal,single,672,1,,,,,TP2,,,,,,,,0,0,0,
+1648,PARSED,673,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,673,signal,single,673,1,,,,,TP1,,,,,,,,0,0,0,
+1647,PARSED,675,3 тейка. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,675,signal,single,675,1,,,,,TP,,,,,,,,0,0,0,
+1646,PARSED,677,3 тейка. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,677,signal,single,677,1,,,,,TP,,,,,,,,0,0,0,
+1645,PARSED,613,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,613,signal,single,613,1,,,,,TP1,,,,,,,,0,0,0,
+1644,PARSED,579,стоп. 7.1%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,579,signal,single,579,1,,,,,STOP,,,,,,,,0,0,0,
+1635,PARSED,704,"Декабрь начинаем со стопа.  
+
+1.1% убытка
+
+если соблюдаете РМ (1-2% от депозита), то данный минус полная ерунда для вас. Всегда важна дистанция",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,704,signal,single,704,1,,,,,STOP,,,,,,,,0,0,0,
+1621,PARSED,707,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,707,signal,single,707,1,,,,,TP1,,,,,,,,0,0,0,
+1620,PARSED,705,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,705,signal,single,705,1,,,,,TP1,,,,,,,,0,0,0,
+1619,PARSED,706,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,706,signal,single,706,1,,,,,TP1,,,,,,,,0,0,0,
+1611,PARSED,611,"по этому сигналу, очень давнему, но с хорошим усреднением шорт дал 1 тейк - 7.88%",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,611,signal,single,611,1,,,,,TP1,,,,,,,,0,0,0,
+1610,PARSED,575,а тут был стоп 9.44%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,575,signal,single,575,1,,,,,STOP,,,,,,,,0,0,0,
+1609,PARSED,,"[trader#A]
+
+за ноябрь осталось два сигнала, которые еще не взяли, минимум, 1 тейк или стоп:
+1. https://t.me/c/3171748254/686 p.s. стоп был, почему-то установил у себя другой стоп... -10.3%, но так как вход был на 0.3%, минус не должен был быть сильно неприятным
+2. https://t.me/c/3171748254/569",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,,signal_group,multiple,686 | 569,2,,,,,STOP,,,,,,,,0,0,0,
+1603,PARSED,750,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,750,signal,single,750,1,,,,,TP1,,,,,,,,0,0,0,
+1598,PARSED,751,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,751,signal,single,751,1,,,,,TP1,,,,,,,,0,0,0,
+1586,PARSED,750,2 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,750,signal,single,750,1,,,,,TP2,,,,,,,,0,0,0,
+1581,PARSED,750,Все тейки. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,750,signal,single,750,1,,,,,TP,,,,,,,,0,0,0,
+1580,PARSED,766,"Стоп. Но все вопросы к Trader#4
+
+Шучу, мой косяк",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,766,signal,single,766,1,,,,,STOP,,,,,,,,0,0,0,
+1579,PARSED,765,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,765,signal,single,765,1,,,,,TP1,,,,,,,,0,0,0,
+1561,PARSED,768,"стоп, убыток 3.6%",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,768,signal,single,768,1,,,,,STOP,,,,,,,,0,0,0,
+1560,PARSED,769,2 тейка. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,769,signal,single,769,1,,,,,TP2,,,,,,,,0,0,0,
+1559,PARSED,770,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,770,signal,single,770,1,,,,,STOP,,,,,,,,0,0,0,
+1558,PARSED,787,стоп. 2.6 убытка,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,787,signal,single,787,1,,,,,STOP,,,,,,,,0,0,0,
+1552,PARSED,,"Друзья, привет! Админ на связи 👋
+
+Хочу внести немного дополнений по поводу работы с сигналами от [trader#A], чтобы у всех было чёткое понимание структуры и не возникало путаницы.
+
+Весь ноябрь трейдер A работал строго по одной стратегии - ""выживание"" среднесрочной.😁
+Она показала себя достаточно стабильно, и в целом дала понятное и прогнозируемое поведение сигналов.
+
+В первые дни декабря [trader#A] преисполнился веры и протестировал вторую стратегию - Интрадей.😌
+По ней было выдано несколько сигналов, и ниже я размещу их полный список.
+
+👉 Список сигналов Интрадей:
+1. BTC - https://t.me/c/3171748254/704 стоп 1.1%
+2. ETH - https://t.me/c/3171748254/705 1 тейк 2.4%
+3. XRP - https://t.me/c/3171748254/706 1 тейк 2.5%
+4. DOGE - https://t.me/c/3171748254/707 1 тейк 2.5%
+5. ENA - https://t.me/c/3171748254/750 3 тейка 17.9%
+6. DASH - https://t.me/c/3171748254/751 1 тейк 6.2%
+7. ADA - https://t.me/c/3171748254/765 1 тейк 4.3%
+8. ICP - https://t.me/c/3171748254/766 стоп 3.5%
+9. ARB - https://t.me/c/3171748254/767
+10. SEI - https://t.me/c/3171748254/768 стоп 3.6%
+11. RAY - https://t.me/c/3171748254/769 2 тейка 9.9%
+12. ATOM - https://t.me/c/3171748254/770 стоп 2.6%
+13. SOL - https://t.me/c/3171748254/787 стоп 2.6%
+👉 А это Среднесрок за декабрь:
+1. DOGE - https://t.me/c/3171748254/795
+2. CAKE - https://t.me/c/3171748254/805
+3. 1INCH - https://t.me/c/3171748254/817
+4. LINK - https://t.me/c/3171748254/818
+5. ZETA - https://t.me/c/3171748254/819
+6. BAT - https://t.me/c/3171748254/821
+7. XRP - https://t.me/c/3171748254/822 
+Там, где результат не указан - сделка актуальна.
+
+По итогам теста стало понятно, что стратегия Intraday нуждается в небольшой доработке. 
+Ничего критичного, результаты вполне приличные👆 просто...НУЖНО БОЛЬШЕ ЗОЛОТА!🤑
+Поэтому мы временно поставили на стоп Intraday сигналы, но обязательно вернёмся к ним после доработок.
+
+Что изменится дальше?
+
+Чтобы вам было проще ориентироваться, с этого момента сигналы трейдера ""A"" будут публиковаться с дополнительными хэштегами:
+
+#среднесрок - сигналы по среднесрочной стратегии
+#intraday - сигналы по внутридневной стратегии (появятся после доработки)
+Ничего себе мы придумали, да?🤭
+
+Следите внимательно за тегами, чтобы быстро понимать, по какой логике работает текущий сигнал!
+
+Мы продолжаем улучшать подачу информации и качество сигналов.
+Спасибо, что с нами  мы работаем для вас! 🚀....
+
+Слоган, конечно, несколько избит, и мы сами хотим придумать что-то своё, фирменное.
+В команде сейчас два фаворита, проголосуйте реакцией, пожалуйста:
+
+PifSignal - Ты этого достойна!❤️
+или
+PifSignal - Das Auto🔥",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,,signal_group,multiple,704 | 705 | 706 | 707 | 750 | 751 | 765 | 766 | 767 | 768 | 769 | 770 | 787 | 795 | 805 | 817 | 818 | 819 | 821 | 822,20,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+1549,PARSED,767,стоп. 3.4%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,767,signal,single,767,1,,,,,STOP,,,,,,,,0,0,0,
+1548,PARSED,821,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,821,signal,single,821,1,,,,,TP1,,,,,,,,0,0,0,
+1546,PARSED,818,1 тейк,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,818,signal,single,818,1,,,,,TP1,,,,,,,,0,0,0,
+1543,PARSED,795,"Закрываю у тейка. Поздравляю, почти 8%
+
+Тейк все равно случился)",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,795,signal,single,795,1,,,FULL,,TP,,,,,,,,0,0,0,
+1510,PARSED,,"[trader#A]
+
+Всем привет!
+
+Продолжаем удерживать шорты
+модель пока не хочет лонговать, поэтому полностью отдаемся шортам
+
+CAKE - https://t.me/c/3171748254/805
+1INCH - https://t.me/c/3171748254/817
+ZETA - https://t.me/c/3171748254/819
+XRP - https://t.me/c/3171748254/822 (взяли лимитку)
+ENA - https://t.me/c/3171748254/856 (спорный лонг, но держим)
+LDO - https://t.me/c/3171748254/861
+SHIB - https://t.me/c/3171748254/870",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,,signal_group,multiple,805 | 817 | 819 | 822 | 856 | 861 | 870,7,,,,,,FILLED,,,,,,,0,0,0,
+1508,PARSED,870,взяли лимитку. моя средняя 0.008553,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,870,signal,single,870,1,,,,,,FILLED,,,,,,,0,0,0,
+1495,PARSED,805,Закрылось в БУ,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,805,signal,single,805,1,,ENTRY,,,,,,,,,,,0,0,0,
+1494,PARSED,817,Закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,817,signal,single,817,1,,ENTRY,,,,,,,,,,,0,0,0,
+1493,PARSED,819,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,819,signal,single,819,1,,ENTRY,,,,,,,,,,,0,0,0,
+1492,PARSED,,"[trader#A]
+
+
+XRP - https://t.me/c/3171748254/822 3.94% прибыли
+ENA - https://t.me/c/3171748254/856 убыток 9.32
+LDO - https://t.me/c/3171748254/861 прибыль 4.2% 
+SHIB - https://t.me/c/3171748254/870 прибыль 3.4%
+
+Эти монеты закрываю по текущим, так как нет времени за ними следить
+
+Встретимся в воскресенье
+
+p.s. проценты указал без учета усреднения. кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше, убыток по ENA перекроется существеннее",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,822 | 856 | 861 | 870,4,,,ALL_SHORTS,,,,,,,,,,0,0,0,
+1464,PARSED,933,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,933,signal,single,933,1,,,,,TP1,,,,,,,,0,0,0,
+1457,PARSED,946,"стоп. увы, отскока не было достойного",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,946,signal,single,946,1,,,,,STOP,,,,,,,,0,0,0,
+1456,PARSED,925,"еще стоп, понедельник начинается не с прибыли
+
+никак не могу эту ENA обуздать",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,925,signal,single,925,1,,,,,STOP,,,,,,,,0,0,0,
+1454,PARSED,936,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,936,signal,single,936,1,,,,,TP1,,,,,,,,0,0,0,
+1453,PARSED,933,2 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,933,signal,single,933,1,,,,,TP2,,,,,,,,0,0,0,
+1447,PARSED,924,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,924,signal,single,924,1,,,,,TP1,,,,,,,,0,0,0,
+1444,PARSED,936,"2 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,936,signal,single,936,1,,,,,TP2,,,,,,,,0,0,0,
+1440,PARSED,924,2 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,924,signal,single,924,1,,,,,TP2,,,,,,,,0,0,0,
+1439,PARSED,971,тут стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,971,signal,single,971,1,,,,,STOP,,,,,,,,0,0,0,
+1438,PARSED,972,и тут стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,972,signal,single,972,1,,,,,STOP,,,,,,,,0,0,0,
+1435,PARSED,921,закрываю по текущим. 8% движения. поздравляю,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,921,signal,single,921,1,,,FULL,,,,,,,,,,0,0,0,
+1434,PARSED,962,"тут увы стоп. fart закрыл в том числе и по причине минимизации убытка по Doge, Near и OG",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,962,signal,single,962,1,,,,,STOP,,,,,,,,0,0,0,
+1432,PARSED,963,тоже стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,963,signal,single,963,1,,,,,STOP,,,,,,,,0,0,0,
+1431,PARSED,964,Закрываю фактически на точке входа,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,964,signal,single,964,1,,,FULL,,,,,,,,,,0,0,0,
+1430,PARSED,,"[trader#A]
+#intraday
+
+
+ASTER - https://t.me/c/3171748254/924 
+INJ - https://t.me/c/3171748254/936 
+
+По этим монетам остаток закрываю по текущей цене. Фактически эти монеты дошли до 2-х тейков",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,924 | 936,2,,,FULL,,TP2,,,,,,,,0,0,0,
+1415,PARSED,983,увы стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,983,signal,single,983,1,,,,,STOP,,,,,,,,0,0,0,
+1414,PARSED,992,"стоп
+
+проверил сегодня журнал сделок за ноябрь и декабрь. более 70% это стопы по лонгам",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,992,signal,single,992,1,,,,,STOP,,,,,,,,0,0,0,
+1413,PARSED,1005,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1005,signal,single,1005,1,,,,,TP1,,,,,,,,0,0,0,
+1409,PARSED,1005,2 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1005,signal,single,1005,1,,,,,TP2,,,,,,,,0,0,0,
+1404,PARSED,978,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,978,signal,single,978,1,,,,,TP1,,,,,,,,0,0,0,
+1403,PARSED,1002,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1002,signal,single,1002,1,,,,,TP1,,,,,,,,0,0,0,
+1402,PARSED,1003,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1003,signal,single,1003,1,,,,,TP1,,,,,,,,0,0,0,
+1397,PARSED,1024,"закрываю, модель ошиблась, вход без подтверждения на малых ТФ
+
+стоп 1.67%",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1024,signal,single,1024,1,,,FULL,,STOP,,,,,,,,0,0,0,
+1396,PARSED,1018,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1018,signal,single,1018,1,,,,,TP1,,,,,,,,0,0,0,
+1393,PARSED,,"[trader#A]
+
+LINK - https://t.me/c/3171748254/978 - стоп в бу
+ALGO - https://t.me/c/3171748254/1002 стоп в бу
+ARKM - https://t.me/c/3171748254/1003 стоп в бу
+FART - https://t.me/c/3171748254/1005 стоп на 1 тейк
+UNI - https://t.me/c/3171748254/1018 стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=TP1; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}),,,,0.7,,,,,signal_group,multiple,978 | 1002 | 1003 | 1005 | 1018,5,,ENTRY,,,,,,,,,,,0,0,0,
+1388,PARSED,1002,после 1 тейка закрылась в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1002,signal,single,1002,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
+1387,PARSED,1003,после 1 тейка закрылась в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1003,signal,single,1003,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
+1380,PARSED,,"[trader#A]
+
+XRP - https://t.me/c/3171748254/1015
+ADA - https://t.me/c/3171748254/1017
+
+А давайте их прикроем, пока они рядом с ТВХ",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,1015 | 1017,2,,,FULL,,,,,,,,,,0,0,0,
+1376,PARSED,1034,Первый пятничный тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1034,signal,single,1034,1,,,,,TP,,,,,,,,0,0,0,
+1371,PARSED,978,"Закрылась в бу, после 1 тейка, конечно же",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,978,signal,single,978,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
+1370,PARSED,1018,"Закрылась в бу, после 1 тейка",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1018,signal,single,1018,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
+1367,PARSED,1038,"Тут тейк. Поздравляю 
+По этой тоже ожидаем https://t.me/c/3171748254/1037",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,,signal_group,multiple,1038 | 1037,2,,,,,TP,,,,,,,,0,0,0,
+1366,PARSED,1036,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1036,signal,single,1036,1,,,,,TP1,,,,,,,,0,0,0,
+1355,PARSED,1037,"начинаем субботу с тейка, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1037,signal,single,1037,1,,,,,TP,,,,,,,,0,0,0,
+1352,PARSED,1036,2 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1036,signal,single,1036,1,,,,,TP2,,,,,,,,0,0,0,
+1326,PARSED,1037,"2 тейк, сделку закрываю полностью",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1037,signal,single,1037,1,,,FULL,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+1325,PARSED,1077,"а теперь к неприятному и одновременно обидному
+
+стоп, но сдлека в итоге точно дойдет до тейка
+
+ставить другой стоп, значит идти против торговой системы",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1077,signal,single,1077,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+1324,PARSED,1084,"тоже самое, что и выше
+
+стоп",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,1084,signal,single,1084,1,,,,,STOP,,,,,,,,0,0,0,
+1323,PARSED,1085,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,1085,signal,single,1085,1,,,,,STOP,,,,,,,,0,0,0,
+1322,PARSED,1086,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,1086,signal,single,1086,1,,,,,STOP,,,,,,,,0,0,0,
+1255,PARSED,1034,"всем привет. рынок очень ""тугой"". среднесрок очень долго отрабатывает. пробежимся по позициям, проведем инвентаризацию, освободим маржу для новых сделок
+
+эту закрываю полностью по текущим, цена как раз на 1 тейке",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1034,signal,single,1034,1,,,FULL,,TP1,,,,,,,,0,0,0,
+1254,PARSED,1036,полностью закрываю,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1036,signal,single,1036,1,,,FULL,,,,,,,,,,0,0,0,
+1253,PARSED,1044,закрываю на текущих ценах. +8%,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1044,signal,single,1044,1,,,FULL,,,,,,,,,,0,0,0,
+1251,PARSED,1081,закрываю по текущим +13%,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1081,signal,single,1081,1,,,FULL,,,,,,,,,,0,0,0,
+1248,PARSED,1038,"Эта позиция закрылась в бу после 1 тейка
+
+Прошу еще раз ознакомиться с этим постом - https://t.me/c/3171748254/1145",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1038 | 1145,2,,ENTRY,,,TP1,,,,,,,,0,0,0,
+1062,PARSED,1516,"Стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1516,signal,single,1516,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+1058,PARSED,1506,"1 тейк. 0.44R
+стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1506,signal,single,1506,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+1039,PARSED,1482,Доброе утро. Перенесите стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1482,signal,single,1482,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1034,PARSED,1506,"Сделка закрылась в бу. 
+итоговый результат 0.44R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1506,signal,single,1506,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+997,PARSED,1482,закрылась в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1482,signal,single,1482,1,,ENTRY,,,,,,,,,,,0,0,0,
+986,PARSED,,"[trader#A]
+
+https://t.me/c/3171748254/1620
+https://t.me/c/3171748254/1620
+https://t.me/c/3171748254/1599
+https://t.me/c/3171748254/1594
+https://t.me/c/3171748254/1593
+https://t.me/c/3171748254/1592
+https://t.me/c/3171748254/1591
+
+По лонгам стопы в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1620 | 1599 | 1594 | 1593 | 1592 | 1591,6,,ENTRY,,,STOP,,,,,,,,0,0,0,
+985,PARSED,1593,закрылась в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1593,signal,single,1593,1,,ENTRY,,,,,,,,,,,0,0,0,
+981,PARSED,1591,закрыта в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_FULL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION,,,,0.7,,,,1591,signal,single,1591,1,,ENTRY,FULL,,,,,,,,,,0,0,0,
+980,PARSED,1619,Закрыта в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_FULL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION,,,,0.7,,,,1619,signal,single,1619,1,,ENTRY,FULL,,,,,,,,,,0,0,0,
+979,PARSED,1620,закрыта в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_FULL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION,,,,0.7,,,,1620,signal,single,1620,1,,ENTRY,FULL,,,,,,,,,,0,0,0,
+974,PARSED,1592,закрылась в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1592,signal,single,1592,1,,ENTRY,,,,,,,,,,,0,0,0,
+973,PARSED,1594,закрылась в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1594,signal,single,1594,1,,ENTRY,,,,,,,,,,,0,0,0,
+967,PARSED,1599,также в бу закрылись,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1599,signal,single,1599,1,,ENTRY,,,,,,,,,,,0,0,0,
+931,PARSED,1654,"1 тейк. 0.22R
+стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1654,signal,single,1654,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+909,PARSED,,"[trader#A]
+
+https://t.me/c/3171748254/1725
+https://t.me/c/3171748254/1726
+
+пора перенести стоп в бу
+кто желает может фиксировать прибыль",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1725 | 1726,2,,ENTRY,,,STOP,,,,,,,,0,0,0,
+908,PARSED,1725,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1725,signal,single,1725,1,,ENTRY,,,,,,,,,,,0,0,0,
+907,PARSED,1726,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1726,signal,single,1726,1,,ENTRY,,,,,,,,,,,0,0,0,
+899,PARSED,1654,Все тейки. Сделка закрылась в +1.5RR,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1654,signal,single,1654,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
+898,PARSED,1685,"1 тейк. Стоп в бу
++0.5RR",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1685,signal,single,1685,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+897,PARSED,1704,"1 тейк. Стоп в бу
++0.5RR",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1704,signal,single,1704,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+883,PARSED,1756,"очень большой риск получить стоп. кто хочет не раздувать убыток - можно закрыть по текущим
+
+я закрывать не буду, чтобы не искажать статистику",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1756,signal,single,1756,1,,,FULL,,STOP,,,,,,,,0,0,0,
+882,PARSED,1774,Убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,1774,signal,single,1774,1,,,,,,,,TARGETED,,,,,0,0,0,
+874,PARSED,1760,"1 тейк. Стоп в бу
+0.26R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1760,signal,single,1760,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+873,PARSED,1756,Стоп. -1R,,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1756,signal,single,1756,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+868,PARSED,1760,Второй тейк. Общий RR 0.75,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1760,signal,single,1760,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
+862,PARSED,,"[trader#A]
+
+
+https://t.me/c/3171748254/1685 MOVR
+https://t.me/c/3171748254/1738 CYBER
+https://t.me/c/3171748254/1706 ZEC
+
+закрываю по текущим ценам
+MOVR - 1.35RR
+CYBER - 1.37RR
+ZEC - 1.43RR",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,1685 | 1706 | 1738,3,,,FULL,,,,R_MULTIPLE,,,,,,0,0,0,
+861,PARSED,1760,"его тоже не будем мучить. закрываю по текущим
+1.06R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,1760,signal,single,1760,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+841,PARSED,,"[trader#A]
+Все лонги закрываю по текущим
+Какие вышли стопы, дополню пост чуть позже
+
+FARTCOIN -0.338R
+ASTER -0.03R
+DOGE -0.63R
+PEPE -0.46R
+ENA - 0.634R
+C98 -0.36R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=SELECTOR}),,,,0.7,,,,,signal,unknown,,0,,,ALL_LONGS,,STOP,,R_MULTIPLE,,,,,,0,0,0,
+810,PARSED,,"[trader#A]
+
+https://t.me/c/3171748254/1830
+https://t.me/c/3171748254/1832
+
+Стопы в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1830 | 1832,2,,ENTRY,,,STOP,,,,,,,,0,0,0,
+808,PARSED,1830,Закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1830,signal,single,1830,1,,ENTRY,,,,,,,,,,,0,0,0,
+784,PARSED,1927,"1 тейк, стоп в бу
+0.3R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1927,signal,single,1927,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+783,PARSED,1924,"1 тейк, стоп в бу
+0.23R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1924,signal,single,1924,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+782,PARSED,1927,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1927,signal,single,1927,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+781,PARSED,1911,"1 тейк, стоп в бу
+0.28R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1911,signal,single,1911,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+770,PARSED,1909,"1 тейк. Стоп в бу
+0.38R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1909,signal,single,1909,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+769,PARSED,1913,"1 тейк, стоп в бу
+0.2Р",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1913,signal,single,1913,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+768,PARSED,1930,"1 тейк, стоп в бу
+0.27Р",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1930,signal,single,1930,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+767,PARSED,1911,"2 тейк
+0.9Р",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1911,signal,single,1911,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+766,PARSED,1924,"2 тейк
+0.76Р",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1924,signal,single,1924,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+764,PARSED,,"[trader#A]
+принимаю решение зафиксировать все шорты. собрали в целом не плохой профит. хочу закрыть январь. 
+Лонг, по сетапу выше, переходит на февраль, скорее всего, либо стоп в январе (рынок уже решит самостоятельно)",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=SELECTOR}),,,,0.7,,,,,signal,unknown,,0,,,ALL_SHORTS,,STOP,,,,,,,,0,0,0,
+763,PARSED,,"[trader#A]
+итог по сделкам:
+hype - 1.27R
+aave -1.67R
+aster - 1.15R
+xrp - 0.75R
+doge - 1.38R
+btc - 1.62R",trader_a_update_missing_target,trader_a_update_missing_target,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.55,,,,,signal,unknown,,0,,,,,,,R_MULTIPLE,,,,,,0,0,0,
+750,PARSED,1968,"рынок не захотел в отскок. сработал стоп
+-0.5R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1968,signal,single,1968,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+745,PARSED,2006,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2006,signal,single,2006,1,,,,,,,,TARGETED,,,,,0,0,0,
+742,PARSED,2010,да что ж такое. и этот без нас улетел. убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2010,signal,single,2010,1,,,,,,,,TARGETED,,,,,0,0,0,
+740,PARSED,2013,"1 тейк и сделка закрылась в бу
++0.16R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2013,signal,single,2013,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
+739,PARSED,2005,"1 тейк, стоп в бу
++0.13R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2005,signal,single,2005,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+736,PARSED,2049,убираем лимитку. опять без нас((,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2049,signal,single,2049,1,,,,,,,,TARGETED,,,,,0,0,0,
+732,PARSED,2057,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2057,signal,single,2057,1,,,,,,,,TARGETED,,,,,0,0,0,
+730,PARSED,2055,тут тоже убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2055,signal,single,2055,1,,,,,,,,TARGETED,,,,,0,0,0,
+726,PARSED,2005,"закрылось в бу
+итог по сделке - 0.13R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2005,signal,single,2005,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+716,PARSED,2074,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2074,signal,single,2074,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+705,PARSED,2066,"1 тейк. стоп в бу
+0.26R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2066,signal,single,2066,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+704,PARSED,2093,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2093,signal,single,2093,1,,,,,,,,TARGETED,,,,,0,0,0,
+703,PARSED,2050,"1 тейк. стоп в бу
+0.11R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2050,signal,single,2050,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+701,PARSED,2050,"закрылась в бу
+итого 0.11R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2050,signal,single,2050,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+699,PARSED,2093,"1 тейк. стоп в бу
+0.59R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2093,signal,single,2093,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+696,PARSED,2110,Взяли лимитку,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2110,signal,single,2110,1,,,,,,FILLED,,,,,,,0,0,0,
+694,PARSED,2093,"2 тейк.
+1.4R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2093,signal,single,2093,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+693,PARSED,2110,"1 тейк. стоп в бу
+0.38R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2110,signal,single,2110,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+692,PARSED,2113,снимаем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2113,signal,single,2113,1,,,,,,,,TARGETED,,,,,0,0,0,
+691,PARSED,2110,"2 тейк
+0.93R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2110,signal,single,2110,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+689,PARSED,2093,"закрываю остаток (10%) сделки по текущим
+1.67R итоговый результат",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2093,signal,single,2093,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+685,PARSED,2110,"тоже закрываю по текущим
+итог 1.11R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2110,signal,single,2110,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+684,PARSED,2000,"поставьте стоп в бу, ну как в бу, чтобы комиссию отбить
+
+надоел уже",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2000,signal,single,2000,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+683,PARSED,2008,"Тут закрою по текущим
+0.28R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2008,signal,single,2008,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+682,PARSED,2066,тут стоп на 1 тейк,,,U_MOVE_STOP,U_MOVE_STOP,MOVE_STOP,MOVE_STOP(new_stop_level=TP1),,,,0.7,,,,2066,signal,single,2066,1,,TP1,,,,,,,,,,,0,0,0,
+681,PARSED,2129,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2129,signal,single,2129,1,,,,,,FILLED,,,,,,,0,0,0,
+680,PARSED,2000,закрылся в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2000,signal,single,2000,1,,ENTRY,,,,,,,,,,,0,0,0,
+679,PARSED,2066,"закрылся полностью на 1 тейке
+итог 0.88R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2066,signal,single,2066,1,,,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
+678,PARSED,2126,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2126,signal,single,2126,1,,,,,,FILLED,,,,,,,0,0,0,
+677,PARSED,2129,"был 1 тейк  и сразу закрылась в бу
+итого 0.26R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2129,signal,single,2129,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
+676,PARSED,2126,"уже было 2 тейка
+0.88R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2126,signal,single,2126,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+674,PARSED,2085,"стоп
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2085,signal,single,2085,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+673,PARSED,2143,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2143,signal,single,2143,1,,,,,,,,TARGETED,,,,,0,0,0,
+670,PARSED,2149,"самый быстрый стоп)
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2149,signal,single,2149,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+667,PARSED,2152,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2152,signal,single,2152,1,,,,,,FILLED,,,,,,,0,0,0,
+666,PARSED,2151,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2151,signal,single,2151,1,,,,,,FILLED,,,,,,,0,0,0,
+665,PARSED,2151,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2151,signal,single,2151,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+664,PARSED,2151,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2151,signal,single,2151,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+663,PARSED,2152,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2152,signal,single,2152,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+661,PARSED,2152,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2152,signal,single,2152,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+659,PARSED,2088,"стоп.
+-0.5R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2088,signal,single,2088,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+655,PARSED,2165,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2165,signal,single,2165,1,,,,,,FILLED,,,,,,,0,0,0,
+654,PARSED,2165,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2165,signal,single,2165,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+653,PARSED,2166,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2166,signal,single,2166,1,,,,,,,,TARGETED,,,,,0,0,0,
+652,PARSED,2164,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2164,signal,single,2164,1,,,,,,,,TARGETED,,,,,0,0,0,
+651,PARSED,2161,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2161,signal,single,2161,1,,,,,,,,TARGETED,,,,,0,0,0,
+650,PARSED,2165,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2165,signal,single,2165,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+648,PARSED,2165,"И она закрылась
+итог - 1.19R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2165,signal,single,2165,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+645,PARSED,2177,"поторопился  с лонгами, зафиксируем микроминус",,,,,,,,,,0.7,,,,2177,signal,single,2177,1,,,,,,,,,,,,,0,0,0,
+644,PARSED,2178,"а тут уберем лимитку
+
+всем хорошего вечера",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2178,signal,single,2178,1,,,,,,,,TARGETED,,,,,0,0,0,
+636,PARSED,2193,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2193,signal,single,2193,1,,,,,,FILLED,,,,,,,0,0,0,
+634,PARSED,2192,"В целом можно зафиксировать часть прибыли. С учетом того, что вошли гораздо ниже твх по сигналу, можно сказать, что тейк взят
+
+Стоп в бу после фиксации части
+Зафиксировал 50% на 0.3406",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_PARTIAL | U_TP_HIT | U_STOP_HIT,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION(close_fraction=0.5),,,,0.7,,,,2192,signal,single,2192,1,,ENTRY,PARTIAL,0.5,STOP,,,,,,,,0,0,0,
+633,PARSED,2193,"Эх. Стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2193,signal,single,2193,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+632,PARSED,2195,Тут отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2195,signal,single,2195,1,,,,,,,,TARGETED,,,,,0,0,0,
+631,PARSED,2186,"здесь уже прилично прошли, кто переживает - можете частично фиксировать позицию и защищать ее стопом в бу
+
+я буду держать согласно сетапа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_PARTIAL | U_STOP_HIT,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION,,,,0.7,,,,2186,signal,single,2186,1,,ENTRY,PARTIAL,,STOP,,,,,,,,0,0,0,
+629,PARSED,2186,а вот и 1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2186,signal,single,2186,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+628,PARSED,2192,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2192,signal,single,2192,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+620,PARSED,2211,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2211,signal,single,2211,1,,,,,,FILLED,,,,,,,0,0,0,
+613,PARSED,2218,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2218,signal,single,2218,1,,,,,,FILLED,,,,,,,0,0,0,
+612,PARSED,2220,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2220,signal,single,2220,1,,,,,,FILLED,,,,,,,0,0,0,
+610,PARSED,2211,"Рынок конечно…
+Стоп -1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2211,signal,single,2211,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+609,PARSED,2218,Стоп -1R,,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2218,signal,single,2218,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+608,PARSED,2220,"Стоп 
+-1R
+
+На сегодня берём перерыв)",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2220,signal,single,2220,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+607,PARSED,2192,"сделка закрылась
+итог 1.36R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2192,signal,single,2192,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+604,PARSED,2187,"что-то я пропустил. вчера, оказывается, был 1 тейк
+
+стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2187,signal,single,2187,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+599,PARSED,2186,Стоп поставьте на первый тейк - 69295.6,,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,2186,signal,single,2186,1,,,,,STOP,,,,,,,,0,0,0,
+598,PARSED,2186,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2186,signal,single,2186,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+595,PARSED,2186,"Эту закрываем полностью
+открываем новую
+
+1.16R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2186,signal,single,2186,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+587,PARSED,,"[trader #A]
+
+https://t.me/c/3171748254/2243
+https://t.me/c/3171748254/2242
+https://t.me/c/3171748254/2222
+https://t.me/c/3171748254/2221
+
+давайте по этим сигналам пока уберем лимитки
+
+буду следить за ними, может позже вернем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,2243 | 2242 | 2222 | 2221,4,,,,,,,,TARGETED,,,,,0,0,0,
+571,PARSED,2219,"стоп
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2219,signal,single,2219,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+570,PARSED,2287,тут отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2287,signal,single,2287,1,,,,,,,,TARGETED,,,,,0,0,0,
+567,PARSED,2256,"Стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2256,signal,single,2256,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+548,PARSED,2294,"тут отмена, вечером уже активно поторгуем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2294,signal,single,2294,1,,,,,,,,TARGETED,,,,,0,0,0,
+529,PARSED,2187,"пропустил
+закрылся в бу
+0.33R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2187,signal,single,2187,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+523,PARSED,,"Trader #A
+
+финальная сделка марафона
+все сделки остаются в работе, утром посмотрим какой будет результат
+
+всем спасибо и хорошего вечера",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,,signal,unknown,,0,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+519,PARSED,2342,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2342,signal,single,2342,1,,,,,,FILLED,,,,,,,0,0,0,
+516,PARSED,2342,"тейк
+0.89R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2342,signal,single,2342,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
+497,PARSED,,"[trader #A]
+
+хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам
+
+https://t.me/c/3171748254/2361
+https://t.me/c/3171748254/2359
+https://t.me/c/3171748254/2275
+https://t.me/c/3171748254/2261
+
+результаты в RR дополню этот пост
+
+fart - 0.38R
+ldo - 0.14R
+zil - 0.32R
+haedal - 0.91R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,2261 | 2275 | 2359 | 2361,4,,,FULL,,,,R_MULTIPLE,,,,,,0,0,0,
+495,PARSED,2234,"фиксирую по текущим
+-0.21R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2234,signal,single,2234,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+494,PARSED,2371,"фиксирую по текущим
+-0.03R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2371,signal,single,2371,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+493,PARSED,2360,"фиксирую по текущим
+-0.04R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2360,signal,single,2360,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+478,PARSED,2397,Отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2397,signal,single,2397,1,,,,,,,,TARGETED,,,,,0,0,0,
+471,PARSED,2348,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2348,signal,single,2348,1,,,,,,,,TARGETED,,,,,0,0,0,
+467,PARSED,,"Trader #A
+
+зафиксирую все свои позиции по текущим, не будет возможности контролировать сделки
+
+Ниже напишу результаты
+PORTALUSDT - 0.2R
+SAGAUSDT - 0.18R
+VIRTUALUSDT -0.01R
+PEOPLEUSDT - 0.24R
+DOGEUSDT - 0.23R
+
+
+Всем хорошего вечера и выходных",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,,signal,unknown,,0,,,ALL_ALL,,,,R_MULTIPLE,,,,,,0,0,0,
+463,PARSED,2234,Кто не закрывал вместе со мной - поздравляю с тейком. В мою статистку не идет. Не забывайте стопы переводить в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2234,signal,single,2234,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+450,PARSED,2425,стоп в бу ставим,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2425,signal,single,2425,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+444,PARSED,2446,"без нас улетели..печально. 
+лимитку убираем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2446,signal,single,2446,1,,,,,,,,TARGETED,,,,,0,0,0,
+443,PARSED,2447,"без нас улетели..печально
+лимитку убираем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2447,signal,single,2447,1,,,,,,,,TARGETED,,,,,0,0,0,
+439,PARSED,2443,чтобы минимизировать риск - стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2443,signal,single,2443,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+438,PARSED,2443,"тейк, стоп уже в бу
+0.72R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2443,signal,single,2443,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+393,PARSED,2522,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2522,signal,single,2522,1,,,,,,FILLED,,,,,,,0,0,0,
+387,PARSED,2522,"Тейк
+0.59R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2522,signal,single,2522,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
+378,PARSED,2444,"1 тейк, стоп в бу
+0.23R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2444,signal,single,2444,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+373,PARSED,2443,стоп переносим на 1 тейк - 0.0998,,,U_MOVE_STOP,U_MOVE_STOP | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP,,,,0.7,,,,2443,signal,single,2443,1,,,,,STOP,,,,,,,,0,0,0,
+366,PARSED,2480,"1 тейк, стоп в бу
+0.62R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2480,signal,single,2480,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+360,PARSED,,"Trader #A
+Закрываю все позиции, результаты по каждой обновлю в этом посте, нужно подождать, посмотреть на рынок
+BTC - 2.8R
+Link - 0.54R
+xrp - 0.46R
+AAVE - фактически в бу
+sol - 0.18R
+near - 0.96R
+ton - 0.7R
+pepe - 0.14R (убыток)
+aster - 0.32R (убыток)",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,,signal,unknown,,0,,,ALL_ALL,,,,R_MULTIPLE,,,,,,0,0,0,
+359,PARSED,2544,"Здесь, если закрыть по текущим, получатся скромные 0.2R
+
+Напомню, что эта сделка в статистику не идет",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2544,signal,single,2544,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+358,PARSED,,"Trader #A
+Сегодня аккуратно поторгуем интрадей, не в рамках марафона, а просто как обычные сделки, требования как и к среднесроку:
+- вход на 1%, если не укажу иное
+- фиксация на тейках 50/40/10",trader_a_update_missing_target,trader_a_update_missing_target,U_TP_HIT,U_TP_HIT,,,,,,0.55,,,,,signal,unknown,,0,,,,,TP,,,,,,,,0,0,0,
+338,PARSED,2589,"Стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2589,signal,single,2589,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+337,PARSED,2575,"Стоп 
+-1R 
+Вывод: интрадей не мое😏",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2575,signal,single,2575,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+336,PARSED,,"trader #A
+
+https://t.me/c/3171748254/2571
+https://t.me/c/3171748254/2573
+
+снимаем лимитки
+
+посмотрим сегодня среднесрок😊",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,2571 | 2573,2,,,,,,,,TARGETED,,,,,0,0,0,
+333,PARSED,2572,Тейк. Стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2572,signal,single,2572,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+328,PARSED,2572,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2572,signal,single,2572,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+327,PARSED,2572,"Все тейки
+
+0.65R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2572,signal,single,2572,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
+312,PARSED,2577,Стоп поставьте на 0.5749,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,2577,signal,single,2577,1,,,,,STOP,,,,,,,,0,0,0,
+311,PARSED,2577,"Закрываю по текущим - 0.5962
+1.8R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2577,signal,single,2577,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+308,PARSED,2635,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2635,signal,single,2635,1,,,,,,,,TARGETED,,,,,0,0,0,
+306,PARSED,2634,Не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2634,signal,single,2634,1,,,,,,,,TARGETED,,,,,0,0,0,
+300,PARSED,2649,"шалость не удалась
+Стоп 
+-0.5R
+
+p.s. очень обидный стоп",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2649,signal,single,2649,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+299,PARSED,2612,"1 тейк. Стоп в бу
+0.42R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2612,signal,single,2612,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+295,PARSED,2610,поставьте стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2610,signal,single,2610,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+290,PARSED,2663,"1 тейк. Стоп в бу
+0.45R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2663,signal,single,2663,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+289,PARSED,2663,"закрываю сейчас по текущим полностью позицию. уже хороший профит
+
+1.17R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2663,signal,single,2663,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+288,PARSED,2643,"закрываю 50% по текущим. стоп в бу
+
+0.42R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2643,signal,single,2643,1,,,FULL,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+286,PARSED,,"Trader #A 
+
+пока новых сделок не будет. доведем до тейков те, что остались
+
+Открыты: 
+ETH
+ASTER
+BTC
+PAXG (стоп в бу стоит)
+JST (был 1 тейк, стоп в бу)
+BONK (был 1 тейк, стоп в бу)
+BNB",trader_a_update_missing_target,trader_a_update_missing_target,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.55,,,,,signal,unknown,,0,,ENTRY,,,STOP,,,,,,,,0,0,0,
+279,PARSED,2675,"передвиньте стопы в плюс или бу (я буду в бу двигать), по ASTER оставляем стоп как есть",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2675,signal,single,2675,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+270,PARSED,2598,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2598,signal,single,2598,1,,ENTRY,,,,,,,,,,,0,0,0,
+269,PARSED,2673,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2673,signal,single,2673,1,,ENTRY,,,,,,,,,,,0,0,0,
+257,PARSED,2711,тут лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2711,signal,single,2711,1,,,,,,FILLED,,,,,,,0,0,0,
+256,PARSED,2643,"закрылся в бу
+итого 0.42R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2643,signal,single,2643,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+249,PARSED,2712,"Trader #A
+
+https://t.me/c/3171748254/2712
+https://t.me/c/3171748254/2713
+https://t.me/c/3171748254/2718
+ 
+Отменяем лимитки
+
+Продолжим после 19:00",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,2712 | 2713 | 2718,3,,,,,,,,TARGETED,,,,,0,0,0,
+248,PARSED,2719,Тут тоже снимаем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2719,signal,single,2719,1,,,,,,,,TARGETED,,,,,0,0,0,
+247,PARSED,2712,Тейк,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,2712,signal,single,2712,1,,,,,TP,,,,,,,,0,0,0,
+246,PARSED,2724,"Шучу
+
+Тут тейк https://t.me/c/3171748254/2711",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,,signal_group,multiple,2724 | 2711,2,,,,,TP,,,,,,,,0,0,0,
+243,PARSED,2612,"закрылся в бу
+итог 0.42R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2612,signal,single,2612,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+229,PARSED,2739,"тейк
+0.87R
+
+ищу новую сделку",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2739,signal,single,2739,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
+224,PARSED,2703,"тут стоп
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2703,signal,single,2703,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+220,PARSED,2734,"тут стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2734,signal,single,2734,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+209,PARSED,2706,"стоп
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2706,signal,single,2706,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+206,PARSED,2772,точка входа 84.86,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2772,signal,single,2772,1,,ENTRY,,,,,,,,,,,0,0,0,
+191,PARSED,,"[trader #A]
+
+Чтобы не кормить ""лося"" закрываю по текущим AVAX и PEOPLE
+
+По  SOL и SUI стоп в бу
+
+AVAX - 0.5R (убыток)
+PEOPLE - 0.28R (убыток)",trader_a_update_missing_target,trader_a_update_missing_target,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.55,,,,,signal,unknown,,0,,,FULL,,STOP,,R_MULTIPLE,,,,,,0,0,0,
+189,PARSED,2610,"Фиксирую 50% по текущей цене. Стоп в бу
+
+0.79R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_PARTIAL | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION(close_fraction=0.5),,,,0.7,,,,2610,signal,single,2610,1,,ENTRY,PARTIAL,0.5,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+188,PARSED,2761,"Тейк. Стоп в бу
+
+0.34R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2761,signal,single,2761,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+186,PARSED,2772,"тейк, стоп в бу
+0.36R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2772,signal,single,2772,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+183,PARSED,2809,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,2809,signal,single,2809,1,,,,,STOP,,,,,,,,0,0,0,
+179,PARSED,,"Trader #A 
+
+Закрываю все позиции по текущим, чтобы закрыть февраль
+
+hype - в бу
+pepe - в бу
+bnb - 0.07R (убыток)
+sol - 0.82R
+sui - 0.95R
+paxg - 2.2R
+aster - 0.12R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,,signal,unknown,,0,,,ALL_ALL,,,,R_MULTIPLE,,,,,,0,0,0,
+172,PARSED,2817,Стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2817,signal,single,2817,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+157,PARSED,2851,"1 тейк. Стоп в бу
+
+0.62R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2851,signal,single,2851,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+154,PARSED,2855,тут отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2855,signal,single,2855,1,,,,,,,,TARGETED,,,,,0,0,0,
+153,PARSED,2851,"закрылась в бу
+итого 0.62R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2851,signal,single,2851,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+151,PARSED,2859,"хочется написать много непечатных слов по поводу 1 копейки...
+
+убираем лимитку😔",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2859,signal,single,2859,1,,,,,,,,TARGETED,,,,,0,0,0,
+148,PARSED,2862,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2862,signal,single,2862,1,,,,,,FILLED,,,,,,,0,0,0,
+147,PARSED,2862,"1 тейк. стоп в бу
+
+0.37R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2862,signal,single,2862,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+146,PARSED,2861,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2861,signal,single,2861,1,,,,,,FILLED,,,,,,,0,0,0,
+145,PARSED,2862,"2 тейк
+0.94R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2862,signal,single,2862,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+144,PARSED,2861,"стоп
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2861,signal,single,2861,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+142,PARSED,2854,"1 тейк. стоп в бу
+0.59R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2854,signal,single,2854,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+140,PARSED,2817,"1 тейк, стоп в бу
+
+0.66R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2817,signal,single,2817,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+138,PARSED,2862,"закрываю остаток по текущим
+итог 1.12R 
+
+Для справки, здесь и во всех постах о тейках или стопах R нарастающим итогом",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2862,signal,single,2862,1,,,FULL,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+133,PARSED,2817,стоп переношу на 65000,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,2817,signal,single,2817,1,,,,,STOP,,,,,,,,0,0,0,
+131,PARSED,2881,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2881,signal,single,2881,1,,,,,,FILLED,,,,,,,0,0,0,
+130,PARSED,2880,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2880,signal,single,2880,1,,,,,,FILLED,,,,,,,0,0,0,
+129,PARSED,2832,стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2832,signal,single,2832,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+126,PARSED,2892,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2892,signal,single,2892,1,,,,,,FILLED,,,,,,,0,0,0,
+125,PARSED,2880,"стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2880,signal,single,2880,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+124,PARSED,2892,"1 тейк. стоп в бу
+0.27R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2892,signal,single,2892,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+123,PARSED,2892,"закрылась в бу
+итог 0.27R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2892,signal,single,2892,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+121,PARSED,2832,"1 тейк. Стоп в бу
+
+0.37R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2832,signal,single,2832,1,,ENTRY,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+108,PARSED,2913,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2913,signal,single,2913,1,,,,,,FILLED,,,,,,,0,0,0,
+107,PARSED,2914,тейк. стоп пока не переносим в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2914,signal,single,2914,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+106,PARSED,2817,стоп переносим на 67000,,,U_MOVE_STOP,U_MOVE_STOP | U_STOP_HIT,MOVE_STOP,MOVE_STOP,,,,0.7,,,,2817,signal,single,2817,1,,,,,STOP,,,,,,,,0,0,0,
+105,PARSED,2916,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2916,signal,single,2916,1,,,,,,,,TARGETED,,,,,0,0,0,
+103,PARSED,,"Trader #A 
+
+PYTH тоже стоп в бу",trader_a_update_missing_target,trader_a_update_missing_target,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.55,,,,,signal,unknown,,0,,ENTRY,,,STOP,,,,,,,,0,0,0,
+102,PARSED,2913,"стоп
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2913,signal,single,2913,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+100,PARSED,2881,1 тейк,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,2881,signal,single,2881,1,,,,,TP1,,,,,,,,0,0,0,
+99,PARSED,2914,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2914,signal,single,2914,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
+98,PARSED,2914,"закрылось в бу
+
+1.19R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2914,signal,single,2914,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+94,PARSED,2930,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2930,signal,single,2930,1,,,,,,FILLED,,,,,,,0,0,0,
+87,PARSED,2930,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2930,signal,single,2930,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+86,PARSED,2832,"закрылось в бу
+0.37R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2832,signal,single,2832,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+84,PARSED,2817,"закрываю по текущим
+
+1.62R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,2817,signal,single,2817,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
+78,PARSED,2838,"Стоп. 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2838,signal,single,2838,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+76,PARSED,2950,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2950,signal,single,2950,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+75,PARSED,2950,"ну и в бу сразу
+0.3R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2950,signal,single,2950,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+71,PARSED,2955,Не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2955,signal,single,2955,1,,,,,,,,TARGETED,,,,,0,0,0,
+59,PARSED,,"Trader #A
+
+Давайте начинать 
+
+Фиксация 50/40/10
+Вернемся к штатному формату фиксации",trader_a_update_missing_target,trader_a_update_missing_target,,,,,,,,0.55,,,,,signal,unknown,,0,,,,,,,,,,,,,0,0,0,
+56,PARSED,2977,"начало положено😄
+
+-1R
+стоп",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2977,signal,single,2977,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+48,PARSED,2986,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2986,signal,single,2986,1,,,,,,FILLED,,,,,,,0,0,0,
+47,PARSED,2987,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2987,signal,single,2987,1,,,,,,FILLED,,,,,,,0,0,0,
+38,PARSED,,"Trader #A
+
+Доброе утро!
+
+Апдейт по марафоновским сделкам
+
+AAVE - стоп (-1R)
+CFX - взял лимитку, пока в небольшом минусе
+BEAM - ждем лимитку
+BAND - ждем лимитку
+API3 - ждем лимитку
+ARB - взял лимитку, пока  в небольшом плюсе
+
+Как только все сделки придут к какому-то исходу, тогда сообщу общий результат марафона
+
+Пока по итогу -2R, но еще сделки в работе, поэтому результат может быть куда лучше
+
+Всем хорошего дня",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,,signal,unknown,,0,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+33,PARSED,2962,"Стоп 
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2962,signal,single,2962,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+32,PARSED,3000,"Пора подводить промежуточные итоги
+
+1. Взяли 3 стопа. Не приятно, но это рынок
+2. Две лимитки (BEAM & BAND) так и не взялись. Отменяю лимитки
+3. Из приятного. По 1 тейку взяли API3 & ARB. Промежуточный профит по ним: 0.67R. Продолжаю удерживать
+
+Промежуточный итог по марафонским сделкам: -2.33R",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,3000,signal,single,3000,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+31,PARSED,3008,"P.S.
+
+по AAVE обидный стоп. По итогу уже 2 тейка взял",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,3008,signal,single,3008,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+26,PARSED,2835,"вчера в суете не опубликовал стоп
+
+-1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2835,signal,single,2835,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
+25,PARSED,2850,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2850,signal,single,2850,1,,ENTRY,,,,,,,,,,,0,0,0,
+22,PARSED,2881,"закрылось в бу
+0.32R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2881,signal,single,2881,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
+20,PARSED,3017,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,3017,signal,single,3017,1,,,,,,,,TARGETED,,,,,0,0,0,
+17,PARSED,3018,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,3018,signal,single,3018,1,,,,,,FILLED,,,,,,,0,0,0,
+16,PARSED,3018,1 тейк. стоп не двигаем,,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,3018,signal,single,3018,1,,,,,STOP,,,,,,,,0,0,0,
+15,PARSED,3020,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,3020,signal,single,3020,1,,,,,,FILLED,,,,,,,0,0,0,
+14,PARSED,3018,теперь стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,3018,signal,single,3018,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+13,PARSED,3022,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,3022,signal,single,3022,1,,,,,,FILLED,,,,,,,0,0,0,
+11,PARSED,3022,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,3022,signal,single,3022,1,,,,,STOP,,,,,,,,0,0,0,
+9,PARSED,3020,тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,3020,signal,single,3020,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+8,PARSED,2944,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2944,signal,single,2944,1,,ENTRY,,,STOP,,,,,,,,0,0,0,
+1,PARSED,2884,стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_STOP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2884,signal,single,2884,1,,ENTRY,,,STOP,,,,,,,,0,0,0,

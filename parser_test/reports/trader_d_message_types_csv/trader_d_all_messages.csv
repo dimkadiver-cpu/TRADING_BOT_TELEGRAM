@@ -1,5 +1,5 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,primary_intent,intents,action_types,actions_structured_summary,event_type,message_class,symbol,direction,market_type,status,confidence,parser_used,parser_mode,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1149,PARSED_WITH_WARNINGS,,"[trader#d]
+﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,event_type,message_class,symbol,direction,market_type,status,confidence,parser_used,parser_mode,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
+1149,PARSED,,"[trader#d]
 
 Storjusdt SHORT вход с текущих
 
@@ -11,12 +11,12 @@ Storjusdt SHORT вход с текущих
 
 Тейки 
 • TP1: 0.1445
-TP2; 0,138",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.1445,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1148,PARSED_WITH_WARNINGS,1407,"[trader#d]
-Перевод в безубыток",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1407,signal,single,1407,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1144,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1408
-[trader#d] позиция ушла в бу",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,1408,signal,single,1408,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,1,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-1127,PARSED_WITH_WARNINGS,,"[trader#d]
+TP2; 0,138",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1445 | 0.138),,,STORJUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.16134,0.1445 | 0.138,2,1149,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1148,PARSED,1407,"[trader#d]
+Перевод в безубыток",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1407,signal,single,1407,1,,ENTRY,,,,,,,,,,,0,0,0,
+1144,PARSED,,"https://t.me/c/3171748254/1408
+[trader#d] позиция ушла в бу",,,U_EXIT_BE,U_EXIT_BE,,,,,HTTPSUSDT,,,,0.68,,,,,False,0,,,,0,1408,signal,single,1408,1,,,,,,,,,,,,,0,0,0,
+1127,PARSED,,"[trader#d]
 
 Brev SHORT вход с текущих
 
@@ -28,8 +28,8 @@ Brev SHORT вход с текущих
 
 Тейки 
 • TP1: 0.4283
-• TP2:0.3485",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.4283 | 0.3485,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1123,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP2:0.3485",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.4283 | 0.3485),,,BREVUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.5358,0.4283 | 0.3485,2,1127,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1123,PARSED,,"[trader#d]
 
 Btc Long  вход с текущих
 
@@ -41,29 +41,29 @@ Btc Long  вход с текущих
 
 Тейки 
 • TP1: 92265
-• TP2:93704",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,LONG,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,92265 | 93704,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-1122,PARSED_WITH_WARNINGS,1439,"Trader#d
-Перевод в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1439,signal,single,1439,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1120,PARSED_WITH_WARNINGS,1443,"Trader#d
+• TP2:93704",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=92265 | 93704),,,BTCUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,90939,92265 | 93704,2,1123,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1122,PARSED,1439,"Trader#d
+Перевод в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1439,signal,single,1439,1,,ENTRY,,,,,,,,,,,0,0,0,
+1120,PARSED,1443,"Trader#d
 Стоп.
--0.5%",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1443,signal,single,1443,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1119,PARSED_WITH_WARNINGS,1439,"Trader#d
+-0.5%",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1443,signal,single,1443,1,,,FULL,,STOP,,,,,-0.5,,,0,0,0,
+1119,PARSED,1439,"Trader#d
 Стоп сдвигаю в +
-0.4671",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1439,signal,single,1439,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1113,PARSED_WITH_WARNINGS,1448,"Trader#d
+0.4671",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1439,signal,single,1439,1,,,FULL,,STOP,,,,,,,,0,0,0,
+1113,PARSED,1448,"Trader#d
 Ушли по стопу в + 0.1%
- обидно)",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1448,signal,single,1448,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1110,PARSED_WITH_WARNINGS,,"Trader#d
+ обидно)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1448,signal,single,1448,1,,,FULL,,STOP,,,,,0.1,,,0,0,0,
+1110,PARSED,,"Trader#d
 Btc long
 рыночный
 стоп 89586
 тп1 91332
-тп2 94371",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1109,PARSED_WITH_WARNINGS,1461,"trader#d
-upd кину в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1461,signal,single,1461,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1108,PARSED_WITH_WARNINGS,1462,"trader#d
-upd#бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1462,signal,single,1462,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1102,PARSED_WITH_WARNINGS,,"[trader#d]
+тп2 94371",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=91332 | 94371),,,BTCUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,89586,91332 | 94371,2,1110,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1109,PARSED,1461,"trader#d
+upd кину в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1461,signal,single,1461,1,,,,,,,,,,,,,0,0,0,
+1108,PARSED,1462,"trader#d
+upd#бу",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1462,signal,single,1462,1,,,,,,,,,,,,,0,0,0,
+1102,PARSED,,"[trader#d]
 
 Iotx SHORT вход с текущих
 
@@ -75,14 +75,14 @@ Iotx SHORT вход с текущих
 
 Тейки 
 • TP1: 0.008629
-• TP2: 0.008498",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.008629 | 0.008498,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1101,PARSED_WITH_WARNINGS,1476,"[Trader#d]
+• TP2: 0.008498",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.008629 | 0.008498),,,IOTXUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.009023,0.008629 | 0.008498,2,1102,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1101,PARSED,1476,"[Trader#d]
 tp1+
-Перевод в бу",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,1476,signal,single,1476,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-1099,PARSED_WITH_WARNINGS,1477,"[trader#d]
+Перевод в бу",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1476,signal,single,1476,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
+1099,PARSED,1477,"[trader#d]
 ТП2
-позиция закрыта +0,75",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1477,signal,single,1477,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1097,PARSED_WITH_WARNINGS,,"[trader#d]
+позиция закрыта +0,75",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1477,signal,single,1477,1,,,FULL,,TP2,,,,,0.75,,,0,0,0,
+1097,PARSED,,"[trader#d]
 
 GUNUSDT SHORT вход с текущих
 
@@ -94,11 +94,11 @@ GUNUSDT SHORT вход с текущих
 
 Тейки 
 • TP1: 0.024756
-• TP2: 0.021756",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,GUNUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.024756 | 0.021756,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1095,PARSED_WITH_WARNINGS,1481,"[Trader#d] 
+• TP2: 0.021756",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.024756 | 0.021756),,,GUNUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.027288,0.024756 | 0.021756,2,1097,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1095,PARSED,1481,"[Trader#d] 
 стоп
- -0,5",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1481,signal,single,1481,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1094,PARSED_WITH_WARNINGS,1481,"Trader#d
+ -0,5",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1481,signal,single,1481,1,,,FULL,,STOP,,,,,,,,0,0,0,
+1094,PARSED,1481,"Trader#d
 GUNUSDT SHORT вход с текущих
 
 рыночный— риск 0.5% депо
@@ -109,8 +109,8 @@ GUNUSDT SHORT вход с текущих
 
 Тейки 
 • TP1: 0.0245
-• TP2: 0.021758",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,GUNUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.0245 | 0.021758,2,1481,signal,single,1481,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1093,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP2: 0.021758",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0245 | 0.021758),,,GUNUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.027848,0.0245 | 0.021758,2,1094,signal,single,1481,1,,,FULL,,STOP,,,,,,,,0,0,0,
+1093,PARSED,,"[trader#d]
 
 GMT SHORT вход с текущих
 
@@ -122,18 +122,26 @@ GMT SHORT вход с текущих
 
 Тейки 
 • TP1: 0.018264
-• TP2:0.017349",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,GMT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.018264 | 0.017349,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1091,PARSED_WITH_WARNINGS,1486,"Trader#d
-Sl -0.5",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.5,,0,1486,signal,single,1486,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-1090,PARSED_WITH_WARNINGS,1487,"Trader#d
-Перевел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1487,signal,single,1487,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1084,PARSED_WITH_WARNINGS,1496,"Trader#d
+• TP2:0.017349",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.018264 | 0.017349),,,GMTUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.020705,0.018264 | 0.017349,2,1093,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1091,PARSED,1486,"Trader#d
+Sl -0.5",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1486,signal,single,1486,1,,,FULL,,,,,,,,,,0,0,0,
+1090,PARSED,1487,"Trader#d
+Перевел в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1487,signal,single,1487,1,,,,,,,,,,,,,0,0,0,
+1089,PARSED,1489,"Попробую перезаход
+Sl 0.02902
+Tp 0.024482
+Tp2 0.021766",,,U_TP_HIT,U_TP_HIT,,,,,,,,,0.68,,,,,False,0,,,,0,1489,signal,single,1489,1,,,,,TP,,,,,,,,0,0,0,
+1088,PARSED,1491,Upd: сразу кину в бу,,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1491,signal,single,1491,1,,,,,,,,,,,,,0,0,0,
+1086,PARSED,1491,Фикс 50% чтоб погасить частично стоп,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION | CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1491,signal,single,1491,1,,,PARTIAL,0.5,STOP,,,,,50,,,0,0,0,
+1085,PARSED,1487,"Тут тоже фикс 50%
+Для полного погашения стопа",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION | CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1487,signal,single,1487,1,,,PARTIAL,0.5,STOP,,,,,50,,,0,0,0,
+1084,PARSED,1496,"Trader#d
 Gmt остаток ушел в бу
-+0.15%",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1496,signal,single,1496,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1083,PARSED_WITH_WARNINGS,1491,"Trader#d
++0.15%",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1496,signal,single,1496,1,,,,,,,,,,,,,0,0,0,
+1083,PARSED,1491,"Trader#d
 Gun Полный фикс,не нравится.
-+0.5%",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1491,signal,single,1491,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1061,PARSED_WITH_WARNINGS,,"[trader#d]
++0.5%",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1491,signal,single,1491,1,,,,,,,,,,,,,0,0,0,
+1061,PARSED,,"[trader#d]
 
 ALCH SHORT вход с текущих
 
@@ -145,8 +153,10 @@ ALCH SHORT вход с текущих
 
 Тейки 
 • TP1: 0.13983
-• TP2: 0.12775",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,ALCH,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.13983 | 0.12775,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1056,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP2: 0.12775",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.13983 | 0.12775),,,ALCHUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.14893,0.13983 | 0.12775,2,1061,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1060,PARSED,1536,upd:Перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1536,signal,single,1536,1,,ENTRY,,,,,,,,,,,0,0,0,
+1059,PARSED,1537,upd:позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,,,,0.68,,,,,False,0,,,,0,1537,signal,single,1537,1,,,,,,,,,,,,,0,0,0,
+1056,PARSED,,"[trader#d]
 
 BTC Long вход с текущих
 
@@ -158,8 +168,8 @@ BTC Long вход с текущих
 
 Тейки 
 • TP1: 92488
-• TP2: 94763",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,BTC,LONG,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,92488 | 94763,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1054,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP2: 94763",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=92488 | 94763),,,BTCUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,90071,92488 | 94763,2,1056,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1054,PARSED,,"[trader#d]
 
 ZIL LONG вход с текущих
 
@@ -170,8 +180,8 @@ ZIL LONG вход с текущих
 
 
 Тейки 
-• TP1:  0.00654",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,ZIL,LONG,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.00654,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1053,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP1:  0.00654",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.00654),,,ZILUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.00508,0.00654,1,1054,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1053,PARSED,,"[trader#d]
 
 Link LONG вход с текущих
 
@@ -183,32 +193,37 @@ Link LONG вход с текущих
 
 Тейки 
 • TP1:  13.517
-Tp2; 14.226",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,LONG,LONG,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,13.517,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1052,PARSED_WITH_WARNINGS,1541,"trader#d
-btc в бу перевел",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1541,signal,single,1541,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1050,PARSED_WITH_WARNINGS,1541,"Trader#d
+Tp2; 14.226",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=13.517 | 14.226),,,LINKUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,12.916,13.517 | 14.226,2,1053,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1052,PARSED,1541,"trader#d
+btc в бу перевел",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1541,signal,single,1541,1,,,,,,,,,,,,,0,0,0,
+1050,PARSED,1541,"Trader#d
 upd
-btc первый фикс сделаем на снятии Лондона 91591",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1541,signal,single,1541,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1048,PARSED_WITH_WARNINGS,1545,"trader#d
-Link перевод в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1545,signal,single,1545,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1046,PARSED_WITH_WARNINGS,,"Trader#d
+btc первый фикс сделаем на снятии Лондона 91591",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1541,signal,single,1541,1,,,,,,,,,,,,,0,0,0,
+1049,PARSED,1548,"фикс +0,25",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1548,signal,single,1548,1,,,,,,,,,,,,,0,0,0,
+1048,PARSED,1545,"trader#d
+Link перевод в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1545,signal,single,1545,1,,ENTRY,,,,,,,,,,,0,0,0,
+1046,PARSED,,"Trader#d
 Parti Шорт
 лимт 0,09287
 стоп 0,09494
 тп1 0,08977
 тп2 0,08584
-если достигнем тп1 то лимитку убираем",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1044,PARSED_WITH_WARNINGS,1550,"Trader#d 
-Link ушел по бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1550,signal,single,1550,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1043,PARSED_WITH_WARNINGS,,"Trader#d
+если достигнем тп1 то лимитку убираем",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.08977 | 0.08584; entries=0.09287),,,PARTIUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:LIMIT:0.09287,0.09494,0.08977 | 0.08584,2,1046,,,,0,,,FULL,,STOP,,,ALL_PENDING_ENTRIES,,,,,0,0,0,
+1045,PARSED,1552,"Upd : лимитку убрал
+Сделка не актуальна",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1552,signal,single,1552,1,,,,,,,,,,,,,0,0,0,
+1044,PARSED,1550,"Trader#d 
+Link ушел по бу",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1550,signal,single,1550,1,,,,,,,,,,,,,0,0,0,
+1043,PARSED,,"Trader#d
 Dolousdt Short 
 Вход по рынку риск 0.5%
 Стоп 0.07560
 Тп1 0.062
-Тп2 0.05562",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,SHORT,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1042,PARSED_WITH_WARNINGS,1556,"Trader#d
-Upd.Стоп в бу на ночь 🤝",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1556,signal,single,1556,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1038,PARSED_WITH_WARNINGS,,"[trader#d]
+Тп2 0.05562",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.062 | 0.05562),,,DOLOUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.0756,0.062 | 0.05562,2,1043,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1042,PARSED,1556,"Trader#d
+Upd.Стоп в бу на ночь 🤝",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1556,signal,single,1556,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+1041,PARSED,1557,Upd:бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1557,signal,single,1557,1,,,,,,,,,,,,,0,0,0,
+1040,PARSED,1541,Upd:Btc остатки закрываю,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1541,signal,single,1541,1,,,FULL,,,,,,,,,,0,0,0,
+1038,PARSED,,"[trader#d]
 
 MTL SHORT вход с текущих
 
@@ -221,12 +236,14 @@ MTL SHORT вход с текущих
 Тейки 
 • TP1: 0.4176
 • TP2:0.4054
-TP3; 0.3875",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,MTL,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.4176 | 0.4054,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1035,PARSED_WITH_WARNINGS,1544,"trader#D
-Zil перевожу в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1544,signal,single,1544,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1033,PARSED_WITH_WARNINGS,1570,"Trader#d
-Zil закрываю позицию полностью +0,35%",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1570,signal,single,1570,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-1028,PARSED_WITH_WARNINGS,,"[trader#d]
+TP3; 0.3875",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.4176 | 0.4054 | 0.3875),,,MTLUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.4382,0.4176 | 0.4054 | 0.3875,3,1038,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1037,PARSED,1564,upd перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1564,signal,single,1564,1,,ENTRY,,,,,,,,,,,0,0,0,
+1036,PARSED,1566,ушли в бу,,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1566,signal,single,1566,1,,,,,,,,,,,,,0,0,0,
+1035,PARSED,1544,"trader#D
+Zil перевожу в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1544,signal,single,1544,1,,,,,,,,,,,,,0,0,0,
+1033,PARSED,1570,"Trader#d
+Zil закрываю позицию полностью +0,35%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1570,signal,single,1570,1,,,FULL,,,,,,,0.35,,,0,0,0,
+1028,PARSED,,"[trader#d]
 
 Dash SHORT вход с текущих
 
@@ -237,8 +254,8 @@ Dash SHORT вход с текущих
 
 
 Тейки 
-• TP1: 52.39",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,52.39,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1025,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP1: 52.39",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=52.39),,,DASHUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,62.74,52.39,1,1028,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1025,PARSED,,"[trader#d]
 
 AXS SHORT вход лимит 1,0573
 
@@ -250,8 +267,10 @@ AXS SHORT вход лимит 1,0573
 
 Тейки 
 • TP1: 1,0049
-• TP2:0,9283",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,AXS,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,1 | 0,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1013,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP2:0,9283",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.0049 | 0.9283; entries=1.0573),,,AXSUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:LIMIT:1.0573,1.1085,1.0049 | 0.9283,2,1025,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1024,PARSED,1579,upd:Перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1579,signal,single,1579,1,,ENTRY,,,,,,,,,,,0,0,0,
+1023,PARSED,1579,upd;срезал 50% +0.15%,,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1579,signal,single,1579,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
+1013,PARSED,,"[trader#d]
 
 Pixel SHORT вход с текущих
 
@@ -263,8 +282,8 @@ Pixel SHORT вход с текущих
 
 Тейки 
 • TP1: 0.009
-• TP2: 0.008685",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.009 | 0.008685,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1008,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP2: 0.008685",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.009 | 0.008685),,,PIXELUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.009648,0.009 | 0.008685,2,1013,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1008,PARSED,,"[trader#d]
 
 Aevo SHORT вход с текущих
 
@@ -275,16 +294,21 @@ Aevo SHORT вход с текущих
 
 
 Тейки 
-• TP1: 0.04146",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.04146,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-1003,PARSED_WITH_WARNINGS,1585,"Trader#d
-Dash остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1585,signal,single,1585,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-996,PARSED_WITH_WARNINGS,,"Trader#d
+• TP1: 0.04146",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.04146),,,AEVOUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.04946,0.04146,1,1008,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+1006,PARSED,1601,Upd:перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1601,signal,single,1601,1,,ENTRY,,,,,,,,,,,0,0,0,
+1005,PARSED,1582,"Upd:лимитку снимаем.
+Сделка не актуальна",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1582,signal,single,1582,1,,,,,,,,,,,,,0,0,0,
+1004,PARSED,1603,Upd:позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,,,,0.68,,,,,False,0,,,,0,1603,signal,single,1603,1,,,,,,,,,,,,,0,0,0,
+1003,PARSED,1585,"Trader#d
+Dash остаток ушел в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1585,signal,single,1585,1,,,,,,,,,,,,,0,0,0,
+1002,PARSED,1595,"Sl.-0,5%",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1595,signal,single,1595,1,,,,,,,,,,,,,0,0,0,
+996,PARSED,,"Trader#d
 среднесрок
 Ltc Long с текущих
 риск 0,5
 sl:75.16
-tp:93.49",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,LONG,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,75.16,93.49,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-995,PARSED_WITH_WARNINGS,,"[trader#d]
+tp:93.49",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=93.49),,,LTCUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,75.16,93.49,1,996,,,,0,,,,,,,,,,,,,0,0,0,
+995,PARSED,,"[trader#d]
 
 AXS SHORT вход с текущих
 
@@ -295,8 +319,14 @@ AXS SHORT вход с текущих
 
 
 Тейки 
-• TP1: 1.1337",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,AXS,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,1.1337,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-984,PARSED_WITH_WARNINGS,,"[trader#d]
+• TP1: 1.1337",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.1337),,,AXSUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,1.3301,1.1337,1,995,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+991,PARSED,1616,Upd;стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1616,signal,single,1616,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+990,PARSED,1621,бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1621,signal,single,1621,1,,,,,,,,,,,,,0,0,0,
+989,PARSED,1622,"перезаход
+стоп 1,3085
+тп 1,1341",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1622,signal,single,1622,1,,,FULL,,TP1,,,,,,,,0,0,0,
+988,PARSED,1624,стоп -0.5,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1624,signal,single,1624,1,,,FULL,,STOP,,,,,,,,0,0,0,
+984,PARSED,,"[trader#d]
 
 Bera SHORT вход с текущих
 
@@ -308,13 +338,18 @@ Bera SHORT вход с текущих
 
 Тейки 
 • TP1:  0.772
-• TP2: 0.676",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SHORT,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,0.772 | 0.676,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-968,PARSED_WITH_WARNINGS,,"trader#d
+• TP2: 0.676",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.772 | 0.676),,,BERAUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.8872,0.772 | 0.676,2,984,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+982,PARSED,1630,перевел в бу,,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1630,signal,single,1630,1,,,,,,,,,,,,,0,0,0,
+978,PARSED,1632,Тп1 +0.3,,,U_TP_HIT,U_TP_HIT,,,,,,,,,0.68,,,,,False,0,,,,0,1632,signal,single,1632,1,,,,,TP1,,,,,,,,0,0,0,
+971,PARSED,1639,Остаток ушел в бу,,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1639,signal,single,1639,1,,,,,,,,,,,,,0,0,0,
+969,PARSED,1615,Upd: sl- 0.5,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1615,signal,single,1615,1,,,,,,,,,,,,,0,0,0,
+968,PARSED,,"trader#d
 dolo short
 вход по рынку риск 0,5
 sl 0.08116
-tp 0.05645",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.08116,0.05645,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-963,PARSED_WITH_WARNINGS,,"[trader#d]
+tp 0.05645",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.05645),,,DOLOUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.08116,0.05645,1,968,,,,0,,,,,,,,,,,,,0,0,0,
+965,PARSED,1652,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1652,signal,single,1652,1,,,FULL,,,,,,,,,,0,0,0,
+963,PARSED,,"[trader#d]
 
 BTC SHORT вход с текущих
 
@@ -326,312 +361,506 @@ BTC SHORT вход с текущих
 
 Тейки 
 • TP1: 94515
-• TP2:93530",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,BTC,SHORT,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,,94515 | 93530,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-955,PARSED_WITH_WARNINGS,,"trader#d 
+• TP2:93530",trader_d_update_missing_target,trader_d_update_missing_target,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=94515 | 93530),,,BTCUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,97968,94515 | 93530,2,963,,,,0,,,FULL,,STOP,,,,,,,,0,0,0,
+959,PARSED,1658,upd;стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1658,signal,single,1658,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+957,PARSED,1664,стоп сдвигаем в + на 96408,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1664,signal,single,1664,1,,,FULL,,STOP,,,,,,,,0,0,0,
+956,PARSED,1666,"стоп +0,1%",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1666,signal,single,1666,1,,,FULL,,STOP,,,,,0.1,,,0,0,0,
+955,PARSED,,"trader#d 
 long btc
 sl 95347
 tp1 97955
 tp2 99900
-tp3 107505",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,95347,97955 | 99900 | 107505,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-954,PARSED_WITH_WARNINGS,,"Trader#d
+tp3 107505",trader_d_update_missing_target,trader_d_update_missing_target,U_TP_HIT,U_TP_HIT,,,,,,,,,0.68,,,,,False,0,,,,0,,signal,unknown,,0,,,,,TP,,,,,,,,0,0,0,
+954,PARSED,,"Trader#d
 XRP Long
 риск 0,5
 sl 2.0673
 tp1 2.2
 tp2 2.3184
-tp3 2.415",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,XRP,,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,2.0673,2.2 | 2.3184 | 2.415,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-953,PARSED_WITH_WARNINGS,,"trader#d
+tp3 2.415",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.2 | 2.3184 | 2.415),,,XRPUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.0673,2.2 | 2.3184 | 2.415,3,954,,,,0,,,,,,,,,,,,,0,0,0,
+953,PARSED,,"trader#d
 Usual short
 риск 0,5
 sl 0.03143
 tp 0.03013
 tp2 0.02987
-tp3 0.02918",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.03143,0.03013 | 0.02987 | 0.02918,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-950,PARSED_WITH_WARNINGS,,"Trader#d
+tp3 0.02918",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03013 | 0.02987 | 0.02918),,,USUALUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.03143,0.03013 | 0.02987 | 0.02918,3,953,,,,0,,,,,,,,,,,,,0,0,0,
+952,PARSED,1670,upd перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1670,signal,single,1670,1,,ENTRY,,,,,,,,,,,0,0,0,
+951,PARSED,1671,бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1671,signal,single,1671,1,,,,,,,,,,,,,0,0,0,
+950,PARSED,,"Trader#d
 Sol Long
 риск 0,5 
 sl 141.67
 tp1 145.95
 tp2 148.93
-tp3 151",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,141.67,145.95 | 148.93 | 151,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-936,PARSED_WITH_WARNINGS,,"Trader#d
+tp3 151",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=145.95 | 148.93 | 151),,,SOLUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,141.67,145.95 | 148.93 | 151,3,950,,,,0,,,,,,,,,,,,,0,0,0,
+948,PARSED,1669,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1669,signal,single,1669,1,,,FULL,,,,,,,,,,0,0,0,
+947,PARSED,1673,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1673,signal,single,1673,1,,,FULL,,,,,,,,,,0,0,0,
+945,PARSED,1668,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1668,signal,single,1668,1,,,FULL,,,,,,,,,,0,0,0,
+936,PARSED,,"Trader#d
 Dash Short 
 рыночный риск 0,5
 sl 96.69
-tp1 75.32",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,96.69,75.32,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-926,PARSED_WITH_WARNINGS,1692,"перезаход
+tp1 75.32",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=75.32),,,DASHUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,96.69,75.32,1,936,,,,0,,,,,,,,,,,,,0,0,0,
+935,PARSED,1692,upd стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1692,signal,single,1692,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+933,PARSED,1693,позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,,,,0.68,,,,,False,0,,,,0,1693,signal,single,1693,1,,,,,,,,,,,,,0,0,0,
+926,PARSED,1692,"перезаход
 Trader#d
 Dash Short 
 рыночный риск 0,5
 sl 96.69
-tp1 75.32",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,96.69,75.32,1,1692,signal,single,1692,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-920,PARSED_WITH_WARNINGS,,"Trader#d
+tp1 75.32",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=75.32),,,DASHUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,96.69,75.32,1,926,signal,single,1692,1,,,,,,,,,,,,,0,0,0,
+923,PARSED,1703,стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1703,signal,single,1703,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+922,PARSED,1707,позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,,,,0.68,,,,,False,0,,,,0,1707,signal,single,1707,1,,,,,,,,,,,,,0,0,0,
+920,PARSED,,"Trader#d
 scrt short
 риск 0,5
 сл 0,13764
 тп1 0,12522
-тп2 0,11886",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-887,PARSED_WITH_WARNINGS,,"Trader#d
+тп2 0,11886",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.12522 | 0.11886),,,SCRTUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.13764,0.12522 | 0.11886,2,920,,,,0,,,,,,,,,,,,,0,0,0,
+915,PARSED,1710,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1710,signal,single,1710,1,,,FULL,,,,,,,,,,0,0,0,
+887,PARSED,,"Trader#d
 Axs short
 рыночный,риск 0,5
 sl 2.0839
 tp1  1.9775
-tp2 1.8968",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,2.0839,1.9775 | 1.8968,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-880,PARSED_WITH_WARNINGS,,"Trader#d
+tp2 1.8968",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.9775 | 1.8968),,,AXSUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.0839,1.9775 | 1.8968,2,887,,,,0,,,,,,,,,,,,,0,0,0,
+886,PARSED,1771,upd перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1771,signal,single,1771,1,,ENTRY,,,,,,,,,,,0,0,0,
+885,PARSED,1772,позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,,,,0.68,,,,,False,0,,,,0,1772,signal,single,1772,1,,,,,,,,,,,,,0,0,0,
+880,PARSED,,"Trader#d
  xrp long
 sl 1.9052
-tp1 2.0294",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,1.9052,2.0294,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-878,PARSED_WITH_WARNINGS,,"trader#d
+tp1 2.0294",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.0294),,,XRPUSDT,LONG,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,1.9052,2.0294,1,880,,,,0,,,,,,,,,,,,,0,0,0,
+878,PARSED,,"trader#d
 Dusk Short 0.5
 sl 0.24914
-tp1 0.18268",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.24914,0.18268,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-857,PARSED_WITH_WARNINGS,,"trader#d
+tp1 0.18268",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.18268),,,DUSKUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.24914,0.18268,1,878,,,,0,,,,,,,,,,,,,0,0,0,
+877,PARSED,1782,перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1782,signal,single,1782,1,,ENTRY,,,,,,,,,,,0,0,0,
+876,PARSED,1784,бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,1784,signal,single,1784,1,,,,,,,,,,,,,0,0,0,
+875,PARSED,1780,"Sl -0,5",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1780,signal,single,1780,1,,,FULL,,,,,,,,,,0,0,0,
+857,PARSED,,"trader#d
 Sxt short 0.5
 tp1 0.03549
-tp2 0.03281",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,0.03549 | 0.03281,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-856,PARSED_WITH_WARNINGS,,"Trader#d
+tp2 0.03281",,,U_TP_HIT,U_TP_HIT,,,,,SXTUSDT,,,,0.68,,,,,False,0,,,,0,,signal,unknown,,0,,,,,TP,,,,,,,,0,0,0,
+856,PARSED,,"Trader#d
 Pha Short 0.5
 sl 0.04743
 tp1 0.03952
-tp2  0.03636",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.04743,0.03952 | 0.03636,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-854,PARSED_WITH_WARNINGS,,"Trader#d
+tp2  0.03636",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03952 | 0.03636),,,PHAUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.04743,0.03952 | 0.03636,2,856,,,,0,,,,,,,,,,,,,0,0,0,
+854,PARSED,,"Trader#d
 Axs Short 0.5
 sl 2.56
-tp1 1.6367",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,2.56,1.6367,1,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-842,PARSED_WITH_WARNINGS,1813,"Trader#d
+tp1 1.6367",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.6367),,,AXSUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.56,1.6367,1,854,,,,0,,,,,,,,,,,,,0,0,0,
+853,PARSED,1810,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1810,signal,single,1810,1,,,FULL,,,,,,,,,,0,0,0,
+842,PARSED,1813,"Trader#d
 Фикс 70%
-Стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1813,signal,single,1813,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-823,PARSED_WITH_WARNINGS,,"Trader#d
+Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1813,signal,single,1813,1,,ENTRY,PARTIAL,0.7,STOP,,,,,70,,,0,0,0,
+837,PARSED,1811,Закрываю в бу,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1811,signal,single,1811,1,,,FULL,,,,,,,,,,0,0,0,
+836,PARSED,1828,Остаток в бу,,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1828,signal,single,1828,1,,,,,,,,,,,,,0,0,0,
+823,PARSED,,"Trader#d
 Stg short
 риск 0,5
 sl 0.20339
 tp1 0.17713
-tp2  0.16060",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.20339,0.17713 | 0.1606,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-822,PARSED_WITH_WARNINGS,,"Trader#d
+tp2  0.16060",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.17713 | 0.1606),,,STGUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.20339,0.17713 | 0.1606,2,823,,,,0,,,,,,,,,,,,,0,0,0,
+822,PARSED,,"Trader#d
 Zro Short
 риск 0,,5
 sl 2.3656
 tp1 2.1225
-tp2 1.7373",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,2.3656,2.1225 | 1.7373,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-817,PARSED_WITH_WARNINGS,,"https://t.me/c/3171748254/1864
+tp2 1.7373",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.1225 | 1.7373),,,ZROUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.3656,2.1225 | 1.7373,2,822,,,,0,,,,,,,,,,,,,0,0,0,
+821,PARSED,1861,upd стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1861,signal,single,1861,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+820,PARSED,1860,Upd стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1860,signal,single,1860,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+817,PARSED,,"https://t.me/c/3171748254/1864
 https://t.me/c/3171748254/1863
 Бу
-Trader#d",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,1864,signal_group,multiple,1864 | 1863,2,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,2,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-780,PARSED_WITH_WARNINGS,,"[trader #D]
+Trader#d",,,,,,,,,HTTPSUSDT,,,,0.2,,,,,False,0,,,,0,,signal_group,multiple,1864 | 1863,2,,,,,,,,,,,,,0,0,0,
+780,PARSED,,"[trader #D]
 Sent short риск 0,5
 sl 0.034094
 tp 0.027789
-tp2 0.026276",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.034094,0.027789 | 0.026276,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-776,PARSED_WITH_WARNINGS,1949,"[trader #D]
-upd:50% срежем rr 1;1 стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1949,signal,single,1949,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-774,PARSED_WITH_WARNINGS,1954,"[trader #D]
-Upd.остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1954,signal,single,1954,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-762,PARSED_WITH_WARNINGS,,"[trader #D]
+tp2 0.026276",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.027789 | 0.026276),,,SENTUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.034094,0.027789 | 0.026276,2,780,,,,0,,,,,,,,,,,,,0,0,0,
+776,PARSED,1949,"[trader #D]
+upd:50% срежем rr 1;1 стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1949,signal,single,1949,1,,ENTRY,PARTIAL,0.5,STOP,,,,,50,,,0,0,0,
+774,PARSED,1954,"[trader #D]
+Upd.остаток ушел в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,1954,signal,single,1954,1,,,,,,,,,,,,,0,0,0,
+762,PARSED,,"[trader #D]
 Enj шорт риск 0,5
 sl 0.02832
 тп1 0,02751
 тп 2 0,0270
-тп3 0,02669",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.02832,,0,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-761,PARSED_WITH_WARNINGS,,"[trader #D]
+тп3 0,02669",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02751 | 20.027 | 0.02669),,,ENJUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.02832,0.02751 | 20.027 | 0.02669,3,762,,,,0,,,,,,,,,,,,,0,0,0,
+761,PARSED,,"[trader #D]
 Nmr шорт риск 0,5
 sl 10.294
 tp1 9.637
 tp2 9.307
-tp3 8.909",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,10.294,9.637 | 9.307 | 8.909,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-760,PARSED_WITH_WARNINGS,1976,"[trader #D]
+tp3 8.909",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=9.637 | 9.307 | 8.909),,,NMRUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,10.294,9.637 | 9.307 | 8.909,3,761,,,,0,,,,,,,,,,,,,0,0,0,
+760,PARSED,1976,"[trader #D]
 тп1 фикс 50% +0,35%
-стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1976,signal,single,1976,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-759,PARSED_WITH_WARNINGS,1976,"[trader #D]
+стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1976,signal,single,1976,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+759,PARSED,1976,"[trader #D]
 Tp2 срезал ещё 25% +0.36%
 Остаток 25% позиции
-Стоп находится в бу",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,1976,signal,single,1976,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-757,PARSED_WITH_WARNINGS,1977,"[trader #D]
+Стоп находится в бу",,,U_MOVE_STOP,U_MOVE_STOP | U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP | CLOSE_POSITION | CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,1976,signal,single,1976,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
+757,PARSED,1977,"[trader #D]
 Tp1 срезал 50% +0.25
-Стоп в бу",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,1977,signal,single,1977,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-755,PARSED_WITH_WARNINGS,1976,"[trader #D]
-Tp3 общий профит +1.18%",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,1976,signal,single,1976,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-754,PARSED_WITH_WARNINGS,1985,"[trader #D]
+Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,1977,signal,single,1977,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+755,PARSED,1976,"[trader #D]
+Tp3 общий профит +1.18%",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT | U_TP_HIT,,,,,,,,,0.68,,,,,False,0,,,,0,1976,signal,single,1976,1,,,,,TP3,,,,,1.18,,,0,0,0,
+754,PARSED,1985,"[trader #D]
 Остаток позиции ушел по бу.
-Профит по сделке +0.25",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,1985,signal,single,1985,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-724,PARSED_WITH_WARNINGS,,"[trader #D]
+Профит по сделке +0.25",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,,,,0.2,,,,,False,0,,,,0,1985,signal,single,1985,1,,,,,,,,,,,,,0,0,0,
+724,PARSED,,"[trader #D]
 PAXG Long 
 Вход по рынку 4678 - риск 0,5
 Sl: 4457.3
 Tp1: 4895
 TP2: 4971
 TP3: 5282
-TP4: 5631",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,PAXG,LONG,UNKNOWN,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,4457.3,4895 | 4971 | 5282 | 5631,4,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-721,PARSED_WITH_WARNINGS,2070,"[trader #D]
+TP4: 5631",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=4895 | 4971 | 5282 | 5631; entries=4678),,,PAXGUSDT,LONG,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:4678,4457.3,4895 | 4971 | 5282 | 5631,4,724,,,,0,,,,,,,,,,,,,0,0,0,
+721,PARSED,2070,"[trader #D]
 Tp 1 срезал 50% +0,245 
-стоп в бу",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,1,1,2070,signal,single,2070,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-720,PARSED_WITH_WARNINGS,,"[trader #D]
+стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2070,signal,single,2070,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+720,PARSED,,"[trader #D]
 ZILUSDT Short
 вход по рынку 0,006807
 SL : 0.007371
 Tp1:0.006241
 Tp2: 0.005524
-Tp3: 0.004666",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,ZILUSDT,,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.007371,0.006241 | 0.005524 | 0.004666,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-718,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 0.004666",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.006241 | 0.005524 | 0.004666; entries=0.006807),,,ZILUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.006807,0.007371,0.006241 | 0.005524 | 0.004666,3,720,,,,0,,,,,,,,,,,,,0,0,0,
+719,PARSED,2078,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2078,signal,single,2078,1,,,FULL,,,,,,,,,,0,0,0,
+718,PARSED,,"[trader #D]
 ANKRUSDT Short
 вход по рынку 0,005723
 SL : 0.006233
 Tp1:0.00522
 Tp2: 0.005018
-Tp3: 0.004611",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,ANKRUSDT,,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.006233,0.00522 | 0.005018 | 0.004611,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-714,PARSED_WITH_WARNINGS,2070,"[trader #D]
+Tp3: 0.004611",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.00522 | 0.005018 | 0.004611; entries=0.005723),,,ANKRUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.005723,0.006233,0.00522 | 0.005018 | 0.004611,3,718,,,,0,,,,,,,,,,,,,0,0,0,
+717,PARSED,2081,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2081,signal,single,2081,1,,,FULL,,,,,,,,,,0,0,0,
+714,PARSED,2070,"[trader #D]
 TP2 срезал еще 25%
-Остаток 25%",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2070,signal,single,2070,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-690,PARSED_WITH_WARNINGS,,"[trader #D]
+Остаток 25%",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2070,signal,single,2070,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
+690,PARSED,,"[trader #D]
 BTCUSDT Long риск 0,5
 вход по рынку 75265
 SL : 72900
 Tp1: 79400
 Tp2: 81500
-Tp3: 86000",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,BTCUSDT,LONG,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,72900,79400 | 81500 | 86000,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-639,PARSED_WITH_WARNINGS,2086,"[trader #D]
-остаток ушел в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2086,signal,single,2086,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-627,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 86000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=79400 | 81500 | 86000; entries=75265),,,BTCUSDT,LONG,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:75265,72900,79400 | 81500 | 86000,3,690,,,,0,,,,,,,,,,,,,0,0,0,
+687,PARSED,2123,Sl:-0.5r,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2123,signal,single,2123,1,,,,,,,,,,,,,0,0,0,
+639,PARSED,2086,"[trader #D]
+остаток ушел в бу.",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2086,signal,single,2086,1,,,,,,,,,,,,,0,0,0,
+627,PARSED,,"[trader #D]
 PROVEUSDT SHORT риск 0,5
 вход по рынку 0.3653
 SL : 0.3946
 Tp1: 0.3388
 Tp2: 0.327
-Tp3: 0.2783",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,PROVEUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.3946,0.3388 | 0.327 | 0.2783,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-591,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 0.2783",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.3388 | 0.327 | 0.2783; entries=0.3653),,,PROVEUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.3653,0.3946,0.3388 | 0.327 | 0.2783,3,627,,,,0,,,,,,,,,,,,,0,0,0,
+621,PARSED,2206,стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2206,signal,single,2206,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+619,PARSED,2206,Upd:Бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2206,signal,single,2206,1,,,,,,,,,,,,,0,0,0,
+591,PARSED,,"[trader #D]
 VANAUSDT Short риск 0,5
 вход по рынку 1.7931
 SL : 1.9204
 Tp1: 1.66
 Tp2: 1.4933
-Tp3: 1.4224",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,VANAUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,1.9204,1.66 | 1.4933 | 1.4224,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-590,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 1.4224",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.66 | 1.4933 | 1.4224; entries=1.7931),,,VANAUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.7931,1.9204,1.66 | 1.4933 | 1.4224,3,591,,,,0,,,,,,,,,,,,,0,0,0,
+590,PARSED,,"[trader #D]
 GPSUSDT Short риск 0,5
 вход по рынку 0.013671
 SL : 0.014454
 Tp1: 0.012891
 Tp2: 0.012061
-Tp3: 0.010137",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,GPSUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.014454,0.012891 | 0.012061 | 0.010137,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-581,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 0.010137",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.012891 | 0.012061 | 0.010137; entries=0.013671),,,GPSUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.013671,0.014454,0.012891 | 0.012061 | 0.010137,3,590,,,,0,,,,,,,,,,,,,0,0,0,
+589,PARSED,2263,"ТП1 фикс 50% +0.24
+стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2263,signal,single,2263,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+588,PARSED,2264,Тп2 фикс 25% + 0.25,,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2264,signal,single,2264,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
+586,PARSED,2262,"Закрою полностью по текущим.
+Не очень нравится 
+Р +0.4%",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2262,signal,single,2262,1,,,,,,,,,,,,,0,0,0,
+584,PARSED,2265,Остаток ушел в бу,,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2265,signal,single,2265,1,,,,,,,,,,,,,0,0,0,
+581,PARSED,,"[trader #D]
 SOLUSDT LONG риск 0,5
 вход по рынку 84.43
 SL : 82.82
 Tp1: 86.2
 Tp2: 89.78
-TP3: 106.6",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,SOLUSDT,LONG,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,82.82,86.2 | 89.78 | 106.6,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-566,PARSED_WITH_WARNINGS,,"[trader #D]
+TP3: 106.6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=86.2 | 89.78 | 106.6; entries=84.43),,,SOLUSDT,LONG,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:84.43,82.82,86.2 | 89.78 | 106.6,3,581,,,,0,,,,,,,,,,,,,0,0,0,
+575,PARSED,2277,"закрываю в бу.
+не нравится",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2277,signal,single,2277,1,,,FULL,,,,,,,,,,0,0,0,
+566,PARSED,,"[trader #D]
 NILUSDT Short риск 0,5
 вход по рынку 0.06293
 SL : 0.0654
 Tp1: 0.05783
 TP2: 0.05623
-Tp3: 0.05226",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,NILUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.0654,0.05783 | 0.05623 | 0.05226,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-556,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 0.05226",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.05783 | 0.05623 | 0.05226; entries=0.06293),,,NILUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.06293,0.0654,0.05783 | 0.05623 | 0.05226,3,566,,,,0,,,,,,,,,,,,,0,0,0,
+564,PARSED,2299,Upd : Стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2299,signal,single,2299,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+562,PARSED,2299,"фикс 50% +0,25
+тяжело идет",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2299,signal,single,2299,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
+561,PARSED,2299,"стоп передвигаю в + 0,0614",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2299,signal,single,2299,1,,,FULL,,STOP,,,,,,,,0,0,0,
+560,PARSED,2299,тп 1: срезал еще 25%,,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2299,signal,single,2299,1,,,PARTIAL,0.25,TP1,,,,,25,,,0,0,0,
+557,PARSED,2299,TP2 срезал 12.5%,,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2299,signal,single,2299,1,,,PARTIAL,0.125,TP2,,,,,12.5,,,0,0,0,
+556,PARSED,,"[trader #D]
 STGUSDT Short риск 0,5
 вход по рынку 0.21256
 SL : 0.21808
 TP1: 0.19023
 TP2: 0.18384
-TP3: 0.165",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,STGUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.21808,0.19023 | 0.18384 | 0.165,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-546,PARSED_WITH_WARNINGS,,"[trader #D]
+TP3: 0.165",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.19023 | 0.18384 | 0.165; entries=0.21256),,,STGUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.21256,0.21808,0.19023 | 0.18384 | 0.165,3,556,,,,0,,,,,,,,,,,,,0,0,0,
+554,PARSED,2310,sl -0.5 поторопился.Буду искать перезаход,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2310,signal,single,2310,1,,,,,,,,,,,,,0,0,0,
+546,PARSED,,"[trader #D]
 STGUSDT Short риск 0,5
 вход по рынку 0.21714
 SL : 0.22575
 TP1: 0.19023
 TP2: 0.18384
-TP3: 0.165",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,STGUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.22575,0.19023 | 0.18384 | 0.165,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-521,PARSED_WITH_WARNINGS,2320,"Trader#D
+TP3: 0.165",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.19023 | 0.18384 | 0.165; entries=0.21714),,,STGUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.21714,0.22575,0.19023 | 0.18384 | 0.165,3,546,,,,0,,,,,,,,,,,,,0,0,0,
+528,PARSED,2320,Стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2320,signal,single,2320,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+521,PARSED,2320,"Trader#D
 Стоп в бу
-Срежем тут 60% чтобы отбить предидущий стоп)+0,59р",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2320,signal,single,2320,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-496,PARSED_WITH_WARNINGS,,"[trader #D]
+Срежем тут 60% чтобы отбить предидущий стоп)+0,59р",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2320,signal,single,2320,1,,ENTRY,PARTIAL,0.6,STOP,,,,,60,,,0,0,0,
+506,PARSED,2320,"Tp 1 
+Tp2
+Закрываем полностью",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2320,signal,single,2320,1,,,FULL,,TP,,,,,,,,0,0,0,
+504,PARSED,2299,Tp3. Сделка закрыта,,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2299,signal,single,2299,1,,,,,TP3,,,,,,,,0,0,0,
+496,PARSED,,"[trader #D]
 CVXUSDT Short риск 0,5
 вход по рынку 1.992
 SL : 2.0364
 Tp1: 1.9457
 TP2: 1.8936
-Tp3: 1.7608",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,CVXUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,2.0364,1.9457 | 1.8936 | 1.7608,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-489,PARSED_WITH_WARNINGS,2376,[trader #D] Стоп переставим в бу,profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2376,signal,single,2376,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-487,PARSED_WITH_WARNINGS,2376,"[trader #D] 
+Tp3: 1.7608",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.9457 | 1.8936 | 1.7608; entries=1.992),,,CVXUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.992,2.0364,1.9457 | 1.8936 | 1.7608,3,496,,,,0,,,,,,,,,,,,,0,0,0,
+489,PARSED,2376,[trader #D] Стоп переставим в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2376,signal,single,2376,1,,,FULL,,STOP,,,,,,,,0,0,0,
+487,PARSED,2376,"[trader #D] 
 Tp1 фикс 50% R+0,26
 стоп в бу
-Остальные 2 цели по 25%",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2376,signal,single,2376,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-482,PARSED_WITH_WARNINGS,2376,"[trader #D] 
+Остальные 2 цели по 25%",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2376,signal,single,2376,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+482,PARSED,2376,"[trader #D] 
 Tp2 фикс 25% R+0,27
-остаток 25 %",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2376,signal,single,2376,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-455,PARSED_WITH_WARNINGS,2395,"[ trader #D]
-Остаток ушел в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2395,signal,single,2395,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-437,PARSED_WITH_WARNINGS,,"[trader #D]
+остаток 25 %",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2376,signal,single,2376,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
+477,PARSED,,"Trader [ #D]
+CAKEUSDT LONG  РИСК 0,5
+Вход по рынку 1,2518
+Sl: 1.2324
+Tp1: 1.2985
+Tp2: 1.4185
+tp3; 1.6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.2985 | 1.4185 | 1.6; entries=1.2518),,,CAKEUSDT,LONG,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.2518,1.2324,1.2985 | 1.4185 | 1.6,3,477,,,,0,,,,,,,,,,,,,0,0,0,
+468,PARSED,2403,"Tp1 фикс 50%
+Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2403,signal,single,2403,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+455,PARSED,2395,"[ trader #D]
+Остаток ушел в бу.",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2395,signal,single,2395,1,,,,,,,,,,,,,0,0,0,
+437,PARSED,,"[trader #D]
 UMAUSDT Short риск 0,5
 вход по рынку 0.5912
 SL : 0.6221
 Tp1: 0.5608
 TP2: 0.546
-Tp3: 0.525",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,UMAUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.6221,0.5608 | 0.546 | 0.525,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-429,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 0.525",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.5608 | 0.546 | 0.525; entries=0.5912),,,UMAUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.5912,0.6221,0.5608 | 0.546 | 0.525,3,437,,,,0,,,,,,,,,,,,,0,0,0,
+436,PARSED,2462,Sl:-0.5,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2462,signal,single,2462,1,,,,,,,,,,,,,0,0,0,
+429,PARSED,,"[trader #D]
 ORCAUSDT Short риск 0,5
 вход по рынку 1.2628
 Sl: 1.3284
 Tp1: 1.1845
 Tp2: 1.1331
-Tp3: 1.0147",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,ORCAUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,1.3284,1.1845 | 1.1331 | 1.0147,3,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-427,PARSED_WITH_WARNINGS,2475,"[trader #D]
-тп1 фикс 50% +0,29",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2475,signal,single,2475,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-423,PARSED_WITH_WARNINGS,2479,"[trader #D]
-стоп переставляем в + на 1,2453",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2479,signal,single,2479,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-422,PARSED_WITH_WARNINGS,,"[trader #D]
+Tp3: 1.0147",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.1845 | 1.1331 | 1.0147; entries=1.2628),,,ORCAUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.2628,1.3284,1.1845 | 1.1331 | 1.0147,3,429,,,,0,,,,,,,,,,,,,0,0,0,
+428,PARSED,2475,"Стоп в б.у
+есть опасение что дадут пересвип как вчера c uma",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2475,signal,single,2475,1,,,FULL,,STOP,,,,,,,,0,0,0,
+427,PARSED,2475,"[trader #D]
+тп1 фикс 50% +0,29",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2475,signal,single,2475,1,,,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+423,PARSED,2479,"[trader #D]
+стоп переставляем в + на 1,2453",,,U_MOVE_STOP,U_MOVE_STOP | U_STOP_HIT | U_CLOSE_FULL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=1.2453) | CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2479,signal,single,2479,1,,1.2453,FULL,,STOP,,,,,,,,0,0,0,
+422,PARSED,,"[trader #D]
 JTOUSDT Short риск 0,5
 вход по рынку 0.3459
 Sl: 0.3614
 Tp1: 0.3166
-TP2: 0.2878",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,JTOUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,0.3614,0.3166 | 0.2878,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-421,PARSED_WITH_WARNINGS,2484,"[trader #D]
-Стоп в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2484,signal,single,2484,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-420,PARSED_WITH_WARNINGS,2475,"[trader #D]
-Tp 2😑",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,2,1,2475,signal,single,2475,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-419,PARSED_WITH_WARNINGS,2484,"[trader #D]
+TP2: 0.2878",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.3166 | 0.2878; entries=0.3459),,,JTOUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.3459,0.3614,0.3166 | 0.2878,2,422,,,,0,,,,,,,,,,,,,0,0,0,
+421,PARSED,2484,"[trader #D]
+Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2484,signal,single,2484,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+420,PARSED,2475,"[trader #D]
+Tp 2😑",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2475,signal,single,2475,1,,,,,,,,,,,,,0,0,0,
+419,PARSED,2484,"[trader #D]
 Срежем тут 50% +0,42р
-Первый тейк убираем",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2484,signal,single,2484,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-417,PARSED_WITH_WARNINGS,2488,[trader #D] остаток ушел в бу+,profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2488,signal,single,2488,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-415,PARSED_WITH_WARNINGS,,"[trader #D]
+Первый тейк убираем",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2484,signal,single,2484,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
+417,PARSED,2488,[trader #D] остаток ушел в бу+,,,U_EXIT_BE,U_EXIT_BE,,,,,,,,,0.68,,,,,False,0,,,,0,2488,signal,single,2488,1,,,,,,,,,,,,,0,0,0,
+415,PARSED,,"[trader #D]
 CyberUSDT Short риск 0,5
 вход по рынку 0.7346
 Sl: 0.7594
 Tp1: 0.6878
-TP2: 0.6506",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,SHORT,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,0.7594,0.6878 | 0.6506,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-414,PARSED_WITH_WARNINGS,2497,[trader #D] стоп в бу,profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2497,signal,single,2497,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-412,PARSED_WITH_WARNINGS,,"[trader #D]
+TP2: 0.6506",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6878 | 0.6506; entries=0.7346),,,CYBERUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.7346,0.7594,0.6878 | 0.6506,2,415,,,,0,,,,,,,,,,,,,0,0,0,
+414,PARSED,2497,[trader #D] стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2497,signal,single,2497,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+413,PARSED,2498,бу.поищем перезаход,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2498,signal,single,2498,1,,,,,,,,,,,,,0,0,0,
+412,PARSED,,"[trader #D]
 ETHUSDT Short риск 0,5
 вход по рынку 2019.58
 Sl: 2038.35
 Tp1: 1991
-TP2: 1936",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,ETHUSDT,SHORT,LINEAR,PARSED_WITH_WARNINGS,0.55,regex,llm_only,,,False,0,,2038.35,1991 | 1936,2,,signal,unknown,,0,unresolved,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.55; parse_status_input=PARSED; intents_count=0; actions_count=0
-411,PARSED_WITH_WARNINGS,2484,"[trader #D]
+TP2: 1936",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1991 | 1936; entries=2019.58),,,ETHUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:2019.58,2038.35,1991 | 1936,2,412,,,,0,,,,,,,,,,,,,0,0,0,
+411,PARSED,2484,"[trader #D]
 JTO закрываем полностью 0,307
-+1р",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,JTO,,UNKNOWN,PARSED_WITH_WARNINGS,0.2,regex,llm_only,,,False,0,,,,0,2484,signal,single,2484,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.2; parse_status_input=PARSED; intents_count=0; actions_count=0
-408,PARSED_WITH_WARNINGS,2501,[trader #D] стоп в бу,profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2501,signal,single,2501,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-407,PARSED_WITH_WARNINGS,2501,"[trader #D]
-Tp1 фикс 50% +0.38r😑",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2501,signal,single,2501,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-379,PARSED_WITH_WARNINGS,2501,"[trader #D]
++1р",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2484,signal,single,2484,1,,,FULL,,,,,,,,,,0,0,0,
+408,PARSED,2501,[trader #D] стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2501,signal,single,2501,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+407,PARSED,2501,"[trader #D]
+Tp1 фикс 50% +0.38r😑",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2501,signal,single,2501,1,,,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+379,PARSED,2501,"[trader #D]
 Tp2 сделка закрыта
-Общий профит +1.49р🔫",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2501,signal,single,2501,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-319,PARSED_WITH_WARNINGS,2608,"[trader #D ]
-Стоп в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2608,signal,single,2608,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-317,PARSED_WITH_WARNINGS,2593,"[trader #D ]
-Остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2593,signal,single,2593,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-293,PARSED_WITH_WARNINGS,2661,"[trader #D ]
-Tp2 фикс 25%",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2661,signal,single,2661,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-285,PARSED_WITH_WARNINGS,2664,"[trader #D ]
-Остаток позиции закрываем по текущим 31.57",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2664,signal,single,2664,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-221,PARSED_WITH_WARNINGS,2689,"[trader #D ]
+Общий профит +1.49р🔫",,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2501,signal,single,2501,1,,,,,TP2,,,,,1.49,,,0,0,0,
+370,PARSED,2403,"Trader [ #D]
+Остаток ушел в бу
++0.6r по позиции",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2403,signal,single,2403,1,,,,,,,,,,,,,0,0,0,
+353,PARSED,,"Trader [ #D]
+BIOUSDT Short  РИСК 0,5
+Вход по рынку 0.0324
+Sl: 0.03413
+Tp1: 0.03064
+Tp2: 0.02777",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03064 | 0.02777; entries=0.0324),,,BIOUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.0324,0.03413,0.03064 | 0.02777,2,353,,,,0,,,,,,,,,,,,,0,0,0,
+351,PARSED,2576,"Trader [ #D]
+Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2576,signal,single,2576,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+350,PARSED,2578,"Б.у 
+поищем перезаход",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2578,signal,single,2578,1,,,,,,,,,,,,,0,0,0,
+349,PARSED,2578,Перезаход,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2578,signal,single,2578,1,,,,,,,,,,,,,0,0,0,
+348,PARSED,,"Trader [ #D]
+BIOUSDT Short  РИСК 0,5
+Вход по рынку 0.0331
+Sl: 0.03413
+Tp1: 0.03064
+Tp2: 0.02777",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03064 | 0.02777; entries=0.0331),,,BIOUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.0331,0.03413,0.03064 | 0.02777,2,348,,,,0,,,,,,,,,,,,,0,0,0,
+347,PARSED,2581,ставим в бу),,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2581,signal,single,2581,1,,,,,,,,,,,,,0,0,0,
+340,PARSED,2581,"Trader [ #D]
+срежем тут 50% 0.03157
++0.37r",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2581,signal,single,2581,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
+339,PARSED,2581,"Trader [ #D]
+tp фикс еще 25 %
+Остаток 25%",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2581,signal,single,2581,1,,,,,,,,,,,,,0,0,0,
+325,PARSED,,"Trader [ #D]
+ENSOUSDT Short  РИСК 0,5
+Вход по рынку 1.9193
+Sl: 2.1574
+Tp1: 1.67
+Tp2: 1.4454",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.67 | 1.4454; entries=1.9193),,,ENSOUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:1.9193,2.1574,1.67 | 1.4454,2,325,,,,0,,,,,,,,,,,,,0,0,0,
+319,PARSED,2608,"[trader #D ]
+Стоп в бу.",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2608,signal,single,2608,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+317,PARSED,2593,"[trader #D ]
+Остаток ушел в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2593,signal,single,2593,1,,,,,,,,,,,,,0,0,0,
+316,PARSED,2616,Тут тоже бу 🫡,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2616,signal,single,2616,1,,,,,,,,,,,,,0,0,0,
+298,PARSED,,"Trader [ #D]
+DashUSDT Short  РИСК 0,5
+Вход по рынку 33.34
+Sl: 33.78
+Tp1: 32.87
+Tp2: 32.05
+tp3; 31.03",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=32.87 | 32.05 | 31.03; entries=33.34),,,DASHUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:33.34,33.78,32.87 | 32.05 | 31.03,3,298,,,,0,,,,,,,,,,,,,0,0,0,
+296,PARSED,2659,"Tp1 фикс 50%
+Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2659,signal,single,2659,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+293,PARSED,2661,"[trader #D ]
+Tp2 фикс 25%",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2661,signal,single,2661,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
+285,PARSED,2664,"[trader #D ]
+Остаток позиции закрываем по текущим 31.57",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2664,signal,single,2664,1,,,FULL,,,,,,,,,,0,0,0,
+284,PARSED,,"Trader [ #D]
+ESPUSDT Short  РИСК 0,5
+Вход по рынку 0.18105
+Sl: 0.19
+Tp1: 0.16618
+Tp2: 0.1335
+tp3; 0.11548",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.16618 | 0.1335 | 0.11548; entries=0.18105),,,ESPUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.18105,0.19,0.16618 | 0.1335 | 0.11548,3,284,,,,0,,,,,,,,,,,,,0,0,0,
+283,PARSED,2678,Стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2678,signal,single,2678,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+282,PARSED,2679,бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2679,signal,single,2679,1,,,,,,,,,,,,,0,0,0,
+278,PARSED,,"Trader [ #D]
+перезаход
+ESPUSDT Short  РИСК 0,5
+Вход по рынку 0.177
+Sl: 0.197
+Tp1: 0.15011
+Tp2: 0.13595
+tp3; 0.12435",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.15011 | 0.13595 | 0.12435; entries=0.177),,,ESPUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.177,0.197,0.15011 | 0.13595 | 0.12435,3,278,,,,0,,,,,,,,,,,,,0,0,0,
+275,PARSED,,"Trader [ #D]
+
+ZKUSDT Long  РИСК 0,5
+Вход по рынку 0.0192
+Sl: 0.01783
+Tp1: 0.02082
+Tp2: 0.02477",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.02082 | 0.02477; entries=0.0192),,,ZKUSDT,LONG,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.0192,0.01783,0.02082 | 0.02477,2,275,,,,0,,,,,,,,,,,,,0,0,0,
+266,PARSED,2686,"Trader [ #D]
+закрываю по текущим 0,1664",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2686,signal,single,2686,1,,,FULL,,,,,,,,,,0,0,0,
+264,PARSED,,"Trader [ #D]
+
+PHAUSDT Short  РИСК 0,5
+Вход по рынку 0.02402
+Sl: 0.025
+Tp1: 0.02281
+Tp2: 0.02195
+tp3; 0.0214",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02281 | 0.02195 | 0.0214; entries=0.02402),,,PHAUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.02402,0.025,0.02281 | 0.02195 | 0.0214,3,264,,,,0,,,,,,,,,,,,,0,0,0,
+223,PARSED,2705,Стоп  - 0.5,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2705,signal,single,2705,1,,,FULL,,STOP,,,,,,,,0,0,0,
+221,PARSED,2689,"[trader #D ]
 Срезаем тут 50% +0.25R ,
 тп 1 убираем
-Стоп в бу.",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2689,signal,single,2689,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-205,PARSED_WITH_WARNINGS,2752,"[trader #D]
-Остаток ушел в бу",profile_parser_failed:trader_d; llm_unavailable,,,,,INVALID,UNCLASSIFIED,,,,PARSED_WITH_WARNINGS,0.1,regex,llm_only,,,False,0,,,,0,2752,signal,single,2752,1,reply_or_link,,,,,,,,,,,classified=UNCLASSIFIED,0,0,2,parser_mode=llm_only; parser_used=regex; confidence=0.1; parse_status_input=PARSED; intents_count=0; actions_count=0
-196,PARSED_WITH_WARNINGS,2784,"[trader #D]
+Стоп в бу.",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2689,signal,single,2689,1,,ENTRY,FULL,,TP1,,,,,50,,,0,0,0,
+205,PARSED,2752,"[trader #D]
+Остаток ушел в бу",,,,,,,,,,,,,0.68,,,,,False,0,,,,0,2752,signal,single,2752,1,,,,,,,,,,,,,0,0,0,
+201,PARSED,,"Trader [ #D]
+
+ARBUSDT Short  РИСК 0,5
+Вход по рынку 0.11083
+Sl: 0.11294
+Tp1: 0.1082
+Tp2: 0.10375",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1082 | 0.10375; entries=0.11083),,,ARBUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.11083,0.11294,0.1082 | 0.10375,2,201,,,,0,,,,,,,,,,,,,0,0,0,
+197,PARSED,2784,стоп в бу.,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2784,signal,single,2784,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+196,PARSED,2784,"[trader #D]
 TP1 +031R
 Фикс 50%
- стоп все так же в бу",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2784,signal,single,2784,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
-195,PARSED_WITH_WARNINGS,2784,"[trader #D]
+ стоп все так же в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION | CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2784,signal,single,2784,1,,,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
+195,PARSED,2784,"[trader #D]
 Tp2 
 сделка закрыта
-профит +1,15R",profile_parser_failed:trader_d; missing mandatory setup fields; llm_unavailable,,,,,SETUP_INCOMPLETE,SETUP_INCOMPLETE,,,,PARSED_WITH_WARNINGS,0.45,regex,llm_only,,,False,0,,,,0,2784,signal,single,2784,1,reply_or_link,,,,,,,,,,,classified=SETUP_INCOMPLETE,0,0,3,parser_mode=llm_only; parser_used=regex; confidence=0.45; parse_status_input=PARSED; intents_count=0; actions_count=0
+профит +1,15R",,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2784,signal,single,2784,1,,,,,TP2,,,,,1.15,,,0,0,0,
+122,PARSED,,"Trader [ #D]
+
+PHAUSDT Short  РИСК 0,5
+Вход по рынку  0,03645
+Sl: 0.039
+Tp1: 0.03344
+Tp2: 0.02868",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.03344 | 0.02868; entries=0.03645),,,PHAUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.03645,0.039,0.03344 | 0.02868,2,122,,,,0,,,,,,,,,,,,,0,0,0,
+119,PARSED,2899,стоп  в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2899,signal,single,2899,1,,,FULL,,STOP,,,,,,,,0,0,0,
+117,PARSED,2902,Бу,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2902,signal,single,2902,1,,,,,,,,,,,,,0,0,0,
+116,PARSED,,"Trader [ #D]
+
+MUBARAKUSDT Short  РИСК 0,5
+Вход по рынку  0.015245
+Sl: 0.015531
+Tp1: 0.014923
+Tp2: 0.013575",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.014923 | 0.013575; entries=0.015245),,,MUBARAKUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:0.015245,0.015531,0.014923 | 0.013575,2,116,,,,0,,,,,,,,,,,,,0,0,0,
+115,PARSED,2906,Стоп в бу🤝,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2906,signal,single,2906,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+114,PARSED,2908,"День бу)
+Бу не минус,завтра глянем что нового дадут 🤝",,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2908,signal,single,2908,1,,,,,,,,,,,,,0,0,0,
+92,PARSED,,"Trader [ #D]
+
+AAVEUSDT Short  РИСК 0,5
+Вход по рынку  115.04
+Sl: 116.24
+Tp1: 112.9
+Tp2: 104.68",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=112.9 | 104.68; entries=115.04),,,AAVEUSDT,SHORT,,,0.82,,,SINGLE,ONE_SHOT,False,1,ENTRY:MARKET:115.04,116.24,112.9 | 104.68,2,92,,,,0,,,,,,,,,,,,,0,0,0,
+85,PARSED,2935,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,,,,0.68,,,,,False,0,,,,0,2935,signal,single,2935,1,,,FULL,,,,,,,,,,0,0,0,
+45,PARSED,,"Trader [ #D]
+
+Kiteusdt Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.28281
+Tp1:0.26261
+Tp 2:0.2242
+Tp3: 0.18147",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.26261 | 2 | 0.18147),,,KITEUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,0.28281,0.26261 | 2 | 0.18147,3,45,,,,0,,,,,,,,,,,,,0,0,0,
+44,PARSED,2992,Стоп в бу.,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,2992,signal,single,2992,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+43,PARSED,2993,Бу🤝,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,2993,signal,single,2993,1,,,,,,,,,,,,,0,0,0,
+36,PARSED,,"Trader [ #D]
+
+CVXUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 2.099
+Tp1: 2.023
+Tp 2: 1.988",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.023 | 2),,,CVXUSDT,SHORT,,,0.82,,,SINGLE_MARKET,ONE_SHOT,False,1,ENTRY:MARKET,2.099,2.023 | 2,2,36,,,,0,,,,,,,,,,,,,0,0,0,
+35,PARSED,3003,быстро однако)стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,,,,0.68,,,,,False,0,,,,0,3003,signal,single,3003,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+34,PARSED,3003,бу😂,,,,,,,,,,,,,0.2,,,,,False,0,,,,0,3003,signal,single,3003,1,,,,,,,,,,,,,0,0,0,
