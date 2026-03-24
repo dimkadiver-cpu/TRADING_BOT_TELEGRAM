@@ -204,8 +204,8 @@ class ReportingCsvExportTests(unittest.TestCase):
         self.assertEqual(row['action_types'], 'MARK_TP_HIT | ATTACH_RESULT')
         self.assertEqual(row['symbol'], 'TAOUSDT')
         self.assertEqual(row['signal_id'], '17')
-        self.assertEqual(row['target_refs'], '17')
-        self.assertEqual(row['target_refs_count'], '1')
+        self.assertEqual(row['target_refs'], '17 | 18')
+        self.assertEqual(row['target_refs_count'], '2')
         self.assertEqual(row['linking_strategy'], 'reply_or_link')
         self.assertEqual(row['hit_target'], 'TP1')
         self.assertEqual(row['tp_prices'], '1.245 | 1.31')
@@ -234,7 +234,7 @@ class ReportingCsvExportTests(unittest.TestCase):
             self.assertNotIn('normalized_json_debug', header)
             self.assertTrue(rows)
             self.assertEqual(rows[0]['action_types'], 'MARK_TP_HIT | ATTACH_RESULT')
-            self.assertEqual(rows[0]['target_refs_count'], '1')
+            self.assertEqual(rows[0]['target_refs_count'], '2')
         finally:
             for suffix in ('', '-wal', '-shm'):
                 try:
@@ -405,6 +405,53 @@ class ReportingCsvExportTests(unittest.TestCase):
         self.assertEqual(row['entries_summary'], 'RANGE_LOW:LIMIT:100000 | RANGE_HIGH:LIMIT:101600')
         self.assertEqual(row['tp_prices'], '102000 | 103000 | 105000')
         self.assertEqual(row['stop_loss_price'], '97000')
+
+    def test_build_report_row_filters_update_warning_for_new_signal(self) -> None:
+        row = build_report_row(
+            raw_message_id=1001,
+            parse_status='PARSED',
+            reply_to_message_id=None,
+            raw_text='BTCUSDT long',
+            warning_text='',
+            normalized={
+                'message_type': 'NEW_SIGNAL',
+                'warnings': ['ambiguous_update_without_target', 'missing_stop_loss'],
+            },
+            scope='NEW_SIGNAL',
+        )
+        self.assertEqual(row['warnings_summary'], 'missing_stop_loss')
+
+    def test_build_report_row_keeps_update_warning_for_ambiguous_update(self) -> None:
+        row = build_report_row(
+            raw_message_id=1002,
+            parse_status='PARSED',
+            reply_to_message_id=None,
+            raw_text='Move SL now',
+            warning_text='',
+            normalized={
+                'message_type': 'UPDATE',
+                'warnings': ['ambiguous_update_without_target'],
+                'target_scope': {'kind': 'signal', 'scope': 'unknown'},
+            },
+            scope='UPDATE',
+        )
+        self.assertEqual(row['warnings_summary'], 'ambiguous_update_without_target')
+
+    def test_build_report_row_suppresses_missing_target_for_explicit_global_update(self) -> None:
+        row = build_report_row(
+            raw_message_id=1003,
+            parse_status='PARSED',
+            reply_to_message_id=None,
+            raw_text='Close all longs now',
+            warning_text='',
+            normalized={
+                'message_type': 'UPDATE',
+                'warnings': ['missing_target', 'other_warning'],
+                'target_scope': {'kind': 'signal_group', 'scope': 'multiple'},
+            },
+            scope='UPDATE',
+        )
+        self.assertEqual(row['warnings_summary'], 'other_warning')
 
 
 if __name__ == '__main__':
