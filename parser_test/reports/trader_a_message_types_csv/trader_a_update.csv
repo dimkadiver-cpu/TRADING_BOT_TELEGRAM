@@ -1,31 +1,31 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1956,PARSED,229,Можно переставить стоп на точку входа. С учетом усреднения у меня точка входа 1.1340,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,229,signal,single,229,1,,ENTRY,,,,,,,,,,,0,0,0,
-1955,PARSED,202,"[trader#A]
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1956,UPDATE,PARSED,trader_a,3171748254,262,229,2025-11-11T07:13:14+00:00,Можно переставить стоп на точку входа. С учетом усреднения у меня точка входа 1.1340,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 229}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1955,UPDATE,PARSED,trader_a,3171748254,263,202,2025-11-11T07:13:53+00:00,"[trader#A]
 
-К сожалению стоп. Словили -1,5%",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,202,signal,single,202,1,,,,,STOP,,,,,,,,0,0,0,
-1938,PARSED,229,"[trader#A]
+К сожалению стоп. Словили -1,5%",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 202}]",[],"{""hit_target"": ""STOP""}",[]
+1938,UPDATE,PARSED,trader_a,3171748254,280,229,2025-11-11T18:29:21+00:00,"[trader#A]
 
 1 тейк, заработали 19.7% чистого движения. Стоп обязательно на точку входа, кто не закрывал позицию.
 
-Поздравляю!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,229,signal,single,229,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1937,PARSED,270,"[trader#A]
+Поздравляю!",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 229}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_percent"": 19.7}",[]
+1937,UPDATE,PARSED,trader_a,3171748254,281,270,2025-11-11T20:13:07+00:00,"[trader#A]
 
 1 тейк, стоп на точку входа. Лимитку на усреднение обязательно убираем
 
-Поздравляю с 2.48% чистого движения!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,270,signal,single,270,1,,ENTRY,,,TP1,,,TARGETED,,,,,0,0,0,
-1935,PARSED,282,"[trader#A]
+Поздравляю с 2.48% чистого движения!",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 270}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""cancel_scope"": ""TARGETED"", ""result_percent"": 2.48}",[]
+1935,UPDATE,PARSED,trader_a,3171748254,283,282,2025-11-12T05:10:49+00:00,"[trader#A]
 
-Лимитка. Моя средняя 0.1541",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,282,signal,single,282,1,,,,,,FILLED,,,,,,,0,0,0,
-1934,PARSED,270,"[trader#A]
+Лимитка. Моя средняя 0.1541",,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 282}]",[],"{""fill_state"": ""FILLED""}",[]
+1934,UPDATE,PARSED,trader_a,3171748254,284,270,2025-11-12T05:40:52+00:00,"[trader#A]
 
-После первого тейка, цена вернулась на точку входа и закрылась в безубыток. Сетап полностью закрыт",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,270,signal,single,270,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-1933,PARSED,,"[trader#A]
+После первого тейка, цена вернулась на точку входа и закрылась в безубыток. Сетап полностью закрыт",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 270}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+1933,UPDATE,PARSED,trader_a,3171748254,285,,2025-11-12T06:24:22+00:00,"[trader#A]
 
 https://t.me/c/3171748254/265
 https://t.me/c/3171748254/266
 
-по этим сетапам стоп нужно обязательно поставить на точку входа и убрать все лимитные ордера",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,265 | 266,2,,ENTRY,,,,,,TARGETED,,,,,0,0,0,
-1930,PARSED,287,"На примере этого сигнала объясню как я работаю со сделкой. Делать также или нет - решение полностью ваше
+по этим сетапам стоп нужно обязательно поставить на точку входа и убрать все лимитные ордера",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/265""}, {""kind"": ""message_id"", ""ref"": 265}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/266""}, {""kind"": ""message_id"", ""ref"": 266}]",[],"{""new_stop_level"": ""ENTRY"", ""cancel_scope"": ""TARGETED""}",[]
+1930,UPDATE,PARSED,trader_a,3171748254,288,287,2025-11-12T06:55:37+00:00,"На примере этого сигнала объясню как я работаю со сделкой. Делать также или нет - решение полностью ваше
 
 
  SEIUSDT.P — ЛОНГ (с текущих). Как работать
@@ -65,58 +65,58 @@ https://t.me/c/3171748254/266
 Запреты
 
 * Только 2 входа. Доборов «по пути» нет.
-* Стоп «в минус» не переносим. Тянем только после цели-1.",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,287,signal,single,287,1,,ENTRY,,,,,,,,,,,0,0,0,
-1929,PARSED,282,"[trader#A]
+* Стоп «в минус» не переносим. Тянем только после цели-1.",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 287}]",[],"{""new_stop_level"": ""ENTRY"", ""result_percent"": 1.0}",[]
+1929,UPDATE,PARSED,trader_a,3171748254,289,282,2025-11-12T06:58:20+00:00,"[trader#A]
 
-К сожалению стоп - 4.8%",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,282,signal,single,282,1,,,,,STOP,,,,,,,,0,0,0,
-1917,PARSED,286,"[trader#A]
+К сожалению стоп - 4.8%",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 282}]",[],"{""hit_target"": ""STOP""}",[]
+1917,UPDATE,PARSED,trader_a,3171748254,301,286,2025-11-12T13:51:57+00:00,"[trader#A]
 
 1 тейк!
 Поздравляю, заработали 2.4% чистого движения
 
-Стоп обязательно на точку входа и убираем лимтку на усреднение",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,286,signal,single,286,1,,ENTRY,,,TP1,,,TARGETED,,,,,0,0,0,
-1895,PARSED,310,"[trader#A]
+Стоп обязательно на точку входа и убираем лимтку на усреднение",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 286}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""cancel_scope"": ""TARGETED"", ""result_percent"": 2.4}",[]
+1895,UPDATE,PARSED,trader_a,3171748254,326,310,2025-11-13T16:27:34+00:00,"[trader#A]
 
 тут был стоп, убыток -2.5%
 
-весь день уделил внимание этому стопу, нашел ошибку, в дальнейшем не должна повториться",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,310,signal,single,310,1,,,,,STOP,,,,,,,,0,0,0,
-1889,PARSED,309,"[trader#A]
+весь день уделил внимание этому стопу, нашел ошибку, в дальнейшем не должна повториться",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 310}]",[],"{""hit_target"": ""STOP"", ""result_percent"": -2.5}",[]
+1889,UPDATE,PARSED,trader_a,3171748254,332,309,2025-11-13T18:12:35+00:00,"[trader#A]
 
 1 тейк!
 
 Поздравляю! Заработали чистыми 4.38%, а кто усреднял, около 6.5%
 
-Стоп на точку входа, обязательно!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,309,signal,single,309,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1881,PARSED,304,"[trader#A]
+Стоп на точку входа, обязательно!",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 309}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_percent"": 4.38}",[]
+1881,UPDATE,PARSED,trader_a,3171748254,340,304,2025-11-13T20:09:05+00:00,"[trader#A]
 
 1 тейк!
 
 Поздравляю, заработали 5.5%
 
-Стоп на точку входа. Лимитку на усреднение убираем",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,304,signal,single,304,1,,ENTRY,,,TP1,,,TARGETED,,,,,0,0,0,
-1877,PARSED,311,"[trader#A]
+Стоп на точку входа. Лимитку на усреднение убираем",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 304}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""cancel_scope"": ""TARGETED"", ""result_percent"": 5.5}",[]
+1877,UPDATE,PARSED,trader_a,3171748254,344,311,2025-11-13T20:36:02+00:00,"[trader#A]
 
 Закрываю сделку у первого тейка, заработали 6%
 
-Поздравляю!",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,311,signal,single,311,1,,,FULL,,TP,,,,,,,,0,0,0,
-1875,PARSED,229,"Закрываю полностью сделку!
+Поздравляю!",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 311}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""TP"", ""result_percent"": 6.0}",[]
+1875,UPDATE,PARSED,trader_a,3171748254,346,229,2025-11-13T20:48:15+00:00,"Закрываю полностью сделку!
 
 Заработали чистыми 31.2%
 
-Поздравляю",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,229,signal,single,229,1,,,FULL,,,,,,,,,,0,0,0,
-1865,PARSED,309,"[trader#A]
+Поздравляю",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 229}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 31.2}",[]
+1865,UPDATE,PARSED,trader_a,3171748254,356,309,2025-11-14T09:38:35+00:00,"[trader#A]
 
 2 тейк. Итого 10,5% чистого движения
 
-Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,309,signal,single,309,1,,,,,TP2,,,,,,,,0,0,0,
-1861,PARSED,304,"[trader#A]
+Поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 309}]",[],"{""hit_target"": ""TP2"", ""result_percent"": 10.5}",[]
+1861,UPDATE,PARSED,trader_a,3171748254,361,304,2025-11-14T12:58:21+00:00,"[trader#A]
 
 2 тейк
 
 уже 8% чистого движения
 
-Поздравляю!",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,304,signal,single,304,1,,,,,TP2,,,,,,,,0,0,0,
-1849,PARSED,312,"[trader#A]
+Поздравляю!",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 304}]",[],"{""hit_target"": ""TP2"", ""result_percent"": 8.0}",[]
+1849,UPDATE,PARSED,trader_a,3171748254,373,312,2025-11-15T04:23:54+00:00,"[trader#A]
 
 1 тейк! 
 
@@ -124,8 +124,8 @@ https://t.me/c/3171748254/266
 
 Стоп на точку входа, лимитку убираем.
 
-Поздравляю!",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,312,signal,single,312,1,,ENTRY,,,TP1,,,TARGETED,,,,,0,0,0,
-1842,PARSED,338,"[trader#A]
+Поздравляю!",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 312}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""cancel_scope"": ""TARGETED"", ""result_percent"": 10.5}",[]
+1842,UPDATE,PARSED,trader_a,3171748254,382,338,2025-11-15T13:54:32+00:00,"[trader#A]
 
 К сожалению стоп. С учетом усреднения -11%
 
@@ -133,20 +133,20 @@ https://t.me/c/3171748254/266
 
 Заходить повторно не будем.
 
-Всегда говорю, что стоп это защита от ликвидации",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,338,signal,single,338,1,,,,,STOP,,,,,,,,0,0,0,
-1835,PARSED,385,"[trader#A]
+Всегда говорю, что стоп это защита от ликвидации",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 338}]",[],"{""hit_target"": ""STOP""}",[]
+1835,UPDATE,PARSED,trader_a,3171748254,389,385,2025-11-15T22:45:55+00:00,"[trader#A]
 
 1 тейк! Чистыми 22% 
 
 Стоп в бу и убираем лимитку
 
-Поздравляю",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,385,signal,single,385,1,,ENTRY,,,TP1,,,TARGETED,,,,,0,0,0,
-1830,PARSED,200,"[trader#A]
+Поздравляю",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 385}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""cancel_scope"": ""TARGETED"", ""result_percent"": 22.0}",[]
+1830,UPDATE,PARSED,trader_a,3171748254,395,200,2025-11-16T10:07:25+00:00,"[trader#A]
 
 Очередной тейк. Чистыми 19% 
 
-Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CANCEL_PENDING_ORDERS | U_TP_HIT,MOVE_STOP | CANCEL_PENDING,MOVE_STOP(new_stop_level=ENTRY) | CANCEL_PENDING,,,,0.7,,,,200,signal,single,200,1,,ENTRY,,,TP,,,TARGETED,,,,,0,0,0,
-1829,PARSED,391,"[trader#A]
+Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CANCEL_PENDING_ORDERS"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 200}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP"", ""cancel_scope"": ""TARGETED"", ""result_percent"": 19.0}",[]
+1829,UPDATE,PARSED,trader_a,3171748254,398,391,2025-11-16T11:09:33+00:00,"[trader#A]
 
 Взяли лимитку.
 
@@ -156,178 +156,178 @@ https://t.me/c/3171748254/266
 
 Оставшуюся часть позиции тянуть по остальным тейкам. 
 
-При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,391,signal,single,391,1,,,,,,FILLED,,,,,,,0,0,0,
-1826,PARSED,357,"[trader#A]
+При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа",,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 391}]",[],"{""fill_state"": ""FILLED"", ""result_percent"": 80.0}",[]
+1826,UPDATE,PARSED,trader_a,3171748254,401,357,2025-11-16T15:54:23+00:00,"[trader#A]
 
 1 тейк, чистыми 8%
 
 Поздравляю. стоп в бу
 
-Спасибо за вашу поддержку в виде реакций на мои посты",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,357,signal,single,357,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1825,PARSED,383,"[trader#A]
+Спасибо за вашу поддержку в виде реакций на мои посты",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 357}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_percent"": 8.0}",[]
+1825,UPDATE,PARSED,trader_a,3171748254,405,383,2025-11-16T17:55:51+00:00,"[trader#A]
 
 1 тейк 
 
 Стоп в бу
 
-Поздравляю",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,383,signal,single,383,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1824,PARSED,,"[trader#A]
+Поздравляю",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 383}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+1824,UPDATE,PARSED,trader_a,3171748254,406,,2025-11-16T18:00:37+00:00,"[trader#A]
 
 
-По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal,unknown,,0,,ENTRY,,,,,,,,,,,0,0,0,
-1823,PARSED,,"[trader#A]
+По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],[],[],"{""new_stop_level"": ""ENTRY""}",[]
+1823,UPDATE,PARSED,trader_a,3171748254,407,,2025-11-16T18:08:28+00:00,"[trader#A]
 
 https://t.me/c/3171748254/379
 
 https://t.me/c/3171748254/290
 
-Вот по этим шортам стоп должен стоять в безубытке",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,379 | 290,2,,ENTRY,,,,,,,,,,,0,0,0,
-1820,PARSED,379,Закрылись в бу. Не перезаходим,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,379,signal,single,379,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-1815,PARSED,410,"Взяли лимитку. Не забываем про стопы. Должны стоять обязателно
+Вот по этим шортам стоп должен стоять в безубытке",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/379""}, {""kind"": ""message_id"", ""ref"": 379}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/290""}, {""kind"": ""message_id"", ""ref"": 290}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1820,UPDATE,PARSED,trader_a,3171748254,411,379,2025-11-17T05:14:12+00:00,Закрылись в бу. Не перезаходим,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 379}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+1815,UPDATE,PARSED,trader_a,3171748254,416,410,2025-11-17T07:50:06+00:00,"Взяли лимитку. Не забываем про стопы. Должны стоять обязателно
 
-Повторюсь: стоп - это защита от ликвидации",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,410,signal,single,410,1,,,,,,FILLED,,,,,,,0,0,0,
-1810,PARSED,417,"[trader#A]
+Повторюсь: стоп - это защита от ликвидации",,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 410}]",[],"{""fill_state"": ""FILLED""}",[]
+1810,UPDATE,PARSED,trader_a,3171748254,425,417,2025-11-17T19:02:00+00:00,"[trader#A]
 
 Так, тут тейк. 8.8%
 
-Поздравляю. Стоп на точку входа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,417,signal,single,417,1,,ENTRY,,,TP,,,,,,,,0,0,0,
-1808,PARSED,391,"[trader#A]
+Поздравляю. Стоп на точку входа",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 417}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP"", ""result_percent"": 8.8}",[]
+1808,UPDATE,PARSED,trader_a,3171748254,432,391,2025-11-18T03:59:25+00:00,"[trader#A]
 
-Очень не приятный стоп.",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,391,signal,single,391,1,,,,,STOP,,,,,,,,0,0,0,
-1807,PARSED,410,"Давайте прикроем, после усреднения находится около точки входа, убыток будет меньше 1%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,410,signal,single,410,1,,,FULL,,,,,,,,,,0,0,0,
-1806,PARSED,290,"Закрылся в безубыток 
+Очень не приятный стоп.",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 391}]",[],"{""hit_target"": ""STOP""}",[]
+1807,UPDATE,PARSED,trader_a,3171748254,433,410,2025-11-18T05:51:12+00:00,"Давайте прикроем, после усреднения находится около точки входа, убыток будет меньше 1%",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 410}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 1.0}",[]
+1806,UPDATE,PARSED,trader_a,3171748254,434,290,2025-11-18T06:04:44+00:00,"Закрылся в безубыток 
 
-https://t.me/c/3171748254/407 тут писал о том, что необходимо поставить стоп на точку входа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,290 | 407,2,,ENTRY,,,,,,,,,,,0,0,0,
-1799,PARSED,200,"[trader#A]
+https://t.me/c/3171748254/407 тут писал о том, что необходимо поставить стоп на точку входа",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 290}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/407""}, {""kind"": ""message_id"", ""ref"": 407}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1799,UPDATE,PARSED,trader_a,3171748254,443,200,2025-11-18T09:42:02+00:00,"[trader#A]
 
 
 2 тейк 
 29%  чистыми
 
-поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,200,signal,single,200,1,,,,,TP2,,,,,,,,0,0,0,
-1779,PARSED,444,"[trader#A]
+поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 200}]",[],"{""hit_target"": ""TP2"", ""result_percent"": 29.0}",[]
+1779,UPDATE,PARSED,trader_a,3171748254,469,444,2025-11-20T02:21:36+00:00,"[trader#A]
 
 1 тейк.
 
-Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,444,signal,single,444,1,,,,,TP1,,,,,,,,0,0,0,
-1773,PARSED,444,"[trader#A]
+Поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 444}]",[],"{""hit_target"": ""TP1""}",[]
+1773,UPDATE,PARSED,trader_a,3171748254,477,444,2025-11-20T08:33:36+00:00,"[trader#A]
 
 
 убираю 2 и 3 тейк, добавлю тейк спота, чтобы получить красивый pnl и немного заработать
 
-стоп поставить обязательно чуть выше точки входа",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,444,signal,single,444,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-1771,PARSED,478,"[trader#A]
+стоп поставить обязательно чуть выше точки входа",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 444}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+1771,UPDATE,PARSED,trader_a,3171748254,483,478,2025-11-20T13:29:58+00:00,"[trader#A]
 
 1 тейк, стоп на точку входа
 
-поздравляю",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,478,signal,single,478,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1768,PARSED,439,"[trader#A]
+поздравляю",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 478}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+1768,UPDATE,PARSED,trader_a,3171748254,486,439,2025-11-20T15:56:35+00:00,"[trader#A]
 
-закрываю в убыток. -1.5%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,439,signal,single,439,1,,,FULL,,,,,,,,,,0,0,0,
-1767,PARSED,450,"[trader#A]
+закрываю в убыток. -1.5%",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 439}]",[],"{""close_scope"": ""FULL"", ""result_percent"": -1.5}",[]
+1767,UPDATE,PARSED,trader_a,3171748254,487,450,2025-11-20T15:57:07+00:00,"[trader#A]
 
-закрываю в убыток 3%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,450,signal,single,450,1,,,FULL,,,,,,,,,,0,0,0,
-1766,PARSED,470,"[trader#A]
+закрываю в убыток 3%",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 450}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 3.0}",[]
+1766,UPDATE,PARSED,trader_a,3171748254,488,470,2025-11-20T15:59:03+00:00,"[trader#A]
 
-закрываю по текущим. чуть меньше 1% прибыли",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,470,signal,single,470,1,,,FULL,,,,,,,,,,0,0,0,
-1765,PARSED,452,"[trader#A]
+закрываю по текущим. чуть меньше 1% прибыли",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 470}]",[],"{""close_scope"": ""FULL""}",[]
+1765,UPDATE,PARSED,trader_a,3171748254,489,452,2025-11-20T15:59:25+00:00,"[trader#A]
 
-закрываю по текущим на точке входа",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,452,signal,single,452,1,,,FULL,,,,,,,,,,0,0,0,
-1764,PARSED,418,"[trader#A]
+закрываю по текущим на точке входа",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 452}]",[],"{""close_scope"": ""FULL""}",[]
+1764,UPDATE,PARSED,trader_a,3171748254,490,418,2025-11-20T16:00:58+00:00,"[trader#A]
 
-закрываю. не приятный минус",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,418,signal,single,418,1,,,FULL,,,,,,,,,,0,0,0,
-1763,PARSED,484,"[trader#A]
+закрываю. не приятный минус",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 418}]",[],"{""close_scope"": ""FULL""}",[]
+1763,UPDATE,PARSED,trader_a,3171748254,492,484,2025-11-20T17:07:54+00:00,"[trader#A]
 
-1 тейк. поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,484,signal,single,484,1,,,,,TP1,,,,,,,,0,0,0,
-1762,PARSED,485,"[trader#A]
+1 тейк. поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 484}]",[],"{""hit_target"": ""TP1""}",[]
+1762,UPDATE,PARSED,trader_a,3171748254,493,485,2025-11-20T17:19:10+00:00,"[trader#A]
 
 1 тейк. поздравляю
 
 хоть немного минуса прикрыли
 
-по шортам стоп на точку входа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,TAKE_PROFIT | MOVE_STOP,TAKE_PROFIT(targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=SELECTOR}),,,,0.7,,,,485,signal,single,485,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1758,PARSED,484,"[trader#A]
+по шортам стоп на точку входа",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 485}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+1758,UPDATE,PARSED,trader_a,3171748254,497,484,2025-11-21T07:37:07+00:00,"[trader#A]
 
-2 тейк. Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,484,signal,single,484,1,,,,,TP2,,,,,,,,0,0,0,
-1757,PARSED,485,"[trader#A]
+2 тейк. Поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 484}]",[],"{""hit_target"": ""TP2""}",[]
+1757,UPDATE,PARSED,trader_a,3171748254,498,485,2025-11-21T07:37:43+00:00,"[trader#A]
 
-2 тейк. Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,485,signal,single,485,1,,,,,TP2,,,,,,,,0,0,0,
-1754,PARSED,496,Взяли лимитку. Моя средняя 0.4770,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,496,signal,single,496,1,,,,,,FILLED,,,,,,,0,0,0,
-1753,PARSED,496,"[trader#A]
+2 тейк. Поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 485}]",[],"{""hit_target"": ""TP2""}",[]
+1754,UPDATE,PARSED,trader_a,3171748254,506,496,2025-11-21T10:10:48+00:00,Взяли лимитку. Моя средняя 0.4770,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 496}]",[],"{""fill_state"": ""FILLED""}",[]
+1753,UPDATE,PARSED,trader_a,3171748254,514,496,2025-11-21T13:54:06+00:00,"[trader#A]
 
-Увы стоп. Была надежда на отскок. Но учитывая вход на 0.3% от депозита, то убыток хоть и не приятный, но не такой уж и большой, как мог быть",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,496,signal,single,496,1,,,,,STOP,,,,,,,,0,0,0,
-1751,PARSED,516,"Отбой, модель сбойнула и не учла важные параметры расчета сетапа
+Увы стоп. Была надежда на отскок. Но учитывая вход на 0.3% от депозита, то убыток хоть и не приятный, но не такой уж и большой, как мог быть",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 496}]",[],"{""hit_target"": ""STOP"", ""result_percent"": 0.3}",[]
+1751,UPDATE,PARSED,trader_a,3171748254,517,516,2025-11-21T16:58:46+00:00,"Отбой, модель сбойнула и не учла важные параметры расчета сетапа
 
-3.2% убытка закрываю",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,516,signal,single,516,1,,,FULL,,,,,,,,,,0,0,0,
-1746,PARSED,484,"закрываю полностью сделку, заработали более 20%
+3.2% убытка закрываю",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 516}]",[],"{""close_scope"": ""FULL""}",[]
+1746,UPDATE,PARSED,trader_a,3171748254,523,484,2025-11-22T06:21:44+00:00,"закрываю полностью сделку, заработали более 20%
 
-поздравляю",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,484,signal,single,484,1,,,FULL,,,,,,,,,,0,0,0,
-1739,PARSED,527,"[trader#A]
+поздравляю",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 484}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 20.0}",[]
+1739,UPDATE,PARSED,trader_a,3171748254,536,527,2025-11-23T05:45:46+00:00,"[trader#A]
 
 Давайте стоп поставим на точку входа, точнее немного выше, чтобы отбить комиссию, 1 тейк должны сегодня забрать
 
-p.s. если возьмет стоп, значит чуть ниже перезайдем",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,527,signal,single,527,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1729,PARSED,527,"фиксирую 70% позиции. 4% чистого движения.
+p.s. если возьмет стоп, значит чуть ниже перезайдем",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 527}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+1729,UPDATE,PARSED,trader_a,3171748254,551,527,2025-11-23T15:59:57+00:00,"фиксирую 70% позиции. 4% чистого движения.
 
 поздравляю
 
 
 З.ы. Тейк был. Но засчитаю себе только 4%
 
-Лимитку на усреднение можно убрать. Стоп обязательно чуть выше точки входа",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,527,signal,single,527,1,,,,,STOP,,,,,,,,0,0,0,
-1722,PARSED,550,"Понедельник начинается не с плюса... -16%. Больно. Но у нас висят лонговые сделки, которые с лихвой перекроют эту убыточную сделку
+Лимитку на усреднение можно убрать. Стоп обязательно чуть выше точки входа",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 527}]",[],"{""hit_target"": ""STOP"", ""result_percent"": 70.0}",[]
+1722,UPDATE,PARSED,trader_a,3171748254,564,550,2025-11-24T16:47:41+00:00,"Понедельник начинается не с плюса... -16%. Больно. Но у нас висят лонговые сделки, которые с лихвой перекроют эту убыточную сделку
 
 Такие минуса тоже нужны, чтобы отрезветь от постоянных плюсов.
 
-Продолжаем работать и ждать тейков по лонгам",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,550,signal,single,550,1,,,,,TP,,,,,,,,0,0,0,
-1721,PARSED,549,еще один стоп в копилку -8%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,549,signal,single,549,1,,,,,STOP,,,,,,,,0,0,0,
-1720,PARSED,520,"1 тейк. с учетом усреднения 10% 
+Продолжаем работать и ждать тейков по лонгам",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 550}]",[],"{""hit_target"": ""TP""}",[]
+1721,UPDATE,PARSED,trader_a,3171748254,565,549,2025-11-24T17:27:39+00:00,еще один стоп в копилку -8%,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 549}]",[],"{""hit_target"": ""STOP""}",[]
+1720,UPDATE,PARSED,trader_a,3171748254,566,520,2025-11-24T17:59:15+00:00,"1 тейк. с учетом усреднения 10% 
 
-Поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,520,signal,single,520,1,,,,,TP1,,,,,,,,0,0,0,
-1704,PARSED,518,"1  тейк. с учетом усреднения +13%
+Поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 520}]",[],"{""hit_target"": ""TP1"", ""result_percent"": 10.0}",[]
+1704,UPDATE,PARSED,trader_a,3171748254,586,518,2025-11-25T04:40:09+00:00,"1  тейк. с учетом усреднения +13%
 
 Поздравляю. Стопы по ARB и FART вернули (с учетом тейка https://t.me/c/3171748254/566) и даже заработали сверху 4%
 
-обязательно стоп в безубыток",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,518 | 566,2,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1698,PARSED,,"[trader#A]
+обязательно стоп в безубыток",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 518}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/566""}, {""kind"": ""message_id"", ""ref"": 566}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_percent"": 13.0}",[]
+1698,UPDATE,PARSED,trader_a,3171748254,612,,2025-11-25T19:28:19+00:00,"[trader#A]
 
-Все лонги закрываю на текущих отметках, не нравится рынок.",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=SELECTOR}),,,,0.7,,,,,signal,unknown,,0,,,ALL_LONGS,,,,,,,,,,0,0,0,
-1659,PARSED,672,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,672,signal,single,672,1,,,,,TP1,,,,,,,,0,0,0,
-1655,PARSED,674,стоп 1.4%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,674,signal,single,674,1,,,,,STOP,,,,,,,,0,0,0,
-1649,PARSED,672,2 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,672,signal,single,672,1,,,,,TP2,,,,,,,,0,0,0,
-1648,PARSED,673,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,673,signal,single,673,1,,,,,TP1,,,,,,,,0,0,0,
-1647,PARSED,675,3 тейка. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,675,signal,single,675,1,,,,,TP,,,,,,,,0,0,0,
-1646,PARSED,677,3 тейка. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,677,signal,single,677,1,,,,,TP,,,,,,,,0,0,0,
-1645,PARSED,613,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,613,signal,single,613,1,,,,,TP1,,,,,,,,0,0,0,
-1644,PARSED,579,стоп. 7.1%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,579,signal,single,579,1,,,,,STOP,,,,,,,,0,0,0,
-1635,PARSED,704,"Декабрь начинаем со стопа.  
+Все лонги закрываю на текущих отметках, не нравится рынок.",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],[],[],"{""close_scope"": ""ALL_LONGS""}",[]
+1659,UPDATE,PARSED,trader_a,3171748254,683,672,2025-11-30T10:45:35+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 672}]",[],"{""hit_target"": ""TP1""}",[]
+1655,UPDATE,PARSED,trader_a,3171748254,687,674,2025-11-30T13:44:45+00:00,стоп 1.4%,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 674}]",[],"{""hit_target"": ""STOP""}",[]
+1649,UPDATE,PARSED,trader_a,3171748254,698,672,2025-12-01T03:47:39+00:00,2 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 672}]",[],"{""hit_target"": ""TP2""}",[]
+1648,UPDATE,PARSED,trader_a,3171748254,699,673,2025-12-01T03:48:12+00:00,1 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 673}]",[],"{""hit_target"": ""TP1""}",[]
+1647,UPDATE,PARSED,trader_a,3171748254,700,675,2025-12-01T03:48:35+00:00,3 тейка. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 675}]",[],"{""hit_target"": ""TP""}",[]
+1646,UPDATE,PARSED,trader_a,3171748254,701,677,2025-12-01T03:48:58+00:00,3 тейка. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 677}]",[],"{""hit_target"": ""TP""}",[]
+1645,UPDATE,PARSED,trader_a,3171748254,702,613,2025-12-01T03:56:50+00:00,1 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 613}]",[],"{""hit_target"": ""TP1""}",[]
+1644,UPDATE,PARSED,trader_a,3171748254,703,579,2025-12-01T04:03:33+00:00,стоп. 7.1%,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 579}]",[],"{""hit_target"": ""STOP""}",[]
+1635,UPDATE,PARSED,trader_a,3171748254,714,704,2025-12-01T10:45:02+00:00,"Декабрь начинаем со стопа.  
 
 1.1% убытка
 
-если соблюдаете РМ (1-2% от депозита), то данный минус полная ерунда для вас. Всегда важна дистанция",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,704,signal,single,704,1,,,,,STOP,,,,,,,,0,0,0,
-1621,PARSED,707,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,707,signal,single,707,1,,,,,TP1,,,,,,,,0,0,0,
-1620,PARSED,705,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,705,signal,single,705,1,,,,,TP1,,,,,,,,0,0,0,
-1619,PARSED,706,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,706,signal,single,706,1,,,,,TP1,,,,,,,,0,0,0,
-1611,PARSED,611,"по этому сигналу, очень давнему, но с хорошим усреднением шорт дал 1 тейк - 7.88%",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,611,signal,single,611,1,,,,,TP1,,,,,,,,0,0,0,
-1610,PARSED,575,а тут был стоп 9.44%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,575,signal,single,575,1,,,,,STOP,,,,,,,,0,0,0,
-1609,PARSED,,"[trader#A]
+если соблюдаете РМ (1-2% от депозита), то данный минус полная ерунда для вас. Всегда важна дистанция",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 704}]",[],"{""hit_target"": ""STOP""}",[]
+1621,UPDATE,PARSED,trader_a,3171748254,736,707,2025-12-01T15:33:29+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 707}]",[],"{""hit_target"": ""TP1""}",[]
+1620,UPDATE,PARSED,trader_a,3171748254,737,705,2025-12-01T15:34:53+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 705}]",[],"{""hit_target"": ""TP1""}",[]
+1619,UPDATE,PARSED,trader_a,3171748254,738,706,2025-12-01T15:35:11+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 706}]",[],"{""hit_target"": ""TP1""}",[]
+1611,UPDATE,PARSED,trader_a,3171748254,746,611,2025-12-02T08:12:00+00:00,"по этому сигналу, очень давнему, но с хорошим усреднением шорт дал 1 тейк - 7.88%",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 611}]",[],"{""hit_target"": ""TP1""}",[]
+1610,UPDATE,PARSED,trader_a,3171748254,747,575,2025-12-02T08:12:41+00:00,а тут был стоп 9.44%,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 575}]",[],"{""hit_target"": ""STOP""}",[]
+1609,UPDATE,PARSED,trader_a,3171748254,748,,2025-12-02T08:14:51+00:00,"[trader#A]
 
 за ноябрь осталось два сигнала, которые еще не взяли, минимум, 1 тейк или стоп:
 1. https://t.me/c/3171748254/686 p.s. стоп был, почему-то установил у себя другой стоп... -10.3%, но так как вход был на 0.3%, минус не должен был быть сильно неприятным
-2. https://t.me/c/3171748254/569",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,,signal_group,multiple,686 | 569,2,,,,,STOP,,,,,,,,0,0,0,
-1603,PARSED,750,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,750,signal,single,750,1,,,,,TP1,,,,,,,,0,0,0,
-1598,PARSED,751,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,751,signal,single,751,1,,,,,TP1,,,,,,,,0,0,0,
-1586,PARSED,750,2 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,750,signal,single,750,1,,,,,TP2,,,,,,,,0,0,0,
-1581,PARSED,750,Все тейки. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,750,signal,single,750,1,,,,,TP,,,,,,,,0,0,0,
-1580,PARSED,766,"Стоп. Но все вопросы к Trader#4
+2. https://t.me/c/3171748254/569",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/686""}, {""kind"": ""message_id"", ""ref"": 686}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/569""}, {""kind"": ""message_id"", ""ref"": 569}]",[],"{""hit_target"": ""STOP""}",[]
+1603,UPDATE,PARSED,trader_a,3171748254,756,750,2025-12-02T15:13:51+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 750}]",[],"{""hit_target"": ""TP1""}",[]
+1598,UPDATE,PARSED,trader_a,3171748254,761,751,2025-12-02T15:42:06+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 751}]",[],"{""hit_target"": ""TP1""}",[]
+1586,UPDATE,PARSED,trader_a,3171748254,773,750,2025-12-02T19:05:37+00:00,2 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 750}]",[],"{""hit_target"": ""TP2""}",[]
+1581,UPDATE,PARSED,trader_a,3171748254,784,750,2025-12-03T05:10:14+00:00,Все тейки. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 750}]",[],"{""hit_target"": ""TP""}",[]
+1580,UPDATE,PARSED,trader_a,3171748254,785,766,2025-12-03T05:11:09+00:00,"Стоп. Но все вопросы к Trader#4
 
-Шучу, мой косяк",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,766,signal,single,766,1,,,,,STOP,,,,,,,,0,0,0,
-1579,PARSED,765,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,765,signal,single,765,1,,,,,TP1,,,,,,,,0,0,0,
-1561,PARSED,768,"стоп, убыток 3.6%",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,768,signal,single,768,1,,,,,STOP,,,,,,,,0,0,0,
-1560,PARSED,769,2 тейка. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,769,signal,single,769,1,,,,,TP2,,,,,,,,0,0,0,
-1559,PARSED,770,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,770,signal,single,770,1,,,,,STOP,,,,,,,,0,0,0,
-1558,PARSED,787,стоп. 2.6 убытка,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,787,signal,single,787,1,,,,,STOP,,,,,,,,0,0,0,
-1552,PARSED,,"Друзья, привет! Админ на связи 👋
+Шучу, мой косяк",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 766}]",[],"{""hit_target"": ""STOP""}",[]
+1579,UPDATE,PARSED,trader_a,3171748254,786,765,2025-12-03T06:15:37+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 765}]",[],"{""hit_target"": ""TP1""}",[]
+1561,UPDATE,PARSED,trader_a,3171748254,813,768,2025-12-05T05:57:53+00:00,"стоп, убыток 3.6%",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 768}]",[],"{""hit_target"": ""STOP"", ""result_percent"": 3.6}",[]
+1560,UPDATE,PARSED,trader_a,3171748254,814,769,2025-12-05T05:58:42+00:00,2 тейка. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 769}]",[],"{""hit_target"": ""TP2""}",[]
+1559,UPDATE,PARSED,trader_a,3171748254,815,770,2025-12-05T05:59:20+00:00,стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 770}]",[],"{""hit_target"": ""STOP""}",[]
+1558,UPDATE,PARSED,trader_a,3171748254,816,787,2025-12-05T06:00:32+00:00,стоп. 2.6 убытка,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 787}]",[],"{""hit_target"": ""STOP""}",[]
+1552,UPDATE,PARSED,trader_a,3171748254,823,,2025-12-05T13:18:00+00:00,"Друзья, привет! Админ на связи 👋
 
 Хочу внести немного дополнений по поводу работы с сигналами от [trader#A], чтобы у всех было чёткое понимание структуры и не возникало путаницы.
 
@@ -383,14 +383,14 @@ p.s. если возьмет стоп, значит чуть ниже перез
 
 PifSignal - Ты этого достойна!❤️
 или
-PifSignal - Das Auto🔥",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,,signal_group,multiple,704 | 705 | 706 | 707 | 750 | 751 | 765 | 766 | 767 | 768 | 769 | 770 | 787 | 795 | 805 | 817 | 818 | 819 | 821 | 822,20,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-1549,PARSED,767,стоп. 3.4%,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,767,signal,single,767,1,,,,,STOP,,,,,,,,0,0,0,
-1548,PARSED,821,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,821,signal,single,821,1,,,,,TP1,,,,,,,,0,0,0,
-1546,PARSED,818,1 тейк,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,818,signal,single,818,1,,,,,TP1,,,,,,,,0,0,0,
-1543,PARSED,795,"Закрываю у тейка. Поздравляю, почти 8%
+PifSignal - Das Auto🔥",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/704""}, {""kind"": ""message_id"", ""ref"": 704}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/705""}, {""kind"": ""message_id"", ""ref"": 705}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/706""}, {""kind"": ""message_id"", ""ref"": 706}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/707""}, {""kind"": ""message_id"", ""ref"": 707}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/750""}, {""kind"": ""message_id"", ""ref"": 750}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/751""}, {""kind"": ""message_id"", ""ref"": 751}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/765""}, {""kind"": ""message_id"", ""ref"": 765}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/766""}, {""kind"": ""message_id"", ""ref"": 766}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/767""}, {""kind"": ""message_id"", ""ref"": 767}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/768""}, {""kind"": ""message_id"", ""ref"": 768}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/769""}, {""kind"": ""message_id"", ""ref"": 769}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/770""}, {""kind"": ""message_id"", ""ref"": 770}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/787""}, {""kind"": ""message_id"", ""ref"": 787}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/795""}, {""kind"": ""message_id"", ""ref"": 795}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/805""}, {""kind"": ""message_id"", ""ref"": 805}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/817""}, {""kind"": ""message_id"", ""ref"": 817}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/818""}, {""kind"": ""message_id"", ""ref"": 818}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/819""}, {""kind"": ""message_id"", ""ref"": 819}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/821""}, {""kind"": ""message_id"", ""ref"": 821}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/822""}, {""kind"": ""message_id"", ""ref"": 822}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+1549,UPDATE,PARSED,trader_a,3171748254,826,767,2025-12-05T16:03:39+00:00,стоп. 3.4%,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 767}]",[],"{""hit_target"": ""STOP""}",[]
+1548,UPDATE,PARSED,trader_a,3171748254,827,821,2025-12-05T16:08:06+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 821}]",[],"{""hit_target"": ""TP1""}",[]
+1546,UPDATE,PARSED,trader_a,3171748254,829,818,2025-12-05T16:42:09+00:00,1 тейк,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 818}]",[],"{""hit_target"": ""TP1""}",[]
+1543,UPDATE,PARSED,trader_a,3171748254,832,795,2025-12-05T18:46:12+00:00,"Закрываю у тейка. Поздравляю, почти 8%
 
-Тейк все равно случился)",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,795,signal,single,795,1,,,FULL,,TP,,,,,,,,0,0,0,
-1510,PARSED,,"[trader#A]
+Тейк все равно случился)",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 795}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""TP"", ""result_percent"": 8.0}",[]
+1510,UPDATE,PARSED,trader_a,3171748254,873,,2025-12-09T10:47:29+00:00,"[trader#A]
 
 Всем привет!
 
@@ -403,12 +403,12 @@ ZETA - https://t.me/c/3171748254/819
 XRP - https://t.me/c/3171748254/822 (взяли лимитку)
 ENA - https://t.me/c/3171748254/856 (спорный лонг, но держим)
 LDO - https://t.me/c/3171748254/861
-SHIB - https://t.me/c/3171748254/870",,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,,signal_group,multiple,805 | 817 | 819 | 822 | 856 | 861 | 870,7,,,,,,FILLED,,,,,,,0,0,0,
-1508,PARSED,870,взяли лимитку. моя средняя 0.008553,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,870,signal,single,870,1,,,,,,FILLED,,,,,,,0,0,0,
-1495,PARSED,805,Закрылось в БУ,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,805,signal,single,805,1,,ENTRY,,,,,,,,,,,0,0,0,
-1494,PARSED,817,Закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,817,signal,single,817,1,,ENTRY,,,,,,,,,,,0,0,0,
-1493,PARSED,819,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,819,signal,single,819,1,,ENTRY,,,,,,,,,,,0,0,0,
-1492,PARSED,,"[trader#A]
+SHIB - https://t.me/c/3171748254/870",,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/805""}, {""kind"": ""message_id"", ""ref"": 805}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/817""}, {""kind"": ""message_id"", ""ref"": 817}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/819""}, {""kind"": ""message_id"", ""ref"": 819}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/822""}, {""kind"": ""message_id"", ""ref"": 822}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/856""}, {""kind"": ""message_id"", ""ref"": 856}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/861""}, {""kind"": ""message_id"", ""ref"": 861}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/870""}, {""kind"": ""message_id"", ""ref"": 870}]",[],"{""fill_state"": ""FILLED""}",[]
+1508,UPDATE,PARSED,trader_a,3171748254,876,870,2025-12-09T14:49:46+00:00,взяли лимитку. моя средняя 0.008553,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 870}]",[],"{""fill_state"": ""FILLED""}",[]
+1495,UPDATE,PARSED,trader_a,3171748254,901,805,2025-12-11T03:46:33+00:00,Закрылось в БУ,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 805}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1494,UPDATE,PARSED,trader_a,3171748254,902,817,2025-12-11T03:47:10+00:00,Закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 817}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1493,UPDATE,PARSED,trader_a,3171748254,903,819,2025-12-11T03:47:49+00:00,закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 819}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1492,UPDATE,PARSED,trader_a,3171748254,904,,2025-12-11T03:56:21+00:00,"[trader#A]
 
 
 XRP - https://t.me/c/3171748254/822 3.94% прибыли
@@ -420,101 +420,101 @@ SHIB - https://t.me/c/3171748254/870 прибыль 3.4%
 
 Встретимся в воскресенье
 
-p.s. проценты указал без учета усреднения. кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше, убыток по ENA перекроется существеннее",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,822 | 856 | 861 | 870,4,,,ALL_SHORTS,,,,,,,,,,0,0,0,
-1464,PARSED,933,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,933,signal,single,933,1,,,,,TP1,,,,,,,,0,0,0,
-1457,PARSED,946,"стоп. увы, отскока не было достойного",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,946,signal,single,946,1,,,,,STOP,,,,,,,,0,0,0,
-1456,PARSED,925,"еще стоп, понедельник начинается не с прибыли
+p.s. проценты указал без учета усреднения. кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше, убыток по ENA перекроется существеннее",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/822""}, {""kind"": ""message_id"", ""ref"": 822}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/856""}, {""kind"": ""message_id"", ""ref"": 856}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/861""}, {""kind"": ""message_id"", ""ref"": 861}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/870""}, {""kind"": ""message_id"", ""ref"": 870}]",[],"{""close_scope"": ""ALL_SHORTS"", ""result_percent"": 3.94}",[]
+1464,UPDATE,PARSED,trader_a,3171748254,945,933,2025-12-15T01:42:25+00:00,"1 тейк, поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 933}]",[],"{""hit_target"": ""TP1""}",[]
+1457,UPDATE,PARSED,trader_a,3171748254,955,946,2025-12-15T14:47:33+00:00,"стоп. увы, отскока не было достойного",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 946}]",[],"{""hit_target"": ""STOP""}",[]
+1456,UPDATE,PARSED,trader_a,3171748254,956,925,2025-12-15T14:58:51+00:00,"еще стоп, понедельник начинается не с прибыли
 
-никак не могу эту ENA обуздать",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,925,signal,single,925,1,,,,,STOP,,,,,,,,0,0,0,
-1454,PARSED,936,1 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,936,signal,single,936,1,,,,,TP1,,,,,,,,0,0,0,
-1453,PARSED,933,2 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,933,signal,single,933,1,,,,,TP2,,,,,,,,0,0,0,
-1447,PARSED,924,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,924,signal,single,924,1,,,,,TP1,,,,,,,,0,0,0,
-1444,PARSED,936,"2 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,936,signal,single,936,1,,,,,TP2,,,,,,,,0,0,0,
-1440,PARSED,924,2 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,924,signal,single,924,1,,,,,TP2,,,,,,,,0,0,0,
-1439,PARSED,971,тут стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,971,signal,single,971,1,,,,,STOP,,,,,,,,0,0,0,
-1438,PARSED,972,и тут стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,972,signal,single,972,1,,,,,STOP,,,,,,,,0,0,0,
-1435,PARSED,921,закрываю по текущим. 8% движения. поздравляю,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,921,signal,single,921,1,,,FULL,,,,,,,,,,0,0,0,
-1434,PARSED,962,"тут увы стоп. fart закрыл в том числе и по причине минимизации убытка по Doge, Near и OG",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,962,signal,single,962,1,,,,,STOP,,,,,,,,0,0,0,
-1432,PARSED,963,тоже стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,963,signal,single,963,1,,,,,STOP,,,,,,,,0,0,0,
-1431,PARSED,964,Закрываю фактически на точке входа,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,964,signal,single,964,1,,,FULL,,,,,,,,,,0,0,0,
-1430,PARSED,,"[trader#A]
+никак не могу эту ENA обуздать",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 925}]",[],"{""hit_target"": ""STOP""}",[]
+1454,UPDATE,PARSED,trader_a,3171748254,959,936,2025-12-15T15:25:08+00:00,1 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 936}]",[],"{""hit_target"": ""TP1""}",[]
+1453,UPDATE,PARSED,trader_a,3171748254,960,933,2025-12-15T15:25:56+00:00,2 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 933}]",[],"{""hit_target"": ""TP2""}",[]
+1447,UPDATE,PARSED,trader_a,3171748254,966,924,2025-12-15T17:27:17+00:00,1 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 924}]",[],"{""hit_target"": ""TP1""}",[]
+1444,UPDATE,PARSED,trader_a,3171748254,969,936,2025-12-15T18:22:04+00:00,"2 тейк, поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 936}]",[],"{""hit_target"": ""TP2""}",[]
+1440,UPDATE,PARSED,trader_a,3171748254,974,924,2025-12-16T03:40:26+00:00,2 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 924}]",[],"{""hit_target"": ""TP2""}",[]
+1439,UPDATE,PARSED,trader_a,3171748254,975,971,2025-12-16T03:42:06+00:00,тут стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 971}]",[],"{""hit_target"": ""STOP""}",[]
+1438,UPDATE,PARSED,trader_a,3171748254,976,972,2025-12-16T03:43:09+00:00,и тут стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 972}]",[],"{""hit_target"": ""STOP""}",[]
+1435,UPDATE,PARSED,trader_a,3171748254,981,921,2025-12-16T14:32:49+00:00,закрываю по текущим. 8% движения. поздравляю,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 921}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 8.0}",[]
+1434,UPDATE,PARSED,trader_a,3171748254,982,962,2025-12-16T14:34:07+00:00,"тут увы стоп. fart закрыл в том числе и по причине минимизации убытка по Doge, Near и OG",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 962}]",[],"{""hit_target"": ""STOP""}",[]
+1432,UPDATE,PARSED,trader_a,3171748254,984,963,2025-12-16T14:40:23+00:00,тоже стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 963}]",[],"{""hit_target"": ""STOP""}",[]
+1431,UPDATE,PARSED,trader_a,3171748254,985,964,2025-12-16T14:41:39+00:00,Закрываю фактически на точке входа,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 964}]",[],"{""close_scope"": ""FULL""}",[]
+1430,UPDATE,PARSED,trader_a,3171748254,986,,2025-12-16T14:49:08+00:00,"[trader#A]
 #intraday
 
 
 ASTER - https://t.me/c/3171748254/924 
 INJ - https://t.me/c/3171748254/936 
 
-По этим монетам остаток закрываю по текущей цене. Фактически эти монеты дошли до 2-х тейков",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,924 | 936,2,,,FULL,,TP2,,,,,,,,0,0,0,
-1415,PARSED,983,увы стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,983,signal,single,983,1,,,,,STOP,,,,,,,,0,0,0,
-1414,PARSED,992,"стоп
+По этим монетам остаток закрываю по текущей цене. Фактически эти монеты дошли до 2-х тейков",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_TP_HIT""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/924""}, {""kind"": ""message_id"", ""ref"": 924}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/936""}, {""kind"": ""message_id"", ""ref"": 936}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""TP2""}",[]
+1415,UPDATE,PARSED,trader_a,3171748254,1007,983,2025-12-17T19:12:46+00:00,увы стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 983}]",[],"{""hit_target"": ""STOP""}",[]
+1414,UPDATE,PARSED,trader_a,3171748254,1008,992,2025-12-18T06:15:15+00:00,"стоп
 
-проверил сегодня журнал сделок за ноябрь и декабрь. более 70% это стопы по лонгам",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,992,signal,single,992,1,,,,,STOP,,,,,,,,0,0,0,
-1413,PARSED,1005,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1005,signal,single,1005,1,,,,,TP1,,,,,,,,0,0,0,
-1409,PARSED,1005,2 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1005,signal,single,1005,1,,,,,TP2,,,,,,,,0,0,0,
-1404,PARSED,978,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,978,signal,single,978,1,,,,,TP1,,,,,,,,0,0,0,
-1403,PARSED,1002,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1002,signal,single,1002,1,,,,,TP1,,,,,,,,0,0,0,
-1402,PARSED,1003,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1003,signal,single,1003,1,,,,,TP1,,,,,,,,0,0,0,
-1397,PARSED,1024,"закрываю, модель ошиблась, вход без подтверждения на малых ТФ
+проверил сегодня журнал сделок за ноябрь и декабрь. более 70% это стопы по лонгам",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 992}]",[],"{""hit_target"": ""STOP""}",[]
+1413,UPDATE,PARSED,trader_a,3171748254,1009,1005,2025-12-18T06:16:26+00:00,1 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1005}]",[],"{""hit_target"": ""TP1""}",[]
+1409,UPDATE,PARSED,trader_a,3171748254,1014,1005,2025-12-18T12:16:54+00:00,2 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1005}]",[],"{""hit_target"": ""TP2""}",[]
+1404,UPDATE,PARSED,trader_a,3171748254,1020,978,2025-12-18T17:27:58+00:00,"1 тейк, поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 978}]",[],"{""hit_target"": ""TP1""}",[]
+1403,UPDATE,PARSED,trader_a,3171748254,1021,1002,2025-12-18T17:30:26+00:00,1 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1002}]",[],"{""hit_target"": ""TP1""}",[]
+1402,UPDATE,PARSED,trader_a,3171748254,1022,1003,2025-12-18T17:31:13+00:00,"1 тейк, поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1003}]",[],"{""hit_target"": ""TP1""}",[]
+1397,UPDATE,PARSED,trader_a,3171748254,1030,1024,2025-12-18T19:37:24+00:00,"закрываю, модель ошиблась, вход без подтверждения на малых ТФ
 
-стоп 1.67%",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1024,signal,single,1024,1,,,FULL,,STOP,,,,,,,,0,0,0,
-1396,PARSED,1018,1 тейк. поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1018,signal,single,1018,1,,,,,TP1,,,,,,,,0,0,0,
-1393,PARSED,,"[trader#A]
+стоп 1.67%",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1024}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP""}",[]
+1396,UPDATE,PARSED,trader_a,3171748254,1031,1018,2025-12-18T19:51:32+00:00,1 тейк. поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1018}]",[],"{""hit_target"": ""TP1""}",[]
+1393,UPDATE,PARSED,trader_a,3171748254,1035,,2025-12-19T04:47:39+00:00,"[trader#A]
 
 LINK - https://t.me/c/3171748254/978 - стоп в бу
 ALGO - https://t.me/c/3171748254/1002 стоп в бу
 ARKM - https://t.me/c/3171748254/1003 стоп в бу
 FART - https://t.me/c/3171748254/1005 стоп на 1 тейк
-UNI - https://t.me/c/3171748254/1018 стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_MOVE_STOP,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=TP1; targeting={mode=EXPLICIT_TARGETS}) | MOVE_STOP(new_stop_level=ENTRY; targeting={mode=EXPLICIT_TARGETS}),,,,0.7,,,,,signal_group,multiple,978 | 1002 | 1003 | 1005 | 1018,5,,ENTRY,,,,,,,,,,,0,0,0,
-1388,PARSED,1002,после 1 тейка закрылась в бу,,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1002,signal,single,1002,1,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-1387,PARSED,1003,после 1 тейка закрылась в бу,,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1003,signal,single,1003,1,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-1380,PARSED,,"[trader#A]
+UNI - https://t.me/c/3171748254/1018 стоп в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_MOVE_STOP""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/978""}, {""kind"": ""message_id"", ""ref"": 978}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1002""}, {""kind"": ""message_id"", ""ref"": 1002}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1003""}, {""kind"": ""message_id"", ""ref"": 1003}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1005""}, {""kind"": ""message_id"", ""ref"": 1005}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1018""}, {""kind"": ""message_id"", ""ref"": 1018}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1388,UPDATE,PARSED,trader_a,3171748254,1040,1002,2025-12-19T07:16:29+00:00,после 1 тейка закрылась в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1002}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+1387,UPDATE,PARSED,trader_a,3171748254,1041,1003,2025-12-19T07:16:45+00:00,после 1 тейка закрылась в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1003}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+1380,UPDATE,PARSED,trader_a,3171748254,1053,,2025-12-19T12:20:57+00:00,"[trader#A]
 
 XRP - https://t.me/c/3171748254/1015
 ADA - https://t.me/c/3171748254/1017
 
-А давайте их прикроем, пока они рядом с ТВХ",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,1015 | 1017,2,,,FULL,,,,,,,,,,0,0,0,
-1376,PARSED,1034,Первый пятничный тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1034,signal,single,1034,1,,,,,TP,,,,,,,,0,0,0,
-1371,PARSED,978,"Закрылась в бу, после 1 тейка, конечно же",,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,978,signal,single,978,1,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-1370,PARSED,1018,"Закрылась в бу, после 1 тейка",,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1018,signal,single,1018,1,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-1367,PARSED,1038,"Тут тейк. Поздравляю 
-По этой тоже ожидаем https://t.me/c/3171748254/1037",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,,signal_group,multiple,1038 | 1037,2,,,,,TP,,,,,,,,0,0,0,
-1366,PARSED,1036,"1 тейк, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1036,signal,single,1036,1,,,,,TP1,,,,,,,,0,0,0,
-1355,PARSED,1037,"начинаем субботу с тейка, поздравляю",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1037,signal,single,1037,1,,,,,TP,,,,,,,,0,0,0,
-1354,PARSED,1005,"И этот закрылся в бу на первом тейке. Конечно же после того как взяли 2 тейка. Сделка закрыта 
+А давайте их прикроем, пока они рядом с ТВХ",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1015""}, {""kind"": ""message_id"", ""ref"": 1015}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1017""}, {""kind"": ""message_id"", ""ref"": 1017}]",[],"{""close_scope"": ""FULL""}",[]
+1376,UPDATE,PARSED,trader_a,3171748254,1058,1034,2025-12-19T16:04:36+00:00,Первый пятничный тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1034}]",[],"{""hit_target"": ""TP""}",[]
+1371,UPDATE,PARSED,trader_a,3171748254,1064,978,2025-12-19T16:31:34+00:00,"Закрылась в бу, после 1 тейка, конечно же",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 978}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+1370,UPDATE,PARSED,trader_a,3171748254,1065,1018,2025-12-19T16:32:08+00:00,"Закрылась в бу, после 1 тейка",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1018}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+1367,UPDATE,PARSED,trader_a,3171748254,1072,1038,2025-12-19T19:37:42+00:00,"Тут тейк. Поздравляю 
+По этой тоже ожидаем https://t.me/c/3171748254/1037",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1038}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1037""}, {""kind"": ""message_id"", ""ref"": 1037}]",[],"{""hit_target"": ""TP""}",[]
+1366,UPDATE,PARSED,trader_a,3171748254,1074,1036,2025-12-20T00:02:31+00:00,"1 тейк, поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1036}]",[],"{""hit_target"": ""TP1""}",[]
+1355,UPDATE,PARSED,trader_a,3171748254,1087,1037,2025-12-20T08:23:58+00:00,"начинаем субботу с тейка, поздравляю",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1037}]",[],"{""hit_target"": ""TP""}",[]
+1354,UPDATE,PARSED,trader_a,3171748254,1089,1005,2025-12-20T08:44:04+00:00,"И этот закрылся в бу на первом тейке. Конечно же после того как взяли 2 тейка. Сделка закрыта 
 
 О переводе стопа на 1 тейк писал тут - https://t.me/c/3171748254/1035
 
-Шортов у вас не должно остаться, если, конечно, я не пропустил ничего",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,,signal_group,multiple,1005 | 1035,2,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-1352,PARSED,1036,2 тейк. Поздравляю,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,1036,signal,single,1036,1,,,,,TP2,,,,,,,,0,0,0,
-1326,PARSED,1037,"2 тейк, сделку закрываю полностью",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1037,signal,single,1037,1,,,FULL,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-1325,PARSED,1077,"а теперь к неприятному и одновременно обидному
+Шортов у вас не должно остаться, если, конечно, я не пропустил ничего",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1005}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1035""}, {""kind"": ""message_id"", ""ref"": 1035}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+1352,UPDATE,PARSED,trader_a,3171748254,1093,1036,2025-12-20T11:52:00+00:00,2 тейк. Поздравляю,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1036}]",[],"{""hit_target"": ""TP2""}",[]
+1326,UPDATE,PARSED,trader_a,3171748254,1128,1037,2025-12-22T12:05:05+00:00,"2 тейк, сделку закрываю полностью",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1037}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+1325,UPDATE,PARSED,trader_a,3171748254,1129,1077,2025-12-22T12:07:07+00:00,"а теперь к неприятному и одновременно обидному
 
 стоп, но сдлека в итоге точно дойдет до тейка
 
-ставить другой стоп, значит идти против торговой системы",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1077,signal,single,1077,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-1324,PARSED,1084,"тоже самое, что и выше
+ставить другой стоп, значит идти против торговой системы",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1077}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+1324,UPDATE,PARSED,trader_a,3171748254,1130,1084,2025-12-22T12:09:07+00:00,"тоже самое, что и выше
 
-стоп",,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,1084,signal,single,1084,1,,,,,STOP,,,,,,,,0,0,0,
-1323,PARSED,1085,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,1085,signal,single,1085,1,,,,,STOP,,,,,,,,0,0,0,
-1322,PARSED,1086,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,1086,signal,single,1086,1,,,,,STOP,,,,,,,,0,0,0,
-1255,PARSED,1034,"всем привет. рынок очень ""тугой"". среднесрок очень долго отрабатывает. пробежимся по позициям, проведем инвентаризацию, освободим маржу для новых сделок
+стоп",,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1084}]",[],"{""hit_target"": ""STOP""}",[]
+1323,UPDATE,PARSED,trader_a,3171748254,1131,1085,2025-12-22T12:09:43+00:00,стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1085}]",[],"{""hit_target"": ""STOP""}",[]
+1322,UPDATE,PARSED,trader_a,3171748254,1132,1086,2025-12-22T12:10:10+00:00,стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1086}]",[],"{""hit_target"": ""STOP""}",[]
+1255,UPDATE,PARSED,trader_a,3171748254,1239,1034,2025-12-28T08:42:58+00:00,"всем привет. рынок очень ""тугой"". среднесрок очень долго отрабатывает. пробежимся по позициям, проведем инвентаризацию, освободим маржу для новых сделок
 
-эту закрываю полностью по текущим, цена как раз на 1 тейке",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1034,signal,single,1034,1,,,FULL,,TP1,,,,,,,,0,0,0,
-1254,PARSED,1036,полностью закрываю,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1036,signal,single,1036,1,,,FULL,,,,,,,,,,0,0,0,
-1253,PARSED,1044,закрываю на текущих ценах. +8%,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1044,signal,single,1044,1,,,FULL,,,,,,,,,,0,0,0,
-1251,PARSED,1081,закрываю по текущим +13%,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1081,signal,single,1081,1,,,FULL,,,,,,,,,,0,0,0,
-1248,PARSED,1038,"Эта позиция закрылась в бу после 1 тейка
+эту закрываю полностью по текущим, цена как раз на 1 тейке",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1034}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""TP1""}",[]
+1254,UPDATE,PARSED,trader_a,3171748254,1240,1036,2025-12-28T08:43:45+00:00,полностью закрываю,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1036}]",[],"{""close_scope"": ""FULL""}",[]
+1253,UPDATE,PARSED,trader_a,3171748254,1241,1044,2025-12-28T08:44:38+00:00,закрываю на текущих ценах. +8%,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1044}]",[],"{""close_scope"": ""FULL""}",[]
+1251,UPDATE,PARSED,trader_a,3171748254,1243,1081,2025-12-28T08:47:00+00:00,закрываю по текущим +13%,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1081}]",[],"{""close_scope"": ""FULL""}",[]
+1248,UPDATE,PARSED,trader_a,3171748254,1246,1038,2025-12-28T08:52:43+00:00,"Эта позиция закрылась в бу после 1 тейка
 
-Прошу еще раз ознакомиться с этим постом - https://t.me/c/3171748254/1145",,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,,signal_group,multiple,1038 | 1145,2,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-1062,PARSED,1516,"Стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1516,signal,single,1516,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-1058,PARSED,1506,"1 тейк. 0.44R
-стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1506,signal,single,1506,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-1039,PARSED,1482,Доброе утро. Перенесите стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1482,signal,single,1482,1,,ENTRY,,,,,,,,,,,0,0,0,
-1034,PARSED,1506,"Сделка закрылась в бу. 
-итоговый результат 0.44R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1506,signal,single,1506,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-997,PARSED,1482,закрылась в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1482,signal,single,1482,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-986,PARSED,,"[trader#A]
+Прошу еще раз ознакомиться с этим постом - https://t.me/c/3171748254/1145",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1038}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1145""}, {""kind"": ""message_id"", ""ref"": 1145}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+1062,UPDATE,PARSED,trader_a,3171748254,1535,1516,2026-01-12T13:44:17+00:00,"Стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1516}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+1058,UPDATE,PARSED,trader_a,3171748254,1539,1506,2026-01-12T14:25:30+00:00,"1 тейк. 0.44R
+стоп в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1506}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+1039,UPDATE,PARSED,trader_a,3171748254,1563,1482,2026-01-13T05:20:30+00:00,Доброе утро. Перенесите стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1482}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+1034,UPDATE,PARSED,trader_a,3171748254,1572,1506,2026-01-13T14:07:48+00:00,"Сделка закрылась в бу. 
+итоговый результат 0.44R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1506}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+997,UPDATE,PARSED,trader_a,3171748254,1614,1482,2026-01-14T04:26:43+00:00,закрылась в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1482}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+986,UPDATE,PARSED,trader_a,3171748254,1628,,2026-01-14T14:55:58+00:00,"[trader#A]
 
 https://t.me/c/3171748254/1620
 https://t.me/c/3171748254/1620
@@ -524,40 +524,40 @@ https://t.me/c/3171748254/1593
 https://t.me/c/3171748254/1592
 https://t.me/c/3171748254/1591
 
-По лонгам стопы в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1620 | 1599 | 1594 | 1593 | 1592 | 1591,6,,ENTRY,,,,,,,,,,,0,0,0,
-985,PARSED,1593,закрылась в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1593,signal,single,1593,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-981,PARSED,1591,закрыта в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1591,signal,single,1591,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-980,PARSED,1619,Закрыта в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1619,signal,single,1619,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-979,PARSED,1620,закрыта в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1620,signal,single,1620,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-974,PARSED,1592,закрылась в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1592,signal,single,1592,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-973,PARSED,1594,закрылась в бу,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1594,signal,single,1594,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-967,PARSED,1599,также в бу закрылись,,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1599,signal,single,1599,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-931,PARSED,1654,"1 тейк. 0.22R
-стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1654,signal,single,1654,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-909,PARSED,,"[trader#A]
+По лонгам стопы в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1620""}, {""kind"": ""message_id"", ""ref"": 1620}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1599""}, {""kind"": ""message_id"", ""ref"": 1599}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1594""}, {""kind"": ""message_id"", ""ref"": 1594}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1593""}, {""kind"": ""message_id"", ""ref"": 1593}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1592""}, {""kind"": ""message_id"", ""ref"": 1592}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1591""}, {""kind"": ""message_id"", ""ref"": 1591}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+985,UPDATE,PARSED,trader_a,3171748254,1629,1593,2026-01-14T15:01:58+00:00,закрылась в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1593}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+981,UPDATE,PARSED,trader_a,3171748254,1636,1591,2026-01-14T17:35:28+00:00,закрыта в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1591}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+980,UPDATE,PARSED,trader_a,3171748254,1637,1619,2026-01-14T17:36:07+00:00,Закрыта в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1619}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+979,UPDATE,PARSED,trader_a,3171748254,1638,1620,2026-01-14T17:36:21+00:00,закрыта в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1620}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+974,UPDATE,PARSED,trader_a,3171748254,1643,1592,2026-01-14T19:17:10+00:00,закрылась в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1592}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+973,UPDATE,PARSED,trader_a,3171748254,1644,1594,2026-01-14T19:17:19+00:00,закрылась в бу,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1594}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+967,UPDATE,PARSED,trader_a,3171748254,1653,1599,2026-01-15T06:22:37+00:00,также в бу закрылись,,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1599}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+931,UPDATE,PARSED,trader_a,3171748254,1698,1654,2026-01-16T15:22:55+00:00,"1 тейк. 0.22R
+стоп в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1654}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+909,UPDATE,PARSED,trader_a,3171748254,1730,,2026-01-17T16:25:56+00:00,"[trader#A]
 
 https://t.me/c/3171748254/1725
 https://t.me/c/3171748254/1726
 
 пора перенести стоп в бу
-кто желает может фиксировать прибыль",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1725 | 1726,2,,ENTRY,,,,,,,,,,,0,0,0,
-908,PARSED,1725,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1725,signal,single,1725,1,,ENTRY,,,,,,,,,,,0,0,0,
-907,PARSED,1726,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1726,signal,single,1726,1,,ENTRY,,,,,,,,,,,0,0,0,
-899,PARSED,1654,Все тейки. Сделка закрылась в +1.5RR,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1654,signal,single,1654,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-898,PARSED,1685,"1 тейк. Стоп в бу
-+0.5RR",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1685,signal,single,1685,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-897,PARSED,1704,"1 тейк. Стоп в бу
-+0.5RR",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1704,signal,single,1704,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-891,PARSED,1704,сделка закрыта в бу. итоговый результат 0.5R,,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1704,signal,single,1704,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-883,PARSED,1756,"очень большой риск получить стоп. кто хочет не раздувать убыток - можно закрыть по текущим
+кто желает может фиксировать прибыль",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1725""}, {""kind"": ""message_id"", ""ref"": 1725}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1726""}, {""kind"": ""message_id"", ""ref"": 1726}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+908,UPDATE,PARSED,trader_a,3171748254,1734,1725,2026-01-18T02:25:13+00:00,закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1725}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+907,UPDATE,PARSED,trader_a,3171748254,1735,1726,2026-01-18T02:25:25+00:00,закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1726}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+899,UPDATE,PARSED,trader_a,3171748254,1748,1654,2026-01-19T00:56:05+00:00,Все тейки. Сделка закрылась в +1.5RR,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1654}]",[],"{""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+898,UPDATE,PARSED,trader_a,3171748254,1749,1685,2026-01-19T00:59:41+00:00,"1 тейк. Стоп в бу
++0.5RR",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1685}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+897,UPDATE,PARSED,trader_a,3171748254,1750,1704,2026-01-19T01:00:22+00:00,"1 тейк. Стоп в бу
++0.5RR",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1704}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+891,UPDATE,PARSED,trader_a,3171748254,1764,1704,2026-01-20T02:58:54+00:00,сделка закрыта в бу. итоговый результат 0.5R,,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1704}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+883,UPDATE,PARSED,trader_a,3171748254,1775,1756,2026-01-20T11:46:05+00:00,"очень большой риск получить стоп. кто хочет не раздувать убыток - можно закрыть по текущим
 
-я закрывать не буду, чтобы не искажать статистику",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1756,signal,single,1756,1,,,FULL,,STOP,,,,,,,,0,0,0,
-882,PARSED,1774,Убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,1774,signal,single,1774,1,,,,,,,,TARGETED,,,,,0,0,0,
-874,PARSED,1760,"1 тейк. Стоп в бу
-0.26R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1760,signal,single,1760,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-873,PARSED,1756,Стоп. -1R,,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1756,signal,single,1756,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-868,PARSED,1760,Второй тейк. Общий RR 0.75,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1760,signal,single,1760,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-862,PARSED,,"[trader#A]
+я закрывать не буду, чтобы не искажать статистику",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1756}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP""}",[]
+882,UPDATE,PARSED,trader_a,3171748254,1776,1774,2026-01-20T12:14:30+00:00,Убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 1774}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+874,UPDATE,PARSED,trader_a,3171748254,1787,1760,2026-01-20T16:44:10+00:00,"1 тейк. Стоп в бу
+0.26R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1760}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+873,UPDATE,PARSED,trader_a,3171748254,1788,1756,2026-01-20T16:45:46+00:00,Стоп. -1R,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1756}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+868,UPDATE,PARSED,trader_a,3171748254,1797,1760,2026-01-21T01:56:32+00:00,Второй тейк. Общий RR 0.75,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1760}]",[],"{""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+862,UPDATE,PARSED,trader_a,3171748254,1804,,2026-01-21T03:38:44+00:00,"[trader#A]
 
 
 https://t.me/c/3171748254/1685 MOVR
@@ -567,10 +567,10 @@ https://t.me/c/3171748254/1706 ZEC
 закрываю по текущим ценам
 MOVR - 1.35RR
 CYBER - 1.37RR
-ZEC - 1.43RR",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,1685 | 1706 | 1738,3,,,FULL,,,,R_MULTIPLE,,,,,,0,0,0,
-861,PARSED,1760,"его тоже не будем мучить. закрываю по текущим
-1.06R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,1760,signal,single,1760,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-841,PARSED,,"[trader#A]
+ZEC - 1.43RR",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1685""}, {""kind"": ""message_id"", ""ref"": 1685}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1738""}, {""kind"": ""message_id"", ""ref"": 1738}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1706""}, {""kind"": ""message_id"", ""ref"": 1706}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""R_MULTIPLE""}",[]
+861,UPDATE,PARSED,trader_a,3171748254,1805,1760,2026-01-21T03:47:48+00:00,"его тоже не будем мучить. закрываю по текущим
+1.06R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1760}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+841,UPDATE,PARSED,trader_a,3171748254,1829,,2026-01-21T17:14:42+00:00,"[trader#A]
 Все лонги закрываю по текущим
 Какие вышли стопы, дополню пост чуть позже
 
@@ -579,154 +579,154 @@ ASTER -0.03R
 DOGE -0.63R
 PEPE -0.46R
 ENA - 0.634R
-C98 -0.36R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=SELECTOR}),,,,0.7,,,,,signal,unknown,,0,,,ALL_LONGS,,STOP,,R_MULTIPLE,,,,,,0,0,0,
-810,PARSED,,"[trader#A]
+C98 -0.36R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],[],[],"{""close_scope"": ""ALL_LONGS"", ""hit_target"": ""STOP"", ""result_mode"": ""R_MULTIPLE""}",[]
+810,UPDATE,PARSED,trader_a,3171748254,1890,,2026-01-25T20:26:42+00:00,"[trader#A]
 
 https://t.me/c/3171748254/1830
 https://t.me/c/3171748254/1832
 
-Стопы в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,,signal_group,multiple,1830 | 1832,2,,ENTRY,,,,,,,,,,,0,0,0,
-808,PARSED,1830,Закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1830,signal,single,1830,1,,ENTRY,,,,,,,,,,,0,0,0,
-784,PARSED,1927,"1 тейк, стоп в бу
-0.3R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1927,signal,single,1927,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-783,PARSED,1924,"1 тейк, стоп в бу
-0.23R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1924,signal,single,1924,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-782,PARSED,1927,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1927,signal,single,1927,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-781,PARSED,1911,"1 тейк, стоп в бу
-0.28R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1911,signal,single,1911,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-770,PARSED,1909,"1 тейк. Стоп в бу
-0.38R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1909,signal,single,1909,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-769,PARSED,1913,"1 тейк, стоп в бу
-0.2Р",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1913,signal,single,1913,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-768,PARSED,1930,"1 тейк, стоп в бу
-0.27Р",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,1930,signal,single,1930,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-767,PARSED,1911,"2 тейк
-0.9Р",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1911,signal,single,1911,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-766,PARSED,1924,"2 тейк
-0.76Р",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1924,signal,single,1924,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-764,PARSED,,"[trader#A]
+Стопы в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1830""}, {""kind"": ""message_id"", ""ref"": 1830}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1832""}, {""kind"": ""message_id"", ""ref"": 1832}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+808,UPDATE,PARSED,trader_a,3171748254,1894,1830,2026-01-26T05:31:35+00:00,Закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1830}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+784,UPDATE,PARSED,trader_a,3171748254,1945,1927,2026-01-29T14:42:55+00:00,"1 тейк, стоп в бу
+0.3R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1927}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+783,UPDATE,PARSED,trader_a,3171748254,1946,1924,2026-01-29T14:52:14+00:00,"1 тейк, стоп в бу
+0.23R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1924}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+782,UPDATE,PARSED,trader_a,3171748254,1947,1927,2026-01-29T15:12:06+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1927}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+781,UPDATE,PARSED,trader_a,3171748254,1948,1911,2026-01-29T15:12:24+00:00,"1 тейк, стоп в бу
+0.28R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1911}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+770,UPDATE,PARSED,trader_a,3171748254,1961,1909,2026-01-29T20:18:44+00:00,"1 тейк. Стоп в бу
+0.38R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1909}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+769,UPDATE,PARSED,trader_a,3171748254,1963,1913,2026-01-30T01:50:22+00:00,"1 тейк, стоп в бу
+0.2Р",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1913}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+768,UPDATE,PARSED,trader_a,3171748254,1964,1930,2026-01-30T01:52:11+00:00,"1 тейк, стоп в бу
+0.27Р",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1930}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+767,UPDATE,PARSED,trader_a,3171748254,1965,1911,2026-01-30T01:55:01+00:00,"2 тейк
+0.9Р",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1911}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+766,UPDATE,PARSED,trader_a,3171748254,1967,1924,2026-01-30T02:58:12+00:00,"2 тейк
+0.76Р",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1924}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+764,UPDATE,PARSED,trader_a,3171748254,1969,,2026-01-30T03:14:03+00:00,"[trader#A]
 принимаю решение зафиксировать все шорты. собрали в целом не плохой профит. хочу закрыть январь. 
-Лонг, по сетапу выше, переходит на февраль, скорее всего, либо стоп в январе (рынок уже решит самостоятельно)",,,U_CLOSE_FULL,U_CLOSE_FULL | U_STOP_HIT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=SELECTOR}),,,,0.7,,,,,signal,unknown,,0,,,ALL_SHORTS,,STOP,,,,,,,,0,0,0,
-763,PARSED,,"[trader#A]
+Лонг, по сетапу выше, переходит на февраль, скорее всего, либо стоп в январе (рынок уже решит самостоятельно)",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_STOP_HIT""]",[],[],[],"{""close_scope"": ""ALL_SHORTS"", ""hit_target"": ""STOP""}",[]
+763,UPDATE,PARSED,trader_a,3171748254,1970,,2026-01-30T03:17:16+00:00,"[trader#A]
 итог по сделкам:
 hype - 1.27R
 aave -1.67R
 aster - 1.15R
 xrp - 0.75R
 doge - 1.38R
-btc - 1.62R",trader_a_update_missing_target,trader_a_update_missing_target,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.55,,,,,signal,unknown,,0,,,,,,,R_MULTIPLE,,,,,,0,0,0,
-750,PARSED,1968,"рынок не захотел в отскок. сработал стоп
--0.5R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,1968,signal,single,1968,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-745,PARSED,2006,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2006,signal,single,2006,1,,,,,,,,TARGETED,,,,,0,0,0,
-742,PARSED,2010,да что ж такое. и этот без нас улетел. убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2010,signal,single,2010,1,,,,,,,,TARGETED,,,,,0,0,0,
-740,PARSED,2013,"1 тейк и сделка закрылась в бу
-+0.16R",,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2013,signal,single,2013,1,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-739,PARSED,2005,"1 тейк, стоп в бу
-+0.13R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2005,signal,single,2005,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-736,PARSED,2049,убираем лимитку. опять без нас((,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2049,signal,single,2049,1,,,,,,,,TARGETED,,,,,0,0,0,
-732,PARSED,2057,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2057,signal,single,2057,1,,,,,,,,TARGETED,,,,,0,0,0,
-730,PARSED,2055,тут тоже убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2055,signal,single,2055,1,,,,,,,,TARGETED,,,,,0,0,0,
-726,PARSED,2005,"закрылось в бу
-итог по сделке - 0.13R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2005,signal,single,2005,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-716,PARSED,2074,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2074,signal,single,2074,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-705,PARSED,2066,"1 тейк. стоп в бу
-0.26R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2066,signal,single,2066,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-704,PARSED,2093,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2093,signal,single,2093,1,,,,,,,,TARGETED,,,,,0,0,0,
-703,PARSED,2050,"1 тейк. стоп в бу
-0.11R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2050,signal,single,2050,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-701,PARSED,2050,"закрылась в бу
-итого 0.11R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2050,signal,single,2050,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-699,PARSED,2093,"1 тейк. стоп в бу
-0.59R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2093,signal,single,2093,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-696,PARSED,2110,Взяли лимитку,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2110,signal,single,2110,1,,,,,,FILLED,,,,,,,0,0,0,
-694,PARSED,2093,"2 тейк.
-1.4R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2093,signal,single,2093,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-693,PARSED,2110,"1 тейк. стоп в бу
-0.38R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2110,signal,single,2110,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-692,PARSED,2113,снимаем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2113,signal,single,2113,1,,,,,,,,TARGETED,,,,,0,0,0,
-691,PARSED,2110,"2 тейк
-0.93R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2110,signal,single,2110,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-689,PARSED,2093,"закрываю остаток (10%) сделки по текущим
-1.67R итоговый результат",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2093,signal,single,2093,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-685,PARSED,2110,"тоже закрываю по текущим
-итог 1.11R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2110,signal,single,2110,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-684,PARSED,2000,"поставьте стоп в бу, ну как в бу, чтобы комиссию отбить
+btc - 1.62R",trader_a_update_missing_target,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],[],[],"{""result_mode"": ""R_MULTIPLE""}",[]
+750,UPDATE,PARSED,trader_a,3171748254,1996,1968,2026-01-31T14:24:42+00:00,"рынок не захотел в отскок. сработал стоп
+-0.5R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1968}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+745,UPDATE,PARSED,trader_a,3171748254,2007,2006,2026-02-01T10:27:57+00:00,убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2006}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+742,UPDATE,PARSED,trader_a,3171748254,2011,2010,2026-02-01T14:40:03+00:00,да что ж такое. и этот без нас улетел. убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2010}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+740,UPDATE,PARSED,trader_a,3171748254,2047,2013,2026-02-02T02:16:29+00:00,"1 тейк и сделка закрылась в бу
++0.16R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2013}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+739,UPDATE,PARSED,trader_a,3171748254,2048,2005,2026-02-02T02:17:29+00:00,"1 тейк, стоп в бу
++0.13R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2005}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+736,UPDATE,PARSED,trader_a,3171748254,2052,2049,2026-02-02T03:15:59+00:00,убираем лимитку. опять без нас((,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2049}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+732,UPDATE,PARSED,trader_a,3171748254,2059,2057,2026-02-02T12:06:21+00:00,убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2057}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+730,UPDATE,PARSED,trader_a,3171748254,2063,2055,2026-02-02T13:14:43+00:00,тут тоже убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2055}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+726,UPDATE,PARSED,trader_a,3171748254,2067,2005,2026-02-02T14:36:36+00:00,"закрылось в бу
+итог по сделке - 0.13R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2005}]",[],"{""new_stop_level"": ""ENTRY"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+716,UPDATE,PARSED,trader_a,3171748254,2084,2074,2026-02-03T12:53:08+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2074}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+705,UPDATE,PARSED,trader_a,3171748254,2097,2066,2026-02-03T18:14:40+00:00,"1 тейк. стоп в бу
+0.26R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2066}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+704,UPDATE,PARSED,trader_a,3171748254,2098,2093,2026-02-03T18:14:48+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2093}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+703,UPDATE,PARSED,trader_a,3171748254,2099,2050,2026-02-03T18:22:26+00:00,"1 тейк. стоп в бу
+0.11R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2050}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+701,UPDATE,PARSED,trader_a,3171748254,2104,2050,2026-02-03T20:52:51+00:00,"закрылась в бу
+итого 0.11R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2050}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+699,UPDATE,PARSED,trader_a,3171748254,2108,2093,2026-02-04T03:34:33+00:00,"1 тейк. стоп в бу
+0.59R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2093}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+696,UPDATE,PARSED,trader_a,3171748254,2115,2110,2026-02-04T10:30:15+00:00,Взяли лимитку,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2110}]",[],"{""fill_state"": ""FILLED""}",[]
+694,UPDATE,PARSED,trader_a,3171748254,2119,2093,2026-02-04T13:49:24+00:00,"2 тейк.
+1.4R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2093}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+693,UPDATE,PARSED,trader_a,3171748254,2120,2110,2026-02-04T13:58:36+00:00,"1 тейк. стоп в бу
+0.38R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2110}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+692,UPDATE,PARSED,trader_a,3171748254,2121,2113,2026-02-04T14:31:17+00:00,снимаем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2113}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+691,UPDATE,PARSED,trader_a,3171748254,2122,2110,2026-02-04T14:37:03+00:00,"2 тейк
+0.93R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2110}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+689,UPDATE,PARSED,trader_a,3171748254,2124,2093,2026-02-04T15:00:23+00:00,"закрываю остаток (10%) сделки по текущим
+1.67R итоговый результат",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2093}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+685,UPDATE,PARSED,trader_a,3171748254,2130,2110,2026-02-04T18:10:14+00:00,"тоже закрываю по текущим
+итог 1.11R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2110}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+684,UPDATE,PARSED,trader_a,3171748254,2131,2000,2026-02-04T18:19:23+00:00,"поставьте стоп в бу, ну как в бу, чтобы комиссию отбить
 
-надоел уже",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2000,signal,single,2000,1,,ENTRY,,,,,,,,,,,0,0,0,
-683,PARSED,2008,"Тут закрою по текущим
-0.28R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2008,signal,single,2008,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-682,PARSED,2066,тут стоп на 1 тейк,,,U_MOVE_STOP,U_MOVE_STOP,MOVE_STOP,MOVE_STOP(new_stop_level=TP1),,,,0.7,,,,2066,signal,single,2066,1,,TP1,,,,,,,,,,,0,0,0,
-681,PARSED,2129,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2129,signal,single,2129,1,,,,,,FILLED,,,,,,,0,0,0,
-680,PARSED,2000,закрылся в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.7,,,,2000,signal,single,2000,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-679,PARSED,2066,"закрылся полностью на 1 тейке
-итог 0.88R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2066,signal,single,2066,1,,,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-678,PARSED,2126,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2126,signal,single,2126,1,,,,,,FILLED,,,,,,,0,0,0,
-677,PARSED,2129,"был 1 тейк  и сразу закрылась в бу
-итого 0.26R",,,U_EXIT_BE,U_EXIT_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2129,signal,single,2129,1,,,,,TP1,,BREAKEVEN,,,,,,0,0,0,
-676,PARSED,2126,"уже было 2 тейка
-0.88R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2126,signal,single,2126,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-674,PARSED,2085,"стоп
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2085,signal,single,2085,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-673,PARSED,2143,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2143,signal,single,2143,1,,,,,,,,TARGETED,,,,,0,0,0,
-670,PARSED,2149,"самый быстрый стоп)
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2149,signal,single,2149,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-667,PARSED,2152,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2152,signal,single,2152,1,,,,,,FILLED,,,,,,,0,0,0,
-666,PARSED,2151,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2151,signal,single,2151,1,,,,,,FILLED,,,,,,,0,0,0,
-665,PARSED,2151,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2151,signal,single,2151,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-664,PARSED,2151,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2151,signal,single,2151,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-663,PARSED,2152,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2152,signal,single,2152,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-661,PARSED,2152,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2152,signal,single,2152,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-659,PARSED,2088,"стоп.
--0.5R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2088,signal,single,2088,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-655,PARSED,2165,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2165,signal,single,2165,1,,,,,,FILLED,,,,,,,0,0,0,
-654,PARSED,2165,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2165,signal,single,2165,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-653,PARSED,2166,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2166,signal,single,2166,1,,,,,,,,TARGETED,,,,,0,0,0,
-652,PARSED,2164,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2164,signal,single,2164,1,,,,,,,,TARGETED,,,,,0,0,0,
-651,PARSED,2161,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2161,signal,single,2161,1,,,,,,,,TARGETED,,,,,0,0,0,
-650,PARSED,2165,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2165,signal,single,2165,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-648,PARSED,2165,"И она закрылась
-итог - 1.19R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2165,signal,single,2165,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-645,PARSED,2177,"поторопился  с лонгами, зафиксируем микроминус",,,,,,,,,,0.7,,,,2177,signal,single,2177,1,,,,,,,,,,,,,0,0,0,
-644,PARSED,2178,"а тут уберем лимитку
+надоел уже",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2000}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+683,UPDATE,PARSED,trader_a,3171748254,2132,2008,2026-02-04T18:22:21+00:00,"Тут закрою по текущим
+0.28R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2008}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+682,UPDATE,PARSED,trader_a,3171748254,2133,2066,2026-02-04T18:23:31+00:00,тут стоп на 1 тейк,,,,,,,[],,,,"[""U_MOVE_STOP""]",[],"[{""kind"": ""reply"", ""ref"": 2066}]",[],"{""new_stop_level"": ""TP1""}",[]
+681,UPDATE,PARSED,trader_a,3171748254,2134,2129,2026-02-04T18:38:19+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2129}]",[],"{""fill_state"": ""FILLED""}",[]
+680,UPDATE,PARSED,trader_a,3171748254,2135,2000,2026-02-04T18:40:42+00:00,закрылся в бу,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2000}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+679,UPDATE,PARSED,trader_a,3171748254,2136,2066,2026-02-04T18:41:31+00:00,"закрылся полностью на 1 тейке
+итог 0.88R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2066}]",[],"{""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+678,UPDATE,PARSED,trader_a,3171748254,2138,2126,2026-02-04T20:00:43+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2126}]",[],"{""fill_state"": ""FILLED""}",[]
+677,UPDATE,PARSED,trader_a,3171748254,2140,2129,2026-02-05T01:21:18+00:00,"был 1 тейк  и сразу закрылась в бу
+итого 0.26R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2129}]",[],"{""result_mode"": ""BREAKEVEN"", ""hit_target"": ""TP1""}",[]
+676,UPDATE,PARSED,trader_a,3171748254,2141,2126,2026-02-05T01:22:12+00:00,"уже было 2 тейка
+0.88R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2126}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+674,UPDATE,PARSED,trader_a,3171748254,2145,2085,2026-02-05T04:32:28+00:00,"стоп
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2085}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+673,UPDATE,PARSED,trader_a,3171748254,2146,2143,2026-02-05T04:32:46+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2143}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+670,UPDATE,PARSED,trader_a,3171748254,2150,2149,2026-02-05T07:09:45+00:00,"самый быстрый стоп)
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2149}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+667,UPDATE,PARSED,trader_a,3171748254,2154,2152,2026-02-05T09:09:30+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2152}]",[],"{""fill_state"": ""FILLED""}",[]
+666,UPDATE,PARSED,trader_a,3171748254,2155,2151,2026-02-05T09:10:49+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2151}]",[],"{""fill_state"": ""FILLED""}",[]
+665,UPDATE,PARSED,trader_a,3171748254,2156,2151,2026-02-05T10:04:05+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2151}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+664,UPDATE,PARSED,trader_a,3171748254,2157,2151,2026-02-05T10:50:00+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2151}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+663,UPDATE,PARSED,trader_a,3171748254,2158,2152,2026-02-05T10:52:37+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2152}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+661,UPDATE,PARSED,trader_a,3171748254,2160,2152,2026-02-05T11:25:17+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2152}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+659,UPDATE,PARSED,trader_a,3171748254,2162,2088,2026-02-05T11:33:02+00:00,"стоп.
+-0.5R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2088}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+655,UPDATE,PARSED,trader_a,3171748254,2169,2165,2026-02-05T14:39:45+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2165}]",[],"{""fill_state"": ""FILLED""}",[]
+654,UPDATE,PARSED,trader_a,3171748254,2170,2165,2026-02-05T14:52:51+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2165}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+653,UPDATE,PARSED,trader_a,3171748254,2171,2166,2026-02-05T14:55:05+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2166}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+652,UPDATE,PARSED,trader_a,3171748254,2172,2164,2026-02-05T14:55:13+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2164}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+651,UPDATE,PARSED,trader_a,3171748254,2173,2161,2026-02-05T14:55:21+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2161}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+650,UPDATE,PARSED,trader_a,3171748254,2174,2165,2026-02-05T15:17:10+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2165}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+648,UPDATE,PARSED,trader_a,3171748254,2176,2165,2026-02-05T15:21:42+00:00,"И она закрылась
+итог - 1.19R",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2165}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+645,UPDATE,PARSED,trader_a,3171748254,2179,2177,2026-02-05T17:17:21+00:00,"поторопился  с лонгами, зафиксируем микроминус",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2177}]",[],{},[]
+644,UPDATE,PARSED,trader_a,3171748254,2180,2178,2026-02-05T17:17:36+00:00,"а тут уберем лимитку
 
-всем хорошего вечера",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2178,signal,single,2178,1,,,,,,,,TARGETED,,,,,0,0,0,
-636,PARSED,2193,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2193,signal,single,2193,1,,,,,,FILLED,,,,,,,0,0,0,
-634,PARSED,2192,"В целом можно зафиксировать часть прибыли. С учетом того, что вошли гораздо ниже твх по сигналу, можно сказать, что тейк взят
+всем хорошего вечера",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2178}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+636,UPDATE,PARSED,trader_a,3171748254,2194,2193,2026-02-06T10:21:28+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2193}]",[],"{""fill_state"": ""FILLED""}",[]
+634,UPDATE,PARSED,trader_a,3171748254,2198,2192,2026-02-06T14:08:22+00:00,"В целом можно зафиксировать часть прибыли. С учетом того, что вошли гораздо ниже твх по сигналу, можно сказать, что тейк взят
 
 Стоп в бу после фиксации части
-Зафиксировал 50% на 0.3406",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_PARTIAL | U_TP_HIT,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION(close_fraction=0.5),,,,0.7,,,,2192,signal,single,2192,1,,ENTRY,PARTIAL,0.5,TP,,,,,,,,0,0,0,
-633,PARSED,2193,"Эх. Стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2193,signal,single,2193,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-632,PARSED,2195,Тут отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2195,signal,single,2195,1,,,,,,,,TARGETED,,,,,0,0,0,
-631,PARSED,2186,"здесь уже прилично прошли, кто переживает - можете частично фиксировать позицию и защищать ее стопом в бу
+Зафиксировал 50% на 0.3406",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CLOSE_PARTIAL"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2192}]",[],"{""new_stop_level"": ""ENTRY"", ""close_scope"": ""PARTIAL"", ""close_fraction"": 0.5, ""hit_target"": ""TP""}",[]
+633,UPDATE,PARSED,trader_a,3171748254,2199,2193,2026-02-06T14:36:07+00:00,"Эх. Стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2193}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+632,UPDATE,PARSED,trader_a,3171748254,2200,2195,2026-02-06T14:44:25+00:00,Тут отмена,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2195}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+631,UPDATE,PARSED,trader_a,3171748254,2202,2186,2026-02-06T15:59:16+00:00,"здесь уже прилично прошли, кто переживает - можете частично фиксировать позицию и защищать ее стопом в бу
 
-я буду держать согласно сетапа",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_PARTIAL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION,,,,0.7,,,,2186,signal,single,2186,1,,ENTRY,PARTIAL,,,,,,,,,,0,0,0,
-629,PARSED,2186,а вот и 1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2186,signal,single,2186,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-628,PARSED,2192,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2192,signal,single,2192,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-626,PARSED,2203,"тоже отбой
-всем хорошего вечера",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2203,signal,single,2203,1,,,,,,,,TARGETED,,,,,0,0,0,
-620,PARSED,2211,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2211,signal,single,2211,1,,,,,,FILLED,,,,,,,0,0,0,
-613,PARSED,2218,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2218,signal,single,2218,1,,,,,,FILLED,,,,,,,0,0,0,
-612,PARSED,2220,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2220,signal,single,2220,1,,,,,,FILLED,,,,,,,0,0,0,
-610,PARSED,2211,"Рынок конечно…
-Стоп -1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2211,signal,single,2211,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-609,PARSED,2218,Стоп -1R,,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2218,signal,single,2218,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-608,PARSED,2220,"Стоп 
+я буду держать согласно сетапа",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2186}]",[],"{""new_stop_level"": ""ENTRY"", ""close_scope"": ""PARTIAL""}",[]
+629,UPDATE,PARSED,trader_a,3171748254,2204,2186,2026-02-06T16:11:03+00:00,а вот и 1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2186}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+628,UPDATE,PARSED,trader_a,3171748254,2205,2192,2026-02-06T16:36:50+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2192}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+626,UPDATE,PARSED,trader_a,3171748254,2207,2203,2026-02-06T16:41:51+00:00,"тоже отбой
+всем хорошего вечера",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2203}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+620,UPDATE,PARSED,trader_a,3171748254,2214,2211,2026-02-06T19:10:20+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2211}]",[],"{""fill_state"": ""FILLED""}",[]
+613,UPDATE,PARSED,trader_a,3171748254,2224,2218,2026-02-07T06:58:18+00:00,Лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2218}]",[],"{""fill_state"": ""FILLED""}",[]
+612,UPDATE,PARSED,trader_a,3171748254,2225,2220,2026-02-07T07:00:06+00:00,Лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2220}]",[],"{""fill_state"": ""FILLED""}",[]
+610,UPDATE,PARSED,trader_a,3171748254,2227,2211,2026-02-07T07:35:33+00:00,"Рынок конечно…
+Стоп -1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2211}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+609,UPDATE,PARSED,trader_a,3171748254,2228,2218,2026-02-07T07:35:48+00:00,Стоп -1R,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2218}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+608,UPDATE,PARSED,trader_a,3171748254,2229,2220,2026-02-07T07:36:00+00:00,"Стоп 
 -1R
 
-На сегодня берём перерыв)",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2220,signal,single,2220,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-607,PARSED,2192,"сделка закрылась
-итог 1.36R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2192,signal,single,2192,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-604,PARSED,2187,"что-то я пропустил. вчера, оказывается, был 1 тейк
+На сегодня берём перерыв)",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2220}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+607,UPDATE,PARSED,trader_a,3171748254,2233,2192,2026-02-07T16:19:29+00:00,"сделка закрылась
+итог 1.36R",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2192}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+604,UPDATE,PARSED,trader_a,3171748254,2241,2187,2026-02-08T11:20:04+00:00,"что-то я пропустил. вчера, оказывается, был 1 тейк
 
-стоп в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2187,signal,single,2187,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-599,PARSED,2186,Стоп поставьте на первый тейк - 69295.6,,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,2186,signal,single,2186,1,,,,,STOP,,,,,,,,0,0,0,
-598,PARSED,2186,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2186,signal,single,2186,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-595,PARSED,2186,"Эту закрываем полностью
+стоп в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2187}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+599,UPDATE,PARSED,trader_a,3171748254,2249,2186,2026-02-08T19:54:41+00:00,Стоп поставьте на первый тейк - 69295.6,,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2186}]",[],"{""hit_target"": ""STOP""}",[]
+598,UPDATE,PARSED,trader_a,3171748254,2251,2186,2026-02-08T23:22:51+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2186}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+595,UPDATE,PARSED,trader_a,3171748254,2255,2186,2026-02-09T07:20:12+00:00,"Эту закрываем полностью
 открываем новую
 
-1.16R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2186,signal,single,2186,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-587,PARSED,,"[trader #A]
+1.16R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2186}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+587,UPDATE,PARSED,trader_a,3171748254,2266,,2026-02-09T16:50:50+00:00,"[trader #A]
 
 https://t.me/c/3171748254/2243
 https://t.me/c/3171748254/2242
@@ -735,20 +735,20 @@ https://t.me/c/3171748254/2221
 
 давайте по этим сигналам пока уберем лимитки
 
-буду следить за ними, может позже вернем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,2243 | 2242 | 2222 | 2221,4,,,,,,,,TARGETED,,,,,0,0,0,
-571,PARSED,2219,"стоп
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2219,signal,single,2219,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-570,PARSED,2287,тут отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2287,signal,single,2287,1,,,,,,,,TARGETED,,,,,0,0,0,
-567,PARSED,2256,"Стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2256,signal,single,2256,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-548,PARSED,2294,"тут отмена, вечером уже активно поторгуем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2294,signal,single,2294,1,,,,,,,,TARGETED,,,,,0,0,0,
-529,PARSED,2187,"пропустил
+буду следить за ними, может позже вернем",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2243""}, {""kind"": ""message_id"", ""ref"": 2243}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2242""}, {""kind"": ""message_id"", ""ref"": 2242}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2222""}, {""kind"": ""message_id"", ""ref"": 2222}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2221""}, {""kind"": ""message_id"", ""ref"": 2221}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+571,UPDATE,PARSED,trader_a,3171748254,2292,2219,2026-02-11T03:55:37+00:00,"стоп
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2219}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+570,UPDATE,PARSED,trader_a,3171748254,2293,2287,2026-02-11T03:55:51+00:00,тут отмена,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2287}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+567,UPDATE,PARSED,trader_a,3171748254,2298,2256,2026-02-11T08:19:32+00:00,"Стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2256}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+548,UPDATE,PARSED,trader_a,3171748254,2318,2294,2026-02-11T14:08:48+00:00,"тут отмена, вечером уже активно поторгуем",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2294}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+529,UPDATE,PARSED,trader_a,3171748254,2338,2187,2026-02-11T18:16:18+00:00,"пропустил
 закрылся в бу
-0.33R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2187,signal,single,2187,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-519,PARSED,2342,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2342,signal,single,2342,1,,,,,,FILLED,,,,,,,0,0,0,
-516,PARSED,2342,"тейк
-0.89R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2342,signal,single,2342,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-497,PARSED,,"[trader #A]
+0.33R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2187}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+519,UPDATE,PARSED,trader_a,3171748254,2349,2342,2026-02-11T20:24:39+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2342}]",[],"{""fill_state"": ""FILLED""}",[]
+516,UPDATE,PARSED,trader_a,3171748254,2353,2342,2026-02-12T01:43:10+00:00,"тейк
+0.89R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2342}]",[],"{""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+497,UPDATE,PARSED,trader_a,3171748254,2375,,2026-02-12T12:19:36+00:00,"[trader #A]
 
 хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам
 
@@ -762,16 +762,16 @@ https://t.me/c/3171748254/2261
 fart - 0.38R
 ldo - 0.14R
 zil - 0.32R
-haedal - 0.91R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,,signal_group,multiple,2261 | 2275 | 2359 | 2361,4,,,FULL,,,,R_MULTIPLE,,,,,,0,0,0,
-495,PARSED,2234,"фиксирую по текущим
--0.21R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2234,signal,single,2234,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-494,PARSED,2371,"фиксирую по текущим
--0.03R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2371,signal,single,2371,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-493,PARSED,2360,"фиксирую по текущим
--0.04R",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2360,signal,single,2360,1,,,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-478,PARSED,2397,Отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2397,signal,single,2397,1,,,,,,,,TARGETED,,,,,0,0,0,
-471,PARSED,2348,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2348,signal,single,2348,1,,,,,,,,TARGETED,,,,,0,0,0,
-467,PARSED,,"Trader #A
+haedal - 0.91R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2361""}, {""kind"": ""message_id"", ""ref"": 2361}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2359""}, {""kind"": ""message_id"", ""ref"": 2359}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2275""}, {""kind"": ""message_id"", ""ref"": 2275}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2261""}, {""kind"": ""message_id"", ""ref"": 2261}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""R_MULTIPLE""}",[]
+495,UPDATE,PARSED,trader_a,3171748254,2377,2234,2026-02-12T12:35:50+00:00,"фиксирую по текущим
+-0.21R",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2234}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+494,UPDATE,PARSED,trader_a,3171748254,2378,2371,2026-02-12T12:36:25+00:00,"фиксирую по текущим
+-0.03R",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2371}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+493,UPDATE,PARSED,trader_a,3171748254,2379,2360,2026-02-12T12:37:03+00:00,"фиксирую по текущим
+-0.04R",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2360}]",[],"{""result_mode"": ""TEXT_SUMMARY""}",[]
+478,UPDATE,PARSED,trader_a,3171748254,2401,2397,2026-02-13T14:48:31+00:00,Отмена,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2397}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+471,UPDATE,PARSED,trader_a,3171748254,2409,2348,2026-02-13T16:18:32+00:00,убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2348}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+467,UPDATE,PARSED,trader_a,3171748254,2413,,2026-02-13T18:12:27+00:00,"Trader #A
 
 зафиксирую все свои позиции по текущим, не будет возможности контролировать сделки
 
@@ -783,25 +783,25 @@ PEOPLEUSDT - 0.24R
 DOGEUSDT - 0.23R
 
 
-Всем хорошего вечера и выходных",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,,signal,unknown,,0,,,ALL_ALL,,,,R_MULTIPLE,,,,,,0,0,0,
-463,PARSED,2234,Кто не закрывал вместе со мной - поздравляю с тейком. В мою статистку не идет. Не забывайте стопы переводить в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2234,signal,single,2234,1,,ENTRY,,,TP,,,,,,,,0,0,0,
-450,PARSED,2425,стоп в бу ставим,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2425,signal,single,2425,1,,ENTRY,,,,,,,,,,,0,0,0,
-444,PARSED,2446,"без нас улетели..печально. 
-лимитку убираем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2446,signal,single,2446,1,,,,,,,,TARGETED,,,,,0,0,0,
-443,PARSED,2447,"без нас улетели..печально
-лимитку убираем",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2447,signal,single,2447,1,,,,,,,,TARGETED,,,,,0,0,0,
-439,PARSED,2443,чтобы минимизировать риск - стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2443,signal,single,2443,1,,ENTRY,,,,,,,,,,,0,0,0,
-438,PARSED,2443,"тейк, стоп уже в бу
-0.72R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2443,signal,single,2443,1,,ENTRY,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-393,PARSED,2522,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2522,signal,single,2522,1,,,,,,FILLED,,,,,,,0,0,0,
-387,PARSED,2522,"Тейк
-0.59R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2522,signal,single,2522,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-378,PARSED,2444,"1 тейк, стоп в бу
-0.23R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2444,signal,single,2444,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-373,PARSED,2443,стоп переносим на 1 тейк - 0.0998,,,U_MOVE_STOP,U_MOVE_STOP | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=1),,,,0.7,,,,2443,signal,single,2443,1,,1.0,,,TP1,,,,,,,,0,0,0,
-366,PARSED,2480,"1 тейк, стоп в бу
-0.62R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2480,signal,single,2480,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-360,PARSED,,"Trader #A
+Всем хорошего вечера и выходных",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],[],[],"{""close_scope"": ""ALL_ALL"", ""result_mode"": ""R_MULTIPLE""}",[]
+463,UPDATE,PARSED,trader_a,3171748254,2421,2234,2026-02-14T08:37:20+00:00,Кто не закрывал вместе со мной - поздравляю с тейком. В мою статистку не идет. Не забывайте стопы переводить в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2234}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP""}",[]
+450,UPDATE,PARSED,trader_a,3171748254,2442,2425,2026-02-15T13:45:56+00:00,стоп в бу ставим,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2425}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+444,UPDATE,PARSED,trader_a,3171748254,2449,2446,2026-02-15T17:50:57+00:00,"без нас улетели..печально. 
+лимитку убираем",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2446}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+443,UPDATE,PARSED,trader_a,3171748254,2450,2447,2026-02-15T17:51:01+00:00,"без нас улетели..печально
+лимитку убираем",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2447}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+439,UPDATE,PARSED,trader_a,3171748254,2460,2443,2026-02-16T13:19:06+00:00,чтобы минимизировать риск - стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2443}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+438,UPDATE,PARSED,trader_a,3171748254,2461,2443,2026-02-16T13:51:04+00:00,"тейк, стоп уже в бу
+0.72R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2443}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+393,UPDATE,PARSED,trader_a,3171748254,2523,2522,2026-02-18T17:07:22+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2522}]",[],"{""fill_state"": ""FILLED""}",[]
+387,UPDATE,PARSED,trader_a,3171748254,2530,2522,2026-02-18T18:29:49+00:00,"Тейк
+0.59R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2522}]",[],"{""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+378,UPDATE,PARSED,trader_a,3171748254,2539,2444,2026-02-18T19:39:29+00:00,"1 тейк, стоп в бу
+0.23R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2444}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+373,UPDATE,PARSED,trader_a,3171748254,2548,2443,2026-02-19T08:39:00+00:00,стоп переносим на 1 тейк - 0.0998,,,,,,,[],,,,"[""U_MOVE_STOP"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2443}]",[],"{""new_stop_level"": 1.0, ""hit_target"": ""TP1""}",[]
+366,UPDATE,PARSED,trader_a,3171748254,2559,2480,2026-02-19T16:04:13+00:00,"1 тейк, стоп в бу
+0.62R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2480}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+360,UPDATE,PARSED,trader_a,3171748254,2568,,2026-02-20T05:45:17+00:00,"Trader #A
 Закрываю все позиции, результаты по каждой обновлю в этом посте, нужно подождать, посмотреть на рынок
 BTC - 2.8R
 Link - 0.54R
@@ -811,50 +811,50 @@ sol - 0.18R
 near - 0.96R
 ton - 0.7R
 pepe - 0.14R (убыток)
-aster - 0.32R (убыток)",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,,signal,unknown,,0,,,ALL_ALL,,,,R_MULTIPLE,,,,,,0,0,0,
-359,PARSED,2544,"Здесь, если закрыть по текущим, получатся скромные 0.2R
+aster - 0.32R (убыток)",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],[],[],"{""close_scope"": ""ALL_ALL"", ""result_mode"": ""R_MULTIPLE""}",[]
+359,UPDATE,PARSED,trader_a,3171748254,2569,2544,2026-02-20T05:51:13+00:00,"Здесь, если закрыть по текущим, получатся скромные 0.2R
 
-Напомню, что эта сделка в статистику не идет",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2544,signal,single,2544,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-338,PARSED,2589,"Стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2589,signal,single,2589,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-337,PARSED,2575,"Стоп 
+Напомню, что эта сделка в статистику не идет",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2544}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+338,UPDATE,PARSED,trader_a,3171748254,2594,2589,2026-02-20T13:36:55+00:00,"Стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2589}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+337,UPDATE,PARSED,trader_a,3171748254,2595,2575,2026-02-20T13:37:31+00:00,"Стоп 
 -1R 
-Вывод: интрадей не мое😏",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2575,signal,single,2575,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-336,PARSED,,"trader #A
+Вывод: интрадей не мое😏",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2575}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+336,UPDATE,PARSED,trader_a,3171748254,2596,,2026-02-20T13:39:59+00:00,"trader #A
 
 https://t.me/c/3171748254/2571
 https://t.me/c/3171748254/2573
 
 снимаем лимитки
 
-посмотрим сегодня среднесрок😊",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,2571 | 2573,2,,,,,,,,TARGETED,,,,,0,0,0,
-333,PARSED,2572,Тейк. Стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2572,signal,single,2572,1,,ENTRY,,,TP,,,,,,,,0,0,0,
-328,PARSED,2572,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2572,signal,single,2572,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-327,PARSED,2572,"Все тейки
+посмотрим сегодня среднесрок😊",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2571""}, {""kind"": ""message_id"", ""ref"": 2571}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2573""}, {""kind"": ""message_id"", ""ref"": 2573}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+333,UPDATE,PARSED,trader_a,3171748254,2599,2572,2026-02-20T14:05:42+00:00,Тейк. Стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2572}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP""}",[]
+328,UPDATE,PARSED,trader_a,3171748254,2604,2572,2026-02-20T14:36:32+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2572}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+327,UPDATE,PARSED,trader_a,3171748254,2605,2572,2026-02-20T15:06:56+00:00,"Все тейки
 
-0.65R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2572,signal,single,2572,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-312,PARSED,2577,Стоп поставьте на 0.5749,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,2577,signal,single,2577,1,,,,,STOP,,,,,,,,0,0,0,
-311,PARSED,2577,"Закрываю по текущим - 0.5962
-1.8R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2577,signal,single,2577,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-308,PARSED,2635,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2635,signal,single,2635,1,,,,,,,,TARGETED,,,,,0,0,0,
-306,PARSED,2634,Не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2634,signal,single,2634,1,,,,,,,,TARGETED,,,,,0,0,0,
-300,PARSED,2649,"шалость не удалась
+0.65R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2572}]",[],"{""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+312,UPDATE,PARSED,trader_a,3171748254,2632,2577,2026-02-21T20:05:42+00:00,Стоп поставьте на 0.5749,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2577}]",[],"{""hit_target"": ""STOP""}",[]
+311,UPDATE,PARSED,trader_a,3171748254,2633,2577,2026-02-21T20:13:54+00:00,"Закрываю по текущим - 0.5962
+1.8R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2577}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+308,UPDATE,PARSED,trader_a,3171748254,2638,2635,2026-02-22T05:19:16+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2635}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+306,UPDATE,PARSED,trader_a,3171748254,2641,2634,2026-02-22T07:22:47+00:00,Не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2634}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+300,UPDATE,PARSED,trader_a,3171748254,2654,2649,2026-02-23T07:48:47+00:00,"шалость не удалась
 Стоп 
 -0.5R
 
-p.s. очень обидный стоп",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2649,signal,single,2649,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-299,PARSED,2612,"1 тейк. Стоп в бу
-0.42R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2612,signal,single,2612,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-295,PARSED,2610,поставьте стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2610,signal,single,2610,1,,ENTRY,,,,,,,,,,,0,0,0,
-290,PARSED,2663,"1 тейк. Стоп в бу
-0.45R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2663,signal,single,2663,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-289,PARSED,2663,"закрываю сейчас по текущим полностью позицию. уже хороший профит
+p.s. очень обидный стоп",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2649}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+299,UPDATE,PARSED,trader_a,3171748254,2657,2612,2026-02-23T12:50:05+00:00,"1 тейк. Стоп в бу
+0.42R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2612}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+295,UPDATE,PARSED,trader_a,3171748254,2662,2610,2026-02-23T16:05:28+00:00,поставьте стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2610}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+290,UPDATE,PARSED,trader_a,3171748254,2669,2663,2026-02-23T21:35:36+00:00,"1 тейк. Стоп в бу
+0.45R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2663}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+289,UPDATE,PARSED,trader_a,3171748254,2671,2663,2026-02-24T03:21:27+00:00,"закрываю сейчас по текущим полностью позицию. уже хороший профит
 
-1.17R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2663,signal,single,2663,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-288,PARSED,2643,"закрываю 50% по текущим. стоп в бу
+1.17R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2663}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+288,UPDATE,PARSED,trader_a,3171748254,2672,2643,2026-02-24T03:22:36+00:00,"закрываю 50% по текущим. стоп в бу
 
-0.42R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2643,signal,single,2643,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-286,PARSED,,"Trader #A 
+0.42R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2643}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+286,UPDATE,PARSED,trader_a,3171748254,2675,,2026-02-24T04:15:59+00:00,"Trader #A 
 
 пока новых сделок не будет. доведем до тейков те, что остались
 
@@ -865,14 +865,14 @@ BTC
 PAXG (стоп в бу стоит)
 JST (был 1 тейк, стоп в бу)
 BONK (был 1 тейк, стоп в бу)
-BNB",trader_a_update_missing_target,trader_a_update_missing_target,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.55,,,,,signal,unknown,,0,,ENTRY,,,TP1,,,,,,,,0,0,0,
-279,PARSED,2675,"передвиньте стопы в плюс или бу (я буду в бу двигать), по ASTER оставляем стоп как есть",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2675,signal,single,2675,1,,ENTRY,,,,,,,,,,,0,0,0,
-270,PARSED,2598,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2598,signal,single,2598,1,,ENTRY,,,,,,,,,,,0,0,0,
-269,PARSED,2673,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2673,signal,single,2673,1,,ENTRY,,,,,,,,,,,0,0,0,
-257,PARSED,2711,тут лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2711,signal,single,2711,1,,,,,,FILLED,,,,,,,0,0,0,
-256,PARSED,2643,"закрылся в бу
-итого 0.42R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2643,signal,single,2643,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-249,PARSED,2712,"Trader #A
+BNB",trader_a_update_missing_target,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],[],[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+279,UPDATE,PARSED,trader_a,3171748254,2685,2675,2026-02-24T14:19:19+00:00,"передвиньте стопы в плюс или бу (я буду в бу двигать), по ASTER оставляем стоп как есть",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2675}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+270,UPDATE,PARSED,trader_a,3171748254,2697,2598,2026-02-25T03:24:47+00:00,закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2598}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+269,UPDATE,PARSED,trader_a,3171748254,2698,2673,2026-02-25T03:26:43+00:00,закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2673}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+257,UPDATE,PARSED,trader_a,3171748254,2714,2711,2026-02-25T14:16:23+00:00,тут лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2711}]",[],"{""fill_state"": ""FILLED""}",[]
+256,UPDATE,PARSED,trader_a,3171748254,2715,2643,2026-02-25T14:19:51+00:00,"закрылся в бу
+итого 0.42R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2643}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+249,UPDATE,PARSED,trader_a,3171748254,2722,2712,2026-02-25T15:01:10+00:00,"Trader #A
 
 https://t.me/c/3171748254/2712
 https://t.me/c/3171748254/2713
@@ -880,43 +880,43 @@ https://t.me/c/3171748254/2718
  
 Отменяем лимитки
 
-Продолжим после 19:00",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,,signal_group,multiple,2712 | 2713 | 2718,3,,,,,,,,TARGETED,,,,,0,0,0,
-248,PARSED,2719,Тут тоже снимаем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2719,signal,single,2719,1,,,,,,,,TARGETED,,,,,0,0,0,
-247,PARSED,2712,Тейк,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,2712,signal,single,2712,1,,,,,TP,,,,,,,,0,0,0,
-246,PARSED,2724,"Шучу
+Продолжим после 19:00",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2712}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2712""}, {""kind"": ""message_id"", ""ref"": 2712}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2713""}, {""kind"": ""message_id"", ""ref"": 2713}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2718""}, {""kind"": ""message_id"", ""ref"": 2718}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+248,UPDATE,PARSED,trader_a,3171748254,2723,2719,2026-02-25T15:38:09+00:00,Тут тоже снимаем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2719}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+247,UPDATE,PARSED,trader_a,3171748254,2724,2712,2026-02-25T15:44:32+00:00,Тейк,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2712}]",[],"{""hit_target"": ""TP""}",[]
+246,UPDATE,PARSED,trader_a,3171748254,2725,2724,2026-02-25T15:45:54+00:00,"Шучу
 
-Тут тейк https://t.me/c/3171748254/2711",,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,,signal_group,multiple,2724 | 2711,2,,,,,TP,,,,,,,,0,0,0,
-243,PARSED,2612,"закрылся в бу
-итог 0.42R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2612,signal,single,2612,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-229,PARSED,2739,"тейк
+Тут тейк https://t.me/c/3171748254/2711",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2724}, {""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/2711""}, {""kind"": ""message_id"", ""ref"": 2711}]",[],"{""hit_target"": ""TP""}",[]
+243,UPDATE,PARSED,trader_a,3171748254,2729,2612,2026-02-25T16:09:59+00:00,"закрылся в бу
+итог 0.42R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2612}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+229,UPDATE,PARSED,trader_a,3171748254,2743,2739,2026-02-25T18:27:17+00:00,"тейк
 0.87R
 
-ищу новую сделку",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2739,signal,single,2739,1,,,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-224,PARSED,2703,"тут стоп
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2703,signal,single,2703,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-220,PARSED,2734,"тут стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2734,signal,single,2734,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-209,PARSED,2706,"стоп
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2706,signal,single,2706,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-206,PARSED,2772,точка входа 84.86,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2772,signal,single,2772,1,,ENTRY,,,,,,,,,,,0,0,0,
-191,PARSED,,"[trader #A]
+ищу новую сделку",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2739}]",[],"{""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+224,UPDATE,PARSED,trader_a,3171748254,2748,2703,2026-02-25T19:30:49+00:00,"тут стоп
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2703}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+220,UPDATE,PARSED,trader_a,3171748254,2755,2734,2026-02-26T04:28:35+00:00,"тут стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2734}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+209,UPDATE,PARSED,trader_a,3171748254,2770,2706,2026-02-26T16:34:42+00:00,"стоп
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2706}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+206,UPDATE,PARSED,trader_a,3171748254,2773,2772,2026-02-26T16:48:21+00:00,точка входа 84.86,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2772}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+191,UPDATE,PARSED,trader_a,3171748254,2798,,2026-02-27T17:48:08+00:00,"[trader #A]
 
 Чтобы не кормить ""лося"" закрываю по текущим AVAX и PEOPLE
 
 По  SOL и SUI стоп в бу
 
 AVAX - 0.5R (убыток)
-PEOPLE - 0.28R (убыток)",trader_a_update_missing_target,trader_a_update_missing_target,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.55,,,,,signal,unknown,,0,,,FULL,,,,R_MULTIPLE,,,,,,0,0,0,
-189,PARSED,2610,"Фиксирую 50% по текущей цене. Стоп в бу
+PEOPLE - 0.28R (убыток)",trader_a_update_missing_target,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],[],[],"{""close_scope"": ""FULL"", ""result_mode"": ""R_MULTIPLE""}",[]
+189,UPDATE,PARSED,trader_a,3171748254,2801,2610,2026-02-27T21:17:07+00:00,"Фиксирую 50% по текущей цене. Стоп в бу
 
-0.79R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_CLOSE_PARTIAL | U_REPORT_FINAL_RESULT,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=ENTRY) | CLOSE_POSITION(close_fraction=0.5),,,,0.7,,,,2610,signal,single,2610,1,,ENTRY,PARTIAL,0.5,,,TEXT_SUMMARY,,,,,,0,0,0,
-188,PARSED,2761,"Тейк. Стоп в бу
+0.79R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_CLOSE_PARTIAL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2610}]",[],"{""new_stop_level"": ""ENTRY"", ""close_scope"": ""PARTIAL"", ""close_fraction"": 0.5, ""result_mode"": ""TEXT_SUMMARY""}",[]
+188,UPDATE,PARSED,trader_a,3171748254,2802,2761,2026-02-27T22:27:33+00:00,"Тейк. Стоп в бу
 
-0.34R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2761,signal,single,2761,1,,ENTRY,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-186,PARSED,2772,"тейк, стоп в бу
-0.36R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2772,signal,single,2772,1,,ENTRY,,,TP,,TEXT_SUMMARY,,,,,,0,0,0,
-183,PARSED,2809,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,2809,signal,single,2809,1,,,,,STOP,,,,,,,,0,0,0,
-179,PARSED,,"Trader #A 
+0.34R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2761}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+186,UPDATE,PARSED,trader_a,3171748254,2807,2772,2026-02-28T06:18:49+00:00,"тейк, стоп в бу
+0.36R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2772}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+183,UPDATE,PARSED,trader_a,3171748254,2810,2809,2026-02-28T06:56:16+00:00,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2809}]",[],"{""hit_target"": ""STOP""}",[]
+179,UPDATE,PARSED,trader_a,3171748254,2816,,2026-02-28T13:40:14+00:00,"Trader #A 
 
 Закрываю все позиции по текущим, чтобы закрыть февраль
 
@@ -926,104 +926,104 @@ bnb - 0.07R (убыток)
 sol - 0.82R
 sui - 0.95R
 paxg - 2.2R
-aster - 0.12R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION,,,,0.7,,,,,signal,unknown,,0,,,ALL_ALL,,,,R_MULTIPLE,,,,,,0,0,0,
-172,PARSED,2817,Стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2817,signal,single,2817,1,,ENTRY,,,,,,,,,,,0,0,0,
-157,PARSED,2851,"1 тейк. Стоп в бу
+aster - 0.12R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],[],[],"{""close_scope"": ""ALL_ALL"", ""result_mode"": ""R_MULTIPLE""}",[]
+172,UPDATE,PARSED,trader_a,3171748254,2828,2817,2026-03-01T04:51:32+00:00,Стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2817}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+157,UPDATE,PARSED,trader_a,3171748254,2853,2851,2026-03-02T05:47:03+00:00,"1 тейк. Стоп в бу
 
-0.62R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2851,signal,single,2851,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-154,PARSED,2855,тут отмена,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2855,signal,single,2855,1,,,,,,,,TARGETED,,,,,0,0,0,
-153,PARSED,2851,"закрылась в бу
-итого 0.62R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2851,signal,single,2851,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-151,PARSED,2859,"хочется написать много непечатных слов по поводу 1 копейки...
+0.62R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2851}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+154,UPDATE,PARSED,trader_a,3171748254,2856,2855,2026-03-02T07:05:45+00:00,тут отмена,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2855}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+153,UPDATE,PARSED,trader_a,3171748254,2857,2851,2026-03-02T07:10:54+00:00,"закрылась в бу
+итого 0.62R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2851}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+151,UPDATE,PARSED,trader_a,3171748254,2860,2859,2026-03-02T09:11:18+00:00,"хочется написать много непечатных слов по поводу 1 копейки...
 
-убираем лимитку😔",,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2859,signal,single,2859,1,,,,,,,,TARGETED,,,,,0,0,0,
-148,PARSED,2862,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2862,signal,single,2862,1,,,,,,FILLED,,,,,,,0,0,0,
-147,PARSED,2862,"1 тейк. стоп в бу
+убираем лимитку😔",,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2859}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+148,UPDATE,PARSED,trader_a,3171748254,2865,2862,2026-03-02T13:53:59+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2862}]",[],"{""fill_state"": ""FILLED""}",[]
+147,UPDATE,PARSED,trader_a,3171748254,2867,2862,2026-03-02T14:19:32+00:00,"1 тейк. стоп в бу
 
-0.37R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2862,signal,single,2862,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-146,PARSED,2861,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2861,signal,single,2861,1,,,,,,FILLED,,,,,,,0,0,0,
-145,PARSED,2862,"2 тейк
-0.94R",,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2862,signal,single,2862,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-144,PARSED,2861,"стоп
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2861,signal,single,2861,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-142,PARSED,2854,"1 тейк. стоп в бу
-0.59R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2854,signal,single,2854,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-140,PARSED,2817,"1 тейк, стоп в бу
+0.37R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2862}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+146,UPDATE,PARSED,trader_a,3171748254,2868,2861,2026-03-02T14:35:01+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2861}]",[],"{""fill_state"": ""FILLED""}",[]
+145,UPDATE,PARSED,trader_a,3171748254,2869,2862,2026-03-02T14:48:04+00:00,"2 тейк
+0.94R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2862}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+144,UPDATE,PARSED,trader_a,3171748254,2870,2861,2026-03-02T14:50:56+00:00,"стоп
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2861}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+142,UPDATE,PARSED,trader_a,3171748254,2872,2854,2026-03-02T15:07:34+00:00,"1 тейк. стоп в бу
+0.59R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2854}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+140,UPDATE,PARSED,trader_a,3171748254,2875,2817,2026-03-02T15:39:34+00:00,"1 тейк, стоп в бу
 
-0.66R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2817,signal,single,2817,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-138,PARSED,2862,"закрываю остаток по текущим
+0.66R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2817}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+138,UPDATE,PARSED,trader_a,3171748254,2877,2862,2026-03-02T16:14:06+00:00,"закрываю остаток по текущим
 итог 1.12R 
 
-Для справки, здесь и во всех постах о тейках или стопах R нарастающим итогом",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2862,signal,single,2862,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-133,PARSED,2817,стоп переношу на 65000,,,U_MOVE_STOP,U_MOVE_STOP,MOVE_STOP,MOVE_STOP(new_stop_level=65000),,,,0.7,,,,2817,signal,single,2817,1,,65000.0,,,,,,,,,,,0,0,0,
-131,PARSED,2881,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2881,signal,single,2881,1,,,,,,FILLED,,,,,,,0,0,0,
-130,PARSED,2880,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2880,signal,single,2880,1,,,,,,FILLED,,,,,,,0,0,0,
-129,PARSED,2832,стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2832,signal,single,2832,1,,ENTRY,,,,,,,,,,,0,0,0,
-126,PARSED,2892,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2892,signal,single,2892,1,,,,,,FILLED,,,,,,,0,0,0,
-125,PARSED,2880,"стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2880,signal,single,2880,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-124,PARSED,2892,"1 тейк. стоп в бу
-0.27R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2892,signal,single,2892,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-123,PARSED,2892,"закрылась в бу
-итог 0.27R",,,U_EXIT_BE,U_EXIT_BE | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2892,signal,single,2892,1,,,,,,,BREAKEVEN,,,,,,0,0,0,
-121,PARSED,2832,"1 тейк. Стоп в бу
+Для справки, здесь и во всех постах о тейках или стопах R нарастающим итогом",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2862}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+133,UPDATE,PARSED,trader_a,3171748254,2882,2817,2026-03-02T18:31:28+00:00,стоп переношу на 65000,,,,,,,[],,,,"[""U_MOVE_STOP""]",[],"[{""kind"": ""reply"", ""ref"": 2817}]",[],"{""new_stop_level"": 65000.0}",[]
+131,UPDATE,PARSED,trader_a,3171748254,2886,2881,2026-03-03T03:30:08+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2881}]",[],"{""fill_state"": ""FILLED""}",[]
+130,UPDATE,PARSED,trader_a,3171748254,2888,2880,2026-03-03T04:44:33+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2880}]",[],"{""fill_state"": ""FILLED""}",[]
+129,UPDATE,PARSED,trader_a,3171748254,2890,2832,2026-03-03T10:22:11+00:00,стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2832}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+126,UPDATE,PARSED,trader_a,3171748254,2894,2892,2026-03-03T13:21:36+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2892}]",[],"{""fill_state"": ""FILLED""}",[]
+125,UPDATE,PARSED,trader_a,3171748254,2895,2880,2026-03-03T13:32:33+00:00,"стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2880}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+124,UPDATE,PARSED,trader_a,3171748254,2896,2892,2026-03-03T14:07:17+00:00,"1 тейк. стоп в бу
+0.27R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2892}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+123,UPDATE,PARSED,trader_a,3171748254,2897,2892,2026-03-03T14:30:15+00:00,"закрылась в бу
+итог 0.27R",,,,,,,[],,,,"[""U_EXIT_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2892}]",[],"{""result_mode"": ""BREAKEVEN""}",[]
+121,UPDATE,PARSED,trader_a,3171748254,2900,2832,2026-03-03T14:50:51+00:00,"1 тейк. Стоп в бу
 
-0.37R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2832,signal,single,2832,1,,ENTRY,,,TP1,,TEXT_SUMMARY,,,,,,0,0,0,
-108,PARSED,2913,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2913,signal,single,2913,1,,,,,,FILLED,,,,,,,0,0,0,
-107,PARSED,2914,тейк. стоп пока не переносим в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2914,signal,single,2914,1,,ENTRY,,,TP,,,,,,,,0,0,0,
-106,PARSED,2817,стоп переносим на 67000,,,U_MOVE_STOP,U_MOVE_STOP,MOVE_STOP,MOVE_STOP(new_stop_level=67000),,,,0.7,,,,2817,signal,single,2817,1,,67000.0,,,,,,,,,,,0,0,0,
-105,PARSED,2916,убираем лимитку,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2916,signal,single,2916,1,,,,,,,,TARGETED,,,,,0,0,0,
-102,PARSED,2913,"стоп
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2913,signal,single,2913,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-100,PARSED,2881,1 тейк,,,U_TP_HIT,U_TP_HIT,,,,,,0.7,,,,2881,signal,single,2881,1,,,,,TP1,,,,,,,,0,0,0,
-99,PARSED,2914,2 тейк,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2914,signal,single,2914,1,,,,,TP2,,TEXT_SUMMARY,,,,,,0,0,0,
-98,PARSED,2914,"закрылось в бу
+0.37R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2832}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+108,UPDATE,PARSED,trader_a,3171748254,2918,2913,2026-03-04T08:45:41+00:00,Лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2913}]",[],"{""fill_state"": ""FILLED""}",[]
+107,UPDATE,PARSED,trader_a,3171748254,2919,2914,2026-03-04T08:50:33+00:00,тейк. стоп пока не переносим в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2914}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP""}",[]
+106,UPDATE,PARSED,trader_a,3171748254,2920,2817,2026-03-04T08:56:44+00:00,стоп переносим на 67000,,,,,,,[],,,,"[""U_MOVE_STOP""]",[],"[{""kind"": ""reply"", ""ref"": 2817}]",[],"{""new_stop_level"": 67000.0}",[]
+105,UPDATE,PARSED,trader_a,3171748254,2921,2916,2026-03-04T08:58:34+00:00,убираем лимитку,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2916}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+102,UPDATE,PARSED,trader_a,3171748254,2924,2913,2026-03-04T09:37:57+00:00,"стоп
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2913}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+100,UPDATE,PARSED,trader_a,3171748254,2926,2881,2026-03-04T09:59:07+00:00,1 тейк,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2881}]",[],"{""hit_target"": ""TP1""}",[]
+99,UPDATE,PARSED,trader_a,3171748254,2927,2914,2026-03-04T09:59:50+00:00,2 тейк,,,,,,,[],,,,"[""U_TP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2914}]",[],"{""hit_target"": ""TP2"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+98,UPDATE,PARSED,trader_a,3171748254,2928,2914,2026-03-04T10:35:12+00:00,"закрылось в бу
 
-1.19R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2914,signal,single,2914,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-94,PARSED,2930,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2930,signal,single,2930,1,,,,,,FILLED,,,,,,,0,0,0,
-87,PARSED,2930,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2930,signal,single,2930,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-86,PARSED,2832,"закрылось в бу
-0.37R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2832,signal,single,2832,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-84,PARSED,2817,"закрываю по текущим
+1.19R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2914}]",[],"{""new_stop_level"": ""ENTRY"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+94,UPDATE,PARSED,trader_a,3171748254,2933,2930,2026-03-04T12:47:38+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2930}]",[],"{""fill_state"": ""FILLED""}",[]
+87,UPDATE,PARSED,trader_a,3171748254,2940,2930,2026-03-04T14:25:28+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2930}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+86,UPDATE,PARSED,trader_a,3171748254,2941,2832,2026-03-04T14:31:37+00:00,"закрылось в бу
+0.37R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2832}]",[],"{""new_stop_level"": ""ENTRY"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+84,UPDATE,PARSED,trader_a,3171748254,2943,2817,2026-03-04T14:47:51+00:00,"закрываю по текущим
 
-1.62R",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT,CLOSE_POSITION,CLOSE_POSITION(targeting={mode=TARGET_GROUP}),,,,0.7,,,,2817,signal,single,2817,1,,,FULL,,,,TEXT_SUMMARY,,,,,,0,0,0,
-78,PARSED,2838,"Стоп. 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2838,signal,single,2838,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-76,PARSED,2950,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2950,signal,single,2950,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-75,PARSED,2950,"ну и в бу сразу
-0.3R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2950,signal,single,2950,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-71,PARSED,2955,Не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,2955,signal,single,2955,1,,,,,,,,TARGETED,,,,,0,0,0,
-56,PARSED,2977,"начало положено😄
+1.62R",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2817}]",[],"{""close_scope"": ""FULL"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+78,UPDATE,PARSED,trader_a,3171748254,2949,2838,2026-03-04T16:10:11+00:00,"Стоп. 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2838}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+76,UPDATE,PARSED,trader_a,3171748254,2953,2950,2026-03-04T19:26:01+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2950}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+75,UPDATE,PARSED,trader_a,3171748254,2954,2950,2026-03-04T19:29:19+00:00,"ну и в бу сразу
+0.3R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2950}]",[],"{""new_stop_level"": ""ENTRY"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+71,UPDATE,PARSED,trader_a,3171748254,2960,2955,2026-03-05T05:22:07+00:00,Не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 2955}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+56,UPDATE,PARSED,trader_a,3171748254,2979,2977,2026-03-05T16:12:16+00:00,"начало положено😄
 
 -1R
-стоп",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2977,signal,single,2977,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-48,PARSED,2986,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2986,signal,single,2986,1,,,,,,FILLED,,,,,,,0,0,0,
-47,PARSED,2987,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,2987,signal,single,2987,1,,,,,,FILLED,,,,,,,0,0,0,
-33,PARSED,2962,"Стоп 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2962,signal,single,2962,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-32,PARSED,3000,"Пора подводить промежуточные итоги
+стоп",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2977}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+48,UPDATE,PARSED,trader_a,3171748254,2989,2986,2026-03-05T19:09:51+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2986}]",[],"{""fill_state"": ""FILLED""}",[]
+47,UPDATE,PARSED,trader_a,3171748254,2990,2987,2026-03-05T19:14:17+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 2987}]",[],"{""fill_state"": ""FILLED""}",[]
+33,UPDATE,PARSED,trader_a,3171748254,3006,2962,2026-03-06T09:26:48+00:00,"Стоп 
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2962}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+32,UPDATE,PARSED,trader_a,3171748254,3008,3000,2026-03-06T12:13:53+00:00,"Пора подводить промежуточные итоги
 
 1. Взяли 3 стопа. Не приятно, но это рынок
 2. Две лимитки (BEAM & BAND) так и не взялись. Отменяю лимитки
 3. Из приятного. По 1 тейку взяли API3 & ARB. Промежуточный профит по ним: 0.67R. Продолжаю удерживать
 
-Промежуточный итог по марафонским сделкам: -2.33R",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,3000,signal,single,3000,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-31,PARSED,3008,"P.S.
+Промежуточный итог по марафонским сделкам: -2.33R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 3000}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+31,UPDATE,PARSED,trader_a,3171748254,3009,3008,2026-03-06T12:19:20+00:00,"P.S.
 
-по AAVE обидный стоп. По итогу уже 2 тейка взял",,,U_TP_HIT,U_TP_HIT | U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,3008,signal,single,3008,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-26,PARSED,2835,"вчера в суете не опубликовал стоп
+по AAVE обидный стоп. По итогу уже 2 тейка взял",,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 3008}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+26,UPDATE,PARSED,trader_a,3171748254,3015,2835,2026-03-06T15:16:59+00:00,"вчера в суете не опубликовал стоп
 
--1R",,,U_STOP_HIT,U_STOP_HIT | U_REPORT_FINAL_RESULT,,,,,,0.7,,,,2835,signal,single,2835,1,,,,,STOP,,TEXT_SUMMARY,,,,,,0,0,0,
-25,PARSED,2850,закрылось в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2850,signal,single,2850,1,,ENTRY,,,,,,,,,,,0,0,0,
-22,PARSED,2881,"закрылось в бу
-0.32R",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2881,signal,single,2881,1,,ENTRY,,,,,TEXT_SUMMARY,,,,,,0,0,0,
-20,PARSED,3017,не актуально,,,U_CANCEL_PENDING_ORDERS,U_CANCEL_PENDING_ORDERS,CANCEL_PENDING,CANCEL_PENDING,,,,0.7,,,,3017,signal,single,3017,1,,,,,,,,TARGETED,,,,,0,0,0,
-17,PARSED,3018,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,3018,signal,single,3018,1,,,,,,FILLED,,,,,,,0,0,0,
-16,PARSED,3018,1 тейк. стоп не двигаем,,,U_TP_HIT,U_TP_HIT | U_STOP_HIT,,,,,,0.7,,,,3018,signal,single,3018,1,,,,,STOP,,,,,,,,0,0,0,
-15,PARSED,3020,Лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,3020,signal,single,3020,1,,,,,,FILLED,,,,,,,0,0,0,
-14,PARSED,3018,теперь стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,3018,signal,single,3018,1,,ENTRY,,,,,,,,,,,0,0,0,
-13,PARSED,3022,лимитка,,,U_MARK_FILLED,U_MARK_FILLED,,,,,,0.7,,,,3022,signal,single,3022,1,,,,,,FILLED,,,,,,,0,0,0,
-11,PARSED,3022,стоп,,,U_STOP_HIT,U_STOP_HIT,,,,,,0.7,,,,3022,signal,single,3022,1,,,,,STOP,,,,,,,,0,0,0,
-9,PARSED,3020,тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,3020,signal,single,3020,1,,ENTRY,,,TP,,,,,,,,0,0,0,
-8,PARSED,2944,1 тейк. стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_TP_HIT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2944,signal,single,2944,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1,PARSED,2884,стоп в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.7,,,,2884,signal,single,2884,1,,ENTRY,,,,,,,,,,,0,0,0,
+-1R",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2835}]",[],"{""hit_target"": ""STOP"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+25,UPDATE,PARSED,trader_a,3171748254,3016,2850,2026-03-06T15:17:20+00:00,закрылось в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2850}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+22,UPDATE,PARSED,trader_a,3171748254,3019,2881,2026-03-06T15:31:38+00:00,"закрылось в бу
+0.32R",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 2881}]",[],"{""new_stop_level"": ""ENTRY"", ""result_mode"": ""TEXT_SUMMARY""}",[]
+20,UPDATE,PARSED,trader_a,3171748254,3021,3017,2026-03-06T16:16:41+00:00,не актуально,,,,,,,[],,,,"[""U_CANCEL_PENDING_ORDERS""]",[],"[{""kind"": ""reply"", ""ref"": 3017}]",[],"{""cancel_scope"": ""TARGETED""}",[]
+17,UPDATE,PARSED,trader_a,3171748254,3024,3018,2026-03-06T17:06:34+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 3018}]",[],"{""fill_state"": ""FILLED""}",[]
+16,UPDATE,PARSED,trader_a,3171748254,3025,3018,2026-03-06T17:07:15+00:00,1 тейк. стоп не двигаем,,,,,,,[],,,,"[""U_TP_HIT"", ""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 3018}]",[],"{""hit_target"": ""STOP""}",[]
+15,UPDATE,PARSED,trader_a,3171748254,3027,3020,2026-03-06T18:09:25+00:00,Лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 3020}]",[],"{""fill_state"": ""FILLED""}",[]
+14,UPDATE,PARSED,trader_a,3171748254,3028,3018,2026-03-06T19:45:09+00:00,теперь стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 3018}]",[],"{""new_stop_level"": ""ENTRY""}",[]
+13,UPDATE,PARSED,trader_a,3171748254,3029,3022,2026-03-06T20:21:04+00:00,лимитка,,,,,,,[],,,,"[""U_MARK_FILLED""]",[],"[{""kind"": ""reply"", ""ref"": 3022}]",[],"{""fill_state"": ""FILLED""}",[]
+11,UPDATE,PARSED,trader_a,3171748254,3032,3022,2026-03-06T21:21:19+00:00,стоп,,,,,,,[],,,,"[""U_STOP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 3022}]",[],"{""hit_target"": ""STOP""}",[]
+9,UPDATE,PARSED,trader_a,3171748254,3036,3020,2026-03-07T06:35:26+00:00,тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 3020}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP""}",[]
+8,UPDATE,PARSED,trader_a,3171748254,3037,2944,2026-03-07T07:12:12+00:00,1 тейк. стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2944}]",[],"{""new_stop_level"": ""ENTRY"", ""hit_target"": ""TP1""}",[]
+1,UPDATE,PARSED,trader_a,3171748254,3047,2884,2026-03-07T17:03:41+00:00,стоп в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2884}]",[],"{""new_stop_level"": ""ENTRY""}",[]

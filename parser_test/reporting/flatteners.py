@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from typing import Any
 
 from parser_test.reporting.report_schema import schema_for_scope
@@ -20,6 +21,7 @@ def build_report_row(
     include_json_debug: bool = False,
 ) -> dict[str, str]:
     normalized_obj = normalized if isinstance(normalized, dict) else {}
+    filtered_warnings = _filtered_warnings(normalized_obj=normalized_obj, raw_text=raw_text)
     schema = schema_for_scope(
         scope,
         include_legacy_debug=include_legacy_debug,
@@ -33,7 +35,7 @@ def build_report_row(
         "reply_to_message_id": "" if reply_to_message_id is None else _scalar(reply_to_message_id),
         "raw_text": _scalar(raw_text),
         "warning_text": _scalar(warning_text),
-        "warnings_summary": _join_list(normalized_obj.get("warnings")),
+        "warnings_summary": _join_list(filtered_warnings),
         "primary_intent": _scalar(
             normalized_obj.get("primary_intent")
             or _intent_name(_first_value(normalized_obj.get("intents")))
@@ -180,20 +182,68 @@ def _canonical_target_refs(
     linking: dict[str, Any],
     entities: dict[str, Any],
 ) -> list[int]:
-    sources: list[list[int]] = []
-    sources.append(_extract_action_target_refs(actions_structured))
-    sources.append(_extract_int_list(target_scope.get("target_refs")))
-    sources.append(_extract_int_list(target_scope.get("extracted_target_refs")))
-    sources.append(_extract_int_list(linking.get("target_refs")))
-    sources.append(_extract_int_list(linking.get("extracted_target_refs")))
-    sources.append(_extract_int_list(normalized.get("target_refs")))
-    sources.append(_extract_int_list(entities.get("target_refs")))
-    sources.append(_extract_int_list([normalized.get("root_ref")]))
-    sources.append(_extract_int_list([normalized.get("target_ref")]))
+    sources: list[list[int]] = [
+        _extract_action_target_refs(actions_structured),
+        _extract_int_list(target_scope.get("target_refs")),
+        _extract_int_list(target_scope.get("extracted_target_refs")),
+        _extract_int_list(linking.get("target_refs")),
+        _extract_int_list(linking.get("extracted_target_refs")),
+        _extract_int_list(normalized.get("target_refs")),
+        _extract_int_list(entities.get("target_refs")),
+        _extract_int_list([normalized.get("root_ref")]),
+        _extract_int_list([normalized.get("target_ref")]),
+    ]
+    merged_refs: list[int] = []
     for source in sources:
-        if source:
-            return source
-    return []
+        merged_refs.extend(source)
+    return _unique_ints(merged_refs)
+
+
+def _filtered_warnings(*, normalized_obj: dict[str, Any], raw_text: str | None) -> list[Any]:
+    warnings = _coerce_list(normalized_obj.get("warnings"))
+    message_type = _scalar(normalized_obj.get("message_type")).upper()
+    is_global_update = message_type == "UPDATE" and _has_explicit_global_update_scope(normalized_obj=normalized_obj, raw_text=raw_text)
+    filtered: list[Any] = []
+    for warning in warnings:
+        warning_name = _scalar(warning).strip().lower()
+        if "_update_" in warning_name and message_type != "UPDATE":
+            continue
+        if is_global_update and warning_name in {"missing_target", "ambiguous_update_without_target"}:
+            continue
+        filtered.append(warning)
+    return filtered
+
+
+def _has_explicit_global_update_scope(*, normalized_obj: dict[str, Any], raw_text: str | None) -> bool:
+    target_scope = normalized_obj.get("target_scope") if isinstance(normalized_obj.get("target_scope"), dict) else {}
+    scope = _scalar(target_scope.get("scope")).lower()
+    kind = _scalar(target_scope.get("kind")).lower()
+    if scope in {"all", "global", "multiple", "multi", "basket"}:
+        return True
+    if kind in {"global", "signal_group"} and scope not in {"", "single"}:
+        return True
+
+    normalized_text = re.sub(r"\s+", " ", _scalar(raw_text).lower()).strip()
+    if not normalized_text:
+        return False
+    global_markers = (
+        "all longs",
+        "all long",
+        "all shorts",
+        "all short",
+        "all positions",
+        "all signals",
+        "all open",
+        "every long",
+        "every short",
+        "basket",
+        "все лонг",
+        "все шорт",
+        "все позиции",
+        "по всем",
+        "закрыть все",
+    )
+    return any(marker in normalized_text for marker in global_markers)
 
 
 def _derive_signal_id(

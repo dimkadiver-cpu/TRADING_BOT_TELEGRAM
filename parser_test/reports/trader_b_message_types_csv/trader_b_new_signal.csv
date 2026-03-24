@@ -1,5 +1,5 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,completeness,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1975,PARSED,,"[trader#В]
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1975,NEW_SIGNAL,PARSED,trader_b,3171748254,236,,2025-11-10T10:02:17+00:00,"[trader#В]
 
 $ARBUSDT - Лонг (сделка на споте)
 
@@ -9,8 +9,8 @@ $ARBUSDT - Лонг (сделка на споте)
 
 Стоп лосс: 0.2956
 
-Риск на сделку 1%, соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ARBUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.3007,0.2956,0.316,1,1975,,0,,,0,0,0,
-1866,PARSED,354,"[trader#В]
+Риск на сделку 1%, соотношение РР 1:3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ARBUSDT"", ""side"": ""LONG"", ""entry"": [0.3007], ""stop_loss"": 0.2956, ""take_profits"": [0.316], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 0.3007, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1866,NEW_SIGNAL,PARSED,trader_b,3171748254,355,354,2025-11-14T08:18:43+00:00,"[trader#В]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -20,8 +20,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 
 Стоп лосс: 93.2
 
-Риск на сделку 1%, соотношение РР 1:3.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:98,93.2,115,1,1866,354,1,,,0,0,0,
-1832,PARSED,,"[trader#В]
+Риск на сделку 1%, соотношение РР 1:3.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""reply"", ""ref"": 354}]",[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [98.0], ""stop_loss"": 93.2, ""take_profits"": [115.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 98.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1832,NEW_SIGNAL,PARSED,trader_b,3171748254,392,,2025-11-16T06:20:12+00:00,"[trader#В]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -33,8 +33,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 
 Риск на сделку выходит менее 1% - так как сделала на споте(т.е. заходить можно всем объемом, и тем самым риск будет менее 1%), потенциальная прибыль 2%
 
-Соотношение РР 1:2.7",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:95555,94840,97500,1,1832,,0,,,0,0,0,
-1775,PARSED,,"[trader#В]
+Соотношение РР 1:2.7",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [95555.0], ""stop_loss"": 94840.0, ""take_profits"": [97500.0], ""risk_percent"": null, ""potential_profit_percent"": 2.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 95555.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1775,NEW_SIGNAL,PARSED,trader_b,3171748254,475,,2025-11-20T07:04:05+00:00,"[trader#В]
 
 $NEARUSDT - Лонг (сделка на споте⭐️)
 
@@ -44,8 +44,8 @@ $NEARUSDT - Лонг (сделка на споте⭐️)
 
 Стоп лосс: 2.178
 
-Риск на сделку 1%, соотношение РР 1:12.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,NEARUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.3,2.178,3.8,1,1775,,0,,,0,0,0,
-1673,PARSED,,"[trader#В]
+Риск на сделку 1%, соотношение РР 1:12.3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""NEARUSDT"", ""side"": ""LONG"", ""entry"": [2.3], ""stop_loss"": 2.178, ""take_profits"": [3.8], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2.3, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1673,NEW_SIGNAL,PARSED,trader_b,3171748254,658,,2025-11-28T11:38:20+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -55,8 +55,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 
 Стоп лосс: 138.95
 
-Риск на сделку 1%, соотношение РР 1:3.7",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:140.4,138.95,145.76,1,1673,,0,,,0,0,0,
-1606,PARSED,,"[trader#В]
+Риск на сделку 1%, соотношение РР 1:3.7",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [140.4], ""stop_loss"": 138.95, ""take_profits"": [145.76], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 140.4, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1606,NEW_SIGNAL,PARSED,trader_b,3171748254,752,,2025-12-02T11:37:15+00:00,"[trader#В]
 
 $SUIUSDT - Лонг (сделка на споте⭐️)
 
@@ -66,8 +66,8 @@ $SUIUSDT - Лонг (сделка на споте⭐️)
 
 Стоп лосс: 1.336
 
-Риск на сделку 1%, соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.357,1.336,1.42,1,1606,,0,,,0,0,0,
-1582,PARSED,,"[trader#В]
+Риск на сделку 1%, соотношение РР 1:3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SUIUSDT"", ""side"": ""LONG"", ""entry"": [1.357], ""stop_loss"": 1.336, ""take_profits"": [1.42], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.357, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1582,NEW_SIGNAL,PARSED,trader_b,3171748254,783,,2025-12-03T03:02:33+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -77,8 +77,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 
 Стоп лосс: 137.9
 
-Риск на сделку 1%, соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:139.9,137.9,146,1,1582,,0,,,0,0,0,
-1570,PARSED,,"[trader#В]
+Риск на сделку 1%, соотношение РР 1:3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [139.9], ""stop_loss"": 137.9, ""take_profits"": [146.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 139.9, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1570,NEW_SIGNAL,PARSED,trader_b,3171748254,798,,2025-12-03T16:43:04+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -89,8 +89,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 140.05
 
 Риск на сделку менее 1%, потенциальная прибыль 3.6%
-Соотношение ≈ РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:141.1,140.05,146.3,1,1570,,0,,,0,0,0,
-1545,PARSED,,"[trader#В]
+Соотношение ≈ РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [141.1], ""stop_loss"": 140.05, ""take_profits"": [146.3], ""risk_percent"": null, ""potential_profit_percent"": 3.6, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 141.1, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1545,NEW_SIGNAL,PARSED,trader_b,3171748254,830,,2025-12-05T16:51:48+00:00,"[trader#В]
 
 $TONUSDT - Лонг (сделка на споте⭐️)
 
@@ -101,8 +101,8 @@ $TONUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1.485
 
 Риск на сделку 1%
-Соотношение РР 1:4.2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,TONUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.533,1.485,1.735,1,1545,,0,,,0,0,0,
-1544,PARSED,,"[trader#В]
+Соотношение РР 1:4.2",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""TONUSDT"", ""side"": ""LONG"", ""entry"": [1.533], ""stop_loss"": 1.485, ""take_profits"": [1.735], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.533, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1544,NEW_SIGNAL,PARSED,trader_b,3171748254,831,,2025-12-05T18:05:19+00:00,"[trader#В]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -113,8 +113,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 75
 
 Риск на сделку 1%
-Соотношение РР 1:3.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:80.5,75,97.55,1,1544,,0,,,0,0,0,
-1533,PARSED,,"[trader#В]
+Соотношение РР 1:3.1",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [80.5], ""stop_loss"": 75.0, ""take_profits"": [97.55], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 80.5, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1533,NEW_SIGNAL,PARSED,trader_b,3171748254,846,,2025-12-07T16:20:36+00:00,"[trader#В]
 
 $APTUSDT - Лонг (сделка на споте⭐️)
 
@@ -125,8 +125,8 @@ $APTUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1.675
 
 Риск на сделку 1%
-Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,APTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.705,1.675,1.78,1,1533,,0,,,0,0,0,
-1527,PARSED,,"[trader#В]
+Соотношение РР 1:2.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""APTUSDT"", ""side"": ""LONG"", ""entry"": [1.705], ""stop_loss"": 1.675, ""take_profits"": [1.78], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.705, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1527,NEW_SIGNAL,PARSED,trader_b,3171748254,852,,2025-12-07T18:37:12+00:00,"[trader#В]
 
 $TWTUSDT - Лонг (сделка на споте⭐️)
 
@@ -137,8 +137,8 @@ $TWTUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 0.9841
 
 Риск на сделку 1%
-Соотношение РР 1:4.2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,TWTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.009,0.9841,1.1135,1,1527,,0,,,0,0,0,
-1526,PARSED,,"[trader#В]
+Соотношение РР 1:4.2",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""TWTUSDT"", ""side"": ""LONG"", ""entry"": [1.009], ""stop_loss"": 0.9841, ""take_profits"": [1.1135], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.009, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1526,NEW_SIGNAL,PARSED,trader_b,3171748254,853,,2025-12-07T19:48:34+00:00,"[trader#В]
 
 $ICPUSDT - Лонг (сделка на споте⭐️)
 
@@ -149,8 +149,8 @@ $ICPUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 3.345
 
 Риск на сделку 1%
-Соотношение РР 1:8",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ICPUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:3.475,3.345,4.515,1,1526,,0,,,0,0,0,
-1520,PARSED,,"[trader#В]
+Соотношение РР 1:8",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ICPUSDT"", ""side"": ""LONG"", ""entry"": [3.475], ""stop_loss"": 3.345, ""take_profits"": [4.515], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 3.475, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1520,NEW_SIGNAL,PARSED,trader_b,3171748254,859,,2025-12-08T07:14:33+00:00,"[trader#В]
 
 $ATOMUSDT - Лонг (сделка на споте⭐️)
 
@@ -161,8 +161,8 @@ $ATOMUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2.155
 
 Риск на сделку 1%
-Соотношение РР 1:4.2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ATOMUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.235,2.155,2.572,1,1520,,0,,,0,0,0,
-1513,PARSED,,"[trader#В]
+Соотношение РР 1:4.2",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ATOMUSDT"", ""side"": ""LONG"", ""entry"": [2.235], ""stop_loss"": 2.155, ""take_profits"": [2.572], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2.235, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1513,NEW_SIGNAL,PARSED,trader_b,3171748254,869,,2025-12-09T04:10:31+00:00,"[trader#В]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -173,8 +173,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 3092
 
 Риск на сделку 1%
-Соотношение РР 1:4.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:3125,3092,3260.5,1,1513,,0,,,0,0,0,
-1498,PARSED,,"[trader#В]
+Соотношение РР 1:4.1",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [3125.0], ""stop_loss"": 3092.0, ""take_profits"": [3260.5], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 3125.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1498,NEW_SIGNAL,PARSED,trader_b,3171748254,896,,2025-12-10T12:23:39+00:00,"[trader#В]
 
 $TWTUSDT - Лонг (сделка на споте⭐️)
 
@@ -185,8 +185,8 @@ $TWTUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 0.978
 
 Риск на сделку 1%
-Соотношение РР 1:4.6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,TWTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.002,0.978,1.1123,1,1498,,0,,,0,0,0,
-1486,PARSED,,"[trader#В]
+Соотношение РР 1:4.6",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""TWTUSDT"", ""side"": ""LONG"", ""entry"": [1.002], ""stop_loss"": 0.978, ""take_profits"": [1.1123], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.002, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1486,NEW_SIGNAL,PARSED,trader_b,3171748254,911,,2025-12-12T05:04:47+00:00,"[trader#В]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -197,8 +197,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 91450
 
 Риск на сделку 1%
-Соотношение РР 1:4.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:92370,91450,96350,1,1486,,0,,,0,0,0,
-1462,PARSED,,"[trader#В]
+Соотношение РР 1:4.3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [92370.0], ""stop_loss"": 91450.0, ""take_profits"": [96350.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 92370.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1462,NEW_SIGNAL,PARSED,trader_b,3171748254,947,,2025-12-15T04:03:29+00:00,"[trader#В]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -209,8 +209,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 78
 
 Риск на сделку 1%
-Соотношение РР 1:6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:79.5,78,88.5,1,1462,,0,,,0,0,0,
-1428,PARSED,,"[trader#В]
+Соотношение РР 1:6",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [79.5], ""stop_loss"": 78.0, ""take_profits"": [88.5], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 79.5, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1428,NEW_SIGNAL,PARSED,trader_b,3171748254,988,,2025-12-16T19:05:43+00:00,"[trader#В]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -221,8 +221,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2913
 
 Риск на сделку 1%, потенциальная прибыль 3%
-Соотношение РР 1:3.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2940,2913,3028.5,1,1428,,0,,,0,0,0,
-1427,PARSED,,"[trader#В]
+Соотношение РР 1:3.3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2940.0], ""stop_loss"": 2913.0, ""take_profits"": [3028.5], ""risk_percent"": 1.0, ""potential_profit_percent"": 3.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2940.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1427,NEW_SIGNAL,PARSED,trader_b,3171748254,990,,2025-12-16T21:01:11+00:00,"[trader#В]
 
 $ZECUSDT - Лонг (сделка на споте⭐️)
 
@@ -233,8 +233,8 @@ $ZECUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 396.4
 
 Риск на сделку 1%
-Соотношение РР 1:2",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:404,396.4,419.2,1,1427,,0,,,0,0,0,
-1423,PARSED,,"[trader#В]
+Соотношение РР 1:2",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZECUSDT"", ""side"": ""LONG"", ""entry"": [404.0], ""stop_loss"": 396.4, ""take_profits"": [419.2], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 404.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1423,NEW_SIGNAL,PARSED,trader_b,3171748254,996,,2025-12-17T12:11:33+00:00,"[trader#В]
 
 $ZECUSDT - Лонг (сделка на споте⭐️)
 
@@ -245,8 +245,8 @@ $ZECUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 387
 
 Риск на сделку 1%
-Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:392.5,387,420,1,1423,,0,,,0,0,0,
-1422,PARSED,,"[trader#В]
+Соотношение РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZECUSDT"", ""side"": ""LONG"", ""entry"": [392.5], ""stop_loss"": 387.0, ""take_profits"": [420.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 392.5, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1422,NEW_SIGNAL,PARSED,trader_b,3171748254,997,,2025-12-17T14:25:11+00:00,"[trader#В]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -257,8 +257,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2918.5
 
 Риск на сделку 1%
-Соотношение РР 1:3 (потенциальная прибыль 2.7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2945,2918.5,3025.5,1,1422,,0,,,0,0,0,
-1420,PARSED,,"[trader#В]
+Соотношение РР 1:3 (потенциальная прибыль 2.7%)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2945.0], ""stop_loss"": 2918.5, ""take_profits"": [3025.5], ""risk_percent"": 1.0, ""potential_profit_percent"": 2.7, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2945.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1420,NEW_SIGNAL,PARSED,trader_b,3171748254,1000,,2025-12-17T15:44:41+00:00,"[trader#В]
 
 $ZECUSDT - Лонг (сделка на споте⭐️)
 
@@ -271,8 +271,8 @@ $ZECUSDT - Лонг (сделка на споте⭐️)
 Риск на сделку 1%
 Соотношение РР ≈1:5.3
 
-UPD: -1%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:398.15,394,420,1,1420,,0,,,0,0,0,
-1389,PARSED,,"[trader#В]
+UPD: -1%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZECUSDT"", ""side"": ""LONG"", ""entry"": [398.15], ""stop_loss"": 394.0, ""take_profits"": [420.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 398.15, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1389,NEW_SIGNAL,PARSED,trader_b,3171748254,1039,,2025-12-19T07:06:21+00:00,"[trader#В]
 
 $ZECUSDT - Лонг (сделка на споте⭐️)
 
@@ -283,8 +283,8 @@ $ZECUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 396
 
 Риск на сделку 1%
-Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZECUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:400,396,420,1,1389,,0,,,0,0,0,
-1365,PARSED,,"[trader#В]
+Соотношение РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZECUSDT"", ""side"": ""LONG"", ""entry"": [400.0], ""stop_loss"": 396.0, ""take_profits"": [420.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 400.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1365,NEW_SIGNAL,PARSED,trader_b,3171748254,1075,,2025-12-20T03:39:35+00:00,"[trader#В]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -296,8 +296,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 
 Риск на сделку 0.6%
 Потенциальная прибыль 2%
-Соотношение РР 1:3.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2991,2974,3051,1,1365,,0,,,0,0,0,
-1364,PARSED,,"[trader#В]
+Соотношение РР 1:3.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2991.0], ""stop_loss"": 2974.0, ""take_profits"": [3051.0], ""risk_percent"": 0.6, ""potential_profit_percent"": 2.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2991.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1364,NEW_SIGNAL,PARSED,trader_b,3171748254,1076,,2025-12-20T03:56:38+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -309,8 +309,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 
 Риск на сделку 0.5%
 Потенциальная прибыль 2.5%
-Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:126.15,125.52,129.31,1,1364,,0,,,0,0,0,
-1347,PARSED,,"[trader#В]
+Соотношение РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [126.15], ""stop_loss"": 125.52, ""take_profits"": [129.31], ""risk_percent"": 0.5, ""potential_profit_percent"": 2.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 126.15, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1347,NEW_SIGNAL,PARSED,trader_b,3171748254,1100,,2025-12-21T10:20:08+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -322,8 +322,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 
 Риск на сделку 1%
 Потенциальная прибыль 3%
-Соотношение РР 1:3.45",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:125.9,124.8,129.7,1,1347,,0,,,0,0,0,
-1346,PARSED,,"[trader#В]
+Соотношение РР 1:3.45",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [125.9], ""stop_loss"": 124.8, ""take_profits"": [129.7], ""risk_percent"": 1.0, ""potential_profit_percent"": 3.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 125.9, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1346,NEW_SIGNAL,PARSED,trader_b,3171748254,1102,,2025-12-21T10:59:01+00:00,"[trader#В]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -335,8 +335,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 
 Риск на сделку 0.5%
 Потенциальная прибыль 2%
-Соотношение РР 1:4.66",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:88435,88055,90205,1,1346,,0,,,0,0,0,
-1343,PARSED,,"[trader#В]
+Соотношение РР 1:4.66",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [88435.0], ""stop_loss"": 88055.0, ""take_profits"": [90205.0], ""risk_percent"": 0.5, ""potential_profit_percent"": 2.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 88435.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1343,NEW_SIGNAL,PARSED,trader_b,3171748254,1107,,2025-12-21T16:06:13+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -347,8 +347,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 124
 
 Риск на сделку 0.8%
-Потенциальная прибыль 3.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:125,124,129.4,1,1343,,0,,,0,0,0,
-1336,PARSED,,"[trader#В]
+Потенциальная прибыль 3.5%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [125.0], ""stop_loss"": 124.0, ""take_profits"": [129.4], ""risk_percent"": 0.8, ""potential_profit_percent"": 3.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""MARKET"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""MARKET"", ""price"": 125.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1336,NEW_SIGNAL,PARSED,trader_b,3171748254,1117,,2025-12-22T04:51:19+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -359,8 +359,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 124.92
 
 Риск на сделку 1%
-Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:125.15,124.92,129.32,1,1336,,0,,,0,0,0,
-1335,PARSED,,"[trader#B]
+Соотношение РР 1:2.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [125.15], ""stop_loss"": 124.92, ""take_profits"": [129.32], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 125.15, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1335,NEW_SIGNAL,PARSED,trader_b,3171748254,1118,,2025-12-22T04:58:59+00:00,"[trader#B]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -371,8 +371,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 75.8
 
 Риск на сделку 1%
-Соотношение РР 1:5.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:77.8,75.8,88,1,1335,,0,,,0,0,0,
-1327,PARSED,,"[trader#В]
+Соотношение РР 1:5.1",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [77.8], ""stop_loss"": 75.8, ""take_profits"": [88.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""MARKET"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""MARKET"", ""price"": 77.8, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1327,NEW_SIGNAL,PARSED,trader_b,3171748254,1127,,2025-12-22T11:16:22+00:00,"[trader#В]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -385,8 +385,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Риск на сделку 0.8%
 Потенциальная прибыль 2.5%
 
-Ps: Либо я его, либо он меня",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:126.5,125.5,129.67,1,1327,,0,,,0,0,0,
-1291,PARSED,,"[trader#B]
+Ps: Либо я его, либо он меня",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [126.5], ""stop_loss"": 125.5, ""take_profits"": [129.67], ""risk_percent"": 0.8, ""potential_profit_percent"": 2.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 126.5, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1291,NEW_SIGNAL,PARSED,trader_b,3171748254,1181,,2025-12-25T04:37:44+00:00,"[trader#B]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -399,8 +399,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Риск на сделку 1%
 Соотношение РР 1:4
 
-Upd: БУ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:87400,86525,90900,1,1291,,0,,,0,0,0,
-1264,PARSED,,"[trader#B]
+Upd: БУ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [87400.0], ""stop_loss"": 86525.0, ""take_profits"": [90900.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 87400.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1264,NEW_SIGNAL,PARSED,trader_b,3171748254,1225,,2025-12-27T11:57:33+00:00,"[trader#B]
 
 $SUIUSDT - Лонг (сделка на споте⭐️)
 
@@ -411,8 +411,8 @@ $SUIUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1.394
 
 Риск на сделку 0.8%
-Потенциальная прибыль 2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.405,1.394,1.4335,1,1264,,0,,,0,0,0,
-1262,PARSED,,"[trader#B]
+Потенциальная прибыль 2%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SUIUSDT"", ""side"": ""LONG"", ""entry"": [1.405], ""stop_loss"": 1.394, ""take_profits"": [1.4335], ""risk_percent"": 0.8, ""potential_profit_percent"": 2.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.405, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1262,NEW_SIGNAL,PARSED,trader_b,3171748254,1228,,2025-12-27T15:52:07+00:00,"[trader#B]
 
 $NEARUSDT - Лонг (сделка на споте⭐️)
 
@@ -423,8 +423,8 @@ $NEARUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1.524
 
 Риск на сделку 1%
-Соотношение РР 1:3.3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,NEARUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.539,1.524,1.59,1,1262,,0,,,0,0,0,
-1256,PARSED,,"[trader#B]
+Соотношение РР 1:3.3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""NEARUSDT"", ""side"": ""LONG"", ""entry"": [1.539], ""stop_loss"": 1.524, ""take_profits"": [1.59], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.539, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1256,NEW_SIGNAL,PARSED,trader_b,3171748254,1238,,2025-12-28T07:21:53+00:00,"[trader#B]
 
 $BCHUSDT - Лонг (сделка на споте⭐️)
 
@@ -435,8 +435,8 @@ $BCHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 612.7
 
 Риск на сделку 1%
-Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:618.8,612.7,634.3,1,1256,,0,,,0,0,0,
-1233,PARSED,,"[trader#B]
+Соотношение РР 1:2.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BCHUSDT"", ""side"": ""LONG"", ""entry"": [618.8], ""stop_loss"": 612.7, ""take_profits"": [634.3], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 618.8, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1233,NEW_SIGNAL,PARSED,trader_b,3171748254,1274,,2025-12-29T05:36:38+00:00,"[trader#B]
 
 $ZROUSDT - Лонг (сделка на споте⭐️)
 
@@ -447,8 +447,8 @@ $ZROUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1.238
 
 Риск на сделку 1%
-Соотношение РР 1:4.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZROUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.264,1.238,1.381,1,1233,,0,,,0,0,0,
-1207,PARSED,,"[trader#B]
+Соотношение РР 1:4.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZROUSDT"", ""side"": ""LONG"", ""entry"": [1.264], ""stop_loss"": 1.238, ""take_profits"": [1.381], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.264, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1207,NEW_SIGNAL,PARSED,trader_b,3171748254,1321,,2026-01-01T18:00:15+00:00,"[trader#B]
 
 $XRPUSDT - Лонг (сделка на споте⭐️)
 
@@ -459,8 +459,8 @@ $XRPUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1.814
 
 Риск на сделку 1%
-Соотношение РР 1:8",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,XRPUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:1.869,1.814,2.31,1,1207,,0,,,0,0,0,
-1205,PARSED,,"[trader#B]
+Соотношение РР 1:8",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""XRPUSDT"", ""side"": ""LONG"", ""entry"": [1.869], ""stop_loss"": 1.814, ""take_profits"": [2.31], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 1.869, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1205,NEW_SIGNAL,PARSED,trader_b,3171748254,1323,,2026-01-02T07:52:05+00:00,"[trader#B]
 
 $BCHUSDT - Лонг (сделка на споте⭐️)
 
@@ -471,8 +471,8 @@ $BCHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 586
 
 Риск на сделку 1%
-Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:595,586,640,1,1205,,0,,,0,0,0,
-1184,PARSED,,"[trader#B]
+Соотношение РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BCHUSDT"", ""side"": ""LONG"", ""entry"": [595.0], ""stop_loss"": 586.0, ""take_profits"": [640.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 595.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1184,NEW_SIGNAL,PARSED,trader_b,3171748254,1355,,2026-01-03T08:46:17+00:00,"[trader#B]
 
 $BCHUSDT - Лонг (сделка на споте ⭐️)
 
@@ -483,8 +483,8 @@ $BCHUSDT - Лонг (сделка на споте ⭐️)
 Стоп лосс: 626.3
 
 Риск на сделку 1%
-Соотношение РР 1:3.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:632,626.3,651.6,1,1184,,0,,,0,0,0,
-1173,PARSED,,"[trader#B]
+Соотношение РР 1:3.1",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BCHUSDT"", ""side"": ""LONG"", ""entry"": [632.0], ""stop_loss"": 626.3, ""take_profits"": [651.6], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 632.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1173,NEW_SIGNAL,PARSED,trader_b,3171748254,1368,,2026-01-03T17:10:38+00:00,"[trader#B]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -495,8 +495,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 80.77
 
 Риск на сделку 1%
-Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:81.95,80.77,87.95,1,1173,,0,,,0,0,0,
-1156,PARSED,,"[trader#B]
+Соотношение РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [81.95], ""stop_loss"": 80.77, ""take_profits"": [87.95], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 81.95, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1156,NEW_SIGNAL,PARSED,trader_b,3171748254,1394,,2026-01-05T10:24:10+00:00,"[trader#B]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -507,8 +507,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 92320
 
 Риск на сделку 0.6%
-Потенциальная прибыль 2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:92850,92320,94740,1,1156,,0,,,0,0,0,
-1092,PARSED,,"[trader#B]
+Потенциальная прибыль 2%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [92850.0], ""stop_loss"": 92320.0, ""take_profits"": [94740.0], ""risk_percent"": 0.6, ""potential_profit_percent"": 2.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 92850.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1092,NEW_SIGNAL,PARSED,trader_b,3171748254,1488,,2026-01-09T16:24:12+00:00,"[trader#B]
 
 $BCHUSDT - Лонг (сделка на споте⭐️)
 
@@ -519,8 +519,8 @@ $BCHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 624.5
 
 Риск на сделку 1%
-Соотношение РР 1:4",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BCHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:634.2,624.5,673,1,1092,,0,,,0,0,0,
-1019,PARSED,,"[trader#B]
+Соотношение РР 1:4",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BCHUSDT"", ""side"": ""LONG"", ""entry"": [634.2], ""stop_loss"": 624.5, ""take_profits"": [673.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 634.2, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+1019,NEW_SIGNAL,PARSED,trader_b,3171748254,1589,,2026-01-13T16:55:08+00:00,"[trader#B]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -531,8 +531,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 141.25
 
 Риск на сделку 1%
-Соотношение РР 1:3",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:142.7,141.25,147.1,1,1019,,0,,,0,0,0,
-994,PARSED,,"[trader#B]
+Соотношение РР 1:3",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [142.7], ""stop_loss"": 141.25, ""take_profits"": [147.1], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 142.7, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+994,NEW_SIGNAL,PARSED,trader_b,3171748254,1617,,2026-01-14T08:03:25+00:00,"[trader#B]
 
 $DOTUSDT - Лонг (сделка на споте⭐️)
 
@@ -543,8 +543,8 @@ $DOTUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2.215
 
 Риск на сделку 1%
-Соотношение РР 1:4.57",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,DOTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.25,2.215,2.41,1,994,,0,,,0,0,0,
-972,PARSED,,"[trader#B]
+Соотношение РР 1:4.57",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""DOTUSDT"", ""side"": ""LONG"", ""entry"": [2.25], ""stop_loss"": 2.215, ""take_profits"": [2.41], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2.25, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+972,NEW_SIGNAL,PARSED,trader_b,3171748254,1645,,2026-01-14T19:53:12+00:00,"[trader#B]
 
 $DOTUSDT - Лонг (сделка на споте⭐️)
 
@@ -555,8 +555,8 @@ $DOTUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2.195
 
 Риск на сделку 1%
-Соотношение РР 1:4.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,DOTUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2.233,2.195,2.404,1,972,,0,,,0,0,0,
-961,PARSED,,"[trader#B]
+Соотношение РР 1:4.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""DOTUSDT"", ""side"": ""LONG"", ""entry"": [2.233], ""stop_loss"": 2.195, ""take_profits"": [2.404], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2.233, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+961,NEW_SIGNAL,PARSED,trader_b,3171748254,1662,,2026-01-15T13:52:04+00:00,"[trader#B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -567,8 +567,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 3357
 
 Риск на сделку 0.7%
-Соотношение РР 1:2.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:3380,3357,3465,1,961,,0,,,0,0,0,
-918,PARSED,,"[trader#B]
+Соотношение РР 1:2.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [3380.0], ""stop_loss"": 3357.0, ""take_profits"": [3465.0], ""risk_percent"": 0.7, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 3380.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+918,NEW_SIGNAL,PARSED,trader_b,3171748254,1715,,2026-01-16T21:03:34+00:00,"[trader#B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -579,8 +579,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 3264.3
 
 Риск на сделку 0.8%
-Потенциальная прибыль 5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:3290.5,3264.3,3455,1,918,,0,,,0,0,0,
-902,PARSED,,"[trader#B]
+Потенциальная прибыль 5%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [3290.5], ""stop_loss"": 3264.3, ""take_profits"": [3455.0], ""risk_percent"": 0.8, ""potential_profit_percent"": 5.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""MARKET"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""MARKET"", ""price"": 3290.5, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+902,NEW_SIGNAL,PARSED,trader_b,3171748254,1744,,2026-01-18T17:36:30+00:00,"[trader#B]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -591,8 +591,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 71
 
 Риск на сделку 1%
-Потенциальная прибыль 6%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:73.5,71,88.5,1,902,,0,,,0,0,0,
-901,PARSED,,"[trader#B]
+Потенциальная прибыль 6%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [73.5], ""stop_loss"": 71.0, ""take_profits"": [88.5], ""risk_percent"": 1.0, ""potential_profit_percent"": 6.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 73.5, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+901,NEW_SIGNAL,PARSED,trader_b,3171748254,1745,,2026-01-18T18:52:24+00:00,"[trader#B]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -603,8 +603,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 141.5
 
 Риск на сделку 1%
-Потенциальная прибыль 4.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:142.75,141.5,149.2,1,901,,0,,,0,0,0,
-847,PARSED,,"[trader#B]
+Потенциальная прибыль 4.5%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [142.75], ""stop_loss"": 141.5, ""take_profits"": [149.2], ""risk_percent"": 1.0, ""potential_profit_percent"": 4.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 142.75, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+847,NEW_SIGNAL,PARSED,trader_b,3171748254,1822,,2026-01-21T14:45:48+00:00,"[trader#B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -615,8 +615,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2920
 
 Риск на сделку 1%
-Потенциальная прибыль 3%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2955,2920,3060,1,847,,0,,,0,0,0,
-834,PARSED,,"[trader#B]
+Потенциальная прибыль 3%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2955.0], ""stop_loss"": 2920.0, ""take_profits"": [3060.0], ""risk_percent"": 1.0, ""potential_profit_percent"": 3.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2955.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+834,NEW_SIGNAL,PARSED,trader_b,3171748254,1841,,2026-01-22T09:16:26+00:00,"[trader#B]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -627,8 +627,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 68.2
 
 Риск на сделку 1%
-Потенциальная прибыль 4.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:68.88,68.2,72,1,834,,0,,,0,0,0,
-827,PARSED,,"[trader#B]
+Потенциальная прибыль 4.5%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [68.88], ""stop_loss"": 68.2, ""take_profits"": [72.0], ""risk_percent"": 1.0, ""potential_profit_percent"": 4.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 68.88, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+827,NEW_SIGNAL,PARSED,trader_b,3171748254,1852,,2026-01-22T17:59:23+00:00,"[trader#B]
 
 $LTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -639,8 +639,8 @@ $LTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 67.62
 
 Риск на сделку 1%
-Потенциальная прибыль 5.2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,LTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:68.3,67.62,71.9,1,827,,0,,,0,0,0,
-815,PARSED,,"[trader#B]
+Потенциальная прибыль 5.2%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry"": [68.3], ""stop_loss"": 67.62, ""take_profits"": [71.9], ""risk_percent"": 1.0, ""potential_profit_percent"": 5.2, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 68.3, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+815,NEW_SIGNAL,PARSED,trader_b,3171748254,1876,,2026-01-24T15:18:44+00:00,"[trader#B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -651,8 +651,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2935.5
 
 Риск на сделку 1%
-Потенциальная прибыль 4%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:2965,2935.5,3084,1,815,,0,,,0,0,0,
-795,PARSED,,"[trader#B]
+Потенциальная прибыль 4%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2965.0], ""stop_loss"": 2935.5, ""take_profits"": [3084.0], ""risk_percent"": 1.0, ""potential_profit_percent"": 4.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 2965.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+795,NEW_SIGNAL,PARSED,trader_b,3171748254,1922,,2026-01-28T06:02:17+00:00,"[trader#B]
 
 $ARBUSDT - Лонг (сделка на споте⭐️)
 
@@ -665,8 +665,8 @@ $ARBUSDT - Лонг (сделка на споте⭐️)
 Риск на сделку 1%
 Потенциальная прибыль 3%
 
-Upd: ожидания не подтвердились, (-1%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ARBUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.171,0.167,0.183,1,795,,0,,,0,0,0,
-583,PARSED,,"[trader #B]
+Upd: ожидания не подтвердились, (-1%)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ARBUSDT"", ""side"": ""LONG"", ""entry"": [0.171], ""stop_loss"": 0.167, ""take_profits"": [0.183], ""risk_percent"": 1.0, ""potential_profit_percent"": 3.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 0.171, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+583,NEW_SIGNAL,PARSED,trader_b,3171748254,2272,,2026-02-09T22:12:55+00:00,"[trader #B]
 
 $ZKUSDT - Лонг (сделка на споте⭐️)
 
@@ -677,8 +677,8 @@ $ZKUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 0.0205
 
 Риск на сделку 1%
-Потенциальная прибыль 3.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZKUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.022,0.0205,0.02725,1,583,,0,,,0,0,0,
-565,PARSED,,"[trader #B]
+Потенциальная прибыль 3.5%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZKUSDT"", ""side"": ""LONG"", ""entry"": [0.022], ""stop_loss"": 0.0205, ""take_profits"": [0.02725], ""risk_percent"": 1.0, ""potential_profit_percent"": 3.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 0.022, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+565,NEW_SIGNAL,PARSED,trader_b,3171748254,2300,,2026-02-11T12:07:12+00:00,"[trader #B]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -689,8 +689,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 66370
 
 Риск на сделку 0.7%
-Потенциальная прибыль 2.5%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:66840,66370,68510,1,565,,0,,,0,0,0,
-549,PARSED,,"[trader #B]
+Потенциальная прибыль 2.5%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [66840.0], ""stop_loss"": 66370.0, ""take_profits"": [68510.0], ""risk_percent"": 0.7, ""potential_profit_percent"": 2.5, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 66840.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+549,NEW_SIGNAL,PARSED,trader_b,3171748254,2317,,2026-02-11T14:01:30+00:00,"[trader #B]
 
 $ZKUSDT - Лонг (сделка на споте⭐️)
 
@@ -701,8 +701,8 @@ $ZKUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 0.02085
 
 Риск на сделку 1%
-Потенциальная прибыль 4.7%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ZKUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.022,0.02085,0.0273,1,549,,0,,,0,0,0,
-507,PARSED,,"[trader #B]
+Потенциальная прибыль 4.7%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ZKUSDT"", ""side"": ""LONG"", ""entry"": [0.022], ""stop_loss"": 0.02085, ""take_profits"": [0.0273], ""risk_percent"": 1.0, ""potential_profit_percent"": 4.7, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 0.022, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+507,NEW_SIGNAL,PARSED,trader_b,3171748254,2362,,2026-02-12T03:56:13+00:00,"[trader #B]
 
 $SOLUSDT - Лонг (сделка на споте⭐️)
 
@@ -713,8 +713,8 @@ $SOLUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 78.8
 
 Риск на сделку 1%
-Потенциальная прибыль 6%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SOLUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:80.4,78.8,90,1,507,,0,,,0,0,0,
-464,PARSED,,"[trader #B]
+Потенциальная прибыль 6%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry"": [80.4], ""stop_loss"": 78.8, ""take_profits"": [90.0], ""risk_percent"": 1.0, ""potential_profit_percent"": 6.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 80.4, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+464,NEW_SIGNAL,PARSED,trader_b,3171748254,2420,,2026-02-14T08:09:11+00:00,"[trader #B]
 
 $SUIUSDT - Лонг (сделка на споте⭐️)
 
@@ -725,8 +725,8 @@ $SUIUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 0.956
 
 Риск на сделку 1%
-Потенциальная прибыль 4%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.972,0.956,1.036,1,464,,0,,,0,0,0,
-274,PARSED,,"[trader #B]
+Потенциальная прибыль 4%",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SUIUSDT"", ""side"": ""LONG"", ""entry"": [0.972], ""stop_loss"": 0.956, ""take_profits"": [1.036], ""risk_percent"": 1.0, ""potential_profit_percent"": 4.0, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 0.972, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+274,NEW_SIGNAL,PARSED,trader_b,3171748254,2690,,2026-02-24T15:53:57+00:00,"[trader #B]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -737,8 +737,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 62510
 
 Риск на сделку 1%
-Соотношение РР 1:5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:63200,62510,66670,1,274,,0,,,0,0,0,
-271,PARSED,,"[trader #B]
+Соотношение РР 1:5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [63200.0], ""stop_loss"": 62510.0, ""take_profits"": [66670.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 63200.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+271,NEW_SIGNAL,PARSED,trader_b,3171748254,2696,,2026-02-25T03:02:58+00:00,"[trader #B]
 
 $SUIUSDT - Лонг (сделка на споте⭐️)
 
@@ -749,8 +749,8 @@ $SUIUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 0.8572
 
 Риск на сделку 1%
-Соотношение РР 1:6.12",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,SUIUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:0.885,0.8572,1.055,1,271,,0,,,0,0,0,
-202,PARSED,,"[trader #B]
+Соотношение РР 1:6.12",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""SUIUSDT"", ""side"": ""LONG"", ""entry"": [0.885], ""stop_loss"": 0.8572, ""take_profits"": [1.055], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 0.885, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+202,NEW_SIGNAL,PARSED,trader_b,3171748254,2783,,2026-02-27T08:30:30+00:00,"[trader #B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -761,8 +761,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2000
 
 Риск на сделку 1%
-Соотношение РР 1:3.63",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:2035,2000,2162,1,202,,0,,,0,0,0,
-173,PARSED,,"[trader #B]
+Соотношение РР 1:3.63",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2035.0], ""stop_loss"": 2000.0, ""take_profits"": [2162.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""MARKET"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""MARKET"", ""price"": 2035.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+173,NEW_SIGNAL,PARSED,trader_b,3171748254,2827,,2026-03-01T02:18:53+00:00,"[trader #B]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -773,8 +773,8 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 66250
 
 Риск на сделку 1%
-Соотношение РР 1:4.52",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:67400,66250,72600,1,173,,0,,,0,0,0,
-163,PARSED,,"[trader #B]
+Соотношение РР 1:4.52",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [67400.0], ""stop_loss"": 66250.0, ""take_profits"": [72600.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 67400.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+163,NEW_SIGNAL,PARSED,trader_b,3171748254,2840,,2026-03-01T14:49:05+00:00,"[trader #B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -785,8 +785,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 1972
 
 Риск на сделку 1%
-Соотношение РР 1:6",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET,1972,2160,1,163,,0,,,0,0,0,
-93,PARSED,,"[trader #B]
+Соотношение РР 1:6",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [], ""stop_loss"": 1972.0, ""take_profits"": [2160.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""MARKET"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""MARKET"", ""price"": null, ""raw_label"": ""ENTRY"", ""source_style"": ""ENTRY_AVERAGING"", ""is_optional"": false}]}",[]
+93,NEW_SIGNAL,PARSED,trader_b,3171748254,2934,,2026-03-04T13:03:48+00:00,"[trader #B]
 
 $ETHUSDT - Лонг (сделка на споте⭐️)
 
@@ -797,8 +797,8 @@ $ETHUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 2033
 
 Риск на сделку 1%
-Соотношение РР 1:5.1",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,ETHUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:MARKET:2054,2033,2160,1,93,,0,,,0,0,0,
-41,PARSED,,"[trader #B]
+Соотношение РР 1:5.1",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry"": [2054.0], ""stop_loss"": 2033.0, ""take_profits"": [2160.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""MARKET"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""MARKET"", ""price"": 2054.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
+41,NEW_SIGNAL,PARSED,trader_b,3171748254,2996,,2026-03-06T02:19:26+00:00,"[trader #B]
 
 $BTCUSDT - Лонг (сделка на споте⭐️)
 
@@ -809,4 +809,4 @@ $BTCUSDT - Лонг (сделка на споте⭐️)
 Стоп лосс: 70350
 
 Риск на сделку 1%
-Соотношение РР 1:4.5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,,,BTCUSDT,LONG,,,0.8,,,,SINGLE,ONE_SHOT,False,1,PRIMARY:LIMIT:71000,70350,74200,1,41,,0,,,0,0,0,
+Соотношение РР 1:4.5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],[],[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry"": [71000.0], ""stop_loss"": 70350.0, ""take_profits"": [74200.0], ""risk_percent"": 1.0, ""potential_profit_percent"": null, ""market_context"": ""SPOT"", ""entry_order_type"": ""LIMIT"", ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false, ""entry_plan_entries"": [{""sequence"": 1, ""role"": ""PRIMARY"", ""order_type"": ""LIMIT"", ""price"": 71000.0, ""raw_label"": ""ENTRY"", ""source_style"": ""SINGLE"", ""is_optional"": false}]}",[]
