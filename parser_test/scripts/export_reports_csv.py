@@ -47,6 +47,8 @@ def main() -> None:
     with sqlite3.connect(str(DB_PATH)) as conn:
         conn.row_factory = sqlite3.Row
         for csv_path in sorted(REPORTS_DIR.glob("*_message_types_csv/*.csv")):
+            if csv_path.name.startswith("unresolved_"):
+                continue
             trader_id, scope = _parse_report_target(csv_path.name)
             rows = _fetch_rows(conn=conn, trader_id=trader_id, scope=scope)
             _write_csv(csv_path, rows)

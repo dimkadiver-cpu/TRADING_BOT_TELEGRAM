@@ -1,5 +1,5 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,completeness,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1379,PARSED,,"[trader#С]
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1379,NEW_SIGNAL,PARSED,trader_c,3171748254,1054,,2025-12-19T14:03:51+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -12,8 +12,8 @@ Tейк-профит:
 
 2) 86500 (RR - 1:3)
 
-3) 86000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=87100 | 86500 | 86000),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:88000 | ENTRY:UNKNOWN:87900,88450,87100 | 86500 | 86000,3,1379,,0,,,0,0,0,
-1373,PARSED,,"[trader#С]
+3) 86000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 88000.0}, {""sequence"": 2, ""price"": 87900.0}], ""entry"": [88000.0], ""entry_text_raw"": ""Вход с текущих (88000-87900"", ""stop_loss"": 88450.0, ""stop_text_raw"": ""Stop 88450"", ""take_profits"": [87100.0, 86500.0, 86000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1373,NEW_SIGNAL,PARSED,trader_c,3171748254,1062,,2025-12-19T16:10:51+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -30,8 +30,8 @@ Tейк-профит
 
  2)86800(RR - 1:3)
 
- 3)85800",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=87500 | 86800 | 85800),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:88650 | ENTRY:UNKNOWN:89100,89450,87500 | 86800 | 85800,3,1373,,0,,,0,0,0,
-1362,PARSED,,"[trader#С]
+ 3)85800",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 88650.0, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 89100.0, ""size_hint"": ""2/3""}], ""entry"": [88650.0], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 89450.0, ""stop_text_raw"": ""Stop 89450"", ""take_profits"": [87500.0, 86800.0, 85800.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1362,NEW_SIGNAL,PARSED,trader_c,3171748254,1078,,2025-12-20T05:54:05+00:00,"[trader#С]
 
 $LDOUSDT - LONG 
 
@@ -48,8 +48,8 @@ Tейк-профит
 
  2)0,56(RR1-2)
 
- 3)0,582(RR1-3)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),LDOUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:0.519 | ENTRY:UNKNOWN:0.508,0.498,,0,1362,,0,,,0,0,0,
-1361,PARSED,,"[trader#С]
+ 3)0,582(RR1-3)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""LDOUSDT""}]",[],"{""symbol"": ""LDOUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 0.519, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 0.508, ""size_hint"": ""2/3""}], ""entry"": [0.519], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 0.498, ""stop_text_raw"": ""Stop 0,498"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1361,NEW_SIGNAL,PARSED,trader_c,3171748254,1079,,2025-12-20T05:54:48+00:00,"[trader#С]
 
 $CFXUSDT - LONG 
 
@@ -66,8 +66,8 @@ Tейк-профит
 
  2)0,0072(RR1-2)
 
- 3)0,075(RR1-3)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),CFXUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:0.0675 | ENTRY:UNKNOWN:0.066,0.065,,0,1361,,0,,,0,0,0,
-1351,PARSED,,"[trader#С]
+ 3)0,075(RR1-3)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""CFXUSDT""}]",[],"{""symbol"": ""CFXUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 0.0675, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 0.066, ""size_hint"": ""2/3""}], ""entry"": [0.0675], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 0.065, ""stop_text_raw"": ""Stop 0,065"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1351,NEW_SIGNAL,PARSED,trader_c,3171748254,1094,,2025-12-20T13:27:09+00:00,"[trader#С]
 
 $BTCUSDT - LONG 
 
@@ -84,8 +84,8 @@ Tейк-профит
 
  2)89000(RR1-3)
 
- 3)90500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=88300 | 89000 | 90500),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:87650 | ENTRY:UNKNOWN:87150,86700,88300 | 89000 | 90500,3,1351,,0,,,0,0,0,
-1350,PARSED,," [trader#С]
+ 3)90500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 87650.0, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 87150.0, ""size_hint"": ""2/3""}], ""entry"": [87650.0], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 86700.0, ""stop_text_raw"": ""Stop 86700"", ""take_profits"": [88300.0, 89000.0, 90500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1350,NEW_SIGNAL,PARSED,trader_c,3171748254,1095,,2025-12-20T14:03:31+00:00," [trader#С]
 
 $BTCUSDT - LONG
 
@@ -99,8 +99,8 @@ Tейк-профит
 
  2)88950 (RR1-3)
 
- 3)89555-90",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=88600 | 88950 | 89555),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,87700,88600 | 88950 | 89555,3,1350,,0,,,0,0,0,
-1332,PARSED,,"[trader#С]
+ 3)89555-90",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 87700.0, ""stop_text_raw"": ""Stop 87700"", ""take_profits"": [88600.0, 88950.0, 89555.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+1332,NEW_SIGNAL,PARSED,trader_c,3171748254,1121,,2025-12-22T05:49:57+00:00,"[trader#С]
 
 $SNXUSDT - LONG 
 
@@ -117,8 +117,8 @@ Tейк-профит
 
  2)0,435(RR1-2)
 
- 3)0,45+(RR1-3)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),SNXUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:0.4 | ENTRY:UNKNOWN:0.393,0.381,,0,1332,,0,,,0,0,0,
-1331,PARSED,,"[trader#С]
+ 3)0,45+(RR1-3)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""SNXUSDT""}]",[],"{""symbol"": ""SNXUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 0.4, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 0.393, ""size_hint"": ""2/3""}], ""entry"": [0.4], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 0.381, ""stop_text_raw"": ""Stop 0,381"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1331,NEW_SIGNAL,PARSED,trader_c,3171748254,1122,,2025-12-22T05:53:05+00:00,"[trader#С]
 
 $CFXUSDT - LONG 
 
@@ -135,8 +135,8 @@ Tейк-профит
 
  2)0,075(RR1-2)
 
- 3)0,078(RR1-3)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),CFXUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:0.0677 | ENTRY:UNKNOWN:0.0662,0.065,,0,1331,,0,,,0,0,0,
-1311,PARSED,,"[trader#С]
+ 3)0,078(RR1-3)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""CFXUSDT""}]",[],"{""symbol"": ""CFXUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 0.0677, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 0.0662, ""size_hint"": ""2/3""}], ""entry"": [0.0677], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 0.065, ""stop_text_raw"": ""Stop 0,065"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1311,NEW_SIGNAL,PARSED,trader_c,3171748254,1151,,2025-12-22T20:42:11+00:00,"[trader#С]
 
 $BTCUSDT - LONG
 
@@ -150,8 +150,8 @@ Tейк-профит
 
  2)88850(RR1-3)
 
- 3)89500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=88500 | 88850 | 89500),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:88000 | ENTRY:UNKNOWN:88100,87800,88500 | 88850 | 89500,3,1311,,0,,,0,0,0,
-1303,PARSED,,"[trader#С]
+ 3)89500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 88000.0}, {""sequence"": 2, ""price"": 88100.0}], ""entry"": [88000.0], ""entry_text_raw"": ""Вход с текущих (88000-88100"", ""stop_loss"": 87800.0, ""stop_text_raw"": ""Stop 87800"", ""take_profits"": [88500.0, 88850.0, 89500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1303,NEW_SIGNAL,PARSED,trader_c,3171748254,1161,,2025-12-23T14:33:36+00:00,"[trader#С]
 
 $BTCUSDT - LONG 
 
@@ -168,8 +168,8 @@ Tейк-профит
 
  2)88800(RR1-2)
 
- 3)90600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87709 | 88800 | 90600),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:86710 | ENTRY:UNKNOWN:85950,85600,87709 | 88800 | 90600,3,1303,,0,,,0,0,0,
-1295,PARSED,,"[trader#С]
+ 3)90600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 86710.0, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 85950.0, ""size_hint"": ""2/3""}], ""entry"": [86710.0], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 85600.0, ""stop_text_raw"": ""Stop 85600"", ""take_profits"": [87709.0, 88800.0, 90600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1295,NEW_SIGNAL,PARSED,trader_c,3171748254,1175,,2025-12-24T14:43:59+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -185,8 +185,8 @@ Tейк-профит
 
 3) 89000. (RR1-4)
 
-4)90600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87500 | 88000 | 89000 | 90600),BTSUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:86700 | ENTRY:UNKNOWN:800,86300,87500 | 88000 | 89000 | 90600,4,1295,,0,,,0,0,0,
-1272,PARSED,,"[trader#С]
+4)90600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 86700.0}, {""sequence"": 2, ""price"": 800.0}], ""entry"": [86700.0], ""entry_text_raw"": ""Вход с текущих (86700-800"", ""stop_loss"": 86300.0, ""stop_text_raw"": ""Stop 86300"", ""take_profits"": [87500.0, 88000.0, 89000.0, 90600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1272,NEW_SIGNAL,PARSED,trader_c,3171748254,1214,,2025-12-26T14:52:58+00:00,"[trader#С]
 
 $ETHUSDT - LONG
 
@@ -202,8 +202,8 @@ Tейк-профит
 
 3)2970
 
-4)2990",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2945 | 2960 | 2970 | 2990),ETHUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:2920 | ENTRY:UNKNOWN:8,2915,2945 | 2960 | 2970 | 2990,4,1272,,0,,,0,0,0,
-1269,PARSED,,"[trader#С]
+4)2990",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 2920.0}, {""sequence"": 2, ""price"": 8.0}], ""entry"": [2920.0], ""entry_text_raw"": ""Вход с текущих (2920-8"", ""stop_loss"": 2915.0, ""stop_text_raw"": ""Stop 2915"", ""take_profits"": [2945.0, 2960.0, 2970.0, 2990.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1269,NEW_SIGNAL,PARSED,trader_c,3171748254,1217,,2025-12-26T15:31:06+00:00,"[trader#С]
 
 $ETHUSDT - LONG
 
@@ -222,8 +222,8 @@ Tейк-профит
 
 3)2960
 
-4)2990",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2930 | 2940 | 2960 | 2990),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2900,2890,2930 | 2940 | 2960 | 2990,4,1269,,0,,,0,0,0,
-1265,PARSED,,"[trader#С]
+4)2990",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 3, ""price"": 2900.0, ""size_hint"": ""2/3""}], ""entry"": [2900.0], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 2890.0, ""stop_text_raw"": ""Stop 2890"", ""take_profits"": [2930.0, 2940.0, 2960.0, 2990.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+1265,NEW_SIGNAL,PARSED,trader_c,3171748254,1224,,2025-12-27T11:23:19+00:00,"[trader#С]
 
 $BTCUSDT - LONG 
 
@@ -239,8 +239,8 @@ Tейк-профит
 
 3) 89000
 
-4)90600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87950 | 88500 | 89000 | 90600),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:87400 | ENTRY:UNKNOWN:450,87200,87950 | 88500 | 89000 | 90600,4,1265,,0,,,0,0,0,
-1232,PARSED,,"[trader#С]
+4)90600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 87400.0}, {""sequence"": 2, ""price"": 450.0}], ""entry"": [87400.0], ""entry_text_raw"": ""Вход с текущих (87400-450"", ""stop_loss"": 87200.0, ""stop_text_raw"": ""Stop 87200"", ""take_profits"": [87950.0, 88500.0, 89000.0, 90600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1232,NEW_SIGNAL,PARSED,trader_c,3171748254,1275,,2025-12-29T05:41:08+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -256,8 +256,8 @@ Tейк-профит
 
  3)88400(RR1-4)
 
-4)87000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=89605 | 89200 | 88400 | 87000),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:90100 | ENTRY:UNKNOWN:200,90400,89605 | 89200 | 88400 | 87000,4,1232,,0,,,0,0,0,
-1222,PARSED,,"[trader#С]
+4)87000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 90100.0}, {""sequence"": 2, ""price"": 200.0}], ""entry"": [90100.0], ""entry_text_raw"": ""Вход с текущих (90100-200"", ""stop_loss"": 90400.0, ""stop_text_raw"": ""Stop 90400"", ""take_profits"": [89605.0, 89200.0, 88400.0, 87000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1222,NEW_SIGNAL,PARSED,trader_c,3171748254,1288,,2025-12-29T17:43:31+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -273,8 +273,8 @@ Tейк-профит
 
 3) 88550. (RR1-3)
 
-4)90600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87830 | 88150 | 88550 | 90600),BTSUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:87550 | ENTRY:UNKNOWN:450,87222,87830 | 88150 | 88550 | 90600,4,1222,,0,,,0,0,0,
-1204,PARSED,,"[trader#С]
+4)90600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 87550.0}, {""sequence"": 2, ""price"": 450.0}], ""entry"": [87550.0], ""entry_text_raw"": ""Вход с текущих (87550-450"", ""stop_loss"": 87222.0, ""stop_text_raw"": ""Stop 87222"", ""take_profits"": [87830.0, 88150.0, 88550.0, 90600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1204,NEW_SIGNAL,PARSED,trader_c,3171748254,1327,,2026-01-02T10:40:06+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -290,8 +290,8 @@ Tейк-профит
 
  3)88000
 
-4)86600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=89000 | 88700 | 88000 | 86600),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:89600 | ENTRY:UNKNOWN:700,89900,89000 | 88700 | 88000 | 86600,4,1204,,0,,,0,0,0,
-1194,PARSED,,"[trader#С]
+4)86600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 89600.0}, {""sequence"": 2, ""price"": 700.0}], ""entry"": [89600.0], ""entry_text_raw"": ""Вход по рынку  89600-700"", ""stop_loss"": 89900.0, ""stop_text_raw"": ""Stop 89900"", ""take_profits"": [89000.0, 88700.0, 88000.0, 86600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1194,NEW_SIGNAL,PARSED,trader_c,3171748254,1340,,2026-01-02T18:01:54+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -307,8 +307,8 @@ Tейк-профит
 
  3)88600
 
-4)86600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=89800 | 89400 | 88600 | 86600),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:90500 | ENTRY:UNKNOWN:600,91000,89800 | 89400 | 88600 | 86600,4,1194,,0,,,0,0,0,
-1171,PARSED,,"[trader#С]
+4)86600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 90500.0}, {""sequence"": 2, ""price"": 600.0}], ""entry"": [90500.0], ""entry_text_raw"": ""Вход по рынку  90500-600"", ""stop_loss"": 91000.0, ""stop_text_raw"": ""Stop 91000"", ""take_profits"": [89800.0, 89400.0, 88600.0, 86600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1171,NEW_SIGNAL,PARSED,trader_c,3171748254,1372,,2026-01-04T06:32:27+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -324,8 +324,8 @@ Tейк-профит
 
  3)90200
 
-4)88800",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=91000 | 90700 | 90200 | 88800),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:91500 | ENTRY:UNKNOWN:600,91800,91000 | 90700 | 90200 | 88800,4,1171,,0,,,0,0,0,
-1160,PARSED,,"[trader#С]
+4)88800",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 91500.0}, {""sequence"": 2, ""price"": 600.0}], ""entry"": [91500.0], ""entry_text_raw"": ""Вход по рынку  91500-600"", ""stop_loss"": 91800.0, ""stop_text_raw"": ""Stop 91800"", ""take_profits"": [91000.0, 90700.0, 90200.0, 88800.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1160,NEW_SIGNAL,PARSED,trader_c,3171748254,1390,,2026-01-05T04:06:20+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -341,8 +341,8 @@ Tейк-профит
 
  3)91000
 
-4)90000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=92300 | 91700 | 91000 | 90000),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:92850 | ENTRY:UNKNOWN:950,93400,92300 | 91700 | 91000 | 90000,4,1160,,0,,,0,0,0,
-1147,PARSED,,"[trader#С]
+4)90000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 92850.0}, {""sequence"": 2, ""price"": 950.0}], ""entry"": [92850.0], ""entry_text_raw"": ""Вход по рынку  92850-950"", ""stop_loss"": 93400.0, ""stop_text_raw"": ""Stop 93400"", ""take_profits"": [92300.0, 91700.0, 91000.0, 90000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1147,NEW_SIGNAL,PARSED,trader_c,3171748254,1409,,2026-01-05T17:06:01+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -358,8 +358,8 @@ Tейк-профит
 
  3)92200
 
-4)90000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=93200 | 92700 | 92200 | 90000),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:93650 | ENTRY:UNKNOWN:93750,94070,93200 | 92700 | 92200 | 90000,4,1147,,0,,,0,0,0,
-1140,PARSED,,"[trader#С]
+4)90000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 93650.0}, {""sequence"": 2, ""price"": 93750.0}], ""entry"": [93650.0], ""entry_text_raw"": ""Вход по рынку  93650-93750"", ""stop_loss"": 94070.0, ""stop_text_raw"": ""Stop 94070"", ""take_profits"": [93200.0, 92700.0, 92200.0, 90000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1140,NEW_SIGNAL,PARSED,trader_c,3171748254,1416,,2026-01-05T20:00:47+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -375,8 +375,8 @@ Tейк-профит
 
  3)92750
 
-4)91600",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=93900 | 93400 | 92750 | 91600),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:94200 | ENTRY:UNKNOWN:94300,94500,93900 | 93400 | 92750 | 91600,4,1140,,0,,,0,0,0,
-1134,PARSED,,"[trader#С]
+4)91600",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 94200.0}, {""sequence"": 2, ""price"": 94300.0}], ""entry"": [94200.0], ""entry_text_raw"": ""Вход по рынку  94200-94300"", ""stop_loss"": 94500.0, ""stop_text_raw"": ""Stop 94500"", ""take_profits"": [93900.0, 93400.0, 92750.0, 91600.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1134,NEW_SIGNAL,PARSED,trader_c,3171748254,1427,,2026-01-06T16:58:05+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -392,8 +392,8 @@ Tейк-профит
 
 3) 93800
 
-4)94500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=93100 | 93400 | 93800 | 94500),BTSUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:92450 | ENTRY:UNKNOWN:550,92250,93100 | 93400 | 93800 | 94500,4,1134,,0,,,0,0,0,
-1129,PARSED,,"[trader#С]
+4)94500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 92450.0}, {""sequence"": 2, ""price"": 550.0}], ""entry"": [92450.0], ""entry_text_raw"": ""Вход по рынку 92450-550"", ""stop_loss"": 92250.0, ""stop_text_raw"": ""Stop 92250"", ""take_profits"": [93100.0, 93400.0, 93800.0, 94500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1129,NEW_SIGNAL,PARSED,trader_c,3171748254,1436,,2026-01-07T15:24:08+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -409,8 +409,8 @@ Tейк-профит
 
 3) 92600
 
-4)93300",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=91800 | 92100 | 92600 | 93300),BTSUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:91250 | ENTRY:UNKNOWN:350,90900,91800 | 92100 | 92600 | 93300,4,1129,,0,,,0,0,0,
-1121,PARSED,,"[trader#С]
+4)93300",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 91250.0}, {""sequence"": 2, ""price"": 350.0}], ""entry"": [91250.0], ""entry_text_raw"": ""Вход по рынку 91250-350"", ""stop_loss"": 90900.0, ""stop_text_raw"": ""Stop 90900"", ""take_profits"": [91800.0, 92100.0, 92600.0, 93300.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1121,NEW_SIGNAL,PARSED,trader_c,3171748254,1446,,2026-01-07T18:50:15+00:00,"[trader#С]
 
 $ETHUSDT - LONG
 
@@ -428,8 +428,8 @@ Tейк-профит
 
 3)3190 изменено!!!
 
-4)3220",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=3155 | 3170 | 3190 | 3220),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:3133,3115,3155 | 3170 | 3190 | 3220,4,1121,,0,,,0,0,0,
-1118,PARSED,,"[trader#С]
+4)3220",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 3, ""price"": 3133.0, ""size_hint"": ""2/3""}], ""entry"": [3133.0], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 3115.0, ""stop_text_raw"": ""Stop 3115"", ""take_profits"": [3155.0, 3170.0, 3190.0, 3220.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+1118,NEW_SIGNAL,PARSED,trader_c,3171748254,1449,,2026-01-07T19:05:46+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -445,8 +445,8 @@ Tейк-профит
 
 3) 92300
 
-4)94500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=91500 | 91800 | 92300 | 94500),BTSUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:90950 | ENTRY:UNKNOWN:850,90650,91500 | 91800 | 92300 | 94500,4,1118,,0,,,0,0,0,
-1106,PARSED,,"[trader#С]
+4)94500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 90950.0}, {""sequence"": 2, ""price"": 850.0}], ""entry"": [90950.0], ""entry_text_raw"": ""Вход по рынку 90950-850"", ""stop_loss"": 90650.0, ""stop_text_raw"": ""Stop 90650"", ""take_profits"": [91500.0, 91800.0, 92300.0, 94500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1106,NEW_SIGNAL,PARSED,trader_c,3171748254,1467,,2026-01-08T14:50:03+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -462,8 +462,8 @@ Tейк-профит
 
 3) 91300
 
-4)92500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=90300 | 90800 | 91300 | 92500),BTSUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:89650 | ENTRY:UNKNOWN:750,89200,90300 | 90800 | 91300 | 92500,4,1106,,0,,,0,0,0,
-1081,PARSED,,"[trader#С]
+4)92500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 89650.0}, {""sequence"": 2, ""price"": 750.0}], ""entry"": [89650.0], ""entry_text_raw"": ""Вход по рынку 89650-750"", ""stop_loss"": 89200.0, ""stop_text_raw"": ""Stop 89200"", ""take_profits"": [90300.0, 90800.0, 91300.0, 92500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1081,NEW_SIGNAL,PARSED,trader_c,3171748254,1504,,2026-01-10T08:28:53+00:00,"[trader#С]
 
 $ICPUSDT - LONG 
 
@@ -480,8 +480,8 @@ Tейк-профит
 
  2) 3,38. (RR 1-4)
 
- ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),ICPUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:3.008 | ENTRY:UNKNOWN:2.856,2.785,,0,1081,,0,,,0,0,0,
-1080,PARSED,,"[trader#С]
+ ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ICPUSDT""}]",[],"{""symbol"": ""ICPUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 3.008, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 2.856, ""size_hint"": ""2/3""}], ""entry"": [3.008], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 2.785, ""stop_text_raw"": ""Stop 2,785"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1080,NEW_SIGNAL,PARSED,trader_c,3171748254,1505,,2026-01-10T08:32:49+00:00,"[trader#С]
 
 $CFXUSDT - LONG 
 
@@ -496,8 +496,8 @@ Tейк-профит
 
 1)0,0788(RR1-2,5)
 
- 2)0,082(RR1-4)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),CFXUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:0.0744 | ENTRY:UNKNOWN:0.0719,0.07,,0,1080,,0,,,0,0,0,
-1068,PARSED,,"[trader#С]
+ 2)0,082(RR1-4)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""CFXUSDT""}]",[],"{""symbol"": ""CFXUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 0.0744, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 0.0719, ""size_hint"": ""2/3""}], ""entry"": [0.0744], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 0.07, ""stop_text_raw"": ""Stop 0,07"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+1068,NEW_SIGNAL,PARSED,trader_c,3171748254,1526,,2026-01-12T04:21:04+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -513,8 +513,8 @@ Tейк-профит
 
  3) 90200
 
-4)89000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=90200 | 89000),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,92550,90200 | 89000,2,1068,,0,,,0,0,0,
-1032,PARSED,,"[trader#С]
+4)89000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 92550.0, ""stop_text_raw"": ""Stop 92550"", ""take_profits"": [90200.0, 89000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+1032,NEW_SIGNAL,PARSED,trader_c,3171748254,1575,,2026-01-13T15:30:25+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -530,8 +530,8 @@ Tейк-профит
 
  3)
 
-4)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:92550,92900,,0,1032,,0,,,0,0,0,
-1027,PARSED,,"[trader#С]
+4)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 92550.0}], ""entry"": [92550.0], ""entry_text_raw"": ""Вход лимитка 92550"", ""stop_loss"": 92900.0, ""stop_text_raw"": ""Stop 92900"", ""take_profits"": [], ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+1027,NEW_SIGNAL,PARSED,trader_c,3171748254,1580,,2026-01-13T15:55:35+00:00,"[trader#С]
 
 $ETHUSDT - LONG 
 
@@ -545,8 +545,8 @@ Tейк-профит
 
 2)   3230(RR1-2)
 
-3). 3300",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=3190 | 3230),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:3150,3110,3190 | 3230,2,1027,,0,,,0,0,0,
-1012,PARSED,,"[trader#С]
+3). 3300",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 3150.0}], ""entry"": [3150.0], ""entry_text_raw"": ""Вход лимит 3150"", ""stop_loss"": 3110.0, ""stop_text_raw"": ""Stop 3110"", ""take_profits"": [3190.0, 3230.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+1012,NEW_SIGNAL,PARSED,trader_c,3171748254,1596,,2026-01-13T18:33:28+00:00,"[trader#С]
 
 $LTCUSDT - LONG 
 
@@ -563,8 +563,8 @@ Tейк-профит
 
  2) 80. (RR 1-2)
 
- 3) 83",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=78 | 80 | 83),LTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:76.5 | ENTRY:UNKNOWN:75,73.5,78 | 80 | 83,3,1012,,0,,,0,0,0,
-977,PARSED,,"[trader#С]
+ 3) 83",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""LTCUSDT""}]",[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 76.5, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 75.0, ""size_hint"": ""2/3""}], ""entry"": [76.5], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 73.5, ""stop_text_raw"": ""Stop 73,5"", ""take_profits"": [78.0, 80.0, 83.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+977,NEW_SIGNAL,PARSED,trader_c,3171748254,1640,,2026-01-14T18:16:35+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -580,8 +580,8 @@ Tейк-профит
 
  3). 95200(RR1-3)
 
-4)94400",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=94400),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:97250,97800,94400,1,977,,0,,,0,0,0,
-949,PARSED,,"[trader#С]
+4)94400",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 97250.0}], ""entry"": [97250.0], ""entry_text_raw"": ""Вход лимитка 97250"", ""stop_loss"": 97800.0, ""stop_text_raw"": ""Stop 97800"", ""take_profits"": [94400.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+949,NEW_SIGNAL,PARSED,trader_c,3171748254,1674,,2026-01-15T16:46:59+00:00,"[trader#С]
 
 $ETCUSDT - LONG 
 
@@ -598,8 +598,8 @@ Tейк-профит
 
  2) 13,9 (RR 1-2)
 
- 3) 14,5",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=13.3 | 13.9 | 14.5),ETCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:12.7 | ENTRY:UNKNOWN:12.42,12.09,13.3 | 13.9 | 14.5,3,949,,0,,,0,0,0,
-943,PARSED,,"[trader#С]
+ 3) 14,5",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETCUSDT""}]",[],"{""symbol"": ""ETCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 12.7, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 12.42, ""size_hint"": ""2/3""}], ""entry"": [12.7], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 12.09, ""stop_text_raw"": ""Stop 12,09"", ""take_profits"": [13.3, 13.9, 14.5], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+943,NEW_SIGNAL,PARSED,trader_c,3171748254,1683,,2026-01-16T04:12:17+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -615,8 +615,8 @@ Tейк-профит
 
 3)   97000
 
-4). 98000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=95750 | 96300 | 97000),BTSUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,95000,95750 | 96300 | 97000,3,943,,0,,,0,0,0,
-938,PARSED,,"[trader#С]
+4). 98000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 95000.0, ""stop_text_raw"": ""Stop 95000"", ""take_profits"": [95750.0, 96300.0, 97000.0], ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+938,NEW_SIGNAL,PARSED,trader_c,3171748254,1690,,2026-01-16T08:56:08+00:00,"[trader#С]
 
 $LDOUSDT - LONG 
 
@@ -634,8 +634,8 @@ Tейк-профит
  2)0,65(RR1-2,5)
 
  3)0,682(RR1-4)
-Исправлено",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),LDOUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:0.592 | ENTRY:UNKNOWN:0.578,0.565,,0,938,,0,,,0,0,0,
-934,PARSED,,"[trader#С]
+Исправлено",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""LDOUSDT""}]",[],"{""symbol"": ""LDOUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 0.592, ""size_hint"": ""1/3""}, {""sequence"": 2, ""price"": 0.578, ""size_hint"": ""2/3""}], ""entry"": [0.592], ""entry_text_raw"": ""TRANCHE_PLAN"", ""stop_loss"": 0.565, ""stop_text_raw"": ""Stop 0,565"", ""take_profits"": [], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+934,NEW_SIGNAL,PARSED,trader_c,3171748254,1695,,2026-01-16T15:07:29+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -651,8 +651,8 @@ Tейк-профит
 
 3)   97000
 
-4). 98000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=95750 | 96400 | 97000),BTSUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,95000,95750 | 96400 | 97000,3,934,,0,,,0,0,0,
-930,PARSED,,"[trader#С]
+4). 98000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 95000.0, ""stop_text_raw"": ""Stop 95000"", ""take_profits"": [95750.0, 96400.0, 97000.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+930,NEW_SIGNAL,PARSED,trader_c,3171748254,1699,,2026-01-16T15:25:57+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -668,8 +668,8 @@ Tейк-профит
 
 3)   97000
 
-4). 98000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=95650 | 96400 | 97000),BTSUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,94700,95650 | 96400 | 97000,3,930,,0,,,0,0,0,
-928,PARSED,,"[trader#С]
+4). 98000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""CURRENT"", ""entries"": [], ""entry"": [], ""stop_loss"": 94700.0, ""stop_text_raw"": ""Stop 94700"", ""take_profits"": [95650.0, 96400.0, 97000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+928,NEW_SIGNAL,PARSED,trader_c,3171748254,1701,,2026-01-16T15:39:30+00:00,"[trader#С]
 
 $BTSUSDT - LONG 
 
@@ -685,8 +685,8 @@ Tейк-профит
 
 3) 96400
 
-4)97000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=95250 | 95800 | 96400 | 97000),BTSUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,94300,95250 | 95800 | 96400 | 97000,4,928,,0,,,0,0,0,
-921,PARSED,,"[trader#С]
+4)97000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTSUSDT""}]",[],"{""symbol"": ""BTSUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 94300.0, ""stop_text_raw"": ""Stop 94300"", ""take_profits"": [95250.0, 95800.0, 96400.0, 97000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+921,NEW_SIGNAL,PARSED,trader_c,3171748254,1709,,2026-01-16T16:29:11+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -702,8 +702,8 @@ Tейк-профит
 
 3) 96400
 
-4) 97200",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=95500 | 95950 | 96400 | 97200),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:94650,94200,95500 | 95950 | 96400 | 97200,4,921,,0,,,0,0,0,
-916,PARSED,,"[trader#С]
+4) 97200",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 94650.0}], ""entry"": [94650.0], ""entry_text_raw"": ""Вход по лимитке 94650"", ""stop_loss"": 94200.0, ""stop_text_raw"": ""Stop 94200"", ""take_profits"": [95500.0, 95950.0, 96400.0, 97200.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+916,NEW_SIGNAL,PARSED,trader_c,3171748254,1720,,2026-01-17T06:23:43+00:00,"[trader#С]
 
 $ETHUSDT - LONG
 
@@ -719,8 +719,8 @@ Tейк-профит
 
 3)3330
 
-4)3350",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=3295 | 3310 | 3330 | 3350),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:3272,3255,3295 | 3310 | 3330 | 3350,4,916,,0,,,0,0,0,
-890,PARSED,,"[trader#С]
+4)3350",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 3272.0}], ""entry"": [3272.0], ""entry_text_raw"": ""Вход лимитка 3272"", ""stop_loss"": 3255.0, ""stop_text_raw"": ""Stop 3255"", ""take_profits"": [3295.0, 3310.0, 3330.0, 3350.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+890,NEW_SIGNAL,PARSED,trader_c,3171748254,1766,,2026-01-20T05:45:56+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -736,8 +736,8 @@ Tейк-профит
 
 3) 93000
 
-4)94500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=92100 | 92500 | 93000 | 94500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,91200,92100 | 92500 | 93000 | 94500,4,890,,0,,,0,0,0,
-888,PARSED,,"[trader#С]
+4)94500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 91200.0, ""stop_text_raw"": ""Stop 91200"", ""take_profits"": [92100.0, 92500.0, 93000.0, 94500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+888,NEW_SIGNAL,PARSED,trader_c,3171748254,1770,,2026-01-20T10:34:00+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -753,8 +753,8 @@ Tейк-профит
 
 3)   93000
 
-4). 94000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=92000 | 92500 | 93000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:91030,90600,92000 | 92500 | 93000,3,888,,0,,,0,0,0,
-879,PARSED,,"[trader#С]
+4). 94000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 91030.0}], ""entry"": [91030.0], ""entry_text_raw"": ""Вход лимитка 91030"", ""stop_loss"": 90600.0, ""stop_text_raw"": ""Stop 90600"", ""take_profits"": [92000.0, 92500.0, 93000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+879,NEW_SIGNAL,PARSED,trader_c,3171748254,1781,,2026-01-20T15:30:03+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -770,8 +770,8 @@ Tейк-профит
 
 3)   93000
 
-4). 94000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=91000 | 92000 | 93000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:90251,89800,91000 | 92000 | 93000,3,879,,0,,,0,0,0,
-869,PARSED,,"[trader#С]
+4). 94000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 90251.0}], ""entry"": [90251.0], ""entry_text_raw"": ""Вход лимитка 90251"", ""stop_loss"": 89800.0, ""stop_text_raw"": ""Stop 89800"", ""take_profits"": [91000.0, 92000.0, 93000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+869,NEW_SIGNAL,PARSED,trader_c,3171748254,1792,,2026-01-20T19:58:25+00:00,"[trader#С]
 
 $CFXUSDT - LONG 
 
@@ -785,8 +785,8 @@ Tейк-профит
 
 1)0,07353
 
- 2)0,077",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),CFXUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1,0.0685,,0,869,,0,,,0,0,0,
-863,PARSED,,"[trader#С]
+ 2)0,077",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""CFXUSDT""}]",[],"{""symbol"": ""CFXUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.0}], ""entry"": [1.0], ""entry_text_raw"": ""Вход лимиткой \n\n1"", ""stop_loss"": 0.0685, ""stop_text_raw"": ""Stop 0,0685"", ""take_profits"": [], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+863,NEW_SIGNAL,PARSED,trader_c,3171748254,1802,,2026-01-21T02:59:56+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -802,8 +802,8 @@ Tейк-профит
 
 3)   91000
 
-4). 92000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=88900 | 90000 | 91000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:88250,87750,88900 | 90000 | 91000,3,863,,0,,,0,0,0,
-845,PARSED,,"[trader#С]
+4). 92000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 88250.0}], ""entry"": [88250.0], ""entry_text_raw"": ""Вход лимитка 88250"", ""stop_loss"": 87750.0, ""stop_text_raw"": ""Stop 87750"", ""take_profits"": [88900.0, 90000.0, 91000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+845,NEW_SIGNAL,PARSED,trader_c,3171748254,1824,,2026-01-21T16:22:59+00:00,"[trader#С]
 
 $ETHUSDT - LONG
 
@@ -819,8 +819,8 @@ Tейк-профит
 
 3)3030
 
-4)3060",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2950 | 3000 | 3030 | 3060),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2925,2900,2950 | 3000 | 3030 | 3060,4,845,,0,,,0,0,0,
-835,PARSED,,"[trader#С]
+4)3060",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2925.0}], ""entry"": [2925.0], ""entry_text_raw"": ""Вход лимитка 2925"", ""stop_loss"": 2900.0, ""stop_text_raw"": ""Stop 2900"", ""take_profits"": [2950.0, 3000.0, 3030.0, 3060.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+835,NEW_SIGNAL,PARSED,trader_c,3171748254,1836,,2026-01-21T20:43:58+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -836,8 +836,8 @@ Tейк-профит
 
 3)   92000
 
-4). 93000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=90000 | 91000 | 92000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:88450,87350,90000 | 91000 | 92000,3,835,,0,,,0,0,0,
-833,PARSED,,"[trader#С]
+4). 93000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 88450.0}], ""entry"": [88450.0], ""entry_text_raw"": ""Вход лимитка 88450"", ""stop_loss"": 87350.0, ""stop_text_raw"": ""Stop 87350"", ""take_profits"": [90000.0, 91000.0, 92000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+833,NEW_SIGNAL,PARSED,trader_c,3171748254,1844,,2026-01-22T15:11:53+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -853,8 +853,8 @@ Tейк-профит
 
 3)   92000
 
-4). 93000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=90000 | 91000 | 92000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,88800,90000 | 91000 | 92000,3,833,,0,,,0,0,0,
-830,PARSED,,"[trader#С]
+4). 93000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""MARKET"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""MARKET_ENTRY"", ""stop_loss"": 88800.0, ""stop_text_raw"": ""Stop 88800"", ""take_profits"": [90000.0, 91000.0, 92000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+830,NEW_SIGNAL,PARSED,trader_c,3171748254,1847,,2026-01-22T15:47:15+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -870,8 +870,8 @@ Tейк-профит
 
 3)   92000
 
-4). 93000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=90000 | 91000 | 92000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:88900,88400,90000 | 91000 | 92000,3,830,,0,,,0,0,0,
-813,PARSED,,"[trader#С]
+4). 93000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 88900.0}], ""entry"": [88900.0], ""entry_text_raw"": ""Вход лимитка 88900"", ""stop_loss"": 88400.0, ""stop_text_raw"": ""Stop 88400"", ""take_profits"": [90000.0, 91000.0, 92000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+813,NEW_SIGNAL,PARSED,trader_c,3171748254,1884,,2026-01-25T09:15:13+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -887,8 +887,8 @@ Tейк-профит
 
 3)   90000
 
-4). 91000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=88850 | 89250 | 90000),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:88300 | ENTRY:UNKNOWN:400,88000,88850 | 89250 | 90000,3,813,,0,,,0,0,0,
-809,PARSED,,"[trader#С]
+4). 91000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 88300.0}, {""sequence"": 2, ""price"": 400.0}], ""entry"": [88300.0], ""entry_text_raw"": ""Вход по рынку 88300-400"", ""stop_loss"": 88000.0, ""stop_text_raw"": ""Stop 88000"", ""take_profits"": [88850.0, 89250.0, 90000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+809,NEW_SIGNAL,PARSED,trader_c,3171748254,1893,,2026-01-26T04:18:06+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -904,8 +904,8 @@ Tейк-профит
 
 3)  88800
 
-4). 90000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87700 | 88150 | 88800),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:87250,86850,87700 | 88150 | 88800,3,809,,0,,,0,0,0,
-805,PARSED,,"[trader#С]
+4). 90000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 87250.0}], ""entry"": [87250.0], ""entry_text_raw"": ""Вход лимитка 87250"", ""stop_loss"": 86850.0, ""stop_text_raw"": ""Stop 86850"", ""take_profits"": [87700.0, 88150.0, 88800.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+805,NEW_SIGNAL,PARSED,trader_c,3171748254,1902,,2026-01-26T17:40:12+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -921,8 +921,8 @@ Tейк-профит
 
 3)  88800
 
-4). 90000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87700 | 88150 | 88800),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:87250,86850,87700 | 88150 | 88800,3,805,,0,,,0,0,0,
-797,PARSED,,"[trader#С]
+4). 90000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 87250.0}], ""entry"": [87250.0], ""entry_text_raw"": ""Вход лимитка 87250"", ""stop_loss"": 86850.0, ""stop_text_raw"": ""Stop 86850"", ""take_profits"": [87700.0, 88150.0, 88800.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+797,NEW_SIGNAL,PARSED,trader_c,3171748254,1916,,2026-01-27T17:44:24+00:00,"[trader#С]
 
 $ETHUSDT - Short 
 
@@ -938,8 +938,8 @@ Tейк-профит
 
 3)2850
 
-4)2750",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2920 | 2880 | 2850 | 2750),ETHUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2970,3000,2920 | 2880 | 2850 | 2750,4,797,,0,,,0,0,0,
-792,PARSED,,"[trader#С]
+4)2750",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2970.0}], ""entry"": [2970.0], ""entry_text_raw"": ""Вход лимитка 2970"", ""stop_loss"": 3000.0, ""stop_text_raw"": ""Stop 3000"", ""take_profits"": [2920.0, 2880.0, 2850.0, 2750.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+792,NEW_SIGNAL,PARSED,trader_c,3171748254,1929,,2026-01-28T13:10:30+00:00,"[trader#С]
 
  $LTCUSDT - LONG 
 
@@ -956,8 +956,8 @@ Tейк-профит
 
  2)72(RR1-2,5)
 
- 3)74(RR1-3+)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=70 | 72 | 74),LTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1,65.2,70 | 72 | 74,3,792,,0,,,0,0,0,
-790,PARSED,,"[trader#С]
+ 3)74(RR1-3+)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""LTCUSDT""}]",[],"{""symbol"": ""LTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.0}], ""entry"": [1.0], ""entry_text_raw"": ""Вход лимиткой \n\n1"", ""stop_loss"": 65.2, ""stop_text_raw"": ""Stop 65,2"", ""take_profits"": [70.0, 72.0, 74.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+790,NEW_SIGNAL,PARSED,trader_c,3171748254,1931,,2026-01-28T14:46:15+00:00,"[trader#С]
 
 $BTCUSDT - SHORT 
 
@@ -973,8 +973,8 @@ Tейк-профит
 
  3). 88500
 
-4) 87000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=87000),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:90100,90600,87000,1,790,,0,,,0,0,0,
-777,PARSED,,"[trader#С]
+4) 87000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 90100.0}], ""entry"": [90100.0], ""entry_text_raw"": ""Вход лимитка 90100"", ""stop_loss"": 90600.0, ""stop_text_raw"": ""Stop 90600"", ""take_profits"": [87000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+777,NEW_SIGNAL,PARSED,trader_c,3171748254,1953,,2026-01-29T16:14:27+00:00,"[trader#С]
 
 $BTСUSDT - LONG 
 
@@ -990,8 +990,8 @@ Tейк-профит
 
 3)  86200
 
-4). 87000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=85200 | 85650 | 86200),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:84600 | ENTRY:UNKNOWN:650,84250,85200 | 85650 | 86200,3,777,,0,,,0,0,0,
-758,PARSED,,"[trader #С]
+4). 87000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 84600.0}, {""sequence"": 2, ""price"": 650.0}], ""entry"": [84600.0], ""entry_text_raw"": ""Вход лимитка 84600-650"", ""stop_loss"": 84250.0, ""stop_text_raw"": ""Stop 84250"", ""take_profits"": [85200.0, 85650.0, 86200.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+758,NEW_SIGNAL,PARSED,trader_c,3171748254,1982,,2026-01-30T19:05:58+00:00,"[trader #С]
 
 $ETHUSDT - LONG
 
@@ -1007,8 +1007,8 @@ Tейк-профит
 
 3)2820
 
-4)2900",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2730 | 2770 | 2820 | 2900),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2670,2635,2730 | 2770 | 2820 | 2900,4,758,,0,,,0,0,0,
-752,PARSED,,"[trader #С]
+4)2900",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2670.0}], ""entry"": [2670.0], ""entry_text_raw"": ""Вход лимитка 2670"", ""stop_loss"": 2635.0, ""stop_text_raw"": ""Stop 2635"", ""take_profits"": [2730.0, 2770.0, 2820.0, 2900.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+752,NEW_SIGNAL,PARSED,trader_c,3171748254,1992,,2026-01-31T07:47:33+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1024,8 +1024,8 @@ Tейк-профит
 
 3)  85000
 
-4). 86500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=83000 | 84000 | 85000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:82420,81820,83000 | 84000 | 85000,3,752,,0,,,0,0,0,
-731,PARSED,,"[trader #С]
+4). 86500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 82420.0}], ""entry"": [82420.0], ""entry_text_raw"": ""Вход лимитка 82420"", ""stop_loss"": 81820.0, ""stop_text_raw"": ""Stop 81820"", ""take_profits"": [83000.0, 84000.0, 85000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+731,NEW_SIGNAL,PARSED,trader_c,3171748254,2062,,2026-02-02T12:56:35+00:00,"[trader #С]
 
 $ETHUSDT - LONG
 
@@ -1041,8 +1041,8 @@ Tейк-профит
 
 3) 2390
 
-4) 2460",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2260 | 2310 | 2390 | 2460),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2200,2150,2260 | 2310 | 2390 | 2460,4,731,,0,,,0,0,0,
-722,PARSED,,"[trader #С]
+4) 2460",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2200.0}], ""entry"": [2200.0], ""entry_text_raw"": ""Вход лимитка 2200"", ""stop_loss"": 2150.0, ""stop_text_raw"": ""Stop 2150"", ""take_profits"": [2260.0, 2310.0, 2390.0, 2460.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+722,NEW_SIGNAL,PARSED,trader_c,3171748254,2075,,2026-02-03T05:31:35+00:00,"[trader #С]
 
 $KAS USDT - LONG 
 
@@ -1059,8 +1059,8 @@ Tейк-профит
 
  2) 0,035 (RR1-2)
 
- 3) 0,04 (RR1-4)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),KASUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1,0.0295,,0,722,,0,,,0,0,0,
-711,PARSED,,"[trader #С]
+ 3) 0,04 (RR1-4)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""KASUSDT""}]",[],"{""symbol"": ""KASUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.0}], ""entry"": [1.0], ""entry_text_raw"": ""Вход лимиткой \n\n1"", ""stop_loss"": 0.0295, ""stop_text_raw"": ""Stop 0,0295"", ""take_profits"": [], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+711,NEW_SIGNAL,PARSED,trader_c,3171748254,2090,,2026-02-03T15:08:40+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1076,8 +1076,8 @@ Tейк-профит
 
 3)  80000
 
-4)  82000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=78000 | 79000 | 80000 | 82000),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:77400 | ENTRY:UNKNOWN:300,77000,78000 | 79000 | 80000 | 82000,4,711,,0,,,0,0,0,
-643,PARSED,,"[trader #С]
+4)  82000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 77400.0}, {""sequence"": 2, ""price"": 300.0}], ""entry"": [77400.0], ""entry_text_raw"": ""Вход лимитка 77400-300"", ""stop_loss"": 77000.0, ""stop_text_raw"": ""Stop 77000"", ""take_profits"": [78000.0, 79000.0, 80000.0, 82000.0], ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+643,NEW_SIGNAL,PARSED,trader_c,3171748254,2182,,2026-02-05T19:18:56+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1093,8 +1093,8 @@ Tейк-профит
 
 3)  70000
 
-4)  72000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=67500 | 68500 | 70000 | 72000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,65300,67500 | 68500 | 70000 | 72000,4,643,,0,,,0,0,0,
-625,PARSED,,"[trader #С]
+4)  72000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""CURRENT"", ""entries"": [], ""entry"": [], ""stop_loss"": 65300.0, ""stop_text_raw"": ""Stop 65300"", ""take_profits"": [67500.0, 68500.0, 70000.0, 72000.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+625,NEW_SIGNAL,PARSED,trader_c,3171748254,2209,,2026-02-06T18:00:08+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1110,8 +1110,8 @@ Tейк-профит
 
  3) 68000
 
-4) 66000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=70000 | 69300 | 68000 | 66000),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:70800 | ENTRY:UNKNOWN:71000,71500,70000 | 69300 | 68000 | 66000,4,625,,0,,,0,0,0,
-611,PARSED,,"[trader #С]
+4) 66000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 70800.0}, {""sequence"": 2, ""price"": 71000.0}], ""entry"": [70800.0], ""entry_text_raw"": ""Вход лимитка 70800-71000"", ""stop_loss"": 71500.0, ""stop_text_raw"": ""Stop 71500"", ""take_profits"": [70000.0, 69300.0, 68000.0, 66000.0], ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+611,NEW_SIGNAL,PARSED,trader_c,3171748254,2226,,2026-02-07T07:21:00+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1130,8 +1130,8 @@ Tейк-профит
 
 3)  73000
 
-4)  76500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=69000 | 71000 | 73000 | 76500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,61600,69000 | 71000 | 73000 | 76500,4,611,,0,,,0,0,0,
-605,PARSED,,"[trader #С]
+4)  76500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""Вход лимитка \n\n"", ""stop_loss"": 61600.0, ""stop_text_raw"": ""Stop 61600"", ""take_profits"": [69000.0, 71000.0, 73000.0, 76500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+605,NEW_SIGNAL,PARSED,trader_c,3171748254,2240,,2026-02-08T10:35:01+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1147,8 +1147,8 @@ Tейк-профит
 
 3)  74000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=72000 | 73000 | 74000),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:70000 | ENTRY:UNKNOWN:69900,69000,72000 | 73000 | 74000,3,605,,0,,,0,0,0,
-593,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 70000.0}, {""sequence"": 2, ""price"": 69900.0}], ""entry"": [70000.0], ""entry_text_raw"": ""Вход 70000-69900"", ""stop_loss"": 69000.0, ""stop_text_raw"": ""Stop 69000"", ""take_profits"": [72000.0, 73000.0, 74000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+593,NEW_SIGNAL,PARSED,trader_c,3171748254,2258,,2026-02-09T11:03:43+00:00,"[trader #С]
 
 $CFXUSDT - LONG 
 
@@ -1164,8 +1164,8 @@ Tейк-профит
 
 2) 0,0534
 
-3) 0,0579",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),CFXUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1,0.04,,0,593,,0,,,0,0,0,
-577,PARSED,,"[trader #С]
+3) 0,0579",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""CFXUSDT""}]",[],"{""symbol"": ""CFXUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.0}], ""entry"": [1.0], ""entry_text_raw"": ""Вход лимиткой \n\n1"", ""stop_loss"": 0.04, ""stop_text_raw"": ""Stop 0,040"", ""take_profits"": [], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+577,NEW_SIGNAL,PARSED,trader_c,3171748254,2283,,2026-02-10T15:28:18+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1181,8 +1181,8 @@ Tейк-профит
 
 3)  73000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=70250 | 71500 | 73000),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:68950 | ENTRY:UNKNOWN:850,67850,70250 | 71500 | 73000,3,577,,0,,,0,0,0,
-576,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 68950.0}, {""sequence"": 2, ""price"": 850.0}], ""entry"": [68950.0], ""entry_text_raw"": ""Вход 68950-850"", ""stop_loss"": 67850.0, ""stop_text_raw"": ""Stop 67850"", ""take_profits"": [70250.0, 71500.0, 73000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+576,NEW_SIGNAL,PARSED,trader_c,3171748254,2284,,2026-02-10T15:32:37+00:00,"[trader #С]
 
 $ETHUSDT - LONG
 
@@ -1196,8 +1196,8 @@ Tейк-профит
 
 2) 2110(RR1-2)
 
-3) 2170",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2065 | 2110 | 2170),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2025,1985,2065 | 2110 | 2170,3,576,,0,,,0,0,0,
-563,PARSED,,"[trader #С]
+3) 2170",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2025.0}], ""entry"": [2025.0], ""entry_text_raw"": ""Вход лимитка 2025"", ""stop_loss"": 1985.0, ""stop_text_raw"": ""Stop 1985"", ""take_profits"": [2065.0, 2110.0, 2170.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+563,NEW_SIGNAL,PARSED,trader_c,3171748254,2303,,2026-02-11T12:14:37+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1213,8 +1213,8 @@ Tейк-профит
 
 3)  69000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=67460 | 68000 | 69000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66666,66250,67460 | 68000 | 69000,3,563,,0,,,0,0,0,
-492,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66666.0}], ""entry"": [66666.0], ""entry_text_raw"": ""Вход лимитка 66666"", ""stop_loss"": 66250.0, ""stop_text_raw"": ""Stop 66250"", ""take_profits"": [67460.0, 68000.0, 69000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+492,NEW_SIGNAL,PARSED,trader_c,3171748254,2380,,2026-02-12T12:39:46+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1230,8 +1230,8 @@ Tейк-профит
 
 3)  65000
 
-4)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=67300 | 66400 | 65000),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:68100,68950,67300 | 66400 | 65000,3,492,,0,,,0,0,0,
-486,PARSED,,"[trader #С]
+4)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 68100.0}], ""entry"": [68100.0], ""entry_text_raw"": ""Вход лимитка 68100"", ""stop_loss"": 68950.0, ""stop_text_raw"": ""Stop 68950"", ""take_profits"": [67300.0, 66400.0, 65000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+486,NEW_SIGNAL,PARSED,trader_c,3171748254,2387,,2026-02-12T18:22:47+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1250,8 +1250,8 @@ Tейк-профит
 
 3)  73000
 
-4)  76500",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=69000 | 71000 | 73000 | 76500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,61600,69000 | 71000 | 73000 | 76500,4,486,,0,,,0,0,0,
-480,PARSED,,"[trader #С]
+4)  76500",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""Вход лимитка \n\n"", ""stop_loss"": 61600.0, ""stop_text_raw"": ""Stop 61600"", ""take_profits"": [69000.0, 71000.0, 73000.0, 76500.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+480,NEW_SIGNAL,PARSED,trader_c,3171748254,2399,,2026-02-13T13:16:36+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1265,8 +1265,8 @@ Tейк-профит
 
  2) 66000(RR1-2)
 
- 3) 65000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=67000 | 66000 | 65000),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:67900,68700,67000 | 66000 | 65000,3,480,,0,,,0,0,0,
-458,PARSED,,"[trader #С]
+ 3) 65000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 67900.0}], ""entry"": [67900.0], ""entry_text_raw"": ""Вход лимитка 67900"", ""stop_loss"": 68700.0, ""stop_text_raw"": ""Stop  68700"", ""take_profits"": [67000.0, 66000.0, 65000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+458,NEW_SIGNAL,PARSED,trader_c,3171748254,2427,,2026-02-14T13:15:54+00:00,"[trader #С]
 
 $ETHUSDT - SHORT 
 
@@ -1280,8 +1280,8 @@ Tейк-профит
 
 2)   2045(RR1-2)
 
-3)  2020",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2072 | 2045 | 2020),ETHUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2092,2109,2072 | 2045 | 2020,3,458,,0,,,0,0,0,
-442,PARSED,,"[trader #С]
+3)  2020",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2092.0}], ""entry"": [2092.0], ""entry_text_raw"": ""Вход лимитка 2092"", ""stop_loss"": 2109.0, ""stop_text_raw"": ""Stop 2109"", ""take_profits"": [2072.0, 2045.0, 2020.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+442,NEW_SIGNAL,PARSED,trader_c,3171748254,2451,,2026-02-15T18:03:35+00:00,"[trader #С]
 
 $SOLUSDT - LONG 
 
@@ -1300,8 +1300,8 @@ Tейк-профит
 
 3)  
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87.9 | 93.6),SOLUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,0,,76.6,87.9 | 93.6,2,442,,0,,,0,0,0,
-418,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""SOLUSDT""}]",[],"{""symbol"": ""SOLUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [], ""entry"": [], ""entry_text_raw"": ""Вход лимитка \n\n"", ""stop_loss"": 76.6, ""stop_text_raw"": ""Stop .  76,6"", ""take_profits"": [87.9, 93.6], ""risk_value_raw"": ""0,6"", ""risk_value_normalized"": 0.6, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+418,NEW_SIGNAL,PARSED,trader_c,3171748254,2490,,2026-02-17T17:15:13+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1317,8 +1317,8 @@ Tейк-профит
 
 3)  69500
 
-4) 70700",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=67300 | 68400 | 69500 | 70700),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66200,65100,67300 | 68400 | 69500 | 70700,4,418,,0,,,0,0,0,
-372,PARSED,,"[trader #С]
+4) 70700",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66200.0}], ""entry"": [66200.0], ""entry_text_raw"": ""Вход лимитка 66200"", ""stop_loss"": 65100.0, ""stop_text_raw"": ""Stop 65100"", ""take_profits"": [67300.0, 68400.0, 69500.0, 70700.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+372,NEW_SIGNAL,PARSED,trader_c,3171748254,2552,,2026-02-19T12:37:06+00:00,"[trader #С]
 
 $ETHUSDT - SHORT 
 
@@ -1332,8 +1332,8 @@ Tейк-профит
 
 2)   1920(RR1-2)
 
-3)  1890",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1945 | 1920 | 1890),ETHUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1975,1990,1945 | 1920 | 1890,3,372,,0,,,0,0,0,
-364,PARSED,,"[trader #С]
+3)  1890",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1975.0}], ""entry"": [1975.0], ""entry_text_raw"": ""Вход лимитка 1975"", ""stop_loss"": 1990.0, ""stop_text_raw"": ""Stop 1990"", ""take_profits"": [1945.0, 1920.0, 1890.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+364,NEW_SIGNAL,PARSED,trader_c,3171748254,2562,,2026-02-19T20:05:34+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1352,8 +1352,8 @@ Tейк-профит
 
 3)   72000
 
-4)   74000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68000 | 70000 | 72000 | 74000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66100,64000,68000 | 70000 | 72000 | 74000,4,364,,0,,,0,0,0,
-346,PARSED,,"[trader #С]
+4)   74000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66100.0}], ""entry"": [66100.0], ""entry_text_raw"": ""Вход лимитка\n\n66100"", ""stop_loss"": 64000.0, ""stop_text_raw"": ""Stop 64000"", ""take_profits"": [68000.0, 70000.0, 72000.0, 74000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+346,NEW_SIGNAL,PARSED,trader_c,3171748254,2584,,2026-02-20T12:27:05+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1372,8 +1372,8 @@ Tейк-профит
 
 3)   72000
 
-4)   74000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68000 | 70000 | 72000 | 74000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66666,64400,68000 | 70000 | 72000 | 74000,4,346,,0,,,0,0,0,
-343,PARSED,,"[trader #С]
+4)   74000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66666.0}], ""entry"": [66666.0], ""entry_text_raw"": ""Вход лимитка\n\n66666"", ""stop_loss"": 64400.0, ""stop_text_raw"": ""Stop 64400"", ""take_profits"": [68000.0, 70000.0, 72000.0, 74000.0], ""risk_value_raw"": ""1"", ""risk_value_normalized"": 1.0, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+343,NEW_SIGNAL,PARSED,trader_c,3171748254,2587,,2026-02-20T12:39:30+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1389,8 +1389,8 @@ Tейк-профит
 
 3)  72500
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68400 | 70000 | 72500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66666,66130,68400 | 70000 | 72500,3,343,,0,,,0,0,0,
-322,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66666.0}], ""entry"": [66666.0], ""entry_text_raw"": ""Вход лимитка 66666"", ""stop_loss"": 66130.0, ""stop_text_raw"": ""Stop 66130"", ""take_profits"": [68400.0, 70000.0, 72500.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+322,NEW_SIGNAL,PARSED,trader_c,3171748254,2611,,2026-02-20T16:01:09+00:00,"[trader #С]
 
 $BTСUSDT - LONG перезахожу 
 
@@ -1406,8 +1406,8 @@ Tейк-профит
 
 3)  72500
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68400 | 70000 | 72500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:67100,66400,68400 | 70000 | 72500,3,322,,0,,,0,0,0,
-318,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 67100.0}], ""entry"": [67100.0], ""entry_text_raw"": ""Вход лимитка 67100"", ""stop_loss"": 66400.0, ""stop_text_raw"": ""Stop 66400"", ""take_profits"": [68400.0, 70000.0, 72500.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+318,NEW_SIGNAL,PARSED,trader_c,3171748254,2617,,2026-02-20T19:05:09+00:00,"[trader #С]
 
 $ETHUSDT - LONG
 
@@ -1421,8 +1421,8 @@ Tейк-профит
 
 2) 2000(RR1-2)
 
-3) 2045",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1980 | 2000 | 2045),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1950,1935,1980 | 2000 | 2045,3,318,,0,,,0,0,0,
-292,PARSED,,"[trader #С]
+3) 2045",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1950.0}], ""entry"": [1950.0], ""entry_text_raw"": ""Вход лимитка 1950"", ""stop_loss"": 1935.0, ""stop_text_raw"": ""Stop 1935"", ""take_profits"": [1980.0, 2000.0, 2045.0], ""risk_value_raw"": ""0,5"", ""risk_value_normalized"": 0.5, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+292,NEW_SIGNAL,PARSED,trader_c,3171748254,2666,,2026-02-23T18:01:26+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1438,8 +1438,8 @@ Tейк-профит
 
 3)  66600
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=64850 | 65600 | 66600),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:64330,64100,64850 | 65600 | 66600,3,292,,0,,,0,0,0,
-277,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 64330.0}], ""entry"": [64330.0], ""entry_text_raw"": ""Вход лимитка 64330"", ""stop_loss"": 64100.0, ""stop_text_raw"": ""Stop 64100"", ""take_profits"": [64850.0, 65600.0, 66600.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+277,NEW_SIGNAL,PARSED,trader_c,3171748254,2687,,2026-02-24T15:00:41+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1455,8 +1455,8 @@ Tейк-профит
 
 3)  65600
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=63600 | 64100 | 65600),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:62900,62400,63600 | 64100 | 65600,3,277,,0,,,0,0,0,
-276,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 62900.0}], ""entry"": [62900.0], ""entry_text_raw"": ""Вход лимитка 62900"", ""stop_loss"": 62400.0, ""stop_text_raw"": ""Stop 62400"", ""take_profits"": [63600.0, 64100.0, 65600.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+276,NEW_SIGNAL,PARSED,trader_c,3171748254,2688,,2026-02-24T15:13:10+00:00,"[trader #С]
 
 $ETHUSDT - LONG
 
@@ -1470,8 +1470,8 @@ Tейк-профит
 
 2) 1870(RR1-2)
 
-3) 1900",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1845 | 1870 | 1900),ETHUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1820,1795,1845 | 1870 | 1900,3,276,,0,,,0,0,0,
-254,PARSED,,"[trader #С]
+3) 1900",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1820.0}], ""entry"": [1820.0], ""entry_text_raw"": ""Вход лимитка 1820"", ""stop_loss"": 1795.0, ""stop_text_raw"": ""Stop 1795"", ""take_profits"": [1845.0, 1870.0, 1900.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+254,NEW_SIGNAL,PARSED,trader_c,3171748254,2717,,2026-02-25T14:35:54+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1485,8 +1485,8 @@ Tейк-профит
 
  2) 64800(RR1-2)
 
- 3) 63900",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=65600 | 64800 | 63900),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:66300 | ENTRY:UNKNOWN:400,66900,65600 | 64800 | 63900,3,254,,0,,,0,0,0,
-225,PARSED,,"[trader #С]
+ 3) 63900",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 66300.0}, {""sequence"": 2, ""price"": 400.0}], ""entry"": [66300.0], ""entry_text_raw"": ""Вход лимитка 66300-400"", ""stop_loss"": 66900.0, ""stop_text_raw"": ""Stop  66900"", ""take_profits"": [65600.0, 64800.0, 63900.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+225,NEW_SIGNAL,PARSED,trader_c,3171748254,2747,,2026-02-25T19:26:56+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1500,8 +1500,8 @@ Tейк-профит
 
  2) 67500(RR1-2)
 
- 3) 66666",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=68400 | 67500 | 66666),BTCUSDT,SHORT,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:69000 | ENTRY:UNKNOWN:100,69600,68400 | 67500 | 66666,3,225,,0,,,0,0,0,
-218,PARSED,,"[trader #С]
+ 3) 66666",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 69000.0}, {""sequence"": 2, ""price"": 100.0}], ""entry"": [69000.0], ""entry_text_raw"": ""Вход лимитка 69000-100"", ""stop_loss"": 69600.0, ""stop_text_raw"": ""Stop  69600"", ""take_profits"": [68400.0, 67500.0, 66666.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+218,NEW_SIGNAL,PARSED,trader_c,3171748254,2760,,2026-02-26T12:54:38+00:00,"[trader #С]
 
 $LDOUSDT - LONG 
 
@@ -1518,8 +1518,8 @@ Tейк-профит
 
 2) 0,345
 
-3) 0,36",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),LDOUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1,0.298,,0,218,,0,,,0,0,0,
-213,PARSED,,"[trader #С]
+3) 0,36",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""LDOUSDT""}]",[],"{""symbol"": ""LDOUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.0}], ""entry"": [1.0], ""entry_text_raw"": ""Вход лимиткой \n\n1"", ""stop_loss"": 0.298, ""stop_text_raw"": ""Stop 0,298"", ""take_profits"": [], ""risk_value_raw"": ""0,6"", ""risk_value_normalized"": 0.6, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+213,NEW_SIGNAL,PARSED,trader_c,3171748254,2765,,2026-02-26T15:00:12+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1535,8 +1535,8 @@ Tейк-профит
 
 3)  71000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68500 | 69500 | 71000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:67600,67000,68500 | 69500 | 71000,3,213,,0,,,0,0,0,
-210,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 67600.0}], ""entry"": [67600.0], ""entry_text_raw"": ""Вход лимитка 67600"", ""stop_loss"": 67000.0, ""stop_text_raw"": ""Stop 67000"", ""take_profits"": [68500.0, 69500.0, 71000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+210,NEW_SIGNAL,PARSED,trader_c,3171748254,2769,,2026-02-26T16:32:50+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1552,8 +1552,8 @@ Tейк-профит
 
 3)  71000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68200 | 69500 | 71000),BTCUSDT,LONG,,,0.88,,,,MULTI,LADDER,True,2,ENTRY:UNKNOWN:67300 | ENTRY:UNKNOWN:400,66700,68200 | 69500 | 71000,3,210,,0,,,0,0,0,
-204,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""RANGE"", ""entries"": [{""sequence"": 1, ""price"": 67300.0}, {""sequence"": 2, ""price"": 400.0}], ""entry"": [67300.0], ""entry_text_raw"": ""Вход лимитка 67300-400"", ""stop_loss"": 66700.0, ""stop_text_raw"": ""Stop 66700"", ""take_profits"": [68200.0, 69500.0, 71000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""MULTI"", ""entry_structure"": ""LADDER"", ""has_averaging_plan"": true}",[]
+204,NEW_SIGNAL,PARSED,trader_c,3171748254,2777,,2026-02-26T20:26:13+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1569,8 +1569,8 @@ Tейк-профит
 
 3)  71000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68500 | 69500 | 71000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:67150,66400,68500 | 69500 | 71000,3,204,,0,,,0,0,0,
-187,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 67150.0}], ""entry"": [67150.0], ""entry_text_raw"": ""Вход лимитка 67150"", ""stop_loss"": 66400.0, ""stop_text_raw"": ""Stop 66400"", ""take_profits"": [68500.0, 69500.0, 71000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+187,NEW_SIGNAL,PARSED,trader_c,3171748254,2806,,2026-02-28T05:51:09+00:00,"[trader #С]
 
 $DOTUSDT - SHORT 
 
@@ -1584,8 +1584,8 @@ Tейк-профит
 
  2) 
 
- 3)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT),DOTUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1.54,1.62,,0,187,,0,,,0,0,0,
-169,PARSED,,"[trader #С]
+ 3)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""DOTUSDT""}]",[],"{""symbol"": ""DOTUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.54}], ""entry"": [1.54], ""entry_text_raw"": ""Вход лимитка 1,54"", ""stop_loss"": 1.62, ""stop_text_raw"": ""Stop  1.62"", ""take_profits"": [], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+169,NEW_SIGNAL,PARSED,trader_c,3171748254,2831,,2026-03-01T06:18:10+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1601,8 +1601,8 @@ Tейк-профит
 
 3)  71000
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=68200 | 69500 | 71000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66800,65900,68200 | 69500 | 71000,3,169,,0,,,0,0,0,
-161,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66800.0}], ""entry"": [66800.0], ""entry_text_raw"": ""Вход лимитка 66800"", ""stop_loss"": 65900.0, ""stop_text_raw"": ""Stop 65900"", ""take_profits"": [68200.0, 69500.0, 71000.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+161,NEW_SIGNAL,PARSED,trader_c,3171748254,2848,,2026-03-02T04:07:18+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1618,8 +1618,8 @@ Tейк-профит
 
 3)  69500
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=67000 | 68200 | 69500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:66001,65000,67000 | 68200 | 69500,3,161,,0,,,0,0,0,
-120,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 66001.0}], ""entry"": [66001.0], ""entry_text_raw"": ""Вход лимитка 66001"", ""stop_loss"": 65000.0, ""stop_text_raw"": ""Stop 65000"", ""take_profits"": [67000.0, 68200.0, 69500.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+120,NEW_SIGNAL,PARSED,trader_c,3171748254,2901,,2026-03-03T14:58:31+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1637,8 +1637,8 @@ Tейк-профит
 
 2)  67550 (RR1-2)
 
-3)  68800",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=66600 | 67550 | 68800),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:64630,62500,66600 | 67550 | 68800,3,120,,0,,,0,0,0,
-118,PARSED,,"[trader #С]
+3)  68800",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 64630.0}], ""entry"": [64630.0], ""entry_text_raw"": ""Вход лимитка\n\n64630"", ""stop_loss"": 62500.0, ""stop_text_raw"": ""Stop 62500"", ""take_profits"": [66600.0, 67550.0, 68800.0], ""risk_value_raw"": ""0,6"", ""risk_value_normalized"": 0.6, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+118,NEW_SIGNAL,PARSED,trader_c,3171748254,2903,,2026-03-03T15:47:20+00:00,"[trader #С]
 
 $LDOUSDT - LONG 
 
@@ -1655,8 +1655,8 @@ Tейк-профит
 
 2) 0,325
 
-3)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG),LDOUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:1,0.279,,0,118,,0,,,0,0,0,
-101,PARSED,,"[trader #С]
+3)",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""LDOUSDT""}]",[],"{""symbol"": ""LDOUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 1.0}], ""entry"": [1.0], ""entry_text_raw"": ""Вход лимиткой \n\n1"", ""stop_loss"": 0.279, ""stop_text_raw"": ""Stop 0,279"", ""take_profits"": [], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+101,NEW_SIGNAL,PARSED,trader_c,3171748254,2925,,2026-03-04T09:54:32+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1675,8 +1675,8 @@ Tейк-профит
 
  3) 67500 
 
-4) 65000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=70500 | 69000 | 67500 | 65000),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:72000,74500,70500 | 69000 | 67500 | 65000,4,101,,0,,,0,0,0,
-82,PARSED,,"[trader #С]
+4) 65000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 72000.0}], ""entry"": [72000.0], ""entry_text_raw"": ""Вход лимитка \n\n72000"", ""stop_loss"": 74500.0, ""stop_text_raw"": ""Stop  74500"", ""take_profits"": [70500.0, 69000.0, 67500.0, 65000.0], ""risk_value_raw"": ""0,6"", ""risk_value_normalized"": 0.6, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+82,NEW_SIGNAL,PARSED,trader_c,3171748254,2945,,2026-03-04T14:54:19+00:00,"[trader #С]
 
 $BTCUSDT - SHORT 
 
@@ -1698,8 +1698,8 @@ Tейк-профит
 
  3) 67500 
 
-4)65000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=70500 | 69000 | 67500 | 65000),BTCUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:72000,75500,70500 | 69000 | 67500 | 65000,4,82,,0,,,0,0,0,
-64,PARSED,,"[trader #С]
+4)65000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 72000.0}], ""entry"": [72000.0], ""entry_text_raw"": ""Вход лимитка \n\n72000"", ""stop_loss"": 75500.0, ""stop_text_raw"": ""Stop  75500"", ""take_profits"": [70500.0, 69000.0, 67500.0, 65000.0], ""risk_value_raw"": ""1,2"", ""risk_value_normalized"": 1.2, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+64,NEW_SIGNAL,PARSED,trader_c,3171748254,2970,,2026-03-05T13:37:08+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1715,8 +1715,8 @@ Tейк-профит
 
 3)  74500
 
-4) ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=72900 | 73500 | 74500),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:72100,71650,72900 | 73500 | 74500,3,64,,0,,,0,0,0,
-61,PARSED,,"[trader #С]
+4) ",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 72100.0}], ""entry"": [72100.0], ""entry_text_raw"": ""Вход лимитка 72100"", ""stop_loss"": 71650.0, ""stop_text_raw"": ""Stop 71650"", ""take_profits"": [72900.0, 73500.0, 74500.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+61,NEW_SIGNAL,PARSED,trader_c,3171748254,2974,,2026-03-05T14:33:15+00:00,"[trader #С]
 
 $ETHUSDT - SHORT 
 
@@ -1730,8 +1730,8 @@ Tейк-профит
 
 2)   2025(RR1-2)
 
-3)  1980",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2065 | 2025 | 1980),ETHUSDT,SHORT,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:2115,2165,2065 | 2025 | 1980,3,61,,0,,,0,0,0,
-18,PARSED,,"[trader #С]
+3)  1980",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""ETHUSDT""}]",[],"{""symbol"": ""ETHUSDT"", ""side"": ""SHORT"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 2115.0}], ""entry"": [2115.0], ""entry_text_raw"": ""Вход лимитка 2115"", ""stop_loss"": 2165.0, ""stop_text_raw"": ""Stop 2165"", ""take_profits"": [2065.0, 2025.0, 1980.0], ""risk_value_raw"": ""0,3"", ""risk_value_normalized"": 0.3, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]
+18,NEW_SIGNAL,PARSED,trader_c,3171748254,3023,,2026-03-06T16:32:12+00:00,"[trader #С]
 
 $BTСUSDT - LONG 
 
@@ -1749,4 +1749,4 @@ Tейк-профит
 
 3)  73000
 
-4) 75000",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=69500 | 71000 | 73000 | 75000),BTCUSDT,LONG,,,0.88,,,,SINGLE,ONE_SHOT,False,1,ENTRY:UNKNOWN:68400,66000,69500 | 71000 | 73000 | 75000,4,18,,0,,,0,0,0,
+4) 75000",,,,,,,[],,,,"[""NS_CREATE_SIGNAL""]",[],"[{""kind"": ""symbol"", ""ref"": ""BTCUSDT""}]",[],"{""symbol"": ""BTCUSDT"", ""side"": ""LONG"", ""entry_order_type"": ""LIMIT"", ""entries"": [{""sequence"": 1, ""price"": 68400.0}], ""entry"": [68400.0], ""entry_text_raw"": ""Вход лимитка\n\n68400"", ""stop_loss"": 66000.0, ""stop_text_raw"": ""Stop 66000"", ""take_profits"": [69500.0, 71000.0, 73000.0, 75000.0], ""risk_value_raw"": ""0,6"", ""risk_value_normalized"": 0.6, ""entry_plan_type"": ""SINGLE"", ""entry_structure"": ""ONE_SHOT"", ""has_averaging_plan"": false}",[]

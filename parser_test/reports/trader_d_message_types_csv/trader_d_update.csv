@@ -1,210 +1,210 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1148,PARSED,1407,"[trader#d]
-Перевод в безубыток",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE | U_REPORT_FINAL_RESULT,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1407,signal,single,1407,1,,ENTRY,,,,,,,,,,,0,0,0,
-1144,PARSED,,"https://t.me/c/3171748254/1408
-[trader#d] позиция ушла в бу",,,U_EXIT_BE,U_EXIT_BE,,,HTTPSUSDT,,,0.68,,,,1408,signal,single,1408,1,,,,,,,,,,,,,0,0,0,
-1122,PARSED,1439,"Trader#d
-Перевод в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1439,signal,single,1439,1,,ENTRY,,,,,,,,,,,0,0,0,
-1120,PARSED,1443,"Trader#d
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1148,UPDATE,PARSED,trader_d,3171748254,1408,1407,2026-01-05T16:12:33+00:00,"[trader#d]
+Перевод в безубыток",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE"", ""U_REPORT_FINAL_RESULT""]",[],"[{""kind"": ""reply"", ""ref"": 1407}]",[],"{""new_stop_level"": ""ENTRY"", ""new_stop_price"": null, ""new_stop_reference_text"": ""BREAKEVEN"", ""update_tense"": ""UNSPECIFIED""}",[]
+1144,UPDATE,PARSED,trader_d,3171748254,1412,,2026-01-05T17:51:58+00:00,"https://t.me/c/3171748254/1408
+[trader#d] позиция ушла в бу",,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""telegram_link"", ""ref"": ""https://t.me/c/3171748254/1408""}, {""kind"": ""message_id"", ""ref"": 1408}]",[],"{""update_tense"": ""EVENT_REPORTED"", ""symbol_raw"": ""HTTPS"", ""symbol"": ""HTTPSUSDT""}",[]
+1122,UPDATE,PARSED,trader_d,3171748254,1444,1439,2026-01-07T17:46:46+00:00,"Trader#d
+Перевод в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1439}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1120,UPDATE,PARSED,trader_d,3171748254,1447,1443,2026-01-07T18:55:11+00:00,"Trader#d
 Стоп.
--0.5%",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1443,signal,single,1443,1,,,FULL,,STOP,,,,,-0.5,,,0,0,0,
-1119,PARSED,1439,"Trader#d
+-0.5%",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1443}]",[],"{""close_scope"": ""FULL"", ""result_percent"": -0.5, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""reported_profit_percent"": -0.5}",[]
+1119,UPDATE,PARSED,trader_d,3171748254,1448,1439,2026-01-07T18:57:04+00:00,"Trader#d
 Стоп сдвигаю в +
-0.4671",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1439,signal,single,1439,1,,,FULL,,STOP,,,,,,,,0,0,0,
-1113,PARSED,1448,"Trader#d
+0.4671",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1439}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+1113,UPDATE,PARSED,trader_d,3171748254,1457,1448,2026-01-08T05:01:55+00:00,"Trader#d
 Ушли по стопу в + 0.1%
- обидно)",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1448,signal,single,1448,1,,,FULL,,STOP,,,,,0.1,,,0,0,0,
-1109,PARSED,1461,"trader#d
-upd кину в бу",,,,,,,,,,0.68,,,,1461,signal,single,1461,1,,,,,,,,,,,,,0,0,0,
-1101,PARSED,1476,"[Trader#d]
+ обидно)",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1448}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 0.1, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""reported_profit_percent"": 0.1}",[]
+1109,UPDATE,PARSED,trader_d,3171748254,1462,1461,2026-01-08T08:10:28+00:00,"trader#d
+upd кину в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1461}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+1101,UPDATE,PARSED,trader_d,3171748254,1477,1476,2026-01-09T08:12:27+00:00,"[Trader#d]
 tp1+
-Перевод в бу",,,U_TP_HIT,U_TP_HIT | U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1476,signal,single,1476,1,,ENTRY,,,TP1,,,,,,,,0,0,0,
-1099,PARSED,1477,"[trader#d]
+Перевод в бу",,,,,,,[],,,,"[""U_TP_HIT"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1476}]",[],"{""update_tense"": ""UNSPECIFIED"", ""hit_target"": ""TP1"", ""hit_targets"": [1], ""max_target_hit"": 1, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1099,UPDATE,PARSED,trader_d,3171748254,1479,1477,2026-01-09T08:35:12+00:00,"[trader#d]
 ТП2
-позиция закрыта +0,75",,,U_CLOSE_FULL,U_CLOSE_FULL | U_REPORT_FINAL_RESULT | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1477,signal,single,1477,1,,,FULL,,TP2,,,,,0.75,,,0,0,0,
-1095,PARSED,1481,"[Trader#d] 
+позиция закрыта +0,75",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_REPORT_FINAL_RESULT"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1477}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""EVENT_REPORTED"", ""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""reported_profit_percent"": 0.75}",[]
+1095,UPDATE,PARSED,trader_d,3171748254,1483,1481,2026-01-09T09:31:03+00:00,"[Trader#d] 
 стоп
- -0,5",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1481,signal,single,1481,1,,,FULL,,STOP,,,,,,,,0,0,0,
-1091,PARSED,1486,"Trader#d
-Sl -0.5",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1486,signal,single,1486,1,,,FULL,,,,,,,,,,0,0,0,
-1090,PARSED,1487,"Trader#d
-Перевел в бу",,,,,,,,,,0.68,,,,1487,signal,single,1487,1,,,,,,,,,,,,,0,0,0,
-1089,PARSED,1489,"Попробую перезаход
+ -0,5",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1481}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+1091,UPDATE,PARSED,trader_d,3171748254,1489,1486,2026-01-09T18:08:43+00:00,"Trader#d
+Sl -0.5",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1486}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+1090,UPDATE,PARSED,trader_d,3171748254,1490,1487,2026-01-09T18:21:56+00:00,"Trader#d
+Перевел в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1487}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+1089,UPDATE,PARSED,trader_d,3171748254,1491,1489,2026-01-09T18:25:33+00:00,"Попробую перезаход
 Sl 0.02902
 Tp 0.024482
-Tp2 0.021766",,,U_TP_HIT,U_TP_HIT,,,,,,0.68,,,,1489,signal,single,1489,1,,,,,TP,,,,,,,,0,0,0,
-1088,PARSED,1491,Upd: сразу кину в бу,,,,,,,,,,0.68,,,,1491,signal,single,1491,1,,,,,,,,,,,,,0,0,0,
-1086,PARSED,1491,Фикс 50% чтоб погасить частично стоп,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION | CLOSE_POSITION,,,,0.68,,,,1491,signal,single,1491,1,,,PARTIAL,0.5,STOP,,,,,50,,,0,0,0,
-1085,PARSED,1487,"Тут тоже фикс 50%
-Для полного погашения стопа",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION | CLOSE_POSITION,,,,0.68,,,,1487,signal,single,1487,1,,,PARTIAL,0.5,STOP,,,,,50,,,0,0,0,
-1060,PARSED,1536,upd:Перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1536,signal,single,1536,1,,ENTRY,,,,,,,,,,,0,0,0,
-1059,PARSED,1537,upd:позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.68,,,,1537,signal,single,1537,1,,,,,,,,,,,,,0,0,0,
-1052,PARSED,1541,"trader#d
-btc в бу перевел",,,,,,,,,,0.68,,,,1541,signal,single,1541,1,,,,,,,,,,,,,0,0,0,
-1048,PARSED,1545,"trader#d
-Link перевод в бу",,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1545,signal,single,1545,1,,ENTRY,,,,,,,,,,,0,0,0,
-1042,PARSED,1556,"Trader#d
-Upd.Стоп в бу на ночь 🤝",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1556,signal,single,1556,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-1040,PARSED,1541,Upd:Btc остатки закрываю,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1541,signal,single,1541,1,,,FULL,,,,,,,,,,0,0,0,
-1037,PARSED,1564,upd перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1564,signal,single,1564,1,,ENTRY,,,,,,,,,,,0,0,0,
-1036,PARSED,1566,ушли в бу,,,,,,,,,,0.68,,,,1566,signal,single,1566,1,,,,,,,,,,,,,0,0,0,
-1035,PARSED,1544,"trader#D
-Zil перевожу в бу",,,,,,,,,,0.68,,,,1544,signal,single,1544,1,,,,,,,,,,,,,0,0,0,
-1033,PARSED,1570,"Trader#d
-Zil закрываю позицию полностью +0,35%",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1570,signal,single,1570,1,,,FULL,,,,,,,0.35,,,0,0,0,
-1024,PARSED,1579,upd:Перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1579,signal,single,1579,1,,ENTRY,,,,,,,,,,,0,0,0,
-1023,PARSED,1579,upd;срезал 50% +0.15%,,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1579,signal,single,1579,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
-1006,PARSED,1601,Upd:перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1601,signal,single,1601,1,,ENTRY,,,,,,,,,,,0,0,0,
-1004,PARSED,1603,Upd:позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.68,,,,1603,signal,single,1603,1,,,,,,,,,,,,,0,0,0,
-991,PARSED,1616,Upd;стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1616,signal,single,1616,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-989,PARSED,1622,"перезаход
+Tp2 0.021766",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1489}]",[],"{""hit_target"": ""TP"", ""hit_targets"": [0, 2], ""max_target_hit"": 2}",[]
+1088,UPDATE,PARSED,trader_d,3171748254,1492,1491,2026-01-09T18:37:58+00:00,Upd: сразу кину в бу,,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1491}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+1086,UPDATE,PARSED,trader_d,3171748254,1495,1491,2026-01-09T19:36:56+00:00,Фикс 50% чтоб погасить частично стоп,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 1491}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""reported_profit_percent"": 50.0}",[]
+1085,UPDATE,PARSED,trader_d,3171748254,1496,1487,2026-01-09T19:38:49+00:00,"Тут тоже фикс 50%
+Для полного погашения стопа",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 1487}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""reported_profit_percent"": 50.0}",[]
+1060,UPDATE,PARSED,trader_d,3171748254,1537,1536,2026-01-12T14:10:08+00:00,upd:Перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1536}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1059,UPDATE,PARSED,trader_d,3171748254,1538,1537,2026-01-12T14:23:02+00:00,upd:позиция ушла в бу,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1537}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+1052,UPDATE,PARSED,trader_d,3171748254,1546,1541,2026-01-12T15:31:53+00:00,"trader#d
+btc в бу перевел",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1541}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+1048,UPDATE,PARSED,trader_d,3171748254,1550,1545,2026-01-12T15:56:43+00:00,"trader#d
+Link перевод в бу",,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1545}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1042,UPDATE,PARSED,trader_d,3171748254,1557,1556,2026-01-12T21:14:43+00:00,"Trader#d
+Upd.Стоп в бу на ночь 🤝",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1556}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1040,UPDATE,PARSED,trader_d,3171748254,1559,1541,2026-01-12T21:54:19+00:00,Upd:Btc остатки закрываю,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1541}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST""}",[]
+1037,UPDATE,PARSED,trader_d,3171748254,1566,1564,2026-01-13T06:16:52+00:00,upd перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1564}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1036,UPDATE,PARSED,trader_d,3171748254,1567,1566,2026-01-13T06:22:37+00:00,ушли в бу,,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1566}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+1035,UPDATE,PARSED,trader_d,3171748254,1570,1544,2026-01-13T12:15:52+00:00,"trader#D
+Zil перевожу в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1544}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+1033,UPDATE,PARSED,trader_d,3171748254,1573,1570,2026-01-13T14:26:35+00:00,"Trader#d
+Zil закрываю позицию полностью +0,35%",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1570}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 0.35, ""update_tense"": ""ACTION_REQUEST"", ""reported_profit_percent"": 0.35}",[]
+1024,UPDATE,PARSED,trader_d,3171748254,1584,1579,2026-01-13T16:40:40+00:00,upd:Перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1579}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1023,UPDATE,PARSED,trader_d,3171748254,1585,1579,2026-01-13T16:45:40+00:00,upd;срезал 50% +0.15%,,,,,,,[],,,,"[""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 1579}]",[],"{""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 50.0}",[]
+1006,UPDATE,PARSED,trader_d,3171748254,1603,1601,2026-01-13T20:12:22+00:00,Upd:перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1601}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+1004,UPDATE,PARSED,trader_d,3171748254,1605,1603,2026-01-13T20:36:15+00:00,Upd:позиция ушла в бу,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1603}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+991,UPDATE,PARSED,trader_d,3171748254,1621,1616,2026-01-14T08:53:53+00:00,Upd;стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1616}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+989,UPDATE,PARSED,trader_d,3171748254,1624,1622,2026-01-14T09:29:13+00:00,"перезаход
 стоп 1,3085
-тп 1,1341",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1622,signal,single,1622,1,,,FULL,,TP1,,,,,,,,0,0,0,
-988,PARSED,1624,стоп -0.5,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1624,signal,single,1624,1,,,FULL,,STOP,,,,,,,,0,0,0,
-982,PARSED,1630,перевел в бу,,,,,,,,,,0.68,,,,1630,signal,single,1630,1,,,,,,,,,,,,,0,0,0,
-978,PARSED,1632,Тп1 +0.3,,,U_TP_HIT,U_TP_HIT,,,,,,0.68,,,,1632,signal,single,1632,1,,,,,TP1,,,,,,,,0,0,0,
-965,PARSED,1652,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1652,signal,single,1652,1,,,FULL,,,,,,,,,,0,0,0,
-959,PARSED,1658,upd;стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1658,signal,single,1658,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-957,PARSED,1664,стоп сдвигаем в + на 96408,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1664,signal,single,1664,1,,,FULL,,STOP,,,,,,,,0,0,0,
-956,PARSED,1666,"стоп +0,1%",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1666,signal,single,1666,1,,,FULL,,STOP,,,,,0.1,,,0,0,0,
-955,PARSED,,"trader#d 
+тп 1,1341",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1622}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1}",[]
+988,UPDATE,PARSED,trader_d,3171748254,1625,1624,2026-01-14T10:46:26+00:00,стоп -0.5,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1624}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+982,UPDATE,PARSED,trader_d,3171748254,1632,1630,2026-01-14T16:08:11+00:00,перевел в бу,,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1630}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+978,UPDATE,PARSED,trader_d,3171748254,1639,1632,2026-01-14T17:43:32+00:00,Тп1 +0.3,,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1632}]",[],"{""hit_target"": ""TP1"", ""hit_targets"": [1], ""max_target_hit"": 1}",[]
+965,UPDATE,PARSED,trader_d,3171748254,1655,1652,2026-01-15T07:19:46+00:00,sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1652}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+959,UPDATE,PARSED,trader_d,3171748254,1664,1658,2026-01-15T14:41:00+00:00,upd;стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1658}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+957,UPDATE,PARSED,trader_d,3171748254,1666,1664,2026-01-15T15:38:58+00:00,стоп сдвигаем в + на 96408,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1664}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+956,UPDATE,PARSED,trader_d,3171748254,1667,1666,2026-01-15T15:58:52+00:00,"стоп +0,1%",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1666}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 0.1, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""reported_profit_percent"": 0.1}",[]
+955,UPDATE,PARSED,trader_d,3171748254,1668,,2026-01-15T15:59:40+00:00,"trader#d 
 long btc
 sl 95347
 tp1 97955
 tp2 99900
-tp3 107505",trader_d_update_missing_target,trader_d_update_missing_target,U_TP_HIT,U_TP_HIT,,,,,,0.68,,,,,signal,unknown,,0,,,,,TP,,,,,,,,0,0,0,
-952,PARSED,1670,upd перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1670,signal,single,1670,1,,ENTRY,,,,,,,,,,,0,0,0,
-948,PARSED,1669,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1669,signal,single,1669,1,,,FULL,,,,,,,,,,0,0,0,
-947,PARSED,1673,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1673,signal,single,1673,1,,,FULL,,,,,,,,,,0,0,0,
-945,PARSED,1668,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1668,signal,single,1668,1,,,FULL,,,,,,,,,,0,0,0,
-935,PARSED,1692,upd стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1692,signal,single,1692,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-933,PARSED,1693,позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.68,,,,1693,signal,single,1693,1,,,,,,,,,,,,,0,0,0,
-923,PARSED,1703,стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1703,signal,single,1703,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-922,PARSED,1707,позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.68,,,,1707,signal,single,1707,1,,,,,,,,,,,,,0,0,0,
-915,PARSED,1710,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1710,signal,single,1710,1,,,FULL,,,,,,,,,,0,0,0,
-886,PARSED,1771,upd перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1771,signal,single,1771,1,,ENTRY,,,,,,,,,,,0,0,0,
-885,PARSED,1772,позиция ушла в бу,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.68,,,,1772,signal,single,1772,1,,,,,,,,,,,,,0,0,0,
-877,PARSED,1782,перевод в бу,,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1782,signal,single,1782,1,,ENTRY,,,,,,,,,,,0,0,0,
-875,PARSED,1780,"Sl -0,5",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1780,signal,single,1780,1,,,FULL,,,,,,,,,,0,0,0,
-857,PARSED,,"trader#d
+tp3 107505",trader_d_update_missing_target,,,,,,[],,,,"[""U_TP_HIT""]",[],[],[],"{""hit_target"": ""TP"", ""hit_targets"": [1, 2, 3], ""max_target_hit"": 3}",[]
+952,UPDATE,PARSED,trader_d,3171748254,1671,1670,2026-01-15T16:22:37+00:00,upd перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1670}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+948,UPDATE,PARSED,trader_d,3171748254,1675,1669,2026-01-15T18:41:22+00:00,Sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1669}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+947,UPDATE,PARSED,trader_d,3171748254,1676,1673,2026-01-15T18:41:37+00:00,Sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1673}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+945,UPDATE,PARSED,trader_d,3171748254,1679,1668,2026-01-15T19:40:02+00:00,Sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1668}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+935,UPDATE,PARSED,trader_d,3171748254,1693,1692,2026-01-16T11:16:22+00:00,upd стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1692}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+933,UPDATE,PARSED,trader_d,3171748254,1696,1693,2026-01-16T15:13:12+00:00,позиция ушла в бу,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1693}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+923,UPDATE,PARSED,trader_d,3171748254,1707,1703,2026-01-16T16:07:01+00:00,стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1703}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+922,UPDATE,PARSED,trader_d,3171748254,1708,1707,2026-01-16T16:20:00+00:00,позиция ушла в бу,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1707}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+915,UPDATE,PARSED,trader_d,3171748254,1721,1710,2026-01-17T07:19:44+00:00,Sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1710}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+886,UPDATE,PARSED,trader_d,3171748254,1772,1771,2026-01-20T11:29:54+00:00,upd перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1771}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+885,UPDATE,PARSED,trader_d,3171748254,1773,1772,2026-01-20T11:33:52+00:00,позиция ушла в бу,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1772}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+877,UPDATE,PARSED,trader_d,3171748254,1784,1782,2026-01-20T16:10:34+00:00,перевод в бу,,,,,,,[],,,,"[""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1782}]",[],"{""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+875,UPDATE,PARSED,trader_d,3171748254,1786,1780,2026-01-20T16:42:54+00:00,"Sl -0,5",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1780}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+857,UPDATE,PARSED,trader_d,3171748254,1810,,2026-01-21T09:51:15+00:00,"trader#d
 Sxt short 0.5
 tp1 0.03549
-tp2 0.03281",,,U_TP_HIT,U_TP_HIT,,,SXTUSDT,,,0.68,,,,,signal,unknown,,0,,,,,TP,,,,,,,,0,0,0,
-853,PARSED,1810,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1810,signal,single,1810,1,,,FULL,,,,,,,,,,0,0,0,
-842,PARSED,1813,"Trader#d
+tp2 0.03281",,,,,,,[],,,,"[""U_TP_HIT""]",[],"[{""kind"": ""symbol"", ""ref"": ""SXTUSDT""}]",[],"{""symbol_raw"": ""SXT"", ""symbol"": ""SXTUSDT"", ""hit_target"": ""TP"", ""hit_targets"": [1, 2], ""max_target_hit"": 2}",[]
+853,UPDATE,PARSED,trader_d,3171748254,1814,1810,2026-01-21T11:03:08+00:00,sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1810}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+842,UPDATE,PARSED,trader_d,3171748254,1828,1813,2026-01-21T17:12:14+00:00,"Trader#d
 Фикс 70%
-Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1813,signal,single,1813,1,,ENTRY,PARTIAL,0.7,STOP,,,,,70,,,0,0,0,
-837,PARSED,1811,Закрываю в бу,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,1811,signal,single,1811,1,,,FULL,,,,,,,,,,0,0,0,
-836,PARSED,1828,Остаток в бу,,,,,,,,,,0.68,,,,1828,signal,single,1828,1,,,,,,,,,,,,,0,0,0,
-821,PARSED,1861,upd стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1861,signal,single,1861,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-820,PARSED,1860,Upd стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1860,signal,single,1860,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-776,PARSED,1949,"[trader #D]
-upd:50% срежем rr 1;1 стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1949,signal,single,1949,1,,ENTRY,PARTIAL,0.5,STOP,,,,,50,,,0,0,0,
-760,PARSED,1976,"[trader #D]
+Стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1813}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 70.0, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""close_fraction_percent"": 70.0, ""close_fraction"": 0.7, ""partial_close_percent"": 70.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 70.0}",[]
+837,UPDATE,PARSED,trader_d,3171748254,1834,1811,2026-01-21T19:36:48+00:00,Закрываю в бу,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 1811}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST""}",[]
+836,UPDATE,PARSED,trader_d,3171748254,1835,1828,2026-01-21T19:41:09+00:00,Остаток в бу,,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1828}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+821,UPDATE,PARSED,trader_d,3171748254,1863,1861,2026-01-23T08:50:25+00:00,upd стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1861}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+820,UPDATE,PARSED,trader_d,3171748254,1864,1860,2026-01-23T08:50:55+00:00,Upd стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1860}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+776,UPDATE,PARSED,trader_d,3171748254,1954,1949,2026-01-29T16:21:26+00:00,"[trader #D]
+upd:50% срежем rr 1;1 стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1949}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+760,UPDATE,PARSED,trader_d,3171748254,1978,1976,2026-01-30T17:07:43+00:00,"[trader #D]
 тп1 фикс 50% +0,35%
-стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1976,signal,single,1976,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-759,PARSED,1976,"[trader #D]
+стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1976}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 0.35, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+759,UPDATE,PARSED,trader_d,3171748254,1980,1976,2026-01-30T18:31:41+00:00,"[trader #D]
 Tp2 срезал ещё 25% +0.36%
 Остаток 25% позиции
-Стоп находится в бу",,,U_MOVE_STOP,U_MOVE_STOP | U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP | CLOSE_POSITION | CLOSE_POSITION,,,,0.68,,,,1976,signal,single,1976,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
-757,PARSED,1977,"[trader #D]
+Стоп находится в бу",,,,,,,[],,,,"[""U_MOVE_STOP"", ""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 1976}]",[],"{""new_stop_reference_text"": null, ""stop_reference_text"": null, ""close_scope"": ""PARTIAL"", ""result_percent"": 0.36, ""hit_target"": ""TP2"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [2], ""max_target_hit"": 2, ""close_fraction_percent"": 25.0, ""close_fraction"": 0.25, ""partial_close_percent"": 25.0, ""remaining_position_percent"": 25.0, ""reported_profit_percent"": 25.0}",[]
+757,UPDATE,PARSED,trader_d,3171748254,1985,1977,2026-01-30T20:44:19+00:00,"[trader #D]
 Tp1 срезал 50% +0.25
-Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,1977,signal,single,1977,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-755,PARSED,1976,"[trader #D]
-Tp3 общий профит +1.18%",,,U_REPORT_FINAL_RESULT,U_REPORT_FINAL_RESULT | U_TP_HIT,,,,,,0.68,,,,1976,signal,single,1976,1,,,,,TP3,,,,,1.18,,,0,0,0,
-721,PARSED,2070,"[trader #D]
+Стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 1977}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+755,UPDATE,PARSED,trader_d,3171748254,1989,1976,2026-01-31T07:34:38+00:00,"[trader #D]
+Tp3 общий профит +1.18%",,,,,,,[],,,,"[""U_REPORT_FINAL_RESULT"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 1976}]",[],"{""result_percent"": 1.18, ""update_tense"": ""UNSPECIFIED"", ""hit_target"": ""TP3"", ""hit_targets"": [3], ""max_target_hit"": 3, ""reported_profit_percent"": 1.18}",[]
+721,UPDATE,PARSED,trader_d,3171748254,2077,2070,2026-02-03T06:40:06+00:00,"[trader #D]
 Tp 1 срезал 50% +0,245 
-стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2070,signal,single,2070,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-719,PARSED,2078,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2078,signal,single,2078,1,,,FULL,,,,,,,,,,0,0,0,
-717,PARSED,2081,sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2081,signal,single,2081,1,,,FULL,,,,,,,,,,0,0,0,
-714,PARSED,2070,"[trader #D]
+стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2070}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+719,UPDATE,PARSED,trader_d,3171748254,2080,2078,2026-02-03T10:49:26+00:00,sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2078}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+717,UPDATE,PARSED,trader_d,3171748254,2083,2081,2026-02-03T12:33:52+00:00,sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2081}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+714,UPDATE,PARSED,trader_d,3171748254,2086,2070,2026-02-03T13:45:57+00:00,"[trader #D]
 TP2 срезал еще 25%
-Остаток 25%",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2070,signal,single,2070,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
-621,PARSED,2206,стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2206,signal,single,2206,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-589,PARSED,2263,"ТП1 фикс 50% +0.24
-стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2263,signal,single,2263,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-588,PARSED,2264,Тп2 фикс 25% + 0.25,,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2264,signal,single,2264,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
-575,PARSED,2277,"закрываю в бу.
-не нравится",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2277,signal,single,2277,1,,,FULL,,,,,,,,,,0,0,0,
-564,PARSED,2299,Upd : Стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2299,signal,single,2299,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-562,PARSED,2299,"фикс 50% +0,25
-тяжело идет",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2299,signal,single,2299,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
-561,PARSED,2299,"стоп передвигаю в + 0,0614",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2299,signal,single,2299,1,,,FULL,,STOP,,,,,,,,0,0,0,
-560,PARSED,2299,тп 1: срезал еще 25%,,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2299,signal,single,2299,1,,,PARTIAL,0.25,TP1,,,,,25,,,0,0,0,
-557,PARSED,2299,TP2 срезал 12.5%,,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2299,signal,single,2299,1,,,PARTIAL,0.125,TP2,,,,,12.5,,,0,0,0,
-528,PARSED,2320,Стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2320,signal,single,2320,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-521,PARSED,2320,"Trader#D
+Остаток 25%",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2070}]",[],"{""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""close_fraction_percent"": 25.0, ""close_fraction"": 0.25, ""partial_close_percent"": 25.0, ""close_scope"": ""PARTIAL"", ""remaining_position_percent"": 25.0, ""reported_profit_percent"": 25.0}",[]
+621,UPDATE,PARSED,trader_d,3171748254,2213,2206,2026-02-06T18:42:34+00:00,стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2206}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+589,UPDATE,PARSED,trader_d,3171748254,2264,2263,2026-02-09T16:05:24+00:00,"ТП1 фикс 50% +0.24
+стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2263}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+588,UPDATE,PARSED,trader_d,3171748254,2265,2264,2026-02-09T16:45:12+00:00,Тп2 фикс 25% + 0.25,,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2264}]",[],"{""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""close_fraction_percent"": 25.0, ""close_fraction"": 0.25, ""partial_close_percent"": 25.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 25.0}",[]
+575,UPDATE,PARSED,trader_d,3171748254,2285,2277,2026-02-10T16:27:13+00:00,"закрываю в бу.
+не нравится",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2277}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST""}",[]
+564,UPDATE,PARSED,trader_d,3171748254,2302,2299,2026-02-11T12:12:54+00:00,Upd : Стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2299}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+562,UPDATE,PARSED,trader_d,3171748254,2304,2299,2026-02-11T12:44:37+00:00,"фикс 50% +0,25
+тяжело идет",,,,,,,[],,,,"[""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2299}]",[],"{""update_tense"": ""UNSPECIFIED"", ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 50.0}",[]
+561,UPDATE,PARSED,trader_d,3171748254,2305,2299,2026-02-11T12:49:27+00:00,"стоп передвигаю в + 0,0614",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2299}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+560,UPDATE,PARSED,trader_d,3171748254,2306,2299,2026-02-11T12:57:26+00:00,тп 1: срезал еще 25%,,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2299}]",[],"{""hit_target"": ""TP1"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 25.0, ""close_fraction"": 0.25, ""partial_close_percent"": 25.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 25.0}",[]
+557,UPDATE,PARSED,trader_d,3171748254,2309,2299,2026-02-11T13:15:47+00:00,TP2 срезал 12.5%,,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2299}]",[],"{""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""close_fraction_percent"": 12.5, ""close_fraction"": 0.125, ""partial_close_percent"": 12.5, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 12.5}",[]
+528,UPDATE,PARSED,trader_d,3171748254,2339,2320,2026-02-11T18:17:08+00:00,Стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2320}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+521,UPDATE,PARSED,trader_d,3171748254,2347,2320,2026-02-11T19:38:48+00:00,"Trader#D
 Стоп в бу
-Срежем тут 60% чтобы отбить предидущий стоп)+0,59р",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2320,signal,single,2320,1,,ENTRY,PARTIAL,0.6,STOP,,,,,60,,,0,0,0,
-506,PARSED,2320,"Tp 1 
+Срежем тут 60% чтобы отбить предидущий стоп)+0,59р",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2320}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 60.0, ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""close_fraction_percent"": 60.0, ""close_fraction"": 0.6, ""partial_close_percent"": 60.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 60.0, ""reported_profit_r"": 0.59}",[]
+506,UPDATE,PARSED,trader_d,3171748254,2364,2320,2026-02-12T04:44:49+00:00,"Tp 1 
 Tp2
-Закрываем полностью",,,U_CLOSE_FULL,U_CLOSE_FULL | U_TP_HIT,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2320,signal,single,2320,1,,,FULL,,TP,,,,,,,,0,0,0,
-504,PARSED,2299,Tp3. Сделка закрыта,,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2299,signal,single,2299,1,,,,,TP3,,,,,,,,0,0,0,
-489,PARSED,2376,[trader #D] Стоп переставим в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2376,signal,single,2376,1,,,FULL,,STOP,,,,,,,,0,0,0,
-487,PARSED,2376,"[trader #D] 
+Закрываем полностью",,,,,,,[],,,,"[""U_CLOSE_FULL"", ""U_TP_HIT""]",[],"[{""kind"": ""reply"", ""ref"": 2320}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST"", ""hit_target"": ""TP"", ""hit_targets"": [1, 2], ""max_target_hit"": 2}",[]
+504,UPDATE,PARSED,trader_d,3171748254,2366,2299,2026-02-12T05:48:59+00:00,Tp3. Сделка закрыта,,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2299}]",[],"{""update_tense"": ""EVENT_REPORTED"", ""hit_target"": ""TP3"", ""hit_targets"": [3], ""max_target_hit"": 3}",[]
+489,UPDATE,PARSED,trader_d,3171748254,2384,2376,2026-02-12T15:53:34+00:00,[trader #D] Стоп переставим в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2376}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+487,UPDATE,PARSED,trader_d,3171748254,2386,2376,2026-02-12T16:02:06+00:00,"[trader #D] 
 Tp1 фикс 50% R+0,26
 стоп в бу
-Остальные 2 цели по 25%",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2376,signal,single,2376,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-482,PARSED,2376,"[trader #D] 
+Остальные 2 цели по 25%",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2376}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+482,UPDATE,PARSED,trader_d,3171748254,2395,2376,2026-02-13T06:34:16+00:00,"[trader #D] 
 Tp2 фикс 25% R+0,27
-остаток 25 %",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2376,signal,single,2376,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
-468,PARSED,2403,"Tp1 фикс 50%
-Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2403,signal,single,2403,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-428,PARSED,2475,"Стоп в б.у
-есть опасение что дадут пересвип как вчера c uma",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2475,signal,single,2475,1,,,FULL,,STOP,,,,,,,,0,0,0,
-427,PARSED,2475,"[trader #D]
-тп1 фикс 50% +0,29",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2475,signal,single,2475,1,,,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-423,PARSED,2479,"[trader #D]
-стоп переставляем в + на 1,2453",,,U_MOVE_STOP,U_MOVE_STOP | U_STOP_HIT | U_CLOSE_FULL,MOVE_STOP | CLOSE_POSITION,MOVE_STOP(new_stop_level=1.2453) | CLOSE_POSITION,,,,0.68,,,,2479,signal,single,2479,1,,1.2453,FULL,,STOP,,,,,,,,0,0,0,
-421,PARSED,2484,"[trader #D]
-Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2484,signal,single,2484,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-419,PARSED,2484,"[trader #D]
+остаток 25 %",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2376}]",[],"{""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""close_fraction_percent"": 25.0, ""close_fraction"": 0.25, ""partial_close_percent"": 25.0, ""close_scope"": ""PARTIAL"", ""remaining_position_percent"": 25.0, ""reported_profit_percent"": 25.0}",[]
+468,UPDATE,PARSED,trader_d,3171748254,2412,2403,2026-02-13T17:01:26+00:00,"Tp1 фикс 50%
+Стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2403}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+428,UPDATE,PARSED,trader_d,3171748254,2476,2475,2026-02-17T13:15:16+00:00,"Стоп в б.у
+есть опасение что дадут пересвип как вчера c uma",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2475}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+427,UPDATE,PARSED,trader_d,3171748254,2479,2475,2026-02-17T13:54:53+00:00,"[trader #D]
+тп1 фикс 50% +0,29",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2475}]",[],"{""update_tense"": ""UNSPECIFIED"", ""hit_target"": ""TP1"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 50.0}",[]
+423,UPDATE,PARSED,trader_d,3171748254,2483,2479,2026-02-17T14:54:54+00:00,"[trader #D]
+стоп переставляем в + на 1,2453",,,,,,,[],,,,"[""U_MOVE_STOP"", ""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2479}]",[],"{""new_stop_reference_text"": ""+ на 1"", ""stop_reference_text"": ""в + на 1"", ""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": 1.2453, ""new_stop_price"": 1.2453}",[]
+421,UPDATE,PARSED,trader_d,3171748254,2486,2484,2026-02-17T16:08:26+00:00,"[trader #D]
+Стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2484}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+419,UPDATE,PARSED,trader_d,3171748254,2489,2484,2026-02-17T16:36:29+00:00,"[trader #D]
 Срежем тут 50% +0,42р
-Первый тейк убираем",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL | U_UPDATE_TAKE_PROFITS,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2484,signal,single,2484,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
-417,PARSED,2488,[trader #D] остаток ушел в бу+,,,U_EXIT_BE,U_EXIT_BE,,,,,,0.68,,,,2488,signal,single,2488,1,,,,,,,,,,,,,0,0,0,
-414,PARSED,2497,[trader #D] стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2497,signal,single,2497,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-411,PARSED,2484,"[trader #D]
+Первый тейк убираем",,,,,,,[],,,,"[""U_CLOSE_PARTIAL"", ""U_UPDATE_TAKE_PROFITS""]",[],"[{""kind"": ""reply"", ""ref"": 2484}]",[],"{""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""close_scope"": ""PARTIAL"", ""take_profit_update_note"": ""FIRST_TP_REMOVED"", ""reported_profit_percent"": 50.0, ""reported_profit_r"": 0.42}",[]
+417,UPDATE,PARSED,trader_d,3171748254,2492,2488,2026-02-17T20:53:58+00:00,[trader #D] остаток ушел в бу+,,,,,,,[],,,,"[""U_EXIT_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2488}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+414,UPDATE,PARSED,trader_d,3171748254,2498,2497,2026-02-18T07:13:58+00:00,[trader #D] стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2497}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+411,UPDATE,PARSED,trader_d,3171748254,2502,2484,2026-02-18T09:53:26+00:00,"[trader #D]
 JTO закрываем полностью 0,307
-+1р",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2484,signal,single,2484,1,,,FULL,,,,,,,,,,0,0,0,
-408,PARSED,2501,[trader #D] стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2501,signal,single,2501,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-407,PARSED,2501,"[trader #D]
-Tp1 фикс 50% +0.38r😑",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2501,signal,single,2501,1,,,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-379,PARSED,2501,"[trader #D]
++1р",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2484}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST"", ""close_price"": 0.307, ""reported_profit_r"": 1.0}",[]
+408,UPDATE,PARSED,trader_d,3171748254,2505,2501,2026-02-18T10:53:06+00:00,[trader #D] стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2501}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+407,UPDATE,PARSED,trader_d,3171748254,2506,2501,2026-02-18T11:07:46+00:00,"[trader #D]
+Tp1 фикс 50% +0.38r😑",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2501}]",[],"{""update_tense"": ""UNSPECIFIED"", ""hit_target"": ""TP1"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 50.0, ""reported_profit_r"": 0.38}",[]
+379,UPDATE,PARSED,trader_d,3171748254,2538,2501,2026-02-18T19:39:28+00:00,"[trader #D]
 Tp2 сделка закрыта
-Общий профит +1.49р🔫",,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2501,signal,single,2501,1,,,,,TP2,,,,,1.49,,,0,0,0,
-351,PARSED,2576,"Trader [ #D]
-Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2576,signal,single,2576,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-347,PARSED,2581,ставим в бу),,,,,,,,,,0.68,,,,2581,signal,single,2581,1,,,,,,,,,,,,,0,0,0,
-340,PARSED,2581,"Trader [ #D]
+Общий профит +1.49р🔫",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2501}]",[],"{""update_tense"": ""EVENT_REPORTED"", ""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""reported_profit_percent"": 1.49, ""reported_profit_r"": 1.49}",[]
+351,UPDATE,PARSED,trader_d,3171748254,2578,2576,2026-02-20T11:02:02+00:00,"Trader [ #D]
+Стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2576}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+347,UPDATE,PARSED,trader_d,3171748254,2582,2581,2026-02-20T11:59:52+00:00,ставим в бу),,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2581}]",[],"{""update_tense"": ""UNSPECIFIED""}",[]
+340,UPDATE,PARSED,trader_d,3171748254,2590,2581,2026-02-20T13:01:15+00:00,"Trader [ #D]
 срежем тут 50% 0.03157
-+0.37r",,,U_CLOSE_PARTIAL,U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2581,signal,single,2581,1,,,PARTIAL,0.5,,,,,,50,,,0,0,0,
-319,PARSED,2608,"[trader #D ]
-Стоп в бу.",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2608,signal,single,2608,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-296,PARSED,2659,"Tp1 фикс 50%
-Стоп в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2659,signal,single,2659,1,,ENTRY,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-293,PARSED,2661,"[trader #D ]
-Tp2 фикс 25%",,,U_TP_HIT,U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2661,signal,single,2661,1,,,PARTIAL,0.25,TP2,,,,,25,,,0,0,0,
-285,PARSED,2664,"[trader #D ]
-Остаток позиции закрываем по текущим 31.57",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2664,signal,single,2664,1,,,FULL,,,,,,,,,,0,0,0,
-283,PARSED,2678,Стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2678,signal,single,2678,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-266,PARSED,2686,"Trader [ #D]
-закрываю по текущим 0,1664",,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2686,signal,single,2686,1,,,FULL,,,,,,,,,,0,0,0,
-223,PARSED,2705,Стоп  - 0.5,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2705,signal,single,2705,1,,,FULL,,STOP,,,,,,,,0,0,0,
-221,PARSED,2689,"[trader #D ]
++0.37r",,,,,,,[],,,,"[""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2581}]",[],"{""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 50.0, ""reported_profit_r"": 0.37}",[]
+319,UPDATE,PARSED,trader_d,3171748254,2616,2608,2026-02-20T19:02:50+00:00,"[trader #D ]
+Стоп в бу.",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2608}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+296,UPDATE,PARSED,trader_d,3171748254,2661,2659,2026-02-23T15:51:32+00:00,"Tp1 фикс 50%
+Стоп в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2659}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0}",[]
+293,UPDATE,PARSED,trader_d,3171748254,2664,2661,2026-02-23T17:37:52+00:00,"[trader #D ]
+Tp2 фикс 25%",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2661}]",[],"{""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""close_fraction_percent"": 25.0, ""close_fraction"": 0.25, ""partial_close_percent"": 25.0, ""close_scope"": ""PARTIAL"", ""reported_profit_percent"": 25.0}",[]
+285,UPDATE,PARSED,trader_d,3171748254,2676,2664,2026-02-24T06:13:34+00:00,"[trader #D ]
+Остаток позиции закрываем по текущим 31.57",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2664}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST"", ""close_price"": 31.57}",[]
+283,UPDATE,PARSED,trader_d,3171748254,2679,2678,2026-02-24T10:45:55+00:00,Стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2678}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+266,UPDATE,PARSED,trader_d,3171748254,2702,2686,2026-02-25T06:55:49+00:00,"Trader [ #D]
+закрываю по текущим 0,1664",,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2686}]",[],"{""close_scope"": ""FULL"", ""update_tense"": ""ACTION_REQUEST"", ""close_price"": 0.1664}",[]
+223,UPDATE,PARSED,trader_d,3171748254,2750,2705,2026-02-25T20:01:50+00:00,Стоп  - 0.5,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2705}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+221,UPDATE,PARSED,trader_d,3171748254,2752,2689,2026-02-25T21:03:09+00:00,"[trader #D ]
 Срезаем тут 50% +0.25R ,
 тп 1 убираем
-Стоп в бу.",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2689,signal,single,2689,1,,ENTRY,FULL,,TP1,,,,,50,,,0,0,0,
-197,PARSED,2784,стоп в бу.,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2784,signal,single,2784,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-196,PARSED,2784,"[trader #D]
+Стоп в бу.",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2689}]",[],"{""close_scope"": ""FULL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN"", ""reported_profit_percent"": 50.0, ""reported_profit_r"": 0.25}",[]
+197,UPDATE,PARSED,trader_d,3171748254,2788,2784,2026-02-27T10:56:34+00:00,стоп в бу.,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2784}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+196,UPDATE,PARSED,trader_d,3171748254,2789,2784,2026-02-27T10:59:49+00:00,"[trader #D]
 TP1 +031R
 Фикс 50%
- стоп все так же в бу",,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_TP_HIT | U_CLOSE_PARTIAL,CLOSE_POSITION,CLOSE_POSITION | CLOSE_POSITION,,,,0.68,,,,2784,signal,single,2784,1,,,PARTIAL,0.5,TP1,,,,,50,,,0,0,0,
-195,PARSED,2784,"[trader #D]
+ стоп все так же в бу",,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_TP_HIT"", ""U_CLOSE_PARTIAL""]",[],"[{""kind"": ""reply"", ""ref"": 2784}]",[],"{""close_scope"": ""PARTIAL"", ""result_percent"": 50.0, ""hit_target"": ""TP1"", ""update_tense"": ""UNSPECIFIED"", ""hit_targets"": [1], ""max_target_hit"": 1, ""close_fraction_percent"": 50.0, ""close_fraction"": 0.5, ""partial_close_percent"": 50.0, ""reported_profit_percent"": 50.0, ""reported_profit_r"": 31.0}",[]
+195,UPDATE,PARSED,trader_d,3171748254,2790,2784,2026-02-27T11:52:09+00:00,"[trader #D]
 Tp2 
 сделка закрыта
-профит +1,15R",,,U_TP_HIT,U_TP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2784,signal,single,2784,1,,,,,TP2,,,,,1.15,,,0,0,0,
-119,PARSED,2899,стоп  в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2899,signal,single,2899,1,,,FULL,,STOP,,,,,,,,0,0,0,
-115,PARSED,2906,Стоп в бу🤝,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2906,signal,single,2906,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-85,PARSED,2935,Sl -0.5,,,U_CLOSE_FULL,U_CLOSE_FULL,CLOSE_POSITION,CLOSE_POSITION,,,,0.68,,,,2935,signal,single,2935,1,,,FULL,,,,,,,,,,0,0,0,
-44,PARSED,2992,Стоп в бу.,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,2992,signal,single,2992,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
-35,PARSED,3003,быстро однако)стоп в бу,,,U_STOP_HIT,U_STOP_HIT | U_CLOSE_FULL | U_MOVE_STOP_TO_BE,CLOSE_POSITION | MOVE_STOP,CLOSE_POSITION | MOVE_STOP(new_stop_level=ENTRY),,,,0.68,,,,3003,signal,single,3003,1,,ENTRY,FULL,,STOP,,,,,,,,0,0,0,
+профит +1,15R",,,,,,,[],,,,"[""U_TP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2784}]",[],"{""update_tense"": ""EVENT_REPORTED"", ""hit_target"": ""TP2"", ""hit_targets"": [2], ""max_target_hit"": 2, ""reported_profit_percent"": 1.15, ""reported_profit_r"": 1.15}",[]
+119,UPDATE,PARSED,trader_d,3171748254,2902,2899,2026-03-03T15:09:18+00:00,стоп  в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2899}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED""}",[]
+115,UPDATE,PARSED,trader_d,3171748254,2908,2906,2026-03-03T21:06:04+00:00,Стоп в бу🤝,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2906}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+85,UPDATE,PARSED,trader_d,3171748254,2942,2935,2026-03-04T14:32:03+00:00,Sl -0.5,,,,,,,[],,,,"[""U_CLOSE_FULL""]",[],"[{""kind"": ""reply"", ""ref"": 2935}]",[],"{""close_scope"": ""FULL"", ""reported_profit_r"": 1.0}",[]
+44,UPDATE,PARSED,trader_d,3171748254,2993,2992,2026-03-05T20:20:32+00:00,Стоп в бу.,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 2992}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]
+35,UPDATE,PARSED,trader_d,3171748254,3004,3003,2026-03-06T09:09:16+00:00,быстро однако)стоп в бу,,,,,,,[],,,,"[""U_STOP_HIT"", ""U_CLOSE_FULL"", ""U_MOVE_STOP_TO_BE""]",[],"[{""kind"": ""reply"", ""ref"": 3003}]",[],"{""close_scope"": ""FULL"", ""hit_target"": ""STOP"", ""update_tense"": ""UNSPECIFIED"", ""new_stop_level"": ""ENTRY"", ""new_stop_reference_text"": ""BREAKEVEN""}",[]

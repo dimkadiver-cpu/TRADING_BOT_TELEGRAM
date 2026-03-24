@@ -1,21 +1,21 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,signal_id,linking_strategy,reported_results,reported_profit_percent,reported_leverage_hint,notes_summary,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1084,PARSED,1496,"Trader#d
+﻿raw_message_id,message_type,parse_status,resolved_trader_id,source_chat_id,telegram_message_id,reply_to_message_id,message_ts,raw_text,warning_text,symbol,direction,entry_main,average_entry,stop_loss_price,take_profit_prices,entry_plan_type,entry_structure,has_averaging_plan,intents,actions,target_refs,reported_results,entities,validation_warnings
+1084,INFO_ONLY,PARSED,trader_d,3171748254,1497,1496,2026-01-09T20:40:26+00:00,"Trader#d
 Gmt остаток ушел в бу
-+0.15%",,,,,,,,,1496,,,,,,1,0,0,0,
-1003,PARSED,1585,"Trader#d
-Dash остаток ушел в бу",,,,,,,,,1585,,,,,,1,0,0,0,
-971,PARSED,1639,Остаток ушел в бу,,,,,,,,,1639,,,,,,1,0,0,0,
-774,PARSED,1954,"[trader #D]
-Upd.остаток ушел в бу",,,,,,,,,1954,,,,,,1,0,0,0,
-639,PARSED,2086,"[trader #D]
-остаток ушел в бу.",,,,,,,,,2086,,,,,,1,0,0,0,
-584,PARSED,2265,Остаток ушел в бу,,,,,,,,,2265,,,,,,1,0,0,0,
-455,PARSED,2395,"[ trader #D]
-Остаток ушел в бу.",,,,,,,,,2395,,,,,,1,0,0,0,
-370,PARSED,2403,"Trader [ #D]
++0.15%",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1496}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+1003,INFO_ONLY,PARSED,trader_d,3171748254,1606,1585,2026-01-13T21:52:42+00:00,"Trader#d
+Dash остаток ушел в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1585}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+971,INFO_ONLY,PARSED,trader_d,3171748254,1647,1639,2026-01-14T22:14:24+00:00,Остаток ушел в бу,,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1639}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+774,INFO_ONLY,PARSED,trader_d,3171748254,1956,1954,2026-01-29T17:28:06+00:00,"[trader #D]
+Upd.остаток ушел в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 1954}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+639,INFO_ONLY,PARSED,trader_d,3171748254,2190,2086,2026-02-06T07:40:14+00:00,"[trader #D]
+остаток ушел в бу.",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2086}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+584,INFO_ONLY,PARSED,trader_d,3171748254,2270,2265,2026-02-09T19:07:49+00:00,Остаток ушел в бу,,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2265}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+455,INFO_ONLY,PARSED,trader_d,3171748254,2432,2395,2026-02-14T19:58:46+00:00,"[ trader #D]
+Остаток ушел в бу.",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2395}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+370,INFO_ONLY,PARSED,trader_d,3171748254,2554,2403,2026-02-19T13:54:26+00:00,"Trader [ #D]
 Остаток ушел в бу
-+0.6r по позиции",,,,,,,,,2403,,,,,,1,0,0,0,
-317,PARSED,2593,"[trader #D ]
-Остаток ушел в бу",,,,,,,,,2593,,,,,,1,0,0,0,
-205,PARSED,2752,"[trader #D]
-Остаток ушел в бу",,,,,,,,,2752,,,,,,1,0,0,0,
++0.6r по позиции",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2403}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+317,INFO_ONLY,PARSED,trader_d,3171748254,2618,2593,2026-02-20T19:12:29+00:00,"[trader #D ]
+Остаток ушел в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2593}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
+205,INFO_ONLY,PARSED,trader_d,3171748254,2774,2752,2026-02-26T16:52:02+00:00,"[trader #D]
+Остаток ушел в бу",,,,,,,[],,,,[],[],"[{""kind"": ""reply"", ""ref"": 2752}]",[],"{""update_tense"": ""EVENT_REPORTED""}",[]
