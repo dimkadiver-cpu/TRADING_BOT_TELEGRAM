@@ -198,7 +198,7 @@
       "pronouns": []
     }
   },
-  "blacklist": [],
+  "blacklist": ["#админ","Админ на связи","Друзья, привет!"],
   "fallback_hook": {
     "enabled": false,
     "provider": null,
