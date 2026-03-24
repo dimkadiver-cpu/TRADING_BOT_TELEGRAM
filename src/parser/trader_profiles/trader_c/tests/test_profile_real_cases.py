@@ -146,6 +146,83 @@ class TraderCProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("trader_c_update_missing_target", result.warnings)
 
+    def test_indexed_entry_without_size_hint_keeps_real_price(self) -> None:
+        text = (
+            "[trader#С]\n\n $LTCUSDT - LONG \n\nВход лимиткой \n\n1)67,25\n2)\n\n"
+            "Stop 65,2  0,5% деп\n\nTейк-профит \n\n1)70(RR1-1,5)\n\n2)72(RR1-2,5)\n\n3)74(RR1-3+)"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry"), [67.25])
+        self.assertEqual(result.entities.get("entries"), [{"sequence": 1, "price": 67.25}])
+
+    def test_decimal_take_profits_are_extracted(self) -> None:
+        text = (
+            "[trader#С]\n\n$LDOUSDT - LONG \n\nВход лимиткой \n\n1)0,519(1/3)\n2)0,508(2/3)\n\n"
+            "Stop 0,498.  1% деп\n\nTейк-профит \n\n1)0,539(RR1-1)\n\n2)0,56(RR1-2)\n\n3)0,582(RR1-3)"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("take_profits"), [0.539, 0.56, 0.582])
+
+    def test_admin_take_profit_guide_is_info_only(self) -> None:
+        text = (
+            "Друзья, это снова #админ\n"
+            "Если в сигнале 3 тейк-профита (TP1-TP3)\n"
+            "TP1 - 30%\nTP2 - 30%\nTP3 - 40%\n"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "INFO_ONLY")
+        self.assertEqual(result.intents, [])
+
+    def test_short_stop_reply_is_update(self) -> None:
+        text = "На байбит стоп 89950!!!!!!\n [trader #C]"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=1327))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_UPDATE_STOP", result.intents)
+        self.assertEqual(result.entities.get("new_stop_price"), 89950.0)
+
+    def test_be_reply_variants_are_updates(self) -> None:
+        for text in ("Остаток закрыт в бу\n[trader#C]", "Увы ушли в бу \n\n[tradet#C]"):
+            result = self.parser.parse_message(text, _context(text=text, reply_to=1683))
+            self.assertEqual(result.message_type, "UPDATE")
+            self.assertIn("U_EXIT_BE", result.intents)
+
+    def test_aktualno_is_info_only(self) -> None:
+        text = "Актуально"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2226))
+        self.assertEqual(result.message_type, "INFO_ONLY")
+
+    def test_limitka_reply_is_update(self) -> None:
+        text = "Лимитка на 73400 на этот объем \n0,3% то что скинули\n\n[trader #C]"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2956))
+        self.assertEqual(result.message_type, "UPDATE")
+
+    def test_reduce_percent_populates_partial_close(self) -> None:
+        text = "Сократил -0,3% по 72800\n\nСредняя 73025\n\n[trader #C]"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2959))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_CLOSE_PARTIAL", result.intents)
+        self.assertEqual(result.entities.get("partial_close_percent"), 0.3)
+        self.assertEqual(result.entities.get("partial_close_price"), 72800.0)
+
+    def test_tp_hit_close_extracts_close_price(self) -> None:
+        text = "90500 Позиция закрыта по тейку. Поздравляю!"
+        result = self.parser.parse_message(text, _context(text=text, reply_to=1094))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertEqual(result.entities.get("close_price"), 90500.0)
+
+    def test_symbol_only_update_warns_about_weak_target(self) -> None:
+        text = (
+            "Btcusdt SHORT\n\nДоливаю часть шорта:87800-900\n"
+            "Чтобы средняя оказалась в 88500 стоп в бу \nТп1.  87222\nТп2.  86666\nТп3.  85888"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("trader_c_update_weak_target_only", result.warnings)
+        self.assertEqual(result.target_scope, {"kind": "signal", "scope": "unknown"})
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -23,3 +23,8 @@ logs/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Test artifacts
+.pytest_cache/
+.test_tmp/
+.codex_tmp/

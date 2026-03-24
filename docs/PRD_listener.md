@@ -6,7 +6,7 @@ Acquisire messaggi in real-time da canali Telegram di terzi con latenza minima, 
 
 ## Stato
 
-Da implementare — Fase 2. Il listener base esiste (Telethon scraping) ma va riscritto per uso live.
+Implementato. Il listener live esiste già e copre ingestione, `asyncio.Queue`, recovery, media-skip e hot reload della configurazione canali.
 
 ## Tecnologia
 
@@ -123,12 +123,12 @@ timestamp | chat_id | telegram_message_id | status | reason | raw_text[:200]
 
 Mai inghiottito silenziosamente. Log file: `logs/listener.log`
 
-## File da creare/modificare
+## File creati/modificati
 
 ```
-src/telegram/listener.py          → riscrivere per asyncio.Queue + recovery
-config/channels.yaml              → creare
-src/telegram/channel_config.py   → hot reload watchdog su channels.yaml
+src/telegram/listener.py         → implementato
+config/channels.yaml             → creato
+src/telegram/channel_config.py   → implementato hot reload su channels.yaml
 ```
 
 ## File da NON toccare
@@ -153,3 +153,7 @@ aiosqlite>=0.20.0   # già installato
 - test blacklist: verifica che messaggi blacklistati abbiano status `blacklisted`
 - test hot reload: modifica channels.yaml, verifica che il listener aggiorni la lista
 - test media skip: verifica log corretto per messaggi media-only
+
+## Stato di verifica
+
+Coperti nel repository da test dedicati in `src/telegram/tests/`, inclusi recovery, blacklist, media skip e hot reload config.

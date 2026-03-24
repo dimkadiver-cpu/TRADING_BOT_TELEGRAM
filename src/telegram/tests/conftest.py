@@ -1,21 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from pathlib import Path
-import shutil
-import uuid
 
 import pytest
-
-
-@pytest.fixture()
-def tmp_path() -> Path:
-    path = Path("C:/TeleSignalBot/.codex_tmp/pytest") / uuid.uuid4().hex
-    path.mkdir(parents=True, exist_ok=True)
-    try:
-        yield path
-    finally:
-        shutil.rmtree(path, ignore_errors=True)
 
 
 @pytest.hookimpl(tryfirst=True)

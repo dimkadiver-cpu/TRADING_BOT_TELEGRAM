@@ -8,8 +8,9 @@ Layer tra Listener e Parser. Decide se e a quale profilo parser passare ogni mes
 
 Implementato in Step 10.
 
-Nota aperta: nei canali multi-trader la risoluzione via reply va considerata
-transitiva sulla catena delle reply, non solo sul parent diretto.
+La risoluzione via reply è implementata in modo transitivo sulla catena delle reply, con depth limit e protezione da loop. Restano possibili casi limite applicativi nei canali multi-trader con contesto storico incompleto.
+
+Per una fotografia aggiornata della fase, inclusi gap residui e criterio di chiusura operativa, vedere `docs/PHASE_3_ROUTER_STATUS.md`.
 
 ## Posizione nel flusso
 

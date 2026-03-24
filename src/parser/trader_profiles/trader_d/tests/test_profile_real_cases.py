@@ -392,11 +392,17 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("close_fraction_percent"), 25.0)
         self.assertEqual(result.entities.get("remaining_position_percent"), 25.0)
 
-    def test_passive_be_outcome_is_info_only(self) -> None:
+    def test_passive_be_outcome_with_target_is_update_exit_be(self) -> None:
         text = _u(r"\u041e\u0441\u0442\u0430\u0442\u043e\u043a \u0443\u0448\u0435\u043b \u0432 \u0431\u0443")
         result = self.parser.parse_message(text, _context(text=text, reply_to=719))
-        self.assertEqual(result.message_type, "INFO_ONLY")
-        self.assertEqual(result.intents, [])
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_EXIT_BE", result.intents)
+
+    def test_passive_be_outcome_without_target_is_still_treated_as_update(self) -> None:
+        text = _u(r"\u041e\u0441\u0442\u0430\u0442\u043e\u043a \u0443\u0448\u0435\u043b \u0432 \u0431\u0443")
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_EXIT_BE", result.intents)
 
     def test_close_full_remaining_current_price_extracts_close_price(self) -> None:
         text = _u(
@@ -407,6 +413,103 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("U_CLOSE_FULL", result.intents)
         self.assertEqual(result.entities.get("close_price"), 31.57)
+
+    def test_new_signal_reclassification_drops_update_leakage(self) -> None:
+        text = _u(
+            r"[trader#d]" "\n\n"
+            r"Brev SHORT \u0432\u0445\u043e\u0434 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u0445" "\n\n"
+            r"\u0440\u044b\u043d\u043e\u0447\u043d\u044b\u0439 \u2014 \u0440\u0438\u0441\u043a 0.5% \u0434\u0435\u043f\u043e" "\n\n"
+            r"\u0421\u0442\u043e\u043f 0.5358" "\n\n"
+            r"\u0422\u0435\u0439\u043a\u0438" "\n"
+            r"TP1: 0.4283" "\n"
+            r"TP2:0.3485"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.intents, ["NS_CREATE_SIGNAL"])
+        self.assertNotIn("close_scope", result.entities)
+        self.assertNotIn("hit_target", result.entities)
+        self.assertNotIn("update_tense", result.entities)
+        self.assertEqual(result.warnings, [])
+
+    def test_link_prefix_does_not_become_symbol(self) -> None:
+        text = _u(
+            r"https://t.me/c/3171748254/1408" "\n"
+            r"[trader#d] \u043f\u043e\u0437\u0438\u0446\u0438\u044f \u0443\u0448\u043b\u0430 \u0432 \u0431\u0443"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_EXIT_BE", result.intents)
+        self.assertNotIn("symbol", result.entities)
+        self.assertNotIn("symbol_raw", result.entities)
+
+    def test_in_profit_stop_move_is_not_stop_hit(self) -> None:
+        text = _u(r"\u0421\u0442\u043e\u043f \u0441\u0434\u0432\u0438\u0433\u0430\u044e \u0432 +" "\n" r"0.4671")
+        result = self.parser.parse_message(text, _context(text=text, reply_to=1439))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_MOVE_STOP", result.intents)
+        self.assertNotIn("U_STOP_HIT", result.intents)
+        self.assertNotIn("U_CLOSE_FULL", result.intents)
+        self.assertEqual(result.entities.get("new_stop_level"), 0.4671)
+
+    def test_take_profit_formats_with_spaced_index_preserve_value(self) -> None:
+        first = _u(
+            r"Kiteusdt Short  \u0420\u0418\u0421\u041a 0,5" "\n"
+            r"\u0412\u0445\u043e\u0434 \u043f\u043e \u0440\u044b\u043d\u043a\u0443" "\n"
+            r"Sl: 0.28281" "\n"
+            r"Tp1:0.26261" "\n"
+            r"Tp 2:0.2242" "\n"
+            r"Tp3: 0.18147"
+        )
+        second = _u(
+            r"CVXUSDT Short  \u0420\u0418\u0421\u041a 0,5" "\n"
+            r"\u0412\u0445\u043e\u0434 \u043f\u043e \u0440\u044b\u043d\u043a\u0443" "\n"
+            r"Sl: 2.099" "\n"
+            r"Tp1: 2.023" "\n"
+            r"Tp 2: 1.988"
+        )
+        third = _u(
+            r"Enj \u0448\u043e\u0440\u0442 \u0440\u0438\u0441\u043a 0,5" "\n"
+            r"sl 0.02832" "\n"
+            r"\u0442\u043f1 0,02751" "\n"
+            r"\u0442\u043f 2 0,0270" "\n"
+            r"\u0442\u043f3 0,02669"
+        )
+        self.assertEqual(self.parser.parse_message(first, _context(text=first)).entities.get("take_profits"), [0.26261, 0.2242, 0.18147])
+        self.assertEqual(self.parser.parse_message(second, _context(text=second)).entities.get("take_profits"), [2.023, 1.988])
+        self.assertEqual(self.parser.parse_message(third, _context(text=third)).entities.get("take_profits"), [0.02751, 0.027, 0.02669])
+
+    def test_brief_bu_reply_is_operational_update(self) -> None:
+        text = _u(r"\u0411\u0443\ud83e\udd1d")
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2993))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_MOVE_STOP_TO_BE", result.intents)
+
+    def test_short_sl_variants_are_updates(self) -> None:
+        first = self.parser.parse_message("Sl.-0,5%", _context(text="Sl.-0,5%", reply_to=1595))
+        second = self.parser.parse_message("Upd: sl- 0.5", _context(text="Upd: sl- 0.5", reply_to=1615))
+        self.assertEqual(first.message_type, "UPDATE")
+        self.assertIn("U_CLOSE_FULL", first.intents)
+        self.assertEqual(second.message_type, "UPDATE")
+        self.assertIn("U_CLOSE_FULL", second.intents)
+
+    def test_tp_hit_with_emoji_suffix_is_update(self) -> None:
+        text = _u(r"Tp 2\ud83d\ude11")
+        result = self.parser.parse_message(text, _context(text=text, reply_to=2475))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_TP_HIT", result.intents)
+        self.assertEqual(result.entities.get("hit_target"), "TP2")
+
+    def test_targeted_remaining_position_to_be_with_profit_is_update(self) -> None:
+        text = _u(
+            r"Trader#d" "\n"
+            r"Gmt \u043e\u0441\u0442\u0430\u0442\u043e\u043a \u0443\u0448\u0435\u043b \u0432 \u0431\u0443" "\n"
+            r"+0.15%"
+        )
+        result = self.parser.parse_message(text, _context(text=text, reply_to=1496))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_EXIT_BE", result.intents)
+        self.assertEqual(result.entities.get("reported_profit_percent"), 0.15)
 
 
 if __name__ == "__main__":

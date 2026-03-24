@@ -86,15 +86,12 @@ Replay `parse_results` storici in freqtrade backtesting mode, config matrix runn
 ## Stato attuale
 
 ```
-✓ Listener base (Telethon, scraping storico)
-✓ Parser pipeline (da riprogettare)
-✓ Parser test harness (da migliorare)
-✗ Listener live robusto con asyncio.Queue e recovery
-✗ Router / Pre-parser
-✗ Pydantic models canonici
-✗ RulesEngine
-✗ Profili trader nuova architettura
-✗ Validazione coerenza
+✓ Listener live robusto (asyncio.Queue, recovery, hot reload config)
+✓ Router / Pre-parser
+✓ Parser nuova architettura (Pydantic models, RulesEngine, profili trader migrati)
+✓ Parser test harness e report CSV
+✓ Validazione coerenza integrata nel Router
+~ Configurazione canali live presente ma ancora vuota (`config/channels.yaml`)
 ✗ Operation rules
 ✗ Target resolver
 ✗ Signal bridge freqtrade
@@ -104,25 +101,29 @@ Replay `parse_results` storici in freqtrade backtesting mode, config matrix runn
 ## Ordine di sviluppo
 
 ```
-Fase 1 — Parser (NOW)
-  Step 1  Pydantic models
-  Step 2  RulesEngine
-  Step 3  Trader 3 profilo (riferimento)
-  Step 4  Sistema debug CSV + watch mode
-  Step 5  Migrazione altri profili
-  Step 6  Eliminazione pipeline.py legacy
+Fase 1 — Parser
+  ✓ Step 1  Pydantic models
+  ✓ Step 2  RulesEngine
+  ✓ Step 3  Trader 3 profilo (riferimento)
+  ✓ Step 4  Sistema debug CSV + watch mode
+  ✓ Step 5  Migrazione altri profili
+  ✓ Step 6  Eliminazione cluster parser legacy
 
 Fase 2 — Listener robusto
-  Listener live con asyncio.Queue
-  Recovery al restart
-  Hot reload channels.yaml
+  ✓ Listener live con asyncio.Queue
+  ✓ Recovery al restart
+  ✓ Hot reload channels.yaml
 
 Fase 3 — Router / Pre-parser
-  Blacklist check
-  Trader resolution
-  Review queue
+  ✓ Blacklist check
+  ✓ Trader resolution
+  ✓ Review queue
+  ✓ Reply-chain transitiva con depth limit
 
 Fase 4 — Validazione + Operation rules + Target resolver
+  ✓ Validazione coerenza
+  ✗ Operation rules
+  ✗ Target resolver
 
 Fase 5 — Sistema 1 (freqtrade live)
 

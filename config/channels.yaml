@@ -6,16 +6,14 @@ recovery:
 
 blacklist_global:
   - "#admin"
+  - "#админ"
   - "#info"
   - "#pinned"
   - "Админ на связи"
 
-channels: []
-# Aggiungere i canali qui. Esempio:
-#
-#  - chat_id: -1001234567890
-#    label: "trader_alpha"
-#    active: true
-#    trader_id: "trader_a"   # null se canale multi-trader
-#    blacklist:
-#      - "#weekly"
+channels:
+  - chat_id: -1003171748254
+    label: "PifSignal"
+    active: true
+    trader_id: null   # canale multi-trader — risoluzione via alias/reply-chain
+    blacklist: []

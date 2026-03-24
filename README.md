@@ -4,34 +4,29 @@ Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi
 
 ## Stato attuale
 
-Il progetto è in fase di **riprogettazione del parser** seguendo una nuova architettura più semplice e manutenibile. Il layer di acquisizione Telegram e storage esistono e funzionano. L'execution è pianificata per le fasi successive.
+Il progetto ha già completato la parte principale della nuova architettura di ingestione e parsing: listener live, router/pre-parser, parser per trader e validazione di coerenza sono presenti nel repository. L'execution operativa resta pianificata per le fasi successive.
 
 ### Implementato e stabile
 
 - persistenza raw messages con dedup e metadata sorgente (`src/storage/raw_messages.py`)
+- listener live con recovery, queue e hot reload config (`src/telegram/listener.py`)
+- router / pre-parser con blacklist, review queue e persistenza parse result (`src/telegram/router.py`)
 - risoluzione trader effettivo (`src/telegram/effective_trader.py`)
 - eligibility e strong linking (`src/telegram/eligibility.py`)
-- parser pipeline esistente — **in fase di riscrittura** (`src/parser/pipeline.py`)
-- profili trader esistenti — **in fase di migrazione** (`src/parser/trader_profiles/`)
+- parser nuova architettura con models Pydantic e RulesEngine (`src/parser/models/`, `src/parser/rules_engine.py`)
+- profili trader migrati sulla nuova architettura (`src/parser/trader_profiles/`)
+- validazione coerenza integrata nel Router (`src/validation/coherence.py`)
 - harness replay e report CSV (`parser_test/`)
 
-### In sviluppo ora — Fase 1: Parser
+### Stato per fasi
 
 ```
-Step 1  Pydantic models canonici     src/parser/models/
-Step 2  RulesEngine                  src/parser/rules_engine.py
-Step 3  Trader 3 profilo             primo profilo nuova architettura
-Step 4  Watch mode + CSV debug       parser_test/
-Step 5  Migrazione altri profili     trader_b → trader_c/d → trader_a
-Step 6  Cleanup legacy               eliminazione pipeline.py e normalization.py
-```
-
-### Pianificato — Fasi successive
-
-```
-Fase 2  Listener robusto             asyncio.Queue, recovery, hot reload
-Fase 3  Router / Pre-parser          blacklist, trader resolution, review queue
-Fase 4  Validazione + Operation rules + Target resolver
+Fase 1  Parser                       completata nella base architetturale
+Fase 2  Listener robusto             implementata
+Fase 3  Router / Pre-parser          implementata
+Fase 4  Validazione                  implementata
+Fase 4  Operation rules              da fare
+Fase 4  Target resolver              da fare
 Fase 5  Sistema 1 — freqtrade live
 Fase 6  Sistema 2 — backtesting
 ```
@@ -116,11 +111,48 @@ python main.py --migrate
 python main.py
 ```
 
-## Test parser
+## Test
+
+Prerequisito: `.venv` attiva con `pip install -r requirements.txt` (vedi sezione Setup).
+Usa sempre `.venv/Scripts/python.exe -m pytest` — mai `pytest` bare dal Python globale.
+
+### Smoke suite — controllo rapido del sistema (212 test, ~5s)
+
+Copre: modelli Pydantic, RulesEngine, listener/router Telegram, validazione coerenza.
+Da eseguire prima di ogni commit come verifica minima.
 
 ```bash
-# test profilo specifico
-pytest src/parser/trader_profiles/trader_3/tests/
+.venv/Scripts/python.exe -m pytest \
+  src/parser/models/tests/ \
+  src/parser/tests/ \
+  src/telegram/tests/ \
+  src/validation/tests/ \
+  -q
+```
+
+### Full suite — tutti i profili trader e harness di test
+
+Copre: profili trader (trader_3/a/b/c/d), harness replay, execution planner/applier.
+Richiede workspace stabile e `.venv` completa. ~427 test, ~3s.
+
+```bash
+.venv/Scripts/python.exe -m pytest \
+  src/parser/trader_profiles/ \
+  parser_test/tests/ \
+  src/execution/test_update_planner.py \
+  src/execution/test_update_applier.py \
+  -q
+```
+
+Note:
+- Su Windows, file SQLite nei test router possono lasciare artefatti in `.test_tmp/` — inoffensivi, ignorati da git.
+- `src/execution/` usa `unittest.TestCase` — compatibile con pytest, nessuna dipendenza da fixture custom.
+- `parser_test/tests/` richiede il DB di test in `parser_test/db/` per i test di integrazione.
+
+### Test profilo specifico
+
+```bash
+.venv/Scripts/python.exe -m pytest src/parser/trader_profiles/trader_3/tests/
 
 # replay su DB test
 python parser_test/scripts/replay_parser.py --trader trader_3
@@ -128,6 +160,28 @@ python parser_test/scripts/replay_parser.py --trader trader_3
 # watch mode debug (replay automatico su modifica file)
 python parser_test/scripts/watch_parser.py --trader trader_3
 ```
+
+### Troubleshooting test
+
+**Errore di ambiente** — non indica regressione del parser:
+
+| Sintomo | Causa | Soluzione |
+|---|---|---|
+| `ModuleNotFoundError: No module named 'pydantic'` | pytest lanciato fuori dalla `.venv` | Usa `.venv/Scripts/python.exe -m pytest` |
+| `ModuleNotFoundError: No module named 'src'` | CWD errata | Lancia pytest dalla root del progetto (`C:\TeleSignalBot`) |
+| `PermissionError` su `.pytest_cache` o `.test_tmp` | Path non scrivibile | Verifica che cache e temp siano nel workspace (vedi `pytest.ini` e `conftest.py`) |
+| `ERRORS` in collection, zero test raccolti | Import fallito per dipendenza mancante | `pip install -r requirements.txt` nella `.venv` |
+
+**Errore di logica** — indica regressione del parser:
+
+| Sintomo | Causa |
+|---|---|
+| `AssertionError: assert 'UPDATE' == 'NEW_SIGNAL'` | Classificazione cambiata |
+| `assert result.entities.symbol == 'BTCUSDT'` | Estrazione entità rotta |
+| `assert len(result.intents) == 2` | Intent mancante o aggiunto inatteso |
+| `KeyError` o `ValidationError` Pydantic | Modello o struttura output cambiata |
+
+Gli errori di ambiente non vanno mai interpretati come regressioni del parser. Risolvi l'ambiente prima di analizzare i test falliti.
 
 ## Struttura repository
 
@@ -156,8 +210,7 @@ TeleSignalBot/
 │   │   │   ├── trader_b/
 │   │   │   ├── trader_c/
 │   │   │   └── trader_d/
-│   │   ├── pipeline.py          → LEGACY (eliminare dopo migrazione)
-│   │   └── normalization.py     → LEGACY (eliminare dopo migrazione)
+│   │   └── trader_profiles/     → profili parser attivi
 │   ├── execution/               → placeholder (Fase 5+)
 │   └── exchange/                → placeholder (Fase 5+)
 ├── config/
@@ -172,7 +225,9 @@ La documentazione autorevole è in `docs/`:
 - `CLAUDE.md` — contesto per Claude Code (root del progetto)
 - `CODEX.md` — contesto per CODEX APP (root del progetto)
 - `docs/PRD_generale.md` — visione e architettura
-- `docs/PRD_parser.md` — parser dettagliato (priorità attuale)
+- `docs/PRD_parser.md` — parser dettagliato e stato architettura parser
+- `docs/PHASE_3_ROUTER_STATUS.md` — stato reale, gap e criterio di chiusura della Fase 3
 - `docs/AUDIT.md` — stato progetto aggiornato
+- `docs/TEST_ENV_STABILIZATION_CHECKLIST.md` — checklist operativa per chiudere la stabilizzazione ambiente test
 
 I file in `docs/old/` sono archivio della vecchia architettura — non usare come riferimento operativo.

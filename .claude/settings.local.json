@@ -28,7 +28,15 @@
       "Bash(.venv/Scripts/pip install:*)",
       "Bash(.venv/Scripts/pytest src/telegram/tests/ -v 2>&1)",
       "Bash(.venv/Scripts/pytest src/parser/trader_profiles/ parser_test/tests/ src/execution/ -q)",
-      "Bash(git stash:*)"
+      "Bash(git stash:*)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/parser/tests/ src/telegram/tests/ src/parser/models/tests/ -q --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/parser/trader_profiles/ parser_test/tests/ -q --tb=short)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/parser/models/tests/ src/parser/tests/ src/telegram/tests/ src/validation/tests/ -v --tb=short 2>&1)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/parser/trader_profiles/ parser_test/tests/ src/execution/test_update_planner.py src/execution/test_update_applier.py -q --tb=short 2>&1)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/parser/models/tests/ src/parser/tests/ src/telegram/tests/ src/validation/tests/ -q --tb=short 2>&1)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/telegram/tests/test_router_integration.py -v --tb=short 2>&1)",
+      "Bash(.venv/Scripts/python.exe -m pytest src/parser/models/tests/ src/parser/tests/ src/telegram/tests/ src/validation/tests/ -q)",
+      "Bash(.venv/Scripts/python.exe check_db.py)"
     ]
   }
 }

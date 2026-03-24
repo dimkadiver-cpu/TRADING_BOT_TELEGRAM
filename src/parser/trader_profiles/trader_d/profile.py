@@ -105,18 +105,25 @@ class TraderDProfileParser(TraderBProfileParser):
         compact_new_signal = self._is_compact_new_signal(raw_text=raw_text, entities=entities)
         operational_update = self._is_operational_update(raw_text=raw_text, normalized=normalized)
 
-        # Passive BE: position reached breakeven naturally — informational only, no action
-        if "остаток ушел в бу" in normalized and "бу+" not in normalized:
+        # Passive BE without target is informational; anchored cases are operational updates.
+        if (
+            "??????? ???? ? ??" in normalized
+            and "??+" not in normalized
+            and not any(ref.get("kind") in {"reply", "telegram_link", "message_id"} for ref in target_refs)
+        ):
             message_type = "INFO_ONLY"
             intents = []
         elif compact_new_signal:
             message_type = "NEW_SIGNAL"
+            intents = ["NS_CREATE_SIGNAL"]
+            entities = {}
+            warnings = []
         elif operational_update and message_type in {"UNCLASSIFIED", "INFO_ONLY"}:
             message_type = "UPDATE"
 
         if message_type == "NEW_SIGNAL":
             intents = ["NS_CREATE_SIGNAL"]
-            entities = self._enrich_new_signal_entities(raw_text=raw_text, entities=entities)
+            entities = self._enrich_new_signal_entities(raw_text=raw_text, entities={})
         elif message_type == "UPDATE":
             intents, entities = self._enrich_update_intents_entities(raw_text=raw_text, normalized=normalized, intents=intents, entities=entities)
             if not any(ref.get("kind") in {"reply", "telegram_link", "message_id"} for ref in target_refs) and entities.get("symbol"):
@@ -220,19 +227,27 @@ class TraderDProfileParser(TraderBProfileParser):
 
     @staticmethod
     def _is_operational_update(*, raw_text: str, normalized: str) -> bool:
-        return bool(_SL_SHORT_FORM_RE.search(raw_text)) or any(
-            marker in normalized
-            for marker in [
-                *_TP_COMPACT_MARKERS,
-                *_BE_EXIT_MARKERS,
-                *_BE_MOVE_MARKERS,
-                *_CLOSE_FULL_MARKERS,
-                *_UPDATE_TP_MARKERS,
-                "срежем",
-                "срезал",
-                "фикс 50%",
-                "переставляем в +",
-            ]
+        return (
+            _has_short_sl_form(raw_text)
+            or _is_brief_be_update(raw_text)
+            or _is_tp_hit_shorthand(raw_text)
+            or _is_fix_close_shorthand(raw_text)
+            or any(
+                marker in normalized
+                for marker in [
+                    *_TP_COMPACT_MARKERS,
+                    *_BE_EXIT_MARKERS,
+                    *_BE_MOVE_MARKERS,
+                    *_CLOSE_FULL_MARKERS,
+                    *_UPDATE_TP_MARKERS,
+                    "??????",
+                    "??????",
+                    "???? 50%",
+                    "???????????? ? +",
+                    "?????? ????",
+                    "????",
+                ]
+            )
         )
 
     def _enrich_new_signal_entities(self, *, raw_text: str, entities: dict[str, Any]) -> dict[str, Any]:
@@ -306,7 +321,14 @@ class TraderDProfileParser(TraderBProfileParser):
         out_intents = list(intents)
         out_entities = dict(entities)
 
+        if _is_in_profit_stop_move(raw_text):
+            out_intents = [intent for intent in out_intents if intent not in {"U_STOP_HIT", "U_CLOSE_FULL"}]
+            for stale_key in ("close_scope", "hit_target", "hit_targets", "max_target_hit"):
+                out_entities.pop(stale_key, None)
+
         hit_targets = sorted({int(m.group("idx")) for m in _TP_HIT_IDX_RE.finditer(raw_text)})
+        if not hit_targets:
+            hit_targets = _extract_brief_tp_hit_indices(raw_text)
         if hit_targets:
             out_intents.append("U_TP_HIT")
             out_entities["hit_target"] = f"TP{max(hit_targets)}" if len(hit_targets) == 1 else "TP"
@@ -339,9 +361,22 @@ class TraderDProfileParser(TraderBProfileParser):
             out_intents.append("U_MOVE_STOP_TO_BE")
             out_entities.setdefault("new_stop_level", "ENTRY")
             out_entities["new_stop_reference_text"] = "BREAKEVEN"
+        elif _is_brief_be_update(raw_text):
+            out_intents.append("U_MOVE_STOP_TO_BE")
+            out_entities.setdefault("new_stop_level", "ENTRY")
+            out_entities["new_stop_reference_text"] = "BREAKEVEN"
 
         if any(marker in normalized for marker in _BE_EXIT_MARKERS):
             out_intents.append("U_EXIT_BE")
+
+        if _is_in_profit_stop_move(raw_text):
+            out_intents.append("U_MOVE_STOP")
+            price = _extract_move_stop_price(raw_text)
+            if price is not None:
+                out_entities["new_stop_level"] = price
+                out_entities["new_stop_price"] = price
+            else:
+                out_entities["new_stop_reference_text"] = "IN_PROFIT"
 
         if "переставляем в +" in normalized or "переставляем на" in normalized:
             out_intents.append("U_MOVE_STOP")
@@ -357,6 +392,8 @@ class TraderDProfileParser(TraderBProfileParser):
             close_price = _extract_close_price(raw_text)
             if close_price is not None:
                 out_entities["close_price"] = close_price
+        elif _is_fix_close_shorthand(raw_text) and "U_CLOSE_PARTIAL" not in out_intents:
+            out_intents.append("U_CLOSE_FULL")
 
         # SL short form: "Sl -0.5" or "Сл -1.2" — stop loss hit notification
         if not out_intents and _SL_SHORT_FORM_RE.search(raw_text):
@@ -364,6 +401,10 @@ class TraderDProfileParser(TraderBProfileParser):
             out_entities["close_scope"] = "FULL"
             # Hitting SL = canonical 1R loss
             out_entities["reported_profit_r"] = 1.0
+        elif _has_short_sl_form(raw_text):
+            out_intents.append("U_CLOSE_FULL")
+            out_entities.setdefault("close_scope", "FULL")
+            out_entities.setdefault("reported_profit_r", 1.0)
 
         if any(marker in normalized for marker in _UPDATE_TP_MARKERS):
             out_intents.append("U_UPDATE_TAKE_PROFITS")
@@ -394,8 +435,9 @@ _SYMBOL_NON_TOKENS = {"TP", "SL", "UPD", "TRADER", "TRADE", "LONG", "SHORT"}
 
 
 def _extract_symbol_flexible(raw_text: str) -> dict[str, str] | None:
+    candidate_text = "\n".join(_content_lines(raw_text)) or raw_text
     # Prefer a symbol on a line that also has a side marker (skips prefix tags like "[trader#d]")
-    match = _SYMBOL_WITH_SIDE_RE.search(raw_text) or _NAKED_SYMBOL_RE.search(raw_text)
+    match = _SYMBOL_WITH_SIDE_RE.search(candidate_text) or _NAKED_SYMBOL_RE.search(candidate_text)
     if not match:
         return None
     token = match.group("symbol").upper()
@@ -436,7 +478,10 @@ def _extract_r_result(raw_text: str) -> float | None:
 
 def _extract_move_stop_price(raw_text: str) -> float | None:
     match = re.search(r"на\s+(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE)
-    return _to_float(match.group("value")) if match else None
+    if match:
+        return _to_float(match.group("value"))
+    standalone = re.search(r"^\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)\s*$", raw_text, re.MULTILINE)
+    return _to_float(standalone.group("value")) if standalone else None
 
 
 def _extract_close_price(raw_text: str) -> float | None:
@@ -456,11 +501,95 @@ def _extract_stop_price_flexible(raw_text: str) -> float | None:
 
 def _extract_take_profits_flexible(raw_text: str) -> list[float]:
     out: list[float] = []
-    for match in re.finditer(r"(?:\btp\d*\b|тп\d*\b|тейк(?:\s*\d+)?)\s*[;:=]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", raw_text, re.IGNORECASE):
+    pattern = re.compile(
+        r"^\s*(?:[^A-Za-z0-9\u0410-\u042f\u0430-\u044f\u0401\u0451]+\s*)?"
+        r"(?:"
+        r"(?:tp|\u0442\u043f)(?:\s*\d{1,2})?"
+        r"|(?:tp|\u0442\u043f)\d{1,2}"
+        r"|\u0442\u0435\u0439\u043a(?:\s*\d{1,2})?"
+        r")"
+        r"(?:\s*[:;=]\s*|\s+)"
+        r"(?P<value>\d[\d\s]*(?:[.,]\d+)?)\s*$",
+        re.IGNORECASE,
+    )
+    for line in _content_lines(raw_text):
+        match = pattern.match(line.strip())
+        if not match:
+            continue
         value = _to_float(match.group("value"))
         if value is not None and value not in out:
             out.append(value)
     return out
+
+
+def _content_lines(raw_text: str) -> list[str]:
+    out: list[str] = []
+    for line in (raw_text or "").splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+        stripped = re.sub(r"^\s*(?:\[?\s*trader\s*#?\s*d\s*\]?|trader\s*\[\s*#d\s*\])\s*", "", stripped, flags=re.IGNORECASE)
+        if not stripped:
+            continue
+        lowered = stripped.lower()
+        if lowered.startswith("http://t.me/") or lowered.startswith("https://t.me/"):
+            continue
+        compact = re.sub(r"[^a-z0-9#\[\] ]+", "", lowered)
+        compact = re.sub(r"\s+", " ", compact).strip()
+        if compact in {"trader#d", "[trader#d]", "trader [ #d]", "[trader #d]"}:
+            continue
+        out.append(stripped)
+    return out
+
+
+def _brief_marker_text(raw_text: str) -> str:
+    content = " ".join(_content_lines(raw_text)).lower()
+    return re.sub(r"\s+", " ", content).strip()
+
+
+def _brief_word_tokens(raw_text: str) -> list[str]:
+    return re.findall(r"[a-zA-Z\u0430-\u044f\u0410-\u042f\u0451\u0401]+", _brief_marker_text(raw_text))
+
+
+def _has_short_sl_form(raw_text: str) -> bool:
+    return bool(
+        re.search(
+            r"^\s*(?:upd\s*[:;#.\-]?\s*)?(?:sl|\u0441\u043b)\s*[:.\-]*\s*-?\d+(?:[.,]\d+)?\s*(?:%|[\u0440r])?(?:\b|$)",
+            raw_text,
+            re.IGNORECASE | re.MULTILINE,
+        )
+    )
+
+
+def _is_brief_be_update(raw_text: str) -> bool:
+    tokens = _brief_word_tokens(raw_text)
+    return tokens in (["\u0431\u0443"], ["upd", "\u0431\u0443"])
+
+
+def _extract_brief_tp_hit_indices(raw_text: str) -> list[int]:
+    content = "\n".join(_content_lines(raw_text))
+    match = re.search(
+        r"^\s*(?:[?*+-]\s*)?(?:tp|\u0442\u043f)\s*(?P<idx>\d)\b",
+        content,
+        re.IGNORECASE | re.MULTILINE,
+    )
+    if not match:
+        return []
+    return [int(match.group("idx"))]
+
+
+def _is_tp_hit_shorthand(raw_text: str) -> bool:
+    return bool(_extract_brief_tp_hit_indices(raw_text))
+
+
+def _is_in_profit_stop_move(raw_text: str) -> bool:
+    lowered = _brief_marker_text(raw_text)
+    return bool(re.search(r"\u0441\u0442\u043e\u043f\s+\w*\s*\u0432\s*\+", lowered))
+
+
+def _is_fix_close_shorthand(raw_text: str) -> bool:
+    lowered = _brief_marker_text(raw_text)
+    return "\u0444\u0438\u043a\u0441" in lowered and not re.search(r"\b(?:25|50|70|80|100)\s*%", lowered)
 
 
 def _unique(values: list[str]) -> list[str]:

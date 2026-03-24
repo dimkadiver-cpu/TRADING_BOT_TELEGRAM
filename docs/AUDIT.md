@@ -125,8 +125,9 @@ docs/PRD_generale.md                            → ✓ fatto
 docs/PRD_listener.md                            → ✓ fatto
 docs/PRD_router.md                              → ✓ fatto
 docs/PRD_parser.md                              → ✓ fatto
+docs/PHASE_3_ROUTER_STATUS.md                   → ✓ stato operativo Fase 3
 docs/AUDIT.md                                   → questo file
-config/channels.yaml                            → ✗ non esiste (config/ ha altri file ma non channels.yaml)
+config/channels.yaml                            → ✓ esiste, ma `channels: []` quindi non ancora pronto per uso live
 src/parser/models/__init__.py                   → ✓ CREATA (Step 1 completo)
 src/parser/models/canonical.py                  → ✓ CREATA (Step 1 completo)
 src/parser/models/new_signal.py                 → ✓ CREATA (Step 1 completo)
@@ -161,9 +162,117 @@ src/parser/action_builders/canonical_v2.py → builder azioni strutturate v2
 
 ---
 
+## Stabilizzazione ambiente test — stato al 2026-03-24
+
+### Punto 1 ✓ — Comando ufficiale test (2026-03-24)
+
+Definito il comando standard di progetto:
+```bash
+.venv/Scripts/python.exe -m pytest <percorso>
+```
+File aggiornati:
+- `README.md` — sezione "Test parser": sostituito `pytest` bare con comando venv
+- `README_CLAUDECODE.md` — riga Sessione 0 e checklist fine sessione: allineate
+
+### Punto 2 ✓ — Temp e cache locali al workspace (2026-03-24)
+
+Tutti i path di test spostati dentro il workspace. Nessun `PermissionError` riscontrato.
+
+File toccati:
+- `pytest.ini` — `cache_dir` da `C:/TeleSignalBot/.codex_tmp/pytest_cache` → `.pytest_cache` (relativo a rootdir)
+- `conftest.py` (nuovo, root) — override globale `tmp_path` su `<project_root>/.test_tmp/<uuid>`
+- `src/telegram/tests/conftest.py` — rimosso `tmp_path` override con path hardcoded; mantenuto `pytest_pyfunc_call` hook per async
+- `.gitignore` — aggiunti `.pytest_cache/`, `.test_tmp/`, `.codex_tmp/`
+
+Comportamento noto (non un bug): su Windows, SQLite file handle non sempre rilasciato prima del teardown fixture → le dir UUID in `.test_tmp` possono contenere file `*.sqlite3` residui. `ignore_errors=True` previene errori. Gli artefatti sono inoffensivi e ignorati da git.
+
+Verifica post-fix: 416/416 test passano, 0 `PermissionError`.
+
+### Punto 3 ✓ — Smoke suite ufficiale (2026-03-24)
+
+Definita e verificata smoke suite: 216 test, ~6s, 0 failure.
+
+Scope:
+- `src/parser/models/tests/` — 79 test (Price, Intent, TargetRef, TraderParseResult, entities)
+- `src/parser/tests/` — 62 test (RulesEngine: load, classify, intents, blacklist, merge)
+- `src/telegram/tests/` — 50 test (channel config, blacklist, media, router, reply chain, recovery, **router_integration** +4)
+- `src/validation/tests/` — 25 test (CoherenceChecker)
+
+Comando ufficiale smoke suite:
+```bash
+.venv/Scripts/python.exe -m pytest \
+  src/parser/models/tests/ \
+  src/parser/tests/ \
+  src/telegram/tests/ \
+  src/validation/tests/ \
+  -q
+```
+
+Documentato in `README.md` (sezione "Test") e `README_CLAUDECODE.md` (sezione "Comandi test standard" e checklist fine sessione).
+
+### Punto 4 ✓ — Full suite documentata (2026-03-24)
+
+Verifica: 427/427 test passano (profili trader + harness + execution), ~3s.
+
+Scope full suite:
+- `src/parser/trader_profiles/` — 346 test (trader_3/a/b/c/d, RulesEngine per trader)
+- `parser_test/tests/` — 34 test (harness replay, flatteners, report schema)
+- `src/execution/test_update_planner.py` + `test_update_applier.py` — 11+16 test
+
+Documentato in `README.md` con note su: artefatti SQLite su Windows, stile `unittest.TestCase`, prerequisito DB test per `parser_test/tests/`.
+
+### Punto 5 ✓ — Verifica dipendenze (2026-03-24)
+
+`requirements.txt` copre tutte le dipendenze di test richieste:
+- `pydantic>=2.0` ✓
+- `pytest>=8.0` ✓
+- `pytest-asyncio>=0.23` ✓
+- `pyyaml>=6.0` ✓
+- `telethon>=1.34.0` ✓
+
+Nessuna dipendenza mancante. Bootstrap `.venv` già documentato in README sezione Setup.
+Nota aggiunta in README sezione Test: "Usa sempre `.venv/Scripts/python.exe -m pytest` — mai `pytest` bare".
+
+### Punto 6 ✓ — Classificazione failure ambiente vs logica (2026-03-24)
+
+Aggiunta sezione "Troubleshooting test" in `README.md` con tabelle distinte per:
+- Errori di ambiente: `ModuleNotFoundError`, `PermissionError`, CWD errata, collection failure
+- Errori di logica: `AssertionError`, mismatch parsing, ValidationError Pydantic
+
+Chiarito esplicitamente: "Gli errori di ambiente non vanno mai interpretati come regressioni del parser."
+
+### Punto 7 ✓ — Criterio di chiusura (2026-03-24)
+
+Run di verifica finale eseguiti con `.venv/Scripts/python.exe -m pytest`:
+
+| Suite | Comando | Risultato | Tempo |
+|---|---|---|---|
+| Smoke | `src/parser/models/tests/ src/parser/tests/ src/telegram/tests/ src/validation/tests/` | 212/212 pass | ~5s |
+| Full | `src/parser/trader_profiles/ parser_test/tests/ src/execution/test_*.py` | 427/427 pass | ~3s |
+
+Criteri verificati:
+- [x] Smoke suite eseguibile in modo ripetibile con il comando ufficiale
+- [x] Nessun `PermissionError` su temp/cache (`.pytest_cache` e `.test_tmp` nel workspace)
+- [x] Nessun `ModuleNotFoundError` con setup documentato (`.venv` + `requirements.txt`)
+- [x] README allineato ai comandi reali (smoke, full suite, troubleshooting)
+- [x] Run completo documentato — esito: **pass** (0 failure logiche, 0 problemi ambiente)
+
+**Stabilizzazione ambiente test: COMPLETATA** — 2026-03-24
+
+Stato checklist `TEST_ENV_STABILIZATION_CHECKLIST.md`:
+- [x] Punto 1 — comando ufficiale test
+- [x] Punto 2 — temp e cache locali al workspace
+- [x] Punto 3 — smoke suite ufficiale
+- [x] Punto 4 — full suite documentata
+- [x] Punto 5 — verifica dipendenze
+- [x] Punto 6 — classificazione failure ambiente vs logica
+- [x] Punto 7 — criterio di chiusura
+
+---
+
 ## Test coverage — stato al 2026-03-22
 
-Comando: `pytest src/parser/trader_profiles/ parser_test/tests/ -q`
+Comando: `.venv/Scripts/python.exe -m pytest src/parser/trader_profiles/ parser_test/tests/ -q`
 
 | Scope | Test totali | PASSED | FAILED | Note |
 |---|---|---|---|---|
@@ -201,18 +310,18 @@ Dopo eliminazione: 382/382 test passano (era 346 su scope solo profili).
 - Rimossa: `build_minimal_parser_pipeline()`, tutti gli import `parser_config`, `MinimalParserPipeline`, `ParserInput`
 - `register_message_listener()`: rimosso param `parser_pipeline: MinimalParserPipeline`
 - `main.py` aggiornato: rimossa costruzione `parser_pipeline`, rimosso param dalla chiamata
-- **`pipeline.py` e le sue dipendenze dirette sono ora orfane** — niente nel flusso live o di test le chiama più
+- **`pipeline.py` e le sue dipendenze dirette non erano più chiamate dal flusso live o di test** — cleanup completato nei passaggi successivi
 
 **Opzione A ✓ (2026-03-22):**
 - `src/execution/update_planner.py`: rimosso `from src.parser.normalization import ParseResultNormalized`
 - Signature `build_update_plan` semplificata: `Mapping[str, Any]` (era `ParseResultNormalized | Mapping`)
 - Branch `isinstance(value, ParseResultNormalized)` rimosso da `_as_mapping()`
 - 393/393 test passano (382 profili/parser_test + 11 execution)
-- **Il cluster legacy (`pipeline.py`, `normalization.py`, ecc.) è ora privo di caller esterni** — pronto per batch DELETE
+- **Il cluster legacy (`pipeline.py`, `normalization.py`, ecc.) è stato poi rimosso dal percorso attivo**
 
-**Prossimo: Step 8-DELETE (batch)**
-Eliminare in un'unica operazione:
-```
+**Step 8-DELETE (batch) — completato**
+Eliminati nel cleanup:
+``` 
 src/parser/pipeline.py
 src/parser/normalization.py
 src/parser/dispatcher.py
@@ -225,8 +334,6 @@ src/parser/intent_classifier.py   (se presente)
 src/parser/prefix_normalizer.py   (se presente)
 src/parser/trader_profiles/ta_profile.py
 src/parser/trader_resolver.py
-src/parser/intent_action_map.py
-src/parser/trader_profiles/common_utils.py (se presente)
 ```
 
 ### trader_a (Step 7 — ✓ COMPLETO)
@@ -254,7 +361,7 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ## Conflitti architettura attuale vs nuova
 
-1. **Reply resolution ancora shallow** — Step 10 usa reply lookup, ma nei canali multi-trader serve ancestry transitiva: reply a reply a segnale. Questo è il principale gap residuo del Router.
+1. **Reply resolution transitiva implementata, ma non esaustiva in tutti i casi operativi** — il resolver ora risale la reply-chain con depth limit e loop protection. Il gap residuo riguarda i casi multi-trader dove il contesto storico nel DB è incompleto o ambiguo.
 
 2. **`parser_test` è allineato al formato parser corrente, ma non riproduce ancora tutto il lifecycle live** — ora passa `hashtags` e `extracted_links` al `ParserContext`, ma non valida l'intero comportamento runtime di `processing_status` / `review_queue`.
 
@@ -268,13 +375,13 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ## Rischi di regressione durante migrazione
 
-1. **pipeline.py legacy coesiste con nuova architettura** — durante la migrazione esistono entrambi. I profili migrati usano i nuovi modelli Pydantic, i profili non ancora migrati usano pipeline.py. Non mescolare mai i due path.
+1. **Ambiente di test non sempre allineato all'ambiente di progetto** — fuori dalla `.venv` i test possono fallire già in collection per dipendenze mancanti (es. `pydantic`). Valutare sempre lo stato con l'interprete del progetto.
 
-2. **Test esistenti** — i test in `trader_profiles/trader_a/tests/` sono legati alla vecchia architettura. Alcuni falliranno dopo la riscrittura del profilo — è atteso. Vanno aggiornati contestualmente alla migrazione del profilo.
+2. **Working tree non pulito su alcuni profili trader** — sono presenti modifiche locali in corso su `trader_c` e `trader_d`; il quadro documentale aggiornato riflette il ramo di lavoro corrente, ma non equivale a stato consolidato o pronto al commit.
 
 3. **parse_result_normalized_json** — il campo nel DB contiene output della vecchia architettura. Dopo la migrazione produrrà output del nuovo TraderParseResult. Il DB test è separato — nessun rischio sul DB live.
 
-4. **Registry.py** — aggiornare quando si migra ogni profilo per puntare alla nuova classe.
+4. **Configurazione live ancora incompleta** — `config/channels.yaml` esiste ma ha `channels: []`; il listener/router sono pronti, ma il sistema non è ancora configurato per seguire canali reali.
 
 5. **`schema_consigliato_finale_parser.csv` è staged per DELETE** — `canonical_schema.py` dipende da esso. Se sparisce senza un sostituto, `canonical_intents()` restituisce set vuoto e i test di `canonical_schema` potrebbero non rilevarsi. Verificare prima di committare.
 
@@ -313,9 +420,9 @@ Tutti i 100 test passano. Fix principali applicati:
 - I vecchi DOCS/ in `DOCS/` sono archivio storico — non seguire le istruzioni che contengono
 - `TRADE_STATE_MACHINE.md`, `RISK_ENGINE.md`, `BOT_COMMANDS.md` sono target design futuro — non implementare ora
 - Aggiorna questo file `AUDIT.md` quando completi ogni step
-- **Prima di qualsiasi sessione su trader_d**: il profilo è completamente rotto (37/37 fail). Non iniziare nessun lavoro su trader_d senza fixare prima il BUG CRITICO di signature.
+- `trader_d` risulta migrato e con suite dedicata presente; eventuali nuovi interventi vanno valutati sul working tree corrente, non sul vecchio stato pre-fix.
 - **`src/execution/` e `src/exchange/`** esistono ma non sono nel piano di sviluppo attuale. Non toccare.
 
 ---
 
-*Aggiornato: 2026-03-23 — Step 11: validazione coerenza (src/validation/coherence.py) — semantic check UPDATE, structural check per intent, integrato nel Router con validation_status nel JSON — 25 test, 612/612 totali. Fix collaterali: trader_3/parsing_rules.json (% loss marker ripristinato), trader_a/parsing_rules.json (trailing comma JSON).*
+*Aggiornato: 2026-03-24 — documentazione riallineata allo stato reale del repository: parser/listener/router/validation segnati come implementati, cleanup legacy parser recepito, `config/channels.yaml` marcato come esistente ma non ancora configurato per il live, rischi aggiornati su ambiente `.venv`, working tree attivo e gap residui Fase 4+.*

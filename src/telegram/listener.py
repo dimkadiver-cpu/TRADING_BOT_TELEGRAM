@@ -131,10 +131,8 @@ class TelegramListener:
         chat_ids_to_recover = [ch.chat_id for ch in active] if active else list(self._fallback_ids)
         for chat_id in chat_ids_to_recover:
             last_id = self._status_store.get_last_telegram_message_id(str(chat_id))
-            if last_id is None:
-                continue
             try:
-                messages = await client.get_messages(chat_id, min_id=last_id, limit=200)
+                messages = await client.get_messages(chat_id, min_id=last_id or 0, limit=200)
             except Exception:
                 self._logger.exception("recovery: failed to fetch messages | chat=%s", chat_id)
                 continue

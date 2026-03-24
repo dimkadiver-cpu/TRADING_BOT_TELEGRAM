@@ -36,7 +36,7 @@ Leggi docs/PRD_generale.md.
 Fai un audit del progetto:
 1. Mappa struttura cartelle esistente
 2. Classifica ogni file in src/parser/ come KEEP | REWRITE | DELETE | NEW
-3. Verifica quali test esistono e passano con: pytest src/parser/trader_profiles/ -v
+3. Verifica quali test esistono e passano con: .venv/Scripts/python.exe -m pytest src/parser/trader_profiles/ -v
 4. Identifica conflitti tra architettura attuale e nuova
 5. Aggiorna docs/AUDIT.md con stato aggiornato
 
@@ -211,10 +211,30 @@ skills/position-lifecycle/        → ciclo vita posizioni (Fase 5+)
 - **Non toccare legacy** — pipeline.py e normalization.py restano intatti durante migrazione
 - **Aggiorna AUDIT.md** — segna ogni step completato
 
+## Comandi test standard
+
+```bash
+# Smoke suite — controllo rapido (212 test, ~5s)
+.venv/Scripts/python.exe -m pytest \
+  src/parser/models/tests/ \
+  src/parser/tests/ \
+  src/telegram/tests/ \
+  src/validation/tests/ \
+  -q
+
+# Full suite — profili trader + harness
+.venv/Scripts/python.exe -m pytest \
+  src/parser/trader_profiles/ \
+  parser_test/tests/ \
+  src/execution/test_update_planner.py \
+  src/execution/test_update_applier.py \
+  -q
+```
+
 ## Fine sessione — checklist
 
 - [ ] obiettivo completato e testato
 - [ ] AUDIT.md aggiornato con step completato
 - [ ] handoff-trading-bot eseguita
 - [ ] nessun file legacy toccato
-- [ ] test passano: `pytest src/parser/trader_profiles/ -v`
+- [ ] smoke suite passa: `.venv/Scripts/python.exe -m pytest src/parser/models/tests/ src/parser/tests/ src/telegram/tests/ src/validation/tests/ -q`

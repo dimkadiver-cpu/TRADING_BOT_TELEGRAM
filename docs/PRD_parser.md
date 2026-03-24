@@ -6,7 +6,7 @@ Riprogettare il parser con architettura pulita a responsabilità singole, output
 
 ## Stato
 
-In corso — Fase 1. Priorità massima.
+Implementato nella sua base architetturale. Models Pydantic, RulesEngine, profili trader migrati e sistema di replay/report sono presenti; restano fuori da questo PRD i layer downstream (`operation rules`, `target resolver`, execution).
 
 ## Architettura interna parser
 
@@ -227,13 +227,10 @@ src/parser/trader_profiles/trader_3/parsing_rules.json  ← riscrivere
 src/parser/trader_profiles/trader_3/profile.py          ← riscrivere
 ```
 
-## File da NON toccare (legacy in produzione)
+## File legacy storici
 
 ```
-src/parser/pipeline.py       → elimina SOLO dopo migrazione completa
-src/parser/normalization.py  → elimina SOLO dopo migrazione completa
-src/parser/dispatcher.py     → legacy
-src/parser/scoring.py        → legacy
+Il cluster parser legacy (`pipeline.py`, `normalization.py`, `dispatcher.py`, `scoring.py`) risulta rimosso dal percorso attivo.
 ```
 
 ## Sistema test/debug
@@ -344,8 +341,7 @@ Ordine: trader_b → trader_c → trader_d → trader_a
 Per ogni profilo: riscrivere parsing_rules.json + profile.py, verificare test esistenti.
 
 ### Step 6 — Cleanup legacy
-Eliminare `pipeline.py`, `normalization.py`, `dispatcher.py`, `scoring.py`
-SOLO dopo che tutti i profili sono migrati e i test passano.
+Completato: il cluster parser legacy è stato rimosso dal percorso attivo dopo la migrazione dei profili.
 
 ## Note per Claude Code
 
@@ -353,4 +349,4 @@ SOLO dopo che tutti i profili sono migrati e i test passano.
 - **Non saltare step** — ogni step dipende dal precedente
 - **Leggi le skill** prima di iniziare: `pydantic-models`, `rules-engine`, `build-parser-profile`
 - **Trader 3 prima** — è il più semplice e diventa il riferimento
-- **Non toccare legacy** — `pipeline.py` e `normalization.py` devono continuare a funzionare durante la migrazione
+- **Nota stato attuale** — la migrazione parser è stata completata a livello di architettura di parsing; la priorità residua si sposta sui layer downstream e sulla stabilizzazione dell'ambiente di test/configurazione live.
