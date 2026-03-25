@@ -109,7 +109,7 @@ src/parser/trader_profiles/trader_b_da_contollare_/ → cartella eliminata (non 
   src/parser/report_market_entry_none.py    → script di debug ad-hoc (da eliminare)
   src/parser/trader_profiles/trader_b/parsing_rules copy.json → copia di backup (da eliminare)
   src/parser/trader_profiles/trader_d/parsing_rules copy.json → copia di backup (da eliminare)
-  src/parser/trader_profiles/trader_b_da_contollare_/ → cartella WIP non integrata, valutare
+  
 ```
 
 **Nota Step 8-DELETE:** `common_utils.py` e `intent_action_map.py` erano stati inclusi
