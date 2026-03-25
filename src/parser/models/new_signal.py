@@ -15,9 +15,9 @@ Usage:
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Literal, Self
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 from src.parser.models.canonical import Price
 
@@ -114,10 +114,32 @@ class NewSignalEntities(BaseModel):
     conditions: str | None = None
     """Free-text entry conditions not otherwise parsed, e.g. "wait for confirmation"."""
 
+    warnings: list[str] = []
+    """Warnings produced during validation. Caller should merge into TraderParseResult.warnings."""
+
     @field_validator("symbol", mode="before")
     @classmethod
     def _normalise_symbol(cls, v: str | None) -> str | None:
         return v.upper().strip() if v is not None else None
+
+    @model_validator(mode="after")
+    def check_entry_magnitude_consistency(self) -> Self:
+        """Se ci sono 2+ entries, il rapporto max/min non deve superare 3x.
+
+        Non blocca il parsing. Aggiunge un warning alla lista warnings del modello.
+        Solo entries — non tocca TP e SL.
+        """
+        if len(self.entries) < 2:
+            return self
+        prices = [e.price.value for e in self.entries if e.price is not None]
+        if len(prices) < 2:
+            return self
+        ratio = max(prices) / min(prices)
+        if ratio > 3.0:
+            self.warnings.append(
+                f"entry_magnitude_inconsistent: ratio={ratio:.1f}"
+            )
+        return self
 
 
 # ---------------------------------------------------------------------------
