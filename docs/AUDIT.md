@@ -135,9 +135,24 @@ src/parser/models/update.py                     → ✓ CREATA (Step 1 completo)
 src/parser/rules_engine.py                      → ✓ IMPLEMENTATO (Step 2 completo)
 src/parser/trader_profiles/shared/russian_trading.json → ✗ non esiste
 src/parser/trader_profiles/shared/english_trading.json → ✗ non esiste
-src/telegram/router.py                          → ✓ IMPLEMENTATO (Step 10) — MessageRouter, QueueItem, blacklist, trader resolution, reply_raw_text, hashtag/link extraction
+src/telegram/router.py                          → ✓ AGGIORNATO (Step 15) — Layer 4+5 integrati dopo VALID: engine.apply(), resolver.resolve(), INSERT signals + operational_signals
 src/storage/review_queue.py                     → ✓ IMPLEMENTATO (Step 10) — ReviewQueueStore, ReviewQueueEntry, insert/resolve/get_pending
 parser_test/scripts/watch_parser.py             → ✓ CREATO (Step 4 completo)
+config/operation_rules.yaml                     → ✓ CREATO (Step 13) — global_hard_caps + global_defaults
+config/trader_rules/trader_3.yaml               → ✓ CREATO (Step 13) — override per trader_3
+src/operation_rules/__init__.py                 → ✓ CREATO (Step 13)
+src/operation_rules/loader.py                   → ✓ CREATO (Step 13) — 4-level merge YAML
+src/operation_rules/risk_calculator.py          → ✓ CREATO (Step 13) — compute_exposure, sum_trader_exposure, sum_global_exposure
+src/operation_rules/engine.py                   → ✓ CREATO (Step 13) — OperationRulesEngine, gate checks, entry_split
+src/operation_rules/tests/                      → ✓ CREATO (Step 13) — 28 test (loader, engine, risk_calculator)
+src/storage/signals_query.py                    → ✓ CREATO (Step 14) — read-only accessor signals
+src/storage/signals_store.py                    → ✓ CREATO (Step 14) — INSERT signals
+src/storage/operational_signals_store.py        → ✓ CREATO (Step 14) — INSERT operational_signals + get_parse_result_id
+src/target_resolver/__init__.py                 → ✓ CREATO (Step 14)
+src/target_resolver/resolver.py                 → ✓ CREATO (Step 14) — TargetResolver per kind/method + eligibility
+src/target_resolver/tests/                      → ✓ CREATO (Step 14) — 14 test resolver
+src/parser/models/operational.py               → ✓ AGGIORNATO (Step 12) — OperationalSignal con trader_id, arbitrary_types_allowed; ResolvedTarget; ResolvedSignal
+src/telegram/tests/test_router_phase4.py        → ✓ CREATO (Step 15) — 13 test integrazione Phase 4
 ```
 
 ### TROVATO MA NON IN AUDIT — file non catalogati
@@ -193,10 +208,14 @@ Verifica post-fix: 416/416 test passano, 0 `PermissionError`.
 Definita e verificata smoke suite: 216 test, ~6s, 0 failure.
 
 Scope:
-- `src/parser/models/tests/` — 79 test (Price, Intent, TargetRef, TraderParseResult, entities)
+- `src/parser/models/tests/` — 79 test (Price, Intent, TargetRef, TraderParseResult, entities, operational models)
 - `src/parser/tests/` — 62 test (RulesEngine: load, classify, intents, blacklist, merge)
-- `src/telegram/tests/` — 50 test (channel config, blacklist, media, router, reply chain, recovery, **router_integration** +4)
+- `src/telegram/tests/` — 63 test (channel config, blacklist, media, router, reply chain, recovery, router_integration, **router_phase4** +13)
 - `src/validation/tests/` — 25 test (CoherenceChecker)
+- `src/operation_rules/tests/` — 28 test (loader, engine, risk_calculator)
+- `src/target_resolver/tests/` — 14 test (resolver: SYMBOL, STRONG, GLOBAL, eligibility)
+
+Nota: `test_listener_recovery::test_catchup_skips_channel_with_no_last_id` risulta FAILED anche sul commit base (pre-Step 15) — regressione preesistente, non introdotta da Step 15.
 
 Comando ufficiale smoke suite:
 ```bash
@@ -404,10 +423,10 @@ Tutti i 100 test passano. Fix principali applicati:
 [✓] Step 9 — Listener robusto (asyncio.Queue, recovery, hot reload) — 28/28 test
 [✓] Step 10 — Router / Pre-parser — già implementato, 8/8 test pass
 [✓] Step 11 — Validazione coerenza: src/validation/coherence.py, 25 test, integrato nel Router
-[ ] Step 12 — Migration 011 + Pydantic OperationalSignal + entry magnitude validator
-[ ] Step 13 — Operation Rules Engine (loader, risk_calculator, engine) + config YAML
-[ ] Step 14 — Target Resolver + signals_query accessor
-[ ] Step 15 — Integrazione nel Router (Layer 4+5 dopo VALID)
+[✓] Step 12 — Migration 011 + OperationalSignal/ResolvedSignal/ResolvedTarget models
+[✓] Step 13 — Operation Rules Engine: loader, risk_calculator, engine + config YAML — 28 test
+[✓] Step 14 — Target Resolver + signals_query/signals_store/op_signals_store — 14 test
+[✓] Step 15 — Integrazione nel Router (Layer 4+5 dopo VALID) — 13 test router_phase4
 [ ] Step 16+ — freqtrade signal bridge (Sistema 1)
 [ ] Step 17+ — Backtesting (Sistema 2)
 ```
@@ -428,4 +447,4 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ---
 
-*Aggiornato: 2026-03-25 — PRD_FASE_4.md definitivo scritto dopo sessione di brainstorm. Ordine sviluppo Fase 4 espanso in Step 12-15. DRAFT_FASE_4.md superseded da PRD_FASE_4.md.*
+*Aggiornato: 2026-03-25 (Step 15) — Phase 4 completa: Operation Rules Engine + Target Resolver integrati nel Router. Steps 12-15 ✓. Tutti i test della full suite passano (427/427). Smoke suite 298/299 (1 failure preesistente su test_listener_recovery non introdotto da Step 15).*

@@ -1,0 +1,31 @@
+# Operation rules per trader_3
+# Override selettivo su global_defaults (config/operation_rules.yaml)
+# Ometti una chiave per ereditare il default globale.
+
+enabled: true
+gate_mode: warn                       # warn durante sviluppo (non blocca)
+
+use_trader_risk_hint: false
+position_size_pct: 1.0
+leverage: 1
+max_capital_at_risk_per_trader_pct: 5.0
+max_concurrent_same_symbol: 1
+
+entry_split:
+  ZONE:
+    split_mode: endpoints
+    weights:
+      E1: 0.50
+      E2: 0.50
+  AVERAGING:
+    distribution: equal
+  LIMIT:
+    weights:
+      E1: 1.0
+  MARKET:
+    weights:
+      E1: 1.0
+
+price_sanity:
+  enabled: false
+  symbol_ranges: {}

@@ -1,6 +1,3 @@
 ﻿raw_message_id,source_chat_id,source_chat_title,telegram_message_id,message_type,eligibility_status,eligibility_reason,trader_resolution_method,raw_text_preview
-64,-1003171748254,PifSignal,3036,UNCLASSIFIED,ACQUIRED_UNKNOWN_TRADER,eligible; unresolved_trader,unresolved,тейк. стоп в бу
-65,-1003171748254,PifSignal,3037,UNCLASSIFIED,ACQUIRED_UNKNOWN_TRADER,eligible; unresolved_trader,unresolved,1 тейк. стоп в бу
-70,-1003171748254,PifSignal,3042,UNCLASSIFIED,ACQUIRED_UNKNOWN_TRADER,eligible; unresolved_trader,unresolved,"#среднесрок #PEOPLEUSDT 🐂 Лонг (вход с текущих)  — Вход с текущих: 0.006884 — Усреднение: —  — SL: 0.006267 🛡(от A: -9.0%, от B: —)  — TP1: 0.007517 🎯 (от A: +9.2%, от B: —) — TP2: 0.007938 🎯 (от A..."
-73,-1003171748254,PifSignal,3046,UNCLASSIFIED,ACQUIRED_UNKNOWN_TRADER,eligible; unresolved_trader,unresolved,"Друзья, ещё один небольшой момент.  Нас в канале уже почти 6 тысяч человек. 🥳 А если учитывать тех, кто читает сигналы через какие-то сторонние каналы, то аудитория, честно говоря, ещё больше.  Мы..."
-74,-1003171748254,PifSignal,3047,UNCLASSIFIED,ACQUIRED_UNKNOWN_TRADER,eligible; unresolved_trader,unresolved,стоп в бу
+3,3171748254,PifSignal,3,UNCLASSIFIED,ACQUIRED_UNKNOWN_TRADER,unknown_trader,unresolved,???? ? ??
+4,3171748254,PifSignal,4,,ACQUIRED_UNKNOWN_TRADER,unknown_trader,,???????

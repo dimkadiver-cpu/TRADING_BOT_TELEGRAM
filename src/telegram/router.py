@@ -7,13 +7,22 @@ from datetime import datetime, timezone
 import json
 import logging
 import re
+from typing import Any
 
+from src.operation_rules.engine import OperationRulesEngine
+from src.parser.models.operational import OperationalSignal, ResolvedTarget
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.registry import get_profile_parser
+from src.storage.operational_signals_store import (
+    OperationalSignalRecord,
+    OperationalSignalsStore,
+)
 from src.storage.parse_results import ParseResultRecord, ParseResultStore
 from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.storage.review_queue import ReviewQueueStore
+from src.storage.signals_store import SignalRecord, SignalsStore
+from src.target_resolver.resolver import TargetResolver
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.effective_trader import (
     EffectiveTraderContext,
@@ -27,6 +36,8 @@ _SIGNAL_ID_RE = re.compile(r"\bSIGNAL\s*ID\s*:\s*#?\s*(?P<id>\d+)\b", re.IGNOREC
 _HTTP_LINK_RE = re.compile(r"https?://[^\s]+", re.IGNORECASE)
 _TELEGRAM_LINK_RE = re.compile(r"\bt\.me/[^\s]+", re.IGNORECASE)
 _HASHTAG_RE = re.compile(r"(?<!\w)(#[A-Za-z0-9_]+)")
+
+_ENV_DEFAULT = "T"
 
 
 @dataclass(slots=True)
@@ -66,6 +77,12 @@ class MessageRouter:
         raw_message_store: RawMessageStore,
         logger: logging.Logger,
         channels_config: ChannelsConfig,
+        # Layer 4+5 — optional; if None, Phase 4 pipeline is skipped
+        db_path: str | None = None,
+        operation_rules_engine: OperationRulesEngine | None = None,
+        target_resolver: TargetResolver | None = None,
+        signals_store: SignalsStore | None = None,
+        operational_signals_store: OperationalSignalsStore | None = None,
     ) -> None:
         self._trader_resolver = effective_trader_resolver
         self._eligibility = eligibility_evaluator
@@ -75,6 +92,13 @@ class MessageRouter:
         self._raw_store = raw_message_store
         self._logger = logger
         self._config = channels_config
+
+        # Layer 4+5
+        self._db_path = db_path
+        self._engine = operation_rules_engine
+        self._resolver = target_resolver
+        self._signals_store = signals_store
+        self._op_signals_store = operational_signals_store
 
     def update_config(self, new_config: ChannelsConfig) -> None:
         self._config = new_config
@@ -196,6 +220,16 @@ class MessageRouter:
             now_ts=now_ts,
         )
         self._parse_results.upsert(parse_record)
+
+        # ── Layer 4+5 — only when validation is VALID and all stores wired ──
+        if validation.status == "VALID" and self._engine is not None and self._db_path is not None:
+            self._apply_phase4(
+                item=item,
+                result=result,
+                trader_id=trader_resolution.trader_id,
+                now_ts=now_ts,
+            )
+
         self._status_store.update(item.raw_message_id, "done")
         self._logger.info(
             "parse result persisted | raw_message_id=%s type=%s executable=%s validation=%s mode=%s",
@@ -205,6 +239,89 @@ class MessageRouter:
             validation.status,
             item.acquisition_mode,
         )
+
+    # ------------------------------------------------------------------
+    # Phase 4 integration
+    # ------------------------------------------------------------------
+
+    def _apply_phase4(
+        self,
+        *,
+        item: QueueItem,
+        result: TraderParseResult,
+        trader_id: str,
+        now_ts: str,
+    ) -> None:
+        """Apply operation rules + target resolver and persist output."""
+        assert self._engine is not None
+        assert self._db_path is not None
+
+        db_path = self._db_path
+
+        # Step 1 — Apply operation rules
+        op_signal = self._engine.apply(result, trader_id, db_path=db_path)
+
+        # Step 2 — If NEW_SIGNAL and not blocked: INSERT into signals
+        attempt_key: str | None = None
+        if result.message_type == "NEW_SIGNAL" and not op_signal.is_blocked:
+            attempt_key = _build_attempt_key(
+                env=_ENV_DEFAULT,
+                channel_id=item.source_chat_id,
+                telegram_msg_id=item.telegram_message_id,
+                trader_id=trader_id,
+            )
+            signal_rec = _build_signal_record(
+                op_signal=op_signal,
+                attempt_key=attempt_key,
+                item=item,
+                trader_id=trader_id,
+                now_ts=now_ts,
+            )
+            if self._signals_store is not None:
+                self._signals_store.insert(signal_rec)
+
+        # Step 3 — Resolve target
+        resolved: ResolvedTarget | None = None
+        if self._resolver is not None:
+            resolved = self._resolver.resolve(op_signal, db_path=db_path)
+
+        # Step 4 — INSERT into operational_signals
+        parse_result_id = None
+        if self._op_signals_store is not None:
+            parse_result_id = self._op_signals_store.get_parse_result_id(item.raw_message_id)
+            if parse_result_id is not None:
+                op_rec = _build_op_signal_record(
+                    op_signal=op_signal,
+                    parse_result_id=parse_result_id,
+                    attempt_key=attempt_key,
+                    trader_id=trader_id,
+                    resolved=resolved,
+                    now_ts=now_ts,
+                )
+                op_signal_id = self._op_signals_store.insert(op_rec)
+                self._logger.debug(
+                    "operational_signal persisted | op_signal_id=%s attempt_key=%s is_blocked=%s"
+                    " target_eligibility=%s",
+                    op_signal_id,
+                    attempt_key,
+                    op_signal.is_blocked,
+                    op_rec.target_eligibility,
+                )
+
+        self._logger.info(
+            "phase4 complete | raw_message_id=%s type=%s is_blocked=%s block_reason=%s"
+            " attempt_key=%s target_eligibility=%s",
+            item.raw_message_id,
+            result.message_type,
+            op_signal.is_blocked,
+            op_signal.block_reason,
+            attempt_key,
+            resolved.eligibility if resolved else None,
+        )
+
+    # ------------------------------------------------------------------
+    # Existing helpers
+    # ------------------------------------------------------------------
 
     def _resolve_trader(self, item: QueueItem) -> EffectiveTraderResult:
         trader_resolution = self._trader_resolver.resolve(
@@ -255,6 +372,197 @@ class MessageRouter:
             resolved_trader_id=trader_code,
             signal_id=signal_id,
         )
+
+
+# ---------------------------------------------------------------------------
+# Phase 4 builders
+# ---------------------------------------------------------------------------
+
+
+def _build_attempt_key(
+    *,
+    env: str,
+    channel_id: str,
+    telegram_msg_id: int,
+    trader_id: str,
+) -> str:
+    return f"{env}_{channel_id}_{telegram_msg_id}_{trader_id}"
+
+
+def _build_signal_record(
+    *,
+    op_signal: OperationalSignal,
+    attempt_key: str,
+    item: QueueItem,
+    trader_id: str,
+    now_ts: str,
+) -> SignalRecord:
+    entities: dict[str, Any] = (
+        op_signal.parse_result.entities
+        if isinstance(op_signal.parse_result.entities, dict)
+        else {}
+    )
+    symbol = str(entities.get("symbol") or "").strip().upper() or None
+    side = str(entities.get("side") or entities.get("direction") or "").strip().upper() or None
+
+    # Build entry_json from entry_split weights and extracted prices
+    entry_prices = _extract_entry_prices_from_entities(entities)
+    entry_json = json.dumps(
+        [{"price": p, "type": "LIMIT"} for p in entry_prices] or [{"price": None, "type": "MARKET"}]
+    )
+
+    # SL
+    sl = _extract_sl_float(entities)
+
+    # TP list
+    tp_prices = _extract_tp_prices(entities)
+    tp_json = json.dumps([{"price": p} for p in tp_prices])
+
+    return SignalRecord(
+        attempt_key=attempt_key,
+        env=_ENV_DEFAULT,
+        channel_id=item.source_chat_id,
+        root_telegram_id=str(item.telegram_message_id),
+        trader_id=trader_id,
+        trader_prefix=trader_id.upper()[:4],
+        symbol=symbol,
+        side=side,
+        entry_json=entry_json,
+        sl=sl,
+        tp_json=tp_json,
+        status="PENDING",
+        confidence=op_signal.parse_result.confidence,
+        raw_text=item.raw_text,
+        created_at=now_ts,
+        updated_at=now_ts,
+    )
+
+
+def _build_op_signal_record(
+    *,
+    op_signal: OperationalSignal,
+    parse_result_id: int,
+    attempt_key: str | None,
+    trader_id: str,
+    resolved: ResolvedTarget | None,
+    now_ts: str,
+) -> OperationalSignalRecord:
+    return OperationalSignalRecord(
+        parse_result_id=parse_result_id,
+        attempt_key=attempt_key,
+        trader_id=trader_id,
+        message_type=op_signal.parse_result.message_type,
+        is_blocked=op_signal.is_blocked,
+        block_reason=op_signal.block_reason,
+        position_size_pct=op_signal.position_size_pct,
+        position_size_usdt=op_signal.position_size_usdt,
+        entry_split_json=json.dumps(op_signal.entry_split) if op_signal.entry_split else None,
+        leverage=op_signal.leverage,
+        risk_hint_used=op_signal.risk_hint_used,
+        management_rules_json=(
+            json.dumps(op_signal.management_rules) if op_signal.management_rules else None
+        ),
+        price_corrections_json=None,
+        applied_rules_json=json.dumps(op_signal.applied_rules),
+        warnings_json=json.dumps(op_signal.warnings) if op_signal.warnings else None,
+        resolved_target_ids=(
+            json.dumps(resolved.position_ids) if resolved is not None else None
+        ),
+        target_eligibility=resolved.eligibility if resolved is not None else None,
+        target_reason=resolved.reason if resolved is not None else None,
+        created_at=now_ts,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Entity extraction helpers (best-effort, used for signal INSERT)
+# ---------------------------------------------------------------------------
+
+_NUMBER_RE = re.compile(r"[\d]+(?:[.,][\d]+)?")
+
+
+def _parse_first_float(s: str | None) -> float | None:
+    if not s:
+        return None
+    cleaned = str(s).replace(" ", "").replace("\xa0", "")
+    match = _NUMBER_RE.search(cleaned)
+    if not match:
+        return None
+    try:
+        return float(match.group(0).replace(",", "."))
+    except ValueError:
+        return None
+
+
+def _parse_all_floats(s: str | None) -> list[float]:
+    if not s:
+        return []
+    cleaned = str(s).replace(" ", "").replace("\xa0", "")
+    results: list[float] = []
+    for m in _NUMBER_RE.finditer(cleaned):
+        try:
+            results.append(float(m.group(0).replace(",", ".")))
+        except ValueError:
+            pass
+    return results
+
+
+def _extract_entry_prices_from_entities(entities: dict[str, Any]) -> list[float]:
+    entries_raw = entities.get("entries")
+    if isinstance(entries_raw, list) and entries_raw:
+        prices: list[float] = []
+        for e in entries_raw:
+            if isinstance(e, dict):
+                p = e.get("price")
+                if p is not None:
+                    try:
+                        prices.append(float(p))
+                    except (TypeError, ValueError):
+                        pass
+            elif isinstance(e, (int, float)):
+                prices.append(float(e))
+        if prices:
+            return prices
+    entry_raw = entities.get("entry_raw") or entities.get("entry")
+    return _parse_all_floats(str(entry_raw) if entry_raw is not None else None)
+
+
+def _extract_sl_float(entities: dict[str, Any]) -> float | None:
+    sl_obj = entities.get("stop_loss") or entities.get("sl")
+    if isinstance(sl_obj, dict):
+        p = sl_obj.get("price") or sl_obj.get("value")
+        if p is not None:
+            try:
+                return float(p)
+            except (TypeError, ValueError):
+                pass
+    stop_raw = entities.get("stop_raw") or entities.get("stop")
+    return _parse_first_float(str(stop_raw) if stop_raw is not None else None)
+
+
+def _extract_tp_prices(entities: dict[str, Any]) -> list[float]:
+    tps = entities.get("take_profits") or entities.get("tp") or entities.get("targets")
+    if isinstance(tps, list):
+        prices: list[float] = []
+        for t in tps:
+            if isinstance(t, dict):
+                p = t.get("price") or t.get("value")
+                if p is not None:
+                    try:
+                        prices.append(float(p))
+                    except (TypeError, ValueError):
+                        pass
+            elif isinstance(t, (int, float)):
+                prices.append(float(t))
+        if prices:
+            return prices
+    tp_raw = entities.get("target_raw") or entities.get("tp_raw")
+    return _parse_all_floats(str(tp_raw) if tp_raw is not None else None)
+
+
+# ---------------------------------------------------------------------------
+# Existing utility functions (unchanged)
+# ---------------------------------------------------------------------------
 
 
 def _safe_int(value: str | None) -> int | None:
