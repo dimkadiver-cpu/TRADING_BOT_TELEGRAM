@@ -1,0 +1,41 @@
+# config/trader_rules/trader_3.yaml
+# Override per trader_3. Valori operativi reali da definire con l'utente.
+# Per ora: global_defaults come base con gate_mode: warn per sicurezza in test.
+
+enabled: true
+gate_mode: warn                        # warn durante sviluppo/test; portare a block in prod
+
+use_trader_risk_hint: false
+position_size_pct: 1.0                 # placeholder — da definire con l'utente
+leverage: 1                            # placeholder — da definire con l'utente
+max_capital_at_risk_per_trader_pct: 5.0
+max_concurrent_same_symbol: 1
+
+entry_split:
+  ZONE:
+    split_mode: endpoints
+    weights: {E1: 0.50, E2: 0.50}
+  AVERAGING:
+    distribution: equal
+  LIMIT:
+    weights: {E1: 1.0}
+  MARKET:
+    weights: {E1: 1.0}
+
+price_sanity:
+  enabled: false
+  symbol_ranges: {}
+
+position_management:
+  on_tp_hit:
+    - {tp_level: 1, action: close_partial, close_pct: 50}
+    - {tp_level: 2, action: move_to_be}
+    - {tp_level: 3, action: close_full}
+  auto_apply_intents:
+    - U_MOVE_STOP
+    - U_CLOSE_FULL
+    - U_CLOSE_PARTIAL
+    - U_CANCEL_PENDING
+  log_only_intents:
+    - U_TP_HIT
+    - U_SL_HIT
