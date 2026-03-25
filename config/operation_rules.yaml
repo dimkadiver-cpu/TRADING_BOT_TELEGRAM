@@ -5,29 +5,36 @@
 
 # ── Hard caps globali (non overridabili) ─────────────────────────────────────
 global_hard_caps:
-  max_capital_at_risk_pct: 10.0       # % portfolio totale su tutti i trader
-  max_per_signal_pct: 2.0             # cap esposizione per singolo segnale
+  max_capital_at_risk_pct: 10.0           # % portfolio totale su tutti i trader
+  hard_max_per_signal_risk_pct: 2.0       # rischio massimo per singolo segnale (% capitale)
 
 # ── Defaults per trader (overridabili in config/trader_rules/) ────────────────
 global_defaults:
   enabled: true
-  gate_mode: block                    # block | warn
+  gate_mode: block                        # block | warn
 
-  # Set A — apertura posizione
-  use_trader_risk_hint: false         # usa risk_hint estratto dal parser
-  position_size_pct: 1.0             # % portfolio per posizione
+  # ── Modello rischio — Set A ──────────────────────────────────────────────
+  # Il centro del sistema è il rischio massimo accettato, non la size.
+  # La size viene calcolata dal sistema in base a: entry, stop loss, leva.
+  risk_mode: risk_pct_of_capital          # risk_pct_of_capital | risk_usdt_fixed
+  risk_pct_of_capital: 1.0               # % capitale che puoi perdere su un singolo trade
+  risk_usdt_fixed: 10.0                  # perdita massima fissa (USDT) se risk_mode=risk_usdt_fixed
+  capital_base_mode: static_config        # static_config | live_equity (live = Fase 5)
+  capital_base_usdt: 1000.0              # capitale di riferimento (se static_config)
+
+  use_trader_risk_hint: false             # usa risk_hint estratto dal parser
   leverage: 1
   max_capital_at_risk_per_trader_pct: 5.0
   max_concurrent_same_symbol: 1
 
   entry_split:
     ZONE:
-      split_mode: endpoints           # endpoints | midpoint | three_way
+      split_mode: endpoints             # endpoints | midpoint | three_way
       weights:
         E1: 0.50
         E2: 0.50
     AVERAGING:
-      distribution: equal             # equal | decreasing
+      distribution: equal               # equal | decreasing
     LIMIT:
       weights:
         E1: 1.0
@@ -38,19 +45,25 @@ global_defaults:
   # Price corrections hook (implementazione futura)
   price_corrections:
     enabled: false
-    method: null                      # "number_theory" | "round_to_tick" | null
+    method: null                        # "number_theory" | "round_to_tick" | null
 
   # Range statici per sanity check (opzionale, senza dati live)
   price_sanity:
     enabled: false
     symbol_ranges: {}
 
-  # Set B — snapshot regole gestione posizione (letto da Sistema 1)
+  # ── Gestione TP ─────────────────────────────────────────────────────────
+  tp_handling:
+    tp_handling_mode: follow_all_signal_tps   # follow_all_signal_tps | limit_to_max_levels
+    max_tp_levels: 4                           # usato solo se limit_to_max_levels
+    tp_close_distribution:                     # tabelle separate per numero di TP
+      2: [50, 50]
+      3: [30, 30, 40]
+      4: [25, 25, 25, 25]
+      # fallback: distribuzione uguale se numero TP non in tabella
+
+  # ── Set B — snapshot regole gestione posizione (letto da Sistema 1) ─────
   position_management:
-    on_tp_hit:
-      - {tp_level: 1, action: close_partial, close_pct: 50}
-      - {tp_level: 2, action: move_to_be}
-      - {tp_level: 3, action: close_full}
     auto_apply_intents:               # UPDATE intents che Sistema 1 esegue automaticamente
       - U_MOVE_STOP
       - U_CLOSE_FULL

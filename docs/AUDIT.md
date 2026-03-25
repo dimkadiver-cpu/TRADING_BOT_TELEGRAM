@@ -138,16 +138,18 @@ src/parser/trader_profiles/shared/english_trading.json → ✗ non esiste
 src/telegram/router.py                          → ✓ AGGIORNATO (Step 15) — Layer 4+5 integrati dopo VALID: engine.apply(), resolver.resolve(), INSERT signals + operational_signals
 src/storage/review_queue.py                     → ✓ IMPLEMENTATO (Step 10) — ReviewQueueStore, ReviewQueueEntry, insert/resolve/get_pending
 parser_test/scripts/watch_parser.py             → ✓ CREATO (Step 4 completo)
-config/operation_rules.yaml                     → ✓ CREATO (Step 13) — global_hard_caps + global_defaults
-config/trader_rules/trader_3.yaml               → ✓ CREATO (Step 13) — override per trader_3
+config/operation_rules.yaml                     → ✓ AGGIORNATO (Step 13+align) — risk-first model: risk_mode, risk_pct_of_capital, capital_base_usdt, tp_handling; rinominato max_per_signal_pct → hard_max_per_signal_risk_pct
+config/trader_rules/trader_3.yaml               → ✓ AGGIORNATO (Step 13+align) — usa nuovi campi rischio
 src/operation_rules/__init__.py                 → ✓ CREATO (Step 13)
-src/operation_rules/loader.py                   → ✓ CREATO (Step 13) — 4-level merge YAML
-src/operation_rules/risk_calculator.py          → ✓ CREATO (Step 13) — compute_exposure, sum_trader_exposure, sum_global_exposure
-src/operation_rules/engine.py                   → ✓ CREATO (Step 13) — OperationRulesEngine, gate checks, entry_split
-src/operation_rules/tests/                      → ✓ CREATO (Step 13) — 28 test (loader, engine, risk_calculator)
+src/operation_rules/loader.py                   → ✓ AGGIORNATO (align) — HardCaps.hard_max_per_signal_risk_pct; EffectiveRules: risk_mode, risk_pct_of_capital, risk_usdt_fixed, capital_base_mode, capital_base_usdt, tp_handling
+src/operation_rules/risk_calculator.py          → ✓ AGGIORNATO (align) — compute_risk_pct, compute_risk_budget_usdt, compute_position_size_from_risk; DB queries leggono risk_budget_usdt/capital_base_usdt
+src/operation_rules/engine.py                   → ✓ AGGIORNATO (align) — nuovi gate hard-block (missing_entry, missing_stop_loss, zero_sl_distance, invalid_leverage); size calcolata da rischio; nuovi campi OperationalSignal
+src/operation_rules/tests/                      → ✓ AGGIORNATO (align) — 45 test passano (era 28)
 src/storage/signals_query.py                    → ✓ CREATO (Step 14) — read-only accessor signals
 src/storage/signals_store.py                    → ✓ CREATO (Step 14) — INSERT signals
-src/storage/operational_signals_store.py        → ✓ CREATO (Step 14) — INSERT operational_signals + get_parse_result_id
+src/storage/operational_signals_store.py        → ✓ AGGIORNATO (align) — OperationalSignalRecord e INSERT con nuovi campi risk-first
+src/parser/models/operational.py               → ✓ AGGIORNATO (align) — OperationalSignal: +risk_mode, +risk_pct_of_capital, +risk_usdt_fixed, +capital_base_usdt, +risk_budget_usdt, +sl_distance_pct; position_size_usdt/pct ora derivati
+db/migrations/012_operational_signals_risk.sql  → ✓ CREATO (align) — ALTER TABLE: 6 nuove colonne risk-first
 src/target_resolver/__init__.py                 → ✓ CREATO (Step 14)
 src/target_resolver/resolver.py                 → ✓ CREATO (Step 14) — TargetResolver per kind/method + eligibility
 src/target_resolver/tests/                      → ✓ CREATO (Step 14) — 14 test resolver

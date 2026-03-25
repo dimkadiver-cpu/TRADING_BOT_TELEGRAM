@@ -1,46 +1,92 @@
 """Risk exposure calculations for Layer 4 — Operation Rules Engine.
 
-All exposure values are expressed as a percentage of total portfolio capital.
+Modello risk-first: il centro del sistema è il rischio massimo accettato,
+non la size della posizione.
+
+Tutte le esposizioni sono espresse come percentuale del capitale.
 
 Usage:
     from src.operation_rules.risk_calculator import (
-        compute_exposure,
+        compute_risk_pct,
+        compute_position_size_from_risk,
         sum_trader_exposure,
         sum_global_exposure,
+        count_open_same_symbol,
     )
 """
 
 from __future__ import annotations
 
-import json
 import sqlite3
-from typing import Any
 
 
 # ---------------------------------------------------------------------------
-# Exposure computation for a new signal
+# Risk % computation for a new signal
 # ---------------------------------------------------------------------------
 
 
-def compute_exposure(
-    entry_prices: list[float],
-    sl_price: float | None,
-    position_size_pct: float,
-    leverage: int,
+def compute_risk_pct(
+    risk_mode: str,
+    risk_pct_of_capital: float,
+    risk_usdt_fixed: float,
+    capital_base_usdt: float,
 ) -> float:
-    """Compute the % portfolio at risk for a single signal.
+    """Return the % of capital at risk for a new signal.
 
-    Formula: position_size_pct × (|avg_entry - SL| / avg_entry) × leverage
-
-    Returns 0.0 if data is insufficient (conservative — won't trigger cap blocks).
+    With risk_pct_of_capital mode the result is simply risk_pct_of_capital.
+    With risk_usdt_fixed mode the result is risk_usdt_fixed / capital_base * 100.
+    Returns 0.0 if capital_base_usdt <= 0 in fixed mode.
     """
-    if not entry_prices or sl_price is None or sl_price <= 0:
-        return 0.0
+    if risk_mode == "risk_usdt_fixed":
+        if capital_base_usdt <= 0:
+            return 0.0
+        return risk_usdt_fixed / capital_base_usdt * 100.0
+    # default: risk_pct_of_capital
+    return float(risk_pct_of_capital)
+
+
+def compute_risk_budget_usdt(
+    risk_mode: str,
+    risk_pct_of_capital: float,
+    risk_usdt_fixed: float,
+    capital_base_usdt: float,
+) -> float:
+    """Return the risk budget in USDT for a new signal."""
+    if risk_mode == "risk_usdt_fixed":
+        return float(risk_usdt_fixed)
+    return capital_base_usdt * risk_pct_of_capital / 100.0
+
+
+# ---------------------------------------------------------------------------
+# Position size calculation
+# ---------------------------------------------------------------------------
+
+
+def compute_position_size_from_risk(
+    entry_prices: list[float],
+    sl_price: float,
+    risk_budget_usdt: float,
+    leverage: int,
+    capital_base_usdt: float,
+) -> tuple[float, float, float]:
+    """Compute position size from risk budget.
+
+    Returns (position_size_usdt, position_size_pct, sl_distance_pct).
+
+    Raises:
+        ValueError: if sl_distance is zero or leverage <= 0.
+    """
     avg_entry = sum(entry_prices) / len(entry_prices)
-    if avg_entry <= 0:
-        return 0.0
     sl_distance_pct = abs(avg_entry - sl_price) / avg_entry
-    return position_size_pct * sl_distance_pct * leverage
+    if sl_distance_pct == 0.0:
+        raise ValueError("sl_distance_pct is zero — cannot compute position size")
+    if leverage <= 0:
+        raise ValueError(f"leverage must be > 0, got {leverage}")
+    position_size_usdt = risk_budget_usdt / (sl_distance_pct * leverage)
+    position_size_pct = (
+        (position_size_usdt / capital_base_usdt * 100.0) if capital_base_usdt > 0 else 0.0
+    )
+    return position_size_usdt, position_size_pct, sl_distance_pct
 
 
 # ---------------------------------------------------------------------------
@@ -48,86 +94,49 @@ def compute_exposure(
 # ---------------------------------------------------------------------------
 
 
-def _signal_exposure_from_row(
-    entry_json: str | None,
-    sl: float | None,
-    position_size_pct: float | None,
-    leverage: int | None,
-) -> float:
-    """Compute exposure for a single stored signal row. Returns 0.0 on any error."""
-    if not entry_json or sl is None or sl <= 0:
-        return 0.0
-    ps = float(position_size_pct) if position_size_pct is not None else 1.0
-    lev = int(leverage) if leverage is not None else 1
-    try:
-        entries_data: Any = json.loads(entry_json)
-    except (json.JSONDecodeError, TypeError):
-        return 0.0
-
-    prices: list[float] = []
-    if isinstance(entries_data, list):
-        for item in entries_data:
-            if isinstance(item, dict):
-                p = item.get("price")
-            else:
-                p = item
-            if p is not None:
-                try:
-                    prices.append(float(p))
-                except (TypeError, ValueError):
-                    pass
-    elif isinstance(entries_data, (int, float)):
-        prices = [float(entries_data)]
-
-    return compute_exposure(prices, sl, ps, lev)
-
-
 def sum_trader_exposure(trader_id: str, db_path: str) -> float:
-    """Sum exposure (% portfolio) for all open non-blocked signals of a trader.
+    """Sum risk_pct for all open non-blocked signals of a trader.
 
-    Joins operational_signals for position_size_pct and leverage because the
-    signals table alone does not store these parameters.
+    Reads risk_budget_usdt and capital_base_usdt stored in operational_signals.
+    Rows without these columns (pre-migration) contribute 0.
     """
     query = """
-        SELECT s.entry_json, s.sl, os.position_size_pct, os.leverage
+        SELECT os.risk_budget_usdt, os.capital_base_usdt
         FROM signals s
         JOIN operational_signals os ON os.attempt_key = s.attempt_key
         WHERE s.trader_id = ?
           AND s.status NOT IN ('CLOSED', 'CANCELLED')
           AND os.is_blocked = 0
+          AND os.risk_budget_usdt IS NOT NULL
+          AND os.capital_base_usdt IS NOT NULL
+          AND os.capital_base_usdt > 0
     """
     try:
         with sqlite3.connect(db_path) as conn:
             rows = conn.execute(query, (trader_id,)).fetchall()
     except sqlite3.OperationalError:
-        # Table may not exist yet in test DBs without full migration
         return 0.0
-
-    total = 0.0
-    for entry_json, sl, ps_pct, lev in rows:
-        total += _signal_exposure_from_row(entry_json, sl, ps_pct, lev)
-    return total
+    return sum(risk_b / cap_b * 100.0 for risk_b, cap_b in rows if cap_b > 0)
 
 
 def sum_global_exposure(db_path: str) -> float:
-    """Sum exposure (% portfolio) across ALL open non-blocked signals globally."""
+    """Sum risk_pct across ALL open non-blocked signals globally."""
     query = """
-        SELECT s.entry_json, s.sl, os.position_size_pct, os.leverage
+        SELECT os.risk_budget_usdt, os.capital_base_usdt
         FROM signals s
         JOIN operational_signals os ON os.attempt_key = s.attempt_key
         WHERE s.status NOT IN ('CLOSED', 'CANCELLED')
           AND os.is_blocked = 0
+          AND os.risk_budget_usdt IS NOT NULL
+          AND os.capital_base_usdt IS NOT NULL
+          AND os.capital_base_usdt > 0
     """
     try:
         with sqlite3.connect(db_path) as conn:
             rows = conn.execute(query).fetchall()
     except sqlite3.OperationalError:
         return 0.0
-
-    total = 0.0
-    for entry_json, sl, ps_pct, lev in rows:
-        total += _signal_exposure_from_row(entry_json, sl, ps_pct, lev)
-    return total
+    return sum(risk_b / cap_b * 100.0 for risk_b, cap_b in rows if cap_b > 0)
 
 
 def count_open_same_symbol(trader_id: str, symbol: str, db_path: str) -> int:

@@ -3,6 +3,9 @@
 Receives a validated TraderParseResult and produces an OperationalSignal
 with gate check result, sizing parameters, and management rules snapshot.
 
+Modello risk-first: si specifica il rischio massimo accettato (% o USDT fissi),
+il sistema calcola la size della posizione in base a entry, stop loss e leva.
+
 Public API:
     engine = OperationRulesEngine(rules_dir="config")
     op_signal = engine.apply(parse_result, trader_id, db_path=db_path)
@@ -15,7 +18,9 @@ from typing import Any
 
 from src.operation_rules.loader import EffectiveRules, load_effective_rules
 from src.operation_rules.risk_calculator import (
-    compute_exposure,
+    compute_position_size_from_risk,
+    compute_risk_budget_usdt,
+    compute_risk_pct,
     count_open_same_symbol,
     sum_global_exposure,
     sum_trader_exposure,
@@ -164,9 +169,11 @@ def _compute_entry_split(
 
 
 def _snapshot_management_rules(rules: EffectiveRules) -> dict[str, Any]:
-    """Snapshot the management rules from config at signal creation time."""
+    """Snapshot the management rules (Set B + tp_handling) at signal creation time."""
     import copy
-    return copy.deepcopy(rules.position_management)
+    snapshot = copy.deepcopy(rules.position_management)
+    snapshot["tp_handling"] = copy.deepcopy(rules.tp_handling)
+    return snapshot
 
 
 def _make_blocked(
@@ -261,7 +268,22 @@ class OperationRulesEngine:
         entry_prices = _extract_entry_prices(entities)
         sl_price = _extract_sl_price(entities)
 
-        # Gate 2: max concurrent same symbol ──────────────────────────────
+        # ── Gate 2: entry prezzi presenti? (hard block — senza entry non si calcola) ──
+        if not entry_prices:
+            return _make_blocked(parse_result, "missing_entry", rules, applied, trader_id)
+        applied.append("gate_entry_ok")
+
+        # ── Gate 3: stop loss presente? (hard block — senza SL non si calcola il rischio) ──
+        if sl_price is None or sl_price <= 0:
+            return _make_blocked(parse_result, "missing_stop_loss", rules, applied, trader_id)
+        applied.append("gate_sl_ok")
+
+        # ── Gate 4: leva valida? (hard block) ─────────────────────────────
+        if rules.leverage <= 0:
+            return _make_blocked(parse_result, "invalid_leverage", rules, applied, trader_id)
+        applied.append("gate_leverage_ok")
+
+        # ── Gate 5: max concurrent same symbol ────────────────────────────
         if symbol:
             open_count = count_open_same_symbol(trader_id, symbol, db_path)
             applied.append(f"gate_same_symbol:open={open_count}")
@@ -276,29 +298,49 @@ class OperationRulesEngine:
                         parse_result, "max_concurrent_same_symbol", rules, applied, trader_id
                     )
 
-        # Gate 3: compute exposure for new signal ─────────────────────────
-        new_exp = compute_exposure(entry_prices, sl_price, rules.position_size_pct, rules.leverage)
-        applied.append(f"gate_exposure:new_exp={new_exp:.4f}")
+        # ── Calcola budget rischio e size ──────────────────────────────────
+        risk_budget_usdt = compute_risk_budget_usdt(
+            rules.risk_mode,
+            rules.risk_pct_of_capital,
+            rules.risk_usdt_fixed,
+            rules.capital_base_usdt,
+        )
 
-        # Gate 4: hard cap per signal ─────────────────────────────────────
-        if new_exp > rules.hard_caps.max_per_signal_pct:
+        try:
+            position_size_usdt, position_size_pct, sl_distance_pct = compute_position_size_from_risk(
+                entry_prices, sl_price, risk_budget_usdt, rules.leverage, rules.capital_base_usdt
+            )
+        except ValueError:
+            # sl_distance == 0: entry == SL (degenerate signal)
+            return _make_blocked(parse_result, "zero_sl_distance", rules, applied, trader_id)
+
+        new_risk_pct = compute_risk_pct(
+            rules.risk_mode,
+            rules.risk_pct_of_capital,
+            rules.risk_usdt_fixed,
+            rules.capital_base_usdt,
+        )
+        applied.append(f"gate_risk:new_risk_pct={new_risk_pct:.4f}")
+
+        # ── Gate 6: hard cap per signal ────────────────────────────────────
+        if new_risk_pct > rules.hard_caps.hard_max_per_signal_risk_pct:
             applied.append("gate_per_signal_cap")
             if rules.gate_mode == "warn":
                 warnings.append(
-                    f"per_signal_cap_exceeded:exp={new_exp:.4f}"
-                    f",cap={rules.hard_caps.max_per_signal_pct}"
+                    f"per_signal_cap_exceeded:risk={new_risk_pct:.4f}"
+                    f",cap={rules.hard_caps.hard_max_per_signal_risk_pct}"
                 )
             else:
                 return _make_blocked(parse_result, "per_signal_cap_exceeded", rules, applied, trader_id)
 
-        # Gate 5: trader capital cap ──────────────────────────────────────
+        # ── Gate 7: trader capital cap ─────────────────────────────────────
         trader_exp = sum_trader_exposure(trader_id, db_path)
         applied.append(f"gate_trader_cap:trader_exp={trader_exp:.4f}")
-        if trader_exp + new_exp > rules.max_capital_at_risk_per_trader_pct:
+        if trader_exp + new_risk_pct > rules.max_capital_at_risk_per_trader_pct:
             if rules.gate_mode == "warn":
                 warnings.append(
                     f"trader_capital_at_risk_exceeded"
-                    f":total={trader_exp + new_exp:.4f}"
+                    f":total={trader_exp + new_risk_pct:.4f}"
                     f",cap={rules.max_capital_at_risk_per_trader_pct}"
                 )
             else:
@@ -306,14 +348,14 @@ class OperationRulesEngine:
                     parse_result, "trader_capital_at_risk_exceeded", rules, applied, trader_id
                 )
 
-        # Gate 6: global capital hard cap ─────────────────────────────────
+        # ── Gate 8: global capital hard cap ───────────────────────────────
         global_exp = sum_global_exposure(db_path)
         applied.append(f"gate_global_cap:global_exp={global_exp:.4f}")
-        if global_exp + new_exp > rules.hard_caps.max_capital_at_risk_pct:
+        if global_exp + new_risk_pct > rules.hard_caps.max_capital_at_risk_pct:
             if rules.gate_mode == "warn":
                 warnings.append(
                     f"global_capital_at_risk_exceeded"
-                    f":total={global_exp + new_exp:.4f}"
+                    f":total={global_exp + new_risk_pct:.4f}"
                     f",cap={rules.hard_caps.max_capital_at_risk_pct}"
                 )
             else:
@@ -321,7 +363,7 @@ class OperationRulesEngine:
                     parse_result, "global_capital_at_risk_exceeded", rules, applied, trader_id
                 )
 
-        # Gate 7: static price sanity (optional) ──────────────────────────
+        # ── Gate 9: static price sanity (optional) ────────────────────────
         if rules.price_sanity.get("enabled") and entry_prices and symbol:
             ranges = rules.price_sanity.get("symbol_ranges", {})
             if symbol in ranges:
@@ -344,24 +386,43 @@ class OperationRulesEngine:
         entry_split = _compute_entry_split(entry_prices, entities, rules)
         mgmt = _snapshot_management_rules(rules)
 
-        # risk_hint override (if enabled and available)
+        # risk_hint override (if enabled and available) — overrides risk_pct_of_capital
         risk_hint_used = False
-        effective_size_pct = rules.position_size_pct
+        effective_risk_pct = rules.risk_pct_of_capital
         if rules.use_trader_risk_hint:
             risk_hint = entities.get("risk_hint") or parse_result.entities.get("risk_hint")  # type: ignore[union-attr]
             if risk_hint is not None:
                 try:
-                    effective_size_pct = float(risk_hint)
+                    effective_risk_pct = float(risk_hint)
                     risk_hint_used = True
-                    applied.append(f"risk_hint_applied:{effective_size_pct}")
-                except (TypeError, ValueError):
+                    applied.append(f"risk_hint_applied:{effective_risk_pct}")
+                    # Recompute budget and size with hint value
+                    risk_budget_usdt = compute_risk_budget_usdt(
+                        rules.risk_mode, effective_risk_pct,
+                        rules.risk_usdt_fixed, rules.capital_base_usdt,
+                    )
+                    position_size_usdt, position_size_pct, sl_distance_pct = (
+                        compute_position_size_from_risk(
+                            entry_prices, sl_price, risk_budget_usdt,
+                            rules.leverage, rules.capital_base_usdt,
+                        )
+                    )
+                except (TypeError, ValueError) as exc:
+                    if "zero" in str(exc).lower():
+                        return _make_blocked(parse_result, "zero_sl_distance", rules, applied, trader_id)
                     warnings.append(f"risk_hint_parse_failed:{risk_hint}")
 
         return OperationalSignal(
             parse_result=parse_result,
             trader_id=trader_id,
-            position_size_pct=effective_size_pct,
-            position_size_usdt=None,  # requires live portfolio value — not available
+            risk_mode=rules.risk_mode,
+            risk_pct_of_capital=effective_risk_pct,
+            risk_usdt_fixed=rules.risk_usdt_fixed if rules.risk_mode == "risk_usdt_fixed" else None,
+            capital_base_usdt=rules.capital_base_usdt,
+            risk_budget_usdt=risk_budget_usdt,
+            sl_distance_pct=sl_distance_pct,
+            position_size_usdt=position_size_usdt,
+            position_size_pct=position_size_pct,
             entry_split=entry_split,
             leverage=rules.leverage,
             risk_hint_used=risk_hint_used,

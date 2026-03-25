@@ -20,13 +20,17 @@ def rules_dir(tmp_path: Path) -> Path:
     global_yaml = {
         "global_hard_caps": {
             "max_capital_at_risk_pct": 10.0,
-            "max_per_signal_pct": 2.0,
+            "hard_max_per_signal_risk_pct": 2.0,
         },
         "global_defaults": {
             "enabled": True,
             "gate_mode": "block",
             "use_trader_risk_hint": False,
-            "position_size_pct": 1.0,
+            "risk_mode": "risk_pct_of_capital",
+            "risk_pct_of_capital": 1.0,
+            "risk_usdt_fixed": 10.0,
+            "capital_base_mode": "static_config",
+            "capital_base_usdt": 1000.0,
             "leverage": 1,
             "max_capital_at_risk_per_trader_pct": 5.0,
             "max_concurrent_same_symbol": 1,
@@ -68,7 +72,9 @@ class TestLoaderDefaults:
         rules = load_effective_rules("unknown_trader", rules_dir=str(rules_dir))
         assert rules.enabled is True
         assert rules.gate_mode == "block"
-        assert rules.position_size_pct == 1.0
+        assert rules.risk_mode == "risk_pct_of_capital"
+        assert rules.risk_pct_of_capital == 1.0
+        assert rules.capital_base_usdt == 1000.0
         assert rules.leverage == 1
         assert rules.max_capital_at_risk_per_trader_pct == 5.0
         assert rules.max_concurrent_same_symbol == 1
@@ -77,7 +83,7 @@ class TestLoaderDefaults:
         rules = load_effective_rules("any", rules_dir=str(rules_dir))
         assert isinstance(rules.hard_caps, HardCaps)
         assert rules.hard_caps.max_capital_at_risk_pct == 10.0
-        assert rules.hard_caps.max_per_signal_pct == 2.0
+        assert rules.hard_caps.hard_max_per_signal_risk_pct == 2.0
 
     def test_entry_split_defaults(self, rules_dir: Path) -> None:
         rules = load_effective_rules("any", rules_dir=str(rules_dir))
@@ -93,13 +99,13 @@ class TestLoaderDefaults:
 
 class TestLoaderTraderOverride:
     def test_trader_overrides_gate_mode(self, rules_dir: Path) -> None:
-        trader_yaml = {"gate_mode": "warn", "position_size_pct": 0.5}
+        trader_yaml = {"gate_mode": "warn", "risk_pct_of_capital": 0.5}
         (rules_dir / "trader_rules" / "my_trader.yaml").write_text(
             yaml.dump(trader_yaml), encoding="utf-8"
         )
         rules = load_effective_rules("my_trader", rules_dir=str(rules_dir))
         assert rules.gate_mode == "warn"
-        assert rules.position_size_pct == 0.5
+        assert rules.risk_pct_of_capital == 0.5
         # Non-overridden keys still from defaults
         assert rules.leverage == 1
 
@@ -115,7 +121,7 @@ class TestLoaderTraderOverride:
         trader_yaml = {
             "global_hard_caps": {  # This key is not in the merge path
                 "max_capital_at_risk_pct": 999.0,
-                "max_per_signal_pct": 999.0,
+                "hard_max_per_signal_risk_pct": 999.0,
             }
         }
         (rules_dir / "trader_rules" / "hacker.yaml").write_text(
@@ -124,7 +130,7 @@ class TestLoaderTraderOverride:
         rules = load_effective_rules("hacker", rules_dir=str(rules_dir))
         # Hard caps remain from global
         assert rules.hard_caps.max_capital_at_risk_pct == 10.0
-        assert rules.hard_caps.max_per_signal_pct == 2.0
+        assert rules.hard_caps.hard_max_per_signal_risk_pct == 2.0
 
     def test_entry_split_deep_merge(self, rules_dir: Path) -> None:
         """Trader can override specific entry types without losing others."""

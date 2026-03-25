@@ -5,8 +5,13 @@
 enabled: true
 gate_mode: warn                       # warn durante sviluppo (non blocca)
 
+# Modello rischio
+risk_mode: risk_pct_of_capital
+risk_pct_of_capital: 1.0             # 1% del capitale per trade
+capital_base_mode: static_config
+capital_base_usdt: 1000.0            # da aggiornare con il capitale reale
+
 use_trader_risk_hint: false
-position_size_pct: 1.0
 leverage: 1
 max_capital_at_risk_per_trader_pct: 5.0
 max_concurrent_same_symbol: 1

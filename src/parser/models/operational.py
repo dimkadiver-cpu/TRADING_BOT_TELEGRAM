@@ -49,8 +49,24 @@ class OperationalSignal(BaseModel):
     trader_id: str = ""
 
     # Set A — parametri apertura (solo NEW_SIGNAL)
-    position_size_pct: float | None = None
+    # Modello risk-first: l'input è il rischio massimo accettato;
+    # position_size_usdt e position_size_pct sono calcolati dal sistema.
+    risk_mode: str | None = None
+    """risk_pct_of_capital | risk_usdt_fixed"""
+    risk_pct_of_capital: float | None = None
+    """% capitale configurato per trade (input da config)."""
+    risk_usdt_fixed: float | None = None
+    """USDT fissi configurati se risk_mode=risk_usdt_fixed."""
+    capital_base_usdt: float | None = None
+    """Capitale di riferimento usato per il calcolo."""
+    risk_budget_usdt: float | None = None
+    """Perdita massima calcolata per questo segnale (USDT)."""
+    sl_distance_pct: float | None = None
+    """Distanza percentuale entry → stop loss (0.05 = 5%)."""
     position_size_usdt: float | None = None
+    """Size della posizione calcolata (USDT). Derivato da risk_budget / sl_distance."""
+    position_size_pct: float | None = None
+    """Size come % del capitale. Dato derivato — non è input di config."""
     entry_split: dict[str, float] | None = None
     """Pesi di split per entries, es. {"E1": 0.3, "E2": 0.7}."""
     leverage: int | None = None

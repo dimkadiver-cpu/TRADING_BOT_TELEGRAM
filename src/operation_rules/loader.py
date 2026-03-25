@@ -30,7 +30,7 @@ import yaml
 @dataclass(slots=True)
 class HardCaps:
     max_capital_at_risk_pct: float
-    max_per_signal_pct: float
+    hard_max_per_signal_risk_pct: float
 
 
 @dataclass
@@ -43,15 +43,22 @@ class EffectiveRules:
     enabled: bool
     gate_mode: str  # "block" | "warn"
 
-    # Set A — position opening
+    # Set A — position opening (risk-first model)
     use_trader_risk_hint: bool
-    position_size_pct: float
+    risk_mode: str                   # "risk_pct_of_capital" | "risk_usdt_fixed"
+    risk_pct_of_capital: float       # % capitale per trade
+    risk_usdt_fixed: float           # USDT fissi se risk_usdt_fixed
+    capital_base_mode: str           # "static_config" | "live_equity"
+    capital_base_usdt: float         # capitale di riferimento
     leverage: int
     max_capital_at_risk_per_trader_pct: float
     max_concurrent_same_symbol: int
 
     # Entry split config (nested dict keyed by entry type)
     entry_split: dict[str, Any]
+
+    # TP handling
+    tp_handling: dict[str, Any]
 
     # Price corrections (future)
     price_corrections: dict[str, Any]
@@ -118,9 +125,14 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
     merged = _deep_merge(global_defaults, trader_data)
 
     # Hard caps are always final (never overridable)
+    # Support both old key (max_per_signal_pct) and new key for backward compat
+    hard_max = hard_caps_raw.get(
+        "hard_max_per_signal_risk_pct",
+        hard_caps_raw.get("max_per_signal_pct", 2.0),
+    )
     hard_caps = HardCaps(
         max_capital_at_risk_pct=float(hard_caps_raw.get("max_capital_at_risk_pct", 10.0)),
-        max_per_signal_pct=float(hard_caps_raw.get("max_per_signal_pct", 2.0)),
+        hard_max_per_signal_risk_pct=float(hard_max),
     )
 
     entry_split = merged.get("entry_split", {})
@@ -134,13 +146,22 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
         enabled=bool(merged.get("enabled", True)),
         gate_mode=str(merged.get("gate_mode", "block")),
         use_trader_risk_hint=bool(merged.get("use_trader_risk_hint", False)),
-        position_size_pct=float(merged.get("position_size_pct", 1.0)),
+        risk_mode=str(merged.get("risk_mode", "risk_pct_of_capital")),
+        risk_pct_of_capital=float(merged.get("risk_pct_of_capital", 1.0)),
+        risk_usdt_fixed=float(merged.get("risk_usdt_fixed", 10.0)),
+        capital_base_mode=str(merged.get("capital_base_mode", "static_config")),
+        capital_base_usdt=float(merged.get("capital_base_usdt", 1000.0)),
         leverage=int(merged.get("leverage", 1)),
         max_capital_at_risk_per_trader_pct=float(
             merged.get("max_capital_at_risk_per_trader_pct", 5.0)
         ),
         max_concurrent_same_symbol=int(merged.get("max_concurrent_same_symbol", 1)),
         entry_split=entry_split,
+        tp_handling=merged.get("tp_handling", {
+            "tp_handling_mode": "follow_all_signal_tps",
+            "max_tp_levels": 5,
+            "tp_close_distribution": {2: [50, 50], 3: [30, 30, 40], 5: [20, 20, 20, 20, 20]},
+        }),
         price_corrections=merged.get("price_corrections", {"enabled": False, "method": None}),
         price_sanity=merged.get("price_sanity", {"enabled": False, "symbol_ranges": {}}),
         position_management=merged.get("position_management", {}),

@@ -30,9 +30,15 @@ class OperationalSignalRecord:
     is_blocked: bool
     block_reason: str | None
 
-    # Set A — apertura posizione (solo NEW_SIGNAL)
-    position_size_pct: float | None
+    # Set A — apertura posizione (solo NEW_SIGNAL) — modello risk-first
+    risk_mode: str | None
+    risk_pct_of_capital: float | None
+    risk_usdt_fixed: float | None
+    capital_base_usdt: float | None
+    risk_budget_usdt: float | None
+    sl_distance_pct: float | None
     position_size_usdt: float | None
+    position_size_pct: float | None
     entry_split_json: str | None   # JSON {"E1": 0.5, "E2": 0.5}
     leverage: int | None
     risk_hint_used: bool
@@ -67,7 +73,10 @@ class OperationalSignalsStore:
             INSERT INTO operational_signals (
               parse_result_id, attempt_key, trader_id, message_type,
               is_blocked, block_reason,
-              position_size_pct, position_size_usdt, entry_split_json, leverage, risk_hint_used,
+              risk_mode, risk_pct_of_capital, risk_usdt_fixed,
+              capital_base_usdt, risk_budget_usdt, sl_distance_pct,
+              position_size_usdt, position_size_pct,
+              entry_split_json, leverage, risk_hint_used,
               management_rules_json, price_corrections_json,
               applied_rules_json, warnings_json,
               resolved_target_ids, target_eligibility, target_reason,
@@ -75,7 +84,10 @@ class OperationalSignalsStore:
             ) VALUES (
               ?, ?, ?, ?,
               ?, ?,
-              ?, ?, ?, ?, ?,
+              ?, ?, ?,
+              ?, ?, ?,
+              ?, ?,
+              ?, ?, ?,
               ?, ?,
               ?, ?,
               ?, ?, ?,
@@ -92,8 +104,14 @@ class OperationalSignalsStore:
                     record.message_type,
                     1 if record.is_blocked else 0,
                     record.block_reason,
-                    record.position_size_pct,
+                    record.risk_mode,
+                    record.risk_pct_of_capital,
+                    record.risk_usdt_fixed,
+                    record.capital_base_usdt,
+                    record.risk_budget_usdt,
+                    record.sl_distance_pct,
                     record.position_size_usdt,
+                    record.position_size_pct,
                     record.entry_split_json,
                     record.leverage,
                     1 if record.risk_hint_used else 0,
