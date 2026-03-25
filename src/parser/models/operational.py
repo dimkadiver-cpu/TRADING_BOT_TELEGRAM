@@ -26,8 +26,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict
 
-from src.parser.models.canonical import TraderParseResult
-
 
 # ---------------------------------------------------------------------------
 # OperationalSignal
@@ -42,8 +40,13 @@ class OperationalSignal(BaseModel):
     Campi Set B (management_rules) sono popolati per NEW_SIGNAL e UPDATE.
     """
 
-    # composizione — non copia
-    parse_result: TraderParseResult
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    # composizione — non copia (accetta base.TraderParseResult e canonical.TraderParseResult)
+    parse_result: Any
+
+    # trader context — set by the engine from the caller's trader_id
+    trader_id: str = ""
 
     # Set A — parametri apertura (solo NEW_SIGNAL)
     position_size_pct: float | None = None

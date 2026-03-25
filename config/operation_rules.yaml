@@ -1,0 +1,61 @@
+# Operation Rules — configurazione globale
+# ─────────────────────────────────────────────────────────────────────────────
+# Merge priority: global_hard_caps > trader_on_off > trader_specific > global_defaults
+# I global_hard_caps non sono mai overridabili dai trader.
+
+# ── Hard caps globali (non overridabili) ─────────────────────────────────────
+global_hard_caps:
+  max_capital_at_risk_pct: 10.0       # % portfolio totale su tutti i trader
+  max_per_signal_pct: 2.0             # cap esposizione per singolo segnale
+
+# ── Defaults per trader (overridabili in config/trader_rules/) ────────────────
+global_defaults:
+  enabled: true
+  gate_mode: block                    # block | warn
+
+  # Set A — apertura posizione
+  use_trader_risk_hint: false         # usa risk_hint estratto dal parser
+  position_size_pct: 1.0             # % portfolio per posizione
+  leverage: 1
+  max_capital_at_risk_per_trader_pct: 5.0
+  max_concurrent_same_symbol: 1
+
+  entry_split:
+    ZONE:
+      split_mode: endpoints           # endpoints | midpoint | three_way
+      weights:
+        E1: 0.50
+        E2: 0.50
+    AVERAGING:
+      distribution: equal             # equal | decreasing
+    LIMIT:
+      weights:
+        E1: 1.0
+    MARKET:
+      weights:
+        E1: 1.0
+
+  # Price corrections hook (implementazione futura)
+  price_corrections:
+    enabled: false
+    method: null                      # "number_theory" | "round_to_tick" | null
+
+  # Range statici per sanity check (opzionale, senza dati live)
+  price_sanity:
+    enabled: false
+    symbol_ranges: {}
+
+  # Set B — snapshot regole gestione posizione (letto da Sistema 1)
+  position_management:
+    on_tp_hit:
+      - {tp_level: 1, action: close_partial, close_pct: 50}
+      - {tp_level: 2, action: move_to_be}
+      - {tp_level: 3, action: close_full}
+    auto_apply_intents:               # UPDATE intents che Sistema 1 esegue automaticamente
+      - U_MOVE_STOP
+      - U_CLOSE_FULL
+      - U_CLOSE_PARTIAL
+      - U_CANCEL_PENDING
+    log_only_intents:                 # UPDATE intents solo informativi
+      - U_TP_HIT
+      - U_SL_HIT
