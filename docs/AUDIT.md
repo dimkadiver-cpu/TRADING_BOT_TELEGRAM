@@ -404,9 +404,12 @@ Tutti i 100 test passano. Fix principali applicati:
 [✓] Step 9 — Listener robusto (asyncio.Queue, recovery, hot reload) — 28/28 test
 [✓] Step 10 — Router / Pre-parser — già implementato, 8/8 test pass
 [✓] Step 11 — Validazione coerenza: src/validation/coherence.py, 25 test, integrato nel Router
-[ ] Step 12+ — Operation rules, target resolver
-[ ] Step 13+ — freqtrade signal bridge (Sistema 1)
-[ ] Step 14+ — Backtesting (Sistema 2)
+[ ] Step 12 — Migration 011 + Pydantic OperationalSignal + entry magnitude validator
+[ ] Step 13 — Operation Rules Engine (loader, risk_calculator, engine) + config YAML
+[ ] Step 14 — Target Resolver + signals_query accessor
+[ ] Step 15 — Integrazione nel Router (Layer 4+5 dopo VALID)
+[ ] Step 16+ — freqtrade signal bridge (Sistema 1)
+[ ] Step 17+ — Backtesting (Sistema 2)
 ```
 
 **Regola: non iniziare uno step prima che il precedente sia testato e funzionante.**
@@ -425,4 +428,4 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ---
 
-*Aggiornato: 2026-03-24 — documentazione riallineata allo stato reale del repository: parser/listener/router/validation segnati come implementati, cleanup legacy parser recepito, `config/channels.yaml` marcato come esistente ma non ancora configurato per il live, rischi aggiornati su ambiente `.venv`, working tree attivo e gap residui Fase 4+.*
+*Aggiornato: 2026-03-25 — PRD_FASE_4.md definitivo scritto dopo sessione di brainstorm. Ordine sviluppo Fase 4 espanso in Step 12-15. DRAFT_FASE_4.md superseded da PRD_FASE_4.md.*
