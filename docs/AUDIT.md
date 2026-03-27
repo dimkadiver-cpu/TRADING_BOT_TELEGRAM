@@ -429,8 +429,12 @@ Tutti i 100 test passano. Fix principali applicati:
 [✓] Step 13 — Operation Rules Engine: loader, risk_calculator, engine + config YAML — 28 test
 [✓] Step 14 — Target Resolver + signals_query/signals_store/op_signals_store — 14 test
 [✓] Step 15 — Integrazione nel Router (Layer 4+5 dopo VALID) — 13 test router_phase4
-[ ] Step 16+ — freqtrade signal bridge (Sistema 1)
-[ ] Step 17+ — Backtesting (Sistema 2)
+[ ] Step 16 — Eliminazione stub exchange/execution incompatibili + SignalBridgeStrategy scheletro
+[ ] Step 17 — freqtrade_callback.py + populate_exit + custom_stoploss
+[ ] Step 18 — UPDATE intents su freqtrade (U_MOVE_STOP, U_CLOSE_FULL, U_CLOSE_PARTIAL)
+[ ] Step 19 — Smoke test dry_run Bybit
+[ ] Step 20 — Configurazione canali live
+[ ] Step 21+ — Backtesting (Sistema 2)
 ```
 
 **Regola: non iniziare uno step prima che il precedente sia testato e funzionante.**
@@ -449,4 +453,6 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ---
 
-*Aggiornato: 2026-03-27 (P1+P2+P3 fix) — P1: risk_hint applicato PRIMA dei gate 6/7/8. P2: _coerce_entities() in engine.py — NewSignalEntities (Pydantic) non produce più missing_entry spurio. P3: _validate_enum_fields() in loader.py — gate_mode/risk_mode/capital_base_mode validati fail-fast; valori normalizzati a lowercase prima dello store. operation_rules tests: 73/73 (erano 58). Vedi docs/FASE_4_AUDIT_2026-03-27.md per dettagli.*
+*Aggiornato: 2026-03-25 (Step 15) — Phase 4 completa: Operation Rules Engine + Target Resolver integrati nel Router. Steps 12-15 ✓. Tutti i test della full suite passano (427/427). Smoke suite 298/299 (1 failure preesistente su test_listener_recovery non introdotto da Step 15).*
+
+*Aggiornato: 2026-03-27 (Step 16 — PRD) — Creato docs/PRD_FASE_5.md. Architettura Fase 5 definita: freqtrade + IStrategy custom (SignalBridgeStrategy). Step 16–20 pianificati. Stub incompatibili (src/exchange/, planner.py, state_machine.py) marcati per eliminazione in Step 16.*
