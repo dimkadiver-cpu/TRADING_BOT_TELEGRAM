@@ -10,6 +10,8 @@ import yaml
 
 from src.core.migrations import apply_migrations
 from src.operation_rules.engine import OperationRulesEngine
+from src.parser.models.new_signal import EntryLevel, NewSignalEntities, StopLoss, TakeProfit
+from src.parser.models.canonical import Price
 from src.parser.trader_profiles.base import TraderParseResult
 
 
@@ -264,6 +266,90 @@ class TestEngineNewSignalMissingData:
         assert op.block_reason == "invalid_leverage"
 
 
+class TestEngineCanonicalEntities:
+    """Engine must handle NewSignalEntities (Pydantic model) as well as plain dicts."""
+
+    def _make_canonical_result(
+        self,
+        entries: list[tuple[float, str]],   # (price, order_type)
+        sl_price: float,
+        symbol: str = "BTCUSDT",
+        direction: str = "LONG",
+    ) -> TraderParseResult:
+        entry_levels = [
+            EntryLevel(price=Price(raw=str(p), value=p), order_type=ot)  # type: ignore[arg-type]
+            for p, ot in entries
+        ]
+        entities = NewSignalEntities(
+            symbol=symbol,
+            direction=direction,  # type: ignore[arg-type]
+            entry_type="LIMIT",
+            entries=entry_levels,
+            stop_loss=StopLoss(price=Price(raw=str(sl_price), value=sl_price)),  # type: ignore[arg-type]
+            take_profits=[TakeProfit(price=Price(raw=str(sl_price * 1.1), value=sl_price * 1.1))],  # type: ignore[arg-type]
+        )
+        return TraderParseResult(
+            message_type="NEW_SIGNAL",
+            intents=[],
+            entities=entities,
+            confidence=0.9,
+        )
+
+    def test_canonical_entities_not_spuriously_blocked(
+        self, rules_dir: Path, db_path: str
+    ) -> None:
+        """NewSignalEntities must not produce missing_entry/missing_stop_loss blocks.
+
+        Before P2 fix, isinstance(entities, dict) fell through to {}, causing
+        _extract_entry_prices → [] → blocked("missing_entry").
+        """
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = self._make_canonical_result(
+            entries=[(60000.0, "LIMIT")], sl_price=57000.0
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        assert op.is_blocked is False
+        assert op.position_size_usdt is not None
+
+    def test_canonical_entities_sl_extracted(
+        self, rules_dir: Path, db_path: str
+    ) -> None:
+        """SL price must be correctly extracted from nested StopLoss model."""
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = self._make_canonical_result(
+            entries=[(100.0, "LIMIT")], sl_price=90.0
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        assert op.is_blocked is False
+        # sl_distance = |100-90|/100 = 0.10
+        assert op.sl_distance_pct == pytest.approx(0.10)
+
+    def test_canonical_entities_symbol_extracted(
+        self, rules_dir: Path, db_path: str
+    ) -> None:
+        """Symbol from NewSignalEntities must flow into OperationalSignal."""
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = self._make_canonical_result(
+            entries=[(100.0, "LIMIT")], sl_price=90.0, symbol="ETHUSDT"
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        # Not blocked; symbol gate was evaluated on ETHUSDT (no open signals)
+        assert op.is_blocked is False
+
+    def test_canonical_entities_multi_entry(
+        self, rules_dir: Path, db_path: str
+    ) -> None:
+        """Multiple entries in NewSignalEntities produce a multi-key entry_split."""
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = self._make_canonical_result(
+            entries=[(60000.0, "LIMIT"), (58000.0, "LIMIT")], sl_price=55000.0
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        assert op.is_blocked is False
+        assert op.entry_split is not None
+        assert len(op.entry_split) == 2
+
+
 class TestEngineUpdatePassthrough:
     def test_update_not_blocked(self, rules_dir: Path, db_path: str) -> None:
         engine = OperationRulesEngine(rules_dir=str(rules_dir))
@@ -332,6 +418,102 @@ class TestEngineNonActionable:
         assert op.is_blocked is False
         assert op.position_size_usdt is None
         assert op.risk_budget_usdt is None
+
+
+class TestEngineRiskHint:
+    """risk_hint must be applied BEFORE cap gates — not after."""
+
+    def test_risk_hint_within_cap_passes(self, rules_dir: Path, db_path: str) -> None:
+        """risk_hint within hard cap → signal not blocked, hint used."""
+        (rules_dir / "trader_rules" / "hint_ok.yaml").write_text(
+            yaml.dump({
+                "use_trader_risk_hint": True,
+                "risk_pct_of_capital": 0.5,
+                "capital_base_usdt": 1000.0,
+            }),
+            encoding="utf-8",
+        )
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        # hint=1.5% — below hard cap of 2%
+        result = _make_result(entities={
+            "symbol": "BTCUSDT", "side": "BUY",
+            "entry_raw": "100", "stop_raw": "90",
+            "risk_hint": 1.5,
+        })
+        op = engine.apply(result, "hint_ok", db_path=db_path)
+        assert op.is_blocked is False
+        assert op.risk_hint_used is True
+        assert op.risk_pct_of_capital == pytest.approx(1.5)
+
+    def test_risk_hint_exceeds_hard_cap_blocks(self, rules_dir: Path, db_path: str) -> None:
+        """risk_hint above hard_max_per_signal_risk_pct (2%) → blocked.
+
+        Before the P1 fix, the cap was evaluated against the config value (0.5%)
+        which passed; the hint was applied after, bypassing the gate.
+        """
+        (rules_dir / "trader_rules" / "hint_over.yaml").write_text(
+            yaml.dump({
+                "use_trader_risk_hint": True,
+                "gate_mode": "block",
+                "risk_pct_of_capital": 0.5,      # config < hard cap
+                "capital_base_usdt": 1000.0,
+            }),
+            encoding="utf-8",
+        )
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        # hint=5% — above hard cap of 2%
+        result = _make_result(entities={
+            "symbol": "BTCUSDT", "side": "BUY",
+            "entry_raw": "100", "stop_raw": "90",
+            "risk_hint": 5.0,
+        })
+        op = engine.apply(result, "hint_over", db_path=db_path)
+        assert op.is_blocked is True
+        assert op.block_reason == "per_signal_cap_exceeded"
+
+    def test_risk_hint_exceeds_hard_cap_warn_mode(self, rules_dir: Path, db_path: str) -> None:
+        """In warn mode, hint above hard cap adds warning but does not block."""
+        (rules_dir / "trader_rules" / "hint_warn.yaml").write_text(
+            yaml.dump({
+                "use_trader_risk_hint": True,
+                "gate_mode": "warn",
+                "risk_pct_of_capital": 0.5,
+                "capital_base_usdt": 1000.0,
+            }),
+            encoding="utf-8",
+        )
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result(entities={
+            "symbol": "BTCUSDT", "side": "BUY",
+            "entry_raw": "100", "stop_raw": "90",
+            "risk_hint": 5.0,
+        })
+        op = engine.apply(result, "hint_warn", db_path=db_path)
+        assert op.is_blocked is False
+        assert any("per_signal_cap_exceeded" in w for w in op.warnings)
+        assert op.risk_hint_used is True
+
+    def test_invalid_risk_hint_falls_back_to_config(self, rules_dir: Path, db_path: str) -> None:
+        """Non-numeric risk_hint → warning added, config value used."""
+        (rules_dir / "trader_rules" / "hint_bad.yaml").write_text(
+            yaml.dump({
+                "use_trader_risk_hint": True,
+                "risk_pct_of_capital": 1.0,
+                "capital_base_usdt": 1000.0,
+            }),
+            encoding="utf-8",
+        )
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result(entities={
+            "symbol": "BTCUSDT", "side": "BUY",
+            "entry_raw": "100", "stop_raw": "90",
+            "risk_hint": "not-a-number",
+        })
+        op = engine.apply(result, "hint_bad", db_path=db_path)
+        assert op.is_blocked is False
+        assert op.risk_hint_used is False
+        assert op.risk_pct_of_capital == pytest.approx(1.0)
+        assert any("risk_hint_parse_failed" in w for w in op.warnings)
 
 
 class TestEngineTpHandling:

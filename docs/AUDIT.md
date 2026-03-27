@@ -449,4 +449,4 @@ Tutti i 100 test passano. Fix principali applicati:
 
 ---
 
-*Aggiornato: 2026-03-25 (Step 15) — Phase 4 completa: Operation Rules Engine + Target Resolver integrati nel Router. Steps 12-15 ✓. Tutti i test della full suite passano (427/427). Smoke suite 298/299 (1 failure preesistente su test_listener_recovery non introdotto da Step 15).*
+*Aggiornato: 2026-03-27 (P1+P2+P3 fix) — P1: risk_hint applicato PRIMA dei gate 6/7/8. P2: _coerce_entities() in engine.py — NewSignalEntities (Pydantic) non produce più missing_entry spurio. P3: _validate_enum_fields() in loader.py — gate_mode/risk_mode/capital_base_mode validati fail-fast; valori normalizzati a lowercase prima dello store. operation_rules tests: 73/73 (erano 58). Vedi docs/FASE_4_AUDIT_2026-03-27.md per dettagli.*

@@ -17,7 +17,10 @@ Usage:
 
 from __future__ import annotations
 
+import logging
 import sqlite3
+
+logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -115,6 +118,12 @@ def sum_trader_exposure(trader_id: str, db_path: str) -> float:
         with sqlite3.connect(db_path) as conn:
             rows = conn.execute(query, (trader_id,)).fetchall()
     except sqlite3.OperationalError:
+        logger.warning(
+            "sum_trader_exposure: DB query failed for trader_id=%r db=%r — "
+            "returning 0.0 (gate 7 will be permissive)",
+            trader_id, db_path,
+            exc_info=True,
+        )
         return 0.0
     return sum(risk_b / cap_b * 100.0 for risk_b, cap_b in rows if cap_b > 0)
 
@@ -135,6 +144,12 @@ def sum_global_exposure(db_path: str) -> float:
         with sqlite3.connect(db_path) as conn:
             rows = conn.execute(query).fetchall()
     except sqlite3.OperationalError:
+        logger.warning(
+            "sum_global_exposure: DB query failed db=%r — "
+            "returning 0.0 (gate 8 will be permissive)",
+            db_path,
+            exc_info=True,
+        )
         return 0.0
     return sum(risk_b / cap_b * 100.0 for risk_b, cap_b in rows if cap_b > 0)
 
@@ -154,4 +169,10 @@ def count_open_same_symbol(trader_id: str, symbol: str, db_path: str) -> int:
             row = conn.execute(query, (trader_id, symbol)).fetchone()
         return int(row[0]) if row else 0
     except sqlite3.OperationalError:
+        logger.warning(
+            "count_open_same_symbol: DB query failed for trader_id=%r symbol=%r db=%r — "
+            "returning 0 (gate 5 will be permissive)",
+            trader_id, symbol, db_path,
+            exc_info=True,
+        )
         return 0
