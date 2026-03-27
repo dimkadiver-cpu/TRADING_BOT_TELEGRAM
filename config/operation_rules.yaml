@@ -12,6 +12,7 @@ global_hard_caps:
 global_defaults:
   enabled: true
   gate_mode: block                        # block | warn
+  operation_rules: override               # override | global
 
   # ── Modello rischio — Set A ──────────────────────────────────────────────
   # Il centro del sistema è il rischio massimo accettato, non la size.

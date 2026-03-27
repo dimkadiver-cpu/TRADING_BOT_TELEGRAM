@@ -4,6 +4,7 @@
 
 enabled: true
 gate_mode: warn                       # warn durante sviluppo (non blocca)
+operation_rules: override             # override | global (usa solo global defaults)
 
 # Modello rischio
 risk_mode: risk_pct_of_capital
