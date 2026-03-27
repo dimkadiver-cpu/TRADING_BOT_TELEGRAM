@@ -195,6 +195,39 @@ def _validate_position_management_config(position_management: dict[str, Any]) ->
         seen_selectors.add(selector)
 
 
+def _validate_enum_fields(merged: dict[str, Any], trader_id: str) -> None:
+    """Fail-fast validation for enumerated string fields.
+
+    Raises ValueError immediately if a field contains a value outside its
+    allowed set, so misconfigurations are caught at load time rather than
+    producing silent wrong behaviour at runtime.
+    """
+    _GATE_MODE_VALUES = {"block", "warn"}
+    _RISK_MODE_VALUES = {"risk_pct_of_capital", "risk_usdt_fixed"}
+    _CAPITAL_BASE_MODE_VALUES = {"static_config", "live_equity"}
+
+    gate_mode = str(merged.get("gate_mode", "block")).lower()
+    if gate_mode not in _GATE_MODE_VALUES:
+        raise ValueError(
+            f"[{trader_id}] gate_mode must be one of {sorted(_GATE_MODE_VALUES)}, "
+            f"got: {gate_mode!r}"
+        )
+
+    risk_mode = str(merged.get("risk_mode", "risk_pct_of_capital")).lower()
+    if risk_mode not in _RISK_MODE_VALUES:
+        raise ValueError(
+            f"[{trader_id}] risk_mode must be one of {sorted(_RISK_MODE_VALUES)}, "
+            f"got: {risk_mode!r}"
+        )
+
+    capital_base_mode = str(merged.get("capital_base_mode", "static_config")).lower()
+    if capital_base_mode not in _CAPITAL_BASE_MODE_VALUES:
+        raise ValueError(
+            f"[{trader_id}] capital_base_mode must be one of "
+            f"{sorted(_CAPITAL_BASE_MODE_VALUES)}, got: {capital_base_mode!r}"
+        )
+
+
 def _validate_entry_split_config(entry_split: dict[str, Any]) -> None:
     """Fail-fast validation for entry_split shape and ambiguous averaging keys."""
     if not isinstance(entry_split, dict):
@@ -324,6 +357,8 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
         hard_max_per_signal_risk_pct=float(hard_max),
     )
 
+    _validate_enum_fields(merged, trader_id)
+
     entry_split = merged.get("entry_split", {})
     # Normalise entry_split: ensure each entry type exists
     for et in ("ZONE", "AVERAGING", "LIMIT", "MARKET"):
@@ -345,13 +380,13 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
     return EffectiveRules(
         hard_caps=hard_caps,
         enabled=bool(merged.get("enabled", True)),
-        gate_mode=str(merged.get("gate_mode", "block")),
+        gate_mode=str(merged.get("gate_mode", "block")).lower(),
         operation_rules=resolved_operation_rules,
         use_trader_risk_hint=bool(merged.get("use_trader_risk_hint", False)),
-        risk_mode=str(merged.get("risk_mode", "risk_pct_of_capital")),
+        risk_mode=str(merged.get("risk_mode", "risk_pct_of_capital")).lower(),
         risk_pct_of_capital=float(merged.get("risk_pct_of_capital", 1.0)),
         risk_usdt_fixed=float(merged.get("risk_usdt_fixed", 10.0)),
-        capital_base_mode=str(merged.get("capital_base_mode", "static_config")),
+        capital_base_mode=str(merged.get("capital_base_mode", "static_config")).lower(),
         capital_base_usdt=float(merged.get("capital_base_usdt", 1000.0)),
         leverage=int(merged.get("leverage", 1)),
         max_capital_at_risk_per_trader_pct=float(

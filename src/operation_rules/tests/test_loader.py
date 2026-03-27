@@ -279,3 +279,76 @@ class TestLoaderTraderOverride:
         )
         with pytest.warns(DeprecationWarning, match="entry_split.AVERAGING is deprecated"):
             load_effective_rules("legacy_avg_warn", rules_dir=str(rules_dir))
+
+
+class TestLoaderEnumValidation:
+    """Enum fields gate_mode, risk_mode, capital_base_mode must be validated fail-fast."""
+
+    def test_invalid_gate_mode_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_gate.yaml").write_text(
+            yaml.dump({"gate_mode": "blokk"}), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="gate_mode"):
+            load_effective_rules("bad_gate", rules_dir=str(rules_dir))
+
+    def test_invalid_risk_mode_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_risk.yaml").write_text(
+            yaml.dump({"risk_mode": "fixed_amount"}), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="risk_mode"):
+            load_effective_rules("bad_risk", rules_dir=str(rules_dir))
+
+    def test_invalid_capital_base_mode_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_cap.yaml").write_text(
+            yaml.dump({"capital_base_mode": "dynamic"}), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="capital_base_mode"):
+            load_effective_rules("bad_cap", rules_dir=str(rules_dir))
+
+    def test_valid_gate_mode_warn_loads(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "ok_gate.yaml").write_text(
+            yaml.dump({"gate_mode": "warn"}), encoding="utf-8"
+        )
+        rules = load_effective_rules("ok_gate", rules_dir=str(rules_dir))
+        assert rules.gate_mode == "warn"
+
+    def test_valid_risk_mode_fixed_loads(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "ok_risk.yaml").write_text(
+            yaml.dump({"risk_mode": "risk_usdt_fixed", "risk_usdt_fixed": 20.0}),
+            encoding="utf-8",
+        )
+        rules = load_effective_rules("ok_risk", rules_dir=str(rules_dir))
+        assert rules.risk_mode == "risk_usdt_fixed"
+
+    def test_invalid_gate_mode_in_global_defaults_raises(self, tmp_path: Path) -> None:
+        """Typo in global defaults must also be caught (not just trader overrides)."""
+        global_yaml = {
+            "global_hard_caps": {
+                "max_capital_at_risk_pct": 10.0,
+                "hard_max_per_signal_risk_pct": 2.0,
+            },
+            "global_defaults": {
+                "enabled": True,
+                "gate_mode": "bloock",   # typo — not in {block, warn}
+                "risk_mode": "risk_pct_of_capital",
+                "capital_base_mode": "static_config",
+                "capital_base_usdt": 1000.0,
+                "leverage": 1,
+                "position_management": {"auto_apply_intents": [], "log_only_intents": []},
+            },
+        }
+        (tmp_path / "operation_rules.yaml").write_text(
+            yaml.dump(global_yaml), encoding="utf-8"
+        )
+        (tmp_path / "trader_rules").mkdir()
+        with pytest.raises(ValueError, match="gate_mode"):
+            load_effective_rules("any", rules_dir=str(tmp_path))
+
+    def test_gate_mode_case_insensitive(self, rules_dir: Path) -> None:
+        """Uppercase gate_mode values are normalized, not rejected."""
+        (rules_dir / "trader_rules" / "upper_gate.yaml").write_text(
+            yaml.dump({"gate_mode": "WARN"}), encoding="utf-8"
+        )
+        rules = load_effective_rules("upper_gate", rules_dir=str(rules_dir))
+        # Normalized to lowercase — engine comparisons work correctly
+        assert rules.gate_mode == "warn"
