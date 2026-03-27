@@ -15,6 +15,7 @@ Usage:
 from __future__ import annotations
 
 import copy
+import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -194,6 +195,82 @@ def _validate_position_management_config(position_management: dict[str, Any]) ->
         seen_selectors.add(selector)
 
 
+def _validate_entry_split_config(entry_split: dict[str, Any]) -> None:
+    """Fail-fast validation for entry_split shape and ambiguous averaging keys."""
+    if not isinstance(entry_split, dict):
+        raise ValueError("entry_split must be an object")
+
+    for top_key in ("ZONE", "AVERAGING", "LIMIT", "MARKET"):
+        if top_key in entry_split and not isinstance(entry_split[top_key], dict):
+            raise ValueError(f"entry_split.{top_key} must be an object")
+
+    typo_aliases = {"avareging", "averging", "averageing", "avg"}
+    for family in ("LIMIT", "MARKET"):
+        family_cfg = entry_split.get(family, {})
+        if not isinstance(family_cfg, dict):
+            continue
+
+        has_averaging = "averaging" in family_cfg
+        typo_hits = sorted(k for k in family_cfg.keys() if str(k).lower() in typo_aliases)
+        if typo_hits and has_averaging:
+            raise ValueError(
+                f"entry_split.{family} has overlapping averaging keys: "
+                f"averaging + {typo_hits}"
+            )
+        if typo_hits:
+            raise ValueError(
+                f"entry_split.{family} uses invalid key(s) {typo_hits}; "
+                "did you mean 'averaging'?"
+            )
+
+    averaging_cfg = entry_split.get("AVERAGING", {})
+    if isinstance(averaging_cfg, dict):
+        distribution = str(averaging_cfg.get("distribution", "equal")).lower()
+        if distribution not in {"equal", "decreasing"}:
+            raise ValueError(
+                "entry_split.AVERAGING.distribution must be one of: "
+                "equal | decreasing"
+            )
+        if distribution == "decreasing":
+            weights = averaging_cfg.get("weights", {})
+            if not isinstance(weights, dict) or not weights:
+                raise ValueError(
+                    "entry_split.AVERAGING.weights must be a non-empty object when "
+                    "distribution=decreasing"
+                )
+            total = 0.0
+            for key, value in weights.items():
+                if not str(key).upper().startswith("E"):
+                    raise ValueError(
+                        "entry_split.AVERAGING.weights keys must follow Ex format "
+                        "(e.g. E1, E2)"
+                    )
+                try:
+                    w = float(value)
+                except (TypeError, ValueError) as exc:
+                    raise ValueError(
+                        f"entry_split.AVERAGING.weights[{key}] must be numeric"
+                    ) from exc
+                if w < 0:
+                    raise ValueError(
+                        f"entry_split.AVERAGING.weights[{key}] must be >= 0"
+                    )
+                total += w
+            if total <= 0:
+                raise ValueError(
+                    "entry_split.AVERAGING.weights must have sum > 0 "
+                    "when distribution=decreasing"
+                )
+        # Soft deprecation: legacy block still accepted for backward compatibility.
+        if distribution != "equal" or "weights" in averaging_cfg:
+            warnings.warn(
+                "entry_split.AVERAGING is deprecated; use LIMIT.averaging and/or "
+                "MARKET.averaging instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -252,6 +329,7 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
     for et in ("ZONE", "AVERAGING", "LIMIT", "MARKET"):
         if et not in entry_split:
             entry_split[et] = {}
+    _validate_entry_split_config(entry_split)
 
     resolved_operation_rules = str(merged.get("operation_rules", "override")).lower()
     if resolved_operation_rules not in {"override", "global"}:

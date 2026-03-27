@@ -14,6 +14,7 @@ Public API:
 from __future__ import annotations
 
 import re
+import warnings
 from typing import Any
 
 from src.operation_rules.loader import EffectiveRules, load_effective_rules
@@ -225,10 +226,16 @@ def _compute_entry_split(
         if cfg:
             return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
 
-    # Legacy AVERAGING fallback (n >= 2, not ZONE)
+    # Legacy AVERAGING fallback (n >= 2, not ZONE) — deprecated.
     cfg = rules.entry_split.get("AVERAGING", {})
     distribution = cfg.get("distribution", "equal")
     if distribution == "decreasing" and "weights" in cfg:
+        warnings.warn(
+            "entry_split.AVERAGING fallback is deprecated; prefer LIMIT.averaging "
+            "and MARKET.averaging.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         raw = cfg["weights"]
         available = list(raw.items())[:n]
         total = sum(float(v) for _, v in available)

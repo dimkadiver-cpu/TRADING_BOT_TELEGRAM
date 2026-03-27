@@ -240,3 +240,42 @@ class TestLoaderTraderOverride:
             encoding="utf-8",
         )
         validate_operation_rules_config(rules_dir=str(rules_dir))
+
+    def test_entry_split_averaging_typo_raises(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "entry_split": {
+                "LIMIT": {
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                    "avareging": {"weights": {"E1": 0.6, "E2": 0.4}},
+                }
+            }
+        }
+        (rules_dir / "trader_rules" / "bad_avg_key.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="overlapping averaging keys"):
+            load_effective_rules("bad_avg_key", rules_dir=str(rules_dir))
+
+    def test_entry_split_decreasing_requires_valid_weights(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "entry_split": {
+                "AVERAGING": {"distribution": "decreasing", "weights": {"E1": 0, "E2": 0}}
+            }
+        }
+        (rules_dir / "trader_rules" / "bad_avg_weights.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="sum > 0"):
+            load_effective_rules("bad_avg_weights", rules_dir=str(rules_dir))
+
+    def test_entry_split_averaging_deprecated_warns(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "entry_split": {
+                "AVERAGING": {"distribution": "decreasing", "weights": {"E1": 0.7, "E2": 0.3}}
+            }
+        }
+        (rules_dir / "trader_rules" / "legacy_avg_warn.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.warns(DeprecationWarning, match="entry_split.AVERAGING is deprecated"):
+            load_effective_rules("legacy_avg_warn", rules_dir=str(rules_dir))

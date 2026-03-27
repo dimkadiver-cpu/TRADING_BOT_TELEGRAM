@@ -141,6 +141,34 @@ class TestEngineNewSignalPassthrough:
         assert op.entry_split is not None
         assert len(op.entry_split) == 2
 
+    def test_legacy_averaging_fallback_warns(self, rules_dir: Path, db_path: str) -> None:
+        (rules_dir / "trader_rules" / "legacy_avg.yaml").write_text(
+            yaml.dump(
+                {
+                    "entry_split": {
+                        "AVERAGING": {
+                            "distribution": "decreasing",
+                            "weights": {"E1": 0.7, "E2": 0.3},
+                        },
+                        "LIMIT": {"single": {"weights": {"E1": 1.0}}, "averaging": {}},
+                    }
+                }
+            ),
+            encoding="utf-8",
+        )
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result(
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "BUY",
+                "entry_raw": "60000-62000",
+                "stop_raw": "55000",
+            }
+        )
+        with pytest.warns(DeprecationWarning, match="deprecated"):
+            op = engine.apply(result, "legacy_avg", db_path=db_path)
+        assert op.entry_split == {"E1": pytest.approx(0.7), "E2": pytest.approx(0.3)}
+
     def test_entry_split_single_market_plan(self, rules_dir: Path, db_path: str) -> None:
         engine = OperationRulesEngine(rules_dir=str(rules_dir))
         result = _make_result(
