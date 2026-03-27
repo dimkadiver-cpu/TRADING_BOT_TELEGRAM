@@ -508,21 +508,22 @@ def _parse_all_floats(s: str | None) -> list[float]:
 
 
 def _extract_entry_prices_from_entities(entities: dict[str, Any]) -> list[float]:
-    entries_raw = entities.get("entries")
-    if isinstance(entries_raw, list) and entries_raw:
-        prices: list[float] = []
-        for e in entries_raw:
-            if isinstance(e, dict):
-                p = e.get("price")
-                if p is not None:
-                    try:
-                        prices.append(float(p))
-                    except (TypeError, ValueError):
-                        pass
-            elif isinstance(e, (int, float)):
-                prices.append(float(e))
-        if prices:
-            return prices
+    for key in ("entry_plan_entries", "entries"):
+        entries_raw = entities.get(key)
+        if isinstance(entries_raw, list) and entries_raw:
+            prices: list[float] = []
+            for e in entries_raw:
+                if isinstance(e, dict):
+                    p = e.get("price")
+                    if p is not None:
+                        try:
+                            prices.append(float(p))
+                        except (TypeError, ValueError):
+                            pass
+                elif isinstance(e, (int, float)):
+                    prices.append(float(e))
+            if prices:
+                return prices
     entry_raw = entities.get("entry_raw") or entities.get("entry")
     return _parse_all_floats(str(entry_raw) if entry_raw is not None else None)
 

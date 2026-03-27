@@ -25,11 +25,21 @@ entry_split:
   AVERAGING:
     distribution: equal
   LIMIT:
-    weights:
-      E1: 1.0
+    single:
+      weights:
+        E1: 1.0
+    averaging:
+      weights:
+        E1: 0.50
+        E2: 0.50
   MARKET:
-    weights:
-      E1: 1.0
+    single:
+      weights:
+        E1: 1.0
+    averaging:
+      weights:
+        E1: 0.50
+        E2: 0.50
 
 price_sanity:
   enabled: false

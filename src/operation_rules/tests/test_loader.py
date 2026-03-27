@@ -37,8 +37,14 @@ def rules_dir(tmp_path: Path) -> Path:
             "entry_split": {
                 "ZONE": {"split_mode": "endpoints", "weights": {"E1": 0.50, "E2": 0.50}},
                 "AVERAGING": {"distribution": "equal"},
-                "LIMIT": {"weights": {"E1": 1.0}},
-                "MARKET": {"weights": {"E1": 1.0}},
+                "LIMIT": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                },
+                "MARKET": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                },
             },
             "price_corrections": {"enabled": False, "method": None},
             "price_sanity": {"enabled": False, "symbol_ranges": {}},
