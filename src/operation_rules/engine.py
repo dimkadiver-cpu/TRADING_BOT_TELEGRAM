@@ -74,23 +74,24 @@ def _parse_all_floats(s: str | None) -> list[float]:
 
 
 def _extract_entry_prices(entities: dict[str, Any]) -> list[float]:
-    """Extract entry price(s) from raw entities dict."""
-    # Prefer structured entries list if present
-    entries_raw = entities.get("entries")
-    if isinstance(entries_raw, list) and entries_raw:
-        prices: list[float] = []
-        for e in entries_raw:
-            if isinstance(e, dict):
-                p = e.get("price")
-                if p is not None:
-                    try:
-                        prices.append(float(p))
-                    except (TypeError, ValueError):
-                        pass
-            elif isinstance(e, (int, float)):
-                prices.append(float(e))
-        if prices:
-            return prices
+    """Extract entry price(s) from entities, including canonical entry_plan_entries."""
+    # Prefer canonical entry plan entries when present
+    for key in ("entry_plan_entries", "entries"):
+        entries_raw = entities.get(key)
+        if isinstance(entries_raw, list) and entries_raw:
+            prices: list[float] = []
+            for e in entries_raw:
+                if isinstance(e, dict):
+                    p = e.get("price")
+                    if p is not None:
+                        try:
+                            prices.append(float(p))
+                        except (TypeError, ValueError):
+                            pass
+                elif isinstance(e, (int, float)):
+                    prices.append(float(e))
+            if prices:
+                return prices
 
     # Fall back to entry_raw string
     entry_raw = entities.get("entry_raw") or entities.get("entry")
@@ -121,23 +122,48 @@ def _extract_symbol(entities: dict[str, Any]) -> str:
     return str(entities.get("symbol") or "").strip().upper()
 
 
+def _extract_entry_plan_entries(entities: dict[str, Any]) -> list[dict[str, Any]]:
+    """Extract canonical entry plan entries from entities when available."""
+    raw = entities.get("entry_plan_entries") or entities.get("entries")
+    if not isinstance(raw, list):
+        return []
+    out: list[dict[str, Any]] = []
+    for item in raw:
+        if isinstance(item, dict):
+            out.append(item)
+    return out
+
+
+def _weights_from_cfg(cfg: dict[str, Any], *, default: dict[str, float]) -> dict[str, float]:
+    """Return normalized split weights from cfg['weights'] or default."""
+    raw = cfg.get("weights", default)
+    casted: dict[str, float] = {}
+    for key, val in raw.items() if isinstance(raw, dict) else default.items():
+        try:
+            casted[str(key)] = float(val)
+        except (TypeError, ValueError):
+            continue
+    if not casted:
+        casted = dict(default)
+    total = sum(casted.values())
+    if total <= 0:
+        return dict(default)
+    return {k: v / total for k, v in casted.items()}
+
+
 def _compute_entry_split(
     entry_prices: list[float],
     entities: dict[str, Any],
     rules: EffectiveRules,
 ) -> dict[str, float]:
-    """Compute entry split weights based on entry count and config."""
+    """Compute entry split weights based on canonical entry plan and config."""
     n = len(entry_prices)
+    plan_type = str(entities.get("entry_plan_type", "")).upper()
+    plan_entries = _extract_entry_plan_entries(entities)
+    order_types = [str(e.get("order_type", "")).upper() for e in plan_entries]
 
-    if n == 0:
-        # MARKET
-        cfg = rules.entry_split.get("MARKET", {})
-        return dict(cfg.get("weights", {"E1": 1.0}))
-
-    if n == 1:
-        # LIMIT
-        cfg = rules.entry_split.get("LIMIT", {})
-        return dict(cfg.get("weights", {"E1": 1.0}))
+    market_cfg = rules.entry_split.get("MARKET", {})
+    limit_cfg = rules.entry_split.get("LIMIT", {})
 
     # Check for ZONE type hint in entities
     entry_type = str(entities.get("entry_type", "")).upper()
@@ -147,13 +173,59 @@ def _compute_entry_split(
         if split_mode == "midpoint":
             return {"E1": 1.0}
         if split_mode == "three_way":
-            weights = cfg.get("weights", {"E1": 0.33, "E2": 0.34, "E3": 0.33})
-            return {k: float(v) for k, v in weights.items()}
+            return _weights_from_cfg(cfg, default={"E1": 0.33, "E2": 0.34, "E3": 0.33})
         # endpoints (default)
-        weights = cfg.get("weights", {"E1": 0.50, "E2": 0.50})
-        return {k: float(v) for k, v in weights.items()}
+        return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
 
-    # AVERAGING (n >= 2, not ZONE)
+    # SINGLE entry
+    if n <= 1:
+        is_single_market = (
+            plan_type == "SINGLE_MARKET"
+            or (order_types and order_types[0] == "MARKET")
+            or str(entities.get("entry_mode", "")).upper() == "MARKET"
+            or str(entities.get("order_type", "")).upper() == "MARKET"
+        )
+        if is_single_market:
+            cfg = (
+                market_cfg.get("single")
+                if isinstance(market_cfg.get("single"), dict)
+                else market_cfg
+            )
+            return _weights_from_cfg(cfg or {}, default={"E1": 1.0})
+        cfg = (
+            limit_cfg.get("single")
+            if isinstance(limit_cfg.get("single"), dict)
+            else limit_cfg
+        )
+        return _weights_from_cfg(cfg or {}, default={"E1": 1.0})
+
+    # TWO-STEP specific plans
+    is_market_with_limit_averaging = (
+        plan_type == "MARKET_WITH_LIMIT_AVERAGING"
+        or (len(order_types) >= 2 and order_types[0] == "MARKET" and order_types[1] == "LIMIT")
+    )
+    if is_market_with_limit_averaging:
+        cfg = (
+            market_cfg.get("averaging")
+            if isinstance(market_cfg.get("averaging"), dict)
+            else {}
+        )
+        return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
+
+    is_limit_with_averaging = (
+        plan_type == "LIMIT_WITH_LIMIT_AVERAGING"
+        or (len(order_types) >= 2 and order_types[0] == "LIMIT" and order_types[1] == "LIMIT")
+    )
+    if is_limit_with_averaging:
+        cfg = (
+            limit_cfg.get("averaging")
+            if isinstance(limit_cfg.get("averaging"), dict)
+            else {}
+        )
+        if cfg:
+            return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
+
+    # Legacy AVERAGING fallback (n >= 2, not ZONE)
     cfg = rules.entry_split.get("AVERAGING", {})
     distribution = cfg.get("distribution", "equal")
     if distribution == "decreasing" and "weights" in cfg:

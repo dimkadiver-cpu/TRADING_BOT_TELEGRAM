@@ -40,8 +40,14 @@ def rules_dir(tmp_path: Path) -> Path:
             "entry_split": {
                 "ZONE": {"split_mode": "endpoints", "weights": {"E1": 0.50, "E2": 0.50}},
                 "AVERAGING": {"distribution": "equal"},
-                "LIMIT": {"weights": {"E1": 1.0}},
-                "MARKET": {"weights": {"E1": 1.0}},
+                "LIMIT": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.4, "E2": 0.6}},
+                },
+                "MARKET": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.7, "E2": 0.3}},
+                },
             },
             "tp_handling": {
                 "tp_handling_mode": "follow_all_signal_tps",
@@ -134,6 +140,54 @@ class TestEngineNewSignalPassthrough:
         op = engine.apply(result, "trader_x", db_path=db_path)
         assert op.entry_split is not None
         assert len(op.entry_split) == 2
+
+    def test_entry_split_single_market_plan(self, rules_dir: Path, db_path: str) -> None:
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result(
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "BUY",
+                "entry_plan_type": "SINGLE_MARKET",
+                "entry_plan_entries": [{"role": "PRIMARY", "order_type": "MARKET", "price": 60000}],
+                "stop_raw": "55000",
+            }
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        assert op.entry_split == {"E1": 1.0}
+
+    def test_entry_split_market_with_limit_averaging(self, rules_dir: Path, db_path: str) -> None:
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result(
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "BUY",
+                "entry_plan_type": "MARKET_WITH_LIMIT_AVERAGING",
+                "entry_plan_entries": [
+                    {"role": "PRIMARY", "order_type": "MARKET", "price": 60000},
+                    {"role": "AVERAGING", "order_type": "LIMIT", "price": 59000},
+                ],
+                "stop_raw": "55000",
+            }
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        assert op.entry_split == {"E1": pytest.approx(0.7), "E2": pytest.approx(0.3)}
+
+    def test_entry_split_limit_with_limit_averaging(self, rules_dir: Path, db_path: str) -> None:
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result(
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "BUY",
+                "entry_plan_type": "LIMIT_WITH_LIMIT_AVERAGING",
+                "entry_plan_entries": [
+                    {"role": "PRIMARY", "order_type": "LIMIT", "price": 60000},
+                    {"role": "AVERAGING", "order_type": "LIMIT", "price": 59000},
+                ],
+                "stop_raw": "55000",
+            }
+        )
+        op = engine.apply(result, "trader_x", db_path=db_path)
+        assert op.entry_split == {"E1": pytest.approx(0.4), "E2": pytest.approx(0.6)}
 
     def test_management_rules_snapshot(self, rules_dir: Path, db_path: str) -> None:
         engine = OperationRulesEngine(rules_dir=str(rules_dir))

@@ -6,7 +6,11 @@ import pytest
 import yaml
 from pathlib import Path
 
-from src.operation_rules.loader import load_effective_rules, HardCaps
+from src.operation_rules.loader import (
+    HardCaps,
+    load_effective_rules,
+    validate_operation_rules_config,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -25,6 +29,7 @@ def rules_dir(tmp_path: Path) -> Path:
         "global_defaults": {
             "enabled": True,
             "gate_mode": "block",
+            "operation_rules": "override",
             "use_trader_risk_hint": False,
             "risk_mode": "risk_pct_of_capital",
             "risk_pct_of_capital": 1.0,
@@ -37,8 +42,14 @@ def rules_dir(tmp_path: Path) -> Path:
             "entry_split": {
                 "ZONE": {"split_mode": "endpoints", "weights": {"E1": 0.50, "E2": 0.50}},
                 "AVERAGING": {"distribution": "equal"},
-                "LIMIT": {"weights": {"E1": 1.0}},
-                "MARKET": {"weights": {"E1": 1.0}},
+                "LIMIT": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                },
+                "MARKET": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                },
             },
             "price_corrections": {"enabled": False, "method": None},
             "price_sanity": {"enabled": False, "symbol_ranges": {}},
@@ -72,6 +83,7 @@ class TestLoaderDefaults:
         rules = load_effective_rules("unknown_trader", rules_dir=str(rules_dir))
         assert rules.enabled is True
         assert rules.gate_mode == "block"
+        assert rules.operation_rules == "override"
         assert rules.risk_mode == "risk_pct_of_capital"
         assert rules.risk_pct_of_capital == 1.0
         assert rules.capital_base_usdt == 1000.0
@@ -96,6 +108,14 @@ class TestLoaderDefaults:
         with pytest.raises(FileNotFoundError):
             load_effective_rules("any", rules_dir=str(tmp_path))
 
+    def test_legacy_position_management_is_normalized(self, rules_dir: Path) -> None:
+        rules = load_effective_rules("any", rules_dir=str(rules_dir))
+        pm = rules.position_management
+        assert pm["mode"] == "trader_hint"
+        assert "trader_hint" in pm
+        assert "machine_event" in pm
+        assert "on_tp_hit" in pm  # legacy extra key preserved
+
 
 class TestLoaderTraderOverride:
     def test_trader_overrides_gate_mode(self, rules_dir: Path) -> None:
@@ -108,6 +128,36 @@ class TestLoaderTraderOverride:
         assert rules.risk_pct_of_capital == 0.5
         # Non-overridden keys still from defaults
         assert rules.leverage == 1
+
+    def test_global_mode_ignores_trader_rule_overrides(self, rules_dir: Path) -> None:
+        """operation_rules=global keeps global defaults, except control switches."""
+        trader_yaml = {
+            "operation_rules": "global",
+            "enabled": False,
+            "gate_mode": "warn",
+            "risk_pct_of_capital": 0.25,  # must be ignored
+            "leverage": 7,                # must be ignored
+        }
+        (rules_dir / "trader_rules" / "global_mode.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        rules = load_effective_rules("global_mode", rules_dir=str(rules_dir))
+        assert rules.operation_rules == "global"
+        assert rules.enabled is False
+        assert rules.gate_mode == "warn"
+        # still global defaults
+        assert rules.risk_pct_of_capital == 1.0
+        assert rules.leverage == 1
+
+    def test_invalid_operation_rules_mode_falls_back_to_override(self, rules_dir: Path) -> None:
+        trader_yaml = {"operation_rules": "invalid_mode", "risk_pct_of_capital": 0.75}
+        (rules_dir / "trader_rules" / "badmode.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        rules = load_effective_rules("badmode", rules_dir=str(rules_dir))
+        assert rules.operation_rules == "override"
+        # override behavior still applied
+        assert rules.risk_pct_of_capital == 0.75
 
     def test_trader_disables(self, rules_dir: Path) -> None:
         (rules_dir / "trader_rules" / "disabled.yaml").write_text(
@@ -147,3 +197,46 @@ class TestLoaderTraderOverride:
         # Other entry types still present
         assert "LIMIT" in rules.entry_split
         assert "MARKET" in rules.entry_split
+
+    def test_position_management_overlap_raises(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "position_management": {
+                "mode": "hybrid",
+                "trader_hint": {
+                    "auto_apply_intents": ["U_MOVE_STOP"],
+                    "log_only_intents": ["U_MOVE_STOP"],
+                },
+                "machine_event": {"rules": []},
+            }
+        }
+        (rules_dir / "trader_rules" / "pm_overlap.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="overlap"):
+            load_effective_rules("pm_overlap", rules_dir=str(rules_dir))
+
+    def test_machine_event_selector_overlap_raises(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "position_management": {
+                "mode": "machine_event",
+                "trader_hint": {"auto_apply_intents": [], "log_only_intents": []},
+                "machine_event": {
+                    "rules": [
+                        {"event_type": "TP_EXECUTED", "when": {"tp_level": 2}, "actions": []},
+                        {"event_type": "TP_EXECUTED", "when": {"tp_level": 2}, "actions": []},
+                    ]
+                },
+            }
+        }
+        (rules_dir / "trader_rules" / "ev_overlap.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="overlapping selector"):
+            load_effective_rules("ev_overlap", rules_dir=str(rules_dir))
+
+    def test_validate_operation_rules_config_validates_all_traders(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "ok.yaml").write_text(
+            yaml.dump({"position_management": {"auto_apply_intents": [], "log_only_intents": []}}),
+            encoding="utf-8",
+        )
+        validate_operation_rules_config(rules_dir=str(rules_dir))

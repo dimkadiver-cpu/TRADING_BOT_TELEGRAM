@@ -42,6 +42,7 @@ class EffectiveRules:
     # Trader on/off + mode
     enabled: bool
     gate_mode: str  # "block" | "warn"
+    operation_rules: str  # "override" | "global"
 
     # Set A — position opening (risk-first model)
     use_trader_risk_hint: bool
@@ -97,6 +98,102 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def _normalize_position_management(raw: dict[str, Any]) -> dict[str, Any]:
+    """Normalize legacy/new position-management config to the v2 shape."""
+    # Legacy v1 shape: {auto_apply_intents, log_only_intents}
+    has_legacy_intents = "auto_apply_intents" in raw or "log_only_intents" in raw
+    has_v2_sections = "trader_hint" in raw or "machine_event" in raw or "mode" in raw
+
+    passthrough = {
+        k: copy.deepcopy(v)
+        for k, v in raw.items()
+        if k not in {"mode", "trader_hint", "machine_event", "auto_apply_intents", "log_only_intents"}
+    }
+
+    if has_legacy_intents and not has_v2_sections:
+        return {
+            "mode": "trader_hint",
+            "trader_hint": {
+                "auto_apply_intents": list(raw.get("auto_apply_intents", [])),
+                "log_only_intents": list(raw.get("log_only_intents", [])),
+            },
+            "machine_event": {"rules": []},
+            **passthrough,
+        }
+
+    mode = str(raw.get("mode", "hybrid")).lower()
+    if mode not in {"machine_event", "trader_hint", "hybrid"}:
+        mode = "hybrid"
+
+    trader_hint = raw.get("trader_hint", {})
+    if not isinstance(trader_hint, dict):
+        trader_hint = {}
+    machine_event = raw.get("machine_event", {})
+    if not isinstance(machine_event, dict):
+        machine_event = {}
+
+    return {
+        "mode": mode,
+        "trader_hint": {
+            "auto_apply_intents": list(trader_hint.get("auto_apply_intents", [])),
+            "log_only_intents": list(trader_hint.get("log_only_intents", [])),
+        },
+        "machine_event": {
+            "rules": list(machine_event.get("rules", [])),
+        },
+        **passthrough,
+    }
+
+
+def _validate_position_management_config(position_management: dict[str, Any]) -> None:
+    """Fail-fast validation for overlapping/conflicting position rules."""
+    mode = str(position_management.get("mode", "hybrid")).lower()
+    if mode not in {"machine_event", "trader_hint", "hybrid"}:
+        raise ValueError(f"Invalid position_management.mode: {mode}")
+
+    trader_hint = position_management.get("trader_hint", {})
+    if not isinstance(trader_hint, dict):
+        raise ValueError("position_management.trader_hint must be an object")
+
+    auto_apply = set(str(x) for x in trader_hint.get("auto_apply_intents", []))
+    log_only = set(str(x) for x in trader_hint.get("log_only_intents", []))
+    overlap = sorted(auto_apply.intersection(log_only))
+    if overlap:
+        raise ValueError(
+            "position_management trader_hint overlap between auto_apply_intents "
+            f"and log_only_intents: {overlap}"
+        )
+
+    machine_event = position_management.get("machine_event", {})
+    if not isinstance(machine_event, dict):
+        raise ValueError("position_management.machine_event must be an object")
+    rules = machine_event.get("rules", [])
+    if not isinstance(rules, list):
+        raise ValueError("position_management.machine_event.rules must be a list")
+
+    # Exclusion check: no duplicated event selectors (no overlap on same trigger).
+    seen_selectors: set[tuple[str, str | None]] = set()
+    for idx, rule in enumerate(rules):
+        if not isinstance(rule, dict):
+            raise ValueError(f"position_management.machine_event.rules[{idx}] must be an object")
+        event_type = str(rule.get("event_type", "")).upper().strip()
+        if not event_type:
+            raise ValueError(f"position_management.machine_event.rules[{idx}].event_type is required")
+        when = rule.get("when", {})
+        if when is None:
+            when = {}
+        if not isinstance(when, dict):
+            raise ValueError(f"position_management.machine_event.rules[{idx}].when must be an object")
+        tp_selector = when.get("tp_level") or when.get("tp_level_gte")
+        selector = (event_type, str(tp_selector) if tp_selector is not None else None)
+        if selector in seen_selectors:
+            raise ValueError(
+                "position_management.machine_event overlapping selector detected: "
+                f"{selector}"
+            )
+        seen_selectors.add(selector)
+
+
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
@@ -121,8 +218,23 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
     trader_path = root / "trader_rules" / f"{trader_id}.yaml"
     trader_data = _load_yaml(trader_path)
 
-    # Merge: start from global_defaults, apply trader overrides on top
-    merged = _deep_merge(global_defaults, trader_data)
+    # operation_rules mode:
+    # - override (default): trader YAML overrides global defaults
+    # - global: ignore trader-specific rule overrides, keep only control switches
+    operation_rules_mode = str(
+        trader_data.get("operation_rules", global_defaults.get("operation_rules", "override"))
+    ).lower()
+    if operation_rules_mode not in {"override", "global"}:
+        operation_rules_mode = "override"
+
+    if operation_rules_mode == "global":
+        merged = copy.deepcopy(global_defaults)
+        for control_key in ("enabled", "gate_mode", "operation_rules"):
+            if control_key in trader_data:
+                merged[control_key] = copy.deepcopy(trader_data[control_key])
+    else:
+        # Merge: start from global_defaults, apply trader overrides on top
+        merged = _deep_merge(global_defaults, trader_data)
 
     # Hard caps are always final (never overridable)
     # Support both old key (max_per_signal_pct) and new key for backward compat
@@ -141,10 +253,22 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
         if et not in entry_split:
             entry_split[et] = {}
 
+    resolved_operation_rules = str(merged.get("operation_rules", "override")).lower()
+    if resolved_operation_rules not in {"override", "global"}:
+        resolved_operation_rules = "override"
+
+    position_management = _normalize_position_management(
+        merged.get("position_management", {})
+        if isinstance(merged.get("position_management", {}), dict)
+        else {}
+    )
+    _validate_position_management_config(position_management)
+
     return EffectiveRules(
         hard_caps=hard_caps,
         enabled=bool(merged.get("enabled", True)),
         gate_mode=str(merged.get("gate_mode", "block")),
+        operation_rules=resolved_operation_rules,
         use_trader_risk_hint=bool(merged.get("use_trader_risk_hint", False)),
         risk_mode=str(merged.get("risk_mode", "risk_pct_of_capital")),
         risk_pct_of_capital=float(merged.get("risk_pct_of_capital", 1.0)),
@@ -164,6 +288,23 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
         }),
         price_corrections=merged.get("price_corrections", {"enabled": False, "method": None}),
         price_sanity=merged.get("price_sanity", {"enabled": False, "symbol_ranges": {}}),
-        position_management=merged.get("position_management", {}),
+        position_management=position_management,
         _raw=merged,
     )
+
+
+def validate_operation_rules_config(*, rules_dir: str = "config") -> None:
+    """Validate global + trader operation rules config at startup."""
+    root = Path(rules_dir)
+    global_path = root / "operation_rules.yaml"
+    if not global_path.exists():
+        raise FileNotFoundError(f"Global operation rules not found: {global_path}")
+
+    # Validate defaults path
+    load_effective_rules("__defaults__", rules_dir=rules_dir)
+
+    trader_dir = root / "trader_rules"
+    if not trader_dir.exists():
+        return
+    for path in sorted(trader_dir.glob("*.yaml")):
+        load_effective_rules(path.stem, rules_dir=rules_dir)
