@@ -75,11 +75,25 @@ global_defaults:
 
   # ── Set B — snapshot regole gestione posizione (letto da Sistema 1) ─────
   position_management:
-    auto_apply_intents:               # UPDATE intents che Sistema 1 esegue automaticamente
-      - U_MOVE_STOP
-      - U_CLOSE_FULL
-      - U_CLOSE_PARTIAL
-      - U_CANCEL_PENDING
-    log_only_intents:                 # UPDATE intents solo informativi
-      - U_TP_HIT
-      - U_SL_HIT
+    mode: hybrid                      # machine_event | trader_hint | hybrid
+
+    trader_hint:
+      auto_apply_intents:             # UPDATE intents che Sistema 1 esegue automaticamente
+        - U_MOVE_STOP
+        - U_CLOSE_FULL
+        - U_CLOSE_PARTIAL
+        - U_CANCEL_PENDING
+      log_only_intents:               # UPDATE intents solo informativi
+        - U_TP_HIT
+        - U_SL_HIT
+
+    machine_event:
+      rules:
+        - event_type: TP_EXECUTED
+          when:
+            tp_level: 2
+          actions:
+            - type: MOVE_STOP_TO_BE
+        - event_type: EXIT_BE
+          actions:
+            - type: MARK_EXIT_BE

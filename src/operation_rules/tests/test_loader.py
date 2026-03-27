@@ -6,7 +6,11 @@ import pytest
 import yaml
 from pathlib import Path
 
-from src.operation_rules.loader import load_effective_rules, HardCaps
+from src.operation_rules.loader import (
+    HardCaps,
+    load_effective_rules,
+    validate_operation_rules_config,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +108,14 @@ class TestLoaderDefaults:
         with pytest.raises(FileNotFoundError):
             load_effective_rules("any", rules_dir=str(tmp_path))
 
+    def test_legacy_position_management_is_normalized(self, rules_dir: Path) -> None:
+        rules = load_effective_rules("any", rules_dir=str(rules_dir))
+        pm = rules.position_management
+        assert pm["mode"] == "trader_hint"
+        assert "trader_hint" in pm
+        assert "machine_event" in pm
+        assert "on_tp_hit" in pm  # legacy extra key preserved
+
 
 class TestLoaderTraderOverride:
     def test_trader_overrides_gate_mode(self, rules_dir: Path) -> None:
@@ -185,3 +197,46 @@ class TestLoaderTraderOverride:
         # Other entry types still present
         assert "LIMIT" in rules.entry_split
         assert "MARKET" in rules.entry_split
+
+    def test_position_management_overlap_raises(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "position_management": {
+                "mode": "hybrid",
+                "trader_hint": {
+                    "auto_apply_intents": ["U_MOVE_STOP"],
+                    "log_only_intents": ["U_MOVE_STOP"],
+                },
+                "machine_event": {"rules": []},
+            }
+        }
+        (rules_dir / "trader_rules" / "pm_overlap.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="overlap"):
+            load_effective_rules("pm_overlap", rules_dir=str(rules_dir))
+
+    def test_machine_event_selector_overlap_raises(self, rules_dir: Path) -> None:
+        trader_yaml = {
+            "position_management": {
+                "mode": "machine_event",
+                "trader_hint": {"auto_apply_intents": [], "log_only_intents": []},
+                "machine_event": {
+                    "rules": [
+                        {"event_type": "TP_EXECUTED", "when": {"tp_level": 2}, "actions": []},
+                        {"event_type": "TP_EXECUTED", "when": {"tp_level": 2}, "actions": []},
+                    ]
+                },
+            }
+        }
+        (rules_dir / "trader_rules" / "ev_overlap.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="overlapping selector"):
+            load_effective_rules("ev_overlap", rules_dir=str(rules_dir))
+
+    def test_validate_operation_rules_config_validates_all_traders(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "ok.yaml").write_text(
+            yaml.dump({"position_management": {"auto_apply_intents": [], "log_only_intents": []}}),
+            encoding="utf-8",
+        )
+        validate_operation_rules_config(rules_dir=str(rules_dir))

@@ -13,6 +13,7 @@ from telethon import TelegramClient
 from src.core.config_loader import load_config
 from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
+from src.operation_rules.loader import validate_operation_rules_config
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
 from src.telegram.listener import (
     TelegramListener,
@@ -78,6 +79,8 @@ async def _async_main(
         "TELEGRAM_SOURCE_MAP_PATH",
         str(root_dir / "config" / "telegram_source_map.json"),
     )
+    validate_operation_rules_config(rules_dir=str(root_dir / "config"))
+    logger.info("operation rules config validation passed")
     config = load_config(str(root_dir))
     trader_mapper = TelegramSourceTraderMapper.from_json_file(
         file_path=source_map_path,
