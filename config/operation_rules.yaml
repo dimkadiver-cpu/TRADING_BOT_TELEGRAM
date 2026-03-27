@@ -12,6 +12,7 @@ global_hard_caps:
 global_defaults:
   enabled: true
   gate_mode: block                        # block | warn
+  operation_rules: override               # override | global
 
   # ── Modello rischio — Set A ──────────────────────────────────────────────
   # Il centro del sistema è il rischio massimo accettato, non la size.
@@ -36,11 +37,21 @@ global_defaults:
     AVERAGING:
       distribution: equal               # equal | decreasing
     LIMIT:
-      weights:
-        E1: 1.0
+      single:
+        weights:
+          E1: 1.0
+      averaging:                        # due entry LIMIT (primary + averaging)
+        weights:
+          E1: 0.50
+          E2: 0.50
     MARKET:
-      weights:
-        E1: 1.0
+      single:
+        weights:
+          E1: 1.0
+      averaging:                        # MARKET + LIMIT averaging (2 step)
+        weights:
+          E1: 0.50
+          E2: 0.50
 
   # Price corrections hook (implementazione futura)
   price_corrections:

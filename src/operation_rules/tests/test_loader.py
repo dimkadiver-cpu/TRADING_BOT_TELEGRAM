@@ -25,6 +25,7 @@ def rules_dir(tmp_path: Path) -> Path:
         "global_defaults": {
             "enabled": True,
             "gate_mode": "block",
+            "operation_rules": "override",
             "use_trader_risk_hint": False,
             "risk_mode": "risk_pct_of_capital",
             "risk_pct_of_capital": 1.0,
@@ -37,8 +38,14 @@ def rules_dir(tmp_path: Path) -> Path:
             "entry_split": {
                 "ZONE": {"split_mode": "endpoints", "weights": {"E1": 0.50, "E2": 0.50}},
                 "AVERAGING": {"distribution": "equal"},
-                "LIMIT": {"weights": {"E1": 1.0}},
-                "MARKET": {"weights": {"E1": 1.0}},
+                "LIMIT": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                },
+                "MARKET": {
+                    "single": {"weights": {"E1": 1.0}},
+                    "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
+                },
             },
             "price_corrections": {"enabled": False, "method": None},
             "price_sanity": {"enabled": False, "symbol_ranges": {}},
@@ -72,6 +79,7 @@ class TestLoaderDefaults:
         rules = load_effective_rules("unknown_trader", rules_dir=str(rules_dir))
         assert rules.enabled is True
         assert rules.gate_mode == "block"
+        assert rules.operation_rules == "override"
         assert rules.risk_mode == "risk_pct_of_capital"
         assert rules.risk_pct_of_capital == 1.0
         assert rules.capital_base_usdt == 1000.0
@@ -108,6 +116,36 @@ class TestLoaderTraderOverride:
         assert rules.risk_pct_of_capital == 0.5
         # Non-overridden keys still from defaults
         assert rules.leverage == 1
+
+    def test_global_mode_ignores_trader_rule_overrides(self, rules_dir: Path) -> None:
+        """operation_rules=global keeps global defaults, except control switches."""
+        trader_yaml = {
+            "operation_rules": "global",
+            "enabled": False,
+            "gate_mode": "warn",
+            "risk_pct_of_capital": 0.25,  # must be ignored
+            "leverage": 7,                # must be ignored
+        }
+        (rules_dir / "trader_rules" / "global_mode.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        rules = load_effective_rules("global_mode", rules_dir=str(rules_dir))
+        assert rules.operation_rules == "global"
+        assert rules.enabled is False
+        assert rules.gate_mode == "warn"
+        # still global defaults
+        assert rules.risk_pct_of_capital == 1.0
+        assert rules.leverage == 1
+
+    def test_invalid_operation_rules_mode_falls_back_to_override(self, rules_dir: Path) -> None:
+        trader_yaml = {"operation_rules": "invalid_mode", "risk_pct_of_capital": 0.75}
+        (rules_dir / "trader_rules" / "badmode.yaml").write_text(
+            yaml.dump(trader_yaml), encoding="utf-8"
+        )
+        rules = load_effective_rules("badmode", rules_dir=str(rules_dir))
+        assert rules.operation_rules == "override"
+        # override behavior still applied
+        assert rules.risk_pct_of_capital == 0.75
 
     def test_trader_disables(self, rules_dir: Path) -> None:
         (rules_dir / "trader_rules" / "disabled.yaml").write_text(

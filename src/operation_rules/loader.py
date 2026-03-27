@@ -42,6 +42,7 @@ class EffectiveRules:
     # Trader on/off + mode
     enabled: bool
     gate_mode: str  # "block" | "warn"
+    operation_rules: str  # "override" | "global"
 
     # Set A — position opening (risk-first model)
     use_trader_risk_hint: bool
@@ -121,8 +122,23 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
     trader_path = root / "trader_rules" / f"{trader_id}.yaml"
     trader_data = _load_yaml(trader_path)
 
-    # Merge: start from global_defaults, apply trader overrides on top
-    merged = _deep_merge(global_defaults, trader_data)
+    # operation_rules mode:
+    # - override (default): trader YAML overrides global defaults
+    # - global: ignore trader-specific rule overrides, keep only control switches
+    operation_rules_mode = str(
+        trader_data.get("operation_rules", global_defaults.get("operation_rules", "override"))
+    ).lower()
+    if operation_rules_mode not in {"override", "global"}:
+        operation_rules_mode = "override"
+
+    if operation_rules_mode == "global":
+        merged = copy.deepcopy(global_defaults)
+        for control_key in ("enabled", "gate_mode", "operation_rules"):
+            if control_key in trader_data:
+                merged[control_key] = copy.deepcopy(trader_data[control_key])
+    else:
+        # Merge: start from global_defaults, apply trader overrides on top
+        merged = _deep_merge(global_defaults, trader_data)
 
     # Hard caps are always final (never overridable)
     # Support both old key (max_per_signal_pct) and new key for backward compat
@@ -141,10 +157,15 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
         if et not in entry_split:
             entry_split[et] = {}
 
+    resolved_operation_rules = str(merged.get("operation_rules", "override")).lower()
+    if resolved_operation_rules not in {"override", "global"}:
+        resolved_operation_rules = "override"
+
     return EffectiveRules(
         hard_caps=hard_caps,
         enabled=bool(merged.get("enabled", True)),
         gate_mode=str(merged.get("gate_mode", "block")),
+        operation_rules=resolved_operation_rules,
         use_trader_risk_hint=bool(merged.get("use_trader_risk_hint", False)),
         risk_mode=str(merged.get("risk_mode", "risk_pct_of_capital")),
         risk_pct_of_capital=float(merged.get("risk_pct_of_capital", 1.0)),

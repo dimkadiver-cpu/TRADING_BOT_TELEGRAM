@@ -4,6 +4,7 @@
 
 enabled: true
 gate_mode: warn                       # warn durante sviluppo (non blocca)
+operation_rules: override             # override | global (usa solo global defaults)
 
 # Modello rischio
 risk_mode: risk_pct_of_capital
@@ -25,11 +26,21 @@ entry_split:
   AVERAGING:
     distribution: equal
   LIMIT:
-    weights:
-      E1: 1.0
+    single:
+      weights:
+        E1: 1.0
+    averaging:
+      weights:
+        E1: 0.50
+        E2: 0.50
   MARKET:
-    weights:
-      E1: 1.0
+    single:
+      weights:
+        E1: 1.0
+    averaging:
+      weights:
+        E1: 0.50
+        E2: 0.50
 
 price_sanity:
   enabled: false
