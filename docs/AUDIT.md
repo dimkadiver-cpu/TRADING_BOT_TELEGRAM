@@ -154,25 +154,45 @@ src/target_resolver/__init__.py                 → ✓ CREATO (Step 14)
 src/target_resolver/resolver.py                 → ✓ CREATO (Step 14) — TargetResolver per kind/method + eligibility
 src/target_resolver/tests/                      → ✓ CREATO (Step 14) — 14 test resolver
 src/parser/models/operational.py               → ✓ AGGIORNATO (Step 12) — OperationalSignal con trader_id, arbitrary_types_allowed; ResolvedTarget; ResolvedSignal
-src/telegram/tests/test_router_phase4.py        → ✓ CREATO (Step 15) — 13 test integrazione Phase 4
+src/telegram/tests/test_router_phase4.py        → ✓ AGGIORNATO (Step 15 + GAP-01) — +2 test: unresolved UPDATE → review_queue
 ```
 
-### TROVATO MA NON IN AUDIT — file non catalogati
+### KEEP — execution layer (Fase 5–6, stabile)
 
 ```
-src/execution/                      → NUOVO, non pianificato in questa fase
-  planner.py                        → genera OrderPlan da segnale
-  risk_gate.py                      → risk gating
-  state_machine.py                  → state machine posizioni
-  update_applier.py                 → applica update su stato
-  update_planner.py                 → pianifica update
-  test_update_applier.py            → test
-  test_update_planner.py            → test
-src/exchange/                       → NUOVO, non pianificato in questa fase
-  adapter.py                        → interfaccia exchange
-  bybit_rest.py                     → bybit REST
-  bybit_ws.py                       → bybit WebSocket
-  reconcile.py                      → riconciliazione stato
+src/execution/
+  freqtrade_normalizer.py           → ✓ canonical → FreqtradeSignalContext; Step A-E allineamento
+  freqtrade_callback.py             → ✓ callback writer con retry SQLite
+  exchange_gateway.py               → ✓ gateway exchange-backed (protocol + wrapper)
+  exchange_order_manager.py         → ✓ manager SL/TP exchange-backed + update lifecycle
+  order_reconciliation.py           → ✓ bootstrap sync + watchdog leggero (Step 24)
+  freqtrade_exchange_backend.py     → ✓ CREATO GAP-03 — adapter FreqtradeExchangeBackend (ExchangeGatewayBackend)
+  machine_event.py                  → ✓ CREATO GAP-04 — rule engine machine_event (evaluate_rules, MachineEventAction)
+  protective_orders_mode.py         → ✓ feature flag strategy_managed / exchange_manager
+  dynamic_pairlist.py               → ✓ auto-popola dynamic_pairs.json per freqtrade
+  risk_gate.py                      → ✓ risk gating
+  update_applier.py                 → ✓ applica update su stato DB
+  update_planner.py                 → ✓ pianifica update da intents
+  test_update_applier.py            → ✓ test
+  test_update_planner.py            → ✓ test
+  tests/test_freqtrade_bridge.py    → ✓ 82 pass (normalizer + SignalBridgeStrategy + plot_config)
+  tests/test_freqtrade_callback.py  → ✓ test callback writer
+  tests/test_exchange_order_manager.py → ✓ test Step 22-23
+  tests/test_order_reconciliation.py   → ✓ test Step 24
+  tests/test_freqtrade_exchange_backend.py → ✓ CREATO GAP-03 — 19 test (field mapping, error handling, gateway integration)
+  tests/test_machine_event.py             → ✓ CREATO GAP-04 — 18 test (unit rule engine + integrazione TP2→BE→EXIT_BE)
+  tests/test_phase6_e2e.py             → ✓ evidenza e2e Fase 6 (60 pass)
+  tests/test_dynamic_pairlist.py       → ✓ test pairlist dinamica
+  tests/test_protective_orders_mode.py → ✓ test feature flag
+freqtrade/user_data/strategies/
+  SignalBridgeStrategy.py           → ✓ bridge IStrategy entry + exit + stoploss + sizing + plot_config + bot_start() watchdog (GAP-03)
+db/migrations/
+  013_protective_orders_mode.sql    → ✓ migration feature flag mode per trade
+docs/
+  GAP_ANALYSIS.md                   → ✓ AGGIORNATO 2026-03-28 — GAP-01, GAP-02, GAP-03, GAP-04 chiusi
+  FASE_6_ALLINEAMENTO_AGENTE.md     → ✓ discrepanze operation_rules vs runtime (Step A-E risolte)
+  FIX_FREQUI_MARKERS.md             → ✓ guida chart FreqUI + limiti strutturali documentati
+  FIX_FREQUI_MARKERS_AGENTE.md      → handoff agente per fix marker/chart
 src/telegram/bot.py                 → bot Telegram (non pianificato ora)
 src/parser/action_builders/canonical_v2.py → builder azioni strutturate v2
 ```
@@ -386,11 +406,21 @@ Tutti i 100 test passano. Fix principali applicati:
 
 2. **`parser_test` è allineato al formato parser corrente, ma non riproduce ancora tutto il lifecycle live** — ora passa `hashtags` e `extracted_links` al `ParserContext`, ma non valida l'intero comportamento runtime di `processing_status` / `review_queue`.
 
-3. **`src/execution/` e `src/exchange/` esistono ma non sono pianificati** — Questi moduli sono stati creati anticipatamente rispetto all'ordine di sviluppo (Fase 5+). Non integrati con il parser. Non testati nel contesto del flusso completo. Non modificare.
+3. **Bridge freqtrade Step 20** — catena documentata fino all'operatività: `channels.yaml` reale presente (`PifSignal`), runbook minimo per listener/freqtrade/FreqUI/Telegram bot pronto, parser e operation rules verificati per i trader attesi del canale multi-trader. L'osservabilità end-to-end live con messaggio Telegram reale non è ancora stata osservata in questo workspace.
 
 4. **Canali multi-trader** — `telegram_source_map.json` può e deve marcare i chat id multi-trader, ma questo non elimina gli `UNRESOLVED` per update brevi senza alias; serve contesto reply-chain robusto.
 
 5. **`canonical_schema.py` carica da CSV** — `schema_consigliato_finale_parser.csv` è marcato come DELETE nel git status (`D schema_consigliato_finale_parser.csv`). Se il file viene eliminato, `canonical_schema.py` restituisce `{}` silenziosamente. Controllare prima di procedere.
+
+6. **Gap aperti documentati in `docs/GAP_ANALYSIS.md`** — Analisi 2026-03-28 aggiornata. Stato gap:
+   - **GAP-01** ✅ CHIUSO (2026-03-28) — UPDATE UNRESOLVED ora instradato in review_queue; eligibility e conflict detection erano già corretti
+   - **GAP-02** ✅ CHIUSO (2026-03-28) — `EntryPricePolicy` già integrata in `confirm_trade_entry()` di SignalBridgeStrategy (file era untracked al momento dell'analisi)
+   - **GAP-03** Watchdog ordini orfani: riconciliazione solo a bootstrap, nessun polling periodico — step 24 Fase 6
+   - **GAP-04** `machine_event.rules` dichiarato `NOT_SUPPORTED` con sentinel — non eseguito, step 23 Fase 6
+   - **GAP-05** Update Applier frammentato — U_CLOSE_PARTIAL, U_ADD_ENTRY non hanno handler — step 23 Fase 6
+   - **GAP-06** `price_corrections` futura feature, rimossa dalla lista gap attivi (out-of-scope)
+   - **GAP-07** `live_equity` capital sizing non implementato (solo `static_config`) — bassa priorità
+   Vedere `docs/GAP_ANALYSIS.md` per dettaglio completo con impatto e priorità.
 
 ---
 
@@ -402,7 +432,7 @@ Tutti i 100 test passano. Fix principali applicati:
 
 3. **parse_result_normalized_json** — il campo nel DB contiene output della vecchia architettura. Dopo la migrazione produrrà output del nuovo TraderParseResult. Il DB test è separato — nessun rischio sul DB live.
 
-4. **Configurazione live ancora incompleta** — `config/channels.yaml` esiste ma ha `channels: []`; il listener/router sono pronti, ma il sistema non è ancora configurato per seguire canali reali.
+4. **Configurazione live ancora parziale** — `config/channels.yaml` ora include il canale reale `PifSignal`, ma in questo workspace mancano ancora runtime Telegram live e runtime freqtrade reale per osservare la catena completa in esercizio.
 
 5. **`schema_consigliato_finale_parser.csv` è staged per DELETE** — `canonical_schema.py` dipende da esso. Se sparisce senza un sostituto, `canonical_intents()` restituisce set vuoto e i test di `canonical_schema` potrebbero non rilevarsi. Verificare prima di committare.
 
@@ -429,12 +459,22 @@ Tutti i 100 test passano. Fix principali applicati:
 [✓] Step 13 — Operation Rules Engine: loader, risk_calculator, engine + config YAML — 28 test
 [✓] Step 14 — Target Resolver + signals_query/signals_store/op_signals_store — 14 test
 [✓] Step 15 — Integrazione nel Router (Layer 4+5 dopo VALID) — 13 test router_phase4
-[ ] Step 16 — Eliminazione stub exchange/execution incompatibili + SignalBridgeStrategy scheletro
-[ ] Step 17 — freqtrade_callback.py + populate_exit + custom_stoploss
-[ ] Step 18 — UPDATE intents su freqtrade (U_MOVE_STOP, U_CLOSE_FULL, U_CLOSE_PARTIAL)
-[ ] Step 19 — Smoke test dry_run Bybit
-[ ] Step 20 — Configurazione canali live
-[ ] Step 21+ — Backtesting (Sistema 2)
+[✓] Step 16 — Eliminazione stub exchange/execution incompatibili + SignalBridgeStrategy scheletro
+[✓] Step 17 — freqtrade_callback.py + populate_exit + custom_stoploss
+[✓] Step 18 — UPDATE intents su freqtrade (U_MOVE_STOP, U_CLOSE_FULL, U_CLOSE_PARTIAL, U_CANCEL_PENDING)
+[✓] Step 19 — Smoke test dry_run Bybit (template + bootstrap pronti, limite ambiente documentato)
+[✓] Step 20 — Configurazione canali live + monitoring operativo (limiti ambiente documentati)
+[✓] Step 21 — Feature flag `exchange_manager` + contratto dati protettivi
+[✓] Step 22 — `exchange_gateway.py` + `exchange_order_manager.py` (SL + TP reali dopo fill)
+[✓] Step 23 — Update management ordini aperti (U_MOVE_STOP, U_CLOSE_FULL, U_CLOSE_PARTIAL, U_CANCEL_PENDING)
+[✓] Step 24 — `order_reconciliation.py` bootstrap sync + watchdog leggero
+[✓] Step A  — Router preserva `order_type` reale; normalizer espone `entry_prices` + `entry_split`
+[✓] Step B  — Policy single-entry `first_in_plan`; `custom_entry_price()` usa E1 come prezzo LIMIT
+[✓] Step C  — `EntryPricePolicy` + `check_entry_rate()` + `confirm_trade_entry()` rigetta fill fuori tolleranza
+[✓] Step D  — `MACHINE_EVENT_RULES_NOT_SUPPORTED` sentinel; `allowed_update_directives` connette trader_hint al runtime
+[✓] Step E  — `PRICE_CORRECTIONS_NOT_SUPPORTED` sentinel; tabella contratto runtime in `FREQTRADE_CONFIG.md`
+[✓] FreqUI  — `plot_config` + subplot "Bridge Events" in `SignalBridgeStrategy.py`
+[ ] Sistema 2 — Backtesting (non ancora pianificato)
 ```
 
 **Regola: non iniziare uno step prima che il precedente sia testato e funzionante.**
@@ -449,10 +489,36 @@ Tutti i 100 test passano. Fix principali applicati:
 - `TRADE_STATE_MACHINE.md`, `RISK_ENGINE.md`, `BOT_COMMANDS.md` sono target design futuro — non implementare ora
 - Aggiorna questo file `AUDIT.md` quando completi ogni step
 - `trader_d` risulta migrato e con suite dedicata presente; eventuali nuovi interventi vanno valutati sul working tree corrente, non sul vecchio stato pre-fix.
-- **`src/execution/` e `src/exchange/`** esistono ma non sono nel piano di sviluppo attuale. Non toccare.
+- `src/exchange/` stub legacy rimossi in Step 16; i nuovi punti di integrazione Fase 5 sono `src/execution/freqtrade_normalizer.py` e `freqtrade/user_data/strategies/SignalBridgeStrategy.py`.
 
 ---
 
 *Aggiornato: 2026-03-25 (Step 15) — Phase 4 completa: Operation Rules Engine + Target Resolver integrati nel Router. Steps 12-15 ✓. Tutti i test della full suite passano (427/427). Smoke suite 298/299 (1 failure preesistente su test_listener_recovery non introdotto da Step 15).*
 
-*Aggiornato: 2026-03-27 (Step 16 — PRD) — Creato docs/PRD_FASE_5.md. Architettura Fase 5 definita: freqtrade + IStrategy custom (SignalBridgeStrategy). Step 16–20 pianificati. Stub incompatibili (src/exchange/, planner.py, state_machine.py) marcati per eliminazione in Step 16.*
+*Aggiornato: 2026-03-27 (Step 16) — Rimossi gli stub incompatibili (`src/exchange/adapter.py`, `bybit_rest.py`, `bybit_ws.py`, `reconcile.py`, `src/execution/planner.py`, `state_machine.py`). Creati `src/execution/freqtrade_normalizer.py`, `freqtrade/user_data/strategies/SignalBridgeStrategy.py` e i test unitari del bridge. Lo smoke test dry-run freqtrade resta bloccato finché non esiste un venv freqtrade dedicato disponibile.*
+
+*Aggiornato: 2026-03-27 (Step 17) — Estesi `SignalBridgeStrategy.py` con `custom_stoploss()`, `populate_exit_trend()`, `custom_stake_amount()` e `leverage()`. Creato `src/execution/freqtrade_callback.py` con callback writer minimo e retry su `SQLITE_BUSY`. Aggiunti test unitari per stoploss, UPDATE `U_MOVE_STOP`, exit `U_CLOSE_FULL`, fill entry e close piena. Suite completa: 783 pass, 1 failure preesistente su `test_listener_recovery`.*
+
+*Aggiornato: 2026-03-27 (Step 18) — Esteso il normalizer con UPDATE targettizzati normalizzati (`U_MOVE_STOP`, `U_CLOSE_FULL`, `U_CLOSE_PARTIAL`, `U_CANCEL_PENDING`) e metadata trade per evitare partial exit ripetute. `SignalBridgeStrategy.py` ora usa `check_entry_timeout()` per cancel pending e `adjust_trade_position()` per partial exits, mantenendo il confine di normalizzazione. `freqtrade_callback.py` persiste partial close, audit dedicato e protegge dal race `cancel-before-fill`. Test nuovi: partial close, cancel pending, close full da UPDATE, move stop a breakeven e race condition. Suite completa: 787 pass, 1 failure preesistente su `test_listener_recovery`.*
+
+*Aggiornato: 2026-03-27 (Step 19) — Creato il template sicuro `freqtrade/user_data/config.template.json` per Bybit futures in `dry_run`, con whitelist ampia ma controllata, configurazione Telegram e `api_server`/FreqUI. Aggiunta la guida `docs/FREQTRADE_CONFIG.md` con bootstrap del venv freqtrade, copia template, validazione config, avvio dry-run e troubleshooting minimo (`pair_whitelist`, symbol non mappabile, `SQLITE_BUSY`). Il file locale `freqtrade/user_data/config.json` è ora ignorato da git. Smoke test end-to-end non eseguibile in questo workspace perché il modulo reale `freqtrade.strategy` non è installato nel venv del progetto.*
+
+*Aggiornato: 2026-03-27 (Step 20) — Popolato `config/channels.yaml` con il canale reale `PifSignal` e documentato il suo uso multi-trader (`trader_a`, `trader_b`, `trader_c`, `trader_d`, `trader_3`). Aggiunto `docs/FREQTRADE_RUNBOOK.md` con avvio listener, avvio freqtrade, check FreqUI, check Telegram bot, query DB essenziali e comandi operativi base. Verificati localmente: loader `channels.yaml`, parser profile disponibili per tutti i trader attesi, operation rules caricabili tramite fallback globale e test router/channel config verdi. Smoke test con messaggio reale e passaggio effettivo a freqtrade non eseguibile in questo workspace per assenza di runtime Telegram live e modulo reale `freqtrade.strategy`; Fase 5 è quindi pronta sul piano di configurazione e monitoraggio, ma non ancora osservata end-to-end dal vivo in questo ambiente.*
+
+*Aggiornato: 2026-03-27 (Fase 5 runtime dry_run) - Bootstrappato `.venv-freqtrade` con `freqtrade 2026.2` e creato `freqtrade/user_data/config.json` locale. Validati nel runtime freqtrade reale in `dry_run` con DB condiviso: `NEW_SIGNAL`, `U_MOVE_STOP`, `U_CLOSE_FULL`, `U_CLOSE_PARTIAL`, `U_CANCEL_PENDING`. Il bridge aggiorna correttamente il DB del bot e gli UPDATE principali sono stati osservati end-to-end. FreqUI/API server locale riattivata con pin `starlette<1.0.0` nel venv freqtrade; verificati `http://127.0.0.1:8080/` e `/docs` con risposta `200`. Resta non validato solo il listener Telegram live in questo workspace.*
+
+*Aggiornato: 2026-03-27 (Fase 5 pairlist dinamica + docs) - Aggiunto `src/execution/dynamic_pairlist.py` e collegato il router per auto-popolare `freqtrade/user_data/dynamic_pairs.json` quando arriva un `NEW_SIGNAL` valido e mappabile. Corrette due regressioni emerse dal test end-to-end del bridge: lettura di `stop_loss` numerico in `OperationRulesEngine` e costruzione incompleta di `OperationalSignalRecord` nel router. Verificate le suite mirate: `src/telegram/tests/test_router_phase4.py`, `src/operation_rules/tests/test_engine.py`, `src/telegram/tests/test_router_integration.py`, `src/execution/tests`. Aggiornata la documentazione operativa e aggiunto `docs/COMANDI.md`. Resta aperta solo l'osservazione di un messaggio Telegram reale nello stesso ambiente.*
+
+*Aggiornato: 2026-03-28 (Fase 6 completata in dry-run avanzato) - Implementati Step 21-24: feature flag `exchange_manager`, `exchange_gateway.py`, `exchange_order_manager.py`, update lifecycle (`U_MOVE_STOP`, `U_CLOSE_FULL`, `U_CLOSE_PARTIAL`, `U_CANCEL_PENDING`), `TP fill`/`SL fill`, `order_reconciliation.py` con bootstrap sync e watchdog leggero. Aggiunti test dedicati per manager, reconciliation e scenario end-to-end `test_phase6_e2e.py`. Evidenza concreta raccolta in `docs/FASE_6_COMPLETAMENTO.md`: entry fill, `SL` reale exchange-backed, ladder `TP` reale, stop update applicato, restart con riconciliazione riuscita, nessun doppio owner e nessun ordine duplicato aperto. Suite `src/execution` verde: 60 pass.*
+
+*Aggiornato: 2026-03-28 (Fase 6 allineamento contratto — Step A–E) — Cinque step di allineamento tra `operation_rules` e runtime freqtrade completati:*
+- *Step A: `router.py` preserva `order_type` reale per entry (non più sempre "LIMIT"); `freqtrade_normalizer.py` espone `entry_prices` e `entry_split` in `FreqtradeSignalContext`.*
+- *Step B: Policy single-entry `first_in_plan` esplicita. `FreqtradeSignalContext` aggiunge `first_entry_price` / `first_entry_order_type`. `SignalBridgeStrategy.custom_entry_price()` usa E1 come prezzo LIMIT; fallback a `proposed_rate` per MARKET.*
+- *Step C: `EntryPricePolicy`, `resolve_entry_price_policy()`, `check_entry_rate()`, `persist_entry_price_rejected_event()` nel normalizer. `confirm_trade_entry()` nella strategy rigetta fill fuori tolleranza e persiste evento `ENTRY_PRICE_REJECTED` nel DB.*
+- *Step D: `MACHINE_EVENT_RULES_NOT_SUPPORTED = True` sentinel; `resolve_allowed_update_intents()` connette `trader_hint.auto_apply_intents` al runtime; `is_machine_event_mode()` forza fallback permissivo. `allowed_update_directives` property su `FreqtradeSignalContext` sostituisce `update_directives` nei metodi `close_full_requested`, `cancel_pending_requested`, `latest_partial_close`.*
+- *Step E: `PRICE_CORRECTIONS_NOT_SUPPORTED = True` sentinel dichiarato in normalizer. Aggiunto docstring su scope `EntryPricePolicy` vs `price_sanity` (parse-time vs runtime). Aggiornati `FREQTRADE_CONFIG.md` e `FREQTRADE_RUNBOOK.md` con tabella contratto runtime (supportato/non supportato/garanzie). Aggiunti 7 test di alignment contract in `test_freqtrade_bridge.py` (pillars 1–4 + note price_sanity). Suite `src/execution`: 76 pass. Suite globale: 807 pass + 2 failure preesistenti invariati.*
+
+*Aggiornato: 2026-03-28 (Fix FreqUI Markers) — Aggiunto `plot_config` e logica di plotting read-only a `SignalBridgeStrategy.py`. Main plot: linee SL (`bridge_sl`), TP1-3 (`bridge_tp1`..`bridge_tp3`), entry price (`bridge_entry_price`). Subplot "Bridge Events": barre per entry fill, partial exit, TP hit, SL hit, close completa, lette dalla tabella `events` del DB e mappate sulla candela più vicina. Nessuna modifica alla logica di trading. Aggiunti 7 test di plotting in `test_freqtrade_bridge.py`. Aggiornato `docs/FIX_FREQUI_MARKERS.md` con guida alla lettura del chart e limiti strutturali di FreqUI documentati. Suite `src/execution/tests/test_freqtrade_bridge.py`: 82 pass, 1 skip (pandas non disponibile nel test env).*
+
+*Aggiornato: 2026-03-28 (Analisi gap pipeline) — Revisione completa del flusso parser→execution. Creato `docs/GAP_ANALYSIS.md` con elenco classificato (critici/medi/bassi) di 8 gap aperti. Aggiornate le sezioni AUDIT: ordine di sviluppo (Steps 21-24 + A-E + FreqUI marcati completi), file execution spostati in KEEP, conflitti architetturali integrati con i gap residui. Stato globale confermato: flusso end-to-end funzionante per `exchange_manager` mode; gap aperti documentati ma non bloccanti per operatività base.*
+

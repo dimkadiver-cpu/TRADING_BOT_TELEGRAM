@@ -1,0 +1,117 @@
+{
+  "$schema_note": "Copy this file to freqtrade/user_data/config.json and replace placeholder values locally. Do not commit real credentials.",
+  "max_open_trades": 20,
+  "stake_currency": "USDT",
+  "stake_amount": "unlimited",
+  "tradable_balance_ratio": 0.99,
+  "fiat_display_currency": "USD",
+  "dry_run": true,
+  "dry_run_wallet": 1000,
+  "cancel_open_orders_on_exit": false,
+  "timeframe": "1m",
+  "trading_mode": "futures",
+  "margin_mode": "isolated",
+  "strategy": "SignalBridgeStrategy",
+  "bot_name": "TeleSignalBot-Bridge",
+  "bot_db_path": "C:/TeleSignalBot/.local/tele_signalbot.sqlite3",
+  "te_signal_bot_db_path": "C:/TeleSignalBot/.local/tele_signalbot.sqlite3",
+  "execution": {
+    "protective_orders_mode": "strategy_managed",
+    "reconciliation_watchdog_interval_s": 60
+  },
+  "exchange": {
+    "name": "bybit",
+    "key": "__SET_LOCALLY__",
+    "secret": "__SET_LOCALLY__",
+    "password": "",
+    "ccxt_config": {
+      "enableRateLimit": true,
+      "options": {
+        "defaultType": "swap"
+      }
+    },
+    "ccxt_async_config": {
+      "enableRateLimit": true,
+      "options": {
+        "defaultType": "swap"
+      }
+    },
+    "pair_whitelist": [
+      "BTC/USDT:USDT",
+      "ETH/USDT:USDT",
+      "SOL/USDT:USDT",
+      "BNB/USDT:USDT",
+      "XRP/USDT:USDT",
+      "DOGE/USDT:USDT",
+      "ADA/USDT:USDT",
+      "AVAX/USDT:USDT",
+      "LINK/USDT:USDT",
+      "LTC/USDT:USDT",
+      "DOT/USDT:USDT",
+      "MATIC/USDT:USDT",
+      "TRX/USDT:USDT",
+      "APT/USDT:USDT",
+      "SUI/USDT:USDT",
+      "TON/USDT:USDT"
+    ],
+    "pair_blacklist": [
+      ".*/BUSD",
+      ".*/USDC"
+    ]
+  },
+  "entry_pricing": {
+    "price_side": "same",
+    "use_order_book": true,
+    "order_book_top": 1
+  },
+  "exit_pricing": {
+    "price_side": "same",
+    "use_order_book": true,
+    "order_book_top": 1
+  },
+  "order_types": {
+    "entry": "limit",
+    "exit": "limit",
+    "emergency_exit": "market",
+    "force_entry": "market",
+    "force_exit": "market",
+    "stoploss": "market",
+    "stoploss_on_exchange": true,
+    "stoploss_on_exchange_interval": 60
+  },
+  "pairlists": [
+    {
+      "method": "StaticPairList"
+    },
+    {
+      "method": "RemotePairList",
+      "mode": "whitelist",
+      "processing_mode": "append",
+      "pairlist_url": "file:///user_data/dynamic_pairs.json",
+      "refresh_period": 10,
+      "keep_pairlist_on_failure": true
+    }
+  ],
+  "api_server": {
+    "enabled": true,
+    "listen_ip_address": "127.0.0.1",
+    "listen_port": 8080,
+    "verbosity": "error",
+    "enable_openapi": true,
+    "jwt_secret_key": "__SET_LOCALLY__",
+    "ws_token": "__SET_LOCALLY__",
+    "username": "__SET_LOCALLY__",
+    "password": "__SET_LOCALLY__"
+  },
+  "telegram": {
+    "enabled": false,
+    "token": "__SET_LOCALLY__",
+    "chat_id": "__SET_LOCALLY__",
+    "allow_custom_messages": true
+  }
+}
+
+
+
+
+
