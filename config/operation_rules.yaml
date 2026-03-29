@@ -8,6 +8,16 @@ global_hard_caps:
   max_capital_at_risk_pct: 10.0           # % portfolio totale su tutti i trader
   hard_max_per_signal_risk_pct: 2.0       # rischio massimo per singolo segnale (% capitale)
 
+# ── Trader registrati / autorizzati ──────────────────────────────────────────
+# Se un trader non è in questa lista, il segnale viene bloccato con
+# block_reason=trader_not_registered anche se esiste parser/profile.
+registered_traders:
+  - trader_3
+  - trader_a
+  - trader_b
+  - trader_c
+  - trader_d
+
 # ── Defaults per trader (overridabili in config/trader_rules/) ────────────────
 global_defaults:
   enabled: true
@@ -66,7 +76,7 @@ global_defaults:
   # ── Gestione TP ─────────────────────────────────────────────────────────
   tp_handling:
     tp_handling_mode: follow_all_signal_tps   # follow_all_signal_tps | limit_to_max_levels
-    max_tp_levels: 4                           # usato solo se limit_to_max_levels
+    max_tp_levels: 3                           # usato solo se limit_to_max_levels
     tp_close_distribution:                     # tabelle separate per numero di TP
       2: [50, 50]
       3: [30, 30, 40]
@@ -76,6 +86,9 @@ global_defaults:
   # ── Set B — snapshot regole gestione posizione (letto da Sistema 1) ─────
   position_management:
     mode: hybrid                      # machine_event | trader_hint | hybrid
+                                      # hybrid: trader_hint per UPDATE Telegram + machine_event per callback runtime
+                                      # trader_hint: solo UPDATE Telegram auto-applicati
+                                      # machine_event: blocca auto-apply degli UPDATE Telegram, usa solo callback runtime
 
     trader_hint:
       auto_apply_intents:             # UPDATE intents che Sistema 1 esegue automaticamente
@@ -83,6 +96,8 @@ global_defaults:
         - U_CLOSE_FULL
         - U_CLOSE_PARTIAL
         - U_CANCEL_PENDING
+        - U_MOVE_STOP_TO_BE
+
       log_only_intents:               # UPDATE intents solo informativi
         - U_TP_HIT
         - U_SL_HIT
@@ -97,3 +112,22 @@ global_defaults:
         - event_type: EXIT_BE
           actions:
             - type: MARK_EXIT_BE
+
+
+              # Eventi runtime supportati oggi:
+      # - TP_EXECUTED : emesso dal callback dopo un partial TP fill
+      # - EXIT_BE     : emesso dal callback stoploss quando be_stop_active=true
+      #
+      # Variabili supportate in "when":
+      # - tp_level    : livello TP 1-based (TP1=1, TP2=2, ...)
+      #
+      # Azioni supportate oggi:
+      # - MOVE_STOP_TO_BE : sposta SL al prezzo di entry reale e marca be_stop_active=true
+      # - MARK_EXIT_BE    : marca il trade come chiuso a breakeven in meta_json
+      #
+      # Note operative:
+      # - EXIT_BE oggi non usa variabili in "when" (match unconditional)
+      # - SL_HIT è previsto dall'engine ma non ha ancora azioni runtime dedicate
+      # - Per aggiungere nuove azioni/eventi serve allineare:
+      #   src/execution/machine_event.py
+      #   src/execution/freqtrade_callback.py

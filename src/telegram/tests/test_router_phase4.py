@@ -21,7 +21,9 @@ import pytest
 import yaml
 
 from src.core.migrations import apply_migrations
+from src.execution.dynamic_pairlist import DynamicPairlistManager
 from src.operation_rules.engine import OperationRulesEngine
+from src.parser.trader_profiles.base import TraderParseResult
 from src.storage.operational_signals_store import OperationalSignalsStore
 from src.storage.parse_results import ParseResultStore
 from src.storage.processing_status import ProcessingStatusStore
@@ -32,7 +34,7 @@ from src.target_resolver.resolver import TargetResolver
 from src.telegram.channel_config import ChannelEntry, ChannelsConfig
 from src.telegram.effective_trader import EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
-from src.telegram.router import MessageRouter, QueueItem
+from src.telegram.router import MessageRouter, QueueItem, _build_entry_json, _extract_sl_float
 
 _CHAT_ID = "-100999"
 _CHAT_ID_INT = -100999
@@ -116,6 +118,7 @@ def _make_router(
     resolved_trader_id: str | None = "trader_3",
     active: bool = True,
     phase4: bool = True,
+    dynamic_pairlist_path: Path | None = None,
 ) -> MessageRouter:
     raw_store = RawMessageStore(db_path=db_path)
     resolver_mock = MagicMock(spec=EffectiveTraderResolver)
@@ -126,6 +129,11 @@ def _make_router(
     signals_store = SignalsStore(db_path=db_path) if phase4 else None
     op_signals_store = OperationalSignalsStore(db_path=db_path) if phase4 else None
     target_resolver = TargetResolver() if phase4 else None
+    dynamic_pairlist_manager = (
+        DynamicPairlistManager(dynamic_pairlist_path)
+        if phase4 and dynamic_pairlist_path is not None
+        else None
+    )
 
     return MessageRouter(
         effective_trader_resolver=resolver_mock,
@@ -151,6 +159,7 @@ def _make_router(
         target_resolver=target_resolver,
         signals_store=signals_store,
         operational_signals_store=op_signals_store,
+        dynamic_pairlist_manager=dynamic_pairlist_manager,
     )
 
 
@@ -203,11 +212,23 @@ def _status(db_path: str, raw_message_id: int) -> str:
 # ---------------------------------------------------------------------------
 
 _NEW_SIGNAL_TEXT = "BTC/USDT LONG entry 60000-62000 stop 57000 targets 65000-70000"
+_NEW_SIGNAL_VALID_TEXT = (
+    "[trader#3] SIGNAL ID: #2005\n"
+    "COIN: $AVAX/USDT (2-5x)\n"
+    "DIRECTION: LONG\n"
+    "ENTRY: 17.40 - 18.00\n"
+    "TARGETS: 18.6 - 19.6\n"
+    "STOP LOSS: 15.95"
+)
 _UPDATE_TEXT_CLOSE = "close position"  # may not produce VALID UPDATE — used as reference
 
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+def test_extract_sl_float_accepts_numeric_stop_loss() -> None:
+    assert _extract_sl_float({"stop_loss": 65500.0}) == 65500.0
 
 
 class TestPhase4NewSignalValid:
@@ -265,6 +286,20 @@ class TestPhase4NewSignalValid:
 
         assert _status(db_path, raw_id) == "done"
         assert len(_get_op_signals(db_path)) == 0
+
+
+class TestDynamicPairlist:
+    def test_new_signal_adds_pair_to_dynamic_pairlist(self, tmp_path: Path, rules_dir: Path) -> None:
+        db_path = _make_db(tmp_path)
+        raw_id = _insert_raw(db_path, raw_text=_NEW_SIGNAL_VALID_TEXT)
+        dynamic_pairlist_path = tmp_path / 'dynamic_pairs.json'
+        router = _make_router(db_path, rules_dir, dynamic_pairlist_path=dynamic_pairlist_path)
+
+        router.route(_item(raw_id, raw_text=_NEW_SIGNAL_VALID_TEXT))
+
+        payload = json.loads(dynamic_pairlist_path.read_text(encoding='utf-8'))
+        assert payload['refresh_period'] == 10
+        assert 'AVAX/USDT:USDT' in payload['pairs']
 
 
 class TestPhase4Blocked:
@@ -434,6 +469,93 @@ class TestPhase4UpdateResolution:
         assert resolved.position_ids == []
 
 
+class TestPhase4UnresolvedUpdateReviewQueue:
+    def test_unresolved_update_routed_to_review_queue(
+        self, tmp_path: Path, rules_dir: Path
+    ) -> None:
+        """UPDATE whose target cannot be resolved → inserted in review_queue."""
+        from src.parser.trader_profiles.base import TraderParseResult
+
+        db_path = _make_db(tmp_path)
+        raw_id = _insert_raw(db_path, raw_text="close ETH", telegram_message_id=5)
+        router = _make_router(db_path, rules_dir)
+
+        # Patch the profile parser to return an UPDATE targeting ETHUSDT
+        # (no open signal exists for this symbol → UNRESOLVED)
+        mock_parse_result = TraderParseResult(
+            message_type="UPDATE",
+            intents=["U_CLOSE_FULL"],
+            entities={"symbol": "ETHUSDT"},
+            target_refs=[{"kind": "SYMBOL", "symbol": "ETHUSDT"}],
+        )
+        mock_parser = MagicMock()
+        mock_parser.parse_message.return_value = mock_parse_result
+
+        with patch("src.telegram.router.get_profile_parser", return_value=mock_parser):
+            router.route(_item(raw_id, raw_text="close ETH", telegram_message_id=5))
+
+        pending = ReviewQueueStore(db_path).get_pending()
+        assert any(
+            "update_target_unresolved" in entry.reason for entry in pending
+        ), f"Expected review_queue entry, got: {[e.reason for e in pending]}"
+
+    def test_resolved_update_not_in_review_queue(
+        self, tmp_path: Path, rules_dir: Path
+    ) -> None:
+        """UPDATE whose target resolves successfully → NOT inserted in review_queue."""
+        import sqlite3 as _sqlite3
+        from src.parser.trader_profiles.base import TraderParseResult
+
+        db_path = _make_db(tmp_path)
+
+        # Insert an open signal for BTCUSDT so the UPDATE can resolve
+        with _sqlite3.connect(db_path) as conn:
+            conn.execute(
+                """INSERT INTO parse_results
+                   (raw_message_id,eligibility_status,eligibility_reason,
+                    resolved_trader_id,trader_resolution_method,message_type,
+                    parse_status,completeness,is_executable,risky_flag,created_at,updated_at)
+                   VALUES (1,'OK','ok','trader_3','direct','NEW_SIGNAL','PARSED',
+                           'COMPLETE',1,0,'2026-01-01','2026-01-01')"""
+            )
+            conn.execute(
+                """INSERT INTO signals
+                   (attempt_key,env,channel_id,root_telegram_id,trader_id,trader_prefix,
+                    symbol,side,entry_json,sl,tp_json,status,confidence,raw_text,
+                    created_at,updated_at)
+                   VALUES ('T_-100999_1_trader_3','T','-100999','1','trader_3','TRAD',
+                           'BTCUSDT','BUY','[]',57000.0,'[]','ACTIVE',0.9,'signal',
+                           '2026-01-01','2026-01-01')"""
+            )
+            conn.execute(
+                """INSERT INTO operational_signals
+                   (parse_result_id,attempt_key,trader_id,message_type,is_blocked,
+                    position_size_pct,leverage,created_at)
+                   VALUES (1,'T_-100999_1_trader_3','trader_3','NEW_SIGNAL',0,
+                           1.0,1,'2026-01-01')"""
+            )
+            conn.commit()
+
+        raw_id = _insert_raw(db_path, raw_text="close BTC", telegram_message_id=5)
+        router = _make_router(db_path, rules_dir)
+
+        mock_parse_result = TraderParseResult(
+            message_type="UPDATE",
+            intents=["U_CLOSE_FULL"],
+            entities={"symbol": "BTCUSDT"},
+            target_refs=[{"kind": "SYMBOL", "symbol": "BTCUSDT"}],
+        )
+        mock_parser = MagicMock()
+        mock_parser.parse_message.return_value = mock_parse_result
+
+        with patch("src.telegram.router.get_profile_parser", return_value=mock_parser):
+            router.route(_item(raw_id, raw_text="close BTC", telegram_message_id=5))
+
+        pending = ReviewQueueStore(db_path).get_pending()
+        unresolved_entries = [e for e in pending if "update_target_unresolved" in e.reason]
+        assert unresolved_entries == [], f"Unexpected review_queue entries: {unresolved_entries}"
+
+
 class TestPhase4ProcessingStatus:
     def test_status_always_done_on_success(self, tmp_path: Path, rules_dir: Path) -> None:
         """After Phase 4 (even blocked), processing_status must be 'done'."""
@@ -484,3 +606,121 @@ class TestPhase4ProcessingStatus:
         )
         router.route(_item(raw_id, raw_text="weekly recap #admin"))
         assert _status(db_path, raw_id) == "blacklisted"
+
+
+class TestPhase4UpdateRuntimeApply:
+    def test_update_move_stop_is_applied_to_target_signal(self, tmp_path: Path, rules_dir: Path) -> None:
+        db_path = _make_db(tmp_path)
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                """INSERT INTO parse_results
+                   (raw_message_id,eligibility_status,eligibility_reason,
+                    resolved_trader_id,trader_resolution_method,message_type,
+                    parse_status,completeness,is_executable,risky_flag,created_at,updated_at)
+                   VALUES (1,'OK','ok','trader_3','direct','NEW_SIGNAL','PARSED',
+                           'COMPLETE',1,0,'2026-01-01','2026-01-01')"""
+            )
+            conn.execute(
+                """INSERT INTO signals
+                   (attempt_key,env,channel_id,root_telegram_id,trader_id,trader_prefix,
+                    symbol,side,entry_json,sl,tp_json,status,confidence,raw_text,
+                    created_at,updated_at)
+                   VALUES ('T_-100999_1_trader_3','T','-100999','1','trader_3','TRAD',
+                           'BTCUSDT','BUY','[{\"price\": 60000.0, \"type\": \"LIMIT\"}]',59000.0,'[]','ACTIVE',0.9,'signal',
+                           '2026-01-01','2026-01-01')"""
+            )
+            conn.execute(
+                """INSERT INTO operational_signals
+                   (parse_result_id,attempt_key,trader_id,message_type,is_blocked,
+                    position_size_pct,leverage,management_rules_json,created_at)
+                   VALUES (1,'T_-100999_1_trader_3','trader_3','NEW_SIGNAL',0,
+                           1.0,1,'{\"mode\":\"hybrid\",\"trader_hint\":{\"auto_apply_intents\":[\"U_MOVE_STOP\"],\"log_only_intents\":[]},\"machine_event\":{\"rules\":[]}}','2026-01-01')"""
+            )
+            conn.commit()
+
+        raw_id = _insert_raw(db_path, raw_text="move stop btc", telegram_message_id=5)
+        router = _make_router(db_path, rules_dir)
+
+        mock_parse_result = TraderParseResult(
+            message_type="UPDATE",
+            intents=["U_MOVE_STOP"],
+            entities={"symbol": "BTCUSDT", "new_stop_level": 60000.0},
+            target_refs=[{"kind": "SYMBOL", "symbol": "BTCUSDT"}],
+        )
+        mock_parser = MagicMock()
+        mock_parser.parse_message.return_value = mock_parse_result
+
+        with patch("src.telegram.router.get_profile_parser", return_value=mock_parser):
+            router.route(_item(raw_id, raw_text="move stop btc", telegram_message_id=5))
+
+        with sqlite3.connect(db_path) as conn:
+            row = conn.execute(
+                "SELECT sl FROM signals WHERE attempt_key = 'T_-100999_1_trader_3'"
+            ).fetchone()
+        assert row is not None
+        assert row[0] == 60000.0
+
+
+# ---------------------------------------------------------------------------
+# Unit tests: _build_entry_json preserves real order_type
+# ---------------------------------------------------------------------------
+
+
+def test_build_entry_json_preserves_limit_order_type() -> None:
+    entities = {
+        "entries": [
+            {"price": 66100.0, "order_type": "LIMIT"},
+            {"price": 66200.0, "order_type": "LIMIT"},
+        ]
+    }
+    result = _build_entry_json(entities)
+    assert result == [
+        {"price": 66100.0, "type": "LIMIT"},
+        {"price": 66200.0, "type": "LIMIT"},
+    ]
+
+
+def test_build_entry_json_preserves_market_order_type() -> None:
+    entities = {
+        "entries": [
+            {"price": 66100.0, "order_type": "MARKET"},
+        ]
+    }
+    result = _build_entry_json(entities)
+    assert result == [{"price": 66100.0, "type": "MARKET"}]
+
+
+def test_build_entry_json_mixed_market_limit() -> None:
+    entities = {
+        "entries": [
+            {"price": 66100.0, "order_type": "MARKET"},
+            {"price": 66000.0, "order_type": "LIMIT"},
+        ]
+    }
+    result = _build_entry_json(entities)
+    assert result == [
+        {"price": 66100.0, "type": "MARKET"},
+        {"price": 66000.0, "type": "LIMIT"},
+    ]
+
+
+def test_build_entry_json_defaults_to_limit_when_order_type_absent() -> None:
+    entities = {
+        "entries": [{"price": 66100.0}]
+    }
+    result = _build_entry_json(entities)
+    assert result == [{"price": 66100.0, "type": "LIMIT"}]
+
+
+def test_build_entry_json_returns_market_when_no_prices() -> None:
+    result = _build_entry_json({})
+    assert result == [{"price": None, "type": "MARKET"}]
+
+
+def test_build_entry_json_uses_entry_mode_fallback_for_market() -> None:
+    """When entries list is absent, entry_mode=MARKET should yield type=MARKET."""
+    entities = {"entry_mode": "MARKET", "entry_raw": "66100"}
+    result = _build_entry_json(entities)
+    assert len(result) == 1
+    assert result[0]["type"] == "MARKET"
+    assert result[0]["price"] == 66100.0

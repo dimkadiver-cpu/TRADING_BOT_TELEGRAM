@@ -34,6 +34,7 @@ from src.storage.raw_messages import RawMessageStore
 from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
 from src.telegram.trader_mapping import TelegramSourceTraderMapper
+from parser_test.scripts.db_paths import resolve_parser_test_db_path
 
 _SIGNAL_ID_RE = re.compile(r"\bSIGNAL\s*ID\s*:\s*#?\s*(?P<id>\d+)\b", re.IGNORECASE)
 
@@ -76,6 +77,12 @@ class SelectedRaw:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Replay parser on parser_test DB.")
     parser.add_argument("--db-path", default=None, help="Path to parser_test sqlite DB.")
+    parser.add_argument("--db-name", default=None, help="Logical DB name under parser_test/db (e.g. trader_a_mar).")
+    parser.add_argument(
+        "--db-per-chat",
+        action="store_true",
+        help="Use parser_test/db/parser_test__chat_<chat>.sqlite3 based on --chat-id.",
+    )
     parser.add_argument("--only-unparsed", action="store_true", help="Replay only rows without parse_results.")
     parser.add_argument("--limit", type=int, default=None, help="Max rows to process.")
     parser.add_argument("--chat-id", default=None, help="Filter by raw_messages.source_chat_id.")
@@ -236,11 +243,14 @@ def main() -> None:
     if env_path.exists():
         _load_env_file(env_path)
 
-    db_path = args.db_path or os.getenv(
-        "PARSER_TEST_DB_PATH",
-        str(parser_test_dir / "db" / "parser_test.sqlite3"),
+    db_path = resolve_parser_test_db_path(
+        project_root=PROJECT_ROOT,
+        parser_test_dir=parser_test_dir,
+        explicit_db_path=args.db_path,
+        db_name=args.db_name,
+        db_per_chat=args.db_per_chat,
+        chat_ref=args.chat_id,
     )
-    db_path = str((PROJECT_ROOT / db_path).resolve()) if not Path(db_path).is_absolute() else db_path
 
     if _is_live_db_path(db_path):
         raise RuntimeError(f"Refusing to run on live DB path: {db_path}")
@@ -547,6 +557,8 @@ def _load_env_file(path: Path) -> None:
 def replay_database(
     *,
     db_path: str | None = None,
+    db_name: str | None = None,
+    db_per_chat: bool = False,
     only_unparsed: bool = False,
     limit: int | None = None,
     chat_id: str | None = None,
@@ -562,14 +574,13 @@ def replay_database(
     if env_path.exists():
         _load_env_file(env_path)
 
-    resolved_db_path = db_path or os.getenv(
-        "PARSER_TEST_DB_PATH",
-        str(parser_test_dir / "db" / "parser_test.sqlite3"),
-    )
-    resolved_db_path = (
-        str((PROJECT_ROOT / resolved_db_path).resolve())
-        if not Path(resolved_db_path).is_absolute()
-        else resolved_db_path
+    resolved_db_path = resolve_parser_test_db_path(
+        project_root=PROJECT_ROOT,
+        parser_test_dir=parser_test_dir,
+        explicit_db_path=db_path,
+        db_name=db_name,
+        db_per_chat=db_per_chat,
+        chat_ref=chat_id,
     )
 
     if _is_live_db_path(resolved_db_path):

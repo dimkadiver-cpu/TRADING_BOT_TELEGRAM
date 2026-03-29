@@ -117,6 +117,30 @@ erroneamente nella lista DELETE — sono ancora usati dai profili migrati. Ripri
 `common_utils.py` → usato da trader_3, trader_a, trader_b, trader_c
 `intent_action_map.py` → usato da trader_a e trader_d (intent_policy_for_intent)
 
+### NEW — backtesting (Fase 7)
+
+```
+src/backtesting/__init__.py                     → ✓ CREATO Step 16
+src/backtesting/models.py                       → ✓ CREATO Step 16 — ChainedMessage, SignalChain, BacktestReadyChain (Pydantic v2)
+src/backtesting/chain_builder.py                → ✓ CREATO Step 16 — SignalChainBuilder.build_all_async + sync wrapper
+src/backtesting/tests/__init__.py               → ✓ CREATO Step 16
+src/backtesting/tests/conftest.py               → ✓ CREATO Step 16 — in-memory schema, insert helpers, JSON factories
+src/backtesting/tests/test_chain_builder.py     → ✓ CREATO Step 16 — 12 test, tutti verdi
+src/backtesting/scenario.py                     → ✓ CREATO Step 17 — ScenarioConditions, BacktestScenario, BacktestSettings, ScenarioConfig, ScenarioLoader, ScenarioApplier
+config/backtest_scenarios.yaml                  → ✓ CREATO Step 17 — 6 scenari predefiniti + backtest_settings
+src/backtesting/tests/test_scenario.py          → ✓ CREATO Step 17 — 12 test, tutti verdi
+db/migrations/015_backtest_runs.sql             → ✓ CREATO Step 21 — tabella backtest_runs
+db/migrations/016_backtest_trades.sql           → ✓ CREATO Step 21 — tabella backtest_trades + indici
+src/backtesting/storage.py                      → ✓ CREATO Step 21 — BacktestRunStore, BacktestTradeStore (aiosqlite)
+src/backtesting/tests/test_storage.py           → ✓ CREATO Step 21 — 9 test, tutti verdi
+src/backtesting/tests/conftest.py               → ✓ AGGIORNATO Step 21 — schema esteso con backtest_runs e backtest_trades
+parser_test/scripts/replay_operation_rules.py   → ✓ CREATO Step 18b — batch script operation rules replay, CLI completa, safety guard
+parser_test/scripts/tests/__init__.py           → ✓ CREATO Step 18b
+parser_test/scripts/tests/test_replay_operation_rules.py → ✓ CREATO Step 18b — 6 test, tutti verdi
+freqtrade/user_data/strategies/SignalBridgeBacktestStrategy.py → ✓ CREATO Step 19 — IStrategy backtest, separata da live, normalize_pair, 6 hook
+src/backtesting/tests/test_strategy_signal_bridge.py → ✓ CREATO Step 19 — 17 test, tutti verdi
+```
+
 ### NEW — da creare da zero
 
 ```
@@ -474,10 +498,102 @@ Tutti i 100 test passano. Fix principali applicati:
 [✓] Step D  — `MACHINE_EVENT_RULES_NOT_SUPPORTED` sentinel; `allowed_update_directives` connette trader_hint al runtime
 [✓] Step E  — `PRICE_CORRECTIONS_NOT_SUPPORTED` sentinel; tabella contratto runtime in `FREQTRADE_CONFIG.md`
 [✓] FreqUI  — `plot_config` + subplot "Bridge Events" in `SignalBridgeStrategy.py`
-[ ] Sistema 2 — Backtesting (non ancora pianificato)
+[✓] Fase 7 Step 21 — DB migrations (015_backtest_runs.sql, 016_backtest_trades.sql) + storage asincrono (BacktestRunStore, BacktestTradeStore) — 9 test
+[✓] Fase 7 Step 18b — replay_operation_rules.py: batch script + safety guard + ReplayStats — 6 test
+[✓] Fase 7 Step 19 — SignalBridgeBacktestStrategy.py: IStrategy completa backtesting (tutti gli hook) — 17 test
+[✓] Fase 7 Step 20 — BacktestRunner (runner.py) + CLI (run_backtest.py) + test_runner.py — 20 test
+[✓] Fase 7 Step 22 — ReportGenerator (report.py) + CLI (run_report.py) + test_report.py — 27 test
+[✓] Fase 7 Step EXE-1 — Fix capital gates replay + entity normalization + freqtrade config → primo run end-to-end completato (2026-03-29)
 ```
 
 **Regola: non iniziare uno step prima che il precedente sia testato e funzionante.**
+
+---
+
+## Fase 7 — Sessione esecuzione end-to-end (2026-03-29)
+
+### Obiettivo
+Prima run completa del pipeline backtesting: replay segnali storici → download OHLCV → run freqtrade → import trade results.
+
+### Fix applicati
+
+#### EXE-1 — Capital gates bypass in replay mode
+**File:** `src/operation_rules/engine.py`
+
+Diagnosi: 98% dei segnali veniva bloccato in `replay_operation_rules.py` perché `sum_global_exposure()` / `sum_trader_exposure()` leggono la tabella `signals` live — in replay le posizioni non si chiudono mai, quindi il budget si esaurisce dopo i primi signal.
+
+Fix: aggiunto parametro `skip_capital_gates: bool = False` a `engine.apply()`. Gates 5, 7, 8 wrappati in guard; se `skip_capital_gates=True` il gate viene saltato e annotato con `gate_X:skipped(replay)`.
+
+Risultato: da 10 segnali inseriti → **537 segnali** inseriti nel backtest DB.
+
+**File:** `parser_test/scripts/replay_operation_rules.py` — default `skip_capital_gates=True`; flag `--no-skip-capital-gates` per tornare al comportamento originale.
+
+**File:** `parser_test/scripts/replay_operation_rules_orig.py` — backup del file originale prima del fix.
+
+**File:** `parser_test/scripts/tests/test_replay_operation_rules.py` — `fake_apply()` aggiornato con `**kwargs` per accettare il nuovo parametro.
+
+#### EXE-2 — Entity normalization: formato legacy DB → NewSignalEntities
+**File:** `src/backtesting/chain_builder.py`
+
+Il DB storico salva le entità in formato flat legacy:
+- `stop_loss: 104103.0` (float grezzo)
+- `take_profits: [109600.0, ...]` (lista di float)
+- `entries: [{"sequence": 1, "price": float}]` (dict senza `order_type`)
+
+`NewSignalEntities` richiede nested Pydantic: `StopLoss{price: Price{raw: str, value: float}}`, ecc.
+
+Fix: aggiunte due funzioni di normalizzazione:
+- `_normalize_new_signal_entities(raw: dict) -> dict` — normalizza SL, TP, entries
+- `_normalize_update_entities(raw: dict) -> dict` — normalizza `new_sl_level`, `close_price`
+- Helper `_price_obj(v: float) -> dict` — costruisce `{"raw": str(v), "value": float}`
+
+Entrambe invocate da `_deserialize_entities()` prima di `model_validate()`.
+
+#### EXE-3 — Freqtrade subprocess: path eseguibile
+**File:** `src/backtesting/runner.py`
+
+Il runner usava `["python", "-m", "freqtrade"]` che puntava al Python di sistema senza freqtrade installato.
+
+Fix: uso path assoluto `.venv-freqtrade/Scripts/freqtrade.exe` (Windows). Fallback a `["python", "-m", "freqtrade"]` se l'exe non esiste.
+
+#### EXE-4 — Freqtrade config: campi obbligatori mancanti
+**File:** `src/backtesting/runner.py` — `_generate_freqtrade_config()`
+
+Config generata mancava di:
+- `datadir` / `user_data_dir` come path assoluti
+- `pairlists` (required property)
+- `entry_pricing` / `exit_pricing` (KeyError a runtime)
+
+Fix: aggiunti tutti i campi. `_project_root` calcolato da `Path(__file__).resolve().parents[2]`.
+
+#### EXE-5 — Strategy: `No module named 'src'`
+**File:** `freqtrade/user_data/strategies/SignalBridgeBacktestStrategy.py`
+
+`_PROJECT_ROOT = Path(__file__).resolve().parents[2]` puntava a `freqtrade/` invece che a `TeleSignalBot/`.
+
+Il file si trova a `freqtrade/user_data/strategies/` → `parents[3]` = project root.
+
+Fix: cambiato `parents[2]` → `parents[3]`.
+
+### Risultati operativi
+
+| Metrica | Valore |
+|---|---|
+| Segnali inseriti nel backtest DB | 537 |
+| Coppie OHLCV scaricate | 95 pairs × 5m × 165 days |
+| File `.feather` generati | 281 |
+| Chain processate dal runner | 537 |
+| Trade generati da freqtrade | 10 |
+| Profitto totale | -430.636 USDT (-43.06%) |
+| Win rate | 0% (tutti force_exit a fine backtest) |
+
+### Rischio aperto: strategia genera troppo pochi trade
+
+**Problema:** su 537 chain processate, solo 10 trade vengono aperti da freqtrade. Tutti i trade terminano con `force_exit` (fine finestra backtest), nessun SL/TP reale.
+
+**Causa sospetta:** `populate_entry_trend()` in `SignalBridgeBacktestStrategy` genera `enter_long=1` o `enter_short=1` solo per la candela corrispondente all'`entry_time` del segnale. Se l'OHLCV 5m non ha una candela esatta in quell'istante (o se il prezzo LIMIT non viene raggiunto), nessun trade viene aperto.
+
+**Prossimo step:** investigare la logica `populate_entry_trend()` — verificare che il lookup candele sia corretto, che i segnali MARKET vengano gestiti diversamente dai LIMIT, e che `custom_stoploss()` / `custom_exit()` siano raggiungibili.
 
 ---
 
@@ -522,3 +638,22 @@ Tutti i 100 test passano. Fix principali applicati:
 
 *Aggiornato: 2026-03-28 (Analisi gap pipeline) — Revisione completa del flusso parser→execution. Creato `docs/GAP_ANALYSIS.md` con elenco classificato (critici/medi/bassi) di 8 gap aperti. Aggiornate le sezioni AUDIT: ordine di sviluppo (Steps 21-24 + A-E + FreqUI marcati completi), file execution spostati in KEEP, conflitti architetturali integrati con i gap residui. Stato globale confermato: flusso end-to-end funzionante per `exchange_manager` mode; gap aperti documentati ma non bloccanti per operatività base.*
 
+*Aggiornato: 2026-03-29 (Promemoria parser) - Applicato fix locale in `src/parser/trader_profiles/trader_c/profile.py` per materializzare `entities.new_stop_level = "ENTRY"` quando il parser riconosce `U_MOVE_STOP_TO_BE`, cosi il bridge riceve un payload operativo completo. Resta da rivedere l'architettura parser: alcune semantiche critiche sono ancora duplicate nei profili trader invece che normalizzate nel core centrale. Da pianificare un hardening del layer canonico/validation prima del passaggio ai livelli successivi, con controlli di coerenza del tipo `intent -> campi obbligatori` (es. `U_MOVE_STOP_TO_BE` richiede `new_stop_level`), idealmente su modelli tipizzati/validatori centrali invece che lasciati ai parser trader-specifici.*
+
+*Aggiornato: 2026-03-29 (Parser notes) - Creato `docs/PARSER_NOTES.md` come nota separata per questioni solo parser: separazione core/trader-specifici, validazione semantica centrale, gestione delle ambiguita tra `U_MOVE_STOP` e `U_MOVE_STOP_TO_BE`, e contratto parser -> bot per usare il fill reale come source of truth del vero breakeven.*
+
+*Aggiornato: 2026-03-29 (Entry process notes) - Creato `docs/ENTRY_PROCESS_NOTES.md` per rivedere il processo di entry lato bot/runtime: rapporto tra segnali `PENDING`, ordini `LIMIT` pendenti, `custom_entry_price()` e `confirm_trade_entry()`, con il caso reale `raw 2`/`XLMUSDT` come riferimento.*
+
+*Aggiornato: 2026-03-29 (Dry-run stoploss notes) - Creato `docs/DRYRUN_STOPLOSS_NOTES.md` per documentare il caso BTC con multipli ordini `stoploss` ancora `open` in `dry_run` Freqtrade: SL logico corretto lato bot, ma persistenza/runtime sporchi nel lifecycle `stoploss_on_exchange`. Decisione attuale: non correggere subito e validare prima su caso reale senza ulteriori interventi.*
+
+*Aggiornato: 2026-03-29 (Fase 7 — Step 22 completato) — Report Generator:*
+- *`src/backtesting/report.py`: `ScenarioMetrics`, `MonthlyMetrics`, `BacktestSummaryReport` Pydantic models. Funzioni pure esposte per test: `_compute_max_drawdown`, `_compute_sharpe`, `_compute_scenario_metrics`, `_compute_monthly_metrics`, `_generate_html_table`, `_write_comparison_csv`, `_write_comparison_monthly_csv`. `ReportGenerator.generate()` carica trades da DB, calcola metriche, scrive: `summary.json`, `comparison_table.csv`, `comparison_table.html`, `comparison_table_monthly.csv`, `per_scenario/{name}/trades.csv + equity_curve.csv`, `parser_quality/signal_coverage.csv + update_chain_stats.csv`. `_try_plot_profit` best-effort. CSV con UTF-8-sig. Profit factor capato a 999 se no losses.*
+- *`src/backtesting/run_report.py`: CLI argparse (`--db-path`, `--run-ids`, `--output`). Carica run COMPLETED da DB, ricostruisce `BacktestRunResult`, chiama `ReportGenerator.generate()`.*
+- *`src/backtesting/tests/test_report.py`: 27 test: metrics calcolo, win rate, profit factor edge case (no losses), Sharpe, max drawdown, monthly grouping, CSV encoding UTF-8-sig, HTML structure, generate() integrazione con mock storage.*
+- *Suite backtesting totale: 97 test, tutti passano.*
+
+*Aggiornato: 2026-03-29 (Fase 7 — Step 20 completato) — Completato Step 20 del sistema backtesting:*
+- *`src/backtesting/runner.py`: BacktestRunResult + BacktestRunner (ScenarioApplier → subprocess → storage). _normalize_pair, _collect_pairs, _generate_freqtrade_config locali. _run_freqtrade usa `python -m freqtrade` su win32. _find_results_file con fallback al JSON più recente.*
+- *`src/backtesting/run_backtest.py`: CLI argparse (--scenario-config, --db-path, --trader, --output). Trader override via _run_with_trader_override() senza rompere la firma pubblica di BacktestRunner.run(). Stampa tabella risultati.*
+- *`src/backtesting/tests/test_runner.py`: 20 test in 5 classi: TestNormalizePair (7), TestCollectPairs (3), TestGenerateFreqtradeConfig (2), TestBacktestRunnerScenario (3), TestWindowsCommandDetection (2), TestFindResultsFile (3).*
+- *Suite backtesting totale: 70 test raccolti, tutti passano (53 su test_runner/test_storage/test_scenario/test_chain_builder + 17 test_strategy_signal_bridge).*

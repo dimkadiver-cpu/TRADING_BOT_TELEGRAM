@@ -103,6 +103,7 @@ class TraderDProfileParser(TraderBProfileParser):
             entities.setdefault("symbol", inferred_symbol["symbol"])
 
         compact_new_signal = self._is_compact_new_signal(raw_text=raw_text, entities=entities)
+        compact_setup_incomplete = self._is_compact_setup_incomplete(raw_text=raw_text, entities=entities)
         operational_update = self._is_operational_update(raw_text=raw_text, normalized=normalized)
 
         # Passive BE without target is informational; anchored cases are operational updates.
@@ -118,10 +119,15 @@ class TraderDProfileParser(TraderBProfileParser):
             intents = ["NS_CREATE_SIGNAL"]
             entities = {}
             warnings = []
+        elif compact_setup_incomplete:
+            message_type = "SETUP_INCOMPLETE"
+            intents = ["NS_CREATE_SIGNAL"]
+            entities = {}
+            warnings = []
         elif operational_update and message_type in {"UNCLASSIFIED", "INFO_ONLY"}:
             message_type = "UPDATE"
 
-        if message_type == "NEW_SIGNAL":
+        if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
             intents = ["NS_CREATE_SIGNAL"]
             entities = self._enrich_new_signal_entities(raw_text=raw_text, entities={})
         elif message_type == "UPDATE":
@@ -135,6 +141,8 @@ class TraderDProfileParser(TraderBProfileParser):
         confidence = base_result.confidence
         if message_type == "NEW_SIGNAL" and confidence < 0.78:
             confidence = 0.82
+        if message_type == "SETUP_INCOMPLETE" and confidence < 0.55:
+            confidence = 0.55
         if message_type == "UPDATE" and confidence < 0.62:
             confidence = 0.68
         reported_results = list(base_result.reported_results)
@@ -167,7 +175,7 @@ class TraderDProfileParser(TraderBProfileParser):
 
     @staticmethod
     def _build_actions_structured(*, message_type: str, intents: list[str], entities: dict) -> list[dict]:
-        if message_type == "NEW_SIGNAL":
+        if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
             return [
                 {
                     "action": "CREATE_SIGNAL",
@@ -221,9 +229,29 @@ class TraderDProfileParser(TraderBProfileParser):
         has_symbol = bool(entities.get("symbol") or _extract_symbol_flexible(raw_text))
         has_side = bool(_SIDE_RE.search(raw_text))
         lowered = raw_text.lower()
+        has_entry = bool(
+            _LIMIT_ENTRY_RE.search(raw_text)
+            or _LIMIT_STANDALONE_RE.search(raw_text)
+            or _ENTRY_MARKET_PRICE_RE.search(raw_text)
+            or any(marker in lowered for marker in _ENTRY_MARKET_MARKERS)
+        )
         has_stop = "sl" in lowered or "стоп" in lowered or "сл" in lowered
         has_tp = "tp" in lowered or "тп" in lowered or "тейк" in lowered
-        return has_symbol and has_side and has_stop and has_tp
+        return has_symbol and has_side and has_entry and has_stop and has_tp
+
+    def _is_compact_setup_incomplete(self, *, raw_text: str, entities: dict[str, Any]) -> bool:
+        has_symbol = bool(entities.get("symbol") or _extract_symbol_flexible(raw_text))
+        has_side = bool(_SIDE_RE.search(raw_text))
+        lowered = raw_text.lower()
+        has_entry = bool(
+            _LIMIT_ENTRY_RE.search(raw_text)
+            or _LIMIT_STANDALONE_RE.search(raw_text)
+            or _ENTRY_MARKET_PRICE_RE.search(raw_text)
+            or any(marker in lowered for marker in _ENTRY_MARKET_MARKERS)
+        )
+        has_stop = "sl" in lowered or "стоп" in lowered or "сл" in lowered
+        has_tp = "tp" in lowered or "тп" in lowered or "тейк" in lowered
+        return has_symbol and has_side and not has_entry and has_stop and has_tp
 
     @staticmethod
     def _is_operational_update(*, raw_text: str, normalized: str) -> bool:

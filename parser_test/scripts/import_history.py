@@ -24,6 +24,7 @@ from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
+from parser_test.scripts.db_paths import resolve_parser_test_db_path
 
 
 @dataclass(slots=True)
@@ -34,16 +35,37 @@ class Stats:
     skipped: int = 0
 
 
+@dataclass(slots=True)
+class MediaPayload:
+    has_media: bool = False
+    media_kind: str | None = None
+    media_mime_type: str | None = None
+    media_filename: str | None = None
+    media_blob: bytes | None = None
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Import Telegram history into parser_test raw_messages.")
     parser.add_argument("--chat-id", default=None, help="Target chat id/username/link. Falls back to env.")
+    parser.add_argument("--topic-id", type=int, default=None, help="Optional forum topic root message id to import only one topic/thread.")
     parser.add_argument("--limit", type=int, default=None, help="Max messages to read from Telegram history.")
     parser.add_argument("--from-date", default=None, help="Inclusive lower bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--to-date", default=None, help="Inclusive upper bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--reverse", action="store_true", help="Read messages oldest -> newest.")
     parser.add_argument("--db-path", default=None, help="Path to parser_test sqlite DB.")
+    parser.add_argument("--db-name", default=None, help="Logical DB name under parser_test/db (e.g. trader_a_mar).")
+    parser.add_argument(
+        "--db-per-chat",
+        action="store_true",
+        help="Create/use parser_test/db/parser_test__chat_<chat>.sqlite3 based on chat-id.",
+    )
     parser.add_argument("--session", default=None, help="Telegram session name/path for parser_test.")
     parser.add_argument("--only-new", action="store_true", help="Skip ids <= current max id for this chat in DB.")
+    parser.add_argument(
+        "--download-media",
+        action="store_true",
+        help="Download Telegram media and store it in raw_messages.media_blob when available.",
+    )
     return parser.parse_args()
 
 
@@ -62,7 +84,23 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
     if env_path.exists():
         _load_env_file(env_path)
 
-    db_path = _resolve_db_path(args.db_path, parser_test_dir=parser_test_dir)
+    chat_ref = args.chat_id or os.getenv("PARSER_TEST_CHAT_ID")
+    if not chat_ref or str(chat_ref).strip() in {"", "//"}:
+        raise RuntimeError(
+            "Missing chat target. Provide --chat-id or set PARSER_TEST_CHAT_ID in parser_test/.env."
+        )
+    print(f"chat target used: {chat_ref}")
+    if args.topic_id is not None:
+        print(f"topic target used: {args.topic_id}")
+
+    db_path = resolve_parser_test_db_path(
+        project_root=PROJECT_ROOT,
+        parser_test_dir=parser_test_dir,
+        explicit_db_path=args.db_path,
+        db_name=args.db_name,
+        db_per_chat=args.db_per_chat,
+        chat_ref=str(chat_ref).strip(),
+    )
     _ensure_not_live_db(db_path)
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
     apply_migrations(db_path=db_path, migrations_dir=str(PROJECT_ROOT / "db" / "migrations"))
@@ -74,13 +112,6 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
     api_id = int(_required_env("TELEGRAM_API_ID"))
     api_hash = _required_env("TELEGRAM_API_HASH")
     session_name = args.session or os.getenv("PARSER_TEST_TELEGRAM_SESSION") or os.getenv("TELEGRAM_SESSION") or "parser_test"
-
-    chat_ref = args.chat_id or os.getenv("PARSER_TEST_CHAT_ID")
-    if not chat_ref or str(chat_ref).strip() in {"", "//"}:
-        raise RuntimeError(
-            "Missing chat target. Provide --chat-id or set PARSER_TEST_CHAT_ID in parser_test/.env."
-        )
-    print(f"chat target used: {chat_ref}")
 
     from_ts = _parse_cli_date(args.from_date, end_of_day=False) if args.from_date else None
     to_ts = _parse_cli_date(args.to_date, end_of_day=True) if args.to_date else None
@@ -99,8 +130,13 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
         source_type = _resolve_source_type(entity)
         max_existing_id = _max_existing_message_id(db_path=db_path, source_chat_id=source_chat_id) if args.only_new else None
 
-        iterator = client.iter_messages(entity, limit=args.limit, reverse=args.reverse)
-        async for message in iterator:
+        async for message in _iter_target_messages(
+            client=client,
+            entity=entity,
+            limit=args.limit,
+            reverse=args.reverse,
+            topic_id=args.topic_id,
+        ):
             stats.read += 1
             if message is None or getattr(message, "id", None) is None:
                 stats.skipped += 1
@@ -118,6 +154,11 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
             reply_to_message_id = None
             if message.reply_to and getattr(message.reply_to, "reply_to_msg_id", None):
                 reply_to_message_id = int(message.reply_to.reply_to_msg_id)
+            media_payload = await _extract_media_payload(
+                client=client,
+                message=message,
+                download_media=args.download_media,
+            )
 
             incoming = TelegramIncomingMessage(
                 source_chat_id=source_chat_id,
@@ -129,6 +170,11 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
                 raw_text=message.message,
                 message_ts=message_ts,
                 acquisition_status="ACQUIRED_HISTORY",
+                has_media=media_payload.has_media,
+                media_kind=media_payload.media_kind,
+                media_mime_type=media_payload.media_mime_type,
+                media_filename=media_payload.media_filename,
+                media_blob=media_payload.media_blob,
             )
             result = ingestion.ingest(incoming)
             if result.saved:
@@ -144,17 +190,74 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
     print(f"total duplicates: {stats.duplicates}")
     print(f"total skipped: {stats.skipped}")
 
-
-def _resolve_db_path(raw_value: str | None, parser_test_dir: Path) -> str:
-    db_path = raw_value or os.getenv("PARSER_TEST_DB_PATH", str(parser_test_dir / "db" / "parser_test.sqlite3"))
-    return str((PROJECT_ROOT / db_path).resolve()) if not Path(db_path).is_absolute() else db_path
-
-
 def _ensure_not_live_db(db_path: str) -> None:
     candidate = Path(db_path).resolve()
     live = (PROJECT_ROOT / "db" / "tele_signal_bot.sqlite3").resolve()
     if candidate == live:
         raise RuntimeError(f"Refusing to run on live DB path: {db_path}")
+
+
+async def _iter_target_messages(
+    *,
+    client: object,
+    entity: object,
+    limit: int | None,
+    reverse: bool,
+    topic_id: int | None,
+):
+    if topic_id is None:
+        async for message in client.iter_messages(entity, limit=limit, reverse=reverse):
+            yield message
+        return
+
+    yielded_ids: set[int] = set()
+    root_message = await client.get_messages(entity, ids=topic_id)
+    root_is_valid = root_message is not None and getattr(root_message, "id", None) is not None
+    remaining_limit = limit
+
+    if reverse and root_is_valid:
+        yielded_ids.add(int(root_message.id))
+        yield root_message
+        if remaining_limit is not None:
+            remaining_limit -= 1
+            if remaining_limit <= 0:
+                return
+
+    async for message in client.iter_messages(entity, limit=remaining_limit, reverse=reverse, reply_to=topic_id):
+        message_id = getattr(message, "id", None)
+        if message_id is None:
+            yield message
+            continue
+        normalized_id = int(message_id)
+        if normalized_id in yielded_ids:
+            continue
+        yielded_ids.add(normalized_id)
+        yield message
+
+    if not reverse and root_is_valid and int(root_message.id) not in yielded_ids:
+        yield root_message
+
+
+async def _extract_media_payload(*, client: object, message: object, download_media: bool) -> MediaPayload:
+    if getattr(message, "media", None) is None:
+        return MediaPayload()
+
+    payload = MediaPayload(
+        has_media=True,
+        media_kind=_resolve_media_kind(message),
+        media_mime_type=_resolve_media_mime_type(message),
+        media_filename=_resolve_media_filename(message),
+    )
+    if not download_media:
+        return payload
+
+    try:
+        media_blob = await client.download_media(message, file=bytes)
+    except Exception:
+        media_blob = None
+    if isinstance(media_blob, (bytes, bytearray)):
+        payload.media_blob = bytes(media_blob)
+    return payload
 
 
 def _required_env(name: str) -> str:
@@ -183,6 +286,36 @@ def _ensure_utc(value: datetime | None) -> datetime:
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
     return value.astimezone(timezone.utc)
+
+
+def _resolve_media_kind(message: object) -> str | None:
+    if getattr(message, "photo", None) is not None:
+        return "photo"
+    if getattr(message, "video", None) is not None:
+        return "video"
+    if getattr(message, "document", None) is not None:
+        return "document"
+    if getattr(message, "media", None) is not None:
+        return type(message.media).__name__.lower()
+    return None
+
+
+def _resolve_media_mime_type(message: object) -> str | None:
+    file_info = getattr(message, "file", None)
+    mime_type = getattr(file_info, "mime_type", None)
+    if isinstance(mime_type, str) and mime_type.strip():
+        return mime_type.strip()
+    if getattr(message, "photo", None) is not None:
+        return "image/jpeg"
+    return None
+
+
+def _resolve_media_filename(message: object) -> str | None:
+    file_info = getattr(message, "file", None)
+    name = getattr(file_info, "name", None)
+    if isinstance(name, str) and name.strip():
+        return name.strip()
+    return None
 
 
 def _max_existing_message_id(db_path: str, source_chat_id: str) -> int | None:

@@ -7,9 +7,14 @@ from datetime import datetime, timezone
 import json
 import logging
 import re
+import sqlite3
 from typing import Any
 
+from src.execution.dynamic_pairlist import DynamicPairlistManager
+from src.execution.update_applier import apply_update_plan
+from src.execution.update_planner import build_update_plan
 from src.operation_rules.engine import OperationRulesEngine
+from src.parser.intent_action_map import map_intents_to_actions
 from src.parser.models.operational import OperationalSignal, ResolvedTarget
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.registry import get_profile_parser
@@ -83,6 +88,7 @@ class MessageRouter:
         target_resolver: TargetResolver | None = None,
         signals_store: SignalsStore | None = None,
         operational_signals_store: OperationalSignalsStore | None = None,
+        dynamic_pairlist_manager: DynamicPairlistManager | None = None,
     ) -> None:
         self._trader_resolver = effective_trader_resolver
         self._eligibility = eligibility_evaluator
@@ -99,6 +105,7 @@ class MessageRouter:
         self._resolver = target_resolver
         self._signals_store = signals_store
         self._op_signals_store = operational_signals_store
+        self._dynamic_pairlist = dynamic_pairlist_manager
 
     def update_config(self, new_config: ChannelsConfig) -> None:
         self._config = new_config
@@ -279,11 +286,37 @@ class MessageRouter:
             )
             if self._signals_store is not None:
                 self._signals_store.insert(signal_rec)
+            if self._dynamic_pairlist is not None:
+                pair = self._dynamic_pairlist.ensure_symbol(signal_rec.symbol)
+                if pair:
+                    self._logger.info(
+                        "dynamic pairlist updated | attempt_key=%s symbol=%s pair=%s path=%s",
+                        attempt_key,
+                        signal_rec.symbol,
+                        pair,
+                        self._dynamic_pairlist.path,
+                    )
 
         # Step 3 — Resolve target
         resolved: ResolvedTarget | None = None
         if self._resolver is not None:
             resolved = self._resolver.resolve(op_signal, db_path=db_path)
+
+        # Step 3b — Route UNRESOLVED UPDATE to review queue
+        if (
+            resolved is not None
+            and resolved.eligibility == "UNRESOLVED"
+            and result.message_type == "UPDATE"
+        ):
+            self._review_queue.insert(
+                item.raw_message_id,
+                f"update_target_unresolved:{resolved.reason or 'unknown'}",
+            )
+            self._logger.warning(
+                "UPDATE target unresolved → review_queue | raw_message_id=%s reason=%s",
+                item.raw_message_id,
+                resolved.reason,
+            )
 
         # Step 4 — INSERT into operational_signals
         parse_result_id = None
@@ -307,6 +340,14 @@ class MessageRouter:
                     op_signal.is_blocked,
                     op_rec.target_eligibility,
                 )
+                self._apply_update_runtime(
+                    item=item,
+                    result=result,
+                    trader_id=trader_id,
+                    op_signal=op_signal,
+                    resolved=resolved,
+                    op_signal_id=op_signal_id,
+                )
 
         self._logger.info(
             "phase4 complete | raw_message_id=%s type=%s is_blocked=%s block_reason=%s"
@@ -318,6 +359,88 @@ class MessageRouter:
             attempt_key,
             resolved.eligibility if resolved else None,
         )
+
+    def _apply_update_runtime(
+        self,
+        *,
+        item: QueueItem,
+        result: TraderParseResult,
+        trader_id: str,
+        op_signal: OperationalSignal,
+        resolved: ResolvedTarget | None,
+        op_signal_id: int,
+    ) -> None:
+        """Apply eligible UPDATE messages to the live trade state DB."""
+        if result.message_type != "UPDATE" or op_signal.is_blocked or resolved is None:
+            return
+        if resolved.eligibility != "ELIGIBLE" or not resolved.position_ids:
+            return
+
+        actions = map_intents_to_actions(result.intents, result.entities)
+        if not actions:
+            return
+
+        target_attempt_keys = self._resolve_attempt_keys_from_position_ids(resolved.position_ids)
+        if not target_attempt_keys:
+            self._logger.warning(
+                "update runtime skipped | raw_message_id=%s op_signal_id=%s reason=missing_target_attempt_keys"
+                " position_ids=%s",
+                item.raw_message_id,
+                op_signal_id,
+                resolved.position_ids,
+            )
+            return
+
+        plan = build_update_plan(
+            {
+                "message_type": result.message_type,
+                "intents": result.intents,
+                "actions": actions,
+                "entities": result.entities,
+                "reported_results": result.reported_results,
+                "target_refs": resolved.position_ids,
+            }
+        )
+        apply_result = apply_update_plan(
+            plan,
+            self._db_path,
+            env=_ENV_DEFAULT,
+            channel_id=item.source_chat_id,
+            telegram_msg_id=str(item.telegram_message_id),
+            trader_id=trader_id,
+            target_attempt_keys=target_attempt_keys,
+        )
+        if apply_result.errors:
+            self._logger.warning(
+                "update runtime apply failed | raw_message_id=%s op_signal_id=%s errors=%s warnings=%s",
+                item.raw_message_id,
+                op_signal_id,
+                apply_result.errors,
+                apply_result.warnings,
+            )
+            return
+        self._logger.info(
+            "update runtime applied | raw_message_id=%s op_signal_id=%s target_attempt_keys=%s"
+            " warnings=%s",
+            item.raw_message_id,
+            op_signal_id,
+            apply_result.target_attempt_keys,
+            apply_result.warnings,
+        )
+
+    def _resolve_attempt_keys_from_position_ids(self, position_ids: list[int]) -> list[str]:
+        if not position_ids or self._db_path is None:
+            return []
+        placeholders = ",".join("?" for _ in position_ids)
+        query = f"""
+            SELECT attempt_key
+            FROM operational_signals
+            WHERE op_signal_id IN ({placeholders})
+              AND attempt_key IS NOT NULL
+        """
+        with sqlite3.connect(self._db_path) as conn:
+            rows = conn.execute(query, tuple(position_ids)).fetchall()
+        return [str(row[0]) for row in rows if row and row[0]]
 
     # ------------------------------------------------------------------
     # Existing helpers
@@ -405,11 +528,8 @@ def _build_signal_record(
     symbol = str(entities.get("symbol") or "").strip().upper() or None
     side = str(entities.get("side") or entities.get("direction") or "").strip().upper() or None
 
-    # Build entry_json from entry_split weights and extracted prices
-    entry_prices = _extract_entry_prices_from_entities(entities)
-    entry_json = json.dumps(
-        [{"price": p, "type": "LIMIT"} for p in entry_prices] or [{"price": None, "type": "MARKET"}]
-    )
+    # Build entry_json preserving the real order_type for each entry
+    entry_json = json.dumps(_build_entry_json(entities))
 
     # SL
     sl = _extract_sl_float(entities)
@@ -454,6 +574,12 @@ def _build_op_signal_record(
         message_type=op_signal.parse_result.message_type,
         is_blocked=op_signal.is_blocked,
         block_reason=op_signal.block_reason,
+        risk_mode=op_signal.risk_mode,
+        risk_pct_of_capital=op_signal.risk_pct_of_capital,
+        risk_usdt_fixed=op_signal.risk_usdt_fixed,
+        capital_base_usdt=op_signal.capital_base_usdt,
+        risk_budget_usdt=op_signal.risk_budget_usdt,
+        sl_distance_pct=op_signal.sl_distance_pct,
         position_size_pct=op_signal.position_size_pct,
         position_size_usdt=op_signal.position_size_usdt,
         entry_split_json=json.dumps(op_signal.entry_split) if op_signal.entry_split else None,
@@ -528,8 +654,47 @@ def _extract_entry_prices_from_entities(entities: dict[str, Any]) -> list[float]
     return _parse_all_floats(str(entry_raw) if entry_raw is not None else None)
 
 
+def _build_entry_json(entities: dict[str, Any]) -> list[dict[str, Any]]:
+    """Build entry_json preserving the real order_type from parsed entities.
+
+    Falls back to MARKET when no prices are present (market-entry signal).
+    Falls back to LIMIT for individual entries that have no order_type set.
+    """
+    for key in ("entry_plan_entries", "entries"):
+        entries_raw = entities.get(key)
+        if isinstance(entries_raw, list) and entries_raw:
+            result: list[dict[str, Any]] = []
+            for e in entries_raw:
+                if isinstance(e, dict):
+                    p = e.get("price")
+                    if p is None:
+                        continue
+                    try:
+                        price_val = float(p)
+                    except (TypeError, ValueError):
+                        continue
+                    order_type = str(e.get("order_type") or "LIMIT").upper()
+                    result.append({"price": price_val, "type": order_type})
+                elif isinstance(e, (int, float)):
+                    result.append({"price": float(e), "type": "LIMIT"})
+            if result:
+                return result
+
+    # Fallback: raw entry string — no order_type info available
+    prices = _extract_entry_prices_from_entities(entities)
+    if prices:
+        # Infer MARKET when entry_mode / order_type signals it
+        entry_mode = str(entities.get("entry_mode") or entities.get("order_type") or "").upper()
+        order_type = "MARKET" if "MARKET" in entry_mode else "LIMIT"
+        return [{"price": p, "type": order_type} for p in prices]
+
+    return [{"price": None, "type": "MARKET"}]
+
+
 def _extract_sl_float(entities: dict[str, Any]) -> float | None:
     sl_obj = entities.get("stop_loss") or entities.get("sl")
+    if isinstance(sl_obj, (int, float)):
+        return float(sl_obj)
     if isinstance(sl_obj, dict):
         p = sl_obj.get("price") or sl_obj.get("value")
         if p is not None:

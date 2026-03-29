@@ -95,6 +95,8 @@ def _extract_sl_price(entities: dict[str, Any]) -> float | None:
     """Extract stop-loss price from entities dict."""
     # Structured sl object
     sl_obj = entities.get("stop_loss") or entities.get("sl")
+    if isinstance(sl_obj, (int, float)):
+        return float(sl_obj)
     if isinstance(sl_obj, dict):
         p = sl_obj.get("price") or sl_obj.get("value")
         if p is not None:
@@ -344,13 +346,18 @@ class OperationRulesEngine:
         trader_id: str,
         *,
         db_path: str,
+        skip_capital_gates: bool = False,
     ) -> OperationalSignal:
         """Apply gate checks and compute parameters for *parse_result*.
 
         Args:
-            parse_result: Validated parser output (validation_status == VALID).
-            trader_id:    Trader identifier used to load trader-specific rules.
-            db_path:      SQLite DB path used for open-signal queries.
+            parse_result:        Validated parser output (validation_status == VALID).
+            trader_id:           Trader identifier used to load trader-specific rules.
+            db_path:             SQLite DB path used for open-signal queries.
+            skip_capital_gates:  When True, skip gates 5/7/8 (max_concurrent_same_symbol,
+                                 trader_capital_at_risk, global_capital_at_risk).
+                                 Intended for replay/backtesting mode where positions
+                                 are never closed in the DB.  Default: False.
 
         Returns:
             OperationalSignal with is_blocked=True if any gate failed, or with
@@ -361,6 +368,10 @@ class OperationRulesEngine:
         warnings: list[str] = []
 
         # ── Gate 1: Trader enabled? ────────────────────────────────────────
+        if not rules.is_registered:
+            return _make_blocked(parse_result, "trader_not_registered", rules, applied, trader_id)
+        applied.append("gate_registered_ok")
+
         if not rules.enabled:
             return _make_blocked(parse_result, "trader_disabled", rules, applied, trader_id)
         applied.append("gate_enabled_ok")
@@ -411,7 +422,7 @@ class OperationRulesEngine:
         applied.append("gate_leverage_ok")
 
         # ── Gate 5: max concurrent same symbol ────────────────────────────
-        if symbol:
+        if symbol and not skip_capital_gates:
             open_count = count_open_same_symbol(trader_id, symbol, db_path)
             applied.append(f"gate_same_symbol:open={open_count}")
             if open_count >= rules.max_concurrent_same_symbol:
@@ -424,6 +435,8 @@ class OperationRulesEngine:
                     return _make_blocked(
                         parse_result, "max_concurrent_same_symbol", rules, applied, trader_id
                     )
+        elif skip_capital_gates:
+            applied.append("gate_same_symbol:skipped(replay)")
 
         # ── Applica risk_hint (prima dei gate cap) ────────────────────────────
         # Il hint viene risolto PRIMA dei gate 6/7/8, così che i cap vengano
@@ -477,34 +490,40 @@ class OperationRulesEngine:
                 return _make_blocked(parse_result, "per_signal_cap_exceeded", rules, applied, trader_id)
 
         # ── Gate 7: trader capital cap ────────────────────────────────────────────
-        trader_exp = sum_trader_exposure(trader_id, db_path)
-        applied.append(f"gate_trader_cap:trader_exp={trader_exp:.4f}")
-        if trader_exp + effective_risk_pct > rules.max_capital_at_risk_per_trader_pct:
-            if rules.gate_mode == "warn":
-                warnings.append(
-                    f"trader_capital_at_risk_exceeded"
-                    f":total={trader_exp + effective_risk_pct:.4f}"
-                    f",cap={rules.max_capital_at_risk_per_trader_pct}"
-                )
-            else:
-                return _make_blocked(
-                    parse_result, "trader_capital_at_risk_exceeded", rules, applied, trader_id
-                )
+        if not skip_capital_gates:
+            trader_exp = sum_trader_exposure(trader_id, db_path)
+            applied.append(f"gate_trader_cap:trader_exp={trader_exp:.4f}")
+            if trader_exp + effective_risk_pct > rules.max_capital_at_risk_per_trader_pct:
+                if rules.gate_mode == "warn":
+                    warnings.append(
+                        f"trader_capital_at_risk_exceeded"
+                        f":total={trader_exp + effective_risk_pct:.4f}"
+                        f",cap={rules.max_capital_at_risk_per_trader_pct}"
+                    )
+                else:
+                    return _make_blocked(
+                        parse_result, "trader_capital_at_risk_exceeded", rules, applied, trader_id
+                    )
+        else:
+            applied.append("gate_trader_cap:skipped(replay)")
 
         # ── Gate 8: global capital hard cap ─────────────────────────────────────
-        global_exp = sum_global_exposure(db_path)
-        applied.append(f"gate_global_cap:global_exp={global_exp:.4f}")
-        if global_exp + effective_risk_pct > rules.hard_caps.max_capital_at_risk_pct:
-            if rules.gate_mode == "warn":
-                warnings.append(
-                    f"global_capital_at_risk_exceeded"
-                    f":total={global_exp + effective_risk_pct:.4f}"
-                    f",cap={rules.hard_caps.max_capital_at_risk_pct}"
-                )
-            else:
-                return _make_blocked(
-                    parse_result, "global_capital_at_risk_exceeded", rules, applied, trader_id
-                )
+        if not skip_capital_gates:
+            global_exp = sum_global_exposure(db_path)
+            applied.append(f"gate_global_cap:global_exp={global_exp:.4f}")
+            if global_exp + effective_risk_pct > rules.hard_caps.max_capital_at_risk_pct:
+                if rules.gate_mode == "warn":
+                    warnings.append(
+                        f"global_capital_at_risk_exceeded"
+                        f":total={global_exp + effective_risk_pct:.4f}"
+                        f",cap={rules.hard_caps.max_capital_at_risk_pct}"
+                    )
+                else:
+                    return _make_blocked(
+                        parse_result, "global_capital_at_risk_exceeded", rules, applied, trader_id
+                    )
+        else:
+            applied.append("gate_global_cap:skipped(replay)")
 
         # ── Gate 9: static price sanity (optional) ────────────────────
         if rules.price_sanity.get("enabled") and entry_prices and symbol:

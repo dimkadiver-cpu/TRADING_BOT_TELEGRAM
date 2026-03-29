@@ -22,6 +22,28 @@ from src.operation_rules.loader import (
 def rules_dir(tmp_path: Path) -> Path:
     """Create a minimal config directory structure."""
     global_yaml = {
+        "registered_traders": [
+            "unknown_trader",
+            "any",
+            "my_trader",
+            "global_mode",
+            "badmode",
+            "disabled",
+            "hacker",
+            "splitter",
+            "pm_overlap",
+            "ev_overlap",
+            "ok",
+            "bad_avg_key",
+            "bad_avg_weights",
+            "legacy_avg_warn",
+            "bad_gate",
+            "bad_risk",
+            "bad_cap",
+            "ok_gate",
+            "ok_risk",
+            "upper_gate",
+        ],
         "global_hard_caps": {
             "max_capital_at_risk_pct": 10.0,
             "hard_max_per_signal_risk_pct": 2.0,
@@ -81,6 +103,7 @@ class TestLoaderDefaults:
     def test_loads_without_trader_file(self, rules_dir: Path) -> None:
         """Missing trader file → all defaults from global."""
         rules = load_effective_rules("unknown_trader", rules_dir=str(rules_dir))
+        assert rules.is_registered is True
         assert rules.enabled is True
         assert rules.gate_mode == "block"
         assert rules.operation_rules == "override"
@@ -96,6 +119,10 @@ class TestLoaderDefaults:
         assert isinstance(rules.hard_caps, HardCaps)
         assert rules.hard_caps.max_capital_at_risk_pct == 10.0
         assert rules.hard_caps.hard_max_per_signal_risk_pct == 2.0
+
+    def test_unregistered_trader_flagged(self, rules_dir: Path) -> None:
+        rules = load_effective_rules("not_listed", rules_dir=str(rules_dir))
+        assert rules.is_registered is False
 
     def test_entry_split_defaults(self, rules_dir: Path) -> None:
         rules = load_effective_rules("any", rules_dir=str(rules_dir))

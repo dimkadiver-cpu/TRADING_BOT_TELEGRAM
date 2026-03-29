@@ -173,6 +173,23 @@ class TestResolverStrongReply:
         assert result is not None
         assert result.eligibility == "ELIGIBLE"
 
+    def test_legacy_reply_target_resolved(self, tmp_path: Path) -> None:
+        db_path = _make_db(tmp_path)
+        pr_id = _insert_parse_result(db_path, raw_message_id=1)
+        _insert_signal(db_path, attempt_key="T_100_10_tr_a", trader_id="tr_a",
+                       root_telegram_id="10", status="ACTIVE")
+        _insert_op_signal(db_path, parse_result_id=pr_id, attempt_key="T_100_10_tr_a",
+                          trader_id="tr_a")
+
+        op = _make_op_signal(
+            target_refs=[{"kind": "reply", "ref": 10}],
+            intents=["U_MOVE_STOP"],
+        )
+        result = TargetResolver().resolve(op, db_path=db_path)
+        assert result is not None
+        assert result.eligibility == "ELIGIBLE"
+        assert len(result.position_ids) == 1
+
     def test_reply_no_match_unresolved(self, tmp_path: Path) -> None:
         db_path = _make_db(tmp_path)
         op = _make_op_signal(
@@ -181,6 +198,23 @@ class TestResolverStrongReply:
         result = TargetResolver().resolve(op, db_path=db_path)
         assert result is not None
         assert result.eligibility == "UNRESOLVED"
+
+    def test_legacy_reply_falls_back_to_symbol_target(self, tmp_path: Path) -> None:
+        db_path = _make_db(tmp_path)
+        pr_id = _insert_parse_result(db_path, raw_message_id=1)
+        _insert_signal(db_path, attempt_key="T_100_11_tr_a", trader_id="tr_a",
+                       symbol="BTCUSDT", root_telegram_id="11", status="ACTIVE")
+        _insert_op_signal(db_path, parse_result_id=pr_id, attempt_key="T_100_11_tr_a",
+                          trader_id="tr_a")
+
+        op = _make_op_signal(
+            target_refs=[{"kind": "reply", "ref": 999}, {"kind": "symbol", "ref": "BTCUSDT"}],
+            intents=["U_MOVE_STOP"],
+        )
+        result = TargetResolver().resolve(op, db_path=db_path)
+        assert result is not None
+        assert result.eligibility == "ELIGIBLE"
+        assert len(result.position_ids) == 1
 
 
 class TestResolverGlobal:

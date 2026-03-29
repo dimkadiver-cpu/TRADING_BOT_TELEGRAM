@@ -2,13 +2,16 @@
 
 ---
 
-## Il problema che risolve
+## Il problema che risolve:
 
-Hai un bot che riceve segnali di trading da trader su Telegram, li interpreta, e li esegue in automatico.
+1) Hai un bot che riceve segnali di trading da trader su Telegram, li interpreta, e li esegue in automatico.
 Funziona. Ma non sai se quei segnali, storicamente, avrebbero fatto guadagnare o perdere.
+2) Verifica rapida di una fonte di segnale, se i segnali sono validi e eventilamente in quale schenario si aha un output migliore. 
+
 
 Fase 7 risponde a tre domande:
 
+0. **La fonte ha segnali validi** — I segnali sono statisticamnete validi?
 1. **Il parser funziona bene?** — I segnali che il bot ha capito erano sensati finanziariamente?
 2. **La configurazione è ottimale?** — Se avessi usato 2% di rischio invece di 1%, saresti andato meglio?
 3. **Quanto avresti guadagnato/perso?** — Win rate, drawdown, profitto totale per ogni trader.
@@ -122,7 +125,7 @@ Per ogni run di backtest (= tutti gli scenari su tutti i trader in un dato perio
 
 ```
 backtest_reports/run_2026-03-28/
-  comparison_table.csv      ← tabella comparativa scenari (apri con Excel)
+  comparison_table.csv      ← tabella comparativa scenari (apri con Excel) // piu altre statistiche mensili: numero trade, winrate %, pln ecc
   comparison_table.html     ← stessa tabella, navigabile nel browser
   summary.json              ← dati machine-readable
 
@@ -154,3 +157,13 @@ Dopo Fase 7 puoi rispondere a domande come:
 - "Spostare lo SL a breakeven dopo TP2 riduce il drawdown da -8% a -6% mantenendo lo stesso profitto. Ha senso farlo in automatico?"
 - "Con il 2% di rischio il profitto raddoppia ma il drawdown sale a -15%. Il rischio vale?"
 - "Il 15% dei segnali che il gate aveva bloccato erano in realtà profittevoli. I criteri di blocco sono troppo restrittivi?"
+
+
+## Note importanti:
+   1. Attualmente la fase 7 è integrata nel Applicazione generale. sucessivamente dovra essere autonoma
+   2. Deve usare i moduli attualamente condivi e propri
+
+   Logica generale: 
+   - Scarico i dati raw dalla fonte
+   - applico il parser gia essistenete o fatto specificamente 
+   - applico il processo di simulazione

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import pytest
-
 from src.parser.trader_profiles.base import TraderParseResult
 from src.validation.coherence import ValidationResult, validate
 
@@ -55,35 +53,119 @@ def test_setup_incomplete_is_info_only() -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_new_signal_valid_with_symbol_and_side() -> None:
-    r = validate(_result("NEW_SIGNAL", entities={"symbol": "BTCUSDT", "side": "LONG"}))
+def test_new_signal_valid_with_complete_limit_setup() -> None:
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "LONG",
+                "entry": [100.0],
+                "stop_loss": 90.0,
+                "take_profits": [110.0],
+            },
+        )
+    )
     assert r.status == "VALID"
     assert r.is_actionable
 
 
-def test_new_signal_valid_with_direction_key() -> None:
-    """Accetta sia 'side' (profili correnti) che 'direction' (nuova architettura)."""
-    r = validate(_result("NEW_SIGNAL", entities={"symbol": "ETHUSDT", "direction": "SHORT"}))
+def test_new_signal_valid_with_market_entry_without_prices() -> None:
+    """MARKET richiede il tipo di entry, ma non i prezzi di entry."""
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "symbol": "ETHUSDT",
+                "direction": "SHORT",
+                "entry_order_type": "MARKET",
+                "stop_loss": 2600.0,
+                "take_profits": [2400.0, 2300.0],
+            },
+        )
+    )
     assert r.status == "VALID"
 
 
 def test_new_signal_missing_symbol() -> None:
-    r = validate(_result("NEW_SIGNAL", entities={"side": "LONG"}))
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "side": "LONG",
+                "entry": [100.0],
+                "stop_loss": 90.0,
+                "take_profits": [110.0],
+            },
+        )
+    )
     assert r.status == "STRUCTURAL_ERROR"
     assert "missing_entity:symbol" in r.errors
     assert not r.is_actionable
 
 
 def test_new_signal_missing_direction() -> None:
-    r = validate(_result("NEW_SIGNAL", entities={"symbol": "BTCUSDT"}))
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "symbol": "BTCUSDT",
+                "entry": [100.0],
+                "stop_loss": 90.0,
+                "take_profits": [110.0],
+            },
+        )
+    )
     assert r.status == "STRUCTURAL_ERROR"
     assert "missing_entity:direction" in r.errors
 
 
-def test_new_signal_missing_both() -> None:
-    r = validate(_result("NEW_SIGNAL", entities={}))
+def test_new_signal_missing_entry() -> None:
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "LONG",
+                "stop_loss": 90.0,
+                "take_profits": [110.0],
+            },
+        )
+    )
     assert r.status == "STRUCTURAL_ERROR"
-    assert len(r.errors) == 2
+    assert "missing_entity:entry" in r.errors
+
+
+def test_new_signal_missing_stop_loss() -> None:
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "LONG",
+                "entry": [100.0],
+                "take_profits": [110.0],
+            },
+        )
+    )
+    assert r.status == "STRUCTURAL_ERROR"
+    assert "missing_entity:stop_loss" in r.errors
+
+
+def test_new_signal_missing_take_profits() -> None:
+    r = validate(
+        _result(
+            "NEW_SIGNAL",
+            entities={
+                "symbol": "BTCUSDT",
+                "side": "LONG",
+                "entry": [100.0],
+                "stop_loss": 90.0,
+            },
+        )
+    )
+    assert r.status == "STRUCTURAL_ERROR"
+    assert "missing_entity:take_profits" in r.errors
 
 
 # ---------------------------------------------------------------------------

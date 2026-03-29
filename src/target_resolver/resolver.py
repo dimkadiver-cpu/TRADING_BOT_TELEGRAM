@@ -62,6 +62,13 @@ _ACTION_INTENTS = frozenset({
     "U_UPDATE_TAKE_PROFITS", "U_INVALIDATE_SETUP",
 })
 
+_LEGACY_STRONG_KIND_MAP = {
+    "REPLY": ("STRONG", "REPLY"),
+    "TELEGRAM_LINK": ("STRONG", "TELEGRAM_LINK"),
+    "MESSAGE_ID": ("STRONG", "TELEGRAM_LINK"),
+    "SIGNAL_ID": ("STRONG", "EXPLICIT_ID"),
+}
+
 
 def _normalise_status(status: str) -> str:
     """Map raw DB status to PENDING/ACTIVE/CLOSED for eligibility check."""
@@ -109,6 +116,39 @@ def _check_eligibility(
                 worst_reason = f"{intent}:{norm_status.lower()}"
 
     return worst, worst_reason  # type: ignore[return-value]
+
+
+def _normalize_target_ref(target_ref: dict[str, Any]) -> dict[str, Any]:
+    """Normalize legacy parser target refs to the resolver's canonical shape."""
+    normalized = dict(target_ref)
+
+    raw_kind = str(normalized.get("kind", "SYMBOL")).strip().upper()
+    raw_method = str(normalized.get("method", "")).strip().upper()
+
+    if raw_kind in _LEGACY_STRONG_KIND_MAP:
+        canonical_kind, canonical_method = _LEGACY_STRONG_KIND_MAP[raw_kind]
+        normalized["kind"] = canonical_kind
+        normalized["method"] = canonical_method
+        if raw_kind == "MESSAGE_ID" and normalized.get("ref") is not None:
+            normalized["ref"] = f"https://t.me/c/0/{normalized['ref']}"
+        return normalized
+
+    if raw_kind == "SYMBOL":
+        normalized["kind"] = "SYMBOL"
+        if not normalized.get("symbol") and normalized.get("ref") is not None:
+            normalized["symbol"] = str(normalized["ref"]).upper()
+        return normalized
+
+    if raw_kind == "GLOBAL":
+        normalized["kind"] = "GLOBAL"
+        return normalized
+
+    if raw_kind == "STRONG":
+        normalized["kind"] = "STRONG"
+        normalized["method"] = raw_method or None
+        return normalized
+
+    return normalized
 
 
 # ---------------------------------------------------------------------------
@@ -160,57 +200,67 @@ class TargetResolver:
                 reason="no_target_ref",
             )
 
-        # Use the first target_ref
-        target_ref = target_refs[0] if target_refs else {}
-        kind: str = str(target_ref.get("kind", "SYMBOL")).upper()
-        method: str = str(target_ref.get("method", "")).upper()
-        ref = target_ref.get("ref")
-        symbol = str(target_ref.get("symbol", "")).upper()
-        scope = str(target_ref.get("scope", "")).lower()
+        last_unresolved: ResolvedTarget | None = None
 
-        resolved_signals: list[OpenSignal] = []
+        for raw_target_ref in target_refs:
+            target_ref = _normalize_target_ref(raw_target_ref if isinstance(raw_target_ref, dict) else {})
+            kind: str = str(target_ref.get("kind", "SYMBOL")).upper()
+            method: str = str(target_ref.get("method", "")).upper()
+            ref = target_ref.get("ref")
+            symbol = str(target_ref.get("symbol", "")).upper()
+            scope = str(target_ref.get("scope", "")).lower()
 
-        if kind == "STRONG":
-            resolved_signals = self._resolve_strong(
-                sq, trader_id, method, ref, db_path
-            )
-        elif kind == "SYMBOL":
-            sym = symbol or str(
-                parse_result.entities.get("symbol", "") if isinstance(parse_result.entities, dict) else ""
-            ).upper()
-            resolved_signals = sq.get_open_by_trader_and_symbol(trader_id, sym)
-        elif kind == "GLOBAL":
-            resolved_signals = self._resolve_global(sq, trader_id, scope)
-        else:
-            return ResolvedTarget(
-                kind="SYMBOL",
-                position_ids=[],
-                eligibility="UNRESOLVED",
-                reason=f"unknown_target_ref_kind:{kind}",
-            )
+            resolved_signals: list[OpenSignal] = []
 
-        if not resolved_signals:
+            if kind == "STRONG":
+                resolved_signals = self._resolve_strong(
+                    sq, trader_id, method, ref, db_path
+                )
+            elif kind == "SYMBOL":
+                sym = symbol or str(
+                    parse_result.entities.get("symbol", "") if isinstance(parse_result.entities, dict) else ""
+                ).upper()
+                resolved_signals = sq.get_open_by_trader_and_symbol(trader_id, sym)
+            elif kind == "GLOBAL":
+                resolved_signals = self._resolve_global(sq, trader_id, scope)
+            else:
+                last_unresolved = ResolvedTarget(
+                    kind="SYMBOL",
+                    position_ids=[],
+                    eligibility="UNRESOLVED",
+                    reason=f"unknown_target_ref_kind:{kind}",
+                )
+                continue
+
+            if not resolved_signals:
+                last_unresolved = ResolvedTarget(
+                    kind=kind,  # type: ignore[arg-type]
+                    position_ids=[],
+                    eligibility="UNRESOLVED",
+                    reason="no_matching_open_signal",
+                )
+                continue
+
+            position_ids: list[int] = []
+            for sig in resolved_signals:
+                op_id = sq.get_op_signal_id_for_attempt_key(sig.attempt_key)
+                if op_id is not None:
+                    position_ids.append(op_id)
+
+            eligibility, reason = _check_eligibility(resolved_signals, action_intents)
+
             return ResolvedTarget(
                 kind=kind,  # type: ignore[arg-type]
-                position_ids=[],
-                eligibility="UNRESOLVED",
-                reason="no_matching_open_signal",
+                position_ids=position_ids,
+                eligibility=eligibility,
+                reason=reason,
             )
 
-        # Resolve to op_signal_ids
-        position_ids: list[int] = []
-        for sig in resolved_signals:
-            op_id = sq.get_op_signal_id_for_attempt_key(sig.attempt_key)
-            if op_id is not None:
-                position_ids.append(op_id)
-
-        eligibility, reason = _check_eligibility(resolved_signals, action_intents)
-
-        return ResolvedTarget(
-            kind=kind,  # type: ignore[arg-type]
-            position_ids=position_ids,
-            eligibility=eligibility,
-            reason=reason,
+        return last_unresolved or ResolvedTarget(
+            kind="SYMBOL",
+            position_ids=[],
+            eligibility="UNRESOLVED",
+            reason="no_matching_open_signal",
         )
 
     def _resolve_strong(

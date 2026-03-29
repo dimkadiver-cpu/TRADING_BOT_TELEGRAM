@@ -1,8 +1,8 @@
-# TeleSignalBot — channels configuration
+# TeleSignalBot - channels configuration
 # Il listener rilegge questo file senza restart (hot reload via watchdog).
 
 recovery:
-  max_hours: 4  # finestra temporale messaggi recuperati al restart
+  max_hours: 7  # finestra temporale messaggi recuperati al restart
 
 blacklist_global:
   - "#admin"
@@ -13,7 +13,7 @@ blacklist_global:
 
 channels:
   - chat_id: -1003171748254
-    label: "PifSignal"
+    label: "PifSignal"  # canale reale attivo concordato
     active: true
-    trader_id: null   # canale multi-trader — risoluzione via alias/reply-chain
-    blacklist: []
+    trader_id: null   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    blacklist: []     # estendere qui solo per rumore specifico del canale

@@ -39,6 +39,8 @@ class EffectiveRules:
     """Fully resolved rules for a single trader after 4-level merge."""
 
     hard_caps: HardCaps
+    registered_traders: tuple[str, ...]
+    is_registered: bool
 
     # Trader on/off + mode
     enabled: bool
@@ -323,6 +325,13 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
     global_data = _load_yaml(global_path)
     global_defaults: dict[str, Any] = global_data.get("global_defaults", {})
     hard_caps_raw: dict[str, Any] = global_data.get("global_hard_caps", {})
+    registered_traders_raw = global_data.get("registered_traders", [])
+    registered_traders = tuple(
+        str(value).strip()
+        for value in registered_traders_raw
+        if isinstance(value, str) and str(value).strip()
+    )
+    is_registered = trader_id in registered_traders if registered_traders else True
 
     # Load trader-specific YAML (missing file → empty dict, uses all defaults)
     trader_path = root / "trader_rules" / f"{trader_id}.yaml"
@@ -379,6 +388,8 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
 
     return EffectiveRules(
         hard_caps=hard_caps,
+        registered_traders=registered_traders,
+        is_registered=is_registered,
         enabled=bool(merged.get("enabled", True)),
         gate_mode=str(merged.get("gate_mode", "block")).lower(),
         operation_rules=resolved_operation_rules,

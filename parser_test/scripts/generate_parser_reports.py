@@ -11,12 +11,19 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from parser_test.reporting.report_export import export_reports_csv_v2
+from parser_test.scripts.db_paths import resolve_parser_test_db_path
 from parser_test.scripts.replay_parser import replay_database
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run parser replay and export CSV reports.")
     parser.add_argument("--db-path", default=None, help="Path to parser_test sqlite DB.")
+    parser.add_argument("--db-name", default=None, help="Logical DB name under parser_test/db (e.g. trader_a_mar).")
+    parser.add_argument(
+        "--db-per-chat",
+        action="store_true",
+        help="Use parser_test/db/parser_test__chat_<chat>.sqlite3 based on --chat-id.",
+    )
     parser.add_argument("--trader", default=None, help="Trader filter: TA, trader_a, TB, trader_b, all.")
     parser.add_argument("--only-unparsed", action="store_true", help="Replay only rows without parse_results.")
     parser.add_argument("--limit", type=int, default=None, help="Max rows to process.")
@@ -52,6 +59,8 @@ def main() -> None:
     args = parse_args()
     replay_database(
         db_path=args.db_path,
+        db_name=args.db_name,
+        db_per_chat=args.db_per_chat,
         only_unparsed=args.only_unparsed,
         limit=args.limit,
         chat_id=args.chat_id,
@@ -61,7 +70,16 @@ def main() -> None:
         parser_mode=args.parser_mode,
         show_normalized_samples=args.show_normalized_samples,
     )
-    db_path = _resolve_path(args.db_path or PROJECT_ROOT / "parser_test" / "db" / "parser_test.sqlite3")
+    db_path = Path(
+        resolve_parser_test_db_path(
+            project_root=PROJECT_ROOT,
+            parser_test_dir=PROJECT_ROOT / "parser_test",
+            explicit_db_path=args.db_path,
+            db_name=args.db_name,
+            db_per_chat=args.db_per_chat,
+            chat_ref=args.chat_id,
+        )
+    )
     updated = export_reports_csv_v2(
         db_path=db_path,
         reports_dir=args.reports_dir,
@@ -70,12 +88,6 @@ def main() -> None:
         include_json_debug=args.include_json_debug,
     )
     _print_summary(updated)
-
-
-def _resolve_path(value: str | Path) -> Path:
-    path = Path(value)
-    return path if path.is_absolute() else (PROJECT_ROOT / path).resolve()
-
 
 def _format_path(path: Path) -> str:
     try:

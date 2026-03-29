@@ -113,7 +113,7 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
         self.assertEqual(result.entities.get("take_profits"), [0.00654])
 
-    def test_new_signal_market_default_when_entry_not_specified(self) -> None:
+    def test_missing_entry_does_not_classify_as_new_signal(self) -> None:
         text = (
             "Trader#d\n"
             "scrt short\n"
@@ -123,14 +123,9 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
             "тп2 0,11886"
         )
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
-        self.assertEqual(result.entities.get("symbol"), "SCRTUSDT")
-        self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
-        self.assertEqual(result.entities.get("entry_plan_entries", [])[0].get("order_type"), "MARKET")
-        self.assertIsNone(result.entities.get("entry_plan_entries", [])[0].get("price"))
-        self.assertEqual(result.entities.get("take_profits"), [0.12522, 0.11886])
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
 
-    def test_new_signal_market_default_when_entry_not_specified_with_tp_only(self) -> None:
+    def test_missing_entry_with_multiple_tp_does_not_classify_as_new_signal(self) -> None:
         text = (
             "Trader#d\n"
             "scrt short\n"
@@ -140,13 +135,9 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
             "тп2 0,11886"
         )
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
-        self.assertEqual(result.entities.get("symbol"), "SCRTUSDT")
-        self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
-        self.assertEqual(result.entities.get("entry_plan_entries", [])[0].get("order_type"), "MARKET")
-        self.assertEqual(result.entities.get("take_profits"), [0.12522, 0.11886])
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
 
-    def test_new_signal_market_default_with_single_tp_and_sl_synonym(self) -> None:
+    def test_missing_entry_with_single_tp_does_not_classify_as_new_signal(self) -> None:
         text = (
             "Trader#d\n"
             "scrt short\n"
@@ -156,10 +147,7 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
             "тп2"
         )
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
-        self.assertEqual(result.entities.get("symbol"), "SCRTUSDT")
-        self.assertEqual(result.entities.get("stop_loss"), 0.13764)
-        self.assertEqual(result.entities.get("take_profits"), [0.12522])
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
 
     def test_new_signal_market_default_when_entry_not_specified_btc(self) -> None:
         text = (
@@ -211,7 +199,7 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
             "tp2 0.026276"
         )
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
         self.assertEqual(result.entities.get("symbol"), "SENTUSDT")
         self.assertEqual(result.entities.get("side"), "SHORT")
         self.assertEqual(result.entities.get("risk_percent"), 0.5)
@@ -238,7 +226,7 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
     def test_compact_new_signal_without_explicit_entry_sent(self) -> None:
         text = "Sent short риск 0,5\nsl 0.034094\ntp 0.027789\ntp2 0.026276"
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
         self.assertEqual(result.entities.get("symbol"), "SENTUSDT")
         self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
         self.assertEqual(result.entities.get("risk_value_normalized"), 0.5)
@@ -246,14 +234,14 @@ class TraderDProfileRealCasesTests(unittest.TestCase):
     def test_compact_new_signal_enj_russian_tp(self) -> None:
         text = "Enj шорт риск 0,5\nsl 0.2701\nтп1 0.245\nтп2 0.231\nтп3 0.218"
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
         self.assertEqual(result.entities.get("symbol"), "ENJUSDT")
         self.assertEqual(result.entities.get("entry_order_type"), "MARKET")
 
     def test_paxg_long_compact_signal(self) -> None:
         text = "PAXG Long\nsl 2280\ntp1 2350\ntp2 2390"
         result = self.parser.parse_message(text, _context(text=text))
-        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.message_type, "SETUP_INCOMPLETE")
         self.assertEqual(result.entities.get("symbol"), "PAXGUSDT")
 
     def test_limit_inline_entry_is_supported(self) -> None:

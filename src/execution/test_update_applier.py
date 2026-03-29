@@ -112,6 +112,40 @@ class UpdateApplierTests(unittest.TestCase):
         self.assertEqual(sl, 100.0)
         self.assertEqual(sl_trigger, 100.0)
 
+    def test_move_stop_to_be_prefers_real_filled_entry_price(self) -> None:
+        now = utc_now_iso()
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                """
+                INSERT INTO events(
+                  env, channel_id, telegram_msg_id, trader_id, trader_prefix,
+                  attempt_key, event_type, payload_json, confidence, created_at
+                ) VALUES ('T', '-1001', '301', 'TA', 'TA',
+                          'atk1', 'ENTRY_FILLED', ?, 1.0, ?)
+                """,
+                (json.dumps({"fill_price": 101.5}), now),
+            )
+            conn.commit()
+
+        plan = build_update_plan(
+            {
+                "message_type": "UPDATE",
+                "actions": ["ACT_MOVE_STOP_LOSS"],
+                "entities": {"new_stop_level": "ENTRY"},
+                "target_refs": [101],
+            }
+        )
+        result = apply_update_plan(plan, self.db_path, channel_id="-1001", telegram_msg_id="201")
+        self.assertFalse(result.errors)
+
+        with sqlite3.connect(self.db_path) as conn:
+            sl = conn.execute("SELECT sl FROM signals WHERE attempt_key='atk1'").fetchone()[0]
+            sl_trigger = conn.execute(
+                "SELECT trigger_price FROM orders WHERE attempt_key='atk1' AND purpose='SL'"
+            ).fetchone()[0]
+        self.assertEqual(sl, 101.5)
+        self.assertEqual(sl_trigger, 101.5)
+
     def test_cancel_pending_entries(self) -> None:
         plan = build_update_plan(
             {

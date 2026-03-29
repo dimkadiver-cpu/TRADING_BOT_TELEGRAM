@@ -13,6 +13,11 @@ from telethon import TelegramClient
 from src.core.config_loader import load_config
 from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
+from src.execution.dynamic_pairlist import DynamicPairlistManager
+from src.operation_rules.engine import OperationRulesEngine
+from src.storage.operational_signals_store import OperationalSignalsStore
+from src.storage.signals_store import SignalsStore
+from src.target_resolver.resolver import TargetResolver
 from src.operation_rules.loader import validate_operation_rules_config
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
 from src.telegram.listener import (
@@ -87,6 +92,16 @@ async def _async_main(
         trader_aliases=config.trader_aliases,
         known_trader_ids=set(config.traders.keys()),
     )
+    dynamic_pairlist_path = os.getenv(
+        'FREQTRADE_DYNAMIC_PAIRLIST_PATH',
+        str(root_dir / 'freqtrade' / 'user_data' / 'dynamic_pairs.json'),
+    )
+    dynamic_pairlist_refresh = int(os.getenv('FREQTRADE_DYNAMIC_PAIRLIST_REFRESH_PERIOD', '10'))
+    dynamic_pairlist_manager = DynamicPairlistManager(
+        dynamic_pairlist_path,
+        refresh_period=dynamic_pairlist_refresh,
+    )
+
     ingestion_service = build_ingestion_service(db_path=db_path, logger=logger)
     processing_status_store = build_processing_status_store(db_path=db_path)
 
@@ -107,6 +122,12 @@ async def _async_main(
             raw_message_store=ingestion_service.store,
             logger=logger,
             channels_config=channels_config,
+            db_path=db_path,
+            operation_rules_engine=OperationRulesEngine(rules_dir=str(root_dir / "config")),
+            target_resolver=TargetResolver(),
+            signals_store=SignalsStore(db_path=db_path),
+            operational_signals_store=OperationalSignalsStore(db_path=db_path),
+            dynamic_pairlist_manager=dynamic_pairlist_manager,
         ),
         logger=logger,
         channels_config=channels_config,

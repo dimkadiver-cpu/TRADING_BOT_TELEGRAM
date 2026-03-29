@@ -148,9 +148,70 @@ def _validate_new_signal(entities: dict[str, Any]) -> ValidationResult:
     if not entities.get("side") and not entities.get("direction"):
         errors.append("missing_entity:direction")
 
+    if not _has_new_signal_entry(entities):
+        errors.append("missing_entity:entry")
+
+    if not _has_new_signal_stop(entities):
+        errors.append("missing_entity:stop_loss")
+
+    if not _has_new_signal_take_profits(entities):
+        errors.append("missing_entity:take_profits")
+
     if errors:
         return ValidationResult(status="STRUCTURAL_ERROR", errors=errors)
     return ValidationResult(status="VALID")
+
+
+def _has_new_signal_entry(entities: dict[str, Any]) -> bool:
+    order_type = _extract_entry_order_type(entities)
+    if order_type == "MARKET":
+        return True
+    return _has_entry_values(entities)
+
+
+def _has_new_signal_stop(entities: dict[str, Any]) -> bool:
+    value = entities.get("stop_loss") or entities.get("sl")
+    return value not in (None, "", [])
+
+
+def _has_new_signal_take_profits(entities: dict[str, Any]) -> bool:
+    take_profits = entities.get("take_profits") or entities.get("tp_prices")
+    return isinstance(take_profits, list) and len(take_profits) > 0
+
+
+def _extract_entry_order_type(entities: dict[str, Any]) -> str | None:
+    for key in ("entry_order_type", "entry_type"):
+        value = entities.get(key)
+        if isinstance(value, str) and value.strip():
+            return value.strip().upper()
+
+    plan_entries = entities.get("entry_plan_entries")
+    if isinstance(plan_entries, list):
+        for item in plan_entries:
+            if not isinstance(item, dict):
+                continue
+            value = item.get("order_type")
+            if isinstance(value, str) and value.strip():
+                return value.strip().upper()
+    return None
+
+
+def _has_entry_values(entities: dict[str, Any]) -> bool:
+    for key in ("entry", "entries"):
+        value = entities.get(key)
+        if isinstance(value, list) and len(value) > 0:
+            return True
+        if value not in (None, "", []):
+            return True
+
+    plan_entries = entities.get("entry_plan_entries")
+    if isinstance(plan_entries, list):
+        for item in plan_entries:
+            if not isinstance(item, dict):
+                continue
+            if item.get("price") not in (None, ""):
+                return True
+    return False
 
 
 def _validate_update(intents: list[str], entities: dict[str, Any]) -> ValidationResult:

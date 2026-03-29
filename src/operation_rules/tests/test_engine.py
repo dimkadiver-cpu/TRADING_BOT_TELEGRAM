@@ -23,6 +23,19 @@ from src.parser.trader_profiles.base import TraderParseResult
 @pytest.fixture()
 def rules_dir(tmp_path: Path) -> Path:
     global_yaml = {
+        "registered_traders": [
+            "trader_x",
+            "disabled_t",
+            "legacy_avg",
+            "lev0",
+            "dis2",
+            "warn_t",
+            "hint_ok",
+            "hint_over",
+            "hint_warn",
+            "hint_bad",
+            "tp_t",
+        ],
         "global_hard_caps": {
             "max_capital_at_risk_pct": 10.0,
             "hard_max_per_signal_risk_pct": 2.0,
@@ -101,6 +114,13 @@ def _make_result(
 
 
 class TestEngineDisabledTrader:
+    def test_unregistered_trader_blocks(self, rules_dir: Path, db_path: str) -> None:
+        engine = OperationRulesEngine(rules_dir=str(rules_dir))
+        result = _make_result()
+        op = engine.apply(result, "not_registered", db_path=db_path)
+        assert op.is_blocked is True
+        assert op.block_reason == "trader_not_registered"
+
     def test_disabled_trader_blocks(self, rules_dir: Path, db_path: str) -> None:
         (rules_dir / "trader_rules" / "disabled_t.yaml").write_text(
             yaml.dump({"enabled": False}), encoding="utf-8"

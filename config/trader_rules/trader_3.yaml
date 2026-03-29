@@ -3,7 +3,7 @@
 # Ometti una chiave per ereditare il default globale.
 
 enabled: true
-gate_mode: warn                       # warn durante sviluppo (non blocca)
+gate_mode: block                       # warn durante sviluppo (non blocca)
 operation_rules: override             # override | global (usa solo global defaults)
 
 # Modello rischio

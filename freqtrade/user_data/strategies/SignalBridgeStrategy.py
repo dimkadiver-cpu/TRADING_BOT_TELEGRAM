@@ -7,6 +7,7 @@ import logging
 import os
 import sqlite3
 import time
+from pathlib import Path
 from typing import Any
 
 _log = logging.getLogger(__name__)
@@ -219,6 +220,50 @@ class SignalBridgeStrategy(IStrategy):
         price = context.first_entry_price
         if price is None or price <= 0:
             return float(proposed_rate)
+
+        return float(price)
+
+    def adjust_entry_price(
+        self,
+        trade: Any,
+        order: Any,
+        pair: str,
+        current_time: Any,
+        proposed_rate: float,
+        current_order_rate: float,
+        entry_tag: str | None,
+        side: str,
+        **kwargs: Any,
+    ) -> float | None:
+        """Keep open LIMIT entry orders anchored to the canonical plan price.
+
+        This only affects replacement/repricing of already-open entry orders.
+        MARKET signals and entries without an explicit LIMIT price continue to
+        use Freqtrade's default repricing behavior.
+        """
+        del trade, order, current_time, proposed_rate, side, kwargs
+
+        db_path = self._resolve_db_path()
+        if not pair or not db_path:
+            return float(current_order_rate)
+
+        context = load_context_by_attempt_key(entry_tag, db_path) if entry_tag else None
+        if context is None:
+            context = self._select_pending_context(pair=pair, db_path=db_path)
+        if context is None:
+            return float(current_order_rate)
+        if not context.is_pair_mappable or context.pair != pair:
+            return float(current_order_rate)
+        if context.signal_status != "PENDING":
+            return float(current_order_rate)
+
+        # Only anchor repricing when the signal explicitly defines a LIMIT E1.
+        if context.first_entry_order_type != "LIMIT":
+            return float(current_order_rate)
+
+        price = context.first_entry_price
+        if price is None or price <= 0:
+            return float(current_order_rate)
 
         return float(price)
 
@@ -519,9 +564,15 @@ class SignalBridgeStrategy(IStrategy):
             context.management_rules,
             getattr(self, "config", None),
         )
+        effective_rate = float(rate)
+        if str(order_type).upper() == "LIMIT" and context.first_entry_order_type == "LIMIT":
+            planned_limit_price = context.first_entry_price
+            if planned_limit_price is not None and planned_limit_price > 0:
+                effective_rate = float(planned_limit_price)
+
         rejection = check_entry_rate(
             entry_prices=context.entry_prices,
-            rate=float(rate),
+            rate=effective_rate,
             order_type=str(order_type),
             policy=policy,
         )
@@ -543,7 +594,13 @@ class SignalBridgeStrategy(IStrategy):
             persist_entry_price_rejected_event(
                 db_path=db_path,
                 attempt_key=context.attempt_key,
-                rejection_info={**rejection, "pair": pair, "order_type": order_type},
+                rejection_info={
+                    **rejection,
+                    "pair": pair,
+                    "order_type": order_type,
+                    "requested_rate": float(rate),
+                    "effective_rate": effective_rate,
+                },
             )
             return False
 
@@ -589,6 +646,12 @@ class SignalBridgeStrategy(IStrategy):
         env_path = os.getenv("TELESIGNALBOT_DB_PATH")
         if env_path:
             return env_path
+
+        # Final fallback for live/runtime cases where config/env are not
+        # propagated to the strategy instance but the standard repo layout is used.
+        repo_db = Path(__file__).resolve().parents[3] / "db" / "tele_signal_bot.sqlite3"
+        if repo_db.exists():
+            return str(repo_db)
 
         return None
 

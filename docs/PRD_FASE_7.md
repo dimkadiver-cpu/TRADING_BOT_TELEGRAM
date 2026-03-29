@@ -16,7 +16,12 @@ Fase 7 costruisce **Sistema 2**: replay dei segnali storici contro OHLCV reale i
 - Ottimizzare operation rules (quale config performa meglio per trader?)
 - Calcolare P&L storico (win rate, drawdown, Sharpe per trader)
 
-**Vincolo principale:** tutti i layer upstream (parser, operation rules, storage) sono **read-only** — il backtest non tocca `signals` né `operational_signals`.
+**Vincolo principale:** il backtesting usa un **DB dedicato** (`db/backtest.sqlite3`), separato dal DB live. Il DB live non viene mai letto né scritto dal sistema di backtest.
+
+**Preparazione dati:** prima del backtest, un flusso di preparazione popola il DB dedicato:
+1. `import_history.py` — scarica messaggi da Telegram → `raw_messages`
+2. `replay_parser.py` — parsa i messaggi → `parse_results`
+3. `replay_operation_rules.py` (nuovo) — applica operation rules → `operational_signals` + `signals`
 
 ---
 
@@ -25,9 +30,17 @@ Fase 7 costruisce **Sistema 2**: replay dei segnali storici contro OHLCV reale i
 ```
 Telegram source ID
       ↓
-(import_history.py — già esiste)
+import_history.py --db-path db/backtest.sqlite3        [GIA' ESISTE]
       ↓
-raw_messages → parse_results → signals → operational_signals  [Fase 4-6, read-only]
+raw_messages (backtest DB)
+      ↓
+replay_parser.py --db-path db/backtest.sqlite3         [GIA' ESISTE]
+      ↓
+parse_results (backtest DB)
+      ↓
+replay_operation_rules.py --db-path db/backtest.sqlite3  [NUOVO — Step 18b]
+      ↓
+operational_signals + signals (backtest DB)
       ↓
 SignalChainBuilder        ricostruisce chain: NEW_SIGNAL + UPDATE via resolved_target_ids
       ↓
@@ -182,7 +195,7 @@ backtest_settings:
 
 ---
 
-## Step 18 — Data Preparation (prerequisito operativo)
+## Step 18a — Data Preparation: OHLCV (prerequisito operativo)
 
 **Deliverable:** nessun file di codice — step operativo da eseguire prima del backtest.
 
@@ -214,7 +227,63 @@ freqtrade/user_data/data/bybit/futures/
 
 `BacktestRunner` configura `datadir` nel `freqtrade_config.json` generato puntando a questa directory. Nessuna conversione di formato necessaria.
 
-**Note:** i pair devono essere normalizzati nel formato freqtrade (`BTC/USDT:USDT`) prima del download. Usa `freqtrade_normalizer._normalize_pair()` già esistente in `src/execution/freqtrade_normalizer.py` per ricavare la lista pairs dai simboli nel DB.
+**Note:** i pair devono essere normalizzati nel formato freqtrade (`BTC/USDT:USDT`) prima del download. Usa normalizzazione locale nel runner (Step 20).
+
+---
+
+## Step 18b — Data Preparation: Backtest DB
+
+**Deliverable:** `parser_test/scripts/replay_operation_rules.py`
+
+Il backtesting usa un DB dedicato (`db/backtest.sqlite3`), separato dal DB live. Il flusso di preparazione è:
+
+### Flusso completo
+
+```bash
+# 1. Scarica messaggi storici da Telegram (GIA' ESISTE)
+python parser_test/scripts/import_history.py \
+  --db-path db/backtest.sqlite3 \
+  --chat-id <CHAT_ID> \
+  --from-date 2025-06-01 \
+  --to-date 2026-03-01
+
+# 2. Parsa i messaggi (GIA' ESISTE)
+python parser_test/scripts/replay_parser.py \
+  --db-path db/backtest.sqlite3
+
+# 3. Applica operation rules (NUOVO)
+python parser_test/scripts/replay_operation_rules.py \
+  --db-path db/backtest.sqlite3 \
+  --rules-dir config
+```
+
+### replay_operation_rules.py
+
+Script batch che processa tutti i `parse_results` tramite `OperationRulesEngine` e `TargetResolver`.
+
+**Logica:**
+1. Applica migrazioni 011-016 al DB se mancanti (via `apply_migrations`)
+2. Leggi tutti i `parse_results` con `is_executable=1` (o filtro opzionale `--trader`, `--from-date`, `--to-date`)
+3. Per ogni parse_result:
+   a. Ricostruisci `TraderParseResult` da `parse_result_normalized_json`
+   b. Chiama `OperationRulesEngine.apply(parse_result, trader_id, db_path)` → `OperationalSignal`
+   c. Se `message_type='NEW_SIGNAL'` e non bloccato: inserisci in `signals` tramite `SignalsStore`
+   d. Se UPDATE: chiama `TargetResolver.resolve()` per linkare al NEW_SIGNAL
+   e. Inserisci in `operational_signals` tramite `OperationalSignalsStore`
+4. Stampa statistiche: processati, bloccati, errori, chain linkate
+
+**CLI args:**
+- `--db-path` (obbligatorio)
+- `--rules-dir` (default: `config`)
+- `--trader` (opzionale: filtra per trader_id)
+- `--from-date`, `--to-date` (opzionale)
+- `--dry-run` (opzionale: processa senza scrivere nel DB)
+
+**Riusa:** `src/operation_rules/engine.py`, `src/target_resolver/resolver.py`, `src/storage/operational_signals_store.py`, `src/storage/signals_store.py`
+
+**Safety:** rifiuta di eseguire su `tele_signal_bot.sqlite3` (stessa guardia di `import_history.py`)
+
+**Test:** 4–6 test in `parser_test/scripts/tests/test_replay_operation_rules.py`
 
 ---
 
@@ -363,8 +432,9 @@ CREATE INDEX IF NOT EXISTS idx_bt_trades_chain ON backtest_trades(chain_id);
 ```
 backtest_reports/run_{ts}/
   summary.json                  ← BacktestSummaryReport (machine-readable)
-  comparison_table.csv          ← scenari in riga, metriche in colonna
+  comparison_table.csv          ← scenari in riga, metriche in colonna (aggregato)
   comparison_table.html         ← stessa tabella stilizzata
+  comparison_table_monthly.csv  ← breakdown mensile: scenario | month | trades | win_rate_pct | profit_pct | max_dd_pct
   per_scenario/{name}/
     trades.csv
     equity_curve.csv
@@ -387,6 +457,8 @@ backtest_reports/run_{ts}/
 | `avg_trade_duration_hours` | Durata media trade |
 | `sl_moved_to_be_count` | Trade con SL spostato a BE |
 | `chains_blocked_count` | Chain bloccate dai gate |
+
+Ogni metrica viene calcolata anche con **granularità mensile** (`comparison_table_monthly.csv`), raggruppando le trade per `strftime('%Y-%m', open_date)`. Questo permette di identificare trend stagionali e periodi di drawdown.
 
 ### Comparison table (esempio)
 
@@ -449,8 +521,17 @@ freqtrade/user_data/strategies/
   SignalBridgeStrategy.py           ← LIVE (non toccare)
   SignalBridgeBacktestStrategy.py   ← BACKTEST (nuovo, nessun import condiviso con live)
 
+parser_test/scripts/
+  import_history.py              ← GIA' ESISTE — scarica messaggi Telegram
+  replay_parser.py               ← GIA' ESISTE — parsa raw_messages
+  replay_operation_rules.py      ← NUOVO (Step 18b) — applica operation rules
+
 config/
   backtest_scenarios.yaml
+
+db/
+  backtest.sqlite3               ← DB DEDICATO backtesting (gitignored)
+  tele_signal_bot.sqlite3        ← DB LIVE (non toccato dal backtesting)
 
 db/migrations/
   015_backtest_runs.sql
@@ -465,16 +546,17 @@ backtest_reports/                ← gitignored, output root
 
 ```
 Step 16 (models + chain_builder)  ─┐
-Step 17 (scenario + YAML)         ─┤── paralleli
-Step 18 (data preparation — ops)  ─┘  (nessun codice, solo download-data)
+Step 17 (scenario + YAML)         ─┤── paralleli (nessuna dipendenza reciproca)
+Step 21 (migrations + storage)    ─┘
+         │
+Step 18a (OHLCV download — ops)  ── operativo, nessun codice
+Step 18b (replay_operation_rules) ── script nuovo, parallelo a 16/17/21
          │
 Step 19 (BacktestStrategy)        ← dipende da 16, 17
          │
-Step 20 (runner)                  ← dipende da 16, 17, 19
+Step 20 (runner)                  ← dipende da 16, 17, 19, 21
          │
-Step 21 (migrations + storage)   ← dipende da 20
-         │
-Step 22 (report)                  ← dipende da 21
+Step 22 (report)                  ← dipende da 20, 21
          │
 Step 23 (integration test)       ← dipende da tutto
 ```
@@ -491,6 +573,43 @@ Step 23 (integration test)       ← dipende da tutto
 | OHLCV non disponibile per alcuni simboli/periodi | BASSO | `chains_with_no_ohlcv_count` nel run; skip graceful |
 | `freqtrade` command su Windows | BASSO | Rileva `sys.platform`, usa `python -m freqtrade` |
 | Formato simboli DB vs freqtrade (`BTCUSDT` vs `BTC/USDT:USDT`) | BASSO | Normalizzazione interna in BacktestReadyChain |
+
+---
+
+## Note architetturali — Autonomia futura
+
+### v1 (attuale): integrata nell'applicazione generale
+
+Fase 7 v1 vive dentro il progetto TeleSignalBot. Usa il DB condiviso (`tele_signal_bot.sqlite3`) in modalità **read-only** e importa moduli condivisi:
+
+| Modulo condiviso | Uso in Fase 7 |
+|------------------|---------------|
+| `src/storage/signals_query.py` | Query segnali e operational_signals |
+| `src/storage/raw_messages.py` | Lettura raw messages per chain builder |
+| `src/operation_rules/risk_calculator.py` | Ricalcolo sizing per `risk_pct_variant` |
+| `src/execution/freqtrade_normalizer.py` | Normalizzazione simboli DB → freqtrade |
+
+Queste sono le **uniche** dipendenze esterne del modulo `src/backtesting/`. Devono restare esplicite e minimali.
+
+### v2 (futura): modulo autonomo/standalone
+
+In futuro Fase 7 dovrà poter funzionare come sistema standalone con il proprio flusso completo:
+
+```
+1. Scarico dati raw dalla fonte (Telegram o export)
+2. Applico il parser (esistente o specifico per il contesto)
+3. Applico il processo di simulazione (scenario + backtest)
+```
+
+Il design v1 non blocca questa evoluzione grazie a:
+- DB read-only (nessun accoppiamento bidirezionale)
+- Modulo `src/backtesting/` separato con CLI propria
+- `SignalChainBuilder` disaccoppiato dalla fonte dati (accetta query results, non dipende dal listener)
+
+**Per la transizione a v2** servirà:
+- Internalizzare le query SQL necessarie (o creare un adapter)
+- Aggiungere un layer di import/parsing autonomo
+- Nessun impatto sul design degli step 16–23
 
 ---
 

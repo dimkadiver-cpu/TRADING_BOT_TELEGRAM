@@ -21,6 +21,11 @@ class TelegramIncomingMessage:
     source_trader_id: str | None = None
     reply_to_message_id: int | None = None
     acquisition_status: str = "ACQUIRED_ELIGIBLE"
+    has_media: bool = False
+    media_kind: str | None = None
+    media_mime_type: str | None = None
+    media_filename: str | None = None
+    media_blob: bytes | None = None
 
 
 @dataclass(slots=True)
@@ -59,6 +64,11 @@ class RawMessageIngestionService:
                 message_ts=self._as_utc_iso(incoming.message_ts),
                 acquired_at=utc_now_iso(),
                 acquisition_status=incoming.acquisition_status,
+                has_media=incoming.has_media,
+                media_kind=incoming.media_kind,
+                media_mime_type=incoming.media_mime_type,
+                media_filename=incoming.media_filename,
+                media_blob=incoming.media_blob,
             )
             save_result = self._store.save_with_id(record)
             if not save_result.saved:

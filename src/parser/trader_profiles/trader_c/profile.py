@@ -252,12 +252,13 @@ class TraderCProfileParser(TraderBProfileParser):
             take_profits = _extract_take_profits(raw_text)
             entries, order_type, entry_text = _extract_entries(raw_text)
             risk_raw, risk_norm = _extract_risk(raw_text)
+            is_range_entry = order_type == "RANGE"
             entities.update(
                 {
                     "side": side,
                     "entry_order_type": order_type,
                     "entries": entries,
-                    "entry": [entries[0]["price"]] if entries else [],
+                    "entry": [item["price"] for item in entries] if is_range_entry else ([entries[0]["price"]] if entries else []),
                     "entry_text_raw": entry_text,
                     "stop_loss": stop,
                     "stop_text_raw": _extract_stop_text(raw_text),
@@ -265,9 +266,9 @@ class TraderCProfileParser(TraderBProfileParser):
                     "take_profits_text_raw": _extract_tp_text(raw_text),
                     "risk_value_raw": risk_raw,
                     "risk_value_normalized": risk_norm,
-                    "entry_plan_type": "MULTI" if len(entries) > 1 else "SINGLE",
-                    "entry_structure": "LADDER" if len(entries) > 1 else ("RANGE" if order_type == "RANGE" else "ONE_SHOT"),
-                    "has_averaging_plan": len(entries) > 1,
+                    "entry_plan_type": "SINGLE" if is_range_entry or len(entries) <= 1 else "MULTI",
+                    "entry_structure": "RANGE" if is_range_entry else ("LADDER" if len(entries) > 1 else "ONE_SHOT"),
+                    "has_averaging_plan": len(entries) > 1 and not is_range_entry,
                 }
             )
 
@@ -282,6 +283,8 @@ class TraderCProfileParser(TraderBProfileParser):
             if rr is not None:
                 entities["reported_rr"] = rr
             be_price = _extract_be_price(raw_text)
+            if self._contains_any(normalized, _MOVE_BE_MARKERS):
+                entities["new_stop_level"] = "ENTRY"
             if be_price is not None:
                 entities["new_stop_price"] = be_price
 
@@ -297,10 +300,12 @@ class TraderCProfileParser(TraderBProfileParser):
             if "стоп переносим" in normalized:
                 new_stop = _extract_stop_update(raw_text)
                 if new_stop is not None:
+                    entities["new_stop_level"] = new_stop
                     entities["new_stop_price"] = new_stop
             elif _looks_like_short_stop_update(normalized):
                 short_stop = _extract_short_stop_value(raw_text)
                 if short_stop is not None:
+                    entities["new_stop_level"] = short_stop
                     entities["new_stop_price"] = short_stop
 
             close_price = _extract_close_price(raw_text)
@@ -615,12 +620,10 @@ def _extract_entries(raw_text: str) -> tuple[list[dict[str, Any]], str, str | No
         return indexed_entries, "LIMIT", "INDEXED_ENTRY_PLAN"
 
     # --- Range entry: "Вход лимитка 67300-400" / "Вход с текущих (88000-87900)" ---
-    range_match = _RANGE_ENTRY_RE.search(raw_text)
-    if range_match:
-        a = _to_float(range_match.group("a"))
-        b = _to_float(range_match.group("b"))
-        if a is not None and b is not None:
-            return [{"sequence": 1, "price": a}, {"sequence": 2, "price": b}], "RANGE", range_match.group(0)
+    range_entry = _extract_range_entry(raw_text)
+    if range_entry is not None:
+        a, b, raw_value = range_entry
+        return [{"sequence": 1, "price": a}, {"sequence": 2, "price": b}], "RANGE", raw_value
 
     # --- Single limit entry: "Вход лимитка 92550" / "Вход с лимиткой" ---
     limit = _LIMIT_ENTRY_RE.search(raw_text)
@@ -764,6 +767,53 @@ def _extract_entry_block(raw_text: str) -> str:
             stop_candidates.append(match.start())
     end = min(stop_candidates) if stop_candidates else len(raw_text)
     return raw_text[start:end]
+
+
+def _extract_range_entry(raw_text: str) -> tuple[float, float, str] | None:
+    search_areas: list[str] = []
+    entry_block = _extract_entry_block(raw_text)
+    if entry_block:
+        search_areas.append(entry_block)
+    search_areas.append(raw_text)
+
+    for search_area in search_areas:
+        normalized = _normalize_dash(search_area)
+        match = re.search(r"(?P<a>\d+(?:[.,]\d+)?)\s*-\s*(?P<b>\d+(?:[.,]\d+)?)", normalized)
+        if not match:
+            continue
+        a_raw = match.group("a")
+        b_raw = match.group("b")
+        a = _to_float(a_raw)
+        b = _expand_shorthand_price(a_raw, b_raw)
+        if a is None or b is None:
+            continue
+        return a, b, match.group(0)
+    return None
+
+
+def _expand_shorthand_price(first_raw: str, second_raw: str) -> float | None:
+    first_value = _to_float(first_raw)
+    second_value = _to_float(second_raw)
+    if first_value is None or second_value is None:
+        return None
+
+    if "." in first_raw or "." in second_raw or "," in first_raw or "," in second_raw:
+        return second_value
+
+    first_digits = re.sub(r"\D", "", first_raw)
+    second_digits = re.sub(r"\D", "", second_raw)
+    if not first_digits or not second_digits or len(second_digits) >= len(first_digits):
+        return second_value
+
+    expanded_digits = first_digits[: len(first_digits) - len(second_digits)] + second_digits
+    try:
+        return float(expanded_digits)
+    except ValueError:
+        return second_value
+
+
+def _normalize_dash(value: str) -> str:
+    return value.replace("\u2013", "-").replace("\u2014", "-").replace("\u2212", "-")
 
 
 def _looks_like_short_stop_update(normalized: str) -> bool:

@@ -1095,6 +1095,50 @@ def test_custom_entry_price_zone_uses_first_endpoint(tmp_path: Path) -> None:
     assert result == 66100.0
 
 
+def test_adjust_entry_price_keeps_first_limit_price_on_reprice(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    entry_data = [{"price": 66100.0, "type": "LIMIT"}, {"price": 66200.0, "type": "LIMIT"}]
+    _insert_signal_with_entry(db_path, attempt_key="atk_adjust_limit", entry_json=json.dumps(entry_data))
+    _insert_op_signal_with_split(db_path, parse_result_id=1, attempt_key="atk_adjust_limit")
+
+    strategy = SignalBridgeStrategy(config={"bot_db_path": db_path})
+    result = strategy.adjust_entry_price(
+        trade=None,
+        order=None,
+        pair="BTC/USDT:USDT",
+        current_time=None,
+        proposed_rate=66500.0,
+        current_order_rate=66400.0,
+        entry_tag="atk_adjust_limit",
+        side="long",
+    )
+
+    assert result == 66100.0
+
+
+def test_adjust_entry_price_preserves_market_behavior(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    entry_data = [{"price": None, "type": "MARKET"}]
+    _insert_signal_with_entry(db_path, attempt_key="atk_adjust_market", entry_json=json.dumps(entry_data))
+    _insert_op_signal_with_split(db_path, parse_result_id=1, attempt_key="atk_adjust_market")
+
+    strategy = SignalBridgeStrategy(config={"bot_db_path": db_path})
+    result = strategy.adjust_entry_price(
+        trade=None,
+        order=None,
+        pair="BTC/USDT:USDT",
+        current_time=None,
+        proposed_rate=66500.0,
+        current_order_rate=66400.0,
+        entry_tag="atk_adjust_market",
+        side="long",
+    )
+
+    assert result == 66400.0
+
+
 # ---------------------------------------------------------------------------
 # Entry price policy: unit tests for check_entry_rate and resolve_entry_price_policy
 # ---------------------------------------------------------------------------
@@ -1271,11 +1315,11 @@ def test_confirm_trade_entry_accepts_rate_within_tolerance(tmp_path: Path) -> No
     assert result is True
 
 
-def test_confirm_trade_entry_rejects_rate_outside_tolerance(tmp_path: Path) -> None:
-    """confirm_trade_entry returns False and persists event when rate deviates too much."""
+def test_confirm_trade_entry_limit_uses_planned_entry_price(tmp_path: Path) -> None:
+    """For LIMIT entries, confirm_trade_entry validates against the planned limit price, not proposed_rate."""
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path)
-    # E1=66100, max_slippage=0.5%: rate 66800 is +1.06% → rejected
+    # Even if proposed rate is far away, LIMIT entries use E1 as effective order price.
     entry_data = [{"price": 66100.0, "type": "LIMIT"}]
     mgmt = {"entry_policy": {"enabled": True, "max_slippage_pct": 0.005}}
     _insert_signal_with_entry(db_path, attempt_key="atk_conf_rej", entry_json=json.dumps(entry_data))
@@ -1296,19 +1340,15 @@ def test_confirm_trade_entry_rejects_rate_outside_tolerance(tmp_path: Path) -> N
         side="long",
     )
 
-    assert result is False
+    assert result is True
 
-    # Verify event was persisted
     with sqlite3.connect(db_path) as conn:
         row = conn.execute(
-            "SELECT event_type, payload_json FROM events WHERE attempt_key = ?",
+            "SELECT COUNT(*) FROM events WHERE attempt_key = ? AND event_type = 'ENTRY_PRICE_REJECTED'",
             ("atk_conf_rej",),
         ).fetchone()
     assert row is not None
-    assert row[0] == "ENTRY_PRICE_REJECTED"
-    payload = json.loads(row[1])
-    assert payload["reason"] == "rate_outside_limit_tolerance"
-    assert payload["rate"] == 66800.0
+    assert row[0] == 0
 
 
 def test_confirm_trade_entry_policy_disabled_allows_any_rate(tmp_path: Path) -> None:
@@ -1428,10 +1468,10 @@ def test_resolve_allowed_intents_returns_frozenset_when_non_empty() -> None:
     assert allowed == frozenset({"U_MOVE_STOP", "U_CLOSE_FULL"})
 
 
-def test_resolve_allowed_intents_machine_event_returns_none_permissive() -> None:
-    """machine_event mode is NOT supported — runtime is permissive (allow all)."""
+def test_resolve_allowed_intents_machine_event_returns_empty_set() -> None:
+    """machine_event mode blocks Telegram UPDATE auto-apply."""
     mgmt = _mgmt_machine_event()
-    assert resolve_allowed_update_intents(mgmt) is None
+    assert resolve_allowed_update_intents(mgmt) == frozenset()
 
 
 def test_resolve_allowed_intents_hybrid_mode_uses_auto_apply() -> None:
@@ -1464,11 +1504,11 @@ def test_is_machine_event_mode_false_when_none() -> None:
     assert is_machine_event_mode(None) is False
 
 
-# -- MACHINE_EVENT_RULES_NOT_SUPPORTED sentinel is True ------------------------
+# -- machine_event sentinel is explicit ---------------------------------------
 
-def test_machine_event_rules_not_supported_sentinel_is_true() -> None:
-    """Verify the not-supported sentinel value is set."""
-    assert MACHINE_EVENT_RULES_NOT_SUPPORTED is True
+def test_machine_event_rules_not_supported_sentinel_is_false() -> None:
+    """Verify machine_event is not marked as unsupported anymore."""
+    assert MACHINE_EVENT_RULES_NOT_SUPPORTED is False
 
 
 # -- allowed_update_directives filters correctly --------------------------------
@@ -1535,8 +1575,8 @@ def test_allowed_directives_only_listed_intents_pass(tmp_path: Path) -> None:
     assert context.close_full_requested is False
 
 
-def test_allowed_directives_machine_event_mode_is_permissive(tmp_path: Path) -> None:
-    """machine_event mode → all directives pass through (permissive / not-supported fallback)."""
+def test_allowed_directives_machine_event_mode_blocks_telegram_updates(tmp_path: Path) -> None:
+    """machine_event mode delegates management to callbacks, so Telegram UPDATEs are blocked."""
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path, parse_result_id=1)
     _insert_signal(db_path, attempt_key="atk_machine_evt", status="ACTIVE")
@@ -1548,9 +1588,9 @@ def test_allowed_directives_machine_event_mode_is_permissive(tmp_path: Path) -> 
 
     context = load_context_by_attempt_key("atk_machine_evt", db_path)
     assert context is not None
-    # machine_event mode → permissive → all pass
-    assert len(context.allowed_update_directives) == 1
-    assert context.close_full_requested is True
+    assert len(context.update_directives) == 1
+    assert len(context.allowed_update_directives) == 0
+    assert context.close_full_requested is False
 
 
 # -- strategy uses filtered directives in populate_exit_trend -------------------
@@ -1638,8 +1678,8 @@ def test_alignment_pillar1_entry_price_sourced_from_e1(tmp_path: Path) -> None:
     assert price == 66100.0
 
 
-def test_alignment_pillar2_fill_outside_tolerance_rejected(tmp_path: Path) -> None:
-    """confirm_trade_entry returns False when fill rate deviates > max_slippage_pct from E1."""
+def test_alignment_pillar2_limit_entry_uses_e1_not_runtime_rate(tmp_path: Path) -> None:
+    """For LIMIT entries, confirm_trade_entry uses E1 as the effective order price."""
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path, parse_result_id=1)
     _insert_signal_with_entry(
@@ -1660,7 +1700,7 @@ def test_alignment_pillar2_fill_outside_tolerance_rejected(tmp_path: Path) -> No
     strategy = SignalBridgeStrategy(config={})
     strategy.bot_db_path = db_path
 
-    # Fill at 66500 — 0.6% deviation, exceeds 0.1% tolerance → reject
+    # Proposed runtime rate is far from E1, but the pending LIMIT order is still anchored to E1.
     accepted = strategy.confirm_trade_entry(
         pair="BTC/USDT:USDT",
         order_type="limit",
@@ -1671,7 +1711,7 @@ def test_alignment_pillar2_fill_outside_tolerance_rejected(tmp_path: Path) -> No
         entry_tag="atk_align_p2",
         side="long",
     )
-    assert accepted is False
+    assert accepted is True
 
 
 def test_alignment_pillar2_fill_within_tolerance_accepted(tmp_path: Path) -> None:
@@ -1907,3 +1947,29 @@ def test_populate_indicators_no_db_path_still_adds_columns() -> None:
 
     assert "bridge_sl" in updated._data
     assert updated["bridge_event_entry"] == [0, 0]
+
+
+def test_resolve_db_path_falls_back_to_repo_db() -> None:
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = None
+
+    resolved = strategy._resolve_db_path()
+
+    assert resolved is not None
+    assert resolved.replace('\\', '/').endswith('/db/tele_signal_bot.sqlite3')
+
+
+def test_custom_entry_price_uses_repo_db_fallback_for_limit_entry() -> None:
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = None
+
+    price = strategy.custom_entry_price(
+        pair='XLM/USDT:USDT',
+        trade=None,
+        current_time=None,
+        proposed_rate=0.1636208,
+        entry_tag='T_-1003171748254_3469_trader_3',
+        side='long',
+    )
+
+    assert price == pytest.approx(0.1625)

@@ -312,6 +312,7 @@ def _load_signal_symbols(conn: sqlite3.Connection, *, env: str, attempt_keys: li
 def _load_signal_entry_prices(conn: sqlite3.Connection, *, env: str, attempt_keys: list[str]) -> dict[str, float]:
     if not attempt_keys:
         return {}
+    filled_entries = _load_filled_entry_prices(conn, env=env, attempt_keys=attempt_keys)
     rows = conn.execute(
         """
         SELECT attempt_key, entry_json
@@ -325,6 +326,9 @@ def _load_signal_entry_prices(conn: sqlite3.Connection, *, env: str, attempt_key
     for attempt_key, entry_json in rows:
         if not attempt_key or not entry_json:
             continue
+        if str(attempt_key) in filled_entries:
+            out[str(attempt_key)] = filled_entries[str(attempt_key)]
+            continue
         try:
             entries = json.loads(entry_json)
         except (TypeError, ValueError):
@@ -335,6 +339,37 @@ def _load_signal_entry_prices(conn: sqlite3.Connection, *, env: str, attempt_key
             price = entries[0].get("price")
             if isinstance(price, (int, float)):
                 out[str(attempt_key)] = float(price)
+    for attempt_key, fill_price in filled_entries.items():
+        out.setdefault(attempt_key, fill_price)
+    return out
+
+
+def _load_filled_entry_prices(conn: sqlite3.Connection, *, env: str, attempt_keys: list[str]) -> dict[str, float]:
+    if not attempt_keys:
+        return {}
+    rows = conn.execute(
+        """
+        SELECT attempt_key, payload_json
+        FROM events
+        WHERE env = ?
+          AND event_type = 'ENTRY_FILLED'
+          AND attempt_key IN ({placeholders})
+        ORDER BY event_id DESC
+        """.format(placeholders=",".join("?" for _ in attempt_keys)),
+        [env, *attempt_keys],
+    ).fetchall()
+    out: dict[str, float] = {}
+    for attempt_key, payload_json in rows:
+        key = str(attempt_key) if attempt_key else ""
+        if not key or key in out or not payload_json:
+            continue
+        try:
+            payload = json.loads(payload_json)
+        except (TypeError, ValueError):
+            continue
+        fill_price = payload.get("fill_price") if isinstance(payload, dict) else None
+        if isinstance(fill_price, (int, float)):
+            out[key] = float(fill_price)
     return out
 
 
