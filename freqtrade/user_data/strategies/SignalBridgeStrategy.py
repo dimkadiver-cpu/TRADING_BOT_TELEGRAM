@@ -35,6 +35,7 @@ except ImportError:  # pragma: no cover - exercised indirectly in unit tests
         pass
 
 from src.execution.freqtrade_callback import (
+    entry_order_open_callback,
     order_filled_callback,
     partial_exit_callback,
     stoploss_callback,
@@ -47,9 +48,11 @@ from src.execution.freqtrade_normalizer import (
     load_active_contexts_for_pair,
     load_context_by_attempt_key,
     load_pending_contexts_for_pair,
+    persist_entry_rejected_event,
     persist_entry_price_rejected_event,
     resolve_entry_price_policy,
 )
+from src.execution.market_entry_dispatcher import MarketEntryDispatcher
 from src.execution.order_reconciliation import bootstrap_sync_open_trades
 from src.execution.protective_orders_mode import (
     ProtectiveOrderOwner,
@@ -74,9 +77,11 @@ class SignalBridgeStrategy(IStrategy):
     stoploss = -0.99
     use_custom_stoploss = True
     position_adjustment_enable = True
+    max_entry_position_adjustment = -1
     bot_db_path: str | None = os.getenv("TELESIGNALBOT_DB_PATH")
     _execution_bootstrap_done: bool = False
     _last_execution_reconciliation_at: float = 0.0
+    _last_market_dispatch_at: float = 0.0
 
     # ------------------------------------------------------------------
     # FreqUI plot configuration — observability only, no trading logic
@@ -115,6 +120,15 @@ class SignalBridgeStrategy(IStrategy):
 
         context = self._select_pending_context(pair=pair, db_path=db_path)
         if context is None or not context.is_executable:
+            return dataframe
+        if self._has_active_entry_runtime(db_path=db_path, attempt_key=context.attempt_key):
+            return dataframe
+
+        # Strategy path handles LIMIT and MARKET entries.
+        # MARKET entries are placed as limit orders at current market price (proposed_rate),
+        # which fills immediately for liquid assets. Averaging LIMIT legs are handled
+        # by adjust_trade_position after the first entry creates the Trade record.
+        if context.first_entry_order_type not in ("LIMIT", "MARKET"):
             return dataframe
 
         column = "enter_long" if context.side == "long" else "enter_short"
@@ -178,7 +192,11 @@ class SignalBridgeStrategy(IStrategy):
         context = self._select_pending_context(pair=pair, db_path=db_path)
         if context is None or context.stake_amount is None or context.stake_amount <= 0:
             return float(proposed_stake)
-        return float(context.stake_amount)
+        # For multi-leg plans, scale stake by the first leg's split so that
+        # adjust_trade_position can add subsequent legs without over-sizing.
+        first_leg = context.first_entry_leg
+        split = float(first_leg.split) if first_leg is not None and first_leg.split else 1.0
+        return float(context.stake_amount) * split
 
     def custom_entry_price(
         self,
@@ -209,19 +227,18 @@ class SignalBridgeStrategy(IStrategy):
         if not pair or not db_path:
             return float(proposed_rate)
 
-        context = self._select_pending_context(pair=pair, db_path=db_path)
+        attempt_key = self._attempt_key_from_tag(entry_tag)
+        context = load_context_by_attempt_key(attempt_key, db_path) if attempt_key else self._select_pending_context(pair=pair, db_path=db_path)
         if context is None:
             return float(proposed_rate)
 
-        # Only override when the plan has an explicit LIMIT price.
-        if context.first_entry_order_type != "LIMIT":
+        entry_leg = self._resolve_entry_leg(context=context, entry_tag=entry_tag)
+        if entry_leg is None or entry_leg.order_type != "LIMIT":
+            return float(proposed_rate)
+        if entry_leg.price is None or entry_leg.price <= 0:
             return float(proposed_rate)
 
-        price = context.first_entry_price
-        if price is None or price <= 0:
-            return float(proposed_rate)
-
-        return float(price)
+        return float(entry_leg.price)
 
     def adjust_entry_price(
         self,
@@ -247,25 +264,24 @@ class SignalBridgeStrategy(IStrategy):
         if not pair or not db_path:
             return float(current_order_rate)
 
-        context = load_context_by_attempt_key(entry_tag, db_path) if entry_tag else None
+        attempt_key = self._attempt_key_from_tag(entry_tag)
+        context = load_context_by_attempt_key(attempt_key, db_path) if attempt_key else None
         if context is None:
             context = self._select_pending_context(pair=pair, db_path=db_path)
         if context is None:
             return float(current_order_rate)
         if not context.is_pair_mappable or context.pair != pair:
             return float(current_order_rate)
-        if context.signal_status != "PENDING":
+        if context.signal_status not in {"PENDING", "ACTIVE"}:
             return float(current_order_rate)
 
-        # Only anchor repricing when the signal explicitly defines a LIMIT E1.
-        if context.first_entry_order_type != "LIMIT":
+        entry_leg = self._resolve_entry_leg(context=context, entry_tag=entry_tag)
+        if entry_leg is None or entry_leg.order_type != "LIMIT":
+            return float(current_order_rate)
+        if entry_leg.price is None or entry_leg.price <= 0:
             return float(current_order_rate)
 
-        price = context.first_entry_price
-        if price is None or price <= 0:
-            return float(current_order_rate)
-
-        return float(price)
+        return float(entry_leg.price)
 
     def leverage(
         self,
@@ -328,6 +344,7 @@ class SignalBridgeStrategy(IStrategy):
         tp_idx = self._take_profit_idx_from_tag(order_tag, attempt_key)
 
         if order_side == trade_entry_side:
+            entry_idx = self._entry_idx_from_tag(order_tag or client_order_id, attempt_key=attempt_key)
             order_filled_callback(
                 db_path=db_path,
                 attempt_key=attempt_key,
@@ -339,6 +356,7 @@ class SignalBridgeStrategy(IStrategy):
                 margin_mode=self._resolve_margin_mode(),
                 protective_orders_mode=ownership.mode.value,
                 order_manager=order_manager,
+                entry_idx=entry_idx,
             )
             return
 
@@ -451,7 +469,7 @@ class SignalBridgeStrategy(IStrategy):
         current_exit_profit: float | None = None,
         **kwargs: Any,
     ) -> float | tuple[float, str] | None:
-        del current_time, current_profit, min_stake, max_stake
+        del current_time, current_profit
         del current_entry_rate, current_exit_rate, current_entry_profit, current_exit_profit, kwargs
 
         db_path = self._resolve_db_path()
@@ -462,6 +480,27 @@ class SignalBridgeStrategy(IStrategy):
         context = self._load_trade_context(pair=pair, trade=trade, db_path=db_path)
         if context is None:
             return None
+
+        if bool(getattr(trade, "has_open_orders", False)):
+            return None
+
+        next_limit_leg = context.next_pending_entry_leg
+        if (
+            context.signal_status == "ACTIVE"
+            and next_limit_leg is not None
+            and next_limit_leg.sequence > 1
+            and next_limit_leg.order_type == "LIMIT"
+            and context.stake_amount is not None
+            and context.stake_amount > 0
+        ):
+            increase = float(context.stake_amount) * float(next_limit_leg.split)
+            if isinstance(max_stake, (int, float)) and float(max_stake) > 0:
+                increase = min(increase, float(max_stake))
+            if isinstance(min_stake, (int, float)) and float(min_stake) > 0 and increase < float(min_stake):
+                return None
+            if increase > 0:
+                return increase, f"{context.attempt_key}:ENTRY:{next_limit_leg.sequence - 1}"
+
         ownership = self._resolve_protective_order_ownership(context=context)
         if ownership.take_profit_owner is not ProtectiveOrderOwner.STRATEGY:
             return None
@@ -474,9 +513,6 @@ class SignalBridgeStrategy(IStrategy):
             reduction = -min(trade_stake, trade_stake * float(context.partial_close_fraction))
             if reduction < 0:
                 return reduction, f"signal_close_partial:{context.attempt_key}"
-
-        if bool(getattr(trade, "has_open_orders", False)):
-            return None
 
         tp_action = self._next_take_profit_action(
             context=context,
@@ -536,27 +572,51 @@ class SignalBridgeStrategy(IStrategy):
         *args: Any,
         **kwargs: Any,
     ) -> bool:
-        del amount, time_in_force, current_time
+        del time_in_force, current_time
 
         db_path = self._resolve_db_path()
         if not pair or not db_path:
             return False
 
         entry_tag, side = self._resolve_confirm_args(args=args, kwargs=kwargs)
-        context = load_context_by_attempt_key(entry_tag, db_path) if entry_tag else None
+        entry_idx = self._entry_idx_from_tag(entry_tag, attempt_key=self._attempt_key_from_tag(entry_tag) or "") if entry_tag else 0
+        attempt_key = self._attempt_key_from_tag(entry_tag)
+        context = load_context_by_attempt_key(attempt_key, db_path) if attempt_key else None
         if context is None:
             context = self._select_pending_context(pair=pair, db_path=db_path)
         if context is None:
             return False
         if not context.is_pair_mappable or context.pair != pair:
             return False
-        if context.signal_status != "PENDING":
+        if context.signal_status not in {"PENDING", "ACTIVE"}:
             return False
-        if not context.is_executable:
+        if context.signal_status == "PENDING" and not context.is_executable:
             return False
-        if entry_tag and context.attempt_key != entry_tag:
+        if context.signal_status == "ACTIVE" and entry_idx <= 0:
+            return False
+        if attempt_key and context.attempt_key != attempt_key:
             return False
         if side and context.side and side != context.side:
+            return False
+
+        configured_order_type = str(order_type).upper()
+        entry_leg = self._resolve_entry_leg(context=context, entry_tag=entry_tag)
+        if entry_leg is None:
+            return False
+        signal_entry_order_type = entry_leg.order_type
+        # MARKET signals are accepted even when Freqtrade is configured for limit orders.
+        # custom_entry_price will return proposed_rate (no override) so Freqtrade places
+        # a limit order at current market price, which fills immediately for liquid assets.
+        if signal_entry_order_type not in ("LIMIT", "MARKET"):
+            _log.warning(
+                "confirm_trade_entry REJECTED | pair=%s attempt_key=%s reason=%s"
+                " configured_order_type=%s signal_entry_order_type=%s",
+                pair,
+                context.attempt_key,
+                "unsupported_entry_order_type",
+                configured_order_type,
+                signal_entry_order_type,
+            )
             return False
 
         # Entry price policy — reject if rate diverges from signal entry plan.
@@ -565,20 +625,16 @@ class SignalBridgeStrategy(IStrategy):
             getattr(self, "config", None),
         )
         effective_rate = float(rate)
-        if str(order_type).upper() == "LIMIT" and context.first_entry_order_type == "LIMIT":
-            planned_limit_price = context.first_entry_price
-            if planned_limit_price is not None and planned_limit_price > 0:
-                effective_rate = float(planned_limit_price)
+        if configured_order_type == "LIMIT" and entry_leg.order_type == "LIMIT" and entry_leg.price is not None and entry_leg.price > 0:
+            effective_rate = float(entry_leg.price)
 
         rejection = check_entry_rate(
-            entry_prices=context.entry_prices,
+            entry_prices=({"price": entry_leg.price, "type": entry_leg.order_type},),
             rate=effective_rate,
             order_type=str(order_type),
             policy=policy,
         )
         if rejection is not None:
-            import logging
-            _log = logging.getLogger(__name__)
             _log.warning(
                 "confirm_trade_entry REJECTED | pair=%s attempt_key=%s reason=%s"
                 " rate=%.6f e1=%s e2=%s deviation_pct=%.4f policy_pct=%.4f",
@@ -603,6 +659,16 @@ class SignalBridgeStrategy(IStrategy):
                 },
             )
             return False
+
+        if configured_order_type == "LIMIT":
+            entry_order_open_callback(
+                db_path=db_path,
+                attempt_key=context.attempt_key,
+                qty=float(amount),
+                price=effective_rate if effective_rate > 0 else None,
+                order_type=configured_order_type,
+                entry_idx=max(0, entry_leg.sequence - 1),
+            )
 
         return True
 
@@ -662,6 +728,37 @@ class SignalBridgeStrategy(IStrategy):
             if candidate:
                 return str(candidate)
         return "isolated"
+
+    def _maybe_dispatch_market_entries(self) -> None:
+        # Safety guard: MARKET dispatch is only enabled in dry-run.
+        # In live mode the full FT-Trade integration is not yet complete and
+        # dispatching would open real positions without SL/TP managed by Freqtrade.
+        config = getattr(self, "config", None)
+        if not (isinstance(config, dict) and config.get("dry_run", False)):
+            return
+
+        db_path = self._resolve_db_path()
+        if not db_path:
+            return
+
+        now = time.monotonic()
+        if now - getattr(self, "_last_market_dispatch_at", 0.0) < 10.0:
+            return
+        self._last_market_dispatch_at = now
+
+        order_manager = getattr(self, "exchange_order_manager", None)
+        gateway = order_manager.gateway if order_manager is not None and hasattr(order_manager, "gateway") else None
+
+        try:
+            dispatcher = MarketEntryDispatcher(db_path=db_path, gateway=gateway)
+            results = dispatcher.dispatch_pending_market_entries()
+            for r in results:
+                _log.info(
+                    "market_dispatch | attempt_key=%s ok=%s action=%s error=%s",
+                    r.get("attempt_key"), r.get("ok"), r.get("action"), r.get("error"),
+                )
+        except Exception as exc:  # pragma: no cover - defensive runtime guard
+            _log.warning("market_dispatch error: %s", exc)
 
     def _maybe_run_execution_reconciliation(self) -> None:
         db_path = self._resolve_db_path()
@@ -742,6 +839,39 @@ class SignalBridgeStrategy(IStrategy):
         return entry_tag_value, side_value
 
     @staticmethod
+    def _attempt_key_from_tag(tag: str | None) -> str | None:
+        if not isinstance(tag, str) or not tag.strip():
+            return None
+        normalized = tag.strip()
+        if ":ENTRY:" in normalized:
+            return normalized.split(":ENTRY:", 1)[0]
+        return normalized
+
+    @staticmethod
+    def _entry_idx_from_tag(tag: str | None, *, attempt_key: str) -> int:
+        if not isinstance(tag, str) or not tag.strip():
+            return 0
+        normalized = tag.strip()
+        if normalized == attempt_key:
+            return 0
+        prefix = f"{attempt_key}:ENTRY:"
+        if not normalized.startswith(prefix):
+            return 0
+        try:
+            return max(0, int(normalized[len(prefix):].split(":", 1)[0]))
+        except ValueError:
+            return 0
+
+    @staticmethod
+    def _resolve_entry_leg(context: FreqtradeSignalContext, entry_tag: str | None) -> Any:
+        if not context.entry_legs:
+            return None
+        idx = SignalBridgeStrategy._entry_idx_from_tag(entry_tag, attempt_key=context.attempt_key)
+        if idx < 0 or idx >= len(context.entry_legs):
+            idx = 0
+        return context.entry_legs[idx]
+
+    @staticmethod
     def _select_pending_context(pair: str, db_path: str) -> FreqtradeSignalContext | None:
         for context in load_pending_contexts_for_pair(pair, db_path):
             if context.is_executable:
@@ -749,9 +879,43 @@ class SignalBridgeStrategy(IStrategy):
         return None
 
     @staticmethod
+    def _has_active_entry_runtime(*, db_path: str, attempt_key: str) -> bool:
+        if not attempt_key:
+            return False
+        with sqlite3.connect(db_path) as conn:
+            order_row = conn.execute(
+                """
+                SELECT 1
+                FROM orders
+                WHERE attempt_key = ?
+                  AND purpose = 'ENTRY'
+                  AND status NOT IN ('FILLED', 'CANCELLED', 'REJECTED', 'EXPIRED')
+                LIMIT 1
+                """,
+                (attempt_key,),
+            ).fetchone()
+            if order_row is not None:
+                return True
+            trade_row = conn.execute(
+                """
+                SELECT 1
+                FROM trades
+                WHERE attempt_key = ?
+                  AND state = 'ENTRY_PENDING'
+                LIMIT 1
+                """,
+                (attempt_key,),
+            ).fetchone()
+        return trade_row is not None
+
+    @staticmethod
     def _select_active_context(pair: str, db_path: str) -> FreqtradeSignalContext | None:
         for context in load_active_contexts_for_pair(pair, db_path):
-            if context.is_pair_mappable and context.side in {"long", "short"}:
+            if (
+                context.is_pair_mappable
+                and context.side in {"long", "short"}
+                and context.trade_state == "OPEN"
+            ):
                 return context
         return None
 
@@ -778,7 +942,7 @@ class SignalBridgeStrategy(IStrategy):
         for attr_name in ("enter_tag", "entry_tag", "open_tag"):
             value = getattr(trade, attr_name, None)
             if isinstance(value, str) and value.strip():
-                return value.strip()
+                return SignalBridgeStrategy._attempt_key_from_tag(value)
         return None
 
     @staticmethod

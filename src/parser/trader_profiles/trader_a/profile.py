@@ -28,7 +28,7 @@ _STOP_LEVEL_RE = re.compile(
     re.IGNORECASE,
 )
 _ENTRY_VALUE_RE = re.compile(
-    r"(?:entry|entries|\u0432\u0445\u043e\u0434(?:\s+\u0441\s+\u0442\u0435\u043a\u0443\u0449\u0438\u0445|\s+\u043b\u0438\u043c\u0438\u0442\u043a\u043e\u0439|\s+\u043b\u0438\u043c\u0438\u0442\u043d\u044b\u043c\s+\u043e\u0440\u0434\u0435\u0440\u043e\u043c)?)\s*[:=@-]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)",
+    r"(?:entry|entries|\u043b\u0438\u043c\u0438\u0442\u043d\u044b\u0439\s+\u043e\u0440\u0434\u0435\u0440|\u0432\u0445\u043e\u0434(?:\s+\u0441\s+\u0442\u0435\u043a\u0443\u0449\u0438\u0445|\s+\u043b\u0438\u043c\u0438\u0442\u043a\u043e\u0439|\s+\u043b\u0438\u043c\u0438\u0442\u043d\u044b\u043c\s+\u043e\u0440\u0434\u0435\u0440\u043e\u043c)?)\s*[:=@-]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)",
     re.IGNORECASE,
 )
 _STOP_LOSS_VALUE_RE = re.compile(r"(?:\bsl\b|stop|\u0441\u0442\u043e\u043f)\s*[:=@-]?\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?)", re.IGNORECASE)
@@ -854,7 +854,7 @@ class TraderAProfileParser:
             return "INFO_ONLY"
 
         has_direction = _contains_any(normalized, ("long", "short", "buy", "sell", "\u043b\u043e\u043d\u0433", "\u0448\u043e\u0440\u0442"))
-        has_entry = _contains_any(normalized, ("entry", "entries", "\u0432\u0445\u043e\u0434", "\u0432\u0445\u043e\u0434 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u0445")) or bool(_extract_signal_entry_levels(raw_text))
+        has_entry = _contains_any(normalized, ("entry", "entries", "\u0432\u0445\u043e\u0434", "\u0432\u0445\u043e\u0434 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u0445", "\u043b\u0438\u043c\u0438\u0442\u043d\u044b\u0439 \u043e\u0440\u0434\u0435\u0440")) or bool(_extract_signal_entry_levels(raw_text))
         has_stop = _contains_any(normalized, ("stop", "sl", "sl:", "\u0441\u0442\u043e\u043f"))
         has_tp = bool(re.search(r"\btp\d+\b", raw_text, re.IGNORECASE)) or _contains_any(
             normalized,

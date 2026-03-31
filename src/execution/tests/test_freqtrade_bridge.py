@@ -13,6 +13,7 @@ from src.execution.freqtrade_normalizer import (
     MACHINE_EVENT_RULES_NOT_SUPPORTED,
     PRICE_CORRECTIONS_NOT_SUPPORTED,
     EntryPricePolicy,
+    FreqtradeEntryLeg,
     canonical_side_to_freqtrade_side,
     canonical_symbol_to_freqtrade_pair,
     check_entry_rate,
@@ -20,9 +21,11 @@ from src.execution.freqtrade_normalizer import (
     load_context_by_attempt_key,
     load_pending_contexts_for_pair,
     persist_entry_price_rejected_event,
+    persist_entry_rejected_event,
     resolve_allowed_update_intents,
     resolve_entry_price_policy,
 )
+from src.execution.freqtrade_callback import entry_order_open_callback, order_filled_callback
 from src.execution.update_applier import apply_update_plan
 from src.execution.update_planner import build_update_plan
 
@@ -94,7 +97,10 @@ def _insert_signal(
     status: str = "PENDING",
     sl: float = 57000.0,
     tp_json: str = "[]",
+    entry_json: str | None = None,
 ) -> None:
+    if entry_json is None:
+        entry_json = json.dumps([{"price": 60000.0}])
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """INSERT INTO signals
@@ -104,7 +110,7 @@ def _insert_signal(
                VALUES (?, 'T', '-100999', '1', 'trader_3', 'TRAD',
                        ?, ?, ?, ?, ?, ?, 0.9, 'fixture',
                        '2026-01-01', '2026-01-01')""",
-            (attempt_key, symbol, side, json.dumps([{"price": 60000.0}]), sl, tp_json, status),
+            (attempt_key, symbol, side, entry_json, sl, tp_json, status),
         )
         conn.commit()
 
@@ -118,14 +124,16 @@ def _insert_operational_signal(
     leverage: int = 3,
     is_blocked: int = 0,
     management_rules_json: str | None = None,
+    entry_split_json: str | None = None,
 ) -> int:
     """Insert an operational_signal row and return the inserted op_signal_id."""
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """INSERT INTO operational_signals
                (parse_result_id, attempt_key, trader_id, message_type, is_blocked,
-                block_reason, position_size_usdt, leverage, management_rules_json, created_at)
-               VALUES (?, ?, 'trader_3', 'NEW_SIGNAL', ?, ?, ?, ?, ?, '2026-01-01')""",
+                block_reason, position_size_usdt, leverage, management_rules_json,
+                entry_split_json, created_at)
+               VALUES (?, ?, 'trader_3', 'NEW_SIGNAL', ?, ?, ?, ?, ?, ?, '2026-01-01')""",
             (
                 parse_result_id,
                 attempt_key,
@@ -134,6 +142,7 @@ def _insert_operational_signal(
                 position_size_usdt,
                 leverage,
                 management_rules_json or json.dumps({"tp_handling": "ladder"}),
+                entry_split_json,
             ),
         )
         conn.commit()
@@ -244,6 +253,72 @@ def test_populate_entry_trend_sets_entry_columns_from_normalizer(tmp_path: Path)
     assert updated["enter_long"] == [0, 1]
     assert updated["enter_short"] == [0, 0]
     assert updated["enter_tag"] == [None, "atk_entry"]
+
+
+def test_populate_entry_trend_skips_when_entry_order_already_open(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(db_path, attempt_key="atk_entry_open")
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_entry_open")
+    entry_order_open_callback(
+        db_path=db_path,
+        attempt_key="atk_entry_open",
+        qty=0.004,
+        price=60000.0,
+        order_type="LIMIT",
+    )
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+    dataframe = _MiniDataFrame(rows=2)
+
+    updated = strategy.populate_entry_trend(dataframe, {"pair": "BTC/USDT:USDT"})
+
+    assert updated["enter_long"] == [0, 0]
+    assert updated["enter_short"] == [0, 0]
+    assert updated["enter_tag"] == [None, None]
+
+
+def test_confirm_trade_entry_persists_open_limit_entry_runtime(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(db_path, attempt_key="atk_entry_runtime")
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_entry_runtime")
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+
+    accepted = strategy.confirm_trade_entry(
+        pair="BTC/USDT:USDT",
+        order_type="limit",
+        amount=0.004,
+        rate=60000.0,
+        time_in_force="GTC",
+        current_time=None,
+        entry_tag="atk_entry_runtime",
+        side="long",
+    )
+
+    assert accepted is True
+    with sqlite3.connect(db_path) as conn:
+        trade_row = conn.execute(
+            "SELECT state, opened_at, meta_json FROM trades WHERE attempt_key = ?",
+            ("atk_entry_runtime",),
+        ).fetchone()
+        order_row = conn.execute(
+            "SELECT purpose, status, price, qty, client_order_id FROM orders WHERE attempt_key = ?",
+            ("atk_entry_runtime",),
+        ).fetchone()
+        event_row = conn.execute(
+            "SELECT event_type FROM events WHERE attempt_key = ? ORDER BY event_id DESC LIMIT 1",
+            ("atk_entry_runtime",),
+        ).fetchone()
+
+    assert trade_row is not None
+    assert trade_row[0] == "ENTRY_PENDING"
+    assert trade_row[1] is None
+    assert order_row == ("ENTRY", "OPEN", 60000.0, 0.004, "atk_entry_runtime:ENTRY:0")
+    assert event_row == ("ENTRY_ORDER_OPENED",)
 
 
 def test_custom_stake_amount_uses_operational_position_size_usdt(tmp_path: Path) -> None:
@@ -384,6 +459,54 @@ def test_adjust_trade_position_uses_partial_close_fraction_from_normalizer(tmp_p
     )
 
     assert reduction == (-125.0, "signal_close_partial:atk_partial")
+
+
+def test_adjust_trade_position_requests_next_limit_entry_leg(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path, parse_result_id=1)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_next_limit",
+        status="PENDING",
+        entry_json=json.dumps([
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+            {"type": "LIMIT", "price": 59000.0},
+        ]),
+    )
+    _insert_operational_signal(
+        db_path,
+        parse_result_id=1,
+        attempt_key="atk_next_limit",
+        position_size_usdt=250.0,
+        entry_split_json=json.dumps({"E1": 0.5, "E2": 0.3, "E3": 0.2}),
+    )
+
+    order_filled_callback(
+        db_path=db_path,
+        attempt_key="atk_next_limit",
+        qty=1.0,
+        fill_price=60000.0,
+        client_order_id="entry-next-0",
+        exchange_order_id="ex-entry-next-0",
+        order_type="MARKET",
+        entry_idx=0,
+    )
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+    trade = SimpleNamespace(enter_tag="atk_next_limit", pair="BTC/USDT:USDT", stake_amount=125.0, has_open_orders=False)
+
+    adjustment = strategy.adjust_trade_position(
+        trade=trade,
+        current_time=None,
+        current_rate=60000.0,
+        current_profit=0.0,
+        min_stake=None,
+        max_stake=1000.0,
+    )
+
+    assert adjustment == (75.0, "atk_next_limit:ENTRY:1")
 
 
 def test_adjust_trade_position_uses_take_profit_distribution_from_management_rules(tmp_path: Path) -> None:
@@ -1066,6 +1189,53 @@ def test_custom_entry_price_falls_back_when_no_context(tmp_path: Path) -> None:
     assert result == 3200.0
 
 
+def test_custom_entry_price_returns_limit_price_for_second_entry_tag(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_second_leg_price",
+        entry_json=json.dumps([
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+            {"type": "LIMIT", "price": 59000.0},
+        ]),
+        status="ACTIVE",
+    )
+    _insert_operational_signal(
+        db_path,
+        parse_result_id=1,
+        attempt_key="atk_second_leg_price",
+        entry_split_json=json.dumps({"E1": 0.5, "E2": 0.3, "E3": 0.2}),
+    )
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state, meta_json, created_at, updated_at)
+               VALUES ('T', 'atk_second_leg_price', 'trader_3', 'BTCUSDT', 'BUY', 'FREQTRADE', 'OPEN', ?, '2026-01-01', '2026-01-01')""",
+            (json.dumps({"entry_legs": [
+                {"entry_id": "E1", "sequence": 1, "order_type": "MARKET", "price": None, "split": 0.5, "status": "FILLED", "filled_at": "2026-01-01T00:00:00+00:00"},
+                {"entry_id": "E2", "sequence": 2, "order_type": "LIMIT", "price": 59500.0, "split": 0.3, "status": "PENDING"},
+                {"entry_id": "E3", "sequence": 3, "order_type": "LIMIT", "price": 59000.0, "split": 0.2, "status": "PENDING"},
+            ]}),),
+        )
+        conn.commit()
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+
+    price = strategy.custom_entry_price(
+        pair="BTC/USDT:USDT",
+        trade=None,
+        current_time=None,
+        proposed_rate=61000.0,
+        entry_tag="atk_second_leg_price:ENTRY:1",
+        side="long",
+    )
+
+    assert price == 59500.0
+
+
 def test_custom_entry_price_zone_uses_first_endpoint(tmp_path: Path) -> None:
     """For ZONE plans, E1 (first/lower endpoint) is used as the single entry price."""
     db_path = _make_db(tmp_path)
@@ -1399,6 +1569,34 @@ def test_confirm_trade_entry_market_order_skips_price_check(tmp_path: Path) -> N
         time_in_force="gtc",
         current_time=None,
         entry_tag="atk_conf_mkt",
+        side="long",
+    )
+
+    assert result is True
+
+
+def test_confirm_trade_entry_accepts_market_signal_with_limit_runtime(tmp_path: Path) -> None:
+    """MARKET signals are accepted even when Freqtrade is configured for limit orders.
+
+    Freqtrade places a limit order at current market price (proposed_rate), which
+    fills immediately for liquid assets. This enables MARKET entries to go through
+    the normal Freqtrade lifecycle (Trade record, SL/TP, tracking).
+    """
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    entry_data = [{"price": 60000.0, "type": "MARKET"}]
+    _insert_signal_with_entry(db_path, attempt_key="atk_conf_mkt_limit", entry_json=json.dumps(entry_data))
+    _insert_op_signal_with_split(db_path, parse_result_id=1, attempt_key="atk_conf_mkt_limit")
+
+    strategy = SignalBridgeStrategy(config={"bot_db_path": db_path})
+    result = strategy.confirm_trade_entry(
+        pair="BTC/USDT:USDT",
+        order_type="limit",
+        amount=0.01,
+        rate=60000.0,
+        time_in_force="gtc",
+        current_time=None,
+        entry_tag="atk_conf_mkt_limit",
         side="long",
     )
 
@@ -1859,6 +2057,13 @@ def test_populate_indicators_fills_sl_tp_from_active_context(tmp_path: Path) -> 
         tp_json=json.dumps([62000.0, 64000.0, 66000.0]),
     )
     _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_plot")
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state, created_at, updated_at)
+               VALUES ('T', 'atk_plot', 'trader_3', 'BTCUSDT', 'BUY', 'FREQTRADE', 'OPEN', '2026-01-01', '2026-01-01')"""
+        )
+        conn.commit()
 
     strategy = SignalBridgeStrategy(config={})
     strategy.bot_db_path = db_path
@@ -1878,6 +2083,13 @@ def test_populate_indicators_fills_entry_price_from_active_context(tmp_path: Pat
     _insert_parse_result(db_path)
     _insert_signal(db_path, attempt_key="atk_eprice", status="ACTIVE", sl=57000.0)
     _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_eprice")
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state, created_at, updated_at)
+               VALUES ('T', 'atk_eprice', 'trader_3', 'BTCUSDT', 'BUY', 'FREQTRADE', 'OPEN', '2026-01-01', '2026-01-01')"""
+        )
+        conn.commit()
 
     strategy = SignalBridgeStrategy(config={})
     strategy.bot_db_path = db_path
@@ -1887,6 +2099,44 @@ def test_populate_indicators_fills_entry_price_from_active_context(tmp_path: Pat
 
     # entry_json was [{"price": 60000.0}] from _insert_signal fixture
     assert updated["bridge_entry_price"] == [60000.0, 60000.0]
+
+
+
+
+def test_populate_indicators_ignores_closed_trade_context(tmp_path: Path) -> None:
+    """Closed trades must not keep SL/TP lines visible on the pair chart."""
+    import math
+
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_closed_plot",
+        status="ACTIVE",
+        sl=57000.0,
+        tp_json=json.dumps([62000.0, 64000.0, 66000.0]),
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_closed_plot")
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state, created_at, updated_at)
+               VALUES ('T', 'atk_closed_plot', 'trader_3', 'BTCUSDT', 'BUY', 'FREQTRADE', 'CLOSED', '2026-01-01', '2026-01-01')"""
+        )
+        conn.commit()
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+    dataframe = _MiniDataFrame(rows=2)
+
+    updated = strategy.populate_indicators(dataframe, {"pair": "BTC/USDT:USDT"})
+
+    for val in updated["bridge_sl"]:
+        assert val is None or (isinstance(val, float) and math.isnan(val))
+    for val in updated["bridge_tp1"]:
+        assert val is None or (isinstance(val, float) and math.isnan(val))
+    for val in updated["bridge_entry_price"]:
+        assert val is None or (isinstance(val, float) and math.isnan(val))
 
 
 def test_pair_to_symbol_reverses_freqtrade_pair() -> None:
@@ -1959,17 +2209,336 @@ def test_resolve_db_path_falls_back_to_repo_db() -> None:
     assert resolved.replace('\\', '/').endswith('/db/tele_signal_bot.sqlite3')
 
 
-def test_custom_entry_price_uses_repo_db_fallback_for_limit_entry() -> None:
+def test_custom_entry_price_returns_limit_price_for_fourth_entry_tag(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_fourth_leg_price",
+        entry_json=json.dumps([
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+            {"type": "LIMIT", "price": 59000.0},
+            {"type": "LIMIT", "price": 58500.0},
+        ]),
+        status="ACTIVE",
+    )
+    _insert_operational_signal(
+        db_path,
+        parse_result_id=1,
+        attempt_key="atk_fourth_leg_price",
+        entry_split_json=json.dumps({"E1": 0.4, "E2": 0.25, "E3": 0.2, "E4": 0.15}),
+    )
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state, meta_json, created_at, updated_at)
+               VALUES ('T', 'atk_fourth_leg_price', 'trader_3', 'BTCUSDT', 'BUY', 'FREQTRADE', 'OPEN', ?, '2026-01-01', '2026-01-01')""",
+            (json.dumps({"entry_legs": [
+                {"entry_id": "E1", "sequence": 1, "order_type": "MARKET", "price": None, "split": 0.4, "status": "FILLED", "filled_at": "2026-01-01T00:00:00+00:00"},
+                {"entry_id": "E2", "sequence": 2, "order_type": "LIMIT", "price": 59500.0, "split": 0.25, "status": "FILLED", "filled_at": "2026-01-01T00:05:00+00:00"},
+                {"entry_id": "E3", "sequence": 3, "order_type": "LIMIT", "price": 59000.0, "split": 0.2, "status": "PENDING"},
+                {"entry_id": "E4", "sequence": 4, "order_type": "LIMIT", "price": 58500.0, "split": 0.15, "status": "PENDING"},
+            ]}),),
+        )
+        conn.commit()
+
     strategy = SignalBridgeStrategy(config={})
-    strategy.bot_db_path = None
+    strategy.bot_db_path = db_path
 
     price = strategy.custom_entry_price(
-        pair='XLM/USDT:USDT',
+        pair="BTC/USDT:USDT",
         trade=None,
         current_time=None,
-        proposed_rate=0.1636208,
-        entry_tag='T_-1003171748254_3469_trader_3',
-        side='long',
+        proposed_rate=61000.0,
+        entry_tag="atk_fourth_leg_price:ENTRY:3",
+        side="long",
     )
 
-    assert price == pytest.approx(0.1625)
+    assert price == 58500.0
+
+
+# ---------------------------------------------------------------------------
+# Step 28 — entry legs runtime model
+# ---------------------------------------------------------------------------
+
+
+def test_entry_legs_single_market(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_market",
+        entry_json=json.dumps([{"type": "MARKET", "price": None}]),
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_leg_market")
+
+    ctx = load_context_by_attempt_key("atk_leg_market", db_path)
+
+    assert ctx is not None
+    assert len(ctx.entry_legs) == 1
+    leg = ctx.entry_legs[0]
+    assert leg.entry_id == "E1"
+    assert leg.sequence == 1
+    assert leg.order_type == "MARKET"
+    assert leg.price is None
+    assert leg.split == pytest.approx(1.0)
+    assert ctx.first_entry_leg == leg
+    assert ctx.market_entry_required is True
+    assert ctx.limit_entry_required is False
+    assert ctx.first_entry_order_type == "MARKET"
+
+
+def test_entry_legs_single_limit(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_limit",
+        entry_json=json.dumps([{"type": "LIMIT", "price": 60000.0}]),
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_leg_limit")
+
+    ctx = load_context_by_attempt_key("atk_leg_limit", db_path)
+
+    assert ctx is not None
+    assert len(ctx.entry_legs) == 1
+    leg = ctx.entry_legs[0]
+    assert leg.entry_id == "E1"
+    assert leg.order_type == "LIMIT"
+    assert leg.price == pytest.approx(60000.0)
+    assert leg.split == pytest.approx(1.0)
+    assert ctx.market_entry_required is False
+    assert ctx.limit_entry_required is True
+    assert ctx.first_entry_order_type == "LIMIT"
+
+
+def test_entry_legs_mixed_market_limit(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_mixed",
+        entry_json=json.dumps([
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+        ]),
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_leg_mixed")
+
+    ctx = load_context_by_attempt_key("atk_leg_mixed", db_path)
+
+    assert ctx is not None
+    assert len(ctx.entry_legs) == 2
+    e1, e2 = ctx.entry_legs
+    assert e1.entry_id == "E1"
+    assert e1.order_type == "MARKET"
+    assert e1.price is None
+    assert e1.split == pytest.approx(0.5)
+    assert e2.entry_id == "E2"
+    assert e2.order_type == "LIMIT"
+    assert e2.price == pytest.approx(59500.0)
+    assert e2.split == pytest.approx(0.5)
+    assert ctx.market_entry_required is True
+    assert ctx.first_entry_order_type == "MARKET"
+
+
+def test_entry_legs_split_json_applied(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_split",
+        entry_json=json.dumps([
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 610.0},
+            {"type": "LIMIT", "price": 605.0},
+        ]),
+    )
+    _insert_operational_signal(
+        db_path,
+        parse_result_id=1,
+        attempt_key="atk_leg_split",
+        entry_split_json=json.dumps({"E1": 0.5, "E2": 0.3, "E3": 0.2}),
+    )
+
+    ctx = load_context_by_attempt_key("atk_leg_split", db_path)
+
+    assert ctx is not None
+    assert len(ctx.entry_legs) == 3
+    e1, e2, e3 = ctx.entry_legs
+    assert e1.split == pytest.approx(0.5)
+    assert e2.split == pytest.approx(0.3)
+    assert e3.split == pytest.approx(0.2)
+    assert e1.order_type == "MARKET"
+    assert e2.order_type == "LIMIT"
+    assert e3.order_type == "LIMIT"
+
+
+def test_runtime_entry_leg_helpers_read_serialized_mixed_plan(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_runtime",
+        status="ACTIVE",
+        entry_json=json.dumps([
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+            {"type": "LIMIT", "price": 59000.0},
+        ]),
+    )
+    _insert_operational_signal(
+        db_path,
+        parse_result_id=1,
+        attempt_key="atk_leg_runtime",
+        entry_split_json=json.dumps({"E1": 0.5, "E2": 0.3, "E3": 0.2}),
+    )
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state,
+                entry_zone_policy, non_chase_policy, opened_at, meta_json, created_at, updated_at)
+               VALUES ('T', 'atk_leg_runtime', 'trader_3', 'BTCUSDT', 'BUY', 'FREQTRADE', 'OPEN',
+                       'Z1', 'NI3', '2026-01-01', ?, '2026-01-01', '2026-01-01')""",
+            (
+                json.dumps(
+                    {
+                        "entry_legs": [
+                            {
+                                "entry_id": "E1",
+                                "sequence": 1,
+                                "order_type": "MARKET",
+                                "price": None,
+                                "split": 0.5,
+                                "status": "FILLED",
+                                "filled_at": "2026-01-01T00:00:00+00:00",
+                            },
+                            {
+                                "entry_id": "E2",
+                                "sequence": 2,
+                                "order_type": "LIMIT",
+                                "price": 59500.0,
+                                "split": 0.3,
+                                "status": "PENDING",
+                            },
+                            {
+                                "entry_id": "E3",
+                                "sequence": 3,
+                                "order_type": "LIMIT",
+                                "price": 59000.0,
+                                "split": 0.2,
+                                "status": "PENDING",
+                            },
+                        ]
+                    }
+                ),
+            ),
+        )
+        conn.commit()
+
+    ctx = load_context_by_attempt_key("atk_leg_runtime", db_path)
+
+    assert ctx is not None
+    assert [leg.status for leg in ctx.runtime_entry_legs] == ["FILLED", "PENDING", "PENDING"]
+    assert ctx.next_pending_entry_leg is not None
+    assert ctx.next_pending_entry_leg.entry_id == "E2"
+    assert ctx.next_pending_entry_leg.order_type == "LIMIT"
+    assert [leg.entry_id for leg in ctx.pending_limit_entry_legs] == ["E2", "E3"]
+
+
+def test_runtime_entry_leg_helpers_fallback_for_single_limit_plan(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_limit_runtime",
+        entry_json=json.dumps([{"type": "LIMIT", "price": 60000.0}]),
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_leg_limit_runtime")
+
+    ctx = load_context_by_attempt_key("atk_leg_limit_runtime", db_path)
+
+    assert ctx is not None
+    assert len(ctx.runtime_entry_legs) == 1
+    assert ctx.runtime_entry_legs[0].entry_id == "E1"
+    assert ctx.runtime_entry_legs[0].status == "PENDING"
+    assert ctx.next_pending_entry_leg is not None
+    assert ctx.next_pending_entry_leg.entry_id == "E1"
+    assert [leg.entry_id for leg in ctx.pending_limit_entry_legs] == ["E1"]
+
+
+def test_runtime_entry_leg_helpers_fallback_for_single_market_plan(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_leg_market_runtime",
+        entry_json=json.dumps([{"type": "MARKET", "price": None}]),
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_leg_market_runtime")
+
+    ctx = load_context_by_attempt_key("atk_leg_market_runtime", db_path)
+
+    assert ctx is not None
+    assert len(ctx.runtime_entry_legs) == 1
+    assert ctx.runtime_entry_legs[0].entry_id == "E1"
+    assert ctx.runtime_entry_legs[0].status == "PENDING"
+    assert ctx.next_pending_entry_leg is not None
+    assert ctx.next_pending_entry_leg.entry_id == "E1"
+    assert ctx.pending_limit_entry_legs == ()
+
+
+# ---------------------------------------------------------------------------
+# Step 29 — populate_entry_trend: LIMIT-only strategy path
+# ---------------------------------------------------------------------------
+
+
+def test_populate_entry_trend_emits_entry_for_limit_signal(tmp_path: Path) -> None:
+    """populate_entry_trend emits enter_long when first entry leg is LIMIT."""
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal_with_entry(
+        db_path,
+        attempt_key="atk_pet_limit",
+        entry_json=json.dumps([{"price": 60000.0, "type": "LIMIT"}]),
+    )
+    _insert_op_signal_with_split(db_path, parse_result_id=1, attempt_key="atk_pet_limit")
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+    dataframe = _MiniDataFrame(rows=2)
+
+    updated = strategy.populate_entry_trend(dataframe, {"pair": "BTC/USDT:USDT"})
+
+    assert updated["enter_long"] == [0, 1]
+    assert updated["enter_short"] == [0, 0]
+    assert updated["enter_tag"] == [None, "atk_pet_limit"]
+
+
+def test_populate_entry_trend_emits_entry_for_market_signal(tmp_path: Path) -> None:
+    """populate_entry_trend emits enter_long for MARKET entries.
+
+    MARKET entries are routed through the normal Freqtrade lifecycle via
+    populate_entry_trend so that Trade records, SL/TP, and position tracking
+    are managed by Freqtrade. Freqtrade places a limit order at current market
+    price (proposed_rate), which fills immediately for liquid assets.
+    """
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal_with_entry(
+        db_path,
+        attempt_key="atk_pet_market",
+        entry_json=json.dumps([{"price": None, "type": "MARKET"}]),
+    )
+    _insert_op_signal_with_split(db_path, parse_result_id=1, attempt_key="atk_pet_market")
+
+    strategy = SignalBridgeStrategy(config={})
+    strategy.bot_db_path = db_path
+    dataframe = _MiniDataFrame(rows=2)
+
+    updated = strategy.populate_entry_trend(dataframe, {"pair": "BTC/USDT:USDT"})
+
+    assert updated["enter_long"] == [0, 1]
+    assert updated["enter_short"] == [0, 0]
+    assert updated["enter_tag"] == [None, "atk_pet_market"]

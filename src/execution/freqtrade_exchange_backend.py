@@ -42,19 +42,22 @@ class FreqtradeExchangeBackend:
         from src.execution.freqtrade_normalizer import canonical_symbol_to_freqtrade_pair
 
         pair = canonical_symbol_to_freqtrade_pair(symbol) or symbol
-        params: dict[str, Any] = {"reduceOnly": reduce_only}
+
+        params: dict[str, Any] = {}
+        if trigger_price is not None and trigger_price > 0:
+            params["stopPrice"] = trigger_price
         if client_order_id:
             params["clientOrderId"] = client_order_id
-        if trigger_price is not None:
-            params["stopPrice"] = trigger_price
 
         raw = self._exchange.create_order(
             pair=pair,
             ordertype=order_type.lower(),
             side=side.lower(),
             amount=qty,
-            rate=price,
-            params=params,
+            rate=price or 0.0,
+            leverage=1,
+            reduceOnly=reduce_only,
+            params=params if params else None,
         )
         return _normalize_order(raw, symbol=symbol, client_order_id=client_order_id)
 

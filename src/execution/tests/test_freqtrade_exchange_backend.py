@@ -30,6 +30,8 @@ class _FakeFreqtradeExchange:
         side: str,
         amount: float,
         rate: float | None,
+        leverage: int = 1,
+        reduceOnly: bool = False,
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         params = params or {}
@@ -43,7 +45,7 @@ class _FakeFreqtradeExchange:
             "amount": amount,
             "price": rate,
             "stopPrice": params.get("stopPrice"),
-            "reduceOnly": params.get("reduceOnly", False),
+            "reduceOnly": reduceOnly or params.get("reduceOnly", False),
             "status": "open",
         }
         self.created_orders.append(order)
