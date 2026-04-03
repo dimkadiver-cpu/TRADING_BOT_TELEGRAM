@@ -1,0 +1,9 @@
+Eventi:
+   - Un punto di ingresso Market
+   - Un punto di ingresso Limit
+   - Due punti di ingresso Limit:
+   - Due punti: uno Market altro Limit
+
+
+ Tp1-N
+ Exit BE
