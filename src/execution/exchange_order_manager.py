@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from decimal import Decimal, ROUND_DOWN
 import json
 import sqlite3
 from typing import Any
@@ -1172,7 +1173,20 @@ def _distributed_take_profit_quantities(
     residual_fraction = sum(selected_fractions)
     if residual_fraction <= 0:
         return ()
-    return tuple(float(fill_qty) * (fraction / residual_fraction) for fraction in selected_fractions)
+    qty_decimal = Decimal(str(float(fill_qty)))
+    quantum = _quantity_quantum(fill_qty)
+    normalized_fractions = [Decimal(str(fraction / residual_fraction)) for fraction in selected_fractions]
+
+    distributed: list[float] = []
+    allocated = Decimal("0")
+    for idx, fraction in enumerate(normalized_fractions):
+        if idx == len(normalized_fractions) - 1:
+            qty = qty_decimal - allocated
+        else:
+            qty = (qty_decimal * fraction).quantize(quantum, rounding=ROUND_DOWN)
+            allocated += qty
+        distributed.append(float(max(qty, Decimal("0"))))
+    return tuple(distributed)
 
 
 def _take_profit_close_fractions(context: FreqtradeSignalContext, level_count: int) -> tuple[float, ...]:
@@ -1200,6 +1214,13 @@ def _tp_handling_rules(context: FreqtradeSignalContext) -> dict[str, Any]:
     rules = context.management_rules if isinstance(context.management_rules, dict) else {}
     tp_rules = rules.get("tp_handling")
     return tp_rules if isinstance(tp_rules, dict) else {}
+
+
+def _quantity_quantum(fill_qty: float) -> Decimal:
+    text = format(float(fill_qty), ".12f").rstrip("0").rstrip(".")
+    decimals = len(text.split(".", 1)[1]) if "." in text else 0
+    decimals = max(decimals, 3)
+    return Decimal("1").scaleb(-decimals)
 
 
 def _upsert_order_record(
@@ -1319,7 +1340,12 @@ def _next_client_order_id(conn: sqlite3.Connection, *, env: str, attempt_key: st
 
 
 def _reduce_only_side(entry_side: str) -> str:
-    return "SELL" if str(entry_side).upper() == "BUY" else "BUY"
+    normalized = str(entry_side).strip().upper()
+    if normalized in {"BUY", "LONG"}:
+        return "SELL"
+    if normalized in {"SELL", "SHORT"}:
+        return "BUY"
+    return "SELL"
 
 
 def _exchange_order_to_dict(order: ExchangeOrder) -> dict[str, Any]:

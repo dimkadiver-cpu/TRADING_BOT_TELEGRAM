@@ -4,6 +4,8 @@
 **Data originale:** 2026-03-27
 **Dipendenze:** Fase 1–6 complete
 
+Nota di verifica 2026-04-06: il backbone Fase 7 e presente, ma nel workspace corrente restano regressioni aperte su `ScenarioLoader` v2, `test_runner.py` e `test_listener_recovery.py`. Il config Fase 7 resta il riferimento operativo piu affidabile finche quei test non tornano verdi.
+
 ---
 
 ## Context

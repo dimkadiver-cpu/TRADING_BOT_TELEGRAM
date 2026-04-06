@@ -194,6 +194,35 @@ for row in conn.execute("select event_id, attempt_key, event_type, created_at fr
 '@ | C:\TeleSignalBot\.venv\Scripts\python.exe -
 ```
 
+Inspector end-to-end di un caso singolo:
+
+```powershell
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\inspect_attempt.py --latest-signal
+```
+
+Oppure:
+
+```powershell
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\inspect_attempt.py --latest-trade
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\inspect_attempt.py --symbol BTCUSDT
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\inspect_attempt.py --attempt-key <attempt_key>
+```
+
+Checklist atteso vs osservato:
+
+```powershell
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\verify_attempt_expectation.py --latest-signal --expect entry_filled
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\verify_attempt_expectation.py --latest-signal --expect move_stop
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\verify_attempt_expectation.py --latest-signal --expect tp1
+```
+
+Suite automatica injection + verify:
+
+```powershell
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\run_dryrun_suite.py --scenario-dir C:\TeleSignalBot\scripts\trader_a_scenarios --reset
+C:\TeleSignalBot\.venv\Scripts\python.exe C:\TeleSignalBot\scripts\run_dryrun_suite.py --scenario-dir C:\TeleSignalBot\scripts\trader_a_scenarios --files u01_move_stop_to_be.json u06_close_partial_50.json --reset
+```
+
 ## Config locale
 
 Aprire il config freqtrade:

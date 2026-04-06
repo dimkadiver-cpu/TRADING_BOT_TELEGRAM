@@ -32,20 +32,19 @@ class _FakeFreqtradeExchange:
         rate: float | None,
         leverage: int = 1,
         reduceOnly: bool = False,
-        params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        params = params or {}
-        client_id = params.get("clientOrderId", f"cid-{len(self.created_orders)}")
+        # Mirrors the real Freqtrade Exchange.create_order signature (no params kwarg).
+        # For STOP orders, `rate` carries the trigger price (stopPrice).
+        client_id = f"cid-{len(self.created_orders)}"
         order = {
             "id": f"ex-{client_id}",
-            "clientOrderId": client_id,
             "symbol": pair,
             "side": side,
             "type": ordertype,
             "amount": amount,
-            "price": rate,
-            "stopPrice": params.get("stopPrice"),
-            "reduceOnly": reduceOnly or params.get("reduceOnly", False),
+            "price": rate if ordertype.lower() != "stop" else None,
+            "stopPrice": rate if ordertype.lower() == "stop" else None,
+            "reduceOnly": reduceOnly,
             "status": "open",
         }
         self.created_orders.append(order)
@@ -144,7 +143,9 @@ class TestCreateOrder:
         assert order["type"] == "stop"
         assert order["amount"] == 2.0
         assert order["stopPrice"] == 57000.0
-        assert result["exchange_order_id"] == "ex-atk:SL:0"
+        # exchange assigns its own ID (no clientOrderId forwarded); our client_order_id is
+        # preserved via the _normalize_order fallback parameter.
+        assert result["exchange_order_id"] == "ex-cid-0"
         assert result["client_order_id"] == "atk:SL:0"
 
     def test_creates_limit_tp_order(self) -> None:

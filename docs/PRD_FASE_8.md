@@ -3,6 +3,8 @@
 **Stato:** DESIGN — 2026-03-30
 **Dipendenze:** Fase 7 completa (Step 16–23)
 
+Nota di verifica 2026-04-06: lo schema v2 e il loader avanzato sono il target documentale corrente, ma nel workspace attuale non sono ancora affidabili quanto il config Fase 7. Prima di usarli come base operativa, verificare `src/backtesting/tests/test_scenario_loader.py`.
+
 ---
 
 ## Context

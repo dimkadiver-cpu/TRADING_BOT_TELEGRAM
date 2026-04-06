@@ -1,0 +1,10 @@
+[
+  {
+    "name": "u09_update_take_profits",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 7109,
+    "reply_to_message_id": 7001,
+    "text": "SYMBOL\nОбновляем тейки:\nTP1: NEW_TP1\nTP2: NEW_TP2\nTP3: NEW_TP3"
+  }
+]

@@ -8,6 +8,19 @@ Riferimento storico only.
 
 ---
 
+## Verifica corrente
+
+Data verifica: 2026-04-06
+
+- mixed suite su parser, telegram, validation, operation rules, target resolver, execution, backtesting e parser_test: `657 passed, 20 failed, 1 skipped`
+- cluster di failure corrente:
+  - `src/backtesting/tests/test_scenario_loader.py` e `config/backtest_scenarios_v2.yaml` non sono ancora allineati al modello atteso dal loader
+  - `src/backtesting/tests/test_runner.py::TestWindowsCommandDetection::test_win32_uses_python_module`
+  - `src/telegram/tests/test_listener_recovery.py::test_catchup_skips_channel_with_no_last_id`
+- stato architetturale confermato: listener, router, parser, validation, operation rules, target resolver, live execution e backtesting base sono presenti nel repository
+
+---
+
 ## Documentazione vecchia — cosa fare
 
 | File | Stato | Azione |

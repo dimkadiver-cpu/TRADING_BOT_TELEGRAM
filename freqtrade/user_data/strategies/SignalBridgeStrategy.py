@@ -7,6 +7,7 @@ import logging
 import os
 import sqlite3
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -82,6 +83,8 @@ class SignalBridgeStrategy(IStrategy):
     _execution_bootstrap_done: bool = False
     _last_execution_reconciliation_at: float = 0.0
     _last_market_dispatch_at: float = 0.0
+    _last_stoploss_dedupe_at: float = 0.0
+    _last_entry_cancel_sync_at: float = 0.0
 
     # ------------------------------------------------------------------
     # FreqUI plot configuration — observability only, no trading logic
@@ -92,13 +95,34 @@ class SignalBridgeStrategy(IStrategy):
             "bridge_tp1": {"color": "#27ae60", "type": "line"},
             "bridge_tp2": {"color": "#2ecc71", "type": "line"},
             "bridge_tp3": {"color": "#a3d977", "type": "line"},
+            "bridge_live_entry_open": {"color": "#f39c12", "type": "line"},
+            "bridge_live_sl_open": {"color": "#c0392b", "type": "line"},
+            "bridge_live_tp_open_1": {"color": "#16a085", "type": "line"},
+            "bridge_live_tp_open_2": {"color": "#1abc9c", "type": "line"},
+            "bridge_live_tp_open_3": {"color": "#48c9b0", "type": "line"},
             "bridge_entry_price": {"color": "#3498db", "type": "line"},
+            "bridge_entry_avg": {"color": "#1f78b4", "type": "line"},
+            "bridge_entry_pending_e1": {"color": "#7fb3d5", "type": "line"},
+            "bridge_entry_pending_e2": {"color": "#85c1e9", "type": "line"},
+            "bridge_entry_pending_e3": {"color": "#aed6f1", "type": "line"},
+            "bridge_entry_filled_e1": {"color": "#1f618d", "type": "line"},
+            "bridge_entry_filled_e2": {"color": "#2874a6", "type": "line"},
+            "bridge_entry_filled_e3": {"color": "#2e86c1", "type": "line"},
+            "bridge_tp1_hit": {"color": "#1e8449", "type": "line"},
+            "bridge_tp2_hit": {"color": "#239b56", "type": "line"},
+            "bridge_tp3_hit": {"color": "#52be80", "type": "line"},
         },
         "subplots": {
             "Bridge Events": {
                 "bridge_event_entry": {"color": "#3498db", "type": "bar"},
+                "bridge_event_entry_e1": {"color": "#1f618d", "type": "bar"},
+                "bridge_event_entry_e2": {"color": "#2874a6", "type": "bar"},
+                "bridge_event_entry_e3": {"color": "#2e86c1", "type": "bar"},
                 "bridge_event_partial_exit": {"color": "#f39c12", "type": "bar"},
                 "bridge_event_tp_hit": {"color": "#27ae60", "type": "bar"},
+                "bridge_event_tp1_hit": {"color": "#1e8449", "type": "bar"},
+                "bridge_event_tp2_hit": {"color": "#239b56", "type": "bar"},
+                "bridge_event_tp3_hit": {"color": "#52be80", "type": "bar"},
                 "bridge_event_sl_hit": {"color": "#e74c3c", "type": "bar"},
                 "bridge_event_close": {"color": "#8e44ad", "type": "bar"},
             },
@@ -107,6 +131,9 @@ class SignalBridgeStrategy(IStrategy):
 
     def populate_indicators(self, dataframe: Any, metadata: dict[str, Any]) -> Any:
         self._maybe_run_execution_reconciliation()
+        self._maybe_dispatch_market_entries()
+        self._maybe_sync_cancelled_entry_orders()
+        self._maybe_cleanup_duplicate_stoploss_orders()
         pair = str((metadata or {}).get("pair") or "").strip()
         self._populate_bridge_columns(dataframe, pair)
         return dataframe
@@ -124,16 +151,17 @@ class SignalBridgeStrategy(IStrategy):
         if self._has_active_entry_runtime(db_path=db_path, attempt_key=context.attempt_key):
             return dataframe
 
-        # Strategy path handles LIMIT and MARKET entries.
-        # MARKET entries are placed as limit orders at current market price (proposed_rate),
-        # which fills immediately for liquid assets. Averaging LIMIT legs are handled
-        # by adjust_trade_position after the first entry creates the Trade record.
-        if context.first_entry_order_type not in ("LIMIT", "MARKET"):
+        # Strategy path only emits pending LIMIT entries.
+        # MARKET first legs are dispatched by _maybe_dispatch_market_entries() so they
+        # fill immediately at market and can bootstrap protections before any
+        # averaging LIMIT legs are placed.
+        next_limit_leg = context.next_pending_entry_leg
+        if next_limit_leg is None or next_limit_leg.order_type != "LIMIT" or next_limit_leg.sequence != 1:
             return dataframe
 
         column = "enter_long" if context.side == "long" else "enter_short"
         self._set_last_row_value(dataframe, column, 1)
-        self._set_last_row_value(dataframe, "enter_tag", context.entry_tag)
+        self._set_last_row_value(dataframe, "enter_tag", f"{context.attempt_key}:ENTRY:{next_limit_leg.sequence - 1}")
         return dataframe
 
     def populate_exit_trend(self, dataframe: Any, metadata: dict[str, Any]) -> Any:
@@ -330,8 +358,15 @@ class SignalBridgeStrategy(IStrategy):
         order_manager = getattr(self, "exchange_order_manager", None)
 
         order_side = str(getattr(order, "ft_order_side", "") or "").lower()
-        trade_entry_side = str(getattr(trade, "entry_side", "") or "").lower()
-        trade_exit_side = str(getattr(trade, "exit_side", "") or "").lower()
+        trade_entry_side = self._normalize_order_side(getattr(trade, "entry_side", None))
+        trade_exit_side = self._normalize_order_side(getattr(trade, "exit_side", None))
+        if trade_entry_side is None:
+            is_short = bool(getattr(trade, "is_short", False))
+            if context is not None and context.side in {"long", "short"}:
+                is_short = context.side == "short"
+            trade_entry_side = "sell" if is_short else "buy"
+        if trade_exit_side is None:
+            trade_exit_side = "sell" if trade_entry_side == "buy" else "buy"
         filled_qty = float(getattr(order, "safe_filled", 0.0) or 0.0)
         fill_price = float(getattr(order, "safe_price", 0.0) or 0.0)
         if filled_qty <= 0 or fill_price <= 0:
@@ -343,7 +378,7 @@ class SignalBridgeStrategy(IStrategy):
         order_tag = str(getattr(order, "ft_order_tag", None) or getattr(order, "tag", None) or "")
         tp_idx = self._take_profit_idx_from_tag(order_tag, attempt_key)
 
-        if order_side == trade_entry_side:
+        if order_side in {"buy", "sell"} and order_side == trade_entry_side:
             entry_idx = self._entry_idx_from_tag(order_tag or client_order_id, attempt_key=attempt_key)
             order_filled_callback(
                 db_path=db_path,
@@ -381,7 +416,7 @@ class SignalBridgeStrategy(IStrategy):
             )
             return
 
-        if order_side != trade_exit_side:
+        if order_side not in {"buy", "sell"} or order_side != trade_exit_side:
             return
 
         closed_qty = float(getattr(order, "safe_amount_after_fee", 0.0) or filled_qty)
@@ -600,13 +635,11 @@ class SignalBridgeStrategy(IStrategy):
             return False
 
         configured_order_type = str(order_type).upper()
+        ownership = self._resolve_protective_order_ownership(context=context)
         entry_leg = self._resolve_entry_leg(context=context, entry_tag=entry_tag)
         if entry_leg is None:
             return False
         signal_entry_order_type = entry_leg.order_type
-        # MARKET signals are accepted even when Freqtrade is configured for limit orders.
-        # custom_entry_price will return proposed_rate (no override) so Freqtrade places
-        # a limit order at current market price, which fills immediately for liquid assets.
         if signal_entry_order_type not in ("LIMIT", "MARKET"):
             _log.warning(
                 "confirm_trade_entry REJECTED | pair=%s attempt_key=%s reason=%s"
@@ -614,6 +647,17 @@ class SignalBridgeStrategy(IStrategy):
                 pair,
                 context.attempt_key,
                 "unsupported_entry_order_type",
+                configured_order_type,
+                signal_entry_order_type,
+            )
+            return False
+        if signal_entry_order_type == "MARKET" and configured_order_type != "MARKET":
+            _log.info(
+                "confirm_trade_entry REJECTED | pair=%s attempt_key=%s reason=%s"
+                " configured_order_type=%s signal_entry_order_type=%s",
+                pair,
+                context.attempt_key,
+                "market_leg_reserved_for_dispatcher",
                 configured_order_type,
                 signal_entry_order_type,
             )
@@ -660,16 +704,15 @@ class SignalBridgeStrategy(IStrategy):
             )
             return False
 
-        if configured_order_type == "LIMIT":
-            entry_order_open_callback(
-                db_path=db_path,
-                attempt_key=context.attempt_key,
-                qty=float(amount),
-                price=effective_rate if effective_rate > 0 else None,
-                order_type=configured_order_type,
-                entry_idx=max(0, entry_leg.sequence - 1),
-            )
-
+        entry_order_open_callback(
+            db_path=db_path,
+            attempt_key=context.attempt_key,
+            qty=float(amount),
+            price=float(effective_rate) if configured_order_type == "LIMIT" else None,
+            order_type=configured_order_type,
+            protective_orders_mode=ownership.mode.value,
+            entry_idx=entry_idx,
+        )
         return True
 
     def bot_start(self, **kwargs: Any) -> None:
@@ -748,9 +791,15 @@ class SignalBridgeStrategy(IStrategy):
 
         order_manager = getattr(self, "exchange_order_manager", None)
         gateway = order_manager.gateway if order_manager is not None and hasattr(order_manager, "gateway") else None
+        ownership = self._resolve_protective_order_ownership(context=None)
 
         try:
-            dispatcher = MarketEntryDispatcher(db_path=db_path, gateway=gateway)
+            dispatcher = MarketEntryDispatcher(
+                db_path=db_path,
+                gateway=gateway,
+                protective_orders_mode=ownership.mode.value,
+                order_manager=order_manager,
+            )
             results = dispatcher.dispatch_pending_market_entries()
             for r in results:
                 _log.info(
@@ -806,6 +855,273 @@ class SignalBridgeStrategy(IStrategy):
                 if isinstance(value, (int, float)) and float(value) > 0:
                     return float(value)
         return 0.0
+
+    def _maybe_cleanup_duplicate_stoploss_orders(self) -> None:
+        interval = self._stoploss_dedupe_interval_s()
+        if interval <= 0:
+            return
+
+        now = time.monotonic()
+        if now - getattr(self, "_last_stoploss_dedupe_at", 0.0) < interval:
+            return
+        self._last_stoploss_dedupe_at = now
+
+        trades_db_path = self._resolve_freqtrade_trades_db_path()
+        if not trades_db_path:
+            return
+
+        try:
+            summary = self._dedupe_open_stoploss_orders(trades_db_path)
+        except Exception:
+            _log.debug("stoploss_dedupe failed", exc_info=True)
+            return
+
+        if summary.get("duplicates_resolved", 0) > 0:
+            _log.warning(
+                "stoploss_dedupe | db=%s duplicates=%s canceled=%s",
+                trades_db_path,
+                summary.get("duplicates_resolved"),
+                summary.get("canceled_orders"),
+            )
+
+    def _maybe_sync_cancelled_entry_orders(self) -> None:
+        db_path = self._resolve_db_path()
+        trades_db_path = self._resolve_freqtrade_trades_db_path()
+        if not db_path or not trades_db_path:
+            return
+
+        now = time.monotonic()
+        if now - getattr(self, "_last_entry_cancel_sync_at", 0.0) < 10.0:
+            return
+        self._last_entry_cancel_sync_at = now
+
+        try:
+            summary = self._sync_cancelled_entry_orders(
+                trades_db_path=trades_db_path,
+                bot_db_path=db_path,
+            )
+        except Exception:
+            _log.debug("entry_cancel_sync failed", exc_info=True)
+            return
+
+        if summary.get("signals_cancelled", 0) > 0:
+            _log.warning(
+                "entry_cancel_sync | trades_db=%s bot_db=%s scanned=%s cancelled=%s",
+                trades_db_path,
+                db_path,
+                summary.get("candidates_scanned", 0),
+                summary.get("signals_cancelled", 0),
+            )
+
+    @staticmethod
+    def _sync_cancelled_entry_orders(*, trades_db_path: str, bot_db_path: str) -> dict[str, int]:
+        now = datetime.now(timezone.utc).isoformat()
+        candidate_attempt_keys: set[str] = set()
+        processed_attempt_keys = 0
+        signals_cancelled = 0
+        orders_cancelled = 0
+        trades_closed = 0
+        events_inserted = 0
+
+        with sqlite3.connect(trades_db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT DISTINCT o.ft_order_tag
+                FROM orders o
+                WHERE LOWER(COALESCE(o.status, '')) IN ('canceled', 'cancelled', 'expired', 'rejected')
+                  AND COALESCE(o.ft_order_tag, '') <> ''
+                ORDER BY o.id DESC
+                """
+            ).fetchall()
+
+            for row in rows:
+                tag = str(row[0] or "").strip()
+                if not tag:
+                    continue
+                upper_tag = tag.upper()
+                if ":TP:" in upper_tag or ":SL:" in upper_tag or ":EXIT:" in upper_tag:
+                    continue
+                attempt_key = SignalBridgeStrategy._attempt_key_from_tag(tag)
+                if not attempt_key:
+                    continue
+
+                # If we observed a canceled/rejected/expired ENTRY tag for a still-PENDING
+                # bridge signal, we must stop re-dispatch loops even when Freqtrade has already
+                # spawned a replacement technical order.
+                candidate_attempt_keys.add(attempt_key)
+
+        with sqlite3.connect(bot_db_path) as conn:
+            for attempt_key in sorted(candidate_attempt_keys):
+                processed_attempt_keys += 1
+                signal_row = conn.execute(
+                    """
+                    SELECT env, trader_id
+                    FROM signals
+                    WHERE attempt_key = ?
+                      AND status = 'PENDING'
+                    LIMIT 1
+                    """,
+                    (attempt_key,),
+                ).fetchone()
+                if signal_row is None:
+                    continue
+
+                env = str(signal_row[0] or "T")
+                trader_id = str(signal_row[1] or "")
+
+                signal_result = conn.execute(
+                    """
+                    UPDATE signals
+                    SET status = 'CANCELLED',
+                        updated_at = ?
+                    WHERE attempt_key = ?
+                      AND status = 'PENDING'
+                    """,
+                    (now, attempt_key),
+                )
+                signals_cancelled += int(signal_result.rowcount)
+
+                trade_result = conn.execute(
+                    """
+                    UPDATE trades
+                    SET state = 'CLOSED',
+                        close_reason = COALESCE(close_reason, 'ENTRY_CANCELLED_IN_FREQTRADE'),
+                        closed_at = COALESCE(closed_at, ?),
+                        updated_at = ?
+                    WHERE attempt_key = ?
+                      AND state = 'ENTRY_PENDING'
+                    """,
+                    (now, now, attempt_key),
+                )
+                trades_closed += int(trade_result.rowcount)
+
+                order_result = conn.execute(
+                    """
+                    UPDATE orders
+                    SET status = 'CANCELLED',
+                        updated_at = ?
+                    WHERE attempt_key = ?
+                      AND purpose = 'ENTRY'
+                      AND status NOT IN ('FILLED', 'CANCELLED', 'REJECTED', 'EXPIRED')
+                    """,
+                    (now, attempt_key),
+                )
+                orders_cancelled += int(order_result.rowcount)
+
+                conn.execute(
+                    """
+                    INSERT INTO events(
+                      env, channel_id, telegram_msg_id, trader_id, trader_prefix,
+                      attempt_key, event_type, payload_json, confidence, created_at
+                    ) VALUES (?, 'freqtrade_sync', '0', ?, NULL, ?, 'ENTRY_CANCELLED_EXTERNALLY', ?, 1.0, ?)
+                    """,
+                    (
+                        env,
+                        trader_id,
+                        attempt_key,
+                        json.dumps(
+                            {
+                                "source": "freqtrade_orders_sync",
+                                "reason": "entry_order_cancelled_in_freqtrade",
+                            },
+                            ensure_ascii=False,
+                            sort_keys=True,
+                        ),
+                        now,
+                    ),
+                )
+                events_inserted += 1
+
+            conn.commit()
+
+        return {
+            "candidates_scanned": len(candidate_attempt_keys),
+            "attempt_keys_processed": processed_attempt_keys,
+            "signals_cancelled": signals_cancelled,
+            "trades_closed": trades_closed,
+            "orders_cancelled": orders_cancelled,
+            "events_inserted": events_inserted,
+        }
+
+    def _stoploss_dedupe_interval_s(self) -> float:
+        config = getattr(self, "config", None)
+        if isinstance(config, dict):
+            execution = config.get("execution")
+            if isinstance(execution, dict):
+                value = execution.get("stoploss_dedupe_interval_s")
+                if isinstance(value, (int, float)):
+                    return max(0.0, float(value))
+        return 30.0
+
+    def _resolve_freqtrade_trades_db_path(self) -> str | None:
+        config = getattr(self, "config", None)
+        if isinstance(config, dict):
+            db_url = config.get("db_url")
+            if isinstance(db_url, str) and db_url.startswith("sqlite:///"):
+                raw = db_url[len("sqlite:///") :]
+                if raw:
+                    candidate = Path(raw)
+                    if candidate.exists():
+                        return str(candidate)
+
+        repo_freqtrade_dir = Path(__file__).resolve().parents[2]
+        candidates = (
+            repo_freqtrade_dir / "tradesv3.dryrun.sqlite",
+            repo_freqtrade_dir / "tradesv3.sqlite",
+            repo_freqtrade_dir / "user_data" / "tradesv3.dryrun.sqlite",
+            repo_freqtrade_dir / "user_data" / "tradesv3.sqlite",
+        )
+        for candidate in candidates:
+            if candidate.exists():
+                return str(candidate)
+        return None
+
+    @staticmethod
+    def _dedupe_open_stoploss_orders(trades_db_path: str) -> dict[str, int]:
+        duplicates_resolved = 0
+        canceled_orders = 0
+        now = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S.%f")
+
+        with sqlite3.connect(trades_db_path) as conn:
+            rows = conn.execute(
+                """
+                SELECT o.ft_trade_id, MAX(o.id) AS keep_id, COUNT(*) AS open_count
+                FROM orders o
+                JOIN trades t ON t.id = o.ft_trade_id
+                WHERE t.is_open = 1
+                  AND LOWER(COALESCE(o.ft_order_side, '')) = 'stoploss'
+                  AND LOWER(COALESCE(o.status, '')) IN ('open', 'new')
+                  AND COALESCE(o.ft_is_open, 1) = 1
+                GROUP BY o.ft_trade_id
+                HAVING COUNT(*) > 1
+                """
+            ).fetchall()
+
+            for ft_trade_id, keep_id, _ in rows:
+                result = conn.execute(
+                    """
+                    UPDATE orders
+                    SET status = 'canceled',
+                        ft_is_open = 0,
+                        order_update_date = ?
+                    WHERE ft_trade_id = ?
+                      AND id <> ?
+                      AND LOWER(COALESCE(ft_order_side, '')) = 'stoploss'
+                      AND LOWER(COALESCE(status, '')) IN ('open', 'new')
+                      AND COALESCE(ft_is_open, 1) = 1
+                    """,
+                    (now, int(ft_trade_id), int(keep_id)),
+                )
+                if result.rowcount > 0:
+                    duplicates_resolved += 1
+                    canceled_orders += int(result.rowcount)
+
+            conn.commit()
+
+        return {
+            "duplicates_resolved": duplicates_resolved,
+            "canceled_orders": canceled_orders,
+        }
 
     def _resolve_protective_order_ownership(
         self,
@@ -911,11 +1227,16 @@ class SignalBridgeStrategy(IStrategy):
     @staticmethod
     def _select_active_context(pair: str, db_path: str) -> FreqtradeSignalContext | None:
         for context in load_active_contexts_for_pair(pair, db_path):
-            if (
-                context.is_pair_mappable
-                and context.side in {"long", "short"}
-                and context.trade_state == "OPEN"
-            ):
+            if not (context.is_pair_mappable and context.side in {"long", "short"}):
+                continue
+            if context.trade_state == "OPEN":
+                return context
+            size, _ = SignalBridgeStrategy._load_position_snapshot(
+                db_path=db_path,
+                env=context.env,
+                symbol=context.symbol,
+            )
+            if size is not None and size > 0:
                 return context
         return None
 
@@ -964,6 +1285,15 @@ class SignalBridgeStrategy(IStrategy):
             return int(order_tag.rsplit(":", 1)[1])
         except (IndexError, ValueError):
             return None
+
+    @staticmethod
+    def _normalize_order_side(value: Any) -> str | None:
+        normalized = str(value or "").strip().lower()
+        if normalized in {"buy", "long"}:
+            return "buy"
+        if normalized in {"sell", "short"}:
+            return "sell"
+        return None
 
     @staticmethod
     def _trade_stake_amount(trade: Trade) -> float | None:
@@ -1145,16 +1475,24 @@ class SignalBridgeStrategy(IStrategy):
 
     _BRIDGE_CONTEXT_COLUMNS = (
         "bridge_sl", "bridge_tp1", "bridge_tp2", "bridge_tp3", "bridge_entry_price",
+        "bridge_live_entry_open", "bridge_live_sl_open",
+        "bridge_live_tp_open_1", "bridge_live_tp_open_2", "bridge_live_tp_open_3",
+        "bridge_entry_avg",
+        "bridge_entry_pending_e1", "bridge_entry_pending_e2", "bridge_entry_pending_e3",
+        "bridge_entry_filled_e1", "bridge_entry_filled_e2", "bridge_entry_filled_e3",
+        "bridge_tp1_hit", "bridge_tp2_hit", "bridge_tp3_hit",
     )
     _BRIDGE_EVENT_COLUMNS = (
         "bridge_event_entry", "bridge_event_partial_exit",
         "bridge_event_tp_hit", "bridge_event_sl_hit", "bridge_event_close",
+        "bridge_event_entry_e1", "bridge_event_entry_e2", "bridge_event_entry_e3",
+        "bridge_event_tp1_hit", "bridge_event_tp2_hit", "bridge_event_tp3_hit",
     )
 
     def _populate_bridge_columns(self, dataframe: Any, pair: str) -> None:
         """Inject bridge context and event columns into the dataframe for FreqUI plotting.
 
-        This is purely observational — it never changes trading logic.
+        This is purely observational - it never changes trading logic.
         Errors are caught and logged so plotting failures cannot break the strategy.
         """
         try:
@@ -1175,25 +1513,62 @@ class SignalBridgeStrategy(IStrategy):
         try:
             self._inject_bridge_context(dataframe, pair=pair, db_path=db_path)
             self._inject_bridge_events(dataframe, pair=pair, db_path=db_path)
-        except Exception:  # pragma: no cover — defensive; never break trading
+        except Exception:  # pragma: no cover - defensive; never break trading
             _log.debug("bridge plotting columns failed for %s", pair, exc_info=True)
 
     def _inject_bridge_context(self, dataframe: Any, *, pair: str, db_path: str) -> None:
-        """Fill SL/TP/entry price reference lines from the active trade context."""
+        """Fill entry/SL/TP reference lines from active or pending bridge context."""
         context = self._select_active_context(pair=pair, db_path=db_path)
         if context is None:
+            context = self._select_pending_context(pair=pair, db_path=db_path)
+        if context is None:
+            return
+
+        runtime_legs = tuple(context.runtime_entry_legs)
+        filled_legs = tuple(
+            leg for leg in runtime_legs
+            if leg.status == "FILLED" and isinstance(leg.price, (int, float)) and float(leg.price) > 0
+        )
+        position_size, position_entry_price = self._load_position_snapshot(
+            db_path=db_path,
+            env=context.env,
+            symbol=context.symbol,
+        )
+        has_filled_entry = bool(filled_legs) or (position_size is not None and position_size > 0) or context.signal_status == "ACTIVE"
+
+        for idx, leg in enumerate(runtime_legs[:3], start=1):
+            if not isinstance(leg.price, (int, float)) or float(leg.price) <= 0:
+                continue
+            column_prefix = "bridge_entry_filled" if leg.status == "FILLED" else "bridge_entry_pending"
+            dataframe[f"{column_prefix}_e{idx}"] = float(leg.price)
+
+        weighted_avg = self._weighted_average_entry_price(filled_legs)
+        if weighted_avg is not None and len(filled_legs) >= 2:
+            dataframe["bridge_entry_avg"] = float(weighted_avg)
+
+        entry_price = self._primary_entry_plot_price(context=context, filled_legs=filled_legs, position_entry_price=position_entry_price)
+        if entry_price is not None and entry_price > 0:
+            dataframe["bridge_entry_price"] = float(entry_price)
+
+        self._inject_live_freqtrade_open_order_lines(
+            dataframe,
+            attempt_key=context.attempt_key,
+        )
+
+        if not has_filled_entry:
             return
 
         if context.stoploss_ref is not None and context.stoploss_ref > 0:
             dataframe["bridge_sl"] = float(context.stoploss_ref)
 
+        filled_tp_indices = self._filled_take_profit_indices(
+            attempt_key=context.attempt_key,
+            db_path=db_path,
+        )
         tp_levels = self._effective_take_profit_levels(context)
         for idx, level in enumerate(tp_levels[:3]):
-            dataframe[f"bridge_tp{idx + 1}"] = float(level)
-
-        entry_price = context.first_entry_price
-        if entry_price is not None and entry_price > 0:
-            dataframe["bridge_entry_price"] = float(entry_price)
+            column = f"bridge_tp{idx + 1}_hit" if idx in filled_tp_indices else f"bridge_tp{idx + 1}"
+            dataframe[column] = float(level)
 
     def _inject_bridge_events(self, dataframe: Any, *, pair: str, db_path: str) -> None:
         """Overlay bridge fill events as markers on the dataframe.
@@ -1235,29 +1610,40 @@ class SignalBridgeStrategy(IStrategy):
         try:
             import pandas as pd
             df_dates = pd.to_datetime(dataframe["date"], utc=True)
+            min_df_time = df_dates.min()
+            max_df_time = df_dates.max()
         except Exception:
             return
 
         for event_type, created_at, payload_json in rows:
             col = event_map.get(event_type)
-
-            # TP hit vs SL hit: check payload for tp_idx or event_type
-            if event_type == "PARTIAL_CLOSE_FILLED" and payload_json:
+            payload: dict[str, Any] | None = None
+            if payload_json:
                 try:
-                    payload = json.loads(payload_json)
-                    if isinstance(payload, dict) and payload.get("tp_idx") is not None:
-                        col = "bridge_event_tp_hit"
+                    parsed_payload = json.loads(payload_json)
+                    payload = parsed_payload if isinstance(parsed_payload, dict) else None
                 except (json.JSONDecodeError, TypeError):
-                    pass
+                    payload = None
+
+            if event_type == "ENTRY_FILLED" and payload:
+                entry_idx = payload.get("entry_idx")
+                if isinstance(entry_idx, (int, float)) and 0 <= int(entry_idx) <= 2:
+                    col = f"bridge_event_entry_e{int(entry_idx) + 1}"
+            elif event_type == "PARTIAL_CLOSE_FILLED" and payload:
+                tp_idx = payload.get("tp_idx")
+                if isinstance(tp_idx, (int, float)):
+                    col = "bridge_event_tp_hit"
+                    if 0 <= int(tp_idx) <= 2:
+                        col = f"bridge_event_tp{int(tp_idx) + 1}_hit"
             elif event_type == "STOP_HIT":
                 col = "bridge_event_sl_hit"
-            elif event_type == "POSITION_CLOSED" and payload_json:
-                try:
-                    payload = json.loads(payload_json)
-                    if isinstance(payload, dict) and "TP" in str(payload.get("close_reason", "")):
-                        col = "bridge_event_tp_hit"
-                except (json.JSONDecodeError, TypeError):
-                    pass
+            elif event_type == "POSITION_CLOSED" and payload:
+                close_reason = str(payload.get("close_reason", ""))
+                if "TP" in close_reason:
+                    col = "bridge_event_tp_hit"
+                    tp_idx = payload.get("tp_idx")
+                    if isinstance(tp_idx, (int, float)) and 0 <= int(tp_idx) <= 2:
+                        col = f"bridge_event_tp{int(tp_idx) + 1}_hit"
 
             if col is None:
                 continue
@@ -1265,10 +1651,177 @@ class SignalBridgeStrategy(IStrategy):
             try:
                 import pandas as pd
                 event_time = pd.Timestamp(created_at, tz="UTC")
+                # Ignore events outside the visible candle range to avoid
+                # collapsing old markers on the chart borders.
+                if event_time < min_df_time or event_time > max_df_time:
+                    continue
                 idx = (df_dates - event_time).abs().idxmin()
                 dataframe.at[idx, col] = 1
             except Exception:
                 continue
+
+    @staticmethod
+    def _weighted_average_entry_price(entry_legs: tuple[Any, ...]) -> float | None:
+        total_weight = 0.0
+        weighted_sum = 0.0
+        for leg in entry_legs:
+            try:
+                price = float(getattr(leg, "price", 0.0) or 0.0)
+                split = float(getattr(leg, "split", 0.0) or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if price <= 0 or split <= 0:
+                continue
+            weighted_sum += price * split
+            total_weight += split
+        if total_weight <= 0:
+            return None
+        return weighted_sum / total_weight
+
+    @staticmethod
+    def _primary_entry_plot_price(
+        *,
+        context: FreqtradeSignalContext,
+        filled_legs: tuple[Any, ...],
+        position_entry_price: float | None,
+    ) -> float | None:
+        weighted_avg = SignalBridgeStrategy._weighted_average_entry_price(filled_legs)
+        if weighted_avg is not None:
+            return float(weighted_avg)
+        if isinstance(position_entry_price, (int, float)) and float(position_entry_price) > 0:
+            return float(position_entry_price)
+        entry_price = context.first_entry_price
+        if entry_price is None:
+            return None
+        try:
+            value = float(entry_price)
+        except (TypeError, ValueError):
+            return None
+        return value if value > 0 else None
+
+    @staticmethod
+    def _load_position_snapshot(*, db_path: str, env: str, symbol: str | None) -> tuple[float | None, float | None]:
+        if not symbol:
+            return None, None
+        try:
+            with sqlite3.connect(db_path) as conn:
+                row = conn.execute(
+                    "SELECT size, entry_price FROM positions WHERE env = ? AND symbol = ? LIMIT 1",
+                    (env, symbol),
+                ).fetchone()
+        except sqlite3.Error:
+            return None, None
+        if not row:
+            return None, None
+
+        size_raw, entry_raw = row[0], row[1]
+        try:
+            size_value = float(size_raw) if isinstance(size_raw, (int, float)) else None
+        except (TypeError, ValueError):
+            size_value = None
+        try:
+            entry_value = float(entry_raw) if isinstance(entry_raw, (int, float)) else None
+        except (TypeError, ValueError):
+            entry_value = None
+        return size_value, entry_value
+
+    def _inject_live_freqtrade_open_order_lines(self, dataframe: Any, *, attempt_key: str) -> None:
+        trades_db_path = self._resolve_freqtrade_trades_db_path()
+        if not trades_db_path or not attempt_key:
+            return
+
+        orders = self._load_live_open_orders_for_attempt(
+            trades_db_path=trades_db_path,
+            attempt_key=attempt_key,
+        )
+        if not orders:
+            return
+
+        entry_open: float | None = None
+        sl_open: float | None = None
+        tp_open: dict[int, float] = {}
+
+        for row in orders:
+            side = str(row.get("ft_order_side") or "").strip().lower()
+            tag = str(row.get("ft_order_tag") or "").strip()
+            price_value = self._coerce_positive_float(row.get("stop_price" if side == "stoploss" else "price"))
+            if price_value is None:
+                continue
+
+            if side == "stoploss":
+                if sl_open is None:
+                    sl_open = price_value
+                continue
+
+            tp_idx = self._tp_idx_from_live_order_tag(tag=tag, attempt_key=attempt_key)
+            if tp_idx is not None and tp_idx not in tp_open and tp_idx < 3:
+                tp_open[tp_idx] = price_value
+                continue
+
+            if entry_open is None:
+                if tag == attempt_key or f"{attempt_key}:ENTRY:" in tag or side in {"buy", "sell"}:
+                    entry_open = price_value
+
+        if entry_open is not None:
+            dataframe["bridge_live_entry_open"] = float(entry_open)
+        if sl_open is not None:
+            dataframe["bridge_live_sl_open"] = float(sl_open)
+        for idx, value in sorted(tp_open.items()):
+            dataframe[f"bridge_live_tp_open_{idx + 1}"] = float(value)
+
+    @staticmethod
+    def _load_live_open_orders_for_attempt(*, trades_db_path: str, attempt_key: str) -> list[dict[str, Any]]:
+        tag_like = f"{attempt_key}:%"
+        try:
+            with sqlite3.connect(trades_db_path) as conn:
+                rows = conn.execute(
+                    """
+                    SELECT o.id, o.ft_order_side, o.status, o.price, o.stop_price, o.ft_order_tag
+                    FROM orders o
+                    LEFT JOIN trades t ON t.id = o.ft_trade_id
+                    WHERE LOWER(COALESCE(o.status, '')) IN ('open', 'new')
+                      AND COALESCE(o.ft_is_open, 1) = 1
+                      AND (
+                            (COALESCE(t.is_open, 1) = 1 AND t.enter_tag = ?)
+                         OR o.ft_order_tag = ?
+                         OR o.ft_order_tag LIKE ?
+                      )
+                    ORDER BY o.id DESC
+                    """,
+                    (attempt_key, attempt_key, tag_like),
+                ).fetchall()
+        except sqlite3.Error:
+            return []
+
+        return [
+            {
+                "id": row[0],
+                "ft_order_side": row[1],
+                "status": row[2],
+                "price": row[3],
+                "stop_price": row[4],
+                "ft_order_tag": row[5],
+            }
+            for row in rows
+        ]
+
+    @staticmethod
+    def _tp_idx_from_live_order_tag(*, tag: str, attempt_key: str) -> int | None:
+        if not tag or not tag.startswith(f"{attempt_key}:TP:"):
+            return None
+        try:
+            idx = int(tag.rsplit(":", 1)[1])
+        except (IndexError, ValueError):
+            return None
+        return idx if idx >= 0 else None
+
+    @staticmethod
+    def _coerce_positive_float(value: Any) -> float | None:
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if parsed > 0 else None
 
     @staticmethod
     def _pair_to_symbol(pair: str) -> str | None:
@@ -1282,6 +1835,7 @@ class SignalBridgeStrategy(IStrategy):
         # Remove slash
         normalized = normalized.replace("/", "")
         return normalized if normalized else None
+
 
 
 

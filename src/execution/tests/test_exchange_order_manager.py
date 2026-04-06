@@ -175,6 +175,50 @@ def test_build_entry_protective_order_plan_uses_tp_close_distribution(tmp_path: 
     assert [item.price for item in plan.take_profit_orders] == [65000.0, 66000.0, 67000.0]
 
 
+def test_build_entry_protective_order_plan_assigns_rounding_residual_to_last_tp(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_small_qty",
+        tp_json=json.dumps([{"price": 70000.0}, {"price": 70500.0}]),
+    )
+    _insert_operational_signal(
+        db_path,
+        parse_result_id=1,
+        attempt_key="atk_small_qty",
+        management_rules_json=json.dumps(
+            {
+                "tp_handling": {
+                    "tp_handling_mode": "follow_all_signal_tps",
+                    "tp_close_distribution": {"2": [50, 50]},
+                }
+            }
+        ),
+    )
+    order_filled_callback(
+        db_path=db_path,
+        attempt_key="atk_small_qty",
+        qty=0.003,
+        fill_price=68075.0,
+        client_order_id="entry-small",
+        exchange_order_id="ex-entry-small",
+        protective_orders_mode="exchange_manager",
+    )
+
+    context = load_context_by_attempt_key("atk_small_qty", db_path)
+    assert context is not None
+
+    plan = build_entry_protective_order_plan(
+        context=context,
+        fill_qty=0.003,
+        fill_price=68075.0,
+    )
+
+    assert [item.qty for item in plan.take_profit_orders] == [0.001, 0.002]
+    assert sum(item.qty for item in plan.take_profit_orders) == 0.003
+
+
 def test_sync_after_entry_fill_creates_sl_and_take_profits_with_exchange_order_ids(tmp_path: Path) -> None:
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path)

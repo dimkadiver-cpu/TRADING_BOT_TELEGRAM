@@ -667,13 +667,17 @@ def _build_entry_json(entities: dict[str, Any]) -> list[dict[str, Any]]:
             for e in entries_raw:
                 if isinstance(e, dict):
                     p = e.get("price")
+                    order_type = str(e.get("order_type") or "LIMIT").upper()
                     if p is None:
+                        # Keep MARKET legs even without a price — they must survive
+                        # into entry_json so MarketEntryDispatcher can pick them up.
+                        if order_type == "MARKET":
+                            result.append({"price": None, "type": "MARKET"})
                         continue
                     try:
                         price_val = float(p)
                     except (TypeError, ValueError):
                         continue
-                    order_type = str(e.get("order_type") or "LIMIT").upper()
                     result.append({"price": price_val, "type": order_type})
                 elif isinstance(e, (int, float)):
                     result.append({"price": float(e), "type": "LIMIT"})

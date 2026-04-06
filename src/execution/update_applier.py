@@ -189,6 +189,14 @@ def apply_update_plan(
                         now=now,
                         close_reason="POSITION_CLOSED",
                     )
+                    _apply_signal_status(
+                        conn=conn,
+                        result=result,
+                        attempt_keys=resolved_attempt_keys,
+                        env=env,
+                        status="CLOSED",
+                        now=now,
+                    )
                     _apply_positions_closed(
                         conn=conn,
                         result=result,
@@ -617,6 +625,19 @@ def _apply_positions_closed(
         )
         if cursor.rowcount:
             result.applied_position_updates.append({"attempt_key": attempt_key, "symbol": symbol, "size": 0})
+        # Cancel all open protective orders in DB when the position closes.
+        # Exchange cancellation is handled by the order_manager layer when available;
+        # this ensures DB consistency regardless of the close path.
+        conn.execute(
+            """
+            UPDATE orders
+            SET status = 'CANCELLED', updated_at = ?
+            WHERE env = ? AND attempt_key = ?
+              AND purpose IN ('SL', 'TP')
+              AND status NOT IN ('FILLED', 'CANCELLED', 'REJECTED', 'EXPIRED')
+            """,
+            (now, env, attempt_key),
+        )
 
 
 def _apply_attach_result(

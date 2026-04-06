@@ -145,18 +145,24 @@ def _reconcile_single_trade(
             return trade_result
 
         if residual_size > _EPSILON and no_recognized_protectives:
-            _mark_missing_exchange_orders_cancelled(conn=conn, orders=db_active_orders, now=now)
-            recreated = _rebuild_protectives(
-                conn=conn,
-                manager=manager,
-                context=context,
-                residual_qty=residual_size,
-                now=now,
-                channel_id=channel_id,
-                telegram_msg_id=telegram_msg_id,
-            )
-            trade_result.recreated_orders += recreated
-            trade_result.actions.append("recreated_missing_protectives")
+            # Watchdog mode runs frequently. In some backends (notably dry-run),
+            # fetch_open_orders may not expose protective orders reliably.
+            # If we already have active protective rows in DB, avoid recreate loops.
+            if reason == "watchdog" and db_active_orders:
+                trade_result.actions.append("skipped_recreate_existing_db_protectives")
+            else:
+                _mark_missing_exchange_orders_cancelled(conn=conn, orders=db_active_orders, now=now)
+                recreated = _rebuild_protectives(
+                    conn=conn,
+                    manager=manager,
+                    context=context,
+                    residual_qty=residual_size,
+                    now=now,
+                    channel_id=channel_id,
+                    telegram_msg_id=telegram_msg_id,
+                )
+                trade_result.recreated_orders += recreated
+                trade_result.actions.append("recreated_missing_protectives")
         elif _has_qty_mismatch(recognized_exchange_orders, residual_size):
             cancel_result = ManagerOperationResult(attempt_key=attempt_key, action="reconciliation_cancel_incompatible")
             for order_row in manager._load_active_protective_orders(conn, context=context):

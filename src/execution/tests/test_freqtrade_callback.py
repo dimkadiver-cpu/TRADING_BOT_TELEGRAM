@@ -5,7 +5,7 @@ import sqlite3
 from pathlib import Path
 
 from src.core.migrations import apply_migrations
-from src.execution.freqtrade_callback import order_filled_callback, partial_exit_callback, trade_exit_callback
+from src.execution.freqtrade_callback import entry_order_open_callback, order_filled_callback, partial_exit_callback, trade_exit_callback
 
 
 def _make_db(tmp_path: Path) -> str:
@@ -34,7 +34,10 @@ def _insert_signal(
     attempt_key: str,
     status: str = "PENDING",
     tp_prices: list[float] | None = None,
+    entry_json: list[dict[str, object]] | None = None,
 ) -> None:
+    if entry_json is None:
+        entry_json = [{"price": 60000.0}]
     with sqlite3.connect(db_path) as conn:
         conn.execute(
             """INSERT INTO signals
@@ -46,7 +49,7 @@ def _insert_signal(
                        '2026-01-01', '2026-01-01')""",
             (
                 attempt_key,
-                json.dumps([{"price": 60000.0}]),
+                json.dumps(entry_json),
                 json.dumps(tp_prices or [65000.0, 70000.0]),
                 status,
             ),
@@ -62,6 +65,22 @@ def _insert_operational_signal(db_path: str, *, parse_result_id: int, attempt_ke
                 position_size_usdt, leverage, management_rules_json, created_at)
                VALUES (?, ?, 'trader_3', 'NEW_SIGNAL', 0, 250.0, 3, ?, '2026-01-01')""",
             (parse_result_id, attempt_key, json.dumps({"tp_handling": "ladder"})),
+        )
+        conn.commit()
+
+
+def _insert_trade(
+    db_path: str,
+    *,
+    attempt_key: str,
+    meta_json: dict[str, object],
+) -> None:
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            """INSERT INTO trades
+               (env, attempt_key, trader_id, symbol, side, execution_mode, state, meta_json, created_at, updated_at)
+               VALUES ('T', ?, 'trader_3', 'BTCUSDT', 'BUY', 'PAPER', 'PENDING', ?, '2026-01-01', '2026-01-01')""",
+            (attempt_key, json.dumps(meta_json)),
         )
         conn.commit()
 
@@ -179,6 +198,155 @@ def test_entry_fill_exchange_manager_persists_mode_and_defers_protective_rows(tm
     assert order_rows == [("ENTRY", "FILLED")]
 
 
+def test_entry_fill_preserves_and_updates_entry_legs_meta(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_entry_legs",
+        entry_json=[
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+        ],
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_entry_legs")
+    _insert_trade(
+        db_path,
+        attempt_key="atk_entry_legs",
+        meta_json={"custom_flag": True},
+    )
+
+    result = order_filled_callback(
+        db_path=db_path,
+        attempt_key="atk_entry_legs",
+        qty=1.5,
+        fill_price=60000.0,
+        client_order_id="entry-legs-1",
+        exchange_order_id="ex-entry-legs-1",
+        order_type="MARKET",
+    )
+
+    assert result["ok"] is True
+
+    with sqlite3.connect(db_path) as conn:
+        trade = conn.execute(
+            "SELECT state, meta_json FROM trades WHERE attempt_key = 'atk_entry_legs'"
+        ).fetchone()
+
+    assert trade[0] == "OPEN"
+    meta = json.loads(trade[1])
+    assert meta["custom_flag"] is True
+    assert meta["entry_legs"][0]["entry_id"] == "E1"
+    assert meta["entry_legs"][0]["sequence"] == 1
+    assert meta["entry_legs"][0]["order_type"] == "MARKET"
+    assert meta["entry_legs"][0]["split"] == 0.5
+    assert meta["entry_legs"][0]["status"] == "FILLED"
+    assert isinstance(meta["entry_legs"][0]["filled_at"], str)
+    assert meta["entry_legs"][1]["entry_id"] == "E2"
+    assert meta["entry_legs"][1]["sequence"] == 2
+    assert meta["entry_legs"][1]["order_type"] == "LIMIT"
+    assert meta["entry_legs"][1]["split"] == 0.5
+    assert meta["entry_legs"][1]["status"] == "PENDING"
+
+
+def test_additional_entry_fill_updates_pending_leg_and_position(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(
+        db_path,
+        attempt_key="atk_add_entry",
+        entry_json=[
+            {"type": "MARKET", "price": None},
+            {"type": "LIMIT", "price": 59500.0},
+        ],
+    )
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_add_entry")
+
+    first = order_filled_callback(
+        db_path=db_path,
+        attempt_key="atk_add_entry",
+        qty=1.5,
+        fill_price=60000.0,
+        client_order_id="entry-0",
+        exchange_order_id="ex-entry-0",
+        order_type="MARKET",
+        entry_idx=0,
+    )
+    assert first["ok"] is True
+
+    opened = entry_order_open_callback(
+        db_path=db_path,
+        attempt_key="atk_add_entry",
+        qty=0.5,
+        price=59500.0,
+        client_order_id="entry-1",
+        exchange_order_id="ex-entry-1",
+        order_type="LIMIT",
+        entry_idx=1,
+    )
+    assert opened["ok"] is True
+
+    second = order_filled_callback(
+        db_path=db_path,
+        attempt_key="atk_add_entry",
+        qty=0.5,
+        fill_price=59500.0,
+        client_order_id="entry-1",
+        exchange_order_id="ex-entry-1",
+        order_type="LIMIT",
+        entry_idx=1,
+    )
+    assert second["ok"] is True
+
+    with sqlite3.connect(db_path) as conn:
+        entry_rows = conn.execute(
+            "SELECT idx, status, price FROM orders WHERE attempt_key = 'atk_add_entry' AND purpose = 'ENTRY' ORDER BY idx"
+        ).fetchall()
+        position = conn.execute(
+            "SELECT size, entry_price FROM positions WHERE symbol = 'BTCUSDT'"
+        ).fetchone()
+        meta_raw = conn.execute(
+            "SELECT meta_json FROM trades WHERE attempt_key = 'atk_add_entry'"
+        ).fetchone()[0]
+
+    meta = json.loads(meta_raw)
+    assert entry_rows == [(0, 'FILLED', 60000.0), (1, 'FILLED', 59500.0)]
+    assert position[0] == 2.0
+    assert position[1] == 59875.0
+    assert [leg['status'] for leg in meta['entry_legs']] == ['FILLED', 'FILLED']
+
+
+def test_entry_order_open_persists_exchange_manager_mode(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    _insert_parse_result(db_path)
+    _insert_signal(db_path, attempt_key="atk_open_exchange_manager")
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_open_exchange_manager")
+
+    opened = entry_order_open_callback(
+        db_path=db_path,
+        attempt_key="atk_open_exchange_manager",
+        qty=0.5,
+        price=59500.0,
+        client_order_id="entry-open-0",
+        exchange_order_id="ex-entry-open-0",
+        order_type="LIMIT",
+        protective_orders_mode="exchange_manager",
+        entry_idx=0,
+    )
+    assert opened["ok"] is True
+
+    with sqlite3.connect(db_path) as conn:
+        trade_row = conn.execute(
+            "SELECT state, protective_orders_mode FROM trades WHERE attempt_key = 'atk_open_exchange_manager'"
+        ).fetchone()
+        order_row = conn.execute(
+            "SELECT purpose, status, price FROM orders WHERE attempt_key = 'atk_open_exchange_manager' ORDER BY order_pk"
+        ).fetchall()
+
+    assert trade_row == ('ENTRY_PENDING', 'exchange_manager')
+    assert order_row == [('ENTRY', 'OPEN', 59500.0)]
+
+
 def test_close_full_sets_trade_closed_and_position_zero(tmp_path: Path) -> None:
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path)
@@ -206,6 +374,9 @@ def test_close_full_sets_trade_closed_and_position_zero(tmp_path: Path) -> None:
         trade = conn.execute(
             "SELECT state, close_reason FROM trades WHERE attempt_key = 'atk_close'"
         ).fetchone()
+        signal = conn.execute(
+            "SELECT status FROM signals WHERE attempt_key = 'atk_close'"
+        ).fetchone()
         position = conn.execute(
             "SELECT size, mark_price FROM positions WHERE symbol = 'BTCUSDT'"
         ).fetchone()
@@ -214,6 +385,7 @@ def test_close_full_sets_trade_closed_and_position_zero(tmp_path: Path) -> None:
         ).fetchall()]
 
     assert trade == ("CLOSED", "FULL_CLOSE_REQUESTED")
+    assert signal == ("CLOSED",)
     assert position == (0.0, 61000.0)
     assert "POSITION_CLOSED" in event_types
 

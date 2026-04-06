@@ -230,6 +230,21 @@ def _compute_entry_split(
         # endpoints (default)
         return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
 
+    # TWO-STEP plans must be evaluated before the n<=1 guard: MARKET legs carry
+    # price=None and are absent from entry_prices, so n may equal 1 even when
+    # plan_entries has 2 legs (MARKET + LIMIT averaging).
+    is_market_with_limit_averaging = (
+        plan_type == "MARKET_WITH_LIMIT_AVERAGING"
+        or (len(order_types) >= 2 and order_types[0] == "MARKET" and order_types[1] == "LIMIT")
+    )
+    if is_market_with_limit_averaging:
+        cfg = (
+            market_cfg.get("averaging")
+            if isinstance(market_cfg.get("averaging"), dict)
+            else {}
+        )
+        return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
+
     # SINGLE entry
     if n <= 1:
         is_single_market = (
@@ -252,19 +267,7 @@ def _compute_entry_split(
         )
         return _weights_from_cfg(cfg or {}, default={"E1": 1.0})
 
-    # TWO-STEP specific plans
-    is_market_with_limit_averaging = (
-        plan_type == "MARKET_WITH_LIMIT_AVERAGING"
-        or (len(order_types) >= 2 and order_types[0] == "MARKET" and order_types[1] == "LIMIT")
-    )
-    if is_market_with_limit_averaging:
-        cfg = (
-            market_cfg.get("averaging")
-            if isinstance(market_cfg.get("averaging"), dict)
-            else {}
-        )
-        return _weights_from_cfg(cfg, default={"E1": 0.50, "E2": 0.50})
-
+    # TWO-STEP specific plans (MARKET_WITH_LIMIT_AVERAGING already handled above)
     is_limit_with_averaging = (
         plan_type == "LIMIT_WITH_LIMIT_AVERAGING"
         or (len(order_types) >= 2 and order_types[0] == "LIMIT" and order_types[1] == "LIMIT")
