@@ -252,7 +252,7 @@ def test_populate_entry_trend_sets_entry_columns_from_normalizer(tmp_path: Path)
 
     assert updated["enter_long"] == [0, 1]
     assert updated["enter_short"] == [0, 0]
-    assert updated["enter_tag"] == [None, "atk_entry"]
+    assert updated["enter_tag"] == [None, "atk_entry:ENTRY:0"]
 
 
 def test_populate_entry_trend_skips_when_entry_order_already_open(tmp_path: Path) -> None:
@@ -1575,13 +1575,8 @@ def test_confirm_trade_entry_market_order_skips_price_check(tmp_path: Path) -> N
     assert result is True
 
 
-def test_confirm_trade_entry_accepts_market_signal_with_limit_runtime(tmp_path: Path) -> None:
-    """MARKET signals are accepted even when Freqtrade is configured for limit orders.
-
-    Freqtrade places a limit order at current market price (proposed_rate), which
-    fills immediately for liquid assets. This enables MARKET entries to go through
-    the normal Freqtrade lifecycle (Trade record, SL/TP, tracking).
-    """
+def test_confirm_trade_entry_rejects_market_signal_with_limit_runtime(tmp_path: Path) -> None:
+    """MARKET first legs are reserved for the dispatcher, not the strategy LIMIT path."""
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path)
     entry_data = [{"price": 60000.0, "type": "MARKET"}]
@@ -1600,7 +1595,7 @@ def test_confirm_trade_entry_accepts_market_signal_with_limit_runtime(tmp_path: 
         side="long",
     )
 
-    assert result is True
+    assert result is False
 
 
 def test_persist_entry_price_rejected_event_writes_to_db(tmp_path: Path) -> None:
@@ -2513,17 +2508,11 @@ def test_populate_entry_trend_emits_entry_for_limit_signal(tmp_path: Path) -> No
 
     assert updated["enter_long"] == [0, 1]
     assert updated["enter_short"] == [0, 0]
-    assert updated["enter_tag"] == [None, "atk_pet_limit"]
+    assert updated["enter_tag"] == [None, "atk_pet_limit:ENTRY:0"]
 
 
-def test_populate_entry_trend_emits_entry_for_market_signal(tmp_path: Path) -> None:
-    """populate_entry_trend emits enter_long for MARKET entries.
-
-    MARKET entries are routed through the normal Freqtrade lifecycle via
-    populate_entry_trend so that Trade records, SL/TP, and position tracking
-    are managed by Freqtrade. Freqtrade places a limit order at current market
-    price (proposed_rate), which fills immediately for liquid assets.
-    """
+def test_populate_entry_trend_skips_market_signal(tmp_path: Path) -> None:
+    """populate_entry_trend skips MARKET-first signals because the dispatcher owns E1."""
     db_path = _make_db(tmp_path)
     _insert_parse_result(db_path)
     _insert_signal_with_entry(
@@ -2539,6 +2528,6 @@ def test_populate_entry_trend_emits_entry_for_market_signal(tmp_path: Path) -> N
 
     updated = strategy.populate_entry_trend(dataframe, {"pair": "BTC/USDT:USDT"})
 
-    assert updated["enter_long"] == [0, 1]
+    assert updated["enter_long"] == [0, 0]
     assert updated["enter_short"] == [0, 0]
-    assert updated["enter_tag"] == [None, "atk_pet_market"]
+    assert updated["enter_tag"] == [None, None]

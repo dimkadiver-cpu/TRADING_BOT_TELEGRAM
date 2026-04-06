@@ -1,0 +1,9 @@
+[
+  {
+    "name": "s05_setup_incomplete",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 7005,
+    "text": "SYMBOL LONG\nentry ENTRY_PRICE sl STOP_PRICE\nтейки позже"
+  }
+]

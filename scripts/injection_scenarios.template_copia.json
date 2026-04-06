@@ -1,0 +1,79 @@
+[
+  {
+    "name": "case_01_single_limit_new_signal",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1001,
+    "text": "SYMBOL_PLACEHOLDER long entry ENTRY_1 sl STOP_LOSS tp1 TP_1"
+  },
+  {
+    "name": "case_02_multi_limit_new_signal",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1002,
+    "text": "SYMBOL_PLACEHOLDER long entry ENTRY_1-ENTRY_2 sl STOP_LOSS tp1 TP_1 tp2 TP_2"
+  },
+  {
+    "name": "case_03_market_then_limits_new_signal",
+    "chat_id": "-100111",
+    "trader": "trader_3",
+    "telegram_message_id": 1003,
+    "text": "SYMBOL_PLACEHOLDER long market entry sl STOP_LOSS tp1 TP_1 tp2 TP_2"
+  },
+  {
+    "name": "case_04_move_stop_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1101,
+    "reply_to_message_id": 1001,
+    "text": "new sl NEW_STOP"
+  },
+  {
+    "name": "case_05_move_stop_to_be_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1102,
+    "reply_to_message_id": 1001,
+    "text": "move stop to breakeven"
+  },
+  {
+    "name": "case_06_partial_close_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1103,
+    "reply_to_message_id": 1001,
+    "text": "close 50%"
+  },
+  {
+    "name": "case_07_close_full_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1104,
+    "reply_to_message_id": 1001,
+    "text": "close all"
+  },
+  {
+    "name": "case_08_cancel_pending_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1105,
+    "reply_to_message_id": 1002,
+    "text": "cancel pending order"
+  },
+  {
+    "name": "case_09_tp_hit_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1106,
+    "reply_to_message_id": 1001,
+    "text": "tp1 hit"
+  },
+  {
+    "name": "case_10_stop_hit_update",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 1107,
+    "reply_to_message_id": 1001,
+    "text": "stop hit"
+  }
+]

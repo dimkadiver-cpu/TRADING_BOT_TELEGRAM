@@ -1,0 +1,9 @@
+[
+  {
+    "name": "trader_3_valid_new_signal",
+    "chat_id": "-100111",
+    "trader": "trader_3",
+    "telegram_message_id": 3004,
+    "text": "SIGNAL ID: 3004\nCOIN: BTC/USDT\nDIRECTION: LONG\nENTRY: 66800 - 66900\nTARGETS: 67200, 67500\nSL: 66600"
+  }
+]

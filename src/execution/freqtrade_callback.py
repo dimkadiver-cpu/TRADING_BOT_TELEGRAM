@@ -17,6 +17,7 @@ from src.execution.protective_orders_mode import (
     strategy_owns_take_profit,
 )
 from src.execution.machine_event import MachineEventAction, evaluate_rules
+from src.execution.freqtrade_ui_mirror import mirror_entry_fill, mirror_position_update
 from src.execution.update_applier import UpdateApplyResult, apply_update_plan
 
 _TP_ORDER_TAG_RE = re.compile(r"^(?P<attempt_key>.+):TP:(?P<idx>\d+)$")
@@ -39,47 +40,63 @@ def order_filled_callback(
     telegram_msg_id: str = "0",
     busy_retries: int = 5,
     busy_sleep_s: float = 0.05,
+    entry_idx: int = 0,
 ) -> dict[str, Any]:
     """Persist an entry fill event."""
     context = load_context_by_attempt_key(attempt_key, db_path)
     if context is None:
         return {"ok": False, "error": "missing_context"}
-    if context.signal_status != "PENDING":
-        return {"ok": False, "error": "signal_not_pending"}
-    if context.cancel_pending_requested:
+    if context.signal_status not in {"PENDING", "ACTIVE"}:
+        return {"ok": False, "error": "signal_not_fillable"}
+    if context.signal_status == "PENDING" and context.cancel_pending_requested:
         return {"ok": False, "error": "signal_cancelled_before_fill"}
 
     now = utc_now_iso()
     resolved_protective_orders_mode = resolve_protective_orders_mode(
         persisted_mode=protective_orders_mode,
     )
+    normalized_entry_idx = max(0, int(entry_idx))
+    initial_fill = context.signal_status == "PENDING"
 
     def _writer(conn: sqlite3.Connection) -> dict[str, Any]:
-        conn.execute(
-            "UPDATE signals SET status = 'ACTIVE', updated_at = ? WHERE env = ? AND attempt_key = ?",
-            (now, context.env, context.attempt_key),
-        )
+        is_initial_fill = context.signal_status == "PENDING"
+        if is_initial_fill:
+            conn.execute(
+                "UPDATE signals SET status = 'ACTIVE', updated_at = ? WHERE env = ? AND attempt_key = ?",
+                (now, context.env, context.attempt_key),
+            )
+
+        current_position_size = _load_position_size(conn, env=context.env, symbol=context.symbol or "")
+        current_entry_price = _load_position_entry_price(conn, env=context.env, symbol=context.symbol or "")
+        total_position_size = max(0.0, current_position_size + float(qty))
+        if current_position_size > 0 and current_entry_price is not None and total_position_size > 0:
+            effective_entry_price = ((current_position_size * current_entry_price) + (float(qty) * float(fill_price))) / total_position_size
+        else:
+            effective_entry_price = float(fill_price)
+
         _upsert_trade(
             conn,
             context=context,
             execution_mode=execution_mode,
             protective_orders_mode=resolved_protective_orders_mode.value,
             opened_at=now,
+            fill_price=float(fill_price),
+            filled_entry_idx=normalized_entry_idx,
         )
         _upsert_order(
             conn,
             env=context.env,
             attempt_key=context.attempt_key,
             symbol=context.symbol or "",
-            side=context.signal_side or _entry_side_from_context(context),
+            side=_entry_side_from_context(context),
             order_type=order_type,
             purpose="ENTRY",
-            idx=0,
+            idx=normalized_entry_idx,
             qty=float(qty),
             price=float(fill_price),
             trigger_price=None,
             reduce_only=False,
-            client_order_id=client_order_id or _default_client_order_id(context.attempt_key, "ENTRY", 0),
+            client_order_id=client_order_id or _default_client_order_id(context.attempt_key, "ENTRY", normalized_entry_idx),
             exchange_order_id=exchange_order_id,
             status="FILLED",
             now=now,
@@ -87,7 +104,7 @@ def order_filled_callback(
         _ensure_protective_orders(
             conn,
             context=context,
-            qty=float(qty),
+            qty=total_position_size,
             protective_orders_mode=resolved_protective_orders_mode.value,
             now=now,
         )
@@ -95,9 +112,9 @@ def order_filled_callback(
             conn,
             env=context.env,
             symbol=context.symbol or "",
-            side=context.signal_side or _entry_side_from_context(context),
-            size=float(qty),
-            entry_price=float(fill_price),
+            side=_entry_side_from_context(context),
+            size=total_position_size,
+            entry_price=effective_entry_price,
             mark_price=float(fill_price),
             leverage=float(context.leverage or 1),
             margin_mode=margin_mode,
@@ -113,6 +130,7 @@ def order_filled_callback(
             attempt_key=context.attempt_key,
             event_type="ENTRY_FILLED",
             payload={
+                "entry_idx": normalized_entry_idx,
                 "fill_price": float(fill_price),
                 "protective_orders_mode": resolved_protective_orders_mode.value,
                 "qty": float(qty),
@@ -120,7 +138,20 @@ def order_filled_callback(
             },
             created_at=now,
         )
-        return {"ok": True, "attempt_key": context.attempt_key}
+        # Keep signal state coherent with runtime fill events.
+        # A successful entry fill must leave the signal ACTIVE unless it was already finalized.
+        conn.execute(
+            """
+            UPDATE signals
+            SET status = 'ACTIVE',
+                updated_at = ?
+            WHERE env = ?
+              AND attempt_key = ?
+              AND status NOT IN ('CLOSED', 'CANCELLED')
+            """,
+            (now, context.env, context.attempt_key),
+        )
+        return {"ok": True, "attempt_key": context.attempt_key, "entry_idx": normalized_entry_idx}
 
     result = _with_sqlite_retry(
         db_path=db_path,
@@ -130,7 +161,18 @@ def order_filled_callback(
     )
     if not result.get("ok"):
         return result
-    if resolved_protective_orders_mode is not ProtectiveOrdersMode.EXCHANGE_MANAGER:
+    mirror_entry_fill(
+        attempt_key=context.attempt_key,
+        symbol=context.symbol or "",
+        side=_entry_side_from_context(context),
+        qty=float(qty),
+        fill_price=float(fill_price),
+        opened_at=now,
+        exchange_order_id=exchange_order_id,
+        client_order_id=client_order_id,
+        order_type=order_type,
+    )
+    if not initial_fill or resolved_protective_orders_mode is not ProtectiveOrdersMode.EXCHANGE_MANAGER:
         return result
     if order_manager is None:
         issue = {"ok": False, "error": "exchange_order_manager_not_configured"}
@@ -172,6 +214,105 @@ def order_filled_callback(
         return result
     result["manager_result"] = manager_result.as_dict() if hasattr(manager_result, "as_dict") else manager_result
     return result
+
+
+def entry_order_open_callback(
+    *,
+    db_path: str,
+    attempt_key: str,
+    qty: float,
+    price: float | None,
+    client_order_id: str | None = None,
+    exchange_order_id: str | None = None,
+    order_type: str = "LIMIT",
+    execution_mode: str = "FREQTRADE",
+    protective_orders_mode: str | None = None,
+    channel_id: str = "freqtrade",
+    telegram_msg_id: str = "0",
+    busy_retries: int = 5,
+    busy_sleep_s: float = 0.05,
+    entry_idx: int = 0,
+) -> dict[str, Any]:
+    """Persist an open entry order before the first fill arrives."""
+    context = load_context_by_attempt_key(attempt_key, db_path)
+    if context is None:
+        return {"ok": False, "error": "missing_context"}
+    if context.signal_status not in {"PENDING", "ACTIVE"}:
+        return {"ok": False, "error": "signal_not_openable"}
+    if context.signal_status == "PENDING" and context.cancel_pending_requested:
+        return {"ok": False, "error": "signal_cancelled_before_entry"}
+
+    now = utc_now_iso()
+    normalized_entry_idx = max(0, int(entry_idx))
+    resolved_protective_orders_mode = resolve_protective_orders_mode(
+        persisted_mode=protective_orders_mode,
+    )
+    resolved_client_order_id = client_order_id or _default_client_order_id(context.attempt_key, "ENTRY", normalized_entry_idx)
+
+    def _writer(conn: sqlite3.Connection) -> dict[str, Any]:
+        existing = conn.execute(
+            """
+            SELECT order_pk
+            FROM orders
+            WHERE env = ?
+              AND client_order_id = ?
+            LIMIT 1
+            """,
+            (context.env, resolved_client_order_id),
+        ).fetchone()
+        created = existing is None
+
+        _upsert_pending_entry_trade(
+            conn,
+            context=context,
+            execution_mode=execution_mode,
+            protective_orders_mode=resolved_protective_orders_mode.value,
+            created_at=now,
+        )
+        _upsert_order(
+            conn,
+            env=context.env,
+            attempt_key=context.attempt_key,
+            symbol=context.symbol or "",
+            side=_entry_side_from_context(context),
+            order_type=order_type,
+            purpose="ENTRY",
+            idx=normalized_entry_idx,
+            qty=float(qty),
+            price=float(price) if price is not None else None,
+            trigger_price=None,
+            reduce_only=False,
+            client_order_id=resolved_client_order_id,
+            exchange_order_id=exchange_order_id,
+            status="OPEN",
+            now=now,
+        )
+        if created:
+            _insert_event(
+                conn,
+                env=context.env,
+                channel_id=channel_id,
+                telegram_msg_id=telegram_msg_id,
+                trader_id=context.trader_id,
+                trader_prefix=None,
+                attempt_key=context.attempt_key,
+                event_type="ENTRY_ORDER_OPENED",
+                payload={
+                    "entry_idx": normalized_entry_idx,
+                    "price": float(price) if price is not None else None,
+                    "qty": float(qty),
+                    "source": "freqtrade_callback",
+                },
+                created_at=now,
+            )
+        return {"ok": True, "attempt_key": context.attempt_key, "created": created}
+
+    return _with_sqlite_retry(
+        db_path=db_path,
+        writer=_writer,
+        retries=busy_retries,
+        sleep_s=busy_sleep_s,
+    )
 
 
 def partial_exit_callback(
@@ -278,7 +419,7 @@ def partial_exit_callback(
             env=context.env,
             attempt_key=context.attempt_key,
             symbol=context.symbol or "",
-            side=_reduce_only_side(context.signal_side or _entry_side_from_context(context)),
+            side=_reduce_only_side(_entry_side_from_context(context)),
             order_type="LIMIT",
             purpose="EXIT",
             idx=0,
@@ -295,7 +436,7 @@ def partial_exit_callback(
             conn,
             env=context.env,
             symbol=context.symbol or "",
-            side=context.signal_side or _entry_side_from_context(context),
+            side=_entry_side_from_context(context),
             size=normalized_remaining_qty,
             entry_price=None,
             mark_price=float(exit_price) if exit_price is not None else None,
@@ -334,6 +475,14 @@ def partial_exit_callback(
         retries=busy_retries,
         sleep_s=busy_sleep_s,
     )
+    if result.get("ok"):
+        mirror_position_update(
+            attempt_key=context.attempt_key,
+            remaining_qty=normalized_remaining_qty,
+            exit_price=float(exit_price) if exit_price is not None else None,
+            updated_at=now,
+            close_reason="PARTIAL_CLOSE_FILLED" if normalized_remaining_qty <= 0 else None,
+        )
     if result.get("ok") and tp_idx is not None:
         _fire_tp_machine_events(
             db_path=db_path,
@@ -437,12 +586,21 @@ def trade_exit_callback(
             )
         return {"ok": True, "attempt_key": context.attempt_key, "update_result": update_result.as_dict()}
 
-    return _with_sqlite_retry(
+    result = _with_sqlite_retry(
         db_path=db_path,
         writer=_writer,
         retries=busy_retries,
         sleep_s=busy_sleep_s,
     )
+    if result.get("ok"):
+        mirror_position_update(
+            attempt_key=context.attempt_key,
+            remaining_qty=0.0,
+            exit_price=float(exit_price) if exit_price is not None else None,
+            updated_at=now,
+            close_reason=close_reason,
+        )
+    return result
 
 
 def stoploss_callback(
@@ -471,7 +629,7 @@ def stoploss_callback(
             env=context.env,
             attempt_key=context.attempt_key,
             symbol=context.symbol or "",
-            side=_reduce_only_side(context.signal_side or _entry_side_from_context(context)),
+            side=_reduce_only_side(_entry_side_from_context(context)),
             order_type="STOP",
             purpose="SL",
             idx=0,
@@ -517,7 +675,7 @@ def stoploss_callback(
             conn,
             env=context.env,
             symbol=context.symbol or "",
-            side=context.signal_side or _entry_side_from_context(context),
+            side=_entry_side_from_context(context),
             size=0.0,
             entry_price=None,
             mark_price=float(stop_price),
@@ -534,6 +692,13 @@ def stoploss_callback(
         sleep_s=busy_sleep_s,
     )
     if result.get("ok"):
+        mirror_position_update(
+            attempt_key=context.attempt_key,
+            remaining_qty=0.0,
+            exit_price=float(stop_price),
+            updated_at=now,
+            close_reason="STOP_HIT",
+        )
         _fire_sl_machine_events(
             db_path=db_path,
             context=context,
@@ -668,9 +833,11 @@ def _upsert_trade(
     execution_mode: str,
     protective_orders_mode: str,
     opened_at: str,
+    fill_price: float | None = None,
+    filled_entry_idx: int = 0,
 ) -> None:
     existing = conn.execute(
-        "SELECT trade_id, protective_orders_mode FROM trades WHERE env = ? AND attempt_key = ? LIMIT 1",
+        "SELECT trade_id, protective_orders_mode, meta_json FROM trades WHERE env = ? AND attempt_key = ? LIMIT 1",
         (context.env, context.attempt_key),
     ).fetchone()
     effective_protective_orders_mode = (
@@ -678,11 +845,18 @@ def _upsert_trade(
         if existing and existing[1] is not None
         else protective_orders_mode
     )
-    meta_json = {
-        "entry_tag": context.entry_tag,
-        "protective_orders_mode": effective_protective_orders_mode,
-        "source": "freqtrade_callback",
-    }
+    try:
+        existing_meta_json = json.loads(existing[2]) if existing and existing[2] else {}
+    except (TypeError, ValueError):
+        existing_meta_json = {}
+    meta_json = _build_trade_meta(
+        context=context,
+        protective_orders_mode=effective_protective_orders_mode,
+        opened_at=opened_at,
+        fill_price=fill_price,
+        existing_meta=existing_meta_json if isinstance(existing_meta_json, dict) else None,
+        filled_entry_idx=filled_entry_idx,
+    )
     if existing:
         conn.execute(
             """
@@ -718,7 +892,7 @@ def _upsert_trade(
             context.attempt_key,
             context.trader_id,
             context.symbol,
-            context.signal_side or _entry_side_from_context(context),
+            _entry_side_from_context(context),
             execution_mode,
             protective_orders_mode,
             opened_at,
@@ -727,6 +901,194 @@ def _upsert_trade(
             opened_at,
         ),
     )
+
+
+def _upsert_pending_entry_trade(
+    conn: sqlite3.Connection,
+    *,
+    context: FreqtradeSignalContext,
+    execution_mode: str,
+    protective_orders_mode: str,
+    created_at: str,
+) -> None:
+    existing = conn.execute(
+        "SELECT trade_id, meta_json, state, protective_orders_mode FROM trades WHERE env = ? AND attempt_key = ? LIMIT 1",
+        (context.env, context.attempt_key),
+    ).fetchone()
+    try:
+        existing_meta_json = json.loads(existing[1]) if existing and existing[1] else {}
+    except (TypeError, ValueError):
+        existing_meta_json = {}
+    meta_json = _build_pending_entry_trade_meta(
+        context=context,
+        created_at=created_at,
+        existing_meta=existing_meta_json if isinstance(existing_meta_json, dict) else None,
+    )
+    if existing:
+        conn.execute(
+            """
+            UPDATE trades
+            SET state = CASE WHEN state = 'OPEN' THEN state ELSE 'ENTRY_PENDING' END,
+                protective_orders_mode = CASE
+                    WHEN state = 'OPEN' AND protective_orders_mode IS NOT NULL THEN protective_orders_mode
+                    ELSE ?
+                END,
+                meta_json = ?,
+                updated_at = ?
+            WHERE env = ?
+              AND attempt_key = ?
+            """,
+            (
+                protective_orders_mode,
+                json.dumps(meta_json, ensure_ascii=False, sort_keys=True),
+                created_at,
+                context.env,
+                context.attempt_key,
+            ),
+        )
+        return
+
+    conn.execute(
+        """
+        INSERT INTO trades(
+          env, attempt_key, trader_id, symbol, side, execution_mode, state, protective_orders_mode,
+          entry_zone_policy, non_chase_policy, opened_at, meta_json, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 'ENTRY_PENDING', ?, 'Z1', 'NI3', NULL, ?, ?, ?)
+        """,
+        (
+            context.env,
+            context.attempt_key,
+            context.trader_id,
+            context.symbol,
+            _entry_side_from_context(context),
+            execution_mode,
+            protective_orders_mode,
+            json.dumps(meta_json, ensure_ascii=False, sort_keys=True),
+            created_at,
+            created_at,
+        ),
+    )
+
+
+def _build_trade_meta(
+    *,
+    context: FreqtradeSignalContext,
+    protective_orders_mode: str,
+    opened_at: str,
+    fill_price: float | None = None,
+    existing_meta: dict[str, Any] | None = None,
+    filled_entry_idx: int = 0,
+) -> dict[str, Any]:
+    meta_json = dict(existing_meta or {})
+    meta_json["entry_tag"] = context.entry_tag
+    meta_json["protective_orders_mode"] = protective_orders_mode
+    meta_json["source"] = "freqtrade_callback"
+    entry_legs = _serialize_entry_legs(
+        context=context,
+        existing_meta=meta_json,
+        filled_at=opened_at,
+        fill_price=fill_price,
+        filled_entry_idx=filled_entry_idx,
+    )
+    if entry_legs:
+        meta_json["entry_legs"] = entry_legs
+    return meta_json
+
+
+def _build_pending_entry_trade_meta(
+    *,
+    context: FreqtradeSignalContext,
+    created_at: str,
+    existing_meta: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    meta_json = dict(existing_meta or {})
+    meta_json["entry_tag"] = context.entry_tag
+    meta_json["source"] = "freqtrade_callback"
+    meta_json["entry_order_opened_at"] = meta_json.get("entry_order_opened_at") or created_at
+    entry_legs = _serialize_pending_entry_legs(context=context, existing_meta=meta_json)
+    if entry_legs:
+        meta_json["entry_legs"] = entry_legs
+    return meta_json
+
+
+def _serialize_entry_legs(
+    *,
+    context: FreqtradeSignalContext,
+    existing_meta: dict[str, Any],
+    filled_at: str,
+    fill_price: float | None = None,
+    filled_entry_idx: int = 0,
+) -> list[dict[str, Any]]:
+    if context.entry_legs:
+        existing_by_entry_id = {
+            str(item.get("entry_id")): item
+            for item in existing_meta.get("entry_legs", [])
+            if isinstance(item, dict) and item.get("entry_id") is not None
+        }
+        filled_entry_id = f"E{int(filled_entry_idx) + 1}"
+        legs: list[dict[str, Any]] = []
+        for leg in context.entry_legs:
+            leg_meta = dict(existing_by_entry_id.get(leg.entry_id, {}))
+            resolved_price = leg.price
+            if leg.entry_id == filled_entry_id and fill_price is not None:
+                resolved_price = float(fill_price)
+            leg_meta.update(
+                {
+                    "entry_id": leg.entry_id,
+                    "sequence": leg.sequence,
+                    "order_type": leg.order_type,
+                    "price": resolved_price,
+                    "split": leg.split,
+                    "status": "FILLED" if leg.entry_id == filled_entry_id or str(leg_meta.get("status") or "").upper() == "FILLED" else leg_meta.get("status", "PENDING"),
+                }
+            )
+            if leg.role is not None:
+                leg_meta["role"] = leg.role
+            if leg.entry_id == filled_entry_id:
+                leg_meta["filled_at"] = filled_at
+            legs.append(leg_meta)
+        return legs
+
+    existing_entry_legs = existing_meta.get("entry_legs")
+    if isinstance(existing_entry_legs, list):
+        return [item for item in existing_entry_legs if isinstance(item, dict)]
+    return []
+
+
+def _serialize_pending_entry_legs(
+    *,
+    context: FreqtradeSignalContext,
+    existing_meta: dict[str, Any],
+) -> list[dict[str, Any]]:
+    if not context.entry_legs:
+        existing_entry_legs = existing_meta.get("entry_legs")
+        if isinstance(existing_entry_legs, list):
+            return [item for item in existing_entry_legs if isinstance(item, dict)]
+        return []
+
+    existing_by_entry_id = {
+        str(item.get("entry_id")): item
+        for item in existing_meta.get("entry_legs", [])
+        if isinstance(item, dict) and item.get("entry_id") is not None
+    }
+    legs: list[dict[str, Any]] = []
+    for leg in context.entry_legs:
+        leg_meta = dict(existing_by_entry_id.get(leg.entry_id, {}))
+        current_status = str(leg_meta.get("status") or "PENDING").upper()
+        leg_meta.update(
+            {
+                "entry_id": leg.entry_id,
+                "sequence": leg.sequence,
+                "order_type": leg.order_type,
+                "price": leg.price,
+                "split": leg.split,
+                "status": "FILLED" if current_status == "FILLED" else "PENDING",
+            }
+        )
+        if leg.role is not None:
+            leg_meta["role"] = leg.role
+        legs.append(leg_meta)
+    return legs
 
 
 def _ensure_protective_orders(
@@ -744,7 +1106,7 @@ def _ensure_protective_orders(
     ):
         return
 
-    reduce_only_side = _reduce_only_side(context.signal_side or _entry_side_from_context(context))
+    reduce_only_side = _reduce_only_side(_entry_side_from_context(context))
     if context.stoploss_ref is not None:
         _upsert_order(
             conn,
@@ -836,20 +1198,35 @@ def _upsert_order(
         "SELECT order_pk FROM orders WHERE env = ? AND client_order_id = ? LIMIT 1",
         (env, client_order_id),
     ).fetchone()
+
+    # Fallback: when a FILLED entry arrives with a new exchange client_order_id, look for
+    # an existing placeholder (OPEN/NEW) created by entry_order_open_callback for the same
+    # logical slot. This prevents duplicate ENTRY rows in the orders table.
+    if existing is None and purpose == "ENTRY" and status == "FILLED":
+        existing = conn.execute(
+            """
+            SELECT order_pk FROM orders
+            WHERE env = ? AND attempt_key = ? AND purpose = 'ENTRY' AND idx = ?
+              AND status IN ('OPEN', 'NEW')
+            LIMIT 1
+            """,
+            (env, attempt_key, idx),
+        ).fetchone()
+
     if existing:
         conn.execute(
             """
             UPDATE orders
             SET exchange_order_id = COALESCE(?, exchange_order_id),
+                client_order_id = ?,
                 status = ?,
                 qty = ?,
                 price = ?,
                 trigger_price = ?,
                 updated_at = ?
-            WHERE env = ?
-              AND client_order_id = ?
+            WHERE order_pk = ?
             """,
-            (exchange_order_id, status, qty, price, trigger_price, now, env, client_order_id),
+            (exchange_order_id, client_order_id, status, qty, price, trigger_price, now, existing[0]),
         )
         return
 
@@ -1018,9 +1395,18 @@ def _load_position_size(conn: sqlite3.Connection, *, env: str, symbol: str) -> f
 
 
 def _entry_side_from_context(context: FreqtradeSignalContext) -> str:
-    if context.signal_side:
-        return context.signal_side
-    return "BUY" if context.side == "long" else "SELL"
+    raw_signal_side = str(context.signal_side or "").strip().upper()
+    if raw_signal_side in {"BUY", "LONG"}:
+        return "BUY"
+    if raw_signal_side in {"SELL", "SHORT"}:
+        return "SELL"
+
+    raw_context_side = str(context.side or "").strip().lower()
+    if raw_context_side == "long":
+        return "BUY"
+    if raw_context_side == "short":
+        return "SELL"
+    return "BUY"
 
 
 def _reduce_only_side(entry_side: str) -> str:

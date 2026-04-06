@@ -10,6 +10,46 @@ from typing import Any
 
 
 # ---------------------------------------------------------------------------
+# Entry leg runtime model
+# ---------------------------------------------------------------------------
+
+
+@dataclass(slots=True, frozen=True)
+class FreqtradeEntryLeg:
+    """Runtime model of a single entry leg in the signal execution plan.
+
+    Attributes:
+        entry_id    Canonical leg identifier: E1, E2, E3, ...
+        sequence    1-based position in the plan (1 = first leg).
+        order_type  MARKET or LIMIT.
+        price       Limit price; None for MARKET legs.
+        split       Fraction of the total stake allocated to this leg (0.0–1.0).
+        role        Optional semantic label (e.g. "averaging").
+    """
+
+    entry_id: str
+    sequence: int
+    order_type: str
+    price: float | None
+    split: float
+    role: str | None = None
+
+
+@dataclass(slots=True, frozen=True)
+class FreqtradeRuntimeEntryLeg:
+    """Execution-plan leg with persisted runtime status from trades.meta_json."""
+
+    entry_id: str
+    sequence: int
+    order_type: str
+    price: float | None
+    split: float
+    status: str
+    role: str | None = None
+    filled_at: str | None = None
+
+
+# ---------------------------------------------------------------------------
 # Entry price policy
 # ---------------------------------------------------------------------------
 
@@ -189,12 +229,13 @@ def check_entry_rate(
     return None
 
 
-def persist_entry_price_rejected_event(
+def persist_entry_rejected_event(
     db_path: str,
     attempt_key: str,
-    rejection_info: dict[str, Any],
+    event_type: str,
+    payload_info: dict[str, Any],
 ) -> None:
-    """Persist an ENTRY_PRICE_REJECTED event to the events table."""
+    """Persist a generic entry rejection event to the events table."""
     parts = attempt_key.split("_", 3)
     env = parts[0] if len(parts) > 0 else "T"
     channel_id = parts[1] if len(parts) > 1 else "unknown"
@@ -202,7 +243,7 @@ def persist_entry_price_rejected_event(
     trader_id = parts[3] if len(parts) > 3 else ""
 
     now_ts = datetime.now(timezone.utc).isoformat()
-    payload = json.dumps(rejection_info)
+    payload = json.dumps(payload_info)
     try:
         with sqlite3.connect(db_path) as conn:
             conn.execute(
@@ -210,13 +251,27 @@ def persist_entry_price_rejected_event(
                 INSERT INTO events
                   (env, channel_id, telegram_msg_id, trader_id, trader_prefix,
                    attempt_key, event_type, payload_json, confidence, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, 'ENTRY_PRICE_REJECTED', ?, 0.0, ?)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0.0, ?)
                 """,
                 (env, channel_id, telegram_msg_id, trader_id, trader_id[:4].upper(),
-                 attempt_key, payload, now_ts),
+                 attempt_key, event_type, payload, now_ts),
             )
     except sqlite3.Error:
         pass  # Non-fatal: audit trail is best-effort; entry rejection is already enforced.
+
+
+def persist_entry_price_rejected_event(
+    db_path: str,
+    attempt_key: str,
+    rejection_info: dict[str, Any],
+) -> None:
+    """Persist an ENTRY_PRICE_REJECTED event to the events table."""
+    persist_entry_rejected_event(
+        db_path=db_path,
+        attempt_key=attempt_key,
+        event_type="ENTRY_PRICE_REJECTED",
+        payload_info=rejection_info,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -333,6 +388,50 @@ class FreqtradeSignalContext:
     """Raw entry_json rows from signals table: [{"price": float, "type": str}, ...]."""
     entry_split: dict[str, float] | None
     """Split weights from operational_signals.entry_split_json, e.g. {"E1": 0.5, "E2": 0.5}."""
+    entry_legs: tuple[FreqtradeEntryLeg, ...] = field(default_factory=tuple)
+    """Ordered execution plan built from entry_json + entry_split_json."""
+
+    @property
+    def first_entry_leg(self) -> FreqtradeEntryLeg | None:
+        """First leg in the entry plan, or None when no entries are defined."""
+        return self.entry_legs[0] if self.entry_legs else None
+
+    @property
+    def runtime_entry_legs(self) -> tuple[FreqtradeRuntimeEntryLeg, ...]:
+        """Entry plan augmented with persisted leg status from trade metadata."""
+        return _resolve_runtime_entry_legs(
+            planned_entry_legs=self.entry_legs,
+            trade_meta=self.trade_meta,
+        )
+
+    @property
+    def next_pending_entry_leg(self) -> FreqtradeRuntimeEntryLeg | None:
+        """Next leg still pending in the runtime plan, if any."""
+        for leg in self.runtime_entry_legs:
+            if leg.status == "PENDING":
+                return leg
+        return None
+
+    @property
+    def pending_limit_entry_legs(self) -> tuple[FreqtradeRuntimeEntryLeg, ...]:
+        """Pending entry legs that still require LIMIT execution."""
+        return tuple(
+            leg
+            for leg in self.runtime_entry_legs
+            if leg.status == "PENDING" and leg.order_type == "LIMIT"
+        )
+
+    @property
+    def market_entry_required(self) -> bool:
+        """True when the first entry leg is MARKET."""
+        leg = self.first_entry_leg
+        return leg is not None and leg.order_type == "MARKET"
+
+    @property
+    def limit_entry_required(self) -> bool:
+        """True when the first entry leg is LIMIT."""
+        leg = self.first_entry_leg
+        return leg is not None and leg.order_type == "LIMIT"
 
     @property
     def first_entry_price(self) -> float | None:
@@ -357,7 +456,15 @@ class FreqtradeSignalContext:
 
     @property
     def first_entry_order_type(self) -> str:
-        """Order type of the first entry in the plan: LIMIT or MARKET."""
+        """Order type of the first entry in the plan: LIMIT or MARKET.
+
+        Derived from first_entry_leg when entry_legs are present; falls back to
+        reading entry_prices directly for backward compatibility with contexts
+        constructed without entry_legs.
+        """
+        leg = self.first_entry_leg
+        if leg is not None:
+            return leg.order_type
         if not self.entry_prices:
             return "MARKET"
         return str(self.entry_prices[0].get("type") or "LIMIT").upper()
@@ -702,6 +809,125 @@ def _fetch_signal_rows(db_path: str, *, statuses: tuple[str, ...] | None) -> lis
     )
 
 
+def _build_entry_legs(
+    entry_prices: tuple[dict[str, Any], ...],
+    entry_split: dict[str, float] | None,
+) -> tuple[FreqtradeEntryLeg, ...]:
+    """Build the ordered entry leg plan from parsed entry_json + entry_split_json.
+
+    Split rules:
+    - entry_split present: use mapped weight for each E{n} key.
+    - entry_split absent, single leg: split = 1.0.
+    - entry_split absent, N legs: split = 1/N (uniform).
+    """
+    if not entry_prices:
+        return ()
+
+    n = len(entry_prices)
+    uniform_split = 1.0 / n
+
+    legs: list[FreqtradeEntryLeg] = []
+    for i, entry in enumerate(entry_prices):
+        entry_id = f"E{i + 1}"
+        order_type = str(entry.get("type") or "LIMIT").upper()
+        price_raw = entry.get("price")
+        try:
+            price: float | None = float(price_raw) if price_raw is not None else None
+        except (TypeError, ValueError):
+            price = None
+
+        if entry_split and entry_id in entry_split:
+            try:
+                split = float(entry_split[entry_id])
+            except (TypeError, ValueError):
+                split = uniform_split
+        else:
+            split = 1.0 if n == 1 else uniform_split
+
+        legs.append(
+            FreqtradeEntryLeg(
+                entry_id=entry_id,
+                sequence=i + 1,
+                order_type=order_type,
+                price=price,
+                split=split,
+            )
+        )
+
+    return tuple(legs)
+
+
+def _resolve_runtime_entry_legs(
+    *,
+    planned_entry_legs: tuple[FreqtradeEntryLeg, ...],
+    trade_meta: dict[str, Any] | None,
+) -> tuple[FreqtradeRuntimeEntryLeg, ...]:
+    serialized_runtime_legs = trade_meta.get("entry_legs") if isinstance(trade_meta, dict) else None
+    if isinstance(serialized_runtime_legs, list):
+        parsed_runtime_legs = tuple(
+            runtime_leg
+            for runtime_leg in (
+                _parse_runtime_entry_leg(item)
+                for item in serialized_runtime_legs
+            )
+            if runtime_leg is not None
+        )
+        if parsed_runtime_legs:
+            return parsed_runtime_legs
+
+    return tuple(
+        FreqtradeRuntimeEntryLeg(
+            entry_id=leg.entry_id,
+            sequence=leg.sequence,
+            order_type=leg.order_type,
+            price=leg.price,
+            split=leg.split,
+            status="PENDING",
+            role=leg.role,
+        )
+        for leg in planned_entry_legs
+    )
+
+
+def _parse_runtime_entry_leg(payload: Any) -> FreqtradeRuntimeEntryLeg | None:
+    if not isinstance(payload, dict):
+        return None
+
+    entry_id = payload.get("entry_id")
+    sequence = payload.get("sequence")
+    order_type = payload.get("order_type")
+    split = payload.get("split")
+    if not isinstance(entry_id, str) or not entry_id.strip():
+        return None
+    if not isinstance(sequence, (int, float)):
+        return None
+    if not isinstance(order_type, str) or not order_type.strip():
+        return None
+    if not isinstance(split, (int, float)):
+        return None
+
+    price_raw = payload.get("price")
+    try:
+        price = float(price_raw) if price_raw is not None else None
+    except (TypeError, ValueError):
+        price = None
+
+    role = payload.get("role")
+    filled_at = payload.get("filled_at")
+    status = str(payload.get("status") or "PENDING").upper()
+
+    return FreqtradeRuntimeEntryLeg(
+        entry_id=entry_id.strip(),
+        sequence=int(sequence),
+        order_type=order_type.strip().upper(),
+        price=price,
+        split=float(split),
+        status=status,
+        role=role if isinstance(role, str) else None,
+        filled_at=filled_at if isinstance(filled_at, str) else None,
+    )
+
+
 def _row_to_context(row: sqlite3.Row, *, db_path: str) -> FreqtradeSignalContext:
     management_rules = _safe_json_loads(row["management_rules_json"])
     trade_meta = _safe_json_loads(row["trade_meta_json"])
@@ -747,6 +973,7 @@ def _row_to_context(row: sqlite3.Row, *, db_path: str) -> FreqtradeSignalContext
         update_directives=tuple(load_targeted_update_directives(attempt_key, db_path)),
         entry_prices=entry_prices,
         entry_split=entry_split,
+        entry_legs=_build_entry_legs(entry_prices, entry_split),
     )
 
 

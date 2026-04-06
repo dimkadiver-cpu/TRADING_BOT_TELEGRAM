@@ -1,0 +1,23 @@
+[
+  {
+    "name": "bridge_case_01_single_limit",
+    "chat_id": "-100111",
+    "trader": "TRADER_ID_PLACEHOLDER",
+    "telegram_message_id": 2001,
+    "text": "SYMBOL_PLACEHOLDER long entry ENTRY_1 sl STOP_LOSS tp1 TP_1"
+  },
+  {
+    "name": "bridge_case_02_multi_limit",
+    "chat_id": "-100111",
+    "trader": "TRADER_ID_PLACEHOLDER",
+    "telegram_message_id": 2002,
+    "text": "SYMBOL_PLACEHOLDER long entry ENTRY_1-ENTRY_2 sl STOP_LOSS tp1 TP_1 tp2 TP_2"
+  },
+  {
+    "name": "bridge_case_03_market_then_limit",
+    "chat_id": "-100111",
+    "trader": "TRADER_ID_PLACEHOLDER",
+    "telegram_message_id": 2003,
+    "text": "SYMBOL_PLACEHOLDER long market entry sl STOP_LOSS tp1 TP_1 tp2 TP_2"
+  }
+]

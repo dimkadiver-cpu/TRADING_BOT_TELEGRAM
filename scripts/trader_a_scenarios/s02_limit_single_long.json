@@ -1,0 +1,9 @@
+[
+  {
+    "name": "s02_limit_single_long",
+    "chat_id": "-100111",
+    "trader": "trader_a",
+    "telegram_message_id": 7002,
+    "text": "ETHUSDT LONG\nЛимитный ордер: 2000\n— SL: 1900\n— TP1: 2500\n— TP2: 3000"
+  }
+]

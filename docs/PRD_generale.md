@@ -91,11 +91,12 @@ Replay `parse_results` storici in freqtrade backtesting mode, config matrix runn
 ✓ Parser nuova architettura (Pydantic models, RulesEngine, profili trader migrati)
 ✓ Parser test harness e report CSV
 ✓ Validazione coerenza integrata nel Router
-~ Configurazione canali live presente ma ancora vuota (`config/channels.yaml`)
-✗ Operation rules
-✗ Target resolver
-✗ Signal bridge freqtrade
-✗ Sistema 2
+✓ Operation rules
+✓ Target resolver
+✓ Sistema 1 (live execution / exchange-backed) validato in dry-run
+✓ Sistema 2 base (backtesting runner + report) presente
+~ `config/backtest_scenarios_v2.yaml` e ScenarioLoader v2 non sono ancora allineati al 100% nel workspace corrente
+~ Fasi 8-9: documentate come direzione futura, non ancora chiuse runtime
 ```
 
 ## Ordine di sviluppo
@@ -122,10 +123,18 @@ Fase 3 — Router / Pre-parser
 
 Fase 4 — Validazione + Operation rules + Target resolver
   ✓ Validazione coerenza
-  ✗ Operation rules
-  ✗ Target resolver
+  ✓ Operation rules
+  ✓ Target resolver
 
 Fase 5 — Sistema 1 (freqtrade live)
+  ✓ Execution live / exchange-backed
+  ✓ Reconciliation bootstrap
 
 Fase 6 — Sistema 2 (backtesting)
+  ✓ Base backtesting runner/report
+  ~ ScenarioLoader v2 da riallineare
+
+Fase 8-9 — Design runtime avanzato
+  ~ Documentazione presente
+  ~ Implementazione runtime non chiusa
 ```

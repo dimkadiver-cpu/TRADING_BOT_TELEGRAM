@@ -4,7 +4,12 @@ Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi
 
 ## Stato attuale
 
-Il progetto ha già completato la parte principale della nuova architettura di ingestione e parsing: listener live, router/pre-parser, parser per trader e validazione di coerenza sono presenti nel repository. L'execution operativa resta pianificata per le fasi successive.
+Il progetto ha già completato la catena core: listener live, router/pre-parser, parser nuova architettura, validazione di coerenza, operation rules, target resolver, execution live Freqtrade e base backtesting sono presenti nel repository.
+
+Verifica eseguita il 2026-04-06:
+
+- mixed suite su parser, telegram, validation, operation rules, target resolver, execution, backtesting e parser_test: `657 passed, 20 failed, 1 skipped`
+- le regressioni viste nel workspace riguardano soprattutto `src/backtesting/tests/test_scenario_loader.py`, `src/backtesting/tests/test_runner.py::TestWindowsCommandDetection::test_win32_uses_python_module` e `src/telegram/tests/test_listener_recovery.py::test_catchup_skips_channel_with_no_last_id`
 
 ### Implementato e stabile
 
@@ -16,6 +21,10 @@ Il progetto ha già completato la parte principale della nuova architettura di i
 - parser nuova architettura con models Pydantic e RulesEngine (`src/parser/models/`, `src/parser/rules_engine.py`)
 - profili trader migrati sulla nuova architettura (`src/parser/trader_profiles/`)
 - validazione coerenza integrata nel Router (`src/validation/coherence.py`)
+- operation rules applicate al flusso operativo (`src/operation_rules/`)
+- target resolver integrato nel routing e nell'operational flow (`src/target_resolver/`)
+- execution live / exchange-backed e reconciliation (`src/execution/`)
+- backtesting base con chain builder, scenario engine, runner e report (`src/backtesting/`)
 - harness replay e report CSV (`parser_test/`)
 
 ### Stato per fasi
@@ -24,11 +33,13 @@ Il progetto ha già completato la parte principale della nuova architettura di i
 Fase 1  Parser                       completata nella base architetturale
 Fase 2  Listener robusto             implementata
 Fase 3  Router / Pre-parser          implementata
-Fase 4  Validazione                  implementata
-Fase 4  Operation rules              da fare
-Fase 4  Target resolver              da fare
-Fase 5  Sistema 1 — freqtrade live
-Fase 6  Sistema 2 — backtesting
+Fase 4  Validazione + operation      implementata
+Fase 4  Target resolver              implementato
+Fase 5  Sistema 1 — freqtrade live   implementato e validato in dry-run
+Fase 6  Sistema 2 — backtesting      base implementata
+Fase 7  Scenario engine v2           presente come direzione, loader ancora da allineare
+Fase 8  Report / ottimizzazione       documentata, implementazione runtime non chiusa
+Fase 9  Entry plan runtime           documentata, implementazione runtime non chiusa
 ```
 
 ## Architettura
@@ -130,10 +141,10 @@ Da eseguire prima di ogni commit come verifica minima.
   -q
 ```
 
-### Full suite — tutti i profili trader e harness di test
+### Full suite — tutti i profili trader, harness e backtesting
 
 Copre: profili trader (trader_3/a/b/c/d), harness replay, execution planner/applier.
-Richiede workspace stabile e `.venv` completa. ~427 test, ~3s.
+Richiede workspace stabile e `.venv` completa.
 
 ```bash
 .venv/Scripts/python.exe -m pytest \
@@ -148,6 +159,7 @@ Note:
 - Su Windows, file SQLite nei test router possono lasciare artefatti in `.test_tmp/` — inoffensivi, ignorati da git.
 - `src/execution/` usa `unittest.TestCase` — compatibile con pytest, nessuna dipendenza da fixture custom.
 - `parser_test/tests/` richiede il DB di test in `parser_test/db/` per i test di integrazione.
+- La verifica piu recente non e tutta verde: vedi il blocco "Verifica eseguita" sopra per i failure correnti.
 
 ### Test profilo specifico
 

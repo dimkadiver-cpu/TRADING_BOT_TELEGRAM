@@ -43,21 +43,18 @@ class FreqtradeExchangeBackend:
 
         pair = canonical_symbol_to_freqtrade_pair(symbol) or symbol
 
-        params: dict[str, Any] = {}
-        if trigger_price is not None and trigger_price > 0:
-            params["stopPrice"] = trigger_price
-        if client_order_id:
-            params["clientOrderId"] = client_order_id
-
+        # Freqtrade's Exchange.create_order does not accept a params kwarg.
+        # For STOP orders the trigger price is passed as `rate`; for MARKET orders rate=0.
+        # clientOrderId is not forwarded to the exchange — our DB is the authoritative record.
+        effective_rate = trigger_price if trigger_price is not None and trigger_price > 0 else (price or 0.0)
         raw = self._exchange.create_order(
             pair=pair,
             ordertype=order_type.lower(),
             side=side.lower(),
             amount=qty,
-            rate=price or 0.0,
+            rate=effective_rate,
             leverage=1,
             reduceOnly=reduce_only,
-            params=params if params else None,
         )
         return _normalize_order(raw, symbol=symbol, client_order_id=client_order_id)
 
@@ -82,6 +79,16 @@ class FreqtradeExchangeBackend:
             _log.warning("fetch_open_orders failed symbol=%s: %s", symbol, exc)
             return []
         return [_normalize_order(o, symbol=symbol) for o in (raw_orders or [])]
+
+    def fetch_ticker(self, *, symbol: str) -> Any:
+        from src.execution.freqtrade_normalizer import canonical_symbol_to_freqtrade_pair
+
+        pair = canonical_symbol_to_freqtrade_pair(symbol) or symbol
+        try:
+            return self._exchange.fetch_ticker(pair)
+        except Exception as exc:
+            _log.warning("fetch_ticker failed symbol=%s: %s", symbol, exc)
+            return None
 
     def fetch_position(self, *, symbol: str) -> Any:
         from src.execution.freqtrade_normalizer import canonical_symbol_to_freqtrade_pair

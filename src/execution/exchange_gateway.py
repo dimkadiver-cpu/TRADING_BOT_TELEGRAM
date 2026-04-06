@@ -28,6 +28,8 @@ class ExchangeGatewayBackend(Protocol):
 
     def fetch_position(self, *, symbol: str) -> Any: ...
 
+    def fetch_ticker(self, *, symbol: str) -> Any: ...
+
 
 @dataclass(frozen=True, slots=True)
 class ExchangeOrder:
@@ -41,6 +43,7 @@ class ExchangeOrder:
     trigger_price: float | None
     reduce_only: bool
     status: str
+    average_fill_price: float | None = None
     venue_status_raw: str | None = None
     raw_payload: Any | None = None
 
@@ -102,6 +105,26 @@ class ExchangeGateway:
         )
         return self._normalize_order_payload(payload, default_client_order_id=client_order_id)
 
+    def create_entry_market_order(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        qty: float,
+        client_order_id: str | None = None,
+    ) -> ExchangeOrder:
+        payload = self._backend.create_order(
+            symbol=symbol,
+            side=side,
+            order_type="MARKET",
+            qty=float(qty),
+            price=None,
+            trigger_price=None,
+            reduce_only=False,
+            client_order_id=client_order_id,
+        )
+        return self._normalize_order_payload(payload, default_client_order_id=client_order_id)
+
     def create_reduce_only_market_order(
         self,
         *,
@@ -134,6 +157,23 @@ class ExchangeGateway:
             if isinstance(cancelled, bool):
                 return cancelled
         return True
+
+    def fetch_current_price(self, *, symbol: str) -> float | None:
+        """Return the current market price for qty sizing, or None on failure."""
+        try:
+            ticker = self._backend.fetch_ticker(symbol=symbol)
+        except Exception:
+            return None
+        if ticker is None:
+            return None
+        if isinstance(ticker, dict):
+            price = (
+                _float_or_none(ticker.get("last"))
+                or _float_or_none(ticker.get("bid"))
+                or _float_or_none(ticker.get("ask"))
+            )
+            return price if price is not None and price > 0 else None
+        return None
 
     def fetch_open_orders(self, *, symbol: str) -> list[ExchangeOrder]:
         return [
@@ -186,8 +226,9 @@ class ExchangeGateway:
             qty=float(payload.get("qty") or payload.get("amount") or 0.0),
             price=_float_or_none(payload.get("price")),
             trigger_price=_float_or_none(payload.get("trigger_price") or payload.get("stop_price")),
-            reduce_only=bool(payload.get("reduce_only", True)),
+            reduce_only=bool(payload.get("reduce_only", False)),
             status=_normalize_order_status(raw_status),
+            average_fill_price=_float_or_none(payload.get("average")),
             venue_status_raw=raw_status,
             raw_payload=payload,
         )
