@@ -17,6 +17,7 @@ from src.execution.exchange_order_manager import (
     _upsert_order_record,
 )
 from src.execution.freqtrade_normalizer import load_context_by_attempt_key
+from src.execution.freqtrade_ui_mirror import mirror_trade_stoploss
 
 _EPSILON = 1e-9
 
@@ -218,6 +219,10 @@ def _reconcile_single_trade(
             created_at=now,
         )
         conn.commit()
+    mirror_trade_stoploss(
+        attempt_key=context.attempt_key,
+        bot_db_path=db_path,
+    )
     return trade_result
 
 
@@ -229,7 +234,7 @@ def _load_open_exchange_managed_trades(*, db_path: str, env: str) -> list[str]:
             FROM trades
             WHERE env = ?
               AND protective_orders_mode = 'exchange_manager'
-              AND state IN ('OPEN', 'PARTIAL_CLOSE_REQUESTED', 'CLOSE_REQUESTED')
+              AND state IN ('ENTRY_PENDING', 'OPEN', 'PARTIAL_CLOSE_REQUESTED', 'CLOSE_REQUESTED')
             ORDER BY trade_id ASC
             """,
             (env,),

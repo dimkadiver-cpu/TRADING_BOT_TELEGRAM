@@ -86,10 +86,7 @@ def mirror_position_update(
         with sqlite3.connect(db_path) as conn:
             if not _has_required_tables(conn):
                 return
-            row = conn.execute(
-                "SELECT id FROM trades WHERE enter_tag = ? ORDER BY id DESC LIMIT 1",
-                (attempt_key,),
-            ).fetchone()
+            row = _find_trade_row_by_attempt_key(conn=conn, attempt_key=attempt_key)
             if not row:
                 return
             trade_id = int(row[0])
@@ -141,6 +138,67 @@ def mirror_position_update(
             conn.commit()
     except Exception:
         _log.debug("freqtrade UI mirror position update failed", exc_info=True)
+
+
+def mirror_trade_stoploss(
+    *,
+    attempt_key: str,
+    stoploss_ref: float | None = None,
+    bot_db_path: str | None = None,
+    freqtrade_db_path: str | None = None,
+) -> None:
+    """Best-effort sync of trade-level stoploss fields for FreqUI."""
+    if not _should_mirror():
+        return
+    db_path = freqtrade_db_path or _resolve_freqtrade_trades_db_path()
+    if not db_path:
+        return
+    resolved_bot_db_path = bot_db_path or _resolve_bot_db_path()
+    resolved_stoploss = (
+        float(stoploss_ref)
+        if isinstance(stoploss_ref, (int, float)) and float(stoploss_ref) > 0
+        else _load_signal_stoploss(attempt_key=attempt_key, bot_db_path=resolved_bot_db_path)
+    )
+    if resolved_stoploss is None or resolved_stoploss <= 0:
+        return
+    try:
+        with sqlite3.connect(db_path) as conn:
+            row = _find_trade_row_by_attempt_key(
+                conn=conn,
+                attempt_key=attempt_key,
+                columns="id, open_rate, is_short",
+            )
+            if not row:
+                return
+            reference_price = float(row[1]) if isinstance(row[1], (int, float)) and float(row[1]) > 0 else None
+            if reference_price is None:
+                return
+            side = "SHORT" if bool(row[2]) else "LONG"
+            stoploss_pct = _absolute_stop_to_relative(
+                side=side,
+                stop_price=float(resolved_stoploss),
+                reference_price=reference_price,
+            )
+            conn.execute(
+                """
+                UPDATE trades
+                SET stop_loss = ?,
+                    initial_stop_loss = COALESCE(initial_stop_loss, ?),
+                    stop_loss_pct = ?,
+                    initial_stop_loss_pct = COALESCE(initial_stop_loss_pct, ?)
+                WHERE id = ?
+                """,
+                (
+                    float(resolved_stoploss),
+                    float(resolved_stoploss),
+                    stoploss_pct,
+                    stoploss_pct,
+                    int(row[0]),
+                ),
+            )
+            conn.commit()
+    except Exception:
+        _log.debug("freqtrade UI mirror stoploss sync failed", exc_info=True)
 
 
 def _resolve_freqtrade_trades_db_path() -> str | None:
@@ -225,10 +283,7 @@ def _upsert_open_trade(
     strategy_name: str,
     stoploss_ref: float | None,
 ) -> int:
-    existing = conn.execute(
-        "SELECT id FROM trades WHERE enter_tag = ? ORDER BY id DESC LIMIT 1",
-        (attempt_key,),
-    ).fetchone()
+    existing = _find_trade_row_by_attempt_key(conn=conn, attempt_key=attempt_key)
     pair = canonical_symbol_to_freqtrade_pair(symbol) or symbol
     base_currency, stake_currency = _split_pair(pair)
     is_short = 1 if side.strip().upper() in {"SELL", "SHORT"} else 0
@@ -258,7 +313,8 @@ def _upsert_open_trade(
                 initial_stop_loss_pct = COALESCE(?, initial_stop_loss_pct),
                 realized_profit = COALESCE(realized_profit, 0.0),
                 close_profit = COALESCE(close_profit, 0.0),
-                close_profit_abs = COALESCE(close_profit_abs, 0.0)
+                close_profit_abs = COALESCE(close_profit_abs, 0.0),
+                enter_tag = ?
             WHERE id = ?
             """,
             (
@@ -271,6 +327,7 @@ def _upsert_open_trade(
                 resolved_stoploss,
                 stoploss_pct,
                 stoploss_pct,
+                attempt_key,
                 trade_id,
             ),
         )
@@ -405,6 +462,33 @@ def _split_pair(pair: str) -> tuple[str | None, str | None]:
         return None, None
     base, quote = normalized.split("/", 1)
     return base or None, quote or None
+
+
+def _find_trade_row_by_attempt_key(
+    *,
+    conn: sqlite3.Connection,
+    attempt_key: str,
+    columns: str = "id",
+) -> sqlite3.Row | tuple | None:
+    entry_like = f"{attempt_key}:ENTRY:%"
+    return conn.execute(
+        f"""
+        SELECT {columns}
+        FROM trades
+        WHERE enter_tag = ?
+           OR enter_tag LIKE ?
+        ORDER BY
+          CASE
+            WHEN enter_tag = ? THEN 0
+            WHEN enter_tag LIKE ? THEN 1
+            ELSE 2
+          END,
+          COALESCE(is_open, 0) DESC,
+          id DESC
+        LIMIT 1
+        """,
+        (attempt_key, entry_like, attempt_key, entry_like),
+    ).fetchone()
 
 
 def _absolute_stop_to_relative(*, side: str, stop_price: float, reference_price: float) -> float:

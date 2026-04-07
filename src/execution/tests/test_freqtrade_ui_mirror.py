@@ -3,7 +3,7 @@ from __future__ import annotations
 import sqlite3
 from pathlib import Path
 
-from src.execution.freqtrade_ui_mirror import mirror_entry_fill, mirror_position_update
+from src.execution.freqtrade_ui_mirror import mirror_entry_fill, mirror_position_update, mirror_trade_stoploss
 
 
 def _prepare_freqtrade_db(path: Path) -> None:
@@ -116,6 +116,52 @@ def _prepare_bot_db_with_signal(path: Path, *, attempt_key: str, sl: float) -> N
             (attempt_key, float(sl)),
         )
         conn.commit()
+
+
+def _insert_freqtrade_trade(path: Path, *, enter_tag: str, pair: str, open_rate: float, amount: float, is_short: bool) -> int:
+    with sqlite3.connect(path) as conn:
+        conn.execute(
+            """
+            INSERT INTO trades(
+                exchange, pair, base_currency, stake_currency, is_open,
+                fee_open, fee_close, open_rate, open_rate_requested, open_trade_value,
+                stake_amount, max_stake_amount, amount, amount_requested, open_date,
+                is_stop_loss_trailing, strategy, enter_tag, timeframe, trading_mode,
+                leverage, is_short, interest_rate, record_version, max_rate, min_rate
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "bybit",
+                pair,
+                "BTC",
+                "USDT",
+                1,
+                0.0,
+                0.0,
+                float(open_rate),
+                float(open_rate),
+                float(open_rate) * float(amount),
+                float(open_rate) * float(amount),
+                float(open_rate) * float(amount),
+                float(amount),
+                float(amount),
+                "2026-04-05T21:00:00+00:00",
+                0,
+                "SignalBridgeStrategy",
+                enter_tag,
+                1,
+                "FUTURES",
+                1.0,
+                1 if is_short else 0,
+                0.0,
+                2,
+                float(open_rate),
+                float(open_rate),
+            ),
+        )
+        row = conn.execute("SELECT last_insert_rowid()").fetchone()
+        conn.commit()
+    return int(row[0]) if row else 0
 
 
 def test_mirror_entry_fill_inserts_trade_and_order(tmp_path: Path, monkeypatch) -> None:
@@ -246,3 +292,140 @@ def test_mirror_position_update_closes_trade(tmp_path: Path, monkeypatch) -> Non
         assert float(trade[2]) == 105.0
         assert trade[3] == "2026-04-05T21:20:00+00:00"
         assert trade[4] == "POSITION_CLOSED"
+
+
+def test_mirror_trade_stoploss_updates_existing_short_trade(tmp_path: Path, monkeypatch) -> None:
+    ft_db_path = tmp_path / "tradesv3.dryrun.sqlite"
+    bot_db_path = tmp_path / "tele_signal_bot.sqlite3"
+    _prepare_freqtrade_db(ft_db_path)
+    _prepare_bot_db_with_signal(bot_db_path, attempt_key="atk_short_sl_sync", sl=70200.0)
+    monkeypatch.setenv("TELESIGNALBOT_FREQTRADE_TRADES_DB_PATH", str(ft_db_path))
+    monkeypatch.setenv("TELESIGNALBOT_DB_PATH", str(bot_db_path))
+
+    mirror_entry_fill(
+        attempt_key="atk_short_sl_sync",
+        symbol="BTCUSDT",
+        side="SHORT",
+        qty=0.025,
+        fill_price=69845.7,
+        opened_at="2026-04-06T18:30:31+00:00",
+    )
+
+    with sqlite3.connect(ft_db_path) as conn:
+        conn.execute(
+            """
+            UPDATE trades
+            SET stop_loss = 138373.4,
+                initial_stop_loss = 138992.9,
+                stop_loss_pct = -0.99,
+                initial_stop_loss_pct = -0.99
+            WHERE enter_tag = 'atk_short_sl_sync'
+            """
+        )
+        conn.commit()
+
+    mirror_trade_stoploss(attempt_key="atk_short_sl_sync")
+
+    with sqlite3.connect(ft_db_path) as conn:
+        trade = conn.execute(
+            "SELECT stop_loss, initial_stop_loss, stop_loss_pct, initial_stop_loss_pct FROM trades WHERE enter_tag = ?",
+            ("atk_short_sl_sync",),
+        ).fetchone()
+    assert trade is not None
+    assert float(trade[0]) == 70200.0
+    assert float(trade[1]) == 138992.9
+    assert float(trade[2]) < 0.0
+    assert float(trade[2]) > -0.99
+    assert float(trade[3]) == -0.99
+
+
+def test_mirror_entry_fill_reuses_entry_alias_trade_tag(tmp_path: Path, monkeypatch) -> None:
+    db_path = tmp_path / "tradesv3.dryrun.sqlite"
+    _prepare_freqtrade_db(db_path)
+    monkeypatch.setenv("TELESIGNALBOT_FREQTRADE_TRADES_DB_PATH", str(db_path))
+    original_trade_id = _insert_freqtrade_trade(
+        db_path,
+        enter_tag="atk_alias:ENTRY:0",
+        pair="BTC/USDT:USDT",
+        open_rate=65000.0,
+        amount=0.1,
+        is_short=False,
+    )
+
+    mirror_entry_fill(
+        attempt_key="atk_alias",
+        symbol="BTCUSDT",
+        side="BUY",
+        qty=0.2,
+        fill_price=65100.0,
+        opened_at="2026-04-05T21:00:00+00:00",
+    )
+
+    with sqlite3.connect(db_path) as conn:
+        rows = conn.execute("SELECT id, enter_tag, amount FROM trades ORDER BY id").fetchall()
+
+    assert rows == [(original_trade_id, "atk_alias", 0.2)]
+
+
+def test_mirror_position_update_matches_entry_alias_trade_tag(tmp_path: Path, monkeypatch) -> None:
+    db_path = tmp_path / "tradesv3.dryrun.sqlite"
+    _prepare_freqtrade_db(db_path)
+    monkeypatch.setenv("TELESIGNALBOT_FREQTRADE_TRADES_DB_PATH", str(db_path))
+    _insert_freqtrade_trade(
+        db_path,
+        enter_tag="atk_alias_close:ENTRY:0",
+        pair="SOL/USDT:USDT",
+        open_rate=100.0,
+        amount=1.0,
+        is_short=False,
+    )
+
+    mirror_position_update(
+        attempt_key="atk_alias_close",
+        remaining_qty=0.0,
+        exit_price=105.0,
+        updated_at="2026-04-05T21:20:00+00:00",
+        close_reason="POSITION_CLOSED",
+    )
+
+    with sqlite3.connect(db_path) as conn:
+        trade = conn.execute(
+            "SELECT is_open, amount, close_rate, close_date, exit_reason FROM trades WHERE enter_tag = ?",
+            ("atk_alias_close:ENTRY:0",),
+        ).fetchone()
+    assert trade is not None
+    assert int(trade[0]) == 0
+    assert float(trade[1]) == 0.0
+    assert float(trade[2]) == 105.0
+    assert trade[3] == "2026-04-05T21:20:00+00:00"
+    assert trade[4] == "POSITION_CLOSED"
+
+
+def test_mirror_trade_stoploss_matches_entry_alias_trade_tag(tmp_path: Path, monkeypatch) -> None:
+    ft_db_path = tmp_path / "tradesv3.dryrun.sqlite"
+    bot_db_path = tmp_path / "tele_signal_bot.sqlite3"
+    _prepare_freqtrade_db(ft_db_path)
+    _prepare_bot_db_with_signal(bot_db_path, attempt_key="atk_alias_sl", sl=70200.0)
+    monkeypatch.setenv("TELESIGNALBOT_FREQTRADE_TRADES_DB_PATH", str(ft_db_path))
+    monkeypatch.setenv("TELESIGNALBOT_DB_PATH", str(bot_db_path))
+    _insert_freqtrade_trade(
+        ft_db_path,
+        enter_tag="atk_alias_sl:ENTRY:0",
+        pair="BTC/USDT:USDT",
+        open_rate=69845.7,
+        amount=0.025,
+        is_short=True,
+    )
+
+    mirror_trade_stoploss(attempt_key="atk_alias_sl")
+
+    with sqlite3.connect(ft_db_path) as conn:
+        trade = conn.execute(
+            "SELECT stop_loss, initial_stop_loss, stop_loss_pct, initial_stop_loss_pct FROM trades WHERE enter_tag = ?",
+            ("atk_alias_sl:ENTRY:0",),
+        ).fetchone()
+    assert trade is not None
+    assert float(trade[0]) == 70200.0
+    assert float(trade[1]) == 70200.0
+    assert float(trade[2]) < 0.0
+    assert float(trade[3]) < 0.0

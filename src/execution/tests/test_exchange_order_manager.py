@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
+import pytest
 
 from src.core.migrations import apply_migrations
 from src.execution.exchange_gateway import ExchangeGateway
@@ -12,6 +13,7 @@ from src.execution.exchange_order_manager import (
 )
 from src.execution.freqtrade_normalizer import load_context_by_attempt_key
 from src.execution.freqtrade_callback import order_filled_callback
+from src.execution.tests.test_freqtrade_ui_mirror import _prepare_freqtrade_db
 
 
 class _FakeExchangeBackend:
@@ -388,6 +390,44 @@ def test_apply_update_replace_stop_cancels_old_sl_and_creates_new_one(tmp_path: 
         ("atk_move_stop:SL:0", "ex-atk_move_stop:SL:0", "CANCELLED", 57000.0),
         ("atk_move_stop:SL:0:R1", "ex-atk_move_stop:SL:0:R1", "OPEN", 58500.0),
     ]
+
+
+def test_apply_update_replace_stop_syncs_freqtrade_trade_stoploss(tmp_path: Path, monkeypatch) -> None:
+    db_path = _make_db(tmp_path)
+    ft_db_path = tmp_path / "tradesv3.dryrun.sqlite"
+    _prepare_freqtrade_db(ft_db_path)
+    monkeypatch.setenv("TELESIGNALBOT_FREQTRADE_TRADES_DB_PATH", str(ft_db_path))
+    monkeypatch.setenv("TELESIGNALBOT_DB_PATH", db_path)
+    _insert_parse_result(db_path)
+    _insert_signal(db_path, attempt_key="atk_move_stop_ui")
+    _insert_operational_signal(db_path, parse_result_id=1, attempt_key="atk_move_stop_ui")
+    manager = _make_manager(db_path)
+
+    order_filled_callback(
+        db_path=db_path,
+        attempt_key="atk_move_stop_ui",
+        qty=2.0,
+        fill_price=60000.0,
+        client_order_id="entry-move-stop-ui",
+        exchange_order_id="ex-entry-move-stop-ui",
+        protective_orders_mode="exchange_manager",
+        order_manager=manager,
+    )
+
+    manager.apply_update(
+        attempt_key="atk_move_stop_ui",
+        update_context={"intent": "U_MOVE_STOP", "new_stop_level": 58500.0},
+    )
+
+    with sqlite3.connect(ft_db_path) as conn:
+        row = conn.execute(
+            "SELECT stop_loss, stop_loss_pct FROM trades WHERE enter_tag = ?",
+            ("atk_move_stop_ui",),
+        ).fetchone()
+
+    assert row is not None
+    assert row[0] == 58500.0
+    assert row[1] == pytest.approx(-0.025)
 
 
 def test_apply_update_close_full_cancels_protectives_and_closes_trade(tmp_path: Path) -> None:

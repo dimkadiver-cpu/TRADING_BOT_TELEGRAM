@@ -15,6 +15,7 @@ from src.execution.freqtrade_normalizer import (
     FreqtradeUpdateDirective,
     load_context_by_attempt_key,
 )
+from src.execution.freqtrade_ui_mirror import mirror_trade_stoploss
 from src.execution.protective_orders_mode import ProtectiveOrdersMode
 
 ACTIVE_ORDER_STATUSES = {"NEW", "OPEN", "PARTIALLY_FILLED"}
@@ -407,6 +408,11 @@ class ExchangeOrderManager:
                 now=now,
             )
             conn.commit()
+        mirror_trade_stoploss(
+            attempt_key=context.attempt_key,
+            stoploss_ref=new_stop,
+            bot_db_path=self._db_path,
+        )
         return result
 
     def _apply_close_full(

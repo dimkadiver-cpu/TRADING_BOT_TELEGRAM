@@ -17,7 +17,7 @@ from src.execution.protective_orders_mode import (
     strategy_owns_take_profit,
 )
 from src.execution.machine_event import MachineEventAction, evaluate_rules
-from src.execution.freqtrade_ui_mirror import mirror_entry_fill, mirror_position_update
+from src.execution.freqtrade_ui_mirror import mirror_entry_fill, mirror_position_update, mirror_trade_stoploss
 from src.execution.update_applier import UpdateApplyResult, apply_update_plan
 
 _TP_ORDER_TAG_RE = re.compile(r"^(?P<attempt_key>.+):TP:(?P<idx>\d+)$")
@@ -1572,7 +1572,13 @@ def _apply_move_stop_to_be(
         )
         return {"ok": True, "entry_price": entry_price}
 
-    _with_sqlite_retry(db_path=db_path, writer=_writer, retries=busy_retries, sleep_s=busy_sleep_s)
+    result = _with_sqlite_retry(db_path=db_path, writer=_writer, retries=busy_retries, sleep_s=busy_sleep_s)
+    if result.get("ok"):
+        mirror_trade_stoploss(
+            attempt_key=context.attempt_key,
+            stoploss_ref=result.get("entry_price"),
+            bot_db_path=db_path,
+        )
 
 
 def _apply_mark_exit_be(

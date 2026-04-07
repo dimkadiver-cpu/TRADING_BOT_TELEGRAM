@@ -370,3 +370,19 @@ def test_bootstrap_leaves_ambiguous_mismatch_as_warning(tmp_path: Path) -> None:
 
     assert "exchange_reconciliation_ambiguous" in warning_codes
     assert protective_count == 0
+
+
+def test_bootstrap_processes_entry_pending_trade(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    backend = _FakeReconciliationBackend()
+    gateway = ExchangeGateway(backend)
+    _seed_open_trade(db_path, attempt_key="atk_entry_pending")
+    with sqlite3.connect(db_path) as conn:
+        conn.execute(
+            "UPDATE trades SET state = 'ENTRY_PENDING' WHERE attempt_key = 'atk_entry_pending'"
+        )
+        conn.commit()
+
+    result = bootstrap_sync_open_trades(db_path=db_path, gateway=gateway)
+
+    assert result.processed_attempt_keys == ["atk_entry_pending"]

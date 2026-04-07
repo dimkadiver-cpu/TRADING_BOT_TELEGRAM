@@ -785,7 +785,10 @@ class SignalBridgeStrategy(IStrategy):
             return
 
         now = time.monotonic()
-        if now - getattr(self, "_last_market_dispatch_at", 0.0) < 10.0:
+        interval = self._market_dispatch_interval_s()
+        if interval <= 0:
+            return
+        if now - getattr(self, "_last_market_dispatch_at", 0.0) < interval:
             return
         self._last_market_dispatch_at = now
 
@@ -855,6 +858,16 @@ class SignalBridgeStrategy(IStrategy):
                 if isinstance(value, (int, float)) and float(value) > 0:
                     return float(value)
         return 0.0
+
+    def _market_dispatch_interval_s(self) -> float:
+        config = getattr(self, "config", None)
+        if isinstance(config, dict):
+            execution = config.get("execution")
+            if isinstance(execution, dict):
+                value = execution.get("market_dispatch_interval_s")
+                if isinstance(value, (int, float)) and float(value) > 0:
+                    return float(value)
+        return 10.0
 
     def _maybe_cleanup_duplicate_stoploss_orders(self) -> None:
         interval = self._stoploss_dedupe_interval_s()

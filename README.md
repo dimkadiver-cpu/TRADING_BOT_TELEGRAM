@@ -122,6 +122,31 @@ python main.py --migrate
 python main.py
 ```
 
+## Operativita
+
+Controlli rapidi utili in dry-run/live:
+
+```powershell
+# Audit sync bot <-> freqtrade sui trade aperti/pending
+.\.venv\Scripts\python.exe scripts\audit_live_sync.py
+
+# Audit mirato a un simbolo
+.\.venv\Scripts\python.exe scripts\audit_live_sync.py --symbol BTCUSDT
+
+# Ispezione completa di un attempt_key
+.\.venv\Scripts\python.exe scripts\inspect_attempt.py --attempt-key T_xxx
+
+# Ispezione dell'ultimo trade registrato
+.\.venv\Scripts\python.exe scripts\inspect_attempt.py --latest-trade
+
+# Stato TP dei trade OPEN nel DB bot
+.\.venv\Scripts\python.exe scripts\tp_status.py
+```
+
+`audit_live_sync.py` segnala mismatch tra DB bot e DB `freqtrade`, ad esempio trade duplicati, `ENTRY_PENDING` gia visibili in `freqtrade`, differenze sui TP filled e warning di riconciliazione.
+
+Il throttle del dispatcher MARKET si regola da `freqtrade/user_data/config.json` con `execution.market_dispatch_interval_s` (default `10`). Un valore intorno a `3` secondi e spesso un buon compromesso tra reattivita e rumore operativo.
+
 ## Test
 
 Prerequisito: `.venv` attiva con `pip install -r requirements.txt` (vedi sezione Setup).
