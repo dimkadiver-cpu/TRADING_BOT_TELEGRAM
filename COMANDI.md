@@ -21,21 +21,6 @@ python check_db.py
 
 # Esporta CSV con i risultati del parsing
 python export_live_reports.py
-
-# Audit rapido sync bot <-> freqtrade sui trade aperti/pending
-.\.venv\Scripts\python.exe scripts\audit_live_sync.py
-
-# Audit rapido su un solo simbolo
-.\.venv\Scripts\python.exe scripts\audit_live_sync.py --symbol BTCUSDT
-
-# Ispeziona un singolo attempt_key tra bot DB e freqtrade DB
-.\.venv\Scripts\python.exe scripts\inspect_attempt.py --attempt-key T_xxx
-
-# Ispeziona l'ultimo trade registrato
-.\.venv\Scripts\python.exe scripts\inspect_attempt.py --latest-trade
-
-# Stato TP per tutti i trade OPEN
-.\.venv\Scripts\python.exe scripts\tp_status.py
 ```
 
 I CSV vengono salvati in `parser_test/reports/`.
@@ -57,7 +42,6 @@ I CSV vengono salvati in `parser_test/reports/`.
 | `config/channels.yaml` | Canali Telegram, blacklist, finestra recovery |
 | `config/telegram_source_map.json` | Mapping chat multi-trader |
 | `.env` | API keys Telegram, path DB |
-| `freqtrade/user_data/config.json` | Bridge Freqtrade, incluso `execution.market_dispatch_interval_s` |
 
 Il bot rilegge `channels.yaml` automaticamente senza restart (hot reload).
 

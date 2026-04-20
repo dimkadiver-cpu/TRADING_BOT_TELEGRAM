@@ -46,7 +46,10 @@
       "Bash(.venv/Scripts/python.exe << 'PYEOF'\nwith open\\('src/operation_rules/engine.py', 'r', encoding='utf-8'\\) as f:\n    lines = f.readlines\\(\\)\n\n# Find the start and end lines for replacement\nstart = None\nend = None\nfor i, line in enumerate\\(lines\\):\n    if 'Calcola budget rischio e size' in line and start is None:\n        start = i\n    if line.strip\\(\\).startswith\\('return OperationalSignal\\('\\) and start is not None:\n        # Find the closing paren\n        end = i\n        break\n\nprint\\(f'start={start}, end={end}'\\)\nprint\\('START LINE:', repr\\(lines[start]\\)\\)\nprint\\('END LINE:', repr\\(lines[end]\\)\\)\n\n# Find the actual closing line of return OperationalSignal\\(...\\)\nclose = None\nfor i in range\\(end, len\\(lines\\)\\):\n    if lines[i].strip\\(\\) == '\\)':\n        close = i\n        break\nprint\\(f'close={close}'\\)\nprint\\('CLOSE LINE:', repr\\(lines[close]\\)\\)\nPYEOF)",
       "Bash(.venv/Scripts/python.exe -m pytest src/operation_rules/tests/test_engine.py -v --tb=short)",
       "Bash(.venv/Scripts/python.exe -m pytest src/operation_rules/tests/ -q)",
-      "Bash(.venv/Scripts/python.exe -m pytest src/operation_rules/tests/ -q --tb=short)"
+      "Bash(.venv/Scripts/python.exe -m pytest src/operation_rules/tests/ -q --tb=short)",
+      "Bash(git rebase:*)",
+      "Bash(git merge:*)",
+      "Bash(git checkout:*)"
     ]
   }
 }

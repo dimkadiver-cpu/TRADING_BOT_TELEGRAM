@@ -17,7 +17,6 @@
   "te_signal_bot_db_path": "C:/TeleSignalBot/.local/tele_signalbot.sqlite3",
   "execution": {
     "protective_orders_mode": "strategy_managed",
-    "market_dispatch_interval_s": 10,
     "reconciliation_watchdog_interval_s": 60
   },
   "exchange": {

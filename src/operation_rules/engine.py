@@ -88,35 +88,7 @@ def _extract_entry_prices(entities: dict[str, Any]) -> list[float]:
     # Fall back to entry_raw string
     entry_raw = entities.get("entry_raw") or entities.get("entry")
     parsed = _parse_all_floats(str(entry_raw) if entry_raw is not None else None)
-    if parsed:
-        return parsed
-
-    sl_price = _extract_sl_price(entities)
-    market_reference_price = _market_reference_price(entities, sl_price=sl_price)
-    if market_reference_price is not None:
-        return [market_reference_price]
-
-    return []
-
-
-def _extract_take_profit_prices(entities: dict[str, Any]) -> list[float]:
-    """Extract take-profit prices from entities dict."""
-    raw = entities.get("take_profits") or entities.get("tp") or entities.get("tp_json")
-    if not isinstance(raw, list):
-        return []
-    prices: list[float] = []
-    for item in raw:
-        if isinstance(item, dict):
-            value = item.get("price") or item.get("value")
-        else:
-            value = item
-        if value is None:
-            continue
-        try:
-            prices.append(float(value))
-        except (TypeError, ValueError):
-            continue
-    return prices
+    return parsed if parsed else []
 
 
 def _extract_sl_price(entities: dict[str, Any]) -> float | None:
@@ -154,48 +126,6 @@ def _extract_entry_plan_entries(entities: dict[str, Any]) -> list[dict[str, Any]
         if isinstance(item, dict):
             out.append(item)
     return out
-
-
-def _market_reference_price(entities: dict[str, Any], *, sl_price: float | None) -> float | None:
-    """Resolve a synthetic price reference for MARKET-first signals.
-
-    This keeps operation sizing aligned with runtime dispatch, which can use:
-    1. the first priced non-MARKET leg (e.g. averaging limit),
-    2. midpoint of stop-loss and first take-profit,
-    3. first take-profit only,
-    4. stop-loss only.
-    """
-    plan_entries = _extract_entry_plan_entries(entities)
-    if plan_entries:
-        first_order_type = str(plan_entries[0].get("order_type", "")).upper()
-        if first_order_type != "MARKET":
-            return None
-        for leg in plan_entries[1:]:
-            value = leg.get("price")
-            if value is None:
-                continue
-            try:
-                parsed = float(value)
-            except (TypeError, ValueError):
-                continue
-            if parsed > 0:
-                return parsed
-    else:
-        entry_plan_type = str(entities.get("entry_plan_type", "")).upper()
-        entry_mode = str(entities.get("entry_mode", "")).upper()
-        order_type = str(entities.get("order_type", "")).upper()
-        if entry_plan_type != "SINGLE_MARKET" and entry_mode != "MARKET" and order_type != "MARKET":
-            return None
-
-    tp_prices = _extract_take_profit_prices(entities)
-    first_tp = tp_prices[0] if tp_prices else None
-    if sl_price is not None and sl_price > 0 and first_tp is not None and first_tp > 0:
-        return (float(sl_price) + float(first_tp)) / 2.0
-    if first_tp is not None and first_tp > 0:
-        return float(first_tp)
-    if sl_price is not None and sl_price > 0:
-        return float(sl_price)
-    return None
 
 
 def _coerce_entities(entities: Any) -> dict[str, Any]:

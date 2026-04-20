@@ -45,13 +45,3 @@ entry_split:
 price_sanity:
   enabled: false
   symbol_ranges: {}
-
- # ── Gestione TP ─────────────────────────────────────────────────────────
-  tp_handling:
-    tp_handling_mode: follow_all_signal_tps   # follow_all_signal_tps | limit_to_max_levels
-    max_tp_levels: 3                           # usato solo se limit_to_max_levels
-    tp_close_distribution:                     # tabelle separate per numero di TP
-      2: [50, 50]
-      3: [30, 30, 40]
-      4: [25, 25, 25, 25]
-      # fallback: distribuzione uguale se numero TP non in tabella

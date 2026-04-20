@@ -205,25 +205,6 @@ class TestEngineNewSignalPassthrough:
         op = engine.apply(result, "trader_x", db_path=db_path)
         assert op.entry_split == {"E1": 1.0}
 
-    def test_market_signal_without_explicit_price_uses_tp_sl_reference(
-        self, rules_dir: Path, db_path: str
-    ) -> None:
-        engine = OperationRulesEngine(rules_dir=str(rules_dir))
-        result = _make_result(
-            entities={
-                "symbol": "BTCUSDT",
-                "side": "BUY",
-                "entry_plan_type": "SINGLE_MARKET",
-                "entry_plan_entries": [{"role": "PRIMARY", "order_type": "MARKET", "price": None}],
-                "stop_raw": "57000",
-                "take_profits": [{"price": 65000.0}],
-            }
-        )
-        op = engine.apply(result, "trader_x", db_path=db_path)
-        assert op.is_blocked is False
-        assert op.entry_split == {"E1": 1.0}
-        assert op.sl_distance_pct == pytest.approx((61000.0 - 57000.0) / 61000.0)
-
     def test_entry_split_market_with_limit_averaging(self, rules_dir: Path, db_path: str) -> None:
         engine = OperationRulesEngine(rules_dir=str(rules_dir))
         result = _make_result(
@@ -239,26 +220,6 @@ class TestEngineNewSignalPassthrough:
             }
         )
         op = engine.apply(result, "trader_x", db_path=db_path)
-        assert op.entry_split == {"E1": pytest.approx(0.7), "E2": pytest.approx(0.3)}
-
-    def test_market_with_limit_averaging_without_primary_price_uses_next_leg(
-        self, rules_dir: Path, db_path: str
-    ) -> None:
-        engine = OperationRulesEngine(rules_dir=str(rules_dir))
-        result = _make_result(
-            entities={
-                "symbol": "BTCUSDT",
-                "side": "BUY",
-                "entry_plan_type": "MARKET_WITH_LIMIT_AVERAGING",
-                "entry_plan_entries": [
-                    {"role": "PRIMARY", "order_type": "MARKET", "price": None},
-                    {"role": "AVERAGING", "order_type": "LIMIT", "price": 59000},
-                ],
-                "stop_raw": "55000",
-            }
-        )
-        op = engine.apply(result, "trader_x", db_path=db_path)
-        assert op.is_blocked is False
         assert op.entry_split == {"E1": pytest.approx(0.7), "E2": pytest.approx(0.3)}
 
     def test_entry_split_limit_with_limit_averaging(self, rules_dir: Path, db_path: str) -> None:
