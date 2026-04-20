@@ -21,6 +21,7 @@ class TelegramIncomingMessage:
     source_trader_id: str | None = None
     reply_to_message_id: int | None = None
     acquisition_status: str = "ACQUIRED_ELIGIBLE"
+    source_topic_id: int | None = None
     has_media: bool = False
     media_kind: str | None = None
     media_mime_type: str | None = None
@@ -64,6 +65,7 @@ class RawMessageIngestionService:
                 message_ts=self._as_utc_iso(incoming.message_ts),
                 acquired_at=utc_now_iso(),
                 acquisition_status=incoming.acquisition_status,
+                source_topic_id=incoming.source_topic_id,
                 has_media=incoming.has_media,
                 media_kind=incoming.media_kind,
                 media_mime_type=incoming.media_mime_type,

@@ -1,0 +1,265 @@
+# Template generale completo per policy Signal Chain Lab.
+#
+# Obiettivo:
+# - documentare il contratto YAML attuale
+# - restare caricabile dal PolicyLoader
+# - includere sia campi MVP sia estensioni gia' accettate dal modello
+
+name: policy_template_full
+
+entry:
+  # true  = usa la struttura entry originale della chain  
+  # false = lascia spazio a regole future di override
+  # Nota:
+  # il motore ora puo' costruire piu' EntryPlan da OPEN_SIGNAL quando il payload
+  # contiene abbastanza dettaglio su entries / entry_prices / entry_type.
+  use_original_entries: true
+
+  # Valori oggi presenti nello search space optimizer:
+  # - equal
+  # - front_loaded
+  # - back_loaded
+  #
+  # Semantica:
+  # - equal: distribuzione uniforme tra entry
+  # - front_loaded: piu' size sulle prime entry
+  # - back_loaded: piu' size sulle entry successive
+  entry_allocation: equal
+
+  # null = nessun limite esplicito sul numero di entry utilizzabili
+  max_entries_to_use: null
+
+  # Frazionamento entry per struttura canonica.
+  #
+  # Struttura canonica dispatch:
+  #   entry_structure = ONE_SHOT  + entry_type = MARKET  → MARKET.single
+  #   entry_structure = ONE_SHOT  + entry_type = LIMIT   → LIMIT.single
+  #   entry_structure = TWO_STEP  + primo leg market      → MARKET.averaging
+  #   entry_structure = TWO_STEP  + primo leg limit       → LIMIT.averaging
+  #   entry_structure = RANGE                             → LIMIT.range
+  #   entry_structure = LADDER                            → LIMIT.ladder
+  #
+  # Valori legacy entry_type (AVERAGING, ZONE) e entry_structure (SINGLE) sono
+  # accettati in input ma generano DeprecationWarning e vengono normalizzati
+  # automaticamente dal motore.
+  # I blocchi policy AVERAGING e ZONE sono deprecati: non aggiungerli in nuove policy.
+  entry_split:
+
+    LIMIT:
+      single:
+        weights:
+          E1: 1.0
+      range:
+        # split_mode: come trattare il range di prezzo (P1=basso, P2=alto).
+        #
+        # endpoints  → 2 ordini limit (P1 e P2). Size distribuita con E1/E2 (weights qui sotto).
+        # firstpoint → 1 ordine limit a P1 (piu' basso). Size 100%. Weights ignorati.
+        # lastpoint  → 1 ordine limit a P2 (piu' alto).  Size 100%. Weights ignorati.
+        # midpoint   → 1 ordine limit a (P1+P2)/2.       Size 100%. Weights ignorati.
+        #
+        # I weights E1/E2 si applicano SOLO con split_mode: endpoints.
+        split_mode: endpoints # endpoints | firstpoint | lastpoint | midpoint
+        weights:
+          E1: 0.50
+          E2: 0.50
+      averaging:
+        weights:
+          E1: 0.70
+          E2: 0.30
+      ladder:
+        weights:
+          E1: 0.50
+          E2: 0.30
+          E3: 0.20
+
+    MARKET:
+      single:
+        weights:
+          E1: 1.0
+      averaging:
+        weights:
+          E1: 0.70
+          E2: 0.30
+
+    # AVERAGING: # DEPRECATO — usare LIMIT.averaging con entry_structure='TWO_STEP'
+    # ZONE:      # DEPRECATO — usare LIMIT.range   con entry_structure='RANGE'
+
+
+  allow_add_entry_updates: true   # true = consenti update ADD_ENTRY del trader
+
+
+tp:
+  # null = usa tutti i TP del segnale
+  # N    = usa solo i primi N TP (es: 2 = ignora TP3 e successivi)
+  use_tp_count: null
+
+  # Distribuzione della size sui livelli TP.
+  #
+  # mode: equal
+  #   Split uniforme tra N TP.
+  #   L'ultimo livello assorbe il resto floating-point → somma sempre 1.0.
+  #   Esempio con 3 TP: [33.3%, 33.3%, 33.4%]
+  #
+  # mode: table
+  #   Usa la tabella esplicita sotto per N TP.
+  #   I valori non devono sommare a 100 — vengono normalizzati.
+  #   Se la riga per N manca → warning + fallback equal.
+  close_distribution:
+    mode: table
+    table:
+      1: [100]
+      2: [50, 50]
+      3: [30, 30, 40]
+      4: [25, 25, 25, 25]
+      5: [20, 20, 20, 20, 20]
+      6: [20, 20, 20, 20, 20, 20]
+    # Questa tabella non crea TP mancanti.
+    # Serve solo a distribuire la size di uscita sui TP gia' esistenti
+    # nella chain, per esempio quando i TP usati sono 2, 3 o 4.
+
+sl:
+  # true = conserva lo SL iniziale/originale
+  use_original_sl: true
+
+  # Engine auto-trigger break-even dopo hit di un TP specifico.
+  # null    = nessun BE automatico
+  # "tp1"   = muovi SL a BE dopo il primo TP parziale
+  # "tp2"   = muovi SL a BE dopo il secondo TP parziale
+  #
+  # Nota: il trader puo' sempre inviare MOVE_STOP con:
+  #   - prezzo esatto (es. 1234.56)
+  #   - None          → BE implicito (avg_entry_price)
+  #   - "tp1" / "tp2" → SL al livello del TP corrispondente
+  be_trigger: null
+
+updates:
+  # Bootstrap MVP: flag semplici per filtrare gli update del trader.
+  apply_move_stop: true
+  apply_close_partial: true
+  apply_close_full: true
+  apply_cancel_pending: true
+  apply_add_entry: true
+
+  # Fallback 50% se il partial close non specifica bene la quota.
+  # Nota: questo campo e' parsed ma non ancora letto dall'engine.
+  # L'engine usa event.payload.get("close_pct", 0.5) come fallback interno.
+  partial_close_fallback_pct: 0.5
+
+pending:
+  # Timeout di un ordine pending non fillato.
+  pending_timeout_hours: 24
+
+  # Timeout massimo dell'intera chain.
+  chain_timeout_hours: 168
+
+  # true = allo scadere del pending_timeout_hours emette CANCEL_PENDING engine-driven.
+  # false = i pending rimangono attivi; chain_timeout_hours li chiude comunque.
+  cancel_pending_on_timeout: true
+
+  # Master switch per tutte le logiche di cancel engine TP-triggered (sotto).
+  # false = disabilita cancel_averaging_pending_after e cancel_unfilled_pending_after
+  #         indipendentemente dai loro valori.
+  # Non influenza cancel_pending_on_timeout (ha il suo flag separato).
+  cancel_pending_by_engine: true
+
+  # Cancella gli entry pending rimasti dopo il hit di un TP con open_size > 0.
+  # Scenario: E1 fillato, E2 averaging ancora pending → TP1 colpito → cancella E2.
+  # null  = mai
+  # "tp1" = dopo il primo TP parziale
+  # "tp2" = dopo il secondo TP parziale
+  cancel_averaging_pending_after: null
+
+  # Cancella TUTTI i pending se il prezzo raggiunge un TP senza alcun fill (open_size == 0).
+  # Scenario: LIMIT a 100, prezzo sale a TP1 senza toccare 100 → cancella tutto.
+  # null  = mai
+  # "tp1" = se TP1 raggiunto prima di qualsiasi fill
+  # "tp2" = se TP2 raggiunto prima di qualsiasi fill
+  cancel_unfilled_pending_after: null
+  # cancel_all_pending_after_break_even: false
+
+# risk: controlla il sizing e le metriche R/PnL% nel report.
+#
+# mode:
+#   none   → simulatore gira, metriche R/PnL% assenti nel report (default)
+#   fixed  → usa sempre risk_pct sotto, ignora risk_percent dal segnale
+#   signal → usa risk_percent dal segnale se presente, fallback a risk_pct
+#            se il segnale ha solo un hint qualitativo (U_RISK_NOTE senza valore),
+#            usa reduced_risk_pct invece di risk_pct
+#
+# risk_pct: obbligatorio se mode=fixed o mode=signal
+# reduced_risk_pct: opzionale, usato solo con mode=signal per hint qualitativi
+risk:
+  mode: none
+  # risk_pct: 1.0
+  # reduced_risk_pct: 0.5
+
+execution:
+  # Usato da latency_model.py / fill_model.py
+  latency_ms: 0
+
+  # Modello OHLC per il prezzo di fill degli ordini MARKET.
+  #
+  # current_open  -> usa open della candela corrente
+  # next_open     -> usa open della prima candela successiva all'attivazione
+  # current_close -> usa close della candela corrente
+  # candle_proxy  -> usa market_price_proxy (hl2/ohlc4/open/close)
+  market_fill_mode: next_open  # raccomandato per ridurre look-ahead bias
+
+  # Come trattare l'eventuale prezzo market fornito nel segnale.
+  #
+  # reference -> prezzo segnale usato come riferimento/log, ma il fill segue market_fill_mode
+  # strict    -> se il segnale include un prezzo, usa quello come fill reference
+  market_requested_price_mode: reference
+
+  # Proxy OHLC usato solo quando market_fill_mode: candle_proxy
+  # hl2   = (high + low) / 2
+  # ohlc4 = (open + high + low + close) / 4
+  # open  = open candela
+  # close = close candela
+  market_price_proxy: hl2
+
+  # Se market_requested_price_mode: strict e il prezzo richiesto e' fuori range
+  # candela, clampa dentro [low, high].
+  clamp_requested_to_candle: true
+
+  # Modello slippage applicato ai market order.
+  # Valori supportati:
+  #   none      → nessuno slippage (default)
+  #   fixed_bps → sposta il fill price di slippage_bps basis points in direzione avversa
+  #               (LONG paga di più, SHORT riceve di meno)
+  # Nota: i limit order non sono soggetti a slippage (fill al prezzo esatto del limite).
+  slippage_model: none
+
+  # Usato solo con slippage_model: fixed_bps
+  # 1 bps = 0.01%; es: 5 bps = 0.05% di slippage avverso sui market order
+  slippage_bps: 0
+
+  # Placeholder contrattuale per il modello di fill touch-based.
+  fill_touch_guaranteed: true
+
+  # Modello fee applicato a ogni fill (entry e close TP/SL).
+  # Valori supportati:
+  #   none      → nessuna fee (default)
+  #   fixed_bps → fee = price * qty * fee_bps / 10_000 per lato
+  #               Esempio: fee_bps=5 = 0.05% per lato (entry + exit separati)
+  fee_model: none
+
+  # Usato solo con fee_model: fixed_bps
+  fee_bps: 0.0
+
+  # Override opzionali per distinguere maker/taker:
+  # - maker_fee_bps: applicato a fill limit (entry) e TP hit (close)
+  # - taker_fee_bps: applicato a fill market (entry) e SL hit (close)
+  # Se omessi/null, il simulatore usa fee_bps come fallback.
+  maker_fee_bps: null
+  taker_fee_bps: null
+
+  # Modello funding rate per futures perpetui.
+  # none       → nessun funding applicato (default)
+  # historical → usa i dati storici scaricati da Bybit (PRD: docs/PRD_funding_model.md)
+  funding_model: none
+  funding_apply_to_pnl: true   # se false: calcola e logga ma non deduce dal PnL
+
+  # Estensioni possibili:
+  # partial_fill_model: none   # design: docs/DESIGN_partial_fill_model.md
+  # spread_model: none

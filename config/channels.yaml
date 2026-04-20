@@ -12,8 +12,39 @@ blacklist_global:
   - "Админ на связи"
 
 channels:
-  - chat_id: -1003171748254
-    label: "PifSignal"  # canale reale attivo concordato
+  - chat_id: -1003722628653
+    topic_id: 3
+    label: "PifSignal_A"  # canale reale attivo concordato
     active: true
-    trader_id: null   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    trader_id: trader_a   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
     blacklist: []     # estendere qui solo per rumore specifico del canale
+
+  - chat_id: -1003722628653
+    topic_id: 4
+    label: "PifSignal_B"  # canale reale attivo concordato
+    active: true
+    trader_id: trader_b   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    blacklist: []     # estendere qui solo per rumore specifico del canale
+
+  - chat_id: -1003722628653
+    topic_id: 5
+    label: "PifSignal_C"  # canale reale attivo concordato
+    active: true
+    trader_id: trader_c   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    blacklist: []     # estendere qui solo per rumore specifico del canale
+
+  - chat_id: -1003722628653
+    topic_id: 7
+    label: "PifSignal_D"  # canale reale attivo concordato
+    active: true
+    trader_id: trader_d   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    blacklist: []     # estendere qui solo per rumore specifico del canale
+
+
+  - chat_id: -1003722628653
+    topic_id: 8
+    label: "PifSignal_3"  # canale reale attivo concordato
+    active: true
+    trader_id: trader_3   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    blacklist: []     # estendere qui solo per rumore specifico del canale
+

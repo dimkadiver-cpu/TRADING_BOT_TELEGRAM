@@ -59,7 +59,7 @@ parse_results (SQLite)
       ↓
 Validazione coerenza → Operation rules → Target resolver
       ↓
-Sistema 1 (freqtrade live)    Sistema 2 (backtesting)
+Sistema 1 (freqtrade live)
 ```
 
 ## Nuova architettura parser

@@ -155,3 +155,254 @@ def test_watcher_logs_parse_error(yaml_path: Path, caplog: pytest.LogCaptureFixt
     finally:
         watcher.stop()
     # Should not raise; error is logged instead
+
+
+# ---------------------------------------------------------------------------
+# topic_id — loading
+# ---------------------------------------------------------------------------
+
+
+def test_load_channel_with_topic_id(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: -1001
+    label: forum_topic
+    active: true
+    trader_id: trader_a
+    topic_id: 3
+""",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    assert cfg.channels[0].topic_id == 3
+
+
+def test_load_channel_without_topic_id_defaults_none(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    assert cfg.channels[0].topic_id is None
+
+
+def test_load_channel_topic_id_general(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n    topic_id: 1\n",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    assert cfg.channels[0].topic_id == 1
+
+
+def test_load_invalid_topic_id_zero_raises(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n    topic_id: 0\n",
+    )
+    with pytest.raises(ValueError, match="topic_id"):
+        load_channels_config(str(yaml_path))
+
+
+def test_load_invalid_topic_id_negative_raises(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n    topic_id: -5\n",
+    )
+    with pytest.raises(ValueError, match="topic_id"):
+        load_channels_config(str(yaml_path))
+
+
+def test_load_duplicate_scope_raises(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: 1
+    label: a
+    active: true
+    trader_id: null
+    topic_id: 3
+  - chat_id: 1
+    label: b
+    active: true
+    trader_id: null
+    topic_id: 3
+""",
+    )
+    with pytest.raises(ValueError, match="Duplicate scope"):
+        load_channels_config(str(yaml_path))
+
+
+def test_load_duplicate_forum_wide_scope_raises(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: 1
+    label: a
+    active: true
+    trader_id: null
+  - chat_id: 1
+    label: b
+    active: true
+    trader_id: null
+""",
+    )
+    with pytest.raises(ValueError, match="Duplicate scope"):
+        load_channels_config(str(yaml_path))
+
+
+def test_load_same_chat_different_topics_ok(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: -1001
+    label: t3
+    active: true
+    trader_id: trader_a
+    topic_id: 3
+  - chat_id: -1001
+    label: t4
+    active: true
+    trader_id: trader_b
+    topic_id: 4
+""",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    assert len(cfg.channels) == 2
+    assert cfg.channels[0].topic_id == 3
+    assert cfg.channels[1].topic_id == 4
+
+
+# ---------------------------------------------------------------------------
+# entries_for_chat
+# ---------------------------------------------------------------------------
+
+
+def test_entries_for_chat_returns_all_entries(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: -1001
+    label: t3
+    active: true
+    trader_id: trader_a
+    topic_id: 3
+  - chat_id: -1001
+    label: t4
+    active: false
+    trader_id: trader_b
+    topic_id: 4
+  - chat_id: -9999
+    label: other
+    active: true
+    trader_id: trader_c
+""",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    entries = cfg.entries_for_chat(-1001)
+    assert len(entries) == 2
+    assert all(e.chat_id == -1001 for e in entries)
+
+
+def test_entries_for_chat_unknown_chat(yaml_path: Path) -> None:
+    _write_yaml(yaml_path, "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n")
+    cfg = load_channels_config(str(yaml_path))
+    assert cfg.entries_for_chat(9999) == []
+
+
+# ---------------------------------------------------------------------------
+# match_entry
+# ---------------------------------------------------------------------------
+
+
+def _cfg_multi_topic(yaml_path: Path) -> ChannelsConfig:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: -1001
+    label: wide
+    active: true
+    trader_id: forum_trader
+  - chat_id: -1001
+    label: t3
+    active: true
+    trader_id: trader_a
+    topic_id: 3
+  - chat_id: -1001
+    label: t4
+    active: true
+    trader_id: trader_b
+    topic_id: 4
+""",
+    )
+    return load_channels_config(str(yaml_path))
+
+
+def test_match_entry_topic_specific_wins(yaml_path: Path) -> None:
+    cfg = _cfg_multi_topic(yaml_path)
+    entry = cfg.match_entry(-1001, 3)
+    assert entry is not None
+    assert entry.topic_id == 3
+    assert entry.trader_id == "trader_a"
+
+
+def test_match_entry_fallback_to_forum_wide(yaml_path: Path) -> None:
+    cfg = _cfg_multi_topic(yaml_path)
+    # topic 99 not in config → falls back to forum-wide (topic_id=None)
+    entry = cfg.match_entry(-1001, 99)
+    assert entry is not None
+    assert entry.topic_id is None
+    assert entry.trader_id == "forum_trader"
+
+
+def test_match_entry_none_topic_returns_forum_wide(yaml_path: Path) -> None:
+    cfg = _cfg_multi_topic(yaml_path)
+    entry = cfg.match_entry(-1001, None)
+    assert entry is not None
+    assert entry.topic_id is None
+
+
+def test_match_entry_no_match(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n    topic_id: 3\n",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    # chat_id exists but no forum-wide and topic_id=None → no match
+    assert cfg.match_entry(1, None) is None
+
+
+def test_match_entry_general_topic(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        """
+channels:
+  - chat_id: -1001
+    label: general
+    active: true
+    trader_id: trader_g
+    topic_id: 1
+  - chat_id: -1001
+    label: wide
+    active: true
+    trader_id: forum_trader
+""",
+    )
+    cfg = load_channels_config(str(yaml_path))
+    entry = cfg.match_entry(-1001, 1)
+    assert entry is not None
+    assert entry.topic_id == 1
+    assert entry.trader_id == "trader_g"
+
+
+def test_match_entry_unknown_chat(yaml_path: Path) -> None:
+    _write_yaml(yaml_path, "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n")
+    cfg = load_channels_config(str(yaml_path))
+    assert cfg.match_entry(9999, None) is None
+    assert cfg.match_entry(9999, 3) is None

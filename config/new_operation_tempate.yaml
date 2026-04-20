@@ -1,0 +1,166 @@
+# Operation Rules — configurazione globale
+# ─────────────────────────────────────────────────────────────────────────────
+# Merge priority: global_hard_caps > trader_on_off > trader_specific > global_defaults
+# I global_hard_caps non sono mai overridabili dai trader.
+
+# ── Hard caps globali (non overridabili) ─────────────────────────────────────
+global_hard_caps:
+  max_capital_at_risk_pct: 10.0           # % portfolio totale su tutti i trader
+  hard_max_per_signal_risk_pct: 2.0       # rischio massimo per singolo segnale (% capitale)
+
+# ── Trader registrati / autorizzati ──────────────────────────────────────────
+# Se un trader non è in questa lista, il segnale viene bloccato con
+# block_reason=trader_not_registered anche se esiste parser/profile.
+registered_traders:
+  - trader_3
+  - trader_a
+  - trader_b
+  - trader_c
+  - trader_d
+
+# ── Defaults per trader (overridabili in config/trader_rules/) ────────────────
+global_defaults:
+  enabled: true
+  gate_mode: block                        # block | warn
+  operation_rules: override               # override | global
+
+  # ── Modello rischio — Set A ──────────────────────────────────────────────
+  # Il centro del sistema è il rischio massimo accettato, non la size.
+  # La size viene calcolata dal sistema in base a: entry, stop loss, leva.
+  risk_mode: risk_pct_of_capital         # risk_pct_of_capital | risk_usdt_fixed
+  risk_pct_of_capital: 1.0               # % capitale che puoi perdere su un singolo trade
+  risk_usdt_fixed: 10.0                  # perdita massima fissa (USDT) se risk_mode=risk_usdt_fixed
+  capital_base_mode: static_config       # static_config | live_equity (live = Fase 5)
+  capital_base_usdt: 1000.0              # capitale di riferimento (se static_config)
+
+  use_trader_risk_hint: false             # usa risk_hint estratto dal parser
+  leverage: 1
+  max_capital_at_risk_per_trader_pct: 5.0
+  max_concurrent_same_symbol: 1
+
+  # null = nessun limite esplicito sul numero di entry utilizzabili
+  max_entries_to_use: null
+
+  # Frazionamento entry per struttura canonica.
+  #
+  # Struttura canonica dispatch:
+  #   entry_structure = ONE_SHOT  + entry_type = MARKET  → MARKET.single
+  #   entry_structure = ONE_SHOT  + entry_type = LIMIT   → LIMIT.single
+  #   entry_structure = TWO_STEP  + primo leg market      → MARKET.averaging
+  #   entry_structure = TWO_STEP  + primo leg limit       → LIMIT.averaging
+  #   entry_structure = RANGE                             → LIMIT.range
+  #   entry_structure = LADDER                            → LIMIT.ladder
+  #
+  # Valori legacy entry_type (AVERAGING, ZONE) e entry_structure (SINGLE) sono
+  # accettati in input ma generano DeprecationWarning e vengono normalizzati
+  # automaticamente dal motore.
+  # I blocchi policy AVERAGING e ZONE sono deprecati: non aggiungerli in nuove policy.
+
+  entry_split:
+
+    LIMIT:
+      single:
+        weights:
+          E1: 1.0
+      range:
+        # split_mode: come trattare il range di prezzo (P1=basso, P2=alto).
+        #
+        # endpoints  → 2 ordini limit (P1 e P2). Size distribuita con E1/E2 (weights qui sotto).
+        # firstpoint → 1 ordine limit a P1 (piu' basso). Size 100%. Weights ignorati.
+        # lastpoint  → 1 ordine limit a P2 (piu' alto).  Size 100%. Weights ignorati.
+        # midpoint   → 1 ordine limit a (P1+P2)/2.       Size 100%. Weights ignorati.
+        #
+        # I weights E1/E2 si applicano SOLO con split_mode: endpoints.
+
+        split_mode: endpoints # endpoints | firstpoint | lastpoint | midpoint
+        weights:
+          E1: 0.50
+          E2: 0.50
+      averaging:
+        weights:
+          E1: 0.70
+          E2: 0.30
+      ladder:
+        weights:
+          E1: 0.50
+          E2: 0.30
+          E3: 0.20
+
+    MARKET:
+      single:
+        weights:
+          E1: 1.0
+      averaging:
+        weights:
+          E1: 0.70
+          E2: 0.30
+
+  # AVERAGING: # DEPRECATO — usare LIMIT.averaging con entry_structure='TWO_STEP'
+  # ZONE:      # DEPRECATO — usare LIMIT.range   con entry_structure='RANGE'        
+
+  # Price corrections hook (implementazione futura)
+  price_corrections:
+    enabled: false
+    method: null                        # "number_theory" | "round_to_tick" | null
+
+  # Range statici per sanity check (opzionale, senza dati live implementazione futura) 
+  price_sanity:
+    enabled: false
+    symbol_ranges: {}
+
+  # ── Gestione TP ─────────────────────────────────────────────────────────
+  tp_handling:
+    tp_handling_mode: follow_all_signal_tps   # follow_all_signal_tps | limit_to_max_levels
+    max_tp_levels: 3                           # usato solo se limit_to_max_levels
+    tp_close_distribution:                     # tabelle separate per numero di TP
+      2: [50, 50]
+      3: [30, 30, 40]
+      4: [25, 25, 25, 25]
+      # fallback: distribuzione uguale se numero TP non in tabella
+
+  # ── Set B — snapshot regole gestione posizione (letto da Sistema 1) ───── 
+  # quasta parte deve essere modificata (mapping U_MOVE_STOP??)
+updates:
+  # Bootstrap MVP: flag semplici per filtrare gli update del trader.
+  apply_move_stop: true
+  apply_close_partial: true
+  apply_close_full: true
+  apply_cancel_pending: true
+  apply_add_entry: true
+  
+  log_only_intents:               # UPDATE intents solo informativi
+        - U_TP_HIT                # rivedere la semantica
+        - U_SL_HIT
+        - BE_SL_HIT
+
+pending:
+   # Master switch per tutte le logiche di cancel engine TP-triggered (sotto).
+  # false = disabilita cancel_averaging_pending_after e cancel_unfilled_pending_after
+  #         indipendentemente dai loro valori.
+  # Non influenza cancel_pending_on_timeout (ha il suo flag separato).
+  cancel_pending_by_engine: true
+
+
+  # Timeout di un ordine pending non fillato.
+  cancel_pending_on_timeout: true
+  pending_timeout_hours: 24
+  chain_timeout_hours: 168 # Timeout massimo dell'intera chain.
+
+  # Cancella gli entry pending rimasti dopo il hit di un TP con open_size > 0.
+  # Scenario: E1 fillato, E2 averaging ancora pending → TP1 colpito → cancella E2.
+  # null  = mai
+  # "tp1" = dopo il primo TP parziale
+  # "tp2" = dopo il secondo TP parziale
+  # "tp3" = dopo il terzo TP parziale
+  # "tp4" = dopo il quarto TP parziale
+  cancel_averaging_pending_after: null
+
+  # Cancella TUTTI i pending se il prezzo raggiunge un TP senza alcun fill (open_size == 0).
+  # Scenario: LIMIT a 100, prezzo sale a TP1 senza toccare 100 → cancella tutto.
+  # null  = mai
+  # "tp1" = se TP1 raggiunto prima di qualsiasi fill
+  # "tp2" = se TP2 raggiunto prima di qualsiasi fill
+  cancel_unfilled_pending_after: null
+  # cancel_all_pending_after_break_even: false
+
+

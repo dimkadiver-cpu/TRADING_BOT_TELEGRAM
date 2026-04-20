@@ -26,6 +26,7 @@ from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.storage.review_queue import ReviewQueueStore
 from src.telegram.channel_config import ChannelsConfig
+from src.telegram.topic_utils import extract_message_topic_id
 from src.telegram.effective_trader import EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
@@ -120,6 +121,7 @@ class TelegramListener:
                     source_trader_id=msg.source_trader_id,
                     reply_to_message_id=msg.reply_to_message_id,
                     acquisition_mode="catchup",
+                    source_topic_id=msg.source_topic_id,
                 )
             )
 
@@ -128,36 +130,92 @@ class TelegramListener:
         if not active and not self._fallback_ids:
             return
         cutoff = datetime.now(timezone.utc) - timedelta(hours=self._config.recovery_max_hours)
-        chat_ids_to_recover = [ch.chat_id for ch in active] if active else list(self._fallback_ids)
-        for chat_id in chat_ids_to_recover:
-            last_id = self._status_store.get_last_telegram_message_id(str(chat_id))
-            try:
-                messages = await client.get_messages(chat_id, min_id=last_id or 0, limit=200)
-            except Exception:
-                self._logger.exception("recovery: failed to fetch messages | chat=%s", chat_id)
-                continue
 
-            catchup_messages = [
-                msg
-                for msg in messages
-                if isinstance(msg, Message) and msg.date is not None and _as_utc(msg.date) >= cutoff
-            ]
-            catchup_messages.sort(key=lambda msg: msg.id)
-            if catchup_messages:
-                self._logger.info(
-                    "recovery: %d catchup messages | chat=%s since_id=%s",
-                    len(catchup_messages),
-                    chat_id,
-                    last_id,
-                )
-            for msg in catchup_messages:
-                await self._ingest_and_enqueue(
-                    message=msg,
-                    chat_id=chat_id,
-                    chat_title=None,
-                    chat_username=None,
-                    acquisition_mode="catchup",
-                )
+        if active:
+            # Build per-chat map: chat_id → list of active entries
+            chat_entry_map: dict[int, list] = {}
+            for ch in active:
+                chat_entry_map.setdefault(ch.chat_id, []).append(ch)
+
+            for chat_id, entries in chat_entry_map.items():
+                # Per-entry topic-aware checkpoint; use min to not miss any messages
+                per_entry_last = [
+                    self._status_store.get_last_telegram_message_id(str(chat_id), e.topic_id)
+                    for e in entries
+                ]
+                min_last_id = min((x for x in per_entry_last if x is not None), default=None)
+                try:
+                    messages = await client.get_messages(
+                        chat_id, min_id=min_last_id or 0, limit=200
+                    )
+                except Exception:
+                    self._logger.exception("recovery: failed to fetch messages | chat=%s", chat_id)
+                    continue
+
+                catchup_messages = [
+                    msg
+                    for msg in messages
+                    if isinstance(msg, Message)
+                    and msg.date is not None
+                    and _as_utc(msg.date) >= cutoff
+                ]
+                catchup_messages.sort(key=lambda msg: msg.id)
+                if catchup_messages:
+                    self._logger.info(
+                        "recovery: %d catchup messages | chat=%s since_id=%s",
+                        len(catchup_messages),
+                        chat_id,
+                        min_last_id,
+                    )
+                for msg in catchup_messages:
+                    topic_id = extract_message_topic_id(msg)
+                    if not self._is_allowed_message(chat_id, topic_id):
+                        continue
+                    await self._ingest_and_enqueue(
+                        message=msg,
+                        chat_id=chat_id,
+                        chat_title=None,
+                        chat_username=None,
+                        acquisition_mode="catchup",
+                        source_topic_id=topic_id,
+                    )
+        else:
+            # Fallback IDs path: no config entries, use chat-level checkpoint
+            for chat_id in self._fallback_ids:
+                last_id = self._status_store.get_last_telegram_message_id(str(chat_id))
+                try:
+                    messages = await client.get_messages(
+                        chat_id, min_id=last_id or 0, limit=200
+                    )
+                except Exception:
+                    self._logger.exception("recovery: failed to fetch messages | chat=%s", chat_id)
+                    continue
+
+                catchup_messages = [
+                    msg
+                    for msg in messages
+                    if isinstance(msg, Message)
+                    and msg.date is not None
+                    and _as_utc(msg.date) >= cutoff
+                ]
+                catchup_messages.sort(key=lambda msg: msg.id)
+                if catchup_messages:
+                    self._logger.info(
+                        "recovery: %d catchup messages | chat=%s since_id=%s",
+                        len(catchup_messages),
+                        chat_id,
+                        last_id,
+                    )
+                for msg in catchup_messages:
+                    topic_id = extract_message_topic_id(msg)
+                    await self._ingest_and_enqueue(
+                        message=msg,
+                        chat_id=chat_id,
+                        chat_title=None,
+                        chat_username=None,
+                        acquisition_mode="catchup",
+                        source_topic_id=topic_id,
+                    )
 
     async def run_worker(self) -> None:
         self._logger.info("listener worker started")
@@ -181,12 +239,18 @@ class TelegramListener:
     ) -> None:
         message: Message = event.message
         chat_id_raw = int(event.chat_id) if event.chat_id is not None else None
+        topic_id = extract_message_topic_id(message)
 
-        if not self._is_allowed_chat(chat_id_raw):
+        if not self._is_allowed_message(chat_id_raw, topic_id):
             return
 
         if _is_media_only(message):
-            self._logger.info("media_only_skipped | chat=%s msg_id=%s", chat_id_raw, message.id)
+            self._logger.info(
+                "media_only_skipped | chat=%s topic=%s msg_id=%s",
+                chat_id_raw,
+                topic_id,
+                message.id,
+            )
             return
 
         chat_title = getattr(event.chat, "title", None) or getattr(event.chat, "username", None)
@@ -198,6 +262,7 @@ class TelegramListener:
             chat_title=chat_title,
             chat_username=chat_username,
             acquisition_mode=acquisition_mode,
+            source_topic_id=topic_id,
         )
 
     async def _ingest_and_enqueue(
@@ -208,14 +273,16 @@ class TelegramListener:
         chat_title: str | None,
         chat_username: str | None,
         acquisition_mode: str,
+        source_topic_id: int | None = None,
     ) -> None:
         source_chat_id = str(chat_id) if chat_id is not None else "unknown"
         raw_text = message.message or ""
 
-        if self._is_blacklisted(raw_text, chat_id):
+        if self._is_blacklisted(raw_text, chat_id, source_topic_id):
             self._logger.info(
-                "blacklisted | chat=%s msg_id=%s text_start=%.80r",
+                "blacklisted | chat=%s topic=%s msg_id=%s text_start=%.80r",
                 source_chat_id,
+                source_topic_id,
                 message.id,
                 raw_text,
             )
@@ -227,6 +294,7 @@ class TelegramListener:
                     chat_username=chat_username,
                     trader_id=None,
                     acquisition_status="BLACKLISTED",
+                    source_topic_id=source_topic_id,
                 )
             )
             if result.raw_message_id is not None:
@@ -241,13 +309,24 @@ class TelegramListener:
                 chat_username=chat_username,
                 trader_id=None,
                 acquisition_status="ACQUIRED_ELIGIBLE",
+                source_topic_id=source_topic_id,
             )
         )
         if not ingestion.saved and ingestion.raw_message_id is not None:
-            self._logger.info("duplicate skipped | chat=%s msg_id=%s", source_chat_id, message.id)
+            self._logger.info(
+                "duplicate skipped | chat=%s topic=%s msg_id=%s",
+                source_chat_id,
+                source_topic_id,
+                message.id,
+            )
             return
         if ingestion.raw_message_id is None:
-            self._logger.warning("ingest failed | chat=%s msg_id=%s", source_chat_id, message.id)
+            self._logger.warning(
+                "ingest failed | chat=%s topic=%s msg_id=%s",
+                source_chat_id,
+                source_topic_id,
+                message.id,
+            )
             return
 
         reply_to_message_id = (
@@ -264,11 +343,13 @@ class TelegramListener:
                 source_trader_id=None,
                 reply_to_message_id=reply_to_message_id,
                 acquisition_mode=acquisition_mode,
+                source_topic_id=source_topic_id,
             )
         )
         self._logger.info(
-            "raw acquired | chat=%s msg_id=%s mode=%s raw_message_id=%s",
+            "raw acquired | chat=%s topic=%s msg_id=%s mode=%s raw_message_id=%s",
             source_chat_id,
+            source_topic_id,
             message.id,
             acquisition_mode,
             ingestion.raw_message_id,
@@ -277,18 +358,18 @@ class TelegramListener:
     def _process_item(self, item: _QueueItem) -> None:
         self._router.route(item)
 
-    def _is_allowed_chat(self, chat_id: int | None) -> bool:
+    def _is_allowed_message(self, chat_id: int | None, topic_id: int | None) -> bool:
         if chat_id is None:
             return False
         if self._fallback_ids:
             return chat_id in self._fallback_ids
-        active = self._config.active_chat_ids
-        if not active:
-            return True
-        return chat_id in active
+        if not self._config.channels:
+            return True  # no channels configured at all → open mode
+        entry = self._config.match_entry(chat_id, topic_id)
+        return entry is not None and entry.active
 
-    def _is_blacklisted(self, raw_text: str, chat_id: int | None) -> bool:
-        return is_blacklisted_text(self._config, raw_text, chat_id)
+    def _is_blacklisted(self, raw_text: str, chat_id: int | None, topic_id: int | None = None) -> bool:
+        return is_blacklisted_text(self._config, raw_text, chat_id, topic_id)
 
 
 def _is_media_only(message: Message) -> bool:
@@ -309,6 +390,7 @@ def _build_incoming(
     chat_username: str | None,
     trader_id: str | None,
     acquisition_status: str,
+    source_topic_id: int | None = None,
 ) -> TelegramIncomingMessage:
     return TelegramIncomingMessage(
         source_chat_id=source_chat_id,
@@ -324,6 +406,7 @@ def _build_incoming(
         raw_text=message.message,
         message_ts=message.date or datetime.now(timezone.utc),
         acquisition_status=acquisition_status,
+        source_topic_id=source_topic_id,
     )
 
 

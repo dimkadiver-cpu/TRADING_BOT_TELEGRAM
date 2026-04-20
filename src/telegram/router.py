@@ -54,17 +54,27 @@ class QueueItem:
     source_trader_id: str | None
     reply_to_message_id: int | None
     acquisition_mode: str
+    source_topic_id: int | None = None
 
 
-def is_blacklisted_text(config: ChannelsConfig, raw_text: str, chat_id: int | None) -> bool:
+def is_blacklisted_text(
+    config: ChannelsConfig,
+    raw_text: str,
+    chat_id: int | None,
+    topic_id: int | None = None,
+) -> bool:
+    """Return True if raw_text matches blacklist_global or the scope-matched entry blacklist.
+
+    Rule: blacklist_global + blacklist_scope_matchato (no implicit merge between topic and forum-wide).
+    """
     text_lower = raw_text.lower()
     for tag in config.blacklist_global:
         if tag.lower() in text_lower:
             return True
     if chat_id is not None:
-        channel = config.channel_for(chat_id)
-        if channel is not None:
-            for tag in channel.blacklist:
+        entry = config.match_entry(chat_id, topic_id)
+        if entry is not None:
+            for tag in entry.blacklist:
                 if tag.lower() in text_lower:
                     return True
     return False
@@ -128,11 +138,12 @@ class MessageRouter:
         now_ts = datetime.now(timezone.utc).isoformat()
         chat_id_int = _safe_int(item.source_chat_id)
 
-        if is_blacklisted_text(self._config, item.raw_text, chat_id_int):
+        if is_blacklisted_text(self._config, item.raw_text, chat_id_int, item.source_topic_id):
             self._status_store.update(item.raw_message_id, "blacklisted")
             self._logger.info(
-                "blacklisted | chat_id=%s telegram_message_id=%s raw_message_id=%s",
+                "blacklisted | chat_id=%s topic_id=%s telegram_message_id=%s raw_message_id=%s",
                 item.source_chat_id,
+                item.source_topic_id,
                 item.telegram_message_id,
                 item.raw_message_id,
             )
@@ -162,12 +173,13 @@ class MessageRouter:
             )
             return
 
-        if self._is_inactive_channel(chat_id_int):
+        if self._is_inactive_channel(chat_id_int, item.source_topic_id):
             self._status_store.update(item.raw_message_id, "done")
             self._logger.info(
-                "trader_inactive | trader_id=%s chat_id=%s telegram_message_id=%s",
+                "trader_inactive | trader_id=%s chat_id=%s topic_id=%s telegram_message_id=%s",
                 trader_resolution.trader_id,
                 item.source_chat_id,
+                item.source_topic_id,
                 item.telegram_message_id,
             )
             return
@@ -283,6 +295,7 @@ class MessageRouter:
                 item=item,
                 trader_id=trader_id,
                 now_ts=now_ts,
+                source_topic_id=item.source_topic_id,
             )
             if self._signals_store is not None:
                 self._signals_store.insert(signal_rec)
@@ -330,6 +343,7 @@ class MessageRouter:
                     trader_id=trader_id,
                     resolved=resolved,
                     now_ts=now_ts,
+                    source_topic_id=item.source_topic_id,
                 )
                 op_signal_id = self._op_signals_store.insert(op_rec)
                 self._logger.debug(
@@ -459,22 +473,22 @@ class MessageRouter:
         if trader_resolution.trader_id is not None:
             return trader_resolution
 
-        channel = self._config.channel_for(_safe_int(item.source_chat_id))
-        if channel is not None and channel.trader_id:
+        entry = self._config.match_entry(_safe_int(item.source_chat_id), item.source_topic_id)
+        if entry is not None and entry.trader_id:
             return EffectiveTraderResult(
-                trader_id=channel.trader_id,
+                trader_id=entry.trader_id,
                 method="channels_yaml",
-                detail=channel.label,
+                detail=entry.label,
             )
         return trader_resolution
 
-    def _is_inactive_channel(self, chat_id: int | None) -> bool:
+    def _is_inactive_channel(self, chat_id: int | None, topic_id: int | None = None) -> bool:
         if chat_id is None:
             return False
-        channel = self._config.channel_for(chat_id)
-        if channel is None:
+        entry = self._config.match_entry(chat_id, topic_id)
+        if entry is None:
             return False
-        return not channel.active
+        return not entry.active
 
     def _resolve_reply_raw_text(
         self,
@@ -519,6 +533,7 @@ def _build_signal_record(
     item: QueueItem,
     trader_id: str,
     now_ts: str,
+    source_topic_id: int | None = None,
 ) -> SignalRecord:
     entities: dict[str, Any] = (
         op_signal.parse_result.entities
@@ -555,6 +570,7 @@ def _build_signal_record(
         raw_text=item.raw_text,
         created_at=now_ts,
         updated_at=now_ts,
+        source_topic_id=source_topic_id,
     )
 
 
@@ -566,6 +582,7 @@ def _build_op_signal_record(
     trader_id: str,
     resolved: ResolvedTarget | None,
     now_ts: str,
+    source_topic_id: int | None = None,
 ) -> OperationalSignalRecord:
     return OperationalSignalRecord(
         parse_result_id=parse_result_id,
@@ -597,6 +614,7 @@ def _build_op_signal_record(
         target_eligibility=resolved.eligibility if resolved is not None else None,
         target_reason=resolved.reason if resolved is not None else None,
         created_at=now_ts,
+        source_topic_id=source_topic_id,
     )
 
 

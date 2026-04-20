@@ -59,6 +59,7 @@ class OperationalSignalRecord:
     target_reason: str | None
 
     created_at: str
+    source_topic_id: int | None = None
 
 
 class OperationalSignalsStore:
@@ -68,62 +69,60 @@ class OperationalSignalsStore:
         self._db_path = db_path
 
     def insert(self, record: OperationalSignalRecord) -> int:
-        """INSERT a new operational_signal and return its op_signal_id."""
-        query = """
-            INSERT INTO operational_signals (
-              parse_result_id, attempt_key, trader_id, message_type,
-              is_blocked, block_reason,
-              risk_mode, risk_pct_of_capital, risk_usdt_fixed,
-              capital_base_usdt, risk_budget_usdt, sl_distance_pct,
-              position_size_usdt, position_size_pct,
-              entry_split_json, leverage, risk_hint_used,
-              management_rules_json, price_corrections_json,
-              applied_rules_json, warnings_json,
-              resolved_target_ids, target_eligibility, target_reason,
-              created_at
-            ) VALUES (
-              ?, ?, ?, ?,
-              ?, ?,
-              ?, ?, ?,
-              ?, ?, ?,
-              ?, ?,
-              ?, ?, ?,
-              ?, ?,
-              ?, ?,
-              ?, ?, ?,
-              ?
-            )
+        """INSERT a new operational_signal and return its op_signal_id.
+
+        source_topic_id is inserted conditionally — absent on legacy schemas.
         """
+        base_cols = [
+            "parse_result_id", "attempt_key", "trader_id", "message_type",
+            "is_blocked", "block_reason",
+            "risk_mode", "risk_pct_of_capital", "risk_usdt_fixed",
+            "capital_base_usdt", "risk_budget_usdt", "sl_distance_pct",
+            "position_size_usdt", "position_size_pct",
+            "entry_split_json", "leverage", "risk_hint_used",
+            "management_rules_json", "price_corrections_json",
+            "applied_rules_json", "warnings_json",
+            "resolved_target_ids", "target_eligibility", "target_reason",
+            "created_at",
+        ]
+        base_vals: list = [
+            record.parse_result_id,
+            record.attempt_key,
+            record.trader_id,
+            record.message_type,
+            1 if record.is_blocked else 0,
+            record.block_reason,
+            record.risk_mode,
+            record.risk_pct_of_capital,
+            record.risk_usdt_fixed,
+            record.capital_base_usdt,
+            record.risk_budget_usdt,
+            record.sl_distance_pct,
+            record.position_size_usdt,
+            record.position_size_pct,
+            record.entry_split_json,
+            record.leverage,
+            1 if record.risk_hint_used else 0,
+            record.management_rules_json,
+            record.price_corrections_json,
+            record.applied_rules_json,
+            record.warnings_json,
+            record.resolved_target_ids,
+            record.target_eligibility,
+            record.target_reason,
+            record.created_at,
+        ]
         with sqlite3.connect(self._db_path) as conn:
+            avail = {row[1] for row in conn.execute("PRAGMA table_info(operational_signals)")}
+            if "source_topic_id" in avail:
+                base_cols.append("source_topic_id")
+                base_vals.append(record.source_topic_id)
+
+            placeholders = ", ".join("?" * len(base_vals))
+            col_str = ", ".join(base_cols)
             cursor = conn.execute(
-                query,
-                (
-                    record.parse_result_id,
-                    record.attempt_key,
-                    record.trader_id,
-                    record.message_type,
-                    1 if record.is_blocked else 0,
-                    record.block_reason,
-                    record.risk_mode,
-                    record.risk_pct_of_capital,
-                    record.risk_usdt_fixed,
-                    record.capital_base_usdt,
-                    record.risk_budget_usdt,
-                    record.sl_distance_pct,
-                    record.position_size_usdt,
-                    record.position_size_pct,
-                    record.entry_split_json,
-                    record.leverage,
-                    1 if record.risk_hint_used else 0,
-                    record.management_rules_json,
-                    record.price_corrections_json,
-                    record.applied_rules_json,
-                    record.warnings_json,
-                    record.resolved_target_ids,
-                    record.target_eligibility,
-                    record.target_reason,
-                    record.created_at,
-                ),
+                f"INSERT INTO operational_signals ({col_str}) VALUES ({placeholders})",
+                base_vals,
             )
             conn.commit()
             return int(cursor.lastrowid)  # type: ignore[arg-type]
