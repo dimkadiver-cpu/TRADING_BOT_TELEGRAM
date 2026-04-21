@@ -1,3 +1,4 @@
+Posibile modificare ordine dell ecolonen in RAW_MESSAGE: Topic insieme a ... 
 Perche quando salva raw_message non vengono popolate:
 - source_chat_title
 
