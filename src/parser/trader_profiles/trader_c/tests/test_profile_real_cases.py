@@ -41,6 +41,20 @@ class TraderCProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "NEW_SIGNAL")
         self.assertEqual(len(result.entities.get("entries", [])), 2)
         self.assertEqual(result.entities.get("entry_plan_type"), "MULTI")
+        self.assertEqual(result.entities.get("entry_structure"), "TWO_STEP")
+
+    def test_new_signal_three_entry_tranches_are_ladder(self) -> None:
+        text = (
+            "$BTCUSDT - LONG\n"
+            "\u0412\u0445\u043e\u0434 \u043b\u0438\u043c\u0438\u0442\u043a\u043e\u0439\n"
+            "1)87650(1/4)\n2)87150(2/4)\n3)86650(3/4)\n"
+            "Stop 86100. 1% \u0434\u0435\u043f\n"
+            "T\u0435\u0439\u043a-\u043f\u0440\u043e\u0444\u0438\u0442 \n"
+            "1)88200(RR1-1)\n2)88900(RR1-2)\n3)89500(RR1-3)"
+        )
+        result = self.parser.parse_message(text, _context(text=text))
+        self.assertEqual(result.message_type, "NEW_SIGNAL")
+        self.assertEqual(result.entities.get("entry_structure"), "LADDER")
 
     def test_new_signal_limit_single(self) -> None:
         text = "$BTCUSDT - LONG\nВход лимитка 92550\nStop 91800\nTейк-профит 93200"
@@ -222,6 +236,19 @@ class TraderCProfileRealCasesTests(unittest.TestCase):
         self.assertEqual(result.message_type, "UPDATE")
         self.assertIn("trader_c_update_weak_target_only", result.warnings)
         self.assertEqual(result.target_scope, {"kind": "signal", "scope": "unknown"})
+
+    def test_addon_reply_to_existing_setup_is_update_reenter(self) -> None:
+        text = (
+            "[trader #\u0421]\n\n$BT\u0421USDT - LONG \n\n"
+            "\u0412\u0445\u043e\u0434 72100 \u0434\u043e\u043b\u0438\u043b \u043e\u0441\u0442\u0430\u0442\u043e\u043a "
+            "\u043f\u043e\u0437\u044b \u043a \u0442\u0435\u043a\u0443\u0449\u0435\u043c\u0443 \u0441\u044d\u0442\u0430\u043f\u0443.\n\n"
+            "Stop 71250 \u0432 \u0431\u0443 .  0,2%\u0434\u0435\u043f\n\n"
+            "T\u0435\u0439\u043a-\u043f\u0440\u043e\u0444\u0438\u0442 \n\n1) 74500 \u043d\u0430 \u044d\u0442\u043e\u0442 \u043e\u0431\u044a\u0435\u043c"
+        )
+        result = self.parser.parse_message(text, _context(text=text, reply_to=3162))
+        self.assertEqual(result.message_type, "UPDATE")
+        self.assertIn("U_REENTER", result.intents)
+        self.assertIn("reply", {ref["kind"] for ref in result.target_refs})
 
 
 if __name__ == "__main__":

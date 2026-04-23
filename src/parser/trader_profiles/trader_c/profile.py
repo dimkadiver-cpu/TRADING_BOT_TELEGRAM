@@ -6,6 +6,28 @@ from pathlib import Path
 import re
 from typing import Any
 
+from src.parser.canonical_v1.models import (
+    CancelPendingOperation,
+    CanonicalMessage,
+    CloseOperation,
+    EntryLeg,
+    ModifyEntriesOperation,
+    ModifyTargetsOperation,
+    Price,
+    RawContext,
+    ReportEvent,
+    ReportPayload,
+    ReportedResult,
+    SignalPayload,
+    StopLoss,
+    StopTarget,
+    TakeProfit,
+    Targeting,
+    TargetRef,
+    TargetScope,
+    UpdateOperation,
+    UpdatePayload,
+)
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
@@ -150,6 +172,14 @@ _UPDATE_TP_STRONG_EXCLUSION_MARKERS = (
 )
 _UPDATE_STOP_MARKERS = ("стоп переносим", "рискуем профитом с тп")
 _REENTER_MARKERS = ("перезаход", "re-enter", "перезашел", "перезашли")
+_REENTER_ADDON_MARKERS = (
+    "долил",
+    "доливаю",
+    "добрал",
+    "добираю",
+    "к текущему сетапу",
+    "к текущей позиции",
+)
 # Detects "Стоп в PRICE" stop-move pattern
 _STOP_AT_PRICE_RE = re.compile(r"\bстоп\s+в\s+\d", re.IGNORECASE)
 # INFO-level clarification openers
@@ -192,6 +222,161 @@ class TraderCProfileParser(TraderBProfileParser):
             diagnostics={"parser_version": "trader_c_v1", "warning_count": len(warnings)},
         )
 
+    def parse_canonical(self, text: str, context: ParserContext) -> CanonicalMessage:
+        """Produce a CanonicalMessage v1 directly without the normalizer."""
+        prepared = self._preprocess(text=text, context=context)
+        message_type = self._classify_message(prepared=prepared)
+        entities = self._extract_entities(prepared=prepared, message_type=message_type)
+        intents = self._extract_intents(prepared=prepared, message_type=message_type, entities=entities)
+        target_refs = self._extract_targets(prepared=prepared, context=context, entities=entities)
+        warnings: list[str] = list(
+            self._build_warnings(
+                message_type=message_type,
+                intents=intents,
+                target_refs=target_refs,
+                entities=entities,
+            )
+        )
+        confidence = self._estimate_confidence(message_type=message_type, warnings=warnings)
+        primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
+
+        raw_ctx = RawContext(
+            raw_text=context.raw_text or "",
+            reply_to_message_id=context.reply_to_message_id,
+            extracted_links=list(context.extracted_links or []),
+            hashtags=list(context.hashtags or []),
+            source_chat_id=str(context.channel_id) if context.channel_id else None,
+        )
+        targeting = _build_tc_targeting(message_type, target_refs, context)
+        diagnostics = {"parser_version": "trader_c_v1", "warning_count": len(warnings)}
+
+        if message_type == "NEW_SIGNAL":
+            signal = _build_tc_signal_payload(entities, warnings)
+            parse_status = "PARSED" if signal.completeness == "COMPLETE" else "PARTIAL"
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="SIGNAL",
+                parse_status=parse_status,
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                signal=signal,
+                warnings=warnings,
+                diagnostics=diagnostics,
+                raw_context=raw_ctx,
+            )
+
+        if message_type == "INFO_ONLY":
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="PARSED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics=diagnostics,
+                raw_context=raw_ctx,
+            )
+
+        if message_type == "UPDATE":
+            update_ops = _build_tc_update_ops(intents, entities, warnings)
+            report_events = _build_tc_report_events(intents, entities)
+            reported_result = _build_tc_reported_result(entities)
+            has_ops = bool(update_ops)
+            has_report = bool(report_events) or reported_result is not None
+            report_payload = (
+                ReportPayload(events=report_events, reported_result=reported_result)
+                if has_report
+                else None
+            )
+
+            if has_ops and has_report:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=update_ops),
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_ctx,
+                )
+            if has_ops:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=update_ops),
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_ctx,
+                )
+            if has_report:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="REPORT",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_ctx,
+                )
+            if intents:
+                warnings.append("trader_c_update_no_resolvable_ops")
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARTIAL",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=[]),
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_ctx,
+                )
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="UNCLASSIFIED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics=diagnostics,
+                raw_context=raw_ctx,
+            )
+
+        return CanonicalMessage(
+            parser_profile=context.trader_code,
+            primary_class="INFO",
+            parse_status="UNCLASSIFIED",
+            confidence=confidence,
+            intents=intents,
+            primary_intent=primary_intent,
+            targeting=targeting,
+            warnings=warnings,
+            diagnostics=diagnostics,
+            raw_context=raw_ctx,
+        )
+
     def _preprocess(self, *, text: str, context: ParserContext) -> dict[str, Any]:
         raw_text = text or context.raw_text
         return {"raw_text": raw_text, "normalized_text": normalize_text(raw_text)}
@@ -219,6 +404,8 @@ class TraderCProfileParser(TraderBProfileParser):
         has_stop = _extract_stop(raw_text) is not None
         has_tp = bool(_extract_take_profits(raw_text)) or any(token in normalized for token in ("тейк", "tейк", "тп", "tp"))
         has_entry_signal = bool(_RANGE_ENTRY_RE.search(raw_text) or _LIMIT_ENTRY_RE.search(raw_text) or _TRANCHE_RE.search(raw_text) or "вход" in normalized)
+        if self._looks_like_reentry_update(normalized=normalized):
+            return "UPDATE"
         if has_symbol and has_side and has_stop and has_tp and has_entry_signal:
             return "NEW_SIGNAL"
 
@@ -236,6 +423,10 @@ class TraderCProfileParser(TraderBProfileParser):
         if _contains_any_static(normalized, _ADMIN_MARKERS):
             return True
         return False
+
+    @staticmethod
+    def _looks_like_reentry_update(*, normalized: str) -> bool:
+        return _contains_any_static(normalized, (*_REENTER_MARKERS, *_REENTER_ADDON_MARKERS))
 
     def _extract_entities(self, *, prepared: dict[str, Any], message_type: str) -> dict[str, Any]:
         raw_text = str(prepared.get("raw_text") or "")
@@ -267,7 +458,7 @@ class TraderCProfileParser(TraderBProfileParser):
                     "risk_value_raw": risk_raw,
                     "risk_value_normalized": risk_norm,
                     "entry_plan_type": "SINGLE" if is_range_entry or len(entries) <= 1 else "MULTI",
-                    "entry_structure": "RANGE" if is_range_entry else ("LADDER" if len(entries) > 1 else "ONE_SHOT"),
+                    "entry_structure": _derive_entry_structure(is_range_entry=is_range_entry, entry_count=len(entries)),
                     "has_averaging_plan": len(entries) > 1 and not is_range_entry,
                 }
             )
@@ -376,7 +567,7 @@ class TraderCProfileParser(TraderBProfileParser):
         if "стоп -" in normalized:
             intents.append("U_STOP_HIT")
 
-        if self._contains_any(normalized, _REENTER_MARKERS):
+        if self._looks_like_reentry_update(normalized=normalized):
             intents.append("U_REENTER")
 
         if entities.get("partial_close_percent") is not None:
@@ -476,6 +667,7 @@ class TraderCProfileParser(TraderBProfileParser):
                 *_UPDATE_TP_MARKERS,
                 *_UPDATE_STOP_MARKERS,
                 *_REENTER_MARKERS,
+                *_REENTER_ADDON_MARKERS,
                 "стоп -",
             ]
         ):
@@ -643,6 +835,16 @@ def _extract_risk(raw_text: str) -> tuple[str | None, float | None]:
         return None, None
     raw = match.group("value")
     return raw, _to_float(raw)
+
+
+def _derive_entry_structure(*, is_range_entry: bool, entry_count: int) -> str:
+    if is_range_entry:
+        return "RANGE"
+    if entry_count <= 1:
+        return "ONE_SHOT"
+    if entry_count == 2:
+        return "TWO_STEP"
+    return "LADDER"
 
 
 def _extract_take_profits(raw_text: str) -> list[float]:
@@ -839,6 +1041,401 @@ def _unique(values: list[str]) -> list[str]:
         seen.add(value)
         out.append(value)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Canonical v1 builder helpers (module-level, used by parse_canonical)
+# ---------------------------------------------------------------------------
+
+def _build_tc_targeting(
+    message_type: str,
+    target_refs: list[dict[str, Any]],
+    context: ParserContext,
+) -> Targeting | None:
+    if message_type == "NEW_SIGNAL":
+        return None
+
+    refs: list[TargetRef] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _add(ref_type: str, value: int | str) -> None:
+        key = (ref_type, str(value))
+        if key in seen:
+            return
+        seen.add(key)
+        refs.append(TargetRef(ref_type=ref_type, value=value))  # type: ignore[arg-type]
+
+    for item in target_refs:
+        kind = str(item.get("kind") or "")
+        ref = item.get("ref")
+        if kind == "reply" and isinstance(ref, int):
+            _add("REPLY", ref)
+        elif kind == "telegram_link" and isinstance(ref, str):
+            _add("TELEGRAM_LINK", ref)
+        elif kind == "message_id" and isinstance(ref, int):
+            _add("MESSAGE_ID", ref)
+        elif kind == "symbol" and isinstance(ref, str):
+            _add("SYMBOL", ref)
+
+    if context.reply_to_message_id is not None:
+        _add("REPLY", context.reply_to_message_id)
+
+    if not refs:
+        return None
+
+    has_strong = any(r.ref_type in {"REPLY", "TELEGRAM_LINK", "MESSAGE_ID"} for r in refs)
+    strategy = "REPLY_OR_LINK" if has_strong else "SYMBOL_MATCH"
+    return Targeting(
+        refs=refs,
+        scope=TargetScope(kind="SINGLE_SIGNAL"),
+        strategy=strategy,
+        targeted=True,
+    )
+
+
+def _build_tc_signal_payload(entities: dict[str, Any], warnings: list[str]) -> SignalPayload:
+    del warnings  # currently unused by trader_c signal builder
+    symbol = entities.get("symbol")
+    side = entities.get("side")
+    order_type = str(entities.get("entry_order_type") or "LIMIT").upper()
+    entry_structure_raw = str(entities.get("entry_structure") or "").upper()
+
+    entries_raw = entities.get("entries") if isinstance(entities.get("entries"), list) else []
+    flat_entries = entities.get("entry") if isinstance(entities.get("entry"), list) else []
+    entries: list[EntryLeg] = []
+
+    if order_type == "MARKET":
+        first_price = _coerce_float(flat_entries[0]) if flat_entries else None
+        entries.append(
+            EntryLeg(
+                sequence=1,
+                entry_type="MARKET",
+                price=Price.from_float(first_price) if first_price is not None else None,
+                role="PRIMARY",
+            )
+        )
+    else:
+        for idx, item in enumerate(entries_raw, start=1):
+            if not isinstance(item, dict):
+                continue
+            price = _coerce_float(item.get("price"))
+            if price is None:
+                continue
+            sequence = int(item.get("sequence") or idx)
+            role = "PRIMARY" if sequence == 1 else "AVERAGING"
+            entries.append(
+                EntryLeg(
+                    sequence=sequence,
+                    entry_type="LIMIT",
+                    price=Price.from_float(price),
+                    role=role,
+                    size_hint=str(item.get("size_hint")) if item.get("size_hint") is not None else None,
+                )
+            )
+        if not entries:
+            for idx, value in enumerate(flat_entries, start=1):
+                price = _coerce_float(value)
+                if price is None:
+                    continue
+                role = "PRIMARY" if idx == 1 else "AVERAGING"
+                entries.append(
+                    EntryLeg(
+                        sequence=idx,
+                        entry_type="LIMIT",
+                        price=Price.from_float(price),
+                        role=role,
+                    )
+                )
+
+    stop_value = _coerce_float(entities.get("stop_loss"))
+    stop_loss = StopLoss(price=Price.from_float(stop_value)) if stop_value is not None else None
+
+    take_profits_raw = entities.get("take_profits") if isinstance(entities.get("take_profits"), list) else []
+    take_profits = [
+        TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+        for i, v in enumerate(take_profits_raw)
+        if isinstance(v, (int, float))
+    ]
+
+    entry_structure = _resolve_tc_entry_structure(entry_structure_raw, entries, order_type)
+    missing: list[str] = []
+    if not symbol:
+        missing.append("symbol")
+    if side not in {"LONG", "SHORT"}:
+        missing.append("side")
+    if entry_structure is None:
+        missing.append("entry_structure")
+    if not entries:
+        missing.append("entries")
+    if stop_loss is None:
+        missing.append("stop_loss")
+    if not take_profits:
+        missing.append("take_profits")
+
+    return SignalPayload(
+        symbol=symbol,
+        side=side,  # type: ignore[arg-type]
+        entry_structure=entry_structure,  # type: ignore[arg-type]
+        entries=entries,
+        stop_loss=stop_loss,
+        take_profits=take_profits,
+        completeness="COMPLETE" if not missing else "INCOMPLETE",
+        missing_fields=missing,
+    )
+
+
+def _resolve_tc_entry_structure(
+    raw: str,
+    entries: list[EntryLeg],
+    order_type: str,
+) -> str | None:
+    if raw in {"ONE_SHOT", "TWO_STEP", "RANGE", "LADDER"}:
+        return raw
+    if order_type == "MARKET":
+        return "ONE_SHOT"
+    count = len(entries)
+    if count == 1:
+        return "ONE_SHOT"
+    if count == 2:
+        return "TWO_STEP"
+    if count >= 3:
+        return "LADDER"
+    return None
+
+
+def _build_tc_update_ops(
+    intents: list[str],
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> list[UpdateOperation]:
+    ops: list[UpdateOperation] = []
+    intent_set = set(intents)
+
+    stop_op = _resolve_tc_set_stop_op(intent_set, entities, warnings)
+    if stop_op is not None:
+        ops.append(stop_op)
+
+    for intent in intents:
+        if intent in {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP", "U_UPDATE_STOP"}:
+            continue
+
+        if intent == "U_CLOSE_FULL":
+            ops.append(
+                UpdateOperation(
+                    op_type="CLOSE",
+                    close=CloseOperation(
+                        close_scope="FULL",
+                        close_price=_price_or_none(entities.get("close_price")),
+                    ),
+                )
+            )
+        elif intent == "U_CLOSE_PARTIAL":
+            close_price = _price_or_none(entities.get("partial_close_price"))
+            if close_price is None:
+                close_price = _price_or_none(entities.get("close_price"))
+            ops.append(
+                UpdateOperation(
+                    op_type="CLOSE",
+                    close=CloseOperation(
+                        close_scope="PARTIAL",
+                        close_fraction=_resolve_tc_close_fraction(entities.get("partial_close_percent")),
+                        close_price=close_price,
+                    ),
+                )
+            )
+        elif intent == "U_CANCEL_PENDING_ORDERS":
+            ops.append(
+                UpdateOperation(
+                    op_type="CANCEL_PENDING",
+                    cancel_pending=CancelPendingOperation(
+                        cancel_scope=str(entities.get("cancel_scope")) if entities.get("cancel_scope") else None
+                    ),
+                )
+            )
+        elif intent == "U_REMOVE_PENDING_ENTRY":
+            ops.append(
+                UpdateOperation(
+                    op_type="CANCEL_PENDING",
+                    cancel_pending=CancelPendingOperation(
+                        cancel_scope=str(entities.get("cancel_scope")) if entities.get("cancel_scope") else "REMOVE_PENDING_ENTRY"
+                    ),
+                )
+            )
+        elif intent == "U_REENTER":
+            reenter_entries = _build_tc_reenter_entries(entities)
+            if reenter_entries:
+                ops.append(
+                    UpdateOperation(
+                        op_type="MODIFY_ENTRIES",
+                        modify_entries=ModifyEntriesOperation(mode="REENTER", entries=reenter_entries),
+                    )
+                )
+            else:
+                warnings.append("U_REENTER: no entry legs found")
+        elif intent == "U_UPDATE_TAKE_PROFITS":
+            modify_targets = _build_tc_modify_targets(entities, warnings)
+            if modify_targets is not None:
+                ops.append(
+                    UpdateOperation(
+                        op_type="MODIFY_TARGETS",
+                        modify_targets=modify_targets,
+                    )
+                )
+
+    return ops
+
+
+def _resolve_tc_set_stop_op(
+    intent_set: set[str],
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> UpdateOperation | None:
+    has_move_to_be = "U_MOVE_STOP_TO_BE" in intent_set
+    has_move_stop = bool(intent_set & {"U_MOVE_STOP", "U_UPDATE_STOP"})
+    if not has_move_to_be and not has_move_stop:
+        return None
+
+    target = None
+    if has_move_stop:
+        target = _resolve_tc_stop_target(entities.get("new_stop_level"))
+        if target is None:
+            target = _resolve_tc_stop_target(entities.get("new_stop_price"))
+    if target is None and has_move_to_be:
+        target = StopTarget(target_type="ENTRY")
+    if target is None:
+        warnings.append("U_MOVE_STOP: new_stop_level missing or unresolvable")
+        return None
+
+    return UpdateOperation(op_type="SET_STOP", set_stop=target)
+
+
+def _resolve_tc_stop_target(value: Any) -> StopTarget | None:
+    if isinstance(value, (int, float)):
+        return StopTarget(target_type="PRICE", value=float(value))
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip().upper()
+    if normalized in {"ENTRY", "BE", "BREAKEVEN"}:
+        return StopTarget(target_type="ENTRY")
+    match = re.match(r"^TP(\d+)$", normalized)
+    if match:
+        return StopTarget(target_type="TP_LEVEL", value=int(match.group(1)))
+    parsed = _coerce_float(normalized)
+    if parsed is not None:
+        return StopTarget(target_type="PRICE", value=parsed)
+    return None
+
+
+def _resolve_tc_close_fraction(value: Any) -> float | None:
+    numeric = _coerce_float(value)
+    if numeric is None:
+        return None
+    fraction = abs(numeric) / 100.0
+    if fraction < 0.0:
+        return 0.0
+    if fraction > 1.0:
+        return 1.0
+    return fraction
+
+
+def _build_tc_reenter_entries(entities: dict[str, Any]) -> list[EntryLeg]:
+    entries_raw = entities.get("entries") if isinstance(entities.get("entries"), list) else []
+    out: list[EntryLeg] = []
+    for idx, item in enumerate(entries_raw, start=1):
+        if not isinstance(item, dict):
+            continue
+        price = _coerce_float(item.get("price"))
+        if price is None:
+            continue
+        sequence = int(item.get("sequence") or idx)
+        role = "PRIMARY" if sequence == 1 else "AVERAGING"
+        out.append(
+            EntryLeg(
+                sequence=sequence,
+                entry_type="LIMIT",
+                price=Price.from_float(price),
+                role=role,
+            )
+        )
+    return out
+
+
+def _build_tc_modify_targets(
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> ModifyTargetsOperation | None:
+    tps_raw = entities.get("take_profits")
+    if isinstance(tps_raw, list):
+        take_profits = [
+            TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+            for i, v in enumerate(tps_raw)
+            if isinstance(v, (int, float))
+        ]
+        if take_profits:
+            return ModifyTargetsOperation(mode="REPLACE_ALL", take_profits=take_profits)
+
+    tp_price = _coerce_float(entities.get("tp_update_price"))
+    tp_index = entities.get("tp_update_index")
+    tp_level = int(tp_index) if isinstance(tp_index, int) and tp_index >= 1 else 1
+    if tp_price is not None:
+        return ModifyTargetsOperation(
+            mode="UPDATE_ONE",
+            take_profits=[TakeProfit(sequence=tp_level, price=Price.from_float(tp_price))],
+            target_tp_level=tp_level,
+        )
+
+    warnings.append("U_UPDATE_TAKE_PROFITS: no take_profits found")
+    return None
+
+
+def _build_tc_report_events(intents: list[str], entities: dict[str, Any]) -> list[ReportEvent]:
+    events: list[ReportEvent] = []
+    result = _build_tc_reported_result(entities)
+    close_price = _price_or_none(entities.get("close_price"))
+
+    for intent in intents:
+        if intent == "U_ACTIVATION":
+            events.append(ReportEvent(event_type="ENTRY_FILLED", price=close_price))
+        elif intent == "U_TP_HIT":
+            level = entities.get("max_target_hit")
+            events.append(
+                ReportEvent(
+                    event_type="TP_HIT",
+                    level=int(level) if isinstance(level, int) and level >= 1 else None,
+                    price=close_price,
+                    result=result,
+                )
+            )
+        elif intent == "U_STOP_HIT":
+            events.append(ReportEvent(event_type="STOP_HIT", price=close_price, result=result))
+        elif intent == "U_EXIT_BE":
+            events.append(ReportEvent(event_type="BREAKEVEN_EXIT", price=close_price, result=result))
+        elif intent == "U_REPORT_FINAL_RESULT":
+            events.append(ReportEvent(event_type="FINAL_RESULT", price=close_price, result=result))
+
+    return events
+
+
+def _build_tc_reported_result(entities: dict[str, Any]) -> ReportedResult | None:
+    rr = _coerce_float(entities.get("reported_rr"))
+    if rr is None:
+        return None
+    return ReportedResult(value=rr, unit="R")
+
+
+def _price_or_none(value: Any) -> Price | None:
+    numeric = _coerce_float(value)
+    if numeric is None:
+        return None
+    return Price.from_float(numeric)
+
+
+def _coerce_float(value: Any) -> float | None:
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str):
+        return _to_float(value)
+    return None
 
 
 __all__ = ["TraderCProfileParser"]

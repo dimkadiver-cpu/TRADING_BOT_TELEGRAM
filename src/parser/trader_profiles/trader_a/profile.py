@@ -7,6 +7,27 @@ from pathlib import Path
 import re
 from typing import Any
 
+from src.parser.canonical_v1.models import (
+    CancelPendingOperation,
+    CanonicalMessage,
+    CloseOperation,
+    EntryLeg,
+    ModifyTargetsOperation,
+    Price,
+    RawContext,
+    ReportEvent,
+    ReportPayload,
+    ReportedResult,
+    SignalPayload,
+    StopLoss,
+    StopTarget,
+    TakeProfit,
+    Targeting,
+    TargetRef,
+    TargetScope,
+    UpdateOperation,
+    UpdatePayload,
+)
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text, split_lines
 from src.parser.intent_action_map import intent_policy_for_intent
@@ -194,6 +215,29 @@ _INTERMEDIATE_RESULT_MARKERS: tuple[str, ...] = (
     "\u043f\u043e\u0437\u0434\u0440\u0430\u0432\u043b\u044f\u044e",
     "\u043f\u0440\u043e\u0444\u0438\u0442",
     "profit",
+)
+
+_TA_UPDATE_INTENTS: frozenset[str] = frozenset(
+    {
+        "U_MOVE_STOP",
+        "U_MOVE_STOP_TO_BE",
+        "U_CLOSE_FULL",
+        "U_CLOSE_PARTIAL",
+        "U_CANCEL_PENDING_ORDERS",
+        "U_INVALIDATE_SETUP",
+        "U_UPDATE_TAKE_PROFITS",
+        "U_REVERSE_SIGNAL",
+    }
+)
+
+_TA_REPORT_INTENTS: frozenset[str] = frozenset(
+    {
+        "U_TP_HIT",
+        "U_STOP_HIT",
+        "U_REPORT_FINAL_RESULT",
+        "U_MARK_FILLED",
+        "U_EXIT_BE",
+    }
 )
 
 _DEFAULT_INTENT_MARKERS: dict[str, tuple[str, ...]] = {
@@ -413,6 +457,263 @@ class TraderAProfileParser:
             target_scope=target_scope,
             linking=linking,
             diagnostics=diagnostics,
+        )
+
+    def parse_canonical(self, text: str, context: ParserContext) -> CanonicalMessage:
+        """Produce CanonicalMessage v1 directly from Trader A parser output."""
+        prepared = self._preprocess(text=text, context=context)
+        target_refs = self._extract_targets(prepared=prepared, context=context)
+        global_target_scope = self._resolve_global_target_scope(prepared=prepared)
+        has_global_target = global_target_scope is not None
+        message_type = self._classify_message(prepared=prepared, context=context, target_refs=target_refs)
+        intents = self._extract_intents(
+            prepared=prepared,
+            context=context,
+            message_type=message_type,
+            target_refs=target_refs,
+        )
+
+        if message_type == "UNCLASSIFIED" and "U_REPORT_FINAL_RESULT" in intents:
+            if (target_refs or has_global_target) and any(
+                intent in intents
+                for intent in (
+                    "U_CLOSE_FULL",
+                    "U_CLOSE_PARTIAL",
+                    "U_CANCEL_PENDING_ORDERS",
+                    "U_MOVE_STOP_TO_BE",
+                    "U_MOVE_STOP",
+                    "U_TP_HIT",
+                    "U_STOP_HIT",
+                )
+            ):
+                message_type = "UPDATE"
+            else:
+                message_type = "INFO_ONLY"
+        if message_type == "UNCLASSIFIED" and "U_CANCEL_PENDING_ORDERS" in intents and (target_refs or has_global_target):
+            message_type = "UPDATE"
+        if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(
+            intent in intents for intent in ("U_CLOSE_FULL", "U_CLOSE_PARTIAL")
+        ):
+            message_type = "UPDATE"
+        if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(
+            intent in intents
+            for intent in (
+                "U_MOVE_STOP_TO_BE",
+                "U_MOVE_STOP",
+                "U_TP_HIT",
+                "U_STOP_HIT",
+                "U_MARK_FILLED",
+            )
+        ):
+            message_type = "UPDATE"
+
+        if message_type == "UPDATE" and not target_refs and not has_global_target:
+            stop_mgmt_only = set(intents) <= {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"} and bool(intents)
+            if stop_mgmt_only:
+                normalized = str(prepared.get("normalized_text") or "")
+                authoritative = _contains_any(
+                    normalized,
+                    (
+                        "стоп на точку входа",
+                        "перевести стоп в безубыток",
+                        "стоп переводим в безубыток",
+                        "стоп переводим",
+                        "по шортам стоп на точку входа",
+                    ),
+                )
+                if not authoritative:
+                    message_type = "UNCLASSIFIED"
+
+        reported_results = self._extract_reported_results(
+            prepared=prepared,
+            context=context,
+            intents=intents,
+        )
+        entities = self._extract_entities(
+            prepared=prepared,
+            context=context,
+            intents=intents,
+            target_refs=target_refs,
+            reported_results=reported_results,
+            global_target_scope=global_target_scope,
+        )
+        warnings: list[str] = list(
+            self._build_warnings(
+                prepared=prepared,
+                context=context,
+                message_type=message_type,
+                intents=intents,
+                target_refs=target_refs,
+            )
+        )
+        confidence = self._estimate_confidence(
+            prepared=prepared,
+            context=context,
+            message_type=message_type,
+            intents=intents,
+            warnings=warnings,
+        )
+        primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
+        diagnostics = self._build_diagnostics(
+            prepared=prepared,
+            message_type=message_type,
+            intents=intents,
+            warnings=warnings,
+            has_global_target=has_global_target,
+        )
+
+        raw_context = RawContext(
+            raw_text=context.raw_text or "",
+            reply_to_message_id=context.reply_to_message_id,
+            extracted_links=list(context.extracted_links or []),
+            hashtags=list(context.hashtags or []),
+            source_chat_id=str(context.channel_id) if context.channel_id else None,
+        )
+        targeting = _build_ta_targeting(
+            message_type=message_type,
+            target_refs=target_refs,
+            global_target_scope=global_target_scope,
+            context=context,
+        )
+
+        has_signal = ("NS_CREATE_SIGNAL" in intents) or message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}
+        has_update = bool(set(intents) & _TA_UPDATE_INTENTS)
+        has_report = bool(set(intents) & _TA_REPORT_INTENTS)
+
+        if has_signal:
+            signal = _build_ta_signal_payload(entities=entities)
+            parse_status = "PARSED" if signal.completeness == "COMPLETE" else "PARTIAL"
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="SIGNAL",
+                parse_status=parse_status,
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                signal=signal,
+                warnings=warnings,
+                diagnostics=diagnostics,
+                raw_context=raw_context,
+            )
+
+        if has_update:
+            update_ops = _build_ta_update_ops(intents=intents, entities=entities, warnings=warnings)
+            report_payload = _build_ta_report_payload(
+                intents=intents,
+                entities=entities,
+                reported_results=reported_results,
+            )
+            has_ops = bool(update_ops)
+            has_report_payload = report_payload is not None and (
+                bool(report_payload.events) or report_payload.reported_result is not None
+            )
+
+            if has_ops and has_report_payload:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=update_ops),
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_context,
+                )
+            if has_ops:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=update_ops),
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_context,
+                )
+            if has_report_payload:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="REPORT",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_context,
+                )
+            if intents:
+                warnings.append("trader_a_update_no_resolvable_ops")
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARTIAL",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=[]),
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_context,
+                )
+
+        if has_report:
+            report_payload = _build_ta_report_payload(
+                intents=intents,
+                entities=entities,
+                reported_results=reported_results,
+            )
+            if report_payload is not None and (report_payload.events or report_payload.reported_result is not None):
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="REPORT",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diagnostics,
+                    raw_context=raw_context,
+                )
+
+        if message_type == "INFO_ONLY":
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="PARSED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics=diagnostics,
+                raw_context=raw_context,
+            )
+
+        return CanonicalMessage(
+            parser_profile=context.trader_code,
+            primary_class="INFO",
+            parse_status="UNCLASSIFIED",
+            confidence=confidence,
+            intents=intents,
+            primary_intent=primary_intent,
+            targeting=targeting,
+            warnings=warnings,
+            diagnostics=diagnostics,
+            raw_context=raw_context,
         )
 
     @staticmethod
@@ -1384,6 +1685,342 @@ class TraderAProfileParser:
         if _contains_any(normalized, tuple(all_open)):
             return "ALL_OPEN"
         return None
+
+
+def _build_ta_targeting(
+    *,
+    message_type: str,
+    target_refs: list[dict[str, Any]],
+    global_target_scope: str | None,
+    context: ParserContext,
+) -> Targeting | None:
+    if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
+        return None
+
+    refs: list[TargetRef] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _add(ref_type: str, value: int | str) -> None:
+        key = (ref_type, str(value))
+        if key in seen:
+            return
+        seen.add(key)
+        refs.append(TargetRef(ref_type=ref_type, value=value))  # type: ignore[arg-type]
+
+    for item in target_refs:
+        kind = str(item.get("kind") or "")
+        ref = item.get("ref")
+        if kind == "reply" and isinstance(ref, int):
+            _add("REPLY", ref)
+        elif kind == "telegram_link" and isinstance(ref, str):
+            _add("TELEGRAM_LINK", ref)
+        elif kind == "message_id" and isinstance(ref, int):
+            _add("MESSAGE_ID", ref)
+
+    if context.reply_to_message_id is not None:
+        _add("REPLY", context.reply_to_message_id)
+
+    if global_target_scope is not None:
+        if global_target_scope in {"ALL_LONGS", "ALL_REMAINING_LONGS"}:
+            scope = TargetScope(
+                kind="PORTFOLIO_SIDE",
+                value=global_target_scope,
+                side_filter="LONG",
+                applies_to_all=True,
+            )
+        elif global_target_scope in {"ALL_SHORTS", "ALL_REMAINING_SHORTS"}:
+            scope = TargetScope(
+                kind="PORTFOLIO_SIDE",
+                value=global_target_scope,
+                side_filter="SHORT",
+                applies_to_all=True,
+            )
+        else:
+            scope = TargetScope(kind="ALL_OPEN", value=global_target_scope, applies_to_all=True)
+        return Targeting(refs=refs, scope=scope, strategy="GLOBAL_SCOPE", targeted=True)
+
+    if not refs:
+        return None
+
+    return Targeting(
+        refs=refs,
+        scope=TargetScope(kind="SINGLE_SIGNAL"),
+        strategy="REPLY_OR_LINK",
+        targeted=True,
+    )
+
+
+def _build_ta_signal_payload(*, entities: dict[str, Any]) -> SignalPayload:
+    symbol = entities.get("symbol")
+    side = entities.get("side")
+    plan_entries = entities.get("entry_plan_entries") if isinstance(entities.get("entry_plan_entries"), list) else []
+    fallback_entries = entities.get("entry") if isinstance(entities.get("entry"), list) else []
+    entry_structure_raw = str(entities.get("entry_structure") or "").upper()
+
+    entries: list[EntryLeg] = []
+    if plan_entries:
+        for idx, item in enumerate(plan_entries, start=1):
+            if not isinstance(item, dict):
+                continue
+            sequence = int(item.get("sequence") or idx)
+            order_type = str(item.get("order_type") or "LIMIT").upper()
+            entry_type = "MARKET" if order_type == "MARKET" else "LIMIT"
+            role = str(item.get("role") or "UNKNOWN").upper()
+            if role not in {"PRIMARY", "AVERAGING"}:
+                role = "UNKNOWN"
+            price_val = item.get("price")
+            price = Price.from_float(float(price_val)) if isinstance(price_val, (int, float)) else None
+            if entry_type == "LIMIT" and price is None:
+                continue
+            entries.append(
+                EntryLeg(
+                    sequence=sequence,
+                    entry_type=entry_type,  # type: ignore[arg-type]
+                    price=price,
+                    role=role,  # type: ignore[arg-type]
+                    is_optional=bool(item.get("is_optional")),
+                )
+            )
+    else:
+        for idx, value in enumerate(fallback_entries, start=1):
+            if not isinstance(value, (int, float)):
+                continue
+            entries.append(
+                EntryLeg(
+                    sequence=idx,
+                    entry_type="LIMIT",
+                    price=Price.from_float(float(value)),
+                    role="PRIMARY" if idx == 1 else "AVERAGING",
+                )
+            )
+
+    entry_structure = _resolve_ta_entry_structure(raw=entry_structure_raw, entries=entries)
+
+    stop_val = entities.get("stop_loss")
+    stop_loss = StopLoss(price=Price.from_float(float(stop_val))) if isinstance(stop_val, (int, float)) else None
+
+    tps_raw = entities.get("take_profits") if isinstance(entities.get("take_profits"), list) else []
+    take_profits = [
+        TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+        for i, v in enumerate(tps_raw)
+        if isinstance(v, (int, float))
+    ]
+
+    missing: list[str] = []
+    if not symbol:
+        missing.append("symbol")
+    if side not in {"LONG", "SHORT"}:
+        missing.append("side")
+    if not entries:
+        missing.append("entries")
+    if stop_loss is None:
+        missing.append("stop_loss")
+    if not take_profits:
+        missing.append("take_profits")
+    if entry_structure is None and entries:
+        missing.append("entry_structure")
+
+    return SignalPayload(
+        symbol=symbol,
+        side=side,  # type: ignore[arg-type]
+        entry_structure=entry_structure,  # type: ignore[arg-type]
+        entries=entries,
+        stop_loss=stop_loss,
+        take_profits=take_profits,
+        completeness="COMPLETE" if not missing else "INCOMPLETE",
+        missing_fields=missing,
+    )
+
+
+def _resolve_ta_entry_structure(*, raw: str, entries: list[EntryLeg]) -> str | None:
+    if raw in {"ONE_SHOT", "SINGLE"}:
+        return "ONE_SHOT"
+    if raw == "TWO_STEP":
+        return "TWO_STEP"
+    if raw == "RANGE":
+        return "RANGE"
+    if raw == "LADDER":
+        return "LADDER"
+
+    count = len(entries)
+    if count == 0:
+        return None
+    if count == 1:
+        return "ONE_SHOT"
+    if count == 2:
+        return "TWO_STEP"
+    return "LADDER"
+
+
+def _build_ta_update_ops(*, intents: list[str], entities: dict[str, Any], warnings: list[str]) -> list[UpdateOperation]:
+    ops: list[UpdateOperation] = []
+    intent_set = set(intents)
+
+    stop_op = _build_ta_set_stop_op(intent_set=intent_set, entities=entities, warnings=warnings)
+    if stop_op is not None:
+        ops.append(stop_op)
+
+    for intent in intents:
+        if intent in {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"}:
+            continue
+        if intent == "U_CLOSE_FULL":
+            close_scope = str(entities.get("close_scope") or "FULL")
+            ops.append(
+                UpdateOperation(
+                    op_type="CLOSE",
+                    close=CloseOperation(close_scope=close_scope),
+                )
+            )
+        elif intent == "U_CLOSE_PARTIAL":
+            close_fraction = entities.get("close_fraction")
+            fraction = float(close_fraction) if isinstance(close_fraction, (int, float)) else None
+            ops.append(
+                UpdateOperation(
+                    op_type="CLOSE",
+                    close=CloseOperation(close_scope="PARTIAL", close_fraction=fraction),
+                )
+            )
+        elif intent == "U_CANCEL_PENDING_ORDERS":
+            cancel_scope = entities.get("cancel_scope")
+            ops.append(
+                UpdateOperation(
+                    op_type="CANCEL_PENDING",
+                    cancel_pending=CancelPendingOperation(
+                        cancel_scope=str(cancel_scope) if cancel_scope else "ALL_PENDING_ENTRIES"
+                    ),
+                )
+            )
+        elif intent == "U_INVALIDATE_SETUP":
+            ops.append(
+                UpdateOperation(
+                    op_type="CANCEL_PENDING",
+                    cancel_pending=CancelPendingOperation(cancel_scope="ALL_PENDING_ENTRIES"),
+                )
+            )
+        elif intent == "U_UPDATE_TAKE_PROFITS":
+            tps_raw = entities.get("take_profits") if isinstance(entities.get("take_profits"), list) else []
+            take_profits = [
+                TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+                for i, v in enumerate(tps_raw)
+                if isinstance(v, (int, float))
+            ]
+            if take_profits:
+                ops.append(
+                    UpdateOperation(
+                        op_type="MODIFY_TARGETS",
+                        modify_targets=ModifyTargetsOperation(mode="REPLACE_ALL", take_profits=take_profits),
+                    )
+                )
+            else:
+                warnings.append("U_UPDATE_TAKE_PROFITS: no take_profits found")
+        elif intent == "U_REVERSE_SIGNAL":
+            warnings.append("U_REVERSE_SIGNAL: new signal component ignored; mapped to CLOSE only")
+            ops.append(
+                UpdateOperation(
+                    op_type="CLOSE",
+                    close=CloseOperation(close_scope="FULL"),
+                )
+            )
+
+    return ops
+
+
+def _build_ta_set_stop_op(
+    *,
+    intent_set: set[str],
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> UpdateOperation | None:
+    has_move_to_be = "U_MOVE_STOP_TO_BE" in intent_set
+    has_move_stop = "U_MOVE_STOP" in intent_set
+    if not has_move_to_be and not has_move_stop:
+        return None
+
+    target: StopTarget | None = None
+    if has_move_stop:
+        target = _resolve_ta_stop_target(entities.get("new_stop_level"))
+    if target is None and has_move_to_be:
+        target = StopTarget(target_type="ENTRY")
+    if target is None:
+        warnings.append("U_MOVE_STOP: new_stop_level missing or unresolvable")
+        return None
+    return UpdateOperation(op_type="SET_STOP", set_stop=target)
+
+
+def _resolve_ta_stop_target(value: Any) -> StopTarget | None:
+    if isinstance(value, (int, float)):
+        return StopTarget(target_type="PRICE", value=float(value))
+    if not isinstance(value, str):
+        return None
+    normalized = value.strip().upper()
+    if normalized in {"ENTRY", "BE", "BREAKEVEN"}:
+        return StopTarget(target_type="ENTRY")
+    match = re.match(r"^TP(\d+)$", normalized)
+    if match:
+        return StopTarget(target_type="TP_LEVEL", value=int(match.group(1)))
+    parsed = _to_float(normalized)
+    if parsed is not None:
+        return StopTarget(target_type="PRICE", value=parsed)
+    return None
+
+
+def _build_ta_report_payload(
+    *,
+    intents: list[str],
+    entities: dict[str, Any],
+    reported_results: list[dict[str, Any]],
+) -> ReportPayload | None:
+    events = _build_ta_report_events(intents=intents, entities=entities, reported_results=reported_results)
+    reported_result = _build_ta_reported_result(reported_results=reported_results)
+    if not events and reported_result is None:
+        return None
+    return ReportPayload(events=events, reported_result=reported_result)
+
+
+def _build_ta_report_events(
+    *,
+    intents: list[str],
+    entities: dict[str, Any],
+    reported_results: list[dict[str, Any]],
+) -> list[ReportEvent]:
+    result = _build_ta_reported_result(reported_results=reported_results)
+    events: list[ReportEvent] = []
+    for intent in intents:
+        if intent == "U_TP_HIT":
+            level: int | None = None
+            hit_target = entities.get("hit_target")
+            if isinstance(hit_target, str):
+                m = re.match(r"^TP(\d+)$", hit_target.upper())
+                if m:
+                    level = int(m.group(1))
+            events.append(ReportEvent(event_type="TP_HIT", level=level, result=result))
+        elif intent == "U_STOP_HIT":
+            events.append(ReportEvent(event_type="STOP_HIT", result=result))
+        elif intent == "U_REPORT_FINAL_RESULT":
+            events.append(ReportEvent(event_type="FINAL_RESULT", result=result))
+        elif intent == "U_MARK_FILLED":
+            events.append(ReportEvent(event_type="ENTRY_FILLED"))
+        elif intent == "U_EXIT_BE":
+            events.append(ReportEvent(event_type="BREAKEVEN_EXIT", result=result))
+    return events
+
+
+def _build_ta_reported_result(*, reported_results: list[dict[str, Any]]) -> ReportedResult | None:
+    if not reported_results:
+        return None
+    first = reported_results[0] if isinstance(reported_results[0], dict) else None
+    if not isinstance(first, dict):
+        return None
+    value = first.get("value")
+    unit = str(first.get("unit") or "UNKNOWN").upper()
+    if unit not in {"R", "PERCENT", "TEXT", "UNKNOWN"}:
+        unit = "UNKNOWN"
+    text = first.get("text")
+    return ReportedResult(
+        value=float(value) if isinstance(value, (int, float)) else None,
+        unit=unit,  # type: ignore[arg-type]
+        text=str(text) if isinstance(text, str) and text.strip() else None,
+    )
 
 
 def _as_str_list(value: Any) -> list[str]:

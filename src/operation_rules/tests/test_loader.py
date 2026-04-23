@@ -31,22 +31,28 @@ def rules_dir(tmp_path: Path) -> Path:
             "disabled",
             "hacker",
             "splitter",
-            "pm_overlap",
-            "ev_overlap",
-            "ok",
             "bad_avg_key",
-            "bad_avg_weights",
-            "legacy_avg_warn",
+            "legacy_avg_rejected",
             "bad_gate",
             "bad_risk",
             "bad_cap",
             "ok_gate",
             "ok_risk",
             "upper_gate",
+            "ok",
+            "bad_me_mode",
+            "bad_be_trigger",
+            "bad_cancel_avg",
+            "bad_cd_mode",
         ],
         "global_hard_caps": {
             "max_capital_at_risk_pct": 10.0,
             "hard_max_per_signal_risk_pct": 2.0,
+            "market_execution": {
+                "mode": "tolerance",
+                "tolerance_pct": 0.5,
+                "range_tolerance_pct": 0.2,
+            },
         },
         "global_defaults": {
             "enabled": True,
@@ -62,8 +68,6 @@ def rules_dir(tmp_path: Path) -> Path:
             "max_capital_at_risk_per_trader_pct": 5.0,
             "max_concurrent_same_symbol": 1,
             "entry_split": {
-                "ZONE": {"split_mode": "endpoints", "weights": {"E1": 0.50, "E2": 0.50}},
-                "AVERAGING": {"distribution": "equal"},
                 "LIMIT": {
                     "single": {"weights": {"E1": 1.0}},
                     "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
@@ -73,17 +77,34 @@ def rules_dir(tmp_path: Path) -> Path:
                     "averaging": {"weights": {"E1": 0.5, "E2": 0.5}},
                 },
             },
+            "tp": {
+                "use_tp_count": None,
+                "close_distribution": {
+                    "mode": "table",
+                    "table": {1: [100], 2: [50, 50], 3: [30, 30, 40]},
+                },
+            },
+            "sl": {
+                "use_original_sl": True,
+                "be_trigger": None,
+            },
+            "updates": {
+                "apply_move_stop": True,
+                "apply_close_partial": True,
+                "apply_close_full": True,
+                "apply_cancel_pending": True,
+                "apply_add_entry": True,
+            },
+            "pending": {
+                "cancel_pending_by_engine": True,
+                "cancel_pending_on_timeout": True,
+                "pending_timeout_hours": 24,
+                "chain_timeout_hours": 168,
+                "cancel_averaging_pending_after": None,
+                "cancel_unfilled_pending_after": None,
+            },
             "price_corrections": {"enabled": False, "method": None},
             "price_sanity": {"enabled": False, "symbol_ranges": {}},
-            "position_management": {
-                "on_tp_hit": [
-                    {"tp_level": 1, "action": "close_partial", "close_pct": 50},
-                    {"tp_level": 2, "action": "move_to_be"},
-                    {"tp_level": 3, "action": "close_full"},
-                ],
-                "auto_apply_intents": ["U_MOVE_STOP", "U_CLOSE_FULL"],
-                "log_only_intents": ["U_TP_HIT", "U_SL_HIT"],
-            },
         },
     }
     global_file = tmp_path / "operation_rules.yaml"
@@ -101,7 +122,6 @@ def rules_dir(tmp_path: Path) -> Path:
 
 class TestLoaderDefaults:
     def test_loads_without_trader_file(self, rules_dir: Path) -> None:
-        """Missing trader file → all defaults from global."""
         rules = load_effective_rules("unknown_trader", rules_dir=str(rules_dir))
         assert rules.is_registered is True
         assert rules.enabled is True
@@ -119,6 +139,8 @@ class TestLoaderDefaults:
         assert isinstance(rules.hard_caps, HardCaps)
         assert rules.hard_caps.max_capital_at_risk_pct == 10.0
         assert rules.hard_caps.hard_max_per_signal_risk_pct == 2.0
+        assert rules.hard_caps.market_execution["mode"] == "tolerance"
+        assert rules.hard_caps.market_execution["tolerance_pct"] == 0.5
 
     def test_unregistered_trader_flagged(self, rules_dir: Path) -> None:
         rules = load_effective_rules("not_listed", rules_dir=str(rules_dir))
@@ -126,22 +148,30 @@ class TestLoaderDefaults:
 
     def test_entry_split_defaults(self, rules_dir: Path) -> None:
         rules = load_effective_rules("any", rules_dir=str(rules_dir))
-        assert "ZONE" in rules.entry_split
         assert "LIMIT" in rules.entry_split
         assert "MARKET" in rules.entry_split
-        assert "AVERAGING" in rules.entry_split
+        assert "AVERAGING" not in rules.entry_split
 
     def test_missing_global_raises(self, tmp_path: Path) -> None:
         with pytest.raises(FileNotFoundError):
             load_effective_rules("any", rules_dir=str(tmp_path))
 
-    def test_legacy_position_management_is_normalized(self, rules_dir: Path) -> None:
+    def test_new_sections_loaded(self, rules_dir: Path) -> None:
         rules = load_effective_rules("any", rules_dir=str(rules_dir))
-        pm = rules.position_management
-        assert pm["mode"] == "trader_hint"
-        assert "trader_hint" in pm
-        assert "machine_event" in pm
-        assert "on_tp_hit" in pm  # legacy extra key preserved
+        assert isinstance(rules.tp, dict)
+        assert isinstance(rules.sl, dict)
+        assert isinstance(rules.updates, dict)
+        assert isinstance(rules.pending, dict)
+        assert rules.sl["use_original_sl"] is True
+        assert rules.sl["be_trigger"] is None
+        assert rules.updates["apply_move_stop"] is True
+        assert rules.pending["cancel_pending_by_engine"] is True
+        assert rules.pending["pending_timeout_hours"] == 24
+
+    def test_tp_section_loaded(self, rules_dir: Path) -> None:
+        rules = load_effective_rules("any", rules_dir=str(rules_dir))
+        assert rules.tp["use_tp_count"] is None
+        assert rules.tp["close_distribution"]["mode"] == "table"
 
 
 class TestLoaderTraderOverride:
@@ -153,17 +183,15 @@ class TestLoaderTraderOverride:
         rules = load_effective_rules("my_trader", rules_dir=str(rules_dir))
         assert rules.gate_mode == "warn"
         assert rules.risk_pct_of_capital == 0.5
-        # Non-overridden keys still from defaults
-        assert rules.leverage == 1
+        assert rules.leverage == 1  # not overridden
 
     def test_global_mode_ignores_trader_rule_overrides(self, rules_dir: Path) -> None:
-        """operation_rules=global keeps global defaults, except control switches."""
         trader_yaml = {
             "operation_rules": "global",
             "enabled": False,
             "gate_mode": "warn",
             "risk_pct_of_capital": 0.25,  # must be ignored
-            "leverage": 7,                # must be ignored
+            "leverage": 7,                 # must be ignored
         }
         (rules_dir / "trader_rules" / "global_mode.yaml").write_text(
             yaml.dump(trader_yaml), encoding="utf-8"
@@ -172,7 +200,6 @@ class TestLoaderTraderOverride:
         assert rules.operation_rules == "global"
         assert rules.enabled is False
         assert rules.gate_mode == "warn"
-        # still global defaults
         assert rules.risk_pct_of_capital == 1.0
         assert rules.leverage == 1
 
@@ -183,7 +210,6 @@ class TestLoaderTraderOverride:
         )
         rules = load_effective_rules("badmode", rules_dir=str(rules_dir))
         assert rules.operation_rules == "override"
-        # override behavior still applied
         assert rules.risk_pct_of_capital == 0.75
 
     def test_trader_disables(self, rules_dir: Path) -> None:
@@ -194,9 +220,8 @@ class TestLoaderTraderOverride:
         assert rules.enabled is False
 
     def test_hard_caps_not_overridable(self, rules_dir: Path) -> None:
-        """Trader YAML cannot override global_hard_caps."""
         trader_yaml = {
-            "global_hard_caps": {  # This key is not in the merge path
+            "global_hard_caps": {
                 "max_capital_at_risk_pct": 999.0,
                 "hard_max_per_signal_risk_pct": 999.0,
             }
@@ -205,66 +230,25 @@ class TestLoaderTraderOverride:
             yaml.dump(trader_yaml), encoding="utf-8"
         )
         rules = load_effective_rules("hacker", rules_dir=str(rules_dir))
-        # Hard caps remain from global
         assert rules.hard_caps.max_capital_at_risk_pct == 10.0
         assert rules.hard_caps.hard_max_per_signal_risk_pct == 2.0
 
     def test_entry_split_deep_merge(self, rules_dir: Path) -> None:
-        """Trader can override specific entry types without losing others."""
         trader_yaml = {
             "entry_split": {
-                "ZONE": {"split_mode": "three_way"},
+                "LIMIT": {"single": {"weights": {"E1": 1.0}}, "averaging": {"weights": {"E1": 0.6, "E2": 0.4}}},
             }
         }
         (rules_dir / "trader_rules" / "splitter.yaml").write_text(
             yaml.dump(trader_yaml), encoding="utf-8"
         )
         rules = load_effective_rules("splitter", rules_dir=str(rules_dir))
-        assert rules.entry_split["ZONE"]["split_mode"] == "three_way"
-        # Other entry types still present
-        assert "LIMIT" in rules.entry_split
+        assert rules.entry_split["LIMIT"]["averaging"]["weights"]["E1"] == 0.6
         assert "MARKET" in rules.entry_split
-
-    def test_position_management_overlap_raises(self, rules_dir: Path) -> None:
-        trader_yaml = {
-            "position_management": {
-                "mode": "hybrid",
-                "trader_hint": {
-                    "auto_apply_intents": ["U_MOVE_STOP"],
-                    "log_only_intents": ["U_MOVE_STOP"],
-                },
-                "machine_event": {"rules": []},
-            }
-        }
-        (rules_dir / "trader_rules" / "pm_overlap.yaml").write_text(
-            yaml.dump(trader_yaml), encoding="utf-8"
-        )
-        with pytest.raises(ValueError, match="overlap"):
-            load_effective_rules("pm_overlap", rules_dir=str(rules_dir))
-
-    def test_machine_event_selector_overlap_raises(self, rules_dir: Path) -> None:
-        trader_yaml = {
-            "position_management": {
-                "mode": "machine_event",
-                "trader_hint": {"auto_apply_intents": [], "log_only_intents": []},
-                "machine_event": {
-                    "rules": [
-                        {"event_type": "TP_EXECUTED", "when": {"tp_level": 2}, "actions": []},
-                        {"event_type": "TP_EXECUTED", "when": {"tp_level": 2}, "actions": []},
-                    ]
-                },
-            }
-        }
-        (rules_dir / "trader_rules" / "ev_overlap.yaml").write_text(
-            yaml.dump(trader_yaml), encoding="utf-8"
-        )
-        with pytest.raises(ValueError, match="overlapping selector"):
-            load_effective_rules("ev_overlap", rules_dir=str(rules_dir))
 
     def test_validate_operation_rules_config_validates_all_traders(self, rules_dir: Path) -> None:
         (rules_dir / "trader_rules" / "ok.yaml").write_text(
-            yaml.dump({"position_management": {"auto_apply_intents": [], "log_only_intents": []}}),
-            encoding="utf-8",
+            yaml.dump({"enabled": True}), encoding="utf-8"
         )
         validate_operation_rules_config(rules_dir=str(rules_dir))
 
@@ -283,29 +267,32 @@ class TestLoaderTraderOverride:
         with pytest.raises(ValueError, match="overlapping averaging keys"):
             load_effective_rules("bad_avg_key", rules_dir=str(rules_dir))
 
-    def test_entry_split_decreasing_requires_valid_weights(self, rules_dir: Path) -> None:
+    def test_entry_split_legacy_averaging_rejected(self, rules_dir: Path) -> None:
         trader_yaml = {
             "entry_split": {
                 "AVERAGING": {"distribution": "decreasing", "weights": {"E1": 0, "E2": 0}}
             }
         }
-        (rules_dir / "trader_rules" / "bad_avg_weights.yaml").write_text(
+        (rules_dir / "trader_rules" / "legacy_avg_rejected.yaml").write_text(
             yaml.dump(trader_yaml), encoding="utf-8"
         )
-        with pytest.raises(ValueError, match="sum > 0"):
-            load_effective_rules("bad_avg_weights", rules_dir=str(rules_dir))
+        with pytest.raises(ValueError, match="entry_split.AVERAGING is deprecated"):
+            load_effective_rules("legacy_avg_rejected", rules_dir=str(rules_dir))
 
-    def test_entry_split_averaging_deprecated_warns(self, rules_dir: Path) -> None:
-        trader_yaml = {
-            "entry_split": {
-                "AVERAGING": {"distribution": "decreasing", "weights": {"E1": 0.7, "E2": 0.3}}
-            }
-        }
-        (rules_dir / "trader_rules" / "legacy_avg_warn.yaml").write_text(
-            yaml.dump(trader_yaml), encoding="utf-8"
+    def test_trader_overrides_sl_be_trigger(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "my_trader.yaml").write_text(
+            yaml.dump({"sl": {"be_trigger": "tp1"}}), encoding="utf-8"
         )
-        with pytest.warns(DeprecationWarning, match="entry_split.AVERAGING is deprecated"):
-            load_effective_rules("legacy_avg_warn", rules_dir=str(rules_dir))
+        rules = load_effective_rules("my_trader", rules_dir=str(rules_dir))
+        assert rules.sl["be_trigger"] == "tp1"
+
+    def test_trader_overrides_pending_timeout(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "my_trader.yaml").write_text(
+            yaml.dump({"pending": {"pending_timeout_hours": 48}}), encoding="utf-8"
+        )
+        rules = load_effective_rules("my_trader", rules_dir=str(rules_dir))
+        assert rules.pending["pending_timeout_hours"] == 48
+        assert rules.pending["cancel_pending_by_engine"] is True  # from defaults
 
 
 class TestLoaderEnumValidation:
@@ -348,20 +335,19 @@ class TestLoaderEnumValidation:
         assert rules.risk_mode == "risk_usdt_fixed"
 
     def test_invalid_gate_mode_in_global_defaults_raises(self, tmp_path: Path) -> None:
-        """Typo in global defaults must also be caught (not just trader overrides)."""
         global_yaml = {
             "global_hard_caps": {
                 "max_capital_at_risk_pct": 10.0,
                 "hard_max_per_signal_risk_pct": 2.0,
+                "market_execution": {"mode": "tolerance", "tolerance_pct": 0.5, "range_tolerance_pct": 0.2},
             },
             "global_defaults": {
                 "enabled": True,
-                "gate_mode": "bloock",   # typo — not in {block, warn}
+                "gate_mode": "bloock",  # typo
                 "risk_mode": "risk_pct_of_capital",
                 "capital_base_mode": "static_config",
                 "capital_base_usdt": 1000.0,
                 "leverage": 1,
-                "position_management": {"auto_apply_intents": [], "log_only_intents": []},
             },
         }
         (tmp_path / "operation_rules.yaml").write_text(
@@ -372,10 +358,67 @@ class TestLoaderEnumValidation:
             load_effective_rules("any", rules_dir=str(tmp_path))
 
     def test_gate_mode_case_insensitive(self, rules_dir: Path) -> None:
-        """Uppercase gate_mode values are normalized, not rejected."""
         (rules_dir / "trader_rules" / "upper_gate.yaml").write_text(
             yaml.dump({"gate_mode": "WARN"}), encoding="utf-8"
         )
         rules = load_effective_rules("upper_gate", rules_dir=str(rules_dir))
-        # Normalized to lowercase — engine comparisons work correctly
         assert rules.gate_mode == "warn"
+
+
+class TestNewSectionsValidation:
+    """Validation for market_execution, sl.be_trigger, pending, tp.close_distribution."""
+
+    def test_invalid_market_execution_mode_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_me_mode.yaml").write_text(
+            yaml.dump({}), encoding="utf-8"
+        )
+        # Inject bad mode via direct global_hard_caps — need fresh rules_dir
+        bad_global = {
+            "registered_traders": ["any"],
+            "global_hard_caps": {
+                "max_capital_at_risk_pct": 10.0,
+                "hard_max_per_signal_risk_pct": 2.0,
+                "market_execution": {"mode": "aggressive"},  # invalid
+            },
+            "global_defaults": {
+                "enabled": True,
+                "gate_mode": "block",
+                "risk_mode": "risk_pct_of_capital",
+                "capital_base_mode": "static_config",
+                "capital_base_usdt": 1000.0,
+                "leverage": 1,
+            },
+        }
+        (rules_dir / "operation_rules.yaml").write_text(
+            yaml.dump(bad_global), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="market_execution.mode"):
+            load_effective_rules("any", rules_dir=str(rules_dir))
+
+    def test_invalid_be_trigger_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_be_trigger.yaml").write_text(
+            yaml.dump({"sl": {"be_trigger": "tp9"}}), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="sl.be_trigger"):
+            load_effective_rules("bad_be_trigger", rules_dir=str(rules_dir))
+
+    def test_valid_be_trigger_loads(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_be_trigger.yaml").write_text(
+            yaml.dump({"sl": {"be_trigger": "tp2"}}), encoding="utf-8"
+        )
+        rules = load_effective_rules("bad_be_trigger", rules_dir=str(rules_dir))
+        assert rules.sl["be_trigger"] == "tp2"
+
+    def test_invalid_cancel_averaging_pending_after_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_cancel_avg.yaml").write_text(
+            yaml.dump({"pending": {"cancel_averaging_pending_after": "tp5"}}), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="cancel_averaging_pending_after"):
+            load_effective_rules("bad_cancel_avg", rules_dir=str(rules_dir))
+
+    def test_invalid_close_distribution_mode_raises(self, rules_dir: Path) -> None:
+        (rules_dir / "trader_rules" / "bad_cd_mode.yaml").write_text(
+            yaml.dump({"tp": {"close_distribution": {"mode": "weighted"}}}), encoding="utf-8"
+        )
+        with pytest.raises(ValueError, match="tp.close_distribution.mode"):
+            load_effective_rules("bad_cd_mode", rules_dir=str(rules_dir))

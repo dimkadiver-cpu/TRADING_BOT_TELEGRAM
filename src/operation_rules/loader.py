@@ -2,7 +2,7 @@
 
 Loads and merges YAML configs with 4-level priority:
 
-    global_hard_caps  (max_capital_at_risk_pct, max_per_signal_pct)
+    global_hard_caps  (max_capital_at_risk_pct, max_per_signal_pct, market_execution)
     > trader_on_off   (enabled, gate_mode)
     > trader_specific (all other trader YAML keys)
     > global_defaults (everything in global_defaults section)
@@ -15,7 +15,6 @@ Usage:
 from __future__ import annotations
 
 import copy
-import warnings
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -32,6 +31,7 @@ import yaml
 class HardCaps:
     max_capital_at_risk_pct: float
     hard_max_per_signal_risk_pct: float
+    market_execution: dict[str, Any]
 
 
 @dataclass
@@ -61,17 +61,23 @@ class EffectiveRules:
     # Entry split config (nested dict keyed by entry type)
     entry_split: dict[str, Any]
 
-    # TP handling
-    tp_handling: dict[str, Any]
+    # TP management
+    tp: dict[str, Any]
+
+    # SL management
+    sl: dict[str, Any]
+
+    # UPDATE intents policy (Set B — snapshot letto da Sistema 1)
+    updates: dict[str, Any]
+
+    # Pending orders management
+    pending: dict[str, Any]
 
     # Price corrections (future)
     price_corrections: dict[str, Any]
 
     # Price sanity (optional)
     price_sanity: dict[str, Any]
-
-    # Set B — snapshot management rules
-    position_management: dict[str, Any]
 
     # Raw merged dict for serialization in management_rules_json
     _raw: dict[str, Any] = field(default_factory=dict, repr=False)
@@ -101,109 +107,8 @@ def _load_yaml(path: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def _normalize_position_management(raw: dict[str, Any]) -> dict[str, Any]:
-    """Normalize legacy/new position-management config to the v2 shape."""
-    # Legacy v1 shape: {auto_apply_intents, log_only_intents}
-    has_legacy_intents = "auto_apply_intents" in raw or "log_only_intents" in raw
-    has_v2_sections = "trader_hint" in raw or "machine_event" in raw or "mode" in raw
-
-    passthrough = {
-        k: copy.deepcopy(v)
-        for k, v in raw.items()
-        if k not in {"mode", "trader_hint", "machine_event", "auto_apply_intents", "log_only_intents"}
-    }
-
-    if has_legacy_intents and not has_v2_sections:
-        return {
-            "mode": "trader_hint",
-            "trader_hint": {
-                "auto_apply_intents": list(raw.get("auto_apply_intents", [])),
-                "log_only_intents": list(raw.get("log_only_intents", [])),
-            },
-            "machine_event": {"rules": []},
-            **passthrough,
-        }
-
-    mode = str(raw.get("mode", "hybrid")).lower()
-    if mode not in {"machine_event", "trader_hint", "hybrid"}:
-        mode = "hybrid"
-
-    trader_hint = raw.get("trader_hint", {})
-    if not isinstance(trader_hint, dict):
-        trader_hint = {}
-    machine_event = raw.get("machine_event", {})
-    if not isinstance(machine_event, dict):
-        machine_event = {}
-
-    return {
-        "mode": mode,
-        "trader_hint": {
-            "auto_apply_intents": list(trader_hint.get("auto_apply_intents", [])),
-            "log_only_intents": list(trader_hint.get("log_only_intents", [])),
-        },
-        "machine_event": {
-            "rules": list(machine_event.get("rules", [])),
-        },
-        **passthrough,
-    }
-
-
-def _validate_position_management_config(position_management: dict[str, Any]) -> None:
-    """Fail-fast validation for overlapping/conflicting position rules."""
-    mode = str(position_management.get("mode", "hybrid")).lower()
-    if mode not in {"machine_event", "trader_hint", "hybrid"}:
-        raise ValueError(f"Invalid position_management.mode: {mode}")
-
-    trader_hint = position_management.get("trader_hint", {})
-    if not isinstance(trader_hint, dict):
-        raise ValueError("position_management.trader_hint must be an object")
-
-    auto_apply = set(str(x) for x in trader_hint.get("auto_apply_intents", []))
-    log_only = set(str(x) for x in trader_hint.get("log_only_intents", []))
-    overlap = sorted(auto_apply.intersection(log_only))
-    if overlap:
-        raise ValueError(
-            "position_management trader_hint overlap between auto_apply_intents "
-            f"and log_only_intents: {overlap}"
-        )
-
-    machine_event = position_management.get("machine_event", {})
-    if not isinstance(machine_event, dict):
-        raise ValueError("position_management.machine_event must be an object")
-    rules = machine_event.get("rules", [])
-    if not isinstance(rules, list):
-        raise ValueError("position_management.machine_event.rules must be a list")
-
-    # Exclusion check: no duplicated event selectors (no overlap on same trigger).
-    seen_selectors: set[tuple[str, str | None]] = set()
-    for idx, rule in enumerate(rules):
-        if not isinstance(rule, dict):
-            raise ValueError(f"position_management.machine_event.rules[{idx}] must be an object")
-        event_type = str(rule.get("event_type", "")).upper().strip()
-        if not event_type:
-            raise ValueError(f"position_management.machine_event.rules[{idx}].event_type is required")
-        when = rule.get("when", {})
-        if when is None:
-            when = {}
-        if not isinstance(when, dict):
-            raise ValueError(f"position_management.machine_event.rules[{idx}].when must be an object")
-        tp_selector = when.get("tp_level") or when.get("tp_level_gte")
-        selector = (event_type, str(tp_selector) if tp_selector is not None else None)
-        if selector in seen_selectors:
-            raise ValueError(
-                "position_management.machine_event overlapping selector detected: "
-                f"{selector}"
-            )
-        seen_selectors.add(selector)
-
-
 def _validate_enum_fields(merged: dict[str, Any], trader_id: str) -> None:
-    """Fail-fast validation for enumerated string fields.
-
-    Raises ValueError immediately if a field contains a value outside its
-    allowed set, so misconfigurations are caught at load time rather than
-    producing silent wrong behaviour at runtime.
-    """
+    """Fail-fast validation for enumerated string fields."""
     _GATE_MODE_VALUES = {"block", "warn"}
     _RISK_MODE_VALUES = {"risk_pct_of_capital", "risk_usdt_fixed"}
     _CAPITAL_BASE_MODE_VALUES = {"static_config", "live_equity"}
@@ -230,14 +135,70 @@ def _validate_enum_fields(merged: dict[str, Any], trader_id: str) -> None:
         )
 
 
+def _validate_new_sections(
+    market_execution: dict[str, Any],
+    tp: dict[str, Any],
+    sl: dict[str, Any],
+    pending: dict[str, Any],
+    trader_id: str,
+) -> None:
+    """Fail-fast validation for new canonical sections."""
+    _TP_LEVELS = {"tp1", "tp2", "tp3", "tp4"}
+
+    mode = str(market_execution.get("mode", "tolerance")).lower()
+    if mode not in {"tolerance", "free"}:
+        raise ValueError(
+            f"[{trader_id}] market_execution.mode must be tolerance|free, got: {mode!r}"
+        )
+
+    be_trigger = sl.get("be_trigger")
+    if be_trigger is not None:
+        be_trigger_str = str(be_trigger).lower()
+        if be_trigger_str not in _TP_LEVELS:
+            raise ValueError(
+                f"[{trader_id}] sl.be_trigger must be null|tp1..tp4, got: {be_trigger!r}"
+            )
+
+    for key in ("cancel_averaging_pending_after", "cancel_unfilled_pending_after"):
+        val = pending.get(key)
+        if val is not None:
+            val_str = str(val).lower()
+            if val_str not in _TP_LEVELS:
+                raise ValueError(
+                    f"[{trader_id}] pending.{key} must be null|tp1..tp4, got: {val!r}"
+                )
+
+    cd = tp.get("close_distribution", {})
+    if isinstance(cd, dict):
+        cd_mode = str(cd.get("mode", "equal")).lower()
+        if cd_mode not in {"equal", "table"}:
+            raise ValueError(
+                f"[{trader_id}] tp.close_distribution.mode must be equal|table, "
+                f"got: {cd_mode!r}"
+            )
+
+
 def _validate_entry_split_config(entry_split: dict[str, Any]) -> None:
-    """Fail-fast validation for entry_split shape and ambiguous averaging keys."""
+    """Fail-fast validation for canonical entry_split shape.
+
+    Canonical families supported:
+    - LIMIT
+    - MARKET
+
+    Legacy top-level families (e.g. AVERAGING, ZONE) are rejected.
+    """
     if not isinstance(entry_split, dict):
         raise ValueError("entry_split must be an object")
 
-    for top_key in ("ZONE", "AVERAGING", "LIMIT", "MARKET"):
+    for top_key in ("LIMIT", "MARKET"):
         if top_key in entry_split and not isinstance(entry_split[top_key], dict):
             raise ValueError(f"entry_split.{top_key} must be an object")
+
+    for legacy_key in ("AVERAGING", "ZONE"):
+        if legacy_key in entry_split:
+            raise ValueError(
+                f"entry_split.{legacy_key} is deprecated; use LIMIT/MARKET canonical families"
+            )
 
     typo_aliases = {"avareging", "averging", "averageing", "avg"}
     for family in ("LIMIT", "MARKET"):
@@ -257,54 +218,6 @@ def _validate_entry_split_config(entry_split: dict[str, Any]) -> None:
                 f"entry_split.{family} uses invalid key(s) {typo_hits}; "
                 "did you mean 'averaging'?"
             )
-
-    averaging_cfg = entry_split.get("AVERAGING", {})
-    if isinstance(averaging_cfg, dict):
-        distribution = str(averaging_cfg.get("distribution", "equal")).lower()
-        if distribution not in {"equal", "decreasing"}:
-            raise ValueError(
-                "entry_split.AVERAGING.distribution must be one of: "
-                "equal | decreasing"
-            )
-        if distribution == "decreasing":
-            weights = averaging_cfg.get("weights", {})
-            if not isinstance(weights, dict) or not weights:
-                raise ValueError(
-                    "entry_split.AVERAGING.weights must be a non-empty object when "
-                    "distribution=decreasing"
-                )
-            total = 0.0
-            for key, value in weights.items():
-                if not str(key).upper().startswith("E"):
-                    raise ValueError(
-                        "entry_split.AVERAGING.weights keys must follow Ex format "
-                        "(e.g. E1, E2)"
-                    )
-                try:
-                    w = float(value)
-                except (TypeError, ValueError) as exc:
-                    raise ValueError(
-                        f"entry_split.AVERAGING.weights[{key}] must be numeric"
-                    ) from exc
-                if w < 0:
-                    raise ValueError(
-                        f"entry_split.AVERAGING.weights[{key}] must be >= 0"
-                    )
-                total += w
-            if total <= 0:
-                raise ValueError(
-                    "entry_split.AVERAGING.weights must have sum > 0 "
-                    "when distribution=decreasing"
-                )
-        # Soft deprecation: legacy block still accepted for backward compatibility.
-        if distribution != "equal" or "weights" in averaging_cfg:
-            warnings.warn(
-                "entry_split.AVERAGING is deprecated; use LIMIT.averaging and/or "
-                "MARKET.averaging instead.",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-
 
 # ---------------------------------------------------------------------------
 # Public API
@@ -352,39 +265,42 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
             if control_key in trader_data:
                 merged[control_key] = copy.deepcopy(trader_data[control_key])
     else:
-        # Merge: start from global_defaults, apply trader overrides on top
         merged = _deep_merge(global_defaults, trader_data)
 
-    # Hard caps are always final (never overridable)
-    # Support both old key (max_per_signal_pct) and new key for backward compat
+    # Hard caps — never overridable by traders
     hard_max = hard_caps_raw.get(
         "hard_max_per_signal_risk_pct",
         hard_caps_raw.get("max_per_signal_pct", 2.0),
     )
+    market_execution = dict(hard_caps_raw.get("market_execution", {})) or {
+        "mode": "tolerance",
+        "tolerance_pct": 0.5,
+        "range_tolerance_pct": 0.2,
+    }
     hard_caps = HardCaps(
         max_capital_at_risk_pct=float(hard_caps_raw.get("max_capital_at_risk_pct", 10.0)),
         hard_max_per_signal_risk_pct=float(hard_max),
+        market_execution=market_execution,
     )
 
     _validate_enum_fields(merged, trader_id)
 
     entry_split = merged.get("entry_split", {})
-    # Normalise entry_split: ensure each entry type exists
-    for et in ("ZONE", "AVERAGING", "LIMIT", "MARKET"):
+    for et in ("LIMIT", "MARKET"):
         if et not in entry_split:
             entry_split[et] = {}
     _validate_entry_split_config(entry_split)
 
+    tp = dict(merged.get("tp", {}))
+    sl = dict(merged.get("sl", {}))
+    updates = dict(merged.get("updates", {}))
+    pending = dict(merged.get("pending", {}))
+
+    _validate_new_sections(market_execution, tp, sl, pending, trader_id)
+
     resolved_operation_rules = str(merged.get("operation_rules", "override")).lower()
     if resolved_operation_rules not in {"override", "global"}:
         resolved_operation_rules = "override"
-
-    position_management = _normalize_position_management(
-        merged.get("position_management", {})
-        if isinstance(merged.get("position_management", {}), dict)
-        else {}
-    )
-    _validate_position_management_config(position_management)
 
     return EffectiveRules(
         hard_caps=hard_caps,
@@ -405,14 +321,12 @@ def load_effective_rules(trader_id: str, *, rules_dir: str = "config") -> Effect
         ),
         max_concurrent_same_symbol=int(merged.get("max_concurrent_same_symbol", 1)),
         entry_split=entry_split,
-        tp_handling=merged.get("tp_handling", {
-            "tp_handling_mode": "follow_all_signal_tps",
-            "max_tp_levels": 5,
-            "tp_close_distribution": {2: [50, 50], 3: [30, 30, 40], 5: [20, 20, 20, 20, 20]},
-        }),
+        tp=tp,
+        sl=sl,
+        updates=updates,
+        pending=pending,
         price_corrections=merged.get("price_corrections", {"enabled": False, "method": None}),
         price_sanity=merged.get("price_sanity", {"enabled": False, "symbol_ranges": {}}),
-        position_management=position_management,
         _raw=merged,
     )
 
@@ -424,7 +338,6 @@ def validate_operation_rules_config(*, rules_dir: str = "config") -> None:
     if not global_path.exists():
         raise FileNotFoundError(f"Global operation rules not found: {global_path}")
 
-    # Validate defaults path
     load_effective_rules("__defaults__", rules_dir=rules_dir)
 
     trader_dir = root / "trader_rules"

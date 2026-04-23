@@ -1,7 +1,7 @@
 # PIANO DI PASSAGGIO UNICO — Canonical Parser Model v1
 
-> Data redazione: 2026-04-22
-> Stato: DEFINITIVO — Fasi 1-8 completate (trader_3, trader_b, trader_c, trader_d, trader_a migrati)
+> Data redazione: 2026-04-22 | Aggiornato: 2026-04-23
+> Stato: DEFINITIVO — Fasi 1-8 completate + Fase 9 parziale (canonical_v2.py rimosso)
 
 ---
 
@@ -368,16 +368,31 @@ E il **normalizer implicito attuale**. Contiene domain knowledge reale e testato
 
 ---
 
-### FASE 9 — Deprecazione legacy
+### FASE 9 — Deprecazione legacy — PARZIALMENTE COMPLETATA 2026-04-23
 
-**Sequenza:**
-1. Rimuovere `canonical_v2.py` (sostituito dal normalizer)
-2. Rimuovere `src/parser/models/canonical.py` (legacy Pydantic)
-3. Rimuovere `models/new_signal.py`, `update.py`, `operational.py`
-4. Rimuovere il normalizer se i profili emettono direttamente
-5. Aggiornare `CLAUDE.md` con nuova architettura
+**Sequenza originale:**
+1. Rimuovere `canonical_v2.py` ✅ FATTO — rimosso; `action_builders/__init__.py` svuotato; `flatteners.py` aggiornato; test aggiornato
+2. Rimuovere `src/parser/models/canonical.py` ❌ BLOCCATO — importato da `new_signal.py` che è in produzione in backtesting
+3. Rimuovere `models/new_signal.py`, `update.py`, `operational.py` ❌ BLOCCATO — in uso attivo da backtesting, operation_rules, target_resolver
+4. Rimuovere il normalizer se i profili emettono direttamente — rimandato a dopo rimozione modelli legacy
+5. Aggiornare `CLAUDE.md` con nuova architettura ✅ FATTO
 
-**Exit criteria:** un solo contratto, un solo path, niente legacy attivo.
+**Dipendenze che bloccano la rimozione completa:**
+
+| File legacy | Dipendenze attive |
+|-------------|-------------------|
+| `src/parser/models/canonical.py` | `new_signal.py` e `update.py` importano `Price` da qui |
+| `src/parser/models/new_signal.py` | `src/backtesting/chain_builder.py`, `src/backtesting/models.py` |
+| `src/parser/models/update.py` | `src/backtesting/chain_builder.py`, `src/backtesting/scenario.py` |
+| `src/parser/models/operational.py` | `src/telegram/router.py`, `src/operation_rules/engine.py`, `src/target_resolver/resolver.py` |
+
+**Per completare la Fase 9 servirà migrare prima:**
+- `src/backtesting/` → usa `CanonicalMessage` come input
+- `src/operation_rules/` → usa `CanonicalMessage`
+- `src/target_resolver/` → usa `CanonicalMessage`
+- Solo allora: eliminare `src/parser/models/*.py`
+
+**Exit criteria (attuale):** `canonical_v2.py` rimosso; modelli legacy parser isolati in `src/parser/models/` in attesa di migrazione downstream. Test suite: 541/542 pass (1 pre-esistente trader_d).
 
 ---
 
@@ -473,10 +488,16 @@ FASE 8 — Migrazione profili (uno alla volta)  ✅ COMPLETATA 2026-04-23
 [x] trader_a: adattare profile.py → CanonicalMessage nativo (parse_canonical() + helper canonical module-level)
 [x] trader_a: aggiornare test (nuovo test_canonical_output.py + regressione suite trader_a: 118 passed)
 
-FASE 9 — Deprecazione
-[ ] Rimuovere canonical_v2.py
-[ ] Rimuovere src/parser/models/canonical.py
-[ ] Rimuovere models/new_signal.py, update.py, operational.py
-[ ] Aggiornare CLAUDE.md con nuova architettura definitiva
-[ ] Verificare zero import rotti
+FASE 9 — Deprecazione  ⚠️ PARZIALE 2026-04-23
+[x] Rimuovere canonical_v2.py  ✅ rimosso; action_builders svuotato; flatteners.py aggiornato
+[ ] Rimuovere src/parser/models/canonical.py  ❌ BLOCCATO (vedi dipendenze)
+[ ] Rimuovere models/new_signal.py, update.py, operational.py  ❌ BLOCCATO (vedi dipendenze)
+[x] Aggiornare CLAUDE.md con nuova architettura definitiva  ✅
+[x] Verificare zero import rotti  ✅ 541/542 pass (1 pre-esistente)
+
+PROSSIMI STEP (post Fase 9)
+[ ] Migrare src/backtesting/ a CanonicalMessage
+[ ] Migrare src/operation_rules/ a CanonicalMessage
+[ ] Migrare src/target_resolver/ a CanonicalMessage
+[ ] Solo allora: eliminare src/parser/models/*.py
 ```

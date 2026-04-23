@@ -2,7 +2,7 @@
 
 ## Visione
 
-Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi, li parsa in formato canonico, li esegue su exchange tramite freqtrade (Sistema 1), e li replica in backtesting con configurazioni multiple (Sistema 2).
+Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi, li parsa in formato canonico, e li esegue su exchange tramite freqtrade (Sistema 1).
 
 ## Architettura generale
 
@@ -25,11 +25,11 @@ Operation rules
       ↓
 Target resolver
       ↓
-Sistema 1                    Sistema 2
-(live execution)             (backtesting)
-freqtrade                    freqtrade BT
-      ↓                            ↓
-Exchange (ccxt)              Report / analisi
+Sistema 1                   
+(live execution)           
+freqtrade                 
+      ↓                            
+Exchange (ccxt)              
       ↓
 FreqUI + Telegram bot
 ```
@@ -57,8 +57,6 @@ Risolve `target_ref` in posizioni concrete dal DB. STRONG → diretto, SYMBOL �
 **Sistema 1 — Live execution**
 freqtrade con IStrategy custom (signal bridge), gestione ciclo di vita posizioni, FreqUI, Telegram bot controllo.
 
-**Sistema 2 — Backtesting**
-Replay `parse_results` storici in freqtrade backtesting mode, config matrix runner, report comparativi.
 
 ## Tecnologie
 
@@ -94,8 +92,7 @@ Replay `parse_results` storici in freqtrade backtesting mode, config matrix runn
 ✓ Operation rules
 ✓ Target resolver
 ✓ Sistema 1 (live execution / exchange-backed) validato in dry-run
-✓ Sistema 2 base (backtesting runner + report) presente
-~ `config/backtest_scenarios_v2.yaml` e ScenarioLoader v2 non sono ancora allineati al 100% nel workspace corrente
+~ Sistema 2 (backtesting) non attivo nel codice corrente
 ~ Fasi 8-9: documentate come direzione futura, non ancora chiuse runtime
 ```
 
@@ -131,8 +128,7 @@ Fase 5 — Sistema 1 (freqtrade live)
   ✓ Reconciliation bootstrap
 
 Fase 6 — Sistema 2 (backtesting)
-  ✓ Base backtesting runner/report
-  ~ ScenarioLoader v2 da riallineare
+  ~ Modulo rimosso dal codice corrente (`src/backtesting/`)
 
 Fase 8-9 — Design runtime avanzato
   ~ Documentazione presente

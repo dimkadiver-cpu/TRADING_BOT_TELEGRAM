@@ -1,3 +1,4 @@
+# LEGACY — non usare in nuovo codice. Usa src.parser.canonical_v1.models.
 """Canonical Pydantic models for the parser output.
 
 This is the authoritative contract between the parser layer and all downstream

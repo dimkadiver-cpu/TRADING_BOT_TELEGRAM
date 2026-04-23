@@ -16,6 +16,7 @@ from src.core.migrations import apply_migrations
 from src.execution.dynamic_pairlist import DynamicPairlistManager
 from src.operation_rules.engine import OperationRulesEngine
 from src.storage.operational_signals_store import OperationalSignalsStore
+from src.storage.parse_results_v1 import ParseResultV1Store
 from src.storage.signals_store import SignalsStore
 from src.target_resolver.resolver import TargetResolver
 from src.operation_rules.loader import validate_operation_rules_config
@@ -50,6 +51,26 @@ def _parse_fallback_chat_ids(raw: str | None) -> set[int]:
         if token:
             values.add(int(token))
     return values
+
+
+def _is_enabled_env(raw: str | None) -> bool:
+    if raw is None:
+        return False
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _configure_shadow_mode(
+    *,
+    router: MessageRouter,
+    db_path: str,
+    logger,
+) -> bool:
+    """Enable canonical_v1 shadow mode when explicitly requested by env."""
+    if not _is_enabled_env(os.getenv("PARSER_V1_SHADOW_MODE")):
+        return False
+    router.enable_shadow_normalizer(ParseResultV1Store(db_path=db_path))
+    logger.info("canonical_v1 shadow mode enabled | table=parse_results_v1")
+    return True
 
 
 async def _async_main(
@@ -105,30 +126,34 @@ async def _async_main(
     ingestion_service = build_ingestion_service(db_path=db_path, logger=logger)
     processing_status_store = build_processing_status_store(db_path=db_path)
 
+    router = MessageRouter(
+        effective_trader_resolver=build_effective_trader_resolver(
+            db_path=db_path,
+            trader_mapper=trader_mapper,
+            trader_aliases=config.trader_aliases,
+            known_trader_ids=set(config.traders.keys()),
+        ),
+        eligibility_evaluator=build_eligibility_evaluator(db_path=db_path),
+        parse_results_store=build_parse_results_store(db_path=db_path),
+        processing_status_store=processing_status_store,
+        review_queue_store=build_review_queue_store(db_path=db_path),
+        raw_message_store=ingestion_service.store,
+        logger=logger,
+        channels_config=channels_config,
+        db_path=db_path,
+        operation_rules_engine=OperationRulesEngine(rules_dir=str(root_dir / "config")),
+        target_resolver=TargetResolver(),
+        signals_store=SignalsStore(db_path=db_path),
+        operational_signals_store=OperationalSignalsStore(db_path=db_path),
+        dynamic_pairlist_manager=dynamic_pairlist_manager,
+        parse_results_v1_store=ParseResultV1Store(db_path=db_path),
+    )
+    logger.info("canonical_v1 normalization active | table=parse_results_v1")
+
     listener = TelegramListener(
         ingestion_service=ingestion_service,
         processing_status_store=processing_status_store,
-        router=MessageRouter(
-            effective_trader_resolver=build_effective_trader_resolver(
-                db_path=db_path,
-                trader_mapper=trader_mapper,
-                trader_aliases=config.trader_aliases,
-                known_trader_ids=set(config.traders.keys()),
-            ),
-            eligibility_evaluator=build_eligibility_evaluator(db_path=db_path),
-            parse_results_store=build_parse_results_store(db_path=db_path),
-            processing_status_store=processing_status_store,
-            review_queue_store=build_review_queue_store(db_path=db_path),
-            raw_message_store=ingestion_service.store,
-            logger=logger,
-            channels_config=channels_config,
-            db_path=db_path,
-            operation_rules_engine=OperationRulesEngine(rules_dir=str(root_dir / "config")),
-            target_resolver=TargetResolver(),
-            signals_store=SignalsStore(db_path=db_path),
-            operational_signals_store=OperationalSignalsStore(db_path=db_path),
-            dynamic_pairlist_manager=dynamic_pairlist_manager,
-        ),
+        router=router,
         logger=logger,
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,

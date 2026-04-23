@@ -6,6 +6,26 @@ from pathlib import Path
 import re
 from typing import Any
 
+from src.parser.canonical_v1.models import (
+    CanonicalMessage,
+    CloseOperation,
+    EntryLeg,
+    ModifyTargetsOperation,
+    Price,
+    RawContext,
+    ReportEvent,
+    ReportPayload,
+    ReportedResult,
+    SignalPayload,
+    StopLoss,
+    StopTarget,
+    TakeProfit,
+    Targeting,
+    TargetRef,
+    TargetScope,
+    UpdateOperation,
+    UpdatePayload,
+)
 from src.parser.intent_action_map import intent_policy_for_intent
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
@@ -86,6 +106,161 @@ class TraderDProfileParser(TraderBProfileParser):
                 "parser_version": "trader_d_v2_compatible",
                 "warning_count": len(base_result.warnings),
             },
+        )
+
+    def parse_canonical(self, text: str, context: ParserContext) -> CanonicalMessage:
+        """Produce a CanonicalMessage v1 directly without the normalizer."""
+        result = self.parse_message(text, context)
+        prepared = self._preprocess(text=text, context=context)
+        global_target_scope = (
+            self._resolve_global_target_scope(prepared=prepared)
+            if result.message_type == "UPDATE"
+            else None
+        )
+
+        message_type = result.message_type
+        intents = result.intents
+        entities = result.entities
+        target_refs = result.target_refs
+        warnings = list(result.warnings)
+        confidence = result.confidence
+
+        raw_ctx = RawContext(
+            raw_text=context.raw_text or "",
+            reply_to_message_id=context.reply_to_message_id,
+            extracted_links=list(context.extracted_links or []),
+            hashtags=list(context.hashtags or []),
+            source_chat_id=str(context.channel_id) if context.channel_id else None,
+        )
+        targeting = _build_td_targeting(message_type, target_refs, global_target_scope, context)
+        diag: dict[str, Any] = {"parser_version": "trader_d_v1", "warning_count": len(warnings)}
+        primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
+
+        if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
+            signal = _build_td_signal_payload(entities, message_type, warnings)
+            parse_status = "PARSED" if signal.completeness == "COMPLETE" else "PARTIAL"
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="SIGNAL",
+                parse_status=parse_status,
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                signal=signal,
+                warnings=warnings,
+                diagnostics=diag,
+                raw_context=raw_ctx,
+            )
+
+        if message_type == "INFO_ONLY":
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="PARSED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics=diag,
+                raw_context=raw_ctx,
+            )
+
+        if message_type == "UPDATE":
+            update_ops = _build_td_update_ops(intents, entities, warnings)
+            report_events = _build_td_report_events(intents, entities)
+            reported_result = _build_td_reported_result(entities, result.reported_results)
+            has_ops = bool(update_ops)
+            has_report = bool(report_events) or reported_result is not None
+            report_payload = (
+                ReportPayload(events=report_events, reported_result=reported_result)
+                if has_report
+                else None
+            )
+
+            if has_ops and has_report:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=update_ops),
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diag,
+                    raw_context=raw_ctx,
+                )
+            if has_ops:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=update_ops),
+                    warnings=warnings,
+                    diagnostics=diag,
+                    raw_context=raw_ctx,
+                )
+            if has_report:
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="REPORT",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    report=report_payload,
+                    warnings=warnings,
+                    diagnostics=diag,
+                    raw_context=raw_ctx,
+                )
+            if intents:
+                warnings.append("trader_d_update_no_resolvable_ops")
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status="PARTIAL",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=[]),
+                    warnings=warnings,
+                    diagnostics=diag,
+                    raw_context=raw_ctx,
+                )
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="UNCLASSIFIED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics=diag,
+                raw_context=raw_ctx,
+            )
+
+        return CanonicalMessage(
+            parser_profile=context.trader_code,
+            primary_class="INFO",
+            parse_status="UNCLASSIFIED",
+            confidence=confidence,
+            intents=intents,
+            primary_intent=primary_intent,
+            targeting=targeting,
+            warnings=warnings,
+            diagnostics=diag,
+            raw_context=raw_ctx,
         )
 
     def _postprocess_result(self, *, base_result: TraderParseResult, text: str, context: ParserContext) -> TraderParseResult:
@@ -629,3 +804,303 @@ def _unique(values: list[str]) -> list[str]:
         seen.add(value)
         out.append(value)
     return out
+
+
+# ---------------------------------------------------------------------------
+# Canonical v1 builder helpers (module-level, used by parse_canonical)
+# ---------------------------------------------------------------------------
+
+def _build_td_targeting(
+    message_type: str,
+    target_refs: list[dict[str, Any]],
+    global_target_scope: str | None,
+    context: ParserContext,
+) -> Targeting | None:
+    if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
+        return None
+
+    if global_target_scope:
+        if global_target_scope == "ALL_LONGS":
+            scope = TargetScope(kind="PORTFOLIO_SIDE", value=global_target_scope, side_filter="LONG", applies_to_all=True)
+        elif global_target_scope == "ALL_SHORTS":
+            scope = TargetScope(kind="PORTFOLIO_SIDE", value=global_target_scope, side_filter="SHORT", applies_to_all=True)
+        else:
+            scope = TargetScope(kind="ALL_OPEN", value=global_target_scope, applies_to_all=True)
+        return Targeting(refs=[], scope=scope, strategy="GLOBAL_SCOPE", targeted=True)
+
+    refs: list[TargetRef] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _add(ref_type: str, value: int | str) -> None:
+        key = (ref_type, str(value))
+        if key in seen:
+            return
+        seen.add(key)
+        refs.append(TargetRef(ref_type=ref_type, value=value))  # type: ignore[arg-type]
+
+    for item in target_refs:
+        kind = str(item.get("kind") or "")
+        ref = item.get("ref")
+        if kind == "reply" and isinstance(ref, int):
+            _add("REPLY", ref)
+        elif kind == "telegram_link" and isinstance(ref, str):
+            _add("TELEGRAM_LINK", ref)
+        elif kind == "message_id" and isinstance(ref, int):
+            _add("MESSAGE_ID", ref)
+        elif kind == "symbol" and isinstance(ref, str):
+            _add("SYMBOL", ref)
+
+    if context.reply_to_message_id is not None:
+        _add("REPLY", context.reply_to_message_id)
+
+    if not refs:
+        return None
+
+    has_strong = any(r.ref_type in {"REPLY", "TELEGRAM_LINK", "MESSAGE_ID"} for r in refs)
+    strategy = "REPLY_OR_LINK" if has_strong else "SYMBOL_MATCH"
+    return Targeting(
+        refs=refs,
+        scope=TargetScope(kind="SINGLE_SIGNAL"),
+        strategy=strategy,
+        targeted=True,
+    )
+
+
+def _build_td_signal_payload(
+    entities: dict[str, Any],
+    message_type: str,
+    warnings: list[str],
+) -> SignalPayload:
+    symbol = entities.get("symbol")
+    side = entities.get("side")
+    order_type = str(entities.get("entry_order_type") or "MARKET").upper()
+
+    entries: list[EntryLeg] = []
+    plan_entries = entities.get("entry_plan_entries")
+    if isinstance(plan_entries, list) and plan_entries:
+        for idx, item in enumerate(plan_entries, start=1):
+            if not isinstance(item, dict):
+                continue
+            price_raw = item.get("price")
+            ot = str(item.get("order_type") or order_type).upper()
+            price = Price.from_float(float(price_raw)) if isinstance(price_raw, (int, float)) else None
+            if ot == "LIMIT" and price is None:
+                continue
+            entries.append(EntryLeg(
+                sequence=idx,
+                entry_type=ot,
+                price=price,
+                role="PRIMARY" if idx == 1 else "AVERAGING",
+            ))
+    else:
+        flat = entities.get("entry") or []
+        if order_type == "MARKET":
+            price = Price.from_float(float(flat[0])) if flat and isinstance(flat[0], (int, float)) else None
+            entries = [EntryLeg(sequence=1, entry_type="MARKET", price=price, role="PRIMARY")]
+        else:
+            for idx, v in enumerate(flat, start=1):
+                if isinstance(v, (int, float)):
+                    entries.append(EntryLeg(
+                        sequence=idx,
+                        entry_type="LIMIT",
+                        price=Price.from_float(float(v)),
+                        role="PRIMARY" if idx == 1 else "AVERAGING",
+                    ))
+
+    stop_val = entities.get("stop_loss")
+    stop_loss = StopLoss(price=Price.from_float(float(stop_val))) if isinstance(stop_val, (int, float)) else None
+
+    tps_raw = entities.get("take_profits") or []
+    take_profits = [
+        TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+        for i, v in enumerate(tps_raw)
+        if isinstance(v, (int, float))
+    ]
+
+    entry_structure_raw = str(entities.get("entry_structure") or "").upper()
+    if entry_structure_raw in {"ONE_SHOT", "TWO_STEP", "RANGE", "LADDER"}:
+        entry_structure: str | None = entry_structure_raw
+    elif order_type == "MARKET" or (entries and entries[0].entry_type == "MARKET"):
+        entry_structure = "ONE_SHOT"
+    elif len(entries) == 1:
+        entry_structure = "ONE_SHOT"
+    elif len(entries) == 2:
+        entry_structure = "TWO_STEP"
+    elif len(entries) >= 3:
+        entry_structure = "LADDER"
+    else:
+        entry_structure = None
+
+    # SETUP_INCOMPLETE: signal without an explicit entry price — force INCOMPLETE
+    if message_type == "SETUP_INCOMPLETE":
+        has_explicit_price = any(e.price is not None for e in entries)
+        if not has_explicit_price:
+            return SignalPayload(
+                symbol=symbol,
+                side=side,  # type: ignore[arg-type]
+                entry_structure=entry_structure,  # type: ignore[arg-type]
+                entries=entries,
+                stop_loss=stop_loss,
+                take_profits=take_profits,
+                completeness="INCOMPLETE",
+                missing_fields=["entries"],
+            )
+
+    missing: list[str] = []
+    if not symbol:
+        missing.append("symbol")
+    if side not in {"LONG", "SHORT"}:
+        missing.append("side")
+    if not entries:
+        missing.append("entries")
+    if stop_loss is None:
+        missing.append("stop_loss")
+    if not take_profits:
+        missing.append("take_profits")
+
+    return SignalPayload(
+        symbol=symbol,
+        side=side,  # type: ignore[arg-type]
+        entry_structure=entry_structure,  # type: ignore[arg-type]
+        entries=entries,
+        stop_loss=stop_loss,
+        take_profits=take_profits,
+        completeness="COMPLETE" if not missing else "INCOMPLETE",
+        missing_fields=missing,
+    )
+
+
+def _build_td_update_ops(
+    intents: list[str],
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> list[UpdateOperation]:
+    ops: list[UpdateOperation] = []
+    intent_set = set(intents)
+
+    if "U_MOVE_STOP_TO_BE" in intent_set or "U_MOVE_STOP" in intent_set:
+        op = _resolve_td_set_stop_op(intent_set, entities, warnings)
+        if op is not None:
+            ops.append(op)
+
+    # Skip CLOSE FULL when stop hit implies close
+    if "U_CLOSE_FULL" in intent_set and "U_STOP_HIT" not in intent_set:
+        close_scope = str(entities.get("close_scope") or "FULL")
+        close_price_val = entities.get("close_price")
+        close_price = Price.from_float(float(close_price_val)) if isinstance(close_price_val, (int, float)) else None
+        ops.append(UpdateOperation(op_type="CLOSE", close=CloseOperation(close_scope=close_scope, close_price=close_price)))
+
+    if "U_CLOSE_PARTIAL" in intent_set:
+        close_fraction = entities.get("close_fraction")
+        if not isinstance(close_fraction, float):
+            pct = entities.get("close_fraction_percent")
+            close_fraction = round(float(pct) / 100.0, 4) if isinstance(pct, (int, float)) else None
+        close_price_val = entities.get("close_price") or entities.get("partial_close_price")
+        close_price = Price.from_float(float(close_price_val)) if isinstance(close_price_val, (int, float)) else None
+        if close_fraction is not None:
+            ops.append(UpdateOperation(
+                op_type="CLOSE",
+                close=CloseOperation(close_scope="PARTIAL", close_fraction=close_fraction, close_price=close_price),
+            ))
+        else:
+            ops.append(UpdateOperation(op_type="CLOSE", close=CloseOperation(close_scope="PARTIAL")))
+
+    if "U_CANCEL_PENDING_ORDERS" in intent_set:
+        cancel_scope = entities.get("cancel_scope")
+        from src.parser.canonical_v1.models import CancelPendingOperation
+        ops.append(UpdateOperation(
+            op_type="CANCEL_PENDING",
+            cancel_pending=CancelPendingOperation(cancel_scope=str(cancel_scope) if cancel_scope else None),
+        ))
+
+    if "U_UPDATE_TAKE_PROFITS" in intent_set:
+        tps_raw = entities.get("take_profits")
+        if isinstance(tps_raw, list) and tps_raw:
+            tp_legs = [
+                TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+                for i, v in enumerate(tps_raw)
+                if isinstance(v, (int, float))
+            ]
+            if tp_legs:
+                ops.append(UpdateOperation(
+                    op_type="MODIFY_TARGETS",
+                    modify_targets=ModifyTargetsOperation(mode="REPLACE_ALL", take_profits=tp_legs),
+                ))
+            else:
+                warnings.append("U_UPDATE_TAKE_PROFITS: no resolvable TP prices")
+        else:
+            warnings.append("U_UPDATE_TAKE_PROFITS: no resolvable TP prices")
+
+    return ops
+
+
+def _resolve_td_set_stop_op(
+    intent_set: set[str],
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> UpdateOperation | None:
+    new_stop_level = entities.get("new_stop_level")
+
+    if isinstance(new_stop_level, (int, float)):
+        return UpdateOperation(
+            op_type="SET_STOP",
+            set_stop=StopTarget(target_type="PRICE", value=float(new_stop_level)),
+        )
+    if new_stop_level == "ENTRY" or "U_MOVE_STOP_TO_BE" in intent_set:
+        return UpdateOperation(op_type="SET_STOP", set_stop=StopTarget(target_type="ENTRY"))
+
+    ref_text = entities.get("new_stop_reference_text")
+    if ref_text:
+        warnings.append(f"trader_d_stop_structural_reference_no_price: {ref_text!r}")
+        return None
+
+    warnings.append("trader_d_move_stop_unresolvable: no price found")
+    return None
+
+
+def _build_td_report_events(
+    intents: list[str],
+    entities: dict[str, Any],
+) -> list[ReportEvent]:
+    events: list[ReportEvent] = []
+    reported_result = _build_td_reported_result(entities, [])
+
+    for intent in intents:
+        if intent == "U_TP_HIT":
+            hit_target = entities.get("hit_target")
+            level: int | None = None
+            if isinstance(hit_target, str) and hit_target.startswith("TP"):
+                try:
+                    level = int(hit_target[2:])
+                except ValueError:
+                    pass
+            events.append(ReportEvent(event_type="TP_HIT", level=level, result=reported_result))
+        elif intent == "U_STOP_HIT":
+            events.append(ReportEvent(event_type="STOP_HIT", result=reported_result))
+        elif intent == "U_EXIT_BE":
+            events.append(ReportEvent(event_type="BREAKEVEN_EXIT", result=reported_result))
+
+    return events
+
+
+def _build_td_reported_result(
+    entities: dict[str, Any],
+    reported_results: list[Any],
+) -> ReportedResult | None:
+    profit_r = entities.get("reported_profit_r")
+    if isinstance(profit_r, (int, float)):
+        return ReportedResult(value=float(profit_r), unit="R")
+
+    profit_pct = entities.get("reported_profit_percent")
+    if isinstance(profit_pct, (int, float)):
+        return ReportedResult(value=float(profit_pct), unit="PERCENT")
+
+    if reported_results:
+        first = reported_results[0]
+        if isinstance(first, dict):
+            val = first.get("value")
+            unit = str(first.get("unit") or "UNKNOWN")
+            if isinstance(val, (int, float)):
+                return ReportedResult(value=float(val), unit=unit)  # type: ignore[arg-type]
+
+    return None

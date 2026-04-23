@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Protocol
+from typing import TYPE_CHECKING, Any, Protocol
+
+if TYPE_CHECKING:
+    from src.parser.canonical_v1.models import CanonicalMessage
 
 
 @dataclass(slots=True)
@@ -38,3 +41,10 @@ class TraderParseResult:
 class TraderProfileParser(Protocol):
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
         """Parse a trader message and return normalized profile output."""
+
+
+class TraderProfileParserV1(Protocol):
+    """Protocol for trader profiles that emit CanonicalMessage natively (Phase 8+)."""
+
+    def parse_canonical(self, text: str, context: ParserContext) -> "CanonicalMessage":
+        """Parse a trader message and return a CanonicalMessage v1 directly."""

@@ -6,6 +6,25 @@ from pathlib import Path
 import re
 from typing import Any
 
+from src.parser.canonical_v1.models import (
+    CanonicalMessage,
+    CloseOperation,
+    EntryLeg,
+    ModifyEntriesOperation,
+    Price,
+    RawContext,
+    ReportEvent,
+    ReportPayload,
+    ReportedResult,
+    SignalPayload,
+    StopLoss,
+    TakeProfit,
+    Targeting,
+    TargetRef,
+    TargetScope,
+    UpdateOperation,
+    UpdatePayload,
+)
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text
 from src.parser.trader_profiles.trader_b.profile import TraderBProfileParser
@@ -70,6 +89,166 @@ class Trader3ProfileParser(TraderBProfileParser):
             target_scope=target_scope,
             linking=linking,
             diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+        )
+
+    # ------------------------------------------------------------------
+    # Canonical v1 native output (Phase 8)
+    # ------------------------------------------------------------------
+
+    def parse_canonical(self, text: str, context: ParserContext) -> CanonicalMessage:
+        """Produce a CanonicalMessage v1 directly without the normalizer."""
+        prepared = self._preprocess(text=text, context=context)
+        message_type = self._classify_message(prepared=prepared)
+        entities = self._extract_entities(prepared=prepared, message_type=message_type)
+        intents = self._extract_intents(message_type=message_type, entities=entities)
+        target_refs = self._extract_targets(prepared=prepared, context=context, entities=entities)
+        warnings: list[str] = list(
+            self._build_warnings(
+                message_type=message_type,
+                entities=entities,
+                target_refs=target_refs,
+                context=context,
+                intents=intents,
+            )
+        )
+        confidence = self._estimate_confidence(message_type=message_type, warnings=warnings)
+        primary_intent = self._derive_primary_intent(message_type=message_type, entities=entities)
+
+        raw_ctx = RawContext(
+            raw_text=context.raw_text or "",
+            reply_to_message_id=context.reply_to_message_id,
+            extracted_links=list(context.extracted_links or []),
+            hashtags=list(context.hashtags or []),
+            source_chat_id=str(context.channel_id) if context.channel_id else None,
+        )
+        targeting = _build_t3_targeting(message_type, target_refs, context)
+
+        if message_type == "NEW_SIGNAL":
+            signal = _build_t3_signal_payload(entities, warnings)
+            parse_status = "PARSED" if signal.completeness == "COMPLETE" else "PARTIAL"
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="SIGNAL",
+                parse_status=parse_status,
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                signal=signal,
+                warnings=warnings,
+                diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+                raw_context=raw_ctx,
+            )
+
+        if message_type == "INFO_ONLY":
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="PARSED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+                raw_context=raw_ctx,
+            )
+
+        if message_type == "UPDATE":
+            intent_set = set(intents)
+            has_update_intent = bool(intent_set & {"U_CLOSE_FULL", "U_REENTER"})
+            has_report_intent = bool(intent_set & {"U_TP_HIT", "U_STOP_HIT"})
+
+            if has_update_intent:
+                ops = _build_t3_update_ops(intents, entities, warnings)
+                report = _build_t3_report_payload(intents, entities) if has_report_intent else None
+                parse_status = "PARSED" if ops else "PARTIAL"
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="UPDATE",
+                    parse_status=parse_status,
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    update=UpdatePayload(operations=ops),
+                    report=report,
+                    warnings=warnings,
+                    diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+                    raw_context=raw_ctx,
+                )
+
+            if has_report_intent:
+                report = _build_t3_report_payload(intents, entities)
+                parse_status = (
+                    "PARSED"
+                    if report is not None and (report.events or report.reported_result is not None)
+                    else "PARTIAL"
+                )
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="REPORT",
+                    parse_status=parse_status,
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    report=report,
+                    warnings=warnings,
+                    diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+                    raw_context=raw_ctx,
+                )
+
+            # UPDATE with no recognised intents — check for bare reported results
+            reported_loss = entities.get("reported_loss_percent")
+            reported_profit = entities.get("reported_profit_percent")
+            if reported_loss is not None or reported_profit is not None:
+                value = reported_loss if reported_loss is not None else reported_profit
+                report = ReportPayload(
+                    events=[],
+                    reported_result=ReportedResult(value=value, unit="PERCENT"),
+                )
+                return CanonicalMessage(
+                    parser_profile=context.trader_code,
+                    primary_class="REPORT",
+                    parse_status="PARSED",
+                    confidence=confidence,
+                    intents=intents,
+                    primary_intent=primary_intent,
+                    targeting=targeting,
+                    report=report,
+                    warnings=warnings,
+                    diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+                    raw_context=raw_ctx,
+                )
+
+            # Truly unresolvable update
+            warnings.append("trader_3_update_no_intents_no_data")
+            return CanonicalMessage(
+                parser_profile=context.trader_code,
+                primary_class="INFO",
+                parse_status="UNCLASSIFIED",
+                confidence=confidence,
+                intents=intents,
+                primary_intent=primary_intent,
+                targeting=targeting,
+                warnings=warnings,
+                diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+                raw_context=raw_ctx,
+            )
+
+        # UNCLASSIFIED
+        return CanonicalMessage(
+            parser_profile=context.trader_code,
+            primary_class="INFO",
+            parse_status="UNCLASSIFIED",
+            confidence=confidence,
+            intents=intents,
+            primary_intent=primary_intent,
+            targeting=targeting,
+            warnings=warnings,
+            diagnostics={"parser_version": "trader_3_v1", "warning_count": len(warnings)},
+            raw_context=raw_ctx,
         )
 
     def _preprocess(self, *, text: str, context: ParserContext) -> dict[str, Any]:
@@ -492,6 +671,139 @@ def _to_float(raw: str | None) -> float | None:
         return float(cleaned)
     except ValueError:
         return None
+
+
+# ---------------------------------------------------------------------------
+# Canonical v1 builder helpers (module-level, used by parse_canonical)
+# ---------------------------------------------------------------------------
+
+def _build_t3_targeting(
+    message_type: str,
+    target_refs: list[dict[str, Any]],
+    context: ParserContext,
+) -> Targeting | None:
+    if message_type == "NEW_SIGNAL":
+        return None
+
+    refs: list[TargetRef] = []
+    seen: set[tuple[str, str]] = set()
+
+    def _add(ref_type: str, value: int | str) -> None:
+        key = (ref_type, str(value))
+        if key in seen:
+            return
+        seen.add(key)
+        refs.append(TargetRef(ref_type=ref_type, value=value))  # type: ignore[arg-type]
+
+    for item in target_refs:
+        kind = str(item.get("kind") or "")
+        ref = item.get("ref")
+        if kind == "signal_id" and isinstance(ref, int):
+            _add("EXPLICIT_ID", ref)
+        elif kind == "reply" and isinstance(ref, int):
+            _add("REPLY", ref)
+        elif kind == "telegram_link" and isinstance(ref, str):
+            _add("TELEGRAM_LINK", ref)
+        elif kind == "message_id" and isinstance(ref, int):
+            _add("MESSAGE_ID", ref)
+        elif kind == "symbol" and isinstance(ref, str):
+            _add("SYMBOL", ref)
+
+    if context.reply_to_message_id is not None:
+        _add("REPLY", context.reply_to_message_id)
+
+    if not refs:
+        return None
+
+    has_strong = any(r.ref_type in {"EXPLICIT_ID", "REPLY", "TELEGRAM_LINK", "MESSAGE_ID"} for r in refs)
+    strategy = "REPLY_OR_LINK" if has_strong else "SYMBOL_MATCH"
+
+    return Targeting(
+        refs=refs,
+        scope=TargetScope(kind="SINGLE_SIGNAL"),
+        strategy=strategy,
+        targeted=True,
+    )
+
+
+def _build_t3_signal_payload(entities: dict[str, Any], warnings: list[str]) -> SignalPayload:
+    symbol = entities.get("symbol") or None
+    side = entities.get("side") or None
+    low: float | None = entities.get("entry_range_low")
+    high: float | None = entities.get("entry_range_high")
+    stop_val: float | None = entities.get("stop_loss")
+    tps_raw: list[float] = [v for v in (entities.get("take_profits") or []) if isinstance(v, (int, float))]
+
+    entries: list[EntryLeg] = []
+    if low is not None and high is not None:
+        entries = [
+            EntryLeg(sequence=1, entry_type="LIMIT", price=Price.from_float(low), role="PRIMARY"),
+            EntryLeg(sequence=2, entry_type="LIMIT", price=Price.from_float(high), role="AVERAGING"),
+        ]
+
+    stop_loss = StopLoss(price=Price.from_float(stop_val)) if stop_val is not None else None
+    take_profits = [
+        TakeProfit(sequence=i + 1, price=Price.from_float(float(v)))
+        for i, v in enumerate(tps_raw)
+    ]
+
+    missing: list[str] = []
+    if not symbol:
+        missing.append("symbol")
+    if not side:
+        missing.append("side")
+    if not entries:
+        missing.append("entries")
+    if stop_loss is None:
+        missing.append("stop_loss")
+    if not take_profits:
+        missing.append("take_profits")
+
+    return SignalPayload(
+        symbol=symbol,
+        side=side,  # type: ignore[arg-type]
+        entry_structure="RANGE" if entries else None,
+        entries=entries,
+        stop_loss=stop_loss,
+        take_profits=take_profits,
+        completeness="COMPLETE" if not missing else "INCOMPLETE",
+        missing_fields=missing,
+    )
+
+
+def _build_t3_update_ops(
+    intents: list[str],
+    entities: dict[str, Any],
+    warnings: list[str],
+) -> list[UpdateOperation]:
+    ops: list[UpdateOperation] = []
+    for intent in intents:
+        if intent == "U_CLOSE_FULL":
+            ops.append(UpdateOperation(op_type="CLOSE", close=CloseOperation(close_scope="FULL")))
+        elif intent == "U_REENTER":
+            # Trader 3 reenter notes "same entry level" — no explicit new prices
+            warnings.append("trader_3_reenter_no_explicit_entry_prices")
+    return ops
+
+
+def _build_t3_report_payload(
+    intents: list[str],
+    entities: dict[str, Any],
+) -> ReportPayload | None:
+    events: list[ReportEvent] = []
+    for intent in intents:
+        if intent == "U_TP_HIT":
+            max_hit: int | None = entities.get("max_target_hit")
+            profit_pct: float | None = entities.get("reported_profit_percent")
+            result = ReportedResult(value=profit_pct, unit="PERCENT") if profit_pct is not None else None
+            events.append(ReportEvent(event_type="TP_HIT", level=max_hit, result=result))
+        elif intent == "U_STOP_HIT":
+            loss_pct: float | None = entities.get("reported_loss_percent")
+            result = ReportedResult(value=loss_pct, unit="PERCENT") if loss_pct is not None else None
+            events.append(ReportEvent(event_type="STOP_HIT", result=result))
+    if not events:
+        return None
+    return ReportPayload(events=events)
 
 
 __all__ = ["Trader3ProfileParser"]

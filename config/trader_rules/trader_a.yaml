@@ -1,118 +1,36 @@
-# Operation Rules — configurazione globale
-# ─────────────────────────────────────────────────────────────────────────────
-# Merge priority: global_hard_caps > trader_on_off > trader_specific > global_defaults
-# I global_hard_caps non sono mai overridabili dai trader.
+# Operation rules per trader_a
+# Override selettivo su global_defaults (config/operation_rules.yaml)
+# Ometti una chiave per ereditare il default globale.
 
-# ── Defaults per trader (overridabili in config/trader_rules/) ────────────────
-global_defaults:
-  enabled: true
-  gate_mode: block                        # block | warn
-  operation_rules: override               # override | global
+enabled: true
+gate_mode: block
+operation_rules: override
 
-  # ── Modello rischio — Set A ──────────────────────────────────────────────
-  # Il centro del sistema è il rischio massimo accettato, non la size.
-  # La size viene calcolata dal sistema in base a: entry, stop loss, leva.
-  risk_mode: risk_pct_of_capital          # risk_pct_of_capital | risk_usdt_fixed
-  risk_pct_of_capital: 5.0               # % capitale che puoi perdere su un singolo trade
-  risk_usdt_fixed: 20.0                  # perdita massima fissa (USDT) se risk_mode=risk_usdt_fixed
-  capital_base_mode: static_config        # static_config | live_equity (live = Fase 5)
-  capital_base_usdt: 1000.0              # capitale di riferimento (se static_config)
+risk_mode: risk_pct_of_capital
+risk_pct_of_capital: 5.0
+risk_usdt_fixed: 20.0
+capital_base_mode: static_config
+capital_base_usdt: 1000.0
 
-  use_trader_risk_hint: false             # usa risk_hint estratto dal parser
-  leverage: 1
-  max_capital_at_risk_per_trader_pct: 5.0
-  max_concurrent_same_symbol: 1
+use_trader_risk_hint: false
+leverage: 1
+max_capital_at_risk_per_trader_pct: 5.0
+max_concurrent_same_symbol: 1
 
-  entry_split:
-    ZONE:
-      split_mode: endpoints             # endpoints | midpoint | three_way
+entry_split:
+  LIMIT:
+    single:
       weights:
-        E1: 0.50
-        E2: 0.50
-    AVERAGING:
-      distribution: equal               # equal | decreasing
-    LIMIT:
-      single:
-        weights:
-          E1: 1.0
-      averaging:                        # due entry LIMIT (primary + averaging)
-        weights:
-          E1: 0.70
-          E2: 0.30
-    MARKET:
-      single:
-        weights:
-          E1: 1.0
-      averaging:                        # MARKET + LIMIT averaging (2 step)
-        weights:
-          E1: 0.70
-          E2: 0.30
-
-  # Price corrections hook (implementazione futura)
-  price_corrections:
-    enabled: false
-    method: null                        # "number_theory" | "round_to_tick" | null
-
-  # Range statici per sanity check (opzionale, senza dati live)
-  price_sanity:
-    enabled: false
-    symbol_ranges: {}
-
-  # ── Gestione TP ─────────────────────────────────────────────────────────
-  tp_handling:
-    tp_handling_mode: follow_all_signal_tps   # follow_all_signal_tps | limit_to_max_levels
-    max_tp_levels: 3                           # usato solo se limit_to_max_levels
-    tp_close_distribution:                     # tabelle separate per numero di TP
-      2: [50, 50]
-      3: [30, 30, 40]
-      4: [25, 25, 25, 25]
-      # fallback: distribuzione uguale se numero TP non in tabella
-
-  # ── Set B — snapshot regole gestione posizione (letto da Sistema 1) ─────
-  position_management:
-    mode: hybrid                      # machine_event | trader_hint | hybrid
-                                      # hybrid: trader_hint per UPDATE Telegram + machine_event per callback runtime
-                                      # trader_hint: solo UPDATE Telegram auto-applicati
-                                      # machine_event: blocca auto-apply degli UPDATE Telegram, usa solo callback runtime
-
-    trader_hint:
-      auto_apply_intents:             # UPDATE intents che Sistema 1 esegue automaticamente
-        - U_MOVE_STOP
-        - U_CLOSE_FULL
-        - U_CLOSE_PARTIAL
-        - U_CANCEL_PENDING
-        - U_MOVE_STOP_TO_BE
-
-      log_only_intents:               # UPDATE intents solo informativi
-        - U_TP_HIT
-        - U_SL_HIT
-
-    machine_event:
-      rules:
-        - event_type: TP_EXECUTED
-          when:
-            tp_level: 1
-          actions:
-            - type: MOVE_STOP_TO_BE
-        - event_type: EXIT_BE
-          actions:
-            - type: MARK_EXIT_BE
-
-
-              # Eventi runtime supportati oggi:
-      # - TP_EXECUTED : emesso dal callback dopo un partial TP fill
-      # - EXIT_BE     : emesso dal callback stoploss quando be_stop_active=true
-      #
-      # Variabili supportate in "when":
-      # - tp_level    : livello TP 1-based (TP1=1, TP2=2, ...)
-      #
-      # Azioni supportate oggi:
-      # - MOVE_STOP_TO_BE : sposta SL al prezzo di entry reale e marca be_stop_active=true
-      # - MARK_EXIT_BE    : marca il trade come chiuso a breakeven in meta_json
-      #
-      # Note operative:
-      # - EXIT_BE oggi non usa variabili in "when" (match unconditional)
-      # - SL_HIT è previsto dall'engine ma non ha ancora azioni runtime dedicate
-      # - Per aggiungere nuove azioni/eventi serve allineare:
-      #   src/execution/machine_event.py
-      #   src/execution/freqtrade_callback.py
+        E1: 1.0
+    averaging:
+      weights:
+        E1: 0.70
+        E2: 0.30
+  MARKET:
+    single:
+      weights:
+        E1: 1.0
+    averaging:
+      weights:
+        E1: 0.70
+        E2: 0.30

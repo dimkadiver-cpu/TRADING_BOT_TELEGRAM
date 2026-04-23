@@ -5,7 +5,6 @@ import re
 from typing import Any
 
 from parser_test.reporting.report_schema import schema_for_scope
-from src.parser.action_builders.canonical_v2 import derive_legacy_actions
 
 
 def build_report_row(
@@ -49,7 +48,7 @@ def build_report_row(
         "actions_structured_summary": _summarize_actions_structured(actions_structured),
     }
     if include_legacy_debug:
-        row["legacy_actions"] = _join_list(normalized_obj.get("actions") or derive_legacy_actions(actions_structured))
+        row["legacy_actions"] = _join_list(normalized_obj.get("actions") or [])
     if include_json_debug:
         row["normalized_json_debug"] = json.dumps(normalized_obj, ensure_ascii=False)
     for column in schema.columns:

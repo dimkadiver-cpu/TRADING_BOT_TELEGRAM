@@ -1,3 +1,4 @@
+# LEGACY — non usare in nuovo codice. Usa src.parser.canonical_v1.models.
 """Pydantic model for UPDATE parser output.
 
 UpdateEntities is the structured result produced by the parser when it classifies

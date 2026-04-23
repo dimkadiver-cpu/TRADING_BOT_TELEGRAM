@@ -10,7 +10,10 @@ Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi
 
 ## Stato attuale
 
-Il progetto è in fase di **riprogettazione del parser**. Il layer di acquisizione Telegram e storage esistono ma vanno aggiornati. Il parser va riscritto seguendo la nuova architettura. Execution e backtesting non sono ancora implementati.
+La migrazione del parser alla nuova architettura canonicav1 è **completata** (Fasi 1-9 parziale).
+Tutti i profili trader emettono `CanonicalMessage` nativamente tramite `parse_canonical()`.
+Il router persiste `CanonicalMessage` in `parse_results_v1`. I layer downstream (operation_rules,
+target_resolver, backtesting) sono ancora su modelli legacy — migrazione non ancora iniziata.
 
 ## Flusso generale
 
@@ -38,9 +41,9 @@ Sistema 1 / Sistema 2        [DA IMPLEMENTARE]
 
 ---
 
-## Architettura parser — NUOVO DESIGN
+## Architettura parser — DESIGN ATTUALE (v1 nativa)
 
-Il parser è in fase di riscrittura. La nuova architettura elimina il pipeline generico e usa un percorso unico per trader.
+La migrazione è completata. Ogni profilo emette `CanonicalMessage` direttamente senza passare per il normalizer.
 
 ### Flusso interno parser
 
@@ -49,33 +52,43 @@ testo + ParserContext
       ↓
 RulesEngine          legge parsing_rules.json → classificazione + confidence
       ↓
-profile.py           estrae entità + intents (logica procedurale specifica trader)
+profile.py::parse_canonical()   estrae e produce CanonicalMessage direttamente
       ↓
-Pydantic models      normalizza formato + valida tipo
+CanonicalMessage     src/parser/canonical_v1/models.py — contratto unico
       ↓
-TraderParseResult    output canonico unico
+parse_results_v1 DB  router persiste il JSON canonico
 ```
 
 ### Cosa NON esiste più nella nuova architettura
 
-- `pipeline.py` generico con regex universali — DA ELIMINARE dopo migrazione
+- `src/parser/action_builders/canonical_v2.py` — **RIMOSSO** (Fase 9)
+- `pipeline.py` generico con regex universali — legacy, da eliminare
+- `normalization.py` come layer separato — legacy, da eliminare
 - riconciliazione tra pipeline e profilo — non esiste più
-- `normalization.py` come layer separato — sostituito da Pydantic models
 
-### Output canonico — TraderParseResult
+### Contratto canonico — CanonicalMessage
 
 ```python
-message_type:     NEW_SIGNAL | UPDATE | INFO_ONLY | UNCLASSIFIED
-completeness:     COMPLETE | INCOMPLETE  (solo NEW_SIGNAL)
-missing_fields:   lista campi mancanti
-entities:         NewSignalEntities | UpdateEntities | None
-intents:          lista Intent(name, kind=CONTEXT|ACTION)
-target_ref:       TargetRef(kind=STRONG|SYMBOL|GLOBAL, ...)
-confidence:       float 0.0-1.0
-warnings:         lista str
+# src/parser/canonical_v1/models.py
+primary_class:    SIGNAL | UPDATE | REPORT | INFO
+parse_status:     PARSED | PARTIAL | UNCLASSIFIED
 trader_id:        str
-raw_text:         str
-acquisition_mode: live | catchup
+raw_context:      RawContext (raw_text, reply_to_message_id, ...)
+targeting:        Targeting (refs + scope)
+signal:           SignalPayload | None
+update:           UpdatePayload | None
+report:           ReportPayload | None
+warnings:         list[str]
+```
+
+### Come usare i profili v1-nativi
+
+```python
+# Ogni profilo implementa parse_canonical():
+result: CanonicalMessage = parser.parse_canonical(text, context)
+
+# Il router rileva automaticamente i profili v1-nativi:
+callable(getattr(type(parser), 'parse_canonical', None))
 ```
 
 ### Entry type
@@ -119,47 +132,47 @@ GLOBAL  → scope: str (es. "all_long", "all_positions")
 TeleSignalBot/
 ├── CLAUDE.md                        ← questo file
 ├── requirements.txt
-├── skills/                          ← skill per Claude Code
-│   ├── project-architecture/
-│   ├── build-parser-profile/
-│   ├── telegram-ingestion/
-│   ├── pydantic-models/             ← NUOVO
-│   ├── rules-engine/                ← NUOVO
-│   ├── debug-csv-watchmode/         ← NUOVO
-│   ├── qa-parser-regression/
-│   ├── handoff-trading-bot/
-│   └── map-trading-bot/
 ├── src/
 │   ├── core/                        ← utilities condivise, non toccare
 │   ├── storage/                     ← storage layer, non toccare
 │   ├── telegram/                    ← listener, ingestion, trader resolution
 │   └── parser/
-│       ├── models/                  ← Pydantic models NUOVO
-│       │   ├── canonical.py         ← TraderParseResult, Price, Intent, TargetRef
-│       │   ├── new_signal.py        ← NewSignalEntities
-│       │   └── update.py            ← UpdateEntities
-│       ├── rules_engine.py          ← RulesEngine NUOVO
+│       ├── canonical_v1/            ← CONTRATTO UNICO (non toccare struttura)
+│       │   ├── __init__.py
+│       │   ├── models.py            ← CanonicalMessage, Price, EntryLeg, ...
+│       │   ├── normalizer.py        ← normalizer legacy→v1 (usato come fallback)
+│       │   └── tests/
+│       ├── adapters/
+│       │   └── legacy_to_event_envelope_v1.py  ← bridge TraderParseResult→v1
+│       ├── event_envelope_v1.py     ← TraderEventEnvelopeV1 (bridge minimo)
+│       ├── models/                  ← LEGACY — usati da backtesting/operation_rules
+│       │   ├── canonical.py         ← LEGACY Price, Intent, TargetRef (vecchio)
+│       │   ├── new_signal.py        ← LEGACY NewSignalEntities
+│       │   ├── update.py            ← LEGACY UpdateEntities
+│       │   └── operational.py       ← LEGACY OperationalSignal, ResolvedTarget
+│       ├── action_builders/         ← LEGACY svuotato (canonical_v2.py rimosso)
+│       ├── rules_engine.py          ← RulesEngine
 │       ├── trader_profiles/
-│       │   ├── shared/              ← vocabolari condivisi NUOVO
-│       │   │   ├── russian_trading.json
-│       │   │   └── english_trading.json
-│       │   ├── base.py              ← ParserContext, TraderParseResult protocol
+│       │   ├── base.py              ← ParserContext, TraderParseResult dataclass, Protocols
 │       │   ├── registry.py          ← registro profili
-│       │   ├── trader_3/            ← primo profilo da migrare
-│       │   ├── trader_a/
-│       │   ├── trader_b/
-│       │   ├── trader_c/
-│       │   └── trader_d/
-│       ├── pipeline.py              ← LEGACY, non toccare, verrà eliminato
-│       └── normalization.py         ← LEGACY, non toccare, verrà eliminato
+│       │   ├── trader_3/            ← ✅ v1-nativo
+│       │   ├── trader_a/            ← ✅ v1-nativo
+│       │   ├── trader_b/            ← ✅ v1-nativo
+│       │   ├── trader_c/            ← ✅ v1-nativo
+│       │   └── trader_d/            ← ✅ v1-nativo
+│       ├── pipeline.py              ← LEGACY, non toccare
+│       └── normalization.py         ← LEGACY, non toccare
 ├── parser_test/
 │   ├── db/
 │   ├── scripts/
 │   │   ├── replay_parser.py
+│   │   ├── audit_canonical_v1.py
 │   │   └── generate_parser_reports.py
 │   └── reporting/
+├── tests/
+│   └── parser_canonical_v1/         ← test schema + normalizer
 └── config/
-    ├── channels.yaml                ← config canali e trader attivi
+    ├── channels.yaml
     └── telegram_source_map.json
 ```
 
@@ -176,7 +189,9 @@ Usa solo i file in docs/ (PRD_generale, PRD_listener, PRD_router, PRD_parser, AU
 - `src/storage/` — storage layer stabile
 - `src/core/` — utilities condivise
 - `db/migrations/` — schema DB
-- `pipeline.py` e `normalization.py` — legacy in produzione, toccarli solo quando tutti i profili sono migrati
+- `pipeline.py` e `normalization.py` — legacy, eliminare solo dopo migrazione backtesting
+- `src/parser/models/` (canonical.py, new_signal.py, update.py, operational.py) — LEGACY ancora in uso da backtesting, operation_rules, target_resolver; non eliminare prima di migrare quei layer
+- `src/parser/canonical_v1/models.py` — contratto canonico definitivo, non modificare struttura
 
 ### Prima di qualsiasi modifica
 1. Leggi la skill pertinente in `skills/`
@@ -224,18 +239,25 @@ LLM hook opzionali (installare solo se configurati per un trader):
 
 ---
 
-## Ordine di sviluppo — parser
+## Stato migrazione — parser
 
 ```
-Step 1  Pydantic models              src/parser/models/
-Step 2  RulesEngine                  src/parser/rules_engine.py
-Step 3  Trader 3 profilo             src/parser/trader_profiles/trader_3/
-Step 4  Sistema debug CSV + watch    parser_test/
-Step 5  Migrazione altri profili     trader_b → trader_c/d → trader_a
-Step 6  Eliminazione pipeline.py     solo dopo migrazione completa
+✅ Fase 1-8  Migrazione profili completata — tutti i profili emettono CanonicalMessage
+✅ Fase 9a   canonical_v2.py rimosso — action_builders svuotato
+⚠️  Fase 9b   Modelli legacy in src/parser/models/ non rimovibili:
+              canonical.py, new_signal.py, update.py, operational.py
+              → bloccati da: operation_rules, target_resolver
 ```
 
-**Non saltare step. Non iniziare Step 2 prima che Step 1 sia testato.**
+## Prossimi step (dopo Fase 9)
+
+```
+✅ Step A  src/backtesting/ rimosso — SignalBridgeBacktestStrategy.py eliminato
+Step B  Migrare operation_rules        src/operation_rules/ → usa CanonicalMessage
+Step C  Migrare target_resolver        src/target_resolver/ → usa CanonicalMessage
+Step D  Rimuovere src/parser/models/   solo dopo B+C completati
+Step E  Aggiornare CLAUDE.md finale
+```
 
 ---
 

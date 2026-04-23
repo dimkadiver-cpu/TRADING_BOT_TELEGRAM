@@ -23,6 +23,7 @@ from src.storage.operational_signals_store import (
     OperationalSignalsStore,
 )
 from src.storage.parse_results import ParseResultRecord, ParseResultStore
+from src.storage.parse_results_v1 import ParseResultV1Record, ParseResultV1Store
 from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.storage.review_queue import ReviewQueueStore
@@ -99,6 +100,8 @@ class MessageRouter:
         signals_store: SignalsStore | None = None,
         operational_signals_store: OperationalSignalsStore | None = None,
         dynamic_pairlist_manager: DynamicPairlistManager | None = None,
+        # Canonical v1 — wired here so normalization is always-on
+        parse_results_v1_store: ParseResultV1Store | None = None,
     ) -> None:
         self._trader_resolver = effective_trader_resolver
         self._eligibility = eligibility_evaluator
@@ -117,8 +120,18 @@ class MessageRouter:
         self._op_signals_store = operational_signals_store
         self._dynamic_pairlist = dynamic_pairlist_manager
 
+        # Canonical v1 normalizer — always runs when store is wired; no flag needed
+        self._parse_results_v1: ParseResultV1Store | None = parse_results_v1_store
+
     def update_config(self, new_config: ChannelsConfig) -> None:
         self._config = new_config
+
+    def enable_shadow_normalizer(self, store: ParseResultV1Store) -> None:
+        """Wire the v1 store. Kept for backward compat; prefer constructor param."""
+        self._parse_results_v1 = store
+
+    def disable_shadow_normalizer(self) -> None:
+        self._parse_results_v1 = None
 
     def route(self, item: QueueItem) -> None:
         self._status_store.update(item.raw_message_id, "processing")
@@ -218,6 +231,27 @@ class MessageRouter:
             hashtags=_extract_hashtags(item.raw_text),
         )
         result = profile_parser.parse_message(text=item.raw_text, context=context)
+
+        # Canonical v1 — runs in parallel, never mutates result or blocks.
+        # Profiles that declare parse_canonical() on their class skip the normalizer.
+        # Check type(parser) to avoid MagicMock auto-attribute creation in tests.
+        if self._parse_results_v1 is not None:
+            if callable(getattr(type(profile_parser), "parse_canonical", None)):
+                self._native_canonical_v1(
+                    profile_parser=profile_parser,
+                    text=item.raw_text,
+                    context=context,
+                    raw_message_id=item.raw_message_id,
+                    now_ts=now_ts,
+                )
+            else:
+                self._shadow_normalize(
+                    result=result,
+                    context=context,
+                    raw_message_id=item.raw_message_id,
+                    now_ts=now_ts,
+                )
+
         validation = _validate_result(result)
         if validation.status == "STRUCTURAL_ERROR":
             self._logger.warning(
@@ -258,6 +292,107 @@ class MessageRouter:
             validation.status,
             item.acquisition_mode,
         )
+
+    # ------------------------------------------------------------------
+    # Shadow normalizer v1
+    # ------------------------------------------------------------------
+
+    def _shadow_normalize(
+        self,
+        *,
+        result: TraderParseResult,
+        context: ParserContext,
+        raw_message_id: int,
+        now_ts: str,
+    ) -> None:
+        assert self._parse_results_v1 is not None
+        canonical_json = ""
+        normalizer_error: str | None = None
+        primary_class = "INFO"
+        parse_status = "UNCLASSIFIED"
+        confidence = 0.0
+        try:
+            from src.parser.canonical_v1.normalizer import normalize
+            msg = normalize(result, context)
+            canonical_json = msg.model_dump_json(exclude_none=True)
+            primary_class = msg.primary_class
+            parse_status = msg.parse_status
+            confidence = msg.confidence
+        except Exception as exc:
+            normalizer_error = f"{type(exc).__name__}: {exc}"
+            self._logger.warning(
+                "shadow_normalizer_error | raw_message_id=%s error=%s",
+                raw_message_id,
+                normalizer_error,
+            )
+        try:
+            self._parse_results_v1.upsert(
+                ParseResultV1Record(
+                    raw_message_id=raw_message_id,
+                    trader_id=context.trader_code,
+                    primary_class=primary_class,
+                    parse_status=parse_status,
+                    confidence=confidence,
+                    canonical_json=canonical_json,
+                    normalizer_error=normalizer_error,
+                    created_at=now_ts,
+                )
+            )
+        except Exception as exc:
+            self._logger.warning(
+                "shadow_normalizer_store_error | raw_message_id=%s error=%s",
+                raw_message_id,
+                str(exc),
+            )
+
+    def _native_canonical_v1(
+        self,
+        *,
+        profile_parser: Any,
+        text: str,
+        context: ParserContext,
+        raw_message_id: int,
+        now_ts: str,
+    ) -> None:
+        """Persist CanonicalMessage v1 from a v1-native profile (no normalizer)."""
+        assert self._parse_results_v1 is not None
+        canonical_json = ""
+        normalizer_error: str | None = None
+        primary_class = "INFO"
+        parse_status = "UNCLASSIFIED"
+        confidence = 0.0
+        try:
+            msg = profile_parser.parse_canonical(text, context)
+            canonical_json = msg.model_dump_json(exclude_none=True)
+            primary_class = msg.primary_class
+            parse_status = msg.parse_status
+            confidence = msg.confidence
+        except Exception as exc:
+            normalizer_error = f"{type(exc).__name__}: {exc}"
+            self._logger.warning(
+                "native_canonical_v1_error | raw_message_id=%s error=%s",
+                raw_message_id,
+                normalizer_error,
+            )
+        try:
+            self._parse_results_v1.upsert(
+                ParseResultV1Record(
+                    raw_message_id=raw_message_id,
+                    trader_id=context.trader_code,
+                    primary_class=primary_class,
+                    parse_status=parse_status,
+                    confidence=confidence,
+                    canonical_json=canonical_json,
+                    normalizer_error=normalizer_error,
+                    created_at=now_ts,
+                )
+            )
+        except Exception as exc:
+            self._logger.warning(
+                "native_canonical_v1_store_error | raw_message_id=%s error=%s",
+                raw_message_id,
+                str(exc),
+            )
 
     # ------------------------------------------------------------------
     # Phase 4 integration

@@ -3,14 +3,13 @@
 # Ometti una chiave per ereditare il default globale.
 
 enabled: true
-gate_mode: block                       # warn durante sviluppo (non blocca)
-operation_rules: override             # override | global (usa solo global defaults)
+gate_mode: block
+operation_rules: override
 
-# Modello rischio
 risk_mode: risk_pct_of_capital
-risk_pct_of_capital: 1.0             # 1% del capitale per trade
+risk_pct_of_capital: 1.0
 capital_base_mode: static_config
-capital_base_usdt: 1000.0            # da aggiornare con il capitale reale
+capital_base_usdt: 1000.0
 
 use_trader_risk_hint: false
 leverage: 1
@@ -18,13 +17,6 @@ max_capital_at_risk_per_trader_pct: 5.0
 max_concurrent_same_symbol: 1
 
 entry_split:
-  ZONE:
-    split_mode: endpoints
-    weights:
-      E1: 0.50
-      E2: 0.50
-  AVERAGING:
-    distribution: equal
   LIMIT:
     single:
       weights:

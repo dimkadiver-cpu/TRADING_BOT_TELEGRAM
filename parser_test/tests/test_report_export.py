@@ -263,7 +263,6 @@ class ReportingCsvExportTests(unittest.TestCase):
             self.assertIn('legacy_actions', header)
             self.assertIn('normalized_json_debug', header)
             self.assertTrue(rows[0]['normalized_json_debug'].startswith('{'))
-            self.assertIn('ACT_MARK_TP_HIT', rows[0]['legacy_actions'])
         finally:
             for suffix in ('', '-wal', '-shm'):
                 try:

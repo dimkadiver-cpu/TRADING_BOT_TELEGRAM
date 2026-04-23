@@ -256,6 +256,25 @@ class TestRulesEngineDetectIntents(unittest.TestCase):
         self.assertIn("U_REMOVE_PENDING_ENTRY", intents)
 
 
+class TestRulesEngineReenterAddOnPatterns(unittest.TestCase):
+    def setUp(self) -> None:
+        self.engine = _engine()
+
+    def test_addon_reenter_classified_as_update(self) -> None:
+        result = self.engine.classify(
+            "\u0412\u0445\u043e\u0434 72100 \u0434\u043e\u043b\u0438\u043b \u043e\u0441\u0442\u0430\u0442\u043e\u043a "
+            "\u043f\u043e\u0437\u044b \u043a \u0442\u0435\u043a\u0443\u0449\u0435\u043c\u0443 \u0441\u044d\u0442\u0430\u043f\u0443"
+        )
+        self.assertEqual(result.message_type, "UPDATE")
+
+    def test_addon_reenter_intent_detected(self) -> None:
+        intents = self.engine.detect_intents(
+            "\u0412\u0445\u043e\u0434 72100 \u0434\u043e\u043b\u0438\u043b \u043e\u0441\u0442\u0430\u0442\u043e\u043a "
+            "\u043f\u043e\u0437\u044b \u043a \u0442\u0435\u043a\u0443\u0449\u0435\u043c\u0443 \u0441\u044d\u0442\u0430\u043f\u0443"
+        )
+        self.assertIn("U_REENTER", intents)
+
+
 class TestRulesEngineCombinationRules(unittest.TestCase):
     def setUp(self) -> None:
         self.engine = _engine()
