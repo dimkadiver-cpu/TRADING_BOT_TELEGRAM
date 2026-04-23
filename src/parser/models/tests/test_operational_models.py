@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import pytest
 
+from src.parser.canonical_v1.models import CanonicalMessage, RawContext
 from src.parser.models.canonical import Price, TraderParseResult
 from src.parser.models.new_signal import EntryLevel, NewSignalEntities, StopLoss, TakeProfit
 from src.parser.models.operational import OperationalSignal, ResolvedSignal, ResolvedTarget
@@ -39,6 +40,16 @@ def _parse_result(message_type: str = "NEW_SIGNAL") -> TraderParseResult:
 
 def _entry(value: float) -> EntryLevel:
     return EntryLevel(price=Price.from_float(value), order_type="LIMIT")
+
+
+def _canonical_message(primary_class: str = "INFO") -> CanonicalMessage:
+    return CanonicalMessage(
+        parser_profile="trader_3",
+        primary_class=primary_class,  # type: ignore[arg-type]
+        parse_status="PARSED",
+        confidence=0.9,
+        raw_context=RawContext(raw_text="test"),
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -153,6 +164,7 @@ class TestOperationalSignal:
         pr = _parse_result()
         op = OperationalSignal(parse_result=pr)
         assert op.parse_result is pr
+        assert op.canonical_message.primary_class == "SIGNAL"
         assert op.is_blocked is False
         assert op.block_reason is None
         assert op.position_size_pct is None
@@ -160,9 +172,17 @@ class TestOperationalSignal:
         assert op.entry_split is None
         assert op.leverage is None
         assert op.risk_hint_used is False
+        assert op.sizing_deferred is False
         assert op.management_rules is None
         assert op.applied_rules == []
         assert op.warnings == []
+
+    def test_accepts_canonical_message_directly(self) -> None:
+        msg = _canonical_message()
+        op = OperationalSignal(canonical_message=msg, sizing_deferred=True)
+        assert op.canonical_message is msg
+        assert op.parse_result is msg
+        assert op.sizing_deferred is True
 
     def test_blocked_state(self) -> None:
         pr = _parse_result()
@@ -191,7 +211,12 @@ class TestOperationalSignal:
         assert op.risk_hint_used is True
 
     def test_management_rules_snapshot(self) -> None:
-        rules = {"on_tp_hit": [{"tp_level": 1, "action": "close_partial", "close_pct": 50}]}
+        rules = {
+            "tp": {"use_tp_count": 2},
+            "sl": {"be_trigger": "tp1"},
+            "updates": {"apply_move_stop": True},
+            "pending": {"cancel_pending_by_engine": True},
+        }
         pr = _parse_result()
         op = OperationalSignal(parse_result=pr, management_rules=rules)
         assert op.management_rules == rules
@@ -316,6 +341,7 @@ class TestResolvedSignal:
         op = self._make_op()
         rs = ResolvedSignal(operational=op, resolved_target=None, is_ready=True)
         assert rs.operational.parse_result.trader_id == "trader_3"
+        assert rs.operational.canonical_message.primary_class == "SIGNAL"
 
     def test_update_message_type(self) -> None:
         pr = _parse_result("UPDATE")
