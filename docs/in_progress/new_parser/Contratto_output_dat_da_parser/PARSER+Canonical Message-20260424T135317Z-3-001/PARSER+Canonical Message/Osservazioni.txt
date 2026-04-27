@@ -1,0 +1,44 @@
+Trader C
+
+1)
+ho ricevuto il mesaggio:
+
+a) New signal + 1 entrt +SL + 3Tp (https://t.me/c/3171748254/3479)
+
+b) Update: (https://t.me/c/3171748254/3490) Collegamento reply/id + "izmenenia"
+
+- struttura simile s new signal: 
+  presente parola "izmenenia" resto quasi identico.    // "izmenenia" o update
+- Cambiato: è stato aggiunto un entry nuovo
+- Conseguenze:
+	- se ordine gia filato: non fare niente
+	- se non filato:
+		- confronta la struttura/livelli/valori nuovi con vecchi
+		- aggiorna il segnale con dati attuali
+		- cancella ordine vecchio pendente 
+		- piazza nuovo ordine con dati aggiornati e altro valori ricolcalati
+	
+
+2) signal: https://t.me/c/3722628653/5/3635
+
+
+  update:https://t.me/c/3722628653/5/3638
+     cambio valore primo ordine limit
+
+  update: https://t.me/c/3722628653/5/3713
+
+	chiusua parziale (0.5% della posione "meta")
+
+  update: https://t.me/c/3722628653/5/3728
+
+	move in be
+
+
+
+
+Logica esecuzione ordini ad eventi:
+
+
+- Se Move SL
+	- Metti SL a BE/TP/PRICE
+	- Se ci sono ordini pendenti per ENTRY - chiudi
