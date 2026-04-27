@@ -152,3 +152,132 @@ pytest src/parser/trader_profiles/  →  549 passed, 12 skipped, 0 failed
 ### Prossimo step
 
 **Step 1** — Taxonomy Layer: definire `IntentName` e `STATEFUL_INTENTS` in `intent_taxonomy.py`.
+
+---
+
+## 2026-04-27 — STEP 1: Taxonomy Layer (`intent_taxonomy.py`)
+
+### Step completato
+
+**STEP 1** del piano `PIANO_IMPLEMENTAZIONE_DISAMBIGUATION_CONTEXT_RESOLUTION.md` —
+fonte unica di verità per gli 17 intent ufficiali.
+
+### File toccati
+
+| File | Stato | Note |
+|------|-------|------|
+| `src/parser/canonical_v1/intent_taxonomy.py` | Creato | `IntentName` Literal, `INTENT_NAMES`, `STATEFUL_INTENTS`, `STRONGLY_STATEFUL`, `validate_intent_name` |
+| `tests/parser_canonical_v1/test_intent_taxonomy.py` | Creato | 29 test — tutti verdi |
+
+### Risultato test
+
+```
+pytest tests/parser_canonical_v1/test_intent_taxonomy.py  →  29 passed
+pytest src/parser/trader_profiles/                        →  549 passed, 12 skipped, 0 failed
+```
+
+### Rischi aperti
+
+- Alias legacy `"NS_CREATE_SIGNAL"` (usato in trader_a) non incluso nel taxonomy — risoluzione richiesta prima di chiamare `validate_intent_name` nei profili.
+
+### Prossimo step
+
+**Step 2** — Modello `IntentCandidate` in `intent_candidate.py`.
+
+---
+
+## 2026-04-27 — STEP 2: Modello `IntentCandidate`
+
+### Step completato
+
+**STEP 2** del piano `PIANO_IMPLEMENTAZIONE_DISAMBIGUATION_CONTEXT_RESOLUTION.md` —
+struttura dati tipizzata per i candidati con forza ed evidenza.
+
+### File toccati
+
+| File | Stato | Note |
+|------|-------|------|
+| `src/parser/canonical_v1/intent_candidate.py` | Creato | `IntentStrength`, `IntentCandidate` Pydantic v2, properties `is_strong`/`is_weak` |
+| `tests/parser_canonical_v1/test_intent_candidate.py` | Creato | 11 test — tutti verdi |
+
+### Risultato test
+
+```
+pytest tests/parser_canonical_v1/test_intent_candidate.py  →  11 passed
+pytest src/parser/trader_profiles/                         →  549 passed, 12 skipped, 0 failed
+```
+
+### Rischi aperti
+
+- Nessun limite sulla lunghezza di `evidence` — accettabile per ora, da valutare se diventa fonte di output verboso.
+- Implementazione era già pre-esistente nella working copy (sessione precedente non committata); verificata corretta e completa per la spec.
+
+### Prossimo step
+
+**Step 3** — Schema JSON `intent_compatibility` in `src/parser/shared/intent_compatibility_schema.py`.
+
+---
+
+## 2026-04-27 — STEP 3: Schema JSON `intent_compatibility`
+
+### Step completato
+
+**STEP 3** del piano `PIANO_IMPLEMENTAZIONE_DISAMBIGUATION_CONTEXT_RESOLUTION.md` —
+validatore Pydantic per il blocco `intent_compatibility` nei `parsing_rules.json`.
+
+### File toccati
+
+| File | Stato | Note |
+|------|-------|------|
+| `src/parser/shared/__init__.py` | Creato | Package vuoto per il layer semantico condiviso |
+| `src/parser/shared/intent_compatibility_schema.py` | Creato | `RelationType`, `IntentCompatibilityPair`, `IntentCompatibilityBlock` |
+| `tests/parser_canonical_v1/test_intent_compatibility_schema.py` | Creato | 17 test — tutti verdi |
+
+### Risultato test
+
+```
+pytest tests/parser_canonical_v1/test_intent_compatibility_schema.py  →  17 passed
+pytest src/parser/trader_profiles/                                     →  549 passed, 12 skipped, 0 failed
+```
+
+### Rischi aperti
+
+- Unicità delle coppie e unicità degli intent in `intents` non verificata a schema — rinviata a Step 11 (validazione manuale JSON).
+- `IntentCompatibilityBlock` non ancora registrato nel `RulesEngine`.
+
+### Prossimo step
+
+**Step 4** — Schema JSON `disambiguation_rules` in `src/parser/shared/disambiguation_rules_schema.py`.
+
+---
+
+## 2026-04-27 — STEP 4: Schema JSON `disambiguation_rules`
+
+### Step completato
+
+**STEP 4** del piano `PIANO_IMPLEMENTAZIONE_DISAMBIGUATION_CONTEXT_RESOLUTION.md` —
+validatore Pydantic per il blocco `disambiguation_rules` nei `parsing_rules.json`.
+
+### File toccati
+
+| File | Stato | Note |
+|------|-------|------|
+| `src/parser/shared/disambiguation_rules_schema.py` | Creato | `DisambiguationAction`, `DisambiguationRule`, `DisambiguationRulesBlock` |
+| `tests/parser_canonical_v1/test_disambiguation_rules_schema.py` | Creato | 18 test — tutti verdi |
+
+### Risultato test
+
+```
+pytest tests/parser_canonical_v1/test_disambiguation_rules_schema.py  →  18 passed
+pytest src/parser/trader_profiles/                                     →  549 passed, 12 skipped, 0 failed
+```
+
+### Rischi aperti
+
+- `prefer` non è validato come appartenente a `when_*_detected` — una regola con intent incoerenti è accettata per schema; il controllo è responsabilità del motore (Step 7).
+- `keep_multi` non richiede `keep` valorizzato — il motore deve gestire `keep=None` come "mantieni tutti i candidati".
+- Unicità dei nomi regola non verificata a schema — duplicati non rilevati prima di Step 11.
+
+### Prossimo step
+
+**Step 5** — Schema JSON `context_resolution_rules` in `src/parser/shared/context_resolution_schema.py`.
