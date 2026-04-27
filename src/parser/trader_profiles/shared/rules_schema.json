@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "parser_profile_rules_v1",
+  "title": "Parser Profile Rules Schema v1",
+  "description": "Common schema for parsing_rules.json files across all trader profiles.",
+  "type": "object",
+  "required": ["classification_markers"],
+  "properties": {
+    "profile_meta": {
+      "type": "object",
+      "properties": {
+        "trader_code": { "type": "string" },
+        "language": { "type": "string" },
+        "schema_version": { "type": "string", "const": "parser_profile_rules_v1" }
+      }
+    },
+    "language": { "type": "string" },
+    "shared_vocabulary": {},
+    "number_format": {
+      "type": "object",
+      "properties": {
+        "decimal_separator": { "type": "string" },
+        "thousands_separator": { "type": "string" }
+      }
+    },
+    "classification_markers": {
+      "type": "object",
+      "required": ["new_signal"],
+      "properties": {
+        "new_signal": { "$ref": "#/$defs/marker_group" },
+        "update": { "$ref": "#/$defs/marker_group" },
+        "info_only": { "$ref": "#/$defs/marker_group" }
+      }
+    },
+    "field_markers": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/marker_group" }
+    },
+    "classification_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "when_all_fields_present", "then"],
+        "properties": {
+          "name": { "type": "string" },
+          "when_all_fields_present": { "type": "array", "items": { "type": "string" } },
+          "then": { "type": "string" },
+          "score": { "type": "number" }
+        }
+      }
+    },
+    "combination_rules": {
+      "type": "array",
+      "items": { "type": "object" }
+    },
+    "intent_markers": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/marker_group" }
+    },
+    "side_markers": {
+      "type": "object",
+      "properties": {
+        "long": { "type": "array", "items": { "type": "string" } },
+        "short": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "market_context_markers": { "type": "object" },
+    "entry_order_markers": { "type": "object" },
+    "target_markers": { "type": "object" },
+    "target_ref_markers": { "type": "object" },
+    "action_scope_groups": { "type": "object" },
+    "entity_hints": { "type": "object" },
+    "entity_policy": { "type": "object" },
+    "symbol_aliases": { "type": "object" },
+    "ignore_markers": { "type": "array" },
+    "blacklist": { "type": "array" },
+    "partial_exit_markers": { "type": "array" },
+    "final_exit_markers": { "type": "array" },
+    "result_markers": { "type": "array" },
+    "global_target_markers": {},
+    "cancel_scope_vocabulary": {},
+    "entity_patterns": {},
+    "result_patterns": {},
+    "fallback_hook": {},
+    "disambiguation_rules": { "type": "object" },
+    "context_resolution_rules": { "type": "array" }
+  },
+  "$defs": {
+    "marker_group": {
+      "type": "object",
+      "required": ["strong", "weak"],
+      "properties": {
+        "strong": { "type": "array", "items": { "type": "string" } },
+        "weak": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

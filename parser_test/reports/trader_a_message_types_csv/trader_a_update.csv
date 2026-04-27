@@ -1,2 +1,920 @@
-﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,confidence,parser_used,parser_mode,status,signal_id,target_scope_kind,target_scope_scope,target_refs,target_refs_count,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,fill_state,result_mode,cancel_scope,reported_results,reported_profit_percent,reported_leverage_hint,tp_prices,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-2,PARSED,1,TAOUSDT tp1 hit https://t.me/c/1/17,,,U_TP_HIT,U_TP_HIT | U_REPORT_FINAL_RESULT,MARK_TP_HIT | ATTACH_RESULT,MARK_TP_HIT(intent=U_TP_HIT; hit_target=TP1; result_mode=PERCENT; target_refs=17; target_refs_count=1) | ATTACH_RESULT(intent=U_REPORT_FINAL_RESULT; result_mode=PERCENT),TAOUSDT,,,0.83,regex,regex_only,PARSED,17,signal_group,multiple,17 | 18,2,reply_or_link,,,,TP1,,PERCENT,,TAOUSDT:15PERCENT,15,5,1.245 | 1.31,0,0,0,parser_mode=regex_only
+﻿raw_message_id,parse_status,reply_to_message_id,parser_system,raw_text,message_type,primary_intent,intents,symbol,direction,market_type,status,confidence,completeness,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_count,tp_prices,risk_hint_summary,risk_hint_value,risk_hint_min,risk_hint_max,risk_hint_unit,signal_id,target_refs_count,reported_results,reported_profit_percent,reported_leverage_hint,warnings_summary,validation_warning_count,notes_summary,diagnostics_summary,target_scope_kind,target_scope_scope,target_refs,linking_strategy,new_stop_level,close_scope,close_fraction,hit_target,result_mode,cancel_scope,links_count,hashtags_count
+1919,PARSED,,both,"Друзья, привет! Админ на связи 👋
+
+Хочу внести немного дополнений по поводу работы с сигналами от [trader#A], чтобы у всех было чёткое понимание структуры и не возникало путаницы.
+
+Весь ноябрь трейдер A работал строго по одной стратегии - ""выживание"" среднесрочной.😁
+Она показала себя достаточно стабильно, и в целом дала понятное и прогнозируемое поведение сигналов.
+
+В первые дни декабря [trader#A] преисполнился веры и протестировал вторую стратегию - Интрадей.😌
+По ней было выдано несколько сигналов, и ниже я размещу их полный список.
+
+👉 Список сигналов Интрадей:
+1. BTC - https://t.me/c/3171748254/704 стоп 1.1%
+2. ETH - https://t.me/c/3171748254/705 1 тейк 2.4%
+3. XRP - https://t.me/c/3171748254/706 1 тейк 2.5%
+4. DOGE - https://t.me/c/3171748254/707 1 тейк 2.5%
+5. ENA - https://t.me/c/3171748254/750 3 тейка 17.9%
+6. DASH - https://t.me/c/3171748254/751 1 тейк 6.2%
+7. ADA - https://t.me/c/3171748254/765 1 тейк 4.3%
+8. ICP - https://t.me/c/3171748254/766 стоп 3.5%
+9. ARB - https://t.me/c/3171748254/767
+10. SEI - https://t.me/c/3171748254/768 стоп 3.6%
+11. RAY - https://t.me/c/3171748254/769 2 тейка 9.9%
+12. ATOM - https://t.me/c/3171748254/770 стоп 2.6%
+13. SOL - https://t.me/c/3171748254/787 стоп 2.6%
+👉 А это Среднесрок за декабрь:
+1. DOGE - https://t.me/c/3171748254/795
+2. CAKE - https://t.me/c/3171748254/805
+3. 1INCH - https://t.me/c/3171748254/817
+4. LINK - https://t.me/c/3171748254/818
+5. ZETA - https://t.me/c/3171748254/819
+6. BAT - https://t.me/c/3171748254/821
+7. XRP - https://t.me/c/3171748254/822 
+Там, где результат не указан - сделка актуальна.
+
+По итогам теста стало понятно, что стратегия Intraday нуждается в небольшой доработке. 
+Ничего критичного, результаты вполне приличные👆 просто...НУЖНО БОЛЬШЕ ЗОЛОТА!🤑
+Поэтому мы временно поставили на стоп Intraday сигналы, но обязательно вернёмся к ним после доработок.
+
+Что изменится дальше?
+
+Чтобы вам было проще ориентироваться, с этого момента сигналы трейдера ""A"" будут публиковаться с дополнительными хэштегами:
+
+#среднесрок - сигналы по среднесрочной стратегии
+#intraday - сигналы по внутридневной стратегии (появятся после доработки)
+Ничего себе мы придумали, да?🤭
+
+Следите внимательно за тегами, чтобы быстро понимать, по какой логике работает текущий сигнал!
+
+Мы продолжаем улучшать подачу информации и качество сигналов.
+Спасибо, что с нами  мы работаем для вас! 🚀....
+
+Слоган, конечно, несколько избит, и мы сами хотим придумать что-то своё, фирменное.
+В команде сейчас два фаворита, проголосуйте реакцией, пожалуйста:
+
+PifSignal - Ты этого достойна!❤️
+или
+PifSignal - Das Auto🔥",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,INTRADAYUSDT,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,704,20,,,,,0,,,signal_group,multiple,704 | 705 | 706 | 707 | 750 | 751 | 765 | 766 | 767 | 768 | 769 | 770 | 787 | 795 | 805 | 817 | 818 | 819 | 821 | 822,REPLY_OR_LINK,,,,,,,20,1
+1910,PARSED,795,both,"Закрываю у тейка. Поздравляю, почти 8%
+
+Тейк все равно случился)",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,795,1,,,,unclassified_with_markers,1,,,signal,single,795,REPLY_OR_LINK,,,,,,,0,0
+1877,PARSED,,both,"[trader#A]
+
+Всем привет!
+
+Продолжаем удерживать шорты
+модель пока не хочет лонговать, поэтому полностью отдаемся шортам
+
+CAKE - https://t.me/c/3171748254/805
+1INCH - https://t.me/c/3171748254/817
+ZETA - https://t.me/c/3171748254/819
+XRP - https://t.me/c/3171748254/822 (взяли лимитку)
+ENA - https://t.me/c/3171748254/856 (спорный лонг, но держим)
+LDO - https://t.me/c/3171748254/861
+SHIB - https://t.me/c/3171748254/870",UPDATE,ENTRY_FILLED,ENTRY_FILLED,,LONG,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,805,7,,,,,0,,,signal_group,multiple,805 | 817 | 819 | 822 | 856 | 861 | 870,REPLY_OR_LINK,,,,,,,7,0
+1875,PARSED,870,both,взяли лимитку. моя средняя 0.008553,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,870,1,,,,,0,,,signal,single,870,REPLY_OR_LINK,,,,,,,0,0
+1859,PARSED,,both,"[trader#A]
+
+
+XRP - https://t.me/c/3171748254/822 3.94% прибыли
+ENA - https://t.me/c/3171748254/856 убыток 9.32
+LDO - https://t.me/c/3171748254/861 прибыль 4.2% 
+SHIB - https://t.me/c/3171748254/870 прибыль 3.4%
+
+Эти монеты закрываю по текущим, так как нет времени за ними следить
+
+Встретимся в воскресенье
+
+p.s. проценты указал без учета усреднения. кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше, убыток по ENA перекроется существеннее",UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE | REPORT_FINAL_RESULT,,SHORT,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,822,4,,,,,0,,,signal_group,multiple,822 | 856 | 861 | 870,REPLY_OR_LINK,,,,,,,4,0
+1810,PARSED,933,both,3 тейк. сделка закрыта. поздравляю.,UPDATE,TP_HIT,CLOSE_FULL | TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,933,1,,,,unclassified_with_markers,1,,,signal,single,933,REPLY_OR_LINK,,,,,,,0,0
+1802,PARSED,921,both,закрываю по текущим. 8% движения. поздравляю,UPDATE,REPORT_FINAL_RESULT,CLOSE_FULL | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,921,1,,,,,0,,,signal,single,921,REPLY_OR_LINK,,,,,,,0,0
+1798,PARSED,964,both,Закрываю фактически на точке входа,UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,964,1,,,,unclassified_with_markers,1,,,signal,single,964,REPLY_OR_LINK,,,,,,,0,0
+1797,PARSED,,both,"[trader#A]
+#intraday
+
+
+ASTER - https://t.me/c/3171748254/924 
+INJ - https://t.me/c/3171748254/936 
+
+По этим монетам остаток закрываю по текущей цене. Фактически эти монеты дошли до 2-х тейков",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT,INTRADAYUSDT,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,924,2,,,,,0,,,signal_group,multiple,924 | 936,REPLY_OR_LINK,,,,,,,2,1
+1764,PARSED,1024,both,"закрываю, модель ошиблась, вход без подтверждения на малых ТФ
+
+стоп 1.67%",UPDATE,SL_HIT,CLOSE_FULL | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1024,1,,,,unclassified_with_markers,1,,,signal,single,1024,REPLY_OR_LINK,,,,,,,0,0
+1760,PARSED,,both,"[trader#A]
+
+LINK - https://t.me/c/3171748254/978 - стоп в бу
+ALGO - https://t.me/c/3171748254/1002 стоп в бу
+ARKM - https://t.me/c/3171748254/1003 стоп в бу
+FART - https://t.me/c/3171748254/1005 стоп на 1 тейк
+UNI - https://t.me/c/3171748254/1018 стоп в бу",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,978,5,,,,,0,,,signal_group,multiple,978 | 1002 | 1003 | 1005 | 1018,REPLY_OR_LINK,ENTRY,,,,,,5,0
+1747,PARSED,,both,"[trader#A]
+
+XRP - https://t.me/c/3171748254/1015
+ADA - https://t.me/c/3171748254/1017
+
+А давайте их прикроем, пока они рядом с ТВХ",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1015,2,,,,unclassified_with_markers,1,,,signal_group,multiple,1015 | 1017,REPLY_OR_LINK,,,,,,,2,0
+1721,PARSED,1005,both,"И этот закрылся в бу на первом тейке. Конечно же после того как взяли 2 тейка. Сделка закрыта 
+
+О переводе стопа на 1 тейк писал тут - https://t.me/c/3171748254/1035
+
+Шортов у вас не должно остаться, если, конечно, я не пропустил ничего",UPDATE,SL_HIT,CLOSE_FULL | TP_HIT | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,,SHORT,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1005,2,,,,unclassified_with_markers,1,,,signal_group,multiple,1005 | 1035,REPLY_OR_LINK,,,,,,,1,0
+1693,PARSED,1037,both,"2 тейк, сделку закрываю полностью",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1037,1,,,,unclassified_with_markers,1,,,signal,single,1037,REPLY_OR_LINK,,,,,,,0,0
+1692,PARSED,1077,both,"а теперь к неприятному и одновременно обидному
+
+стоп, но сдлека в итоге точно дойдет до тейка
+
+ставить другой стоп, значит идти против торговой системы",UPDATE,SL_HIT,TP_HIT | SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1077,1,,,,,0,,,signal,single,1077,REPLY_OR_LINK,,,,,,,0,0
+1681,PARSED,,both,"Друзья, админ зашёл чат 👋 
+
+Некоторые пользователи читают сигналы, как-будто человек, на ощупь наткнувшийся в темноте на рифлёную батарею и решивший, что это Священное Писание на языке Брайля.😎
+
+Чтобы как-то помочь нашему общему делу - ниже публикую регламент стратегии и правила пользования сигналами trader#A
+Про что-то уже говорил ранее, - но, в любом случае, тут лучше лишний раз повторить, чем упустить какую-то деталь.🧐
+
+1️⃣ Рынок и стиль
+Торгуем крипто-фьючерсы, направления - лонг / шорт, в зависимости от фаз Лунного Цикла.😁
+
+Плечо 3-5x.
+Не 20, не «А у меня вот сотое - и что ты мне сделаешь?»
+Ничего не сделаю. Но тогда без обид.
+
+2️⃣ Стоп-лосс (он есть. всегда.)
+Стоп ставится сразу при входе.
+Если нет - выйди и зайди нормально, кому сказали!👨‍🏫
+
+Двигать стоп дальше от входа запрещено.
+Там - лава.🔥😂
+
+Стоп можно двигать только в сторону уменьшения риска:
+после TP1 - в безубыток;
+после TP2 - на уровень TP1.
+
+3️⃣ Вход 
+Если сигнал даёт зону:
+70% позиции - по рынку;
+30% - лимиткой по зоне.
+
+Главное правило:
+Если лимитка не исполнилась, а цена ушла - НЕ ДОГОНЯЕМ.
+Это не любовь всей жизни и не последний поезд.
+
+4️⃣ Выходы и сопровождение
+
+TP1
+Фиксирем 30% всей позиции.
+Стоп - в БУ.
+Допускается подтяжка стопа только за свинг
+(Свинг, если что - это не что-то из мира джаза и не ваши сексуальные предпочтения, а структура рынка😂):
+Лонг - стоп под новый локальный лой;
+Шорт - стоп над новым локальным хаем.
+
+TP2
+Фиксируем 50% от остатка.
+Стоп - на уровень TP1.
+
+TP3
+Фиксирем всё.
+Сделка закрыта.
+Можете купить жене Рафаэлки, а себе - Chapman😊
+
+Продолжение ниже...
+#админ",UPDATE,SL_HIT,CLOSE_FULL | ENTRY_FILLED | TP_HIT | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,,LONG,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1681,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+1622,PARSED,1034,both,"всем привет. рынок очень ""тугой"". среднесрок очень долго отрабатывает. пробежимся по позициям, проведем инвентаризацию, освободим маржу для новых сделок
+
+эту закрываю полностью по текущим, цена как раз на 1 тейке",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1034,1,,,,unclassified_with_markers,1,,,signal,single,1034,REPLY_OR_LINK,,,,,,,0,0
+1621,PARSED,1036,both,полностью закрываю,UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1036,1,,,,unclassified_with_markers,1,,,signal,single,1036,REPLY_OR_LINK,,,,,,,0,0
+1620,PARSED,1044,both,закрываю на текущих ценах. +8%,UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1044,1,,,,unclassified_with_markers,1,,,signal,single,1044,REPLY_OR_LINK,,,,,,,0,0
+1618,PARSED,1081,both,закрываю по текущим +13%,UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1081,1,,,,,0,,,signal,single,1081,REPLY_OR_LINK,,,,,,,0,0
+1509,PARSED,,both,"Друзья, #админ на связи 👋
+Небольшое уточнение по trader#A.
+
+Перед Новым годом было пару сигналов, которые он не довёл и ушёл праздновать, исчезнув из доступного нашим чувствам мира,  как декабрьская зарплата.💨
+
+Праздник - это, конечно, святое...😌
+Но сопровождение сигналов - это что-то прямиком на божественном. 😇
+
+В принципе, ничего критичного не произошло: хоть эти 2 сделки закрылись по стопам - это просто часть работы. В статистике всё отразим, в любом случае.👌
+Но сам факт, что не довёл - косяк.🤔
+
+В итоге, мы назначили товарищу пять рождественских розг и заставили 50 раз написать Диме в директ:
+«Я не бросаю позиции ради салатов».🫡
+Шутка… конечно. 
+Мы просто взяли в заложники его собаку 🐕😂
+
+Приносим извинения.
+Будет внимательнее, и мы - тоже.
+
+#админ",UPDATE,SL_HIT,SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1509,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+1425,PARSED,1506,both,"1 тейк. 0.44R
+стоп в бу",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1506,1,,,,,0,,,signal,single,1506,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1406,PARSED,1482,both,Доброе утро. Перенесите стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1482,1,,,,,0,,,signal,single,1482,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1401,PARSED,1506,both,"Сделка закрылась в бу. 
+итоговый результат 0.44R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,1506,1,,,,,0,,,signal,single,1506,REPLY_OR_LINK,,,,,,,0,0
+1348,PARSED,1591,both,закрыта в бу,UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1591,1,,,,unclassified_with_markers,1,,,signal,single,1591,REPLY_OR_LINK,,,,,,,0,0
+1347,PARSED,1619,both,Закрыта в бу,UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1619,1,,,,unclassified_with_markers,1,,,signal,single,1619,REPLY_OR_LINK,,,,,,,0,0
+1346,PARSED,1620,both,закрыта в бу,UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1620,1,,,,unclassified_with_markers,1,,,signal,single,1620,REPLY_OR_LINK,,,,,,,0,0
+1298,PARSED,1654,both,"1 тейк. 0.22R
+стоп в бу",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1654,1,,,,,0,,,signal,single,1654,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1276,PARSED,,both,"[trader#A]
+
+https://t.me/c/3171748254/1725
+https://t.me/c/3171748254/1726
+
+пора перенести стоп в бу
+кто желает может фиксировать прибыль",UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1725,2,,,,,0,,,signal_group,multiple,1725 | 1726,REPLY_OR_LINK,ENTRY,,,,,,2,0
+1265,PARSED,1685,both,"1 тейк. Стоп в бу
++0.5RR",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1685,1,,,,,0,,,signal,single,1685,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1264,PARSED,1704,both,"1 тейк. Стоп в бу
++0.5RR",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1704,1,,,,,0,,,signal,single,1704,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1258,PARSED,1704,both,сделка закрыта в бу. итоговый результат 0.5R,UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1704,1,,,,,0,,,signal,single,1704,REPLY_OR_LINK,,,,,,,0,0
+1250,PARSED,1756,both,"очень большой риск получить стоп. кто хочет не раздувать убыток - можно закрыть по текущим
+
+я закрывать не буду, чтобы не искажать статистику",UPDATE,SL_HIT,CLOSE_FULL | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1756,1,,,,unclassified_with_markers,1,,,signal,single,1756,REPLY_OR_LINK,,,,,,,0,0
+1249,PARSED,1774,both,Убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1774,1,,,,unclassified_with_markers,1,,,signal,single,1774,REPLY_OR_LINK,,,,,,,0,0
+1241,PARSED,1760,both,"1 тейк. Стоп в бу
+0.26R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1760,1,,,,,0,,,signal,single,1760,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1229,PARSED,,both,"[trader#A]
+
+
+https://t.me/c/3171748254/1685 MOVR
+https://t.me/c/3171748254/1738 CYBER
+https://t.me/c/3171748254/1706 ZEC
+
+закрываю по текущим ценам
+MOVR - 1.35RR
+CYBER - 1.37RR
+ZEC - 1.43RR",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1685,3,,,,,0,,,signal_group,multiple,1685 | 1738 | 1706,REPLY_OR_LINK,,,,,,,3,0
+1228,PARSED,1760,both,"его тоже не будем мучить. закрываю по текущим
+1.06R",UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1760,1,,,,,0,,,signal,single,1760,REPLY_OR_LINK,,,,,,,0,0
+1208,PARSED,,both,"[trader#A]
+Все лонги закрываю по текущим
+Какие вышли стопы, дополню пост чуть позже
+
+FARTCOIN -0.338R
+ASTER -0.03R
+DOGE -0.63R
+PEPE -0.46R
+ENA - 0.634R
+C98 -0.36R",UPDATE,SL_HIT,CLOSE_FULL | SL_HIT,,LONG,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1208,0,,,,,1,,,signal,unknown,,,,,,,,,0,0
+1151,PARSED,1927,both,"1 тейк, стоп в бу
+0.3R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1927,1,,,,,0,,,signal,single,1927,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1150,PARSED,1924,both,"1 тейк, стоп в бу
+0.23R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1924,1,,,,,0,,,signal,single,1924,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1148,PARSED,1911,both,"1 тейк, стоп в бу
+0.28R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1911,1,,,,,0,,,signal,single,1911,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1146,PARSED,1927,both,"3 тейка. Сделка закрыта
+1.67R
+
+RR добавлю к каждой сделке, когда  буду у журнала, сорян",UPDATE,EXIT_BE,CLOSE_FULL | TP_HIT | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,1927,1,,,,unclassified_with_markers,1,,,signal,single,1927,REPLY_OR_LINK,,,,,,,0,0
+1140,PARSED,,both,"Итоги января 2026 (статистика на вечер 29.01)
+
+Если коротко - январь был. 😏
+Весь месяц рынок вёл себя как деревенский гуляка, который решил после посиделок в гостях на празднике срезать путь домой:
+итог - ЗАБОР, боль, и стойкое желание больше не повторять. 😂
+Ладно, не всё так драматично!
+
+Что там у наших парней?
+
+trader#A
+
+Формат: intraday + среднесрок, фьючерсы
+
+Статистика:
+Всего сигналов: 33
+Закрыто: 27
+в плюс: 7
+в минус (защитные): 8
+БУ: 12
+В работе: 6
+
+Результат:
+Итог по закрытым:  +3.24%
+С учётом уже зафиксированных тейков по открытым: +3.78%
+Если “закрыть всё прямо сейчас и завязать с этим трейдингом нахрен!” (mark-to-market): ≈ +6.24% 😉
+
+Коротко по сути:
+В этом месяце хорошо себя показали шорты (круче только в июле на жаре😂)
+Лонги - наоборот, просели
+Много БУ и не слишком приятных стопов, но в итоге...
+Не феерия, конечно,  но рабочий плюс в сложном рынке.
+
+Если в прошлом месяце мы нарекли trader#A швейцарским ножом, то в этом - это скорее ложка. Но пока всё ещё с альпийским блеском. 😂
+
+#админ",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,,LONG,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1140,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+1137,PARSED,1909,both,"1 тейк. Стоп в бу
+0.38R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1909,1,,,,,0,,,signal,single,1909,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1136,PARSED,1913,both,"1 тейк, стоп в бу
+0.2Р",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1913,1,,,,,0,,,signal,single,1913,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1135,PARSED,1930,both,"1 тейк, стоп в бу
+0.27Р",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1930,1,,,,,0,,,signal,single,1930,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1131,PARSED,,both,"[trader#A]
+принимаю решение зафиксировать все шорты. собрали в целом не плохой профит. хочу закрыть январь. 
+Лонг, по сетапу выше, переходит на февраль, скорее всего, либо стоп в январе (рынок уже решит самостоятельно)",UPDATE,SL_HIT,CLOSE_FULL | SL_HIT | REPORT_FINAL_RESULT,,LONG,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,1131,0,,,,,1,,,signal,unknown,,,,,,,,,0,0
+1130,PARSED,,both,"[trader#A]
+итог по сделкам:
+hype - 1.27R
+aave -1.67R
+aster - 1.15R
+xrp - 0.75R
+doge - 1.38R
+btc - 1.62R",UPDATE,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,1130,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+1112,PARSED,2006,both,убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2006,1,,,,unclassified_with_markers,1,,,signal,single,2006,REPLY_OR_LINK,,,,,,,0,0
+1109,PARSED,2010,both,да что ж такое. и этот без нас улетел. убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2010,1,,,,unclassified_with_markers,1,,,signal,single,2010,REPLY_OR_LINK,,,,,,,0,0
+1106,PARSED,2005,both,"1 тейк, стоп в бу
++0.13R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2005,1,,,,,0,,,signal,single,2005,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1103,PARSED,2049,both,убираем лимитку. опять без нас((,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2049,1,,,,unclassified_with_markers,1,,,signal,single,2049,REPLY_OR_LINK,,,,,,,0,0
+1099,PARSED,2057,both,убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2057,1,,,,unclassified_with_markers,1,,,signal,single,2057,REPLY_OR_LINK,,,,,,,0,0
+1097,PARSED,2055,both,тут тоже убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2055,1,,,,unclassified_with_markers,1,,,signal,single,2055,REPLY_OR_LINK,,,,,,,0,0
+1093,PARSED,2005,both,"закрылось в бу
+итог по сделке - 0.13R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2005,1,,,,,0,,,signal,single,2005,REPLY_OR_LINK,,,,,,,0,0
+1083,PARSED,2074,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2074,1,,,,,0,,,signal,single,2074,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1080,PARSED,2074,both,"сделка закрыта по бу
+очень скромный результат. в статистику не буду показывать
+
+p.s. был пробный трейд, буду давать более адекватный интрадей, с нормальными тейками",UPDATE,EXIT_BE,CLOSE_FULL | TP_HIT | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0.4,,,,False,0,,,0,,,,,,,2074,1,,,,,0,,,signal,single,2074,REPLY_OR_LINK,,,,,,,0,0
+1072,PARSED,2066,both,"1 тейк. стоп в бу
+0.26R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2066,1,,,,,0,,,signal,single,2066,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1071,PARSED,2093,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2093,1,,,,,0,,,signal,single,2093,REPLY_OR_LINK,,,,,,,0,0
+1070,PARSED,2050,both,"1 тейк. стоп в бу
+0.11R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2050,1,,,,,0,,,signal,single,2050,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1068,PARSED,2050,both,"закрылась в бу
+итого 0.11R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2050,1,,,,,0,,,signal,single,2050,REPLY_OR_LINK,,,,,,,0,0
+1066,PARSED,2093,both,"1 тейк. стоп в бу
+0.59R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2093,1,,,,,0,,,signal,single,2093,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1063,PARSED,2110,both,Взяли лимитку,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2110,1,,,,,0,,,signal,single,2110,REPLY_OR_LINK,,,,,,,0,0
+1060,PARSED,2110,both,"1 тейк. стоп в бу
+0.38R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2110,1,,,,,0,,,signal,single,2110,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1059,PARSED,2113,both,снимаем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2113,1,,,,unclassified_with_markers,1,,,signal,single,2113,REPLY_OR_LINK,,,,,,,0,0
+1056,PARSED,2093,both,"закрываю остаток (10%) сделки по текущим
+1.67R итоговый результат",UPDATE,REPORT_FINAL_RESULT,CLOSE_FULL | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2093,1,,,,,0,,,signal,single,2093,REPLY_OR_LINK,,,,,,,0,0
+1052,PARSED,2110,both,"тоже закрываю по текущим
+итог 1.11R",UPDATE,REPORT_FINAL_RESULT,CLOSE_FULL | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2110,1,,,,,0,,,signal,single,2110,REPLY_OR_LINK,,,,,,,0,0
+1051,PARSED,2000,both,"поставьте стоп в бу, ну как в бу, чтобы комиссию отбить
+
+надоел уже",UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2000,1,,,,,0,,,signal,single,2000,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1050,PARSED,2008,both,"Тут закрою по текущим
+0.28R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2008,1,,,,unclassified_with_markers,1,,,signal,single,2008,REPLY_OR_LINK,,,,,,,0,0
+1049,PARSED,2066,both,тут стоп на 1 тейк,UPDATE,SL_HIT,MOVE_STOP | TP_HIT | SL_HIT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2066,1,,,,,0,,,signal,single,2066,REPLY_OR_LINK,,,,,,,0,0
+1048,PARSED,2129,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2129,1,,,,unclassified_with_markers,1,,,signal,single,2129,REPLY_OR_LINK,,,,,,,0,0
+1046,PARSED,2066,both,"закрылся полностью на 1 тейке
+итог 0.88R",UPDATE,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2066,1,,,,,0,,,signal,single,2066,REPLY_OR_LINK,,,,,,,0,0
+1045,PARSED,2126,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2126,1,,,,unclassified_with_markers,1,,,signal,single,2126,REPLY_OR_LINK,,,,,,,0,0
+1044,PARSED,2129,both,"был 1 тейк  и сразу закрылась в бу
+итого 0.26R",UPDATE,EXIT_BE,TP_HIT | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2129,1,,,,,0,,,signal,single,2129,REPLY_OR_LINK,,,,,,,0,0
+1040,PARSED,2143,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2143,1,,,,,0,,,signal,single,2143,REPLY_OR_LINK,,,,,,,0,0
+1039,PARSED,2126,both,3 тейк. Сделка закрыта,UPDATE,TP_HIT,CLOSE_FULL | TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2126,1,,,,unclassified_with_markers,1,,,signal,single,2126,REPLY_OR_LINK,,,,,,,0,0
+1034,PARSED,2152,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2152,1,,,,unclassified_with_markers,1,,,signal,single,2152,REPLY_OR_LINK,,,,,,,0,0
+1033,PARSED,2151,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2151,1,,,,unclassified_with_markers,1,,,signal,single,2151,REPLY_OR_LINK,,,,,,,0,0
+1032,PARSED,2151,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2151,1,,,,,0,,,signal,single,2151,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1030,PARSED,2152,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2152,1,,,,,0,,,signal,single,2152,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1029,PARSED,2151,both,"3 тейк. Сделка закрыта
+итого - 0.63R",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2151,1,,,,,0,,,signal,single,2151,REPLY_OR_LINK,,,,,,,0,0
+1022,PARSED,2165,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2165,1,,,,unclassified_with_markers,1,,,signal,single,2165,REPLY_OR_LINK,,,,,,,0,0
+1021,PARSED,2165,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2165,1,,,,,0,,,signal,single,2165,REPLY_OR_LINK,ENTRY,,,,,,0,0
+1020,PARSED,2166,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2166,1,,,,,0,,,signal,single,2166,REPLY_OR_LINK,,,,,,,0,0
+1019,PARSED,2164,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2164,1,,,,,0,,,signal,single,2164,REPLY_OR_LINK,,,,,,,0,0
+1018,PARSED,2161,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2161,1,,,,,0,,,signal,single,2161,REPLY_OR_LINK,,,,,,,0,0
+1016,PARSED,2152,both,"Сделка закрыта по 3 тейкам
+итог 0.63R",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2152,1,,,,,0,,,signal,single,2152,REPLY_OR_LINK,,,,,,,0,0
+1015,PARSED,2165,both,"И она закрылась
+итог - 1.19R",UPDATE,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2165,1,,,,,0,,,signal,single,2165,REPLY_OR_LINK,,,,,,,0,0
+1012,PARSED,2177,both,"поторопился  с лонгами, зафиксируем микроминус",UPDATE,CLOSE_FULL,CLOSE_FULL,,LONG,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2177,1,,,,,0,,,signal,single,2177,REPLY_OR_LINK,,,,,,,0,0
+1011,PARSED,2178,both,"а тут уберем лимитку
+
+всем хорошего вечера",UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2178,1,,,,unclassified_with_markers,1,,,signal,single,2178,REPLY_OR_LINK,,,,,,,0,0
+1003,PARSED,2193,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2193,1,,,,unclassified_with_markers,1,,,signal,single,2193,REPLY_OR_LINK,,,,,,,0,0
+1001,PARSED,2192,both,"В целом можно зафиксировать часть прибыли. С учетом того, что вошли гораздо ниже твх по сигналу, можно сказать, что тейк взят
+
+Стоп в бу после фиксации части
+Зафиксировал 50% на 0.3406",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2192,1,,,,,0,,,signal,single,2192,REPLY_OR_LINK,ENTRY,,,,,,0,0
+999,PARSED,2195,both,Тут отмена,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2195,1,,,,unclassified_with_markers,1,,,signal,single,2195,REPLY_OR_LINK,,,,,,,0,0
+998,PARSED,2186,both,"здесь уже прилично прошли, кто переживает - можете частично фиксировать позицию и защищать ее стопом в бу
+
+я буду держать согласно сетапа",UPDATE,SL_HIT,CLOSE_PARTIAL | SL_HIT | EXIT_BE,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2186,1,,,,unclassified_with_markers,1,,,signal,single,2186,REPLY_OR_LINK,,,,,,,0,0
+996,PARSED,2186,both,а вот и 1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2186,1,,,,,0,,,signal,single,2186,REPLY_OR_LINK,ENTRY,,,,,,0,0
+993,PARSED,2203,both,"тоже отбой
+всем хорошего вечера",UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2203,1,,,,unclassified_with_markers,1,,,signal,single,2203,REPLY_OR_LINK,,,,,,,0,0
+987,PARSED,2211,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2211,1,,,,unclassified_with_markers,1,,,signal,single,2211,REPLY_OR_LINK,,,,,,,0,0
+980,PARSED,2218,both,Лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2218,1,,,,unclassified_with_markers,1,,,signal,single,2218,REPLY_OR_LINK,,,,,,,0,0
+979,PARSED,2220,both,Лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2220,1,,,,unclassified_with_markers,1,,,signal,single,2220,REPLY_OR_LINK,,,,,,,0,0
+974,PARSED,2192,both,"сделка закрылась
+итог 1.36R",UPDATE,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2192,1,,,,,0,,,signal,single,2192,REPLY_OR_LINK,,,,,,,0,0
+971,PARSED,2187,both,"что-то я пропустил. вчера, оказывается, был 1 тейк
+
+стоп в бу",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2187,1,,,,,0,,,signal,single,2187,REPLY_OR_LINK,ENTRY,,,,,,0,0
+966,PARSED,2186,both,Стоп поставьте на первый тейк - 69295.6,UPDATE,SL_HIT,MOVE_STOP | TP_HIT | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2186,1,,,,unclassified_with_markers,1,,,signal,single,2186,REPLY_OR_LINK,,,,,,,0,0
+962,PARSED,2186,both,"Эту закрываем полностью
+открываем новую
+
+1.16R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2186,1,,,,unclassified_with_markers,1,,,signal,single,2186,REPLY_OR_LINK,,,,,,,0,0
+954,PARSED,,both,"[trader #A]
+
+https://t.me/c/3171748254/2243
+https://t.me/c/3171748254/2242
+https://t.me/c/3171748254/2222
+https://t.me/c/3171748254/2221
+
+давайте по этим сигналам пока уберем лимитки
+
+буду следить за ними, может позже вернем",UPDATE,EXIT_BE,CANCEL_PENDING_ORDERS | EXIT_BE,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2243,4,,,,unclassified_with_markers,1,,,signal_group,multiple,2243 | 2242 | 2222 | 2221,REPLY_OR_LINK,,,,,,,4,0
+946,PARSED,,both,"Всем привет, это админ! 👋
+
+Залетаю с анонсом 😉
+Завтра вечером trader#A готов устроить в канале мини-марафон по интрадей-сделкам (тот самый формат “вошли - вышли, приключение на 20 минут”)😅.
+Время: с 19:00 до 22:00 (МСК)
+Условие запуска: если под этим постом собираем 200+ реакций - делаем. 
+Если нет - значит, «Вы не готовы все! Я на вас сейчас всех смотрю - вы не готовы!» без марафонов пока.😉
+
+Что будет по правилам?
+Торгуем быстрые сделки. Хотя, в конечном итоге, всё зависит от рынка.
+Сетапы - как обычный интрадей (формат ниже).
+Ключевое отличие: фиксируем 100% позиции на 1 тейке.
+Вход всегда на 1% от депо.
+Нужны быстрые пальцы: если не знаете, какие у вас - спросите жену. 😂
+
+Как будет идти поток?
+Сделки публикуются по мере завершения анализа.
+Как только сделка закрылась по тейку или стопу - выходит следующая (возможно не мгновенно, но нужно быть готовым).
+Так что если хотите участвовать нормально - держите внимание на канале примерно с 19:00 до 22:00 (МСК).
+
+Пример сетапа (как это выглядит):
+#интрадей
+#SXTUSDT 🐂 Лонг (вход лимиткой)
+Вход (2-фазный):
+— Вход лимиткой: 0,02331
+— Усреднение: нет
+Отмена входа: если 15m закреп ниже 0,02322 (PDL)
+Стоп:
+— SL: 0,02298 🛡(от A: -1,4%, от B: —)
+Тейки (интрадей, 3 цели):
+— TP1: 0,02363 🎯 (от A: +1,4%, от B: —)
+— TP2: 0,02378 🎯 (от A: +2,0%, от B: —)
+— TP3: 0,02402 🎯 (от A: +3,0%, от B: —)
+
+
+🔷 В марафоне будет проще: один тейк - 100% фиксация.
+Ну что, тряхнём ордерами?
+
+Жду 200+ реакций под постом - и завтра вечером летим. 🚀
+
+⚠️ Дисклеймер: это экспериментальный формат, и 100% успеха мы не гарантируем - это всё ещё рынок и он умеет всякое.
+Можно вообще просто понаблюдать со стороны - это нормально и бесплатно. 
+Я вот, честно, сам так и сделаю. 🍿
+Для остальных - это шанс резко встать из-за стола за завтрашним ужином и сказать: «Рынок зовёт!»
++15 к крутизне и −10 к мытью посуды вам обеспечены. 😂
+
+#админ",UPDATE,SL_HIT,INVALIDATE_SETUP | TP_HIT | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,SXTUSDT,LONG,UNKNOWN,PARTIAL,1,,SINGLE_LIMIT,ONE_SHOT,False,1,PRIMARY:LIMIT:0.02331,0.02298,3,0.02363 | 0.02378 | 0.02402,вход всегда на 1%,1,,,PERCENT,946,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,1
+937,PARSED,2287,both,тут отмена,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2287,1,,,,unclassified_with_markers,1,,,signal,single,2287,REPLY_OR_LINK,,,,,,,0,0
+915,PARSED,2294,both,"тут отмена, вечером уже активно поторгуем",UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2294,1,,,,unclassified_with_markers,1,,,signal,single,2294,REPLY_OR_LINK,,,,,,,0,0
+890,PARSED,,both,"Trader #A
+
+финальная сделка марафона
+все сделки остаются в работе, утром посмотрим какой будет результат
+
+всем спасибо и хорошего вечера",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,0.4,,,,False,0,,,0,,,,,,,890,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+886,PARSED,2342,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2342,1,,,,unclassified_with_markers,1,,,signal,single,2342,REPLY_OR_LINK,,,,,,,0,0
+864,PARSED,,both,"[trader #A]
+
+хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам
+
+https://t.me/c/3171748254/2361
+https://t.me/c/3171748254/2359
+https://t.me/c/3171748254/2275
+https://t.me/c/3171748254/2261
+
+результаты в RR дополню этот пост
+
+fart - 0.38R
+ldo - 0.14R
+zil - 0.32R
+haedal - 0.91R",UPDATE,REPORT_FINAL_RESULT,CLOSE_FULL | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2361,4,,,,,0,,,signal_group,multiple,2361 | 2359 | 2275 | 2261,REPLY_OR_LINK,,,,,,,4,0
+862,PARSED,2234,both,"фиксирую по текущим
+-0.21R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2234,1,,,,unclassified_with_markers,1,,,signal,single,2234,REPLY_OR_LINK,,,,,,,0,0
+861,PARSED,2371,both,"фиксирую по текущим
+-0.03R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2371,1,,,,unclassified_with_markers,1,,,signal,single,2371,REPLY_OR_LINK,,,,,,,0,0
+860,PARSED,2360,both,"фиксирую по текущим
+-0.04R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2360,1,,,,unclassified_with_markers,1,,,signal,single,2360,REPLY_OR_LINK,,,,,,,0,0
+851,PARSED,2371,both,Заходим по текущим заново,UPDATE,REENTER,REENTER,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2371,1,,,,unclassified_with_markers,1,,,signal,single,2371,REPLY_OR_LINK,,,,,,,0,0
+850,PARSED,2360,both,Тоже заходим по текущим заново,UPDATE,REENTER,REENTER,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2360,1,,,,unclassified_with_markers,1,,,signal,single,2360,REPLY_OR_LINK,,,,,,,0,0
+845,PARSED,2397,both,Отмена,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2397,1,,,,unclassified_with_markers,1,,,signal,single,2397,REPLY_OR_LINK,,,,,,,0,0
+838,PARSED,2348,both,убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2348,1,,,,unclassified_with_markers,1,,,signal,single,2348,REPLY_OR_LINK,,,,,,,0,0
+834,PARSED,,both,"Trader #A
+
+зафиксирую все свои позиции по текущим, не будет возможности контролировать сделки
+
+Ниже напишу результаты
+PORTALUSDT - 0.2R
+SAGAUSDT - 0.18R
+VIRTUALUSDT -0.01R
+PEOPLEUSDT - 0.24R
+DOGEUSDT - 0.23R
+
+
+Всем хорошего вечера и выходных",UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE | REPORT_FINAL_RESULT,PORTALUSDT,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,834,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+817,PARSED,2425,both,стоп в бу ставим,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2425,1,,,,,0,,,signal,single,2425,REPLY_OR_LINK,ENTRY,,,,,,0,0
+811,PARSED,2446,both,"без нас улетели..печально. 
+лимитку убираем",UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2446,1,,,,unclassified_with_markers,1,,,signal,single,2446,REPLY_OR_LINK,,,,,,,0,0
+810,PARSED,2447,both,"без нас улетели..печально
+лимитку убираем",UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2447,1,,,,unclassified_with_markers,1,,,signal,single,2447,REPLY_OR_LINK,,,,,,,0,0
+806,PARSED,2443,both,чтобы минимизировать риск - стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2443,1,,,,,0,,,signal,single,2443,REPLY_OR_LINK,ENTRY,,,,,,0,0
+792,PARSED,,both,"Привет, это админ! 👋
+Ну что, прошла неделя с прошлого марафона, и я обязан признать очевидное:
+
+Вы накидали нам в реакции не только сердец, но и больших пальцев (левой руки, похоже...), ладоней, кистей с шариковыми ручками и даже какой-то золотой утвари. 🏆😂
+Энергии от этой расчленёнки (Петербург одобряет!😂) столько, что её точно хватит, чтобы марафоны жили дальше. 
+
+Так что завтра, в среду, trader#A повторит забег на тех же условиях.
+
+🏃‍♂️ Mini-марафон intraday (18.02.2026)
+
+Время: 19:00 – 22:00 (МСК)
+
+Условия (для тех, кто забыл):
+
+- Торгуем быстрые интрадей-сделки. 
+- Сетап - обычный интрадей, как в канале.
+- Главное отличие: фиксируем 100% позиции на 1 тейке (без TP1/TP2/TP3).
+- Вход всегда на 1% риска.
+- Сделки публикуются по мере готовности анализа: закрылась по тейку/стопу - появляется следующая (иногда с паузой, но в рамках вечера).
+- Нужно уметь быстро обращаться с биржевым терминалом... а также быть смелым, ловким, умелым - а иначе эти ""джунгли вас не позовут"". Олды поймут! 😂
+
+Важное!
+
+📌 Статистика по марафонам теперь будет вестись отдельно и публиковаться в конце месяца дополнительно к основной статистике trader#A.
+Если будет плохой, то мелким шрифтом!😂
+
+Всё! Я закончил.
+Можете идти готовиться к марафону:
+🧺 постирайте велосипедки,
+🧴 натрите ляжки вазелином,
+🥤 купите изотоников,
+🍯 углеводных гелей в дорогу,
+🧻попросите кого-нибудь встретить на финише с полотенцем 😉
+
+И напоминаю: участвовать или просто смотреть, как потеют другие - ваш личный выбор. Это торговля и мы не можем гарантировать успех.
+Но канал завтра вечером будет горячий. 🔥
+
+#админ",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,вход всегда на 1%,1,,,PERCENT,792,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+760,PARSED,2522,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2522,1,,,,unclassified_with_markers,1,,,signal,single,2522,REPLY_OR_LINK,,,,,,,0,0
+745,PARSED,2444,both,"1 тейк, стоп в бу
+0.23R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2444,1,,,,,0,,,signal,single,2444,REPLY_OR_LINK,ENTRY,,,,,,0,0
+740,PARSED,2443,both,стоп переносим на 1 тейк - 0.0998,UPDATE,SL_HIT,MOVE_STOP | TP_HIT | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2443,1,,,,unclassified_with_markers,1,,,signal,single,2443,REPLY_OR_LINK,,,,,,,0,0
+733,PARSED,2480,both,"1 тейк, стоп в бу
+0.62R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2480,1,,,,,0,,,signal,single,2480,REPLY_OR_LINK,ENTRY,,,,,,0,0
+727,PARSED,,both,"Trader #A
+Закрываю все позиции, результаты по каждой обновлю в этом посте, нужно подождать, посмотреть на рынок
+BTC - 2.8R
+Link - 0.54R
+xrp - 0.46R
+AAVE - фактически в бу
+sol - 0.18R
+near - 0.96R
+ton - 0.7R
+pepe - 0.14R (убыток)
+aster - 0.32R (убыток)",UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,727,0,,,,,1,,,signal,unknown,,,,,,,,,0,0
+726,PARSED,2544,both,"Здесь, если закрыть по текущим, получатся скромные 0.2R
+
+Напомню, что эта сделка в статистику не идет",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2544,1,,,,unclassified_with_markers,1,,,signal,single,2544,REPLY_OR_LINK,,,,,,,0,0
+725,PARSED,,both,"Trader #A
+Сегодня аккуратно поторгуем интрадей, не в рамках марафона, а просто как обычные сделки, требования как и к среднесроку:
+- вход на 1%, если не укажу иное
+- фиксация на тейках 50/40/10",UPDATE,TP_HIT,TP_HIT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,вход на 1%,1,,,PERCENT,725,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+703,PARSED,,both,"trader #A
+
+https://t.me/c/3171748254/2571
+https://t.me/c/3171748254/2573
+
+снимаем лимитки
+
+посмотрим сегодня среднесрок😊",UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2571,2,,,,unclassified_with_markers,1,,,signal_group,multiple,2571 | 2573,REPLY_OR_LINK,,,,,,,2,0
+700,PARSED,2572,both,Тейк. Стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2572,1,,,,,0,,,signal,single,2572,REPLY_OR_LINK,ENTRY,,,,,,0,0
+679,PARSED,2577,both,Стоп поставьте на 0.5749,UPDATE,SL_HIT,MOVE_STOP | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2577,1,,,,unclassified_with_markers,1,,,signal,single,2577,REPLY_OR_LINK,,,,,,,0,0
+678,PARSED,2577,both,"Закрываю по текущим - 0.5962
+1.8R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2577,1,,,,,0,,,signal,single,2577,REPLY_OR_LINK,,,,,,,0,0
+675,PARSED,2635,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2635,1,,,,,0,,,signal,single,2635,REPLY_OR_LINK,,,,,,,0,0
+673,PARSED,2634,both,Не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2634,1,,,,,0,,,signal,single,2634,REPLY_OR_LINK,,,,,,,0,0
+666,PARSED,2612,both,"1 тейк. Стоп в бу
+0.42R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2612,1,,,,,0,,,signal,single,2612,REPLY_OR_LINK,ENTRY,,,,,,0,0
+662,PARSED,2610,both,поставьте стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2610,1,,,,,0,,,signal,single,2610,REPLY_OR_LINK,ENTRY,,,,,,0,0
+657,PARSED,2663,both,"1 тейк. Стоп в бу
+0.45R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2663,1,,,,,0,,,signal,single,2663,REPLY_OR_LINK,ENTRY,,,,,,0,0
+656,PARSED,2663,both,"закрываю сейчас по текущим полностью позицию. уже хороший профит
+
+1.17R",UPDATE,REPORT_FINAL_RESULT,CLOSE_FULL | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2663,1,,,,unclassified_with_markers,1,,,signal,single,2663,REPLY_OR_LINK,,,,,,,0,0
+655,PARSED,2643,both,"закрываю 50% по текущим. стоп в бу
+
+0.42R",UPDATE,SL_HIT,CLOSE_FULL | CLOSE_PARTIAL | SL_HIT | EXIT_BE,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2643,1,,,,,0,,,signal,single,2643,REPLY_OR_LINK,ENTRY,,,,,,0,0
+653,PARSED,,both,"Trader #A 
+
+пока новых сделок не будет. доведем до тейков те, что остались
+
+Открыты: 
+ETH
+ASTER
+BTC
+PAXG (стоп в бу стоит)
+JST (был 1 тейк, стоп в бу)
+BONK (был 1 тейк, стоп в бу)
+BNB",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,653,0,,,,missing_target,1,,,signal,unknown,,,ENTRY,,,,,,0,0
+648,PARSED,,both,"Привет, это админ! 👋
+Друзья, прошла неделя - а значит завтра, в среду, проводим третий марафон по интрадей-сделкам с trader #A 🔥
+
+В предыдущих сериях:
+
+📌 Марафон №1 принёс нам +2.72% к депозиту (без учёта комиссии)
+📌 Марафон №2 закончился −1.5%, при вялой волатильности и малом количестве сетапов.
+
+Что добавить?
+Да, результат второго получился не слишком радужный.
+Но давайте спокойно:
+
+Первое! 
+В целом, ничего критичного не произошло - хоть и обидно, когда рынок забирает значимую часть того, что совсем недавно дал. 
+(как старший брат, который сначала разрешил поиграть в Sega, но потом сказал, что играть можно только в ""Русалочку""...😂)
+Боже,как я стар! И как скуплюсь тратить деньги на психолога по детским травмам...😅
+
+Второе! 
+Две сессии - это не статистика.
+Чтобы увидеть реальную картину, было решено провести хотя бы 4–5 марафонов. Едем дальше!
+
+В-третьих, 
+Trader #A продолжает допиливать интрадей-стратегию.
+Поэтому это не тот случай, когда мы просто еще раз дергаем за рычаг ""однорукого бандита"" в надежде, что сейчас выпадут семёрки или вишенки. 🎰
+Идёт нормальный рабочий процесс: тест, корректировка, снова тест... И всё это к тому же в лаборатории, на хомячках! Шутим.😂
+
+И главное - вы всегда можете наблюдать за этим действом с безопасного расстояния, продолжая пользоваться обычными сигналами.
+Кстати, скоро конец месяца, и статистика не заставит себя ждать!
+Спойлер: если команда не решит внезапно поставить всё на зеро с 100х плечом, то текущие результаты вполне способны скрасить начало весны.
+На букет и конфеты к 8 марта точно хватит 🌷🍫😉
+
+
+По завтрашнему марафону:
+
+📍 Старт - 17:00 (МСК)
+⏸ Перерыв - 18:00–19:00
+📍 Дальше работаем до 22:00
+
+Правила те же.
+Рынок, надеемся, поживее...🙏
+
+Увидимся завтра.
+
+#админ",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,648,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+624,PARSED,2711,both,тут лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2711,1,,,,unclassified_with_markers,1,,,signal,single,2711,REPLY_OR_LINK,,,,,,,0,0
+623,PARSED,2643,both,"закрылся в бу
+итого 0.42R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2643,1,,,,,0,,,signal,single,2643,REPLY_OR_LINK,,,,,,,0,0
+616,PARSED,2712,both,"Trader #A
+
+https://t.me/c/3171748254/2712
+https://t.me/c/3171748254/2713
+https://t.me/c/3171748254/2718
+ 
+Отменяем лимитки
+
+Продолжим после 19:00",UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2712,3,,,,,0,,,signal_group,multiple,2712 | 2713 | 2718,REPLY_OR_LINK,,,,,,,3,0
+615,PARSED,2719,both,Тут тоже снимаем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2719,1,,,,unclassified_with_markers,1,,,signal,single,2719,REPLY_OR_LINK,,,,,,,0,0
+610,PARSED,2612,both,"закрылся в бу
+итог 0.42R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2612,1,,,,,0,,,signal,single,2612,REPLY_OR_LINK,,,,,,,0,0
+573,PARSED,2772,both,точка входа 84.86,UPDATE,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,,,UNKNOWN,PARTIAL,0,,SINGLE_LIMIT,ONE_SHOT,False,1,PRIMARY:LIMIT:84.86,,0,,,,,,,2772,1,,,,unclassified_with_markers,1,,,signal,single,2772,REPLY_OR_LINK,,,,,,,0,0
+558,PARSED,,both,"[trader #A]
+
+Чтобы не кормить ""лося"" закрываю по текущим AVAX и PEOPLE
+
+По  SOL и SUI стоп в бу
+
+AVAX - 0.5R (убыток)
+PEOPLE - 0.28R (убыток)",UPDATE,SL_HIT,CLOSE_FULL | SL_HIT | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,558,0,,,,missing_target,1,,,signal,unknown,,,ENTRY,,,,,,0,0
+556,PARSED,2610,both,"Фиксирую 50% по текущей цене. Стоп в бу
+
+0.79R",UPDATE,SL_HIT,CLOSE_PARTIAL | SL_HIT | EXIT_BE,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2610,1,,,,,0,,,signal,single,2610,REPLY_OR_LINK,ENTRY,,,,,,0,0
+555,PARSED,2761,both,"Тейк. Стоп в бу
+
+0.34R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2761,1,,,,,0,,,signal,single,2761,REPLY_OR_LINK,ENTRY,,,,,,0,0
+553,PARSED,2772,both,"тейк, стоп в бу
+0.36R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2772,1,,,,,0,,,signal,single,2772,REPLY_OR_LINK,ENTRY,,,,,,0,0
+546,PARSED,,both,"Trader #A 
+
+Закрываю все позиции по текущим, чтобы закрыть февраль
+
+hype - в бу
+pepe - в бу
+bnb - 0.07R (убыток)
+sol - 0.82R
+sui - 0.95R
+paxg - 2.2R
+aster - 0.12R",UPDATE,EXIT_BE,CLOSE_FULL | EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,546,0,,,,,1,,,signal,unknown,,,,,,,,,0,0
+539,PARSED,2817,both,Стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2817,1,,,,,0,,,signal,single,2817,REPLY_OR_LINK,ENTRY,,,,,,0,0
+524,PARSED,2851,both,"1 тейк. Стоп в бу
+
+0.62R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2851,1,,,,,0,,,signal,single,2851,REPLY_OR_LINK,ENTRY,,,,,,0,0
+521,PARSED,2855,both,тут отмена,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2855,1,,,,unclassified_with_markers,1,,,signal,single,2855,REPLY_OR_LINK,,,,,,,0,0
+520,PARSED,2851,both,"закрылась в бу
+итого 0.62R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2851,1,,,,,0,,,signal,single,2851,REPLY_OR_LINK,,,,,,,0,0
+518,PARSED,2859,both,"хочется написать много непечатных слов по поводу 1 копейки...
+
+убираем лимитку😔",UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2859,1,,,,unclassified_with_markers,1,,,signal,single,2859,REPLY_OR_LINK,,,,,,,0,0
+515,PARSED,2862,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2862,1,,,,unclassified_with_markers,1,,,signal,single,2862,REPLY_OR_LINK,,,,,,,0,0
+514,PARSED,2862,both,"1 тейк. стоп в бу
+
+0.37R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2862,1,,,,,0,,,signal,single,2862,REPLY_OR_LINK,ENTRY,,,,,,0,0
+513,PARSED,2861,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2861,1,,,,unclassified_with_markers,1,,,signal,single,2861,REPLY_OR_LINK,,,,,,,0,0
+509,PARSED,2854,both,"1 тейк. стоп в бу
+0.59R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2854,1,,,,,0,,,signal,single,2854,REPLY_OR_LINK,ENTRY,,,,,,0,0
+507,PARSED,2817,both,"1 тейк, стоп в бу
+
+0.66R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2817,1,,,,,0,,,signal,single,2817,REPLY_OR_LINK,ENTRY,,,,,,0,0
+505,PARSED,2862,both,"закрываю остаток по текущим
+итог 1.12R 
+
+Для справки, здесь и во всех постах о тейках или стопах R нарастающим итогом",UPDATE,SL_HIT,CLOSE_FULL | TP_HIT | SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2862,1,,,,,0,,,signal,single,2862,REPLY_OR_LINK,,,,,,,0,0
+504,PARSED,2854,both,"3 тейка. сделка закрыта
+
+2.58R",UPDATE,TP_HIT,CLOSE_FULL | TP_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2854,1,,,,unclassified_with_markers,1,,,signal,single,2854,REPLY_OR_LINK,,,,,,,0,0
+500,PARSED,2817,both,стоп переношу на 65000,UPDATE,SL_HIT,MOVE_STOP | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2817,1,,,,unclassified_with_markers,1,,,signal,single,2817,REPLY_OR_LINK,,,,,,,0,0
+498,PARSED,2881,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2881,1,,,,unclassified_with_markers,1,,,signal,single,2881,REPLY_OR_LINK,,,,,,,0,0
+497,PARSED,2880,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2880,1,,,,unclassified_with_markers,1,,,signal,single,2880,REPLY_OR_LINK,,,,,,,0,0
+496,PARSED,2832,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2832,1,,,,,0,,,signal,single,2832,REPLY_OR_LINK,ENTRY,,,,,,0,0
+493,PARSED,2892,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2892,1,,,,unclassified_with_markers,1,,,signal,single,2892,REPLY_OR_LINK,,,,,,,0,0
+491,PARSED,2892,both,"1 тейк. стоп в бу
+0.27R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2892,1,,,,,0,,,signal,single,2892,REPLY_OR_LINK,ENTRY,,,,,,0,0
+490,PARSED,2892,both,"закрылась в бу
+итог 0.27R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,PARSED,1,,,,False,0,,,0,,,,,,,2892,1,,,,,0,,,signal,single,2892,REPLY_OR_LINK,,,,,,,0,0
+488,PARSED,2832,both,"1 тейк. Стоп в бу
+
+0.37R",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2832,1,,,,,0,,,signal,single,2832,REPLY_OR_LINK,ENTRY,,,,,,0,0
+475,PARSED,2913,both,Лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2913,1,,,,unclassified_with_markers,1,,,signal,single,2913,REPLY_OR_LINK,,,,,,,0,0
+473,PARSED,2817,both,стоп переносим на 67000,UPDATE,SL_HIT,MOVE_STOP | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2817,1,,,,unclassified_with_markers,1,,,signal,single,2817,REPLY_OR_LINK,,,,,,,0,0
+472,PARSED,2916,both,убираем лимитку,UPDATE,CANCEL_PENDING_ORDERS,CANCEL_PENDING_ORDERS,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,2916,1,,,,unclassified_with_markers,1,,,signal,single,2916,REPLY_OR_LINK,,,,,,,0,0
+470,PARSED,,both,"Trader #A 
+
+PYTH тоже стоп в бу",UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,470,0,,,,missing_target,1,,,signal,unknown,,,ENTRY,,,,,,0,0
+461,PARSED,2930,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2930,1,,,,unclassified_with_markers,1,,,signal,single,2930,REPLY_OR_LINK,,,,,,,0,0
+454,PARSED,2930,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2930,1,,,,,0,,,signal,single,2930,REPLY_OR_LINK,ENTRY,,,,,,0,0
+451,PARSED,2817,both,"закрываю по текущим
+
+1.62R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2817,1,,,,,0,,,signal,single,2817,REPLY_OR_LINK,,,,,,,0,0
+443,PARSED,2950,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2950,1,,,,,0,,,signal,single,2950,REPLY_OR_LINK,ENTRY,,,,,,0,0
+438,PARSED,2955,both,Не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2955,1,,,,,0,,,signal,single,2955,REPLY_OR_LINK,,,,,,,0,0
+426,PARSED,,both,"Trader #A
+
+Давайте начинать 
+
+Фиксация 50/40/10
+Вернемся к штатному формату фиксации",UPDATE,,,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,426,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+415,PARSED,2986,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2986,1,,,,unclassified_with_markers,1,,,signal,single,2986,REPLY_OR_LINK,,,,,,,0,0
+414,PARSED,2987,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,2987,1,,,,unclassified_with_markers,1,,,signal,single,2987,REPLY_OR_LINK,,,,,,,0,0
+413,PARSED,,both,"Trader #A
+
+Друзья, сегодня, видимо, рынок включил режим «лимитки? не слышал».🙂
+
+Из 6 лимиток - 2 взяли. А также поймали 1 стоп
+Чтобы не переносить лишний риск через ночь, рекомендую снять все лимитные ордера. 
+
+Я у себя лимитки оставлю - для полной картины стратегии интрадей и статистики по переносам.
+
+Если ночью что-то исполнится - обязательно сообщу и зафиксирую результат.🫡",UPDATE,SL_HIT,CANCEL_PENDING_ORDERS | SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,PARTIAL,0.4,,,,False,0,,,0,,,,,,,413,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+406,PARSED,,both,"Trader #A
+
+Доброе утро!
+
+Апдейт по марафоновским сделкам
+
+AAVE - стоп (-1R)
+CFX - взял лимитку, пока в небольшом минусе
+BEAM - ждем лимитку
+BAND - ждем лимитку
+API3 - ждем лимитку
+ARB - взял лимитку, пока  в небольшом плюсе
+
+Как только все сделки придут к какому-то исходу, тогда сообщу общий результат марафона
+
+Пока по итогу -2R, но еще сделки в работе, поэтому результат может быть куда лучше
+
+Всем хорошего дня",UPDATE,SL_HIT,SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,406,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,0
+400,PARSED,3000,both,"Пора подводить промежуточные итоги
+
+1. Взяли 3 стопа. Не приятно, но это рынок
+2. Две лимитки (BEAM & BAND) так и не взялись. Отменяю лимитки
+3. Из приятного. По 1 тейку взяли API3 & ARB. Промежуточный профит по ним: 0.67R. Продолжаю удерживать
+
+Промежуточный итог по марафонским сделкам: -2.33R",UPDATE,SL_HIT,TP_HIT | SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3000,1,,,,,0,,,signal,single,3000,REPLY_OR_LINK,,,,,,,0,0
+399,PARSED,3008,both,"P.S.
+
+по AAVE обидный стоп. По итогу уже 2 тейка взял",UPDATE,SL_HIT,TP_HIT | SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3008,1,,,,,0,,,signal,single,3008,REPLY_OR_LINK,,,,,,,0,0
+388,PARSED,3017,both,не актуально,UPDATE,INVALIDATE_SETUP,INVALIDATE_SETUP,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,3017,1,,,,,0,,,signal,single,3017,REPLY_OR_LINK,,,,,,,0,0
+385,PARSED,3018,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,3018,1,,,,unclassified_with_markers,1,,,signal,single,3018,REPLY_OR_LINK,,,,,,,0,0
+383,PARSED,3020,both,Лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,3020,1,,,,unclassified_with_markers,1,,,signal,single,3020,REPLY_OR_LINK,,,,,,,0,0
+382,PARSED,3018,both,теперь стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3018,1,,,,,0,,,signal,single,3018,REPLY_OR_LINK,ENTRY,,,,,,0,0
+381,PARSED,3022,both,лимитка,UPDATE,ENTRY_FILLED,ENTRY_FILLED,,,UNKNOWN,PARSED,0,,,,False,0,,,0,,,,,,,3022,1,,,,unclassified_with_markers,1,,,signal,single,3022,REPLY_OR_LINK,,,,,,,0,0
+377,PARSED,3020,both,тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3020,1,,,,,0,,,signal,single,3020,REPLY_OR_LINK,ENTRY,,,,,,0,0
+376,PARSED,2944,both,1 тейк. стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2944,1,,,,,0,,,signal,single,2944,REPLY_OR_LINK,ENTRY,,,,,,0,0
+371,PARSED,,both,"Друзья, админ на связи.👋
+
+Нужно подвести итоги последнего марафона от [trader #A] и заодно рассказать о решении, которое мы приняли сегодня внутри команды. 🧐
+
+Последний марафон завершился результатом −0.79% по всем закрытым сделкам, с учётом того, что часть позиций, как это у нас уже бывало, уехала жить ночной жизнью. 🤪
+И, в отличие от прошлого ""забега"", даже успела подзгладить...вечерние стопы! (как вам такое название для новой рубрики - ""ВЕЧЕРНИЕ СТОПЫ""?😅). 
+Общий результат за 4 марафона:  −0.25% 
+
+Мы отнеслись к этому сдеражанно, но с намерением продолжать ""допиливать эту дверь""🚪🪚.
+Собственно, занимались этим параллельно все эти дни.
+В частности, как уже упоминалось выше
+марафон, вроде как, заканчивается вечером…
+а сделки регулярно уходят в ночь, и дарят неожиданные сюжетные твисты.📇
+
+Поэтому мы уже обсуждали новый формат:
+марафон длиной в целый день. 
+
+И даже успели это немного погонять в тесте несколько дней подряд.
+Надо сказать, результаты там были вполне бодрые...📈
+
+Но всё же решили пока взять паузу и ещё потестировать эту идею.
+
+🔥 И ещё! 🔥
+Пока что мы полностью приостановим торговлю в интрадей режиме для trader #A потому что
+он балуется
+ему нужно больше времени на общение с собакой
+он хочет пересобрать всю стратегию для этого режима 👷‍♂️
+
+В остальном всё так же.
+Всем трейдерского фарта, работяги! 😎
+
+#админ",UPDATE,SL_HIT,SL_HIT | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,371,0,,,,,1,,,signal,unknown,,,,,,,,,0,0
+369,PARSED,2884,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2884,1,,,,,0,,,signal,single,2884,REPLY_OR_LINK,ENTRY,,,,,,0,0
+362,PARSED,3020,both,"Закрыл по текущим
+0.41R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,3020,1,,,,unclassified_with_markers,1,,,signal,single,3020,REPLY_OR_LINK,,,,,,,0,0
+361,PARSED,2944,both,"закрываю по текущим
+0.85R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2944,1,,,,,0,,,signal,single,2944,REPLY_OR_LINK,,,,,,,0,0
+360,PARSED,3042,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3042,1,,,,,0,,,signal,single,3042,REPLY_OR_LINK,ENTRY,,,,,,0,0
+358,PARSED,2884,both,"закрываю по текущим
+0.37R",UPDATE,CLOSE_FULL,CLOSE_FULL,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,2884,1,,,,,0,,,signal,single,2884,REPLY_OR_LINK,,,,,,,0,0
+341,PARSED,3042,both,стоп поставьте на 1 тейк,UPDATE,SL_HIT,MOVE_STOP | TP_HIT | SL_HIT,,,UNKNOWN,PARTIAL,0,,,,False,0,,,0,,,,,,,3042,1,,,,unclassified_with_markers,1,,,signal,single,3042,REPLY_OR_LINK,,,,,,,0,0
+334,PARSED,3041,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3041,1,,,,,0,,,signal,single,3041,REPLY_OR_LINK,ENTRY,,,,,,0,0
+331,PARSED,2964,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2964,1,,,,,0,,,signal,single,2964,REPLY_OR_LINK,ENTRY,,,,,,0,0
+319,PARSED,3042,both,"давайте закроем оставшиеся 10% позиции по текущим. не будем мучить)
+
+итог 1.3R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3042,1,,,,,0,,,signal,single,3042,REPLY_OR_LINK,,,,,,,0,0
+288,PARSED,3040,both,1 тейк стоп в бу,UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3040,1,,,,,0,,,signal,single,3040,REPLY_OR_LINK,ENTRY,,,,,,0,0
+283,PARSED,3040,both,"давайте закроем, че мучить оставшиеся 10% позиции
+
+итого 1.06R",UPDATE,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3040,1,,,,,0,,,signal,single,3040,REPLY_OR_LINK,,,,,,,0,0
+237,PARSED,3080,both,стоп на 1 тейк,UPDATE,SL_HIT,MOVE_STOP | TP_HIT | SL_HIT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,3080,1,,,,,0,,,signal,single,3080,REPLY_OR_LINK,,,,,,,0,0
+236,PARSED,3080,both,"позиция полностью закрылась
+итог - 1.33R",UPDATE,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3080,1,,,,,0,,,signal,single,3080,REPLY_OR_LINK,,,,,,,0,0
+232,PARSED,3172,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3172,1,,,,,0,,,signal,single,3172,REPLY_OR_LINK,ENTRY,,,,,,0,0
+230,PARSED,2963,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,2963,1,,,,,0,,,signal,single,2963,REPLY_OR_LINK,ENTRY,,,,,,0,0
+223,PARSED,,both,"Trader #A 
+
+апдейт по моим сигналам
+
+принимаю решение по всем открытым лонговым позициям 100% позиции закрыть на 1 тейке
+
+Ищите сигналы по хештегам
+#LTCUSDT
+#OPUSDT
+#API3USDT 
+#AAVEUSDT 
+#ASTERUSDT 
+#SOLUSDT 
+#DOGEUSDT 
+#XRPUSDT 
+
+#ETHUSDT  фиксация остается прежней, с учетом 1 тейка в позиции осталось 50%. на втором кроем 40%, 10% тянем до 3 тейка, либо пока не напишу обратное",UPDATE,TP_HIT,TP_HIT,LTCUSDT,LONG,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,223,0,,,,,1,,,signal,unknown,,,,,,,,,0,9
+218,PARSED,3258,both,"Давайте все закроем, чтобы не терять прибыль
+
+В этом посте добавлю результаты:
+#LTCUSDT - 0.45R
+#OPUSDT - 0.52R
+#API3USDT  - 0.2R (убыток)
+#AAVEUSDT  - 1.38R
+#ASTERUSDT - 0.41R
+#SOLUSDT - 1.64R
+#DOGEUSDT - 1.2R
+#XRPUSDT - 0.84R
+#ETHUSDT - 1.74R",UPDATE,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,LTCUSDT,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3258,1,,,,,0,,,signal,single,3258,REPLY_OR_LINK,,,,,,,0,9
+208,PARSED,3272,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3272,1,,,,,0,,,signal,single,3272,REPLY_OR_LINK,ENTRY,,,,,,0,0
+206,PARSED,3272,both,Давайте тут зафиксируем 50%. Не будем дожидаться 1 тейка. Все равно рядом с ним,UPDATE,EXIT_BE,CLOSE_FULL | CLOSE_PARTIAL | TP_HIT | EXIT_BE,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,3272,1,,,,,0,,,signal,single,3272,REPLY_OR_LINK,,,,,,,0,0
+204,PARSED,3273,both,Давайте поставим стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3273,1,,,,,0,,,signal,single,3273,REPLY_OR_LINK,ENTRY,,,,,,0,0
+189,PARSED,3272,both,стоп на 1 тейк поставьте,UPDATE,SL_HIT,MOVE_STOP | TP_HIT | SL_HIT,,,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,3272,1,,,,,0,,,signal,single,3272,REPLY_OR_LINK,,,,,,,0,0
+168,PARSED,3307,both,стоп в бу,UPDATE,SL_HIT,SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3307,1,,,,,0,,,signal,single,3307,REPLY_OR_LINK,ENTRY,,,,,,0,0
+162,PARSED,,both,"Trader #A
+
+Закрываю шорты по текущим.
+Ниже напишу результат по монетам
+Не нравится рынок. Нужно понаблюдать
+
+Итог:
+
+#1000PEPEUSDT - 1.22R
+#ETHUSDT - 0.33R
+#BTCUSDT - 0.16R (убыток)
+#DOGEUSDT - 0.2R (убыток)
+#LINKUSDT - 0.34R (убыток)
+#SOLUSDT - 0.33R (убыток)",UPDATE,REPORT_FINAL_RESULT,CLOSE_FULL | REPORT_FINAL_RESULT,1000PEPEUSDT,SHORT,UNKNOWN,PARTIAL,1,,,,False,0,,,0,,,,,,,162,0,,,,missing_target,1,,,signal,unknown,,,,,,,,,0,6
+70,PARSED,3428,both,"тут 2 тейка
+стоп в бу",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3428,1,,,,,0,,,signal,single,3428,REPLY_OR_LINK,ENTRY,,,,,,0,0
+65,PARSED,3428,both,"Закрылось в бу
+Итого 1.43R",UPDATE,EXIT_BE,EXIT_BE | REPORT_FINAL_RESULT,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3428,1,,,,,0,,,signal,single,3428,REPLY_OR_LINK,,,,,,,0,0
+37,PARSED,3404,both,"теперь точно 1 тейк
+стоп в бу",UPDATE,SL_HIT,TP_HIT | SL_HIT | EXIT_BE,,,UNKNOWN,UNCLASSIFIED,1,,,,False,0,,,0,,,,,,,3404,1,,,,,0,,,signal,single,3404,REPLY_OR_LINK,ENTRY,,,,,,0,0

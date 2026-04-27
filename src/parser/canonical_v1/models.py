@@ -13,6 +13,7 @@ This schema follows the final decisions agreed in chat, including:
 
 from __future__ import annotations
 
+import warnings
 from typing import Any, Literal
 
 from pydantic import BaseModel, Field, ConfigDict, model_validator
@@ -76,6 +77,13 @@ ReportEventType = Literal[
 
 ResultUnit = Literal["R", "PERCENT", "TEXT", "UNKNOWN"]
 RiskHintUnit = Literal["PERCENT", "ABSOLUTE", "UNKNOWN"]
+
+# Multi-ref target-aware contract (v1.1 additions)
+ActionType = Literal["SET_STOP", "CLOSE", "CANCEL_PENDING", "MODIFY_ENTRIES", "MODIFY_TARGETS"]
+TargetingMode = Literal["EXPLICIT_TARGETS", "TARGET_GROUP", "SELECTOR"]
+ResolutionUnit = Literal["MESSAGE_WIDE", "TARGET_ITEM_WIDE"]
+EventType = Literal["ENTRY_FILLED", "TP_HIT", "STOP_HIT", "BREAKEVEN_EXIT", "FINAL_RESULT"]
+CancelScope = Literal["TARGETED", "ALL_PENDING_ENTRIES", "ALL_LONG", "ALL_SHORT", "ALL_ALL"]
 
 
 # -----------------------------------------------------------------------------
@@ -225,6 +233,8 @@ class TakeProfit(CanonicalBaseModel):
 class RiskHint(CanonicalBaseModel):
     raw: str | None = None
     value: float | None = None
+    min_value: float | None = None
+    max_value: float | None = None
     unit: RiskHintUnit = "UNKNOWN"
 
 
@@ -388,6 +398,112 @@ class ReportPayload(CanonicalBaseModel):
 
 
 # -----------------------------------------------------------------------------
+# Targeted action / report models (multi-ref target-aware contract)
+# -----------------------------------------------------------------------------
+
+class TargetedActionTargeting(CanonicalBaseModel):
+    mode: TargetingMode
+    targets: list[int] = Field(default_factory=list)
+    selector: dict[str, Any] | None = None
+
+    @model_validator(mode="after")
+    def _validate_targeting(self) -> "TargetedActionTargeting":
+        if self.mode in ("EXPLICIT_TARGETS", "TARGET_GROUP") and not self.targets:
+            raise ValueError(f"mode={self.mode} requires non-empty targets")
+        if self.mode == "SELECTOR" and self.selector is None:
+            raise ValueError("mode=SELECTOR requires selector")
+        return self
+
+
+TargetedReportTargeting = TargetedActionTargeting
+
+
+class TargetedActionDiagnostics(CanonicalBaseModel):
+    resolution_unit: ResolutionUnit | None = None
+    semantic_signature: str | None = None
+    applied_disambiguation_rules: list[str] = Field(default_factory=list)
+    applied_context_rules: list[str] = Field(default_factory=list)
+    grouping_reason: str | None = None
+
+
+class SetStopParams(CanonicalBaseModel):
+    target_type: StopTargetType
+    value: int | None = None
+    price: float | None = None
+
+    @model_validator(mode="after")
+    def _validate_set_stop_params(self) -> "SetStopParams":
+        if self.target_type == "PRICE" and self.price is None:
+            raise ValueError("target_type=PRICE requires price")
+        if self.target_type == "TP_LEVEL" and self.value is None:
+            raise ValueError("target_type=TP_LEVEL requires value")
+        return self
+
+
+class CloseParams(CanonicalBaseModel):
+    close_scope: str
+    close_fraction: float | None = Field(default=None, ge=0.0, le=1.0)
+    close_price: float | None = None
+
+    @model_validator(mode="after")
+    def _validate_close_params(self) -> "CloseParams":
+        if self.close_scope == "PARTIAL" and self.close_fraction is None and self.close_price is None:
+            raise ValueError("close_scope=PARTIAL requires close_fraction or close_price")
+        return self
+
+
+class CancelPendingParams(CanonicalBaseModel):
+    cancel_scope: CancelScope
+
+
+class ModifyEntriesParams(CanonicalBaseModel):
+    mode: ModifyEntriesMode
+    entries: list[Any] = Field(default_factory=list)
+
+
+class ModifyTargetsParams(CanonicalBaseModel):
+    mode: ModifyTargetsMode
+    target_tp_level: int | None = Field(default=None, ge=1)
+    take_profits: list[Any] = Field(default_factory=list)
+
+
+class TargetedAction(CanonicalBaseModel):
+    action_type: ActionType
+    params: dict[str, Any]
+    targeting: TargetedActionTargeting
+    raw_fragment: str | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    diagnostics: TargetedActionDiagnostics | None = None
+
+
+class TargetedReportResult(CanonicalBaseModel):
+    value: float | None = None
+    unit: ResultUnit = "UNKNOWN"
+    text: str | None = None
+
+
+class TargetedReport(CanonicalBaseModel):
+    event_type: EventType
+    result: TargetedReportResult | None = None
+    level: int | None = Field(default=None, ge=1)
+    targeting: TargetedReportTargeting
+    instrument_hint: str | None = None
+    raw_fragment: str | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    diagnostics: TargetedActionDiagnostics | None = None
+
+    @model_validator(mode="after")
+    def _validate_targeted_report(self) -> "TargetedReport":
+        if self.event_type == "FINAL_RESULT" and self.result is None:
+            warnings.warn(
+                "TargetedReport with event_type=FINAL_RESULT has no result",
+                UserWarning,
+                stacklevel=2,
+            )
+        return self
+
+
+# -----------------------------------------------------------------------------
 # Top-level canonical message
 # -----------------------------------------------------------------------------
 
@@ -407,6 +523,9 @@ class CanonicalMessage(CanonicalBaseModel):
     signal: SignalPayload | None = None
     update: UpdatePayload | None = None
     report: ReportPayload | None = None
+
+    targeted_actions: list[TargetedAction] = Field(default_factory=list)
+    targeted_reports: list[TargetedReport] = Field(default_factory=list)
 
     warnings: list[str] = Field(default_factory=list)
     diagnostics: dict[str, Any] = Field(default_factory=dict)
@@ -480,18 +599,25 @@ class CanonicalMessage(CanonicalBaseModel):
 
 __all__ = [
     "AcquisitionMode",
+    "ActionType",
     "CancelPendingOperation",
+    "CancelPendingParams",
+    "CancelScope",
     "CanonicalBaseModel",
     "CanonicalMessage",
     "CloseOperation",
+    "CloseParams",
     "EntryLeg",
     "EntryStructure",
     "EntryType",
+    "EventType",
     "MessageClass",
     "ModifyEntriesMode",
     "ModifyEntriesOperation",
+    "ModifyEntriesParams",
     "ModifyTargetsMode",
     "ModifyTargetsOperation",
+    "ModifyTargetsParams",
     "ParseStatus",
     "Price",
     "RawContext",
@@ -499,9 +625,11 @@ __all__ = [
     "ReportEventType",
     "ReportedResult",
     "ReportPayload",
+    "ResolutionUnit",
     "ResultUnit",
     "RiskHint",
     "RiskHintUnit",
+    "SetStopParams",
     "Side",
     "SignalPayload",
     "StopLoss",
@@ -512,7 +640,14 @@ __all__ = [
     "TargetRefType",
     "TargetScope",
     "TargetScopeKind",
+    "TargetedAction",
+    "TargetedActionDiagnostics",
+    "TargetedActionTargeting",
+    "TargetedReport",
+    "TargetedReportResult",
+    "TargetedReportTargeting",
     "Targeting",
+    "TargetingMode",
     "TargetingStrategy",
     "UpdateOperation",
     "UpdateOperationType",

@@ -7,6 +7,7 @@ from pathlib import Path
 import re
 from typing import Any
 
+from src.parser.canonical_v1.intent_candidate import IntentCandidate
 from src.parser.canonical_v1.models import (
     CancelPendingOperation,
     CanonicalMessage,
@@ -18,6 +19,7 @@ from src.parser.canonical_v1.models import (
     ReportEvent,
     ReportPayload,
     ReportedResult,
+    RiskHint,
     SignalPayload,
     StopLoss,
     StopTarget,
@@ -25,8 +27,19 @@ from src.parser.canonical_v1.models import (
     Targeting,
     TargetRef,
     TargetScope,
+    TargetedAction,
+    TargetedReport,
     UpdateOperation,
     UpdatePayload,
+)
+from src.parser.shared.context_resolution_engine import ContextInput
+from src.parser.shared.context_resolution_schema import ContextResolutionRulesBlock
+from src.parser.shared.disambiguation_rules_schema import DisambiguationRulesBlock
+from src.parser.shared.intent_compatibility_schema import IntentCompatibilityBlock
+from src.parser.shared.semantic_resolver import SemanticResolver, SemanticResolverInput
+from src.parser.canonical_v1.targeted_builder import (
+    build_targeted_actions,
+    build_targeted_reports_from_lines,
 )
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text, split_lines
@@ -43,6 +56,14 @@ _RESULT_R_CAPTURE_RE = re.compile(
 )
 _BARE_RESULT_R_RE = re.compile(r"\b(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*R{1,2}\b", re.IGNORECASE)
 _PERCENT_RE = re.compile(r"\b(?P<value>\d{1,3}(?:[.,]\d+)?)%")
+_RISK_RANGE_RE = re.compile(
+    r"(?:риск|вход)[^0-9\n]*?(?P<min>\d+(?:[.,]\d+)?)[–—\-](?P<max>\d+(?:[.,]\d+)?)%",
+    re.IGNORECASE,
+)
+_RISK_SINGLE_RE = re.compile(
+    r"(?:риск|вход)[^0-9\n]*?(?P<value>\d+(?:[.,]\d+)?)%",
+    re.IGNORECASE,
+)
 _TP_INDEX_RE = re.compile(r"\btp(?P<index>\d+)\b", re.IGNORECASE)
 _STOP_LEVEL_RE = re.compile(
     r"(?:move\s*(?:sl|stop)\s*(?:to)?|sl|stop|стоп\s*(?:переношу|переставляю|переносим|переставим)\s*на)\s*[:=@-]?\s*(?P<value>\d+(?:[.,]\d+)?)",
@@ -240,6 +261,35 @@ _TA_REPORT_INTENTS: frozenset[str] = frozenset(
     }
 )
 
+_LEGACY_TO_CANONICAL_INTENT: dict[str, str] = {
+    "NS_CREATE_SIGNAL": "NEW_SETUP",
+    "U_MOVE_STOP_TO_BE": "MOVE_STOP_TO_BE",
+    "U_MOVE_STOP": "MOVE_STOP",
+    "U_CLOSE_FULL": "CLOSE_FULL",
+    "U_CLOSE_PARTIAL": "CLOSE_PARTIAL",
+    "U_CANCEL_PENDING_ORDERS": "CANCEL_PENDING_ORDERS",
+    "U_INVALIDATE_SETUP": "INVALIDATE_SETUP",
+    "U_UPDATE_TAKE_PROFITS": "UPDATE_TAKE_PROFITS",
+    "U_MARK_FILLED": "ENTRY_FILLED",
+    "U_TP_HIT": "TP_HIT",
+    "U_STOP_HIT": "SL_HIT",
+    "U_EXIT_BE": "EXIT_BE",
+    "U_REPORT_FINAL_RESULT": "REPORT_FINAL_RESULT",
+}
+
+_CANONICAL_TO_LEGACY_INTENT: dict[str, str] = {
+    value: key for key, value in _LEGACY_TO_CANONICAL_INTENT.items()
+}
+
+
+def _canonicalize_intents(intents: list[str]) -> list[str]:
+    canonical: list[str] = []
+    for intent in intents:
+        mapped = _LEGACY_TO_CANONICAL_INTENT.get(intent, intent)
+        if mapped not in canonical:
+            canonical.append(mapped)
+    return canonical
+
 _DEFAULT_INTENT_MARKERS: dict[str, tuple[str, ...]] = {
     "U_MOVE_STOP_TO_BE": (
         "move stop to be",
@@ -333,6 +383,8 @@ class TraderAProfileParser:
     def __init__(self, rules_path: Path | None = None) -> None:
         self._rules_path = rules_path or _RULES_PATH
         self._rules = self._load_rules(self._rules_path)
+        self._rules_engine = RulesEngine.load(self._rules_path)
+        self._semantic_resolver = self._build_semantic_resolver()
 
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
         prepared = self._preprocess(text=text, context=context)
@@ -345,6 +397,7 @@ class TraderAProfileParser:
             context=context,
             message_type=message_type,
             target_refs=target_refs,
+            canonical_mode=False,
         )
         if message_type == "UNCLASSIFIED" and "U_REPORT_FINAL_RESULT" in intents:
             if (target_refs or has_global_target) and any(
@@ -471,7 +524,9 @@ class TraderAProfileParser:
             context=context,
             message_type=message_type,
             target_refs=target_refs,
+            canonical_mode=True,
         )
+        extracted_intents = list(intents)
 
         if message_type == "UNCLASSIFIED" and "U_REPORT_FINAL_RESULT" in intents:
             if (target_refs or has_global_target) and any(
@@ -524,15 +579,34 @@ class TraderAProfileParser:
                 if not authoritative:
                     message_type = "UNCLASSIFIED"
 
+        warning_message_type = message_type
+        message_type, intents, primary_intent, semantic_diagnostics = self._resolve_semantics(
+            prepared=prepared,
+            context=context,
+            message_type=message_type,
+            intents=intents,
+            target_refs=target_refs,
+            global_target_scope=global_target_scope,
+        )
+        raw_text = str(prepared.get("raw_text") or "")
+        granular_stop_actions = self._build_line_level_move_stop_actions(raw_text=raw_text)
+        if warning_message_type == "UPDATE" and (target_refs or has_global_target) and granular_stop_actions:
+            intents = _canonicalize_intents(extracted_intents)
+            primary_intent = intents[0] if intents else primary_intent
+            message_type = warning_message_type
+        legacy_intents = [
+            _CANONICAL_TO_LEGACY_INTENT.get(intent, intent) for intent in intents
+        ]
+
         reported_results = self._extract_reported_results(
             prepared=prepared,
             context=context,
-            intents=intents,
+            intents=legacy_intents,
         )
         entities = self._extract_entities(
             prepared=prepared,
             context=context,
-            intents=intents,
+            intents=legacy_intents,
             target_refs=target_refs,
             reported_results=reported_results,
             global_target_scope=global_target_scope,
@@ -541,11 +615,14 @@ class TraderAProfileParser:
             self._build_warnings(
                 prepared=prepared,
                 context=context,
-                message_type=message_type,
-                intents=intents,
+                message_type=warning_message_type,
+                intents=extracted_intents,
                 target_refs=target_refs,
             )
         )
+        for warning in semantic_diagnostics.get("unresolved_warnings", []):
+            if warning not in warnings:
+                warnings.append(warning)
         confidence = self._estimate_confidence(
             prepared=prepared,
             context=context,
@@ -553,7 +630,33 @@ class TraderAProfileParser:
             intents=intents,
             warnings=warnings,
         )
-        primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
+
+        # --- targeted_actions / targeted_reports (multi-ref contract) --------
+        targeted_actions: list[TargetedAction] = []
+        targeted_reports: list[TargetedReport] = []
+        if message_type in {"UPDATE", "REPORT"}:
+            legacy_actions = self._build_actions_structured(
+                message_type=message_type, intents=legacy_intents, entities=entities
+            )
+            grouped = self._build_grouped_targeted_actions(
+                prepared=prepared,
+                message_type=message_type,
+                intents=legacy_intents,
+                entities=entities,
+                target_refs=target_refs,
+                actions_structured=legacy_actions,
+                global_target_scope=global_target_scope,
+            )
+            has_any_targeting = any("targeting" in a for a in grouped)
+            has_refs = bool(target_refs) or has_global_target
+            if has_any_targeting:
+                targeted_actions = build_targeted_actions(grouped)
+                raw_text = str(prepared.get("raw_text") or "")
+                targeted_reports = build_targeted_reports_from_lines(raw_text)
+            elif has_refs and not has_any_targeting:
+                if any("targeting" not in a for a in grouped) and grouped:
+                    warnings.append("targeted_binding_ambiguous")
+
         diagnostics = self._build_diagnostics(
             prepared=prepared,
             message_type=message_type,
@@ -561,6 +664,10 @@ class TraderAProfileParser:
             warnings=warnings,
             has_global_target=has_global_target,
         )
+        if semantic_diagnostics:
+            diagnostics = {**diagnostics, "semantic_resolver": semantic_diagnostics}
+        if targeted_actions and isinstance(diagnostics, dict):
+            diagnostics = {**diagnostics, "multi_ref_mode": True}
 
         raw_context = RawContext(
             raw_text=context.raw_text or "",
@@ -576,9 +683,18 @@ class TraderAProfileParser:
             context=context,
         )
 
-        has_signal = ("NS_CREATE_SIGNAL" in intents) or message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}
-        has_update = bool(set(intents) & _TA_UPDATE_INTENTS)
-        has_report = bool(set(intents) & _TA_REPORT_INTENTS)
+        canonical_intent_set = set(intents)
+        has_signal = ("NEW_SETUP" in canonical_intent_set) or message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}
+        has_update = bool(
+            canonical_intent_set
+            & {"MOVE_STOP_TO_BE", "MOVE_STOP", "CLOSE_FULL", "CLOSE_PARTIAL", "CANCEL_PENDING_ORDERS", "INVALIDATE_SETUP", "UPDATE_TAKE_PROFITS"}
+        )
+        if not has_update and message_type == "UPDATE" and granular_stop_actions and (target_refs or has_global_target):
+            has_update = True
+        has_report = bool(canonical_intent_set & {"TP_HIT", "SL_HIT", "REPORT_FINAL_RESULT", "ENTRY_FILLED", "EXIT_BE"})
+        suppress_report_payload = message_type == "UPDATE" and granular_stop_actions and canonical_intent_set <= {"EXIT_BE"}
+        if suppress_report_payload:
+            has_report = False
 
         if has_signal:
             signal = _build_ta_signal_payload(entities=entities)
@@ -598,9 +714,9 @@ class TraderAProfileParser:
             )
 
         if has_update:
-            update_ops = _build_ta_update_ops(intents=intents, entities=entities, warnings=warnings)
-            report_payload = _build_ta_report_payload(
-                intents=intents,
+            update_ops = _build_ta_update_ops(intents=legacy_intents, entities=entities, warnings=warnings)
+            report_payload = None if suppress_report_payload else _build_ta_report_payload(
+                intents=legacy_intents,
                 entities=entities,
                 reported_results=reported_results,
             )
@@ -623,6 +739,8 @@ class TraderAProfileParser:
                     warnings=warnings,
                     diagnostics=diagnostics,
                     raw_context=raw_context,
+                    targeted_actions=targeted_actions,
+                    targeted_reports=targeted_reports,
                 )
             if has_ops:
                 return CanonicalMessage(
@@ -637,6 +755,8 @@ class TraderAProfileParser:
                     warnings=warnings,
                     diagnostics=diagnostics,
                     raw_context=raw_context,
+                    targeted_actions=targeted_actions,
+                    targeted_reports=targeted_reports,
                 )
             if has_report_payload:
                 return CanonicalMessage(
@@ -651,6 +771,8 @@ class TraderAProfileParser:
                     warnings=warnings,
                     diagnostics=diagnostics,
                     raw_context=raw_context,
+                    targeted_actions=targeted_actions,
+                    targeted_reports=targeted_reports,
                 )
             if intents:
                 warnings.append("trader_a_update_no_resolvable_ops")
@@ -666,11 +788,13 @@ class TraderAProfileParser:
                     warnings=warnings,
                     diagnostics=diagnostics,
                     raw_context=raw_context,
+                    targeted_actions=targeted_actions,
+                    targeted_reports=targeted_reports,
                 )
 
         if has_report:
             report_payload = _build_ta_report_payload(
-                intents=intents,
+                intents=legacy_intents,
                 entities=entities,
                 reported_results=reported_results,
             )
@@ -687,6 +811,8 @@ class TraderAProfileParser:
                     warnings=warnings,
                     diagnostics=diagnostics,
                     raw_context=raw_context,
+                    targeted_actions=targeted_actions,
+                    targeted_reports=targeted_reports,
                 )
 
         if message_type == "INFO_ONLY":
@@ -716,6 +842,303 @@ class TraderAProfileParser:
             raw_context=raw_context,
         )
 
+    def _build_semantic_resolver(self) -> SemanticResolver:
+        compatibility = IntentCompatibilityBlock.model_validate(
+            self._rules.get("intent_compatibility", {"pairs": []})
+        )
+        disambiguation = DisambiguationRulesBlock.model_validate(
+            self._rules.get("disambiguation_rules", {"rules": []})
+        )
+        context_rules = ContextResolutionRulesBlock.model_validate(
+            self._rules.get("context_resolution_rules", {"rules": []})
+        )
+        return SemanticResolver(
+            compatibility_pairs=compatibility.pairs,
+            disambiguation_rules=disambiguation.rules,
+            context_resolution_rules=context_rules.rules,
+        )
+
+    def _resolve_semantics(
+        self,
+        *,
+        prepared: dict[str, Any],
+        context: ParserContext,
+        message_type: str,
+        intents: list[str],
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None,
+    ) -> tuple[str, list[str], str | None, dict[str, Any]]:
+        intent_candidates = self._build_intent_candidates(
+            prepared=prepared,
+            message_type=message_type,
+            intents=intents,
+        )
+        if not intent_candidates:
+            primary_intent = self._derive_primary_intent(message_type=message_type, intents=intents)
+            return message_type, intents, primary_intent, {}
+
+        context_input = self._build_semantic_context(
+            context=context,
+            target_refs=target_refs,
+            global_target_scope=global_target_scope,
+            message_type=message_type,
+        )
+        resolved = self._semantic_resolver.resolve(
+            SemanticResolverInput(
+                text_normalized=str(prepared.get("normalized_text") or ""),
+                intent_candidates=intent_candidates,
+                context=context_input,
+                resolution_unit="MESSAGE_WIDE",
+            )
+        )
+        final_intents = self._normalize_resolved_intents(resolved.final_intents)
+        if resolved.primary_intent in final_intents:
+            final_intents = [resolved.primary_intent] + [
+                intent for intent in final_intents if intent != resolved.primary_intent
+            ]
+        resolved_intents = self._map_resolved_intents(
+            original_intents=intents,
+            final_intents=final_intents,
+        )
+        resolved_message_type = self._derive_message_type_from_resolved_intents(
+            message_type=message_type,
+            resolved_intents=final_intents,
+        )
+        resolved_primary_intent = self._map_primary_intent(
+            resolved.primary_intent,
+            message_type=resolved_message_type,
+            fallback_intents=resolved_intents,
+        )
+        canonical_intents = _canonicalize_intents(resolved_intents)
+        canonical_primary_intent = (
+            _LEGACY_TO_CANONICAL_INTENT.get(resolved_primary_intent, resolved_primary_intent)
+            if resolved_primary_intent is not None
+            else None
+        )
+        if canonical_primary_intent in canonical_intents:
+            canonical_intents = [canonical_primary_intent] + [
+                intent for intent in canonical_intents if intent != canonical_primary_intent
+            ]
+        diagnostics = {
+            "intent_candidates": [candidate.model_dump() for candidate in intent_candidates],
+            "context": context_input.model_dump(),
+            "final_intents": list(final_intents),
+            "primary_intent": resolved.primary_intent,
+            "applied_disambiguation_rules": list(resolved.diagnostics.applied_disambiguation_rules),
+            "applied_context_rules": list(resolved.diagnostics.applied_context_rules),
+            "unresolved_warnings": list(resolved.diagnostics.unresolved_warnings),
+        }
+        return resolved_message_type, canonical_intents, canonical_primary_intent, diagnostics
+
+    @staticmethod
+    def _normalize_resolved_intents(final_intents: list[str]) -> list[str]:
+        if "INFO_ONLY" in final_intents:
+            return ["INFO_ONLY"]
+        normalized = [intent for intent in final_intents if intent != "REPORT_FINAL_RESULT" or "EXIT_BE" not in final_intents]
+        return normalized or list(final_intents)
+
+    def _build_intent_candidates(
+        self,
+        *,
+        prepared: dict[str, Any],
+        message_type: str,
+        intents: list[str],
+    ) -> list[IntentCandidate]:
+        normalized = str(prepared.get("normalized_text") or "")
+        candidates: list[IntentCandidate] = []
+        for legacy_intent in intents:
+            canonical_intent = _LEGACY_TO_CANONICAL_INTENT.get(legacy_intent)
+            if canonical_intent is None:
+                continue
+            evidence = self._intent_candidate_evidence(legacy_intent=legacy_intent, normalized_text=normalized)
+            candidates.append(
+                IntentCandidate(
+                    intent=canonical_intent,
+                    strength=self._intent_candidate_strength(
+                        legacy_intent=legacy_intent,
+                        normalized_text=normalized,
+                        message_type=message_type,
+                    ),
+                    evidence=evidence or [f"legacy:{legacy_intent.lower()}"],
+                )
+            )
+        return candidates
+
+    def _intent_candidate_evidence(self, *, legacy_intent: str, normalized_text: str) -> list[str]:
+        strong_markers, weak_markers = self._intent_marker_groups(legacy_intent)
+        evidence: list[str] = []
+        for marker in strong_markers:
+            if _contains_any(normalized_text, (marker,)):
+                evidence.append(f"strong:{marker}")
+        for marker in weak_markers:
+            if _contains_any(normalized_text, (marker,)):
+                evidence.append(f"weak:{marker}")
+        return evidence
+
+    def _intent_candidate_strength(
+        self,
+        *,
+        legacy_intent: str,
+        normalized_text: str,
+        message_type: str,
+    ) -> str:
+        strong_markers, weak_markers = self._intent_marker_groups(legacy_intent)
+        if weak_markers and _contains_any(normalized_text, tuple(weak_markers)):
+            return "weak"
+        if strong_markers and _contains_any(normalized_text, tuple(strong_markers)):
+            return "strong"
+        if legacy_intent == "U_EXIT_BE":
+            return "weak"
+        if message_type in {"INFO_ONLY", "UNCLASSIFIED"}:
+            return "weak"
+        return "strong"
+
+    def _intent_marker_groups(self, legacy_intent: str) -> tuple[list[str], list[str]]:
+        marker_map = self._rules_engine.raw_rules.get("intent_markers", {})
+        configured = None
+        if isinstance(marker_map, dict):
+            configured = _marker_values(marker_map, _LEGACY_TO_CANONICAL_INTENT.get(legacy_intent, legacy_intent), legacy_intent)
+        if isinstance(configured, dict):
+            strong = _as_str_list(configured.get("strong"))
+            weak = _as_str_list(configured.get("weak"))
+            return strong, weak
+        if isinstance(configured, list):
+            markers = _as_str_list(configured)
+            if legacy_intent == "U_EXIT_BE":
+                return [], markers
+            return markers, []
+        defaults = list(_DEFAULT_INTENT_MARKERS.get(legacy_intent, ()))
+        if legacy_intent == "U_EXIT_BE":
+            return [], defaults
+        return defaults, []
+
+    def _build_semantic_context(
+        self,
+        *,
+        context: ParserContext,
+        target_refs: list[dict[str, Any]],
+        global_target_scope: str | None,
+        message_type: str,
+    ) -> ContextInput:
+        has_target_ref = bool(target_refs) or global_target_scope is not None
+        target_ref_kind = "unknown"
+        if global_target_scope is not None:
+            target_ref_kind = "global_scope"
+        elif any(item.get("kind") == "reply" for item in target_refs):
+            target_ref_kind = "reply_id"
+        elif any(item.get("kind") == "telegram_link" for item in target_refs):
+            target_ref_kind = "telegram_link"
+        elif any(item.get("kind") in {"message_id", "explicit_id"} for item in target_refs):
+            target_ref_kind = "explicit_id"
+        return ContextInput(
+            has_target_ref=has_target_ref,
+            target_ref_kind=target_ref_kind,  # type: ignore[arg-type]
+            target_exists=has_target_ref,
+            target_history_intents=self._extract_target_history_intents(context=context),
+            message_type_hint=message_type,
+        )
+
+    def _extract_target_history_intents(self, *, context: ParserContext) -> list[str]:
+        if not isinstance(context.reply_raw_text, str) or not context.reply_raw_text.strip():
+            return []
+
+        reply_context = ParserContext(
+            trader_code=context.trader_code,
+            message_id=context.reply_to_message_id,
+            reply_to_message_id=None,
+            channel_id=context.channel_id,
+            raw_text=context.reply_raw_text,
+            extracted_links=[],
+            hashtags=[],
+        )
+        prepared = self._preprocess(text=context.reply_raw_text, context=reply_context)
+        reply_targets: list[dict[str, Any]] = []
+        reply_message_type = self._classify_message(
+            prepared=prepared,
+            context=reply_context,
+            target_refs=reply_targets,
+        )
+        reply_intents = self._extract_intents(
+            prepared=prepared,
+            context=reply_context,
+            message_type=reply_message_type,
+            target_refs=reply_targets,
+            canonical_mode=True,
+        )
+
+        history: list[str] = []
+        if reply_message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
+            history.append("NEW_SETUP")
+        for legacy_intent in reply_intents:
+            canonical = _LEGACY_TO_CANONICAL_INTENT.get(legacy_intent)
+            if canonical is not None and canonical not in history:
+                history.append(canonical)
+        return history
+
+    def _map_resolved_intents(
+        self,
+        *,
+        original_intents: list[str],
+        final_intents: list[str],
+    ) -> list[str]:
+        resolved: list[str] = []
+        for canonical_intent in final_intents:
+            legacy_intent = _CANONICAL_TO_LEGACY_INTENT.get(canonical_intent, canonical_intent)
+            if legacy_intent not in resolved:
+                resolved.append(legacy_intent)
+        for legacy_intent in original_intents:
+            if legacy_intent in _LEGACY_TO_CANONICAL_INTENT:
+                continue
+            if legacy_intent not in resolved:
+                resolved.append(legacy_intent)
+        return resolved
+
+    @staticmethod
+    def _derive_message_type_from_resolved_intents(*, message_type: str, resolved_intents: list[str]) -> str:
+        resolved_set = set(resolved_intents)
+        if resolved_set == {"INFO_ONLY"}:
+            return "INFO_ONLY"
+        if "NEW_SETUP" in resolved_set:
+            return message_type
+
+        update_intents = {
+            "MOVE_STOP_TO_BE",
+            "MOVE_STOP",
+            "CLOSE_FULL",
+            "CLOSE_PARTIAL",
+            "CANCEL_PENDING_ORDERS",
+            "INVALIDATE_SETUP",
+            "UPDATE_TAKE_PROFITS",
+            "REENTER",
+            "ADD_ENTRY",
+        }
+        report_intents = {
+            "ENTRY_FILLED",
+            "TP_HIT",
+            "SL_HIT",
+            "EXIT_BE",
+            "REPORT_FINAL_RESULT",
+            "REPORT_PARTIAL_RESULT",
+        }
+        if resolved_set & update_intents:
+            return "UPDATE"
+        if resolved_set & report_intents:
+            return "REPORT"
+        return message_type
+
+    def _map_primary_intent(
+        self,
+        canonical_primary_intent: str | None,
+        *,
+        message_type: str,
+        fallback_intents: list[str],
+    ) -> str | None:
+        if message_type == "INFO_ONLY":
+            return "INFO_ONLY"
+        if canonical_primary_intent is not None:
+            return _CANONICAL_TO_LEGACY_INTENT.get(canonical_primary_intent, canonical_primary_intent)
+        return self._derive_primary_intent(message_type=message_type, intents=fallback_intents)
+
     @staticmethod
     def _derive_primary_intent(*, message_type: str, intents: list[str]) -> str | None:
         if message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}:
@@ -742,7 +1165,12 @@ class TraderAProfileParser:
 
         actions: list[dict[str, Any]] = []
         for intent in intents:
-            if not intent_policy_for_intent(intent).get("state_change"):
+            if not intent_policy_for_intent(intent).get("state_change") and intent not in {
+                "U_TP_HIT",
+                "U_STOP_HIT",
+                "U_MARK_FILLED",
+                "U_REPORT_FINAL_RESULT",
+            }:
                 continue
             if intent == "U_MOVE_STOP_TO_BE":
                 actions.append({"action": "MOVE_STOP", "new_stop_level": "ENTRY"})
@@ -1145,7 +1573,14 @@ class TraderAProfileParser:
         update_markers = _merge_markers(_class_markers(classification, "update"), _DEFAULT_CLASSIFICATION_MARKERS["update_strong"])
         report_markers = _merge_markers(None, _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"])
         info_only_markers = _merge_markers(_class_markers(classification, "info_only"), _DEFAULT_CLASSIFICATION_MARKERS["info_only"])
-        exit_be_markers = _merge_markers(self._rules.get("intent_markers", {}).get("U_EXIT_BE") if isinstance(self._rules.get("intent_markers"), dict) else None, ())
+        exit_be_markers = _merge_markers(
+            _marker_values(
+                self._rules.get("intent_markers", {}) if isinstance(self._rules.get("intent_markers"), dict) else {},
+                "EXIT_BE",
+                "U_EXIT_BE",
+            ),
+            (),
+        )
         incomplete_markers = _merge_markers(
             classification.get("setup_incomplete") if isinstance(classification, dict) else None,
             _DEFAULT_CLASSIFICATION_MARKERS["setup_incomplete"],
@@ -1326,6 +1761,7 @@ class TraderAProfileParser:
         context: ParserContext,
         message_type: str,
         target_refs: list[dict[str, Any]],
+        canonical_mode: bool = False,
     ) -> list[str]:
         normalized = str(prepared.get("normalized_text") or "")
         raw_text = str(prepared.get("raw_text") or "")
@@ -1357,14 +1793,33 @@ class TraderAProfileParser:
         if message_type == "NEW_SIGNAL":
             intents.append("NS_CREATE_SIGNAL")
 
-        move_to_be_markers = _merge_markers(_strong_only(marker_map.get("U_MOVE_STOP_TO_BE")), _DEFAULT_INTENT_MARKERS["U_MOVE_STOP_TO_BE"])
-        exit_be_markers = _merge_markers(marker_map.get("U_EXIT_BE"), ())
-        move_markers = _merge_markers(_strong_only(marker_map.get("U_MOVE_STOP")), _DEFAULT_INTENT_MARKERS["U_MOVE_STOP"])
-        cancel_markers = _merge_markers(marker_map.get("U_CANCEL_PENDING_ORDERS"), _DEFAULT_INTENT_MARKERS["U_CANCEL_PENDING_ORDERS"])
-        invalidate_markers = _merge_markers(marker_map.get("U_INVALIDATE_SETUP"), _DEFAULT_INTENT_MARKERS["U_INVALIDATE_SETUP"])
-        filled_markers = _merge_markers(marker_map.get("U_MARK_FILLED"), _DEFAULT_INTENT_MARKERS["U_MARK_FILLED"])
+        move_to_be_markers = _merge_markers(
+            _strong_only(_marker_values(marker_map, "MOVE_STOP_TO_BE", "U_MOVE_STOP_TO_BE")),
+            _DEFAULT_INTENT_MARKERS["U_MOVE_STOP_TO_BE"],
+        )
+        exit_be_markers = _merge_markers(_marker_values(marker_map, "EXIT_BE", "U_EXIT_BE"), ())
+        move_markers = _merge_markers(
+            _strong_only(_marker_values(marker_map, "MOVE_STOP", "U_MOVE_STOP")),
+            _DEFAULT_INTENT_MARKERS["U_MOVE_STOP"],
+        )
+        cancel_markers = _merge_markers(
+            _marker_values(marker_map, "CANCEL_PENDING_ORDERS", "U_CANCEL_PENDING_ORDERS"),
+            _DEFAULT_INTENT_MARKERS["U_CANCEL_PENDING_ORDERS"],
+        )
+        invalidate_markers = _merge_markers(
+            _marker_values(marker_map, "INVALIDATE_SETUP", "U_INVALIDATE_SETUP"),
+            _DEFAULT_INTENT_MARKERS["U_INVALIDATE_SETUP"],
+        )
+        filled_markers = _merge_markers(
+            _marker_values(marker_map, "ENTRY_FILLED", "U_MARK_FILLED"),
+            _DEFAULT_INTENT_MARKERS["U_MARK_FILLED"],
+        )
         future_management_context = False
-        strong_move_without_target = _contains_any(normalized, tuple(move_to_be_markers)) or _contains_any(normalized, tuple(move_markers))
+        strong_move_without_target = (
+            _contains_any(normalized, tuple(move_to_be_markers))
+            or _contains_any(normalized, tuple(move_markers))
+            or _contains_any(normalized, ("стопы в безубыток",))
+        )
         strong_cancel_without_target = _contains_any(normalized, tuple(cancel_markers))
 
         allow_update_intents = (
@@ -1372,27 +1827,59 @@ class TraderAProfileParser:
             and (message_type == "UPDATE" or has_target or strong_move_without_target or strong_cancel_without_target)
         )
         if allow_update_intents:
-            move_markers = _merge_markers(marker_map.get("U_MOVE_STOP"), _DEFAULT_INTENT_MARKERS["U_MOVE_STOP"])
-            close_partial_markers = _merge_markers(marker_map.get("U_CLOSE_PARTIAL"), _DEFAULT_INTENT_MARKERS["U_CLOSE_PARTIAL"])
-            close_full_markers = _merge_markers(marker_map.get("U_CLOSE_FULL"), _DEFAULT_INTENT_MARKERS["U_CLOSE_FULL"])
-            tp_hit_markers = _merge_markers(_strong_only(marker_map.get("U_TP_HIT")), _DEFAULT_INTENT_MARKERS["U_TP_HIT"])
-            stop_hit_markers = _merge_markers(_strong_only(marker_map.get("U_STOP_HIT")), _DEFAULT_INTENT_MARKERS["U_STOP_HIT"])
+            move_markers = _merge_markers(
+                _marker_values(marker_map, "MOVE_STOP", "U_MOVE_STOP"),
+                _DEFAULT_INTENT_MARKERS["U_MOVE_STOP"],
+            )
+            close_partial_markers = _merge_markers(
+                _marker_values(marker_map, "CLOSE_PARTIAL", "U_CLOSE_PARTIAL"),
+                _DEFAULT_INTENT_MARKERS["U_CLOSE_PARTIAL"],
+            )
+            close_full_markers = _merge_markers(
+                _marker_values(marker_map, "CLOSE_FULL", "U_CLOSE_FULL"),
+                _DEFAULT_INTENT_MARKERS["U_CLOSE_FULL"],
+            )
+            tp_hit_markers = _merge_markers(
+                _strong_only(_marker_values(marker_map, "TP_HIT", "U_TP_HIT")),
+                _DEFAULT_INTENT_MARKERS["U_TP_HIT"],
+            )
+            stop_hit_markers = _merge_markers(
+                _strong_only(_marker_values(marker_map, "SL_HIT", "U_STOP_HIT")),
+                _DEFAULT_INTENT_MARKERS["U_STOP_HIT"],
+            )
             future_management_context = _has_future_management_language(normalized) and _contains_any(normalized, tuple(filled_markers))
 
             stop_to_tp_context = bool(_STOP_TO_TP1_RE.search(raw_text))
             has_move_stop_context = False
             if message_type != "NEW_SIGNAL":
-                if _contains_any(normalized, tuple(exit_be_markers)):
-                    intents.append("U_EXIT_BE")
-                elif _contains_any(normalized, tuple(move_to_be_markers)):
-                    intents.append("U_MOVE_STOP_TO_BE")
-                    has_move_stop_context = True
-                    if stop_to_tp_context:
+                if canonical_mode:
+                    if _contains_any(normalized, tuple(exit_be_markers)):
+                        intents.append("U_EXIT_BE")
+                    elif _contains_any(normalized, tuple(move_to_be_markers)):
+                        intents.append("U_MOVE_STOP_TO_BE")
+                        has_move_stop_context = True
+                        if stop_to_tp_context:
+                            intents.append("U_MOVE_STOP")
+                            has_move_stop_context = True
+                    elif _contains_any(normalized, tuple(move_markers)):
                         intents.append("U_MOVE_STOP")
                         has_move_stop_context = True
-                elif _contains_any(normalized, tuple(move_markers)):
-                    intents.append("U_MOVE_STOP")
-                    has_move_stop_context = True
+                else:
+                    if _contains_any(normalized, tuple(move_to_be_markers)) or _contains_any(normalized, ("стопы в безубыток",)):
+                        intents.append("U_MOVE_STOP_TO_BE")
+                        has_move_stop_context = True
+                        if stop_to_tp_context:
+                            intents.append("U_MOVE_STOP")
+                            has_move_stop_context = True
+                    elif _contains_any(normalized, tuple(move_markers)):
+                        intents.append("U_MOVE_STOP")
+                        has_move_stop_context = True
+                    elif _contains_any(normalized, tuple(exit_be_markers)) and not (
+                        _contains_any(normalized, tuple(close_partial_markers))
+                        or _contains_any(normalized, tuple(close_full_markers))
+                        or _contains_any(normalized, ("закрываю все позиции", "закрываю остаток", "закрываю позиции"))
+                    ):
+                        intents.append("U_EXIT_BE")
 
             if _contains_any(normalized, tuple(cancel_markers)):
                 intents.append("U_CANCEL_PENDING_ORDERS")
@@ -1402,12 +1889,21 @@ class TraderAProfileParser:
                     intents.append("U_CANCEL_PENDING_ORDERS")
             if not future_management_context and _contains_any(normalized, tuple(close_partial_markers)):
                 intents.append("U_CLOSE_PARTIAL")
-            elif not future_management_context and _contains_any(normalized, tuple(close_full_markers)):
+            elif not future_management_context and (
+                _contains_any(normalized, tuple(close_full_markers))
+                or _contains_any(normalized, ("закрываю все позиции", "закрываю остаток", "закрываю позиции"))
+            ):
                 intents.append("U_CLOSE_FULL")
 
-            if message_type != "NEW_SIGNAL" and not future_management_context and not report_explanation_context and not stop_to_tp_context and _contains_any(normalized, tuple(tp_hit_markers)):
+            tp_reply_fallback = not canonical_mode and has_target and (normalized.startswith("тейк") or normalized.startswith("1 тейк"))
+            stop_reply_fallback = not canonical_mode and has_target and normalized.startswith("стоп")
+            if message_type != "NEW_SIGNAL" and not future_management_context and not report_explanation_context and not stop_to_tp_context and (
+                _contains_any(normalized, tuple(tp_hit_markers)) or tp_reply_fallback
+            ):
                 intents.append("U_TP_HIT")
-            if message_type != "NEW_SIGNAL" and not future_management_context and not report_explanation_context and not stop_to_tp_context and not has_move_stop_context and _contains_any(normalized, tuple(stop_hit_markers)):
+            if message_type != "NEW_SIGNAL" and not future_management_context and not report_explanation_context and not stop_to_tp_context and not has_move_stop_context and (
+                _contains_any(normalized, tuple(stop_hit_markers)) or stop_reply_fallback
+            ):
                 intents.append("U_STOP_HIT")
             if _contains_any(normalized, tuple(filled_markers)):
                 intents.append("U_MARK_FILLED")
@@ -1420,7 +1916,10 @@ class TraderAProfileParser:
         if message_type == "UNCLASSIFIED" and not report_only_context and not has_target and _has_intermediate_result_language(normalized):
             message_type = "INFO_ONLY"
 
-        report_markers = _merge_markers(marker_map.get("U_REPORT_FINAL_RESULT"), _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"])
+        report_markers = _merge_markers(
+            _marker_values(marker_map, "REPORT_FINAL_RESULT", "U_REPORT_FINAL_RESULT"),
+            _DEFAULT_INTENT_MARKERS["U_REPORT_FINAL_RESULT"],
+        )
         if _should_emit_report_final_result(raw_text=raw_text, normalized=normalized, report_markers=report_markers):
             intents.append("U_REPORT_FINAL_RESULT")
 
@@ -1462,6 +1961,9 @@ class TraderAProfileParser:
             entities["entry_plan_type"] = entry_plan["entry_plan_type"]
             entities["entry_structure"] = entry_plan["entry_structure"]
             entities["has_averaging_plan"] = entry_plan["has_averaging_plan"]
+            risk_hint = _extract_risk_hint(raw_text)
+            if risk_hint is not None:
+                entities["risk_hint"] = risk_hint
 
         if "U_MOVE_STOP_TO_BE" in intents:
             entities["new_stop_level"] = "ENTRY"
@@ -1638,6 +2140,7 @@ class TraderAProfileParser:
                 "\u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b",
                 "\u0432\u0441\u0435\u043c \u043c\u043e\u0438\u043c \u043e\u0441\u0442\u0430\u0432\u0448\u0438\u043c\u0441\u044f \u0448\u043e\u0440\u0442\u0430\u043c",
                 "\u043c\u043e\u0438\u043c \u0448\u043e\u0440\u0442\u0430\u043c",
+                "\u043f\u043e \u0448\u043e\u0440\u0442\u0430\u043c",
                 "all shorts",
             ),
         )
@@ -1820,6 +2323,10 @@ def _build_ta_signal_payload(*, entities: dict[str, Any]) -> SignalPayload:
     if entry_structure is None and entries:
         missing.append("entry_structure")
 
+    risk_hint = entities.get("risk_hint")
+    if not isinstance(risk_hint, RiskHint):
+        risk_hint = None
+
     return SignalPayload(
         symbol=symbol,
         side=side,  # type: ignore[arg-type]
@@ -1827,6 +2334,7 @@ def _build_ta_signal_payload(*, entities: dict[str, Any]) -> SignalPayload:
         entries=entries,
         stop_loss=stop_loss,
         take_profits=take_profits,
+        risk_hint=risk_hint,
         completeness="COMPLETE" if not missing else "INCOMPLETE",
         missing_fields=missing,
     )
@@ -2080,6 +2588,15 @@ def _strong_only(value: Any) -> Any:
     return value
 
 
+def _marker_values(marker_map: dict[str, Any], canonical_name: str, legacy_name: str | None = None) -> Any:
+    value = marker_map.get(canonical_name)
+    if value is not None:
+        return value
+    if legacy_name is not None:
+        return marker_map.get(legacy_name)
+    return None
+
+
 def _contains_any(text: str, markers: tuple[str, ...] | list[str]) -> bool:
     lowered = text.lower()
     padded = f" {lowered} "
@@ -2133,6 +2650,21 @@ def _has_intermediate_result_language(normalized: str) -> bool:
             "loss",
         ),
     )
+
+
+def _extract_risk_hint(raw_text: str) -> RiskHint | None:
+    range_match = _RISK_RANGE_RE.search(raw_text)
+    if range_match:
+        min_val = _to_float(range_match.group("min"))
+        max_val = _to_float(range_match.group("max"))
+        if min_val is not None and max_val is not None:
+            return RiskHint(raw=range_match.group(0), min_value=min_val, max_value=max_val, unit="PERCENT")
+    single_match = _RISK_SINGLE_RE.search(raw_text)
+    if single_match:
+        val = _to_float(single_match.group("value"))
+        if val is not None:
+            return RiskHint(raw=single_match.group(0), value=val, unit="PERCENT")
+    return None
 
 
 def _extract_result_percent(raw_text: str, normalized: str) -> float | None:

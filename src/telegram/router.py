@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 import json
 import logging
@@ -10,7 +10,11 @@ import re
 import sqlite3
 from typing import Any
 
+import os
+
 from src.execution.dynamic_pairlist import DynamicPairlistManager
+from src.execution.targeted_applier import apply_plan
+from src.execution.targeted_planner import build_plan
 from src.execution.update_applier import apply_update_plan
 from src.execution.update_planner import build_update_plan
 from src.operation_rules.engine import OperationRulesEngine
@@ -28,7 +32,8 @@ from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.storage.review_queue import ReviewQueueStore
 from src.storage.signals_store import SignalRecord, SignalsStore
-from src.target_resolver.resolver import TargetResolver
+from src.target_resolver.models import MultiRefResolvedResult
+from src.target_resolver.resolver import TargetResolver, resolve_targeted
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.effective_trader import (
     EffectiveTraderContext,
@@ -44,6 +49,10 @@ _TELEGRAM_LINK_RE = re.compile(r"\bt\.me/[^\s]+", re.IGNORECASE)
 _HASHTAG_RE = re.compile(r"(?<!\w)(#[A-Za-z0-9_]+)")
 
 _ENV_DEFAULT = "T"
+
+# Feature flag: abilita il percorso targeted runtime (Fase 4).
+# Disabilitato di default; attivare con USE_TARGETED_RUNTIME=1 nell'ambiente.
+_USE_TARGETED_RUNTIME: bool = os.getenv("USE_TARGETED_RUNTIME", "0") == "1"
 
 
 @dataclass(slots=True)
@@ -102,7 +111,7 @@ class MessageRouter:
         dynamic_pairlist_manager: DynamicPairlistManager | None = None,
         # Canonical v1 — wired here so normalization is always-on
         parse_results_v1_store: ParseResultV1Store | None = None,
-    ) -> None:
+    ) -> Any | None:
         self._trader_resolver = effective_trader_resolver
         self._eligibility = eligibility_evaluator
         self._parse_results = parse_results_store
@@ -235,9 +244,10 @@ class MessageRouter:
         # Canonical v1 — runs in parallel, never mutates result or blocks.
         # Profiles that declare parse_canonical() on their class skip the normalizer.
         # Check type(parser) to avoid MagicMock auto-attribute creation in tests.
+        canonical_msg = None
         if self._parse_results_v1 is not None:
             if callable(getattr(type(profile_parser), "parse_canonical", None)):
-                self._native_canonical_v1(
+                canonical_msg = self._native_canonical_v1(
                     profile_parser=profile_parser,
                     text=item.raw_text,
                     context=context,
@@ -281,6 +291,7 @@ class MessageRouter:
                 result=result,
                 trader_id=trader_resolution.trader_id,
                 now_ts=now_ts,
+                canonical=canonical_msg,
             )
 
         self._status_store.update(item.raw_message_id, "done")
@@ -361,6 +372,7 @@ class MessageRouter:
         primary_class = "INFO"
         parse_status = "UNCLASSIFIED"
         confidence = 0.0
+        msg = None
         try:
             msg = profile_parser.parse_canonical(text, context)
             canonical_json = msg.model_dump_json(exclude_none=True)
@@ -394,6 +406,61 @@ class MessageRouter:
                 str(exc),
             )
 
+        # Targeted runtime — Fase 4
+        return msg
+
+    # ------------------------------------------------------------------
+    # Targeted runtime — Fase 4 (multi-ref target-aware)
+    # ------------------------------------------------------------------
+
+    def _apply_targeted_runtime(
+        self,
+        *,
+        canonical: Any,
+        trader_id: str,
+        raw_message_id: int,
+        pre_resolved: MultiRefResolvedResult | None = None,
+    ) -> MultiRefResolvedResult | None:
+        """Risolve e applica targeted_actions/targeted_reports (percorso nuovo).
+
+        Chiamato solo quando USE_TARGETED_RUNTIME=1 e canonical.targeted_actions
+        è non vuoto.
+        """
+        assert self._db_path is not None
+        try:
+            multi_ref_result = pre_resolved or resolve_targeted(
+                canonical, trader_id=trader_id, db_path=self._db_path
+            )
+            if self._parse_results_v1 is not None:
+                self._parse_results_v1.update_targeted_resolved_json(
+                    raw_message_id,
+                    json.dumps(asdict(multi_ref_result), ensure_ascii=False, sort_keys=True),
+                )
+            targeted_plan = build_plan(multi_ref_result, canonical)
+            apply_result = apply_plan(targeted_plan, db_path=self._db_path)
+            if apply_result.errors:
+                self._logger.warning(
+                    "targeted_runtime errors | raw_message_id=%s errors=%s",
+                    raw_message_id,
+                    apply_result.errors,
+                )
+            else:
+                self._logger.info(
+                    "targeted_runtime applied | raw_message_id=%s actions=%s reports=%s warnings=%s",
+                    raw_message_id,
+                    len(apply_result.applied_action_results),
+                    len(apply_result.applied_report_results),
+                    apply_result.warnings,
+                )
+            return multi_ref_result
+        except Exception as exc:
+            self._logger.warning(
+                "targeted_runtime_error | raw_message_id=%s error=%s",
+                raw_message_id,
+                f"{type(exc).__name__}: {exc}",
+            )
+            return None
+
     # ------------------------------------------------------------------
     # Phase 4 integration
     # ------------------------------------------------------------------
@@ -405,7 +472,8 @@ class MessageRouter:
         result: TraderParseResult,
         trader_id: str,
         now_ts: str,
-    ) -> None:
+        canonical: Any | None = None,
+    ) -> Any | None:
         """Apply operation rules + target resolver and persist output."""
         assert self._engine is not None
         assert self._db_path is not None
@@ -447,7 +515,19 @@ class MessageRouter:
 
         # Step 3 — Resolve target
         resolved: ResolvedTarget | None = None
-        if self._resolver is not None:
+        targeted_resolved: MultiRefResolvedResult | None = None
+        should_use_targeted_runtime = bool(
+            _USE_TARGETED_RUNTIME
+            and canonical is not None
+            and getattr(canonical, "targeted_actions", [])
+        )
+        if should_use_targeted_runtime:
+            targeted_resolved = self._apply_targeted_runtime(
+                canonical=canonical,
+                trader_id=trader_id,
+                raw_message_id=item.raw_message_id,
+            )
+        elif self._resolver is not None:
             resolved = self._resolver.resolve(op_signal, db_path=db_path)
 
         # Step 3b — Route UNRESOLVED UPDATE to review queue
@@ -489,14 +569,15 @@ class MessageRouter:
                     op_signal.is_blocked,
                     op_rec.target_eligibility,
                 )
-                self._apply_update_runtime(
-                    item=item,
-                    result=result,
-                    trader_id=trader_id,
-                    op_signal=op_signal,
-                    resolved=resolved,
-                    op_signal_id=op_signal_id,
-                )
+                if not should_use_targeted_runtime:
+                    self._apply_update_runtime(
+                        item=item,
+                        result=result,
+                        trader_id=trader_id,
+                        op_signal=op_signal,
+                        resolved=resolved,
+                        op_signal_id=op_signal_id,
+                    )
 
         self._logger.info(
             "phase4 complete | raw_message_id=%s type=%s is_blocked=%s block_reason=%s"
@@ -506,7 +587,11 @@ class MessageRouter:
             op_signal.is_blocked,
             op_signal.block_reason,
             attempt_key,
-            resolved.eligibility if resolved else None,
+            resolved.eligibility if resolved else (
+                "TARGETED"
+                if targeted_resolved is not None
+                else None
+            ),
         )
 
     def _apply_update_runtime(

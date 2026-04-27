@@ -25,8 +25,14 @@ from __future__ import annotations
 import sqlite3
 from typing import Any, Literal
 
+from src.parser.canonical_v1.models import CanonicalMessage, TargetedAction, TargetedReport
 from src.parser.models.operational import OperationalSignal, ResolvedTarget
 from src.storage.signals_query import OpenSignal, SignalsQuery
+from src.target_resolver.models import (
+    MultiRefResolvedResult,
+    ResolvedActionItem,
+    ResolvedReportItem,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -334,3 +340,191 @@ class TargetResolver:
             return sq.get_open_by_side(trader_id, "SELL")
         # all_positions or unknown scope → return all open
         return sq.get_all_open(trader_id)
+
+
+# ---------------------------------------------------------------------------
+# Multi-ref target-aware resolver (Fase 3)
+# ---------------------------------------------------------------------------
+
+_SIDE_MAP = {"LONG": "BUY", "SHORT": "SELL"}
+
+
+def _resolve_action_item(
+    idx: int,
+    action: TargetedAction,
+    trader_id: str,
+    sq: SignalsQuery,
+) -> ResolvedActionItem:
+    mode = action.targeting.mode
+
+    if mode in ("TARGET_GROUP", "EXPLICIT_TARGETS"):
+        position_ids: list[int] = []
+        attempt_keys: list[str] = []
+        for target_id in action.targeting.targets:
+            sig = sq.get_by_root_telegram_id(trader_id, str(target_id))
+            if sig is None:
+                return ResolvedActionItem(
+                    action_index=idx,
+                    action_type=action.action_type,
+                    resolved_position_ids=[],
+                    resolved_attempt_keys=[],
+                    eligibility="NOT_FOUND",
+                    reason=f"target_{target_id}_not_found",
+                )
+            attempt_keys.append(sig.attempt_key)
+            op_id = sq.get_op_signal_id_for_attempt_key(sig.attempt_key)
+            if op_id is not None:
+                position_ids.append(op_id)
+        return ResolvedActionItem(
+            action_index=idx,
+            action_type=action.action_type,
+            resolved_position_ids=position_ids,
+            resolved_attempt_keys=attempt_keys,
+            eligibility="ELIGIBLE",
+            reason=None,
+        )
+
+    if mode == "SELECTOR":
+        selector = action.targeting.selector or {}
+        side_raw = str(selector.get("side", "")).upper()
+        side = _SIDE_MAP.get(side_raw, "")
+        signals = sq.get_open_by_side(trader_id, side) if side else sq.get_all_open(trader_id)
+        if not signals:
+            return ResolvedActionItem(
+                action_index=idx,
+                action_type=action.action_type,
+                resolved_position_ids=[],
+                resolved_attempt_keys=[],
+                eligibility="NOT_FOUND",
+                reason="no_matching_positions",
+            )
+        op_ids: list[int] = []
+        attempt_keys: list[str] = []
+        for sig in signals:
+            attempt_keys.append(sig.attempt_key)
+            op_id = sq.get_op_signal_id_for_attempt_key(sig.attempt_key)
+            if op_id is not None:
+                op_ids.append(op_id)
+        return ResolvedActionItem(
+            action_index=idx,
+            action_type=action.action_type,
+            resolved_position_ids=op_ids,
+            resolved_attempt_keys=attempt_keys,
+            eligibility="ELIGIBLE",
+            reason=None,
+        )
+
+    return ResolvedActionItem(
+        action_index=idx,
+        action_type=action.action_type,
+        resolved_position_ids=[],
+        resolved_attempt_keys=[],
+        eligibility="NOT_FOUND",
+        reason=f"unknown_targeting_mode:{mode}",
+    )
+
+
+def _resolve_report_item(
+    idx: int,
+    report: TargetedReport,
+    trader_id: str,
+    sq: SignalsQuery,
+) -> ResolvedReportItem:
+    mode = report.targeting.mode
+
+    if mode in ("TARGET_GROUP", "EXPLICIT_TARGETS"):
+        position_ids: list[int] = []
+        attempt_keys: list[str] = []
+        for target_id in report.targeting.targets:
+            sig = sq.get_by_root_telegram_id(trader_id, str(target_id))
+            if sig is None:
+                return ResolvedReportItem(
+                    report_index=idx,
+                    event_type=report.event_type,
+                    resolved_position_ids=[],
+                    resolved_attempt_keys=[],
+                    eligibility="NOT_FOUND",
+                    reason=f"target_{target_id}_not_found",
+                )
+            attempt_keys.append(sig.attempt_key)
+            op_id = sq.get_op_signal_id_for_attempt_key(sig.attempt_key)
+            if op_id is not None:
+                position_ids.append(op_id)
+        return ResolvedReportItem(
+            report_index=idx,
+            event_type=report.event_type,
+            resolved_position_ids=position_ids,
+            resolved_attempt_keys=attempt_keys,
+            eligibility="ELIGIBLE",
+            reason=None,
+        )
+
+    if mode == "SELECTOR":
+        selector = report.targeting.selector or {}
+        side_raw = str(selector.get("side", "")).upper()
+        side = _SIDE_MAP.get(side_raw, "")
+        signals = sq.get_open_by_side(trader_id, side) if side else sq.get_all_open(trader_id)
+        if not signals:
+            return ResolvedReportItem(
+                report_index=idx,
+                event_type=report.event_type,
+                resolved_position_ids=[],
+                resolved_attempt_keys=[],
+                eligibility="NOT_FOUND",
+                reason="no_matching_positions",
+            )
+        op_ids: list[int] = []
+        attempt_keys: list[str] = []
+        for sig in signals:
+            attempt_keys.append(sig.attempt_key)
+            op_id = sq.get_op_signal_id_for_attempt_key(sig.attempt_key)
+            if op_id is not None:
+                op_ids.append(op_id)
+        return ResolvedReportItem(
+            report_index=idx,
+            event_type=report.event_type,
+            resolved_position_ids=op_ids,
+            resolved_attempt_keys=attempt_keys,
+            eligibility="ELIGIBLE",
+            reason=None,
+        )
+
+    return ResolvedReportItem(
+        report_index=idx,
+        event_type=report.event_type,
+        resolved_position_ids=[],
+        resolved_attempt_keys=[],
+        eligibility="NOT_FOUND",
+        reason=f"unknown_targeting_mode:{mode}",
+    )
+
+
+def resolve_targeted(
+    canonical: CanonicalMessage,
+    *,
+    trader_id: str,
+    db_path: str,
+) -> MultiRefResolvedResult:
+    """Resolve targeted_actions and targeted_reports in a CanonicalMessage.
+
+    Called only when canonical.targeted_actions is non-empty.
+    Legacy path (TargetResolver.resolve) is used otherwise.
+    """
+    if not canonical.targeted_actions and not canonical.targeted_reports:
+        return MultiRefResolvedResult()
+
+    sq = SignalsQuery(db_path)
+
+    resolved_actions = [
+        _resolve_action_item(idx, action, trader_id, sq)
+        for idx, action in enumerate(canonical.targeted_actions)
+    ]
+    resolved_reports = [
+        _resolve_report_item(idx, report, trader_id, sq)
+        for idx, report in enumerate(canonical.targeted_reports)
+    ]
+
+    return MultiRefResolvedResult(
+        resolved_actions=resolved_actions,
+        resolved_reports=resolved_reports,
+    )

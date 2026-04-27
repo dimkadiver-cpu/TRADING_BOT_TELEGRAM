@@ -15,8 +15,9 @@ class ParseResultV1Record:
     parse_status: str
     confidence: float
     canonical_json: str
-    normalizer_error: str | None
     created_at: str
+    targeted_resolved_json: str | None = None
+    normalizer_error: str | None = None
 
 
 class ParseResultV1Store:
@@ -32,16 +33,18 @@ class ParseResultV1Store:
               parse_status,
               confidence,
               canonical_json,
+              targeted_resolved_json,
               normalizer_error,
               created_at
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             ON CONFLICT(raw_message_id) DO UPDATE SET
               trader_id         = excluded.trader_id,
               primary_class     = excluded.primary_class,
               parse_status      = excluded.parse_status,
               confidence        = excluded.confidence,
               canonical_json    = excluded.canonical_json,
+              targeted_resolved_json = excluded.targeted_resolved_json,
               normalizer_error  = excluded.normalizer_error
         """
         with sqlite3.connect(self._db_path) as conn:
@@ -54,6 +57,7 @@ class ParseResultV1Store:
                     record.parse_status,
                     record.confidence,
                     record.canonical_json,
+                    record.targeted_resolved_json,
                     record.normalizer_error,
                     record.created_at,
                 ),
@@ -63,7 +67,8 @@ class ParseResultV1Store:
     def get_by_raw_message_id(self, raw_message_id: int) -> ParseResultV1Record | None:
         query = """
             SELECT raw_message_id, trader_id, primary_class, parse_status,
-                   confidence, canonical_json, normalizer_error, created_at
+                   confidence, canonical_json, targeted_resolved_json,
+                   normalizer_error, created_at
             FROM parse_results_v1
             WHERE raw_message_id = ?
         """
@@ -78,8 +83,9 @@ class ParseResultV1Store:
             parse_status=row[3],
             confidence=row[4],
             canonical_json=row[5],
-            normalizer_error=row[6],
-            created_at=row[7],
+            targeted_resolved_json=row[6],
+            normalizer_error=row[7],
+            created_at=row[8],
         )
 
     def count_by_class(self) -> dict[str, int]:
@@ -98,3 +104,13 @@ class ParseResultV1Store:
             return json.loads(record.canonical_json)
         except (json.JSONDecodeError, ValueError):
             return None
+
+    def update_targeted_resolved_json(self, raw_message_id: int, payload_json: str) -> None:
+        query = """
+            UPDATE parse_results_v1
+            SET targeted_resolved_json = ?
+            WHERE raw_message_id = ?
+        """
+        with sqlite3.connect(self._db_path) as conn:
+            conn.execute(query, (payload_json, raw_message_id))
+            conn.commit()

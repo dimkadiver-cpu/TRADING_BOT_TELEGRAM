@@ -1,49 +1,28 @@
 {
-  "language": "ru",
+  // Template trader_a riallineato alla struttura comune proposta.
+  // Mantiene il lessico specifico del profilo ma usa la stessa shape del template shared.
+
+  "profile_meta": {
+    "trader_code": "trader_a",
+    "language": "ru",
+    "schema_version": "parser_profile_rules_v1"
+  },
+
   "shared_vocabulary": null,
+
   "number_format": {
     "decimal_separator": ".",
     "thousands_separator": " "
   },
-  "entity_policy": {
-    "market_type": "DECLARED",
-    "entry_order_type": "DECLARED"
-  },
+
   "classification_markers": {
     "new_signal": {
-      "strong": [
-        "вход с текущих",
-        "entry",
-        "sl:",
-        "tp1:",
-        "tp2:",
-        "tp3:",
-        "tp:",
-        "вход:",
-        "усреднение:",
-        "a (с текущих)",
-        "a (лимит)",
-        "b (усреднение)",
-        "b (лимит)",
-        "вход a",
-        "вход b",
-        "вход (a)",
-        "вход (b)",
-        "вход (2-фазный)",
-        "вход лимиткой",
-        "(вход с текущих)",
-        "вход лимитным ордером",
-        "лимитным ордером",
-        "entry a",
-        "entry b",
-        "long setup",
-        "short setup"
-      ],
+      "strong": [],
       "weak": []
     },
     "update": {
       "strong": [
-      "стоп в бу",
+        "стоп в бу",
         "стоп на 1 тейк",
         "стоп на первый тейк",
         "остаток закрываю по текущей цене",
@@ -93,6 +72,7 @@
       ]
     }
   },
+
   "field_markers": {
     "entry": {
       "strong": [
@@ -139,102 +119,35 @@
       "weak": []
     }
   },
-  "global_target_markers": {
-    "ALL_LONGS": [
-      "все лонги",
-      "все мои лонги",
-      "по всем лонгам",
-      "всем лонгам",
-      "моим лонгам",
-      "all longs",
-      "all my longs",
-      "all long positions",
-      "longs"
-    ],
-    "ALL_SHORTS": [
-      "все шорты",
-      "all shorts",
-      "всем моим оставшимся шортам",
-      "моим шортам",
-      "все мои шорты",
-      "по всем шортам",
-      "всем шортам",
-      "по шортам",
-      "по всем моим шортам",
-      "по всем моим оставшимся шортам",
-      "all my shorts",
-      "all short positions",
-      "shorts",
-      "remaining shorts"
-    ],
-    "ALL_ALL": [
-      "все позиции",
-      "все мои позиции",
-      "все свои позиции",
-      "по всем позициям",
-      "всем позициям",
-      "все сделки",
-      "все мои сделки",
-      "all positions",
-      "all trades",
-      "all open positions",
-      "all open trades"
-    ],
-    "ALL_OPEN": [
-      "все открытые позиции",
-      "all open positions",
-      "all open trades"
-    ],
-    "ALL_REMAINING": [
-      "все оставшиеся позиции",
-      "все оставшиеся сделки",
-      "по всем моим оставшимся шортам",
-      "по всем оставшимся шортам",
-      "оставшимся шортам",
-      "remaining positions",
-      "remaining shorts"
-    ]
-  },
 
   "classification_rules": [
     {
       "name": "complete_new_signal_structure",
-      "when_all_fields_present": [
-        "entry",
-        "stop_loss",
-        "take_profit"
-      ],
+      "when_all_fields_present": ["entry", "stop_loss", "take_profit"],
       "then": "new_signal",
       "score": 1.0
     },
     {
       "name": "partial_new_signal_structure",
-      "when_all_fields_present": [
-        "entry",
-        "stop_loss"
-      ],
+      "when_all_fields_present": ["entry", "stop_loss"],
       "then": "new_signal",
       "score": 0.7
     }
   ],
+
   "combination_rules": [
     {
-      "if": [
-        "вход",
-        "sl:"
-      ],
+      "if": ["вход", "sl:"],
       "then": "new_signal",
       "confidence_boost": 0.4
     },
     {
-      "if": [
-        "стоп в бу",
-        "тейк"
-      ],
+      "if": ["стоп в бу", "тейк"],
       "then": "update",
       "confidence_boost": 0.3
     }
   ],
+
   "intent_markers": {
     "MOVE_STOP_TO_BE": {
       "strong": [
@@ -287,11 +200,9 @@
         "стоп на второй тейк",
         "стоп переношу на"
       ],
-      "weak": [
-        "стоп на "
-      ]
+      "weak": ["стоп на "]
     },
-   "CLOSE_FULL": {
+    "CLOSE_FULL": {
       "strong": [
         "прикроем ее",
         "закрываю по текущей",
@@ -315,18 +226,14 @@
         "фиксирую все позиции",
         "закрываю",
         "прикроем",
-        "закрываю у",
         "фиксирую все",
+        "закрыта",
         "закрою по текущим",
-        "закрыть по текущим",
-        "фиксирую по текущим",
-        "закрыл по текущим"
+        "закрыть по текущим"
       ],
-      "weak": [
-        "закрыта"
-      ]
+      "weak": []
     },
-  "CLOSE_PARTIAL": {
+    "CLOSE_PARTIAL": {
       "strong": [
         "фикс 50%",
         "фиксирую 50%",
@@ -346,29 +253,32 @@
         "половину"
       ]
     },
-    "CANCEL_PENDING_ORDERS": [
-      "уберем лимитки",
-      "убираем лимитки",
-      "отменяем лимитки",
-      "снять все лимитные ордера",
-      "снять лимитки",
-      "снимаем лимитные ордера",
-      "снимаем лимитки",
-      "снять лимитные ордера",
-      "убрать все лимитные ордера",
-      "лимитку убираем",
-      "Лимитку на усреднение убираем",
-      "убираем лимтку",
-      "убираем лимитку",
-      "убрать лимитку",
-      "отменяем лимитку",
-      "отменить лимитки",
-      "отменить лимитный ордер",
-      "лимитку на усреднение обязательно убираем",
-      "лимитку на усреднение убираем",
-      "снимаем лимитку",
-      "уберем лимитку"
-    ],
+    "CANCEL_PENDING_ORDERS": {
+      "strong": [
+        "уберем лимитки",
+        "убираем лимитки",
+        "отменяем лимитки",
+        "снять все лимитные ордера",
+        "снять лимитки",
+        "снимаем лимитные ордера",
+        "снимаем лимитки",
+        "снять лимитные ордера",
+        "убрать все лимитные ордера",
+        "лимитку убираем",
+        "Лимитку на усреднение убираем",
+        "убираем лимтку",
+        "убираем лимитку",
+        "убрать лимитку",
+        "отменяем лимитку",
+        "отменить лимитки",
+        "отменить лимитный ордер",
+        "лимитку на усреднение обязательно убираем",
+        "лимитку на усреднение убираем",
+        "снимаем лимитку",
+        "уберем лимитку"
+      ],
+      "weak": []
+    },
     "INVALIDATE_SETUP": {
       "strong": [
         "тут отмена",
@@ -382,8 +292,7 @@
     "REENTER": {
       "strong": [
         "перезайдем",
-        "перезаходим",
-        "заходим по текущим заново"
+        "перезаходим"
       ],
       "weak": []
     },
@@ -524,6 +433,7 @@
       "weak": []
     }
   },
+
   "side_markers": {
     "long": [
       "long",
@@ -534,11 +444,13 @@
       "шорт"
     ]
   },
+
   "market_context_markers": {
     "spot": [],
     "futures": [],
     "margin": []
   },
+
   "entry_order_markers": {
     "market": [
       "вход с текущих",
@@ -551,6 +463,9 @@
       "лимитным ордером"
     ]
   },
+
+  // Riferimenti forti/deboli al segnale originale.
+  // Serve per linking, reply targeting e bridge verso target resolver shared. 
   "target_markers": {
     "strong": {
       "telegram_link": [
@@ -599,10 +514,12 @@
         ]
       }
     },
+
     "weak": {
       "pronouns": []
     }
   },
+
   "target_ref_markers": {
     "strong": {
       "telegram_link": [
@@ -619,25 +536,23 @@
       "pronouns": []
     }
   },
+
+
   "action_scope_groups": {
-    "all_positions": [
-      "ALL_POSITIONS",
-      "ALL_OPEN",
-      "ALL_REMAINING"
-    ],
-    "all_long": [
-      "ALL_LONGS"
-    ],
-    "all_short": [
-      "ALL_SHORTS"
-    ]
+    "all_positions": ["ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"],
+    "all_long": ["ALL_LONGS"],
+    "all_short": ["ALL_SHORTS"]
   },
+
   "entity_hints": {
     "market_type_default": "UNKNOWN",
     "entry_type_default": "LIMIT"
   },
+
   "symbol_aliases": {},
+
   "ignore_markers": [],
+
   "partial_exit_markers": [
     "фикс",
     "фикс 50%",
@@ -658,8 +573,7 @@
     "закрываем полностью",
     "все тейки",
     "закрываю все позиции",
-    "закрываю полностью",
-    "сделка закрылась"
+    "закрываю полностью"
   ],
   "result_markers": [
     "профит",
@@ -676,135 +590,53 @@
     "итого",
     "результаты"
   ],
+
   "disambiguation_rules": {
-    "rules": [
+    "prefer_rules": [
       {
-        "name": "prefer_be_over_move_stop",
-        "action": "prefer",
-        "when_all_detected": [
-          "MOVE_STOP_TO_BE",
-          "MOVE_STOP"
-        ],
+        "when_all_detected": ["MOVE_STOP_TO_BE", "MOVE_STOP"],
         "prefer": "MOVE_STOP_TO_BE",
-        "if_contains_any": [
-          "bu",
-          "breakeven",
-          "бу",
-          "безубыток"
-        ]
+        "if_contains_any": []
       },
       {
-        "name": "prefer_exit_be_over_close_full",
-        "action": "prefer",
-        "when_all_detected": [
-          "EXIT_BE",
-          "CLOSE_FULL"
-        ],
+        "when_all_detected": ["EXIT_BE", "MOVE_STOP_TO_BE"],
         "prefer": "EXIT_BE",
-        "if_contains_any": [
-          "ушел в бу",
-          "закрылся в бу",
-          "закрылась в безубыток",
-          "closed at breakeven",
-          "stopped at be"
-        ]
+        "if_contains_any": []
       },
       {
-        "name": "suppress_close_full_if_partial",
-        "action": "suppress",
-        "when_all_detected": [
-          "CLOSE_FULL",
-          "CLOSE_PARTIAL"
-        ],
-        "suppress": [
-          "CLOSE_FULL"
-        ]
-      },
-      {
-        "name": "keep_sl_and_close",
-        "action": "keep_multi",
-        "when_all_detected": [
-          "SL_HIT",
-          "CLOSE_FULL"
-        ],
-        "keep": [
-          "SL_HIT",
-          "CLOSE_FULL"
-        ]
+        "when_all_detected": ["ENTRY_FILLED", "NEW_SETUP"],
+        "prefer": "ENTRY_FILLED",
+        "if_contains_any": []
       }
-    ]
+    ],
+    "report_final_result_if_result_pattern_present": false,
+    "allow_multi_intent": true
   },
-  "intent_compatibility": {
-    "pairs": [
-      {
-        "intents": [
-          "MOVE_STOP_TO_BE",
-          "MOVE_STOP"
-        ],
-        "relation": "specific_vs_generic",
-        "preferred": "MOVE_STOP_TO_BE",
-        "requires_resolution": true
+
+  // Riferimenti forti/deboli al segnale originale.
+  // Sereve per disambiguazione tra update di setup (es. STOP_TO_BE) e exit reale (EXIT_BE) quando ci sono segnali contrastanti.
+
+  "context_resolution_rules": [
+    {
+      "name": "weak_be_with_target_ref_can_mean_exit_be",
+      "when": {
+        "has_weak_intent": "EXIT_BE",
+        "has_target_ref": true,
+        "message_has_no_strong_markers_for": ["STOP_TO_BE"]
       },
-      {
-        "intents": [
-          "EXIT_BE",
-          "CLOSE_FULL"
-        ],
-        "relation": "specific_vs_generic",
-        "preferred": "EXIT_BE",
-        "requires_resolution": true,
-        "requires_context_validation": true
-      },
-      {
-        "intents": [
-          "TP_HIT",
-          "REPORT_FINAL_RESULT"
-        ],
-        "relation": "compatible",
-        "requires_resolution": false
-      },
-      {
-        "intents": [
-          "SL_HIT",
-          "CLOSE_FULL"
-        ],
-        "relation": "exclusive",
-        "requires_resolution": true
-      }
-    ]
-  },
-  "context_resolution_rules": {
-    "rules": [
-      {
-        "name": "exit_be_requires_history",
-        "action": "resolve_as",
-        "when": {
-          "has_weak_intent": "EXIT_BE",
-          "has_target_ref": true
-        },
-        "if_target_history_has_any": [
-          "NEW_SETUP",
-          "MOVE_STOP_TO_BE",
-          "MOVE_STOP"
-        ],
-        "resolve_as": "EXIT_BE",
-        "otherwise_resolve_as": "INFO_ONLY"
-      },
-      {
-        "name": "update_requires_target",
-        "action": "resolve_as",
-        "when": {
-          "has_any_intent": [
-            "MOVE_STOP_TO_BE"
-          ],
-          "has_target_ref": true,
-          "message_type_hint_in": [
-            "UPDATE"
-          ]
-        },
-        "resolve_as": "MOVE_STOP_TO_BE",
-        "otherwise_resolve_as": "INFO_ONLY"
-      }
-    ]
-  }
+      "if_target_history_has_any": ["NEW_SETUP", "STOP_TO_BE"],
+      "resolve_as": "EXIT_BE"
+    }
+  ],
+
+  "blacklist": [
+    "# админ",
+    "это админ",
+    "старт:",
+    "финиш:",
+    "#admin",
+    "не является индивидуальной инвестиционной рекомендацией",
+    "не иир",
+    "не финансовый совет"
+  ]
 }

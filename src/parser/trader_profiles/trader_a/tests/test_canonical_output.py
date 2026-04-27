@@ -9,13 +9,20 @@ from src.parser.trader_profiles.base import ParserContext
 from src.parser.trader_profiles.trader_a.profile import TraderAProfileParser
 
 
-def _ctx(*, text: str, reply_to: int | None = None, links: list[str] | None = None) -> ParserContext:
+def _ctx(
+    *,
+    text: str,
+    reply_to: int | None = None,
+    links: list[str] | None = None,
+    reply_raw_text: str | None = None,
+) -> ParserContext:
     return ParserContext(
         trader_code="trader_a",
         message_id=5100,
         reply_to_message_id=reply_to,
         channel_id="-1001",
         raw_text=text,
+        reply_raw_text=reply_raw_text,
         extracted_links=links or [],
         hashtags=[],
     )
@@ -104,6 +111,62 @@ class TestTraderACanonicalUpdate(unittest.TestCase):
         self.assertEqual(msg.targeting.strategy, "GLOBAL_SCOPE")
         self.assertEqual(msg.targeting.scope.kind, "PORTFOLIO_SIDE")
         self.assertEqual(msg.targeting.scope.side_filter, "SHORT")
+
+
+    def test_reply_closed_in_be_with_parent_signal_stays_report_exit_be(self) -> None:
+        text = "\u0437\u0430\u043a\u0440\u044b\u043b\u0430\u0441\u044c \u0432 \u0431\u0443"
+        parent_text = "BTCUSDT long entry 62000 sl 61000 tp1 63000"
+        msg = self.parser.parse_canonical(
+            text,
+            _ctx(text=text, reply_to=701, reply_raw_text=parent_text),
+        )
+        self.assertEqual(msg.primary_class, "REPORT")
+        self.assertEqual(msg.parse_status, "PARSED")
+        self.assertEqual(msg.intents, ["EXIT_BE"])
+        self.assertEqual(msg.primary_intent, "EXIT_BE")
+        self.assertIn("semantic_resolver", msg.diagnostics)
+        self.assertEqual(msg.diagnostics["semantic_resolver"]["final_intents"], ["EXIT_BE"])
+        self.assertEqual(msg.warnings, [])
+        assert msg.report is not None
+        self.assertEqual([event.event_type for event in msg.report.events], ["BREAKEVEN_EXIT"])
+
+    def test_reply_closed_in_be_without_parent_history_degrades_to_info(self) -> None:
+        text = "\u0437\u0430\u043a\u0440\u044b\u043b\u0430\u0441\u044c \u0432 \u0431\u0443"
+        msg = self.parser.parse_canonical(text, _ctx(text=text, reply_to=702))
+        self.assertEqual(msg.primary_class, "INFO")
+        self.assertEqual(msg.parse_status, "PARSED")
+        self.assertEqual(msg.intents, ["INFO_ONLY"])
+        self.assertEqual(msg.primary_intent, "INFO_ONLY")
+        self.assertIn("semantic_resolver", msg.diagnostics)
+        self.assertEqual(msg.diagnostics["semantic_resolver"]["final_intents"], ["INFO_ONLY"])
+        self.assertIsNone(msg.update)
+        self.assertIsNone(msg.report)
+
+    def test_update_without_target_degrades_to_info_via_semantic_resolver(self) -> None:
+        text = "\u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430"
+        msg = self.parser.parse_canonical(text, _ctx(text=text))
+        self.assertEqual(msg.primary_class, "INFO")
+        self.assertEqual(msg.parse_status, "PARSED")
+        self.assertEqual(msg.intents, ["INFO_ONLY"])
+        self.assertEqual(msg.primary_intent, "INFO_ONLY")
+        self.assertIn("trader_a_update_missing_target", msg.warnings)
+        self.assertIn("semantic_resolver", msg.diagnostics)
+        self.assertEqual(msg.diagnostics["semantic_resolver"]["final_intents"], ["INFO_ONLY"])
+
+    def test_stop_hit_and_close_full_keep_both_and_prefer_stop_hit(self) -> None:
+        text = "\u0441\u0442\u043e\u043f, \u0437\u0430\u043a\u0440\u044b\u0432\u0430\u044e \u043e\u0441\u0442\u0430\u0442\u043e\u043a \u043f\u043e \u0442\u0435\u043a\u0443\u0449\u0438\u043c"
+        msg = self.parser.parse_canonical(text, _ctx(text=text, reply_to=703))
+        self.assertEqual(msg.primary_class, "UPDATE")
+        self.assertEqual(msg.intents, ["CLOSE_FULL"])
+        self.assertEqual(msg.primary_intent, "CLOSE_FULL")
+        self.assertIn("semantic_resolver", msg.diagnostics)
+        self.assertEqual(
+            msg.diagnostics["semantic_resolver"]["final_intents"],
+            ["CLOSE_FULL"],
+        )
+        assert msg.update is not None
+        close_ops = [op for op in msg.update.operations if op.op_type == "CLOSE"]
+        self.assertEqual(len(close_ops), 1)
 
 
 class TestTraderACanonicalReportAndInfo(unittest.TestCase):

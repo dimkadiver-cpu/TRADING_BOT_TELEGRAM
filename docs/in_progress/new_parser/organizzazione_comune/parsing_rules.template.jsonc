@@ -1,0 +1,244 @@
+{
+  // Template unico target per tutti i trader profile parser.
+  // Usa i nomi intent semplificati della proposta architetturale.
+  // Copre anche tutte le sezioni oggi presenti nei parsing_rules.json reali.
+
+  "profile_meta": {
+    "trader_code": "trader_x",
+    "language": "ru",
+    "schema_version": "parser_profile_rules_v1"
+  },
+
+  // Facoltativo: utile come ponte durante la migrazione dai profili legacy.
+  "shared_vocabulary": null,
+
+  "number_format": {
+    "decimal_separator": ".",
+    "thousands_separator": " "
+  },
+
+  // Marker usati per la classificazione primaria del messaggio.
+  // Normalizzare sempre alla shape strong/weak, anche se un profilo oggi usa liste flat.
+  "classification_markers": {
+    "new_signal": {
+      "strong": [],
+      "weak": []
+    },
+    "update": {
+      "strong": [],
+      "weak": []
+    },
+    "info_only": {
+      "strong": [],
+      "weak": []
+    }
+  },
+
+  // Marker strutturali per campo.
+  // Servono a distinguere i blocchi del setup dal semplice lessico di classificazione.
+  "field_markers": {
+    "entry": {
+      "strong": [],
+      "weak": []
+    },
+    "stop_loss": {
+      "strong": [],
+      "weak": []
+    },
+    "take_profit": {
+      "strong": [],
+      "weak": []
+    }
+  },
+
+  // Regole strutturali di classificazione.
+  // Permettono di promuovere NEW_SIGNAL quando coesistono i campi tipici del setup.
+  "classification_rules": [
+    {
+      "name": "complete_new_signal_structure",
+      "when_all_fields_present": ["entry", "stop_loss", "take_profit"],
+      "then": "new_signal",
+      "score": 1.0
+    },
+    {
+      "name": "partial_new_signal_structure",
+      "when_all_fields_present": ["entry", "stop_loss"],
+      "then": "new_signal",
+      "score": 0.7
+    }
+  ],
+
+  // Regole di rafforzamento classificazione quando piu indizi coesistono.
+  "combination_rules": [
+    {
+      "if": [],
+      "then": "new_signal",
+      "confidence_boost": 0.0
+    }
+  ],
+
+  // Tassonomia intent comune semplificata.
+  // Ogni intent distingue marker forti e deboli.
+  // I marker deboli non bastano da soli: vanno risolti con disambiguation/context rules.
+  "intent_markers": {
+    "MOVE_STOP_TO_BE": {
+      "strong": [],
+      "weak": []
+    },
+    "MOVE_STOP": {
+      "strong": [],
+      "weak": []
+    },
+    "CLOSE_FULL": {
+      "strong": [],
+      "weak": []
+    },
+    "CLOSE_PARTIAL": {
+      "strong": [],
+      "weak": []
+    },
+    "CANCEL_PENDING_ORDERS": {
+      "strong": [],
+      "weak": []
+    },
+    "INVALIDATE_SETUP": {
+      "strong": [],
+      "weak": []
+    },
+    "REENTER": {
+      "strong": [],
+      "weak": []
+    },
+    "ADD_ENTRY": {
+      "strong": [],
+      "weak": []
+    },
+    "UPDATE_TAKE_PROFITS": {
+      "strong": [],
+      "weak": []
+    },
+    "ENTRY_FILLED": {
+      "strong": [],
+      "weak": []
+    },
+    "TP_HIT": {
+      "strong": [],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong": [],
+      "weak": []
+    },
+    "EXIT_BE": {
+      "strong": [],
+      "weak": []
+    },
+    "REPORT_FINAL_RESULT": {
+      "strong": [],
+      "weak": []
+    },
+    "REPORT_PARTIAL_RESULT": {
+      "strong": [],
+      "weak": []
+    }
+  },
+
+  // Vocabolario opzionale per side quando non si vuole hardcodare nei parser.
+  "side_markers": {
+    "long": [],
+    "short": []
+  },
+
+  // Context di mercato osservato nei profili reali: spot, futures, margin, ecc.
+  "market_context_markers": {
+    "spot": [],
+    "futures": [],
+    "margin": []
+  },
+
+  // Marker per dedurre il tipo di entry order.
+  "entry_order_markers": {
+    "market": [],
+    "limit": []
+  },
+
+ 
+
+  // Compat section legacy: oggi diversi parser usano ancora questa shape.
+  // Tenerla nel template aiuta a migrare senza perdere copertura.
+  "target_markers": {
+    "strong": {
+      "telegram_link": [],
+      "explicit_id": [],
+      "global_scope": {
+        "ALL_LONGS": [],
+        "ALL_SHORTS": [],
+        "ALL_POSITIONS": [],
+        "ALL_OPEN": [],
+        "ALL_REMAINING": []
+      }
+    },
+    "weak": {
+      "pronouns": []
+    }
+  },
+
+
+  // Grouping dichiarativo degli scope per azione.
+  // Tenerlo qui ha senso solo se puo variare per profilo.
+  "action_scope_groups": {
+    "all_positions": ["ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"],
+    "all_long": ["ALL_LONGS"],
+    "all_short": ["ALL_SHORTS"]
+  },
+
+  // Hint di default per normalizzare entity raw senza introdurre logica business nel profilo.
+  "entity_hints": {
+    "market_type_default": "UNKNOWN",
+    "entry_type_default": "LIMIT"
+  },
+
+  // Alias simboli / ticker osservati in alcuni trader.
+  "symbol_aliases": {},
+
+  // Marker da ignorare prima della classificazione o detection intents.
+  "ignore_markers": [],
+
+  // Lessico trader-specifico per distinguere report/close parziali e finali.
+  "partial_exit_markers": [],
+  "final_exit_markers": [],
+  "result_markers": [],
+
+  // Regole di disambiguazione: sciolgono conflitti tra intent concorrenti.
+  // Preferire shape esplicita e non chiavi ad hoc hardcoded.
+  "disambiguation_rules": {
+    "prefer_rules": [
+      {
+        "when_all_detected": [],
+        "prefer": "",
+        "if_contains_any": []
+      }
+    ],
+    "report_final_result_if_result_pattern_present": false,
+    "allow_multi_intent": true
+  },
+
+  // Regole contestuali: usano target_ref e storico del segnale target.
+  // Servono quando i marker lessicali da soli non bastano, ad esempio "бу".
+  "context_resolution_rules": [
+    {
+      "name": "name_of_rule",
+      "when": {
+        "has_weak_intent": "",
+        "has_target_ref": true,
+        "message_has_no_strong_markers_for": []
+      },
+      "if_target_history_has_any": [],
+      "resolve_as": ""
+    }
+  ],
+
+  // Messaggi da scartare a monte.
+  "blacklist": []
+
+}

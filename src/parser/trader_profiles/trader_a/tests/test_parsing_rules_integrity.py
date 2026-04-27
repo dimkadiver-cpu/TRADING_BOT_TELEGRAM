@@ -4,6 +4,10 @@ import json
 from pathlib import Path
 import unittest
 
+from src.parser.rules_engine import RulesEngine
+from src.parser.shared.context_resolution_schema import ContextResolutionRulesBlock
+from src.parser.shared.disambiguation_rules_schema import DisambiguationRulesBlock
+from src.parser.shared.intent_compatibility_schema import IntentCompatibilityBlock
 from src.parser.trader_profiles.base import ParserContext
 from src.parser.trader_profiles.trader_a.profile import TraderAProfileParser
 
@@ -34,7 +38,8 @@ class TraderAParsingRulesIntegrityTests(unittest.TestCase):
         self.assertIn("вход (a)", new_signal)
         self.assertIn("вход (b)", new_signal)
 
-        cancel_markers = payload["intent_markers"]["U_CANCEL_PENDING_ORDERS"]
+        self.assertNotIn("U_CANCEL_PENDING_ORDERS", payload["intent_markers"])
+        cancel_markers = payload["intent_markers"]["CANCEL_PENDING_ORDERS"]
         self.assertIn("уберем лимитки", cancel_markers)
         self.assertIn("убираем лимитки", cancel_markers)
         self.assertIn("отменяем лимитки", cancel_markers)
@@ -69,6 +74,30 @@ class TraderAParsingRulesIntegrityTests(unittest.TestCase):
         text = "рекомендую снимаем лимитные ордера"
         result = parser.parse_message(text, _context(text))
         self.assertIn("U_CANCEL_PENDING_ORDERS", result.intents)
+
+
+    def test_semantic_resolution_blocks_are_present_and_schema_valid(self) -> None:
+        payload = json.loads(_RULES_PATH.read_text(encoding="utf-8"))
+
+        compatibility = IntentCompatibilityBlock.model_validate(
+            payload["intent_compatibility"]
+        )
+        disambiguation = DisambiguationRulesBlock.model_validate(
+            payload["disambiguation_rules"]
+        )
+        context_resolution = ContextResolutionRulesBlock.model_validate(
+            payload["context_resolution_rules"]
+        )
+
+        self.assertGreaterEqual(len(compatibility.pairs), 4)
+        self.assertGreaterEqual(len(disambiguation.rules), 3)
+        self.assertGreaterEqual(len(context_resolution.rules), 2)
+
+    def test_rules_engine_loads_profile_with_semantic_resolution_blocks(self) -> None:
+        engine = RulesEngine.load(_RULES_PATH)
+        self.assertIn("intent_compatibility", engine.raw_rules)
+        self.assertIn("disambiguation_rules", engine.raw_rules)
+        self.assertIn("context_resolution_rules", engine.raw_rules)
 
 
 if __name__ == "__main__":

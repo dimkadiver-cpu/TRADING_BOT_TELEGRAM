@@ -20,7 +20,7 @@ def test_registry_resolves_trader_d():
 
 def test_new_signal_sets_v2_semantic_envelope():
     parser = TraderDProfileParser()
-    text = "BTCUSDT long\nentry: 65000\nsl: 63000\ntp1: 66000"
+    text = "BTCUSDT long\nВход с текущих: 65000\nSL: 63000\nTP1: 66000"
 
     result = parser.parse_message(text=text, context=_context(text))
 
