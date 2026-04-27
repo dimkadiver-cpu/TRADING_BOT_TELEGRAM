@@ -1,1 +1,107 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,signal_id,target_refs_count,links_count,hashtags_count,validation_warning_count,diagnostics_summary,notes_summary
+1918,PARSED,823,,,,,,,,823,1,0,0,0,warning_count=0,
+1806,PARSED,971,тут стоп,,,,,,,971,1,0,0,0,warning_count=0,
+1805,PARSED,972,и тут стоп,,,,,,,972,1,0,0,0,warning_count=0,
+1799,PARSED,963,тоже стоп,,,,,,,963,1,0,0,0,warning_count=0,
+1743,PARSED,1034,Первый пятничный тейк. Поздравляю,,,,,,,1034,1,0,0,0,warning_count=0,
+1722,PARSED,1037,"начинаем субботу с тейка, поздравляю",,,,,,,1037,1,0,0,0,warning_count=0,
+1691,PARSED,1084,"тоже самое, что и выше
+
+стоп",,,,,,,1084,1,0,0,0,warning_count=0,
+1688,PARSED,,"[trader#A]
+
+PEOPLE - https://t.me/c/3171748254/1034 
+SXP - https://t.me/c/3171748254/1036 
+QTUM - https://t.me/c/3171748254/1038 
+HYPE - https://t.me/c/3171748254/1044
+JTO - https://t.me/c/3171748254/1081
+MANA - https://t.me/c/3171748254/1083
+
+
+Эти сделки продолжаю держать",,,,,,,,6,0,0,0,warning_count=0,
+1616,PARSED,,"[trader#A]
+
+MANA - https://t.me/c/3171748254/1083
+SOL - https://t.me/c/3171748254/1159
+LINK - https://t.me/c/3171748254/1160
+SUI - https://t.me/c/3171748254/1168
+
+Должны остаться в работе. Ближе к вечеру гляну, что можно открыть",,,,,,,,4,0,0,0,warning_count=0,
+1389,PARSED,,"[trader#A]
+
+HOOK лонг с текущих.
+Остальные данные чуть позже",,,,,,,,0,0,0,0,warning_count=0,
+1388,PARSED,,"[trader#A]
+
+KAS лонг с текущих.
+Остальные данные чуть позже",,,,,,,,0,0,0,0,warning_count=0,
+1387,PARSED,,"[trader#A]
+
+STORJ лонг с текущих.
+Остальные данные чуть позже",,,,,,,,0,0,0,0,warning_count=0,
+1385,PARSED,,"[trader#A]
+
+TLM лонг с текущих.
+Остальные данные чуть позже
+
+финальная от меня",,,,,,,,0,0,0,0,warning_count=0,
+1309,PARSED,,"[trader#A]
+
+#среднесрок #MOVRUSDT 🐻 Шорт (вход с текущих)
+
+""sl"": 2.676,
+
+полная информация чуть позже",,,,,,,,0,0,0,0,warning_count=0,
+1174,PARSED,1832,Также б/у,,,,,,,1832,1,0,0,0,warning_count=0,
+1067,PARSED,2093,Зайду по текущим,,,,,,,2093,1,0,0,0,warning_count=0,
+999,PARSED,2195,Тут отмена,,,U_INVALIDATE_SETUP,U_INVALIDATE_SETUP,,,2195,1,0,0,0,warning_count=0,
+993,PARSED,2203,"тоже отбой
+всем хорошего вечера",,,U_INVALIDATE_SETUP,U_INVALIDATE_SETUP,,,2203,1,0,0,0,warning_count=0,
+937,PARSED,2287,тут отмена,,,U_INVALIDATE_SETUP,U_INVALIDATE_SETUP,,,2287,1,0,0,0,warning_count=0,
+915,PARSED,2294,"тут отмена, вечером уже активно поторгуем",,,U_INVALIDATE_SETUP,U_INVALIDATE_SETUP,,,2294,1,0,0,0,warning_count=0,
+912,PARSED,,"trader #A
+
+Начинаем марафон, ожидайте сделки",,,,,,,,0,0,0,0,warning_count=0,
+900,PARSED,,"trader #A
+
+пока ждем",,,,,,,,0,0,0,0,warning_count=0,
+851,PARSED,2371,Заходим по текущим заново,,,,,,,2371,1,0,0,0,warning_count=0,
+850,PARSED,2360,Тоже заходим по текущим заново,,,,,,,2360,1,0,0,0,warning_count=0,
+845,PARSED,2397,Отмена,,,U_INVALIDATE_SETUP,U_INVALIDATE_SETUP,,,2397,1,0,0,0,warning_count=0,
+843,PARSED,2234,эту тоже возвращаем,,,,,,,2234,1,0,0,0,warning_count=0,
+826,PARSED,2348,Актуально,,,,,,,2348,1,0,0,0,warning_count=0,
+777,PARSED,2481,,,,,,,,2481,1,0,0,0,warning_count=0,
+756,PARSED,,"Trader #A
+
+Пока все, ждем лимиток и тейков
+Всего 7 сигналов в работе
+из них 3 уже торгуются, 4 сигнала ждут взятия лимиток",,,,,,,,0,0,0,0,warning_count=0,
+647,PARSED,2681,,,,,,,,2681,1,0,0,0,warning_count=0,
+611,PARSED,2708,продолжаем,,,,,,,2708,1,0,0,0,warning_count=0,
+599,PARSED,2739,тут уже вход с текущих,,,,,,,2739,1,0,0,0,warning_count=0,
+597,PARSED,,"[trader #A]
+
+на этом пока все, ожидаем лимитки и тейки
+
+Скорее всего лимитки будем переносить в ночь и уже завтра утром решу, что с ними делать, либо нас порадуют тейками😊",,,,,,,,0,0,0,0,warning_count=0,
+573,PARSED,2772,точка входа 84.86,,,,,,,2772,1,0,0,0,warning_count=0,
+550,PARSED,2809,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",,,,,,,2809,1,0,0,0,warning_count=0,
+525,PARSED,2851,Тут с текущих,,,,,,,2851,1,0,0,0,warning_count=0,
+521,PARSED,2855,тут отмена,,,U_INVALIDATE_SETUP,U_INVALIDATE_SETUP,,,2855,1,0,0,0,warning_count=0,
+476,PARSED,2881,"Этот наконец-то вспомнил, что он интрадей, а не среднесрок…",,,,,,,2881,1,0,0,0,warning_count=0,
+471,PARSED,,"Trader #A 
+
+WOO и ATP стопы в бу",trader_a_ambiguous_update_without_target,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,0,0,0,0,warning_count=1,
+470,PARSED,,"Trader #A 
+
+PYTH тоже стоп в бу",trader_a_ambiguous_update_without_target,,U_MOVE_STOP_TO_BE,U_MOVE_STOP_TO_BE,MOVE_STOP,MOVE_STOP(new_stop_level=ENTRY),,0,0,0,0,warning_count=1,
+277,PARSED,,"Trader #A
+
+Doge
+LDO
+SOL
+BTC
+ETH
+
+стоп двигаем в бу",,,,,,,,0,0,0,0,warning_count=0,
+53,PARSED,3459,"отбой, поторопился. у меня почему-то стоял другой тейк",,,,,,,3459,1,0,0,0,warning_count=0,

@@ -1,2 +1,4560 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,market_type,completeness,confidence,parser_used,parser_mode,status,entry_plan_type,entry_structure,has_averaging_plan,entry_count,entries_summary,stop_loss_price,tp_prices,tp_count,signal_id,target_refs,target_refs_count,linking_strategy,notes_summary,links_count,hashtags_count,validation_warning_count,diagnostics_summary
-1,PARSED,,BTCUSDT long entry 100 sl 90 tp1 110,,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(symbol=BTCUSDT; entry_plan_type=SINGLE_LIMIT),BTCUSDT,LONG,LINEAR,,0.91,regex,regex_only,PARSED,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:100,90,110,1,1,1,1,reply_or_link,,0,0,0,parser_mode=regex_only
+1975,PARSED,,"[trader#A]
+
+#ENAUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.2373
+— Усреднение: нет
+
+— SL: 0.2279 🛡 (~4.0% риска)
+
+🎯 Тейки:
+— TP1: 0.2514 (~+6.0%, ≈1.5R)
+— TP2: 0.2656 (~+11.9%, ≈3.0R)
+— TP3: 0.2797 (~+17.9%, ≈4.5R)
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2514 | 0.2656 | 0.2797; entries=0.2373),ENAUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2373,0.2279,0.2514 | 0.2656 | 0.2797,3,1975,,0,unresolved,,0,0,0,warning_count=0
+1974,PARSED,,"[trader#A]
+
+#DASHUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 46.9800
+— Усреднение: нет
+
+— SL: 45.0507 🛡 (~4.1% риска)
+
+🎯 Тейки:
+— TP1: 49.8739 (~+6.2%, ≈1.5R)
+— TP2: 52.7679 (~+12.3%, ≈3.0R)
+— TP3: 55.6618 (~+18.5%, ≈4.5R)
+
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=49.8739 | 52.7679 | 55.6618; entries=46.98),DASHUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:46.98,45.0507,49.8739 | 52.7679 | 55.6618,3,1974,,0,unresolved,,0,0,0,warning_count=0
+1961,PARSED,,"[trader#A]
+
+#ADAUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.4284
+— Усреднение: нет
+
+— SL: 0.4161 🛡 (~2.9% риска)
+
+🎯 Тейки:
+— TP1: 0.4468 (~+4.3%, ≈1.5R)
+— TP2: 0.4652 (~+8.6%, ≈3.0R)
+— TP3: 0.4836 (~+12.9%, ≈4.5R)
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.4468 | 0.4652 | 0.4836; entries=0.4284),ADAUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.4284,0.4161,0.4468 | 0.4652 | 0.4836,3,1961,,0,unresolved,,0,0,0,warning_count=0
+1960,PARSED,,"[trader#A]
+
+#ICPUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 3.8730
+— Усреднение: нет
+
+— SL: 3.7369 🛡 (~3.5% риска)
+
+🎯 Тейки:
+— TP1: 4.0771 (~+5.3%, ≈1.5R)
+— TP2: 4.2812 (~+10.5%, ≈3.0R)
+— TP3: 4.4853 (~+15.8%, ≈4.5R)
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=4.0771 | 4.2812 | 4.4853; entries=3.873),ICPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:3.873,3.7369,4.0771 | 4.2812 | 4.4853,3,1960,,0,unresolved,,0,0,0,warning_count=0
+1959,PARSED,,"[trader#A]
+
+#ARBUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.2152
+— Усреднение: нет
+
+— SL: 0.2079 🛡 (~3.4% риска)
+
+🎯 Тейки:
+— TP1: 0.2261 (~+5.1%, ≈1.5R)
+— TP2: 0.2370 (~+10.1%, ≈3.0R)
+— TP3: 0.2480 (~+15.2%, ≈4.5R)
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2261 | 0.237 | 0.248; entries=0.2152),ARBUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2152,0.2079,0.2261 | 0.237 | 0.248,3,1959,,0,unresolved,,0,0,0,warning_count=0
+1958,PARSED,,"[trader#A]
+
+#SEIUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.1393
+— Усреднение: нет
+
+— SL: 0.1343 🛡 (~3.6% риска)
+
+🎯 Тейки:
+— TP1: 0.1468 (~+5.4%, ≈1.5R)
+— TP2: 0.1542 (~+10.7%, ≈3.0R)
+— TP3: 0.1617 (~+16.1%, ≈4.5R)
+
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1468 | 0.1542 | 0.1617; entries=0.1393),SEIUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1393,0.1343,0.1468 | 0.1542 | 0.1617,3,1958,,0,unresolved,,0,0,0,warning_count=0
+1957,PARSED,,"[trader#A]
+
+#RAYUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 1.1440
+— Усреднение: нет
+
+— SL: 1.1062 🛡 (~3.3% риска)
+
+🎯 Тейки:
+— TP1: 1.2007 (~+5.0%, ≈1.5R)
+— TP2: 1.2574 (~+9.9%, ≈3.0R)
+— TP3: 1.3140 (~+14.9%, ≈4.5R)
+
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.2007 | 1.2574 | 1.314; entries=1.144),RAYUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.144,1.1062,1.2007 | 1.2574 | 1.314,3,1957,,0,unresolved,,0,0,0,warning_count=0
+1956,PARSED,,"[trader#A]
+
+#ATOMUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 2.3890
+— Усреднение: нет
+
+— SL: 2.3259 🛡 (~2.6% риска)
+
+🎯 Тейки:
+— TP1: 2.4837 (~+4.0%, ≈1.5R)
+— TP2: 2.5784 (~+7.9%, ≈3.0R)
+— TP3: 2.6731 (~+11.9%, ≈4.5R)
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.4837 | 2.5784 | 2.6731; entries=2.389),ATOMUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:2.389,2.3259,2.4837 | 2.5784 | 2.6731,3,1956,,0,unresolved,,0,0,0,warning_count=0
+1945,PARSED,,"[trader#A]
+
+#SOLUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 141.9500
+— Усреднение: нет
+
+— SL: 138.2743 🛡 (~2.6% риска)
+
+🎯 Тейки:
+— TP1: 147.4636 (~+3.9%, ≈1.5R)
+— TP2: 152.9771 (~+7.8%, ≈3.0R)
+— TP3: 158.4907 (~+11.7%, ≈4.5R)
+
+#intraday",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=147.4636 | 152.9771 | 158.4907; entries=141.95),SOLUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:141.95,138.2743,147.4636 | 152.9771 | 158.4907,3,1945,,0,unresolved,,0,0,0,warning_count=0
+1940,PARSED,,"[trader#A]
+
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,1493
+— Усреднение: 0,1577
+
+Стоп:
+— SL: 0,1656 🛡
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,1373 🎯 (от A: +8,0%, от B: +12,9%)
+— TP2: 0,1259 🎯 (от A: +15,7%, от B: +20,2%)
+— TP3: 0,1073 🎯 (от A: +28,1%, от B: +32,0%)
+
+Спот (цель по 1W-ТФ):
+— —
+
+Вход не более 1-2% от депозита
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1373 | 0.1259 | 0.1073; entries=0.1493),DOGEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1493 | AVERAGING:LIMIT:0.1577,0.1656,0.1373 | 0.1259 | 0.1073,3,1940,,0,unresolved,,0,0,0,warning_count=0
+1933,PARSED,,"[trader#A]
+
+
+#CAKEUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 2.363
+— Усреднение: 2.493
+
+Стоп:
+— SL: 2.573 🛡
+
+Тейки (среднесрок, 3 цели):
+— TP1: 2.175 🎯 (от A: +8.0%, от B: +12.8%)
+— TP2: 1.983 🎯 (от A: +16.1%, от B: +20.5%)
+— TP3: 1.783 🎯 (от A: +24.5%, от B: +28.5%)
+
+Вход не более 1–2% от депозита
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.175 | 1.983 | 1.783; entries=2.363),CAKEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:2.363 | AVERAGING:LIMIT:2.493,2.573,2.175 | 1.983 | 1.783,3,1933,,0,unresolved,,0,0,0,warning_count=0
+1924,PARSED,,"[trader#A]
+
+
+#1INCHUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.1873
+— Усреднение: 0.1951
+
+Стоп:
+— SL: 0.2085 🛡
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.1717 🎯 (от A: +8.3%, от B: +12.0%)
+— TP2: 0.1557 🎯 (от A: +16.9%, от B: +20.2%)
+— TP3: 0.1187 🎯 (от A: +36.6%, от B: +39.2%)
+
+Вход не более 1–2% от депозита
+
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1717 | 0.1557 | 0.1187; entries=0.1873),1INCHUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1873 | AVERAGING:LIMIT:0.1951,0.2085,0.1717 | 0.1557 | 0.1187,3,1924,,0,unresolved,,0,0,0,warning_count=0
+1923,PARSED,,"[trader#A]
+
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+
+Вход (2-фазный):
+— Вход с текущих: 14,213
+— Усреднение: 14,927
+
+
+Стоп:
+— SL: 15,087 🛡
+
+
+Тейки (среднесрок, 3 цели):
+— TP1: 13,521 🎯 (от A: +4,9%, от B: +9,4%)
+— TP2: 12,437 🎯 (от A: +12,5%, от B: +16,7%)
+— TP3: 11,237 🎯 (от A: +20,9%, от B: +24,7%)
+
+
+Вход не более 1–2% от депозита
+
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=13.521 | 12.437 | 11.237; entries=14.213),LINKUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:14.213 | AVERAGING:LIMIT:14.927,15.087,13.521 | 12.437 | 11.237,3,1923,,0,unresolved,,0,0,0,warning_count=0
+1922,PARSED,,"[trader#A]
+
+#ZETAUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,0879
+— Усреднение: 0,0933
+
+Стоп:
+— SL: 0,0987 🛡
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,0816 🎯 (от A: +7,2%, от B: +12,5%)
+— TP2: 0,0726 🎯 (от A: +17,4%, от B: +22,2%)
+— TP3: 0,0632 🎯 (от A: +28,1%, от B: +32,3%)
+
+Вход не более 1–2% от депозита
+
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0816 | 0.0726 | 0.0632; entries=0.0879),ZETAUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.0879 | AVERAGING:LIMIT:0.0933,0.0987,0.0816 | 0.0726 | 0.0632,3,1922,,0,unresolved,,0,0,0,warning_count=0
+1921,PARSED,,"[trader#A]
+
+#BATUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,2622
+— Усреднение: 0,2686
+
+Стоп:
+— SL: 0,3035 🛡
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,2488 🎯 (от A: +5,1%, от B: +7,4%)
+— TP2: 0,2296 🎯 (от A: +12,4%, от B: +14,5%)
+— TP3: 0,2074 🎯 (от A: +20,9%, от B: +22,8%)
+
+
+Вход не более 1–2% от депозита
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.2488 | 0.2296 | 0.2074; entries=0.2622),BATUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.2622 | AVERAGING:LIMIT:0.2686,0.3035,0.2488 | 0.2296 | 0.2074,3,1921,,0,unresolved,,0,0,0,warning_count=0
+1920,PARSED,,"[trader#A]
+
+#XRPUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 2.0623
+— Усреднение: 2.1037
+
+Стоп:
+— SL: 2.3153 🛡(от A: -12.3%, от B: -10.1%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1.9301 🎯 (от A: +6.4%, от B: +8.3%)
+— TP2: 1.7083 🎯 (от A: +17.2%, от B: +18.8%)
+— TP3: 1.5481 🎯 (от A: +24.9%, от B: +26.4%)
+
+Вход не более 1-2% от депозита
+
+
+p.s.  пока все, ждем тейков
+
+
+#среднесрок",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.9301 | 1.7083 | 1.5481; entries=2.0623),XRPUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:2.0623 | AVERAGING:LIMIT:2.1037,2.3153,1.9301 | 1.7083 | 1.5481,3,1920,,0,unresolved,,0,0,0,warning_count=0
+1890,PARSED,,"[trader#A]
+
+#среднесрок
+#ENAUSDT 🐂 Лонг (вход с текущих)
+
+
+Вход (2-фазный):
+— Вход с текущих: 0,2729
+— Усреднение: 0,2635
+
+
+Стоп:
+— SL: 0,2317 🛡(от A: -15,1%, от B: -12,1%)
+
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,2941 🎯 (от A: +7,8%, от B: +11,6%)
+— TP2: 0,3347 🎯 (от A: +22,6%, от B: +27,0%)
+— TP3: 0,3643 🎯 (от A: +33,5%, от B: +38,3%)
+
+
+Спот (цель по 1W-ТФ):
+— Цель: 0,4027 💫 (от A: +47,6%)
+
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2941 | 0.3347 | 0.3643; entries=0.2729),ENAUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.2729 | AVERAGING:LIMIT:0.2635,0.2317,0.2941 | 0.3347 | 0.3643,3,1890,,0,unresolved,,0,0,0,warning_count=0
+1886,PARSED,,"[trader#A]
+
+#среднесрок
+
+#LDOUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,6047
+— Усреднение: 0,6229
+
+Стоп:
+— SL: 0,6843 🛡 (от A: -13,2%, от B: -9,9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,5489 🎯 (от A: +9,2%, от B: +11,9%)
+— TP2: 0,4931 🎯 (от A: +18,5%, от B: +20,8%)
+— TP3: 0,4353 🎯 (от A: +28,0%, от B: +30,1%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.5489 | 0.4931 | 0.4353; entries=0.6047),LDOUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.6047 | AVERAGING:LIMIT:0.6229,0.6843,0.5489 | 0.4931 | 0.4353,3,1886,,0,unresolved,,0,0,0,warning_count=0
+1879,PARSED,,"[trader#A]
+
+#среднесрок
+#SHIB1000USDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.00847
+— Усреднение: 0.00863
+
+— SL: 0.00907 🛡 (от A: -7.1%, от B: -5.1%)
+
+— TP1: 0.00813 🎯 (от A: +4.0%, от B: +5.8%)
+— TP2: 0.00759 🎯 (от A: +10.4%, от B: +12.1%)
+— TP3: 0.00721 🎯 (от A: +14.9%, от B: +16.5%)
+
+Вход не более 1–2% от депозита (стандартный риск)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.00813 | 0.00759 | 0.00721; entries=0.00847),SHIB1000USDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.00847 | AVERAGING:LIMIT:0.00863,0.00907,0.00813 | 0.00759 | 0.00721,3,1879,,0,unresolved,,0,0,0,warning_count=0
+1846,PARSED,,"[trader#A]
+
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.3688
+— Усреднение: 0.3879
+
+Стоп:
+— SL: 0.4283 🛡(от A: -16.1%, от B: -10.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.3097 🎯 (от A: +16.0%, от B: +20.2%)
+— TP2: 0.2847 🎯 (от A: +22.8%, от B: +26.6%)
+— TP3: 0.2487 🎯 (от A: +32.6%, от B: +35.9%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.3097 | 0.2847 | 0.2487; entries=0.3688),FARTCOINUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.3688 | AVERAGING:LIMIT:0.3879,0.4283,0.3097 | 0.2847 | 0.2487,3,1846,,0,unresolved,,0,0,0,warning_count=0
+1843,PARSED,,"[trader#A]
+
+
+#среднесрок
+#ASTERUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.9465
+— Усреднение: 0.9536
+
+— SL: 0.9833 🛡 (от A: -3.9%, от B: -3.1%)
+
+— TP1: 0.8420 🎯 (от A: +11.0%, от B: +11.7%)
+— TP2: 0.7865 🎯 (от A: +16.9%, от B: +17.5%)
+— TP3: 0.5855 🎯 (от A: +38.1%, от B: +38.6%)
+
+Вход не более 1–2% от депозита.",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.842 | 0.7865 | 0.5855; entries=0.9465),ASTERUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.9465 | AVERAGING:LIMIT:0.9536,0.9833,0.842 | 0.7865 | 0.5855,3,1843,,0,unresolved,,0,0,0,warning_count=0
+1842,PARSED,,"[trader#A]
+
+
+#среднесрок
+#ENAUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.2497
+— Усреднение: 0.2429
+
+Стоп:
+— SL: 0.2261 🛡(от A: -9.5%, от B: -6.9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.2721 🎯 (от A: +9.0%, от B: +12.0%)
+— TP2: 0.2869 🎯 (от A: +14.9%, от B: +18.1%)
+— TP3: 0.3181 🎯 (от A: +27.4%, от B: +31.0%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 0.4387 💫 (от A: +75.7%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2721 | 0.2869 | 0.3181; entries=0.2497),ENAUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.2497 | AVERAGING:LIMIT:0.2429,0.2261,0.2721 | 0.2869 | 0.3181,3,1842,,0,unresolved,,0,0,0,warning_count=0
+1839,PARSED,,"[trader#A]
+#intraday
+
+#SEIUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 0.1266
+— Усреднение: нет
+
+— SL: 0.1301 🛡 (~2.8% риска)
+
+🎯 Тейки:
+— TP1: 0.1231 (~+2.8%, ≈1.0R)
+— TP2: 0.1196 (~+5.6%, ≈2.0R)
+— TP3: 0.1160 (~+8.4%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1231 | 0.1196 | 0.116; entries=0.1266),SEIUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1266,0.1301,0.1231 | 0.1196 | 0.116,3,1839,,0,unresolved,,0,0,0,warning_count=0
+1837,PARSED,,"[trader#A]
+#intraday
+
+#INJUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 5.2100
+— Усреднение: нет
+
+— SL: 5.4050 🛡 (~3.7% риска)
+
+🎯 Тейки:
+— TP1: 5.0150 (~+3.7%, ≈1.0R)
+— TP2: 4.8200 (~+7.5%, ≈2.0R)
+— TP3: 4.6250 (~+11.2%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=5.015 | 4.82 | 4.625; entries=5.21),INJUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:5.21,5.405,5.015 | 4.82 | 4.625,3,1837,,0,unresolved,,0,0,0,warning_count=0
+1830,PARSED,,"[trader#A]
+#intraday
+
+#PENDLEUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 2.1530
+— Усреднение: нет
+
+— SL: 2.0950 🛡 (~2.7% риска)
+
+🎯 Тейки:
+— TP1: 2.2110 (~+2.7%, ≈1.0R)
+— TP2: 2.2689 (~+5.4%, ≈2.0R)
+— TP3: 2.3269 (~+8.1%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.211 | 2.2689 | 2.3269; entries=2.153),PENDLEUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:2.153,2.095,2.211 | 2.2689 | 2.3269,3,1830,,0,unresolved,,0,0,0,warning_count=0
+1818,PARSED,,"[trader#A]
+#intraday
+
+#DOGEUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 0.1289
+— Усреднение: нет
+
+— SL: 0.1325 🛡 (~2.8% риска)
+
+🎯 Тейки:
+— TP1: 0.1253 (~+2.8%, ≈1.0R)
+— TP2: 0.1216 (~+5.6%, ≈2.0R)
+— TP3: 0.1180 (~+8.4%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1253 | 0.1216 | 0.118; entries=0.1289),DOGEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1289,0.1325,0.1253 | 0.1216 | 0.118,3,1818,,0,unresolved,,0,0,0,warning_count=0
+1817,PARSED,,"[trader#A]
+#intraday
+
+#BNBUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 853.1900
+— Усреднение: нет
+
+— SL: 871.1975 🛡 (~2.1% риска)
+
+🎯 Тейки:
+— TP1: 835.1825 (~+2.1%, ≈1.0R)
+— TP2: 817.1750 (~+4.2%, ≈2.0R)
+— TP3: 799.1675 (~+6.3%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=835.1825 | 817.175 | 799.1675; entries=853.19),BNBUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:853.19,871.1975,835.1825 | 817.175 | 799.1675,3,1817,,0,unresolved,,0,0,0,warning_count=0
+1816,PARSED,,"[trader#A]
+#intraday
+
+#CFXUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 0.0709
+— Усреднение: нет
+
+— SL: 0.0740 🛡 (~4.3% риска)
+
+🎯 Тейки:
+— TP1: 0.0686 (~+3.2%, ≈0.8R)
+— TP2: 0.0648 (~+8.6%, ≈2.0R)
+— TP3: 0.0617 (~+12.9%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0686 | 0.0648 | 0.0617; entries=0.0709),CFXUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0709,0.074,0.0686 | 0.0648 | 0.0617,3,1816,,0,unresolved,,0,0,0,warning_count=0
+1809,PARSED,,"[trader#A]
+#intraday
+
+
+#NEARUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 1.4990
+— Усреднение: нет
+
+— SL: 1.5533 🛡 (~3.6% риска)
+
+🎯 Тейки:
+— TP1: 1.4447 (~+3.6%, ≈1.0R)
+— TP2: 1.3904 (~+7.2%, ≈2.0R)
+— TP3: 1.3360 (~+10.9%, ≈3.0R)
+
+
+p.s. Очень прошу не завышать риски.   
+использовать не более 5-6% от депозита на все сделки! Серия стопов может привести к серьезной просадке. Всегда помните об этом",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.4447 | 1.3904 | 1.336; entries=1.499),NEARUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.499,1.5533,1.4447 | 1.3904 | 1.336,3,1809,,0,global_scope,,0,0,0,warning_count=0
+1808,PARSED,,"[trader#A]
+#intraday
+
+
+
+#OGUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 12.2830
+— Усреднение: нет
+
+— SL: 12.5425 🛡 (~2.1% риска)
+
+🎯 Тейки:
+— TP1: 12.0235 (~+2.1%, ≈1.0R)
+— TP2: 11.7640 (~+4.2%, ≈2.0R)
+— TP3: 11.5045 (~+6.3%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=12.0235 | 11.764 | 11.5045; entries=12.283),OGUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:12.283,12.5425,12.0235 | 11.764 | 11.5045,3,1808,,0,unresolved,,0,0,0,warning_count=0
+1804,PARSED,,"[trader#A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 12.724
+— Усреднение: 13.019
+
+— SL: 13.563 🛡(от A: -6.6%, от B: -4.2%)
+
+— TP1: 11.979 🎯 (от A: +5.9%, от B: +8.0%)
+— TP2: 11.537 🎯 (от A: +9.3%, от B: +11.4%)
+— TP3: 10.943 🎯 (от A: +14.0%, от B: +15.9%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=11.979 | 11.537 | 10.943; entries=12.724),LINKUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:12.724 | AVERAGING:LIMIT:13.019,13.563,11.979 | 11.537 | 10.943,3,1804,,0,unresolved,,0,0,0,warning_count=0
+1800,PARSED,,"[trader#A]
+#intraday
+
+
+#RSRUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.0027
+— Усреднение: нет
+
+— SL: 0.0025 🛡 (~5.0% риска)
+
+🎯 Тейки:
+— TP1: 0.0028 (~+5.0%, ≈1.0R)
+— TP2: 0.0029 (~+9.9%, ≈2.0R)
+— TP3: 0.0030 (~+12.2%, ≈2.5R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0028 | 0.0029 | 0.003; entries=0.0027),RSRUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0027,0.0025,0.0028 | 0.0029 | 0.003,3,1800,,0,unresolved,,0,0,0,warning_count=0
+1792,PARSED,,"[trader#A]
+
+#среднесрок
+#ARBUSDT 🐂 Лонг  вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.1981
+— Усреднение: 0.1929
+
+Стоп:
+— SL: 0.1805 🛡(от A: -8.9%, от B: -6.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.2167 🎯 (от A: +9.4%, от B: +12.3%)
+— TP2: 0.2257 🎯 (от A: +13.9%, от B: +17.0%)
+— TP3: 0.2439 🎯 (от A: +23.1%, от B: +26.4%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2167 | 0.2257 | 0.2439; entries=0.1981),ARBUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1981 | AVERAGING:LIMIT:0.1929,0.1805,0.2167 | 0.2257 | 0.2439,3,1792,,0,unresolved,,0,0,0,warning_count=0
+1786,PARSED,,"[trader#A]
+#intraday
+
+
+#ALGOUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 0.1119
+— Усреднение: нет
+
+— SL: 0.1161 🛡 (~3.8% риска)
+
+🎯 Тейки:
+— TP1: 0.1077 (~+3.8%, ≈1.0R)
+— TP2: 0.1034 (~+7.6%, ≈2.0R)
+— TP3: 0.0992 (~+11.4%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1077 | 0.1034 | 0.0992; entries=0.1119),ALGOUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1119,0.1161,0.1077 | 0.1034 | 0.0992,3,1786,,0,unresolved,,0,0,0,warning_count=0
+1785,PARSED,,"[trader#A]
+#intraday
+
+#ARKMUSDT 🐻 Шорт (ML+TA)
+
+— Вход: 0.1870
+— Усреднение: нет
+
+— SL: 0.1969 🛡 (~5.3% риска)
+
+🎯 Тейки:
+— TP1: 0.1771 (~+5.3%, ≈1.0R)
+— TP2: 0.1673 (~+10.5%, ≈2.0R)
+— TP3: 0.1574 (~+15.8%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1771 | 0.1673 | 0.1574; entries=0.187),ARKMUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.187,0.1969,0.1771 | 0.1673 | 0.1574,3,1785,,0,unresolved,,0,0,0,warning_count=0
+1784,PARSED,,"[trader#A]
+
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.3337
+— Усреднение: 0.3469
+
+Стоп:
+— SL: 0.3829 🛡(от A: -14.7%, от B: -10.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.2973 🎯 (от A: +10.9%, от B: +14.3%)
+— TP2: 0.2647 🎯 (от A: +20.7%, от B: +23.7%)
+— TP3: 0.2069 🎯 (от A: +38.0%, от B: +40.4%)
+
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.2973 | 0.2647 | 0.2069; entries=0.3337),FARTCOINUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.3337 | AVERAGING:LIMIT:0.3469,0.3829,0.2973 | 0.2647 | 0.2069,3,1784,,0,unresolved,,0,0,0,warning_count=0
+1775,PARSED,,"[trader#A]
+
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+Вход (2-фазный):
+— Вход с текущих: 1.8723
+— Усреднение: 1.9079
+Стоп:
+— SL: 2.0976 🛡(от A: -12.0%, от B: -9.9%)
+Тейки (среднесрок, 3 цели):
+— TP1: 1.3017 🎯 (от A: +30.5%, от B: +31.8%)
+— TP2: 1.0617 🎯 (от A: +43.3%, от B: +44.4%)
+— TP3: 0.8429 🎯 (от A: +55.0%, от B: +55.8%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.3017 | 1.0617 | 0.8429; entries=1.8723),XRPUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.8723 | AVERAGING:LIMIT:1.9079,2.0976,1.3017 | 1.0617 | 0.8429,3,1775,,0,unresolved,,0,0,0,warning_count=0
+1774,PARSED,1016,"[trader#A]
+
+#среднесрок
+#ADAUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.3657
+— Усреднение: 0.3749
+
+Стоп:
+— SL: 0.3897 🛡(от A: -6.6%, от B: -3.9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.3343 🎯 (от A: +8.6%, от B: +10.8%)
+— TP2: 0.3121 🎯 (от A: +14.7%, от B: +16.8%)
+— TP3: 0.2789 🎯 (от A: +23.7%, от B: +25.6%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.3343 | 0.3121 | 0.2789; entries=0.3657),ADAUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.3657 | AVERAGING:LIMIT:0.3749,0.3897,0.3343 | 0.3121 | 0.2789,3,1774,1016,1,reply_or_link,,0,0,0,warning_count=0
+1773,PARSED,,"[trader#A]
+
+#среднесрок
+#UNIUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 5.327
+— Усреднение: 5.487
+
+Стоп:
+— SL: 5.648 🛡(от A: -6.0%, от B: -2.9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 4.923 🎯 (от A: +7.6%, от B: +10.3%)
+— TP2: 4.731 🎯 (от A: +11.2%, от B: +13.8%)
+— TP3: 4.583 🎯 (от A: +14.0%, от B: +16.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=4.923 | 4.731 | 4.583; entries=5.327),UNIUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:5.327 | AVERAGING:LIMIT:5.487,5.648,4.923 | 4.731 | 4.583,3,1773,,0,unresolved,,0,0,0,warning_count=0
+1768,PARSED,,"[trader#A]
+
+#среднесрок
+#SUIUSDT 🐂 Лонг (вход с текущих) 
+
+Вход (2-фазный):
+— Вход с текущих: 1.3764
+— Усреднение: 1.3297
+
+Стоп:
+— SL: 1.2499 🛡(от A: -9.2%, от B: -6.0%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1.5041 🎯 (от A: +9.3%, от B: +13.1%)
+— TP2: 1.5544 🎯 (от A: +12.9%, от B: +16.9%)
+— TP3: 1.7978 🎯 (от A: +30.6%, от B: +35.2%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 2.6105 💫 (от A: +89.7%)
+
+Риск: не более 0.3–0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.5041 | 1.5544 | 1.7978; entries=1.3764),SUIUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.3764 | AVERAGING:LIMIT:1.3297,1.2499,1.5041 | 1.5544 | 1.7978,3,1768,,0,unresolved,,0,0,0,warning_count=0
+1761,PARSED,,"[trader#A]
+
+
+#среднесрок
+#PEOPLEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.0086
+— Усреднение: 0.0083
+
+Стоп:
+— SL: 0.0079 🛡(от A: -7.7%, от B: -4.6%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.0095 🎯 (от A: +10.6%, от B: +14.4%)
+— TP2: 0.0106 🎯 (от A: +23.5%, от B: +27.7%)
+— TP3: 0.0111 🎯 (от A: +29.7%, от B: +34.1%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 0.0162 💫 (от A: +89.5%)
+
+Вход не более 1-2% от депозита
+
+p.s. тут уверенный лонг, есть разворот на младших ТФ",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0095 | 0.0106 | 0.0111; entries=0.0086),PEOPLEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.0086 | AVERAGING:LIMIT:0.0083,0.0079,0.0095 | 0.0106 | 0.0111,3,1761,,0,unresolved,,0,0,0,warning_count=0
+1759,PARSED,,"[trader#A]
+#intraday
+
+#SXPUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.0597
+— Усреднение: нет
+
+— SL: 0.0557 🛡 (~6.7% риска)
+
+🎯 Тейки:
+— TP1: 0.0637 (~+6.7%, ≈1.0R)
+— TP2: 0.0677 (~+13.4%, ≈2.0R)
+— TP3: 0.0717 (~+20.1%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0637 | 0.0677 | 0.0717; entries=0.0597),SXPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0597,0.0557,0.0637 | 0.0677 | 0.0717,3,1759,,0,unresolved,,0,0,0,warning_count=0
+1758,PARSED,,"[trader#A]
+#intraday
+
+#ONEUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.0034
+— Усреднение: нет
+
+— SL: 0.0032 🛡 (~6.2% риска)
+
+🎯 Тейки:
+— TP1: 0.0036 (~+6.2%, ≈1.0R)
+— TP2: 0.0037 (~+8.6%, ≈1.4R)
+— TP3: 0.0040 (~+18.6%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0036 | 0.0037 | 0.004; entries=0.0034),ONEUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0034,0.0032,0.0036 | 0.0037 | 0.004,3,1758,,0,unresolved,,0,0,0,warning_count=0
+1757,PARSED,,"[trader#A]
+#intraday
+
+#QTUMUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 1.2640
+— Усреднение: нет
+
+— SL: 1.2127 🛡 (~4.1% риска)
+
+🎯 Тейки:
+— TP1: 1.3153 (~+4.1%, ≈1.0R)
+— TP2: 1.3666 (~+8.1%, ≈2.0R)
+— TP3: 1.4170 (~+12.1%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.3153 | 1.3666 | 1.417; entries=1.264),QTUMUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.264,1.2127,1.3153 | 1.3666 | 1.417,3,1757,,0,unresolved,,0,0,0,warning_count=0
+1752,PARSED,,"[trader#A]
+
+#среднесрок
+#HYPEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 23.892
+— Усреднение: 22.985
+
+Стоп:
+— SL: 20.057 🛡(от A: -16.05%, от B: -12.74%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 26.804 🎯 (от A: +12.19%, от B: +16.62%)
+— TP2: 31.474 🎯 (от A: +31.73%, от B: +36.93%)
+— TP3: 33.142 🎯 (от A: +38.72%, от B: +44.19%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 43.840 💫 (от A: +83.49%)
+
+Вход не более 0.3–0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=26.804 | 31.474 | 33.142; entries=23.892),HYPEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:23.892 | AVERAGING:LIMIT:22.985,20.057,26.804 | 31.474 | 33.142,3,1752,,0,unresolved,,0,0,0,warning_count=0
+1730,PARSED,,"[trader#A]
+#intraday
+
+#IMXUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.2316
+— Усреднение: нет
+
+— SL: 0.2194 🛡 (~5.3% риска)
+
+🎯 Тейки:
+— TP1: 0.2438 (~+5.3%, ≈1.0R)
+— TP2: 0.2560 (~+10.6%, ≈2.0R)
+— TP3: 0.2683 (~+15.8%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2438 | 0.256 | 0.2683; entries=0.2316),IMXUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2316,0.2194,0.2438 | 0.256 | 0.2683,3,1730,,0,unresolved,,0,0,0,warning_count=0
+1727,PARSED,,"[trader#A]
+
+#среднесрок
+#JTOUSDT 🐂 Лонг ( вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.3503
+— Усреднение: —
+
+Стоп:
+— SL: 0.2951 🛡(от A: -15.8%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.4102 🎯 (от A: +17.1%, от B: —)
+— TP2: 0.4865 🎯 (от A: +38.9%, от B: —)
+— TP3: 0.5859 🎯 (от A: +67.3%, от B: —)
+
+Спот (цель по 1W-ТФ):
+— Цель: 1.2913 💫 (от A: +268.6%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.4102 | 0.4865 | 0.5859; entries=0.3503),JTOUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.3503,0.2951,0.4102 | 0.4865 | 0.5859,3,1727,,0,unresolved,,0,0,0,warning_count=0
+1726,PARSED,,"[trader#A]
+
+
+#среднесрок
+#MANAUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.1291
+— Усреднение: нет
+
+Стоп:
+— SL: 0.1143 🛡(от A: -11.5%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.1455 🎯 (от A: +12.7%, от B: —)
+— TP2: 0.1601 🎯 (от A: +24.0%, от B: —)
+— TP3: 0.1743 🎯 (от A: +35.0%, от B: —)
+
+Спот (цель по 1W-ТФ):
+— Цель: 0.2485 💫 (от A: +92.5%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1455 | 0.1601 | 0.1743; entries=0.1291),MANAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.1291,0.1143,0.1455 | 0.1601 | 0.1743,3,1726,,0,unresolved,,0,0,0,warning_count=0
+1725,PARSED,,"[trader#A]
+#intraday
+
+#ATOMUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 1.9960
+— Усреднение: нет
+
+— SL: 1.9216 🛡 (~3.7% риска)
+
+🎯 Тейки:
+— TP1: 2.0704 (~+3.7%, ≈1.0R)
+— TP2: 2.1447 (~+7.5%, ≈2.0R)
+— TP3: 2.2191 (~+11.2%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.0704 | 2.1447 | 2.2191; entries=1.996),ATOMUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.996,1.9216,2.0704 | 2.1447 | 2.2191,3,1725,,0,unresolved,,0,0,0,warning_count=0
+1724,PARSED,,"[trader#A]
+#intraday
+
+#IOTAUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.0916
+— Усреднение: нет
+
+— SL: 0.0880 🛡 (~4.0% риска)
+
+🎯 Тейки:
+— TP1: 0.0948 (~+3.4%, ≈0.9R)
+— TP2: 0.0989 (~+7.9%, ≈2.0R)
+— TP3: 0.1025 (~+11.9%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0948 | 0.0989 | 0.1025; entries=0.0916),IOTAUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0916,0.088,0.0948 | 0.0989 | 0.1025,3,1724,,0,unresolved,,0,0,0,warning_count=0
+1723,PARSED,,"[trader#A]
+#intraday
+
+
+#NEOUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 3.6250
+— Усреднение: нет
+
+— SL: 3.5030 🛡 (~3.4% риска)
+
+🎯 Тейки:
+— TP1: 3.7470 (~+3.4%, ≈1.0R)
+— TP2: 3.8200 (~+5.4%, ≈1.6R)
+— TP3: 3.9911 (~+10.1%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=3.747 | 3.82 | 3.9911; entries=3.625),NEOUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:3.625,3.503,3.747 | 3.82 | 3.9911,3,1723,,0,unresolved,,0,0,0,warning_count=0
+1687,PARSED,,"[trader#A]
+#intraday
+
+
+#LDOUSDT 🐂 Лонг (ML+TA)
+
+— Вход: 0.5506
+— Усреднение: нет
+
+— SL: 0.5365 🛡 (~2.6% риска)
+
+🎯 Тейки:
+— TP1: 0.5633 (~+2.3%, ≈0.9R)
+— TP2: 0.5788 (~+5.1%, ≈2.0R)
+— TP3: 0.5928 (~+7.7%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.5633 | 0.5788 | 0.5928; entries=0.5506),LDOUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.5506,0.5365,0.5633 | 0.5788 | 0.5928,3,1687,,0,unresolved,,0,0,0,warning_count=0
+1682,PARSED,,"[trader#A]
+#intraday
+
+
+#ADAUSDT 🐂 Лонг
+
+— Вход: 0.3800
+— Усреднение: нет
+
+— SL: 0.3696 🛡 (~2.7% риска)
+
+🎯 Тейки:
+— TP1: 0.3904 (~+2.7%, ≈1.0R)
+— TP2: 0.4009 (~+5.5%, ≈2.0R)
+— TP3: 0.4113 (~+8.2%, ≈3.0R)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3904 | 0.4009 | 0.4113; entries=0.38),ADAUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.38,0.3696,0.3904 | 0.4009 | 0.4113,3,1682,,0,unresolved,,0,0,0,warning_count=0
+1672,PARSED,,"[trader#A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 123.34
+— Усреднение: 125.66
+
+Стоп:
+— SL: 131.31 🛡(от A: -6.5%, от B: -4.5%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 117.06 🎯 (от A: +5.1%, от B: +6.8%)
+— TP2: 111.65 🎯 (от A: +9.5%, от B: +11.2%)
+— TP3: 99.36 🎯 (от A: +19.4%, от B: +20.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=117.06 | 111.65 | 99.36; entries=123.34),SOLUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:123.34 | AVERAGING:LIMIT:125.66,131.31,117.06 | 111.65 | 99.36,3,1672,,0,unresolved,,0,0,0,warning_count=0
+1671,PARSED,,"[trader#A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 12.1930
+— Усреднение: 12.4390
+
+Стоп:
+— SL: 13.5330 🛡(от A: -11.0%, от B: -8.8%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 9.5210 🎯 (от A: +21.9%, от B: +23.5%)
+— TP2: 7.7210 🎯 (от A: +36.7%, от B: +37.9%)
+— TP3: 5.7810 🎯 (от A: +52.6%, от B: +53.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=9.521 | 7.721 | 5.781; entries=12.193),LINKUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:12.193 | AVERAGING:LIMIT:12.439,13.533,9.521 | 7.721 | 5.781,3,1671,,0,unresolved,,0,0,0,warning_count=0
+1665,PARSED,,"[trader#A]
+
+#среднесрок
+#SUIUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1.4096
+— Усреднение: 1.4423
+
+Стоп:
+— SL: 1.5395 🛡(от A: -9.2%, от B: -6.7%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1.3198 🎯 (от A: +6.4%, от B: +8.5%)
+— TP2: 0.7269 🎯 (от A: +48.4%, от B: +49.6%)
+— TP3: 0.6367 🎯 (от A: +54.8%, от B: +55.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.3198 | 0.7269 | 0.6367; entries=1.4096),SUIUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.4096 | AVERAGING:LIMIT:1.4423,1.5395,1.3198 | 0.7269 | 0.6367,3,1665,,0,unresolved,,0,0,0,warning_count=0
+1606,PARSED,,"[trader#A]
+
+#среднесрок
+#ASTERUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.7196
+— Усреднение: нет
+
+— SL: 0.7463 🛡(от A: -3.7%, от B: —)
+
+🎯 Тейки:
+— TP1: 0.6481 🎯 (от A: +9.9%, от B: —)
+— TP2: 0.6123 🎯 (от A: +14.9%, от B: —)
+— TP3: 0.5603 🎯 (от A: +22.1%, от B: —)
+
+Вход не более 1-2% от депозита
+
+пробуем аккуратно, больше других сделок не будет. Рынок в неопределенности, лучше переждать  эту фазу
+
+p.s. сугубо мое субъективное мнение",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6481 | 0.6123 | 0.5603; entries=0.7196),ASTERUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.7196,0.7463,0.6481 | 0.6123 | 0.5603,3,1606,,0,unresolved,,0,0,0,warning_count=0
+1463,PARSED,,"[trader#А]
+
+#среднесрок
+#ZECUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 423.4800
+— Усреднение: нет
+
+Стоп:
+— SL: 450.5400 🛡(от A: -6.4%, от B: -6.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 296.6500 🎯 (от A: 29.9%, от B: 29.9%)
+— TP2: 274.0500 🎯 (от A: 35.3%, от B: 35.3%)
+— TP3: 251.4500 🎯 (от A: 40.6%, от B: 40.6%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=296.65 | 274.05 | 251.45; entries=423.48),ZECUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:423.48,450.54,296.65 | 274.05 | 251.45,3,1463,,0,unresolved,,0,0,0,warning_count=0
+1446,PARSED,,"[trader#А]
+
+#среднесрок
+#APTUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1.8331
+— Усреднение: нет
+
+Стоп:
+— SL: 1.9028 🛡(от A: -3.8%, от B: -3.8%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1.7303 🎯 (от A: 5.6%, от B: 5.6%)
+— TP2: 1.6646 🎯 (от A: 9.2%, от B: 9.2%)
+— TP3: 1.4140 🎯 (от A: 22.9%, от B: 22.9%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.7303 | 1.6646 | 1.414; entries=1.8331),APTUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.8331,1.9028,1.7303 | 1.6646 | 1.414,3,1446,,0,unresolved,,0,0,0,warning_count=0
+1441,PARSED,,"[trader#А]
+
+#среднесрок
+#TIAUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.5508
+— Усреднение: 0.5359
+
+Стоп:
+— SL: 0.5307 🛡(от A: -3.6%, от B: -1.0%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.5847 🎯 (от A: 6.2%, от B: 9.1%)
+— TP2: 0.6084 🎯 (от A: 10.5%, от B: 13.5%)
+— TP3: 0.6639 🎯 (от A: 20.5%, от B: 23.9%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.5847 | 0.6084 | 0.6639; entries=0.5508),TIAUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.5508 | AVERAGING:LIMIT:0.5359,0.5307,0.5847 | 0.6084 | 0.6639,3,1441,,0,unresolved,,0,0,0,warning_count=0
+1384,PARSED,1586,"#среднесрок
+#HOOKUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.03992
+— Усреднение: 0.03903
+
+Стоп:
+— SL: 0.03739 🛡(от A: -6.3%, от B: -4.2%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.04475 🎯 (от A: 12.1%, от B: 14.7%)
+— TP2: 0.04612 🎯 (от A: 15.5%, от B: 18.2%)
+— TP3: 0.04748 🎯 (от A: 18.9%, от B: 21.7%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.04475 | 0.04612 | 0.04748; entries=0.03992),HOOKUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.03992 | AVERAGING:LIMIT:0.03903,0.03739,0.04475 | 0.04612 | 0.04748,3,1384,1586,1,reply_or_link,,0,0,0,warning_count=0
+1383,PARSED,1587,"#среднесрок
+#KASUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.04771
+— Усреднение: 0.04679
+
+Стоп:
+— SL: 0.04518 🛡(от A: -5.3%, от B: -3.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.05084 🎯 (от A: 6.6%, от B: 8.7%)
+— TP2: 0.05208 🎯 (от A: 9.2%, от B: 11.3%)
+— TP3: 0.05909 🎯 (от A: 23.9%, от B: 26.3%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.05084 | 0.05208 | 0.05909; entries=0.04771),KASUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.04771 | AVERAGING:LIMIT:0.04679,0.04518,0.05084 | 0.05208 | 0.05909,3,1383,1587,1,reply_or_link,,0,0,0,warning_count=0
+1382,PARSED,1588,"#среднесрок
+#STORJUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.14374
+— Усреднение: 0.14092
+
+Стоп:
+— SL: 0.12912 🛡(от A: -10.2%, от B: -8.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.16986 🎯 (от A: 18.2%, от B: 20.5%)
+— TP2: 0.17561 🎯 (от A: 22.2%, от B: 24.6%)
+— TP3: 0.18137 🎯 (от A: 26.2%, от B: 28.7%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.16986 | 0.17561 | 0.18137; entries=0.14374),STORJUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.14374 | AVERAGING:LIMIT:0.14092,0.12912,0.16986 | 0.17561 | 0.18137,3,1382,1588,1,reply_or_link,,0,0,0,warning_count=0
+1381,PARSED,1590,"#среднесрок
+#TLMUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.002484
+— Усреднение: 0.002436
+
+Стоп:
+— SL: 0.002261 🛡(от A: -9.0%, от B: -7.2%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.002789 🎯 (от A: 12.3%, от B: 14.5%)
+— TP2: 0.002862 🎯 (от A: 15.2%, от B: 17.5%)
+— TP3: 0.003819 🎯 (от A: 53.7%, от B: 56.8%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.002789 | 0.002862 | 0.003819; entries=0.002484),TLMUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.002484 | AVERAGING:LIMIT:0.002436,0.002261,0.002789 | 0.002862 | 0.003819,3,1381,1590,1,reply_or_link,,0,0,0,warning_count=0
+1377,PARSED,1598,"#среднесрок
+#JASMYUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.008648
+— Усреднение: 0.008243
+
+Стоп:
+— SL: 0.008151 🛡(от A: -5.7%, от B: -1.1%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.009500 🎯 (от A: 9.9%, от B: 15.2%)
+— TP2: 0.009810 🎯 (от A: 13.4%, от B: 19.0%)
+— TP3: 0.009858 🎯 (от A: 14.0%, от B: 19.6%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0095 | 0.00981 | 0.009858; entries=0.008648),JASMYUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.008648 | AVERAGING:LIMIT:0.008243,0.008151,0.0095 | 0.00981 | 0.009858,3,1377,1598,1,reply_or_link,,0,0,0,warning_count=0
+1360,PARSED,,"[trader#А]
+
+#интрадей
+#TRBUSDT 🐂 Лонг с текущих
+
+— Вход: 22.752
+— Усреднение: нет
+
+— SL: 21.978 🛡 (3.4%)
+
+🎯 Тейки:
+— TP1: 23.526 (+3.4%)
+— TP2: 24.299 (+6.8%)
+— TP3: 25.073 (+10.2%)
+
+Вход на 1% риска",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=23.526 | 24.299 | 25.073; entries=22.752),TRBUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:22.752,21.978,23.526 | 24.299 | 25.073,3,1360,,0,unresolved,,0,0,0,warning_count=0
+1359,PARSED,,"[trader#А]
+
+#интрадей
+#API3USDT 🐂 Лонг
+
+— Вход: 0.4655
+— Усреднение: нет
+
+— SL: 0.4497 🛡 (3.4%)
+
+🎯 Тейки:
+— TP1: 0.4813 (+3.4%)
+— TP2: 0.4972 (+6.8%)
+— TP3: 0.5130 (+10.2%)
+
+Вход на 1% риска",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.4813 | 0.4972 | 0.513; entries=0.4655),API3USDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.4655,0.4497,0.4813 | 0.4972 | 0.513,3,1359,,0,unresolved,,0,0,0,warning_count=0
+1333,PARSED,,"[trader#A]
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.1431
+— Усреднение: 0.1463
+
+— SL: 0.1519 🛡(от A: -6.1%, от B: -3.8%)
+
+🎯 Тейки:
+— TP1: 0.1367 🎯 (от A: +4.5%, от B: +6.6%)
+— TP2: 0.1299 🎯 (от A: +9.2%, от B: +11.2%)
+— TP3: 0.1207 🎯 (от A: +15.7%, от B: +17.5%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1367 | 0.1299 | 0.1207; entries=0.1431),DOGEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1431 | AVERAGING:LIMIT:0.1463,0.1519,0.1367 | 0.1299 | 0.1207,3,1333,,0,unresolved,,0,0,0,warning_count=0
+1308,PARSED,1684,"#среднесрок
+#MOVRUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 2.5300
+— Усреднение: нет
+
+Стоп:
+— SL: 2.6760 🛡(от A: -5.8%, от B: -5.8%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 2.2720 🎯 (от A: 10.2%, от B: 10.2%)
+— TP2: 2.1990 🎯 (от A: 13.1%, от B: 13.1%)
+— TP3: 2.1260 🎯 (от A: 16.0%, от B: 16.0%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.272 | 2.199 | 2.126; entries=2.53),MOVRUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2.53,2.676,2.272 | 2.199 | 2.126,3,1308,1684,1,reply_or_link,,0,0,0,warning_count=0
+1292,PARSED,,"[trader#A]
+
+#среднесрок
+#PENDLEUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 2.0623
+— Усреднение: 2.1306
+
+Стоп:
+— SL: 2.2090 🛡(от A: -7.1%, от B: -3.7%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1.8148 🎯 (от A: 12.0%, от B: 14.8%)
+— TP2: 1.7436 🎯 (от A: 15.5%, от B: 18.2%)
+— TP3: 1.6533 🎯 (от A: 19.8%, от B: 22.4%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.8148 | 1.7436 | 1.6533; entries=2.0623),PENDLEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:2.0623 | AVERAGING:LIMIT:2.1306,2.209,1.8148 | 1.7436 | 1.6533,3,1292,,0,unresolved,,0,0,0,warning_count=0
+1291,PARSED,,"[trader#A]
+
+
+#среднесрок
+#ZECUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 403.3200
+— Усреднение: 417.3700
+
+Стоп:
+— SL: 438.6600 🛡(от A: -8.8%, от B: -5.1%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 297.5300 🎯 (от A: 26.2%, от B: 28.7%)
+— TP2: 276.7700 🎯 (от A: 31.4%, от B: 33.7%)
+— TP3: 256.0100 🎯 (от A: 36.5%, от B: 38.7%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=297.53 | 276.77 | 256.01; entries=403.32),ZECUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:403.32 | AVERAGING:LIMIT:417.37,438.66,297.53 | 276.77 | 256.01,3,1291,,0,unresolved,,0,0,0,warning_count=0
+1279,PARSED,1724,"#среднесрок
+
+#ILVUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 6.6120
+— Усреднение: нет
+
+Стоп:
+— SL: 6.2580 🛡(от A: -5.4%, от B: -5.4%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 7.6010 🎯 (от A: 15.0%, от B: 15.0%)
+— TP2: 7.7930 🎯 (от A: 17.9%, от B: 17.9%)
+— TP3: 10.4170 🎯 (от A: 57.5%, от B: 57.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=7.601 | 7.793 | 10.417; entries=6.612),ILVUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:6.612,6.258,7.601 | 7.793 | 10.417,3,1279,1724,1,reply_or_link,,0,0,0,warning_count=0
+1278,PARSED,1723,"#среднесрок
+
+#APEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.22640
+— Усреднение: 0.22120
+
+Стоп:— SL: 0.20553 🛡(от A: -9.2%, от B: -7.1%)
+
+Тейки (среднесрок, 3 цели):
+
+— TP1: 0.26910 🎯 (от A: 18.9%, от B: 21.7%)
+— TP2: 0.27659 🎯 (от A: 22.2%, от B: 25.0%)
+— TP3: 0.28408 🎯 (от A: 25.5%, от B: 28.4%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2691 | 0.27659 | 0.28408; entries=0.2264),APEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.2264 | AVERAGING:LIMIT:0.2212,0.20553,0.2691 | 0.27659 | 0.28408,3,1278,1723,1,reply_or_link,,0,0,0,warning_count=0
+1272,PARSED,,"[trader#A]
+
+#среднесрок
+#CYBERUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.7530
+— Усреднение: нет
+
+Стоп:
+— SL: 0.7822 🛡(от A: -3.9%, от B: -3.9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.6132 🎯 (от A: 18.6%, от B: 18.6%)
+— TP2: 0.5889 🎯 (от A: 21.8%, от B: 21.8%)
+— TP3: 0.5645 🎯 (от A: 25.0%, от B: 25.0%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6132 | 0.5889 | 0.5645; entries=0.753),CYBERUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.753,0.7822,0.6132 | 0.5889 | 0.5645,3,1272,,0,unresolved,,0,0,0,warning_count=0
+1260,PARSED,,"[trader#A]
+
+#среднесрок
+#SUIUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 1.5926
+— Усреднение: 1.5551
+
+— SL: 1.4901 🛡(от A: -6.4%, от B: -4.2%)
+
+🎯 Тейки:
+— TP1: 1.6844 🎯 (от A: +5.8%, от B: +8.3%)
+— TP2: 1.7620 🎯 (от A: +10.6%, от B: +13.3%)
+— TP3: 1.9371 🎯 (от A: +21.6%, от B: +24.6%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.6844 | 1.762 | 1.9371; entries=1.5926),SUIUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.5926 | AVERAGING:LIMIT:1.5551,1.4901,1.6844 | 1.762 | 1.9371,3,1260,,0,unresolved,,0,0,0,warning_count=0
+1259,PARSED,,"[trader#A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт с текущих
+
+— Вход: 12.824
+— Усреднение: нет
+
+— SL: 13.393 🛡 4.4% риска
+
+🎯 Тейки:
+— TP1: 12.324 +3.9%
+— TP2: 12.019 +6.3%
+— TP3: 11.623 +9.4%
+
+Вход не более 1-2% от депозита.",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=12.324 | 12.019 | 11.623; entries=12.824),LINKUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:12.824,13.393,12.324 | 12.019 | 11.623,3,1259,,0,unresolved,,0,0,0,warning_count=0
+1251,PARSED,,"[trader#A]
+
+#среднесрок
+#AXSUSDT 🐂 Лонг 
+
+— Вход лимитным ордером: 1.844
+— Усреднение: нет
+
+— SL: 1.7917 🛡 2.8%
+
+🎯 Тейки:
+— TP1: 2.0421 +10.8%
+— TP2: 2.1417 +16.1%
+— TP3: 2.1990 +19.3%
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2.0421 | 2.1417 | 2.199; entries=1.844),AXSUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.844,1.7917,2.0421 | 2.1417 | 2.199,3,1251,,0,unresolved,,0,0,0,warning_count=0
+1234,PARSED,,"[trader#A]
+
+#среднесрок
+#FARTCOINUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.3032
+— Усреднение: 0.2912
+
+— SL: 0.2606 🛡(от A: -14.1%, от B: -10.5%)
+
+— TP1: 0.3507 🎯 (от A: +15.7%, от B: +20.4%)
+— TP2: 0.3713 🎯 (от A: +22.5%, от B: +27.5%)
+— TP3: 0.3893 🎯 (от A: +28.4%, от B: +33.7%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3507 | 0.3713 | 0.3893; entries=0.3032),FARTCOINUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.3032 | AVERAGING:LIMIT:0.2912,0.2606,0.3507 | 0.3713 | 0.3893,3,1234,,0,unresolved,,0,0,0,warning_count=0
+1233,PARSED,,"[trader#A]
+
+
+#среднесрок
+#ASTERUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.5907
+— Усреднение: 0.5725
+
+— SL: 0.5273 🛡(от A: -10.7%, от B: -7.9%)
+
+— TP1: 0.6369 🎯 (от A: +7.8%, от B: +11.2%)
+— TP2: 0.6969 🎯 (от A: +18.0%, от B: +21.7%)
+— TP3: 0.7961 🎯 (от A: +34.8%, от B: +39.1%)
+
+— Спот (цель по 1W-ТФ): 1.0671 💫 (от A: +80.7%)
+
+— Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.6369 | 0.6969 | 0.7961; entries=0.5907),ASTERUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.5907 | AVERAGING:LIMIT:0.5725,0.5273,0.6369 | 0.6969 | 0.7961,3,1233,,0,unresolved,,0,0,0,warning_count=0
+1232,PARSED,,"[trader#A]
+
+#среднесрок
+#DOGEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.1264
+— Усреднение: —
+
+— SL: 0.1169 🛡(от A: -7.5%, от B: —)
+
+— TP1: 0.1354 🎯 (от A: +7.1%, от B: —)
+— TP2: 0.1404 🎯 (от A: +11.1%, от B: —)
+— TP3: 0.1512 🎯 (от A: +19.6%, от B: —)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1354 | 0.1404 | 0.1512; entries=0.1264),DOGEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.1264,0.1169,0.1354 | 0.1404 | 0.1512,3,1232,,0,unresolved,,0,0,0,warning_count=0
+1227,PARSED,,"[trader#A]
+
+#среднесрок
+#1000PEPEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.005044
+— Усреднение: 0.004903
+
+Стоп:
+— SL: 0.004619 🛡(от A: -8.4%, от B: -5.8%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.005545 🎯 (от A: +9.9%, от B: +13.1%)
+— TP2: 0.005893 🎯 (от A: +16.8%, от B: +20.2%)
+— TP3: 0.006489 🎯 (от A: +28.6%, от B: +32.3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.005545 | 0.005893 | 0.006489; entries=0.005044),1000PEPEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.005044 | AVERAGING:LIMIT:0.004903,0.004619,0.005545 | 0.005893 | 0.006489,3,1227,,0,unresolved,,0,0,0,warning_count=0
+1226,PARSED,,"[trader#A]
+
+#среднесрок
+#ENAUSDT 🟢 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.1828
+— Усреднение: — 
+Стоп:
+— SL: 0.1653 🛡(от A: -9.6%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.2008 🎯 (от A: +9.8%, от B: —)
+— TP2: 0.2086 🎯 (от A: +14.1%, от B: —)
+— TP3: 0.2387 🎯 (от A: +30.6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2008 | 0.2086 | 0.2387; entries=0.1828),ENAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.1828,0.1653,0.2008 | 0.2086 | 0.2387,3,1226,,0,unresolved,,0,0,0,warning_count=0
+1222,PARSED,,"[trader#A]
+
+#среднесрок
+#C98USDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.02245
+— Усреднение: 0.02189
+
+— SL: 0.02093 🛡(от A: -6.8%, от B: -4.4%)
+
+— TP1: 0.02379 🎯 (от A: +6.0%, от B: +8.7%)
+— TP2: 0.02527 🎯 (от A: +12.6%, от B: +15.4%)
+— TP3: 0.02649 🎯 (от A: +18.0%, от B: +21.0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.02379 | 0.02527 | 0.02649; entries=0.02245),C98USDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.02245 | AVERAGING:LIMIT:0.02189,0.02093,0.02379 | 0.02527 | 0.02649,3,1222,,0,unresolved,,0,0,0,warning_count=0
+1207,PARSED,,"[trader#A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт вход с текущих
+
+
+— Вход (A): 87600
+— Вход (B): - 
+
+— SL: 93558 🛡 (от A: -6.3%, от B: -)
+
+— TP: 76201 🎯 (от A: +13.4%, от B: -)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=76201; entries=87600),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:87600,93558,76201,1,1207,,0,unresolved,,0,0,0,warning_count=0
+1205,PARSED,,"[trader#A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт вход с текущих
+
+— Вход (A): 2906
+— Вход (B): -
+
+— SL: 3244 🛡 (от A: -11.6%, от B: -)
+
+— TP: 2228 🎯 (от A: +23.3%, от B: -)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2228; entries=2906),ETHUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2906,3244,2228,1,1205,,0,unresolved,,0,0,0,warning_count=0
+1169,PARSED,,"[trader#A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 87 786.90
+— Усреднение: -
+
+— SL: 90 861.40 🛡(от A: -3.5%, от B: -)
+
+— TP1: 83 863.70 🎯 (от A: +4.5%, от B: -)
+— TP2: 77 180.80 🎯 (от A: +12.1%, от B: -)
+— TP3: 69 480.60 🎯 (от A: +20.9%, от B: -)
+
+Вход не более 1-2% от депозита.",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=83863.7 | 77180.8 | 69480.6; entries=87786.9),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:87786.9,90861.4,83863.7 | 77180.8 | 69480.6,3,1169,,0,unresolved,,0,0,0,warning_count=0
+1168,PARSED,,"[trader#A]
+
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.1223
+— Усреднение: 0.1241
+
+— SL: 0.1279 🛡(от A: -4.6%, от B: -3.1%)
+
+— TP1: 0.1169 🎯 (от A: +4.4%, от B: +5.8%)
+— TP2: 0.1124 🎯 (от A: +8.1%, от B: +9.4%)
+— TP3: 0.1058 🎯 (от A: +13.5%, от B: +14.7%)
+
+1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1169 | 0.1124 | 0.1058; entries=0.1223),DOGEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1223 | AVERAGING:LIMIT:0.1241,0.1279,0.1169 | 0.1124 | 0.1058,3,1168,,0,unresolved,,0,0,0,warning_count=0
+1166,PARSED,,"[trader#A]
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.8817
+— Усреднение: 1.9092
+
+— SL: 2.0373 🛡 (от A: -8.3%, от B: -6.7%)
+
+— TP1: 1.7763 🎯 (от A: +5.6%, от B: +7.0%)
+— TP2: 1.3017 🎯 (от A: +30.8%, от B: +31.8%)
+— TP3: 1.1423 🎯 (от A: +39.3%, от B: +40.2%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.7763 | 1.3017 | 1.1423; entries=1.8817),XRPUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.8817 | AVERAGING:LIMIT:1.9092,2.0373,1.7763 | 1.3017 | 1.1423,3,1166,,0,unresolved,,0,0,0,warning_count=0
+1161,PARSED,,"[trader#A]
+
+#среднесрок
+#ASTERUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.6818
+— Усреднение: 0.7027
+
+— SL: 0.7427 🛡(от A: -8.9%, от B: -5.7%)
+
+— TP1: 0.6337 🎯 (от A: +7.1%, от B: +9.8%)
+— TP2: 0.5899 🎯 (от A: +13.5%, от B: +16.1%)
+— TP3: 0.5341 🎯 (от A: +21.7%, от B: +24.0%)
+
+— Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6337 | 0.5899 | 0.5341; entries=0.6818),ASTERUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.6818 | AVERAGING:LIMIT:0.7027,0.7427,0.6337 | 0.5899 | 0.5341,3,1161,,0,unresolved,,0,0,0,warning_count=0
+1160,PARSED,,"[trader#A]
+
+#среднесрок
+#AAVEUSDT 🐻 Шорт (вход с текущих) 
+
+
+— Вход с текущих: 160.23
+— Усреднение: 162.89
+
+— SL: 167.37 🛡(от A: -4.5%, от B: -2.8%)
+
+— TP1: 152.93 🎯 (от A: +4.6%, от B: +6.1%)
+— TP2: 147.29 🎯 (от A: +8.1%, от B: +9.6%)
+— TP3: 145.27 🎯 (от A: +9.3%, от B: +10.8%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=152.93 | 147.29 | 145.27; entries=160.23),AAVEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:160.23 | AVERAGING:LIMIT:162.89,167.37,152.93 | 147.29 | 145.27,3,1160,,0,unresolved,,0,0,0,warning_count=0
+1158,PARSED,,"[trader#A]
+
+#среднесрок
+#HYPEUSDT 🐻 Шорт
+
+— Вход (A): 33.758
+— Вход (B): 35.639
+
+— SL: 37.147 🛡 (от A: -10.0%, от B: -4.2%)
+
+— TP1: 30.719 🎯 (от A: +9.0%, от B: +13.8%)
+— TP2: 26.801 🎯 (от A: +20.6%, от B: +24.8%)
+— TP3: 25.487 🎯 (от A: +24.5%, от B: +28.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=30.719 | 26.801 | 25.487; entries=33.758 | 35.639),HYPEUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,RANGE_LOW:LIMIT:33.758 | RANGE_HIGH:LIMIT:35.639,37.147,30.719 | 26.801 | 25.487,3,1158,,0,unresolved,,0,0,0,warning_count=0
+1132,PARSED,,"[trader #A]
+
+#среднесрок
+#1000PEPEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.004694
+— Усреднение: 0.004566
+
+— SL: 0.004309 🛡(от A: -8.2%, от B: -5.6%)
+
+— TP1: 0.005168 🎯 (от A: +10.1%, от B: +13.2%)
+— TP2: 0.005233 🎯 (от A: +11.5%, от B: +14.6%)
+— TP3: 0.006412 🎯 (от A: +36.6%, от B: +40.4%)
+
+— Цель (спот, 1W): 0.007044 💫 (от A: +50.1%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.005168 | 0.005233 | 0.006412; entries=0.004694),1000PEPEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.004694 | AVERAGING:LIMIT:0.004566,0.004309,0.005168 | 0.005233 | 0.006412,3,1132,,0,unresolved,,0,0,0,warning_count=0
+1115,PARSED,,"[trader #A]
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.2189
+— Усреднение: -
+
+— SL: 0.2527 🛡(от A: -15.4%, от B: -)
+
+— TP1: 0.1891 🎯 (от A: +13.6%, от B: -)
+— TP2: 0.1708 🎯 (от A: +22.0%, от B: -)
+— TP3: 0.1512 🎯 (от A: +30.9%, от B: -)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1891 | 0.1708 | 0.1512; entries=0.2189),FARTCOINUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.2189,0.2527,0.1891 | 0.1708 | 0.1512,3,1115,,0,unresolved,,0,0,0,warning_count=0
+1114,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 78 713,30
+— Усреднение: 80 414,20
+
+Стоп:
+— SL: 82 067,40 🛡(от A: -4,3%, от B: -2,1%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 75 691,20 🎯 (от A: +3,8%, от B: +5,9%)
+— TP2: 72 982,40 🎯 (от A: +7,3%, от B: +9,2%)
+— TP3: 69 317,10 🎯 (от A: +11,9%, от B: +13,8%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=75691.2 | 72982.4 | 69317.1; entries=78713.3),BTCUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:78713.3 | AVERAGING:LIMIT:80414.2,82067.4,75691.2 | 72982.4 | 69317.1,3,1114,,0,unresolved,,0,0,0,warning_count=0
+1113,PARSED,,"[trader #A]
+
+#интрадей
+#C98USDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,02529
+— Усреднение: нет
+Отмена входа: если 1H закреп выше 0,02660 или цена уйдёт ниже 0,02360 без касания 0,02529 — ордер снять, не догонять.
+
+Стоп:
+— SL: 0,02658 🛡(от A: -5,10%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,02360 🎯 (от A: +6,68%, от B: —)
+— TP2: 0,02200 🎯 (от A: +13,01%, от B: —)
+— TP3: 0,02000 🎯 (от A: +20,92%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0236 | 0.022 | 0.02; entries=0.02529),C98USDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.02529,0.02658,0.0236 | 0.022 | 0.02,3,1113,,0,unresolved,,0,0,0,warning_count=0
+1111,PARSED,,"[trader #A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 9,8310
+— Усреднение: 10,1570
+
+Стоп:
+— SL: 11,1640 🛡(от A: -13,6%, от B: -9,9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 8,9070 🎯 (от A: +9,4%, от B: +12,3%)
+— TP2: 6,4870 🎯 (от A: +34,0%, от B: +36,1%)
+— TP3: 5,1130 🎯 (от A: +48,0%, от B: +49,7%)
+
+Вход не более 0,3–0,5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.907 | 6.487 | 5.113; entries=9.831),LINKUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:9.831 | AVERAGING:LIMIT:10.157,11.164,8.907 | 6.487 | 5.113,3,1111,,0,unresolved,,0,0,0,warning_count=0
+1110,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (лимиткой)
+
+Вход (2-фазный):
+— Вход A: 2 490
+— Вход B: 2 560
+
+Стоп:
+— SL: 2 640 🛡(от A: -6,0%, от B: -3,1%)
+
+Тейки (3 цели):
+— TP1: 2 330 🎯 (от A: +6,4%, от B: +9,0%)
+— TP2: 2 237,5 🎯 (от A: +10,1%, от B: +12,6%)
+— TP3: 2 000 🎯 (от A: +19,7%, от B: +21,9%)
+
+Вход на 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2330 | 2237.5 | 2000; entries=2490),ETHUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:2490,2640,2330 | 2237.5 | 2000,3,1110,,0,unresolved,,0,0,0,warning_count=0
+1108,PARSED,,"[trader #A]
+
+#интрадей
+#ENAUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,1372
+— Усреднение: 0,1396
+Отмена входа: если 15m закрепится выше 0,1415
+
+Стоп:
+— SL: 0,1441 🛡(от A: -5,0%, от B: -3,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,1335 🎯 (от A: +2,7%, от B: +4,4%)
+— TP2: 0,1275 🎯 (от A: +7,1%, от B: +8,7%)
+— TP3: 0,1230 🎯 (от A: +10,3%, от B: +11,9%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1335 | 0.1275 | 0.123; entries=0.1372),ENAUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.1372 | AVERAGING:LIMIT:0.1396,0.1441,0.1335 | 0.1275 | 0.123,3,1108,,0,unresolved,,0,0,0,warning_count=0
+1105,PARSED,,"[trader #A]
+
+#интрадей
+#1000PEPEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,004300
+— Усреднение: нет
+Отмена входа: если 15m закреп выше 0,004330
+
+Стоп:
+— SL: 0,004440 🛡(от A: -3,3%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,004213 🎯 (от A: +2,0%, от B: —)
+— TP2: 0,004100 🎯 (от A: +4,7%, от B: —)
+— TP3: 0,003820 🎯 (от A: +11,2%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.004213 | 0.0041 | 0.00382; entries=0.0043),1000PEPEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0043,0.00444,0.004213 | 0.0041 | 0.00382,3,1105,,0,unresolved,,0,0,0,warning_count=0
+1104,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 2 268,60
+— Усреднение: 2 362,70
+
+Стоп:
+— SL: 2 441,80 🛡(от A: -7,6%, от B: -3,3%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 2 137,80 🎯 (от A: +5,8%, от B: +9,5%)
+— TP2: 2 013,70 🎯 (от A: +11,2%, от B: +14,8%)
+— TP3: 1 637,80 🎯 (от A: +27,8%, от B: +30,7%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2137.8 | 2013.7 | 1637.8; entries=2268.6),ETHUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:2268.6 | AVERAGING:LIMIT:2362.7,2441.8,2137.8 | 2013.7 | 1637.8,3,1104,,0,unresolved,,0,0,0,warning_count=0
+1101,PARSED,,"[trader #A]
+
+#интрадей
+#ZKUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,02665
+— Усреднение: 0,02825
+
+Стоп:
+— SL: 0,02882 🛡(от A: -8,1%, от B: -2,0%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,02555 🎯 (от A: +4,1%, от B: +9,6%)
+— TP2: 0,02310 🎯 (от A: +13,3%, от B: +18,2%)
+— TP3: 0,02180 🎯 (от A: +18,2%, от B: +22,8%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02555 | 0.0231 | 0.0218; entries=0.02665),ZKUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.02665 | AVERAGING:LIMIT:0.02825,0.02882,0.02555 | 0.0231 | 0.0218,3,1101,,0,unresolved,,0,0,0,warning_count=0
+1100,PARSED,,"[trader #A]
+
+#интрадей
+#JUPUSDT 🐂 Лонг (лимитка)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,18461
+— Усреднение: нет
+
+Стоп:
+— SL: 0,17856 🛡(от A: -3,3%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,19000 🎯(от A: +2,9%)
+— TP2: 0,19325 🎯(от A: +4,7%)
+— TP3: 0,19850 🎯(от A: +7,5%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.19 | 0.19325 | 0.1985; entries=0.18461),JUPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.18461,0.17856,0.19 | 0.19325 | 0.1985,3,1100,,0,unresolved,,0,0,0,warning_count=0
+1094,PARSED,,"[trader #A]
+
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1,6393
+— Усреднение: —
+
+Стоп:
+— SL: 1,7373 🛡(от A: -6,0%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1,5523 🎯 (от A: +5,3%, от B: —)
+— TP2: 1,4797 🎯 (от A: +9,7%, от B: —)
+— TP3: 1,1693 🎯 (от A: +28,7%, от B: —)
+
+Вход не более 1–1,5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.5523 | 1.4797 | 1.1693; entries=1.6393),XRPUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.6393,1.7373,1.5523 | 1.4797 | 1.1693,3,1094,,0,unresolved,,0,0,0,warning_count=0
+1090,PARSED,,"[trader #A]
+
+#интрадей
+#COMPUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 20,05
+— Усреднение: нет
+Отмена входа: если уйдём выше 21,20 без ретеста 20,05
+
+Стоп:
+— SL: 19,29 🛡(от A: -3,8%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 20,23 🎯 (от A: +0,9%, от B: —)
+— TP2: 21,20 🎯 (от A: +5,7%, от B: —)
+— TP3: 21,63 🎯 (от A: +7,9%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=20.23 | 21.2 | 21.63; entries=20.05),COMPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:20.05,19.29,20.23 | 21.2 | 21.63,3,1090,,0,unresolved,,0,0,0,warning_count=0
+1082,PARSED,,"[trader #A]
+
+#среднесрок
+#1INCHUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,1148
+— Усреднение: нет
+
+Стоп:
+— SL: 0,1047 🛡(от A: -8,8%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,1289 🎯 (от A: +12,3%, от B: —)
+— TP2: 0,1443 🎯 (от A: +25,7%, от B: —)
+— TP3: 0,1699 🎯 (от A: +48,0%, от B: —)
+
+Спот (цель по 1W-ТФ):
+— Цель: 0,2130 💫 (от A: +85,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1289 | 0.1443 | 0.1699; entries=0.1148),1INCHUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.1148,0.1047,0.1289 | 0.1443 | 0.1699,3,1082,,0,unresolved,,0,0,0,warning_count=0
+1079,PARSED,,"[trader #A]
+
+#среднесрок
+#WAXPUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,0077
+— Усреднение: 0,0074
+
+Стоп:
+— SL: 0,0068 🛡(от A: -11,7%, от B: -8,1%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,0083 🎯 (от A: +7,8%, от B: +12,2%)
+— TP2: 0,0093 🎯 (от A: +20,8%, от B: +25,7%)
+— TP3: 0,0111 🎯 (от A: +44,2%, от B: +50,0%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 0,0134 💫 (от A: +74,0%)
+
+Вход не более 0,5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0083 | 0.0093 | 0.0111; entries=0.0077),WAXPUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.0077 | AVERAGING:LIMIT:0.0074,0.0068,0.0083 | 0.0093 | 0.0111,3,1079,,0,unresolved,,0,0,0,warning_count=0
+1075,PARSED,,"[trader #A]
+
+#интрадей
+#COTIUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,01447
+— Усреднение: 0,01478
+Отмена входа: если 15m закрепится выше 0,01502 или цена уйдёт вниз без ретеста 0,01447–0,01453
+
+Стоп:
+— SL: 0,01502 🛡(от A: -3,8%, от B: -1,6%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,01410 🎯 (от A: +2,6%, от B: +4,6%)
+— TP2: 0,01375 🎯 (от A: +5,0%, от B: +7,0%)
+— TP3: 0,01350 🎯 (от A: +6,7%, от B: +8,7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0141 | 0.01375 | 0.0135; entries=0.01447),COTIUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.01447 | AVERAGING:LIMIT:0.01478,0.01502,0.0141 | 0.01375 | 0.0135,3,1075,,0,unresolved,,0,0,0,warning_count=0
+1065,PARSED,,"[trader #A]
+
+#интрадей
+#OPUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,22535
+— Усреднение: нет
+Отмена входа: если 15m закрепится выше 0,22600 (закрытие + удержание) — отмена
+
+Стоп:
+— SL: 0,23030 🛡(от A: -2,2%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,22160 🎯 (от A: +1,7%, от B: —)
+— TP2: 0,21850 🎯 (от A: +3,0%, от B: —)
+— TP3: 0,21540 🎯 (от A: +4,4%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.2216 | 0.2185 | 0.2154; entries=0.22535),OPUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.22535,0.2303,0.2216 | 0.2185 | 0.2154,3,1065,,0,unresolved,,0,0,0,warning_count=0
+1064,PARSED,,"[trader #A]
+
+#интрадей
+#IDUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,06090
+— Усреднение: нет
+Отмена входа: если 15m закреп выше 0,06240 / если уйдём вниз без ретеста — вход пропустить
+
+Стоп:
+— SL: 0,06240 🛡(от A: -2,5%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,05920 🎯 (от A: +2,8%, от B: —)
+— TP2: 0,05810 🎯 (от A: +4,6%, от B: —)
+— TP3: 0,05730 🎯 (от A: +5,9%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0592 | 0.0581 | 0.0573; entries=0.0609),IDUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0609,0.0624,0.0592 | 0.0581 | 0.0573,3,1064,,0,unresolved,,0,0,0,warning_count=0
+1055,PARSED,,"[trader #A]
+
+#интрадей
+#ENAUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,1381
+— Усреднение: нет
+Отмена входа: если 1H закреп выше 0,1391
+
+Стоп:
+— SL: 0,1417 🛡(от A: -2,6%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,1358 🎯 (от A: +1,7%, от B: —)
+— TP2: 0,1330 🎯 (от A: +3,7%, от B: —)
+— TP3: 0,1308 🎯 (от A: +5,3%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1358 | 0.133 | 0.1308; entries=0.1381),ENAUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1381,0.1417,0.1358 | 0.133 | 0.1308,3,1055,,0,unresolved,,0,0,0,warning_count=0
+1053,PARSED,,"[trader #A]
+
+#интрадей
+#ZORAUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,02644
+— Усреднение: 0,02722
+Отмена входа: если 15m/1H закреп выше 0,02737
+
+Стоп:
+— SL: 0,02737 🛡(от A: -3,5%, от B: -0,6%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,02595 🎯 (от A: +1,9%, от B: +4,7%)
+— TP2: 0,02510 🎯 (от A: +5,1%, от B: +7,8%)
+— TP3: 0,02450 🎯 (от A: +7,3%, от B: +10,0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02595 | 0.0251 | 0.0245; entries=0.02644),ZORAUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.02644 | AVERAGING:LIMIT:0.02722,0.02737,0.02595 | 0.0251 | 0.0245,3,1053,,0,unresolved,,0,0,0,warning_count=0
+1042,PARSED,,"[trader #A]
+
+#интрадей
+#DOGEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,10490
+— Усреднение: нет
+Отмена входа: если 15m закрепится выше 0,10570 или цена уйдёт к 0,10230 без ретеста лимитки
+
+Стоп:
+— SL: 0,10676 🛡(от A: -1,8%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,10354 🎯 (от A: +1,3%, от B: —)
+— TP2: 0,10230 🎯 (от A: +2,5%, от B: —)
+— TP3: 0,10120 🎯 (от A: +3,5%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.10354 | 0.1023 | 0.1012; entries=0.1049),DOGEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1049,0.10676,0.10354 | 0.1023 | 0.1012,3,1042,,0,unresolved,,0,0,0,warning_count=0
+1038,PARSED,,"[trader #A]
+
+#интрадей
+#HYPEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 34,15
+— Усреднение: нет
+Отмена входа: если цена уйдёт вниз без ретеста 34,15 и пробьёт 33,20 — вход не берём
+
+Стоп:
+— SL: 34,52 🛡(от A: -1,1%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 33,66 🎯 (от A: +1,4%, от B: —)
+— TP2: 33,54 🎯 (от A: +1,8%, от B: —)
+— TP3: 33,20 🎯 (от A: +2,8%, от B: —)
+
+тут давайте попробуем все закрыть на 3 тейке, без промежуточных фиксаций",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=33.66 | 33.54 | 33.2; entries=34.15),HYPEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:34.15,34.52,33.66 | 33.54 | 33.2,3,1038,,0,unresolved,,0,0,0,warning_count=0
+1036,PARSED,,"[trader #A]
+
+#интрадей
+#AVAXUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 9,66
+— Усреднение: нет
+
+Стоп:
+— SL: 9,81 🛡(от A: -1,6%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 9,53 🎯 (от A: +1,3%, от B: —)
+— TP2: 9,44 🎯 (от A: +2,3%, от B: —)
+— TP3: 9,30 🎯 (от A: +3,7%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=9.53 | 9.44 | 9.3; entries=9.66),AVAXUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:9.66,9.81,9.53 | 9.44 | 9.3,3,1036,,0,unresolved,,0,0,0,warning_count=0
+1035,PARSED,,"[trader #A]
+
+#интрадей
+#CAKEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 1,50
+— Усреднение: 1,52
+
+Стоп:
+— SL: 1,53 🛡(от A: -2,0%, от B: -0,7%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 1,48 🎯 (от A: +1,3%, от B: +2,6%)
+— TP2: 1,45 🎯 (от A: +3,3%, от B: +4,6%)
+— TP3: 1,42 🎯 (от A: +5,3%, от B: +6,6%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.48 | 1.45 | 1.42; entries=1.5),CAKEUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:1.5 | AVERAGING:LIMIT:1.52,1.53,1.48 | 1.45 | 1.42,3,1035,,0,unresolved,,0,0,0,warning_count=0
+1027,PARSED,,"[trader #A]
+
+#интрадей
+#POPCATUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,05310
+— Усреднение: нет
+
+Стоп:
+— SL: 0,05480 🛡(от A: -3,2%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,05190 🎯 (от A: +2,3%, от B: —)
+— TP2: 0,05070 🎯 (от A: +4,5%, от B: —)
+— TP3: 0,04900 🎯 (от A: +7,7%, от B: —)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0519 | 0.0507 | 0.049; entries=0.0531),POPCATUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0531,0.0548,0.0519 | 0.0507 | 0.049,3,1027,,0,unresolved,,0,0,0,warning_count=0
+1025,PARSED,,"[trader #A]
+
+#интрадей
+#WLDUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,40
+— Усреднение: нет
+
+Стоп:
+— SL: 0,41 🛡(от A: -2,5%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,39 🎯 (от A: +2,5%, от B: —)
+— TP2: 0,38 🎯 (от A: +5,0%, от B: —)
+— TP3: 0,36 🎯 (от A: +10,0%, от B: —)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.39 | 0.38 | 0.36; entries=0.4),WLDUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.4,0.41,0.39 | 0.38 | 0.36,3,1025,,0,unresolved,,0,0,0,warning_count=0
+1024,PARSED,,"[trader #A]
+
+#интрадей
+#LINK 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 9,05
+— Усреднение: нет
+
+Стоп:
+— SL: 9,25 🛡(от A: -2,2%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 8,94 🎯 (от A: +1,2%, от B: —)
+— TP2: 8,72 🎯 (от A: +3,6%, от B: —)
+— TP3: 8,55 🎯 (от A: +5,5%, от B: —)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.94 | 8.72 | 8.55; entries=9.05),LINKUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:9.05,9.25,8.94 | 8.72 | 8.55,3,1024,,0,unresolved,,0,0,0,warning_count=0
+1023,PARSED,,"[trader #A]
+
+#интрадей
+#JTOUSDT 🐻 Шорт (вход лимиткой)
+
+— Вход лимиткой: 0,2769
+— Усреднение: нет
+
+Стоп:
+— SL: 0,2828 🛡(от A: -2,1%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,2735 🎯 (от A: +1,2%, от B: —)
+— TP2: 0,2686 🎯 (от A: +3,0%, от B: —)
+— TP3: 0,2645 🎯 (от A: +4,5%, от B: —)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.2735 | 0.2686 | 0.2645; entries=0.2769),JTOUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2769,0.2828,0.2735 | 0.2686 | 0.2645,3,1023,,0,unresolved,,0,0,0,warning_count=0
+1014,PARSED,,"[trader #A]
+
+#интрадей
+#HOMEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,02820
+— Усреднение: нет
+
+Стоп:
+— SL: 0,02738 🛡(от A: -2,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,02883 🎯 (от A: +2,2%, от B: —)
+— TP2: 0,02960 🎯 (от A: +5,0%, от B: —)
+— TP3: 0,03030 🎯 (от A: +7,4%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.02883 | 0.0296 | 0.0303; entries=0.0282),HOMEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.0282,0.02738,0.02883 | 0.0296 | 0.0303,3,1014,,0,unresolved,,0,0,0,warning_count=0
+1013,PARSED,,"[trader #A]
+
+#интрадей
+#HUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,11620
+— Усреднение: 0,11320
+Отмена входа: если 1H закроется ниже 0,11505 до активации
+
+Стоп:
+— SL: 0,11150 🛡(от A: -4,0%, от B: -1,5%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,11920 🎯 (от A: +2,6%, от B: +5,3%)
+— TP2: 0,12560 🎯 (от A: +8,1%, от B: +11,0%)
+— TP3: 0,12800 🎯 (от A: +10,2%, от B: +13,1%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1192 | 0.1256 | 0.128; entries=0.1162),HUSDT,LONG,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.1162 | AVERAGING:LIMIT:0.1132,0.1115,0.1192 | 0.1256 | 0.128,3,1013,,0,unresolved,,0,0,0,warning_count=0
+1008,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 64 775.60
+— Усреднение: 61 975.60
+
+Стоп:
+— SL: 59 795.60 🛡(от A: -7.7%, от B: -3.5%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 69 295.60 🎯 (от A: +7.0%, от B: +11.8%)
+— TP2: 72 073.60 🎯 (от A: +11.3%, от B: +16.3%)
+— TP3: 77 133.60 🎯 (от A: +19.1%, от B: +24.5%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 86 302.40 💫 (от A: +33.2%)
+
+Вход не более 0.3–0.5% от депозита
+
+давайте аккуратно пробовать",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=69295.6 | 72073.6 | 77133.6; entries=64775.6),BTCUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:64775.6 | AVERAGING:LIMIT:61975.6,59795.6,69295.6 | 72073.6 | 77133.6,3,1008,,0,unresolved,,0,0,0,warning_count=0
+1007,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1 901.30
+— Усреднение: 1 806.20
+
+Стоп:
+— SL: 1 598.20 🛡(от A: -15.9%, от B: -11.5%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 2 139.10 🎯 (от A: +12.5%, от B: +18.4%)
+— TP2: 2 366.10 🎯 (от A: +24.4%, от B: +31.0%)
+— TP3: 2 577.30 🎯 (от A: +35.6%, от B: +42.7%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 2 848.90 💫 (от A: +49.8%)
+
+Вход не более 0.5% от депозита
+
+тоже аккуратно пробуем. интрадей посмотрим после 11 утра по мск",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2139.1 | 2366.1 | 2577.3; entries=1901.3),ETHUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1901.3 | AVERAGING:LIMIT:1806.2,1598.2,2139.1 | 2366.1 | 2577.3,3,1007,,0,unresolved,,0,0,0,warning_count=0
+1005,PARSED,,"[trader #A]
+
+#интрадей
+#LDOUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,3340
+— Усреднение: нет
+
+Стоп:
+— SL: 0,3209 🛡(от A: -3,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,3457 🎯 (от A: +3,5%, от B: —)
+— TP2: 0,3550 🎯 (от A: +6,3%, от B: —)
+— TP3: 0,3699 🎯 (от A: +10,7%, от B: —)
+
+Цена уже ниже твх, поэтому по рынку 
+
+Заходим не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3457 | 0.355 | 0.3699; entries=0.334),LDOUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.334,0.3209,0.3457 | 0.355 | 0.3699,3,1005,,0,unresolved,,0,0,0,warning_count=0
+1004,PARSED,,"[trader #A]
+
+#интрадей
+#LINKUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 8,26
+— Усреднение: нет
+
+
+Стоп:
+— SL: 8,50 🛡(от A: -2,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 8,09 🎯 (от A: +2,1%, от B: —)
+— TP2: 7,92 🎯 (от A: +4,1%, от B: —)
+— TP3: 7,74 🎯 (от A: +6,3%, от B: —)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.09 | 7.92 | 7.74; entries=8.26),LINKUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:8.26,8.5,8.09 | 7.92 | 7.74,3,1004,,0,unresolved,,0,0,0,warning_count=0
+1002,PARSED,,"[trader #A]
+
+#интрадей
+#DOGEUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,09199
+— Усреднение: нет
+Отмена входа: если 15m закреп ниже 0,09159 или цена уйдет выше 0,09653 без ретеста 0,09199
+
+Стоп:
+— SL: 0,08955 🛡(от A: -2,7%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,09350 🎯 (от A: +1,6%, от B: —)
+— TP2: 0,09541 🎯 (от A: +3,7%, от B: —)
+— TP3: 0,09687 🎯 (от A: +5,3%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0935 | 0.09541 | 0.09687; entries=0.09199),DOGEUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.09199,0.08955,0.0935 | 0.09541 | 0.09687,3,1002,,0,unresolved,,0,0,0,warning_count=0
+997,PARSED,,"[trader #A]
+
+#интрадей
+#JTOUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,2452
+— Усреднение: нет
+Отмена входа: если 15m закреп ниже 0,2444 или уйдём выше 0,2568 без ретеста 0,2452
+
+Стоп:
+— SL: 0,2382 🛡(от A: -2,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,2500 🎯 (от A: +2,0%, от B: —)
+— TP2: 0,2550 🎯 (от A: +4,0%, от B: —)
+— TP3: 0,2592 🎯 (от A: +5,7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.25 | 0.255 | 0.2592; entries=0.2452),JTOUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2452,0.2382,0.25 | 0.255 | 0.2592,3,997,,0,unresolved,,0,0,0,warning_count=0
+990,PARSED,,"[trader #A]
+
+#интрадей
+#XRPUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 1,45
+— Усреднение: нет
+Отмена входа: если 15m закреп ниже 1,43 или если цена уйдёт выше 1,53 без ретеста 1,45
+
+Стоп:
+— SL: 1,41 🛡(от A: -2,8%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 1,50 🎯 (от A: +3,4%, от B: —)
+— TP2: 1,53 🎯 (от A: +5,5%, от B: —)
+— TP3: 1,55 🎯 (от A: +6,9%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.5 | 1.53 | 1.55; entries=1.45),XRPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.45,1.41,1.5 | 1.53 | 1.55,3,990,,0,unresolved,,0,0,0,warning_count=0
+985,PARSED,,"[trader #A]
+
+#интрадей
+#SUIUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,99
+— Усреднение: нет
+
+Стоп:
+— SL: 0,97 🛡(от A: -2,0%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 1,01 🎯 (от A: +2,0%, от B: —)
+— TP2: 1,02 🎯 (от A: +3,0%, от B: —)
+— TP3: 1,04 🎯 (от A: +5,1%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.01 | 1.02 | 1.04; entries=0.99),SUIUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.99,0.97,1.01 | 1.02 | 1.04,3,985,,0,unresolved,,0,0,0,warning_count=0
+984,PARSED,,"[trader #A]
+
+#среднесрок
+#HYPEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 32.895
+— Усреднение: 30.542
+
+— SL: 28.689 🛡(от A: -12.8%, от B: -6.1%)
+
+— TP1: 36.973 🎯 (от A: +12.4%, от B: +21.1%)
+— TP2: 39.183 🎯 (от A: +19.1%, от B: +28.3%)
+— TP3: 44.283 🎯 (от A: +34.6%, от B: +45.0%)
+
+— Цель: 49.183 💫 (от A: +49.5%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=36.973 | 39.183 | 44.283; entries=32.895),HYPEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:32.895 | AVERAGING:LIMIT:30.542,28.689,36.973 | 39.183 | 44.283,3,984,,0,unresolved,,0,0,0,warning_count=0
+983,PARSED,,"[trader #A] 
+
+#интрадей
+#SOLUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 86,20
+— Усреднение: нет
+Отмена входа: если 15m/1H закреп ниже 85,85
+
+Стоп:
+— SL: 84,29 🛡(от A: -2,2%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 87,76 🎯 (от A: +1,8%, от B: —)
+— TP2: 89,12 🎯 (от A: +3,4%, от B: —)
+— TP3: 90,20 🎯 (от A: +4,6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=87.76 | 89.12 | 90.2; entries=86.2),SOLUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:86.2,84.29,87.76 | 89.12 | 90.2,3,983,,0,unresolved,,0,0,0,warning_count=0
+982,PARSED,,"[trader #A]
+
+#среднесрок
+#MOODENGUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,0501
+— Усреднение: нет
+
+Стоп:
+— SL: 0,0543 🛡(от A: -8,4%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,0414 🎯 (от A: +17,4%, от B: —)
+— TP2: 0,0381 🎯 (от A: +24,0%, от B: —)
+— TP3: 0,0337 🎯 (от A: +32,7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0414 | 0.0381 | 0.0337; entries=0.0501),MOODENGUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0501,0.0543,0.0414 | 0.0381 | 0.0337,3,982,,0,unresolved,,0,0,0,warning_count=0
+981,PARSED,,"[trader #A]
+
+#среднесрок
+#LTCUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 59.17
+— Усреднение: 61.31
+
+Стоп:
+— SL: 65.49 🛡(от A: -10.68%, от B: -6.82%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 55.04 🎯 (от A: +6.98%, от B: +10.23%)
+— TP2: 50.12 🎯 (от A: +15.29%, от B: +18.25%)
+— TP3: 44.97 🎯 (от A: +24.00%, от B: +26.65%)
+
+Вход не более 1–1.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=55.04 | 50.12 | 44.97; entries=59.17),LTCUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:59.17 | AVERAGING:LIMIT:61.31,65.49,55.04 | 50.12 | 44.97,3,981,,0,unresolved,,0,0,0,warning_count=0
+973,PARSED,,"[trader #A]
+
+#среднесрок
+#VIRTUALUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.5923
+— Усреднение: 0.5543
+
+Стоп:
+— SL: 0.5141 🛡(от A: -13,2%, от B: -7,3%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.6713 🎯 (от A: +13,3%, от B: +21,1%)
+— TP2: 0.7176 🎯 (от A: +21,2%, от B: +29,5%)
+— TP3: 0.9457 🎯 (от A: +59,7%, от B: +70,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.6713 | 0.7176 | 0.9457; entries=0.5923),VIRTUALUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.5923 | AVERAGING:LIMIT:0.5543,0.5141,0.6713 | 0.7176 | 0.9457,3,973,,0,unresolved,,0,0,0,warning_count=0
+970,PARSED,,"[trader #A]
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,2287
+— Усреднение: 0,2407
+Отмена входа: 4H закрытие выше 0,2531
+
+Стоп:
+— SL: 0,2531 🛡(от A: -10,7%, от B: -5,2%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,1992 🎯 (от A: +12,9%, от B: +17,2%)
+— TP2: 0,1697 🎯 (от A: +25,8%, от B: +29,5%)
+— TP3: 0,1563 🎯 (от A: +31,7%, от B: +35,1%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1992 | 0.1697 | 0.1563; entries=0.2287),FARTCOINUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.2287 | AVERAGING:LIMIT:0.2407,0.2531,0.1992 | 0.1697 | 0.1563,3,970,,0,unresolved,,0,0,0,warning_count=0
+969,PARSED,,"[trader #A]
+
+#среднесрок
+#ASTERUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,5882
+— Усреднение: 0,5594
+Отмена входа: если 1D закроется ниже 0,5556 до исполнения
+
+Стоп:
+— SL: 0,5003 🛡(от A: -14,9%, от B: -10,6%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,6891 🎯 (от A: +17,2%, от B: +23,2%)
+— TP2: 0,8279 🎯 (от A: +40,8%, от B: +48,0%)
+— TP3: 1,0437 🎯 (от A: +77,4%, от B: +86,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.6891 | 0.8279 | 1.0437; entries=0.5882),ASTERUSDT,LONG,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.5882 | AVERAGING:LIMIT:0.5594,0.5003,0.6891 | 0.8279 | 1.0437,3,969,,0,unresolved,,0,0,0,warning_count=0
+961,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+
+Вход (2-фазный):
+— Вход с текущих: 70 606.30
+— Усреднение: нет
+
+Стоп:
+— SL: 66 668.10 🛡(от A: -5.6%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 78 236.30 🎯 (от A: +10.8%, от B: —)
+— TP2: 84 335.30 🎯 (от A: +19.4%, от B: —)
+— TP3: 93 935.20 🎯 (от A: +33.1%, от B: —)
+
+Спот (цель по 1W-ТФ):
+— Цель: 95 366.10 💫 (от A: +35.1%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=78236.3 | 84335.3 | 93935.2; entries=70606.3),BTCUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:70606.3,66668.1,78236.3 | 84335.3 | 93935.2,3,961,,0,unresolved,,0,0,0,warning_count=0
+959,PARSED,,"[trader #A]
+
+#среднесрок
+#HAEDALUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,0266
+— Усреднение: 0,0257
+Отмена входа: 4H закрытие ниже 0,0254
+
+Стоп:
+— SL: 0,0241 🛡(от A: -9,4%, от B: -6,2%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,0338 🎯 (от A: +27,1%, от B: +31,5%)
+— TP2: 0,0372 🎯 (от A: +39,8%, от B: +44,7%)
+— TP3: 0,0407 🎯 (от A: +53,0%, от B: +58,4%)
+
+
+цена сейчас ниже чем в сетапе, можно зайти с текущих",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0338 | 0.0372 | 0.0407; entries=0.0266),HAEDALUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.0266 | AVERAGING:LIMIT:0.0257,0.0241,0.0338 | 0.0372 | 0.0407,3,959,,0,unresolved,,0,0,0,warning_count=0
+949,PARSED,,"[trader #A]
+
+#среднесрок
+#ZILUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,004163
+— Усреднение: 0,003909
+
+Стоп:
+— SL: 0,003334 🛡(от A: -19,9%, от B: -14,7%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,005015 🎯 (от A: +20,5%, от B: +28,3%)
+— TP2: 0,006331 🎯 (от A: +52,1%, от B: +62,0%)
+— TP3: 0,009488 🎯 (от A: +127,9%, от B: +142,7%)
+
+Вход не более 1–1,5% от депозита
+
+монструозная сделка...",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.005015 | 0.006331 | 0.009488; entries=0.004163),ZILUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.004163 | AVERAGING:LIMIT:0.003909,0.003334,0.005015 | 0.006331 | 0.009488,3,949,,0,unresolved,,0,0,0,warning_count=0
+941,PARSED,,"[trader #A]
+
+#интрадей
+#FARTCOINUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход A: 0.1882
+— Вход B (усреднение/добор): 0.1900 
+
+Стоп:
+— SL: 0.1950 🛡 (от A: -3.6%, от B: -2.6%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0.1825 🎯 (от A: +3.0%, от B: +3.9%)
+— TP2: 0.1750 🎯 (от A: +7.0%, от B: +7.9%)
+— TP3: 0.1680 🎯 (от A: +10.7%, от B: +11.6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1825 | 0.175 | 0.168; entries=0.1882),FARTCOINUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.1882 | AVERAGING:LIMIT:0.19,0.195,0.1825 | 0.175 | 0.168,3,941,,0,unresolved,,0,0,0,warning_count=0
+936,PARSED,,"[trader #A]
+
+#интрадей
+#ARUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 1,83
+— Усреднение: нет
+
+Стоп:
+— SL: 1,85 🛡(от A: -1,1%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 1,81 🎯 (от A: +1,1%, от B: —)
+
+прорепетируем одной сделкой вечерний марафон",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.81; entries=1.83),ARUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.83,1.85,1.81,1,936,,0,unresolved,,0,0,0,warning_count=0
+892,PARSED,,"[trader #A]
+
+#интрадей
+#APEUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,12300
+— Усреднение: нет
+Отмена входа: если цена уходит выше 0,12500 без ретеста 0,12300
+
+Стоп:
+— SL: 0,12144 🛡(от A: -1,3%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,12440 🎯 (от A: +1,1%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1244; entries=0.123),APEUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.123,0.12144,0.1244,1,892,,0,unresolved,,0,0,0,warning_count=0
+887,PARSED,,"[trader #A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 8,95
+— Усреднение: нет
+
+Стоп:
+— SL: 9,48 🛡(от A: -5,92%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 8,30 🎯 (от A: +7,26%, от B: —)
+— TP2: 7,50 🎯 (от A: +16,20%, от B: —)
+— TP3: 7,10 🎯 (от A: +20,67%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.3 | 7.5 | 7.1; entries=8.95),LINKUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:8.95,9.48,8.3 | 7.5 | 7.1,3,887,,0,unresolved,,0,0,0,warning_count=0
+877,PARSED,,"[trader #A]
+
+#среднесрок
+#LDOUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,3319
+— Усреднение: 0,3226
+
+Стоп:
+— SL: 0,2943 🛡(от A: -11,3%, от B: -8,8%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,3609 🎯 (от A: +8,7%, от B: +11,9%)
+— TP2: 0,4111 🎯 (от A: +23,9%, от B: +27,4%)
+— TP3: 0,4947 🎯 (от A: +49,1%, от B: +53,3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3609 | 0.4111 | 0.4947; entries=0.3319),LDOUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.3319 | AVERAGING:LIMIT:0.3226,0.2943,0.3609 | 0.4111 | 0.4947,3,877,,0,unresolved,,0,0,0,warning_count=0
+876,PARSED,,"[trader #A] 
+
+#среднесрок
+#PEOPLEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,006509
+— Усреднение: нет
+
+Стоп:
+— SL: 0,005643 🛡(от A: -13,3%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,007591 🎯 (от A: +16,6%, от B: —)
+— TP2: 0,008698 🎯 (от A: +33,6%, от B: —)
+— TP3: 0,011071 🎯 (от A: +70,1%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.007591 | 0.008698 | 0.011071; entries=0.006509),PEOPLEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.006509,0.005643,0.007591 | 0.008698 | 0.011071,3,876,,0,unresolved,,0,0,0,warning_count=0
+875,PARSED,,"[trader #A]
+
+#среднесрок
+#FARTCOINUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,1729
+— Усреднение: 0,1665
+
+Стоп:
+— SL: 0,1517 🛡(от A: -12,3%, от B: -8,9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,1971 🎯 (от A: +14,0%, от B: +18,4%)
+— TP2: 0,2281 🎯 (от A: +31,9%, от B: +37,0%)
+— TP3: 0,2756 🎯 (от A: +59,4%, от B: +65,5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1971 | 0.2281 | 0.2756; entries=0.1729),FARTCOINUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1729 | AVERAGING:LIMIT:0.1665,0.1517,0.1971 | 0.2281 | 0.2756,3,875,,0,unresolved,,0,0,0,warning_count=0
+868,PARSED,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐂 Лонг (вход с текущих) 
+
+Вход (2-фазный):
+— Вход с текущих: 0,09384
+— Усреднение: нет
+
+Стоп:
+— SL: 0,08413 🛡(от A: -10,4%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,10582 🎯 (от A: +12,8%, от B: —)
+— TP2: 0,11985 🎯 (от A: +27,7%, от B: —)
+— TP3: 0,14707 🎯 (от A: +56,7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.10582 | 0.11985 | 0.14707; entries=0.09384),DOGEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.09384,0.08413,0.10582 | 0.11985 | 0.14707,3,868,,0,unresolved,,0,0,0,warning_count=0
+848,PARSED,,"Trader #A
+
+#интрадей
+#COMPUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 15,90
+— Усреднение: нет
+Отмена входа: если 15m закрепится выше 17,50 без ретеста 15,90.
+
+Стоп:
+— SL: 15,50 🛡(от A: -2,5%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 16,30 🎯 (от A: +2,5%, от B: —)
+— TP2: 17,50 🎯 (от A: +10,1%, от B: —)
+— TP3: 18,00 🎯 (от A: +13,2%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=16.3 | 17.5 | 18; entries=15.9),COMPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:15.9,15.5,16.3 | 17.5 | 18,3,848,,0,unresolved,,0,0,0,warning_count=0
+842,PARSED,,"[trader #A]
+
+#среднесрок
+#SAGAUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,03271
+— Усреднение: нет
+
+Стоп:
+— SL: 0,02960 🛡(от A: -9,5%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,03777 🎯 (от A: +15,5%, от B: —)
+— TP2: 0,04306 🎯 (от A: +31,6%, от B: —)
+— TP3: 0,04901 🎯 (от A: +49,8%, от B: —)\",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.03777 | 0.04306 | 0.04901; entries=0.03271),SAGAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.03271,0.0296,0.03777 | 0.04306 | 0.04901,3,842,,0,unresolved,,0,0,0,warning_count=0
+836,PARSED,,"[trader #A]
+
+#среднесрок
+#PORTALUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,01458
+— Усреднение: нет
+
+Стоп:
+— SL: 0,01348 🛡(от A: -7,5%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,01621 🎯 (от A: +11,2%, от B: —)
+— TP2: 0,01829 🎯 (от A: +25,4%, от B: —)
+— TP3: 0,02612 🎯 (от A: +79,1%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.01621 | 0.01829 | 0.02612; entries=0.01458),PORTALUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.01458,0.01348,0.01621 | 0.01829 | 0.02612,3,836,,0,unresolved,,0,0,0,warning_count=0
+827,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 67 887,60
+— Усреднение: нет
+
+Стоп:
+— SL: 71 286,90 🛡(от A: -5,0%, от B: —)
+
+Тейки (среднесрок):
+— TP1: 61 119,40 🎯
+
+
+У меня был такой сетап в загашнике, твх сейчас очень приятная. 
+Можно попробовать с текущих 
+
+
+В статистке вход будет с 70400",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=61119.4; entries=67887.6),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:67887.6,71286.9,61119.4,1,827,,0,unresolved,,0,0,0,warning_count=0
+816,PARSED,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,1078
+— Усреднение: 0,1114
+
+Стоп:
+— SL: 0,1133 🛡(от A: -5,1%, от B: -1,7%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,0998 🎯 (от A: +7,4%, от B: +10,4%)
+— TP2: 0,0966 🎯 (от A: +10,4%, от B: +13,3%)
+— TP3: 0,0878 🎯 (от A: +18,6%, от B: +21,2%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0998 | 0.0966 | 0.0878; entries=0.1078),DOGEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1078 | AVERAGING:LIMIT:0.1114,0.1133,0.0998 | 0.0966 | 0.0878,3,816,,0,unresolved,,0,0,0,warning_count=0
+815,PARSED,,"[trader #A]
+
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1,5226
+— Усреднение: нет
+
+Стоп:
+— SL: 1,7447 🛡(от A: -14,6%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1,4189 🎯 (от A: +6,8%, от B: —)
+— TP2: 0,5419 🎯 (от A: +64,4%, от B: —)
+— TP3: 0,4586 🎯 (от A: +69,9%, от B: —)
+
+не пугаемся тейкам) просто закрываем глаза и ждем))",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.4189 | 0.5419 | 0.4586; entries=1.5226),XRPUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.5226,1.7447,1.4189 | 0.5419 | 0.4586,3,815,,0,unresolved,,0,0,0,warning_count=0
+814,PARSED,,"[trader #A]
+
+#среднесрок
+#AAVEUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 125,47
+— Усреднение: нет
+
+Стоп:
+— SL: 139,17 🛡(от A: -10,9%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 100,63 🎯 (от A: +19,8%, от B: —)
+— TP2: 64,63 🎯 (от A: +48,5%, от B: —)
+— TP3: 52,13 🎯 (от A: +58,5%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=100.63 | 64.63 | 52.13; entries=125.47),AAVEUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:125.47,139.17,100.63 | 64.63 | 52.13,3,814,,0,unresolved,,0,0,0,warning_count=0
+813,PARSED,,"[trader #A]
+
+#интрадей
+#TAOUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 188,45
+— Усреднение: нет
+
+Стоп:
+— SL: 194,00 🛡(от A: -2,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 183,49 🎯 (от A: +2,6%, от B: —)
+— TP2: 178,28 🎯 (от A: +5,4%, от B: —)
+— TP3: 173,10 🎯 (от A: +8,1%, от B: —)
+
+давно не было, давайте пробовать
+фиксация 50/40/10",trader_a_ambiguous_update_without_target,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=183.49 | 178.28 | 173.1; entries=188.45),TAOUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:188.45,194,183.49 | 178.28 | 173.1,3,813,,0,unresolved,,0,0,0,warning_count=1
+812,PARSED,,"[trader #A]
+
+#интрадей
+#RUNEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,4130
+— Усреднение: нет
+
+Стоп:
+— SL: 0,4181 🛡(от A: -1,2%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,4094 🎯 (от A: +0,9%, от B: —)
+— TP2: 0,3900 🎯 (от A: +5,6%, от B: —)
+— TP3: 0,3840 🎯 (от A: +7,0%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.4094 | 0.39 | 0.384; entries=0.413),RUNEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.413,0.4181,0.4094 | 0.39 | 0.384,3,812,,0,unresolved,,0,0,0,warning_count=0
+799,PARSED,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 84,65
+— Усреднение: нет
+
+Стоп:
+— SL: 90,89 🛡(от A: -7,4%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 78,61 🎯 (от A: +7,1%, от B: —)
+— TP2: 74,61 🎯 (от A: +11,9%, от B: —)
+— TP3: 70,61 🎯 (от A: +16,6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=78.61 | 74.61 | 70.61; entries=84.65),SOLUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:84.65,90.89,78.61 | 74.61 | 70.61,3,799,,0,unresolved,,0,0,0,warning_count=0
+793,PARSED,,"[trader #A]
+
+#среднесрок
+#NEARUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1.0583
+— Усреднение: 1.0837
+
+Стоп:
+— SL: 1.1154 🛡(от A: -5.4%, от B: -2.9%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.9867 🎯 (от A: +6.8%, от B: +9.0%)
+— TP2: 0.9433 🎯 (от A: +10.9%, от B: +13.0%)
+— TP3: 0.8679 🎯 (от A: +18.0%, от B: +19.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.9867 | 0.9433 | 0.8679; entries=1.0583),NEARUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.0583 | AVERAGING:LIMIT:1.0837,1.1154,0.9867 | 0.9433 | 0.8679,3,793,,0,unresolved,,0,0,0,warning_count=0
+761,PARSED,,"[trader #A]
+
+#интрадей
+#XMRUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 336,60
+— Усреднение: 340,60
+Отмена входа: если 15m закрепится выше 341,30
+
+Стоп:
+— SL: 341,30 🛡(от A: -1,4%, от B: -0,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 333,80 🎯 (от A: +0,8%, от B: +2,0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=333.8; entries=336.6),XMRUSDT,SHORT,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:336.6 | AVERAGING:LIMIT:340.6,341.3,333.8,1,761,,0,unresolved,,0,0,0,warning_count=0
+744,PARSED,,"[trader #A]
+
+#среднесрок
+#TONUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1,4137
+— Усреднение: 1,4365
+
+Стоп:
+— SL: 1,4755 🛡(от A: -4,4%, от B: -2,7%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 1,3497 🎯 (от A: +4,5%, от B: +6,0%)
+— TP2: 1,3017 🎯 (от A: +7,9%, от B: +9,4%)
+— TP3: 1,2447 🎯 (от A: +12,0%, от B: +13,4%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.3497 | 1.3017 | 1.2447; entries=1.4137),TONUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.4137 | AVERAGING:LIMIT:1.4365,1.4755,1.3497 | 1.3017 | 1.2447,3,744,,0,unresolved,,0,0,0,warning_count=0
+743,PARSED,,"Trader #A
+Важно: данная сделка не учитывается в статистике, так как в моём портфеле (превысит допустимое количество открытых сделок) она выходит за риск-параметры
+
+Тем не менее, я оставляю её в работе, буду контролировать исполнение и публиковать апдейты.
+
+Если вы без позиции — действуйте строго по своему риск-менеджменту
+
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,1867
+— Усреднение: 0,1927
+
+Стоп:
+— SL: 0,2092 🛡(от A: -12,1%, от B: -8,6%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,1673 🎯 (от A: +10,4%, от B: +13,2%)
+— TP2: 0,1518 🎯 (от A: +18,7%, от B: +21,2%)
+— TP3: 0,1217 🎯 (от A: +34,8%, от B: +36,8%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1673 | 0.1518 | 0.1217; entries=0.1867),FARTCOINUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1867 | AVERAGING:LIMIT:0.1927,0.2092,0.1673 | 0.1518 | 0.1217,3,743,,0,unresolved,,0,0,0,warning_count=0
+736,PARSED,,"[trader #A]
+
+#среднесрок
+#1000PEPEUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,004172
+— Усреднение: 0,004273
+
+Стоп:
+— SL: 0,004542 🛡(от A: -8,9%, от B: -6,3%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,003852 🎯 (от A: +7,7%, от B: +9,9%)
+— TP2: 0,003463 🎯 (от A: +17,0%, от B: +19,0%)
+— TP3: 0,003312 🎯 (от A: +20,6%, от B: +22,5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.003852 | 0.003463 | 0.003312; entries=0.004172),1000PEPEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.004172 | AVERAGING:LIMIT:0.004273,0.004542,0.003852 | 0.003463 | 0.003312,3,736,,0,unresolved,,0,0,0,warning_count=0
+732,PARSED,,"[trader #A]
+
+#среднесрок
+#ASTERUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,6940
+— Усреднение: —
+
+Стоп:
+— SL: 0,7442 🛡(от A: -7,2%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,6468 🎯 (от A: +6,8%, от B: —)
+— TP2: 0,6092 🎯 (от A: +12,2%, от B: —)
+— TP3: 0,5226 🎯 (от A: +24,7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6468 | 0.6092 | 0.5226; entries=0.694),ASTERUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.694,0.7442,0.6468 | 0.6092 | 0.5226,3,732,,0,unresolved,,0,0,0,warning_count=0
+724,PARSED,,"[trader #A]
+
+#интрадей
+#APEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,10990
+— Усреднение: нет
+Отмена входа: если 15m закрепится выше 0,11015
+
+Стоп:
+— SL: 0,11202 🛡(от A: -1,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,10870 🎯 (от A: +1,1%, от B: —)
+— TP2: 0,10693 🎯 (от A: +2,7%, от B: —)
+— TP3: 0,10565 🎯 (от A: +3,9%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1087 | 0.10693 | 0.10565; entries=0.1099),APEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1099,0.11202,0.1087 | 0.10693 | 0.10565,3,724,,0,unresolved,,0,0,0,warning_count=0
+723,PARSED,,"[trader #A]
+
+#интрадей
+#AVAXUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 8,95
+— Усреднение: нет
+Отмена входа: если 15m закреп ниже 8,92 (PDL) до исполнения
+
+Стоп:
+— SL: 8,89 🛡(от A: -0,7%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 9,00 🎯 (от A: +0,6%, от B: —)
+— TP2: 9,05 🎯 (от A: +1,1%, от B: —)
+— TP3: 9,09 🎯 (от A: +1,6%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=9 | 9.05 | 9.09; entries=8.95),AVAXUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:8.95,8.89,9 | 9.05 | 9.09,3,723,,0,unresolved,,0,0,0,warning_count=0
+722,PARSED,,"trader #A]
+
+#интрадей
+#ICPUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 2,27
+— Усреднение: нет
+Отмена входа: если 1H закрепится выше 2,35
+
+Стоп:
+— SL: 2,35 🛡(от A: -3,5%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 2,16 🎯 (от A: +4,8%, от B: —)
+— TP2: 2,14 🎯 (от A: +5,7%, от B: —)
+— TP3: 2,02 🎯 (от A: +11,0%, от B: —)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.16 | 2.14 | 2.02; entries=2.27),ICPUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:2.27,2.35,2.16 | 2.14 | 2.02,3,722,,0,unresolved,,0,0,0,warning_count=0
+721,PARSED,,"[trader #A]
+
+#интрадей
+#HYPEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— A (с текущих): 29,45
+— B (лимит/усреднение): 29,10
+
+Стоп:
+— SL: 28,85 🛡 (от A: −2,04%, от B: −0,86%)
+
+Тейк (1 цель):
+— TP1: 30,25 🎯 (от A: +2,72%, от B: +3,95%)
+
+Вход 1%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=30.25; entries=29.45),HYPEUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:29.45 | AVERAGING:LIMIT:29.1,28.85,30.25,1,721,,0,unresolved,,0,0,0,warning_count=0
+719,PARSED,,"Trader #A 
+
+#интрадей
+#CYBERUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— A (с текущих): 0,5633
+— B (лимит/усреднение): -
+
+Стоп:
+— SL: 0,5450 🛡 (от A: −3,25%, от B: −)
+
+Тейк (1 цель):
+— TP1: 0,6000 🎯 (от A: +6,52%, от B: -)
+
+
+Риск 1% на сделку",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.6; entries=0.5633),CYBERUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.5633,0.545,0.6,1,719,,0,unresolved,,0,0,0,warning_count=0
+708,PARSED,,"Trader #A 
+
+#интрадей
+#ENAUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— A (с текущих): 0.11044
+— B (лимит): -
+
+Стоп:
+— SL: 0.10720 🛡 (от A: -2.93%, от B: -)
+
+Тейк (1 цель):
+— TP1: 0.11500 🎯 (от A: +4.13%, от B:-)
+
+вход 1%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.115; entries=0.11044),ENAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.11044,0.1072,0.115,1,708,,0,unresolved,,0,0,0,warning_count=0
+701,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 1 924.95
+— Усреднение: 1 962.23
+
+Стоп:
+— SL: 2 066.70 🛡(от A: -7.4%, от B: -5.3%)
+
+Тейки (3 цели):
+— TP1: 1 742.60 🎯 (от A: +9.5%, от B: +11.2%)
+— TP2: 1 548.70 🎯 (от A: +19.5%, от B: +21.1%)
+— TP3: 1 364.80 🎯 (от A: +29.1%, от B: +30.4%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1742.6 | 1548.7 | 1364.8; entries=1924.95),ETHUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1924.95 | AVERAGING:LIMIT:1962.23,2066.7,1742.6 | 1548.7 | 1364.8,3,701,,0,unresolved,,0,0,0,warning_count=0
+698,PARSED,,"Trader #A
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 66 851.30
+— Усреднение: -
+
+Стоп:
+— SL: 70 429.70 🛡(от A: -5.4%, от B: -)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 53 701.80 🎯 (от A: +19.7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=53701.8; entries=66851.3),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:66851.3,70429.7,53701.8,1,698,,0,unresolved,,0,0,0,warning_count=0
+696,PARSED,,"[trader #A]
+
+#среднесрок
+#ASTERUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0,6940
+— Усреднение: —
+
+Стоп:
+— SL: 0,7442 🛡(от A: -7,2%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0,6468 🎯 (от A: +6,8%, от B: —)
+— TP2: 0,6092 🎯 (от A: +12,2%, от B: —)
+— TP3: 0,5226 🎯 (от A: +24,7%, от B: —)
+
+Снова берём",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.6468 | 0.6092 | 0.5226; entries=0.694),ASTERUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.694,0.7442,0.6468 | 0.6092 | 0.5226,3,696,,0,unresolved,,0,0,0,warning_count=0
+690,PARSED,,"[trader #A]
+
+#среднесрок
+#PAXGUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 5 053.10
+— Усреднение: 5 012.90
+
+Стоп:
+— SL: 4 912.40 🛡 (от A: -2.8%, от B: -2.0%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 5 291.70 🎯 (от A: +4.7%, от B: +5.6%)
+— TP2: 5 591.70 🎯 (от A: +10.7%, от B: +11.5%)
+— TP3: 5 841.70 🎯 (от A: +15.6%, от B: +16.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=5291.7 | 5591.7 | 5841.7; entries=5053.1),PAXGUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:5053.1 | AVERAGING:LIMIT:5012.9,4912.4,5291.7 | 5591.7 | 5841.7,3,690,,0,unresolved,,0,0,0,warning_count=0
+688,PARSED,,"[trader #A]
+
+#среднесрок
+#JSTUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.0434
+— Усреднение: 0.0428
+
+Стоп:
+— SL: 0.0413 🛡(от A: -4.8%, от B: -3.5%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.0452 🎯 (от A: +4.1%, от B: +5.6%)
+— TP2: 0.0469 🎯 (от A: +8.1%, от B: +9.6%)
+— TP3: 0.0479 🎯 (от A: +10.4%, от B: +11.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0452 | 0.0469 | 0.0479; entries=0.0434),JSTUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.0434 | AVERAGING:LIMIT:0.0428,0.0413,0.0452 | 0.0469 | 0.0479,3,688,,0,unresolved,,0,0,0,warning_count=0
+677,PARSED,,"[trader #A]
+
+#среднесрок
+#ADAUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— A (лимит): 0.2980 
+— B (лимит): -
+
+Стоп:
+— SL: 0.3043 🛡 (от A: -2.10%, от B: -)
+
+
+Тейк (1 цель):
+— TP1: 0.2680 🎯 (от A: +10.09%, от B: -)
+
+
+Риск 1% на сделку",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.268; entries=0.298),ADAUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.298,0.3043,0.268,1,677,,0,unresolved,,0,0,0,warning_count=0
+676,PARSED,,"[trader #A]
+
+#среднесрок
+#SXPUSDT 🐻 Шорт (лимит)
+
+Вход (2-фазный):
+— A (лимит): 0.02755 
+— B (лимит): -
+
+Стоп:
+— SL: 0.02889 🛡 (от A: -4.85%, от B: -)
+
+Тейк (1 цель):
+— TP1: 0.02150 🎯 (от A: +21.96%, от B: -)
+
+
+Риск 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0215; entries=0.02755),SXPUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.02755,0.02889,0.0215,1,676,,0,unresolved,,0,0,0,warning_count=0
+672,PARSED,,"[trader #A]
+
+#среднесрок
+#1000BONKUSDT 🐻 Шорт (вход с текущих)
+
+2-фазный вход:
+— A (с текущих): 0.006156
+— B (усреднение): 0.006256
+
+Стоп:
+— SL: 0.006598 🛡(от A: -7.2%, от B: -5.5%)
+
+Тейки (3 цели):
+— TP1: 0.005721 🎯 (от A: +7.1%, от B: +8.6%)
+— TP2: 0.005269 🎯 (от A: +14.4%, от B: +15.8%)
+— TP3: 0.004709 🎯 (от A: +23.5%, от B: +24.7%)
+
+Вход не более 1–2%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.005721 | 0.005269 | 0.004709; entries=0.006156),1000BONKUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.006156 | AVERAGING:LIMIT:0.006256,0.006598,0.005721 | 0.005269 | 0.004709,3,672,,0,unresolved,,0,0,0,warning_count=0
+668,PARSED,,"[trader #A]
+
+#среднесрок
+#AGLDUSDT 🐻 Шорт (вход с текущих)
+
+2-фазный вход:
+— Вход с текущих: 0.36942
+— Усреднение: -
+
+Стоп:
+— SL: 0.4211 🛡(от A: -12.44%, от B: -)
+
+Тейки (3 цели):
+— TP1: 0.28490 🎯 (от A: +23.93%, от B: )
+— TP2: 0.26780 🎯 (от A: +28.50%, от B: )
+— TP3: 0.23470 🎯 (от A: +37.33%, от B: )
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.2849 | 0.2678 | 0.2347; entries=0.36942),AGLDUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.36942,0.4211,0.2849 | 0.2678 | 0.2347,3,668,,0,unresolved,,0,0,0,warning_count=0
+661,PARSED,,"[trader #A]
+
+#среднесрок
+#BCHUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 533.20
+— Усреднение: 544.70
+
+Стоп:
+— SL: 567.40 🛡(от A: -6.4%, от B: -4.2%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 501.80 🎯 (от A: +5.9%, от B: +7.9%)
+— TP2: 481.80 🎯 (от A: +9.6%, от B: +11.5%)
+— TP3: 418.60 🎯 (от A: +21.5%, от B: +23.2%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=501.8 | 481.8 | 418.6; entries=533.2),BCHUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:533.2 | AVERAGING:LIMIT:544.7,567.4,501.8 | 481.8 | 418.6,3,661,,0,unresolved,,0,0,0,warning_count=0
+654,PARSED,,"[trader #A]
+
+#среднесрок
+#BNBUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 597.20
+— Усреднение: 606.60
+
+Стоп:
+— SL: 636.20 🛡 (от A: -6.53%, от B: -4.88%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 563.10 🎯 (от A: +5.71%, от B: +7.17%)
+— TP2: 516.70 🎯 (от A: +13.48%, от B: +14.82%)
+— TP3: 474.80 🎯 (от A: +20.50%, от B: +21.73%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=563.1 | 516.7 | 474.8; entries=597.2),BNBUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:597.2 | AVERAGING:LIMIT:606.6,636.2,563.1 | 516.7 | 474.8,3,654,,0,unresolved,,0,0,0,warning_count=0
+632,PARSED,,"[trader #A]
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.1541
+— Усреднение: 0.1603
+
+Стоп:
+— SL: 0.1731 🛡(от A: -12.3%, от B: -8.0%)
+
+Тейки (3 цели):
+— TP1: 0.1379 🎯 (от A: +10.5%, от B: +14.0%)
+— TP2: 0.1206 🎯 (от A: +21.7%, от B: +24.8%)
+— TP3: 0.0586 🎯 (от A: +62.0%, от B: +63.4%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1379 | 0.1206 | 0.0586; entries=0.1541),FARTCOINUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1541 | AVERAGING:LIMIT:0.1603,0.1731,0.1379 | 0.1206 | 0.0586,3,632,,0,unresolved,,0,0,0,warning_count=0
+630,PARSED,,"[trader #A]
+
+#среднесрок
+#HUSDT 🐂 Лонг (вход с текущих) 
+
+— Вход с текущих: 0.13655
+— Усреднение: 0.1293
+
+— SL: 0.1131 🛡 (от A: -16.5%, от B: -12.5%)
+
+— TP1: 0.1553 🎯 (от A: +14.7%, от B: +20.1%)
+— TP2: 0.1692 🎯 (от A: +25.0%, от B: +30.9%)
+— TP3: 0.1876 🎯 (от A: +38.6%, от B: +45.1%)
+
+тут риск, зайдем на 0.5% от депозита
+
+ТВХ изменил на текущую",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1553 | 0.1692 | 0.1876; entries=0.13655),HUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.13655 | AVERAGING:LIMIT:0.1293,0.1131,0.1553 | 0.1692 | 0.1876,3,630,,0,unresolved,,0,0,0,warning_count=0
+627,PARSED,,"[trader #A]
+
+#интрадей
+#TAOUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 179,00
+— Усреднение: 175,58
+Отмена входа: если 1H/15m закрепится ниже 173,02 (PDL)
+
+Стоп:
+— SL: 171,80 🛡(от A: -4,0%, от B: -2,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 182,22 🎯 (от A: +1,8%, от B: +3,8%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=182.22; entries=179),TAOUSDT,LONG,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:179 | AVERAGING:LIMIT:175.58,171.8,182.22,1,627,,0,unresolved,,0,0,0,warning_count=0
+626,PARSED,,"[trader #A]
+
+#интрадей
+#TIAUSDT 🐂 Лонг (вход лимиткой; Bybit) 
+
+Интрадей_1.1
+
+Вход (2-фазный):
+— Вход лимиткой: 0,3260
+— Усреднение: 0,3216
+Отмена входа: если 15m закроется выше 0,3393 без ретеста 0,3260 — отмена (не догоняем)
+
+Стоп:
+— SL: 0,3094 🛡(от A: -5,1%, от B: -3,8%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,3393 🎯 (от A: +4,1%, от B: +5,5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3393; entries=0.326),TIAUSDT,LONG,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.326 | AVERAGING:LIMIT:0.3216,0.3094,0.3393,1,626,,0,unresolved,,0,0,0,warning_count=0
+625,PARSED,,"[trader #A]
+
+#интрадей
+#THETAUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,18796
+— Усреднение: 0,18546
+Отмена входа: если 15m закрепится ниже 0,18593 (PWL)
+
+Стоп:
+— SL: 0,18383 🛡(от A: -2,2%, от B: -0,9%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,18960 🎯 (от A: +0,9%, от B: +2,2%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1896; entries=0.18796),THETAUSDT,LONG,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:0.18796 | AVERAGING:LIMIT:0.18546,0.18383,0.1896,1,625,,0,unresolved,,0,0,0,warning_count=0
+620,PARSED,,"[trader #A]
+
+#интрадей
+#TLMUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,0016242
+— Усреднение: нет
+Отмена входа: если 15m закреп ниже 0,0016147 или цена уйдёт вверх без ретеста 0,0016242
+
+Стоп:
+— SL: 0,0016147 🛡(от A: -0,6%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,0016349 🎯 (от A: +0,7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0016349; entries=0.0016242),TLMUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0016242,0.0016147,0.0016349,1,620,,0,unresolved,,0,0,0,warning_count=0
+619,PARSED,,"[trader #A]
+
+#интрадей
+#TNSRUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,04867
+— Усреднение: нет
+Отмена входа: если 15m закрепится ниже 0,04831
+
+Стоп:
+— SL: 0,04764 🛡(от A: -2,1%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,05000 🎯 (от A: +2,7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.05; entries=0.04867),TNSRUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.04867,0.04764,0.05,1,619,,0,unresolved,,0,0,0,warning_count=0
+608,PARSED,,"[trader #A]
+
+#интрадей
+#TRUUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,005317
+— Усреднение: нет
+
+
+Стоп:
+— SL: 0,005240 🛡(от A: -1,4%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,005402 🎯 (от A: +1,6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.005402; entries=0.005317),TRUUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.005317,0.00524,0.005402,1,608,,0,unresolved,,0,0,0,warning_count=0
+607,PARSED,,"[trader #A]
+
+#интрадей
+#TWTUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,5123
+— Усреднение: нет
+
+
+Стоп:
+— SL: 0,5044 🛡(от A: -1,5%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,5155 🎯 (от A: +0,6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.5155; entries=0.5123),TWTUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.5123,0.5044,0.5155,1,607,,0,unresolved,,0,0,0,warning_count=0
+606,PARSED,,"[trader #A]
+
+#интрадей
+#TRBUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 15,100
+— Усреднение: нет
+
+
+Стоп:
+— SL: 14,703 🛡(от A: -2,6%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 15,332 🎯 (от A: +1,5%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=15.332; entries=15.1),TRBUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:15.1,14.703,15.332,1,606,,0,unresolved,,0,0,0,warning_count=0
+605,PARSED,,"[trader #A]
+
+#интрадей
+#SXPUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,02291
+— Усреднение: нет
+
+Стоп:
+— SL: 0,02145 🛡(от A: -6,4%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,02400 🎯 (от A: +4,8%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.024; entries=0.02291),SXPUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.02291,0.02145,0.024,1,605,,0,unresolved,,0,0,0,warning_count=0
+603,PARSED,,"[trader #A]
+
+#интрадей
+#WIFUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,21268
+— Усреднение: нет
+
+
+Стоп:
+— SL: 0,20863 🛡(от A: -1,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,21515 🎯 (от A: +1,2%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.21515; entries=0.21268),WIFUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.21268,0.20863,0.21515,1,603,,0,unresolved,,0,0,0,warning_count=0
+600,PARSED,,"[trader #A]
+
+#интрадей
+#ETHFIUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,5288
+— Усреднение: нет
+
+Стоп:
+— SL: 0,5239 🛡(от A: -0,9%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,5331 🎯 (от A: +0,8%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.5331; entries=0.5288),ETHFIUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.5288,0.5239,0.5331,1,600,,0,unresolved,,0,0,0,warning_count=0
+598,PARSED,,"[trader #A]
+
+#интрадей
+#AGLDUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,28978
+— Усреднение: нет
+
+Стоп:
+— SL: 0,28079 🛡(от A: -3,1%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,29435 🎯 (от A: +1,6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.29435; entries=0.28978),AGLDUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.28978,0.28079,0.29435,1,598,,0,unresolved,,0,0,0,warning_count=0
+584,PARSED,,"[trader #A]
+
+#среднесрок
+#SUIUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.9483
+— Усреднение: 0.9791
+
+Стоп:
+— SL: 1.0389 🛡(от A: -9.6%, от B: -6.1%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.8859 🎯 (от A: +6.6%, от B: +9.5%)
+— TP2: 0.8169 🎯 (от A: +13.9%, от B: +16.6%)
+— TP3: 0.7429 🎯 (от A: +21.7%, от B: +24.1%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.8859 | 0.8169 | 0.7429; entries=0.9483),SUIUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.9483 | AVERAGING:LIMIT:0.9791,1.0389,0.8859 | 0.8169 | 0.7429,3,584,,0,unresolved,,0,0,0,warning_count=0
+583,PARSED,,"[trader #A]
+
+#среднесрок
+#AVAXUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 9.332
+— Усреднение: — (пропуск)
+
+Стоп:
+— SL: 8.465 🛡(от A: -9.3%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 10.493 🎯 (от A: +12.4%, от B: —)
+— TP2: 13.886 🎯 (от A: +48.8%, от B: —)
+— TP3: 14.863 🎯 (от A: +59.3%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=10.493 | 13.886 | 14.863; entries=9.332),AVAXUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:9.332,8.465,10.493 | 13.886 | 14.863,3,583,,0,unresolved,,0,0,0,warning_count=0
+582,PARSED,,"[trader #A]
+
+#среднесрок
+#PEOPLEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.006709
+— Усреднение: —
+
+Стоп:
+— SL: 0.006198 🛡 (от A: -7.6%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.007330 🎯 (от A: +9.3%, от B: —)
+— TP2: 0.007820 🎯 (от A: +16.6%, от B: —)
+— TP3: 0.008960 🎯 (от A: +33.6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.00733 | 0.00782 | 0.00896; entries=0.006709),PEOPLEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.006709,0.006198,0.00733 | 0.00782 | 0.00896,3,582,,0,unresolved,,0,0,0,warning_count=0
+574,PARSED,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 85.63
+— Усреднение: 87.45
+
+— SL: 91.70 🛡(от A: -7.09%, от B: -4.86%)
+
+— TP1: 79.85 🎯 (от A: +6.75%, от B: +8.69%)
+— TP2: 75.73 🎯 (от A: +11.56%, от B: +13.40%)
+— TP3: 66.83 🎯 (от A: +21.95%, от B: +23.58%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=79.85 | 75.73 | 66.83; entries=85.63),SOLUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:85.63 | AVERAGING:LIMIT:87.45,91.7,79.85 | 75.73 | 66.83,3,574,,0,unresolved,,0,0,0,warning_count=0
+557,PARSED,,"[trader #A]
+
+#среднесрок
+#HYPEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 27.417
+— Усреднение: 28.267
+
+— SL: 30.276 🛡(от A: -10.4%, от B: -7.1%)
+
+— TP1: 25.472 🎯 (от A: +7.1%, от B: +9.9%)
+— TP2: 23.412 🎯 (от A: +14.6%, от B: +17.2%)
+— TP3: 21.574 🎯 (от A: +21.3%, от B: +23.7%)
+
+у нас особенные отношения с этой монетой. Торговали ее 4 раза с января. 3 раза был стоп, один раз заработали 1.5R, посмотрим, что на этот раз будет",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_REPORT_FINAL_RESULT,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=25.472 | 23.412 | 21.574; entries=27.417),HYPEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:27.417 | AVERAGING:LIMIT:28.267,30.276,25.472 | 23.412 | 21.574,3,557,,0,unresolved,,0,0,0,warning_count=0
+551,PARSED,,"[trader #A]
+
+#среднесрок
+#1000PEPEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.003484
+— Усреднение: 0.003631
+
+— SL: 0.003909 🛡(от A: -11.1%, от B: -7.7%)
+
+— TP1: 0.003229 🎯 (от A: +8.2%, от B: +11.1%)
+— TP2: 0.002969 🎯 (от A: +15.6%, от B: +18.2%)
+— TP3: 0.002639 🎯 (от A: +25.0%, от B: +27.3%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.003229 | 0.002969 | 0.002639; entries=0.003484),1000PEPEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.003484 | AVERAGING:LIMIT:0.003631,0.003909,0.003229 | 0.002969 | 0.002639,3,551,,0,unresolved,,0,0,0,warning_count=0
+549,PARSED,,"[trader #A]
+
+#среднесрок
+#BNBUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 591.59
+— Усреднение: 602.25
+
+— SL: 634.61 🛡(от A: -7.3%, от B: -5.4%)
+
+— TP1: 540.84 🎯 (от A: +8.6%, от B: +10.2%)
+— TP2: 520.63 🎯 (от A: +12.0%, от B: +13.6%)
+— TP3: 503.11 🎯 (от A: +15.0%, от B: +16.5%)
+
+вход 1%",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=540.84 | 520.63 | 503.11; entries=591.59),BNBUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:591.59 | AVERAGING:LIMIT:602.25,634.61,540.84 | 520.63 | 503.11,3,549,,0,unresolved,,0,0,0,warning_count=0
+545,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 64 012.30
+— Усреднение: 62 873.40
+
+— SL: 60 095.90 🛡(от A: -6.1%, от B: -4.4%)
+
+— TP1: 69 209.20 🎯 (от A: +8.1%, от B: +10.1%)
+— TP2: 75 246.10 🎯 (от A: +17.5%, от B: +19.7%)
+— TP3: 84 783.80 🎯 (от A: +32.4%, от B: +34.8%)
+
+— Цель (1W, спот): 92 010.70 💫 (от A: +43.7%)
+
+
+позиция переносится в статистику марта
+
+завтра откроем новые сделки",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=69209.2 | 75246.1 | 84783.8; entries=64012.3),BTCUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:64012.3 | AVERAGING:LIMIT:62873.4,60095.9,69209.2 | 75246.1 | 84783.8,3,545,,0,unresolved,,0,0,0,warning_count=0
+535,PARSED,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.0951
+— Усреднение: 0.0978
+
+— SL: 0.1034 🛡(от A: -8.7%, от B: -5.7%)
+
+— TP1: 0.0888 🎯 (от A: +6.6%, от B: +9.2%)
+— TP2: 0.0813 🎯 (от A: +14.5%, от B: +16.9%)
+— TP3: 0.0608 🎯 (от A: +36.1%, от B: +37.8%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0888 | 0.0813 | 0.0608; entries=0.0951),DOGEUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.0951 | AVERAGING:LIMIT:0.0978,0.1034,0.0888 | 0.0813 | 0.0608,3,535,,0,unresolved,,0,0,0,warning_count=0
+533,PARSED,,"[trader #A]
+
+#среднесрок
+#FARTCOINUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.1586
+— Усреднение: 0.1668
+
+Стоп:
+— SL: 0.1843 🛡(от A: -16.2%, от B: -10.5%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.1387 🎯 (от A: +12.5%, от B: +16.8%)
+— TP2: 0.1222 🎯 (от A: +23.0%, от B: +26.7%)
+— TP3: 0.0993 🎯 (от A: +37.4%, от B: +40.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1387 | 0.1222 | 0.0993; entries=0.1586),FARTCOINUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1586 | AVERAGING:LIMIT:0.1668,0.1843,0.1387 | 0.1222 | 0.0993,3,533,,0,unresolved,,0,0,0,warning_count=0
+532,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1 977.63
+— Усреднение: 2 030.65
+
+— SL: 2 158.82 🛡(от A: -9.2%, от B: -6.3%)
+
+— TP1: 1 807.28 🎯 (от A: +8.6%, от B: +11.0%)
+— TP2: 1 615.96 🎯 (от A: +18.3%, от B: +20.4%)
+— TP3: 1 370.28 🎯 (от A: +30.7%, от B: +32.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1807.28 | 1615.96 | 1370.28; entries=1977.63),ETHUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1977.63 | AVERAGING:LIMIT:2030.65,2158.82,1807.28 | 1615.96 | 1370.28,3,532,,0,unresolved,,0,0,0,warning_count=0
+527,PARSED,,"[trader #A]
+
+#среднесрок
+#PYTHUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.0493
+— Усреднение: —
+
+Стоп:
+— SL: 0.0456 🛡(от A: -7.5%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.0527 🎯 (от A: +6.9%, от B: —)
+— TP2: 0.0548 🎯 (от A: +11.2%, от B: —)
+— TP3: 0.0628 🎯 (от A: +27.4%, от B: —)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0527 | 0.0548 | 0.0628; entries=0.0493),PYTHUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.0493,0.0456,0.0527 | 0.0548 | 0.0628,3,527,,0,unresolved,,0,0,0,warning_count=0
+526,PARSED,,"[trader #A]
+
+#интрадей 
+#NEARUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный): 
+— Вход лимиткой: 1,1813 
+— Усреднение: 1,1670 
+Стоп: — SL: 1,1616 🛡(от A: -2,4%, от B: -0,5%)
+
+Тейки (интрадей, 3 цели): 
+— TP1: 1,2060 🎯 (от A: +1,3%, от B: +3,3%) 
+— TP2: 1,2300 🎯 (от A: +3,4%, от B: +5,4%) 
+— TP3: 1,2470 🎯 (от A: +4,8%, от B: +6,9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.206 | 1.23 | 1.247; entries=1.1813),NEARUSDT,LONG,,,0.75,,,,LIMIT_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:LIMIT:1.1813 | AVERAGING:LIMIT:1.167,1.1616,1.206 | 1.23 | 1.247,3,526,,0,unresolved,,0,0,0,warning_count=0
+523,PARSED,,"[trader #A]
+
+#интрадей
+#TRUUSDT 🐂 Лонг (с текущих)
+
+Вход (2-фазный):
+— Вход лимиткой: 0.004714
+— Усреднение: -
+
+Стоп:
+— SL: 0.004577 🛡(от A: −4.38%, от B: −)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0.004876 🎯 (от A: +1.86%, от B: )
+— TP2: 0.005149 🎯 (от A: +7.56%, от B: )
+— TP3: 0.005701 🎯 (от A: +19.09%, от B: )",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.004876 | 0.005149 | 0.005701; entries=0.004714),TRUUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.004714,0.004577,0.004876 | 0.005149 | 0.005701,3,523,,0,unresolved,,0,0,0,warning_count=0
+522,PARSED,,"[trader #A]
+
+#интрадей
+#LDOUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,3081
+— Усреднение: нет
+
+Стоп:
+— SL: 0,3136 🛡(от A: -1,8%, от B: —)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,3050 🎯 (от A: +1,0%, от B: —)
+— TP2: 0,3004 🎯 (от A: +2,5%, от B: —)
+— TP3: 0,2971 🎯 (от A: +3,6%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.305 | 0.3004 | 0.2971; entries=0.3081),LDOUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.3081,0.3136,0.305 | 0.3004 | 0.2971,3,522,,0,unresolved,,0,0,0,warning_count=0
+519,PARSED,,"[trader #A]
+
+#интрадей
+#POWRUSDT 🐂 Лонг (вход лимиткой) 
+
+Вход (2-фазный):
+— Вход лимиткой: 0,06330
+— Усреднение: нет
+
+Стоп:
+— SL: 0,06141 🛡(от A: -3,0%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,06410 🎯 (от A: +1,3%)
+— TP2: 0,06610 🎯 (от A: +4,4%)
+— TP3: 0,06880 🎯 (от A: +8,7%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0641 | 0.0661 | 0.0688; entries=0.0633),POWRUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0633,0.06141,0.0641 | 0.0661 | 0.0688,3,519,,0,unresolved,,0,0,0,warning_count=0
+517,PARSED,,"[trader #A] 
+
+#интрадей
+#HBARUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,09805
+— Усреднение: нет
+
+Стоп:
+— SL: 0,09930 🛡(от A: -1,3%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,09730 🎯 (от A: +0,8%)
+— TP2: 0,09630 🎯 (от A: +1,8%)
+— TP3: 0,09555 🎯 (от A: +2,5%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0973 | 0.0963 | 0.09555; entries=0.09805),HBARUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.09805,0.0993,0.0973 | 0.0963 | 0.09555,3,517,,0,unresolved,,0,0,0,warning_count=0
+516,PARSED,,"[trader #A]
+
+#интрадей
+#STGUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,16335
+— Усреднение: нет
+
+Стоп:
+— SL: 0,15999 🛡(от A: -2,1%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,16590 🎯 (от A: +1,6%)
+— TP2: 0,16810 🎯 (от A: +2,9%)
+— TP3: 0,17050 🎯 (от A: +4,4%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1659 | 0.1681 | 0.1705; entries=0.16335),STGUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.16335,0.15999,0.1659 | 0.1681 | 0.1705,3,516,,0,unresolved,,0,0,0,warning_count=0
+502,PARSED,,"[trader #A]
+
+#интрадей
+#TUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,006717
+— Усреднение: нет
+
+Стоп:
+— SL: 0,006568 🛡(от A: -2,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,006885 🎯 (от A: +2,5%)
+— TP2: 0,007013 🎯 (от A: +4,4%)
+— TP3: 0,007312 🎯 (от A: +8,9%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.006885 | 0.007013 | 0.007312; entries=0.006717),TUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.006717,0.006568,0.006885 | 0.007013 | 0.007312,3,502,,0,unresolved,,0,0,0,warning_count=0
+501,PARSED,,"[trader #A]
+
+#интрадей
+#WOOUSDT 🐂 Лонг (вход лимиткой) 
+
+Вход (2-фазный):
+— Вход лимиткой: 0,017707
+— Усреднение: нет
+
+Стоп:
+— SL: 0,016439 🛡(от A: -7,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,018537 🎯 (от A: +4,7%)
+— TP2: 0,019500 🎯 (от A: +10,1%)
+— TP3: 0,020300 🎯 (от A: +14,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.018537 | 0.0195 | 0.0203; entries=0.017707),WOOUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.017707,0.016439,0.018537 | 0.0195 | 0.0203,3,501,,0,unresolved,,0,0,0,warning_count=0
+499,PARSED,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 87.27
+— Усреднение: 89.92
+
+— SL: 96.11 🛡(от A: -10.13%, от B: -6.88%)
+
+— TP1: 77.06 🎯 (от A: +11.70%, от B: +14.30%)
+— TP2: 74.81 🎯 (от A: +14.28%, от B: +16.80%)
+— TP3: 68.71 🎯 (от A: +21.26%, от B: +23.59%)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=77.06 | 74.81 | 68.71; entries=87.27),SOLUSDT,SHORT,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:87.27 | AVERAGING:LIMIT:89.92,96.11,77.06 | 74.81 | 68.71,3,499,,0,unresolved,,0,0,0,warning_count=0
+495,PARSED,,"[trader #A]
+
+#интрадей
+#NEARUSDT 🐻 Шорт (вход лимиткой) 
+
+Вход (2-фазный):
+— Вход лимиткой: 1,3525
+— Усреднение: нет
+
+Стоп:
+— SL: 1,3953 🛡(от A: -3,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 1,3290 🎯 (от A: +1,7%)
+— TP2: 1,2926 🎯 (от A: +4,4%)
+— TP3: 1,2670 🎯 (от A: +6,3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.329 | 1.2926 | 1.267; entries=1.3525),NEARUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:1.3525,1.3953,1.329 | 1.2926 | 1.267,3,495,,0,unresolved,,0,0,0,warning_count=0
+479,PARSED,,"[trader #A] 
+
+#интрадей
+#SUPERUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,11700
+— Усреднение: нет
+
+Стоп:
+— SL: 0,11850 🛡(от A: -1,3%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,11600 🎯 (от A: +0,9%)
+— TP2: 0,11476 🎯 (от A: +1,9%)
+— TP3: 0,11348 🎯 (от A: +3,0%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.116 | 0.11476 | 0.11348; entries=0.117),SUPERUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.117,0.1185,0.116 | 0.11476 | 0.11348,3,479,,0,unresolved,,0,0,0,warning_count=0
+478,PARSED,,"[trader #A]
+
+#интрадей
+#APTUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,9961
+— Усреднение: нет
+
+Стоп:
+— SL: 0,9780 🛡(от A: -2,1%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 1,0130 🎯 (от A: +1,4%)
+— TP2: 1,0290 🎯 (от A: +3,0%)
+— TP3: 1,0410 🎯 (от A: +4,2%)
+
+Вход не более 1% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.013 | 1.029 | 1.041; entries=0.9961),APTUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.9961,0.978,1.013 | 1.029 | 1.041,3,478,,0,unresolved,,0,0,0,warning_count=0
+477,PARSED,,"[trader #A]
+
+#интрадей
+#SKLUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,006600
+— Усреднение: нет
+
+Стоп:
+— SL: 0,006472 🛡(от A: -1,9%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,006690 🎯 (от A: +1,4%)
+— TP2: 0,006780 🎯 (от A: +2,7%)
+— TP3: 0,006860 🎯 (от A: +3,9%)
+
+Вход не более 0.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.00669 | 0.00678 | 0.00686; entries=0.0066),SKLUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0066,0.006472,0.00669 | 0.00678 | 0.00686,3,477,,0,unresolved,,0,0,0,warning_count=0
+463,PARSED,,"[trader #A]
+
+#интрадей
+#CHZUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,03660
+— Усреднение: нет
+
+Стоп:
+— SL: 0,03495 🛡(от A: -4,5%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,03728 🎯 (от A: +1,9%)
+— TP2: 0,03993 🎯 (от A: +9,1%)
+— TP3: 0,04043 🎯 (от A: +10,5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.03728 | 0.03993 | 0.04043; entries=0.0366),CHZUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0366,0.03495,0.03728 | 0.03993 | 0.04043,3,463,,0,unresolved,,0,0,0,warning_count=0
+450,PARSED,,"Trader #A 
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 71 063.60
+— Усреднение: —
+
+Стоп:
+— SL: 75 059.80 🛡(от A: -5.62%, от B: —)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 67 452.20 🎯 (от A: +5.08%, от B: —)
+— TP2: 63 543.10 🎯 (от A: +10.58%, от B: —)
+— TP3: 59 897.40 🎯 (от A: +15.71%, от B: —)
+
+Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=67452.2 | 63543.1 | 59897.4; entries=71063.6),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:71063.6,75059.8,67452.2 | 63543.1 | 59897.4,3,450,,0,unresolved,,0,0,0,warning_count=0
+444,PARSED,,"[trader #A]
+
+#интрадей
+#MNTUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,7058
+— Усреднение: нет
+
+Стоп:
+— SL: 0,6969 🛡(от A: -1,3%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,7110 🎯 (от A: +0,7%)
+— TP2: 0,7185 🎯 (от A: +1,8%)
+— TP3: 0,7240 🎯 (от A: +2,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.711 | 0.7185 | 0.724; entries=0.7058),MNTUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.7058,0.6969,0.711 | 0.7185 | 0.724,3,444,,0,unresolved,,0,0,0,warning_count=0
+441,PARSED,,"[trader #A]
+
+#интрадей
+#VANRYUSDT 🐂 Лонг (вход лимиткой) 
+
+Вход (2-фазный):
+— Вход лимиткой: 0,005111
+— Усреднение: нет
+
+Стоп:
+— SL: 0,004925 🛡(от A: -3,6%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,005200 🎯 (от A: +1,7%)
+— TP2: 0,005433 🎯 (от A: +6,3%)
+— TP3: 0,005972 🎯 (от A: +16,8%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.0052 | 0.005433 | 0.005972; entries=0.005111),VANRYUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.005111,0.004925,0.0052 | 0.005433 | 0.005972,3,441,,0,unresolved,,0,0,0,warning_count=0
+437,PARSED,,"[trader #A] 
+
+#среднесрок
+#WIFUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих: 0.2176
+— Усреднение: 0.2109
+
+Стоп:
+— SL: 0.1986 🛡(от A: -8.7%, от B: -5.8%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.2329 🎯 (от A: +7.0%, от B: +10.4%)
+— TP2: 0.2466 🎯 (от A: +13.3%, от B: +16.9%)
+— TP3: 0.2624 🎯 (от A: +20.6%, от B: +24.4%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2329 | 0.2466 | 0.2624; entries=0.2176),WIFUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.2176 | AVERAGING:LIMIT:0.2109,0.1986,0.2329 | 0.2466 | 0.2624,3,437,,0,unresolved,,0,0,0,warning_count=0
+436,PARSED,,"[trader #A]
+
+#среднесрок
+#xrpusdt 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 1.4247
+— Усреднение: 1.3936
+
+— SL: 1.3117 🛡(от A: -7.9%, от B: -5.9%)
+
+— TP1: 1.5666 🎯 (от A: +10.0%, от B: +12.4%)
+— TP2: 1.7007 🎯 (от A: +19.4%, от B: +22.0%)
+— TP3: 1.8836 🎯 (от A: +32.2%, от B: +35.2%)
+
+Вход не более 1–1.5% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.5666 | 1.7007 | 1.8836; entries=1.4247),XRPUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:1.4247 | AVERAGING:LIMIT:1.3936,1.3117,1.5666 | 1.7007 | 1.8836,3,436,,0,unresolved,,0,0,0,warning_count=0
+435,PARSED,,"[trader #A]
+
+#среднесрок
+#SHIB1000USDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.005633
+— Усреднение: —
+
+— SL: 0.004807 🛡(от A: -14.7%, от B: —)
+
+— TP1: 0.005974 🎯 (от A: +6.1%, от B: —)
+— TP2: 0.007171 🎯 (от A: +27.3%, от B: —)
+— TP3: 0.007955 🎯 (от A: +41.2%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.005974 | 0.007171 | 0.007955; entries=0.005633),SHIB1000USDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.005633,0.004807,0.005974 | 0.007171 | 0.007955,3,435,,0,unresolved,,0,0,0,warning_count=0
+425,PARSED,,"[trader #A]
+
+#интрадей
+#AVAXUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— Вход лимиткой: 9,39
+— Усреднение: нет
+
+Стоп:
+— SL: 9,317 
+
+Тейки (интрадей, 3 цели):
+— TP1: 9,550 🎯 
+— TP2: 9,661 🎯 
+— TP3: 9,750 🎯",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=9.55 | 9.661 | 9.75; entries=9.39),AVAXUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:9.39,9.317,9.55 | 9.661 | 9.75,3,425,,0,unresolved,,0,0,0,warning_count=0
+422,PARSED,,"[trader #A]
+
+#интрадей
+#API3USDT 🐻 Шорт (вход лимиткой) 
+
+Вход (2-фазный):
+— Вход лимиткой: 0,2860
+— Усреднение: нет
+
+Стоп:
+— SL: 0,2910 🛡(от A: -1,7%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,2840 🎯 (от A: +0,7%)
+— TP2: 0,2790 🎯 (от A: +2,4%)
+— TP3: 0,2760 🎯 (от A: +3,5%)
+
+AVAX был пробным выстрелом, продолжаем",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.284 | 0.279 | 0.276; entries=0.286),API3USDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.286,0.291,0.284 | 0.279 | 0.276,3,422,,0,unresolved,,0,0,0,warning_count=0
+420,PARSED,,"[trader #A]
+
+#интрадей
+#ARBUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,10380
+— Усреднение: нет
+Стоп:
+— SL: 0,10612 🛡(от A: -2,2%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,10160 🎯 (от A: +2,1%)
+— TP2: 0,10050 🎯 (от A: +3,2%)
+— TP3: 0,09910 🎯 (от A: +4,5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.1016 | 0.1005 | 0.0991; entries=0.1038),ARBUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.1038,0.10612,0.1016 | 0.1005 | 0.0991,3,420,,0,unresolved,,0,0,0,warning_count=0
+419,PARSED,,"[trader #A]
+
+#интрадей
+#BANDUSDT 🐻 Шорт (вход лимиткой)
+
+Вход
+— Вход лимиткой: 0,2136
+— Усреднение: нет
+
+Стоп:
+— SL: 0,2175 🛡(от A: -1,8%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,2112 🎯 (от A: +1,1%)
+— TP2: 0,2081 🎯 (от A: +2,6%)
+— TP3: 0,2058 🎯 (от A: +3,7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.2112 | 0.2081 | 0.2058; entries=0.2136),BANDUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2136,0.2175,0.2112 | 0.2081 | 0.2058,3,419,,0,unresolved,,0,0,0,warning_count=0
+418,PARSED,,"[trader #A]
+
+#интрадей
+#BEAMUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,0019480
+— Усреднение: нет
+
+Стоп:
+— SL: 0,0019802 🛡(от A: -1,7%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,0019320 🎯 (от A: +0,8%)
+— TP2: 0,0019010 🎯 (от A: +2,4%)
+— TP3: 0,0018810 🎯 (от A: +3,4%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.001932 | 0.001901 | 0.001881; entries=0.001948),BEAMUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.001948,0.0019802,0.001932 | 0.001901 | 0.001881,3,418,,0,unresolved,,0,0,0,warning_count=0
+417,PARSED,,"[trader #A]
+
+#интрадей
+#AAVEUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 117,10
+— Усреднение: нет
+
+Стоп:
+— SL: 119,24 🛡(от A: -1,8%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 116,03 🎯 (от A: +0,9%)
+— TP2: 114,10 🎯 (от A: +2,6%)
+— TP3: 112,82 🎯 (от A: +3,7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=116.03 | 114.1 | 112.82; entries=117.1),AAVEUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:117.1,119.24,116.03 | 114.1 | 112.82,3,417,,0,unresolved,,0,0,0,warning_count=0
+416,PARSED,,"[trader #A]
+
+#интрадей
+#CFXUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,04930
+— Усреднение: нет
+
+Стоп:
+— SL: 0,05029 🛡(от A: -2,0%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,04870 🎯 (от A: +1,2%)
+— TP2: 0,04791 🎯 (от A: +2,8%)
+— TP3: 0,04732 🎯 (от A: +4,0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0487 | 0.04791 | 0.04732; entries=0.0493),CFXUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0493,0.05029,0.0487 | 0.04791 | 0.04732,3,416,,0,unresolved,,0,0,0,warning_count=0
+392,PARSED,,"[trader #A]
+
+#интрадей
+#1INCHUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,09560
+— Усреднение: нет
+
+Стоп:
+— SL: 0,09800 🛡(от A: -2,5%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,09310 🎯 (от A: +2,6%)
+— TP2: 0,09180 🎯 (от A: +4,0%)
+— TP3: 0,09020 🎯 (от A: +5,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0931 | 0.0918 | 0.0902; entries=0.0956),1INCHUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.0956,0.098,0.0931 | 0.0918 | 0.0902,3,392,,0,unresolved,,0,0,0,warning_count=0
+391,PARSED,,"[trader #A]
+
+#интрадей
+#AGLDUSDT 🐂 Лонг (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,28180
+— Усреднение: нет
+
+Стоп:
+— SL: 0,27140 🛡(от A: -3,7%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,28950 🎯 (от A: +2,7%)
+— TP2: 0,29850 🎯 (от A: +5,9%)
+— TP3: 0,30950 🎯 (от A: +9,8%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2895 | 0.2985 | 0.3095; entries=0.2818),AGLDUSDT,LONG,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.2818,0.2714,0.2895 | 0.2985 | 0.3095,3,391,,0,unresolved,,0,0,0,warning_count=0
+389,PARSED,,"[trader #A]
+
+#интрадей
+#ANKRUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,004470
+— Усреднение: нет
+
+Стоп:
+— SL: 0,004820 🛡(от A: -7,8%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,004300 🎯 (от A: +3,8%)
+— TP2: 0,004150 🎯 (от A: +7,2%)
+— TP3: 0,003950 🎯 (от A: +11,6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0043 | 0.00415 | 0.00395; entries=0.00447),ANKRUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.00447,0.00482,0.0043 | 0.00415 | 0.00395,3,389,,0,unresolved,,0,0,0,warning_count=0
+387,PARSED,,"[trader #A]
+
+#интрадей
+#BOBAUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход лимиткой: 0,02104
+— Усреднение: нет
+
+Стоп:
+— SL: 0,02146 🛡(от A: -2,0%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0,02055 🎯 (от A: +2,3%)
+— TP2: 0,02015 🎯 (от A: +4,2%)
+— TP3: 0,01980 🎯 (от A: +5,9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.02055 | 0.02015 | 0.0198; entries=0.02104),BOBAUSDT,SHORT,,,0.75,,,,SINGLE_LIMIT,SINGLE,False,1,PRIMARY:LIMIT:0.02104,0.02146,0.02055 | 0.02015 | 0.0198,3,387,,0,unresolved,,0,0,0,warning_count=0
+374,PARSED,,"[trader #A]
+
+#среднесрок
+#ENAUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.1013
+— Усреднение: —
+
+— SL: 0.0924 🛡(от A: -8.8%, от B: —)
+
+— TP1: 0.1091 🎯 (от A: +7.7%, от B: —)
+— TP2: 0.1123 🎯 (от A: +10.9%, от B: —)
+— TP3: 0.1225 🎯 (от A: +20.9%, от B: —)
+
+
+— Вход не более 1-2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1091 | 0.1123 | 0.1225; entries=0.1013),ENAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.1013,0.0924,0.1091 | 0.1123 | 0.1225,3,374,,0,unresolved,,0,0,0,warning_count=0
+373,PARSED,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐂 Лонг (вход с текущих) 
+
+— Вход с текущих: 0.0906
+— Усреднение: —
+
+— SL: 0.0812 🛡(от A: -10.4%, от B: —)
+
+— TP1: 0.1053 🎯 (от A: +16.2%, от B: —)
+— TP2: 0.1152 🎯 (от A: +27.2%, от B: —)
+— TP3: 0.1459 🎯 (от A: +61.0%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1053 | 0.1152 | 0.1459; entries=0.0906),DOGEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.0906,0.0812,0.1053 | 0.1152 | 0.1459,3,373,,0,unresolved,,0,0,0,warning_count=0
+372,PARSED,,"[trader #A]
+
+#среднесрок
+#PEOPLEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.006884
+— Усреднение: —
+
+— SL: 0.006267 🛡(от A: -9.0%, от B: —)
+
+— TP1: 0.007517 🎯 (от A: +9.2%, от B: —)
+— TP2: 0.007938 🎯 (от A: +15.3%, от B: —)
+— TP3: 0.009977 🎯 (от A: +44.9%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.007517 | 0.007938 | 0.009977; entries=0.006884),PEOPLEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.006884,0.006267,0.007517 | 0.007938 | 0.009977,3,372,,0,unresolved,,0,0,0,warning_count=0
+359,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 2 004.84
+— Усреднение: —
+
+— SL: 1 843.67 🛡(от A: -8.0%, от B: -)
+
+— TP1: 2 239.97 🎯 (от A: +11.7%, от B: -)
+— TP2: 2 484.37 🎯 (от A: +23.9%, от B: -)
+— TP3: 2 940.78 🎯 (от A: +46.7%, от B: -)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2239.97 | 2484.37 | 2940.78; entries=2004.84),ETHUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2004.84,1843.67,2239.97 | 2484.37 | 2940.78,3,359,,0,unresolved,,0,0,0,warning_count=0
+350,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 69 035.80
+— Усреднение: 67 977.40
+
+— SL: 65 623.80 🛡(от A: -4.9%, от B: -3.5%)
+
+— TP1: 73 285.40 🎯 (от A: +6.2%, от B: +7.8%)
+— TP2: 74 029.40 🎯 (от A: +7.2%, от B: +8.9%)
+— TP3: 76 483.20 🎯 (от A: +10.8%, от B: +12.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=73285.4 | 74029.4 | 76483.2; entries=69035.8),BTCUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:69035.8 | AVERAGING:LIMIT:67977.4,65623.8,73285.4 | 74029.4 | 76483.2,3,350,,0,unresolved,,0,0,0,warning_count=0
+346,PARSED,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 86.26
+— Усреднение: —
+
+— SL: 80.67 🛡(от A: -6.5%, от B: —)
+
+— TP1: 95.43 🎯 (от A: +10.6%, от B: —)
+— TP2: 107.09 🎯 (от A: +24.2%, от B: —)
+— TP3: 119.72 🎯 (от A: +38.8%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=95.43 | 107.09 | 119.72; entries=86.26),SOLUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:86.26,80.67,95.43 | 107.09 | 119.72,3,346,,0,unresolved,,0,0,0,warning_count=0
+325,PARSED,,"[trader #A]
+
+#среднесрок
+#LDOUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.2918
+— Усреднение: —
+
+— SL: 0.2684 🛡(от A: -8.0%, от B: —)
+
+— TP1: 0.3121 🎯 (от A: +7.0%, от B: —)
+— TP2: 0.3537 🎯 (от A: +21.2%, от B: —)
+— TP3: 0.3755 🎯 (от A: +28.7%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3121 | 0.3537 | 0.3755; entries=0.2918),LDOUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.2918,0.2684,0.3121 | 0.3537 | 0.3755,3,325,,0,unresolved,,0,0,0,warning_count=0
+297,PARSED,,"[trader #A]
+
+#среднесрок
+#ASTERUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.7136
+— Усреднение: 0.7041
+
+— SL: 0.6857 🛡(от A: -3.9%, от B: -2.6%)
+
+— TP1: 0.7587 🎯 (от A: +6.3%, от B: +7.8%)
+— TP2: 0.7927 🎯 (от A: +11.1%, от B: +12.6%)
+— TP3: 0.8367 🎯 (от A: +17.2%, от B: +18.8%)
+
+— Цель: 0.9387 💫 (от A: +31.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.7587 | 0.7927 | 0.8367; entries=0.7136),ASTERUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.7136 | AVERAGING:LIMIT:0.7041,0.6857,0.7587 | 0.7927 | 0.8367,3,297,,0,unresolved,,0,0,0,warning_count=0
+286,PARSED,,"[trader #A]
+
+#среднесрок
+#AAVEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 114.68
+— Усреднение: —
+
+— SL: 109.67 🛡(от A: -4.4%, от B: —)
+
+— TP1: 124.59 🎯 (от A: +8.6%, от B: —)
+— TP2: 151.69 🎯 (от A: +32.3%, от B: —)
+— TP3: 176.46 🎯 (от A: +53.9%, от B: —)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=124.59 | 151.69 | 176.46; entries=114.68),AAVEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:114.68,109.67,124.59 | 151.69 | 176.46,3,286,,0,unresolved,,0,0,0,warning_count=0
+265,PARSED,,"[trader #A]
+
+#среднесрок
+#API3USDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.2956
+— Усреднение: 0.2897
+
+— SL: 0.2737 🛡(от A: -7.4%, от B: -5.5%)
+
+— TP1: 0.3243 🎯 (от A: +9.7%, от B: +11.9%)
+— TP2: 0.3837 🎯 (от A: +29.8%, от B: +32.4%)
+— TP3: 0.4093 🎯 (от A: +38.5%, от B: +41.3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.3243 | 0.3837 | 0.4093; entries=0.2956),API3USDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.2956 | AVERAGING:LIMIT:0.2897,0.2737,0.3243 | 0.3837 | 0.4093,3,265,,0,unresolved,,0,0,0,warning_count=0
+238,PARSED,,"[trader #A]
+
+#среднесрок
+#OPUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.1303
+— Усреднение: 0.1278
+
+— SL: 0.1231 🛡(от A: -5.5%, от B: -3.7%)
+— TP1: 0.1383 🎯 (от A: +6.1%, от B: +8.2%)
+— TP2: 0.1457 🎯 (от A: +11.8%, от B: +14.0%)
+— TP3: 0.1678 🎯 (от A: +28.8%, от B: +31.3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1383 | 0.1457 | 0.1678; entries=0.1303),OPUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:0.1303 | AVERAGING:LIMIT:0.1278,0.1231,0.1383 | 0.1457 | 0.1678,3,238,,0,unresolved,,0,0,0,warning_count=0
+235,PARSED,,"[trader #A]
+
+#среднесрок
+#LTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 57.23
+— Усреднение: 56.63
+
+— SL: 54.83 🛡(от A: -4.19%, от B: -3.18%)
+
+— TP1: 61.13 🎯 (от A: +6.81%, от B: +7.95%)
+— TP2: 64.27 🎯 (от A: +12.30%, от B: +13.49%)
+— TP3: 66.83 🎯 (от A: +16.77%, от B: +18.01%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=61.13 | 64.27 | 66.83; entries=57.23),LTCUSDT,LONG,,,0.75,,,,MARKET_WITH_LIMIT_AVERAGING,TWO_STEP,True,2,PRIMARY:MARKET:57.23 | AVERAGING:LIMIT:56.63,54.83,61.13 | 64.27 | 66.83,3,235,,0,unresolved,,0,0,0,warning_count=0
+212,PARSED,,"[trader #A]
+
+#среднесрок
+#1000PEPEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.003899
+— Усреднение: -
+
+— SL: 0.004127 🛡(от A: -5.8%)
+
+— TP1: 0.003648 🎯 (от A: +6.4%)
+— TP2: 0.003518 🎯 (от A: +9.8%)
+— TP3: 0.003128 🎯 (от A: +19.8%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.003648 | 0.003518 | 0.003128; entries=0.003899),1000PEPEUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.003899,0.004127,0.003648 | 0.003518 | 0.003128,3,212,,0,unresolved,,0,0,0,warning_count=0
+211,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 74 377.20
+— Усреднение: -
+
+— SL: 76 486.80 🛡(от A: -2.84%)
+
+— TP1: 70 517.20 🎯 (от A: +5.19%)
+— TP2: 69 280.80 🎯 (от A: +6.85%)
+— TP3: 62 918.40 🎯 (от A: +15.41%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=70517.2 | 69280.8 | 62918.4; entries=74377.2),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:74377.2,76486.8,70517.2 | 69280.8 | 62918.4,3,211,,0,unresolved,,0,0,0,warning_count=0
+205,PARSED,,"[trader #A]
+
+#среднесрок
+#NEARUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 1.4587
+— Усреднение: -
+
+— SL: 1.3982 🛡(от A: -4.1%)
+
+— TP1: 1.5837 🎯 (от A: +8.6%)
+— TP2: 1.7176 🎯 (от A: +17.7%)
+— TP3: 1.7868 🎯 (от A: +22.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.5837 | 1.7176 | 1.7868; entries=1.4587),NEARUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.4587,1.3982,1.5837 | 1.7176 | 1.7868,3,205,,0,unresolved,,0,0,0,warning_count=0
+203,PARSED,3273,"Trader #A
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 74 183.70
+— Усреднение: -
+
+— SL: 72 041.80 🛡(от A: -2.9%)
+
+— TP1: 76 887.40 🎯 (от A: +3.6%)
+— TP2: 79 136.80 🎯 (от A: +6.7%)
+— TP3: 86 821.30 🎯 (от A: +17.0%)
+
+
+
+Я вообще по битку переобуюсь. 
+Закрываю шорт. Открываю лонг",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL | U_CLOSE_FULL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=76887.4 | 79136.8 | 86821.3; entries=74183.7),BTCUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:74183.7,72041.8,76887.4 | 79136.8 | 86821.3,3,203,3273,1,reply_or_link,,0,0,0,warning_count=0
+181,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 2 209.21
+— Усреднение: -
+
+— SL: 2 363.84 🛡 (от A: +7.0%)
+
+— TP1: 2 067.42 🎯 (от A: -6.4%)
+— TP2: 1 938.64 🎯 (от A: -12.2%)
+— TP3: 1 734.26 🎯 (от A: -21.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2067.42 | 1938.64 | 1734.26; entries=2209.21),ETHUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2209.21,2363.84,2067.42 | 1938.64 | 1734.26,3,181,,0,unresolved,,0,0,0,warning_count=0
+178,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 70 372.70
+— Усреднение: -
+
+— SL: 71 886.40 🛡(от A: -2.15%)
+
+— TP1: 67 928.40 🎯 (от A: +3.47%)
+— TP2: 65 286.70 🎯 (от A: +7.23%)
+— TP3: 61 384.20 🎯 (от A: +12.77%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=67928.4 | 65286.7 | 61384.2; entries=70372.7),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:70372.7,71886.4,67928.4 | 65286.7 | 61384.2,3,178,,0,unresolved,,0,0,0,warning_count=0
+176,PARSED,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.0934
+— Усреднение: -
+
+— SL: 0.0982 🛡(от A: -4.1%)
+
+— TP1: 0.0887 🎯 (от A: +5.9%)
+— TP2: 0.0844 🎯 (от A: +10.5%)
+— TP3: 0.0784 🎯 (от A: +16.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0887 | 0.0844 | 0.0784; entries=0.0934),DOGEUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.0934,0.0982,0.0887 | 0.0844 | 0.0784,3,176,,0,unresolved,,0,0,0,warning_count=0
+175,PARSED,,"[trader #A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 9.031
+— Усреднение: -
+
+— SL: 9.377 🛡(от A: -3.8%)
+
+— TP1: 8.533 🎯 (от A: +5.5%)
+— TP2: 8.371 🎯 (от A: +7.3%)
+— TP3: 7.237 🎯 (от A: +19.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.533 | 8.371 | 7.237; entries=9.031),LINKUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:9.031,9.377,8.533 | 8.371 | 7.237,3,175,,0,unresolved,,0,0,0,warning_count=0
+174,PARSED,,"[trader #A]
+
+#среднесрок
+#PEOPLEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.00662
+— Усреднение: -
+
+— SL: 0.00693 🛡(от A: -4.7%)
+
+— TP1: 0.00619 🎯 (от A: +6.5%)
+— TP2: 0.00584 🎯 (от A: +11.8%)
+— TP3: 0.00556 🎯 (от A: +16.0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.00619 | 0.00584 | 0.00556; entries=0.00662),PEOPLEUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.00662,0.00693,0.00619 | 0.00584 | 0.00556,3,174,,0,unresolved,,0,0,0,warning_count=0
+173,PARSED,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 88.77
+— Усреднение: -
+
+— SL: 92.73 🛡(от A: -4.5%)
+
+— TP1: 84.66 🎯 (от A: +4.6%)
+— TP2: 81.43 🎯 (от A: +8.3%)
+— TP3: 76.37 🎯 (от A: +14.0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=84.66 | 81.43 | 76.37; entries=88.77),SOLUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:88.77,92.73,84.66 | 81.43 | 76.37,3,173,,0,unresolved,,0,0,0,warning_count=0
+148,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 68 138.6
+— Усреднение: -
+
+— SL: 70 842.7 🛡(от A: -3.97%)
+
+— TP1: 65 982.3 🎯 (от A: +3.17%)
+— TP2: 61 274.6 🎯 (от A: +10.07%)
+— TP3: 54 386.2 🎯 (от A: +20.18%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=65982.3 | 61274.6 | 54386.2; entries=68138.6),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:68138.6,70842.7,65982.3 | 61274.6 | 54386.2,3,148,,0,unresolved,,0,0,0,warning_count=0
+143,PARSED,,"[trader #A]
+
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.3792
+— Усреднение: -
+
+— SL: 1.4127 🛡(от A: -2.4%)
+
+— TP1: 1.3346 🎯 (от A: +3.2%)
+— TP2: 1.2843 🎯 (от A: +6.9%)
+— TP3: 1.2148 🎯 (от A: +11.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.3346 | 1.2843 | 1.2148; entries=1.3792),XRPUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.3792,1.4127,1.3346 | 1.2843 | 1.2148,3,143,,0,unresolved,,0,0,0,warning_count=0
+142,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 2 041.70
+— Усреднение: -
+
+— SL: 2 133.80 🛡(от A: -4.50%)
+
+— TP1: 1 982.40 🎯 (от A: +2.90%)
+— TP2: 1 912.60 🎯 (от A: +6.30%)
+— TP3: 1 756.80 🎯 (от A: +13.90%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1982.4 | 1912.6 | 1756.8; entries=2041.7),ETHUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2041.7,2133.8,1982.4 | 1912.6 | 1756.8,3,142,,0,unresolved,,0,0,0,warning_count=0
+110,PARSED,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.0934
+— Усреднение: -
+
+— SL: 0.0982 🛡(от A: -4.1%)
+
+— TP1: 0.0887 🎯 (от A: +5.9%)
+— TP2: 0.0844 🎯 (от A: +10.5%)
+— TP3: 0.0784 🎯 (от A: +16.9%)
+
+перезаход",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=0.0887 | 0.0844 | 0.0784; entries=0.0934),DOGEUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.0934,0.0982,0.0887 | 0.0844 | 0.0784,3,110,,0,unresolved,,0,0,0,warning_count=0
+109,PARSED,,"[trader #A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 9.031
+— Усреднение: -
+
+— SL: 9.377 🛡(от A: -3.8%)
+
+— TP1: 8.533 🎯 (от A: +5.5%)
+— TP2: 8.371 🎯 (от A: +7.3%)
+— TP3: 7.237 🎯 (от A: +19.9%)
+
+перезаход",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.533 | 8.371 | 7.237; entries=9.031),LINKUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:9.031,9.377,8.533 | 8.371 | 7.237,3,109,,0,unresolved,,0,0,0,warning_count=0
+108,PARSED,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 88.77
+— Усреднение: -
+
+— SL: 92.73 🛡(от A: -4.5%)
+
+— TP1: 84.66 🎯 (от A: +4.6%)
+— TP2: 81.43 🎯 (от A: +8.3%)
+— TP3: 76.37 🎯 (от A: +14.0%)
+
+перезаход",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=84.66 | 81.43 | 76.37; entries=88.77),SOLUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:88.77,92.73,84.66 | 81.43 | 76.37,3,108,,0,unresolved,,0,0,0,warning_count=0
+89,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 71 753.80
+— Усреднение: -
+
+— SL: 68 437.80 🛡(от A: -4.1%)
+
+— TP1: 74 435.80 🎯 (от A: +4.3%)
+— TP2: 76 035.80 🎯 (от A: +6.5%)
+— TP3: 78 206.70 🎯 (от A: +9.6%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=74435.8 | 76035.8 | 78206.7; entries=71753.8),BTCUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:71753.8,68437.8,74435.8 | 76035.8 | 78206.7,3,89,,0,unresolved,,0,0,0,warning_count=0
+86,PARSED,,"[trader #A]
+
+#среднесрок
+#ENAUSDT 🐂 Лонг  (вход с текущих)
+
+— Вход с текущих: 0.09887
+— Усреднение: -
+
+— SL: 0.09371 🛡(от A: -5.2%)
+
+— TP1: 0.10491 🎯 (от A: +6.1%)
+— TP2: 0.10981 🎯 (от A: +11.1%)
+— TP3: 0.11997 🎯 (от A: +21.3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.10491 | 0.10981 | 0.11997; entries=0.09887),ENAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.09887,0.09371,0.10491 | 0.10981 | 0.11997,3,86,,0,unresolved,,0,0,0,warning_count=0
+83,PARSED,,"[trader #A]
+
+#среднесрок
+#DOTUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 1.3892
+— Усреднение: -
+
+— SL: 1.3456 🛡(от A: -3.1%)
+
+— TP1: 1.4725 🎯 (от A: +6.0%)
+— TP2: 1.5291 🎯 (от A: +10.1%)
+— TP3: 1.6458 🎯 (от A: +18.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=1.4725 | 1.5291 | 1.6458; entries=1.3892),DOTUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.3892,1.3456,1.4725 | 1.5291 | 1.6458,3,83,,0,unresolved,,0,0,0,warning_count=0
+82,PARSED,,"[trader #A]
+
+#среднесрок
+#OPUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.1144
+— Усреднение: -
+
+— SL: 0.1099 🛡(от A: -3.9%)
+
+— TP1: 0.1238 🎯 (от A: +8.2%)
+— TP2: 0.1293 🎯 (от A: +13.0%)
+— TP3: 0.1397 🎯 (от A: +22.1%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.1238 | 0.1293 | 0.1397; entries=0.1144),OPUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.1144,0.1099,0.1238 | 0.1293 | 0.1397,3,82,,0,unresolved,,0,0,0,warning_count=0
+76,PARSED,,"[trader #A]
+
+#среднесрок 
+#AAVEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 112.97
+— Усреднение: -
+
+— SL: 106.21 🛡(от A: -6.0%).
+
+— TP1: 120.43 🎯 (от A: +6.6%).
+— TP2: 125.41 🎯 (от A: +11.0%).
+— TP3: 129.43 🎯 (от A: +14.6%).
+
+— Цель: 150.43 💫 (от A: +33.2%).",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=120.43 | 125.41 | 129.43; entries=112.97),AAVEUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:112.97,106.21,120.43 | 125.41 | 129.43,3,76,,0,unresolved,,0,0,0,warning_count=0
+74,PARSED,,"[trader #A]
+
+#среднесрок
+#ADAUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.2711
+— Усреднение: -
+
+— SL: 0.2527 🛡(от A: -6.8%)
+
+— TP1: 0.2843 🎯 (от A: +4.9%)
+— TP2: 0.2977 🎯 (от A: +9.8%)
+— TP3: 0.3116 🎯 (от A: +15.0%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=0.2843 | 0.2977 | 0.3116; entries=0.2711),ADAUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:0.2711,0.2527,0.2843 | 0.2977 | 0.3116,3,74,,0,unresolved,,0,0,0,warning_count=0
+36,PARSED,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐂 Лонг (вход с текущих) 
+
+— Вход с текущих: 2 036.35
+— Усреднение: -
+
+— SL: 1 862.15 🛡(от A: -8.6%).
+
+— TP1: 2 158.35 🎯 (от A: +6.0%).
+— TP2: 2 513.65 🎯 (от A: +23.5%).
+— TP3: 2 633.15 🎯 (от A: +29.3%).
+
+— Цель: 2 833.15 💫 (от A: +39.1%).",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=2158.35 | 2513.65 | 2633.15; entries=2036.35),ETHUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2036.35,1862.15,2158.35 | 2513.65 | 2633.15,3,36,,0,unresolved,,0,0,0,warning_count=0
+33,PARSED,,"[trader #A]
+
+#среднесрок
+#AVAXUSDT 🐂 Лонг (лимитный вход)
+
+— Вход с текущих: 8.356
+— Усреднение: -
+
+— SL: 8.019 🛡(от A: -4.0%)
+
+— TP1: 8.836 🎯 (от A: +5.7%)
+— TP2: 9.236 🎯 (от A: +10.5%)
+— TP3: 9.628 🎯 (от A: +15.2%)
+
+— Цель: 10.386 💫 (от A: +24.3%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=LONG; take_profits=8.836 | 9.236 | 9.628; entries=8.356),AVAXUSDT,LONG,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:8.356,8.019,8.836 | 9.236 | 9.628,3,33,,0,unresolved,,0,0,0,warning_count=0
+23,PARSED,,"[trader #A]
+
+#среднесрок
+#BNBUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 614.36
+— Усреднение: -
+
+— SL: 623.18 🛡(от A: -1.4%)
+
+— TP1: 596.34 🎯 (от A: +2.9%)
+— TP2: 582.64 🎯 (от A: +5.2%)
+— TP3: 566.18 🎯 (от A: +7.8%)
+
+— Цель: 548.84 💫 (от A: +10.7%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=596.34 | 582.64 | 566.18; entries=614.36),BNBUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:614.36,623.18,596.34 | 582.64 | 566.18,3,23,,0,unresolved,,0,0,0,warning_count=0
+22,PARSED,,"[trader #A]
+
+#среднесрок
+#TONUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.2104
+— Усреднение: -
+
+— SL: 1.3478 🛡(от A: -11.4%).
+
+— TP1: 1.1186 🎯 (от A: +7.6%).
+— TP2: 0.9864 🎯 (от A: +18.5%).
+— TP3: 0.8468 🎯 (от A: +30.0%).
+
+— Цель: 0.5846 💫 (от A: +51.7%).",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.1186 | 0.9864 | 0.8468; entries=1.2104),TONUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.2104,1.3478,1.1186 | 0.9864 | 0.8468,3,22,,0,unresolved,,0,0,0,warning_count=0
+19,PARSED,,"[trader #A]
+
+#среднесрок
+#AVAXUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 8.946
+— Усреднение: -
+
+— SL: 9.838 🛡(от A: -10.0%)
+
+— TP1: 8.396 🎯 (от A: +6.1%)
+— TP2: 7.348 🎯 (от A: +17.9%)
+— TP3: 6.182 🎯 (от A: +30.9%)
+
+— Цель: 5.842 💫 (от A: +34.7%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=8.396 | 7.348 | 6.182; entries=8.946),AVAXUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:8.946,9.838,8.396 | 7.348 | 6.182,3,19,,0,unresolved,,0,0,0,warning_count=0
+12,PARSED,,"[trader #A]
+
+#среднесрок
+#DOTUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.2292
+— Усреднение: -
+
+— SL: 1.3169 🛡(от A: -7.1%)
+
+— TP1: 1.0964 🎯 (от A: +10.8%)
+— TP2: 0.9868 🎯 (от A: +19.7%)
+— TP3: 0.8476 🎯 (от A: +31.0%)
+
+— Цель: 0.7427 💫 (от A: +39.6%)
+
+Вход не более 1–2% от депозита",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=1.0964 | 0.9868 | 0.8476; entries=1.2292),DOTUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:1.2292,1.3169,1.0964 | 0.9868 | 0.8476,3,12,,0,unresolved,,0,0,0,warning_count=0
+11,PARSED,,"[trader #A]
+
+#среднесрок
+#ICPUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 2.2418
+— Усреднение: -
+
+— SL: 2.3356 🛡(от A: -4.2%)
+
+— TP1: 2.1184 🎯 (от A: +5.5%)
+— TP2: 1.9836 🎯 (от A: +11.5%)
+— TP3: 1.7468 🎯 (от A: +22.1%)
+
+— Цель: 1.6842 💫 (от A: +24.9%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=2.1184 | 1.9836 | 1.7468; entries=2.2418),ICPUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:2.2418,2.3356,2.1184 | 1.9836 | 1.7468,3,11,,0,unresolved,,0,0,0,warning_count=0
+5,PARSED,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 66 636.53
+— Усреднение: -
+
+— SL: 68 287.41 🛡(от A: -2.5%)
+
+— TP1: 64 437.26 🎯 (от A: +3.3%)
+— TP2: 62 387.28 🎯 (от A: +6.4%)
+— TP3: 59 917.42 🎯 (от A: +10.1%)
+
+— Цель: 53 647.18 💫 (от A: +19.5%)",,,NS_CREATE_SIGNAL,NS_CREATE_SIGNAL,CREATE_SIGNAL,CREATE_SIGNAL(side=SHORT; take_profits=64437.26 | 62387.28 | 59917.42; entries=66636.53),BTCUSDT,SHORT,,,0.75,,,,SINGLE_MARKET,SINGLE,False,1,PRIMARY:MARKET:66636.53,68287.41,64437.26 | 62387.28 | 59917.42,3,5,,0,unresolved,,0,0,0,warning_count=0

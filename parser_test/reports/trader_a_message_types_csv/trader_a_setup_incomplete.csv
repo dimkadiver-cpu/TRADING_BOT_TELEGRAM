@@ -1,1 +1,8 @@
 ﻿raw_message_id,parse_status,reply_to_message_id,raw_text,warning_text,warnings_summary,primary_intent,intents,action_types,actions_structured_summary,symbol,direction,completeness,missing_fields,entry_plan_type,entry_structure,has_averaging_plan,missing_stop_flag,missing_tp_flag,missing_entry_flag,validation_warning_count,notes_summary,diagnostics_summary
+1378,PARSED,,"[trader#A]
+
+""#среднесрок #JASMYUSDT 🐂 Лонг (вход с текущих)
+""sl"": 0.008151
+риск 1%
+
+информация о тейках позже",,,NS_CREATE_SIGNAL,,CREATE_SIGNAL,CREATE_SIGNAL,,,,,,,False,True,True,True,0,,warning_count=0
