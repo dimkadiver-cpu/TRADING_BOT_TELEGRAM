@@ -106,6 +106,10 @@ class IntentResult(BaseModel):
     raw_fragment:       str | None = None
     targeting_override: Targeting | None = None   # None = usa targeting message-level
 
+    # popolato dal RulesEngine al momento del rilevamento
+    detection_strength: Literal["strong", "weak"] = "weak"
+    # strong = almeno un marker forte ha matchato; weak = solo marker deboli
+
     # popolato dall'intent_validator
     status:             Literal["CANDIDATE", "CONFIRMED", "INVALID"] = "CANDIDATE"
     valid_refs:         list[int] = []      # refs confermati dal validator
@@ -532,14 +536,38 @@ class TraderXExtractors:
       {
         "name": "",
         "action": "prefer",
-        "when_all_detected": [],
+
+        "when_strong": [],
+        "when_weak":   [],
+
+        "text_any":  [],
+        "text_none": [],
+
+        "message_composite":    null,
+        "message_has_targeting": null,
+
+        "entities_present": [],
+        "entities_absent":  [],
+
         "prefer": "",
-        "if_contains_any": []
+        "over":   []
       },
       {
         "name": "",
         "action": "suppress",
-        "when_all_detected": [],
+
+        "when_strong": [],
+        "when_weak":   [],
+
+        "text_any":  [],
+        "text_none": [],
+
+        "message_composite":    null,
+        "message_has_targeting": null,
+
+        "entities_present": [],
+        "entities_absent":  [],
+
         "suppress": []
       }
     ]
@@ -559,27 +587,96 @@ class TraderXExtractors:
 
 ### Principio
 
-- Se nessuna regola matcha una coppia di intents → **entrambi vengono tenuti** (default)
-- Le regole intervengono solo sui casi di conflitto noti
+- Lavora **solo sui CONFIRMED** (intents validati dall'intent_validator)
+- `detection_strength` per-intent indica come era stato rilevato (strong/weak)
+- Default: se nessuna regola matcha → tutti i CONFIRMED coesistono
 - `intent_compatibility` eliminato — ridondante con le regole stesse
+
+### `detection_strength`
+
+Popolato dal RulesEngine al momento del rilevamento, prima della validazione:
+
+```
+se almeno un marker forte ha matchato → "strong"
+solo marker deboli                    → "weak"
+```
+
+Strong prevale: se un intent matcha sia marker forti che deboli → `"strong"`.
+
+### Condizioni di una regola (tutte opzionali, AND tra loro)
+
+| campo | tipo | semantica |
+|---|---|---|
+| `when_strong` | `list[str]` | questi intents devono essere CONFIRMED e `detection_strength == "strong"` |
+| `when_weak` | `list[str]` | questi intents devono essere CONFIRMED e `detection_strength == "weak"` |
+| `text_any` | `list[str]` | testo contiene almeno un token |
+| `text_none` | `list[str]` | testo non contiene nessun token |
+| `message_composite` | `bool\|null` | ParsedMessage.composite (`null` = non valutato) |
+| `message_has_targeting` | `bool\|null` | targeting message-level presente (`null` = non valutato) |
+| `entities_present` | `list[str]` | questi campi entità sono non-None nel ParsedMessage |
+| `entities_absent` | `list[str]` | questi campi entità sono None nel ParsedMessage |
+
+Campi lista vuota o `null` vengono ignorati (non contribuiscono al match).
+
+### Azioni
+
+| campo | tipo | semantica |
+|---|---|---|
+| `action` | `"prefer"\|"suppress"` | tipo di azione |
+| `prefer` | `str` | intent CONFIRMED da tenere |
+| `over` | `list[str]` | intents CONFIRMED da rimuovere (solo con `action=prefer`) |
+| `suppress` | `list[str]` | intents CONFIRMED da rimuovere (solo con `action=suppress`) |
+
+### Forme supportate
+
+**Flat (primaria):**
+```json
+{
+  "name": "prefer_exit_be_over_stop_move",
+  "action": "prefer",
+  "when_strong": ["EXIT_BE"],
+  "when_weak":   ["STOP_MOVE"],
+  "text_any":    ["breakeven", "be"],
+  "prefer":      "EXIT_BE",
+  "over":        ["STOP_MOVE"]
+}
+```
+
+**Nested (equivalente, per regole complesse):**
+```json
+{
+  "name": "suppress_stop_move_if_close_full_strong",
+  "action": "suppress",
+  "conditions": {
+    "intents":  { "strong": ["CLOSE_FULL"], "weak": [] },
+    "text":     { "any": [], "none": [] },
+    "message":  { "composite": null, "has_targeting": null },
+    "entities": { "present": [], "absent": [] }
+  },
+  "suppress": ["STOP_MOVE"]
+}
+```
+
+Il motore normalizza internamente la forma flat → nested prima del matching.
 
 ### Flusso step by step
 
 ```
 ParsedMessage (validation_status=VALIDATED)
-  — solo intents con status=CONFIRMED entrano
+  — solo intents CONFIRMED entrano
+  — ogni intent porta detection_strength: "strong" | "weak"
         ↓
-1. carica disambiguation_rules da rules.json
+1. carica disambiguation_rules da rules.json del profilo
         ↓
 2. per ogni regola in ordine:
-   - verifica se tutti gli intents in when_all_detected sono CONFIRMED e presenti
-   - se sì → applica action
+   a. normalizza flat → nested
+   b. verifica tutte le condizioni (AND): intents, text, message, entities
+   c. se tutte matchano → applica action
         ↓
 3. action=prefer:
-   - se if_contains_any matcha il testo → rimuove il non-preferito
-   - se if_contains_any non matcha → nessuna modifica (entrambi tenuti)
+   - rimuove gli intents in over[]
    action=suppress:
-   - rimuove sempre gli intents in suppress[]
+   - rimuove gli intents in suppress[]
         ↓
 4. aggiorna intents[], primary_intent, composite
         ↓
@@ -590,12 +687,12 @@ ParsedMessage finale
 
 | action | quando usare |
 |---|---|
-| `prefer` | uno è più specifico dell'altro (es. EXIT_BE > CLOSE_FULL) — condizionale al testo |
+| `prefer` | un intent è più specifico dell'altro (es. EXIT_BE > CLOSE_FULL quando rilevato forte) |
 | `suppress` | un intent è sempre falso positivo in presenza di un altro |
 
 ### Default
 
-Se due intents non hanno nessuna regola → coesistono entrambi nel `ParsedMessage`.
+Se nessuna regola matcha → tutti i CONFIRMED coesistono nel `ParsedMessage`.
 
 ---
 
