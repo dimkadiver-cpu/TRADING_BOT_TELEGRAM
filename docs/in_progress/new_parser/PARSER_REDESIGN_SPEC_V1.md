@@ -540,33 +540,6 @@ class TraderXExtractors:
         "action": "suppress",
         "when_all_detected": [],
         "suppress": []
-      },
-      {
-        "name": "",
-        "action": "keep_multi",
-        "when_all_detected": [],
-        "keep": []
-      }
-    ]
-  },
-
-  "intent_compatibility": {
-    "pairs": [
-      {
-        "intents": [],
-        "relation": "specific_vs_generic",
-        "preferred": "",
-        "requires_resolution": true
-      },
-      {
-        "intents": [],
-        "relation": "compatible",
-        "requires_resolution": false
-      },
-      {
-        "intents": [],
-        "relation": "exclusive",
-        "requires_resolution": true
       }
     ]
   },
@@ -583,21 +556,28 @@ class TraderXExtractors:
 
 ## 10. Disambiguation engine
 
+### Principio
+
+- Se nessuna regola matcha una coppia di intents → **entrambi vengono tenuti** (default)
+- Le regole intervengono solo sui casi di conflitto noti
+- `intent_compatibility` eliminato — ridondante con le regole stesse
+
 ### Flusso step by step
 
 ```
 ParsedMessage (candidati grezzi)
         ↓
-1. carica disambiguation_rules + intent_compatibility da rules.json
+1. carica disambiguation_rules da rules.json
         ↓
-2. per ogni coppia di intents incompatibili rilevati:
-   - verifica se la coppia è in intent_compatibility
-   - se requires_resolution = true → applica disambiguation_rules
+2. per ogni regola in ordine:
+   - verifica se tutti gli intents in when_all_detected sono presenti
+   - se sì → applica action
         ↓
-3. per ogni regola disambiguation:
-   - action=prefer   → rimuove il non-preferito se if_contains_any matcha
-   - action=suppress → rimuove gli intents in suppress[]
-   - action=keep_multi → mantiene entrambi (compatibili)
+3. action=prefer:
+   - se if_contains_any matcha il testo → rimuove il non-preferito
+   - se if_contains_any non matcha → nessuna modifica (entrambi tenuti)
+   action=suppress:
+   - rimuove sempre gli intents in suppress[]
         ↓
 4. aggiorna intents[], primary_intent, composite
         ↓
@@ -608,9 +588,12 @@ ParsedMessage finale
 
 | action | quando usare |
 |---|---|
-| `prefer` | due intents dove uno è più specifico dell'altro (es. EXIT_BE > CLOSE_FULL) |
-| `suppress` | un intent che è falso positivo in presenza di un altro |
-| `keep_multi` | due intents genuinamente compatibili nello stesso messaggio |
+| `prefer` | uno è più specifico dell'altro (es. EXIT_BE > CLOSE_FULL) — condizionale al testo |
+| `suppress` | un intent è sempre falso positivo in presenza di un altro |
+
+### Default
+
+Se due intents non hanno nessuna regola → coesistono entrambi nel `ParsedMessage`.
 
 ---
 
