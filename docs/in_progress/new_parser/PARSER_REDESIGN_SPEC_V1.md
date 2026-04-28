@@ -459,26 +459,15 @@ class TraderXExtractors:
   },
 
   "target_markers": {
-    "strong": {
-      "telegram_link": [],
-      "explicit_id":   [],
-      "global_scope": {
-        "ALL_LONGS":     [],
-        "ALL_SHORTS":    [],
-        "ALL_POSITIONS": [],
-        "ALL_OPEN":      [],
-        "ALL_REMAINING": []
-      }
-    },
-    "weak": {
-      "pronouns": []
-    }
+    "telegram_link": [],
+    "explicit_id":   [],
+    "pronouns":      []
   },
 
   "global_target_markers": {
     "ALL_LONGS":     [],
     "ALL_SHORTS":    [],
-    "ALL_ALL":       [],
+    "ALL_POSITIONS": [],
     "ALL_OPEN":      [],
     "ALL_REMAINING": []
   },
@@ -570,6 +559,12 @@ class TraderXExtractors:
         "otherwise_resolve_as": "INFO_ONLY"
       }
     ]
+  },
+
+  "action_scope_groups": {
+    "all_positions": ["ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"],
+    "all_long":      ["ALL_LONGS"],
+    "all_short":     ["ALL_SHORTS"]
   }
 }
 ```
