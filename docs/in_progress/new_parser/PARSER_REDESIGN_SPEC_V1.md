@@ -57,7 +57,7 @@ operation_rules          → traduce intents in operazioni canoniche
         ↓
 CanonicalMessage         → contratto verso downstream (invariato)
         ↓
-target_resolver / Sistema 1 / Sistema 2
+target_resolver 
 ```
 
 ---
