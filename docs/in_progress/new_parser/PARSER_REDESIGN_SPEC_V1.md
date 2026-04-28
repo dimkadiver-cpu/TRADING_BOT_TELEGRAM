@@ -545,22 +545,6 @@ class TraderXExtractors:
     ]
   },
 
-  "context_resolution_rules": {
-    "rules": [
-      {
-        "name": "",
-        "action": "resolve_as",
-        "when": {
-          "has_weak_intent": "",
-          "has_target_ref": true
-        },
-        "if_target_history_has_any": [],
-        "resolve_as": "",
-        "otherwise_resolve_as": "INFO_ONLY"
-      }
-    ]
-  },
-
   "action_scope_groups": {
     "all_positions": ["ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"],
     "all_long":      ["ALL_LONGS"],
