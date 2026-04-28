@@ -39,21 +39,25 @@ detection intents        → lista candidati da semantic_markers.json
         ↓
 estrazione entità        → prezzi, livelli, percentuali (extractors.py)
         ↓
-ParsedMessage (candidati)
+ParsedMessage (candidati, validation_status=PENDING)
         ↓
 disambiguation_engine    → risolve conflitti tra intents (rules.json, stateless)
         ↓
-ParsedMessage finale     ← OUTPUT DEL PARSER
+ParsedMessage            ← intents con status=CANDIDATE
+        ↓
+intent_validator         → layer separato dentro parser, richiede DB
+                           valida ogni (intent, ref) contro storia
+                           popola status, valid_refs, invalid_refs per ogni intent
+        ↓
+ParsedMessage finale     ← validation_status=VALIDATED, OUTPUT DEL PARSER
 ```
 
 ### Fuori perimetro (layer successivi)
 
 ```
-ParsedMessage finale
+ParsedMessage finale (validation_status=VALIDATED)
         ↓
-intent_validator         → valida ogni (intent, ref) contro storia DB
-        ↓
-operation_rules          → traduce intents in operazioni canoniche
+operation_rules          → traduce intents CONFIRMED in operazioni canoniche
         ↓
 CanonicalMessage         → contratto verso downstream (invariato)
         ↓
@@ -68,24 +72,26 @@ Output unico del parser. Semantica pura, nessuna operazione.
 
 ```python
 class ParsedMessage(BaseModel):
-    schema_version:  str = "parsed_message_v1"
-    parser_profile:  str
+    schema_version:     str = "parsed_message_v1"
+    parser_profile:     str
 
-    primary_class:   MessageClass      # SIGNAL | UPDATE | REPORT | INFO
-    parse_status:    ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED
-    confidence:      float
+    primary_class:      MessageClass      # SIGNAL | UPDATE | REPORT | INFO
+    parse_status:       ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED
+    confidence:         float
 
-    composite:       bool = False      # True se intents di categorie miste (UPDATE + REPORT)
+    composite:          bool = False      # True se intents di categorie miste (UPDATE + REPORT)
 
-    signal:          SignalPayload | None = None   # solo per primary_class=SIGNAL
-    intents:         list[IntentResult] = []       # per UPDATE / REPORT
-    primary_intent:  IntentType | None = None
+    signal:             SignalPayload | None = None   # solo per primary_class=SIGNAL
+    intents:            list[IntentResult] = []       # per UPDATE / REPORT
+    primary_intent:     IntentType | None = None
 
-    targeting:       Targeting | None = None       # targeting message-level (default)
+    targeting:          Targeting | None = None       # targeting message-level (default)
 
-    warnings:        list[str] = []
-    diagnostics:     dict[str, Any] = {}
-    raw_context:     RawContext
+    validation_status:  Literal["PENDING", "VALIDATED"] = "PENDING"
+
+    warnings:           list[str] = []
+    diagnostics:        dict[str, Any] = {}
+    raw_context:        RawContext
 ```
 
 ### IntentResult
@@ -98,10 +104,21 @@ class IntentResult(BaseModel):
     confidence:         float
     raw_fragment:       str | None = None
     targeting_override: Targeting | None = None   # None = usa targeting message-level
+
+    # popolato dall'intent_validator
+    status:             Literal["CANDIDATE", "CONFIRMED", "INVALID"] = "CANDIDATE"
+    valid_refs:         list[int] = []      # refs confermati dal validator
+    invalid_refs:       list[int] = []      # refs scartati dal validator
+    invalid_reason:     str | None = None   # motivo invalidazione
 ```
 
 Il `targeting_override` per-intent gestisce il caso multi-ref dove intents diversi
 puntano a refs diversi nello stesso messaggio.
+
+`status`:
+- `CANDIDATE` → rilevato dal parser, non ancora validato
+- `CONFIRMED` → validato, almeno un ref valido
+- `INVALID` → nessun ref valido, intent scartato
 
 ### IntentCategory
 
@@ -325,16 +342,25 @@ Il `ParsedMessage` supporta questo pattern tramite `targeting_override` per-inte
 Ogni profilo ha esattamente questi file:
 
 ```
-src/parser/trader_profiles/trader_x/
-  semantic_markers.json    ← vocabolario trader-specifico
-  rules.json               ← logica: combination, disambiguation
-  extractors.py            ← regex + estrazione entità (sezioni interne)
-  profile.py               ← orchestratore ~20 righe
-  __init__.py
-  tests/
+src/parser/
+  trader_profiles/
+    trader_x/
+      semantic_markers.json    ← vocabolario trader-specifico
+      rules.json               ← logica: combination, disambiguation
+      extractors.py            ← regex + estrazione entità (sezioni interne)
+      profile.py               ← orchestratore ~20 righe
+      __init__.py
+      tests/
+        __init__.py
+        test_canonical_output.py
+        test_profile_real_cases.py
+  shared/
+    runtime.py               ← parse puro, stateless
+    disambiguation.py        ← stateless
+  intent_validator/          ← layer separato, dentro parser, richiede DB
     __init__.py
-    test_canonical_output.py
-    test_profile_real_cases.py
+    validator.py             ← logica validazione per (intent, ref)
+    validation_rules.json    ← regole comuni a tutti i trader
 ```
 
 ### profile.py — contratto
@@ -783,7 +809,116 @@ ParsedMessage finale
 
 ---
 
-## 12. Fuori perimetro
+## 12. Intent Validator
+
+Layer separato dentro il package parser. Richiede accesso DB storia.
+
+### Posizione
+
+```
+src/parser/intent_validator/
+  validator.py            ← logica validazione
+  validation_rules.json   ← regole comuni tutti i trader
+```
+
+### Contratto
+
+```python
+def validate(parsed: ParsedMessage, db: AsyncSession) -> ParsedMessage:
+    """Valida ogni (intent, ref) contro storia DB.
+    Restituisce lo stesso ParsedMessage con status/valid_refs/invalid_refs popolati.
+    """
+```
+
+### Flusso per ogni IntentResult
+
+```
+per ogni intent in parsed.intents:
+  refs = intent.targeting_override.refs se presente
+         altrimenti parsed.targeting.refs
+
+  per ogni ref in refs:
+    controlla storia DB per quel ref
+    se valido → aggiungi a valid_refs
+    se non valido → aggiungi a invalid_refs con reason
+
+  se valid_refs non vuoto → status = CONFIRMED
+  se valid_refs vuoto     → status = INVALID
+
+parsed.validation_status = VALIDATED
+```
+
+### Schema validation_rules.json
+
+```json
+{
+  "rules": [
+    {
+      "intent": "TP_HIT",
+      "requires_history": ["NEW_SIGNAL"],
+      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal"
+    },
+    {
+      "intent": "SL_HIT",
+      "requires_history": ["NEW_SIGNAL"],
+      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal"
+    },
+    {
+      "intent": "EXIT_BE",
+      "requires_history": ["NEW_SIGNAL"],
+      "requires_any_history": ["MOVE_STOP", "MOVE_STOP_TO_BE"],
+      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal_or_no_stop_moved"
+    },
+    {
+      "intent": "MOVE_STOP_TO_BE",
+      "requires_history": ["NEW_SIGNAL"],
+      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal"
+    },
+    {
+      "intent": "MOVE_STOP",
+      "requires_history": ["NEW_SIGNAL"],
+      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal"
+    },
+    {
+      "intent": "CLOSE_FULL",
+      "requires_history": ["NEW_SIGNAL"],
+      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal"
+    }
+  ]
+}
+```
+
+### Esempio output dopo validazione
+
+```
+intents: [
+  IntentResult(
+    type=MOVE_STOP_TO_BE,
+    status=CONFIRMED,
+    valid_refs=[978, 1002, 1018],
+    invalid_refs=[1003],
+    invalid_reason="no_open_signal"
+  ),
+  IntentResult(
+    type=TP_HIT,
+    status=INVALID,
+    valid_refs=[],
+    invalid_refs=[12345],
+    invalid_reason="no_open_signal"
+  )
+]
+validation_status=VALIDATED
+```
+
+---
+
+## 13. Fuori perimetro
 
 ### intent_validator
 
