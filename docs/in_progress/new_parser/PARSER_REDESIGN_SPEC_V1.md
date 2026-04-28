@@ -41,15 +41,16 @@ estrazione entità        → prezzi, livelli, percentuali (extractors.py)
         ↓
 ParsedMessage (candidati, validation_status=PENDING)
         ↓
-disambiguation_engine    → risolve conflitti tra intents (rules.json, stateless)
-        ↓
-ParsedMessage            ← intents con status=CANDIDATE
-        ↓
 intent_validator         → layer separato dentro parser, richiede DB
                            valida ogni (intent, ref) contro storia
-                           popola status, valid_refs, invalid_refs per ogni intent
+                           popola status=CONFIRMED/INVALID, valid_refs, invalid_refs
         ↓
-ParsedMessage finale     ← validation_status=VALIDATED, OUTPUT DEL PARSER
+ParsedMessage (validation_status=VALIDATED)
+        ↓
+disambiguation_engine    → lavora SOLO sugli intents CONFIRMED
+                           risolve conflitti tra intents validi (rules.json, stateless)
+        ↓
+ParsedMessage finale     ← OUTPUT DEL PARSER
 ```
 
 ### Fuori perimetro (layer successivi)
@@ -565,12 +566,13 @@ class TraderXExtractors:
 ### Flusso step by step
 
 ```
-ParsedMessage (candidati grezzi)
+ParsedMessage (validation_status=VALIDATED)
+  — solo intents con status=CONFIRMED entrano
         ↓
 1. carica disambiguation_rules da rules.json
         ↓
 2. per ogni regola in ordine:
-   - verifica se tutti gli intents in when_all_detected sono presenti
+   - verifica se tutti gli intents in when_all_detected sono CONFIRMED e presenti
    - se sì → applica action
         ↓
 3. action=prefer:
