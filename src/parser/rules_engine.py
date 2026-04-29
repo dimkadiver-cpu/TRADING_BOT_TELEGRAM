@@ -57,6 +57,13 @@ class ClassificationResult:
     intents_hint: list[str] = field(default_factory=list)
 
 
+@dataclass(slots=True)
+class IntentDetectionMatch:
+    intent: str
+    strength: Literal["strong", "weak"]
+    matched_markers: list[str] = field(default_factory=list)
+
+
 # ---------------------------------------------------------------------------
 # RulesEngine
 # ---------------------------------------------------------------------------
@@ -82,7 +89,7 @@ class RulesEngine:
         self._classification_markers = _normalise_classification_markers(
             rules.get("classification_markers", {})
         )
-        self._intent_markers: dict[str, list[str]] = rules.get("intent_markers", {})
+        self._intent_markers: dict[str, Any] = rules.get("intent_markers", {})
         self._combination_rules: list[dict[str, Any]] = rules.get("combination_rules", [])
         self._blacklist: list[str] = rules.get("blacklist", [])
 
@@ -220,14 +227,37 @@ class RulesEngine:
         Returns:
             Lista di nomi intent (es. ["U_CLOSE_FULL", "U_MOVE_STOP"]).
         """
+        return [match.intent for match in self.detect_intents_with_evidence(text)]
+
+    def detect_intents_with_evidence(self, text: str) -> list[IntentDetectionMatch]:
         normalized = _normalise_text(text)
-        found: list[str] = []
-        for intent_name, markers in self._intent_markers.items():
-            for marker in markers:
-                if _normalise_text(marker) in normalized:
-                    found.append(intent_name)
-                    break  # un solo match per intent è sufficiente
-        return found
+        matches: list[IntentDetectionMatch] = []
+        for intent_name, raw_markers in self._intent_markers.items():
+            strong_markers, weak_markers = _normalise_intent_markers(raw_markers)
+            matched_strong = [
+                marker for marker in strong_markers if _normalise_text(marker) in normalized
+            ]
+            matched_weak = [
+                marker for marker in weak_markers if _normalise_text(marker) in normalized
+            ]
+            if matched_strong:
+                matches.append(
+                    IntentDetectionMatch(
+                        intent=intent_name,
+                        strength="strong",
+                        matched_markers=matched_strong,
+                    )
+                )
+                continue
+            if matched_weak:
+                matches.append(
+                    IntentDetectionMatch(
+                        intent=intent_name,
+                        strength="weak",
+                        matched_markers=matched_weak,
+                    )
+                )
+        return matches
 
     def is_blacklisted(self, text: str) -> bool:
         """Restituisce True se il testo contiene un marker blacklist."""
@@ -378,6 +408,19 @@ def _merge_dict_of_lists(
         o = override.get(key, []) if isinstance(override.get(key), list) else []
         result[key] = _dedup(b + o)
     return result
+
+
+def _normalise_intent_markers(raw: Any) -> tuple[list[str], list[str]]:
+    if isinstance(raw, list):
+        return (list(raw), [])
+    if isinstance(raw, dict):
+        strong = raw.get("strong", [])
+        weak = raw.get("weak", [])
+        return (
+            [str(item) for item in strong if isinstance(item, str)],
+            [str(item) for item in weak if isinstance(item, str)],
+        )
+    return ([], [])
 
 
 def _dedup(items: list[str]) -> list[str]:

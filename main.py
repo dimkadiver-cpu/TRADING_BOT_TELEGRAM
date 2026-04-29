@@ -15,8 +15,10 @@ from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
 from src.execution.dynamic_pairlist import DynamicPairlistManager
 from src.operation_rules.engine import OperationRulesEngine
+from src.parser.intent_validator import HistoryBackedIntentValidator
 from src.storage.operational_signals_store import OperationalSignalsStore
 from src.storage.parse_results_v1 import ParseResultV1Store
+from src.storage.parsed_messages import ParsedMessageStore
 from src.storage.signals_store import SignalsStore
 from src.target_resolver.resolver import TargetResolver
 from src.operation_rules.loader import validate_operation_rules_config
@@ -147,6 +149,8 @@ async def _async_main(
         operational_signals_store=OperationalSignalsStore(db_path=db_path),
         dynamic_pairlist_manager=dynamic_pairlist_manager,
         parse_results_v1_store=ParseResultV1Store(db_path=db_path),
+        parsed_messages_store=ParsedMessageStore(db_path=db_path),
+        intent_validator=HistoryBackedIntentValidator(db_path=db_path),
     )
     logger.info("canonical_v1 normalization active | table=parse_results_v1")
 

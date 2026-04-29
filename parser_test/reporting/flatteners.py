@@ -31,6 +31,7 @@ def build_report_row(
     row: dict[str, str] = {
         "raw_message_id": _scalar(raw_message_id),
         "parse_status": _scalar(parse_status),
+        "message_type": _scalar(normalized_obj.get("message_type")),
         "reply_to_message_id": "" if reply_to_message_id is None else _scalar(reply_to_message_id),
         "raw_text": _scalar(raw_text),
         "warning_text": _scalar(warning_text),
@@ -42,6 +43,11 @@ def build_report_row(
         "intents": " | ".join(
             n
             for item in _coerce_list(normalized_obj.get("intents"))
+            if (n := _intent_name(item))
+        ),
+        "intents_raw": " | ".join(
+            n
+            for item in _coerce_list(normalized_obj.get("intents_raw"))
             if (n := _intent_name(item))
         ),
         "action_types": _summarize_action_types(actions_structured),
@@ -673,6 +679,13 @@ def _render_action_value(value: Any) -> str:
         items = [_render_action_value(item) for item in value]
         return " | ".join(item for item in items if item)
     return _scalar(value)
+
+
+def _preview_text(value: str | None, *, limit: int = 150) -> str:
+    text = _scalar(value).replace("\r", " ").replace("\n", " ").strip()
+    if len(text) <= limit:
+        return text
+    return text[: limit - 3].rstrip() + "..."
 
 
 def _unique_ints(values: list[int]) -> list[int]:

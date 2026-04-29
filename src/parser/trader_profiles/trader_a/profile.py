@@ -41,12 +41,17 @@ from src.parser.canonical_v1.targeted_builder import (
     build_targeted_actions,
     build_targeted_reports_from_lines,
 )
+from src.parser.parsed_message import ParsedMessage
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text, split_lines
+from src.parser.trader_profiles.shared.rules_schema import validate_profile_rules, validate_semantic_markers
+from src.parser.trader_profiles.trader_a.extractors import TraderAExtractors
 from src.parser.intent_action_map import intent_policy_for_intent
 from src.parser.rules_engine import RulesEngine
 
 _RULES_PATH = Path(__file__).resolve().parent / "parsing_rules.json"
+_SEMANTIC_MARKERS_PATH = Path(__file__).resolve().parent / "semantic_markers.json"
+_PHASE4_RULES_PATH = Path(__file__).resolve().parent / "rules.json"
 _SYMBOL_RE = re.compile(r"\b[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?\b")
 _LINK_ID_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)
 _RESULT_R_RE = re.compile(r"\b[A-Z]{2,20}(?:USDT|USDC|USD|BTC|ETH)?\s*[-:=]\s*[+-]?\d+(?:[.,]\d+)?\s*R{1,2}\b", re.IGNORECASE)
@@ -282,6 +287,14 @@ _CANONICAL_TO_LEGACY_INTENT: dict[str, str] = {
 }
 
 
+def _load_phase4_rules_engine() -> RulesEngine:
+    semantic_markers = json.loads(_SEMANTIC_MARKERS_PATH.read_text(encoding="utf-8"))
+    phase4_rules = json.loads(_PHASE4_RULES_PATH.read_text(encoding="utf-8"))
+    validate_semantic_markers(semantic_markers, strict=True)
+    validate_profile_rules(phase4_rules, strict=True)
+    return RulesEngine.from_dict({**semantic_markers, **phase4_rules})
+
+
 def _canonicalize_intents(intents: list[str]) -> list[str]:
     canonical: list[str] = []
     for intent in intents:
@@ -385,6 +398,19 @@ class TraderAProfileParser:
         self._rules = self._load_rules(self._rules_path)
         self._rules_engine = RulesEngine.load(self._rules_path)
         self._semantic_resolver = self._build_semantic_resolver()
+        self._phase4_rules_engine = _load_phase4_rules_engine()
+        self._phase4_extractors = TraderAExtractors()
+
+    def parse(self, text: str, context: ParserContext) -> ParsedMessage:
+        from src.parser.shared.runtime import parse as parse_parsed_message
+
+        return parse_parsed_message(
+            trader_code=self.trader_code,
+            text=text,
+            context=context,
+            rules=self._phase4_rules_engine,
+            extractors=self._phase4_extractors,
+        )
 
     def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
         prepared = self._preprocess(text=text, context=context)

@@ -1,0 +1,26 @@
+from __future__ import annotations
+
+from enum import Enum
+from typing import Literal
+
+
+IntentCategory = Literal["UPDATE", "REPORT", "INFO"]
+
+
+class IntentType(str, Enum):
+    MOVE_STOP_TO_BE = "MOVE_STOP_TO_BE"
+    MOVE_STOP = "MOVE_STOP"
+    CLOSE_FULL = "CLOSE_FULL"
+    CLOSE_PARTIAL = "CLOSE_PARTIAL"
+    CANCEL_PENDING = "CANCEL_PENDING"
+    INVALIDATE_SETUP = "INVALIDATE_SETUP"
+    REENTER = "REENTER"
+    ADD_ENTRY = "ADD_ENTRY"
+    UPDATE_TAKE_PROFITS = "UPDATE_TAKE_PROFITS"
+    ENTRY_FILLED = "ENTRY_FILLED"
+    TP_HIT = "TP_HIT"
+    SL_HIT = "SL_HIT"
+    EXIT_BE = "EXIT_BE"
+    REPORT_PARTIAL_RESULT = "REPORT_PARTIAL_RESULT"
+    REPORT_FINAL_RESULT = "REPORT_FINAL_RESULT"
+    INFO_ONLY = "INFO_ONLY"

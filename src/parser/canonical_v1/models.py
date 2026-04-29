@@ -381,8 +381,14 @@ class ModifyTargetsOperation(CanonicalBaseModel):
 
     @model_validator(mode="after")
     def _validate_modify_targets(self) -> "ModifyTargetsOperation":
+        if self.mode == "REMOVE_ONE":
+            if self.target_tp_level is None:
+                raise ValueError("MODIFY_TARGETS REMOVE_ONE requires target_tp_level")
+            return self
         if not self.take_profits:
             raise ValueError("MODIFY_TARGETS requires non-empty take_profits")
+        if self.mode == "UPDATE_ONE" and self.target_tp_level is None:
+            raise ValueError("MODIFY_TARGETS UPDATE_ONE requires target_tp_level")
         return self
 
 
@@ -637,13 +643,21 @@ class CanonicalMessage(CanonicalBaseModel):
 
             elif self.primary_class == "UPDATE":
                 assert self.update is not None
-                if not self.update.operations:
-                    raise ValueError("PARSED UPDATE requires at least one operation")
+                if not self.update.operations and not self.targeted_actions:
+                    raise ValueError(
+                        "PARSED UPDATE requires at least one operation or targeted_action"
+                    )
 
             elif self.primary_class == "REPORT":
                 assert self.report is not None
-                if not self.report.events and self.report.reported_result is None:
-                    raise ValueError("PARSED REPORT requires at least one event or reported_result")
+                if (
+                    not self.report.events
+                    and self.report.reported_result is None
+                    and not self.targeted_reports
+                ):
+                    raise ValueError(
+                        "PARSED REPORT requires at least one event, reported_result, or targeted_report"
+                    )
 
         return self
 

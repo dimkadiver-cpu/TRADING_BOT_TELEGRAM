@@ -901,3 +901,80 @@ docs/AUDIT.md                                            Step 15
 - Ho mantenuto la STEP 13 confinata alla regression suite richiesta, evitando refactor del resolver non necessari.
 - Il caso `EXIT_BE` strong senza history che degrada a `INFO_ONLY` e coperto con una regola sintetica dedicata solo al test tabellare di contesto, senza alterare il set condiviso di regole usato nei casi end-to-end.
 - La correzione del ciclo di import e stata fatta con una utility locale `_split_lines()` in `resolution_unit.py`, scelta piu conservativa rispetto a rifattorizzare il package `trader_profiles`.
+
+---
+
+## Lavoro svolto - fasa 1
+
+### File modificati
+
+| File | Tipo modifica |
+|------|---------------|
+| `src/parser/tests/test_phase1_cleanup.py` | **CREATO** - test TDD minimo per codificare il cleanup preliminare dei file legacy realmente scollegati |
+| `src/parser/action_builders/__init__.py` | **ELIMINATO** - package legacy vuoto senza dipendenti attivi |
+| `src/parser/adapters/__init__.py` | **ELIMINATO** - init di package legacy non piu necessario al runtime corrente |
+| `docs/in_progress/new_parser/PIANO_IMPLEMENTAZIONE_DISAMBIGUATION_CONTEXT_RESOLUTION.md` | **AGGIORNATO** - consuntivo della fasa 1 aggiunto |
+
+### Comportamento implementato
+
+- La fasa 1 prevista dalla spec e stata interpretata come **cleanup preliminare non funzionale**.
+- Ho introdotto un test Red che fallisce se i due artefatti legacy realmente non referenziati sono ancora presenti nel tree.
+- Ho rimosso i due file legacy scollegati e verificato che gli import attivi dell adapter continuino a funzionare anche senza `src/parser/adapters/__init__.py`.
+- Verifiche eseguite:
+  - `.\.venv\Scripts\python.exe -m pytest src\parser\tests\test_phase1_cleanup.py -q` -> `2 passed`
+  - `.\.venv\Scripts\python.exe -m pytest src\parser\canonical_v1\tests\test_legacy_event_envelope_adapter.py -q` -> `5 passed`
+  - `.\.venv\Scripts\python.exe -m pytest src\parser\tests\ -q` -> `64 passed`
+
+### Casi limite non coperti
+
+- La checklist della spec elenca anche file che in questo workspace hanno ancora dipendenze attive nel codice o nei test:
+  - `src/parser/shared/compatibility_engine.py`
+  - `src/parser/shared/intent_compatibility_schema.py`
+  - `src/parser/shared/context_resolution_engine.py`
+  - `src/parser/shared/context_resolution_schema.py`
+  - `src/parser/shared/semantic_resolver.py`
+  - `src/parser/adapters/legacy_to_event_envelope_v1.py`
+  - `src/parser/intent_action_map.py`
+  - `src/parser/canonical_schema.py`
+- Per questi file non ho forzato la rimozione, perche farlo avrebbe introdotto una modifica funzionale o una migrazione di fase successiva, fuori scope rispetto alla fasa 1.
+
+### Decisioni tecniche prese
+
+- Ho scelto un criterio conservativo coerente con la spec stessa: eliminare solo file **obsoleti senza dipendenti attivi**.
+- Ho codificato il cleanup con un test di esistenza file, che e il segnale minimo piu diretto per una fase puramente strutturale.
+- Non ho anticipato migrazioni o refactor sugli altri file della checklist, dato che risultano ancora in uso nel workspace attuale.
+
+---
+
+## Lavoro svolto - Fasa 2
+
+### File modificati
+
+| File | Tipo modifica |
+|------|---------------|
+| `src/parser/intent_types.py` | **CREATO** - enum `IntentType` e alias `IntentCategory` per il nuovo contratto ParsedMessage |
+| `src/parser/parsed_message.py` | **CREATO** - modelli `ParsedMessage`, `IntentResult`, `IntentEntities`, tutte le entity class per intent e riuso di `ReportedResult`/tipi canonici esistenti |
+| `src/parser/tests/test_phase2_parsed_message.py` | **CREATO** - test TDD per enum intents, entity models, default di `IntentResult` e serializzazione JSON di `ParsedMessage` |
+
+### Comportamento implementato
+
+- Introdotto il nuovo contratto dati additive di Fasa 2 senza toccare runtime, profili, router o traduzione intent.
+- `IntentType` espone tutti gli intent presenti nella spec operativa, incluso `INFO_ONLY`.
+- `ParsedMessage` supporta `signal`, `intents`, `primary_intent`, `targeting`, `validation_status`, `warnings`, `diagnostics` e `raw_context` secondo la shape richiesta dalla spec.
+- `IntentResult` include i campi nuovi della Fasa 2: `detection_strength`, `status`, `valid_refs`, `invalid_refs`, `invalid_reason`, `targeting_override`.
+- Ogni modello entity e istanziabile e serializzabile; `ParsedMessage` supera il round-trip JSON via `model_dump_json()` / `model_validate_json()`.
+
+### Casi limite non coperti
+
+- Non ho introdotto validazioni semantiche aggiuntive per singolo intent oltre alla tipizzazione Pydantic, perche la Fasa 2 richiede il contratto dati, non il runtime o il validator.
+- Non esiste ancora un discriminatore esplicito tra `IntentType` e modello `entities`; la preservazione del tipo concreto oggi e affidata alla union dei modelli entity, sufficiente per i casi tipizzati coperti dai test.
+- Nessun wiring nel parser runtime: `shared/runtime.py`, `disambiguation.py`, `intent_validator` e i profili restano invariati, coerentemente fuori scope.
+
+### Decisioni tecniche prese
+
+- Ho riusato i tipi gia stabili di `src/parser/canonical_v1/models.py` (`Price`, `SignalPayload`, `Targeting`, `RawContext`, `ReportedResult`, ecc.) per mantenere la Fasa 2 strettamente additive e ridurre superfici di regressione.
+- Ambiguita della spec risolta in modo conservativo: il piano parla di "15 intents", ma la tassonomia elenca anche `INFO_ONLY`; ho quindi implementato **16** valori in `IntentType` per allinearmi alla sezione tassonomica esplicita.
+- Il ciclo TDD e stato seguito in modo stretto:
+  - Red: fallimento in collection per assenza di `src.parser.intent_types`;
+  - Green: introduzione minima dei nuovi modelli;
+  - Refactor: riuso dei tipi canonici esistenti e union esplicita dei payload entity per preservare il round-trip JSON.

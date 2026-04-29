@@ -12,6 +12,12 @@ from typing import Any
 
 import os
 
+from src.parser import (
+    PassthroughIntentValidator,
+    ProfileCanonicalMessageTranslator,
+    ProfileRulesDisambiguationEngine,
+    parse_message as parse_parsed_message,
+)
 from src.execution.dynamic_pairlist import DynamicPairlistManager
 from src.execution.targeted_applier import apply_plan
 from src.execution.targeted_planner import build_plan
@@ -28,6 +34,7 @@ from src.storage.operational_signals_store import (
 )
 from src.storage.parse_results import ParseResultRecord, ParseResultStore
 from src.storage.parse_results_v1 import ParseResultV1Record, ParseResultV1Store
+from src.storage.parsed_messages import ParsedMessageRecord, ParsedMessageStore
 from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.storage.review_queue import ReviewQueueStore
@@ -53,6 +60,7 @@ _ENV_DEFAULT = "T"
 # Feature flag: abilita il percorso targeted runtime (Fase 4).
 # Disabilitato di default; attivare con USE_TARGETED_RUNTIME=1 nell'ambiente.
 _USE_TARGETED_RUNTIME: bool = os.getenv("USE_TARGETED_RUNTIME", "0") == "1"
+_USE_PARSED_MESSAGE: bool = os.getenv("PARSER_USE_PARSED_MESSAGE", "0") == "1"
 
 
 @dataclass(slots=True)
@@ -111,6 +119,11 @@ class MessageRouter:
         dynamic_pairlist_manager: DynamicPairlistManager | None = None,
         # Canonical v1 — wired here so normalization is always-on
         parse_results_v1_store: ParseResultV1Store | None = None,
+        # ParsedMessage dual-stack — Fasa 4.5
+        parsed_messages_store: ParsedMessageStore | None = None,
+        intent_validator: Any | None = None,
+        intent_translator: Any | None = None,
+        disambiguation_engine: Any | None = None,
     ) -> Any | None:
         self._trader_resolver = effective_trader_resolver
         self._eligibility = eligibility_evaluator
@@ -131,6 +144,12 @@ class MessageRouter:
 
         # Canonical v1 normalizer — always runs when store is wired; no flag needed
         self._parse_results_v1: ParseResultV1Store | None = parse_results_v1_store
+        self._parsed_messages: ParsedMessageStore | None = parsed_messages_store
+        self._intent_validator = intent_validator or PassthroughIntentValidator()
+        self._intent_translator = intent_translator or ProfileCanonicalMessageTranslator()
+        self._disambiguation_engine = (
+            disambiguation_engine or ProfileRulesDisambiguationEngine()
+        )
 
     def update_config(self, new_config: ChannelsConfig) -> None:
         self._config = new_config
@@ -141,6 +160,13 @@ class MessageRouter:
 
     def disable_shadow_normalizer(self) -> None:
         self._parse_results_v1 = None
+
+    def _should_use_parsed_message_dual_stack(self, profile_parser: Any) -> bool:
+        return (
+            _USE_PARSED_MESSAGE
+            and self._parsed_messages is not None
+            and callable(getattr(type(profile_parser), "parse", None))
+        )
 
     def route(self, item: QueueItem) -> None:
         self._status_store.update(item.raw_message_id, "processing")
@@ -241,11 +267,40 @@ class MessageRouter:
         )
         result = profile_parser.parse_message(text=item.raw_text, context=context)
 
+        parsed_message_recorded = False
+        canonical_msg = None
+        if self._should_use_parsed_message_dual_stack(profile_parser):
+            parsed_message, canonical_msg = parse_parsed_message(
+                text=item.raw_text,
+                context=context,
+                profile=profile_parser,
+                validator=self._intent_validator,
+                translator=self._intent_translator,
+                disambiguation_engine=self._disambiguation_engine,
+            )
+            self._persist_parsed_message(
+                parsed_message=parsed_message,
+                trader_id=trader_resolution.trader_id,
+                raw_message_id=item.raw_message_id,
+                now_ts=now_ts,
+            )
+            self._persist_canonical_v1_from_message(
+                canonical_msg=canonical_msg,
+                trader_id=trader_resolution.trader_id,
+                raw_message_id=item.raw_message_id,
+                now_ts=now_ts,
+            )
+            self._log_parsed_message_divergence(
+                raw_message_id=item.raw_message_id,
+                legacy_result=result,
+                parsed_message=parsed_message,
+            )
+            parsed_message_recorded = True
+
         # Canonical v1 — runs in parallel, never mutates result or blocks.
         # Profiles that declare parse_canonical() on their class skip the normalizer.
         # Check type(parser) to avoid MagicMock auto-attribute creation in tests.
-        canonical_msg = None
-        if self._parse_results_v1 is not None:
+        if self._parse_results_v1 is not None and not parsed_message_recorded:
             if callable(getattr(type(profile_parser), "parse_canonical", None)):
                 canonical_msg = self._native_canonical_v1(
                     profile_parser=profile_parser,
@@ -408,6 +463,74 @@ class MessageRouter:
 
         # Targeted runtime — Fase 4
         return msg
+
+    def _persist_canonical_v1_from_message(
+        self,
+        *,
+        canonical_msg: Any,
+        trader_id: str,
+        raw_message_id: int,
+        now_ts: str,
+    ) -> None:
+        if self._parse_results_v1 is None:
+            return
+        self._parse_results_v1.upsert(
+            ParseResultV1Record(
+                raw_message_id=raw_message_id,
+                trader_id=trader_id,
+                primary_class=canonical_msg.primary_class,
+                parse_status=canonical_msg.parse_status,
+                confidence=canonical_msg.confidence,
+                canonical_json=canonical_msg.model_dump_json(exclude_none=True),
+                normalizer_error=None,
+                created_at=now_ts,
+            )
+        )
+
+    def _persist_parsed_message(
+        self,
+        *,
+        parsed_message: Any,
+        trader_id: str,
+        raw_message_id: int,
+        now_ts: str,
+    ) -> None:
+        if self._parsed_messages is None:
+            return
+        confirmed_intents = [
+            intent.type.value
+            for intent in parsed_message.intents
+            if getattr(intent, "status", None) == "CONFIRMED"
+        ]
+        self._parsed_messages.upsert(
+            ParsedMessageRecord(
+                raw_message_id=raw_message_id,
+                trader_id=trader_id,
+                primary_class=parsed_message.primary_class,
+                validation_status=parsed_message.validation_status,
+                composite=parsed_message.composite,
+                parsed_json=parsed_message.model_dump_json(exclude_none=True),
+                intents_confirmed_json=json.dumps(confirmed_intents, ensure_ascii=False),
+                created_at=now_ts,
+            )
+        )
+
+    def _log_parsed_message_divergence(
+        self,
+        *,
+        raw_message_id: int,
+        legacy_result: TraderParseResult,
+        parsed_message: Any,
+    ) -> None:
+        legacy_primary_class = _legacy_message_type_to_primary_class(legacy_result.message_type)
+        if legacy_primary_class == parsed_message.primary_class:
+            return
+        self._logger.warning(
+            "parsed_message_divergence | raw_message_id=%s legacy_message_type=%s parsed_primary_class=%s",
+            raw_message_id,
+            legacy_result.message_type,
+            parsed_message.primary_class,
+        )
 
     # ------------------------------------------------------------------
     # Targeted runtime — Fase 4 (multi-ref target-aware)
@@ -1015,6 +1138,14 @@ def _extract_signal_id(raw_text: str) -> int | None:
         return int(match.group("id"))
     except ValueError:
         return None
+
+
+def _legacy_message_type_to_primary_class(message_type: str) -> str:
+    if message_type == "NEW_SIGNAL":
+        return "SIGNAL"
+    if message_type == "UPDATE":
+        return "UPDATE"
+    return "INFO"
 
 
 def _build_parse_result_record(

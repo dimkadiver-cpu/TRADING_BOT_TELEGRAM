@@ -1,6 +1,0 @@
-﻿raw_message_id,trader_id,legacy_message_type,canonical_primary_class,canonical_parse_status,canonical_confidence,envelope_error,normalizer_error,class_mismatch,unmapped_intents,normalizer_warnings,legacy_action_types,legacy_residual_keys,canonical_summary,raw_text_preview
-2377,trader_a,NEW_SIGNAL,SIGNAL,PARSED,0.75,,,False,,,CREATE_SIGNAL,,SIGNAL:ASTERUSDT:LONG:TWO_STEP,"[trader#A] #ASTERUSDT – Лонг Вход (2-фазный): Вход с текущих: 1.0432 Усреднение: 0.9823 Стоп-лосс: SL: 0.8461 Тейки (среднесрок): TP1: 1.2417 → Δ ≈ +19.0%, R..."
-2375,trader_a,NEW_SIGNAL,SIGNAL,PARTIAL,0.75,,,False,,,CREATE_SIGNAL,,SIGNAL:LINKUSDT:SHORT:TWO_STEP,[trader#A] $LINKUSDT – Шорт Вход A (сейчас): 15.239 Усреднение B: 15.713 Стоп лосс (по позиции): 16.399 Тейк-профиты (среднесрок 1–4 недели): TP1: 14.183 (≈−...
-2362,trader_a,UPDATE,REPORT,PARSED,0.7,,,True,,,,,REPORT:ENTRY_FILLED,"Взяли лимитку, средня стала в районе 15.5"
-2349,trader_a,NEW_SIGNAL,SIGNAL,PARSED,0.75,,,False,,,CREATE_SIGNAL,,SIGNAL:COAIUSDT:SHORT:TWO_STEP,[trader#A] COAIUSDT Шорт (вход с текущих) Вход (2-фазный): — Вход с текущих — Усреднение: 1.1843 Стоп: — SL: 1.2769 4. Тейки (среднесрок): — TP1: 0.8627 (Δ ≈...
-2323,trader_a,UPDATE,UPDATE,PARSED,0.7,,,False,,,MOVE_STOP,,UPDATE:SET_STOP,Можно переставить стоп на точку входа. С учетом усреднения у меня точка входа 1.1340

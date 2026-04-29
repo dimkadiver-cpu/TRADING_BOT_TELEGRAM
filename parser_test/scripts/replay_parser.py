@@ -26,10 +26,15 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.core.config_loader import load_config
 from src.core.migrations import apply_migrations
+from src.parser.adapters.legacy_to_event_envelope_v1 import adapt_legacy_parse_result_to_event_envelope
+from src.parser import ProfileRulesDisambiguationEngine
+from src.parser.canonical_v1.normalizer import normalize as normalize_canonical
+from src.parser.intent_validator import HistoryBackedIntentValidator
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_hashtags, extract_telegram_links
 from src.parser.trader_profiles.registry import canonicalize_trader_code, get_profile_parser
 from src.storage.parse_results import ParseResultRecord, ParseResultStore
+from src.storage.parsed_messages import ParsedMessageRecord, ParsedMessageStore
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
@@ -93,6 +98,12 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--from-date", default=None, help="Inclusive lower bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--to-date", default=None, help="Inclusive upper bound (YYYY-MM-DD or ISO timestamp).")
+    parser.add_argument(
+        "--parser-system",
+        choices=("legacy", "parsed_message"),
+        default="legacy",
+        help="Replay legacy parse_results or backfill parsed_messages with the new parser.",
+    )
     parser.add_argument(
         "--show-normalized-samples",
         type=int,
@@ -197,6 +208,127 @@ def _build_skipped_record(
         created_at=now_ts,
         updated_at=now_ts,
     )
+
+
+def _build_normalized_payload(
+    *,
+    result: TraderParseResult,
+    context: ParserContext,
+    parser_system: str = "common",
+) -> dict[str, object]:
+    payload: dict[str, object] = {
+        "parser_system": parser_system,
+        "event_envelope_v1": adapt_legacy_parse_result_to_event_envelope(result).model_dump(mode="python"),
+        "canonical_message_v1": normalize_canonical(result, context).model_dump(mode="python"),
+    }
+    if parser_system == "both":
+        payload.update(
+            {
+                "message_type": result.message_type,
+                "entities": result.entities,
+                "actions_structured": result.actions_structured,
+                "warnings": result.warnings,
+                "confidence": result.confidence,
+            }
+        )
+    return payload
+
+
+def _build_parsed_message_record(
+    *,
+    parsed_message: object,
+    trader_id: str,
+    raw_message_id: int,
+    now_ts: str,
+) -> ParsedMessageRecord:
+    intents = getattr(parsed_message, "intents", [])
+    confirmed_intents = [
+        intent.type.value
+        for intent in intents
+        if getattr(intent, "status", None) == "CONFIRMED"
+    ]
+    return ParsedMessageRecord(
+        raw_message_id=raw_message_id,
+        trader_id=trader_id,
+        primary_class=str(getattr(parsed_message, "primary_class")),
+        validation_status=str(getattr(parsed_message, "validation_status")),
+        composite=bool(getattr(parsed_message, "composite", False)),
+        parsed_json=parsed_message.model_dump_json(exclude_none=True),
+        intents_confirmed_json=json.dumps(confirmed_intents, ensure_ascii=False),
+        created_at=now_ts,
+    )
+
+
+def backfill_parsed_messages(
+    *,
+    db_path: str,
+    selected: list[SelectedRaw],
+    show_normalized_samples: int = 3,
+) -> None:
+    parsed_messages_store = ParsedMessageStore(db_path=db_path)
+    validator = HistoryBackedIntentValidator(db_path=db_path)
+    disambiguation_engine = ProfileRulesDisambiguationEngine()
+
+    processed = 0
+    skipped = 0
+    by_primary_class: Counter[str] = Counter()
+    by_validation_status: Counter[str] = Counter()
+    normalized_samples: list[dict[str, object]] = []
+
+    for item in selected:
+        row = item.row
+        try:
+            profile_parser = get_profile_parser(item.resolved_trader_id or "")
+            if profile_parser is None:
+                skipped += 1
+                continue
+
+            context = ParserContext(
+                trader_code=item.resolved_trader_id or "",
+                message_id=row.telegram_message_id,
+                reply_to_message_id=row.reply_to_message_id,
+                channel_id=row.source_chat_id,
+                raw_text=row.raw_text or "",
+                extracted_links=_context_links(row.raw_text or ""),
+                hashtags=_context_hashtags(row.raw_text or ""),
+            )
+            parsed_message = profile_parser.parse(text=row.raw_text or "", context=context)
+            parsed_message = validator.validate(parsed_message)
+            parsed_message = disambiguation_engine.apply(parsed_message, profile=profile_parser)
+
+            parsed_messages_store.upsert(
+                _build_parsed_message_record(
+                    parsed_message=parsed_message,
+                    trader_id=item.resolved_trader_id or "",
+                    raw_message_id=row.raw_message_id,
+                    now_ts=datetime.now(timezone.utc).isoformat(),
+                )
+            )
+            processed += 1
+            by_primary_class[str(parsed_message.primary_class)] += 1
+            by_validation_status[str(parsed_message.validation_status)] += 1
+            if show_normalized_samples > 0 and len(normalized_samples) < show_normalized_samples:
+                normalized_samples.append(json.loads(parsed_message.model_dump_json(exclude_none=True)))
+        except Exception as exc:
+            skipped += 1
+            _error_logger.error(
+                "raw_message_id=%s error=%s\n%s",
+                row.raw_message_id,
+                exc,
+                traceback.format_exc(),
+            )
+
+    print(f"db_path: {db_path}")
+    print("parser_system: parsed_message")
+    print(f"total raw selected: {len(selected)}")
+    print(f"total processed: {processed}")
+    print(f"total skipped: {skipped}")
+    print_counter("counts by primary_class", by_primary_class)
+    print_counter("counts by validation_status", by_validation_status)
+    if normalized_samples:
+        print("parsed_message samples:")
+        for index, sample in enumerate(normalized_samples, start=1):
+            print(f"  sample #{index}: {json.dumps(sample, ensure_ascii=False, sort_keys=True)}")
 
 
 def _parse_one(
@@ -309,6 +441,14 @@ def main() -> None:
     by_eligibility_status: Counter[str] = Counter()
     normalized_samples: list[dict[str, object]] = []
     raw_store = RawMessageStore(db_path=db_path)
+
+    if args.parser_system == "parsed_message":
+        backfill_parsed_messages(
+            db_path=db_path,
+            selected=selected,
+            show_normalized_samples=args.show_normalized_samples,
+        )
+        return
 
     for item in selected:
         row = item.row
@@ -571,6 +711,7 @@ def replay_database(
     from_date: str | None = None,
     to_date: str | None = None,
     parser_mode: str | None = None,
+    parser_system: str = "legacy",
     show_normalized_samples: int = 3,
 ) -> None:
     """Callable entry point for use by other scripts (e.g. generate_parser_reports.py)."""
@@ -634,6 +775,14 @@ def replay_database(
         to_date=to_date,
     )
     selected = select_rows(raws=raws, trader_filter=effective_trader, trader_resolver=trader_resolver)
+
+    if parser_system == "parsed_message":
+        backfill_parsed_messages(
+            db_path=resolved_db_path,
+            selected=selected,
+            show_normalized_samples=show_normalized_samples,
+        )
+        return
 
     processed = 0
     skipped = 0

@@ -32,6 +32,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--to-date", default=None, help="Inclusive upper bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--parser-mode", default=None, help="Parser mode override: regex_only | llm_only | hybrid_auto")
     parser.add_argument(
+        "--parser-system",
+        choices=("legacy", "parsed_message"),
+        default="legacy",
+        help="Replay legacy parse_results or backfill parsed_messages with the new parser.",
+    )
+    parser.add_argument(
         "--show-normalized-samples",
         type=int,
         default=3,
@@ -68,6 +74,7 @@ def main() -> None:
         from_date=args.from_date,
         to_date=args.to_date,
         parser_mode=args.parser_mode,
+        parser_system=args.parser_system,
         show_normalized_samples=args.show_normalized_samples,
     )
     db_path = Path(

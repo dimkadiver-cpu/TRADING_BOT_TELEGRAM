@@ -5,14 +5,15 @@ from dataclasses import dataclass
 COMMON_COLUMNS: list[str] = [
     "raw_message_id",
     "parse_status",
-    "reply_to_message_id",
-    "raw_text",
-    "warning_text",
-    "warnings_summary",
+    "message_type",
     "primary_intent",
     "intents",
-    "action_types",
-    "actions_structured_summary",
+    "intents_raw",
+    "warning_text",
+    "warnings_summary",
+    "validation_warning_count",
+    "raw_text",
+    "reply_to_message_id",
 ]
 
 _ALL_MESSAGE_COLUMNS: list[str] = [
@@ -52,7 +53,6 @@ _ALL_MESSAGE_COLUMNS: list[str] = [
     "notes_summary",
     "links_count",
     "hashtags_count",
-    "validation_warning_count",
     "diagnostics_summary",
 ]
 
@@ -80,7 +80,6 @@ _NEW_SIGNAL_COLUMNS: list[str] = [
     "notes_summary",
     "links_count",
     "hashtags_count",
-    "validation_warning_count",
     "diagnostics_summary",
 ]
 
@@ -111,7 +110,6 @@ _UPDATE_COLUMNS: list[str] = [
     "tp_prices",
     "links_count",
     "hashtags_count",
-    "validation_warning_count",
     "diagnostics_summary",
 ]
 
@@ -127,7 +125,6 @@ _INFO_ONLY_COLUMNS: list[str] = [
     "target_refs_count",
     "links_count",
     "hashtags_count",
-    "validation_warning_count",
     "diagnostics_summary",
 ]
 
@@ -142,7 +139,6 @@ _SETUP_INCOMPLETE_COLUMNS: list[str] = [
     "missing_stop_flag",
     "missing_tp_flag",
     "missing_entry_flag",
-    "validation_warning_count",
     "notes_summary",
     "diagnostics_summary",
 ]
@@ -152,7 +148,6 @@ _UNCLASSIFIED_COLUMNS: list[str] = [
     "target_refs_count",
     "links_count",
     "hashtags_count",
-    "validation_warning_count",
     "diagnostics_summary",
     "notes_summary",
 ]
@@ -191,7 +186,7 @@ def schema_for_scope(
         raise ValueError(f"Unsupported report scope: {scope}")
     ordered = list(columns)
     if include_legacy_debug:
-        ordered.append("legacy_actions")
+        ordered.extend(["raw_text", "action_types", "actions_structured_summary", "legacy_actions"])
     if include_json_debug:
         ordered.append("normalized_json_debug")
     return ReportSchema(scope=normalized, columns=ordered)

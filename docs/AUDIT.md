@@ -4,6 +4,41 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-04-29 — Miglioramento output CSV parser_test
+
+### Step completato
+
+Refactoring dello schema CSV del parser_test per migliorare la leggibilità e ridurre il rumore nelle viste principali.
+
+### Modifiche
+
+| File | Stato | Note |
+|---|---|---|
+| `parser_test/reporting/report_schema.py` | Modificato | COMMON_COLUMNS ristrutturate: rimossi `raw_text`, `action_types`, `actions_structured_summary`; aggiunti `message_type`, `raw_text_preview`, `validation_warning_count` |
+| `parser_test/reporting/flatteners.py` | Modificato | Aggiunti `message_type` e `raw_text_preview` nel row dict; aggiunta funzione `_preview_text()` |
+| `parser_test/tests/test_report_export.py` | Modificato | Test aggiornati per il nuovo contratto: `action_types`/`actions_structured_summary` sono ora debug-only |
+
+### Risultato test
+
+```
+pytest parser_test/tests/ parser_test/scripts/tests/  →  31/31 passed
+```
+
+### Cosa è cambiato nel CSV
+
+- `message_type` ora visibile in tutte le viste (era assente dal COMMON)
+- `raw_text_preview` (max 150 char, singola riga) al posto di `raw_text` multilinea nel main view
+- `validation_warning_count` spostato in COMMON (era duplicato in ogni scope)
+- `action_types` e `actions_structured_summary` spostati in debug-only (flag `--include-legacy-debug`)
+- Con `--include-legacy-debug`: aggiunge `raw_text`, `action_types`, `actions_structured_summary`, `legacy_actions`
+
+### Rischi aperti
+
+- Nessuno: modifiche non rompono comportamento esistente, solo cambio di visibilità colonne.
+- Chi usa i CSV via script che si aspettano le colonne `action_types`/`actions_structured_summary` deve aggiungere `--include-legacy-debug`.
+
+---
+
 ## 2026-04-27 — Fase 1: Parser Contract (multi-ref target-aware)
 
 ### Step completato
@@ -281,3 +316,65 @@ pytest src/parser/trader_profiles/                                     →  549 
 ### Prossimo step
 
 **Step 5** — Schema JSON `context_resolution_rules` in `src/parser/shared/context_resolution_schema.py`.
+
+---
+
+## 2026-04-29 — Check stato reale Fasi 1-4 del parser redesign
+
+### Scopo
+
+Verifica documentale del piano `PARSER_REDESIGN_SPEC_V1.md` contro il repository reale,
+senza introdurre nuova logica di prodotto.
+
+### Esito sintetico
+
+| Fase | Stato | Nota |
+|---|---|---|
+| Fase 1 — Cleanup preliminare | Parziale | chiusa solo per i file legacy sicuramente scollegati |
+| Fase 2 — ParsedMessage models | Completata | modelli e test presenti |
+| Fase 3 — Shared infrastructure | Completata | runtime/disambiguation/schema presenti e verificati |
+| Fase 4 — trader_a pilota | Non completata | il profilo `trader_a` e ancora sul percorso legacy |
+
+### Evidenze raccolte
+
+- `src/parser/intent_types.py` e `src/parser/parsed_message.py` sono presenti.
+- `src/parser/shared/runtime.py` e `src/parser/shared/disambiguation.py` sono presenti.
+- I test Phase 1-3 esistono e passano.
+- `src/parser/trader_profiles/trader_a/profile.py` usa ancora `parsing_rules.json`.
+- In `src/parser/trader_profiles/trader_a/` non esistono ancora `semantic_markers.json` e `rules.json`.
+- `trader_a/profile.py` espone ancora `parse_canonical(...) -> CanonicalMessage`, non il nuovo `parse(...) -> ParsedMessage`.
+
+### Verifica eseguita
+
+```bash
+pytest src/parser/tests/test_phase1_cleanup.py \
+       src/parser/tests/test_phase2_parsed_message.py \
+       src/parser/tests/test_phase3_shared_runtime.py \
+       src/parser/tests/test_phase3_disambiguation.py \
+       src/parser/tests/test_phase3_rules_schema.py -q
+```
+
+Risultato:
+
+```text
+30 passed
+```
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `docs/in_progress/new_parser/PARSER_REDESIGN_SPEC_V1.md` | Aggiornato | aggiunta sezione di check stato Fasi 1-4 |
+| `docs/AUDIT.md` | Aggiornato | registrata la verifica del 2026-04-29 |
+
+### Rischi aperti
+
+- La checklist della Fase 1 nel documento originale e piu ampia dello stato reale del cleanup: se la si interpreta letteralmente, la fase non e ancora completamente chiusa.
+- La Fase 4 non va considerata "in corso avanzato" solo per la presenza di `extractors.py`: il contratto del profilo e ancora legacy.
+- Fasi successive che assumono `trader_a` gia migrato devono essere considerate bloccate o almeno premature.
+
+### Prossimo step
+
+Quando si riprendera il lavoro implementativo:
+- o si chiude davvero il residuo di Fase 1 con una nuova migrazione controllata;
+- oppure si accetta formalmente che la Fase 1 e "parzialmente chiusa" e si apre la vera migrazione Fase 4 di `trader_a`.

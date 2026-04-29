@@ -25,6 +25,9 @@ class ReportingCsvExportTests(unittest.TestCase):
             conn.execute(
                 'CREATE TABLE parse_results (raw_message_id INTEGER, resolved_trader_id TEXT, message_type TEXT, parse_status TEXT, warning_text TEXT, parse_result_normalized_json TEXT, trader_resolution_method TEXT)'
             )
+            conn.execute(
+                'CREATE TABLE parsed_messages (raw_message_id INTEGER PRIMARY KEY, trader_id TEXT, primary_class TEXT, validation_status TEXT, composite INTEGER, parsed_json TEXT, intents_confirmed_json TEXT, created_at TEXT)'
+            )
             conn.executemany(
                 'INSERT INTO raw_messages(raw_message_id, raw_text, reply_to_message_id, message_ts, source_chat_id, source_chat_title, telegram_message_id, acquisition_status, acquisition_reason) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 [
@@ -144,6 +147,31 @@ class ReportingCsvExportTests(unittest.TestCase):
                     ),
                 ],
             )
+            conn.executemany(
+                'INSERT INTO parsed_messages(raw_message_id, trader_id, primary_class, validation_status, composite, parsed_json, intents_confirmed_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+                [
+                    (
+                        1,
+                        'trader_a',
+                        'SIGNAL',
+                        'VALIDATED',
+                        0,
+                        json.dumps({'primary_intent': 'CREATE_SIGNAL'}, ensure_ascii=False),
+                        json.dumps(['CREATE_SIGNAL'], ensure_ascii=False),
+                        '2026-01-01T10:00:00Z',
+                    ),
+                    (
+                        2,
+                        'trader_a',
+                        'UPDATE',
+                        'VALIDATED',
+                        0,
+                        json.dumps({'primary_intent': 'TP_HIT'}, ensure_ascii=False),
+                        json.dumps(['TP_HIT', 'REPORT_FINAL_RESULT'], ensure_ascii=False),
+                        '2026-01-01T10:01:00Z',
+                    ),
+                ],
+            )
             conn.commit()
         return db_path
 
@@ -201,7 +229,7 @@ class ReportingCsvExportTests(unittest.TestCase):
             scope='UPDATE',
         )
         self.assertEqual(row['primary_intent'], 'U_TP_HIT')
-        self.assertEqual(row['action_types'], 'MARK_TP_HIT | ATTACH_RESULT')
+        self.assertNotIn('action_types', row)
         self.assertEqual(row['symbol'], 'TAOUSDT')
         self.assertEqual(row['signal_id'], '17')
         self.assertEqual(row['target_refs'], '17 | 18')
@@ -227,13 +255,14 @@ class ReportingCsvExportTests(unittest.TestCase):
                 reader = csv.DictReader(handle)
                 header = reader.fieldnames or []
                 rows = list(reader)
-            self.assertIn('action_types', header)
-            self.assertIn('actions_structured_summary', header)
+            self.assertNotIn('action_types', header)
+            self.assertNotIn('actions_structured_summary', header)
             self.assertNotIn('actions', header)
             self.assertNotIn('legacy_actions', header)
             self.assertNotIn('normalized_json_debug', header)
             self.assertTrue(rows)
-            self.assertEqual(rows[0]['action_types'], 'MARK_TP_HIT | ATTACH_RESULT')
+            self.assertEqual(rows[0]['intents'], 'TP_HIT | REPORT_FINAL_RESULT')
+            self.assertEqual(rows[0]['primary_intent'], 'TP_HIT')
             self.assertEqual(rows[0]['target_refs_count'], '2')
         finally:
             for suffix in ('', '-wal', '-shm'):
@@ -307,8 +336,8 @@ class ReportingCsvExportTests(unittest.TestCase):
             scope='UNCLASSIFIED',
         )
         self.assertEqual(row['raw_message_id'], '99')
-        self.assertEqual(row['action_types'], '')
-        self.assertEqual(row['actions_structured_summary'], '')
+        self.assertNotIn('action_types', row)
+        self.assertNotIn('actions_structured_summary', row)
         self.assertNotIn('legacy_actions', row)
         self.assertNotIn('normalized_json_debug', row)
 

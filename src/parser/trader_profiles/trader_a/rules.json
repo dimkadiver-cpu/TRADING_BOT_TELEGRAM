@@ -1,0 +1,78 @@
+{
+  "classification_rules": [
+    {
+      "name": "complete_new_signal_structure",
+      "when_all_fields_present": ["entry", "stop_loss", "take_profit"],
+      "then": "new_signal"
+    },
+    {
+      "name": "partial_new_signal_structure",
+      "when_all_fields_present": ["entry", "stop_loss"],
+      "then": "new_signal"
+    }
+  ],
+  "combination_rules": [
+    {
+      "if": ["вход", "sl:"],
+      "then": "new_signal",
+      "confidence_boost": 0.4
+    },
+    {
+      "if": ["стоп в бу", "тейк"],
+      "then": "update",
+      "confidence_boost": 0.3
+    }
+  ],
+  "primary_intent_precedence": [
+    "SL_HIT",
+    "EXIT_BE",
+    "TP_HIT",
+    "REPORT_FINAL_RESULT",
+    "CLOSE_FULL",
+    "CLOSE_PARTIAL",
+    "CANCEL_PENDING",
+    "MOVE_STOP_TO_BE",
+    "MOVE_STOP",
+    "ENTRY_FILLED"
+  ],
+  "disambiguation_rules": {
+    "rules": [
+      {
+        "name": "prefer_move_stop_to_be_over_move_stop",
+        "action": "prefer",
+        "conditions": {
+          "intents": {
+            "strong": ["MOVE_STOP_TO_BE", "MOVE_STOP"]
+          }
+        },
+        "prefer": "MOVE_STOP_TO_BE",
+        "over": ["MOVE_STOP"]
+      },
+      {
+        "name": "suppress_info_only_if_actionable",
+        "action": "suppress",
+        "conditions": {
+          "intents": {
+            "strong": ["MOVE_STOP_TO_BE"]
+          }
+        },
+        "suppress": ["INFO_ONLY"]
+      }
+    ]
+  },
+
+
+  "action_scope_groups": {
+    "all_positions": [
+      "ALL_POSITIONS",
+      "ALL_OPEN",
+      "ALL_REMAINING"
+    ],
+    "all_long": [
+      "ALL_LONGS"
+    ],
+    "all_short": [
+      "ALL_SHORTS"
+    ]
+  }
+}

@@ -146,9 +146,12 @@ def _fetch_rows(
       rm.reply_to_message_id,
       rm.raw_text,
       pr.warning_text,
-      pr.parse_result_normalized_json
+      pr.parse_result_normalized_json,
+      pm.parsed_json,
+      pm.intents_confirmed_json
     FROM raw_messages rm
     JOIN parse_results pr ON pr.raw_message_id = rm.raw_message_id
+    LEFT JOIN parsed_messages pm ON pm.raw_message_id = rm.raw_message_id
     WHERE pr.resolved_trader_id = ?
     """
     params: list[object] = [trader_id]
@@ -160,6 +163,14 @@ def _fetch_rows(
     rows: list[dict[str, str]] = []
     for row in conn.execute(sql, params):
         normalized = _normalized_obj(row["parse_result_normalized_json"])
+        parsed_message_obj = _normalized_obj(row["parsed_json"])
+        parsed_message_intents = _parse_intents_confirmed(row["intents_confirmed_json"])
+        if parsed_message_intents is not None:
+            normalized["intents_raw"] = normalized.get("intents")
+            normalized["intents"] = parsed_message_intents
+        parsed_primary_intent = _parse_primary_intent(parsed_message_obj, parsed_message_intents)
+        if parsed_primary_intent:
+            normalized["primary_intent"] = parsed_primary_intent
         rows.append(
             build_report_row(
                 raw_message_id=row["raw_message_id"],
@@ -174,6 +185,30 @@ def _fetch_rows(
             )
         )
     return rows
+
+
+def _parse_intents_confirmed(raw: str | None) -> list[str] | None:
+    if not raw:
+        return None
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        return None
+    if not isinstance(parsed, list):
+        return None
+    return [str(item) for item in parsed if isinstance(item, str)]
+
+
+def _parse_primary_intent(
+    parsed_message_obj: dict[str, Any],
+    parsed_message_intents: list[str] | None,
+) -> str | None:
+    raw_primary = parsed_message_obj.get("primary_intent")
+    if isinstance(raw_primary, str) and raw_primary.strip():
+        return raw_primary.strip()
+    if parsed_message_intents:
+        return parsed_message_intents[0]
+    return None
 
 
 def _write_csv(

@@ -1,292 +1,289 @@
-﻿from __future__ import annotations
+from __future__ import annotations
 
 import re
 from typing import Any
 
-from src.parser.event_envelope_v1 import (
-    EntryLegRaw,
-    InstrumentRaw,
-    ReportEventRaw,
-    ReportPayloadRaw,
-    ReportedResultRaw,
-    RiskHintRaw,
-    SignalPayloadRaw,
-    SignalRawFragments,
-    StopLossRaw,
-    StopUpdateRaw,
-    TakeProfitRaw,
-    UpdatePayloadRaw,
-    UpdateRawFragments,
+from src.parser.canonical_v1.models import (
+    EntryLeg,
+    Price,
+    ReportedResult,
+    RiskHint,
+    SignalPayload,
+    StopLoss,
+    TakeProfit,
 )
+from src.parser.parsed_message import (
+    CancelPendingEntities,
+    CloseFullEntities,
+    ClosePartialEntities,
+    EntryFilledEntities,
+    ExitBeEntities,
+    MoveStopEntities,
+    MoveStopToBEEntities,
+    ReportFinalResultEntities,
+    SlHitEntities,
+    TpHitEntities,
+)
+from src.parser.rules_engine import RulesEngine
 from src.parser.trader_profiles.base import ParserContext
 
 _PRICE_CAPTURE = r"\d[\d\s]*(?:[.,]\d+)?"
 
 _SYMBOL_RE = re.compile(r"(?:#|\$)?(?P<symbol>[A-Z0-9]{2,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b", re.IGNORECASE)
 _ENTRY_CURRENT_RE = re.compile(r"вход\s+с\s+текущих\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
-_ENTRY_LIMIT_RE = re.compile(r"вход\s+(?:лимиткой|лимитным\s+ордером)\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
-_ENTRY_A_RE = re.compile(
-    r"вход\s*(?:\((?:a|а)\)|(?:a|а))(?:\s*\([^)]+\))?\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")",
-    re.IGNORECASE,
-)
-_ENTRY_SIMPLE_RE = re.compile(r"(?:^|\n)\s*(?:[-—•]\s*)?вход\s*[:=@-]\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
-_AVERAGING_RE = re.compile(
-    r"(?:усреднение|вход\s*(?:\((?:b|б)\)|(?:b|б)))\s*(?:\([^)]+\))?\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")",
-    re.IGNORECASE,
-)
+_ENTRY_LIMIT_RE = re.compile(r"(?:вход|entry)\s+(?:лимиткой|лимитным\s+ордером)?\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
+_ENTRY_SIMPLE_RE = re.compile(r"(?:^|\n)\s*(?:[-—•]\s*)?(?:entry|вход)\s*[:=@-]\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _ENTRY_AB_RE = re.compile(
     r"(?:^|\n)\s*(?:[-—•]\s*)?(?:вход\s*)?(?:\((?P<label_paren>[abаб])\)|(?P<label>[abаб]))"
-    r"(?:\s*\((?P<qual>[^)]*)\))?\s*[:=@-]\s*(?P<value>\d[\d\s]*(?:[.,]\d+)?|-)",
+    r"(?:\s*\((?P<qual>[^)]*)\))?\s*[:=@-]\s*(?P<value>" + _PRICE_CAPTURE + r")",
     re.IGNORECASE,
 )
-_STOP_LOSS_RE = re.compile(r"\bsl\b\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
+_AVERAGING_RE = re.compile(r"(?:усреднение|вход\s*(?:\((?:b|б)\)|(?:b|б)))\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
+_STOP_LOSS_RE = re.compile(r"(?:\bsl\b|стоп)\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _TP_RE = re.compile(r"\bTP(?P<index>\d+)?\b\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
-_RISK_PREFIX = r"(?:риск|вход|заходим|зайдем|зайти|не\s+более|не\s+больше|на\s+сделку|тут\s+риск)"
-_RISK_RANGE_WITH_PREFIX_RE = re.compile(
-    r"(?:" + _RISK_PREFIX + r")[^\d]{0,24}(?P<min>\d+(?:[.,]\d+)?)\s*-\s*(?P<max>\d+(?:[.,]\d+)?)\s*%",
+_TP_LEVEL_RE = re.compile(r"\btp(?P<level>\d+)\b", re.IGNORECASE)
+_PERCENT_RE = re.compile(r"(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*%")
+_RESULT_R_RE = re.compile(r"(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*R{1,2}\b", re.IGNORECASE)
+_STOP_PRICE_RE = re.compile(
+    r"(?:move\s*(?:sl|stop)\s*(?:to)?|sl|stop|стоп\s*(?:переношу|переставляю|переносим|переставим)?\s*на)\s*[:=@-]?\s*(?P<value>\d+(?:[.,]\d+)?)",
     re.IGNORECASE,
 )
-_RISK_RANGE_WITH_SUFFIX_RE = re.compile(
-    r"(?P<min>\d+(?:[.,]\d+)?)\s*-\s*(?P<max>\d+(?:[.,]\d+)?)\s*%\s*(?:от\s+депозита|риска|на\s+сделку)",
-    re.IGNORECASE,
-)
-_RISK_SINGLE_WITH_PREFIX_RE = re.compile(
-    r"(?:" + _RISK_PREFIX + r")[^\d]{0,24}(?P<value>\d+(?:[.,]\d+)?)\s*%",
-    re.IGNORECASE,
-)
-_RISK_SINGLE_WITH_SUFFIX_RE = re.compile(
-    r"(?P<value>\d+(?:[.,]\d+)?)\s*%\s*(?:от\s+депозита|риска|на\s+сделку)",
-    re.IGNORECASE,
-)
-_RESULT_PERCENT_RE = re.compile(r"(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*%")
-
-_LONG_MARKERS = ("лонг", "long")
-_SHORT_MARKERS = ("шорт", "short")
-_STOP_TO_ENTRY_MARKERS = (
-    "стоп на точку входа",
-    "переставить стоп на точку входа",
-    "стоп обязательно на точку входа",
+_STOP_TO_TP1_RE = re.compile(r"(?:стоп\s+на\s+(?:1|первый)\s+тейк|стоп\s+на\s+tp1)", re.IGNORECASE)
+_STOP_TO_BE_MARKERS = (
     "стоп в бу",
     "стоп в безубыток",
+    "стоп на точку входа",
+    "переводим в бу",
+    "перевод в безубыток",
 )
-_STOP_HIT_MARKERS = (
-    "к сожалению стоп",
-    "словили стоп",
-    "выбило по стопу",
-    "стоп сработал",
-)
-_EXIT_BE_MARKERS = (
-    "закрылась в безубыток",
-    "закрылась в бу",
-    "закрылся в бу",
-    "сетап полностью закрыт",
-    "ушел в бу",
-    "ушла в бу",
-)
-_ENTRY_FILLED_MARKERS = (
-    "взяли лимитку",
-    "лимитка",
-    "средняя",
-    "вход исполнен",
-)
+_STOP_HIT_MARKERS = ("выбило по стопу", "стоп сработал", "stop hit", "stopped out")
+_EXIT_BE_MARKERS = ("закрылась в безубыток", "закрылась в бу", "закрылся в бу", "ушел в бу", "ушла в бу")
+_ENTRY_FILLED_MARKERS = ("взяли лимитку", "лимитка", "entry filled", "вход исполнен")
+_CLOSE_FULL_MARKERS = ("закрываю по текущим", "закрываю все позиции", "close all", "зафиксировать")
+_CLOSE_PARTIAL_MARKERS = ("partial close", "close half", "частично", "половину", "50%")
+_CANCEL_PENDING_MARKERS = ("убираем лимитки", "отменяем лимитки", "cancel pending", "cancel limit")
+_LONG_MARKERS = ("лонг", "long")
+_SHORT_MARKERS = ("шорт", "short")
+
 
 class TraderAExtractors:
     def extract(
         self,
         text: str,
         context: ParserContext,
-        rules: Any,  # noqa: ARG002 - shared protocol requires it
+        rules: RulesEngine,
     ) -> dict[str, Any]:
-        lowered = _normalize_text(text)
-        instrument = _extract_instrument(text, lowered)
-        signal_payload_raw = _extract_signal_payload(text)
-        update_payload_raw = _extract_update_payload(text, lowered)
-        report_payload_raw = _extract_report_payload(text, lowered)
-        intents_extra = _extract_intents_extra(lowered)
-
+        normalized = _normalize_text(text)
+        signal = _extract_signal(text, normalized, rules)
+        intents = _extract_intents(text, normalized, rules)
         diagnostics: dict[str, Any] = {}
-        if signal_payload_raw.entries:
-            diagnostics["legacy_entry_prices"] = [leg.price for leg in signal_payload_raw.entries]
-        if signal_payload_raw.take_profits:
-            diagnostics["legacy_take_profit_prices"] = [tp.price for tp in signal_payload_raw.take_profits]
+        parse_status: str | None = None
+
+        if signal is not None:
+            diagnostics["signal_entry_count"] = len(signal.entries)
+            diagnostics["signal_tp_count"] = len(signal.take_profits)
+            if signal.completeness == "INCOMPLETE":
+                parse_status = "PARTIAL"
 
         return {
-            "instrument": instrument,
-            "signal_payload_raw": signal_payload_raw,
-            "update_payload_raw": update_payload_raw,
-            "report_payload_raw": report_payload_raw,
-            "intents_extra": intents_extra,
+            "signal": signal,
+            "intents": intents,
+            "parse_status": parse_status,
             "diagnostics": diagnostics,
         }
 
 
-def _extract_instrument(text: str, lowered: str) -> InstrumentRaw:
-    match = _SYMBOL_RE.search(text.upper())
-    symbol = match.group("symbol").upper() if match else _extract_symbol_from_bare_hashtag(text)
-    side = None
-    if any(marker in lowered for marker in _LONG_MARKERS):
-        side = "LONG"
-    elif any(marker in lowered for marker in _SHORT_MARKERS):
-        side = "SHORT"
-    return InstrumentRaw(symbol=symbol, side=side, market_type="UNKNOWN")
+def _extract_signal(text: str, normalized: str, rules: RulesEngine) -> SignalPayload | None:
+    symbol = _extract_instrument_symbol(text)
+    side = _extract_side(normalized)
+    entries = _extract_entries(text)
+    stop_loss = _extract_stop_loss(text)
+    take_profits = _extract_take_profits(text)
+    risk_hint = _extract_risk_hint(text, rules)
 
+    if not any((symbol, side, entries, stop_loss, take_profits)):
+        return None
 
-def _extract_signal_payload(text: str) -> SignalPayloadRaw:
-    entries = _extract_entry_legs(text)
+    missing_fields: list[str] = []
+    if not entries:
+        missing_fields.append("entries")
+    if stop_loss is None:
+        missing_fields.append("stop_loss")
+    if not take_profits:
+        missing_fields.append("take_profits")
 
-    stop_loss_value = _search_float(_STOP_LOSS_RE, text)
-    stop_loss = StopLossRaw(price=stop_loss_value, raw=_search_line(text, "sl")) if stop_loss_value is not None else None
-
-    take_profits: list[TakeProfitRaw] = []
-    for match in _TP_RE.finditer(text):
-        price = _to_float(match.group("value"))
-        if price is None:
-            continue
-        index_raw = match.group("index")
-        index = int(index_raw) if index_raw else 1
-        take_profits.append(
-            TakeProfitRaw(
-                sequence=index,
-                price=price,
-                label=f"TP{index}",
-                raw=match.group(0),
-            )
-        )
-
-    risk_hint = _extract_risk_hint(text)
-
-    entry_structure = None
     if len(entries) >= 2:
         entry_structure = "TWO_STEP"
     elif len(entries) == 1:
         entry_structure = "ONE_SHOT"
+    else:
+        entry_structure = None
 
-    return SignalPayloadRaw(
+    return SignalPayload(
+        symbol=symbol,
+        side=side,
         entry_structure=entry_structure,
         entries=entries,
         stop_loss=stop_loss,
         take_profits=take_profits,
         risk_hint=risk_hint,
-        raw_fragments=SignalRawFragments(
-            entry_text_raw=_search_line(text, "вход"),
-            stop_text_raw=_search_line(text, "sl"),
-            take_profits_text_raw=_collect_tp_lines(text),
-        ),
+        completeness="COMPLETE" if not missing_fields else "INCOMPLETE",
+        missing_fields=missing_fields,
     )
 
 
-def _extract_update_payload(text: str, lowered: str) -> UpdatePayloadRaw:
-    stop_update = None
-    if any(marker in lowered for marker in _STOP_TO_ENTRY_MARKERS):
-        stop_update = StopUpdateRaw(mode="TO_ENTRY", raw=text.strip())
+def _extract_intents(text: str, normalized: str, rules: RulesEngine) -> list[dict[str, Any]]:
+    intents: list[dict[str, Any]] = []
+    for match in rules.detect_intents_with_evidence(text):
+        entity_payload: Any
+        if match.intent == "MOVE_STOP_TO_BE":
+            entity_payload = MoveStopToBEEntities()
+        elif match.intent == "MOVE_STOP":
+            entity_payload = _move_stop_entities(text)
+        elif match.intent == "CLOSE_FULL":
+            entity_payload = CloseFullEntities()
+        elif match.intent == "CLOSE_PARTIAL":
+            entity_payload = ClosePartialEntities(fraction=_extract_fraction(text, normalized))
+        elif match.intent == "CANCEL_PENDING":
+            entity_payload = CancelPendingEntities()
+        elif match.intent == "ENTRY_FILLED":
+            entity_payload = EntryFilledEntities()
+        elif match.intent == "TP_HIT":
+            entity_payload = TpHitEntities(
+                level=_extract_tp_level(text),
+                result=_extract_reported_result(text),
+            )
+        elif match.intent == "SL_HIT":
+            entity_payload = SlHitEntities(result=_extract_reported_result(text))
+        elif match.intent == "EXIT_BE":
+            entity_payload = ExitBeEntities()
+        elif match.intent == "REPORT_FINAL_RESULT":
+            entity_payload = ReportFinalResultEntities(result=_extract_reported_result(text))
+        else:
+            continue
 
-    return UpdatePayloadRaw(
-        stop_update=stop_update,
-        raw_fragments=UpdateRawFragments(
-            stop_text_raw=text.strip() if stop_update is not None else None,
-        ),
-    )
+        intents.append(
+            {
+                "type": match.intent,
+                "entities": entity_payload,
+                "confidence": 0.9 if match.strength == "strong" else 0.55,
+                "raw_fragment": text.strip() or None,
+            }
+        )
 
-
-def _extract_report_payload(text: str, lowered: str) -> ReportPayloadRaw:
-    events: list[ReportEventRaw] = []
-    results: list[ReportedResultRaw] = []
-
-    if any(marker in lowered for marker in _STOP_HIT_MARKERS):
-        result = _extract_percent_result(text)
-        if result is not None:
-            results.append(result)
-        events.append(ReportEventRaw(event_type="SL_HIT", result=result, raw_fragment=text.strip()))
-
-    if any(marker in lowered for marker in _EXIT_BE_MARKERS):
-        events.append(ReportEventRaw(event_type="EXIT_BE", raw_fragment=text.strip()))
-
-    if any(marker in lowered for marker in _ENTRY_FILLED_MARKERS):
-        events.append(ReportEventRaw(event_type="ENTRY_FILLED", raw_fragment=text.strip()))
-
-    return ReportPayloadRaw(
-        events=events,
-        reported_results=results,
-        summary_text_raw=text.strip() if events or results else None,
-    )
-
-
-def _extract_intents_extra(lowered: str) -> list[str]:
-    intents: list[str] = []
-    if any(marker in lowered for marker in _STOP_TO_ENTRY_MARKERS):
-        intents.append("MOVE_STOP_TO_BE")
-    if any(marker in lowered for marker in _STOP_HIT_MARKERS):
-        intents.append("SL_HIT")
-    if any(marker in lowered for marker in _EXIT_BE_MARKERS):
-        intents.append("EXIT_BE")
-    if any(marker in lowered for marker in _ENTRY_FILLED_MARKERS):
-        intents.append("ENTRY_FILLED")
+    # Conservative fallback for high-signal report/update phrases when the marker file
+    # intentionally keeps a smaller vocabulary during the migration.
+    if not intents:
+        if any(marker in normalized for marker in _STOP_TO_BE_MARKERS):
+            intents.append(
+                {
+                    "type": "MOVE_STOP_TO_BE",
+                    "entities": MoveStopToBEEntities(),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
+        elif any(marker in normalized for marker in _STOP_HIT_MARKERS):
+            intents.append(
+                {
+                    "type": "SL_HIT",
+                    "entities": SlHitEntities(result=_extract_reported_result(text)),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
+        elif any(marker in normalized for marker in _EXIT_BE_MARKERS):
+            intents.append(
+                {
+                    "type": "EXIT_BE",
+                    "entities": ExitBeEntities(),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
+        elif any(marker in normalized for marker in _ENTRY_FILLED_MARKERS):
+            intents.append(
+                {
+                    "type": "ENTRY_FILLED",
+                    "entities": EntryFilledEntities(),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
+        elif any(marker in normalized for marker in _CLOSE_FULL_MARKERS):
+            intents.append(
+                {
+                    "type": "CLOSE_FULL",
+                    "entities": CloseFullEntities(),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
+        elif any(marker in normalized for marker in _CLOSE_PARTIAL_MARKERS):
+            intents.append(
+                {
+                    "type": "CLOSE_PARTIAL",
+                    "entities": ClosePartialEntities(fraction=_extract_fraction(text, normalized)),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
+        elif any(marker in normalized for marker in _CANCEL_PENDING_MARKERS):
+            intents.append(
+                {
+                    "type": "CANCEL_PENDING",
+                    "entities": CancelPendingEntities(),
+                    "confidence": 0.55,
+                    "raw_fragment": text.strip() or None,
+                }
+            )
     return intents
 
 
-def _extract_entry_legs(text: str) -> list[EntryLegRaw]:
-    entries: list[EntryLegRaw] = []
-    ab_primary: tuple[float, str] | None = None
-    ab_secondary: float | None = None
-
-    for match in _ENTRY_AB_RE.finditer(text):
-        label = str(match.group("label") or match.group("label_paren") or "").lower()
-        qual = _normalize_text(str(match.group("qual") or ""))
-        value = _to_float(match.group("value"))
-        if label in {"a", "а"} and value is not None and ab_primary is None:
-            entry_type = "MARKET" if "текущ" in qual else "LIMIT"
-            ab_primary = (value, entry_type)
-        elif label in {"b", "б"} and value is not None and ab_secondary is None:
-            ab_secondary = value
-
-    if ab_primary is not None:
-        entries.append(
-            EntryLegRaw(
-                sequence=1,
-                entry_type=ab_primary[1],
-                price=ab_primary[0],
-                role="PRIMARY",
-                is_optional=False,
+def _extract_entries(text: str) -> list[EntryLeg]:
+    entries: list[EntryLeg] = []
+    ab_entries = list(_ENTRY_AB_RE.finditer(text))
+    if ab_entries:
+        for sequence, match in enumerate(ab_entries, start=1):
+            label = str(match.group("label") or match.group("label_paren") or "").lower()
+            qual = _normalize_text(str(match.group("qual") or ""))
+            entry_type = "MARKET" if sequence == 1 and "текущ" in qual else "LIMIT"
+            role = "PRIMARY" if label in {"a", "а"} or sequence == 1 else "AVERAGING"
+            price = _price_from_match(match.group("value"))
+            if price is None:
+                continue
+            entries.append(
+                EntryLeg(
+                    sequence=sequence,
+                    entry_type=entry_type,
+                    price=price,
+                    role=role,
+                    is_optional=role == "AVERAGING",
+                )
             )
-        )
-    if ab_secondary is not None:
-        entries.append(
-            EntryLegRaw(
-                sequence=2,
-                entry_type="LIMIT",
-                price=ab_secondary,
-                role="AVERAGING",
-                is_optional=True,
-            )
-        )
-    if entries:
-        return entries
+        if entries:
+            return entries
 
-    entry_current = _search_float(_ENTRY_CURRENT_RE, text)
-    entry_limit = _search_float(_ENTRY_LIMIT_RE, text)
-    entry_a = _search_float(_ENTRY_A_RE, text)
-    entry_simple = _search_float(_ENTRY_SIMPLE_RE, text)
-    averaging = _search_float(_AVERAGING_RE, text)
-
-    primary_entry = entry_current
+    primary = _search_price(_ENTRY_CURRENT_RE, text)
     primary_type = "MARKET"
-    if primary_entry is None:
-        primary_entry = entry_limit if entry_limit is not None else entry_a if entry_a is not None else entry_simple
+    if primary is None:
+        primary = _search_price(_ENTRY_LIMIT_RE, text) or _search_price(_ENTRY_SIMPLE_RE, text)
         primary_type = "LIMIT"
+    averaging = _search_price(_AVERAGING_RE, text)
 
-    if primary_entry is not None:
+    if primary is not None:
         entries.append(
-            EntryLegRaw(
+            EntryLeg(
                 sequence=1,
                 entry_type=primary_type,
-                price=primary_entry,
+                price=primary,
                 role="PRIMARY",
                 is_optional=False,
             )
         )
     if averaging is not None:
         entries.append(
-            EntryLegRaw(
+            EntryLeg(
                 sequence=2,
                 entry_type="LIMIT",
                 price=averaging,
@@ -297,90 +294,157 @@ def _extract_entry_legs(text: str) -> list[EntryLegRaw]:
     return entries
 
 
-def _extract_percent_result(text: str) -> ReportedResultRaw | None:
-    match = _RESULT_PERCENT_RE.search(text)
+def _extract_stop_loss(text: str) -> StopLoss | None:
+    price = _search_price(_STOP_LOSS_RE, text)
+    if price is None:
+        return None
+    return StopLoss(price=price)
+
+
+def _extract_take_profits(text: str) -> list[TakeProfit]:
+    take_profits: list[TakeProfit] = []
+    for sequence, match in enumerate(_TP_RE.finditer(text), start=1):
+        price = _price_from_match(match.group("value"))
+        if price is None:
+            continue
+        index_raw = match.group("index")
+        index = int(index_raw) if index_raw else sequence
+        take_profits.append(
+            TakeProfit(
+                sequence=index,
+                price=price,
+                label=f"TP{index}",
+            )
+        )
+    return take_profits
+
+
+def _extract_risk_hint(text: str, rules: RulesEngine) -> RiskHint | None:
+    extraction_markers = rules.raw_rules.get("extraction_markers", {})
+    prefixes = _marker_strings(extraction_markers.get("risk_prefix")) or ["риск", "вход", "на сделку"]
+    suffixes = _marker_strings(extraction_markers.get("risk_suffix")) or ["от депозита", "риска", "на сделку"]
+
+    prefix_pattern = "|".join(re.escape(item) for item in prefixes)
+    suffix_pattern = "|".join(re.escape(item) for item in suffixes)
+    range_re = re.compile(
+        rf"(?:(?:{prefix_pattern}))[^\d]{{0,24}}(?P<min>\d+(?:[.,]\d+)?)\s*-\s*(?P<max>\d+(?:[.,]\d+)?)\s*%",
+        re.IGNORECASE,
+    )
+    single_re = re.compile(
+        rf"(?:(?:{prefix_pattern}))[^\d]{{0,24}}(?P<value>\d+(?:[.,]\d+)?)\s*%|(?P<value_suffix>\d+(?:[.,]\d+)?)\s*%\s*(?:{suffix_pattern})",
+        re.IGNORECASE,
+    )
+
+    range_match = range_re.search(text)
+    if range_match:
+        min_value = _to_float(range_match.group("min"))
+        max_value = _to_float(range_match.group("max"))
+        if min_value is not None and max_value is not None:
+            return RiskHint(
+                raw=range_match.group(0),
+                min_value=min_value,
+                max_value=max_value,
+                unit="PERCENT",
+            )
+
+    single_match = single_re.search(text)
+    if single_match:
+        value = _to_float(single_match.group("value") or single_match.group("value_suffix"))
+        if value is not None:
+            return RiskHint(
+                raw=single_match.group(0),
+                value=value,
+                unit="PERCENT",
+            )
+    return None
+
+
+def _extract_instrument_symbol(text: str) -> str | None:
+    match = _SYMBOL_RE.search(text.upper())
+    return match.group("symbol").upper() if match else None
+
+
+def _extract_side(normalized: str) -> str | None:
+    if any(marker in normalized for marker in _LONG_MARKERS):
+        return "LONG"
+    if any(marker in normalized for marker in _SHORT_MARKERS):
+        return "SHORT"
+    return None
+
+
+def _move_stop_entities(text: str) -> MoveStopEntities:
+    if _STOP_TO_TP1_RE.search(text):
+        return MoveStopEntities(stop_to_tp_level=1)
+    price = _search_price(_STOP_PRICE_RE, text)
+    return MoveStopEntities(new_stop_price=price)
+
+
+def _extract_tp_level(text: str) -> int | None:
+    match = _TP_LEVEL_RE.search(text)
     if not match:
         return None
-    value = _to_float(match.group("value"))
-    if value is None:
-        return None
-    return ReportedResultRaw(value=value, unit="PERCENT", text=f"{value}%")
+    return int(match.group("level"))
 
 
-def _extract_risk_hint(text: str) -> RiskHintRaw | None:
-    normalized = _normalize_text(text)
-    for candidate in normalized.splitlines():
-        range_match = _RISK_RANGE_WITH_PREFIX_RE.search(candidate) or _RISK_RANGE_WITH_SUFFIX_RE.search(candidate)
-        if range_match:
-            min_raw = range_match.group("min")
-            max_raw = range_match.group("max")
-            min_value = _to_float(min_raw)
-            max_value = _to_float(max_raw)
-            if min_value is not None and max_value is not None:
-                return RiskHintRaw(
-                    value=None,
-                    min_value=min_value,
-                    max_value=max_value,
-                    unit="PERCENT",
-                    raw=range_match.group(0),
-                )
-
-        single_match = _RISK_SINGLE_WITH_PREFIX_RE.search(candidate) or _RISK_SINGLE_WITH_SUFFIX_RE.search(candidate)
-        if not single_match:
-            continue
-        value_raw = single_match.group("value")
-        value = _to_float(value_raw)
-        if value is None:
-            continue
-        return RiskHintRaw(
-            value=value,
-            min_value=None,
-            max_value=None,
-            unit="PERCENT",
-            raw=single_match.group(0),
-        )
-
+def _extract_fraction(text: str, normalized: str) -> float | None:
+    match = _PERCENT_RE.search(text)
+    if match:
+        value = _to_float(match.group("value"))
+        if value is not None:
+            return round(max(0.0, min(1.0, value / 100.0)), 6)
+    if "half" in normalized or "половину" in normalized:
+        return 0.5
     return None
 
 
-def _collect_tp_lines(text: str) -> str | None:
-    lines = [line.strip() for line in text.splitlines() if "tp" in line.lower()]
-    if not lines:
-        return None
-    return "\n".join(lines)
-
-
-def _extract_symbol_from_bare_hashtag(text: str) -> str | None:
-    for match in re.finditer(r"#\s*([A-Z0-9]{2,24}(?:\.P)?)\b", text, re.IGNORECASE):
-        token = str(match.group(1) or "").upper()
-        if not token:
-            continue
-        if token.endswith((".P", "USDT", "USDC", "USD", "BTC", "ETH")):
-            return token
-        return f"{token}USDT"
+def _extract_reported_result(text: str) -> ReportedResult | None:
+    r_match = _RESULT_R_RE.search(text)
+    if r_match:
+        value = _to_float(r_match.group("value"))
+        if value is not None:
+            return ReportedResult(value=value, unit="R", text=r_match.group(0))
+    percent_match = _PERCENT_RE.search(text)
+    if percent_match:
+        value = _to_float(percent_match.group("value"))
+        if value is not None:
+            return ReportedResult(value=value, unit="PERCENT", text=percent_match.group(0))
     return None
 
 
-def _search_line(text: str, needle: str) -> str | None:
-    for line in text.splitlines():
-        if needle.lower() in line.lower():
-            stripped = line.strip()
-            if stripped:
-                return stripped
-    return None
-
-
-def _search_float(pattern: re.Pattern[str], text: str) -> float | None:
+def _search_price(pattern: re.Pattern[str], text: str) -> Price | None:
     match = pattern.search(text)
     if not match:
         return None
-    return _to_float(match.group("value"))
+    return _price_from_match(match.group("value"))
+
+
+def _price_from_match(raw: str | None) -> Price | None:
+    value = _to_float(raw)
+    if raw is None or value is None:
+        return None
+    return Price(raw=raw, value=value)
+
+
+def _marker_strings(value: Any) -> list[str]:
+    if not isinstance(value, dict):
+        return []
+    items: list[str] = []
+    for bucket in ("strong", "weak"):
+        nested = value.get(bucket)
+        if not isinstance(nested, list):
+            continue
+        items.extend(str(item) for item in nested if isinstance(item, str) and str(item).strip())
+    return items
 
 
 def _to_float(raw: str | None) -> float | None:
     if not raw:
         return None
-    cleaned = raw.replace(" ", "").replace(",", ".")
+    cleaned = raw.replace(" ", "")
+    if "," in cleaned and "." not in cleaned:
+        cleaned = cleaned.replace(",", ".")
+    else:
+        cleaned = cleaned.replace(",", "")
     try:
         return float(cleaned)
     except ValueError:
