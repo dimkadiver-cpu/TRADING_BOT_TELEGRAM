@@ -539,15 +539,35 @@ def _build_entry_legs(
 
 
 def _map_entry_structure(raw: str, legs: list[EntryLeg]) -> str | None:
-    mapping = {
+    """Map a raw entry structure marker (legacy or canonical) to canonical EntryStructure.
+
+    Legacy markers `MARKET`/`LIMIT` collapse to `ONE_SHOT`. `ZONE` maps to `RANGE`.
+    `AVERAGING` is dispatched on leg count: 2 legs -> TWO_STEP, >=3 legs -> LADDER.
+    Without a recognised marker, structure is inferred from leg count.
+    """
+    raw_u = raw.upper() if raw else ""
+    direct = {
         "ONE_SHOT": "ONE_SHOT",
         "SINGLE": "ONE_SHOT",
+        "MARKET": "ONE_SHOT",
+        "LIMIT": "ONE_SHOT",
         "TWO_STEP": "TWO_STEP",
         "RANGE": "RANGE",
+        "ZONE": "RANGE",
         "LADDER": "LADDER",
     }
-    if raw.upper() in mapping:
-        return mapping[raw.upper()]
+    if raw_u in direct:
+        return direct[raw_u]
+    # AVERAGING — dispatch on leg count
+    if raw_u == "AVERAGING":
+        n = len(legs)
+        if n == 2:
+            return "TWO_STEP"
+        if n >= 3:
+            return "LADDER"
+        # Cardinalità insufficiente: il chiamante è responsabile della demozione
+        # (vedi _demote_entry_structure) e di settare parse_status=PARTIAL.
+        return None
     # Infer from leg count
     n = len(legs)
     if n == 0:
@@ -557,6 +577,43 @@ def _map_entry_structure(raw: str, legs: list[EntryLeg]) -> str | None:
     if n == 2:
         return "TWO_STEP"
     return "LADDER"
+
+
+def _demote_entry_structure(
+    intended: str | None,
+    legs: list[EntryLeg],
+    warnings: list[str],
+) -> tuple[str | None, bool]:
+    """Demote an entry structure when leg cardinality is insufficient.
+
+    Returns (resolved_structure, demoted) where `demoted=True` signals to the
+    caller that `parse_status` should be downgraded to PARTIAL.
+
+    Demotion rules (cardinality < required):
+      - AVERAGING/ZONE/RANGE/LADDER/TWO_STEP with 1 leg → ONE_SHOT (PARTIAL + warning)
+      - LADDER with 2 legs                              → TWO_STEP (PARTIAL + warning)
+      - any structure with 0 legs                        → None (PARTIAL, missing entries)
+    """
+    if intended is None:
+        return None, False
+    intended_u = intended.upper()
+    n = len(legs)
+
+    if intended_u in {"AVERAGING", "ZONE", "RANGE", "TWO_STEP", "LADDER"} and n == 1:
+        target = "ONE_SHOT"
+        warnings.append(f"entry_structure_demoted:{intended_u}->{target}:single_price")
+        return target, True
+
+    if intended_u == "LADDER" and n == 2:
+        target = "TWO_STEP"
+        warnings.append(f"entry_structure_demoted:{intended_u}->{target}:two_prices")
+        return target, True
+
+    if n == 0 and intended_u not in {"MARKET", "ONE_SHOT", "SINGLE"}:
+        warnings.append(f"entry_structure_demoted:{intended_u}->NONE:no_prices")
+        return None, True
+
+    return intended, False
 
 
 def _build_stop_loss(value: Any) -> StopLoss | None:
