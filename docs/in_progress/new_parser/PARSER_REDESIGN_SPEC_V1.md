@@ -1277,6 +1277,19 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
   - [ ] verificare `detection_strength` per i casi noti
 - [ ] Eseguire replay su DB test con `replay_parser.py`
 - [ ] Confrontare output ParsedMessage con output precedente su campione reale
+- [ ] **Aggiornare sistema report CSV** (non compatibile con ParsedMessage out-of-the-box):
+  - [ ] `parser_test/reporting/flatteners.py` — riscrivere `_derive_fields()`:
+    - [ ] leggere `signal.entries`, `signal.stop_loss`, `signal.take_profits` invece dei path legacy
+    - [ ] leggere `intents[].entities` per-intent invece di `entities` flat
+    - [ ] leggere `targeting` invece di `target_scope`/`linking`
+    - [ ] leggere `primary_class` invece di `message_type`
+  - [ ] `parser_test/reporting/report_export.py`:
+    - [ ] aggiornare `REPORT_SCOPES`: `["ALL", "SIGNAL", "UPDATE", "REPORT", "INFO", "UNCLASSIFIED"]`
+    - [ ] aggiornare SQL filter: `pr.primary_class = ?` invece di `pr.message_type = ?`
+  - [ ] `parser_test/reporting/report_schema.py` — aggiungere colonne nuove:
+    - [ ] `validation_status`, `composite`
+    - [ ] `intents_confirmed`, `intents_candidate`
+    - [ ] `detection_strengths`
 
 ---
 
