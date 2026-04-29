@@ -12,8 +12,6 @@ Il parser ha un unico compito: **leggere un messaggio e restituire una struttura
 Principi fondamentali:
 
 - Il parser parla il **linguaggio del trader** (semantica), non il linguaggio operativo del sistema
-- Il parser è **stateless** — nessun accesso DB, nessuna storia, nessuna decisione operativa
-- Il parser è **testabile senza infrastruttura** — testo in ingresso, struttura dati in uscita
 - L'architettura è **uniforme per tutti i profili** — stesso schema file, stesso runtime condiviso
 - Tutto il vocabolario trader-specifico sta nel **JSON**, il codice è generico
 
