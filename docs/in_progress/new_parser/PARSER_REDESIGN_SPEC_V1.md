@@ -1088,6 +1088,12 @@ Campi disponibili per ogni regola:
       "requires_all_history": ["NEW_SIGNAL"],
       "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
+    },
+    {
+      "intent": "ENTRY_FILLED",
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "invalid_reason": "no_open_signal"
     }
   ]
 }
