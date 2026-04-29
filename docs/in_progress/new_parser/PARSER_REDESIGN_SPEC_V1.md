@@ -77,7 +77,7 @@ class ParsedMessage(BaseModel):
     parser_profile:     str
 
     primary_class:      MessageClass      # SIGNAL | UPDATE | REPORT | INFO
-    parse_status:       ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED
+    parse_status:       ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED | ERROR
     confidence:         float
 
     composite:          bool = False      # True se intents di categorie miste (UPDATE + REPORT)
@@ -92,8 +92,11 @@ class ParsedMessage(BaseModel):
 
     warnings:           list[str] = []
     diagnostics:        dict[str, Any] = {}
-    raw_context:        RawContext
+    raw_context:        RawContext   # riusa canonical_v1.RawContext invariato
 ```
+
+`RawContext` è riusato da `src/parser/canonical_v1/models.py` senza modifiche:
+`raw_text`, `reply_to_message_id`, `extracted_links`, `hashtags`, `source_chat_id`, `source_topic_id`, `acquisition_mode`.
 
 ### IntentResult
 
@@ -148,12 +151,15 @@ diagnostics: {
     "resolution_unit": "MESSAGE_WIDE" | "TARGET_ITEM_WIDE",
     "applied_disambiguation_rules": list[str],
     "trader_code": str,
+    "composite": bool,   # True se intents di categorie miste — operation_rules lo legge da qui
 }
 ```
 
 `resolution_unit`:
 - `MESSAGE_WIDE` — stessa semantica per tutti i refs del messaggio
 - `TARGET_ITEM_WIDE` — semantica diversa per ref diversi (caso multi-ref)
+
+`composite`: copiato da `ParsedMessage.composite` da operation_rules quando costruisce `CanonicalMessage`.
 
 ---
 
