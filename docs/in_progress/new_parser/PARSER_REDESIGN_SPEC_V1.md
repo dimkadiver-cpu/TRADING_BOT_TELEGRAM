@@ -1190,13 +1190,49 @@ vocabolario trader-specifico: se `MOVE_STOP_TO_BE` smettesse di mappare su
 |---|---|
 | `INFO_ONLY` | nessun payload prodotto — `primary_class=INFO`, signal/update/report tutti None |
 
+### Messaggi compositi UPDATE + REPORT
+
+Quando `ParsedMessage.composite=True` e ci sono intents di entrambe le categorie
+(UPDATE + REPORT), il `CanonicalMessage` deve avere `primary_class=UPDATE` — è un
+vincolo del validator Pydantic:
+
+```python
+# canonical_v1/models.py — _validate_top_level
+elif self.primary_class == "REPORT":
+    if self.update is not None:
+        raise ValueError("primary_class=REPORT forbids signal/update payloads")
+```
+
+`primary_class=UPDATE` è l'unica variante che permette entrambi i payload contemporaneamente.
+
+**Regola del translator per messaggi compositi UPDATE+REPORT:**
+
+```
+se intents CONFIRMED contengono almeno un UPDATE intent:
+    primary_class = UPDATE   (forzato, indipendente dalla classificazione del parser)
+    update = UpdatePayload(operations=[... da UPDATE intents ...])
+    report = ReportPayload(events=[... da REPORT intents ...])
+```
+
+Tutti i CONFIRMED intents compaiono in `CanonicalMessage.intents[]` (a meno che
+soppressi dalla disambiguation). Il `primary_intent` segue la `primary_intent_precedence`.
+
+**Asimmetria del validator:**
+
+| `primary_class` | `update` | `report` | `signal` |
+|---|---|---|---|
+| `SIGNAL` | ❌ vietato | ✅ permesso | ✅ richiesto |
+| `UPDATE` | ✅ richiesto | ✅ permesso | ❌ vietato |
+| `REPORT` | ❌ vietato | ✅ richiesto | ❌ vietato |
+| `INFO` | ❌ vietato | ❌ vietato | ❌ vietato |
+
 ### Caso multi-ref (targeting_override per-intent)
 
 Quando un `IntentResult` ha `targeting_override` non-None, il translator produce
 `TargetedAction` / `TargetedReport` invece di `UpdatePayload.operations` / `ReportPayload.events`.
 
 ```
-IntentResult(targeting_override=None)   → UpdatePayload.operations o ReportPayload.events
+IntentResult(targeting_override=None)      → UpdatePayload.operations o ReportPayload.events
 IntentResult(targeting_override=Targeting) → TargetedAction o TargetedReport
 ```
 
