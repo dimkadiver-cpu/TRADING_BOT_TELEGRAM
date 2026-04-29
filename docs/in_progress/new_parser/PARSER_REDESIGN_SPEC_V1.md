@@ -958,44 +958,55 @@ parsed.validation_status = VALIDATED
 
 ### Schema validation_rules.json
 
+Campi disponibili per ogni regola:
+
+| campo | logica | note |
+|---|---|---|
+| `intent` | a quale intent si applica | obbligatorio |
+| `requires_all_history` | ALL devono essere nel passato del ref | AND |
+| `requires_any_history` | ALMENO UNO deve essere nel passato | OR |
+| `excludes_any_history` | se ANY è presente → INVALID | NONE |
+| `excludes_all_history` | INVALID solo se TUTTI presenti | raro |
+| `invalid_reason` | messaggio di errore | obbligatorio |
+
 ```json
 {
   "rules": [
     {
       "intent": "TP_HIT",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "SL_HIT",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "EXIT_BE",
-      "requires_history": ["NEW_SIGNAL"],
+      "requires_all_history": ["NEW_SIGNAL"],
       "requires_any_history": ["MOVE_STOP", "MOVE_STOP_TO_BE"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal_or_no_stop_moved"
     },
     {
       "intent": "MOVE_STOP_TO_BE",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "MOVE_STOP",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "CLOSE_FULL",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     }
   ]
