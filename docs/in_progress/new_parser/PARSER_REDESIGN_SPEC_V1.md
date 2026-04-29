@@ -967,8 +967,9 @@ per ogni intent in parsed.intents:
   refs = intent.targeting_override.refs se presente
          altrimenti parsed.targeting.refs
 
-  se refs vuoti (scope globale es. ALL_POSITIONS):
-    → status = CONFIRMED (nessun ref da verificare)
+  se refs vuoti O scope != SINGLE_SIGNAL:
+    → status = CONFIRMED (auto)
+    → risoluzione delegata all'esecutore downstream
     → continua al prossimo intent
 
   per ogni ref in refs:
@@ -981,6 +982,9 @@ per ogni intent in parsed.intents:
 
 parsed.validation_status = VALIDATED
 ```
+
+**Scope gestiti dal validator**: solo `SINGLE_SIGNAL` (refs per message ID).
+**Scope delegati all'esecutore**: `SYMBOL`, `PORTFOLIO_SIDE`, `ALL_OPEN` → auto-CONFIRMED, risoluzione posizioni avviene downstream.
 
 ### Schema validation_rules.json
 
@@ -1069,3 +1073,245 @@ validation_status=VALIDATED
 
 Rimane invariato come contratto verso i layer downstream.
 Prodotto da `operation_rules` a partire dal `ParsedMessage` validato.
+
+---
+
+## 14. Mappa file — eliminare / riscrivere / tenere
+
+### ❌ Eliminare (obsoleti)
+
+| file | motivo |
+|---|---|
+| `shared/compatibility_engine.py` | intent_compatibility eliminato dalla spec |
+| `shared/intent_compatibility_schema.py` | eliminato |
+| `shared/context_resolution_engine.py` | context_resolution fuori perimetro parser |
+| `shared/context_resolution_schema.py` | eliminato |
+| `shared/semantic_resolver.py` | dipende da tutti e 4 sopra → obsoleto |
+| `event_envelope_v1.py` | TraderEventEnvelopeV1 sostituito da ParsedMessage |
+| `adapters/legacy_to_event_envelope_v1.py` | TraderEventEnvelopeV1 eliminato |
+| `adapters/__init__.py` | cartella vuota dopo eliminazione |
+| `canonical_v1/intent_candidate.py` | sostituito da IntentResult |
+| `canonical_v1/targeted_builder.py` | sostituito da operation_rules |
+| `canonical_v1/normalizer.py` | fallback legacy, eliminare dopo migrazione |
+| `trader_profiles/shared/envelope_builder.py` | costruiva TraderEventEnvelopeV1 |
+| `trader_profiles/shared/entity_keys.py` | sostituito da modelli Pydantic tipizzati per intent |
+| `intent_action_map.py` | mappatura intent→operazioni, fuori perimetro parser |
+| `canonical_schema.py` | schema CSV intent, sostituito da tassonomia spec |
+| `action_builders/__init__.py` | cartella già svuotata |
+
+**File di backup da eliminare (non fanno parte dell'architettura):**
+
+| file |
+|---|
+| `trader_a/extractors copy.py` |
+| `trader_a/parsing_rules copy.json` |
+| `trader_a/parsing_rules copy 2.json` |
+| `trader_a/parsing_rules copy Ultima.json` |
+| `trader_b/parsing_rules copy.json` |
+| `trader_d/parsing_rules copy.json` |
+
+### 🔄 Riscrivere / sostituire
+
+| file attuale | sostituito da |
+|---|---|
+| `shared/disambiguation_engine.py` | nuovo `shared/disambiguation.py` (schema when_strong/when_weak) |
+| `shared/disambiguation_rules_schema.py` | Pydantic aggiornato per nuovo schema |
+| `trader_profiles/shared/profile_runtime.py` | nuovo `shared/runtime.py` |
+| `trader_profiles/shared/rules_schema.py` | schema per `semantic_markers.json` + `rules.json` |
+| `trader_profiles/shared/rules_schema.json` | nuovo JSON schema |
+| `trader_profiles/shared/intent_taxonomy.py` | tassonomia 15 intents da spec sezione 4 |
+| `trader_profiles/shared/targeting.py` | logica integrata nel nuovo `shared/runtime.py` |
+| `trader_profiles/base.py` | `ParserContext` rimane, `TraderParseResult` → `ParsedMessage` |
+| `trader_x/parsing_rules.json` | split in `semantic_markers.json` + `rules.json` (per ogni profilo) |
+| `trader_x/profile.py` | riscrivere ~20 righe con nuovo contratto |
+
+### ✅ Tenere invariati
+
+| file | motivo |
+|---|---|
+| `canonical_v1/models.py` | CanonicalMessage — contratto downstream invariato |
+| `rules_engine.py` | RulesEngine — aggiornare input, non riscrivere |
+| `text_utils.py` | utilities condivise |
+| `shared/resolution_unit.py` | ResolutionUnit usato in diagnostics |
+| `trader_profiles/registry.py` | registro profili (piccolo update alla migrazione) |
+| `trader_profiles/common_utils.py` | utilities comuni |
+| `models/` (tutto) | LEGACY bloccato da operation_rules/target_resolver — non toccare |
+| `report_market_entry_none.py` | script standalone, non dipende dall'architettura |
+| `trader_x/extractors.py` | logica di estrazione da adattare ma non riscrivere |
+| `trader_x/tests/` | aggiornare gli assert, non riscrivere la struttura |
+
+---
+
+## 15. Piano di implementazione
+
+Ogni fase è autonoma e testabile prima di procedere alla successiva.
+Il vecchio codice rimane attivo finché la nuova architettura non è validata.
+
+---
+
+### Fase 1 — Cleanup preliminare
+*Nessuna modifica funzionale. Elimina il rumore prima di costruire.*
+
+- [ ] Eliminare file di backup non versionati:
+  - [ ] `trader_a/extractors copy.py`
+  - [ ] `trader_a/parsing_rules copy.json`
+  - [ ] `trader_a/parsing_rules copy 2.json`
+  - [ ] `trader_a/parsing_rules copy Ultima.json`
+  - [ ] `trader_b/parsing_rules copy.json`
+  - [ ] `trader_d/parsing_rules copy.json`
+- [ ] Eliminare file obsoleti senza dipendenti attivi:
+  - [ ] `shared/compatibility_engine.py`
+  - [ ] `shared/intent_compatibility_schema.py`
+  - [ ] `shared/context_resolution_engine.py`
+  - [ ] `shared/context_resolution_schema.py`
+  - [ ] `shared/semantic_resolver.py`
+  - [ ] `adapters/legacy_to_event_envelope_v1.py`
+  - [ ] `adapters/__init__.py`
+  - [ ] `intent_action_map.py`
+  - [ ] `canonical_schema.py`
+  - [ ] `action_builders/__init__.py`
+- [ ] Verificare che i test esistenti passino ancora dopo il cleanup
+
+---
+
+### Fase 2 — Nuovi modelli ParsedMessage
+*Additive — non rompe nulla di esistente.*
+
+- [ ] Creare `src/parser/parsed_message.py`:
+  - [ ] `ParsedMessage`
+  - [ ] `IntentResult` con `detection_strength`
+  - [ ] `IntentEntities` base con `to_dict()`
+  - [ ] Tutti i modelli entità per i 15 intents (sezione 4.3)
+  - [ ] `ReportedResult`
+- [ ] Creare `src/parser/intent_types.py`:
+  - [ ] `IntentType` enum (15 valori)
+  - [ ] `IntentCategory` Literal
+- [ ] Scrivere test unitari per ogni modello entità
+- [ ] Verificare che `ParsedMessage` sia serializzabile in JSON
+
+---
+
+### Fase 3 — Nuova shared infrastructure
+*Nuovi file affiancati ai vecchi — nessuna sostituzione ancora.*
+
+- [ ] Creare `src/parser/shared/runtime.py`:
+  - [ ] orchestrazione: classify → detect → extract → build ParsedMessage
+  - [ ] popola `detection_strength` per ogni IntentResult
+  - [ ] gestione `targeting_override` per-intent
+- [ ] Creare `src/parser/shared/disambiguation.py`:
+  - [ ] normalizzazione flat → nested
+  - [ ] matching condizioni: `when_strong`, `when_weak`, `text_any`, `text_none`, `message_*`, `entities_*`
+  - [ ] azioni: `prefer` + `over`, `suppress`
+- [ ] Aggiornare schema Pydantic `disambiguation_rules_schema.py` per nuovo formato
+- [ ] Creare JSON schema per `semantic_markers.json` in `trader_profiles/shared/`
+- [ ] Creare JSON schema per `rules.json` in `trader_profiles/shared/`
+- [ ] Test unitari per `disambiguation.py` con casi flat e nested
+
+---
+
+### Fase 4 — Migrazione trader_a (profilo pilota)
+*Primo profilo sul nuovo contratto. Validare approccio prima di replicare.*
+
+- [ ] Creare `trader_a/semantic_markers.json` (split da `parsing_rules.json`):
+  - [ ] `classification_markers`
+  - [ ] `field_markers`
+  - [ ] `intent_markers` (15 intents)
+  - [ ] `side_markers`, `entry_type_markers`
+  - [ ] `target_markers`, `global_target_markers`
+  - [ ] `extraction_markers` (risk_prefix, risk_suffix, leverage_prefix)
+  - [ ] `symbol_aliases`, `blacklist`
+- [ ] Creare `trader_a/rules.json` (split da `parsing_rules.json`):
+  - [ ] `combination_rules`
+  - [ ] `disambiguation_rules` (nuovo schema)
+  - [ ] `action_scope_groups`
+- [ ] Aggiornare `trader_a/extractors.py`:
+  - [ ] parametrizzare regex su `extraction_markers`
+  - [ ] output tipizzato per ogni intent (modelli da Fase 2)
+- [ ] Riscrivere `trader_a/profile.py` (~20 righe, usa `shared/runtime.py`)
+- [ ] Aggiornare test `trader_a/tests/`:
+  - [ ] assert su `ParsedMessage` invece di `CanonicalMessage`
+  - [ ] verificare `detection_strength` per i casi noti
+- [ ] Eseguire replay su DB test con `replay_parser.py`
+- [ ] Confrontare output ParsedMessage con output precedente su campione reale
+
+---
+
+### Fase 5 — Intent validator
+*Layer separato. Richiede DB. Testabile con DB test esistente.*
+
+- [ ] Creare `src/parser/intent_validator/__init__.py`
+- [ ] Creare `src/parser/intent_validator/validation_rules.json`:
+  - [ ] regole per i 6 intents con verifica storia (compilare a mano)
+- [ ] Creare `src/parser/intent_validator/validator.py`:
+  - [ ] carica `validation_rules.json`
+  - [ ] flusso per ogni IntentResult (auto-CONFIRMED, SINGLE_SIGNAL, scope globale)
+  - [ ] popola `valid_refs`, `invalid_refs`, `invalid_reason`
+  - [ ] setta `validation_status = VALIDATED`
+- [ ] Test con DB test (`parser_test/`):
+  - [ ] verificare riduzione falsi positivi su campione reale
+  - [ ] verificare che intents senza regola siano auto-CONFIRMED
+  - [ ] verificare scope globale → auto-CONFIRMED
+
+---
+
+### Fase 6 — Migrazione profili rimanenti
+*Replicare Fase 4 per ogni profilo. Ordine consigliato: trader_3, trader_b, trader_c, trader_d.*
+
+- [ ] **trader_3**:
+  - [ ] `semantic_markers.json`
+  - [ ] `rules.json`
+  - [ ] `extractors.py` aggiornato
+  - [ ] `profile.py` riscritto
+  - [ ] test aggiornati + replay
+- [ ] **trader_b**: stessi step
+- [ ] **trader_c**: stessi step
+- [ ] **trader_d**: stessi step
+- [ ] Verificare che il `registry.py` carichi correttamente tutti i nuovi profili
+
+---
+
+### Fase 7 — Cleanup finale
+*Solo dopo che tutti i profili sono migrati e i test passano.*
+
+- [ ] Eliminare file sostituiti:
+  - [ ] `event_envelope_v1.py`
+  - [ ] `canonical_v1/intent_candidate.py`
+  - [ ] `canonical_v1/targeted_builder.py`
+  - [ ] `canonical_v1/normalizer.py`
+  - [ ] `trader_profiles/shared/envelope_builder.py`
+  - [ ] `trader_profiles/shared/entity_keys.py`
+  - [ ] `trader_profiles/shared/profile_runtime.py`
+  - [ ] `trader_profiles/shared/targeting.py` (se integrata in runtime.py)
+  - [ ] `trader_profiles/shared/intent_taxonomy.py` (vecchia versione)
+  - [ ] `trader_profiles/base.py` (TraderParseResult rimosso)
+  - [ ] tutti i `parsing_rules.json` per profilo
+- [ ] Rimuovere `shared/disambiguation_engine.py` (vecchio)
+- [ ] Aggiornare `trader_profiles/registry.py` definitivo
+- [ ] Aggiornare `CLAUDE.md` con stato migrazione completata
+
+---
+
+### Dipendenze tra fasi
+
+```
+Fase 1 (cleanup)
+    ↓
+Fase 2 (ParsedMessage models)
+    ↓
+Fase 3 (shared runtime + disambiguation)
+    ↓
+Fase 4 (trader_a pilota)   ←── validare qui prima di procedere
+    ↓
+Fase 5 (intent_validator)  ←── richiede Fase 4 completata
+    ↓
+Fase 6 (altri profili)     ←── parallelizzabile per profilo
+    ↓
+Fase 7 (cleanup finale)    ←── solo dopo Fase 6 completa
+```
+
+### Note operative
+
+- `parser_test/` è lo strumento principale di validazione: usare `replay_parser.py` dopo ogni fase
+- Non eliminare `models/` (canonical.py, new_signal.py, update.py, operational.py) — bloccati da operation_rules/target_resolver
+- `pipeline.py` e `normalization.py` rimangono invariati fino a migrazione backtesting (fuori scope)
+- Aggiornare `docs/AUDIT.md` al termine di ogni fase
