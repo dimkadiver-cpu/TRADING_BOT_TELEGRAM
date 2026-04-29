@@ -1387,7 +1387,7 @@ soppressi). Il `primary_intent` segue la `primary_intent_precedence`.
 
 | `primary_class` | `update` | `report` | `signal` |
 |---|---|---|---|
-| `SIGNAL` | ❌ vietato | ✅ permesso | ✅ richiesto |
+| `SIGNAL` | ❌ vietato | ❌ vietato | ✅ richiesto |
 | `UPDATE` | ✅ richiesto | ✅ permesso | ❌ vietato |
 | `REPORT` | ❌ vietato | ✅ richiesto | ❌ vietato |
 | `INFO` | ❌ vietato | ❌ vietato | ❌ vietato |
