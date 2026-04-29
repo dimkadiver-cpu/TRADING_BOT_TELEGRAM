@@ -58,11 +58,17 @@ ParsedMessage finale     ← OUTPUT DEL PARSER
 ```
 ParsedMessage finale (validation_status=VALIDATED)
         ↓
-operation_rules          → traduce intents CONFIRMED in operazioni canoniche
+intent_translator        → mapping CONFIRMED intents → UpdatePayload / ReportPayload
+                           stateless, universale (non per-profilo)
         ↓
 CanonicalMessage         → contratto verso downstream (invariato)
         ↓
-target_resolver 
+operation_rules          → gate checks + sizing (invariati come responsabilità)
+                           ora legge CanonicalMessage invece di TraderParseResult
+        ↓
+OperationalSignal
+        ↓
+target_resolver / Sistema 1 / Sistema 2
 ```
 
 ---
@@ -1116,7 +1122,98 @@ validation_status=VALIDATED
 ### CanonicalMessage
 
 Rimane invariato come contratto verso i layer downstream.
-Prodotto da `operation_rules` a partire dal `ParsedMessage` validato.
+Prodotto da `intent_translator` a partire dal `ParsedMessage` validato.
+
+---
+
+## 13b. Intent Translator
+
+Layer separato tra parser e operation_rules. Responsabilità singola: convertire
+i CONFIRMED intents del `ParsedMessage` nel payload operazionale del `CanonicalMessage`.
+
+### Posizione
+
+```
+src/
+  intent_translator/
+    __init__.py
+    translator.py    ← mapping hardcoded + build UpdatePayload / ReportPayload
+```
+
+### Principio
+
+- **Stateless** — nessun DB, nessuna storia
+- **Universale** — la mapping è la stessa per tutti i profili trader
+- **Non configurabile per-profilo** — appartiene al contratto di sistema, come `UpdateOperationType` in `models.py`
+
+### Mapping intent → operazione
+
+La mapping è hardcoded in Python (lookup table). Non va in `rules.json` perché non è
+vocabolario trader-specifico: se `MOVE_STOP_TO_BE` smettesse di mappare su
+`SET_STOP(ENTRY)` cambierebbe il contratto del sistema, non la configurazione di un profilo.
+
+#### UPDATE intents → UpdateOperation
+
+| Intent (`ParsedMessage`) | `op_type` | dettaglio |
+|---|---|---|
+| `MOVE_STOP_TO_BE` | `SET_STOP` | `target_type=ENTRY` |
+| `MOVE_STOP` (new_stop_price) | `SET_STOP` | `target_type=PRICE, value=new_stop_price.value` |
+| `MOVE_STOP` (stop_to_tp_level) | `SET_STOP` | `target_type=TP_LEVEL, value=stop_to_tp_level` |
+| `CLOSE_FULL` | `CLOSE` | `close_scope="FULL"` |
+| `CLOSE_PARTIAL` | `CLOSE` | `close_scope="PARTIAL", close_fraction=fraction` |
+| `CANCEL_PENDING` | `CANCEL_PENDING` | `cancel_scope=scope` (o None) |
+| `INVALIDATE_SETUP` | `CANCEL_PENDING` | `cancel_scope="ALL_ALL"` |
+| `REENTER` | `MODIFY_ENTRIES` | `mode=REENTER, entries=[...]` |
+| `ADD_ENTRY` | `MODIFY_ENTRIES` | `mode=ADD, entries=[EntryLeg da entry_price]` |
+| `UPDATE_TAKE_PROFITS` | `MODIFY_TARGETS` | `mode=REPLACE_ALL, take_profits=[...]` |
+
+#### REPORT intents → ReportEvent
+
+| Intent (`ParsedMessage`) | `event_type` | dettaglio |
+|---|---|---|
+| `ENTRY_FILLED` | `ENTRY_FILLED` | `price=fill_price`, `level=level` |
+| `TP_HIT` | `TP_HIT` | `level=level`, `result=result` |
+| `SL_HIT` | `STOP_HIT` | `result=result` |
+| `EXIT_BE` | `BREAKEVEN_EXIT` | `price=price` |
+| `REPORT_FINAL_RESULT` | `FINAL_RESULT` | `result=result` |
+| `REPORT_PARTIAL_RESULT` | — | contribuisce a `ReportPayload.reported_result` (nessun event_type dedicato) |
+
+#### INFO intents
+
+| Intent (`ParsedMessage`) | azione |
+|---|---|
+| `INFO_ONLY` | nessun payload prodotto — `primary_class=INFO`, signal/update/report tutti None |
+
+### Caso multi-ref (targeting_override per-intent)
+
+Quando un `IntentResult` ha `targeting_override` non-None, il translator produce
+`TargetedAction` / `TargetedReport` invece di `UpdatePayload.operations` / `ReportPayload.events`.
+
+```
+IntentResult(targeting_override=None)   → UpdatePayload.operations o ReportPayload.events
+IntentResult(targeting_override=Targeting) → TargetedAction o TargetedReport
+```
+
+Se gli intents del messaggio sono un mix (alcuni con override, altri senza),
+il translator separa i due casi e popola sia `update.operations` che `targeted_actions`.
+
+### Contratto
+
+```python
+def translate(parsed: ParsedMessage) -> CanonicalMessage:
+    """Traduce i CONFIRMED intents del ParsedMessage in CanonicalMessage.
+
+    Non accede al DB. Non esegue gate. Non calcola sizing.
+    Solleva ValueError se parsed.validation_status != VALIDATED.
+    """
+```
+
+### Responsabilità di operation_rules dopo la migrazione
+
+`operation_rules` riceve `CanonicalMessage` (non più `TraderParseResult`):
+- `primary_class=SIGNAL` → gate 1–9 + sizing (logica invariata, ora legge `signal.entries` / `signal.stop_loss`)
+- `primary_class=UPDATE/REPORT/INFO` → passthrough invariato
+- `_coerce_entities()` eliminato — i dati sono già tipizzati in `SignalPayload`
 
 ---
 
@@ -1135,7 +1232,7 @@ Prodotto da `operation_rules` a partire dal `ParsedMessage` validato.
 | `adapters/legacy_to_event_envelope_v1.py` | TraderEventEnvelopeV1 eliminato |
 | `adapters/__init__.py` | cartella vuota dopo eliminazione |
 | `canonical_v1/intent_candidate.py` | sostituito da IntentResult |
-| `canonical_v1/targeted_builder.py` | sostituito da operation_rules |
+| `canonical_v1/targeted_builder.py` | sostituito da intent_translator |
 | `canonical_v1/normalizer.py` | fallback legacy, eliminare dopo migrazione |
 | `trader_profiles/shared/envelope_builder.py` | costruiva TraderEventEnvelopeV1 |
 | `trader_profiles/shared/entity_keys.py` | sostituito da modelli Pydantic tipizzati per intent |
@@ -1311,7 +1408,23 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
 
 ---
 
-### Fase 6 — Migrazione profili rimanenti
+### Fase 6 — Intent translator
+*Layer separato. Stateless. Testabile senza DB.*
+
+- [ ] Creare `src/intent_translator/__init__.py`
+- [ ] Creare `src/intent_translator/translator.py`:
+  - [ ] lookup table `_INTENT_TO_UPDATE_OP` per i 10 UPDATE intents
+  - [ ] lookup table `_INTENT_TO_REPORT_EVENT` per i 6 REPORT intents
+  - [ ] logica `translate(parsed: ParsedMessage) -> CanonicalMessage`
+  - [ ] gestione caso multi-ref (targeting_override → TargetedAction / TargetedReport)
+  - [ ] INFO_ONLY → `primary_class=INFO`, tutti i payload None
+- [ ] Test unitari per ogni intent (input `IntentResult` → output operazione attesa)
+- [ ] Test integrazione: `ParsedMessage` completo → `CanonicalMessage` valido
+- [ ] Verificare che il `CanonicalMessage` prodotto passi i model_validator di Pydantic
+
+---
+
+### Fase 7 — Migrazione profili rimanenti
 *Replicare Fase 4 per ogni profilo. Ordine consigliato: trader_3, trader_b, trader_c, trader_d.*
 
 - [ ] **trader_3**:
@@ -1327,7 +1440,7 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
 
 ---
 
-### Fase 7 — Cleanup finale
+### Fase 8 — Cleanup finale
 *Solo dopo che tutti i profili sono migrati e i test passano.*
 
 - [ ] Eliminare file sostituiti:
@@ -1344,6 +1457,7 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
   - [ ] tutti i `parsing_rules.json` per profilo
 - [ ] Rimuovere `shared/disambiguation_engine.py` (vecchio)
 - [ ] Aggiornare `trader_profiles/registry.py` definitivo
+- [ ] Migrare `operation_rules/engine.py`: input `CanonicalMessage` invece di `TraderParseResult`, eliminare `_coerce_entities()`
 - [ ] Aggiornare `CLAUDE.md` con stato migrazione completata
 
 ---
@@ -1357,13 +1471,15 @@ Fase 2 (ParsedMessage models)
     ↓
 Fase 3 (shared runtime + disambiguation)
     ↓
-Fase 4 (trader_a pilota)   ←── validare qui prima di procedere
+Fase 4 (trader_a pilota)      ←── validare qui prima di procedere
     ↓
-Fase 5 (intent_validator)  ←── richiede Fase 4 completata
+Fase 5 (intent_validator)     ←── richiede Fase 4 completata
     ↓
-Fase 6 (altri profili)     ←── parallelizzabile per profilo
+Fase 6 (intent_translator)    ←── richiede Fase 2 + CanonicalMessage invariato
     ↓
-Fase 7 (cleanup finale)    ←── solo dopo Fase 6 completa
+Fase 7 (altri profili)        ←── parallelizzabile per profilo
+    ↓
+Fase 8 (cleanup finale)       ←── solo dopo Fase 7 completa
 ```
 
 ### Note operative
@@ -1377,15 +1493,18 @@ Fase 7 (cleanup finale)    ←── solo dopo Fase 6 completa
 
 ## 16. Revisione generale — confronto architettura attuale vs nuova
 
-### 16.1 Output contract
+### 16.1 Output contract e pipeline layer
 
 | | Attuale | Nuovo |
 |---|---|---|
 | Output parser | `TraderEventEnvelopeV1` | `ParsedMessage` |
-| Natura | Semi-operazionale (`UpdatePayloadRaw`, `op_type`) | Semantica pura (intents + entities) |
+| Natura output parser | Semi-operazionale (`UpdatePayloadRaw`, `op_type`) | Semantica pura (intents + entities) |
 | Intents | `list[str]` flat | `list[IntentResult]` tipizzati con entities |
 | Validation | Assente | `intent_validator` → CONFIRMED/INVALID/CANDIDATE |
-| Detection strength | Non tracciato | `detection_strength: "strong"|"weak"` per intent |
+| Detection strength | Non tracciato | `detection_strength: "strong"\|"weak"` per intent |
+| Traduzione intents → ops | Nel profilo (profile.py 500+ righe) | `intent_translator` — layer separato, stateless |
+| Input operation_rules | `TraderParseResult` (entities raw/Pydantic) | `CanonicalMessage` (già tipizzato) |
+| `_coerce_entities()` | Necessario (normalizza dict vs Pydantic) | Eliminato — `signal.entries/stop_loss` direttamente |
 
 ### 16.2 profile.py — dimensioni e responsabilità
 
