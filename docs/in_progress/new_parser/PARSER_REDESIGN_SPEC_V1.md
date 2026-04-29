@@ -80,7 +80,7 @@ class ParsedMessage(BaseModel):
     parse_status:       ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED | ERROR
     confidence:         float
 
-    composite:          bool = False      # True se intents di categorie miste (UPDATE + REPORT)
+    composite:          bool = False      # True se intents di categorie miste (UPDATE+REPORT, UPDATE+INFO, REPORT+INFO)
 
     signal:             SignalPayload | None = None   # solo per primary_class=SIGNAL
     intents:            list[IntentResult] = []       # per UPDATE / REPORT
@@ -131,7 +131,7 @@ puntano a refs diversi nello stesso messaggio.
 ### IntentCategory
 
 ```python
-IntentCategory = Literal["UPDATE", "REPORT"]
+IntentCategory = Literal["UPDATE", "REPORT", "INFO"]
 ```
 
 ### IntentEntities — base comune
@@ -199,7 +199,28 @@ Note:
 - `TP_HIT.level`: popolato solo se esplicitamente nel testo, mai inferito
 - `REPORT_FINAL_RESULT.result`: può essere None se il trader dichiara chiusura senza dato numerico
 
-### 4.3 Modelli entità per intent
+### 4.3 INFO intents
+
+| Intent | Categoria | Entità |
+|---|---|---|
+| `INFO_ONLY` | `INFO` | nessuna |
+
+Note:
+- `INFO_ONLY` marca porzioni non-actionable dentro messaggi misti (es. "mercato volatile oggi")
+- auto-CONFIRMED dal validator (nessuna regola DB necessaria)
+- può coesistere con intents UPDATE o REPORT nello stesso messaggio → `composite=True`
+- i disambiguation_rules possono sopprimerlo se un intent più specifico è già CONFIRMED:
+
+```json
+{
+  "name": "suppress_info_only_if_actionable",
+  "action": "suppress",
+  "when_strong": ["MOVE_STOP"],
+  "suppress": ["INFO_ONLY"]
+}
+```
+
+### 4.4 Modelli entità per intent
 
 ```python
 class MoveStopToBEEntities(IntentEntities):
@@ -257,6 +278,9 @@ class ReportPartialResultEntities(IntentEntities):
 
 class ReportFinalResultEntities(IntentEntities):
     result: ReportedResult | None = None
+
+class InfoOnlyEntities(IntentEntities):
+    pass
 ```
 
 ---
@@ -482,7 +506,8 @@ class TraderXExtractors:
     "SL_HIT":          { "strong": [], "weak": [] },
     "EXIT_BE":         { "strong": [], "weak": [] },
     "REPORT_PARTIAL_RESULT": { "strong": [], "weak": [] },
-    "REPORT_FINAL_RESULT":   { "strong": [], "weak": [] }
+    "REPORT_FINAL_RESULT":   { "strong": [], "weak": [] },
+    "INFO_ONLY":             { "strong": [], "weak": [] }
   },
 
   "side_markers": {
