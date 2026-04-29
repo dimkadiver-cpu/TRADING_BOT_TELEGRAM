@@ -918,15 +918,35 @@ def validate(parsed: ParsedMessage, db: AsyncSession) -> ParsedMessage:
     """
 ```
 
+### Principio
+
+**Scopo**: ridurre i falsi positivi — da N candidati rilevati dal parser, sopravvivono solo gli intents credibili in base alla storia.
+
+**Regola di default (auto-CONFIRMED)**:
+- Se l'intent NON ha una regola in `validation_rules.json` → `status = CONFIRMED` senza accesso DB
+- Le regole esistono solo per intents che richiedono verifica sulla storia
+
+**Intents con regola**: validati contro DB → CONFIRMED o INVALID
+**Intents senza regola**: auto-CONFIRMED (es. ENTRY_FILLED, REPORT_FINAL_RESULT, CANCEL_PENDING)
+
 ### Flusso per ogni IntentResult
 
 ```
 per ogni intent in parsed.intents:
+
+  se intent.type NON ha regola in validation_rules.json:
+    → status = CONFIRMED (auto)
+    → continua al prossimo intent
+
   refs = intent.targeting_override.refs se presente
          altrimenti parsed.targeting.refs
 
+  se refs vuoti (scope globale es. ALL_POSITIONS):
+    → status = CONFIRMED (nessun ref da verificare)
+    → continua al prossimo intent
+
   per ogni ref in refs:
-    controlla storia DB per quel ref
+    controlla storia DB per quel ref secondo la regola dell'intent
     se valido → aggiungi a valid_refs
     se non valido → aggiungi a invalid_refs con reason
 
@@ -938,44 +958,55 @@ parsed.validation_status = VALIDATED
 
 ### Schema validation_rules.json
 
+Campi disponibili per ogni regola:
+
+| campo | logica | note |
+|---|---|---|
+| `intent` | a quale intent si applica | obbligatorio |
+| `requires_all_history` | ALL devono essere nel passato del ref | AND |
+| `requires_any_history` | ALMENO UNO deve essere nel passato | OR |
+| `excludes_any_history` | se ANY è presente → INVALID | NONE |
+| `excludes_all_history` | INVALID solo se TUTTI presenti | raro |
+| `invalid_reason` | messaggio di errore | obbligatorio |
+
 ```json
 {
   "rules": [
     {
       "intent": "TP_HIT",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "SL_HIT",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "EXIT_BE",
-      "requires_history": ["NEW_SIGNAL"],
+      "requires_all_history": ["NEW_SIGNAL"],
       "requires_any_history": ["MOVE_STOP", "MOVE_STOP_TO_BE"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal_or_no_stop_moved"
     },
     {
       "intent": "MOVE_STOP_TO_BE",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "MOVE_STOP",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     },
     {
       "intent": "CLOSE_FULL",
-      "requires_history": ["NEW_SIGNAL"],
-      "excludes_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
+      "requires_all_history": ["NEW_SIGNAL"],
+      "excludes_any_history": ["CLOSE_FULL", "EXIT_BE", "INVALIDATE_SETUP", "SL_HIT"],
       "invalid_reason": "no_open_signal"
     }
   ]
@@ -1007,20 +1038,6 @@ validation_status=VALIDATED
 ---
 
 ## 13. Fuori perimetro
-
-### intent_validator
-
-Riceve `ParsedMessage` finale dal parser.
-Per ogni coppia `(intent, ref)` verifica la storia DB:
-
-- `TP_HIT` valido solo se: ref ha avuto `NEW_SIGNAL` e NON ha avuto `CLOSE_FULL | EXIT_BE | INVALIDATE_SETUP | SL_HIT`
-- `SL_HIT` valido solo se: ref ha avuto `NEW_SIGNAL` e NON ha avuto `CLOSE_FULL | EXIT_BE | INVALIDATE_SETUP | SL_HIT`
-- `EXIT_BE` valido solo se: ref ha avuto `NEW_SIGNAL` + (`MOVE_STOP` | `MOVE_STOP_TO_BE`) e NON ha avuto `CLOSE_FULL | EXIT_BE | INVALIDATE_SETUP | SL_HIT`
-- `MOVE_STOP_TO_BE` valido solo se: ref ha avuto `NEW_SIGNAL` e NON ha avuto `CLOSE_FULL | EXIT_BE | INVALIDATE_SETUP | SL_HIT`
-- `MOVE_STOP` valido solo se: stesso criterio di `MOVE_STOP_TO_BE`
-- `CLOSE_FULL` valido solo se: ref ha avuto `NEW_SIGNAL` e NON ha avuto `CLOSE_FULL | EXIT_BE | INVALIDATE_SETUP | SL_HIT`
-
-Output atteso: `ValidatedIntent` con `valid_refs: list[int]` e `invalid_refs: list[int]`.
 
 ### CanonicalMessage
 
