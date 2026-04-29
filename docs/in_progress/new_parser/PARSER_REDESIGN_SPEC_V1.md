@@ -80,7 +80,7 @@ class ParsedMessage(BaseModel):
     parse_status:       ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED | ERROR
     confidence:         float
 
-    composite:          bool = False      # True se intents di categorie miste (UPDATE + REPORT)
+    composite:          bool = False      # True se intents di categorie miste (UPDATE+REPORT, UPDATE+INFO, REPORT+INFO)
 
     signal:             SignalPayload | None = None   # solo per primary_class=SIGNAL
     intents:            list[IntentResult] = []       # per UPDATE / REPORT
@@ -131,7 +131,7 @@ puntano a refs diversi nello stesso messaggio.
 ### IntentCategory
 
 ```python
-IntentCategory = Literal["UPDATE", "REPORT"]
+IntentCategory = Literal["UPDATE", "REPORT", "INFO"]
 ```
 
 ### IntentEntities — base comune
@@ -199,7 +199,28 @@ Note:
 - `TP_HIT.level`: popolato solo se esplicitamente nel testo, mai inferito
 - `REPORT_FINAL_RESULT.result`: può essere None se il trader dichiara chiusura senza dato numerico
 
-### 4.3 Modelli entità per intent
+### 4.3 INFO intents
+
+| Intent | Categoria | Entità |
+|---|---|---|
+| `INFO_ONLY` | `INFO` | nessuna |
+
+Note:
+- `INFO_ONLY` marca porzioni non-actionable dentro messaggi misti (es. "mercato volatile oggi")
+- auto-CONFIRMED dal validator (nessuna regola DB necessaria)
+- può coesistere con intents UPDATE o REPORT nello stesso messaggio → `composite=True`
+- i disambiguation_rules possono sopprimerlo se un intent più specifico è già CONFIRMED:
+
+```json
+{
+  "name": "suppress_info_only_if_actionable",
+  "action": "suppress",
+  "when_strong": ["MOVE_STOP"],
+  "suppress": ["INFO_ONLY"]
+}
+```
+
+### 4.4 Modelli entità per intent
 
 ```python
 class MoveStopToBEEntities(IntentEntities):
@@ -257,6 +278,9 @@ class ReportPartialResultEntities(IntentEntities):
 
 class ReportFinalResultEntities(IntentEntities):
     result: ReportedResult | None = None
+
+class InfoOnlyEntities(IntentEntities):
+    pass
 ```
 
 ---
@@ -482,7 +506,8 @@ class TraderXExtractors:
     "SL_HIT":          { "strong": [], "weak": [] },
     "EXIT_BE":         { "strong": [], "weak": [] },
     "REPORT_PARTIAL_RESULT": { "strong": [], "weak": [] },
-    "REPORT_FINAL_RESULT":   { "strong": [], "weak": [] }
+    "REPORT_FINAL_RESULT":   { "strong": [], "weak": [] },
+    "INFO_ONLY":             { "strong": [], "weak": [] }
   },
 
   "side_markers": {
@@ -557,10 +582,29 @@ weak prefix → match tentativo → può produrre warning
   "combination_rules": [
     {
       "name": "",
-      "if": [],
+      "when_all_fields_present": [],
       "then": "",
       "confidence_boost": 0.0
     }
+  ],
+
+  "primary_intent_precedence": [
+    "SL_HIT",
+    "EXIT_BE",
+    "TP_HIT",
+    "REPORT_FINAL_RESULT",
+    "REPORT_PARTIAL_RESULT",
+    "CLOSE_FULL",
+    "CLOSE_PARTIAL",
+    "CANCEL_PENDING",
+    "INVALIDATE_SETUP",
+    "MOVE_STOP_TO_BE",
+    "MOVE_STOP",
+    "UPDATE_TAKE_PROFITS",
+    "ADD_ENTRY",
+    "REENTER",
+    "ENTRY_FILLED",
+    "INFO_ONLY"
   ],
 
   "disambiguation_rules": {
@@ -1233,6 +1277,19 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
   - [ ] verificare `detection_strength` per i casi noti
 - [ ] Eseguire replay su DB test con `replay_parser.py`
 - [ ] Confrontare output ParsedMessage con output precedente su campione reale
+- [ ] **Aggiornare sistema report CSV** (non compatibile con ParsedMessage out-of-the-box):
+  - [ ] `parser_test/reporting/flatteners.py` — riscrivere `_derive_fields()`:
+    - [ ] leggere `signal.entries`, `signal.stop_loss`, `signal.take_profits` invece dei path legacy
+    - [ ] leggere `intents[].entities` per-intent invece di `entities` flat
+    - [ ] leggere `targeting` invece di `target_scope`/`linking`
+    - [ ] leggere `primary_class` invece di `message_type`
+  - [ ] `parser_test/reporting/report_export.py`:
+    - [ ] aggiornare `REPORT_SCOPES`: `["ALL", "SIGNAL", "UPDATE", "REPORT", "INFO", "UNCLASSIFIED"]`
+    - [ ] aggiornare SQL filter: `pr.primary_class = ?` invece di `pr.message_type = ?`
+  - [ ] `parser_test/reporting/report_schema.py` — aggiungere colonne nuove:
+    - [ ] `validation_status`, `composite`
+    - [ ] `intents_confirmed`, `intents_candidate`
+    - [ ] `detection_strengths`
 
 ---
 
@@ -1315,3 +1372,67 @@ Fase 7 (cleanup finale)    ←── solo dopo Fase 6 completa
 - Non eliminare `models/` (canonical.py, new_signal.py, update.py, operational.py) — bloccati da operation_rules/target_resolver
 - `pipeline.py` e `normalization.py` rimangono invariati fino a migrazione backtesting (fuori scope)
 - Aggiornare `docs/AUDIT.md` al termine di ogni fase
+
+---
+
+## 16. Revisione generale — confronto architettura attuale vs nuova
+
+### 16.1 Output contract
+
+| | Attuale | Nuovo |
+|---|---|---|
+| Output parser | `TraderEventEnvelopeV1` | `ParsedMessage` |
+| Natura | Semi-operazionale (`UpdatePayloadRaw`, `op_type`) | Semantica pura (intents + entities) |
+| Intents | `list[str]` flat | `list[IntentResult]` tipizzati con entities |
+| Validation | Assente | `intent_validator` → CONFIRMED/INVALID/CANDIDATE |
+| Detection strength | Non tracciato | `detection_strength: "strong"|"weak"` per intent |
+
+### 16.2 profile.py — dimensioni e responsabilità
+
+**Attuale** (`trader_a/profile.py`): ~500+ righe — costruisce direttamente `CanonicalMessage`,
+importa da `canonical_v1.models`, `semantic_resolver`, `context_resolution_engine`, `targeted_builder`.
+
+**Nuovo**: ~20 righe — delega tutto a `shared_runtime.parse()`.
+
+### 16.3 Intent taxonomy — migrazioni confermate
+
+| Attuale (Python hardcoded) | Nuovo | Azione |
+|---|---|---|
+| `NEW_SETUP` intent | nessun intent — coperto da `classification_markers.new_signal` | eliminare |
+| `CANCEL_PENDING_ORDERS` | `CANCEL_PENDING` | rinominare in tutti i `parsing_rules.json` |
+| `INFO_ONLY` come sola primary_class | `INFO_ONLY` come intent categoria `INFO` | ✅ tenere, già nello spec |
+| `PRIMARY_INTENT_PRECEDENCE` lista Python | `primary_intent_precedence` in `rules.json` | spostare in JSON |
+| `MUTUAL_EXCLUSIONS` dict Python | `disambiguation_rules.suppress` in `rules.json` | spostare in JSON |
+| `COMPATIBLE_MULTI_INTENT` dict Python | eliminato — compatibilità emerge da validator | eliminare |
+| Alias `U_*` (`U_MOVE_STOP`, ecc.) | nessun alias — nomi diretti | eliminare da taxonomy e profili |
+
+### 16.4 Disambiguation — differenze critiche
+
+| | Attuale | Nuovo |
+|---|---|---|
+| Posizione | inline in `profile_runtime.py` (`_apply_prefer_rules`) | layer separato `shared/disambiguation.py` |
+| Ordine esecuzione | prima della validazione | dopo il validator (solo su CONFIRMED) |
+| Azioni supportate | solo `prefer` | `prefer` + `over` + `suppress` |
+| Condizioni | `when_all_detected` + `if_contains_any` | `when_strong`, `when_weak`, `text_any`, `text_none`, `message_*`, `entities_*` |
+| Detection strength | non usato | `when_strong`/`when_weak` leggono `IntentResult.detection_strength` |
+
+### 16.5 File structure per profilo
+
+| Attuale | Nuovo |
+|---|---|
+| `parsing_rules.json` (vocabolario + logica insieme) | `semantic_markers.json` + `rules.json` |
+| Nessun `extractors.py` separato (tutto in `profile.py`) | `extractors.py` dedicato con sezioni interne |
+| `profile.py` 500+ righe | `profile.py` ~20 righe |
+
+### 16.6 Dipendenze da eliminare da trader_a/profile.py
+
+```python
+# queste import spariscono completamente
+from src.parser.shared.context_resolution_engine import ContextInput
+from src.parser.shared.context_resolution_schema import ContextResolutionRulesBlock
+from src.parser.shared.disambiguation_rules_schema import DisambiguationRulesBlock
+from src.parser.shared.intent_compatibility_schema import IntentCompatibilityBlock
+from src.parser.shared.semantic_resolver import SemanticResolver
+from src.parser.canonical_v1.targeted_builder import build_targeted_actions, ...
+from src.parser.intent_action_map import intent_policy_for_intent
+```
