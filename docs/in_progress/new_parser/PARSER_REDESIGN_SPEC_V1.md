@@ -509,9 +509,35 @@ class TraderXExtractors:
     "ALL_REMAINING": []
   },
 
-  "symbol_aliases": {}
+  "symbol_aliases": {},
+
+  "extraction_markers": {
+    "risk_prefix": {
+      "strong": [],
+      "weak":   []
+    },
+    "risk_suffix": {
+      "strong": [],
+      "weak":   []
+    },
+    "leverage_prefix": {
+      "strong": [],
+      "weak":   []
+    }
+  }
 }
 ```
+
+`extraction_markers` — vocabolario per i pattern di estrazione entità numeriche.
+Il codice in `extractors.py` li legge per costruire le regex parametrizzate:
+
+- `risk_prefix`: parole che precedono il valore rischio (es. "риск", "rischio", "risk")
+- `risk_suffix`: parole che seguono il valore (es. "от депозита", "del deposito")
+- `leverage_prefix`: parole che precedono la leva (es. "x", "лев", "leverage")
+
+`extractors.py` usa strong/weak per costruire regex con priorità:
+strong prefix → match più affidabile → `RiskHint.unit` confermato
+weak prefix → match tentativo → può produrre warning
 
 ---
 
