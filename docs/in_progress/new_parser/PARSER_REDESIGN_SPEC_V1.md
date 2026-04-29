@@ -967,8 +967,9 @@ per ogni intent in parsed.intents:
   refs = intent.targeting_override.refs se presente
          altrimenti parsed.targeting.refs
 
-  se refs vuoti (scope globale es. ALL_POSITIONS):
-    → status = CONFIRMED (nessun ref da verificare)
+  se refs vuoti O scope != SINGLE_SIGNAL:
+    → status = CONFIRMED (auto)
+    → risoluzione delegata all'esecutore downstream
     → continua al prossimo intent
 
   per ogni ref in refs:
@@ -981,6 +982,9 @@ per ogni intent in parsed.intents:
 
 parsed.validation_status = VALIDATED
 ```
+
+**Scope gestiti dal validator**: solo `SINGLE_SIGNAL` (refs per message ID).
+**Scope delegati all'esecutore**: `SYMBOL`, `PORTFOLIO_SIDE`, `ALL_OPEN` → auto-CONFIRMED, risoluzione posizioni avviene downstream.
 
 ### Schema validation_rules.json
 
