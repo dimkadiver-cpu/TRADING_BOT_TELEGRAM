@@ -1073,3 +1073,69 @@ validation_status=VALIDATED
 
 Rimane invariato come contratto verso i layer downstream.
 Prodotto da `operation_rules` a partire dal `ParsedMessage` validato.
+
+---
+
+## 14. Mappa file — eliminare / riscrivere / tenere
+
+### ❌ Eliminare (obsoleti)
+
+| file | motivo |
+|---|---|
+| `shared/compatibility_engine.py` | intent_compatibility eliminato dalla spec |
+| `shared/intent_compatibility_schema.py` | eliminato |
+| `shared/context_resolution_engine.py` | context_resolution fuori perimetro parser |
+| `shared/context_resolution_schema.py` | eliminato |
+| `shared/semantic_resolver.py` | dipende da tutti e 4 sopra → obsoleto |
+| `event_envelope_v1.py` | TraderEventEnvelopeV1 sostituito da ParsedMessage |
+| `adapters/legacy_to_event_envelope_v1.py` | TraderEventEnvelopeV1 eliminato |
+| `adapters/__init__.py` | cartella vuota dopo eliminazione |
+| `canonical_v1/intent_candidate.py` | sostituito da IntentResult |
+| `canonical_v1/targeted_builder.py` | sostituito da operation_rules |
+| `canonical_v1/normalizer.py` | fallback legacy, eliminare dopo migrazione |
+| `trader_profiles/shared/envelope_builder.py` | costruiva TraderEventEnvelopeV1 |
+| `trader_profiles/shared/entity_keys.py` | sostituito da modelli Pydantic tipizzati per intent |
+| `intent_action_map.py` | mappatura intent→operazioni, fuori perimetro parser |
+| `canonical_schema.py` | schema CSV intent, sostituito da tassonomia spec |
+| `action_builders/__init__.py` | cartella già svuotata |
+
+**File di backup da eliminare (non fanno parte dell'architettura):**
+
+| file |
+|---|
+| `trader_a/extractors copy.py` |
+| `trader_a/parsing_rules copy.json` |
+| `trader_a/parsing_rules copy 2.json` |
+| `trader_a/parsing_rules copy Ultima.json` |
+| `trader_b/parsing_rules copy.json` |
+| `trader_d/parsing_rules copy.json` |
+
+### 🔄 Riscrivere / sostituire
+
+| file attuale | sostituito da |
+|---|---|
+| `shared/disambiguation_engine.py` | nuovo `shared/disambiguation.py` (schema when_strong/when_weak) |
+| `shared/disambiguation_rules_schema.py` | Pydantic aggiornato per nuovo schema |
+| `trader_profiles/shared/profile_runtime.py` | nuovo `shared/runtime.py` |
+| `trader_profiles/shared/rules_schema.py` | schema per `semantic_markers.json` + `rules.json` |
+| `trader_profiles/shared/rules_schema.json` | nuovo JSON schema |
+| `trader_profiles/shared/intent_taxonomy.py` | tassonomia 15 intents da spec sezione 4 |
+| `trader_profiles/shared/targeting.py` | logica integrata nel nuovo `shared/runtime.py` |
+| `trader_profiles/base.py` | `ParserContext` rimane, `TraderParseResult` → `ParsedMessage` |
+| `trader_x/parsing_rules.json` | split in `semantic_markers.json` + `rules.json` (per ogni profilo) |
+| `trader_x/profile.py` | riscrivere ~20 righe con nuovo contratto |
+
+### ✅ Tenere invariati
+
+| file | motivo |
+|---|---|
+| `canonical_v1/models.py` | CanonicalMessage — contratto downstream invariato |
+| `rules_engine.py` | RulesEngine — aggiornare input, non riscrivere |
+| `text_utils.py` | utilities condivise |
+| `shared/resolution_unit.py` | ResolutionUnit usato in diagnostics |
+| `trader_profiles/registry.py` | registro profili (piccolo update alla migrazione) |
+| `trader_profiles/common_utils.py` | utilities comuni |
+| `models/` (tutto) | LEGACY bloccato da operation_rules/target_resolver — non toccare |
+| `report_market_entry_none.py` | script standalone, non dipende dall'architettura |
+| `trader_x/extractors.py` | logica di estrazione da adattare ma non riscrivere |
+| `trader_x/tests/` | aggiornare gli assert, non riscrivere la struttura |
