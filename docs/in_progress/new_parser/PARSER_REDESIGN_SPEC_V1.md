@@ -717,10 +717,10 @@ Campi lista vuota o `null` vengono ignorati (non contribuiscono al match).
   "name": "prefer_exit_be_over_stop_move",
   "action": "prefer",
   "when_strong": ["EXIT_BE"],
-  "when_weak":   ["STOP_MOVE"],
+  "when_weak":   ["MOVE_STOP"],
   "text_any":    ["breakeven", "be"],
   "prefer":      "EXIT_BE",
-  "over":        ["STOP_MOVE"]
+  "over":        ["MOVE_STOP"]
 }
 ```
 
@@ -735,7 +735,7 @@ Campi lista vuota o `null` vengono ignorati (non contribuiscono al match).
     "message":  { "composite": null, "has_targeting": null },
     "entities": { "present": [], "absent": [] }
   },
-  "suppress": ["STOP_MOVE"]
+  "suppress": ["MOVE_STOP"]
 }
 ```
 
