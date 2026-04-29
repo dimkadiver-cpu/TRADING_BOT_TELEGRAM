@@ -609,7 +609,7 @@ class TestValidators:
             CancelPendingParams(cancel_scope="INVALID_SCOPE")  # type: ignore[arg-type]
 
     def test_cancel_scope_valid_accepted(self) -> None:
-        for scope in ("TARGETED", "ALL_PENDING_ENTRIES", "ALL_LONG", "ALL_SHORT", "ALL_ALL"):
+        for scope in ("TARGETED", "ALL_PENDING_ENTRIES", "ALL_LONG", "ALL_SHORT", "ALL_POSITIONS"):
             p = CancelPendingParams(cancel_scope=scope)  # type: ignore[arg-type]
             assert p.cancel_scope == scope
 

@@ -91,14 +91,42 @@ result: CanonicalMessage = parser.parse_canonical(text, context)
 callable(getattr(type(parser), 'parse_canonical', None))
 ```
 
-### Entry type
+### Entry model (canonico v1)
 
 ```
-MARKET    → entries opzionale (0 prezzi o prezzo indicativo)
-LIMIT     → entries con 1 prezzo esatto
-AVERAGING → entries con 2+ prezzi discreti
-ZONE      → entries con 2 prezzi min/max (semantica diversa da AVERAGING)
+EntryStructure (livello signal):
+  ONE_SHOT  → 1 leg
+  TWO_STEP  → 2 leg discreti (averaging classico)
+  RANGE     → 2 leg che definiscono [min, max] (zona di entrata)
+  LADDER    → 3+ leg discreti
+
+EntryType (livello leg):
+  MARKET    → esecuzione a mercato (price opzionale e indicativo)
+  LIMIT     → esecuzione a limite (price obbligatorio)
 ```
+
+Matrice EntryStructure × EntryType (enforced dal validator Pydantic):
+
+| Structure | Leg 1        | Leg 2..N |
+|-----------|--------------|----------|
+| ONE_SHOT  | MARKET/LIMIT | —        |
+| TWO_STEP  | MARKET/LIMIT | LIMIT    |
+| RANGE     | LIMIT        | LIMIT    |
+| LADDER    | MARKET/LIMIT | LIMIT    |
+
+`MARKET` ammesso solo su `sequence=1`. Le leg successive sono sempre `LIMIT`.
+
+Mapping legacy:
+```
+MARKET legacy    → ONE_SHOT con leg MARKET
+LIMIT legacy     → ONE_SHOT con leg LIMIT
+AVERAGING (n=2)  → TWO_STEP con leg LIMIT
+AVERAGING (n≥3)  → LADDER con leg LIMIT
+ZONE             → RANGE con 2 leg LIMIT
+```
+
+Demozione strutturale: cardinalità insufficiente → struttura inferiore + `parse_status=PARTIAL`
++ warning `entry_structure_demoted:<from>-><to>:<reason>`.
 
 ### Intents UPDATE
 

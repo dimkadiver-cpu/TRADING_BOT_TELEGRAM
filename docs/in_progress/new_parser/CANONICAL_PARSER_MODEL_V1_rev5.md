@@ -211,6 +211,21 @@ class SignalPayload:
 - `RANGE` = esattamente 2 legs
 - `LADDER` = almeno 3 legs
 
+### Matrice EntryStructure x EntryType (enforced)
+
+| Structure | Leg 1 | Leg 2..N |
+|---|---|---|
+| `ONE_SHOT` | MARKET o LIMIT | - |
+| `TWO_STEP` | MARKET o LIMIT | LIMIT |
+| `RANGE` | LIMIT | LIMIT |
+| `LADDER` | MARKET o LIMIT | LIMIT |
+
+Vincolo: `MARKET` ammesso solo su `sequence=1`. Le leg successive sono ordini in attesa,
+richiedono livello di prezzo, quindi `LIMIT` obbligatorio.
+
+`MARKET` con `price` popolato preserva il prezzo come indicativo (snapshot al momento del
+messaggio); il prezzo non viene scartato.
+
 Nota:
 
 - `ONE_SHOT` con `entry_type = MARKET` puo avere `price = null`.
@@ -220,8 +235,22 @@ Nota:
 
 - `SINGLE -> ONE_SHOT`
 - `ZONE -> RANGE` con leg `LIMIT`
-- `AVERAGING -> TWO_STEP` oppure `LADDER` con leg `LIMIT`
+- `AVERAGING (n=2) -> TWO_STEP` con leg `LIMIT`
+- `AVERAGING (n>=3) -> LADDER` con leg `LIMIT`
 - `entry_plan_type` legacy -> `entry_structure` canonica + `entry_type` per leg
+
+### Demozione strutturale (cardinalita insufficiente)
+
+Quando l'extractor identifica un marker multi-leg ma trova un numero di prezzi inferiore,
+il parser demota la struttura e degrada `parse_status` a `PARTIAL`:
+
+| Caso intended | n. prezzi | Demozione |
+|---|---|---|
+| AVERAGING/ZONE/RANGE/TWO_STEP/LADDER | 1 | -> ONE_SHOT (PARTIAL + warning) |
+| LADDER | 2 | -> TWO_STEP (PARTIAL + warning) |
+| qualsiasi (!= MARKET/ONE_SHOT) | 0 | -> entry_structure=None (PARTIAL, missing entries) |
+
+Warning machine-readable: `entry_structure_demoted:<INTENDED>-><TARGET>:<reason>`.
 
 ### Invalidation
 
@@ -268,6 +297,8 @@ class CancelPendingOperation:
 class ModifyEntriesOperation:
     mode: Literal["ADD", "REENTER", "UPDATE"]
     entries: list[EntryLeg]
+    entry_structure: Literal["ONE_SHOT", "TWO_STEP", "RANGE", "LADDER"] | None
+    # entry_structure tipicamente popolato per REENTER multi-leg; None per ADD/UPDATE
 
 class ModifyTargetsOperation:
     mode: Literal["REPLACE_ALL", "ADD", "UPDATE_ONE", "REMOVE_ONE"]
@@ -383,17 +414,20 @@ Event types ammessi:
 
 ## Messaggi compositi
 
-Ammesso:
+Ammessi in v1:
 
 - `UPDATE + REPORT`
+- `UPDATE + INFO`
+- `REPORT + INFO`
 
-Non ammesso in v1:
+Non ammessi in v1:
 
 - `SIGNAL + UPDATE`
+- `SIGNAL + REPORT` (rimosso da v1: era "tollerato eccezionalmente" in revisioni precedenti)
+- `SIGNAL + INFO`
 
-Tollerato solo eccezionalmente:
-
-- `SIGNAL + REPORT`
+Regola di soppressione del translator: quando `signal` è popolato, gli intents non-SIGNAL
+CONFIRMED vengono soppressi con warning `composite_with_signal_dropped:<intent_type>`.
 
 ---
 

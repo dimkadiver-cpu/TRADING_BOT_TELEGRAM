@@ -83,7 +83,7 @@ ActionType = Literal["SET_STOP", "CLOSE", "CANCEL_PENDING", "MODIFY_ENTRIES", "M
 TargetingMode = Literal["EXPLICIT_TARGETS", "TARGET_GROUP", "SELECTOR"]
 ResolutionUnit = Literal["MESSAGE_WIDE", "TARGET_ITEM_WIDE"]
 EventType = Literal["ENTRY_FILLED", "TP_HIT", "STOP_HIT", "BREAKEVEN_EXIT", "FINAL_RESULT"]
-CancelScope = Literal["TARGETED", "ALL_PENDING_ENTRIES", "ALL_LONG", "ALL_SHORT", "ALL_ALL"]
+CancelScope = Literal["TARGETED", "ALL_PENDING_ENTRIES", "ALL_LONG", "ALL_SHORT", "ALL_POSITIONS"]
 
 
 # -----------------------------------------------------------------------------
@@ -274,6 +274,25 @@ class SignalPayload(CanonicalBaseModel):
             if len(self.entries) < 3:
                 raise ValueError("LADDER requires at least 3 entry legs")
 
+        # EntryStructure × EntryType matrix:
+        #   ONE_SHOT  → leg MARKET o LIMIT
+        #   TWO_STEP  → leg1 MARKET o LIMIT, leg2..N solo LIMIT
+        #   RANGE     → tutti LIMIT
+        #   LADDER    → leg1 MARKET o LIMIT, leg2..N solo LIMIT
+        if self.entry_structure == "RANGE":
+            for leg in self.entries:
+                if leg.entry_type != "LIMIT":
+                    raise ValueError(
+                        f"RANGE requires all legs LIMIT (got {leg.entry_type} at sequence={leg.sequence})"
+                    )
+        if self.entry_structure in ("TWO_STEP", "LADDER"):
+            for leg in self.entries:
+                if leg.entry_type == "MARKET" and leg.sequence != 1:
+                    raise ValueError(
+                        f"{self.entry_structure}: MARKET entry_type allowed only on sequence=1 "
+                        f"(got MARKET at sequence={leg.sequence})"
+                    )
+
         return self
 
 
@@ -315,11 +334,43 @@ class CancelPendingOperation(CanonicalBaseModel):
 class ModifyEntriesOperation(CanonicalBaseModel):
     mode: ModifyEntriesMode
     entries: list[EntryLeg] = Field(default_factory=list)
+    entry_structure: EntryStructure | None = None
 
     @model_validator(mode="after")
     def _validate_modify_entries(self) -> "ModifyEntriesOperation":
         if not self.entries:
             raise ValueError("MODIFY_ENTRIES requires non-empty entries")
+
+        # entry_structure è opzionale; tipicamente popolato per REENTER multi-leg.
+        # Quando popolato, applica la stessa coerenza cardinalità + matrice EntryStructure×EntryType
+        # del SignalPayload.
+        es = self.entry_structure
+        if es is not None:
+            n = len(self.entries)
+            if es == "ONE_SHOT" and n != 1:
+                raise ValueError("MODIFY_ENTRIES ONE_SHOT requires exactly 1 entry leg")
+            if es == "TWO_STEP" and n != 2:
+                raise ValueError("MODIFY_ENTRIES TWO_STEP requires exactly 2 entry legs")
+            if es == "RANGE" and n != 2:
+                raise ValueError("MODIFY_ENTRIES RANGE requires exactly 2 entry legs")
+            if es == "LADDER" and n < 3:
+                raise ValueError("MODIFY_ENTRIES LADDER requires at least 3 entry legs")
+
+            if es == "RANGE":
+                for leg in self.entries:
+                    if leg.entry_type != "LIMIT":
+                        raise ValueError(
+                            f"MODIFY_ENTRIES RANGE requires all legs LIMIT "
+                            f"(got {leg.entry_type} at sequence={leg.sequence})"
+                        )
+            if es in ("TWO_STEP", "LADDER"):
+                for leg in self.entries:
+                    if leg.entry_type == "MARKET" and leg.sequence != 1:
+                        raise ValueError(
+                            f"MODIFY_ENTRIES {es}: MARKET allowed only on sequence=1 "
+                            f"(got MARKET at sequence={leg.sequence})"
+                        )
+
         return self
 
 

@@ -84,7 +84,7 @@ class ParsedMessage(BaseModel):
     parse_status:       ParseStatus       # PARSED | PARTIAL | UNCLASSIFIED | ERROR
     confidence:         float
 
-    composite:          bool = False      # True se intents di categorie miste (UPDATE+REPORT, UPDATE+INFO, REPORT+INFO)
+    composite:          bool = False      # True se intents di categorie miste; ammesso solo UPDATE+REPORT, UPDATE+INFO, REPORT+INFO
 
     signal:             SignalPayload | None = None   # solo per primary_class=SIGNAL
     intents:            list[IntentResult] = []       # per UPDATE / REPORT
@@ -142,8 +142,11 @@ IntentCategory = Literal["UPDATE", "REPORT", "INFO"]
 
 ```python
 class IntentEntities(BaseModel):
-    raw_fragment: str | None = None
-    confidence:   float = 1.0
+    """Marker base per le entità per-intent.
+
+    `raw_fragment` e `confidence` vivono SOLO su `IntentResult` per evitare
+    duplicazione (decisione consolidata: source of truth unica).
+    """
 
     def to_dict(self) -> dict: ...    # export per DB/JSON
 ```
@@ -155,15 +158,18 @@ diagnostics: {
     "resolution_unit": "MESSAGE_WIDE" | "TARGET_ITEM_WIDE",
     "applied_disambiguation_rules": list[str],
     "trader_code": str,
-    "composite": bool,   # True se intents di categorie miste — operation_rules lo legge da qui
+    "entry_structure_demoted": dict | None,   # popolato se demozione cardinalità (vedi 5.2)
 }
 ```
 
 `resolution_unit`:
 - `MESSAGE_WIDE` — stessa semantica per tutti i refs del messaggio
 - `TARGET_ITEM_WIDE` — semantica diversa per ref diversi (caso multi-ref)
+- popolato dal `runtime.py` dopo la fase di estrazione: `TARGET_ITEM_WIDE` se almeno un
+  `IntentResult.targeting_override` è non-None, altrimenti `MESSAGE_WIDE`.
 
-`composite`: copiato da `ParsedMessage.composite` da operation_rules quando costruisce `CanonicalMessage`.
+NB: `composite` NON è duplicato in diagnostics — vive solo su `ParsedMessage.composite`
+(source of truth unica).
 
 ---
 
@@ -177,16 +183,20 @@ diagnostics: {
 | `MOVE_STOP` | `new_stop_price: Price \| None`, `stop_to_tp_level: int \| None` |
 | `CLOSE_FULL` | `close_price: Price \| None` |
 | `CLOSE_PARTIAL` | `fraction: float \| None`, `close_price: Price \| None` |
-| `CANCEL_PENDING` | `scope: str \| None` |
+| `CANCEL_PENDING` | `scope: CancelScope \| None` |
 | `INVALIDATE_SETUP` | nessuna |
-| `REENTER` | `entry_price: Price \| None`, `entry_type: EntryType \| None` |
+| `REENTER` | `entries: list[Price]`, `entry_type: EntryType \| None`, `entry_structure: EntryStructure \| None` |
 | `ADD_ENTRY` | `entry_price: Price`, `entry_type: EntryType \| None` |
-| `UPDATE_TAKE_PROFITS` | `new_take_profits: list[Price]`, `remove_levels: list[int]`, `mode: str \| None` |
+| `UPDATE_TAKE_PROFITS` | `new_take_profits: list[Price]`, `target_tp_level: int \| None`, `mode: ModifyTargetsMode \| None` |
 
 Note:
 - `MOVE_STOP`: almeno uno tra `new_stop_price` e `stop_to_tp_level` deve essere presente
-- `CANCEL_PENDING`: `scope` è stringa libera (es. "averaging", "entry") — il layer downstream interpreta
-- `REENTER`: forma complessa con SL/TP non gestita in v1 (edge case noto)
+- `CANCEL_PENDING`: `scope` è tipizzato (`CancelScope` enum); `None` = scope implicito `TARGETED`
+- `REENTER`: supporta multi-leg (lista prezzi) per replicare piani `AVERAGING/ZONE/LADDER`;
+  `entry_structure` opzionale, popolato quando il profilo distingue esplicitamente la struttura
+- `UPDATE_TAKE_PROFITS.mode`: tipizzato sui 4 modi canonici (`REPLACE_ALL/ADD/UPDATE_ONE/REMOVE_ONE`).
+  `target_tp_level` richiesto per `UPDATE_ONE`/`REMOVE_ONE`. Default `REPLACE_ALL` se omesso e
+  `new_take_profits` non vuoto.
 
 ### 4.2 REPORT intents
 
@@ -213,6 +223,8 @@ Note:
 - `INFO_ONLY` marca porzioni non-actionable dentro messaggi misti (es. "mercato volatile oggi")
 - auto-CONFIRMED dal validator (nessuna regola DB necessaria)
 - può coesistere con intents UPDATE o REPORT nello stesso messaggio → `composite=True`
+- in messaggi composite UPDATE+INFO il `CanonicalMessage` ha `primary_class=UPDATE` e
+  `INFO_ONLY` finisce in `intents[]` con `raw_fragment` preservato in `diagnostics.info_fragments`
 - i disambiguation_rules possono sopprimerlo se un intent più specifico è già CONFIRMED:
 
 ```json
@@ -242,14 +254,15 @@ class ClosePartialEntities(IntentEntities):
     close_price: Price | None = None
 
 class CancelPendingEntities(IntentEntities):
-    scope: str | None = None
+    scope: CancelScope | None = None   # None = TARGETED implicito
 
 class InvalidateSetupEntities(IntentEntities):
     pass
 
 class ReenterEntities(IntentEntities):
-    entry_price: Price | None = None
-    entry_type:  EntryType | None = None
+    entries:         list[Price] = []
+    entry_type:      EntryType | None = None
+    entry_structure: EntryStructure | None = None
 
 class AddEntryEntities(IntentEntities):
     entry_price: Price
@@ -257,8 +270,8 @@ class AddEntryEntities(IntentEntities):
 
 class UpdateTakeProfitsEntities(IntentEntities):
     new_take_profits: list[Price] = []
-    remove_levels:    list[int] = []
-    mode:             str | None = None
+    target_tp_level:  int | None = None
+    mode:             ModifyTargetsMode | None = None  # REPLACE_ALL | ADD | UPDATE_ONE | REMOVE_ONE
 
 class EntryFilledEntities(IntentEntities):
     fill_price:    Price | None = None
@@ -323,6 +336,68 @@ class SignalPayload(BaseModel):
 | `TWO_STEP` | esattamente 2 |
 | `RANGE` | esattamente 2 |
 | `LADDER` | almeno 3 |
+
+### 5.1 Matrice EntryStructure × EntryType
+
+Vincoli sulla composizione `EntryLeg.entry_type` per ogni `entry_structure`. Enforced
+dal validator Pydantic in `SignalPayload._validate_signal_payload` e
+`ModifyEntriesOperation._validate_modify_entries`.
+
+| Structure | Leg 1 | Leg 2..N |
+|---|---|---|
+| `ONE_SHOT` | MARKET o LIMIT | — |
+| `TWO_STEP` | MARKET o LIMIT | LIMIT |
+| `RANGE` | LIMIT | LIMIT |
+| `LADDER` | MARKET o LIMIT | LIMIT |
+
+Razionale del vincolo "MARKET solo su sequence=1":
+- `MARKET` = "entra adesso al prezzo corrente": esiste un solo "adesso" per messaggio
+- leg successivi sono ordini in attesa → richiedono livello di prezzo → `LIMIT` obbligatorio
+- `MARKET` con `price` popolato = prezzo indicativo (snapshot al momento del messaggio); sempre preservato
+
+Convenzione `EntryLeg.role`:
+
+| Structure | role pattern |
+|---|---|
+| `ONE_SHOT` | `[PRIMARY]` |
+| `TWO_STEP` | `[PRIMARY, AVERAGING]` |
+| `RANGE` | `[PRIMARY, PRIMARY]` |
+| `LADDER` | `[PRIMARY, AVERAGING, AVERAGING, ...]` |
+
+### 5.2 Conversione legacy entry_type
+
+Mapping dei marker legacy (`MARKET / LIMIT / AVERAGING / ZONE`) al modello canonico:
+
+| Legacy marker | n. prezzi | EntryStructure | EntryLeg.entry_type |
+|---|---|---|---|
+| `MARKET` | 0 o 1 | `ONE_SHOT` | `MARKET` |
+| `LIMIT` | 1 | `ONE_SHOT` | `LIMIT` |
+| `AVERAGING` | 2 | `TWO_STEP` | `LIMIT` (entrambi) |
+| `AVERAGING` | ≥3 | `LADDER` | `LIMIT` (tutti) |
+| `ZONE` | 2 (min/max) | `RANGE` | `LIMIT` (entrambi) |
+
+Distinguere `RANGE` da `TWO_STEP` richiede marker semantico esplicito (es. "zona", "range",
+"от ... до"); il count da solo non basta. Il profilo dichiara questi marker in
+`semantic_markers.json::field_markers.entry.range_markers`.
+
+### 5.3 Demozione strutturale (cardinalità insufficiente)
+
+Quando l'extractor identifica un marker che dichiara struttura multi-leg ma trova un
+numero di prezzi inferiore a quanto richiesto, il parser **demota** la struttura a quella
+inferiore compatibile e degrada `parse_status`:
+
+| Caso intended | n. prezzi | Demozione | parse_status | Warning |
+|---|---|---|---|---|
+| `AVERAGING/ZONE/RANGE/TWO_STEP/LADDER` | 1 | `ONE_SHOT`, leg `LIMIT` | `PARTIAL` | `entry_structure_demoted:<INTENDED>->ONE_SHOT:single_price` |
+| `LADDER` | 2 | `TWO_STEP` | `PARTIAL` | `entry_structure_demoted:LADDER->TWO_STEP:two_prices` |
+| qualsiasi (≠ MARKET/ONE_SHOT) | 0 | `entry_structure=None`, `missing_fields=["entries"]` | `PARTIAL` | `entry_structure_demoted:<INTENDED>->NONE:no_prices` |
+
+Il warning è in formato machine-readable `<event>:<from>-><to>:<reason>` (convenzione
+generale dei warning del parser). Diagnostica completa popolata in
+`diagnostics.entry_structure_demoted = {"from": ..., "to": ..., "reason": ...}`.
+
+L'helper `_demote_entry_structure(intended, legs, warnings)` in
+`canonical_v1/normalizer.py` implementa la logica e va riusato dai profili e dal runtime.
 
 ---
 
@@ -616,50 +691,71 @@ weak prefix → match tentativo → può produrre warning
       {
         "name": "",
         "action": "prefer",
-
-        "when_strong": [],
-        "when_weak":   [],
-
-        "text_any":  [],
-        "text_none": [],
-
-        "message_composite":    null,
-        "message_has_targeting": null,
-
-        "entities_present": [],
-        "entities_absent":  [],
-
+        "priority": 0,
+        "conditions": {
+          "intents":  { "strong": [], "weak": [] },
+          "text":     { "any": [], "none": [] },
+          "message":  { "composite": null, "has_targeting": null },
+          "entities": { "present": [], "absent":  [] }
+        },
         "prefer": "",
         "over":   []
       },
       {
         "name": "",
         "action": "suppress",
-
-        "when_strong": [],
-        "when_weak":   [],
-
-        "text_any":  [],
-        "text_none": [],
-
-        "message_composite":    null,
-        "message_has_targeting": null,
-
-        "entities_present": [],
-        "entities_absent":  [],
-
+        "priority": 0,
+        "conditions": {
+          "intents":  { "strong": [], "weak": [] },
+          "text":     { "any": [], "none": [] },
+          "message":  { "composite": null, "has_targeting": null },
+          "entities": { "present": [], "absent":  [] }
+        },
         "suppress": []
       }
     ]
   },
 
   "action_scope_groups": {
-    "all_positions": ["ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"],
-    "all_long":      ["ALL_LONGS"],
-    "all_short":     ["ALL_SHORTS"]
+    "ALL_POSITIONS": ["ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"],
+    "ALL_LONG":      ["ALL_LONGS"],
+    "ALL_SHORT":     ["ALL_SHORTS"]
   }
 }
 ```
+
+### 9.1 classification_rules
+
+Assegnano `primary_class` quando i campi indicati sono tutti presenti.
+
+| campo | tipo | semantica |
+|---|---|---|
+| `name` | `str` | identificativo |
+| `when_all_fields_present` | `list[str]` | nomi di campi del SignalPayload o categorie di intent_markers |
+| `then` | `"new_signal" \| "update" \| "report" \| "info_only"` | classe assegnata |
+| `score` | `float` | contributo a `confidence` (0..1), sommato e clampato |
+
+### 9.2 combination_rules
+
+Boost di confidence quando combinazioni di marker compaiono insieme (es. side+entry+sl+tp → segnale completo).
+
+| campo | tipo | semantica |
+|---|---|---|
+| `name` | `str` | identificativo |
+| `when_all_fields_present` | `list[str]` | campi richiesti |
+| `then` | `str` | etichetta convenzionale dell'esito (debug) |
+| `confidence_boost` | `float` | additivo a `confidence` |
+
+### 9.3 action_scope_groups
+
+Letto dal `intent_translator` per mappare i marker globali del trader (es. `ALL_OPEN`,
+`ALL_REMAINING`) ai valori canonici di `CancelScope`. Le **chiavi** sono i valori finali di
+`CancelScope` (`ALL_POSITIONS`, `ALL_LONG`, `ALL_SHORT`); i **valori** sono le liste di
+sinonimi emessi dai profili in `semantic_markers.json::global_target_markers`.
+
+NB: `action_scope_groups` è **vocabolario universale**, non trader-specifico. Il file
+canonico è `src/intent_translator/scope_mapping.json`. La copia in `rules.json` del profilo
+è ammessa solo per override specifici trader-per-trader (caso eccezionale).
 
 ---
 
@@ -693,10 +789,16 @@ Strong prevale: se un intent matcha sia marker forti che deboli → `"strong"`.
 | `text_none` | `list[str]` | testo non contiene nessun token |
 | `message_composite` | `bool\|null` | ParsedMessage.composite (`null` = non valutato) |
 | `message_has_targeting` | `bool\|null` | targeting message-level presente (`null` = non valutato) |
-| `entities_present` | `list[str]` | questi campi entità sono non-None nel ParsedMessage |
-| `entities_absent` | `list[str]` | questi campi entità sono None nel ParsedMessage |
+| `entities_present` | `list[str]` | path `<INTENT>.<field>` — esiste un IntentResult del tipo con quel campo non-None |
+| `entities_absent` | `list[str]` | path `<INTENT>.<field>` — non esiste alcun match |
+| `priority` | `int` | priorità di esecuzione (default 0); più alta esegue prima |
 
 Campi lista vuota o `null` vengono ignorati (non contribuiscono al match).
+
+**Sintassi `entities_present`/`entities_absent`**: ogni elemento è nella forma
+`<INTENT_TYPE>.<field>` (es. `MOVE_STOP.new_stop_price`, `TP_HIT.level`). Match se almeno
+un `IntentResult` di quel tipo esiste tra i CONFIRMED con `entities.<field>` non-None
+(per `entities_absent`: nessun match).
 
 ### Azioni
 
@@ -707,26 +809,16 @@ Campi lista vuota o `null` vengono ignorati (non contribuiscono al match).
 | `over` | `list[str]` | intents CONFIRMED da rimuovere (solo con `action=prefer`) |
 | `suppress` | `list[str]` | intents CONFIRMED da rimuovere (solo con `action=suppress`) |
 
-### Forme supportate
+### Forma unica: nested
 
-**Flat (primaria):**
-```json
-{
-  "name": "prefer_exit_be_over_stop_move",
-  "action": "prefer",
-  "when_strong": ["EXIT_BE"],
-  "when_weak":   ["MOVE_STOP"],
-  "text_any":    ["breakeven", "be"],
-  "prefer":      "EXIT_BE",
-  "over":        ["MOVE_STOP"]
-}
-```
+Lo schema delle regole supporta una sola forma (nested). La forma flat è stata rimossa
+per ridurre la superficie di test e la complessità del normalizer.
 
-**Nested (equivalente, per regole complesse):**
 ```json
 {
   "name": "suppress_stop_move_if_close_full_strong",
   "action": "suppress",
+  "priority": 0,
   "conditions": {
     "intents":  { "strong": ["CLOSE_FULL"], "weak": [] },
     "text":     { "any": [], "none": [] },
@@ -737,7 +829,12 @@ Campi lista vuota o `null` vengono ignorati (non contribuiscono al match).
 }
 ```
 
-Il motore normalizza internamente la forma flat → nested prima del matching.
+**Validazione load-time:**
+- `action=prefer` richiede `over` non vuoto. `over=[]` è errore di config (non valido come no-op:
+  per "non sopprimere niente" semplicemente non si scrive la regola).
+- `action=suppress` richiede `suppress` non vuoto.
+- A load-time il motore logga warning se due regole hanno effetti opposti su una stessa
+  coppia di intents (potenziale conflitto da rivedere).
 
 ### Flusso step by step
 
@@ -748,10 +845,9 @@ ParsedMessage (validation_status=VALIDATED)
         ↓
 1. carica disambiguation_rules da rules.json del profilo
         ↓
-2. per ogni regola in ordine:
-   a. normalizza flat → nested
-   b. verifica tutte le condizioni (AND): intents, text, message, entities
-   c. se tutte matchano → applica action
+2. ordina le regole per `priority desc`, poi per posizione nel file `asc`:
+   a. verifica tutte le condizioni (AND): intents, text, message, entities
+   b. se tutte matchano → applica action
         ↓
 3. action=prefer:
    - rimuove gli intents in over[]
@@ -986,11 +1082,19 @@ src/parser/intent_validator/
 ### Contratto
 
 ```python
-def validate(parsed: ParsedMessage, db: AsyncSession) -> ParsedMessage:
-    """Valida ogni (intent, ref) contro storia DB.
-    Restituisce lo stesso ParsedMessage con status/valid_refs/invalid_refs popolati.
-    """
+class IntentValidator:
+    def __init__(self, db_path: str, rules_path: Path) -> None: ...
+
+    def validate(self, parsed: ParsedMessage) -> ParsedMessage:
+        """Valida ogni (intent, ref) contro storia DB.
+        Sync, usa sqlite3.connect(db_path) (allineato al router attuale).
+        Restituisce lo stesso ParsedMessage con status/valid_refs/invalid_refs popolati.
+        """
 ```
+
+Decisione: validator **sync** con `sqlite3` standard library — niente migrazione async,
+allineato al router esistente. Questo riduce complessità della Fase 4.5 e mantiene un
+unico paradigma di concorrenza in tutto il pipeline parser.
 
 ### Principio
 
@@ -1033,6 +1137,39 @@ parsed.validation_status = VALIDATED
 
 **Scope gestiti dal validator**: solo `SINGLE_SIGNAL` (refs per message ID).
 **Scope delegati all'esecutore**: `SYMBOL`, `PORTFOLIO_SIDE`, `ALL_OPEN` → auto-CONFIRMED, risoluzione posizioni avviene downstream.
+
+### History contract
+
+**Cosa è la "history" di un ref:** la sequenza cronologica di intents CONFIRMED collegati
+allo stesso `NEW_SIGNAL` di quel ref, esclusi gli intents `INVALID` (decisione consolidata:
+solo i CONFIRMED entrano in history).
+
+**Pseudo-intent `NEW_SIGNAL`**: termine riservato delle `validation_rules` che mappa su
+`primary_class=SIGNAL` con `parse_status ∈ {PARSED, PARTIAL}`. NON è un IntentType emesso
+dal parser — vive solo nel vocabolario delle regole di validazione.
+
+**Risoluzione della chain di un ref**:
+
+```
+ref_message_id (MESSAGE_ID dato dal parser)
+        ↓
+1. lookup raw_messages.reply_to_message_id ricorsivo → trova il NEW_SIGNAL
+   (primo messaggio della chain con primary_class=SIGNAL)
+        ↓
+2. raccoglie TUTTI i parse_results_v1 con raw_message_id nella chain
+   (ordinati per timestamp ascendente)
+        ↓
+3. estrae da ognuno gli intents CONFIRMED
+   (campo intents_confirmed_json di parsed_messages, vedi storage layer)
+        ↓
+SignalLifecycle = (new_signal_id, ordered_events, is_terminal)
+```
+
+`is_terminal = True` se la history contiene già uno tra `CLOSE_FULL`, `SL_HIT`,
+`INVALIDATE_SETUP` (segnale chiuso → tutti i nuovi intents su quel ref sono INVALID).
+
+**Provider injectable** (`HistoryProvider` Protocol) per disaccoppiare validator e DB.
+La query SQL canonica usa CTE ricorsiva su `raw_messages.reply_to_message_id`.
 
 ### Schema validation_rules.json
 
@@ -1165,11 +1302,23 @@ vocabolario trader-specifico: se `MOVE_STOP_TO_BE` smettesse di mappare su
 | `MOVE_STOP` (stop_to_tp_level) | `SET_STOP` | `target_type=TP_LEVEL, value=stop_to_tp_level` |
 | `CLOSE_FULL` | `CLOSE` | `close_scope="FULL"` |
 | `CLOSE_PARTIAL` | `CLOSE` | `close_scope="PARTIAL", close_fraction=fraction` |
-| `CANCEL_PENDING` | `CANCEL_PENDING` | `cancel_scope=scope` (o None) |
-| `INVALIDATE_SETUP` | `CANCEL_PENDING` | `cancel_scope="ALL_ALL"` |
-| `REENTER` | `MODIFY_ENTRIES` | `mode=REENTER, entries=[...]` |
-| `ADD_ENTRY` | `MODIFY_ENTRIES` | `mode=ADD, entries=[EntryLeg da entry_price]` |
-| `UPDATE_TAKE_PROFITS` | `MODIFY_TARGETS` | `mode=REPLACE_ALL, take_profits=[...]` |
+| `CANCEL_PENDING` | `CANCEL_PENDING` | `cancel_scope=scope` (o `"TARGETED"` se None) |
+| `INVALIDATE_SETUP` | `CANCEL_PENDING` | `cancel_scope="ALL_POSITIONS"` |
+| `REENTER` | `MODIFY_ENTRIES` | `mode=REENTER, entries=[...], entry_structure=...` (popolato se >1 leg) |
+| `ADD_ENTRY` | `MODIFY_ENTRIES` | `mode=ADD, entries=[EntryLeg da entry_price]`, `entry_structure=None` |
+| `UPDATE_TAKE_PROFITS` | `MODIFY_TARGETS` | `mode=...` (REPLACE_ALL/ADD/UPDATE_ONE/REMOVE_ONE), `take_profits=[...]`, `target_tp_level=...` |
+
+Mapping dettagliato `UPDATE_TAKE_PROFITS`:
+
+| `entities.mode` | `entities.new_take_profits` | `entities.target_tp_level` | output |
+|---|---|---|---|
+| `REPLACE_ALL` o None | non vuoto | — | `mode=REPLACE_ALL, take_profits=[...]` |
+| `ADD` | non vuoto | — | `mode=ADD, take_profits=[...]` |
+| `UPDATE_ONE` | non vuoto (1 elem) | richiesto | `mode=UPDATE_ONE, take_profits=[...], target_tp_level=N` |
+| `REMOVE_ONE` | vuoto | richiesto | `mode=REMOVE_ONE, take_profits=[], target_tp_level=N` |
+
+`REMOVE_ONE` con `take_profits=[]` richiede il rilassamento del validator
+`ModifyTargetsOperation._validate_modify_targets` (validatore condizionale per mode).
 
 #### REPORT intents → ReportEvent
 
@@ -1188,32 +1337,51 @@ vocabolario trader-specifico: se `MOVE_STOP_TO_BE` smettesse di mappare su
 |---|---|
 | `INFO_ONLY` | nessun payload prodotto — `primary_class=INFO`, signal/update/report tutti None |
 
-### Messaggi compositi UPDATE + REPORT
+### Messaggi compositi — regole
 
-Quando `ParsedMessage.composite=True` e ci sono intents di entrambe le categorie
-(UPDATE + REPORT), il `CanonicalMessage` deve avere `primary_class=UPDATE` — è un
-vincolo del validator Pydantic:
+**Compositi ammessi in v1**:
+- `UPDATE + REPORT`
+- `UPDATE + INFO`
+- `REPORT + INFO`
 
-```python
-# canonical_v1/models.py — _validate_top_level
-elif self.primary_class == "REPORT":
-    if self.update is not None:
-        raise ValueError("primary_class=REPORT forbids signal/update payloads")
-```
+**Compositi vietati in v1**:
+- `SIGNAL + UPDATE`
+- `SIGNAL + REPORT` (rimosso da v1: era "tollerato eccezionalmente")
+- `SIGNAL + INFO`
 
-`primary_class=UPDATE` è l'unica variante che permette entrambi i payload contemporaneamente.
-
-**Regola del translator per messaggi compositi UPDATE+REPORT:**
+**Regola del translator** (`primary_class=SIGNAL` ha priorità assoluta):
 
 ```
-se intents CONFIRMED contengono almeno un UPDATE intent:
-    primary_class = UPDATE   (forzato, indipendente dalla classificazione del parser)
+se parsed.signal is not None (segnale rilevato):
+    primary_class = SIGNAL
+    signal = SignalPayload(...)
+    update = None
+    report = None
+    intents non-SIGNAL CONFIRMED → soppressi con warning
+        "composite_with_signal_dropped:<intent_type>"
+
+elif intents CONFIRMED contengono almeno un UPDATE intent:
+    primary_class = UPDATE
     update = UpdatePayload(operations=[... da UPDATE intents ...])
-    report = ReportPayload(events=[... da REPORT intents ...])
+    report = ReportPayload(events=[...]) se anche REPORT presenti, altrimenti None
+
+elif tutti gli intents CONFIRMED sono REPORT:
+    primary_class = REPORT
+    report = ReportPayload(events=[...])
+
+elif solo INFO_ONLY CONFIRMED:
+    primary_class = INFO
+    signal/update/report = None
+    diagnostics.info_fragments = [raw_fragment, ...]
 ```
 
 Tutti i CONFIRMED intents compaiono in `CanonicalMessage.intents[]` (a meno che
-soppressi dalla disambiguation). Il `primary_intent` segue la `primary_intent_precedence`.
+soppressi). Il `primary_intent` segue la `primary_intent_precedence`.
+
+**INFO_ONLY in composite UPDATE+INFO o REPORT+INFO:**
+- non genera payload
+- nome `"INFO_ONLY"` aggiunto a `CanonicalMessage.intents[]`
+- `raw_fragment` preservato in `diagnostics.info_fragments: list[str]`
 
 **Asimmetria del validator:**
 
@@ -1237,6 +1405,15 @@ IntentResult(targeting_override=Targeting) → TargetedAction o TargetedReport
 Se gli intents del messaggio sono un mix (alcuni con override, altri senza),
 il translator separa i due casi e popola sia `update.operations` che `targeted_actions`.
 
+**Uso di `valid_refs` (post-validator)**:
+
+Il translator popola `TargetedAction.targeting.targets` (e `TargetedReport.targeting.targets`)
+da `intent.valid_refs`, **non** da `targeting_override.refs` originale. I refs invalidati
+sono già stati filtrati dal validator e restano in `intent.invalid_refs` per audit.
+
+Edge case: `valid_refs == []` non si presenta perché il validator avrebbe già marcato
+l'intent come `INVALID` (escluso prima del translator, sez. 12).
+
 ### Contratto
 
 ```python
@@ -1254,6 +1431,42 @@ def translate(parsed: ParsedMessage) -> CanonicalMessage:
 - `primary_class=SIGNAL` → gate 1–9 + sizing (logica invariata, ora legge `signal.entries` / `signal.stop_loss`)
 - `primary_class=UPDATE/REPORT/INFO` → passthrough invariato
 - `_coerce_entities()` eliminato — i dati sono già tipizzati in `SignalPayload`
+
+---
+
+## 13c. Orchestratore parser
+
+Punto di ingresso unico che incatena profilo → validator → disambiguation → translator.
+Vive in `src/parser/__init__.py` e viene chiamato dal router.
+
+### Contratto
+
+```python
+def parse_message(
+    text: str,
+    context: ParserContext,
+    profile: TraderProfile,
+    validator: IntentValidator,
+    translator: IntentTranslator,
+    disambiguation_engine: DisambiguationEngine,
+) -> tuple[ParsedMessage, CanonicalMessage]:
+    parsed = profile.parse(text, context)               # sync, stateless
+    parsed = validator.validate(parsed)                  # sync, sqlite3
+    parsed = disambiguation_engine.apply(parsed, profile.rules)   # sync, stateless
+    canonical = translator.translate(parsed)             # sync, stateless
+    return parsed, canonical
+```
+
+Tutto sync (decisione 4.3 — sqlite3, niente async). Il router invoca `parse_message()`
+in un singolo step, persiste sia `parsed` (in `parsed_messages`) che `canonical`
+(in `parse_results_v1`).
+
+### Responsabilità
+
+- istanziamento di validator/translator/disambiguation_engine: a livello applicativo
+  (es. nel router al boot), iniettati come dipendenze
+- gestione errori: ogni step può sollevare; il router cattura e marca il `raw_message`
+  come `failed` con il `processing_status`
 
 ---
 
@@ -1295,16 +1508,32 @@ def translate(parsed: ParsedMessage) -> CanonicalMessage:
 
 | file attuale | sostituito da |
 |---|---|
-| `shared/disambiguation_engine.py` | nuovo `shared/disambiguation.py` (schema when_strong/when_weak) |
+| `shared/disambiguation_engine.py` | nuovo `shared/disambiguation.py` (schema nested + priority) |
 | `shared/disambiguation_rules_schema.py` | Pydantic aggiornato per nuovo schema |
 | `trader_profiles/shared/profile_runtime.py` | nuovo `shared/runtime.py` |
 | `trader_profiles/shared/rules_schema.py` | schema per `semantic_markers.json` + `rules.json` |
 | `trader_profiles/shared/rules_schema.json` | nuovo JSON schema |
 | `trader_profiles/shared/intent_taxonomy.py` | tassonomia 15 intents da spec sezione 4 |
 | `trader_profiles/shared/targeting.py` | logica integrata nel nuovo `shared/runtime.py` |
-| `trader_profiles/base.py` | `ParserContext` rimane, `TraderParseResult` → `ParsedMessage` |
+| `trader_profiles/base.py` | `ParserContext` migrato in `src/parser/context.py`, `TraderParseResult` rimosso |
 | `trader_x/parsing_rules.json` | split in `semantic_markers.json` + `rules.json` (per ogni profilo) |
 | `trader_x/profile.py` | riscrivere ~20 righe con nuovo contratto |
+| `src/telegram/router.py` | aggiornare detection profili (`parse()` invece di `parse_canonical()`) e flusso (`parse_message()`) |
+
+### 🆕 Nuovi file
+
+| file | scopo |
+|---|---|
+| `src/parser/__init__.py::parse_message()` | orchestratore (sez. 13c) |
+| `src/parser/context.py` | nuova home di `ParserContext` (ex `trader_profiles/base.py`) |
+| `src/parser/parsed_message.py` | modelli `ParsedMessage`, `IntentResult`, entities |
+| `src/parser/intent_types.py` | enum `IntentType`, `IntentCategory` |
+| `src/parser/intent_validator/validator.py` | layer separato (sez. 12) |
+| `src/parser/intent_validator/validation_rules.json` | regole storia DB |
+| `src/parser/intent_validator/history_provider.py` | `HistoryProvider` Protocol + impl SQLite |
+| `src/intent_translator/translator.py` | layer separato (sez. 13b) |
+| `src/intent_translator/scope_mapping.json` | mappatura globale ai valori canonici di `CancelScope` |
+| `src/storage/parsed_messages.py` + tabella DB | persistenza ParsedMessage per debug/replay/history |
 
 ### ✅ Tenere invariati
 
@@ -1430,14 +1659,34 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
 
 ---
 
+### Fase 4.5 — Router migration
+*Aggiornare il router per usare l'orchestratore parse_message() e persistere ParsedMessage.*
+
+- [ ] Aggiornare detection profili in `router.py`: usare `parse()` invece di `parse_canonical()`
+- [ ] Wirare istanza singola di `IntentValidator`, `IntentTranslator`, `DisambiguationEngine` al boot
+- [ ] Sostituire chiamata profilo con `parse_message(text, ctx, profile, validator, translator, ...)`
+- [ ] Creare migrazione DB per tabella `parsed_messages`:
+  - colonne: `raw_message_id, trader_id, primary_class, validation_status, composite, parsed_json, intents_confirmed_json, created_at`
+- [ ] Persistere sia `ParsedMessage` (in `parsed_messages`) sia `CanonicalMessage` (in `parse_results_v1`)
+- [ ] Feature flag `PARSER_USE_PARSED_MESSAGE` per dual-stack durante validazione
+- [ ] Logging di divergenze legacy vs nuovo durante dual-stack
+- [ ] Test integration: `test_router_parsed_message.py`
+
+---
+
 ### Fase 5 — Intent validator
 *Layer separato. Richiede DB. Testabile con DB test esistente.*
 
 - [ ] Creare `src/parser/intent_validator/__init__.py`
 - [ ] Creare `src/parser/intent_validator/validation_rules.json`:
   - [ ] regole per i 6 intents con verifica storia (compilare a mano)
+- [ ] Creare `src/parser/intent_validator/history_provider.py`:
+  - [ ] `HistoryProvider` Protocol
+  - [ ] implementazione SQLite con CTE ricorsiva su `raw_messages.reply_to_message_id`
+  - [ ] query legge `parsed_messages.intents_confirmed_json` (filtra automaticamente i CONFIRMED)
 - [ ] Creare `src/parser/intent_validator/validator.py`:
   - [ ] carica `validation_rules.json`
+  - [ ] sync, sqlite3 (decisione 4.3 — niente async)
   - [ ] flusso per ogni IntentResult (auto-CONFIRMED, SINGLE_SIGNAL, scope globale)
   - [ ] popola `valid_refs`, `invalid_refs`, `invalid_reason`
   - [ ] setta `validation_status = VALIDATED`
@@ -1445,6 +1694,7 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
   - [ ] verificare riduzione falsi positivi su campione reale
   - [ ] verificare che intents senza regola siano auto-CONFIRMED
   - [ ] verificare scope globale → auto-CONFIRMED
+  - [ ] verificare che history consideri solo CONFIRMED storici
 
 ---
 
@@ -1452,12 +1702,17 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
 *Layer separato. Stateless. Testabile senza DB.*
 
 - [ ] Creare `src/intent_translator/__init__.py`
+- [ ] Creare `src/intent_translator/scope_mapping.json` (vocabolario universale, sez. 9.3)
 - [ ] Creare `src/intent_translator/translator.py`:
   - [ ] lookup table `_INTENT_TO_UPDATE_OP` per i 10 UPDATE intents
   - [ ] lookup table `_INTENT_TO_REPORT_EVENT` per i 6 REPORT intents
   - [ ] logica `translate(parsed: ParsedMessage) -> CanonicalMessage`
+  - [ ] regola priorità `primary_class=SIGNAL` con soppressione intents non-SIGNAL
   - [ ] gestione caso multi-ref (targeting_override → TargetedAction / TargetedReport)
-  - [ ] INFO_ONLY → `primary_class=INFO`, tutti i payload None
+  - [ ] uso di `valid_refs` (non `targeting_override.refs`) per popolare `targets`
+  - [ ] mapping completo `UPDATE_TAKE_PROFITS` su tutti i 4 modi (REPLACE_ALL/ADD/UPDATE_ONE/REMOVE_ONE)
+  - [ ] mapping `INVALIDATE_SETUP → cancel_scope="ALL_POSITIONS"` (no `ALL_ALL`)
+  - [ ] INFO_ONLY composite → `intents[]` + `diagnostics.info_fragments`
 - [ ] Test unitari per ogni intent (input `IntentResult` → output operazione attesa)
 - [ ] Test integrazione: `ParsedMessage` completo → `CanonicalMessage` valido
 - [ ] Verificare che il `CanonicalMessage` prodotto passi i model_validator di Pydantic
@@ -1493,12 +1748,25 @@ Il vecchio codice rimane attivo finché la nuova architettura non è validata.
   - [ ] `trader_profiles/shared/profile_runtime.py`
   - [ ] `trader_profiles/shared/targeting.py` (se integrata in runtime.py)
   - [ ] `trader_profiles/shared/intent_taxonomy.py` (vecchia versione)
-  - [ ] `trader_profiles/base.py` (TraderParseResult rimosso)
+  - [ ] `trader_profiles/base.py` (TraderParseResult rimosso, ParserContext migrato)
   - [ ] tutti i `parsing_rules.json` per profilo
 - [ ] Rimuovere `shared/disambiguation_engine.py` (vecchio)
+- [ ] Smettere di scrivere su `parse_results` (legacy); marcare la tabella come deprecata in CLAUDE.md
 - [ ] Aggiornare `trader_profiles/registry.py` definitivo
 - [ ] Migrare `operation_rules/engine.py`: input `CanonicalMessage` invece di `TraderParseResult`, eliminare `_coerce_entities()`
 - [ ] Aggiornare `CLAUDE.md` con stato migrazione completata
+
+---
+
+### Fase 9 — Migrazione target_resolver
+*Sblocca la rimozione finale di `src/parser/models/`.*
+
+- [ ] Aggiornare `src/target_resolver/resolver.py`: input `CanonicalMessage` invece di
+      `OperationalSignal` legacy
+- [ ] Resolver consuma `CanonicalMessage.targeting` + `CanonicalMessage.targeted_actions`
+- [ ] Rimuovere `src/parser/models/` (canonical.py, new_signal.py, update.py, operational.py)
+- [ ] Drop tabella `parse_results` legacy (migration finale)
+- [ ] Aggiornare CLAUDE.md: lista "non toccare" semplificata
 
 ---
 
@@ -1511,15 +1779,19 @@ Fase 2 (ParsedMessage models)
     ↓
 Fase 3 (shared runtime + disambiguation)
     ↓
-Fase 4 (trader_a pilota)      ←── validare qui prima di procedere
+Fase 4 (trader_a pilota)         ←── validare qui prima di procedere
     ↓
-Fase 5 (intent_validator)     ←── richiede Fase 4 completata
+Fase 4.5 (router migration)      ←── orchestratore parse_message + tabella parsed_messages
     ↓
-Fase 6 (intent_translator)    ←── richiede Fase 2 + CanonicalMessage invariato
+Fase 5 (intent_validator)        ←── richiede Fase 4.5 completata (legge parsed_messages)
     ↓
-Fase 7 (altri profili)        ←── parallelizzabile per profilo
+Fase 6 (intent_translator)       ←── richiede Fase 2 + CanonicalMessage invariato
     ↓
-Fase 8 (cleanup finale)       ←── solo dopo Fase 7 completa
+Fase 7 (altri profili)           ←── parallelizzabile per profilo
+    ↓
+Fase 8 (cleanup finale)          ←── solo dopo Fase 7 completa
+    ↓
+Fase 9 (target_resolver)         ←── sblocca rimozione models/ e parse_results legacy
 ```
 
 ### Note operative
@@ -1572,7 +1844,8 @@ importa da `canonical_v1.models`, `semantic_resolver`, `context_resolution_engin
 | Posizione | inline in `profile_runtime.py` (`_apply_prefer_rules`) | layer separato `shared/disambiguation.py` |
 | Ordine esecuzione | prima della validazione | dopo il validator (solo su CONFIRMED) |
 | Azioni supportate | solo `prefer` | `prefer` + `over` + `suppress` |
-| Condizioni | `when_all_detected` + `if_contains_any` | `when_strong`, `when_weak`, `text_any`, `text_none`, `message_*`, `entities_*` |
+| Forme schema | flat hardcoded | solo nested + `priority` |
+| Condizioni | `when_all_detected` + `if_contains_any` | `when_strong`, `when_weak`, `text_any`, `text_none`, `message_*`, `entities_*` (path `<INTENT>.<field>`) |
 | Detection strength | non usato | `when_strong`/`when_weak` leggono `IntentResult.detection_strength` |
 
 ### 16.5 File structure per profilo
