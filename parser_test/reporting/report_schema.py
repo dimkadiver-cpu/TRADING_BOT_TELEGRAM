@@ -4,16 +4,16 @@ from dataclasses import dataclass
 
 COMMON_COLUMNS: list[str] = [
     "raw_message_id",
+    "reply_to_message_id",
     "parse_status",
     "message_type",
+    "raw_text",
     "primary_intent",
     "intents",
     "intents_raw",
     "warning_text",
     "warnings_summary",
     "validation_warning_count",
-    "raw_text",
-    "reply_to_message_id",
 ]
 
 _ALL_MESSAGE_COLUMNS: list[str] = [
