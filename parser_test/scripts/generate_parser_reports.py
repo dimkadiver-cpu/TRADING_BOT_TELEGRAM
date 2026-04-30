@@ -11,6 +11,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from parser_test.reporting.report_export import export_reports_csv_v2
+from parser_test.reporting.report_export_v1 import export_reports_csv_v1
 from parser_test.scripts.db_paths import resolve_parser_test_db_path
 from parser_test.scripts.replay_parser import replay_database
 
@@ -58,6 +59,16 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Include the full normalized JSON as a debug-only CSV column.",
     )
+    parser.add_argument(
+        "--report-system",
+        choices=("legacy", "v1"),
+        default="legacy",
+        help=(
+            "Which report system to use for CSV export. "
+            "'legacy' reads parse_results (default). "
+            "'v1' reads parsed_messages (parsed_message_v1 schema, no legacy data)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -87,13 +98,20 @@ def main() -> None:
             chat_ref=args.chat_id,
         )
     )
-    updated = export_reports_csv_v2(
-        db_path=db_path,
-        reports_dir=args.reports_dir,
-        trader=args.trader,
-        include_legacy_debug=args.include_legacy_debug,
-        include_json_debug=args.include_json_debug,
-    )
+    if args.report_system == "v1":
+        updated = export_reports_csv_v1(
+            db_path=db_path,
+            reports_dir=args.reports_dir,
+            trader=args.trader,
+        )
+    else:
+        updated = export_reports_csv_v2(
+            db_path=db_path,
+            reports_dir=args.reports_dir,
+            trader=args.trader,
+            include_legacy_debug=args.include_legacy_debug,
+            include_json_debug=args.include_json_debug,
+        )
     _print_summary(updated)
 
 def _format_path(path: Path) -> str:
