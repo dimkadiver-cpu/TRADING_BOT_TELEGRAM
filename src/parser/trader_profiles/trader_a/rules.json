@@ -2,7 +2,7 @@
   "classification_rules": [
     {
       "name": "complete_new_signal_structure",
-      "when_all_fields_present": ["entry", "stop_loss", "take_profit"],
+      "when_all_fields_present": ["side","symbol", "entry", "stop_loss", "take_profit"],
       "then": "new_signal"
     },
     {
