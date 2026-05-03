@@ -34,7 +34,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--force-reparse",
         action="store_true",
-        help="Reparse all selected raw_messages before exporting CSVs, ignoring existing parsed_messages rows.",
+        help="Rebuild parser outputs for all selected raw_messages from raw_messages before exporting CSVs.",
     )
     parser.add_argument("--parser-mode", default=None, help="Parser mode override: regex_only | llm_only | hybrid_auto")
     parser.add_argument(

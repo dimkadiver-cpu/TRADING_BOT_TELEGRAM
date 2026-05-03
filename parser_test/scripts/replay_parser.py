@@ -34,6 +34,7 @@ from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_hashtags, extract_telegram_links
 from src.parser.trader_profiles.registry import canonicalize_trader_code, get_profile_parser
 from src.storage.parse_results import ParseResultRecord, ParseResultStore
+from src.storage.parse_results_v1 import ParseResultV1Store
 from src.storage.parsed_messages import ParsedMessageRecord, ParsedMessageStore
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
@@ -113,7 +114,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--force-reparse",
         action="store_true",
-        help="Reparse all selected raw_messages even if parsed_messages already exists (parsed_message only).",
+        help="Rebuild parser outputs for all selected raw_messages from raw_messages before replaying.",
     )
     return parser.parse_args()
 
@@ -264,6 +265,17 @@ def _build_parsed_message_record(
     )
 
 
+def _purge_parser_outputs(*, db_path: str, raw_message_ids: list[int]) -> dict[str, int]:
+    parsed_messages_store = ParsedMessageStore(db_path=db_path)
+    parse_results_store = ParseResultStore(db_path=db_path)
+    parse_results_v1_store = ParseResultV1Store(db_path=db_path)
+    return {
+        "parsed_messages": parsed_messages_store.delete_by_raw_message_ids(raw_message_ids),
+        "parse_results": parse_results_store.delete_by_raw_message_ids(raw_message_ids),
+        "parse_results_v1": parse_results_v1_store.delete_by_raw_message_ids(raw_message_ids),
+    }
+
+
 def backfill_parsed_messages(
     *,
     db_path: str,
@@ -281,11 +293,12 @@ def backfill_parsed_messages(
     by_validation_status: Counter[str] = Counter()
     normalized_samples: list[dict[str, object]] = []
     deleted_existing = 0
+    deleted_related: dict[str, int] = {"parsed_messages": 0, "parse_results": 0, "parse_results_v1": 0}
 
     if force_reparse:
-        deleted_existing = parsed_messages_store.delete_by_raw_message_ids(
-            [item.row.raw_message_id for item in selected]
-        )
+        raw_message_ids = [item.row.raw_message_id for item in selected]
+        deleted_existing = parsed_messages_store.delete_by_raw_message_ids(raw_message_ids)
+        deleted_related = _purge_parser_outputs(db_path=db_path, raw_message_ids=raw_message_ids)
 
     for item in selected:
         row = item.row
@@ -333,7 +346,11 @@ def backfill_parsed_messages(
     print(f"db_path: {db_path}")
     print("parser_system: parsed_message")
     if force_reparse:
-        print(f"force_reparse: true | deleted_existing={deleted_existing}")
+        print(
+            "force_reparse: true | "
+            f"deleted_existing={deleted_existing} | "
+            f"deleted_related={deleted_related}"
+        )
     print(f"total raw selected: {len(selected)}")
     print(f"total processed: {processed}")
     print(f"total skipped: {skipped}")
@@ -798,6 +815,13 @@ def replay_database(
         parser_system=parser_system,
     )
     selected = select_rows(raws=raws, trader_filter=effective_trader, trader_resolver=trader_resolver)
+
+    if force_reparse and parser_system == "legacy":
+        deleted_related = _purge_parser_outputs(
+            db_path=resolved_db_path,
+            raw_message_ids=[item.row.raw_message_id for item in selected],
+        )
+        print(f"force_reparse purge | deleted_related={deleted_related}")
 
     if parser_system == "parsed_message":
         backfill_parsed_messages(

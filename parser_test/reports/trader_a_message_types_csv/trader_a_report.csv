@@ -36,6 +36,23 @@
 190,3272,2 тейк,PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,3272,,,,TP,,,
 219,3086,"1 тейк. Позиция закрылась
 1.64R",PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,3086,,,,TP,,,
+223,,"Trader #A 
+
+апдейт по моим сигналам
+
+принимаю решение по всем открытым лонговым позициям 100% позиции закрыть на 1 тейке
+
+Ищите сигналы по хештегам
+#LTCUSDT
+#OPUSDT
+#API3USDT 
+#AAVEUSDT 
+#ASTERUSDT 
+#SOLUSDT 
+#DOGEUSDT 
+#XRPUSDT 
+
+#ETHUSDT  фиксация остается прежней, с учетом 1 тейка в позиции осталось 50%. на втором кроем 40%, 10% тянем до 3 тейка, либо пока не напишу обратное",PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,,,,,,TP,,,
 236,3080,"позиция полностью закрылась
 итог - 1.33R",PARSED,REPORT,,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,3080,,,,,,,1.33R
 241,3080,2 тейк,PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,3080,,,,TP,,,
@@ -114,16 +131,6 @@ ARB - взял лимитку, пока  в небольшом плюсе
 Пока по итогу -2R, но еще сделки в работе, поэтому результат может быть куда лучше
 
 Всем хорошего дня",PARSED,REPORT,,SL_HIT,SL_HIT | REPORT_FINAL_RESULT,SL_HIT | REPORT_FINAL_RESULT,,,,,,,,SL,,,-1R
-413,,"Trader #A
-
-Друзья, сегодня, видимо, рынок включил режим «лимитки? не слышал».🙂
-
-Из 6 лимиток - 2 взяли. А также поймали 1 стоп
-Чтобы не переносить лишний риск через ночь, рекомендую снять все лимитные ордера. 
-
-Я у себя лимитки оставлю - для полной картины стратегии интрадей и статистики по переносам.
-
-Если ночью что-то исполнится - обязательно сообщу и зафиксирую результат.🫡",PARSED,REPORT,,SL_HIT,SL_HIT | REPORT_FINAL_RESULT,SL_HIT | REPORT_FINAL_RESULT,,,,,,,,SL,,,REPORT_FINAL_RESULT
 414,2987,лимитка,PARSED,REPORT,,ENTRY_FILLED,ENTRY_FILLED,ENTRY_FILLED,,,SINGLE_SIGNAL,2987,,,,,FILLED,,
 415,2986,лимитка,PARSED,REPORT,,ENTRY_FILLED,ENTRY_FILLED,ENTRY_FILLED,,,SINGLE_SIGNAL,2986,,,,,FILLED,,
 423,2977,"начало положено😄
@@ -149,6 +156,7 @@ ARB - взял лимитку, пока  в небольшом плюсе
 0.94R",PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,2862,,,,TP,,,
 513,2861,лимитка,PARSED,REPORT,,ENTRY_FILLED,ENTRY_FILLED,ENTRY_FILLED,,,SINGLE_SIGNAL,2861,,,,,FILLED,,
 515,2862,лимитка,PARSED,REPORT,,ENTRY_FILLED,ENTRY_FILLED,ENTRY_FILLED,,,SINGLE_SIGNAL,2862,,,,,FILLED,,
+550,2809,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,2809,,,,SL,,,
 576,2706,"стоп
 -1R",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,2706,,,,SL,,,
 587,2734,"тут стоп 
@@ -188,6 +196,10 @@ p.s. очень обидный стоп",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,S
 Вывод: интрадей не мое😏",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,2575,,,,SL,,,
 705,2589,"Стоп 
 -1R",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,2589,,,,SL,,,
+725,,"Trader #A
+Сегодня аккуратно поторгуем интрадей, не в рамках марафона, а просто как обычные сделки, требования как и к среднесроку:
+- вход на 1%, если не укажу иное
+- фиксация на тейках 50/40/10",PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,,,,,,TP,,,
 754,2522,"Тейк
 0.59R",PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,2522,,,,TP,,,
 756,,"Trader #A
@@ -299,6 +311,13 @@ btc - 1.62R",PARSED,REPORT,,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,REPORT_FINAL
 1235,1760,Второй тейк. Общий RR 0.75,PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,1760,,,,TP,,,
 1240,1756,Стоп. -1R,PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,1756,,,,SL,,,
 1266,1654,Все тейки. Сделка закрылась в +1.5RR,PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,SINGLE_SIGNAL,1654,,,,TP,,,
+1378,,"[trader#A]
+
+""#среднесрок #JASMYUSDT 🐂 Лонг (вход с текущих)
+""sl"": 0.008151
+риск 1%
+
+информация о тейках позже",PARSED,REPORT,,TP_HIT,TP_HIT,TP_HIT,,,,,,,,TP,,,
 1429,1516,"Стоп 
 -1R",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,1516,,,,SL,,,
 1689,1086,стоп,PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,1086,,,,SL,,,
@@ -323,6 +342,9 @@ btc - 1.62R",PARSED,REPORT,,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,REPORT_FINAL
 1771,978,"1 тейк, поздравляю",PARSED,REPORT,,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,TP_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,978,,,,TP,,,REPORT_FINAL_RESULT
 1776,1005,2 тейк. поздравляю,PARSED,REPORT,,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,TP_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,1005,,,,TP,,,REPORT_FINAL_RESULT
 1780,1005,1 тейк. поздравляю,PARSED,REPORT,,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,TP_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,1005,,,,TP,,,REPORT_FINAL_RESULT
+1781,992,"стоп
+
+проверил сегодня журнал сделок за ноябрь и декабрь. более 70% это стопы по лонгам",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,992,,,,SL,,,
 1782,983,увы стоп,PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,983,,,,SL,,,
 1799,963,тоже стоп,PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,963,,,,SL,,,
 1801,962,"тут увы стоп. fart закрыл в том числе и по причине минимизации убытка по Doge, Near и OG",PARSED,REPORT,,SL_HIT,SL_HIT | REPORT_FINAL_RESULT,SL_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,962,,,,SL,,,REPORT_FINAL_RESULT
@@ -334,6 +356,40 @@ btc - 1.62R",PARSED,REPORT,,REPORT_FINAL_RESULT,REPORT_FINAL_RESULT,REPORT_FINAL
 1820,933,2 тейк. Поздравляю,PARSED,REPORT,,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,TP_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,933,,,,TP,,,REPORT_FINAL_RESULT
 1821,936,1 тейк. Поздравляю,PARSED,REPORT,,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,TP_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,936,,,,TP,,,REPORT_FINAL_RESULT
 1824,946,"стоп. увы, отскока не было достойного",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,SINGLE_SIGNAL,946,,,,SL,,,
+1828,,"Друзья, привет! Админ на связи 👋
+
+Вы могли заметить, что после небольшого перерыва [trader#A] снова начал публиковать сигналы по второй стратегии - интрадей.
+Той самой, которую он временно ставил «на паузу», допиливал, подкручивал, освещал, заговаривал на растущей луне, ходил с ней к бабке и вот вернул к жизни! 🙏
+
+Чтобы не было разночтений и сюрпризов в стиле «а я думал, это среднесрок», ниже - коротко и по делу, как именно можно теперь работать с двумя стратегиями и риском.🫡
+
+⚡ Интрадей (#intraday)
+Это краткосрок.
+Сигналы живут от нескольких часов до пары дней - быстро, чётко, динамично. 
+На случай если вдруг скучаете и захотелось...движухи. Простите, не удержался! 😂
+
+Как это выглядит:
+анализ рынка осуществляется на 4h/1h, ищутся импульсные паттерны, выдаётся лонг/шорт
+- фиксированный стоп
+- несколько тейков
+- без самодеятельности.
+
+По риску выбираете режим заранее:
+1% - спокойно и консервативно
+2% - базовый режим
+3% - только для сильных сигналов (вас предупредят😉) и адекватной серии
+
+Риск считаем не «на глаз», друзья!
+Объём позиции подгоняется так, чтобы стоп = выбранный % депозита
+Никаких «долью ещё чуть-чуть, ведь Новый Год - это время чудес!»😂
+Если открыто несколько интрадей-сделок, то суммарный риск держим в районе 3-5%, не больше
+
+Плюсы:
+частые сделки, меньше простоев, ну и......фух, тут удержался!😮‍💨😅
+
+Минусы:
+больше эмоций, комиссии, возможны серии стопов - дисциплина обязательна.
+#админ",PARSED,REPORT,,SL_HIT,SL_HIT,SL_HIT,,,,,,,,SL,,,
 1831,933,"1 тейк, поздравляю",PARSED,REPORT,,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,TP_HIT | REPORT_FINAL_RESULT,,,SINGLE_SIGNAL,933,,,,TP,,,REPORT_FINAL_RESULT
 1875,870,взяли лимитку. моя средняя 0.008553,PARSED,REPORT,,ENTRY_FILLED,ENTRY_FILLED,ENTRY_FILLED,,,SINGLE_SIGNAL,870,,,,,FILLED,,
 1877,,"[trader#A]

@@ -114,3 +114,14 @@ class ParseResultV1Store:
         with sqlite3.connect(self._db_path) as conn:
             conn.execute(query, (payload_json, raw_message_id))
             conn.commit()
+
+    def delete_by_raw_message_ids(self, raw_message_ids: list[int]) -> int:
+        ids = [int(raw_message_id) for raw_message_id in raw_message_ids]
+        if not ids:
+            return 0
+        placeholders = ",".join("?" for _ in ids)
+        query = f"DELETE FROM parse_results_v1 WHERE raw_message_id IN ({placeholders})"
+        with sqlite3.connect(self._db_path) as conn:
+            cursor = conn.execute(query, ids)
+            conn.commit()
+        return int(cursor.rowcount or 0)

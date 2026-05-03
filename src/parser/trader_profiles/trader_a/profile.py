@@ -99,18 +99,12 @@ _ENTRY_AB_VALUE_RE = re.compile(
 
 _DEFAULT_CLASSIFICATION_MARKERS: dict[str, tuple[str, ...]] = {
     "new_signal_strong": (
+        # solo indicatori di direzione \u2014 i field marker (entry/sl/tp) non sono
+        # sufficienti a distinguere un nuovo segnale da un update/report
         "long",
         "short",
         "\u043b\u043e\u043d\u0433",
         "\u0448\u043e\u0440\u0442",
-        "entry",
-        "\u0432\u0445\u043e\u0434",
-        "\u0432\u0445\u043e\u0434 \u0441 \u0442\u0435\u043a\u0443\u0449\u0438\u0445",
-        "sl:",
-        "tp1:",
-        "tp2:",
-        "tp3:",
-        "tp:",
     ),
     "update_strong": (
         "\u0441\u0442\u043e\u043f \u0432 \u0431\u0443",
@@ -291,6 +285,7 @@ _LEGACY_TO_CANONICAL_INTENT: dict[str, str] = {
     "U_STOP_HIT": "SL_HIT",
     "U_EXIT_BE": "EXIT_BE",
     "U_REPORT_FINAL_RESULT": "REPORT_FINAL_RESULT",
+    "REPORT_RESULT": "REPORT_RESULT",
 }
 
 _CANONICAL_TO_LEGACY_INTENT: dict[str, str] = {
@@ -729,14 +724,24 @@ class TraderAProfileParser:
         )
 
         canonical_intent_set = set(intents)
-        has_signal = ("NEW_SETUP" in canonical_intent_set) or message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}
+        # Struttura estratta → SIGNAL (non dipende da message_type).
+        _entity_signal = bool(
+            entities.get("symbol")
+            and entities.get("side")
+            and (entities.get("entries") or entities.get("entry"))
+        )
+        has_signal = (
+            ("NEW_SETUP" in canonical_intent_set)
+            or message_type in {"NEW_SIGNAL", "SETUP_INCOMPLETE"}
+            or _entity_signal
+        )
         has_update = bool(
             canonical_intent_set
             & {"MOVE_STOP_TO_BE", "MOVE_STOP", "CLOSE_FULL", "CLOSE_PARTIAL", "CANCEL_PENDING_ORDERS", "INVALIDATE_SETUP", "UPDATE_TAKE_PROFITS"}
         )
         if not has_update and message_type == "UPDATE" and granular_stop_actions and (target_refs or has_global_target):
             has_update = True
-        has_report = bool(canonical_intent_set & {"TP_HIT", "SL_HIT", "REPORT_FINAL_RESULT", "ENTRY_FILLED", "EXIT_BE"})
+        has_report = bool(canonical_intent_set & {"TP_HIT", "SL_HIT", "REPORT_RESULT", "REPORT_FINAL_RESULT", "ENTRY_FILLED", "EXIT_BE"})
         suppress_report_payload = message_type == "UPDATE" and granular_stop_actions and canonical_intent_set <= {"EXIT_BE"}
         if suppress_report_payload:
             has_report = False

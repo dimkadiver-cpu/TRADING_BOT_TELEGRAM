@@ -4,6 +4,53 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-03 — Redesign classificazione parser (Piano v2)
+
+### Step completato
+
+Implementato il piano `PIANO_IMPLEMENTAZIONE_NUOVA_CLASSIFICAZIONE_PARSER_v2.md`:
+separazione tra marker evidence e classificazione finale.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser/rules_engine.py` | Modificato | Aggiunti `MarkerMatch`, `ClassEvidence`, `detect_class_evidence()`; `classify()` ora wrapper su `detect_class_evidence()` |
+| `src/parser/shared/classification_resolver.py` | Creato | `ClassificationInput`, `ResolvedClassification`, `ClassificationResolver.resolve()` — decide primary_class da struttura > UPDATE > REPORT > INFO |
+| `src/parser/shared/runtime.py` | Modificato | Usa `ClassificationResolver` invece di `_select_primary_class()`; rimossi i vecchi helper; aggiunto `REPORT_RESULT` in `_REPORT_INTENTS` |
+| `src/parser/intent_types.py` | Modificato | Aggiunto `REPORT_RESULT` enum member |
+| `src/parser/parsed_message.py` | Modificato | Aggiunto `ReportResultEntities` con `result_scope/status/value/currency/percent` |
+| `src/parser/canonical_v1/intent_taxonomy.py` | Modificato | Aggiunto `REPORT_RESULT` a `IntentName`; aggiunti `UPDATE_INTENTS`, `REPORT_INTENTS`, helper `is_*` |
+| `src/parser/trader_profiles/shared/intent_taxonomy.py` | Modificato | Aggiunto `REPORT_RESULT` in `OFFICIAL_INTENTS` e `PRIMARY_INTENT_PRECEDENCE`; aggiunti `UPDATE_INTENTS`, `REPORT_INTENTS`, `STATE_CHANGING_INTENTS`, helper `is_*` |
+| `src/parser/trader_profiles/trader_a/semantic_markers.json` | Modificato | Rimossi `entry/вход/sl:/tp*:` da `classification_markers.new_signal.strong`; aggiunto `REPORT_RESULT` in `intent_markers` |
+| `src/parser/trader_profiles/trader_a/rules.json` | Modificato | Aggiunto `REPORT_RESULT` in `primary_intent_precedence` |
+| `src/parser/trader_profiles/trader_a/profile.py` | Modificato | Rimossi field marker da `_DEFAULT_CLASSIFICATION_MARKERS["new_signal_strong"]`; `has_signal` aggiunge check strutturale da entities; `has_report` include `REPORT_RESULT` |
+| `tests/parser_canonical_v1/test_intent_taxonomy.py` | Modificato | Aggiornato conteggio da 17 a 18 intent; aggiunto `REPORT_RESULT` all'expected set |
+| `tests/parser_shared/test_intent_taxonomy.py` | Modificato | Aggiunto `REPORT_RESULT` all'expected set |
+| `src/parser/trader_profiles/trader_a/tests/test_parsing_rules_integrity.py` | Modificato | Test aggiornato: verifica che field marker NON siano in classification_markers (erano al contrario) |
+
+### Risultato test
+
+```
+pytest tests/ src/parser/trader_profiles/trader_a/tests/  →  527 passed, 12 skipped
+```
+
+### Comportamento verificato
+
+| Input | Prima | Dopo |
+|---|---|---|
+| `вход исполнен` | SIGNAL (errato: вход = marker strong) | REPORT/ENTRY_FILLED (corretto) |
+| `BTCUSDT LONG Entry/SL/TP` | SIGNAL | SIGNAL (invariato) |
+| `Сделка закрыта +120$` | REPORT | REPORT/REPORT_FINAL_RESULT (invariato) |
+
+### Rischi aperti
+
+- `parse_canonical()` in `profile.py` usa ancora `message_type == "NEW_SIGNAL"` come fallback in `has_signal`; rimosso solo con la migrazione completa della logica di classificazione interna al profilo.
+- `REPORT_RESULT` intent rilevato dai nuovi marker in `semantic_markers.json`, ma `profile.py` emette ancora `U_REPORT_FINAL_RESULT` → `REPORT_FINAL_RESULT` internamente (backward compat garantita).
+- Il path `parse_canonical()` usa il proprio sistema di classificazione interno, non ancora agganciato a `ClassificationResolver`; si applica solo al path `parse()` → `ParsedMessage`.
+
+---
+
 ## 2026-04-29 — Miglioramento output CSV parser_test
 
 ### Step completato

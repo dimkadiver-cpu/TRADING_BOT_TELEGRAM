@@ -28,7 +28,7 @@ _SCOPE_FILTER: dict[str, tuple[str | None, str | None]] = {
     "REPORT": ("REPORT", None),
     "INFO_ONLY": ("INFO", None),
     "SETUP_INCOMPLETE": ("SIGNAL", "PARTIAL"),
-    "UNCLASSIFIED": (None, "UNCLASSIFIED"),
+    "UNCLASSIFIED": ("non-INFO", "UNCLASSIFIED"),
 }
 
 
@@ -108,7 +108,9 @@ def _fetch_rows(
     """
     params: list[object] = [trader_id]
 
-    if class_filter is not None:
+    if class_filter == "non-INFO":
+        sql += " AND pm.primary_class != 'INFO'"
+    elif class_filter is not None:
         sql += " AND pm.primary_class = ?"
         params.append(class_filter)
 

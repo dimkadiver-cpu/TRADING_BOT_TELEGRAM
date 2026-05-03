@@ -64,6 +64,31 @@ class IntentDetectionMatch:
     matched_markers: list[str] = field(default_factory=list)
 
 
+@dataclass(slots=True)
+class MarkerMatch:
+    """Singolo marker corrispondente trovato nel testo durante la classificazione."""
+
+    category: str
+    marker: str
+    strength: Literal["strong", "weak"]
+    score: float
+
+
+@dataclass(slots=True)
+class ClassEvidence:
+    """Evidenze grezze prodotte da RulesEngine — non decidono primary_class.
+
+    Utilizzate da ClassificationResolver per pesare i segnali testuali
+    insieme a struttura estratta e intenti validati.
+    """
+
+    scores: dict[str, float]
+    matched_markers: list[MarkerMatch]
+    winning_hint: str | None
+    confidence_hint: float
+    reasons: list[str]
+
+
 # ---------------------------------------------------------------------------
 # RulesEngine
 # ---------------------------------------------------------------------------
@@ -147,16 +172,75 @@ class RulesEngine:
     # Public API
     # ------------------------------------------------------------------
 
-    def classify(self, text: str) -> ClassificationResult:
-        """Classifica il testo usando classification_markers e combination_rules.
+    def detect_class_evidence(self, text: str) -> ClassEvidence:
+        """Produce evidenze grezze di classificazione senza decidere primary_class.
 
         Algoritmo:
-            1. Normalizza il testo (lowercase, strip).
+            1. Normalizza il testo.
             2. Per ogni categoria: somma strong × 1.0 + weak × 0.4.
-            3. Applica combination_rules: se tutti i marker "if" sono presenti,
-               aggiunge confidence_boost alla categoria "then".
-            4. Categoria con score più alto vince.
-            5. Se nessun marker corrisponde → UNCLASSIFIED, confidence=0.0.
+            3. Applica combination_rules.
+            4. Restituisce scores, marker match e hint — la decisione finale
+               spetta al ClassificationResolver.
+
+        Args:
+            text: Testo grezzo del messaggio.
+
+        Returns:
+            ClassEvidence con scores per categoria, marker matches e winning_hint.
+        """
+        normalized = _normalise_text(text)
+        scores: dict[str, float] = {cat: 0.0 for cat in _CATEGORIES}
+        marker_matches: list[MarkerMatch] = []
+        reasons: list[str] = []
+
+        for cat in _CATEGORIES:
+            markers_def = self._classification_markers.get(cat, {"strong": [], "weak": []})
+            for marker in markers_def.get("strong", []):
+                if marker in normalized:
+                    scores[cat] += _STRONG_WEIGHT
+                    marker_matches.append(
+                        MarkerMatch(category=cat, marker=marker, strength="strong", score=_STRONG_WEIGHT)
+                    )
+            for marker in markers_def.get("weak", []):
+                if marker in normalized:
+                    scores[cat] += _WEAK_WEIGHT
+                    marker_matches.append(
+                        MarkerMatch(category=cat, marker=marker, strength="weak", score=_WEAK_WEIGHT)
+                    )
+
+        for rule in self._combination_rules:
+            if_markers: list[str] = rule.get("if", [])
+            then_target: str = rule.get("then", "")
+            boost: float = float(rule.get("confidence_boost", 0.0))
+            if not if_markers or not then_target:
+                continue
+            if all(_normalise_text(m) in normalized for m in if_markers):
+                if then_target in scores:
+                    scores[then_target] += boost
+                    reasons.append(f"combination:{then_target}+{boost:.2f}")
+
+        best_cat, best_score = max(scores.items(), key=lambda kv: kv[1])
+        winning_hint: str | None = None
+        confidence_hint = 0.0
+        if best_score > 0.0:
+            winning_hint = _category_to_message_type(best_cat)
+            confidence_hint = min(1.0, best_score)
+            reasons.insert(0, f"top_category:{best_cat}(score={best_score:.2f})")
+
+        return ClassEvidence(
+            scores=dict(scores),
+            matched_markers=marker_matches,
+            winning_hint=winning_hint,
+            confidence_hint=confidence_hint,
+            reasons=reasons,
+        )
+
+    def classify(self, text: str) -> ClassificationResult:
+        """Classifica il testo — ora internamente usa detect_class_evidence().
+
+        Mantenuto per compatibilità con codice esistente.  La logica di scoring
+        è centralizzata in detect_class_evidence(); questo metodo adatta
+        l'output al contratto ClassificationResult.
 
         Args:
             text: Testo grezzo del messaggio.
@@ -164,54 +248,21 @@ class RulesEngine:
         Returns:
             ClassificationResult con message_type, confidence e matched_markers.
         """
-        normalized = _normalise_text(text)
-        scores: dict[str, float] = {cat: 0.0 for cat in _CATEGORIES}
-        matched: list[str] = []
-
-        # --- 1. Applica classification_markers ---
-        for cat in _CATEGORIES:
-            markers_def = self._classification_markers.get(cat, {"strong": [], "weak": []})
-            for marker in markers_def.get("strong", []):
-                if marker in normalized:
-                    scores[cat] += _STRONG_WEIGHT
-                    matched.append(f"{cat}/{marker}")
-            for marker in markers_def.get("weak", []):
-                if marker in normalized:
-                    scores[cat] += _WEAK_WEIGHT
-                    matched.append(f"{cat}/{marker}")
-
-        # --- 2. Applica combination_rules ---
-        for rule in self._combination_rules:
-            if_markers: list[str] = rule.get("if", [])
-            then_target: str = rule.get("then", "")
-            boost: float = float(rule.get("confidence_boost", 0.0))
-
-            if not if_markers or not then_target:
-                continue
-            if all(_normalise_text(m) in normalized for m in if_markers):
-                # "then" può essere una categoria o un intent — boost solo categorie
-                if then_target in scores:
-                    scores[then_target] += boost
-
-        # --- 3. Determina il vincitore ---
+        evidence = self.detect_class_evidence(text)
         intents_hint = self.detect_intents(text)
-        best_cat, best_score = max(scores.items(), key=lambda kv: kv[1])
 
-        if best_score == 0.0:
+        if evidence.winning_hint is None:
             return ClassificationResult(
                 message_type="UNCLASSIFIED",
                 confidence=0.0,
-                matched_markers=matched,
+                matched_markers=[f"{m.category}/{m.marker}" for m in evidence.matched_markers],
                 intents_hint=intents_hint,
             )
 
-        message_type: MessageType = _category_to_message_type(best_cat)
-        confidence = min(1.0, best_score)
-
         return ClassificationResult(
-            message_type=message_type,
-            confidence=confidence,
-            matched_markers=matched,
+            message_type=evidence.winning_hint,  # type: ignore[arg-type]
+            confidence=evidence.confidence_hint,
+            matched_markers=[f"{m.category}/{m.marker}" for m in evidence.matched_markers],
             intents_hint=intents_hint,
         )
 

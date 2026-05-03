@@ -27,6 +27,7 @@ EXPECTED_INTENTS = {
     "TP_HIT",
     "SL_HIT",
     "EXIT_BE",
+    "REPORT_RESULT",
     "REPORT_FINAL_RESULT",
     "REPORT_PARTIAL_RESULT",
     "INFO_ONLY",
@@ -34,7 +35,7 @@ EXPECTED_INTENTS = {
 
 
 def test_intent_names_count() -> None:
-    assert len(INTENT_NAMES) == 17
+    assert len(INTENT_NAMES) == 18
 
 
 def test_all_expected_intents_present() -> None:

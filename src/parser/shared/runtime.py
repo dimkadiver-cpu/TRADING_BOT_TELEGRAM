@@ -6,6 +6,7 @@ from src.parser.canonical_v1.models import RawContext, TargetRef, TargetScope, T
 from src.parser.intent_types import IntentType
 from src.parser.parsed_message import InfoOnlyEntities, IntentResult, ParsedMessage
 from src.parser.rules_engine import RulesEngine
+from src.parser.shared.classification_resolver import ClassificationInput, ClassificationResolver
 from src.parser.trader_profiles.base import ParserContext
 from src.parser.trader_profiles.shared.targeting import extract_targets
 
@@ -16,6 +17,7 @@ _REPORT_INTENTS = {
     IntentType.EXIT_BE,
     IntentType.REPORT_PARTIAL_RESULT,
     IntentType.REPORT_FINAL_RESULT,
+    IntentType.REPORT_RESULT,
 }
 
 
@@ -32,7 +34,8 @@ def parse(
     rules: RulesEngine,
     extractors: ExtractorProtocol,
 ) -> ParsedMessage:
-    classification = rules.classify(text)
+    class_evidence = rules.detect_class_evidence(text)
+    classification = rules.classify(text)  # mantenuto per intents_hint e compat
     detections = {match.intent: match for match in rules.detect_intents_with_evidence(text)}
     extracted = extractors.extract(text, context, rules) or {}
 
@@ -47,16 +50,24 @@ def parse(
             )
         ]
 
+    resolved = ClassificationResolver().resolve(
+        ClassificationInput(
+            text=text,
+            signal=extracted.get("signal"),
+            intents=intents,
+            class_evidence=class_evidence,
+            targeting=extracted.get("targeting"),
+        )
+    )
+
+    # Il profilo può forzare parse_status via extracted; altrimenti usa il resolver.
+    parse_status = extracted.get("parse_status") or resolved.parse_status
+
     parsed = ParsedMessage(
         parser_profile=trader_code,
-        primary_class=_select_primary_class(classification.message_type, intents, extracted.get("signal")),
-        parse_status=_select_parse_status(
-            classification.message_type,
-            extracted.get("signal"),
-            intents,
-            extracted.get("parse_status"),
-        ),
-        confidence=classification.confidence,
+        primary_class=resolved.primary_class,
+        parse_status=parse_status,
+        confidence=resolved.confidence,
         composite=len({intent.category for intent in intents}) > 1,
         signal=extracted.get("signal"),
         intents=intents,
@@ -66,6 +77,7 @@ def parse(
         diagnostics={
             "trader_code": trader_code,
             "resolution_unit": _resolution_unit(intents),
+            "classification_reasons": resolved.reasons,
             **(extracted.get("diagnostics") or {}),
         },
         raw_context=_build_raw_context(context),
@@ -106,30 +118,6 @@ def _category_for_intent(intent_type: IntentType) -> str:
     if intent_type == IntentType.INFO_ONLY:
         return "INFO"
     return "UPDATE"
-
-
-def _select_primary_class(message_type: str, intents: list[IntentResult], signal: Any) -> str:
-    if signal is not None or message_type == "NEW_SIGNAL":
-        return "SIGNAL"
-    categories = {intent.category for intent in intents}
-    if "UPDATE" in categories:
-        return "UPDATE"
-    if "REPORT" in categories:
-        return "REPORT"
-    return "INFO"
-
-
-def _select_parse_status(
-    message_type: str,
-    signal: Any,
-    intents: list[IntentResult],
-    requested: str | None,
-) -> str:
-    if requested is not None:
-        return requested
-    if message_type == "UNCLASSIFIED" and signal is None and not intents:
-        return "UNCLASSIFIED"
-    return "PARSED"
 
 
 def _select_primary_intent(intents: list[IntentResult], rules: RulesEngine) -> IntentType | None:

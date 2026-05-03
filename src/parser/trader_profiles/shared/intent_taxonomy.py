@@ -20,6 +20,7 @@ OFFICIAL_INTENTS: list[str] = [
     "TP_HIT",
     "SL_HIT",
     "EXIT_BE",
+    "REPORT_RESULT",
     "REPORT_FINAL_RESULT",
     "REPORT_PARTIAL_RESULT",
     "INFO_ONLY",
@@ -54,6 +55,7 @@ PRIMARY_INTENT_PRECEDENCE: list[str] = [
     "SL_HIT",
     "EXIT_BE",
     "TP_HIT",
+    "REPORT_RESULT",
     "REPORT_FINAL_RESULT",
     "REPORT_PARTIAL_RESULT",
     "CLOSE_FULL",
@@ -81,13 +83,60 @@ MUTUAL_EXCLUSIONS: dict[str, set[str]] = {
 # Intent -> set of intents that commonly appear together as multi-intent messages.
 # Used downstream for validation and diagnostics.
 COMPATIBLE_MULTI_INTENT: dict[str, set[str]] = {
-    "SL_HIT": {"CLOSE_FULL", "REPORT_FINAL_RESULT"},
-    "TP_HIT": {"CLOSE_PARTIAL", "MOVE_STOP_TO_BE", "REPORT_PARTIAL_RESULT"},
+    "SL_HIT": {"CLOSE_FULL", "REPORT_FINAL_RESULT", "REPORT_RESULT"},
+    "TP_HIT": {"CLOSE_PARTIAL", "MOVE_STOP_TO_BE", "REPORT_PARTIAL_RESULT", "REPORT_RESULT"},
     "EXIT_BE": {"CLOSE_FULL"},
     "NEW_SETUP": {"CANCEL_PENDING_ORDERS", "INVALIDATE_SETUP"},
     "REPORT_FINAL_RESULT": {"CLOSE_FULL", "SL_HIT"},
+    "REPORT_RESULT": {"CLOSE_FULL", "SL_HIT", "TP_HIT", "CLOSE_PARTIAL", "MOVE_STOP_TO_BE"},
     "ENTRY_FILLED": {"MOVE_STOP_TO_BE"},
 }
+
+# Intenti che modificano lo stato operativo del segnale.
+UPDATE_INTENTS: frozenset[str] = frozenset({
+    "MOVE_STOP_TO_BE",
+    "MOVE_STOP",
+    "CLOSE_FULL",
+    "CLOSE_PARTIAL",
+    "CANCEL_PENDING_ORDERS",
+    "INVALIDATE_SETUP",
+    "REENTER",
+    "ADD_ENTRY",
+    "UPDATE_TAKE_PROFITS",
+})
+
+# Intenti che riportano eventi/esiti senza modificare direttamente lo stato.
+REPORT_INTENTS: frozenset[str] = frozenset({
+    "ENTRY_FILLED",
+    "TP_HIT",
+    "SL_HIT",
+    "EXIT_BE",
+    "REPORT_RESULT",
+    "REPORT_FINAL_RESULT",
+    "REPORT_PARTIAL_RESULT",
+})
+
+# Intenti che producono un cambio di stato irreversibile.
+STATE_CHANGING_INTENTS: frozenset[str] = frozenset({
+    "CLOSE_FULL",
+    "CLOSE_PARTIAL",
+    "MOVE_STOP_TO_BE",
+    "MOVE_STOP",
+    "CANCEL_PENDING_ORDERS",
+    "INVALIDATE_SETUP",
+})
+
+
+def is_update_intent(name: str) -> bool:
+    return name in UPDATE_INTENTS
+
+
+def is_report_intent(name: str) -> bool:
+    return name in REPORT_INTENTS
+
+
+def is_state_changing_intent(name: str) -> bool:
+    return name in STATE_CHANGING_INTENTS
 
 
 def resolve_alias(intent: str) -> str:

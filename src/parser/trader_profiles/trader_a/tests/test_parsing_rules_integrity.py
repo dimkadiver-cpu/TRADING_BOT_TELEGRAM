@@ -39,10 +39,17 @@ class TraderAParsingRulesIntegrityTests(unittest.TestCase):
     def test_rules_file_is_utf8_and_contains_restored_markers(self) -> None:
         payload = _load_merged_rules()
 
-        new_signal = payload["classification_markers"]["new_signal"]["strong"]
-        self.assertIn("entry", new_signal)
-        self.assertIn("sl:", new_signal)
-        self.assertIn("tp1:", new_signal)
+        # I field marker (entry/sl/tp) sono stati rimossi da classification_markers
+        # per evitare falsi positivi su update/report che li contengono.
+        new_signal_strong = payload["classification_markers"]["new_signal"]["strong"]
+        self.assertNotIn("entry", new_signal_strong, "field marker non deve stare in classification")
+        self.assertNotIn("sl:", new_signal_strong, "field marker non deve stare in classification")
+        self.assertNotIn("tp1:", new_signal_strong, "field marker non deve stare in classification")
+
+        # I field marker restano disponibili in field_markers
+        self.assertIn("entry", payload["field_markers"]["entry"]["strong"])
+        self.assertIn("sl:", payload["field_markers"]["stop_loss"]["strong"])
+        self.assertIn("tp1:", payload["field_markers"]["take_profit"]["strong"])
 
         self.assertNotIn("U_CANCEL_PENDING_ORDERS", payload["intent_markers"])
         cancel_markers = payload["intent_markers"]["CANCEL_PENDING_ORDERS"]["strong"]

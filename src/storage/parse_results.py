@@ -40,6 +40,68 @@ class ParseResultStore:
     def __init__(self, db_path: str) -> None:
         self._db_path = db_path
 
+    def get_by_raw_message_id(self, raw_message_id: int) -> ParseResultRecord | None:
+        query = """
+            SELECT raw_message_id,
+                   eligibility_status,
+                   eligibility_reason,
+                   declared_trader_tag,
+                   resolved_trader_id,
+                   trader_resolution_method,
+                   message_type,
+                   parse_status,
+                   completeness,
+                   is_executable,
+                   symbol,
+                   direction,
+                   entry_raw,
+                   stop_raw,
+                   target_raw_list,
+                   leverage_hint,
+                   risk_hint,
+                   risky_flag,
+                   linkage_method,
+                   linkage_status,
+                   warning_text,
+                   notes,
+                   parse_result_normalized_json,
+                   created_at,
+                   updated_at
+            FROM parse_results
+            WHERE raw_message_id = ?
+        """
+        with sqlite3.connect(self._db_path) as conn:
+            row = conn.execute(query, (raw_message_id,)).fetchone()
+        if row is None:
+            return None
+        return ParseResultRecord(
+            raw_message_id=row[0],
+            eligibility_status=row[1],
+            eligibility_reason=row[2],
+            declared_trader_tag=row[3],
+            resolved_trader_id=row[4],
+            trader_resolution_method=row[5],
+            message_type=row[6],
+            parse_status=row[7],
+            completeness=row[8],
+            is_executable=bool(row[9]),
+            symbol=row[10],
+            direction=row[11],
+            entry_raw=row[12],
+            stop_raw=row[13],
+            target_raw_list=row[14],
+            leverage_hint=row[15],
+            risk_hint=row[16],
+            risky_flag=bool(row[17]),
+            linkage_method=row[18],
+            linkage_status=row[19],
+            warning_text=row[20],
+            notes=row[21],
+            parse_result_normalized_json=row[22],
+            created_at=row[23],
+            updated_at=row[24],
+        )
+
     def get_raw_text_by_signal_id(self, resolved_trader_id: str, signal_id: int) -> str | None:
         query = """
             SELECT rm.raw_text, pr.parse_result_normalized_json
@@ -148,3 +210,14 @@ class ParseResultStore:
                 ),
             )
             conn.commit()
+
+    def delete_by_raw_message_ids(self, raw_message_ids: list[int]) -> int:
+        ids = [int(raw_message_id) for raw_message_id in raw_message_ids]
+        if not ids:
+            return 0
+        placeholders = ",".join("?" for _ in ids)
+        query = f"DELETE FROM parse_results WHERE raw_message_id IN ({placeholders})"
+        with sqlite3.connect(self._db_path) as conn:
+            cursor = conn.execute(query, ids)
+            conn.commit()
+        return int(cursor.rowcount or 0)

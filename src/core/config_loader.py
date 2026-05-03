@@ -45,6 +45,8 @@ def load_config(root_dir: str = ".") -> Config:
             continue
         parsing_rules = path / "parsing_rules.json"
         if not parsing_rules.is_file():
+            parsing_rules = path / "rules.json"
+        if not parsing_rules.is_file():
             continue
         execution_rules = path / "execution_rules.json"
         parsing = load_json(str(parsing_rules))

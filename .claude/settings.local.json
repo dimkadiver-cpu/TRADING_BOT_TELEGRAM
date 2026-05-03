@@ -50,7 +50,16 @@
       "Bash(git rebase:*)",
       "Bash(git merge:*)",
       "Bash(git checkout:*)",
-      "PowerShell(Get-ChildItem -Path C:\\\\TeleSignalBot -Directory | Select-Object -First 20 | ForEach-Object { $_.Name })"
+      "PowerShell(Get-ChildItem -Path C:\\\\TeleSignalBot -Directory | Select-Object -First 20 | ForEach-Object { $_.Name })",
+      "PowerShell(Get-Command *)",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_472.py)",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_472b.py)",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_cases.py)",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; git show 71562f2 --stat; git log --oneline 71562f2 -1 --format=\"%H %ai %s\")",
+      "PowerShell(git show *)",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; git show 49f9b9c --stat; git log --oneline 49f9b9c -1 --format=\"%H %ai %s\")",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_1688.py)",
+      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_unclassified.py)"
     ]
   }
 }

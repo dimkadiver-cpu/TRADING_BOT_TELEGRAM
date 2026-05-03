@@ -22,13 +22,16 @@
     "SL_HIT",
     "EXIT_BE",
     "TP_HIT",
+    "REPORT_RESULT",
     "REPORT_FINAL_RESULT",
     "CLOSE_FULL",
     "CLOSE_PARTIAL",
     "CANCEL_PENDING_ORDERS",
     "MOVE_STOP_TO_BE",
     "MOVE_STOP",
-    "ENTRY_FILLED"
+    "ENTRY_FILLED",
+    "REPORT_RESULT",
+    "REPORT_FINAL_RESULT"
   ],
   "disambiguation_rules": {
     "rules": [

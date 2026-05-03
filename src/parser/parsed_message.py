@@ -102,6 +102,14 @@ class ReportFinalResultEntities(IntentEntities):
     result: ReportedResult | None = None
 
 
+class ReportResultEntities(IntentEntities):
+    result_scope: Literal["FINAL", "PARTIAL", "UNKNOWN"] = "UNKNOWN"
+    result_status: Literal["TP", "SL", "BE", "PROFIT", "LOSS", "UNKNOWN"] = "UNKNOWN"
+    result_value: float | None = None
+    result_currency: str | None = None
+    result_percent: float | None = None
+
+
 class InfoOnlyEntities(IntentEntities):
     pass
 
@@ -122,6 +130,7 @@ IntentEntityPayload = (
     | ExitBeEntities
     | ReportPartialResultEntities
     | ReportFinalResultEntities
+    | ReportResultEntities
     | InfoOnlyEntities
 )
 

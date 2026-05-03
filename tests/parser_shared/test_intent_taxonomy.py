@@ -33,6 +33,7 @@ class TestOfficialIntents:
             "TP_HIT",
             "SL_HIT",
             "EXIT_BE",
+            "REPORT_RESULT",
             "REPORT_FINAL_RESULT",
             "REPORT_PARTIAL_RESULT",
             "INFO_ONLY",

@@ -11,6 +11,8 @@ from src.parser.canonical_v1.models import RawContext
 from src.parser.intent_types import IntentType
 from src.parser.parsed_message import ExitBeEntities, IntentResult, ParsedMessage
 from src.parser.trader_profiles.base import ParserContext
+from src.storage.parse_results import ParseResultStore
+from src.storage.parse_results_v1 import ParseResultV1Store
 from src.storage.parsed_messages import ParsedMessageStore
 
 from parser_test.scripts.replay_parser import ReplayRawMessage, SelectedRaw, backfill_parsed_messages, fetch_raw_messages
@@ -209,6 +211,49 @@ def test_backfill_parsed_messages_force_reparse_rebuilds_existing_rows(tmp_path:
                 "2026-04-29T10:00:02+00:00",
             ),
         )
+        conn.execute(
+            "INSERT INTO parse_results(raw_message_id, eligibility_status, eligibility_reason, declared_trader_tag, resolved_trader_id, trader_resolution_method, message_type, parse_status, completeness, is_executable, symbol, direction, entry_raw, stop_raw, target_raw_list, leverage_hint, risk_hint, risky_flag, linkage_method, linkage_status, warning_text, notes, parse_result_normalized_json, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                1,
+                "ACQUIRED_ELIGIBLE",
+                "eligible",
+                None,
+                "trader_a",
+                "topic",
+                "UPDATE",
+                "PARSED",
+                "COMPLETE",
+                0,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                None,
+                0,
+                None,
+                None,
+                None,
+                None,
+                "{}",
+                "2026-04-29T10:00:02+00:00",
+                "2026-04-29T10:00:02+00:00",
+            ),
+        )
+        conn.execute(
+            "INSERT INTO parse_results_v1(raw_message_id, trader_id, primary_class, parse_status, confidence, canonical_json, normalizer_error, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                1,
+                "trader_a",
+                "UPDATE",
+                "PARSED",
+                0.9,
+                json.dumps({"primary_class": "UPDATE"}),
+                None,
+                "2026-04-29T10:00:02+00:00",
+            ),
+        )
         conn.commit()
 
     selected = [
@@ -240,3 +285,5 @@ def test_backfill_parsed_messages_force_reparse_rebuilds_existing_rows(tmp_path:
     assert record is not None
     assert record.primary_class == "UPDATE"
     assert json.loads(record.intents_confirmed_json) == ["EXIT_BE"]
+    assert ParseResultStore(db_path=str(db_path)).get_by_raw_message_id(1) is None
+    assert ParseResultV1Store(db_path=str(db_path)).get_by_raw_message_id(1) is None
