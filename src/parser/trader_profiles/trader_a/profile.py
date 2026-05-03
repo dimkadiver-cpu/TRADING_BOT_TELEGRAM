@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 import json
 from pathlib import Path
 import re
@@ -36,6 +37,7 @@ from src.parser.shared.context_resolution_engine import ContextInput
 from src.parser.shared.context_resolution_schema import ContextResolutionRulesBlock
 from src.parser.shared.disambiguation_rules_schema import DisambiguationRulesBlock
 from src.parser.shared.intent_compatibility_schema import IntentCompatibilityBlock
+from src.parser.shared import runtime as shared_runtime
 from src.parser.shared.semantic_resolver import SemanticResolver, SemanticResolverInput
 from src.parser.canonical_v1.targeted_builder import (
     build_targeted_actions,
@@ -45,13 +47,12 @@ from src.parser.parsed_message import ParsedMessage
 from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 from src.parser.trader_profiles.common_utils import extract_telegram_links, normalize_text, split_lines
 from src.parser.trader_profiles.shared.rules_schema import validate_profile_rules, validate_semantic_markers
-from src.parser.trader_profiles.trader_a.extractors import TraderAExtractors
+from src.parser.trader_profiles.trader_a.extractors import TraderAExtractors, _extract_reported_result
 from src.parser.intent_action_map import intent_policy_for_intent
 from src.parser.rules_engine import RulesEngine
 
-_RULES_PATH = Path(__file__).resolve().parent / "parsing_rules.json"
 _SEMANTIC_MARKERS_PATH = Path(__file__).resolve().parent / "semantic_markers.json"
-_PHASE4_RULES_PATH = Path(__file__).resolve().parent / "rules.json"
+_RULES_PATH = Path(__file__).resolve().parent / "rules.json"
 _SYMBOL_RE = re.compile(r"\b[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?\b")
 _LINK_ID_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/(?P<id>\d+)", re.IGNORECASE)
 _RESULT_R_RE = re.compile(r"\b[A-Z]{2,20}(?:USDT|USDC|USD|BTC|ETH)?\s*[-:=]\s*[+-]?\d+(?:[.,]\d+)?\s*R{1,2}\b", re.IGNORECASE)
@@ -143,6 +144,16 @@ _DEFAULT_CLASSIFICATION_MARKERS: dict[str, tuple[str, ...]] = {
         "\u0441\u0435\u0442\u0430\u043f \u043f\u043e\u043b\u043d\u043e\u0441\u0442\u044c\u044e \u0437\u0430\u043a\u0440\u044b\u0442",
     ),
 }
+
+
+@dataclass(slots=True)
+class _ParsePrelude:
+    prepared: dict[str, Any]
+    target_refs: list[dict[str, Any]]
+    global_target_scope: str | None
+    has_global_target: bool
+    message_type: str
+    intents: list[str]
 
 _DEFAULT_INTENT_MARKERS: dict[str, tuple[str, ...]] = {
     "U_MOVE_STOP_TO_BE": (
@@ -287,12 +298,12 @@ _CANONICAL_TO_LEGACY_INTENT: dict[str, str] = {
 }
 
 
-def _load_phase4_rules_engine() -> RulesEngine:
+def _load_merged_rules() -> dict[str, Any]:
     semantic_markers = json.loads(_SEMANTIC_MARKERS_PATH.read_text(encoding="utf-8"))
-    phase4_rules = json.loads(_PHASE4_RULES_PATH.read_text(encoding="utf-8"))
+    rules = json.loads(_RULES_PATH.read_text(encoding="utf-8"))
     validate_semantic_markers(semantic_markers, strict=True)
-    validate_profile_rules(phase4_rules, strict=True)
-    return RulesEngine.from_dict({**semantic_markers, **phase4_rules})
+    validate_profile_rules(rules, strict=True)
+    return {**semantic_markers, **rules}
 
 
 def _canonicalize_intents(intents: list[str]) -> list[str]:
@@ -393,38 +404,74 @@ class TraderAProfileParser:
     trader_code = "trader_a"
     supports_targeted_actions_structured = True
 
-    def __init__(self, rules_path: Path | None = None) -> None:
-        self._rules_path = rules_path or _RULES_PATH
-        self._rules = self._load_rules(self._rules_path)
-        self._rules_engine = RulesEngine.load(self._rules_path)
+    def __init__(self) -> None:
+        self._rules = _load_merged_rules()
+        self._rules_engine = RulesEngine.from_dict(self._rules)
         self._semantic_resolver = self._build_semantic_resolver()
-        self._phase4_rules_engine = _load_phase4_rules_engine()
         self._phase4_extractors = TraderAExtractors()
 
     def parse(self, text: str, context: ParserContext) -> ParsedMessage:
-        from src.parser.shared.runtime import parse as parse_parsed_message
-
-        return parse_parsed_message(
+        return shared_runtime.parse(
             trader_code=self.trader_code,
             text=text,
             context=context,
-            rules=self._phase4_rules_engine,
+            rules=self._rules_engine,
             extractors=self._phase4_extractors,
         )
 
-    def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
+    def _build_parse_prelude(
+        self,
+        *,
+        text: str,
+        context: ParserContext,
+        canonical_mode: bool,
+    ) -> _ParsePrelude:
         prepared = self._preprocess(text=text, context=context)
         target_refs = self._extract_targets(prepared=prepared, context=context)
         global_target_scope = self._resolve_global_target_scope(prepared=prepared)
         has_global_target = global_target_scope is not None
-        message_type = self._classify_message(prepared=prepared, context=context, target_refs=target_refs)
+        message_type = self._classify_message(
+            prepared=prepared,
+            context=context,
+            target_refs=target_refs,
+        )
         intents = self._extract_intents(
             prepared=prepared,
             context=context,
             message_type=message_type,
             target_refs=target_refs,
-            canonical_mode=False,
+            canonical_mode=canonical_mode,
         )
+        message_type = self._normalize_message_type_with_targets(
+            message_type=message_type,
+            intents=intents,
+            target_refs=target_refs,
+            has_global_target=has_global_target,
+        )
+        message_type = self._downgrade_stop_only_update_without_target(
+            message_type=message_type,
+            intents=intents,
+            prepared=prepared,
+            target_refs=target_refs,
+            has_global_target=has_global_target,
+        )
+        return _ParsePrelude(
+            prepared=prepared,
+            target_refs=target_refs,
+            global_target_scope=global_target_scope,
+            has_global_target=has_global_target,
+            message_type=message_type,
+            intents=intents,
+        )
+
+    @staticmethod
+    def _normalize_message_type_with_targets(
+        *,
+        message_type: str,
+        intents: list[str],
+        target_refs: list[dict[str, Any]],
+        has_global_target: bool,
+    ) -> str:
         if message_type == "UNCLASSIFIED" and "U_REPORT_FINAL_RESULT" in intents:
             if (target_refs or has_global_target) and any(
                 intent in intents
@@ -438,13 +485,14 @@ class TraderAProfileParser:
                     "U_STOP_HIT",
                 )
             ):
-                message_type = "UPDATE"
-            else:
-                message_type = "INFO_ONLY"
+                return "UPDATE"
+            return "INFO_ONLY"
         if message_type == "UNCLASSIFIED" and "U_CANCEL_PENDING_ORDERS" in intents and (target_refs or has_global_target):
-            message_type = "UPDATE"
-        if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(intent in intents for intent in ("U_CLOSE_FULL", "U_CLOSE_PARTIAL")):
-            message_type = "UPDATE"
+            return "UPDATE"
+        if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(
+            intent in intents for intent in ("U_CLOSE_FULL", "U_CLOSE_PARTIAL")
+        ):
+            return "UPDATE"
         if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(
             intent in intents
             for intent in (
@@ -455,25 +503,48 @@ class TraderAProfileParser:
                 "U_MARK_FILLED",
             )
         ):
-            message_type = "UPDATE"
-        # Downgrade UPDATE→UNCLASSIFIED when only stop-management intents with no target,
-        # unless the text contains authoritative specific-phrase update indicators.
-        if message_type == "UPDATE" and not target_refs and not has_global_target:
-            _stop_mgmt_only = set(intents) <= {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"} and bool(intents)
-            if _stop_mgmt_only:
-                _norm = str(prepared.get("normalized_text") or "")
-                _authoritative = _contains_any(
-                    _norm,
-                    (
-                        "\u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
-                        "\u043f\u0435\u0440\u0435\u0432\u0435\u0441\u0442\u0438 \u0441\u0442\u043e\u043f \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
-                        "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c \u0432 \u0431\u0435\u0437\u0443\u0431\u044b\u0442\u043e\u043a",
-                        "\u0441\u0442\u043e\u043f \u043f\u0435\u0440\u0435\u0432\u043e\u0434\u0438\u043c",
-                        "\u043f\u043e \u0448\u043e\u0440\u0442\u0430\u043c \u0441\u0442\u043e\u043f \u043d\u0430 \u0442\u043e\u0447\u043a\u0443 \u0432\u0445\u043e\u0434\u0430",
-                    ),
-                )
-                if not _authoritative:
-                    message_type = "UNCLASSIFIED"
+            return "UPDATE"
+        return message_type
+
+    @staticmethod
+    def _downgrade_stop_only_update_without_target(
+        *,
+        message_type: str,
+        intents: list[str],
+        prepared: dict[str, Any],
+        target_refs: list[dict[str, Any]],
+        has_global_target: bool,
+    ) -> str:
+        if message_type != "UPDATE" or target_refs or has_global_target:
+            return message_type
+        stop_mgmt_only = set(intents) <= {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"} and bool(intents)
+        if not stop_mgmt_only:
+            return message_type
+        normalized = str(prepared.get("normalized_text") or "")
+        authoritative = _contains_any(
+            normalized,
+            (
+                "стоп на точку входа",
+                "перевести стоп в безубыток",
+                "стоп переводим в безубыток",
+                "стоп переводим",
+                "по шортам стоп на точку входа",
+            ),
+        )
+        return message_type if authoritative else "UNCLASSIFIED"
+
+    def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
+        prelude = self._build_parse_prelude(
+            text=text,
+            context=context,
+            canonical_mode=False,
+        )
+        prepared = prelude.prepared
+        target_refs = prelude.target_refs
+        global_target_scope = prelude.global_target_scope
+        has_global_target = prelude.has_global_target
+        message_type = prelude.message_type
+        intents = prelude.intents
         reported_results = self._extract_reported_results(prepared=prepared, context=context, intents=intents)
         entities = self._extract_entities(
             prepared=prepared,
@@ -540,70 +611,18 @@ class TraderAProfileParser:
 
     def parse_canonical(self, text: str, context: ParserContext) -> CanonicalMessage:
         """Produce CanonicalMessage v1 directly from Trader A parser output."""
-        prepared = self._preprocess(text=text, context=context)
-        target_refs = self._extract_targets(prepared=prepared, context=context)
-        global_target_scope = self._resolve_global_target_scope(prepared=prepared)
-        has_global_target = global_target_scope is not None
-        message_type = self._classify_message(prepared=prepared, context=context, target_refs=target_refs)
-        intents = self._extract_intents(
-            prepared=prepared,
+        prelude = self._build_parse_prelude(
+            text=text,
             context=context,
-            message_type=message_type,
-            target_refs=target_refs,
             canonical_mode=True,
         )
+        prepared = prelude.prepared
+        target_refs = prelude.target_refs
+        global_target_scope = prelude.global_target_scope
+        has_global_target = prelude.has_global_target
+        message_type = prelude.message_type
+        intents = prelude.intents
         extracted_intents = list(intents)
-
-        if message_type == "UNCLASSIFIED" and "U_REPORT_FINAL_RESULT" in intents:
-            if (target_refs or has_global_target) and any(
-                intent in intents
-                for intent in (
-                    "U_CLOSE_FULL",
-                    "U_CLOSE_PARTIAL",
-                    "U_CANCEL_PENDING_ORDERS",
-                    "U_MOVE_STOP_TO_BE",
-                    "U_MOVE_STOP",
-                    "U_TP_HIT",
-                    "U_STOP_HIT",
-                )
-            ):
-                message_type = "UPDATE"
-            else:
-                message_type = "INFO_ONLY"
-        if message_type == "UNCLASSIFIED" and "U_CANCEL_PENDING_ORDERS" in intents and (target_refs or has_global_target):
-            message_type = "UPDATE"
-        if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(
-            intent in intents for intent in ("U_CLOSE_FULL", "U_CLOSE_PARTIAL")
-        ):
-            message_type = "UPDATE"
-        if message_type == "UNCLASSIFIED" and (target_refs or has_global_target) and any(
-            intent in intents
-            for intent in (
-                "U_MOVE_STOP_TO_BE",
-                "U_MOVE_STOP",
-                "U_TP_HIT",
-                "U_STOP_HIT",
-                "U_MARK_FILLED",
-            )
-        ):
-            message_type = "UPDATE"
-
-        if message_type == "UPDATE" and not target_refs and not has_global_target:
-            stop_mgmt_only = set(intents) <= {"U_MOVE_STOP_TO_BE", "U_MOVE_STOP"} and bool(intents)
-            if stop_mgmt_only:
-                normalized = str(prepared.get("normalized_text") or "")
-                authoritative = _contains_any(
-                    normalized,
-                    (
-                        "стоп на точку входа",
-                        "перевести стоп в безубыток",
-                        "стоп переводим в безубыток",
-                        "стоп переводим",
-                        "по шортам стоп на точку входа",
-                    ),
-                )
-                if not authoritative:
-                    message_type = "UNCLASSIFIED"
 
         warning_message_type = message_type
         message_type, intents, primary_intent, semantic_diagnostics = self._resolve_semantics(
@@ -1847,10 +1866,17 @@ class TraderAProfileParser:
             or _contains_any(normalized, ("стопы в безубыток",))
         )
         strong_cancel_without_target = _contains_any(normalized, tuple(cancel_markers))
+        strong_invalidate_without_target = _contains_any(normalized, tuple(invalidate_markers))
 
         allow_update_intents = (
             not report_only_context
-            and (message_type == "UPDATE" or has_target or strong_move_without_target or strong_cancel_without_target)
+            and (
+                message_type == "UPDATE"
+                or has_target
+                or strong_move_without_target
+                or strong_cancel_without_target
+                or strong_invalidate_without_target
+            )
         )
         if allow_update_intents:
             move_markers = _merge_markers(
@@ -2124,16 +2150,6 @@ class TraderAProfileParser:
         if message_type == "SETUP_INCOMPLETE":
             return 0.45
         return 0.2
-
-    def _load_rules(self, path: Path) -> dict[str, Any]:
-        try:
-            with path.open("r", encoding="utf-8") as file:
-                data = json.load(file)
-            if isinstance(data, dict):
-                return data
-        except (OSError, ValueError):
-            return {}
-        return {}
 
     def _has_global_target_scope(self, *, prepared: dict[str, Any]) -> bool:
         return self._resolve_global_target_scope(prepared=prepared) is not None
@@ -2780,6 +2796,18 @@ def _extract_hit_target(raw_text: str) -> str | None:
     if _TP1_HIT_RE.search(raw_text):
         return "TP1"
     return None
+
+
+def _tp_level_from_hit_target(value: object) -> int | None:
+    if not isinstance(value, str):
+        return None
+    value = value.upper()
+    if not value.startswith("TP"):
+        return None
+    try:
+        return int(value[2:])
+    except ValueError:
+        return None
 
 
 def _extract_setup_invalidation(raw_text: str) -> str | None:

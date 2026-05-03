@@ -13,23 +13,28 @@ from src.parser.canonical_v1.models import (
     TakeProfit,
 )
 from src.parser.parsed_message import (
+    AddEntryEntities,
     CancelPendingEntities,
     CloseFullEntities,
     ClosePartialEntities,
     EntryFilledEntities,
     ExitBeEntities,
+    InvalidateSetupEntities,
     MoveStopEntities,
     MoveStopToBEEntities,
+    ReenterEntities,
     ReportFinalResultEntities,
+    ReportPartialResultEntities,
     SlHitEntities,
     TpHitEntities,
+    UpdateTakeProfitsEntities,
 )
 from src.parser.rules_engine import RulesEngine
 from src.parser.trader_profiles.base import ParserContext
 
 _PRICE_CAPTURE = r"\d[\d\s]*(?:[.,]\d+)?"
 
-_SYMBOL_RE = re.compile(r"(?:#|\$)?(?P<symbol>[A-Z0-9]{2,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b", re.IGNORECASE)
+_SYMBOL_RE = re.compile(r"(?:#|\$)?(?P<symbol>[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b", re.IGNORECASE)
 _ENTRY_CURRENT_RE = re.compile(r"вход\s+с\s+текущих\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _ENTRY_LIMIT_RE = re.compile(r"(?:вход|entry)\s+(?:лимиткой|лимитным\s+ордером)?\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _ENTRY_SIMPLE_RE = re.compile(r"(?:^|\n)\s*(?:[-—•]\s*)?(?:entry|вход)\s*[:=@-]\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
@@ -39,7 +44,7 @@ _ENTRY_AB_RE = re.compile(
     re.IGNORECASE,
 )
 _AVERAGING_RE = re.compile(r"(?:усреднение|вход\s*(?:\((?:b|б)\)|(?:b|б)))\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
-_STOP_LOSS_RE = re.compile(r"(?:\bsl\b|стоп)\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
+_STOP_LOSS_RE = re.compile(r"(?:\bsl\b|стоп)\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")(?![.,\d]*\s*%)", re.IGNORECASE)
 _TP_RE = re.compile(r"\bTP(?P<index>\d+)?\b\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _TP_LEVEL_RE = re.compile(r"\btp(?P<level>\d+)\b", re.IGNORECASE)
 _PERCENT_RE = re.compile(r"(?P<value>[+-]?\d+(?:[.,]\d+)?)\s*%")
@@ -64,6 +69,9 @@ _CLOSE_PARTIAL_MARKERS = ("partial close", "close half", "частично", "п
 _CANCEL_PENDING_MARKERS = ("убираем лимитки", "отменяем лимитки", "cancel pending", "cancel limit")
 _LONG_MARKERS = ("лонг", "long")
 _SHORT_MARKERS = ("шорт", "short")
+_LEGACY_INTENT_ALIASES = {
+    "CANCEL_PENDING_ORDERS": "CANCEL_PENDING",
+}
 
 
 class TraderAExtractors:
@@ -101,7 +109,7 @@ def _extract_signal(text: str, normalized: str, rules: RulesEngine) -> SignalPay
     take_profits = _extract_take_profits(text)
     risk_hint = _extract_risk_hint(text, rules)
 
-    if not any((symbol, side, entries, stop_loss, take_profits)):
+    if not any((entries, stop_loss, take_profits)):
         return None
 
     missing_fields: list[str] = []
@@ -135,41 +143,74 @@ def _extract_signal(text: str, normalized: str, rules: RulesEngine) -> SignalPay
 def _extract_intents(text: str, normalized: str, rules: RulesEngine) -> list[dict[str, Any]]:
     intents: list[dict[str, Any]] = []
     for match in rules.detect_intents_with_evidence(text):
+        intent_name = _LEGACY_INTENT_ALIASES.get(match.intent, match.intent)
         entity_payload: Any
-        if match.intent == "MOVE_STOP_TO_BE":
+        if intent_name == "MOVE_STOP_TO_BE":
             entity_payload = MoveStopToBEEntities()
-        elif match.intent == "MOVE_STOP":
+        elif intent_name == "MOVE_STOP":
             entity_payload = _move_stop_entities(text)
-        elif match.intent == "CLOSE_FULL":
+        elif intent_name == "CLOSE_FULL":
             entity_payload = CloseFullEntities()
-        elif match.intent == "CLOSE_PARTIAL":
+        elif intent_name == "CLOSE_PARTIAL":
             entity_payload = ClosePartialEntities(fraction=_extract_fraction(text, normalized))
-        elif match.intent == "CANCEL_PENDING":
+        elif intent_name == "CANCEL_PENDING":
             entity_payload = CancelPendingEntities()
-        elif match.intent == "ENTRY_FILLED":
+        elif intent_name == "INVALIDATE_SETUP":
+            entity_payload = InvalidateSetupEntities()
+        elif intent_name == "REENTER":
+            entity_payload = ReenterEntities(
+                entries=_extract_entry_prices(text),
+                entry_type=_extract_entry_type(normalized),
+                entry_structure=_extract_entry_structure(text),
+            )
+        elif intent_name == "ADD_ENTRY":
+            entry_price = _first_entry_price(text)
+            if entry_price is None:
+                continue
+            entity_payload = AddEntryEntities(
+                entry_price=entry_price,
+                entry_type=_extract_entry_type(normalized),
+            )
+        elif intent_name == "UPDATE_TAKE_PROFITS":
+            entity_payload = UpdateTakeProfitsEntities(
+                new_take_profits=[tp.price for tp in _extract_take_profits(text)],
+                target_tp_level=_extract_tp_level(text),
+                mode=_extract_modify_targets_mode(normalized),
+            )
+        elif intent_name == "ENTRY_FILLED":
             entity_payload = EntryFilledEntities()
-        elif match.intent == "TP_HIT":
+        elif intent_name == "TP_HIT":
             entity_payload = TpHitEntities(
                 level=_extract_tp_level(text),
                 result=_extract_reported_result(text),
             )
-        elif match.intent == "SL_HIT":
+        elif intent_name == "SL_HIT":
             entity_payload = SlHitEntities(result=_extract_reported_result(text))
-        elif match.intent == "EXIT_BE":
+        elif intent_name == "EXIT_BE":
             entity_payload = ExitBeEntities()
-        elif match.intent == "REPORT_FINAL_RESULT":
+        elif intent_name == "REPORT_PARTIAL_RESULT":
+            entity_payload = ReportPartialResultEntities(result=_extract_reported_result(text))
+        elif intent_name == "REPORT_FINAL_RESULT":
             entity_payload = ReportFinalResultEntities(result=_extract_reported_result(text))
         else:
             continue
 
+        detection_strength = match.strength
+        if intent_name == "REPORT_FINAL_RESULT":
+            detection_strength = "weak"
+
         intents.append(
             {
-                "type": match.intent,
+                "type": intent_name,
                 "entities": entity_payload,
-                "confidence": 0.9 if match.strength == "strong" else 0.55,
+                "confidence": 0.9 if detection_strength == "strong" else 0.55,
                 "raw_fragment": text.strip() or None,
+                "detection_strength": detection_strength,
             }
         )
+
+    if any(item["type"] in {"MOVE_STOP_TO_BE", "MOVE_STOP"} for item in intents):
+        intents = [item for item in intents if item["type"] not in {"SL_HIT", "EXIT_BE"}]
 
     # Conservative fallback for high-signal report/update phrases when the marker file
     # intentionally keeps a smaller vocabulary during the migration.
@@ -319,6 +360,42 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
     return take_profits
 
 
+def _extract_entry_prices(text: str) -> list[Price]:
+    return [entry.price for entry in _extract_entries(text) if entry.price is not None]
+
+
+def _first_entry_price(text: str) -> Price | None:
+    prices = _extract_entry_prices(text)
+    return prices[0] if prices else None
+
+
+def _extract_entry_type(normalized: str) -> str | None:
+    if "текущ" in normalized or "market" in normalized:
+        return "MARKET"
+    if "лимит" in normalized or "limit" in normalized:
+        return "LIMIT"
+    return None
+
+
+def _extract_entry_structure(text: str) -> str | None:
+    prices = _extract_entry_prices(text)
+    if len(prices) >= 3:
+        return "LADDER"
+    if len(prices) == 2:
+        return "TWO_STEP"
+    if len(prices) == 1:
+        return "ONE_SHOT"
+    return None
+
+
+def _extract_modify_targets_mode(normalized: str) -> str | None:
+    if "убир" in normalized or "remove" in normalized:
+        return "REMOVE_ONE"
+    if "добав" in normalized or "add" in normalized:
+        return "ADD"
+    return "REPLACE_ALL"
+
+
 def _extract_risk_hint(text: str, rules: RulesEngine) -> RiskHint | None:
     extraction_markers = rules.raw_rules.get("extraction_markers", {})
     prefixes = _marker_strings(extraction_markers.get("risk_prefix")) or ["риск", "вход", "на сделку"]
@@ -335,8 +412,14 @@ def _extract_risk_hint(text: str, rules: RulesEngine) -> RiskHint | None:
         re.IGNORECASE,
     )
 
+    _sl_line_re = re.compile(r"^[^\n]*(?:sl:|стоп:)[^\n]*$", re.IGNORECASE | re.MULTILINE)
+    sl_spans = {(m.start(), m.end()) for m in _sl_line_re.finditer(text)}
+
+    def _on_sl_line(pos: int) -> bool:
+        return any(start <= pos < end for start, end in sl_spans)
+
     range_match = range_re.search(text)
-    if range_match:
+    if range_match and not _on_sl_line(range_match.start()):
         min_value = _to_float(range_match.group("min"))
         max_value = _to_float(range_match.group("max"))
         if min_value is not None and max_value is not None:
@@ -348,7 +431,7 @@ def _extract_risk_hint(text: str, rules: RulesEngine) -> RiskHint | None:
             )
 
     single_match = single_re.search(text)
-    if single_match:
+    if single_match and not _on_sl_line(single_match.start()):
         value = _to_float(single_match.group("value") or single_match.group("value_suffix"))
         if value is not None:
             return RiskHint(

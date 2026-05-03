@@ -16,7 +16,7 @@ from parser_test.scripts.db_paths import resolve_parser_test_db_path
 from parser_test.scripts.replay_parser import replay_database
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run parser replay and export CSV reports.")
     parser.add_argument("--db-path", default=None, help="Path to parser_test sqlite DB.")
     parser.add_argument("--db-name", default=None, help="Logical DB name under parser_test/db (e.g. trader_a_mar).")
@@ -31,12 +31,17 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--chat-id", default=None, help="Filter by raw_messages.source_chat_id.")
     parser.add_argument("--from-date", default=None, help="Inclusive lower bound (YYYY-MM-DD or ISO timestamp).")
     parser.add_argument("--to-date", default=None, help="Inclusive upper bound (YYYY-MM-DD or ISO timestamp).")
+    parser.add_argument(
+        "--force-reparse",
+        action="store_true",
+        help="Reparse all selected raw_messages before exporting CSVs, ignoring existing parsed_messages rows.",
+    )
     parser.add_argument("--parser-mode", default=None, help="Parser mode override: regex_only | llm_only | hybrid_auto")
     parser.add_argument(
         "--parser-system",
         choices=("legacy", "parsed_message"),
-        default="legacy",
-        help="Replay legacy parse_results or backfill parsed_messages with the new parser.",
+        default="parsed_message",
+        help="Replay legacy parse_results or backfill parsed_messages with the current parser.",
     )
     parser.add_argument(
         "--show-normalized-samples",
@@ -62,14 +67,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--report-system",
         choices=("legacy", "v1"),
-        default="legacy",
+        default="v1",
         help=(
             "Which report system to use for CSV export. "
-            "'legacy' reads parse_results (default). "
-            "'v1' reads parsed_messages (parsed_message_v1 schema, no legacy data)."
+            "'v1' reads parsed_messages (default, current parser). "
+            "'legacy' reads parse_results."
         ),
     )
-    return parser.parse_args()
+    return parser.parse_args(argv)
 
 
 def main() -> None:
@@ -84,6 +89,7 @@ def main() -> None:
         trader=args.trader,
         from_date=args.from_date,
         to_date=args.to_date,
+        force_reparse=args.force_reparse,
         parser_mode=args.parser_mode,
         parser_system=args.parser_system,
         show_normalized_samples=args.show_normalized_samples,

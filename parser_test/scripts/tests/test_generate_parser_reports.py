@@ -15,8 +15,13 @@ def test_generate_parser_reports_passes_parser_system_flag(monkeypatch) -> None:
         captured["export"] = kwargs
         return []
 
+    def fake_export_reports_csv_v1(**kwargs: object) -> list[object]:
+        captured["export_v1"] = kwargs
+        return []
+
     monkeypatch.setattr(module, "replay_database", fake_replay_database)
     monkeypatch.setattr(module, "export_reports_csv_v2", fake_export_reports_csv_v2)
+    monkeypatch.setattr(module, "export_reports_csv_v1", fake_export_reports_csv_v1)
     monkeypatch.setattr(module, "_print_summary", lambda updated: None)
     monkeypatch.setattr(
         module,
@@ -31,12 +36,14 @@ def test_generate_parser_reports_passes_parser_system_flag(monkeypatch) -> None:
             chat_id=None,
             from_date=None,
             to_date=None,
+            force_reparse=True,
             parser_mode=None,
             show_normalized_samples=3,
             reports_dir="parser_test/reports",
             include_legacy_debug=False,
             include_json_debug=False,
             parser_system="parsed_message",
+            report_system="v1",
         ),
     )
 
@@ -44,5 +51,12 @@ def test_generate_parser_reports_passes_parser_system_flag(monkeypatch) -> None:
 
     assert captured["parser_system"] == "parsed_message"
     assert captured["trader"] == "trader_a"
-    assert "export" in captured
+    assert captured["force_reparse"] is True
+    assert "export_v1" in captured
 
+
+def test_generate_parser_reports_defaults_to_current_parser() -> None:
+    args = module.parse_args([])
+    assert args.parser_system == "parsed_message"
+    assert args.report_system == "v1"
+    assert args.force_reparse is False

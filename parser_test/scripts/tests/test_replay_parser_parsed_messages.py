@@ -13,7 +13,7 @@ from src.parser.parsed_message import ExitBeEntities, IntentResult, ParsedMessag
 from src.parser.trader_profiles.base import ParserContext
 from src.storage.parsed_messages import ParsedMessageStore
 
-from parser_test.scripts.replay_parser import ReplayRawMessage, SelectedRaw, backfill_parsed_messages
+from parser_test.scripts.replay_parser import ReplayRawMessage, SelectedRaw, backfill_parsed_messages, fetch_raw_messages
 
 
 def _migrations_dir() -> str:
@@ -108,4 +108,135 @@ def test_backfill_parsed_messages_persists_confirmed_intents(tmp_path: Path) -> 
     assert record.trader_id == "trader_a"
     assert record.primary_class == "UPDATE"
     assert record.validation_status == "VALIDATED"
+    assert json.loads(record.intents_confirmed_json) == ["EXIT_BE"]
+
+
+def test_fetch_raw_messages_only_unparsed_uses_parsed_messages_for_current_parser(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    with sqlite3.connect(str(db_path)) as conn:
+        conn.execute(
+            """
+            INSERT INTO raw_messages(
+                raw_message_id,
+                source_chat_id,
+                telegram_message_id,
+                raw_text,
+                message_ts,
+                acquired_at,
+                acquisition_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?), (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                1,
+                "-1003722628653",
+                1346,
+                "already parsed",
+                "2026-04-29T10:00:00+00:00",
+                "2026-04-29T10:00:01+00:00",
+                "ACQUIRED",
+                2,
+                "-1003722628653",
+                1347,
+                "new raw",
+                "2026-04-29T10:01:00+00:00",
+                "2026-04-29T10:01:01+00:00",
+                "ACQUIRED",
+            ),
+        )
+        conn.execute(
+            "INSERT INTO parsed_messages(raw_message_id, trader_id, primary_class, validation_status, composite, parsed_json, intents_confirmed_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                1,
+                "trader_a",
+                "INFO",
+                "VALIDATED",
+                0,
+                "{}",
+                "[]",
+                "2026-04-29T10:00:02+00:00",
+            ),
+        )
+        conn.commit()
+
+    rows = fetch_raw_messages(
+        db_path=str(db_path),
+        only_unparsed=True,
+        limit=None,
+        chat_id=None,
+        from_date=None,
+        to_date=None,
+        parser_system="parsed_message",
+    )
+
+    assert [row.raw_message_id for row in rows] == [2]
+
+
+def test_backfill_parsed_messages_force_reparse_rebuilds_existing_rows(tmp_path: Path) -> None:
+    db_path = _make_db(tmp_path)
+    with sqlite3.connect(str(db_path)) as conn:
+        conn.execute(
+            """
+            INSERT INTO raw_messages(
+                raw_message_id,
+                source_chat_id,
+                telegram_message_id,
+                raw_text,
+                message_ts,
+                acquired_at,
+                acquisition_status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                1,
+                "-1003722628653",
+                1346,
+                "already parsed",
+                "2026-04-29T10:00:00+00:00",
+                "2026-04-29T10:00:01+00:00",
+                "ACQUIRED",
+            ),
+        )
+        conn.execute(
+            "INSERT INTO parsed_messages(raw_message_id, trader_id, primary_class, validation_status, composite, parsed_json, intents_confirmed_json, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (
+                1,
+                "trader_a",
+                "INFO",
+                "VALIDATED",
+                0,
+                json.dumps({"primary_class": "INFO"}),
+                "[]",
+                "2026-04-29T10:00:02+00:00",
+            ),
+        )
+        conn.commit()
+
+    selected = [
+        SelectedRaw(
+            row=ReplayRawMessage(
+                raw_message_id=1,
+                source_chat_id="-1003722628653",
+                source_chat_title=None,
+                source_chat_username=None,
+                telegram_message_id=1346,
+                reply_to_message_id=None,
+                raw_text="already parsed",
+                message_ts="2026-04-29T10:00:00+00:00",
+            ),
+            resolved_trader_id="trader_a",
+            trader_resolution_method="topic",
+        )
+    ]
+
+    with patch("parser_test.scripts.replay_parser.get_profile_parser", return_value=_FakeProfile()):
+        backfill_parsed_messages(
+            db_path=str(db_path),
+            selected=selected,
+            show_normalized_samples=0,
+            force_reparse=True,
+        )
+
+    record = ParsedMessageStore(db_path=str(db_path)).get_by_raw_message_id(1)
+    assert record is not None
+    assert record.primary_class == "UPDATE"
     assert json.loads(record.intents_confirmed_json) == ["EXIT_BE"]

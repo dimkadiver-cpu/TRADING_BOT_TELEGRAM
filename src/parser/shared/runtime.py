@@ -76,6 +76,7 @@ def parse(
 def _build_intents(raw_intents: list[Any], detections: dict[str, Any]) -> list[IntentResult]:
     intents: list[IntentResult] = []
     for item in raw_intents:
+        explicit_detection_strength = None
         if isinstance(item, IntentResult):
             intent = item.model_copy(deep=True)
         else:
@@ -83,9 +84,10 @@ def _build_intents(raw_intents: list[Any], detections: dict[str, Any]) -> list[I
             intent_type = IntentType(payload["type"])
             payload.setdefault("category", _category_for_intent(intent_type))
             payload.setdefault("confidence", 0.0)
+            explicit_detection_strength = payload.get("detection_strength")
             intent = IntentResult.model_validate(payload)
         detected = detections.get(intent.type.value)
-        if detected is not None:
+        if detected is not None and explicit_detection_strength is None:
             intent = intent.model_copy(
                 update={
                     "detection_strength": detected.strength,

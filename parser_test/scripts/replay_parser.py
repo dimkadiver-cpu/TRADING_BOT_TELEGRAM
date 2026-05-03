@@ -110,6 +110,11 @@ def parse_args() -> argparse.Namespace:
         default=3,
         help="How many normalized parse_result examples to print (default: 3, 0 to disable).",
     )
+    parser.add_argument(
+        "--force-reparse",
+        action="store_true",
+        help="Reparse all selected raw_messages even if parsed_messages already exists (parsed_message only).",
+    )
     return parser.parse_args()
 
 
@@ -264,6 +269,7 @@ def backfill_parsed_messages(
     db_path: str,
     selected: list[SelectedRaw],
     show_normalized_samples: int = 3,
+    force_reparse: bool = False,
 ) -> None:
     parsed_messages_store = ParsedMessageStore(db_path=db_path)
     validator = HistoryBackedIntentValidator(db_path=db_path)
@@ -274,6 +280,12 @@ def backfill_parsed_messages(
     by_primary_class: Counter[str] = Counter()
     by_validation_status: Counter[str] = Counter()
     normalized_samples: list[dict[str, object]] = []
+    deleted_existing = 0
+
+    if force_reparse:
+        deleted_existing = parsed_messages_store.delete_by_raw_message_ids(
+            [item.row.raw_message_id for item in selected]
+        )
 
     for item in selected:
         row = item.row
@@ -320,6 +332,8 @@ def backfill_parsed_messages(
 
     print(f"db_path: {db_path}")
     print("parser_system: parsed_message")
+    if force_reparse:
+        print(f"force_reparse: true | deleted_existing={deleted_existing}")
     print(f"total raw selected: {len(selected)}")
     print(f"total processed: {processed}")
     print(f"total skipped: {skipped}")
@@ -431,6 +445,7 @@ def main() -> None:
         chat_id=args.chat_id,
         from_date=args.from_date,
         to_date=args.to_date,
+        parser_system=args.parser_system,
     )
     selected = select_rows(raws=raws, trader_filter=args.trader, trader_resolver=trader_resolver)
 
@@ -447,6 +462,7 @@ def main() -> None:
             db_path=db_path,
             selected=selected,
             show_normalized_samples=args.show_normalized_samples,
+            force_reparse=args.force_reparse,
         )
         return
 
@@ -522,6 +538,7 @@ def fetch_raw_messages(
     chat_id: str | None,
     from_date: str | None,
     to_date: str | None,
+    parser_system: str = "legacy",
 ) -> list[ReplayRawMessage]:
     query_parts = [
         """
@@ -541,8 +558,12 @@ def fetch_raw_messages(
     params: list[object] = []
 
     if only_unparsed:
-        query_parts.append("LEFT JOIN parse_results pr ON pr.raw_message_id = rm.raw_message_id")
-        where.append("pr.raw_message_id IS NULL")
+        if parser_system == "parsed_message":
+            query_parts.append("LEFT JOIN parsed_messages pm ON pm.raw_message_id = rm.raw_message_id")
+            where.append("pm.raw_message_id IS NULL")
+        else:
+            query_parts.append("LEFT JOIN parse_results pr ON pr.raw_message_id = rm.raw_message_id")
+            where.append("pr.raw_message_id IS NULL")
     if chat_id:
         where.append("rm.source_chat_id = ?")
         params.append(chat_id)
@@ -713,6 +734,7 @@ def replay_database(
     parser_mode: str | None = None,
     parser_system: str = "legacy",
     show_normalized_samples: int = 3,
+    force_reparse: bool = False,
 ) -> None:
     """Callable entry point for use by other scripts (e.g. generate_parser_reports.py)."""
     parser_test_dir = PROJECT_ROOT / "parser_test"
@@ -768,11 +790,12 @@ def replay_database(
 
     raws = fetch_raw_messages(
         db_path=resolved_db_path,
-        only_unparsed=only_unparsed,
+        only_unparsed=only_unparsed and not force_reparse,
         limit=limit,
         chat_id=chat_id,
         from_date=from_date,
         to_date=to_date,
+        parser_system=parser_system,
     )
     selected = select_rows(raws=raws, trader_filter=effective_trader, trader_resolver=trader_resolver)
 
@@ -781,6 +804,7 @@ def replay_database(
             db_path=resolved_db_path,
             selected=selected,
             show_normalized_samples=show_normalized_samples,
+            force_reparse=force_reparse,
         )
         return
 

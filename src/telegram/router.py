@@ -13,6 +13,7 @@ from typing import Any
 import os
 
 from src.parser import (
+    HistoryBackedIntentValidator,
     PassthroughIntentValidator,
     ProfileCanonicalMessageTranslator,
     ProfileRulesDisambiguationEngine,
@@ -60,7 +61,7 @@ _ENV_DEFAULT = "T"
 # Feature flag: abilita il percorso targeted runtime (Fase 4).
 # Disabilitato di default; attivare con USE_TARGETED_RUNTIME=1 nell'ambiente.
 _USE_TARGETED_RUNTIME: bool = os.getenv("USE_TARGETED_RUNTIME", "0") == "1"
-_USE_PARSED_MESSAGE: bool = os.getenv("PARSER_USE_PARSED_MESSAGE", "0") == "1"
+_USE_PARSED_MESSAGE: bool = os.getenv("PARSER_USE_PARSED_MESSAGE", "1") == "1"
 
 
 @dataclass(slots=True)
@@ -145,7 +146,12 @@ class MessageRouter:
         # Canonical v1 normalizer — always runs when store is wired; no flag needed
         self._parse_results_v1: ParseResultV1Store | None = parse_results_v1_store
         self._parsed_messages: ParsedMessageStore | None = parsed_messages_store
-        self._intent_validator = intent_validator or PassthroughIntentValidator()
+        if intent_validator is not None:
+            self._intent_validator = intent_validator
+        elif db_path is not None:
+            self._intent_validator = HistoryBackedIntentValidator(db_path=db_path)
+        else:
+            self._intent_validator = PassthroughIntentValidator()
         self._intent_translator = intent_translator or ProfileCanonicalMessageTranslator()
         self._disambiguation_engine = (
             disambiguation_engine or ProfileRulesDisambiguationEngine()
@@ -162,11 +168,7 @@ class MessageRouter:
         self._parse_results_v1 = None
 
     def _should_use_parsed_message_dual_stack(self, profile_parser: Any) -> bool:
-        return (
-            _USE_PARSED_MESSAGE
-            and self._parsed_messages is not None
-            and callable(getattr(type(profile_parser), "parse", None))
-        )
+        return _USE_PARSED_MESSAGE and callable(getattr(type(profile_parser), "parse", None))
 
     def route(self, item: QueueItem) -> None:
         self._status_store.update(item.raw_message_id, "processing")

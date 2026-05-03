@@ -16,6 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from parser_test.reporting.flatteners_v1 import build_report_row_v1
 from parser_test.reporting.report_schema_v1 import REPORT_SCOPES_V1, schema_for_scope_v1
+from src.parser.trader_profiles.registry import canonicalize_trader_code
 
 # SQL filter per scope -------------------------------------------------------
 # Maps scope name → (primary_class filter, parse_status filter) or None for no filter.
@@ -81,8 +82,8 @@ def export_reports_csv_v1(
 # ---------------------------------------------------------------------------
 
 def _resolve_trader_ids(*, conn: sqlite3.Connection, trader_filter: str | None) -> list[str]:
-    if trader_filter and trader_filter.strip().lower() not in {"", "all", "*", "any"}:
-        return [trader_filter.strip()]
+    if trader_filter and trader_filter.strip().lower() not in {"", "all", "trader_all", "*", "any"}:
+        return [canonicalize_trader_code(trader_filter.strip()) or trader_filter.strip()]
 
     rows = conn.execute(
         "SELECT DISTINCT trader_id FROM parsed_messages WHERE trader_id IS NOT NULL AND TRIM(trader_id) != '' ORDER BY trader_id"
@@ -116,7 +117,7 @@ def _fetch_rows(
         # We use a JSON extract approach for portability, falling back to a LIKE guard.
         # SQLite's json_extract is available from 3.38+; for older versions we filter in Python.
         sql += " AND pm.parsed_json LIKE ?"
-        params.append(f'%"parse_status": "{status_filter}"%')
+        params.append(f'%"parse_status":"{status_filter}"%')
 
     sql += " ORDER BY pm.raw_message_id ASC"
 

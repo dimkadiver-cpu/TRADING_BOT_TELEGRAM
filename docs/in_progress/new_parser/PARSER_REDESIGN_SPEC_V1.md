@@ -2298,3 +2298,63 @@ Risultato:
   - Red: `ModuleNotFoundError` su `src.intent_translator.translator` e assenza del layer dedicato;
   - Green: implementazione minima del translator, del vocabolario scope e dei validator canonici necessari;
   - Refactor: wiring del parser sul translator dedicato e aggiornamento del test router accoppiato al bridge precedente.
+
+---
+
+## Chiusura migrazione trader_a su runtime shared
+
+### File modificati
+
+- `src/parser/trader_profiles/trader_a/profile.py`
+- `src/parser/trader_profiles/trader_a/extractors.py`
+- `src/parser/shared/runtime.py`
+- `src/parser/trader_profiles/trader_a/tests/test_parsing_rules_integrity.py`
+- `tests/parser_shared/test_rules_schema.py`
+- `parser_test/scripts/watch_parser.py`
+- `src/parser/README.md`
+
+### File rimossi
+
+- `src/parser/trader_profiles/trader_a/parsing_rules.json`
+- `src/parser/trader_profiles/trader_a/markers.json`
+- `src/parser/trader_profiles/trader_a/extractors copy.py`
+
+### Comportamento implementato
+
+- `TraderAProfileParser.parse()` ora e un wrapper sottile su `src/parser/shared/runtime.py`.
+- Il nuovo percorso `ParsedMessage` usa `semantic_markers.json` + `rules.json` e `TraderAExtractors`.
+- `TraderAExtractors` traduce l'alias legacy `CANCEL_PENDING_ORDERS` nell'intent canonico `CANCEL_PENDING`.
+- Il nuovo extractor copre anche `REENTER`, `ADD_ENTRY`, `UPDATE_TAKE_PROFITS` e `REPORT_PARTIAL_RESULT` con entity tipizzate.
+- `shared/runtime.py` preserva una `detection_strength` esplicitamente fornita dagli extractor, invece di sovrascriverla sempre con l'evidenza grezza del `RulesEngine`.
+- Il watch mode parser osserva ora `semantic_markers.json`, `rules.json`, `profile.py` ed `extractors.py`.
+
+### Compatibilita mantenuta
+
+- `parse_message()` e `parse_canonical()` restano presenti perche router, replay e operation rules hanno ancora dipendenze attive sul percorso legacy.
+- Il downstream operativo continua a ricevere `TraderParseResult` legacy finche operation rules/router non saranno migrati a `CanonicalMessage` come unico contratto.
+
+### Validazione eseguita
+
+```bash
+.venv\Scripts\python.exe -m pytest \
+  src\parser\trader_profiles\trader_a\tests \
+  tests\parser_shared\test_rules_schema.py \
+  src\parser\tests\test_phase2_parsed_message.py \
+  src\parser\tests\test_phase3_shared_runtime.py \
+  src\parser\tests\test_phase3_disambiguation.py \
+  src\parser\tests\test_phase3_rules_schema.py \
+  src\parser\tests\test_phase5_intent_validator.py \
+  src\intent_translator\tests\test_translator.py \
+  src\telegram\tests\test_router_parsed_message.py \
+  -q
+```
+
+Risultato:
+- `201 passed`
+- `12 skipped`
+- warning non bloccante di pytest su `.pytest_cache` non scrivibile
+
+### Stato residuo
+
+- Migrazione `trader_a` del percorso `ParsedMessage`: chiusa rispetto alla spec del runtime shared.
+- Migrazione completa sistema end-to-end: ancora aperta perche `operation_rules` usa `TraderParseResult` legacy.

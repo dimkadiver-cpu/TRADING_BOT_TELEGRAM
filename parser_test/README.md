@@ -64,7 +64,7 @@ I CSV vengono scritti in `parser_test/reports/<trader_id>_message_types_csv/`.
 
 | Flag | Descrizione |
 |---|---|
-| `--parser-system parsed_message` | **Obbligatorio**: usa il parser v1 e scrive in `parsed_messages` |
+| `--parser-system parsed_message` | Default: usa il parser attuale e scrive in `parsed_messages` |
 | `--db-path <path>` | Path esplicito del DB di test |
 | `--db-name <nome>` | Nome logico del DB |
 | `--db-per-chat` | Usa lo stesso naming basato su `--chat-id` |
@@ -79,8 +79,8 @@ I CSV vengono scritti in `parser_test/reports/<trader_id>_message_types_csv/`.
 
 | Flag | Descrizione |
 |---|---|
-| `--parser-system parsed_message` | **Obbligatorio**: replay con parser v1 prima dell'export |
-| `--report-system v1` | **Obbligatorio**: esporta da `parsed_messages`, niente legacy |
+| `--parser-system parsed_message` | Default: replay con parser attuale prima dell'export |
+| `--report-system v1` | Default: esporta da `parsed_messages`, niente legacy |
 | `--db-path <path>` | Path esplicito del DB di test |
 | `--db-name <nome>` | Nome logico del DB |
 | `--db-per-chat` | Usa naming automatico basato su `--chat-id` |
@@ -168,13 +168,11 @@ python parser_test/scripts/replay_parser.py \
     --parser-system parsed_message --only-unparsed
 ```
 
-### Replay parser + export CSV (tutto in un comando)
+### Replay parser attuale + export CSV (tutto in un comando)
 
 ```bash
 python parser_test/scripts/generate_parser_reports.py \
     --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --report-system v1 \
     --trader trader_all
 ```
 
@@ -183,8 +181,6 @@ python parser_test/scripts/generate_parser_reports.py \
 ```bash
 python parser_test/scripts/generate_parser_reports.py \
     --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --report-system v1 \
     --trader trader_a
 ```
 

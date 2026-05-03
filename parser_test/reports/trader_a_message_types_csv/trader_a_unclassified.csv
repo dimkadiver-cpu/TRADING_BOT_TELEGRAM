@@ -1,14 +1,66 @@
-﻿raw_message_id,parse_status,message_type,primary_intent,intents,intents_raw,warning_text,warnings_summary,validation_warning_count,raw_text,reply_to_message_id,signal_id,target_refs_count,links_count,hashtags_count,diagnostics_summary,notes_summary
-1918,PARSED,UNCLASSIFIED,,,,,,0,,823,823,1,0,0,warning_count=0,
-1806,PARSED,UNCLASSIFIED,SL_HIT,SL_HIT,,,,0,тут стоп,971,971,1,0,0,warning_count=0,
-1805,PARSED,UNCLASSIFIED,SL_HIT,SL_HIT,,,,0,и тут стоп,972,972,1,0,0,warning_count=0,
-1799,PARSED,UNCLASSIFIED,SL_HIT,SL_HIT,,,,0,тоже стоп,963,963,1,0,0,warning_count=0,
-1743,PARSED,UNCLASSIFIED,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,,,,0,Первый пятничный тейк. Поздравляю,1034,1034,1,0,0,warning_count=0,
-1722,PARSED,UNCLASSIFIED,TP_HIT,TP_HIT | REPORT_FINAL_RESULT,,,,0,"начинаем субботу с тейка, поздравляю",1037,1037,1,0,0,warning_count=0,
-1691,PARSED,UNCLASSIFIED,SL_HIT,SL_HIT,,,,0,"тоже самое, что и выше
+﻿raw_message_id,reply_to_message_id,raw_text,parse_status,primary_class,warnings_summary,primary_intent,intents_confirmed,intents_candidate,intents_invalid,intents_invalid_reason,target_scope_scope,target_refs,new_stop_level,close_scope,close_fraction,hit_target,fill_state,cancel_scope,reported_results
+472,2916,убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2916,,,,,,,
+476,2881,"Этот наконец-то вспомнил, что он интрадей, а не среднесрок…",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2881,,,,,,,
+518,2859,"хочется написать много непечатных слов по поводу 1 копейки...
 
-стоп",1084,1084,1,0,0,warning_count=0,
-1688,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
+убираем лимитку😔",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2859,,,,,,,
+525,2851,Тут с текущих,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2851,,,,,,,
+611,2708,продолжаем,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2708,,,,,,,
+615,2719,Тут тоже снимаем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2719,,,,,,,
+647,2681,,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2681,,,,,,,
+703,,"trader #A
+
+https://t.me/c/3171748254/2571
+https://t.me/c/3171748254/2573
+
+снимаем лимитки
+
+посмотрим сегодня среднесрок😊",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,https://t.me/c/3171748254/2571 | 2571 | https://t.me/c/3171748254/2573 | 2573,,,,,,,
+777,2481,,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2481,,,,,,,
+810,2447,"без нас улетели..печально
+лимитку убираем",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2447,,,,,,,
+811,2446,"без нас улетели..печально. 
+лимитку убираем",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2446,,,,,,,
+826,2348,Актуально,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2348,,,,,,,
+838,2348,убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2348,,,,,,,
+843,2234,эту тоже возвращаем,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2234,,,,,,,
+850,2360,Тоже заходим по текущим заново,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2360,,,,,,,
+851,2371,Заходим по текущим заново,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2371,,,,,,,
+889,,"Фух...я даже немного вспотел от волнения!😅
+
+Болел за этого добряка (trader #A), как за Илью Малинина в короткой программе...🥳
+
+Завтра посчитаемся окончательно, но, скажу по секрету, это уже лучше, чем торговля трейдера#4 за всю его жизнь у нас в канале! 🤣
+Без негатива.
+
+#админ",UNCLASSIFIED,INFO,,,,,,,,,,,,,,,
+900,,"trader #A
+
+пока ждем",UNCLASSIFIED,INFO,,,,,,,,,,,,,,,
+912,,"trader #A
+
+Начинаем марафон, ожидайте сделки",UNCLASSIFIED,INFO,,,,,,,,,,,,,,,
+1011,2178,"а тут уберем лимитку
+
+всем хорошего вечера",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2178,,,,,,,
+1059,2113,снимаем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2113,,,,,,,
+1067,2093,Зайду по текущим,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2093,,,,,,,
+1097,2055,тут тоже убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2055,,,,,,,
+1099,2057,убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2057,,,,,,,
+1103,2049,убираем лимитку. опять без нас((,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2049,,,,,,,
+1109,2010,да что ж такое. и этот без нас улетел. убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2010,,,,,,,
+1112,2006,убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,2006,,,,,,,
+1174,1832,Также б/у,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,1832,,,,,,,
+1249,1774,Убираем лимитку,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,1774,,,,,,,
+1616,,"[trader#A]
+
+MANA - https://t.me/c/3171748254/1083
+SOL - https://t.me/c/3171748254/1159
+LINK - https://t.me/c/3171748254/1160
+SUI - https://t.me/c/3171748254/1168
+
+Должны остаться в работе. Ближе к вечеру гляну, что можно открыть",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,https://t.me/c/3171748254/1083 | 1083 | https://t.me/c/3171748254/1159 | 1159 | https://t.me/c/3171748254/1160 | 1160 | https://t.me/c/3171748254/1168 | 1168,,,,,,,
+1688,,"[trader#A]
 
 PEOPLE - https://t.me/c/3171748254/1034 
 SXP - https://t.me/c/3171748254/1036 
@@ -18,90 +70,5 @@ JTO - https://t.me/c/3171748254/1081
 MANA - https://t.me/c/3171748254/1083
 
 
-Эти сделки продолжаю держать",,,6,0,0,warning_count=0,
-1616,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
-
-MANA - https://t.me/c/3171748254/1083
-SOL - https://t.me/c/3171748254/1159
-LINK - https://t.me/c/3171748254/1160
-SUI - https://t.me/c/3171748254/1168
-
-Должны остаться в работе. Ближе к вечеру гляну, что можно открыть",,,4,0,0,warning_count=0,
-1389,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
-
-HOOK лонг с текущих.
-Остальные данные чуть позже",,,0,0,0,warning_count=0,
-1388,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
-
-KAS лонг с текущих.
-Остальные данные чуть позже",,,0,0,0,warning_count=0,
-1387,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
-
-STORJ лонг с текущих.
-Остальные данные чуть позже",,,0,0,0,warning_count=0,
-1385,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
-
-TLM лонг с текущих.
-Остальные данные чуть позже
-
-финальная от меня",,,0,0,0,warning_count=0,
-1309,PARSED,UNCLASSIFIED,,,,,,0,"[trader#A]
-
-#среднесрок #MOVRUSDT 🐻 Шорт (вход с текущих)
-
-""sl"": 2.676,
-
-полная информация чуть позже",,,0,0,0,warning_count=0,
-1174,PARSED,UNCLASSIFIED,,,,,,0,Также б/у,1832,1832,1,0,0,warning_count=0,
-1067,PARSED,UNCLASSIFIED,,,,,,0,Зайду по текущим,2093,2093,1,0,0,warning_count=0,
-999,PARSED,UNCLASSIFIED,U_INVALIDATE_SETUP,,U_INVALIDATE_SETUP,,,0,Тут отмена,2195,2195,1,0,0,warning_count=0,
-993,PARSED,UNCLASSIFIED,U_INVALIDATE_SETUP,,U_INVALIDATE_SETUP,,,0,"тоже отбой
-всем хорошего вечера",2203,2203,1,0,0,warning_count=0,
-937,PARSED,UNCLASSIFIED,U_INVALIDATE_SETUP,,U_INVALIDATE_SETUP,,,0,тут отмена,2287,2287,1,0,0,warning_count=0,
-915,PARSED,UNCLASSIFIED,U_INVALIDATE_SETUP,,U_INVALIDATE_SETUP,,,0,"тут отмена, вечером уже активно поторгуем",2294,2294,1,0,0,warning_count=0,
-912,PARSED,UNCLASSIFIED,,,,,,0,"trader #A
-
-Начинаем марафон, ожидайте сделки",,,0,0,0,warning_count=0,
-900,PARSED,UNCLASSIFIED,,,,,,0,"trader #A
-
-пока ждем",,,0,0,0,warning_count=0,
-851,PARSED,UNCLASSIFIED,,,,,,0,Заходим по текущим заново,2371,2371,1,0,0,warning_count=0,
-850,PARSED,UNCLASSIFIED,,,,,,0,Тоже заходим по текущим заново,2360,2360,1,0,0,warning_count=0,
-845,PARSED,UNCLASSIFIED,U_INVALIDATE_SETUP,,U_INVALIDATE_SETUP,,,0,Отмена,2397,2397,1,0,0,warning_count=0,
-843,PARSED,UNCLASSIFIED,,,,,,0,эту тоже возвращаем,2234,2234,1,0,0,warning_count=0,
-826,PARSED,UNCLASSIFIED,,,,,,0,Актуально,2348,2348,1,0,0,warning_count=0,
-777,PARSED,UNCLASSIFIED,,,,,,0,,2481,2481,1,0,0,warning_count=0,
-756,PARSED,UNCLASSIFIED,TP_HIT,TP_HIT,,,,0,"Trader #A
-
-Пока все, ждем лимиток и тейков
-Всего 7 сигналов в работе
-из них 3 уже торгуются, 4 сигнала ждут взятия лимиток",,,0,0,0,warning_count=0,
-647,PARSED,UNCLASSIFIED,,,,,,0,,2681,2681,1,0,0,warning_count=0,
-611,PARSED,UNCLASSIFIED,,,,,,0,продолжаем,2708,2708,1,0,0,warning_count=0,
-599,PARSED,UNCLASSIFIED,,,,,,0,тут уже вход с текущих,2739,2739,1,0,0,warning_count=0,
-597,PARSED,UNCLASSIFIED,EXIT_BE,MOVE_STOP_TO_BE | TP_HIT | EXIT_BE,,,,0,"[trader #A]
-
-на этом пока все, ожидаем лимитки и тейки
-
-Скорее всего лимитки будем переносить в ночь и уже завтра утром решу, что с ними делать, либо нас порадуют тейками😊",,,0,0,0,warning_count=0,
-573,PARSED,UNCLASSIFIED,,,,,,0,точка входа 84.86,2772,2772,1,0,0,warning_count=0,
-550,PARSED,UNCLASSIFIED,SL_HIT,TP_HIT | SL_HIT,,,,0,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",2809,2809,1,0,0,warning_count=0,
-525,PARSED,UNCLASSIFIED,,,,,,0,Тут с текущих,2851,2851,1,0,0,warning_count=0,
-521,PARSED,UNCLASSIFIED,U_INVALIDATE_SETUP,,U_INVALIDATE_SETUP,,,0,тут отмена,2855,2855,1,0,0,warning_count=0,
-476,PARSED,UNCLASSIFIED,,,,,,0,"Этот наконец-то вспомнил, что он интрадей, а не среднесрок…",2881,2881,1,0,0,warning_count=0,
-471,PARSED,UNCLASSIFIED,SL_HIT,MOVE_STOP_TO_BE | SL_HIT | EXIT_BE,U_MOVE_STOP_TO_BE,trader_a_ambiguous_update_without_target,,0,"Trader #A 
-
-WOO и ATP стопы в бу",,,0,0,0,warning_count=1,
-470,PARSED,UNCLASSIFIED,SL_HIT,MOVE_STOP_TO_BE | SL_HIT | EXIT_BE,U_MOVE_STOP_TO_BE,trader_a_ambiguous_update_without_target,,0,"Trader #A 
-
-PYTH тоже стоп в бу",,,0,0,0,warning_count=1,
-277,PARSED,UNCLASSIFIED,SL_HIT,MOVE_STOP_TO_BE | SL_HIT | EXIT_BE,,,,0,"Trader #A
-
-Doge
-LDO
-SOL
-BTC
-ETH
-
-стоп двигаем в бу",,,0,0,0,warning_count=0,
-53,PARSED,UNCLASSIFIED,TP_HIT,TP_HIT,,,,0,"отбой, поторопился. у меня почему-то стоял другой тейк",3459,3459,1,0,0,warning_count=0,
+Эти сделки продолжаю держать",UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,https://t.me/c/3171748254/1034 | 1034 | https://t.me/c/3171748254/1036 | 1036 | https://t.me/c/3171748254/1038 | 1038 | https://t.me/c/3171748254/1044 | 1044 | https://t.me/c/3171748254/1081 | 1081 | https://t.me/c/3171748254/1083 | 1083,,,,,,,
+1918,823,,UNCLASSIFIED,INFO,,,,,,,SINGLE_SIGNAL,823,,,,,,,

@@ -24,7 +24,7 @@ except ImportError:
     _WATCHDOG_AVAILABLE = False
 
 _DEBOUNCE_SECONDS: float = 2.0
-_WATCHED_FILENAMES: tuple[str, ...] = ("parsing_rules.json", "profile.py")
+_WATCHED_FILENAMES: tuple[str, ...] = ("semantic_markers.json", "rules.json", "profile.py", "extractors.py")
 
 
 def _monitored_files(trader: str) -> list[Path]:

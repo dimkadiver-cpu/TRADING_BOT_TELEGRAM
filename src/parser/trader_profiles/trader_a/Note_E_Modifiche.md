@@ -53,7 +53,7 @@ Per 1823 i tre intent arrivano perché il testo è molto corto e ambiguo e nel t
 
 
 
-- messaggio non blocati da blacklist:
+- messaggio non blocati da blacklist:      info on
     - 1919 : Друзья, привет! Админ на связи 👋
     - 1509 : Друзья, #админ на связи 👋
 
@@ -77,7 +77,7 @@ conratto :
 
 Regole: (aggiungere livello di lavidazione ???)
 
-- per classifica re come "Update" - un ref, (ref + signal father) altrimenti info 
+- per classifica come "Update" - un marker_dei categoria update valido + un ref, (ref + signal father) altrimenti info 
 - per "Cancel_pending_orders" - ref + signal storico +
 - per "Exit_be" - Signal father + move_stop
 - Incompatibili 1 allo stesso ref-unico "Cancel_pending_orders" + "Exit_be" 

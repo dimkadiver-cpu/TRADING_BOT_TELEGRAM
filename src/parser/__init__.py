@@ -65,7 +65,7 @@ def parse_message(
 
 
 def _extract_disambiguation_rules(profile: Any) -> list[dict[str, Any]]:
-    rules_engine = getattr(profile, "_phase4_rules_engine", None)
+    rules_engine = getattr(profile, "_rules_engine", None)
     if rules_engine is not None:
         raw_rules = getattr(rules_engine, "raw_rules", {})
         disambiguation_rules = raw_rules.get("disambiguation_rules", {})
@@ -88,3 +88,4 @@ __all__ = [
     "ProfileRulesDisambiguationEngine",
     "parse_message",
 ]
+
