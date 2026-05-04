@@ -1,0 +1,154 @@
+{
+  "classification_rules": [
+    {
+      "name": "complete_new_signal_structure",
+      "when_all_fields_present": ["side","symbol", "entry", "stop_loss", "take_profit"],
+      "then": "new_signal"
+    }
+  ],
+  "combination_rules": [
+    {
+      "if": ["вход", "sl:"],
+      "then": "new_signal",
+      "confidence_boost": 0.4
+    },
+    {
+      "if": ["стоп в бу", "тейк"],
+      "then": "update",
+      "confidence_boost": 0.3
+    }
+  ],
+  "primary_intent_precedence": [
+    "SL_HIT",
+    "EXIT_BE",
+    "TP_HIT",
+    "REPORT_RESULT",
+    "REPORT_FINAL_RESULT",
+    "CLOSE_FULL",
+    "CLOSE_PARTIAL",
+    "CANCEL_PENDING_ORDERS",
+    "MOVE_STOP_TO_BE",
+    "MOVE_STOP",
+    "ENTRY_FILLED",
+    "REPORT_RESULT",
+    "REPORT_FINAL_RESULT"
+  ],
+  "disambiguation_rules": {
+    "rules": [
+      {
+        "name": "prefer_move_stop_to_be_over_move_stop",
+        "action": "prefer",
+        "conditions": {
+          "intents": {
+            "strong": ["MOVE_STOP_TO_BE", "MOVE_STOP"]
+          }
+        },
+        "prefer": "MOVE_STOP_TO_BE",
+        "over": ["MOVE_STOP"]
+      },
+      {
+        "name": "suppress_info_only_if_actionable",
+        "action": "suppress",
+        "conditions": {
+          "intents": {
+            "strong": ["MOVE_STOP_TO_BE"]
+          }
+        },
+        "suppress": ["INFO_ONLY"]
+      },
+      {
+        "name": "prefer_sl_hit_over_tp_hit",
+        "action": "prefer",
+        "when_all_detected": ["SL_HIT", "TP_HIT"],
+        "prefer": "SL_HIT",
+        "over": ["TP_HIT"]
+      },
+      {
+        "name": "prefer_exit_be_over_close_full",
+        "action": "prefer",
+        "when_all_detected": ["EXIT_BE", "CLOSE_FULL"],
+        "prefer": "EXIT_BE",
+        "over": ["CLOSE_FULL"],
+        "if_contains_any": ["ушел в бу", "закрылся в бу", "закрылась в безубыток", "closed at breakeven", "stopped at be"]
+      },
+      {
+        "name": "suppress_close_full_if_partial",
+        "action": "suppress",
+        "when_all_detected": ["CLOSE_FULL", "CLOSE_PARTIAL"],
+        "suppress": ["CLOSE_FULL"]
+      },
+      {
+        "name": "keep_sl_and_close",
+        "action": "keep_multi",
+        "when_all_detected": ["SL_HIT", "CLOSE_FULL"],
+        "keep": ["SL_HIT", "CLOSE_FULL"]
+      }
+    ]
+  },
+  "intent_compatibility": {
+    "pairs": [
+      {
+        "intents": ["MOVE_STOP_TO_BE", "MOVE_STOP"],
+        "relation": "specific_vs_generic",
+        "preferred": "MOVE_STOP_TO_BE",
+        "requires_resolution": true
+      },
+      {
+        "intents": ["EXIT_BE", "CLOSE_FULL"],
+        "relation": "specific_vs_generic",
+        "preferred": "EXIT_BE",
+        "requires_resolution": true,
+        "requires_context_validation": true
+      },
+      {
+        "intents": ["TP_HIT", "REPORT_FINAL_RESULT"],
+        "relation": "compatible",
+        "requires_resolution": false
+      },
+      {
+        "intents": ["SL_HIT", "CLOSE_FULL"],
+        "relation": "exclusive",
+        "requires_resolution": true
+      }
+    ]
+  },
+  "context_resolution_rules": {
+    "rules": [
+      {
+        "name": "exit_be_requires_history",
+        "action": "resolve_as",
+        "when": {
+          "has_weak_intent": "EXIT_BE",
+          "has_target_ref": true
+        },
+        "if_target_history_has_any": ["NEW_SETUP", "MOVE_STOP_TO_BE", "MOVE_STOP"],
+        "resolve_as": "EXIT_BE",
+        "otherwise_resolve_as": "INFO_ONLY"
+      },
+      {
+        "name": "update_requires_target",
+        "action": "resolve_as",
+        "when": {
+          "has_any_intent": ["MOVE_STOP_TO_BE"],
+          "has_target_ref": true,
+          "message_type_hint_in": ["UPDATE"]
+        },
+        "resolve_as": "MOVE_STOP_TO_BE",
+        "otherwise_resolve_as": "INFO_ONLY"
+      }
+    ]
+  },
+  "action_scope_groups": {
+    "all_positions": [
+      "ALL_POSITIONS",
+      "ALL_OPEN",
+      "ALL_REMAINING"
+    ],
+    "all_long": [
+      "ALL_LONGS"
+    ],
+    "all_short": [
+      "ALL_SHORTS"
+    ]
+  }
+}

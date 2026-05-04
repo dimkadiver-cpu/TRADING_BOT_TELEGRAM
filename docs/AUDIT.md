@@ -4,6 +4,42 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-04 — Review e cleanup documentazione `parser_v2`
+
+### Step completato
+
+Review completa di `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/` (11 documenti) e cleanup
+strutturale per renderla implementabile direttamente.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/00_SCOPE_E_DECISIONI.md` | Modificato | Aggiunto stato codice (parser_v2 = solo docs) e sezione versionamento schema v2 |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/02_CONTRATTO_PARSED_MESSAGE.md` | Riscritto | Aggiunta formula `confidence` (strong=1.0/weak=0.4) e formula `evidence_status` derivate dal parser attuale |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/03_INTENTS_ENTITIES_MINIME.md` | Riscritto | Rimossi tutti gli `\\\_` triple-escape; allineato `ModifyEntryMode` a doc 09; `InfoOnlyEntities` ora solo `raw_fragment` |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/05_CANONICAL_MESSAGE.md` | Riscritto | Aggiunto `targeted_actions` al modello + sezione composite (UPDATE+REPORT, REPORT prevale, SIGNAL+UPDATE non supportato); InfoPayload ridotto |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/06_MARKERS_RULES.md` | Modificato | Aggiunta regola contestuale MARKET (signal) vs MODIFY_ENTRY/MARKET_NOW (update) |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/06_1_SEMANTIC_MARKERS_COMPLETO.md` | Riscritto | Rimossi tutti gli `\\_` underscore escapati (JSON ora valido); `number_format` → hint diagnostico; aggiunto `modify_entry_mode_markers`; `info_markers` consolidato |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/07_PIANO_IMPLEMENTAZIONE.md` | Riscritto | Allineato a struttura cartelle doc 11 (`contracts/`); rimosso adapter legacy (Fase 13); aggiunti edge cases test (testo vuoto, emoji, numeri orfani, locale price) |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/08_MULTI_REF_TARGETED_ACTIONS.md` | Riscritto | Aggiunto algoritmo segmentazione concreto (split_lines + per-line link/intent) basato su `src/parser/trader_profiles/common_utils.py` |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/09_MODIFY_ENTRY_MODE_MARKERS.md` | Riscritto | Rimossi `\\\_` escape; mode ridotto a `MARKET_NOW/UPDATE_PRICE/REMOVE/UNKNOWN`; aggiunto rinvio a doc 06 per disambiguazione contestuale |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/11_ARCHITETTURA_UNIVERSALE_PARSER.md` | Modificato | Aggiunto `target_hints_extractor.py` al core; `extract_target_hints` reso opzionale nel Protocol profile (default in core) |
+| `src/parser_v2/docs/PARSER_DA_ZERO_DOCS/12_ENUMS_E_CONSTANTI.md` | Creato | Single source of truth per tutti gli enum (`MessageClass`, `ParseStatus`, `IntentType`, `EntryStructure`, `ModifyEntryMode`, `ScopeHint`, `UpdateOperationType`, ecc.) |
+
+### Risultato
+
+Documentazione ora coerente, JSON valido copiabile, contratti allineati tra documenti,
+algoritmo segmentazione concreto, formula confidence definita, scope tassativo a `CanonicalMessage`.
+
+### Rischi aperti
+
+- Nessun codice ancora scritto in `src/parser_v2/`. La Fase 1 (`contracts/`) è il prossimo step.
+- Necessità di riscrivere `operation_rules` e `target_resolver` per consumare `CanonicalMessage` (non in scope per parser_v2 ma blocca l'integrazione end-to-end).
+- I marker `info_markers` semplificati non distinguono più ADMIN/SCHEDULE/etc. — se il sistema ne avesse bisogno in futuro, va riaperto.
+
+---
+
 ## 2026-05-03 — Redesign classificazione parser (Piano v2)
 
 ### Step completato

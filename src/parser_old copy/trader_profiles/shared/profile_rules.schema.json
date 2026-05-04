@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "parser_profile_rules_split_v1",
+  "title": "Parser Profile Rules Schema v1",
+  "type": "object",
+  "properties": {
+    "classification_rules": { "type": "array", "items": { "type": "object" } },
+    "combination_rules": { "type": "array", "items": { "type": "object" } },
+    "primary_intent_precedence": { "type": "array", "items": { "type": "string" } },
+    "disambiguation_rules": { "type": "object" },
+    "action_scope_groups": { "type": "object" }
+  }
+}
