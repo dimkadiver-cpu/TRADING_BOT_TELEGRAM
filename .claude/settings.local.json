@@ -59,7 +59,12 @@
       "PowerShell(git show *)",
       "PowerShell($env:PYTHONUTF8 = \"1\"; git show 49f9b9c --stat; git log --oneline 49f9b9c -1 --format=\"%H %ai %s\")",
       "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_1688.py)",
-      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_unclassified.py)"
+      "PowerShell($env:PYTHONUTF8 = \"1\"; & \"C:\\\\TeleSignalBot\\\\.venv\\\\Scripts\\\\python.exe\" _debug_unclassified.py)",
+      "Bash(Get-ChildItem -Path \"C:\\\\TeleSignalBot\\\\src\\\\parser_v2\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)",
+      "Bash(Get-ChildItem -Path \"C:\\\\TeleSignalBot\\\\src\\\\parser_v2\" -Recurse -Force)",
+      "Bash(Select-Object FullName, PSIsContainer)",
+      "Bash(Sort-Object FullName)"
     ]
   }
 }

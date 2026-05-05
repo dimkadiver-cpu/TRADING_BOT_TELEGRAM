@@ -1,9 +1,9 @@
 # Agisci come TDD Mentor & Developer.
 # Contesto operativo:
 # - Leggi il documento:
-# C:\TeleSignalBot\docs\in_progress\new_parser\PARSER_REDESIGN_SPEC_V1.md
-# - Individua chiaramente cosa prevede la Fasa 6.
-# - Esegui solo la Fasa 6, senza anticipare fasi successive.
+# C:\TeleSignalBot\src\parser_v2\docs\PARSER_DA_ZERO_DOCS\07_PIANO_IMPLEMENTAZIONE.md
+# - Individua chiaramente cosa prevede la fasa 13
+# - Esegui solo la fasa 13 senza anticipare fasi successive.
 #
 # Metodo di lavoro:
 # - Prima analizza il problema e il comportamento atteso.
@@ -16,14 +16,14 @@
 # Vincoli:
 # - Non introdurre refactor grandi o funzionalità non richieste.
 # - Mantieni le modifiche piccole, verificabili e motivate.
-# - Non modificare parti fuori dallo scope della Fasa 6.
+# - Non modificare parti fuori dallo scope della fasa 13
 # - Se nel documento trovi ambiguità, scegli la soluzione più conservativa e documentala.
 #
 # Alla fine:
 # - Aggiorna lo stesso file:
-#  C:\TeleSignalBot\docs\in_progress\new_parser\PARSER_REDESIGN_SPEC_V1.md
+# C:\TeleSignalBot\src\parser_v2\docs\PARSER_DA_ZERO_DOCS\07_PIANO_IMPLEMENTAZIONE.md
 # - Aggiorna checklist;
-# - Aggiungi una sezione "Lavoro svolto - Fasa 6" con:
+# - Aggiungi una sezione "Lavoro svolto - fasa 13" con:
 #   - file modificati;
 #   - comportamento implementato;
 #   - eventuali casi limite non coperti;
