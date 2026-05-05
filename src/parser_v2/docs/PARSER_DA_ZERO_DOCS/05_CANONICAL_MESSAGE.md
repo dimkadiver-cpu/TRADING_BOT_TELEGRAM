@@ -435,7 +435,7 @@ Esempio:
 }
 ```
 
-## Caso 2 — REPORT + UPDATE quando il REPORT domina
+## Caso 2 — REPORT + UPDATE: UPDATE resta dominante
 
 Esempio:
 
@@ -443,19 +443,23 @@ Esempio:
 выбило по стопу, всем закрываю
 ```
 
-`SL_HIT` ha precedenza alta nel `primary_intent_precedence` (vedi [06_MARKERS_RULES.md](06_MARKERS_RULES.md)). In questo caso `primary_class=REPORT` ma il `CLOSE_FULL` è ridondante (è già implicito dallo SL hit). Output:
+Anche se compare `SL_HIT`, la classe primaria resta `UPDATE` quando nel messaggio è presente almeno un intent UPDATE risolto. `SL_HIT` resta come intent secondario/report event. Output:
 
 ```json
 {
-  "primary_class": "REPORT",
-  "primary_intent": "SL_HIT",
+  "primary_class": "UPDATE",
+  "primary_intent": "CLOSE_FULL",
   "intents": ["SL_HIT", "CLOSE_FULL"],
+  "update": {
+    "operations": [
+      {"op_type": "CLOSE_FULL", "source_intent": "CLOSE_FULL"}
+    ]
+  },
   "report": {
     "events": [
       {"event_type": "SL_HIT", "source_intent": "SL_HIT"}
     ]
-  },
-  "warnings": ["close_full_redundant_with_sl_hit"]
+  }
 }
 ```
 
@@ -466,11 +470,9 @@ Un messaggio non può essere `primary_class=SIGNAL` e contenere `update.operatio
 ## Regola generale composite
 
 ```text
-1. UPDATE batte REPORT come primary_class.
-2. SIGNAL batte tutto: se signal_payload presente, primary_class=SIGNAL.
-3. Eccezione: se primary_intent_precedence dichiara un REPORT prioritario (es. SL_HIT),
-   primary_class può restare REPORT e gli UPDATE finire come warning di ridondanza.
-4. payload secondari (report dentro UPDATE) sono opzionali — popolare solo se il parser ha estratto entità sensate.
+1. UPDATE batte REPORT come `primary_class` (senza eccezioni).
+2. SIGNAL batte tutto: se `signal_payload` presente, `primary_class=SIGNAL`.
+3. Payload secondari (`report` dentro UPDATE) sono opzionali — popolare solo se il parser ha estratto entità sensate.
 ```
 
 ---
