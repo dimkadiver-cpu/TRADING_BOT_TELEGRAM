@@ -53,6 +53,8 @@ EvidenceStatus = Literal[
 ]
 ```
 
+`ParsedIntent.status` usa **lo stesso enum `EvidenceStatus`** (non esiste un enum separato `IntentEvidenceStatus`).
+
 Vedi [02_CONTRATTO_PARSED_MESSAGE.md](02_CONTRATTO_PARSED_MESSAGE.md#evidence_status) per la formula di derivazione.
 
 ---
@@ -78,6 +80,8 @@ IntentType = Literal[
     "TP_HIT",
     "SL_HIT",
     "EXIT_BE",
+
+    # REPORT result category
     "REPORT_RESULT",
 
     # INFO category
@@ -202,10 +206,35 @@ ModifyEntryMode = Literal[
 ]
 ```
 
+Questo enum vale solo per l'intent `MODIFY_ENTRY` (modifica di un'entry esistente).
+
 > `REPLACE` **non** è incluso (non distinguibile affidabilmente da `UPDATE_PRICE`).
-> `ADD` **non** è incluso (è coperto dall'intent separato `ADD_ENTRY`).
+> `ADD` e `REENTER` **non** sono `ModifyEntryMode`.
 
 Vedi [09_MODIFY_ENTRY_MODE_MARKERS.md](09_MODIFY_ENTRY_MODE_MARKERS.md).
+
+---
+
+## `ModifyEntriesOperationKind`
+
+```python
+ModifyEntriesOperationKind = Literal[
+    "ADD",
+    "REENTER",
+    "MARKET_NOW",
+    "UPDATE_PRICE",
+    "REMOVE",
+    "UNKNOWN",
+]
+```
+
+Enum operativo usato nel payload canonical `update.operations[].modify_entries.kind`.
+
+Regola SSoT:
+
+- `ADD_ENTRY` → `MODIFY_ENTRIES kind=ADD`
+- `REENTER` → `MODIFY_ENTRIES kind=REENTER`
+- `MODIFY_ENTRY` → `MODIFY_ENTRIES kind=MARKET_NOW/UPDATE_PRICE/REMOVE/UNKNOWN`
 
 ---
 

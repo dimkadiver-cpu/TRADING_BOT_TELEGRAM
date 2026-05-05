@@ -108,16 +108,18 @@ targeted_actions:
 
 Vedi [08_MULTI_REF_TARGETED_ACTIONS.md](08_MULTI_REF_TARGETED_ACTIONS.md) per casi e algoritmo.
 
-Regola di esclusività:
+Regola di precedenza (SSoT):
 
 ```text
-Se il messaggio è single-target (reply/global scope/single link nello stesso blocco):
+Se esiste almeno un target esplicito (telegram link/message id) con azione operativa:
+  → tutte le azioni operative vanno in targeted_actions
+  → update.operations resta vuoto
+
+Se non esiste targeting esplicito per-azione:
   → usa update.operations
-Se il messaggio è multi-ref (più link in righe diverse, ognuno con suo intent):
-  → usa targeted_actions
 ```
 
-Un messaggio non deve avere **sia** `update.operations` **sia** `targeted_actions` non vuoti per la stessa azione. Se la stessa azione è disponibile in entrambe le forme, scegliere `targeted_actions`.
+Non è consentito “metà in update.operations e metà in targeted_actions” nello stesso messaggio.
 
 ---
 
@@ -156,6 +158,40 @@ INCOMPLETE = manca almeno uno
 class UpdatePayload(BaseModel):
     operations: list[UpdateOperation] = []
 ```
+
+Vincolo di validazione parser-level: `UPDATE/PARTIAL` può avere `operations` vuote solo se `warnings` non è vuoto.
+
+```python
+class InvalidateSetupOperation(BaseModel):
+    reason_text: str | None = None
+```
+
+`INVALIDATE_SETUP` usa payload minimale: `reason_text` opzionale.
+
+---
+
+## Precedenza `UPDATE` vs `REPORT`
+
+Regola unica:
+
+```text
+SIGNAL > UPDATE > REPORT > INFO
+```
+
+Quindi, se nel messaggio coesistono intent UPDATE e REPORT, `primary_class` è `UPDATE`.
+
+`REPORT_RESULT` non modifica questa precedenza: resta nel payload `report.result` e non promuove `primary_class=REPORT` in presenza di UPDATE.
+
+---
+
+## Posizionamento `REPORT_RESULT`
+
+`REPORT_RESULT` vive in `report.result`, non in `report.events`.
+
+- `report.events[].event_type`: solo `ENTRY_FILLED | TP_HIT | SL_HIT | EXIT_BE`
+- `report.result`: testo risultato libero (`ReportResult.raw_fragment`)
+
+---
 
 ## UpdateOperation
 
@@ -196,9 +232,9 @@ Ogni operation deve avere solo il payload coerente con `op_type`.
 | `CLOSE_PARTIAL`     | `CLOSE close_scope=PARTIAL`            |
 | `CANCEL_PENDING`    | `CANCEL_PENDING`                       |
 | `INVALIDATE_SETUP`  | `INVALIDATE_SETUP`                     |
-| `REENTER`           | `MODIFY_ENTRIES mode=REENTER`          |
-| `ADD_ENTRY`         | `MODIFY_ENTRIES mode=ADD`              |
-| `MODIFY_ENTRY`      | `MODIFY_ENTRIES mode=MARKET_NOW/UPDATE_PRICE/REMOVE` |
+| `REENTER`           | `MODIFY_ENTRIES kind=REENTER`          |
+| `ADD_ENTRY`         | `MODIFY_ENTRIES kind=ADD`              |
+| `MODIFY_ENTRY`      | `MODIFY_ENTRIES kind=MARKET_NOW/UPDATE_PRICE/REMOVE` |
 | `MODIFY_TARGETS`    | `MODIFY_TARGETS`                       |
 
 ---

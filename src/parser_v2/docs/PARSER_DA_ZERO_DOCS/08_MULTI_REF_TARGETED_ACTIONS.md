@@ -20,7 +20,7 @@ La risoluzione reale del target, la validazione dello stato e l'esecuzione resta
 
 ## Decisione
 
-Per ora **non introduciamo `InstructionUnit`**.
+Per ora **non introduciamo `InstructionUnit`** (rimandato intenzionalmente).
 
 Motivo: il caso complesso con intenti diversi per ogni link (`link 111 стоп в бу / link 222 закрываю / link 333 лимитки убираем`) non è stato ancora osservato nei dati reali.
 
@@ -177,7 +177,7 @@ link 222 закрываю
 link 333 лимитки убираем
 ```
 
-Output conservativo:
+Output conservativo (non eseguibile):
 
 ```json
 {
@@ -186,6 +186,8 @@ Output conservativo:
   "warnings": ["multi_ref_mixed_intents_not_supported"]
 }
 ```
+
+Regola esplicita: finché non introduciamo `InstructionUnit`, il caso mixed multi-ref resta `PARTIAL` e **non passa al resolver operativo**.
 
 ---
 
@@ -443,3 +445,16 @@ SÌ grouping per firma semantica
 SÌ warning sui casi multi-ref misti
 NO validazione target dentro parser
 ```
+
+
+## Metadati minimi su ParsedIntent (ponte pre-InstructionUnit)
+
+Per supportare associazione riga/link senza `InstructionUnit`, `ParsedIntent` deve esporre:
+
+```python
+line_index: int | None
+span_start: int | None
+span_end: int | None
+```
+
+Questi campi servono solo a mantenere il legame locale intent↔frammento↔target nella traduzione canonical.
