@@ -83,7 +83,7 @@ Mappa:
 class ParsedIntent(BaseModel):
     type: IntentType
     category: IntentCategory
-    status: IntentEvidenceStatus = "RESOLVED"
+    status: EvidenceStatus = "RESOLVED"
     confidence: float
 
     entities: IntentEntities
