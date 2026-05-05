@@ -119,3 +119,17 @@ Ho letto tutta la cartella PARSER_DA_ZERO_DOCS e ho confrontato i contratti con 
      Tenere parser_v2 isolato.
      Primo step implementativo: solo modelli + translator + test.
      Integrazione router/downstream dopo, con feature flag esplicito, non sostituendo subito parse_message() legacy.
+
+## Decisioni approvate (chiusura gap)
+
+Decisioni confermate:
+
+1. **A** — `UPDATE/PARTIAL` senza payload operativo è consentito solo nei casi non eseguibili (es. `multi_ref_mixed_intents_not_supported`).
+2. **A** — precedenza unica: `SIGNAL > UPDATE > REPORT > INFO`; eventuali particolarità sono diagnostiche, non cambiano `primary_class`.
+3. **A** — separazione enum tra intent-level (`ModifyEntryMode`) e operation-level (`ModifyEntriesOperationMode`).
+4. **A** — `INVALIDATE_SETUP` ha payload minimo esplicito (`reason_text` opzionale).
+5. **Scelta finale** — `REPORT_RESULT` identifica il **messaggio/segmento di risultato**, ma nel canonical vive in `report.result` (non in `report.events`).
+6. **A** — `ParsedIntent.status` usa lo stesso enum `EvidenceStatus`.
+7. **A** — nessun mix: se esiste target esplicito, tutte le operazioni vanno in `targeted_actions`.
+8. **A** — ponte pre-`InstructionUnit`: aggiungere metadati minimi (`line_index`, `span_start`, `span_end`) agli intent.
+9. **B** — integrazione diretta: parser_v2 sostituisce il flusso legacy senza fase intermedia a feature flag.

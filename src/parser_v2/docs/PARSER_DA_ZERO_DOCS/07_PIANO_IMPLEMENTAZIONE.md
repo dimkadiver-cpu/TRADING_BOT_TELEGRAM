@@ -444,7 +444,8 @@ parse_canonical separato
 
 ```text
 [ ] CanonicalMessage SIGNAL con update non None -> ValidationError
-[ ] CanonicalMessage UPDATE con update.operations vuoto E targeted_actions vuoto -> ValidationError
+[ ] CanonicalMessage UPDATE/PARSED con update.operations vuoto E targeted_actions vuoto -> ValidationError
+[ ] CanonicalMessage UPDATE/PARTIAL con update.operations vuoto E targeted_actions vuoto -> consentito solo con warning multi_ref_mixed_intents_not_supported
 [ ] CanonicalMessage REPORT con report=None -> ValidationError
 [ ] CanonicalMessage INFO con signal/update/report/targeted_actions popolati -> ValidationError
 ```
