@@ -4,6 +4,67 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-06 — Verifica Fase 7 LocalDisambiguator e fix compatibilità Python 3.11
+
+### Step completato
+
+Verifica dello stato della Fase 7 (`LocalDisambiguator`) e fix di due categorie di bug
+che bloccavano 44 test nelle Fasi 9, 10, 12, 13 e 1 test nella Fase 5.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/core/target_hints_extractor.py` | Modificato | Sostituita sintassi PEP 695 `def _dedup[T]` con `TypeVar` compatibile Python 3.11; aggiunto import `TypeVar` |
+| `src/parser_v2/core/parsed_message_builder.py` | Modificato | Stessa correzione PEP 695 → TypeVar |
+| `src/parser_v2/profiles/trader_a/signal_extractor.py` | Modificato | Aggiunto `"risk"` (inglese) a `_DEFAULT_RISK_PREFIXES`; prima solo marker russi |
+
+### Risultato test
+
+```
+pytest tests/parser_v2/  →  94/94 passed (erano 50 collezionati con 4 errori di import + 1 failure)
+```
+
+### Stato Fase 7 verificato
+
+`LocalDisambiguator` è **completamente implementato**: tutti i 5 test della Fase 7 passano.
+Checklist piano rispettata: `prefer/suppress`, `primary_intent precedence`, regola contestuale
+MARKET, `diagnostics applied rules`, `keep composites`.
+
+### Stato complessivo parser_v2 dopo il fix
+
+| Fase | Test | Stato |
+|---|---|---|
+| 1 — Contratti | 9/9 ✅ | Completa |
+| 2 — TextNormalizer | 4/4 ✅ | Completa |
+| 3 — MarkerMatcher | 3/3 ✅ | Completa |
+| 4 — MarkerEvidenceResolver | 3/3 ✅ | Completa |
+| 5 — SignalExtractor | 6/6 ✅ | Completa (era 5/6) |
+| 6 — IntentEntityExtractor | 4/4 ✅ | Completa |
+| 7 — LocalDisambiguator | 5/5 ✅ | Completa |
+| 8 — ClassificationResolver | 8/8 ✅ | Completa |
+| 9 — TargetHintsExtractor | 7/7 ✅ | Completa (era bloccata) |
+| 10 — ParsedMessageBuilder | 3/3 ✅ | Completa (era bloccata) |
+| 11 — CanonicalTranslator | 7/7 ✅ | Completa |
+| 12 — Runtime + Profile | 4/4 ✅ | Completa (era bloccata) |
+| 13 — Golden tests | 29/29 ✅ | Completa (era bloccata) |
+
+### Rischi aperti
+
+- L'ambiente di esecuzione usa Python 3.11; il codebase dichiara Python 3.12+ in `CLAUDE.md`.
+  Attenzione a non reintrodurre sintassi PEP 695 (`def f[T]`, `type X = ...`) in nuovi file.
+- `semantic_markers.json` e `rules.json` fisici per `trader_a` non esistono ancora:
+  il profilo usa marker/rules in codice. La copertura linguistica è minima (Fase 12).
+- Fasi downstream (operation_rules, target_resolver) non ancora migrate a `CanonicalMessage`.
+
+### Prossimo step
+
+Parser v2 Fase 1-13 completa e verde. Prossimi step canonici dal CLAUDE.md:
+- **Step B** — Migrare `operation_rules` → consuma `CanonicalMessage`
+- **Step C** — Migrare `target_resolver` → consuma `CanonicalMessage`
+
+---
+
 ## 2026-05-04 — Review e cleanup documentazione `parser_v2`
 
 ### Step completato

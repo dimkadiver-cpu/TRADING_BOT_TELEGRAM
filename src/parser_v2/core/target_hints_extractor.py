@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from typing import cast
+from typing import TypeVar, cast
+
+_T = TypeVar("_T")
 
 from src.parser_v2.contracts.context import ParserContext, TargetHints
 from src.parser_v2.contracts.enums import ScopeHint
@@ -132,7 +134,7 @@ def _marker_values(marker_set: MarkerSet) -> Iterable[str]:
     yield from marker_set.weak
 
 
-def _dedup[T](values: Iterable[T]) -> list[T]:
+def _dedup(values: Iterable[_T]) -> list[_T]:
     seen: set[T] = set()
     result: list[T] = []
     for value in values:

@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping
-from typing import Any
+from typing import Any, TypeVar
+
+_T = TypeVar("_T")
 
 from src.parser_v2.contracts.context import ParserContext, RawContext, TargetHints
 from src.parser_v2.contracts.enums import (
@@ -199,7 +201,7 @@ def _format_markers(
     ]
 
 
-def _dedup[T](values: Iterable[T]) -> list[T]:
+def _dedup(values: Iterable[_T]) -> list[_T]:
     seen: set[T] = set()
     result: list[T] = []
     for value in values:
