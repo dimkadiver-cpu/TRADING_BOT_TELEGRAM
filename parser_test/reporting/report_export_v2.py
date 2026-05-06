@@ -41,7 +41,7 @@ _SELECT_JOIN = """
         m.reply_to_message_id, m.message_ts, m.raw_text
     FROM parser_results_v2 r
     JOIN raw_messages m ON r.raw_message_id = m.raw_message_id
-    WHERE r.run_id = ? AND {filter}
+    WHERE r.run_id = ? AND {filter}{trader_filter}
     ORDER BY m.message_ts ASC
 """
 
@@ -57,12 +57,12 @@ def export_all(
     csv_dir = run_dir / f"{trader_name}_message_types_csv"
     csv_dir.mkdir(parents=True, exist_ok=True)
 
+    trader_filter = " AND r.trader_id = ?" if trader is not None else ""
     generated: list[Path] = []
     for scope, where_filter in _SCOPE_FILTERS.items():
-        query = _SELECT_JOIN.format(filter=where_filter)
+        query = _SELECT_JOIN.format(filter=where_filter, trader_filter=trader_filter)
         params: list[Any] = [run_id]
         if trader is not None:
-            query = query.rstrip() + " AND r.trader_id = ?"
             params.append(trader)
         rows = [_build_report_row(r) for r in conn.execute(query, params).fetchall()]
         filename = f"{trader_name}_{_SCOPE_FILENAMES[scope]}.csv"
