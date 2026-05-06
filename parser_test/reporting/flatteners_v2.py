@@ -33,6 +33,8 @@ class ReportRow:
 def flatten_for_scope(scope: str, row: ReportRow) -> dict[str, Any]:
     canonical: dict[str, Any] = json.loads(row.canonical_json) if row.canonical_json else {}
     all_fields = _build_all_fields(row, canonical)
+    if scope not in SCOPE_COLUMNS:
+        raise ValueError(f"Unknown scope {scope!r}. Valid: {list(SCOPE_COLUMNS)}")
     columns = SCOPE_COLUMNS[scope]
     return {col: all_fields.get(col) for col in columns}
 
@@ -81,7 +83,7 @@ def _common(row: ReportRow, canonical: dict[str, Any]) -> dict[str, Any]:
         "parse_status": canonical.get("parse_status") or row.parse_status,
         "primary_intent": canonical.get("primary_intent") or row.primary_intent,
         "intents": "|".join(canonical.get("intents") or []),
-        "confidence": canonical.get("confidence") if canonical else row.confidence,
+        "confidence": canonical["confidence"] if "confidence" in canonical else row.confidence,
         "warnings": "|".join(warnings),
         "diagnostics_summary": _diagnostics_summary(diagnostics),
         "error_status": row.error_status,
@@ -134,12 +136,12 @@ def _update_fields(
     target_hints: dict[str, Any],
 ) -> dict[str, Any]:
     operations: list[dict[str, Any]] = update.get("operations") or []
-    first_set_stop = next((o.get("set_stop") or {} for o in operations if o.get("set_stop")), {})
-    first_close = next((o.get("close") or {} for o in operations if o.get("close")), {})
-    first_cancel = next((o.get("cancel_pending") or {} for o in operations if o.get("cancel_pending")), {})
-    first_mod_entries = next((o.get("modify_entries") or {} for o in operations if o.get("modify_entries")), {})
-    first_mod_targets = next((o.get("modify_targets") or {} for o in operations if o.get("modify_targets")), {})
-    first_invalidate = next((o.get("invalidate_setup") or {} for o in operations if o.get("invalidate_setup")), {})
+    first_set_stop = next((v for o in operations if (v := o.get("set_stop"))), {})
+    first_close = next((v for o in operations if (v := o.get("close"))), {})
+    first_cancel = next((v for o in operations if (v := o.get("cancel_pending"))), {})
+    first_mod_entries = next((v for o in operations if (v := o.get("modify_entries"))), {})
+    first_mod_targets = next((v for o in operations if (v := o.get("modify_targets"))), {})
+    first_invalidate = next((v for o in operations if (v := o.get("invalidate_setup"))), {})
     mod_entries_entries = first_mod_entries.get("entries") or []
     mod_targets_tps = first_mod_targets.get("take_profits") or []
 
@@ -194,14 +196,15 @@ def _report_fields(report: dict[str, Any]) -> dict[str, Any]:
         et = ev.get("event_type")
         level = ev.get("level")
         price_val = (ev.get("price") or {}).get("value")
-        if et == "TP_HIT":
-            hit_target = f"TP{level}" if level else "TP"
-        elif et == "SL_HIT":
-            hit_target = "SL"
-        elif et == "EXIT_BE":
-            hit_target = "BE"
-        elif et == "ENTRY_FILLED":
-            hit_target = f"ENTRY{level}" if level else "ENTRY"
+        if hit_target is None:
+            if et == "TP_HIT":
+                hit_target = f"TP{level}" if level else "TP"
+            elif et == "SL_HIT":
+                hit_target = "SL"
+            elif et == "EXIT_BE":
+                hit_target = "BE"
+            elif et == "ENTRY_FILLED":
+                hit_target = f"ENTRY{level}" if level else "ENTRY"
         if hit_price is None and price_val is not None:
             hit_price = price_val
 
