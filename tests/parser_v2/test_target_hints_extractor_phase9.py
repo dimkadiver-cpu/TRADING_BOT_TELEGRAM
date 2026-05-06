@@ -74,6 +74,21 @@ def test_extracts_symbols_matching_symbol_target_hint_marker() -> None:
     assert hints.symbols == ["BTCUSDT", "ETHUSDT"]
 
 
+def test_extracts_symbols_and_strips_perpetual_suffix() -> None:
+    text = "move stop on FARTCOINUSDT.P and #ETHUSDT.P"
+    markers = SemanticMarkers(
+        target_hint_markers={"symbol": MarkerSet(strong=["usdt"])}
+    )
+
+    hints = TargetHintsExtractor().extract(
+        normalized=TextNormalizer().normalize(text),
+        context=ParserContext(),
+        markers=markers,
+    )
+
+    assert hints.symbols == ["FARTCOINUSDT", "ETHUSDT"]
+
+
 def test_extracts_scope_hint_from_target_hint_markers() -> None:
     text = "\u0437\u0430\u0444\u0438\u043a\u0441\u0438\u0440\u043e\u0432\u0430\u0442\u044c \u0432\u0441\u0435 \u0448\u043e\u0440\u0442\u044b"
     markers = SemanticMarkers(

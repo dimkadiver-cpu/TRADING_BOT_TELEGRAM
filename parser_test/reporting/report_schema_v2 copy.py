@@ -1,14 +1,24 @@
 from __future__ import annotations
 
 _COMMON_COLUMNS = [
-    "primary_class",
-    "parse_status",
+    "run_id",
     "raw_message_id",
     "telegram_message_id",
+    "source_chat_id",
+    "source_topic_id",
     "reply_to_message_id",
+    "message_ts",
+    "trader_id",
+    "parser_profile",
+    "schema_version",
     "raw_text",
+    "primary_class",
+    "parse_status",
+    "primary_intent",
+    "intents",
     "confidence",
     "warnings",
+    "diagnostics_summary",
 ]
 
 _SIGNAL_COLUMNS = [
@@ -30,8 +40,6 @@ _SIGNAL_COLUMNS = [
 ]
 
 _UPDATE_COLUMNS = [
-    "primary_intent",
-    "intents",
     "operations_count",
     "operations_summary",
     "operation_types",
@@ -65,8 +73,6 @@ _UPDATE_COLUMNS = [
 ]
 
 _REPORT_COLUMNS = [
-    "primary_intent",
-    "intents",
     "report_events_count",
     "report_events_summary",
     "report_event_types",
@@ -80,8 +86,6 @@ _REPORT_COLUMNS = [
 ]
 
 _INFO_COLUMNS = [
-    "primary_intent",
-    "intents",
     "info_raw_fragment",
 ]
 
@@ -89,8 +93,9 @@ _ERRORS_COLUMNS = [
     "run_id",
     "raw_message_id",
     "telegram_message_id",
-    "primary_intent",
-    "intents",
+    "source_chat_id",
+    "source_topic_id",
+    "message_ts",
     "trader_id",
     "parser_profile",
     "primary_class",

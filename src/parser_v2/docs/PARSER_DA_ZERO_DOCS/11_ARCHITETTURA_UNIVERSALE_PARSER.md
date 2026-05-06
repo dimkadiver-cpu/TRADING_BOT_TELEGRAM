@@ -256,7 +256,7 @@ Ordine:
 1. signal payload presente
 2. update intents presenti
 3. report intents presenti
-4. info intent presente
+4. info marker valido presente → short-circuit
 5. fallback INFO / UNCLASSIFIED
 ```
 
@@ -555,6 +555,9 @@ class UniversalParserRuntime:
             marker_matches,
             profile.load_rules(),
         )
+
+        if has_info_marker(evidence):
+            return build_info_message(...)
 
         signal = profile.extract_signal(
             normalized,

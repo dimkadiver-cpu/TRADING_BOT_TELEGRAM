@@ -35,10 +35,9 @@ Ho letto tutta la cartella PARSER_DA_ZERO_DOCS e ho confrontato i contratti con 
     line_index, span, target hints per frammento o introdurre un oggetto intermedio. Riferimenti: src/parser_v2/docs/
     PARSER_DA_ZERO_DOCS/08_MULTI_REF_TARGETED_ACTIONS.md:206, src/parser_v2/docs/
     PARSER_DA_ZERO_DOCS/11_ARCHITETTURA_UNIVERSALE_PARSER.md:537.
-  - Ambiguità: marker #admin è sia INFO sia ignore_marker. info_markers può produrre INFO_ONLY, ma ignore_markers dice che non produce
-    intent. Serve precedenza chiara. Riferimenti: src/parser_v2/docs/PARSER_DA_ZERO_DOCS/06_1_SEMANTIC_MARKERS_COMPLETO.md:577, src/
-    parser_v2/docs/PARSER_DA_ZERO_DOCS/06_1_SEMANTIC_MARKERS_COMPLETO.md:684, src/parser_v2/docs/
-    PARSER_DA_ZERO_DOCS/04_CLASSIFICAZIONE_MESSAGGIO.md:246.
+  - Ambiguità risolta nel runtime v2: marker `info` valido interrompe il parsing operativo e produce `INFO` direttamente. Questo chiude
+    il conflitto tra `info_markers` e gli estrattori operativi. Riferimenti: src/parser_v2/core/runtime.py:78, src/parser_v2/docs/
+    PARSER_DA_ZERO_DOCS/04_CLASSIFICAZIONE_MESSAGGIO.md:246, src/parser_v2/docs/PARSER_DA_ZERO_DOCS/06_1_SEMANTIC_MARKERS_COMPLETO.md:719.
   - Incompatibilità con codice attivo: parser_v2 non è drop-in. I docs dicono “nessun adapter” e downstream da riscrivere, ma il router
     attuale chiama ancora parse_message() e lavora su TraderParseResult, validazione legacy e canonical v1. Riferimenti: src/parser_v2/docs/
     PARSER_DA_ZERO_DOCS/00_SCOPE_E_DECISIONI.md:49, src/telegram/router.py:270, src/parser/trader_profiles/base.py:24, src/validation/

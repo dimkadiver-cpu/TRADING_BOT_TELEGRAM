@@ -246,6 +246,7 @@ Output:
 # 4\. INFO
 
 Un messaggio è `INFO` se non è segnale, non è update, non è report operativo.
+Se contiene un marker `info` valido, il runtime lo classifica subito come `INFO` e interrompe il parsing operativo prima di signal/update/report.
 
 Esempi:
 
@@ -401,4 +402,3 @@ UPDATE + warning update\_without\_target\_hint
 è update `MOVE\_STOP\_TO\_BE`.
 
 La discriminazione deve avvenire con marker strong/weak e regole locali.
-

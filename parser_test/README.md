@@ -55,11 +55,17 @@ python parser_test/scripts/import_history.py ^
   --to-date 2026-05-01
 ```
 
+```bash
+python parser_test/scripts/import_history.py --chat-id -1003171748254 --db-name trader_a_topic
+  --from-date 2026-04-01 ^
+  --to-date 2026-05-01
+```
+
 | Argomento | Descrizione |
 |-----------|-------------|
 | `--chat-id` | ID numerico del canale Telegram |
 | `--topic-id` | ID del topic (se il canale usa topics) |
-| `--db-name` | Nome del DB locale (file in `db/parser_test__<name>.sqlite3`) |
+| `--db-name` | Nome del DB locale (file in `db/telegram__<name>.sqlite3`) |
 | `--from-date` | Data inizio (`YYYY-MM-DD`) |
 | `--to-date` | Data fine (`YYYY-MM-DD`) |
 | `--limit` | Numero massimo messaggi |
@@ -75,6 +81,11 @@ python parser_test/scripts/replay_parser_v2.py ^
   --db-name trader_a_topic ^
   --trader trader_a ^
   --force-reparse
+```
+
+
+```bash
+python parser_test/scripts/replay_parser_v2.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3" --trader trader_a --force-reparse
 ```
 
 | Argomento | Descrizione |
@@ -99,7 +110,7 @@ python parser_test/scripts/generate_parser_reports_v2.py ^
 ### Replay + CSV in un comando
 
 ```bash
-python parser_test/scripts/generate_parser_reports_v2.py ^
+python parser_test/scripts/generate_parser_reports_v2.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3" --trader trader_a --force-reparse
   --db-name trader_a_topic ^
   --trader trader_a ^
   --force-reparse

@@ -51,6 +51,7 @@ def main() -> None:
         if not args.skip_replay:
             run_id = run_replay(
                 conn,
+                db_path=db_path,
                 trader=args.trader,
                 chat_id=args.chat_id,
                 from_date=args.from_date,

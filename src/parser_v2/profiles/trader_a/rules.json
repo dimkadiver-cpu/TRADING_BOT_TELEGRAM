@@ -16,6 +16,26 @@
         "if_strong": "CLOSE_PARTIAL",
         "suppress_weak": ["CLOSE_FULL"],
         "reason": "partial_close_is_more_specific"
+      },
+      {
+        "if_strong": "EXIT_BE",
+        "suppress_weak": ["TP_HIT"],
+        "reason": "exit_be_after_tp_hit"
+      },
+       {
+        "if_strong": "ENTRY_FILLED",
+        "suppress_weak": ["SL_HIT"],
+        "reason": "sl_is_protection_after_entry_filled"
+      },
+       {
+        "if_strong": "CLOSE_FULL",
+        "suppress_weak": ["SL_HIT"],
+        "reason": "sl_is_rummored_to_be_cancelled_by_full_close"
+      },
+       {
+        "if_strong": "CLOSE_FULL",
+        "suppress_weak": ["TP_HIT"],
+        "reason": "tp_is_rummored_to_be_cancelled_by_full_close"
       }
     ]
   },

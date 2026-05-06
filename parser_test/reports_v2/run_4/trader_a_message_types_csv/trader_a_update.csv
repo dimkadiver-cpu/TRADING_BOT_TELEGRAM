@@ -1,0 +1,2721 @@
+﻿primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,primary_intent,intents,operations_count,operations_summary,operation_types,source_intents,operation_confidences,operation_raw_fragments,target_scope_hint,target_reply_to_message_id,target_telegram_message_ids,target_telegram_links,target_explicit_ids,target_symbols,set_stop_target_type,set_stop_price,set_stop_tp_level,close_scope,close_fraction,close_price,cancel_scope_hint,modify_entries_kind,modify_entries_count,modify_entries_summary,modify_entries_entry_structure,modify_targets_mode,modify_targets_count,modify_targets_prices,modify_targets_target_tp_level,invalidate_reason_text,targeted_actions_count,targeted_actions_summary
+UPDATE,PARSED,2447,123,,[trader#2] Close all longs market not looking good agin,1.0,update_without_target_hint,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,close all,UNKNOWN,,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2422,154,,"Приветствуем в сигнальном канале от админов Pifagor Trade!
+Я администратор этого канала и член команды Pifagor Trade. Рад, что вы с нами!👋
+
+Сразу важный момент: здесь НЕ публикуются сигналы от Димы.
+Вместо этого мы сделали для вас кое-что не менее полезное - тщательно отобрали топовых англоязычных трейдеров с отличной репутацией и реальными результатами торговли.
+
+💸Их сигналы обычно платные (и порой очень недешёвые), но мы делимся ими с вами совершенно бесплатно. 
+Так что считайте это ещё одним вкладом Димы в развитие сильного комьюнити.
+
+🛠️ Что важно знать:
+1) Мы не просто сделали подборку - мы будем на постоянной основе следить за качеством сигналов и по необходимости обновлять пул источников, оставляя только самых результативных трейдеров.
+
+2) Перед тем как следовать сигналам - обязательно тестируйте. Сделайте бэктест, посмотрите, как сигналы отрабатывают на истории.
+
+3) Это не финансовая рекомендация. Всё, что вы увидите здесь - образовательный контент. 
+Вы сами несёте ответственность за свои средства. Помните: даже лучший сигнал не заменит здравого смысла.☝️ 
+
+📚 Немного о структуре канала:
+У нас есть несколько источников сигналов. Каждый - со своим стилем торговли, набором монет (от BTC и ETH до альтов и мемкоинов), горизонтом сделки (от быстрых скальперских до свинговых).
+
+Будьте внимательны - каждый трейдер думает по-своему. Каждый имеет свой тег: trader#1/2/3/4👈
+
+💼 Также у нас есть два внутренних специалиста - их сигналы будут обозначаться как trader#A 
+и trader#B (только спотовые сделки). 
+Они уже зарекомендовали себя в команде, и теперь готовы делиться инсайтами здесь.
+
+🙏 Спасибо, что с нами. Свежие идеи, качественные сигналы и постоянное развитие - вот что мы вам обещаем.
+Оставайтесь на связи.",1.0,update_without_target_hint,REPORT_RESULT,REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2347,234,196,"[trader#В]
+
+Сделка полностью закрыта в + 3.6% к депозиту
+
+Поздравляю с профитом 💸💸💸",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,196,,,,,,,,FULL,,3.6,,,0,,,,0,,,,0,
+UPDATE,PARSED,2326,262,229,Можно переставить стоп на точку входа. С учетом усреднения у меня точка входа 1.1340,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,229,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2308,280,229,"[trader#A]
+
+1 тейк, заработали 19.7% чистого движения. Стоп обязательно на точку входа, кто не закрывал позицию.
+
+Поздравляю!",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп обязательно на точку входа,UNKNOWN,229,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2307,281,270,"[trader#A]
+
+1 тейк, стоп на точку входа. Лимитку на усреднение обязательно убираем
+
+Поздравляю с 2.48% чистого движения!",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING|REPORT_RESULT|REPORT_RESULT,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп на точку входа|лимитку на усреднение обязательно убираем,UNKNOWN,270,,,,,ENTRY,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARTIAL,2303,285,,"[trader#A]
+
+https://t.me/c/3171748254/265
+https://t.me/c/3171748254/266
+
+по этим сетапам стоп нужно обязательно поставить на точку входа и убрать все лимитные ордера",1.0,multi_ref_mixed_intents_not_supported,SL_HIT,SL_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING,0,,,,,,UNKNOWN,,265|266,https://t.me/c/3171748254/265|https://t.me/c/3171748254/266,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2287,301,286,"[trader#A]
+
+1 тейк!
+Поздравляю, заработали 2.4% чистого движения
+
+Стоп обязательно на точку входа и убираем лимтку на усреднение",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|CANCEL_PENDING,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп обязательно на точку входа|убираем лимтку,UNKNOWN,286,,,,,ENTRY,,,,,,UNKNOWN,,0,,,,0,,,,0,
+UPDATE,PARSED,2286,303,287,"Не нравится как ведет себя монета, давайте прикроем ее на том месте где сейчас, убыток составит 1%
+
+Сделка закрыта!",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,прикроем ее,UNKNOWN,287,,,,,,,,FULL,,1.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2277,314,179,"[trader#В]
+
+Тут не актуально, лонгов открытых нет - ждём биток по 98к$, после чего будут рассматриваться новые возможности",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,2,INVALIDATE_SETUP(INVALIDATE_SETUP)|SET_STOP(MOVE_STOP_TO_BE),INVALIDATE_SETUP|SET_STOP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,1.0|0.4,не актуально|бу,UNKNOWN,179,,,,,ENTRY,,,,,,,,0,,,,0,,,"[trader#В]
+
+Тут не актуально, лонгов открытых нет - ждём биток по 98к$, после чего будут рассматриваться новые возможности",0,
+UPDATE,PARSED,2259,332,309,"[trader#A]
+
+1 тейк!
+
+Поздравляю! Заработали чистыми 4.38%, а кто усреднял, около 6.5%
+
+Стоп на точку входа, обязательно!",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,309,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2251,340,304,"[trader#A]
+
+1 тейк!
+
+Поздравляю, заработали 5.5%
+
+Стоп на точку входа. Лимитку на усреднение убираем",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|CANCEL_PENDING,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп на точку входа|лимитку на усреднение убираем,UNKNOWN,304,,,,,ENTRY,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,2247,344,311,"[trader#A]
+
+Закрываю сделку у первого тейка, заработали 6%
+
+Поздравляю!",1.0,,TP_HIT,CLOSE_FULL|TP_HIT|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю сделку,UNKNOWN,311,,,,,,,,FULL,,6.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2245,346,229,"Закрываю полностью сделку!
+
+Заработали чистыми 31.2%
+
+Поздравляю",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,229,,,,,,,,FULL,,31.2,,,0,,,,0,,,,0,
+UPDATE,PARSED,2240,351,,"[trader#A]
+
+
+Скорее всего сделаем перерыв по сделкам на пару дней. Биток уже в зоне разворота, а так как ллмка торгует по тренду и тренд локально медвежий, он будет давать только шорт. С очень плохим RR. Поэтому, лучше переждем.
+
+Итак в работе 4 сделки. Wif, Ltc, hype и лонг aster",0.4,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2219,373,312,"[trader#A]
+
+1 тейк! 
+
+Забрали 10,5% процента
+
+Стоп на точку входа, лимитку убираем.
+
+Поздравляю!",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING|REPORT_RESULT,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп на точку входа|лимитку убираем,UNKNOWN,312,,,,,ENTRY,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,2212,382,338,"[trader#A]
+
+К сожалению стоп. С учетом усреднения -11%
+
+Но самое обидное, что монета развернулась и идет в шорт
+
+Заходить повторно не будем.
+
+Всегда говорю, что стоп это защита от ликвидации",1.0,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE|SL_HIT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,338,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2210,384,355,"[trader#В]
+
+$LTCUSDT update 
+
+Все пока идет по плану, стоп лосс переносим в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,355,,,,LTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2205,389,385,"[trader#A]
+
+1 тейк! Чистыми 22% 
+
+Стоп в бу и убираем лимитку
+
+Поздравляю",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|MOVE_STOP_TO_BE|CANCEL_PENDING|REPORT_RESULT,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп в бу|убираем лимитку,UNKNOWN,385,,,,,ENTRY,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,2200,395,200,"[trader#A]
+
+Очередной тейк. Чистыми 19% 
+
+Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|CANCEL_PENDING,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп переводим в бу|лимитку убираем,UNKNOWN,200,,,,,ENTRY,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,2199,398,391,"[trader#A]
+
+Взяли лимитку.
+
+Моя средняя 0.2265
+
+Стоп ставим обязательно. На 1 тейке, рекомендация, закрывать 80% позиции, касается всех сетапов, которые публикую. 
+
+Оставшуюся часть позиции тянуть по остальным тейкам. 
+
+При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа",1.0,,SL_HIT,ENTRY_FILLED|ENTRY_FILLED|SL_HIT|TP_HIT|CLOSE_PARTIAL|TP_HIT|TP_HIT|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,закрывать 80% позиции|стоп переводим в безубыток,UNKNOWN,391,,,,,ENTRY,,,PARTIAL,0.8,1.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2198,399,392,"Принял решение закрыть сделку в бу, не нравится как снизу копят ликвидность",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,392,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2196,401,357,"[trader#A]
+
+1 тейк, чистыми 8%
+
+Поздравляю. стоп в бу
+
+Спасибо за вашу поддержку в виде реакций на мои посты",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,357,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2195,405,383,"[trader#A]
+
+1 тейк 
+
+Стоп в бу
+
+Поздравляю",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,383,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2194,406,,"[trader#A]
+
+
+По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,ALL_SHORT,,,,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,2193,407,,"[trader#A]
+
+https://t.me/c/3171748254/379
+
+https://t.me/c/3171748254/290
+
+Вот по этим шортам стоп должен стоять в безубытке",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,379|290,https://t.me/c/3171748254/379|https://t.me/c/3171748254/290,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,2190,411,379,Закрылись в бу. Не перезаходим,1.0,,EXIT_BE,EXIT_BE|REENTER,1,MODIFY_ENTRIES(REENTER),MODIFY_ENTRIES,REENTER,1.0,перезаходим,UNKNOWN,379,,,,,,,,,,,,REENTER,0,,,,0,,,,0,
+UPDATE,PARSED,2186,415,384,"[trader#В]
+
+Эта сделка тоже у нас ушла в БУ, ничего страшного это часть работы, скоро будем искать новые позиции",0.8,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,384,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2180,425,417,"[trader#A]
+
+Так, тут тейк. 8.8%
+
+Поздравляю. Стоп на точку входа",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,417,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2177,433,410,"Давайте прикроем, после усреднения находится около точки входа, убыток будет меньше 1%",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,прикроем|бу,UNKNOWN,410,,,,,ENTRY,,,FULL,,1.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2176,434,290,"Закрылся в безубыток 
+
+https://t.me/c/3171748254/407 тут писал о том, что необходимо поставить стоп на точку входа",1.0,,REPORT_RESULT,MOVE_STOP_TO_BE|REPORT_RESULT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,290,407,https://t.me/c/3171748254/407,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,2143,477,444,"[trader#A]
+
+
+убираю 2 и 3 тейк, добавлю тейк спота, чтобы получить красивый pnl и немного заработать
+
+стоп поставить обязательно чуть выше точки входа",1.0,,SL_HIT,MODIFY_TARGETS|MODIFY_TARGETS|SL_HIT,2,MODIFY_TARGETS(MODIFY_TARGETS)|MODIFY_TARGETS(MODIFY_TARGETS),MODIFY_TARGETS|MODIFY_TARGETS,MODIFY_TARGETS|MODIFY_TARGETS,1.0|1.0,убираю 2 и 3 тейк|добавлю тейк спота,UNKNOWN,444,,,,,,,,,,,,,0,,,UNKNOWN,0,,,,0,
+UPDATE,PARSED,2141,483,478,"[trader#A]
+
+1 тейк, стоп на точку входа
+
+поздравляю",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,478,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2138,486,439,"[trader#A]
+
+закрываю в убыток. -1.5%",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,439,,,,,,,,FULL,,1.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,2137,487,450,"[trader#A]
+
+закрываю в убыток 3%",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,450,,,,,,,,FULL,,3.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2136,488,470,"[trader#A]
+
+закрываю по текущим. чуть меньше 1% прибыли",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,470,,,,,,,,FULL,,1.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2135,489,452,"[trader#A]
+
+закрываю по текущим на точке входа",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,452,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2134,490,418,"[trader#A]
+
+закрываю. не приятный минус",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,418,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2132,493,485,"[trader#A]
+
+1 тейк. поздравляю
+
+хоть немного минуса прикрыли
+
+по шортам стоп на точку входа",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|MOVE_STOP_TO_BE,0,,,,,,ALL_SHORT,485,,,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,2121,517,516,"Отбой, модель сбойнула и не учла важные параметры расчета сетапа
+
+3.2% убытка закрываю",1.0,,REPORT_RESULT,REPORT_RESULT|CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,516,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,2116,523,484,"закрываю полностью сделку, заработали более 20%
+
+поздравляю",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,484,,,,,,,,FULL,,20.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,2109,536,527,"[trader#A]
+
+Давайте стоп поставим на точку входа, точнее немного выше, чтобы отбить комиссию, 1 тейк должны сегодня забрать
+
+p.s. если возьмет стоп, значит чуть ниже перезайдем",1.0,,SL_HIT,MOVE_STOP_TO_BE|TP_HIT|SL_HIT|REENTER,2,SET_STOP(MOVE_STOP_TO_BE)|MODIFY_ENTRIES(REENTER),SET_STOP|MODIFY_ENTRIES,MOVE_STOP_TO_BE|REENTER,1.0|1.0,стоп поставим на точку входа|перезайдем,UNKNOWN,527,,,,,ENTRY,,,,,,,REENTER,0,,,,0,,,,0,
+UPDATE,PARSED,2074,586,518,"1  тейк. с учетом усреднения +13%
+
+Поздравляю. Стопы по ARB и FART вернули (с учетом тейка https://t.me/c/3171748254/566) и даже заработали сверху 4%
+
+обязательно стоп в безубыток",1.0,,SL_HIT,TP_HIT|REPORT_RESULT|SL_HIT|TP_HIT|REPORT_RESULT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,518,566,https://t.me/c/3171748254/566,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,2068,612,,"[trader#A]
+
+Все лонги закрываю на текущих отметках, не нравится рынок.",1.0,,CLOSE_FULL,CLOSE_FULL,0,,,,,,ALL_LONG,,,,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,2040,661,658,"[trader#В]
+
+Стоп лосс переносим в бу( как указано на изображении)",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,658,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1974,755,752,"[trader#В] 
+
+Не актуально, цели достигнуты без теста точки входа",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,752,,,,,,,,,,,,,0,,,,0,,,"[trader#В] 
+
+Не актуально, цели достигнуты без теста точки входа",0,
+UPDATE,PARSED,1967,762,,"🔥Итоги месяца.🔥
+
+Так, ну что? Начинаем сеанс числового нудизма или как должен выглядеть ответ на просьбу: ""Покажи цифру...цифру покажи!"" (шёпотом) 😂
+
+Часть 1. Разбор трейдеров A и B
+Те, кто тащат (правда, каждый в своём темпе)
+
+Начнём с двух самых «прозрачных» участников команды - Trader A и Trader B.
+Почему с них?
+Потому что именно по ним удалось собрать абсолютно полный и проверяемый массив данных, благодаря тому, что они, дают четкие сетапы: вход, выход и мы опять играем в любимых, стоп, тейк и.т.п.
+И самое главное: оба демонстрируют различный, но стабильный стиль работы. Такой контраст всегда хочется вынести в начало отчёта.👍
+
+Trader A
+
+Общие данные:
+Стиль - агрессивный, с глубокой подборкой альтов и умением вытягивать длинные движения.
+
+Период: 9 ноября (присоединился) - 30 ноября
+Всего сделок: 55
+Закрыто: 51
+В работе: 4
+
+Ключевые цифры:
+
+Win rate: 58.8%
+Profit Factor: 2.6
+Средняя прибыльная сделка: +16%
+Средняя убыточная сделка: –8.75% (по движению цены - не к ДЕПО)
+Ожидаемая доходность на сделку (Expectancy): +5.8%
+Суммарный реализованный результат: ≈ +295.7% движения цены
+Результат в R: +33.8R
+
+Риск–менеджмент (и его встреча с реальностью😉):
+
+Средний стоп ≈ –8.7%
+Максимальная серия стопов подряд: 5
+То есть, если вы совсем запутались к этому моменту:
+Допустим, вы держите фиксированный риск на сделку в 1%, - тогда 5 подряд идущих стопов уменьшат ваш депозит на, ≈5%, а TotalR(результат) = 33.8R - обеспечит вам на дистанции +33.8% к депо.
+Ещё напишу подробнее об этом в течение месяца!😉
+
+Из сильных сторон трейдера:
+
+1. Трендовые тейки.
+   Основная прибыль делается не за TP1, а за многоточечные тейки: 2–3–4 цели в одном сетапе.
+
+2. Дисциплина стопов.
+   Стопы ставятся честно - это и делает матожидание положительным.
+
+3. Разнообразная выборка.
+   55 сигналов за три недели - это огромный массив для анализа.
+
+Итог по A:
+
+высокий потенциал прибыли = высокая рабочая волатильность портфеля.
+
+Для тех, кто любит динамику, - идеальный выбор. Но следовать за сделками нужно последовательно и постоянно - так как этот трейдер работает по своей системе и на дистанции.",1.0,update_without_target_hint,SL_HIT,REPORT_RESULT|MOVE_STOP_TO_BE|SL_HIT|TP_HIT|ENTRY_FILLED|REPORT_RESULT|ENTRY_FILLED|REPORT_RESULT|REPORT_RESULT|SL_HIT|SL_HIT|SL_HIT|REPORT_RESULT|TP_HIT|REPORT_RESULT|TP_HIT|TP_HIT|SL_HIT|SL_HIT|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1965,764,,"Часть 2. 
+Разбор трейдеров #1, #2, #3 и #4
+
+Здесь у нас - четыре трейдера, чьи сигналы проверены, просмотрены, разобраны и… всё же местами очень сложно восстановить реальные результаты.🤯
+
+⚠️ Дисклеймер
+Дальнейшая статистика по трейдерам #1–#4 собрана по сигналам из закрытых Telegram-чатов.
+У нас нет доступа к их реальным сделкам на бирже, только к тому, что публикуется: вход, стоп, апдейты, тейки.
+Поэтому оценка - консервативная, на основании доступных данных.
+Этого достаточно, чтобы понять стиль и качество работы каждого трейдера.
+
+Общая проблема группы:
+Сигналы менее структурированы, чем у A/B.
+Входы - есть (иногда, правда, формате ""Buy here"" или ""This is it!""🤦‍♂️).
+Стопы - тоже имеются, но о них говорят вскользь.
+Тейки - иногда их слишком много, иногда они завышены.
+
+И очень много апдейтов с аналитикой, которую теперь будем регулярно вычищать из канала, ибо за хорошей аналитикой - вы знаете куда можно заглянуть!😉
+
+Исходя из всего вышеперечисленного, обзор этой четвёрки будет основан скорее на общих наблюдениях:
+
+🟡Trader #1 
+
+Плюсы:
+логичные уровни,
+часть сделок реально отрабатывает.
+Минусы:
+Встречаются как крупные тейки, вроде +61% на BATUSDT, так и стопы, типа –45% на AAVE.
+Тут вы сами делаете выбор: кататься на этих качелях или постоять посмотреть со стороны.
+
+Вердикт:
+остается в наблюдении на ещё один месяц.
+Потенциал есть, прозрачности - мало.
+
+🟡Trader #2 
+
+Плюсы:
+входы и уровни чаще внятные,
+тейки обозначены, стопы чаще указаны.
+
+Минусы:
+Много апдейтов c шумом из аналитики,
+Сами стопы фиксирует на бумаге не всегда.
+
+Вердикт:
+Даём ещё месяц. Убираем ненужную аналитику. Только сетапы.
+
+🟠Trader #3 
+
+Плюсы:
+Рабочие идеи и сетапы.
+
+Минусы:
+Всё те же. Широкий разброс по тейкам и стопам, который, хоть и положительный на дистанции, но требует хорошего навыка управления депозитом.
+
+Вердикт:
+Тоже отправляем в комнату особого надзора. Но оставляем.
+
+🔴Trader #4 
+Чистый red flag, как если бы Лариса Долина запустила свои сигналы под влиянием ""мошенников"".😂
+
+Из особенностей:
+обилие низколиквидных монет,
+тейки x10/x20/x50,
+если сделка улетела - хайп-парад,
+если ушла в минус - тишина,
+много мусорных сетапов (на ""инсайде""),
+отсутствие системности...
+
+Вердикт: 
+исключаем.
+Это про лотерею и кликбейт.
+Фу таким быть!
+
+Что будет дальше:
+#1, #2 и #3 продолжают работать в канале, но под усиленным контролем.
+#4 - будет удалён в ближайшее время.
+A и B - пока выглядят, как хорошее пособие для новичков по тому, как должен выглядеть трейдинг с точки зрения стратегии.
+
+Продолжаем работу и следим, как изменится статистика в декабре 😉",1.0,,SL_HIT,REPORT_RESULT|SL_HIT|TP_HIT|SL_HIT|TP_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|TP_HIT|SL_HIT|TP_HIT|SL_HIT|SL_HIT|MOVE_STOP_TO_BE|TP_HIT|SL_HIT|MOVE_STOP_TO_BE|TP_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,6,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP|SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4|0.4|0.4|0.4,бу|бу|бу|бу|бу|бу,UNKNOWN,,,,,BATUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1942,796,783,"[trader#В]
+
+Стоп лосс переносим в БУ - как указанно на изображении",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,783,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1935,806,798,"[trader#В]
+
+Сделка полностью закрыта по тейк профиту, с прибылью в 3.68%
+
+Поздравляю с профитом 💸💸💸",1.0,,TP_HIT,CLOSE_FULL|TP_HIT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,798,,,,,,,,FULL,,3.68,,,0,,,,0,,,,0,
+UPDATE,PARSED,1917,828,,"1. DOGE - https://t.me/c/3171748254/795
+2. CAKE - https://t.me/c/3171748254/805
+3. 1INCH - https://t.me/c/3171748254/817
+4. LINK - https://t.me/c/3171748254/818
+5. ZETA - https://t.me/c/3171748254/819
+6. BAT - https://t.me/c/3171748254/821
+
+По этим монетам стоп в бу поставьте, уберите лимитные ордера на усреднение
+
+Всем хороших выходных",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,795|805|817|818|819|821,https://t.me/c/3171748254/795|https://t.me/c/3171748254/805|https://t.me/c/3171748254/817|https://t.me/c/3171748254/818|https://t.me/c/3171748254/819|https://t.me/c/3171748254/821,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1913,832,795,"Закрываю у тейка. Поздравляю, почти 8%
+
+Тейк все равно случился)",1.0,,TP_HIT,CLOSE_FULL|TP_HIT|REPORT_RESULT|TP_HIT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю у,UNKNOWN,795,,,,,,,,FULL,,8.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1905,844,,"Пример сделки (на пальцах и на графике)
+
+Допустим, ваш депозит: 10.000$
+Риск на сделку: 1%
+
+Выставляем сделку через инструмент «Длинная позиция» в TradingView (для шорта есть аналог).
+
+- Зеленая зона - путь к тейку
+- Красная зона - путь к стопу
+
+В нашем примере расстояние до тейка ~12%, до стопа ~4%.
+И вы такие:
+«4% в минус за одну попытку? Нет, спасибо».
+
+И правильно!😌
+
+Смотрим на область, выделенную белым:
+если зайти объёмом 1.129 ETH, соотношение риск/прибыль = 1:3.
+
+Это означает:
+
+- при успехе: +3% к депозиту
+- при стопе: всего лишь –1%
+
+Вот это уже звучит как трейдинг, а не поход к букмекеру.
+
+🧘‍♂️ Попробуйте так торговать хотя бы месяц…
+
+…и вы удивитесь,
+как много денег можно сэкономить...
+Хотя бы на магнии и 5-HTP. 😂
+
+
+А если серьёзно - начните строго придерживаться фиксированного риска.
+Скучно? Да. Это не «+132% за ночь».
+Но это и не сценарий со сливом депо и ночёвкой на балконе у тестя, в компании старого велосипеда ""Аист"", которому вы грустно шепчете в ночи: «Не взлетели мы с тобой, друг…»🥲
+
+Удачных и взвешенных сделок! 🚀📉📈
+
+P.S.
+теперь буду помечать свои посты хэштегом #админ . Не теряйте.👌
+ 
+#админ",1.0,update_without_target_hint,SL_HIT,TP_HIT|SL_HIT|TP_HIT|SL_HIT|REPORT_RESULT|SL_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1894,855,831,"[trader#В]
+
+$LTCUSDT update:
+
+Так же стоп лосс переносим можно сказать в БУ (на отмету 79.88 - как указано на изображении)",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,831,,,,LTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1887,864,852,"[trader#В]
+
+Закрыта вручную (-0.5%)",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,852,,,,,,,,FULL,,0.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,1886,865,859,"[trader#В]
+
+Закрыта в районе БУ",0.8,,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрыта|бу,UNKNOWN,859,,,,,ENTRY,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1885,866,830,"[trader#В]
+
+Закрыта в +2.3%",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,830,,,,,,,,FULL,,2.3,,,0,,,,0,,,,0,
+UPDATE,PARSED,1884,867,831,"[trader#В]
+
+Закрыта в + 0.5%
+
+В целом мы в плюсе, всех с профитом 💸💸💸
+Как только появится ясная картина будем искать новые возможности для открытия качественных позиций",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрыта|бу,UNKNOWN,831,,,,,ENTRY,,,FULL,,0.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,1881,872,869,"[trader#B]
+
+По эфиру у нас картина мне не нравится, копят много ликвидности снизу, для дальнейшего его снятия, поэтому думаю будет целесообразно закрыть позицию по текущим в -0.5% 
+
+И уже поэтом после снятия всей этой ликвидности искать новые возможности 
+
+Выше у нас так же много ликвидности и открытий FVG, поэтому еще будут возможности",0.8,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,869,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARTIAL,1862,904,,"[trader#A]
+
+
+XRP - https://t.me/c/3171748254/822 3.94% прибыли
+ENA - https://t.me/c/3171748254/856 убыток 9.32
+LDO - https://t.me/c/3171748254/861 прибыль 4.2% 
+SHIB - https://t.me/c/3171748254/870 прибыль 3.4%
+
+Эти монеты закрываю по текущим, так как нет времени за ними следить
+
+Встретимся в воскресенье
+
+p.s. проценты указал без учета усреднения. кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше, убыток по ENA перекроется существеннее",1.0,multi_ref_mixed_intents_not_supported,REPORT_RESULT,REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|CLOSE_FULL|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,ALL_SHORT,,822|856|861|870,https://t.me/c/3171748254/822|https://t.me/c/3171748254/856|https://t.me/c/3171748254/861|https://t.me/c/3171748254/870,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1826,956,925,"еще стоп, понедельник начинается не с прибыли
+
+никак не могу эту ENA обуздать",1.0,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,925,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1805,981,921,закрываю по текущим. 8% движения. поздравляю,1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,921,,,,,,,,FULL,,8.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1801,985,964,Закрываю фактически на точке входа,0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,964,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1800,986,,"[trader#A]
+#intraday
+
+
+ASTER - https://t.me/c/3171748254/924 
+INJ - https://t.me/c/3171748254/936 
+
+По этим монетам остаток закрываю по текущей цене. Фактически эти монеты дошли до 2-х тейков",1.0,,TP_HIT,CLOSE_FULL|TP_HIT,0,,,,,,UNKNOWN,,924|936,https://t.me/c/3171748254/924|https://t.me/c/3171748254/936,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,1796,991,988,"[trader#В]
+
+Стоп лосс переносим в БУ на уровень 2941 (см. изображение)",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,988,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1763,1035,,"[trader#A]
+
+LINK - https://t.me/c/3171748254/978 - стоп в бу
+ALGO - https://t.me/c/3171748254/1002 стоп в бу
+ARKM - https://t.me/c/3171748254/1003 стоп в бу
+FART - https://t.me/c/3171748254/1005 стоп на 1 тейк
+UNI - https://t.me/c/3171748254/1018 стоп в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,978|1002|1003|1005|1018,https://t.me/c/3171748254/978|https://t.me/c/3171748254/1002|https://t.me/c/3171748254/1003|https://t.me/c/3171748254/1005|https://t.me/c/3171748254/1018,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1756,1042,1039,"[trader#В]
+
+Стоп лосс переносим в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1039,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1751,1049,1039,"[trader#B]
+
+Сделка закрыта в +5%  💸💸💸
+
+После череды стопов одна такая прибыльная сделка их стирает и даже может перекрыть в плюс, нужно понимать что череда стопов это нормально , это часть нашей работы, часть трейдинга и без этого никуда, тут самое важное не «не словить» стоп лосс, а (не устану повторять) - работать со строгим РМ и строгой дисциплиной, только тогда будет успех 
+
+Всем спасибо ребята ❤️",1.0,,SL_HIT,REPORT_RESULT|SL_HIT|REPORT_RESULT|SL_HIT|SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1039,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1750,1053,,"[trader#A]
+
+XRP - https://t.me/c/3171748254/1015
+ADA - https://t.me/c/3171748254/1017
+
+А давайте их прикроем, пока они рядом с ТВХ",1.0,,CLOSE_FULL,CLOSE_FULL,0,,,,,,UNKNOWN,,1015|1017,https://t.me/c/3171748254/1015|https://t.me/c/3171748254/1017,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,1748,1055,,"[trader#C]
+https://t.me/c/3171748254/1054  
+В бу перевел",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1054,https://t.me/c/3171748254/1054,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1739,1066,,"https://t.me/c/3171748254/1062
+Добор убрал, в бу перевел 
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1062,https://t.me/c/3171748254/1062,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARTIAL,1723,1090,,"[trader#B]
+
+https://t.me/c/3171748254/1075 
+
+https://t.me/c/3171748254/1076 
+
+Закрываю сделки, не нравится как они себя ведут, зажаты в консолидации , sol уходит в БУ , eth в -0.4%",0.8,multi_ref_mixed_intents_not_supported,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1075|1076,https://t.me/c/3171748254/1075|https://t.me/c/3171748254/1076,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1719,1098,,"https://t.me/c/3171748254/1095
+Закрываю на точке входа,нет реакции
+  
+[trader#C]",0.4,,CLOSE_FULL,CLOSE_FULL,0,,,,,,UNKNOWN,,1095,https://t.me/c/3171748254/1095,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,1718,1099,,"https://t.me/c/3171748254/1095  
+Не актуально 
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1095,https://t.me/c/3171748254/1095,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1710,1112,,"https://t.me/c/3171748254/1094
+ В бу перевел 
+Доливку убрал 
+[trader#C ]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1094,https://t.me/c/3171748254/1094,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1708,1115,1114,"[trader#B]
+
+Закрываю по текущим в небольшой + (≈0.2%), цена к сожалению немного не дошла до тейка и откатилась",1.0,,TP_HIT,CLOSE_FULL|TP_HIT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,1114,,,,,,,,FULL,,0.2,,,0,,,,0,,,,0,
+UPDATE,PARSED,1704,1119,,"https://t.me/c/3171748254/1079
+ Не актуально 
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1079,https://t.me/c/3171748254/1079,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1703,1120,,"https://t.me/c/3171748254/1078
+Не актуально 
+[trader#c]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1078,https://t.me/c/3171748254/1078,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1699,1124,1117,"[trader#B] 
+
+Закрываю в БУ",0.8,,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрываю|бу,UNKNOWN,1117,,,,,ENTRY,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1696,1128,1037,"2 тейк, сделку закрываю полностью",1.0,,TP_HIT,TP_HIT|CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,1037,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1688,1138,1127,"[trader#B]
+
+Стоп лосс переносим в БУ как указано на картине",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1127,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1686,1141,1138,"[trader#B]
+
+Закрываю в +0.5%
+Очень слабо себя ведет",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,1138,,,,,,,,FULL,,0.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,1684,1145,,"Друзья, админ зашёл чат 👋 
+
+Некоторые пользователи читают сигналы, как-будто человек, на ощупь наткнувшийся в темноте на рифлёную батарею и решивший, что это Священное Писание на языке Брайля.😎
+
+Чтобы как-то помочь нашему общему делу - ниже публикую регламент стратегии и правила пользования сигналами trader#A
+Про что-то уже говорил ранее, - но, в любом случае, тут лучше лишний раз повторить, чем упустить какую-то деталь.🧐
+
+1️⃣ Рынок и стиль
+Торгуем крипто-фьючерсы, направления - лонг / шорт, в зависимости от фаз Лунного Цикла.😁
+
+Плечо 3-5x.
+Не 20, не «А у меня вот сотое - и что ты мне сделаешь?»
+Ничего не сделаю. Но тогда без обид.
+
+2️⃣ Стоп-лосс (он есть. всегда.)
+Стоп ставится сразу при входе.
+Если нет - выйди и зайди нормально, кому сказали!👨‍🏫
+
+Двигать стоп дальше от входа запрещено.
+Там - лава.🔥😂
+
+Стоп можно двигать только в сторону уменьшения риска:
+после TP1 - в безубыток;
+после TP2 - на уровень TP1.
+
+3️⃣ Вход 
+Если сигнал даёт зону:
+70% позиции - по рынку;
+30% - лимиткой по зоне.
+
+Главное правило:
+Если лимитка не исполнилась, а цена ушла - НЕ ДОГОНЯЕМ.
+Это не любовь всей жизни и не последний поезд.
+
+4️⃣ Выходы и сопровождение
+
+TP1
+Фиксирем 30% всей позиции.
+Стоп - в БУ.
+Допускается подтяжка стопа только за свинг
+(Свинг, если что - это не что-то из мира джаза и не ваши сексуальные предпочтения, а структура рынка😂):
+Лонг - стоп под новый локальный лой;
+Шорт - стоп над новым локальным хаем.
+
+TP2
+Фиксируем 50% от остатка.
+Стоп - на уровень TP1.
+
+TP3
+Фиксирем всё.
+Сделка закрыта.
+Можете купить жене Рафаэлки, а себе - Chapman😊
+
+Продолжение ниже...
+#админ",1.0,update_without_target_hint,SL_HIT,MOVE_STOP_TO_BE|SL_HIT|SL_HIT|SL_HIT|SL_HIT|TP_HIT|MOVE_STOP_TO_BE|REPORT_RESULT|TP_HIT|TP_HIT|ENTRY_FILLED|ENTRY_FILLED|TP_HIT|SL_HIT|MOVE_STOP_TO_BE|SL_HIT|SL_HIT|TP_HIT|SL_HIT|TP_HIT|TP_HIT|REPORT_RESULT,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|безубыток|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1683,1146,,"Часть 2
+
+5️⃣ Риск-менеджмент (самое важное)
+Суммарный риск по всем сделкам ≤ 5% депозита.
+
+После TP1:
+сделка в БУ
+риск пересчитывается по оставшемуся объёму.
+
+Любая новая сделка - только если после входа суммарный риск всё ещё ≤5%
+Помните: отсутствие контроля за своей позой - это молчаливое согласие на то, что рынок будет сверху и сзади жесток к вам.🥲
+
+6️⃣ Портфельные правила
+В работе 5-6 сделок, максимум
+Новые сделки не открываются, пока хотя бы одна из текущих не взяла TP1.
+
+7️⃣ Защита от плохого дня
+Если за день получилось -5% (это рынок - здесь бывает всякое)
+СТОП ТОРГОВЛЯ до следующего дня
+Это не слабость.
+Это способ сохранить свои нервы.
+Так что в этот раз попросите жену купить вам Рафаэлки, а ей - Chapman😂
+
+8️⃣ Чек-лист перед входом 
+Перед тем как нажать кнопку, задайте себе вопросы:
+Чтобы сделал Иисус на моём месте?😇
+Стоп есть? (Вы его видите? Он в этой комнате?😂)
+TP1 / TP2 / TP3 есть?
+После входа суммарный риск ≤ 5%?
+
+Ликвидация дальше стопа?
+...
+Если этот вопрос вообще встал - возможно, вам стоит строить карьеру не в трейдинге,
+а в какой-нибудь религиозной секте. Серьёзно, подумайте. У вас есть все данные!😉
+
+Вот как-то так мы и работаем с сигналами.
+Не сложно. Но строго.
+Соблюдайте регламент,
+и рынок будет наказывать вас мягче, а вознаграждать чаще 😌
+Отношения всё-равно нездоровые, но вас же никто не заставлял ввязываться в эту историю! 😂
+Всем профита! 🫶
+#админ",1.0,update_without_target_hint,SL_HIT,TP_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|TP_HIT|SL_HIT|SL_HIT|TP_HIT|TP_HIT|TP_HIT|SL_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|REPORT_RESULT,4,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4|0.4,бу|бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1680,1152,,"https://t.me/c/3171748254/1151
+ После первого тп в бу 
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1151,https://t.me/c/3171748254/1151,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1676,1158,1118,"[trader#B]
+
+Тут у нас была еще сделка по Ltc, так нарратив по битку шортовый у меня, закрываю ее по текущим, это в -0.5% 
+
+Больше пока нет открытых сделок, слежу за рынком, ожидаю новые возможности",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,1118,,,,,,,,FULL,,0.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,1672,1162,,"https://t.me/c/3171748254/1161
+ Тп1🥳🥳🥳
+Доливку убрал в бу перевел 
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1161,https://t.me/c/3171748254/1161,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1660,1183,,"https://t.me/c/3171748254/1122
+ Не актуально не дошел до лимитки 😔
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1122,https://t.me/c/3171748254/1122,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1659,1184,,"https://t.me/c/3171748254/1121
+Не актуально 
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1121,https://t.me/c/3171748254/1121,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1656,1189,1175,"В бу перевел 
+ 
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1175,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1652,1198,1181,"[trader#B]
+
+Стоп лосс в БУ переводим",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1181,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1640,1216,,"https://t.me/c/3171748254/1175
+  Остаток в бу ушёл 
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1175,https://t.me/c/3171748254/1175,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1637,1220,,"https://t.me/c/3171748254/1217
+ В бу перевел, добор убрал 
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1217,https://t.me/c/3171748254/1217,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1633,1227,1225,"[trader#B]
+
+Не актуально, цена достигла цели, однако без теста нашей зоны интереса",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,1225,,,,,,,,,,,,,0,,,,0,,,"[trader#B]
+
+Не актуально, цена достигла цели, однако без теста нашей зоны интереса",0,
+UPDATE,PARSED,1631,1229,1224,"Тп 1  RR1-2 🥳🥳🥳в бу перевел
+  
+[trader#С]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1224,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1627,1237,,"[trader#С]
+
+$ETHUSDT - LONG в сущ позиции!
+
+https://t.me/c/3171748254/1217
+
+Вход с текущих (2940-2935)добавляем объем тот что остался в существующей позиции( к примеру было 0,1 эфира должно стать 0,2)в два раза и добавляем 
+промежуточный ТП
+
+Stop в бу 2925
+
+Tейк-профит 
+
+1)2965
+
+2)2990",1.0,,REPORT_RESULT,MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,UNKNOWN,,1217,https://t.me/c/3171748254/1217,,ETHUSDT,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1625,1239,1034,"всем привет. рынок очень ""тугой"". среднесрок очень долго отрабатывает. пробежимся по позициям, проведем инвентаризацию, освободим маржу для новых сделок
+
+эту закрываю полностью по текущим, цена как раз на 1 тейке",1.0,,TP_HIT,CLOSE_FULL|TP_HIT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,1034,,,,,,,,FULL,,1.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1624,1240,1036,полностью закрываю,0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,1036,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1623,1241,1044,закрываю на текущих ценах. +8%,1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю на текущих,UNKNOWN,1044,,,,,,,,FULL,,8.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1621,1243,1081,закрываю по текущим +13%,1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,1081,,,,,,,,FULL,,13.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1613,1252,,"[trader#c]
+
+Так, ребята, возникли вопросы по поводу вот этого сетапа: https://t.me/c/3171748254/1224
+
+Дело в том, что прошедшей ночью (03:15 UTC+3) у меня сработал первый тейк по этой позиции. 
+В ночи не посмотрел цену закрытия и на автомате написал вам сообщение в канал о срабатывании тейка и переводе в БУ. 
+На деле же, мой тейк сработал на 87911 (проскальзывание или биржа дала сбой), тогда как в сигнале 1TP - 87950 и на Bybit, мы не дошли до тейка.
+Кого-то это могло смутить.
+Но!
+В данном случае ничего критичного не случилось:
+хотя в следующие полчаса после этого ""не произошедшего тейка"" произошёл откат до ≈ 87490 , - вас всё-равно не выбило бы в БУ ,если вы заходили в диапазоне 87400-87450 по сигналу.
+
+А уже в 3 часа ночи вы бы зафиксировали тейк в любом случае, так как цена, наконец, достигла его на всех биржах.
+
+Вот как-то так!👌
+
+По итогу:  сделка в работе, первый тейк взяли, перевелись в БУ.
+Всем профита!✊️",1.0,,TP_HIT,TP_HIT|TP_HIT|MOVE_STOP_TO_BE|TP_HIT|TP_HIT|TP_HIT|MOVE_STOP_TO_BE|TP_HIT|REPORT_RESULT|TP_HIT|MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,UNKNOWN,,1224,https://t.me/c/3171748254/1224,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1605,1268,,"https://t.me/c/3171748254/1237
+ Закрыто в бу 
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1237,https://t.me/c/3171748254/1237,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1604,1269,,"https://t.me/c/3171748254/1224
+
+Закрыт остаток в бу
+ 
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1224,https://t.me/c/3171748254/1224,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1601,1276,1275,"🥳 тп 1 в бу перевел , понаблюдаем 
+https://t.me/c/3171748254/1275
+ 
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,1275,1275,https://t.me/c/3171748254/1275,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1596,1282,1274,"[trader#B]
+
+Эту позицию закрываю в районе БУ) крипто рынок выглядит не однозначно, лучшее что можно сделать, это отдохнуть от графиков и подвести итоги в эти предновогодние дни",1.0,,REPORT_RESULT,CLOSE_FULL|MOVE_STOP_TO_BE|REPORT_RESULT,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрываю|бу,UNKNOWN,1274,,,,,ENTRY,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1593,1287,,"[trader #С]
+
+Btcusdt SHORT 
+
+Доливаю часть шорта:87800-900
+Чтобы средняя оказалась в 88500 стоп в бу ,это чуть больше того что в позе для тех кто не закрыл остаток на 87000!!!Кто закрыл нечего делать не нужно 
+Тп1.  87222
+Тп2.  86666
+Тп3.  85888",1.0,,MOVE_STOP_TO_BE,ENTRY_FILLED|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,,,,,BTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1590,1290,1288,"Закрываю по рынку 87450 остаток,не нравится реакция 
+
+[trader#C]",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по рынку,UNKNOWN,1288,,,,,,,,FULL,,87450.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1587,1296,,"Всем привет, это #админ ! 👋
+
+Декабрь пролетел, год заканчивается - время подводить черту, собирать камни и смотреть правде в...калькулятор. 😉
+Сразу предупреждаю: пассажей об итогах года в духе «мы смогли», «мы выросли», «мы осознали» здесь не будет.
+Мы трейдеры, скучные люди - видим мир в числах и циферках. 
+Так что надевайте очки, представляйте себя Нео и давайте надаем по щщам агенту Смиту разберёмся, что там наторговали трейдеры #1, #2, #3 и A, B, C. 😎
+────────────────────────────
+Часть 1. Зарубежные сигнальные каналы (TRADER#1 / #2 / #3)
+🔥Важно🔥 (дисклеймер для всех)
+Сигналы TRADER#1-#3 берутся со сторонних ресурсов и почти не сопровождаются авторами. 
+Обычно там нет:
+- объёма на сделку
+- распределения по тейкам
+- своевременных уведомлений о переводе в БУ
+- иногда и адекватного риск-менеджмента (зато есть широкие плечи и красивые “+200%”🤪)
+
+Поэтому результаты ниже посчитаны по нашей модели:
+- риск фиксированный: 1% депозита на сделку
+- фиксация по тейкам равными долями
+- результат считаем в % к депозиту, а не “по плечу”
+
+В другом режиме (агрессивный объём/плечо) цифры могут выглядеть красивее, но и риск потерь становится несопоставимо выше.
+
+Итог по “цифровым” трейдерам на момент 30.12 00:00:
+TRADER#1: +1.385% (10 сделок)
+TRADER#2: +1.595% (22 сделки)
+TRADER#3: +2.41% (20 сделок)
+Суммарно TRADER#1-#3: +5.39% по модели 1% риск + равные тейки
+
+Если у вас вышло больше - супер! Мы реально рады. 👍
+Но важно понимать: эти сигналы дают идею и уровни, а вот самого главного не дают:
+сколько денег выделить на сделку и как распределить фиксацию по тейкам.
+Для новичков это всё равно что получить маршрут без указания скорости и тормозов.
+Используйте с умом!
+
+Ну и коротко по каждому:
+TRADER#1
+10 сделок: стабильный умеренный плюс, часть сделок с частичной фиксацией и переводом в БУ (а они не всегда это пишут😏).
+
+TRADER#2
+22 сделки: высокая активность, много сделок в работе, были серии стопов(мы в команде называем их ""хлопки"" или ""отрицательный профит""😂), но отдельные сильные выстрелы (например AXL +3.15%) компенсируют.
+
+TRADER#3
+20 сделок: самый высокий итоговый результат среди “цифровых”. 
+При этом есть показательные минуса с завышенным RR и короткими стопами - типичная проблема сторонних сигналов без сопровождения.
+
+Вывод простой: 
+сетапы у TRADER#1-#3 часто годные, иногда даже очень.
+Но когда сигнал заканчивается на слове “Entry” - дальше начинается народное творчество: 
+кто-то фиксирует, кто-то не фиксирует, кто-то вообще забывает, что в позиции.🤦‍♂️
+В 2026 будем решать, что делать с этими тремя, потому что по уровню внимания и сопровождения они заметно проигрывают нашим трейдерам.
+А сопровождение - это не “сервис”, это часть прибыли. 😌
+Переходим к позитивной части и это...",1.0,update_without_target_hint,SL_HIT,REPORT_RESULT|MOVE_STOP_TO_BE|TP_HIT|MOVE_STOP_TO_BE|REPORT_RESULT|TP_HIT|REPORT_RESULT|REPORT_RESULT|TP_HIT|TP_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE|SL_HIT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|SL_HIT|MOVE_STOP_TO_BE,5,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|CLOSE|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|CLOSE_PARTIAL|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4|0.4|0.4,бу|бу|частично|бу|бу,UNKNOWN,,,,,,ENTRY,,,PARTIAL,,2.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1586,1297,,"────────────────────────────
+Часть 2. Команда Pifagor Trade (TRADER A / B / C)
+
+TRADER A (01–29 декабря)
+Рабочая лошадка/верблюд/швейцарский нож/кухонный комбайн - главное, что этот зверь спокойно тащит в разных стилях торговли: и intraday, и mid. 
+По результатам - тащит в плюс.
+
+Доказательства👇
+Объём:
+60 сигналов
+56 закрыто, 4 в работе
+По закрытым: 28 в плюс / 22 убыточные / 6 БУ
+Ключевые цифры:
+Итог: +19.75%
+Средний результат: +0.35% на сделку
+
+
+TRADER B (02.12–29.12, только спот)
+Да. Только спот. Отдайте дань уважения человеку, потому что торговать на этом рынке спот с середины октября по конец декабря - 
+это как зайти в клетку со львами и...торговать спот. 😂
+
+Цифры!👇
+30 сделок:
+9 прибыльных / 14 убыточных / 7 БУ
+Итог: +7.1% к депозиту
+Средняя сделка: +0.24%
+
+
+TRADER C (19.12–29.12)
+Новичок в нашей команде, но уже имеет своих фанатов. 
+Знали бы вы сколько наших подписчиц написали мне в личку, что хотят от него детей! 😂
+
+Статистика!👇
+15 сделок:
+10 прибыльных / 1 убыточная / 4 БУ
+Итог: +21.7% к депозиту
+Лучшая сделка: +7% (BTC short)
+Худшая: −1%
+Пишет сигналы быстро, иногда с опечатками, потому что работает в моменте и входит по рынку.
+И даже если он где-то “traider”, “traitor” или вообще “reader#3” (да, такое тоже бывало😅) - неважно. 
+Главное, что человек знает, что делает.👌
+────────────────────────────
+Часть 3. Празднично-подарочная!
+В январе будет пополнение - ещё один трейдер в команде.
+Вчера спорили, какую букву ему присвоить. Сейчас лидирует скучная D.
+Но кто знает, что сделает с нами Новый Год…
+Так что если увидите в канале трейдера Ж или Ы - просто примите это как данность. 😂
+Подробности - в начале января, когда большинство из нас выйдет из алкогольно-углеводной комы и восстановит когнитивные функции до уровня:
+Мам, я снова умею читать и писать! 😂
+
+#админ",1.0,update_without_target_hint,REPORT_RESULT,REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|ENTRY_FILLED|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,5,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4|0.4|0.4,бу|бу|бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1585,1301,1287,"Закрыт остаток в бу
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1287,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1584,1312,,"Привет, это #админ ! 👋
+
+Для нашего канала прошедший год был хорош хотя бы тем, что он, канал, вообще появился.
+А отнюдь не все идеи доживают до своей реализации - так что поздравляем всех присутствующих с тем, что ""все мы здесь сегодня собрались""!😊
+
+В новом году мы всей командой будем продолжать работать для вас над качеством сигналов, улучшать торговые стратегии собирать ещё более прозрачную статистику и делать ваш трейдинг более системным и менее нервным! 👌
+
+Пусть в новом году у вас будет меньше «сейчас или никогда», и больше «следую плану». 😌
+Пусть winrate постепенно ползёт вверх, а азарт и лишние эмоции - вниз! 🧘🏻‍♂️
+Пусть дисциплина станет привычкой, а не усилием. 🤖
+
+Хороших сделок, роста депозита и просто всего самого лучшего в новом году. 🚀📈🥂
+
+P.S.
+И помните о риск-менеджменте!
+Потому что если его соблюдать, то даже если вдруг всё, что мы вам тут нажелали, не сбудется -
+вы потеряете всего 1% 😂",1.0,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1568,1335,1327,"[trader#C]
+В бу перевел 89650",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1327,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1566,1338,,"Друзья, #админ пережил Новогоднюю ночь и уже с вами! 👋
+Новый год прошёл - все (надеюсь) отдохнули, выспались, доели холодец и вернули себе человеческий режим сна.
+Самое время подумать о будущем, и немного навести порядок в сигнальных источниках.
+За последнее время стало очевидно, что зарубежные сигнальные каналы TRADER#1 / #2 / #3 ведут себя кое-как, а я на них даже наорать за это не могу! 😂
+
+Для тех, кто пропустил предыдущую серию - быстрый recap:
+У #1, #2, #3 часто нет:
+- нормального распределения объёма
+- тейков/долей
+- уведомлений про перевод в БУ 
+- и адекватного риск-менеджмента
+
+В итоге сигнал превращается из жесткой системы в сочинение на вольную тему.
+Нам такое...не очень!🤨
+Поэтому мы решили...🥁🥁🥁🥁🥁🥁🥁
+Пусть ВЫ решите, что делать с #1 #2 #3! 😂
+
+Серьёзно, вдруг кто-то несколько месяцев вывозит этот рынок только благодаря этим трём! 🤷‍♂️
+Ниже опрос, просьба поучаствовать!👇",1.0,update_without_target_hint,TP_HIT,MOVE_STOP_TO_BE|TP_HIT|MOVE_STOP_TO_BE|REPORT_RESULT,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|1.0,бу|перевод в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1563,1341,,"[trader#B]
+
+https://t.me/c/3171748254/1321 - XRP
+
+https://t.me/c/3171748254/1323 - BCH
+
+По обоим сделкам - стопы переносим в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1321|1323,https://t.me/c/3171748254/1321|https://t.me/c/3171748254/1323,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1559,1347,,"https://t.me/c/3171748254/1340
+  В бу перевел,90500
+  
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1340,https://t.me/c/3171748254/1340,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1549,1362,1355,"[trader#B]
+
+Стоп лосс переводим в БУ",1.0,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,переводим в бу,UNKNOWN,1355,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1548,1363,1340,"Закрываю по рынку остаток 
+90200-100
+[trader#C]",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по рынку,UNKNOWN,1340,,,,,,,,FULL,,90200.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1546,1365,,"Друзья, это снова  #админ ! 👋
+
+Мы серьёзно думали, что предыдущее голосование по TRADER#1 / #2 / #3 спокойно провисит все выходные.
+Но кое-кого задолбал спам в канале уже, впринципе, ясно: вы не настолько кровожадные, чтобы выступить за ""окончательное решение"" вопроса зарубежных трейдеров😅, но и не готовы простить их всех разом! 😇
+
+Короче говоря, кого-то придётся убирать. 🔥
+Не будем же затягивать с этим сильно.
+
+Немного закулисной возни: мне в личку уже приходили сообщения из серии:
+- «оставьте #1, он норм!»
+- «#3 самый прибыльный - не убирайте, пожалуйста!»
+- «Hello, it's me, trader#4, take me back please!” 😂
+
+В общем, чтобы не выбирать на глаз и по настроению, делаем дополнительное голосование до понедельника!
+
+Голосуйте. Вы сейчас, буквально, решаете, кто остаётся в команде, а кто уйдёт по-Венесуэльски...👨🏻
+
+#админ",1.0,update_without_target_hint,REPORT_RESULT,MOVE_STOP_TO_BE|REPORT_RESULT|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1539,1375,1367,"[trader#B] 
+
+В итоге наша сделка полностью себя реализовала, (если бы не переносили стоп в БУ) однако тут «если бы» «кабы» не катят - риск менеджмент и дисциплина всегда все решает (ну и конечно же стратегия, знания) 
+
+Идем дальше … 🤝",1.0,,REPORT_RESULT,REPORT_RESULT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1367,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1538,1376,1366,"#админ 
+
+Всем, хорошего дня!
+Напоминаю, что завтра подводим итог голосования - не забудьте поучаствовать!
+
+https://t.me/c/3171748254/1366",1.0,,REPORT_RESULT,REPORT_RESULT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,1366,1366,https://t.me/c/3171748254/1366,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1528,1392,1368,"[trader#B]
+
+Закрываю в БУ, очень слабо себя показывает",0.8,,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрываю|бу,UNKNOWN,1368,,,,,ENTRY,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1524,1396,,"🔥 У нас прибавление! 🔥
+Встречайте: [trader#D].
+
+Да, мы понимаем соблазн строить фанатские теории:
+мол, D - это Дима, и он пришёл под Рождество, чтобы спасти всех нас, грешных хомячков…
+🐹🐹🐹🐹🎓
+Но иногда D - это просто D 😌
+Следите за его результатами, прикладывайте там где бо-бо депо -
+и, возможно, это будет именно ваш вариант.
+
+⚙️ Коротко о стиле торговли trader#D :
+- Интрадей (динамично и оперативно🤳)
+- Нью-Йоркская торговая сессия - человек работает в часы максимальной ликвидности...
+ЧТО? Вы не знаете, когда Нью-Йорк выходит на работу??? 
+Ну что же вы… это любой диктатор знает! 😂
+Ладно, так и быть, скажу! С 16:30 до 23:00 (UTC+3)
+- Вход по рынку
+- Плечо до 10x
+- Быстрые сигналы: вход сразу, промедление = упущенная сделка
+- Риск всегда 0.5% - без увеличений и без “отыгрыша”
+- Частичные фиксации - в среднем 75% позиции забирает по ходу движения (дополнения будет публиковать отдельно)
+- Переводы в БУ - сообщает отдельно по каждой сделке
+- Жёсткая дисциплина 
+(ну это как у всех… других мы и не держим)
+
+Если заснули где-то в середине моего поста и проснулись только сейчас, то вот вам краткий пересказ:
+Короче, [trader#3] остаётся, новые западные пока на стопе, команда усиливается, канал улучшается.
+Двигаемся дальше 🚀
+#админ",1.0,update_without_target_hint,SL_HIT,REPORT_RESULT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|SL_HIT,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1522,1404,,"[trader#C]
+В бу перевел 92900
+https://t.me/c/3171748254/1390",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1390,https://t.me/c/3171748254/1390,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1518,1408,1407,"[trader#d]
+Перевод в безубыток",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в безубыток,UNKNOWN,1407,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1515,1411,,"[trader#C]
+
+https://t.me/c/3171748254/1409
+ До тп 0,1 пипс не дошли 
+ Закрываю по рынку 93700",1.0,,CLOSE_FULL,CLOSE_FULL,0,,,,,,UNKNOWN,,1409,https://t.me/c/3171748254/1409,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,1505,1423,,"Друзья, это снова #админ 👋
+По просьбам ТРЕЙДящихся - варианты фиксации прибыли по сигналам trader#C !
+
+Чтобы не создавалось впечатления, что у этого самурая нет цели - а есть только путь комиссия за фандинг. 😂
+Вот схема, которую он использует и рекомендует, если вы работаете с риском 1% на сделку.
+
+
+1️⃣ Если в сигнале 3 тейк-профита (TP1-TP3)
+
+Оптимальная фиксация:
+
+TP1 - 30%
+TP2 - 30%
+TP3 - 40%
+
+По R/R:
+
+Если забрали все тейки → RR ~ 1-3
+Если после TP2 перевели в БУ → RR ~ 1.47
+Если перевели в БУ уже после TP1 → RR ~ 1-0.5
+(Запомните и повторяйте себе перед сном: ""не трус, а консервативно распорядившийся депозитом...""😌)
+
+---
+
+2️⃣ Если в сигнале 4 тейк-профита (TP1-TP4)
+
+Рекомендуемая фиксация:
+
+TP1 - 25%
+TP2 - 25%
+TP3 - 30%
+TP4 - 20%
+
+По R/R:
+
+Если забрали все тейки → RR ~ 1-3.4
+Если после TP3 перевели в БУ → RR ~ 1-2.45
+Если перевели в БУ уже после TP1 → RR ~ 1-0.6
+(Еще вариант для аффирмации: ""не бояка а долгосрочный участник рынка!"" 😂)
+
+---
+
+Если коротко:
+Понятные режимы  частичной фиксации, без особой жадности aka «Хатико и его последний тейк», но и не паникёрство из разряда «увидел зелёную свечу - зафиксировался, перекрестился и удалил приложение биржи». 😂
+Вот как-то так.
+
+#админ",1.0,update_without_target_hint,TP_HIT,TP_HIT|REPORT_RESULT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|TP_HIT|TP_HIT|REPORT_RESULT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|TP_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|TP_HIT|CLOSE_PARTIAL|TP_HIT,5,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|CLOSE(CLOSE_PARTIAL),SET_STOP|SET_STOP|SET_STOP|SET_STOP|CLOSE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|CLOSE_PARTIAL,0.4|0.4|0.4|0.4|0.4,бу|бу|бу|бу|частично,UNKNOWN,,,,,,ENTRY,,,PARTIAL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1498,1437,1436,"Стоп в бу на точку входа 92200
+
+[trader#C]",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1436,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1496,1440,,"https://t.me/c/3171748254/1436
+
+Закрыто в бу 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1436,https://t.me/c/3171748254/1436,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1492,1444,1439,"Trader#d
+Перевод в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1439,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1485,1454,1446,"https://t.me/c/3171748254/1446
+Тп 2 ,в бу перевел 3136
+
+[tradet#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,1446,1446,https://t.me/c/3171748254/1446,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1482,1458,,"https://t.me/c/3171748254/1446
+ После тп 2 +0,6 в бу ушли
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1446,https://t.me/c/3171748254/1446,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1479,1462,1461,"trader#d
+upd кину в бу",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1461,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1478,1463,1462,"trader#d
+upd#бу",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1462,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1474,1470,,"https://t.me/c/3171748254/1467
+  Тп 2🥳
+ В бу перевел 89800
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1467,https://t.me/c/3171748254/1467,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1471,1477,1476,"[Trader#d]
+tp1+
+Перевод в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1476,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1470,1478,1467,"Остаток позы на последний ТП увеличиваю в два раза в диапазоне 90750-650 лимиткой, с учётом чтобы позиция осталась после увеличения в бу диапазоне до 90300 . 
+ТП дополнительный - 91100
+
+Вход теперь на 90280 в БУ
+
+[trader #C]",0.8,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,1467,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1460,1490,1487,"Trader#d
+Перевел в бу",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1487,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1458,1492,1491,Upd: сразу кину в бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1491,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1456,1495,1491,Фикс 50% чтоб погасить частично стоп,1.0,,SL_HIT,CLOSE_PARTIAL|CLOSE_PARTIAL|SL_HIT,2,CLOSE(CLOSE_PARTIAL)|CLOSE(CLOSE_PARTIAL),CLOSE|CLOSE,CLOSE_PARTIAL|CLOSE_PARTIAL,1.0|0.4,фикс 50%|частично,UNKNOWN,1491,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1455,1496,1487,"Тут тоже фикс 50%
+Для полного погашения стопа",1.0,,SL_HIT,CLOSE_PARTIAL|SL_HIT,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,1487,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1442,1519,,"И снова с вами #админ !👋
+
+https://teletype.in/@pifsignal/EcWWSoq_Iaq
+
+Перезалили «Правила использования и Регламент трейдеров» в teletype, чтобы вам было удобнее передвигаться среди этих букв и цифр! ☝️🤓
+
+#админ",0.4,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1439,1525,,"https://t.me/c/3171748254/1505
+
+Скинул часть по текущим 0,0765 (30%)
+В бу перевел,доливку убрал 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1505,https://t.me/c/3171748254/1505,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1435,1531,,"https://t.me/c/3171748254/1526
+
+Тп 2 🥳в бу перевел 
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1526,https://t.me/c/3171748254/1526,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1430,1537,1536,upd:Перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1536,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1428,1539,1506,"1 тейк. 0.44R
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1506,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1425,1542,1540,"Доливаю по 90900 лимит объем то что остался цель 90200,89200
+Стоп в бу на 91500",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1540,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1422,1546,1541,"trader#d
+btc в бу перевел",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1541,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1421,1547,,"https://t.me/c/3171748254/1542
+ Закрыто в бу 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1542,https://t.me/c/3171748254/1542,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1418,1550,1545,"trader#d
+Link перевод в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1545,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1414,1554,1550,"Trader#d 
+Link ушел по бу",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1550,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1412,1557,1556,"Trader#d
+Upd.Стоп в бу на ночь 🤝",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1556,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1411,1558,1557,Upd:бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1557,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1410,1559,1541,Upd:Btc остатки закрываю,0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,1541,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1409,1563,1482,Доброе утро. Перенесите стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1482,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1407,1566,1564,upd перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1564,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1406,1567,1566,ушли в бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1566,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1405,1570,1544,"trader#D
+Zil перевожу в бу",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1544,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1403,1573,1570,"Trader#d
+Zil закрываю позицию полностью +0,35%",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,1570,,,,,,,,FULL,,0.35,,,0,,,,0,,,,0,
+UPDATE,PARSED,1399,1578,1504,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,1504,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,1396,1581,1580,"Не актуально пока писал улители)
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,1580,,,,,,,,,,,,,0,,,,0,,,"Не актуально пока писал улители)
+
+[trader #C]",0,
+UPDATE,PARSED,1394,1584,1579,upd:Перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1579,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1393,1585,1579,upd;срезал 50% +0.15%,1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,срезал 50%,UNKNOWN,1579,,,,,,,,PARTIAL,0.5,0.15,,,0,,,,0,,,,0,
+UPDATE,PARSED,1377,1602,1589,"[trader#B]
+
+$SOLUSDT Update:
+
+Стоп лосс переносим в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1589,,,,SOLUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1376,1603,1601,Upd:перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1601,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1369,1611,,"https://t.me/c/3171748254/1596
+
+[trader#C]    tp1🥳
+
+  В бу перевел,доливку убрал.",0.4,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1596,https://t.me/c/3171748254/1596,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1361,1621,1616,Upd;стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1616,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1360,1622,1621,бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1621,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1356,1628,,"[trader#A]
+
+https://t.me/c/3171748254/1620
+https://t.me/c/3171748254/1620
+https://t.me/c/3171748254/1599
+https://t.me/c/3171748254/1594
+https://t.me/c/3171748254/1593
+https://t.me/c/3171748254/1592
+https://t.me/c/3171748254/1591
+
+По лонгам стопы в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1620|1599|1594|1593|1592|1591,https://t.me/c/3171748254/1620|https://t.me/c/3171748254/1599|https://t.me/c/3171748254/1594|https://t.me/c/3171748254/1593|https://t.me/c/3171748254/1592|https://t.me/c/3171748254/1591,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1352,1632,1630,перевел в бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1630,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1345,1642,1640,"Не актуально пошли без нас
+
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,1640,,,,,,,,,,,,,0,,,,0,,,"Не актуально пошли без нас
+
+[trader#C]",0,
+UPDATE,PARSED,1340,1650,,"https://t.me/c/3171748254/1596
+
+Остаток в бу ушёл 
+
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1596,https://t.me/c/3171748254/1596,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1329,1664,1658,upd;стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1658,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1322,1671,1670,upd перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1670,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1321,1672,1671,бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1671,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1314,1682,,"https://t.me/c/3171748254/1674
+
+Закрываю по текущим 
+-0,05
+Доливку убрал 
+
+
+[trader#C]",1.0,,CLOSE_FULL,CLOSE_FULL,0,,,,,,UNKNOWN,,1674,https://t.me/c/3171748254/1674,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,1309,1689,,"https://t.me/c/3171748254/1683
+ В бу перевел 95350 
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1683,https://t.me/c/3171748254/1683,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1307,1691,1683,"Остаток закрыт в бу
+[trader#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1683,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1305,1693,1692,upd стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1692,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1301,1698,1654,"1 тейк. 0.22R
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1654,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1293,1707,1703,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1703,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1280,1729,1715,"[trader#B]
+
+$ETHUSDT Update:
+
+Стоп лосс переносим за указанный минимум, в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1715,,,,ETHUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1279,1730,,"[trader#A]
+
+https://t.me/c/3171748254/1725
+https://t.me/c/3171748254/1726
+
+пора перенести стоп в бу
+кто желает может фиксировать прибыль",1.0,,REPORT_RESULT,MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,UNKNOWN,,1725|1726,https://t.me/c/3171748254/1725|https://t.me/c/3171748254/1726,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1274,1740,,"https://t.me/c/3171748254/1720
+ Не актуально 
+
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1720,https://t.me/c/3171748254/1720,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1273,1741,1709,"[trader#C]
+В бу перевел",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1709,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1268,1749,1685,"1 тейк. Стоп в бу
++0.5RR",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1685,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1267,1750,1704,"1 тейк. Стоп в бу
++0.5RR",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1704,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1264,1755,,"[trader#B]
+
+https://t.me/c/3171748254/1745 (-1%)
+
+https://t.me/c/3171748254/1744 (-1%)
+
+https://t.me/c/3171748254/1729 БУ",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1745|1744|1729,https://t.me/c/3171748254/1745|https://t.me/c/3171748254/1744|https://t.me/c/3171748254/1729,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1256,1772,1771,upd перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1771,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1253,1775,1756,"очень большой риск получить стоп. кто хочет не раздувать убыток - можно закрыть по текущим
+
+я закрывать не буду, чтобы не искажать статистику",1.0,close_full_redundant_with_sl_hit,SL_HIT,SL_HIT|REPORT_RESULT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1756,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1252,1776,1774,Убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,1774,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1247,1784,1782,перевод в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевод в бу,UNKNOWN,1782,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1246,1785,1784,бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1784,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1244,1787,1760,"1 тейк. Стоп в бу
+0.26R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1760,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1234,1801,1792,"[trader#C]
+В бу перевел",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1792,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1232,1804,,"[trader#A]
+
+
+https://t.me/c/3171748254/1685 MOVR
+https://t.me/c/3171748254/1738 CYBER
+https://t.me/c/3171748254/1706 ZEC
+
+закрываю по текущим ценам
+MOVR - 1.35RR
+CYBER - 1.37RR
+ZEC - 1.43RR",1.0,,CLOSE_FULL,CLOSE_FULL,0,,,,,,UNKNOWN,,1685|1738|1706,https://t.me/c/3171748254/1685|https://t.me/c/3171748254/1738|https://t.me/c/3171748254/1706,,,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,1231,1805,1760,"его тоже не будем мучить. закрываю по текущим
+1.06R",1.0,,CLOSE_FULL,MOVE_STOP_TO_BE|CLOSE_FULL,2,SET_STOP(MOVE_STOP_TO_BE)|CLOSE(CLOSE_FULL),SET_STOP|CLOSE,MOVE_STOP_TO_BE|CLOSE_FULL,0.4|1.0,бу|закрываю по текущим,UNKNOWN,1760,,,,,ENTRY,,,FULL,,1.06,,,0,,,,0,,,,0,
+UPDATE,PARSED,1228,1809,1792,"Закрыл по текущим на комиссию 
+
+[trader#C]",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрыл по текущим,UNKNOWN,1792,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1220,1818,,"https://t.me/c/3171748254/1802
+
+Тп 1 🥳 , впереди Трамп так что в бу 88250
+
+[tradet#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1802,https://t.me/c/3171748254/1802,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1216,1823,,"https://t.me/c/3171748254/1802
+
+Пробуем долить до объема того что был 
+ 
+Btcusdt Long 
+ 
+Лимитка 89250 
+
+Объем. 0,5 
+
+Средняя сместиться в 88770 стоп в бу 
+
+Тп на 90000 ,и на 93000 добавляем если все получится 
+
+[tradet#C]",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|ENTRY_FILLED|ENTRY_FILLED|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1802,https://t.me/c/3171748254/1802,,BTCUSDT,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1214,1825,1823,"Увы ушли в бу 
+
+[tradet#C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1823,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1212,1828,1813,"Trader#d
+Фикс 70%
+Стоп в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1813,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1207,1834,1811,Закрываю в бу,0.8,,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрываю|бу,UNKNOWN,1811,,,,,ENTRY,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1206,1835,1828,Остаток в бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1828,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1202,1845,1836,"Не актуально 
+
+[trader#C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,1836,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader#C]",0,
+UPDATE,PARSED,1196,1853,,"https://t.me/c/3171748254/1847
+
+Стоп переносим на 88650 в -0,5 RR
+
+[trader #C]",1.0,,MOVE_STOP,MOVE_STOP,0,,,,,,UNKNOWN,,1847,https://t.me/c/3171748254/1847,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP)
+UPDATE,PARSED,1195,1857,1852,"[trader#B]
+
+$LTCUSDT Update:
+
+Стоп лосс переносим в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1852,,,,LTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1191,1863,1861,upd стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1861,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1190,1864,1860,Upd стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1860,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1187,1868,,"https://t.me/c/3171748254/1864
+https://t.me/c/3171748254/1863
+Бу
+Trader#d",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1864|1863,https://t.me/c/3171748254/1864|https://t.me/c/3171748254/1863,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1180,1890,,"[trader#A]
+
+https://t.me/c/3171748254/1830
+https://t.me/c/3171748254/1832
+
+Стопы в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1830|1832,https://t.me/c/3171748254/1830|https://t.me/c/3171748254/1832,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1176,1898,,"https://t.me/c/3171748254/1893
+ 
+Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1893,https://t.me/c/3171748254/1893,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1173,1907,,"https://t.me/c/3171748254/1902
+
+Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,1902,https://t.me/c/3171748254/1902,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1154,1945,1927,"1 тейк, стоп в бу
+0.3R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1927,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1153,1946,1924,"1 тейк, стоп в бу
+0.23R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1924,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1151,1948,1911,"1 тейк, стоп в бу
+0.28R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1911,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1149,1950,1927,"3 тейка. Сделка закрыта
+1.67R
+
+RR добавлю к каждой сделке, когда  буду у журнала, сорян",1.0,,TP_HIT,TP_HIT|REPORT_RESULT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1927,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1146,1954,1949,"[trader #D]
+upd:50% срежем rr 1;1 стоп в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1949,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1143,1957,,"Итоги января 2026 (статистика на вечер 29.01)
+
+Если коротко - январь был. 😏
+Весь месяц рынок вёл себя как деревенский гуляка, который решил после посиделок в гостях на празднике срезать путь домой:
+итог - ЗАБОР, боль, и стойкое желание больше не повторять. 😂
+Ладно, не всё так драматично!
+
+Что там у наших парней?
+
+trader#A
+
+Формат: intraday + среднесрок, фьючерсы
+
+Статистика:
+Всего сигналов: 33
+Закрыто: 27
+в плюс: 7
+в минус (защитные): 8
+БУ: 12
+В работе: 6
+
+Результат:
+Итог по закрытым:  +3.24%
+С учётом уже зафиксированных тейков по открытым: +3.78%
+Если “закрыть всё прямо сейчас и завязать с этим трейдингом нахрен!” (mark-to-market): ≈ +6.24% 😉
+
+Коротко по сути:
+В этом месяце хорошо себя показали шорты (круче только в июле на жаре😂)
+Лонги - наоборот, просели
+Много БУ и не слишком приятных стопов, но в итоге...
+Не феерия, конечно,  но рабочий плюс в сложном рынке.
+
+Если в прошлом месяце мы нарекли trader#A швейцарским ножом, то в этом - это скорее ложка. Но пока всё ещё с альпийским блеском. 😂
+
+#админ",1.0,,SL_HIT,REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT|TP_HIT|MOVE_STOP_TO_BE|SL_HIT|REPORT_RESULT,0,,,,,,ALL_SHORT,,,,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1142,1958,,"----------------------------------
+
+trader#B
+
+Формат: только спот
+
+Статистика:
+Всего сделок: 18
+В плюс: 5
+В минус: 9
+БУ: 4
+
+Результат:
+Итог за месяц: +10.7% 
+
+Коротко по сути:
+trader#B продолжает делать своё дело -
+выжимать из этого рынка всё, что он готов отдать… СПОТОМ и кровью. (такой вот каламбургер😂)
+
+----------------------------------
+
+trader#C
+
+Формат: интрадей, фьючерсы
+С нами с середины декабря. 
+
+Статистика:
+Всего сделок: 35
+В плюс: 14
+В минус: 16
+БУ: 5
+
+Результат:
+Итог за январь: −1.5%
+
+Коротко по сути:
+В декабре - отличный старт
+В январе - посложнее
+То ли праздники подкосили,
+то ли человеку правда комфортнее работать в режиме “пол-месяца через пол-месяца”😂
+
+При всём этом:
+
+- риск не раздувался
+- лудомании не было
+- действовал по системе
+
+Бывает. Следим и работаем дальше.
+
+----------------------------------
+
+trader#D
+
+Формат: интрадей, фьючерсы
+Январь - первый месяц в команде
+
+Статистика:
+Всего сделок: 36
+В плюс: 9
+В минус: 13
+БУ: 14
+
+Результат:
+Итог за месяц: −3.4%
+
+Коротко по сути:
+Трейдер опытный, просто в январе слишком заботился о всех сразу.
+Результат - многовато БУ, там где в итоге могли бы быть тейки.
+Сводили к психотерапевту - теперь в разговоре всё время вставляет: «Я - тренд. Я - ликвидность. Я - импульс»🧘‍♂️
+Но вроде стал посмелее. 😂
+
+Продолжаем работать.
+
+#админ",1.0,update_without_target_hint,TP_HIT,MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|TP_HIT,5,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4|0.4|0.4,бу|бу|бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1141,1959,,"----------------------------------
+
+Наша команда закончилась. Теперь иностранный легионер!
+Пока один, но сейчас присматриваемся к ещё одному бразильцу...⚽️😂
+
+trader#3
+
+Формат расчёта: наша консервативная модель (1% риск, равные тейки)
+
+Статистика:
+Всего закрытых сделок: 20
+Плюсовые (полная отработка тейков): 4
+Частичный тейк + БУ: 6
+Стопы: 10
+Открытые: 2 (не учитываются в январской статистике)
+
+Результат:
+Итог по январю: +0.41%
+
+Коротко по сути:
+Идей много, как у знатного темщика
+Сопровождения мало, как у китайского сенсея, который говорит, что понять сигнал невозможно - нужно почувствовать! 😂
+При консервативном подсчёте результат выглядит скромно
+Но сами сетапы, по-прежнему, часто основаны на вменяемом ТА
+
+С учётом сложного месяца...Не чудо, но и не мусор. Использовать с головой. И с чувством. 😉
+
+----------------------------------
+
+Общий вывод
+
+Январь был месяцем дисциплины, защиты депозита и проверки систем на прочность.🛡
+Где-то получилось,
+Где-то нет,
+Но, в целом, такие месяцы тоже нужны, чтобы понять: трейдинг - это не спринт, а марафонский забег.
+Продолжаем...раз, два, три, четыре...(голосом Шуфутинского🧔🏻‍♂️)
+
+#админ",1.0,update_without_target_hint,SL_HIT,TP_HIT|TP_HIT|TP_HIT|MOVE_STOP_TO_BE|SL_HIT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1140,1961,1909,"1 тейк. Стоп в бу
+0.38R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1909,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1139,1963,1913,"1 тейк, стоп в бу
+0.2Р",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1913,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1138,1964,1930,"1 тейк, стоп в бу
+0.27Р",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1930,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1130,1978,1976,"[trader #D]
+тп1 фикс 50% +0,35%
+стоп в бу",1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фикс 50%|стоп в бу,UNKNOWN,1976,,,,,ENTRY,,,PARTIAL,0.5,0.35,,,0,,,,0,,,,0,
+UPDATE,PARSED,1129,1980,1976,"[trader #D]
+Tp2 срезал ещё 25% +0.36%
+Остаток 25% позиции
+Стоп находится в бу",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|0.4,срезал еще 25%|бу,UNKNOWN,1976,,,,,ENTRY,,,PARTIAL,0.25,0.36,,,0,,,,0,,,,0,
+UPDATE,PARSED,1127,1985,1977,"[trader #D]
+Tp1 срезал 50% +0.25
+Стоп в бу",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,срезал 50%|стоп в бу,UNKNOWN,1977,,,,,ENTRY,,,PARTIAL,0.5,0.25,,,0,,,,0,,,,0,
+UPDATE,PARSED,1126,1986,,"https://t.me/c/3171748254/1982
+
+В бу перевел 😴
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1982,https://t.me/c/3171748254/1982,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1124,1990,1985,"[trader #D]
+Остаток позиции ушел по бу.
+Профит по сделке +0.25",1.0,,REPORT_RESULT,MOVE_STOP_TO_BE|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,1985,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1123,1991,,"https://t.me/c/3171748254/1982
+
+Ушли в бу 
+
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,1982,https://t.me/c/3171748254/1982,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,1115,2007,2006,убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2006,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1112,2011,2010,да что ж такое. и этот без нас улетел. убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2010,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1109,2048,2005,"1 тейк, стоп в бу
++0.13R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2005,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1106,2052,2049,убираем лимитку. опять без нас((,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2049,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1102,2059,2057,убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2057,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1100,2063,2055,тут тоже убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2055,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1086,2084,2074,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2074,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1084,2086,2070,"[trader #D]
+TP2 срезал еще 25%
+Остаток 25%",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,срезал еще 25%,UNKNOWN,2070,,,,,,,,PARTIAL,0.25,25.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1083,2087,2074,"сделка закрыта по бу
+очень скромный результат. в статистику не буду показывать
+
+p.s. был пробный трейд, буду давать более адекватный интрадей, с нормальными тейками",1.0,,TP_HIT,REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|TP_HIT,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,2074,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1080,2091,2090,"Тп 1 в бу перевел 🥳
+4 пункта до стопа не дошло
+
+[trader #C]",0.4,,SL_HIT,MOVE_STOP_TO_BE|SL_HIT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2090,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1077,2094,2075,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2075,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,1076,2095,,"https://t.me/c/3171748254/2062
+Не актуально, шортовый наротив
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,2062,https://t.me/c/3171748254/2062,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,1075,2097,2066,"1 тейк. стоп в бу
+0.26R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2066,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1074,2098,2093,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2093,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,1073,2099,2050,"1 тейк. стоп в бу
+0.11R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2050,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1069,2108,2093,"1 тейк. стоп в бу
+0.59R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2093,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1063,2120,2110,"1 тейк. стоп в бу
+0.38R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2110,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1062,2121,2113,снимаем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снимаем лимитку,UNKNOWN,2113,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1059,2124,2093,"закрываю остаток (10%) сделки по текущим
+1.67R итоговый результат",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,2093,,,,,,,,FULL,,10.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1055,2130,2110,"тоже закрываю по текущим
+итог 1.11R",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2110,,,,,,,,FULL,,1.11,,,0,,,,0,,,,0,
+UPDATE,PARSED,1054,2131,2000,"поставьте стоп в бу, ну как в бу, чтобы комиссию отбить
+
+надоел уже",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,1.0|0.4,стоп в бу|бу,UNKNOWN,2000,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1053,2132,2008,"Тут закрою по текущим
+0.28R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрою по текущим,UNKNOWN,2008,,,,,,,,FULL,,0.28,,,0,,,,0,,,,0,
+UPDATE,PARSED,1052,2133,2066,тут стоп на 1 тейк,1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп на 1 тейк,UNKNOWN,2066,,,,,TP_LEVEL,,1,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1049,2136,2066,"закрылся полностью на 1 тейке
+итог 0.88R",1.0,,TP_HIT,CLOSE_FULL|TP_HIT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрылся полностью,UNKNOWN,2066,,,,,,,,FULL,,1.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1043,2146,2143,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2143,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,1035,2156,2151,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2151,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1033,2158,2152,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2152,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1024,2170,2165,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2165,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1023,2171,2166,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2166,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,1022,2172,2164,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2164,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,1021,2173,2161,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2161,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,1015,2179,2177,"поторопился  с лонгами, зафиксируем микроминус",0.4,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,зафиксируем,UNKNOWN,2177,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,1014,2180,2178,"а тут уберем лимитку
+
+всем хорошего вечера",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,уберем лимитку,UNKNOWN,2178,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,1004,2198,2192,"В целом можно зафиксировать часть прибыли. С учетом того, что вошли гораздо ниже твх по сигналу, можно сказать, что тейк взят
+
+Стоп в бу после фиксации части
+Зафиксировал 50% на 0.3406",1.0,,TP_HIT,CLOSE_FULL|TP_HIT|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|1.0,зафиксировать|стоп в бу,UNKNOWN,2192,,,,,ENTRY,,,FULL,,50.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,1002,2200,2195,Тут отмена,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,тут отмена,UNKNOWN,2195,,,,,,,,,,,,,0,,,,0,,,Тут отмена,0,
+UPDATE,PARSED,1001,2202,2186,"здесь уже прилично прошли, кто переживает - можете частично фиксировать позицию и защищать ее стопом в бу
+
+я буду держать согласно сетапа",1.0,,SL_HIT,CLOSE_PARTIAL|SL_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,частично|бу|бу,UNKNOWN,2186,,,,,ENTRY,,,PARTIAL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,999,2204,2186,а вот и 1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2186,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,996,2207,2203,"тоже отбой
+всем хорошего вечера",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,тоже отбой,UNKNOWN,2203,,,,,,,,,,,,,0,,,,0,,,"тоже отбой
+всем хорошего вечера",0,
+UPDATE,PARSED,992,2212,2209,"В бу перевел 70800
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2209,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,991,2213,2206,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2206,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,989,2216,2206,Upd:Бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2206,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,974,2241,2187,"что-то я пропустил. вчера, оказывается, был 1 тейк
+
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2187,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,971,2245,,"https://t.me/c/3171748254/2240
+
+В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2240,https://t.me/c/3171748254/2240,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,969,2249,2186,Стоп поставьте на первый тейк - 69295.6,1.0,,TP_HIT,MOVE_STOP|TP_HIT,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп поставьте на,UNKNOWN,2186,,,,,PRICE,69295.6,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,967,2253,,"https://t.me/c/3171748254/2247
+
+Тп 1 🥳 остаток в бу ушёл ,+0,3RR
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2247,https://t.me/c/3171748254/2247,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,965,2255,2186,"Эту закрываем полностью
+открываем новую
+
+1.16R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываем полностью,UNKNOWN,2186,,,,,,,,FULL,,1.16,,,0,,,,0,,,,0,
+UPDATE,PARSED,959,2264,2263,"ТП1 фикс 50% +0.24
+стоп в бу",1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фикс 50%|стоп в бу,UNKNOWN,2263,,,,,ENTRY,,,PARTIAL,0.5,0.24,,,0,,,,0,,,,0,
+UPDATE,PARTIAL,957,2266,,"[trader #A]
+
+https://t.me/c/3171748254/2243
+https://t.me/c/3171748254/2242
+https://t.me/c/3171748254/2222
+https://t.me/c/3171748254/2221
+
+давайте по этим сигналам пока уберем лимитки
+
+буду следить за ними, может позже вернем",1.0,multi_ref_mixed_intents_not_supported,CANCEL_PENDING,CANCEL_PENDING|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2243|2242|2222|2221,https://t.me/c/3171748254/2243|https://t.me/c/3171748254/2242|https://t.me/c/3171748254/2222|https://t.me/c/3171748254/2221,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,945,2285,2277,"закрываю в бу.
+не нравится",0.8,,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,закрываю|бу,UNKNOWN,2277,,,,,ENTRY,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,943,2288,2283,"Закрыл в бу 68950
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2283,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,940,2293,2287,тут отмена,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,тут отмена,UNKNOWN,2287,,,,,,,,,,,,,0,,,,0,,,тут отмена,0,
+UPDATE,PARSED,934,2302,2299,Upd : Стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2299,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,932,2304,2299,"фикс 50% +0,25
+тяжело идет",1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,2299,,,,,,,,PARTIAL,0.5,0.25,,,0,,,,0,,,,0,
+UPDATE,PARSED,930,2306,2299,тп 1: срезал еще 25%,1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,срезал еще 25%,UNKNOWN,2299,,,,,,,,PARTIAL,0.25,,,,0,,,,0,,,,0,
+UPDATE,PARSED,924,2312,2310,sl -0.5 поторопился.Буду искать перезаход,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2310,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,922,2314,2300,"[trader #B]
+
+Стоп лосс переносим в БУ, как указано на изображении",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2300,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,921,2315,,"https://t.me/c/3171748254/2303
+
+Не актуально ушли без нас 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,2303,https://t.me/c/3171748254/2303,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,920,2316,2272,"[trader #B]
+
+Эту сделку закрываем в БУ, открываем по нему новую",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2272,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,918,2318,2294,"тут отмена, вечером уже активно поторгуем",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,тут отмена,UNKNOWN,2294,,,,,,,,,,,,,0,,,,0,,,"тут отмена, вечером уже активно поторгуем",0,
+UPDATE,PARSED,898,2339,2320,Стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2320,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,893,2345,,"Trader #A
+
+финальная сделка марафона
+все сделки остаются в работе, утром посмотрим какой будет результат
+
+всем спасибо и хорошего вечера",1.0,,REPORT_RESULT,MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,ALL_POSITIONS,,,,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,891,2347,2320,"Trader#D
+Стоп в бу
+Срежем тут 60% чтобы отбить предидущий стоп)+0,59р",1.0,,SL_HIT,MOVE_STOP_TO_BE|SL_HIT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2320,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,883,2356,2344,тут убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2344,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,875,2365,2258,"Не актуально ушел без нас 
+
+[ trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2258,,,,,,,,,,,,,0,,,,0,,,"Не актуально ушел без нас 
+
+[ trader #C]",0,
+UPDATE,PARSED,872,2369,2362,"[trader #B]
+
+Стоп лосс передвигаем в БУ, как это указано на изображении",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2362,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARTIAL,867,2375,,"[trader #A]
+
+хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам
+
+https://t.me/c/3171748254/2361
+https://t.me/c/3171748254/2359
+https://t.me/c/3171748254/2275
+https://t.me/c/3171748254/2261
+
+результаты в RR дополню этот пост
+
+fart - 0.38R
+ldo - 0.14R
+zil - 0.32R
+haedal - 0.91R",1.0,multi_ref_mixed_intents_not_supported,REPORT_RESULT,CLOSE_FULL|CLOSE_FULL|REPORT_RESULT,0,,,,,,UNKNOWN,,2361|2359|2275|2261,https://t.me/c/3171748254/2361|https://t.me/c/3171748254/2359|https://t.me/c/3171748254/2275|https://t.me/c/3171748254/2261,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,865,2377,2234,"фиксирую по текущим
+-0.21R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,фиксирую по текущим,UNKNOWN,2234,,,,,,,,FULL,,0.21,,,0,,,,0,,,,0,
+UPDATE,PARSED,864,2378,2371,"фиксирую по текущим
+-0.03R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,фиксирую по текущим,UNKNOWN,2371,,,,,,,,FULL,,0.03,,,0,,,,0,,,,0,
+UPDATE,PARSED,863,2379,2360,"фиксирую по текущим
+-0.04R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,фиксирую по текущим,UNKNOWN,2360,,,,,,,,FULL,,0.04,,,0,,,,0,,,,0,
+UPDATE,PARSED,861,2381,2380,"В бу перевел 68100
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2380,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,859,2384,2376,[trader #D] Стоп переставим в бу,0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2376,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,857,2386,2376,"[trader #D] 
+Tp1 фикс 50% R+0,26
+стоп в бу
+Остальные 2 цели по 25%",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фикс 50%|стоп в бу,UNKNOWN,2376,,,,,ENTRY,,,PARTIAL,0.5,0.26,,,0,,,,0,,,,0,
+UPDATE,PARSED,855,2391,,"https://t.me/c/3171748254/2387
+
+В бу перевел 65250
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2387,https://t.me/c/3171748254/2387,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,854,2392,2371,Заходим по текущим заново,1.0,,REENTER,REENTER,1,MODIFY_ENTRIES(REENTER),MODIFY_ENTRIES,REENTER,1.0,заходим по текущим заново,UNKNOWN,2371,,,,,,,,,,,,REENTER,0,,,,0,,,,0,
+UPDATE,PARSED,853,2393,2360,Тоже заходим по текущим заново,1.0,,REENTER,REENTER,1,MODIFY_ENTRIES(REENTER),MODIFY_ENTRIES,REENTER,1.0,заходим по текущим заново,UNKNOWN,2360,,,,,,,,,,,,REENTER,0,,,,0,,,,0,
+UPDATE,PARSED,849,2400,2399,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2399,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,848,2401,2397,Отмена,0.4,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,0.4,отмена,UNKNOWN,2397,,,,,,,,,,,,,0,,,,0,,,Отмена,0,
+UPDATE,PARSED,844,2406,2405,"для чистоты статистики. у меня вход по 0.0332, считаться также будет от этой цифры",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2405,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,841,2409,2348,убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2348,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,840,2410,,"https://t.me/c/3171748254/2387
+
+Лимитку с 63750 убираем 
+
+Ставим на 67600 на тот же объем что в позиции остался(0,375) после тп1 
+
+Средняя станет в 66400+- стоп в бу ,
+Тп дополнительный на этот объем будет на 72000
+ 
+Будет дополнения 
+
+[trader #C]",1.0,,MOVE_STOP_TO_BE,ENTRY_FILLED|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2387,https://t.me/c/3171748254/2387,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,838,2412,2403,"Tp1 фикс 50%
+Стоп в бу",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фикс 50%|стоп в бу,UNKNOWN,2403,,,,,ENTRY,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARTIAL,837,2413,,"Trader #A
+
+зафиксирую все свои позиции по текущим, не будет возможности контролировать сделки
+
+Ниже напишу результаты
+PORTALUSDT - 0.2R
+SAGAUSDT - 0.18R
+VIRTUALUSDT -0.01R
+PEOPLEUSDT - 0.24R
+DOGEUSDT - 0.23R
+
+
+Всем хорошего вечера и выходных",1.0,multi_ref_mixed_intents_not_supported,REPORT_RESULT,CLOSE_FULL|MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,ALL_POSITIONS,,,,,PORTALUSDT|SAGAUSDT|VIRTUALUSDT|PEOPLEUSDT|DOGEUSDT,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,833,2421,2234,Кто не закрывал вместе со мной - поздравляю с тейком. В мою статистку не идет. Не забывайте стопы переводить в бу,1.0,,SL_HIT,REPORT_RESULT|TP_HIT|SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2234,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,826,2430,,"https://t.me/c/3171748254/2427
+
+Тп 1 
+
+В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2427,https://t.me/c/3171748254/2427,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,824,2437,2272,"[trader #B]
+
+
+Закрываем сделку по текущим(+0.3%) так как показывает слабость, ждём новые возможности",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываем сделку,UNKNOWN,2272,,,,,,,,FULL,,0.3,,,0,,,,0,,,,0,
+UPDATE,PARSED,821,2440,,"Там уже в комментарии прилетел фидбэк, что тейки у #A не 40/50/10, а 50/40/10 .
+Это и есть ""шероховатости"".😅 Простите на первый раз!🙏
+В дальнейшем, мы будем становиться лучше.
+
+В крайнем случае, нет.😂
+
+#админ",0.4,update_without_target_hint,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,820,2442,2425,стоп в бу ставим,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2425,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,814,2449,2446,"без нас улетели..печально. 
+лимитку убираем",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,лимитку убираем,UNKNOWN,2446,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,813,2450,2447,"без нас улетели..печально
+лимитку убираем",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,лимитку убираем,UNKNOWN,2447,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,810,2459,,"https://t.me/c/3171748254/2452
+ С профитом 🥳🥳🥳 + RR 0,45
+
+[trader #C]. 
+остаток в позе 0,375
+Тп далее по сэтапу, будет дополнения",1.0,,REPORT_RESULT,REPORT_RESULT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2452,https://t.me/c/3171748254/2452,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,809,2460,2443,чтобы минимизировать риск - стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2443,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,808,2461,2443,"тейк, стоп уже в бу
+0.72R",0.8,,SL_HIT,TP_HIT|SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2443,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,797,2479,2475,"[trader #D]
+тп1 фикс 50% +0,29",1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,2475,,,,,,,,PARTIAL,0.5,0.29,,,0,,,,0,,,,0,
+UPDATE,PARSED,794,2482,,"https://t.me/c/3171748254/2471
+Остаток в бу закрыт 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2471,https://t.me/c/3171748254/2471,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,793,2483,2479,"[trader #D]
+стоп переставляем в + на 1,2453",1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переставляем,UNKNOWN,2479,,,,,PRICE,1.2453,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,791,2486,2484,"[trader #D]
+Стоп в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2484,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,789,2489,2484,"[trader #D]
+Срежем тут 50% +0,42р
+Первый тейк убираем",1.0,,MODIFY_TARGETS,MODIFY_TARGETS,1,MODIFY_TARGETS(MODIFY_TARGETS),MODIFY_TARGETS,MODIFY_TARGETS,1.0,первый тейк убираем,UNKNOWN,2484,,,,,,,,,,,,,0,,,UNKNOWN,0,,,,0,
+UPDATE,PARSED,784,2498,2497,[trader #D] стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2497,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,783,2499,2498,бу.поищем перезаход,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2498,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,781,2502,2484,"[trader #D]
+JTO закрываем полностью 0,307
++1р",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываем полностью,UNKNOWN,2484,,,,,,,,FULL,,0.307,,,0,,,,0,,,,0,
+UPDATE,PARSED,779,2504,,"Привет, это снова админ! 👋
+Напоминание, - вдруг кто пропустил! 🏃‍♂️🔥
+
+Сегодня вечером у нас во второй раз проходит мини-марафон intraday от trader#A:
+
+19:00 – 22:00 (МСК)
+
+Короткий апдейт по текущим реалиям рынка: вчера в очередной раз тестировали и дотачивали формат, и рынок выдал всего два сетапа за весь вечер. 🧐
+Так что мы, конечно, готовимся к забегу на всю дистанцию, но держим в голове, что может получиться не полноценный марафон, а ""кружок вокруг дома"", совмещённый с перекуром и выносом мусора. 😂
+
+Будьте готовы объяснять домашним: ""почему футболка сухая и совсем не пахнет?"" 😂
+
+Ещё раз коротко!
+Это не ""Галя у нас отмена!"" 🫠
+Просто ещё раз напоминаем, что никто не может вытаскивать деньги из рынка гарантированно, по мановению руки и расписанию. 😌
+
+Условия марафона во вчерашнем посте. (прикрепип выше👌)
+
+Участие - на ваше усмотрение. 😉
+
+#админ",0.8,update_without_target_hint,INVALIDATE_SETUP,MOVE_STOP_TO_BE|INVALIDATE_SETUP,2,SET_STOP(MOVE_STOP_TO_BE)|INVALIDATE_SETUP(INVALIDATE_SETUP),SET_STOP|INVALIDATE_SETUP,MOVE_STOP_TO_BE|INVALIDATE_SETUP,0.4|0.4,бу|отмена,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,"Привет, это снова админ! 👋
+Напоминание, - вдруг кто пропустил! 🏃‍♂️🔥
+
+Сегодня вечером у нас во второй раз проходит мини-марафон intraday от trader#A:
+
+19:00 – 22:00 (МСК)
+
+Короткий апдейт по текущим реалиям рынка: вчера в очередной раз тестировали и дотачивали формат, и рынок выдал всего два сетапа за весь вечер. 🧐
+Так что мы, конечно, готовимся к забегу на всю дистанцию, но держим в голове, что может получиться не полноценный марафон, а ""кружок вокруг дома"", совмещённый с перекуром и выносом мусора. 😂
+
+Будьте готовы объяснять домашним: ""почему футболка сухая и совсем не пахнет?"" 😂
+
+Ещё раз коротко!
+Это не ""Галя у нас отмена!"" 🫠
+Просто ещё раз напоминаем, что никто не может вытаскивать деньги из рынка гарантированно, по мановению руки и расписанию. 😌
+
+Условия марафона во вчерашнем посте. (прикрепип выше👌)
+
+Участие - на ваше усмотрение. 😉
+
+#админ",0,
+UPDATE,PARSED,778,2505,2501,[trader #D] стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2501,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,777,2506,2501,"[trader #D]
+Tp1 фикс 50% +0.38r😑",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,2501,,,,,,,,PARTIAL,0.5,0.38,,,0,,,,0,,,,0,
+UPDATE,PARSED,768,2518,2513,"Апдейт от админа: 
+Поясню, почему тут отмена.
+От публикации сигнала до тейка прошла примерно минута.
+Мы в вас верим, но тут нужно обладать поистине самой быстрой рукой на Диком Западе 🤠
+А в условия марафона мы всё-таки не включали пункт ""нельзя моргать""...😂
+#админ",1.0,,TP_HIT,INVALIDATE_SETUP|TP_HIT,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,тут отмена,UNKNOWN,2513,,,,,,,,,,,,,0,,,,0,,,"Апдейт от админа: 
+Поясню, почему тут отмена.
+От публикации сигнала до тейка прошла примерно минута.
+Мы в вас верим, но тут нужно обладать поистине самой быстрой рукой на Диком Западе 🤠
+А в условия марафона мы всё-таки не включали пункт ""нельзя моргать""...😂
+#админ",0,
+UPDATE,PARSED,766,2520,,"Trader #A
+
+После вчерашнего анонса марафона, всю личку оборвал какой-то Павел Д.
+И главное сообщение одного формата - что будет с TON?
+Как нашел мою личку - не понимаю, скорее всего админ слил...
+
+Ну что же, просил, держи:",0.4,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,756,2531,2526,"убираем лимитку, рынок сегодня решил без нас уйти...",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2526,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,755,2532,2517,"убираем лимитку, рынок сегодня решил без нас уйти...",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2517,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,754,2533,2516,"убираем лимитку, рынок сегодня решил без нас уйти...",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2516,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,753,2534,2514,"убираем лимитку, рынок сегодня решил без нас уйти...",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2514,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,748,2539,2444,"1 тейк, стоп в бу
+0.23R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2444,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,745,2545,,"https://t.me/c/3171748254/2490
+
+В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2490,https://t.me/c/3171748254/2490,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,743,2548,2443,стоп переносим на 1 тейк - 0.0998,1.0,,TP_HIT,MOVE_STOP|TP_HIT,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переносим,UNKNOWN,2443,,,,,PRICE,1.0,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,741,2553,2443,"давайте закроем по текущим, в целом неплохо заработали, нужно маржу освободить для новых сделок
+
+1.68R",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,давайте закроем,UNKNOWN,2443,,,,,,,,FULL,,1.68,,,0,,,,0,,,,0,
+UPDATE,PARSED,736,2559,2480,"1 тейк, стоп в бу
+0.62R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2480,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,731,2567,,"https://t.me/c/3171748254/2552
+
+Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,2552,https://t.me/c/3171748254/2552,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARTIAL,730,2568,,"Trader #A
+Закрываю все позиции, результаты по каждой обновлю в этом посте, нужно подождать, посмотреть на рынок
+BTC - 2.8R
+Link - 0.54R
+xrp - 0.46R
+AAVE - фактически в бу
+sol - 0.18R
+near - 0.96R
+ton - 0.7R
+pepe - 0.14R (убыток)
+aster - 0.32R (убыток)",1.0,multi_ref_mixed_intents_not_supported,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT,0,,,,,,ALL_POSITIONS,,,,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,729,2569,2544,"Здесь, если закрыть по текущим, получатся скромные 0.2R
+
+Напомню, что эта сделка в статистику не идет",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрыть по текущим,UNKNOWN,2544,,,,,,,,FULL,,0.2,,,0,,,,0,,,,0,
+UPDATE,PARSED,721,2578,2576,"Trader [ #D]
+Стоп в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2576,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,717,2582,2581,ставим в бу),0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2581,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,715,2585,2584,"Сори, не актуально!!!! У нас уже стоит сэтап",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2584,,,,,,,,,,,,,0,,,,0,,,"Сори, не актуально!!!! У нас уже стоит сэтап",0,
+UPDATE,PARSED,706,2596,,"trader #A
+
+https://t.me/c/3171748254/2571
+https://t.me/c/3171748254/2573
+
+снимаем лимитки
+
+посмотрим сегодня среднесрок😊",1.0,,CANCEL_PENDING,CANCEL_PENDING,0,,,,,,UNKNOWN,,2571|2573,https://t.me/c/3171748254/2571|https://t.me/c/3171748254/2573,,,,,,,,,,,0,,,,0,,,,1,CANCEL_PENDING(CANCEL_PENDING)
+UPDATE,PARSED,703,2599,2572,Тейк. Стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2572,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,702,2600,2587,"В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2587,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,700,2602,2451,"Так же в бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2451,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,696,2606,2587,"Закрыто в бу 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2587,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,689,2616,2608,"[trader #D ]
+Стоп в бу.",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2608,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,686,2619,2616,Тут тоже бу 🫡,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2616,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,684,2628,2617,"Не актуально
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2617,,,,,,,,,,,,,0,,,,0,,,"Не актуально
+
+[trader #C]",0,
+UPDATE,PARSED,683,2629,,"https://t.me/c/3171748254/2611
+
+Тп 1 🥳 в бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2611,https://t.me/c/3171748254/2611,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,682,2632,2577,Стоп поставьте на 0.5749,1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп поставьте на,UNKNOWN,2577,,,,,PRICE,0.5749,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,681,2633,2577,"Закрываю по текущим - 0.5962
+1.8R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2577,,,,,,,,FULL,,0.5962,,,0,,,,0,,,,0,
+UPDATE,PARSED,678,2638,2635,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2635,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,677,2640,,"https://t.me/c/3171748254/2611
+
+Доливаю обьем такой же по 68000
+ 
+Стоп в бу 67550
+
+Тп 68800
+
+
+[trader #C]",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2611,https://t.me/c/3171748254/2611,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,676,2641,2634,Не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2634,,,,,,,,,,,,,0,,,,0,,,Не актуально,0,
+UPDATE,PARSED,669,2657,2612,"1 тейк. Стоп в бу
+0.42R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2612,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,666,2661,2659,"Tp1 фикс 50%
+Стоп в бу",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фикс 50%|стоп в бу,UNKNOWN,2659,,,,,ENTRY,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,665,2662,2610,поставьте стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2610,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,661,2667,2666,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2666,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,660,2669,2663,"1 тейк. Стоп в бу
+0.45R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2663,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,659,2671,2663,"закрываю сейчас по текущим полностью позицию. уже хороший профит
+
+1.17R",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,2663,,,,,,,,FULL,,1.17,,,0,,,,0,,,,0,
+UPDATE,PARSED,658,2672,2643,"закрываю 50% по текущим. стоп в бу
+
+0.42R",1.0,,CLOSE_FULL,CLOSE_FULL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|1.0,закрываю|стоп в бу,UNKNOWN,2643,,,,,ENTRY,,,FULL,,50.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,656,2675,,"Trader #A 
+
+пока новых сделок не будет. доведем до тейков те, что остались
+
+Открыты: 
+ETH
+ASTER
+BTC
+PAXG (стоп в бу стоит)
+JST (был 1 тейк, стоп в бу)
+BONK (был 1 тейк, стоп в бу)
+BNB",1.0,update_without_target_hint,TP_HIT,MOVE_STOP_TO_BE|TP_HIT|MOVE_STOP_TO_BE|TP_HIT|MOVE_STOP_TO_BE|TP_HIT|MOVE_STOP_TO_BE,4,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|1.0|1.0|1.0,бу|стоп в бу|стоп в бу|стоп в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,653,2679,2678,Стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2678,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,652,2680,2679,бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2679,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,649,2685,2675,"передвиньте стопы в плюс или бу (я буду в бу двигать), по ASTER оставляем стоп как есть",1.0,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|SL_HIT,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,2675,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,643,2693,2690,"[trader #B]
+
+Пока не актуально, цена ушла высоко, если далее появится ясная картина - будем искать твх повторно",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,2,INVALIDATE_SETUP(INVALIDATE_SETUP)|SET_STOP(MOVE_STOP_TO_BE),INVALIDATE_SETUP|SET_STOP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,1.0|0.4,не актуально|бу,UNKNOWN,2690,,,,,ENTRY,,,,,,,,0,,,,0,,,"[trader #B]
+
+Пока не актуально, цена ушла высоко, если далее появится ясная картина - будем искать твх повторно",0,
+UPDATE,PARSED,638,2700,2688,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2688,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,637,2701,,"https://t.me/c/3171748254/2687
+
+Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,2687,https://t.me/c/3171748254/2687,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,636,2702,2686,"Trader [ #D]
+закрываю по текущим 0,1664",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2686,,,,,,,,FULL,,0.1664,,,0,,,,0,,,,0,
+UPDATE,PARSED,621,2720,2601,Тут тоже бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2601,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,619,2722,2712,"Trader #A
+
+https://t.me/c/3171748254/2712
+https://t.me/c/3171748254/2713
+https://t.me/c/3171748254/2718
+ 
+Отменяем лимитки
+
+Продолжим после 19:00",1.0,,CANCEL_PENDING,CANCEL_PENDING,0,,,,,,UNKNOWN,2712,2712|2713|2718,https://t.me/c/3171748254/2712|https://t.me/c/3171748254/2713|https://t.me/c/3171748254/2718,,,,,,,,,,,0,,,,0,,,,1,CANCEL_PENDING(CANCEL_PENDING)
+UPDATE,PARSED,618,2723,2719,Тут тоже снимаем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снимаем лимитку,UNKNOWN,2719,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,612,2730,2696,"[trader #B]
+
+Стоп лосс передвигаем в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2696,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,600,2742,,"[trader #A]
+
+на этом пока все, ожидаем лимитки и тейки
+
+Скорее всего лимитки будем переносить в ночь и уже завтра утром решу, что с ними делать, либо нас порадуют тейками😊",0.8,update_without_target_hint,TP_HIT,TP_HIT|MOVE_STOP_TO_BE|TP_HIT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,592,2751,,"https://t.me/c/3171748254/2747
+
+В бу либо в микро + закрыл по 68950
+Слабая реакция 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2747,https://t.me/c/3171748254/2747,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,591,2752,2689,"[trader #D ]
+Срезаем тут 50% +0.25R ,
+тп 1 убираем
+Стоп в бу.",1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,срезаем тут 50%|стоп в бу,UNKNOWN,2689,,,,,ENTRY,,,PARTIAL,0.5,0.25,,,0,,,,0,,,,0,
+UPDATE,PARSED,581,2768,,"Вчерашний марафон закончился сегодня...
+""Обратным тейком"" на YGG.
+(Как вам такой малодушный новояз?😂)
+Если серьёзно, то итоговый результат не самый жирный. Мы бы даже сказали: ""постный"". 😅
+Ни рыба, ни мясо 😇
+Совсем конкретно - минус 0.68% к депозиту. 
+Такое вот небольшое похудение.
+
+Далее нужно упомянуть, что из всех сигналов, которые были вчера выданы в рамках марафона лимитки сработали на четырёх. 
+WinRate - 50%, то есть...
+2 сделки закрыли по тейку, 
+2 по стопу. 
+Но из-за особенностей сетапов в рамках марафона (повышенный риск по отношению к стандартному SL в 1%) мы получаем то, что получили. 💁‍♂️
+
+При этом!
+У нас, по прежнему, положительная статистика по итогу трёх ""забегов"" (Да, мы из тех, кто гордится каждой заработанной честным трудом копейкой🥹), но, конечно, все рассчитывали на большее.
+
+Менять ли что-то?
+Штука в том, что, например, при тесте текущей стратегии на таком же временном диапазоне за день до этого рынок дал +4%. 
+(Нет, мы не из тех, кто хвастается достижениями, которые нельзя проверить, но вы же не думаете, что наша идея с марафонами родилась из концепта ""А давайте просто пожонглируем монетками на закате дня! И будь что будет!"" 
+Всё тестим. И дорожим репутацией. 😇
+
+Из идей на следующий раз:
+1) Подумаем насчёт того, чтобы заходить по рынку - большинство лонговых сетапов из тех, что были вчера не задели лимитки, но ушли выше тейков с запасом;
+2) Подумаем, чтобы не оставлять лимитки на ночь. По всем нам знакомому закону...""трейдерского бытия"", - именно ночные приключения на SXP и затем на YGG превратили наш скромный, но положительный результат (+1.32%) в акт мелкого рыночного возмездия (-0.7%). 😈
+
+В общем, мы продолжим работать для вас над этой активностью.👨‍🔧
+Ну а обычная месячная статистика по сигналам всех трейдеров будет опубликована уже в ближайшие дни.
+Всем профита!
+#админ",1.0,update_without_target_hint,SL_HIT,TP_HIT|REPORT_RESULT|REPORT_RESULT|TP_HIT|SL_HIT|REPORT_RESULT|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|TP_HIT|REPORT_RESULT|MOVE_STOP_TO_BE|REPORT_RESULT,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,573,2780,,"https://t.me/c/3171748254/2777
+
+В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2777,https://t.me/c/3171748254/2777,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,570,2785,2696,"[trader #B]
+
+Закрываем сделку по SUI в +2.2% к депозиту 
+
+Поздравляю с профитом 💸💸💸",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываем сделку,UNKNOWN,2696,,,,,,,,FULL,,2.2,,,0,,,,0,,,,0,
+UPDATE,PARSED,569,2786,2760,"https://t.me/c/3171748254/2760
+
+В бу перевел 
+0,311
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,2760,2760,https://t.me/c/3171748254/2760,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,567,2788,2784,стоп в бу.,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2784,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,566,2789,2784,"[trader #D]
+TP1 +031R
+Фикс 50%
+ стоп все так же в бу",1.0,,SL_HIT,TP_HIT|CLOSE_PARTIAL|SL_HIT|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|0.4,фикс 50%|бу,UNKNOWN,2784,,,,,ENTRY,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,561,2798,,"[trader #A]
+
+Чтобы не кормить ""лося"" закрываю по текущим AVAX и PEOPLE
+
+По  SOL и SUI стоп в бу
+
+AVAX - 0.5R (убыток)
+PEOPLE - 0.28R (убыток)",1.0,update_without_target_hint,REPORT_RESULT,CLOSE_FULL|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,1.0|1.0,закрываю по текущим|стоп в бу,UNKNOWN,,,,,,ENTRY,,,FULL,,0.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,559,2801,2610,"Фиксирую 50% по текущей цене. Стоп в бу
+
+0.79R",1.0,,CLOSE_PARTIAL,CLOSE_PARTIAL|MOVE_STOP_TO_BE,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фиксирую 50%|стоп в бу,UNKNOWN,2610,,,,,ENTRY,,,PARTIAL,0.5,0.79,,,0,,,,0,,,,0,
+UPDATE,PARSED,558,2802,2761,"Тейк. Стоп в бу
+
+0.34R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2761,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,556,2807,2772,"тейк, стоп в бу
+0.36R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2772,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,555,2808,2806,"В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2806,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARTIAL,549,2816,,"Trader #A 
+
+Закрываю все позиции по текущим, чтобы закрыть февраль
+
+hype - в бу
+pepe - в бу
+bnb - 0.07R (убыток)
+sol - 0.82R
+sui - 0.95R
+paxg - 2.2R
+aster - 0.12R",1.0,multi_ref_mixed_intents_not_supported,REPORT_RESULT,CLOSE_FULL|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|REPORT_RESULT,0,,,,,,ALL_POSITIONS,,,,,,,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,542,2828,2817,Стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2817,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,534,2839,,"[trader #C]
+
+https://t.me/c/3171748254/2831
+
+ В бу перевел,мутят что то",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2831,https://t.me/c/3171748254/2831,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,527,2853,2851,"1 тейк. Стоп в бу
+
+0.62R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2851,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,524,2856,2855,тут отмена,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,тут отмена,UNKNOWN,2855,,,,,,,,,,,,,0,,,,0,,,тут отмена,0,
+UPDATE,PARSED,521,2860,2859,"хочется написать много непечатных слов по поводу 1 копейки...
+
+убираем лимитку😔",1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2859,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,517,2867,2862,"1 тейк. стоп в бу
+
+0.37R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2862,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,513,2871,,"https://t.me/c/3171748254/2848
+Тп1🥳
+В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2848,https://t.me/c/3171748254/2848,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,512,2872,2854,"1 тейк. стоп в бу
+0.59R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2854,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,510,2875,2817,"1 тейк, стоп в бу
+
+0.66R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2817,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,503,2882,2817,стоп переношу на 65000,1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переношу на,UNKNOWN,2817,,,,,PRICE,65000.0,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,499,2890,2832,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2832,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,494,2896,2892,"1 тейк. стоп в бу
+0.27R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2892,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,491,2900,2832,"1 тейк. Стоп в бу
+
+0.37R",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2832,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,489,2902,2899,стоп  в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2899,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,487,2904,2902,Бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2902,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,485,2908,2906,Стоп в бу🤝,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2906,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,484,2909,2908,"День бу)
+Бу не минус,завтра глянем что нового дадут 🤝",0.8,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,2908,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,477,2919,2914,тейк. стоп пока не переносим в бу,0.8,,SL_HIT,TP_HIT|SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2914,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,476,2920,2817,стоп переносим на 67000,1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переносим,UNKNOWN,2817,,,,,PRICE,67000.0,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,475,2921,2916,убираем лимитку,1.0,,CANCEL_PENDING,CANCEL_PENDING,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2916,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,474,2922,,"Trader #A 
+
+WOO и ATP стопы в бу",1.0,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стопы в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,473,2923,,"Trader #A 
+
+PYTH тоже стоп в бу",1.0,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,467,2929,,"https://t.me/c/3171748254/2903
+  
+Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,2903,https://t.me/c/3171748254/2903,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,461,2936,2901,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2901,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,460,2937,2925,"Не актуально, будем наблюдать 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,2,INVALIDATE_SETUP(INVALIDATE_SETUP)|SET_STOP(MOVE_STOP_TO_BE),INVALIDATE_SETUP|SET_STOP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,1.0|0.4,не актуально|бу,UNKNOWN,2925,,,,,ENTRY,,,,,,,,0,,,,0,,,"Не актуально, будем наблюдать 
+
+[trader #C]",0,
+UPDATE,PARSED,459,2938,2934,"[trader #B]
+
+Стоп передвигаем в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2934,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,457,2940,2930,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2930,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,454,2943,2817,"закрываю по текущим
+
+1.62R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2817,,,,,,,,FULL,,1.62,,,0,,,,0,,,,0,
+UPDATE,PARSED,446,2953,2950,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2950,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,445,2954,2950,"ну и в бу сразу
+0.3R",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2950,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,441,2960,2955,Не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2955,,,,,,,,,,,,,0,,,,0,,,Не актуально,0,
+UPDATE,PARSED,433,2971,2970,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,2970,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,430,2975,2974,"Чуть не дошли в бу перевел 2118 у меня вход 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2974,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,416,2991,,"Trader #A
+
+Друзья, сегодня, видимо, рынок включил режим «лимитки? не слышал».🙂
+
+Из 6 лимиток - 2 взяли. А также поймали 1 стоп
+Чтобы не переносить лишний риск через ночь, рекомендую снять все лимитные ордера. 
+
+Я у себя лимитки оставлю - для полной картины стратегии интрадей и статистики по переносам.
+
+Если ночью что-то исполнится - обязательно сообщу и зафиксирую результат.🫡",1.0,update_without_target_hint,SL_HIT,SL_HIT|CANCEL_PENDING|REPORT_RESULT,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снять все лимитные ордера,UNKNOWN,,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,,0,
+UPDATE,PARSED,414,2993,2992,Стоп в бу.,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2992,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,413,2994,2993,Бу🤝,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,2993,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,410,2998,,"https://t.me/c/3171748254/2945
+
+Tp1 🥳 В бу перевел лимитки убрал
+
+[trader #C]",0.4,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,,2945,https://t.me/c/3171748254/2945,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,406,3004,3003,быстро однако)стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3003,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,405,3005,3003,бу😂,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3003,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,391,3021,3017,не актуально,1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3017,,,,,,,,,,,,,0,,,,0,,,не актуально,0,
+UPDATE,PARSED,385,3028,3018,теперь стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3018,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,380,3036,3020,тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3020,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,379,3037,2944,1 тейк. стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2944,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,373,3046,,"Друзья, ещё один небольшой момент.
+
+Нас в канале уже почти 6 тысяч человек. 🥳
+А если учитывать тех, кто читает сигналы через какие-то сторонние каналы, то аудитория, честно говоря, ещё больше.
+
+Мы знаем, что некоторые недобросовестные подписчики уже успели обзавестись ботами, которые аккуратно парсят сигналы и пересылают их куда-то дальше - в каналы, не имеющие отношения к Pifagor Trade. 
+
+Что сказать.
+
+Во-первых - если вы читаете это сообщение не в канале PifSignal вы умрёте через 5 дней спасибо за доверие. 😁
+Не каждый день увидишь, чтобы чужие каналы так активно распространяли твою работу.
+
+Во-вторых - мы это видим. И уже знаем ваш адрес.🕵‍♂️
+
+Поэтому если масштабы этого творчества будут расти, нам, возможно, придётся немного изменить формат подачи сигналов. 
+И сжечь дом недоброжелателей. Не весь, но хотя бы только внутри... 😇
+
+Что мы можем?
+Например:
+
+- публиковать сигналы двоичным кодом;
+- стопы и тейки давать римскими цифрами или в виде интегральных уравнений;
+- комментарии к сделкам - на суахили;
+- а сообщения от админа - азбукой Морзе (пу-пу-пу...ну или вернее, - пи-пи-пи)🤖
+
+Конечно, мы понимаем, что настоящих энтузиастов это не остановит.
+Но хотя бы усложнит жизнь их ботам, а нам подарит несколько минут хорошего настроения.
+
+А если серьёзно -
+спасибо всем, кто читает канал в оригинале.
+
+Так всё-таки надёжнее. 🫰
+
+#админ",0.8,update_without_target_hint,SL_HIT,MOVE_STOP_TO_BE|SL_HIT|TP_HIT|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,372,3047,2884,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2884,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,367,3056,3054,"Не актуально
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3054,,,,,,,,,,,,,0,,,,0,,,"Не актуально
+
+[trader #C]",0,
+UPDATE,PARSED,365,3063,3020,"Закрыл по текущим
+0.41R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрыл по текущим,UNKNOWN,3020,,,,,,,,FULL,,0.41,,,0,,,,0,,,,0,
+UPDATE,PARSED,364,3064,2944,"закрываю по текущим
+0.85R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2944,,,,,,,,FULL,,0.85,,,0,,,,0,,,,0,
+UPDATE,PARSED,363,3065,3042,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3042,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,361,3068,2884,"закрываю по текущим
+0.37R",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2884,,,,,,,,FULL,,0.37,,,0,,,,0,,,,0,
+UPDATE,PARSED,359,3073,3069,"Не актуально,ушли без меня , 180 пунктов не дошли 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3069,,,,,,,,,,,,,0,,,,0,,,"Не актуально,ушли без меня , 180 пунктов не дошли 
+
+[trader #C]",0,
+UPDATE,PARSED,358,3074,3042,1 тейк. стоп уже в бу стоит,1.0,,SL_HIT,TP_HIT|SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3042,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,356,3077,2965,"Долил остаток позы по текущим 68850 таким же объёмом как в позе ,средняя 70950 стоп в бу  70900
+
+[trader #C]",1.0,,MOVE_STOP_TO_BE,ENTRY_FILLED|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2965,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,354,3079,3078,Стоп можно перенести в бу,0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3078,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,346,3091,3079,бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3079,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,344,3094,3042,стоп поставьте на 1 тейк,1.0,,TP_HIT,MOVE_STOP|TP_HIT,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп поставьте на,UNKNOWN,3042,,,,,PRICE,1.0,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,342,3096,3095,"давайте закроем в микро +
+не нравится па
+глянем на ню",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,давайте закроем,UNKNOWN,3095,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,340,3099,3093,"[trader #B]
+
+Стоп лосс переносим в БУ",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3093,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,337,3102,3041,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3041,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,334,3108,2964,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2964,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,333,3109,3107,"[trader #B]
+
+Не актуально , ушли без нас",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3107,,,,,,,,,,,,,0,,,,0,,,"[trader #B]
+
+Не актуально , ушли без нас",0,
+UPDATE,PARSED,330,3113,3112,R 1-1 можно срезать 50% стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3112,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,329,3114,3112,tp1 срезал еще 25%,1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,срезал еще 25%,UNKNOWN,3112,,,,,,,,PARTIAL,0.25,,,,0,,,,0,,,,0,
+UPDATE,PARSED,324,3120,,"[trader #С]
+
+https://t.me/c/3171748254/3119
+
+Не актуально",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,0,,,,,,UNKNOWN,,3119,https://t.me/c/3171748254/3119,,,,,,,,,,,0,,,,0,,,,1,INVALIDATE_SETUP(INVALIDATE_SETUP)
+UPDATE,PARSED,322,3126,3042,"давайте закроем оставшиеся 10% позиции по текущим. не будем мучить)
+
+итог 1.3R",1.0,,REPORT_RESULT,CLOSE_FULL|MOVE_STOP_TO_BE|REPORT_RESULT,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,1.0|0.4,давайте закроем|бу,UNKNOWN,3042,,,,,ENTRY,,,FULL,,10.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,318,3132,3128,"Пока не актуально посмотрим как будет реакция на импульс.
+
+[ trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,2,INVALIDATE_SETUP(INVALIDATE_SETUP)|SET_STOP(MOVE_STOP_TO_BE),INVALIDATE_SETUP|SET_STOP,INVALIDATE_SETUP|MOVE_STOP_TO_BE,1.0|0.4,не актуально|бу,UNKNOWN,3128,,,,,ENTRY,,,,,,,,0,,,,0,,,"Пока не актуально посмотрим как будет реакция на импульс.
+
+[ trader #C]",0,
+UPDATE,PARSED,317,3133,3130,"[trader #С]
+
+Тп 1 🥳 в бу перевел,лимитку ниже убрал",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3130,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,316,3134,3131,"[Trader #D]
+Upd;перевел в бу",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3131,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,315,3135,3131,"[Trader #D]
+Tp1 фикс 50%",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,3131,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,313,3138,3137,кину в бу.Топчемся на месте,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3137,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,312,3139,3138,Бу.моментально),0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3138,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,301,3156,3153,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3153,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,299,3158,3153,"Trader [ #D] 
+бу.поищем перезаход",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3153,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,298,3160,3151,"[trader #B]
+
+Тут стоп, буду по нему же смотреть повторную точку входа, потенциал для роста все еще есть, технически смотрится хорошо",0.4,,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3151,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,295,3163,3161,"Закрываем по текущим в -0.4
+Рынок топчется, выглядит не уверенно, буду смотреть новые возможности",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3161,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,291,3169,3040,1 тейк стоп в бу,1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3040,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,290,3170,3162,"https://t.me/c/3171748254/3162
+
+Тп1 🥳 в бу перевел лимитку убрал 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,0,,,,,,UNKNOWN,3162,3162,https://t.me/c/3171748254/3162,,,,,,,,,,,0,,,,0,,,,1,SET_STOP(MOVE_STOP_TO_BE)
+UPDATE,PARSED,287,3174,3166,"[trader #B]
+
+Стоп переводим в БУ",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп переводим в бу,UNKNOWN,3166,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,286,3175,3040,"давайте закроем, че мучить оставшиеся 10% позиции
+
+итого 1.06R",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,давайте закроем,UNKNOWN,3040,,,,,,,,FULL,,10.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,281,3182,3179,"срежем тут 30 %  0,014219
+стоп в бу",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3179,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,280,3183,,"Trader #A
+
+Doge
+LDO
+SOL
+BTC
+ETH
+
+стоп двигаем в бу",0.4,update_without_target_hint,SL_HIT,SL_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,271,3193,3189,тут стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3189,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,270,3194,3189,Tp1 фикс 50%,1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,3189,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,267,3197,3191,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3191,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,266,3198,3190,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3190,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,264,3200,3197,Позиция закрылась по бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3197,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,261,3203,3198,Бу🤝,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3198,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,256,3209,3166,"Закрываю по текущим в +0.5
+В моменте было 4.5%, думал снимет компрессию выше, но рипл решил оставить на потом)",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,3166,,,,,,,,FULL,,0.5,,,0,,,,0,,,,0,
+UPDATE,PARSED,254,3213,3115,"Обидный бу.
+Не дошло до 1 тейка одну копейку",1.0,,TP_HIT,MOVE_STOP_TO_BE|TP_HIT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3115,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,252,3221,3201,"Закрыл в бу 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3201,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,251,3222,3178,"В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3178,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,249,3227,3220,"[trader #B]
+ 
+Стоп в БУ",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3220,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,242,3238,3232,"[trader #B]
+
+Стоп в БУ",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3232,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,240,3240,3080,стоп на 1 тейк,1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп на 1 тейк,UNKNOWN,3080,,,,,TP_LEVEL,,1,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,237,3245,3236,"В бу перевел верхние лимитки оставил
+
+[ trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3236,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,235,3247,3172,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3172,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,233,3249,2963,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2963,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,227,3256,3254,Перевожу в бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3254,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,224,3261,3254,"Tp1,фикс 50%",1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,3254,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,221,3264,3258,"Давайте все закроем, чтобы не терять прибыль
+
+В этом посте добавлю результаты:
+#LTCUSDT - 0.45R
+#OPUSDT - 0.52R
+#API3USDT  - 0.2R (убыток)
+#AAVEUSDT  - 1.38R
+#ASTERUSDT - 0.41R
+#SOLUSDT - 1.64R
+#DOGEUSDT - 1.2R
+#XRPUSDT - 0.84R
+#ETHUSDT - 1.74R",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT,0,,,,,,ALL_POSITIONS,3258,,,,LTCUSDT|OPUSDT|API3USDT|AAVEUSDT|ASTERUSDT|SOLUSDT|DOGEUSDT|XRPUSDT|ETHUSDT,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,211,3277,3272,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3272,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,209,3280,3272,Давайте тут зафиксируем 50%. Не будем дожидаться 1 тейка. Все равно рядом с ним,1.0,,TP_HIT,CLOSE_FULL|MOVE_STOP_TO_BE|TP_HIT,2,CLOSE(CLOSE_FULL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_FULL|MOVE_STOP_TO_BE,0.4|0.4,зафиксируем|бу,UNKNOWN,3272,,,,,ENTRY,,,FULL,,50.0,,,0,,,,0,,,,0,
+UPDATE,PARSED,207,3282,3273,Давайте поставим стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3273,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,205,3284,3275,"Не актуально, уверенно смотрится 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3275,,,,,,,,,,,,,0,,,,0,,,"Не актуально, уверенно смотрится 
+
+[trader #C]",0,
+UPDATE,PARSED,202,3287,3286,перевожу в бу.,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3286,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,201,3288,3286,Позиция ушла по бу🤝,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3286,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,197,3292,3290,"Закрою руками в бу
+Не нравится рынок перед фрс",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3290,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,196,3293,3274,"В бу перевел лимитку убрал
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3274,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,192,3298,3272,стоп на 1 тейк поставьте,1.0,,MOVE_STOP,MOVE_STOP,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп на 1 тейк,UNKNOWN,3272,,,,,TP_LEVEL,,1,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,189,3301,3283,"выше по Near я чуть поторопился, но думаю там тоже будет стоп
+
+а так был стоп по этому сигналу
+
+-1R",0.8,,SL_HIT,MOVE_STOP_TO_BE|SL_HIT|SL_HIT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3283,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,183,3308,3305,"В бу перевел
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3305,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,182,3309,3306,"Так как Лонг закрыт в бу то оставляем тп без изменений 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3306,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,174,3318,3317,Стоп переводим в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп переводим в бу,UNKNOWN,3317,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,173,3319,3317,Tp1 фикс 50%,1.0,,TP_HIT,TP_HIT|CLOSE_PARTIAL,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,UNKNOWN,3317,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,,0,
+UPDATE,PARSED,171,3323,3307,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3307,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,170,3325,3274,"Долил такой же объем по 70650
+Стоп в бу 72200 тп на этот объем 68900
+
+[trader #C]",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3274,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,165,3332,,"Trader #A
+
+Закрываю шорты по текущим.
+Ниже напишу результат по монетам
+Не нравится рынок. Нужно понаблюдать
+
+Итог:
+
+#1000PEPEUSDT - 1.22R
+#ETHUSDT - 0.33R
+#BTCUSDT - 0.16R (убыток)
+#DOGEUSDT - 0.2R (убыток)
+#LINKUSDT - 0.34R (убыток)
+#SOLUSDT - 0.33R (убыток)",1.0,,REPORT_RESULT,CLOSE_FULL|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT,0,,,,,,ALL_SHORT,,,,,1000PEPEUSDT|ETHUSDT|BTCUSDT|DOGEUSDT|LINKUSDT|SOLUSDT,,,,,,,,,0,,,,0,,,,1,CLOSE(CLOSE_FULL)
+UPDATE,PARSED,162,3335,3333,"В бу перевел 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3333,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,161,3336,3330,"[trader #B]
+
+Не актуально",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3330,,,,,,,,,,,,,0,,,,0,,,"[trader #B]
+
+Не актуально",0,
+UPDATE,PARSED,153,3364,3359,"Не актуально,если кто в позиции закройте в бу, я перевел в бу
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,INVALIDATE_SETUP(INVALIDATE_SETUP)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),INVALIDATE_SETUP|SET_STOP|SET_STOP,INVALIDATE_SETUP|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,1.0|0.4|0.4,не актуально|бу|бу,UNKNOWN,3359,,,,,ENTRY,,,,,,,,0,,,,0,,,"Не актуально,если кто в позиции закройте в бу, я перевел в бу
+
+[trader #C]",0,
+UPDATE,PARSED,150,3367,3365,"Не актуально, подождем утро с Трампом 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3365,,,,,,,,,,,,,0,,,,0,,,"Не актуально, подождем утро с Трампом 
+
+[trader #C]",0,
+UPDATE,PARSED,138,3379,3378,"быстро однако.
+tp1
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3378,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,137,3380,3379,"остаток отлетел в бу.
+ликвидности мало кидает со стороны в сторону",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3379,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,130,3387,3385,"Перевожу в бу.
+Не очень нравится топтание",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3385,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,129,3388,3387,Позиция ушла по бу.,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3387,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,120,3397,3396,"TP1
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3396,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,115,3402,3400,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3400,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,108,3409,3408,"Trader [ #D]
+Закрываю по текущим.",1.0,,CLOSE_FULL,CLOSE_FULL,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,3408,,,,,,,,FULL,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,103,3414,3412,"Тп1 ,2🥳 в бу перевел 
+
+[ trader #C ]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3412,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,99,3418,3411,"Обновления 
+Тп1 71450
+ в бу перевел 69600
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3411,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,98,3419,3415,"[trader #B]
+
+Не актуально, ушла без нас",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3415,,,,,,,,,,,,,0,,,,0,,,"[trader #B]
+
+Не актуально, ушла без нас",0,
+UPDATE,PARSED,93,3424,3421,"[trader #B]
+
+Стоп в БУ",1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3421,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,90,3427,3384,"Остаток закрыт в бу
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3384,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,88,3429,3421,"[trader #B]
+
+Ушла в БУ",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3421,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,82,3435,3433,"Не актуально 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3433,,,,,,,,,,,,,0,,,,0,,,"Не актуально 
+
+[trader #C]",0,
+UPDATE,PARSED,73,3444,3428,"тут 2 тейка
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3428,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,70,3447,,"Привет, это снова админ! 👋
+Будем дублировать это сообщение, чтобы никто не пропустил!
+
+У нас тут небольшая (на самом деле нет) новость - МЫ ПЕРЕЕЗЖАЕМ 🚚
+Из канала с сигналами в полноценное сообщество. 
+
+Зачем это всё:
+В этом лучшем из миров новой группе каждый трейдер будет жить в своей отдельной ветке. И торговать ещё чуточку лучше! 🥹
+Вы сможете подписаться только на тех, кто вам интересен, и не ловить по 100 уведомлений в день…
+если вы, конечно, не фанат жёсткого вибро в кармане 😂
+
+📌 Как будет проходить миграция:
+
+- Уже сейчас готово новое сообщество
+- Для входа нужно перейти в бота, нажать на синюю кнопку «Меню» (снизу слева), ввести данные и получить новую ссылку
+- С сегодняшнего дня сигналы начнут дублироваться и сюда, и в новую группу
+- На весь переход даём 1 неделю: вам - привыкнуть; нам - потестить
+
+❗️Важно:
+Со следующего вторника этот канал перестаёт обновляться. 🥲
+То есть если 1 апреля вы зайдёте сюда и увидите, что теперь Дима постит тут фотки улова с рыбалки - это не шутка. 😂
+Просто трейдеры теперь живут по другому адресу. 🐠🐟🦑🐬
+
+👉 Как попасть в новое сообщество:
+
+1. Переходите в бота: https://t.me/Pifagor_Indicator_bot
+2. Далее в mini-приложение (кнопка «Меню»)
+3. Если не заполняли данные то... «Получить всё» ➡️ «Заполнить данные» ➡️ «Перейти по ссылке в канал»
+Если пропустили ссылку в канал, но данные уже заполнили:
+«Меню» ➡️ «Профиль» ➡️ «Ссылка на канал»
+
+🏠 Когда окажетесь внутри - располагайтесь:
+побродите по веткам, настройте уведомления под себя,
+всё сделано максимально в стиле «Как раньше», только удобнее.
+
+Мы даже подумываем сделать пустую ветку Trader#4 ,
+чтобы олды могли зайти, посмотреть в пустоту и вспомнить этого добряка и все свои самые безрассурдные торговые идеи 🥹
+
+Если что-то не работает или не получается зайти - пишите, @pifagor_admin - поможет.",1.0,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,60,3457,3456,стоп в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3456,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,59,3458,3457,ушла по бу,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3457,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,55,3462,,"Привет, это снова админ! 👋
+Будем дублировать это сообщение, чтобы никто не пропустил!
+
+У нас тут небольшая (на самом деле нет) новость - МЫ ПЕРЕЕЗЖАЕМ 🚚
+Из канала с сигналами в полноценное сообщество. 
+
+Зачем это всё:
+В этом лучшем из миров новой группе каждый трейдер будет жить в своей отдельной ветке. И торговать ещё чуточку лучше! 🥹
+Вы сможете подписаться только на тех, кто вам интересен, и не ловить по 100 уведомлений в день…
+если вы, конечно, не фанат жёсткого вибро в кармане 😂
+
+📌 Как будет проходить миграция:
+
+- Уже сейчас готово новое сообщество
+- Для входа нужно перейти в бота, нажать на синюю кнопку «Меню» (снизу слева), ввести данные и получить новую ссылку
+- С сегодняшнего дня сигналы начнут дублироваться и сюда, и в новую группу
+- На весь переход даём 1 неделю: вам - привыкнуть; нам - потестить
+
+❗️Важно:
+Со следующего вторника этот канал перестаёт обновляться. 🥲
+То есть если 1 апреля вы зайдёте сюда и увидите, что теперь Дима постит тут фотки улова с рыбалки - это не шутка. 😂
+Просто трейдеры теперь живут по другому адресу. 🐠🐟🦑🐬
+
+👉 Как попасть в новое сообщество:
+
+1. Переходите в бота: https://t.me/Pifagor_Indicator_bot
+2. Далее в mini-приложение (кнопка «Меню»)
+3. Если не заполняли данные то... «Получить всё» ➡️ «Заполнить данные» ➡️ «Перейти по ссылке в канал»
+Если пропустили ссылку в канал, но данные уже заполнили:
+«Меню» ➡️ «Профиль» ➡️ «Ссылка на канал»
+
+🏠 Когда окажетесь внутри - располагайтесь:
+побродите по веткам, настройте уведомления под себя,
+всё сделано максимально в стиле «Как раньше», только удобнее.
+
+Мы даже подумываем сделать пустую ветку Trader#4 ,
+чтобы олды могли зайти, посмотреть в пустоту и вспомнить этого добряка и все свои самые безрассурдные торговые идеи 🥹
+
+Если что-то не работает или не получается зайти - пишите, @pifagor_admin - поможет.",1.0,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,45,3472,3468,"В бу перевел
+
+ BTCUSDT 66200
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3468,,,,BTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,43,3474,,"Привет, это снова админ! 👋
+Будем дублировать это сообщение, чтобы никто не пропустил!
+
+У нас тут небольшая (на самом деле нет) новость - МЫ ПЕРЕЕЗЖАЕМ 🚚
+Из канала с сигналами в полноценное сообщество. 
+
+Зачем это всё:
+В этом лучшем из миров новой группе каждый трейдер будет жить в своей отдельной ветке. И торговать ещё чуточку лучше! 🥹
+Вы сможете подписаться только на тех, кто вам интересен, и не ловить по 100 уведомлений в день…
+если вы, конечно, не фанат жёсткого вибро в кармане 😂
+
+📌 Как будет проходить миграция:
+
+- Уже сейчас готово новое сообщество
+- Для входа нужно перейти в бота, нажать на синюю кнопку «Меню» (снизу слева), ввести данные и получить новую ссылку
+- С сегодняшнего дня сигналы начнут дублироваться и сюда, и в новую группу
+- На весь переход даём 1 неделю: вам - привыкнуть; нам - потестить
+
+❗️Важно:
+Со следующего вторника этот канал перестаёт обновляться. 🥲
+То есть если 1 апреля вы зайдёте сюда и увидите, что теперь Дима постит тут фотки улова с рыбалки - это не шутка. 😂
+Просто трейдеры теперь живут по другому адресу. 🐠🐟🦑🐬
+
+👉 Как попасть в новое сообщество:
+
+1. Переходите в бота: https://t.me/Pifagor_Indicator_bot
+2. Далее в mini-приложение (кнопка «Меню»)
+3. Если не заполняли данные то... «Получить всё» ➡️ «Заполнить данные» ➡️ «Перейти по ссылке в канал»
+Если пропустили ссылку в канал, но данные уже заполнили:
+«Меню» ➡️ «Профиль» ➡️ «Ссылка на канал»
+
+🏠 Когда окажетесь внутри - располагайтесь:
+побродите по веткам, настройте уведомления под себя,
+всё сделано максимально в стиле «Как раньше», только удобнее.
+
+Мы даже подумываем сделать пустую ветку Trader#4 ,
+чтобы олды могли зайти, посмотреть в пустоту и вспомнить этого добряка и все свои самые безрассурдные торговые идеи 🥹
+
+Если что-то не работает или не получается зайти - пишите, @pifagor_admin - поможет.",1.0,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4|0.4,бу|бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,40,3477,3404,"теперь точно 1 тейк
+стоп в бу",1.0,,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3404,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,34,3483,,"---
+
+trader#C
+
+Формат: интрадей, фьючерсы
+
+Статистика:
+29 сделок
+12 в плюс / 5 в минус / 11 БУ / 1 в работе
+Итог: +1.5%
+
+Комментарий:
+После января и февраля, закрытых с небольшим минусом, у trader #C, похоже, остались лёгкие вьетнамские флешбеки.😂
+Поэтому март он торговал заметно осторожнее обычного и осознанно снизил средний риск на сделку примерно до 0.3%.
+
+На фоне уверенного винрейта
+итог +1.5% выглядит сдержанно, но здесь важно понимать механику:
+при более классическом риске в 1% на сделку месячный результат в процентах был бы значительно весомее. 🏋‍♂️
+
+Поэтому отдельно напомним:
+📌 финальный уровень риска - это всегда ваша зона ответственности:
+Сигнал можно торговать агрессивнее. 👹
+Можно - консервативнее. 😌
+А можно вообще не торговать, а просто показывать друзьям, что у вас есть доступ в закрытый канал, и иногда демонстративно открывать приложение биржи, задумчиво смотреть в экран и бормотать:
+“Ну что там у нас по последней сделочке… три, пять, девятого… икс, логарифм, стоп, рыба, фулл хаус…”🤳😂
+
+Так вы, конечно, ничего не заработаете, кроме звания ""самого успешного криптана подъезда"" и самоощушения, что ""вы у мамы уже совсем большой""... 😂
+но и не потеряете тоже ничего. 😉
+
+---
+
+trader#D
+
+Формат: интрадей, фьючерсы
+
+Статистика:
+27 сделок
+Итог: +1.53% 
+
+Комментарий:
+В календаре с фотографиями мужчин с голым торсом, этот джентльмен красовался бы в образе ""Прохладный март"". 🌨🦵😂
+Trader #D работает с риском 0.5% на сделку, поэтому итоговые +1.53% - это результат в сдержанной модели риска.
+
+При R = 1% и выше цифры месяца выглядели бы уже заметно внушительнее. (примерно...раза в два✌️😉)",1.0,update_without_target_hint,SL_HIT,MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT|SL_HIT|REPORT_RESULT|REPORT_RESULT|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,33,3484,,"Секция иностранных торговых связей 😉
+или
+trader #3
+Модель расчёта: консервативная (1% риск, равные тейки)
+
+Статистика:
+20 сделок
+5 стопов
+Остальное - частичные фиксации, БУ и сделки, которые ещё остаются в работе.
+Итог: +2.7%
+
+Комментарий:
+Месяц получился составным: часть прибыли доехала из февральских сигналов, часть мартовских сделок ещё продолжает отрабатываться.🤷‍♂️
+
+---
+Общий итог:
+Типичный март.
+Вроде уже весна, и ты ждёшь, что сейчас всё дружно зацветёт зелёным.🕯🔼
+А он, собака, всё морозит. 😏
+Ну а в апрель мы заходим уже с новым адресом и нормальным человеческим оптимизмом. 👌",1.0,update_without_target_hint,SL_HIT,TP_HIT|SL_HIT|MOVE_STOP_TO_BE|REPORT_RESULT|REPORT_RESULT,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,28,3489,3486,"Не актуально 2 пункта не дошли 
+
+Btcusdt short 
+
+[trader #C]",1.0,,INVALIDATE_SETUP,INVALIDATE_SETUP,1,INVALIDATE_SETUP(INVALIDATE_SETUP),INVALIDATE_SETUP,INVALIDATE_SETUP,1.0,не актуально,UNKNOWN,3486,,,,BTCUSDT,,,,,,,,,0,,,,0,,,"Не актуально 2 пункта не дошли 
+
+Btcusdt short 
+
+[trader #C]",0,
+UPDATE,PARSED,23,3494,3490,"Тп 1🥳 BTCUSDT в бу перевел,лимитку убрал 
+
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3490,,,,BTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,20,3497,3478,давайте тут переведем в бу,1.0,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,переведем в бу,UNKNOWN,3478,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,19,3498,3478,в бу закрылись,0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,3478,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,13,3504,,"Привет, это снова админ! 👋
+🔥🔥Завтра этот канал перестанет работать!🔥🔥
+Это не первоапрельская шутка!
+
+МЫ ПЕРЕЕЗЖАЕМ 🚚
+Из канала с сигналами в полноценное сообщество. 
+
+Зачем это всё:
+В этом лучшем из миров новой группе каждый трейдер будет жить в своей отдельной ветке. И торговать ещё чуточку лучше! 🥹
+Вы сможете подписаться только на тех, кто вам интересен, и не ловить по 100 уведомлений в день…
+если вы, конечно, не фанат жёсткого вибро в кармане 😂
+
+📌 Как будет проходить миграция:
+
+- Уже сейчас готово новое сообщество
+- Для входа нужно перейти в бота, нажать на синюю кнопку «Меню» (снизу слева), ввести данные и получить новую ссылку
+- С сегодняшнего дня сигналы начнут дублироваться и сюда, и в новую группу
+- На весь переход даём 1 неделю: вам - привыкнуть; нам - потестить
+
+❗️Важно:
+Со следующего вторника этот канал перестаёт обновляться. 🥲
+То есть если 1 апреля вы зайдёте сюда и увидите, что теперь Дима постит тут фотки улова с рыбалки - это не шутка. 😂
+Просто трейдеры теперь живут по другому адресу. 🐠🐟🦑🐬
+
+👉 Как попасть в новое сообщество:
+
+1. Переходите в бота: https://t.me/Pifagor_Indicator_bot
+2. Далее в mini-приложение (кнопка «Меню»)
+3. Если не заполняли данные то... «Получить всё» ➡️ «Заполнить данные» ➡️ «Перейти по ссылке в канал»
+Если пропустили ссылку в канал, но данные уже заполнили:
+«Меню» ➡️ «Профиль» ➡️ «Ссылка на канал»
+
+🏠 Когда окажетесь внутри - располагайтесь:
+побродите по веткам, настройте уведомления под себя,
+всё сделано максимально в стиле «Как раньше», только удобнее.
+
+Мы даже подумываем сделать пустую ветку Trader#4 ,
+чтобы олды могли зайти, посмотреть в пустоту и вспомнить этого добряка и все свои самые безрассурдные торговые идеи 🥹
+
+Если что-то не работает или не получается зайти - пишите, @pifagor_admin - поможет.",0.8,update_without_target_hint,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,0.4|0.4,бу|бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,,0,
+UPDATE,PARSED,10,3507,,"Btcusdt long 
+В бу перевел 
+[trader #C]",0.4,,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,бу,UNKNOWN,,,,,BTCUSDT,ENTRY,,,,,,,,0,,,,0,,,,0,

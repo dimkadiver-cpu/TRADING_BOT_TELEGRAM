@@ -563,6 +563,8 @@ else:
     parse_status = "UNCLASSIFIED"
 ```
 
+Nota runtime: quando la risoluzione marker lascia un `info` valido, il flusso si ferma prima di `extract_signal()` e `extract_intent_entities()`. `info` non è un fallback tardivo, è una guardia iniziale.
+
 Checklist:
 
 ```text
@@ -592,6 +594,7 @@ src/parser_v2/docs/PARSER_DA_ZERO_DOCS/07_PIANO_IMPLEMENTAZIONE.md
 - UPDATE senza target hint resta UPDATE/PARSED e aggiunge warning update_without_target_hint.
 - TargetHints con reply, link, message id, explicit id, symbol o scope_hint diverso da UNKNOWN evita la warning update_without_target_hint.
 - Se non ci sono UPDATE, gli intenti REPORT producono REPORT/PARSED.
+- Se un marker `info` valido è presente, il runtime chiude il flusso su INFO prima di estrarre signal o intent.
 - Se non ci sono UPDATE o REPORT, INFO_ONLY produce INFO/PARSED.
 - Nessun signal e nessun intent utile produce INFO/UNCLASSIFIED.
 ```

@@ -5,7 +5,7 @@ from typing import Protocol
 from src.parser_v2.contracts.canonical_message import CanonicalMessage
 from src.parser_v2.contracts.context import ParserContext, TargetHints
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
-from src.parser_v2.contracts.parsed_message import ParsedIntent, SignalDraft
+from src.parser_v2.contracts.parsed_message import ParsedIntent, ParsedMessage, SignalDraft
 from src.parser_v2.contracts.rules import ParserRules, SemanticMarkers
 from src.parser_v2.core.local_disambiguator import LocalDisambiguator
 from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver
@@ -74,6 +74,17 @@ class UniversalParserRuntime:
 
         marker_matches = self._marker_matcher.match(normalized, markers)
         evidence_resolution = self._marker_evidence_resolver.resolve(marker_matches, rules)
+
+        if _has_info_marker(evidence_resolution.evidence):
+            parsed = _build_info_parsed_message(
+                parser_profile=profile.trader_code,
+                normalized=normalized,
+                context=context,
+                matched_markers=marker_matches,
+                suppressed_markers=evidence_resolution.suppressed_markers,
+                applied_marker_rules=evidence_resolution.diagnostics.get("applied_marker_rules", []),
+            )
+            return self._canonical_translator.translate(parsed)
 
         signal = profile.extract_signal(normalized, context, evidence_resolution.evidence)
         extracted_intents = profile.extract_intent_entities(
@@ -145,6 +156,66 @@ def _warnings_from_disambiguation(diagnostics: dict[str, list[str]]) -> list[str
     if "close_full_redundant_with_sl_hit" in applied_rules:
         warnings.append("close_full_redundant_with_sl_hit")
     return warnings
+
+
+def _raw_context(normalized: NormalizedText, context: ParserContext) -> RawContext:
+    if context.raw_context is not None:
+        raw = context.raw_context.model_copy(deep=True)
+        if raw.normalized_text is None:
+            raw.normalized_text = normalized.normalized_text
+        return raw
+
+    return RawContext(
+        raw_text=normalized.raw_text,
+        normalized_text=normalized.normalized_text,
+        message_id=context.message_id,
+        reply_to_message_id=context.reply_to_message_id,
+        source_chat_id=context.source_chat_id,
+        source_topic_id=context.source_topic_id,
+    )
+
+
+def _format_markers(markers: list[MarkerEvidence]) -> list[str]:
+    return [
+        f"{marker.name}/{marker.strength}:{marker.marker}@{marker.start}:{marker.end}"
+        for marker in markers
+    ]
+
+
+def _build_info_parsed_message(
+    *,
+    parser_profile: str,
+    normalized: NormalizedText,
+    context: ParserContext,
+    matched_markers: list[MarkerEvidence],
+    suppressed_markers: list[MarkerEvidence],
+    applied_marker_rules: list[str],
+) -> ParsedMessage:
+    return ParsedMessage(
+        parser_profile=parser_profile,
+        primary_class="INFO",
+        parse_status="PARSED",
+        confidence=1.0,
+        signal=None,
+        intents=[],
+        primary_intent=None,
+        evidence_status="RESOLVED",
+        target_hints=None,
+        warnings=[],
+        diagnostics={
+            "matched_markers": _format_markers(matched_markers),
+            "suppressed_markers": _format_markers(suppressed_markers),
+            "applied_marker_rules": list(applied_marker_rules),
+            "applied_disambiguation_rules": [],
+            "applied_rules": list(dict.fromkeys(applied_marker_rules)),
+            "category_scores": {},
+        },
+        raw_context=_raw_context(normalized, context),
+    )
+
+
+def _has_info_marker(evidence: list[MarkerEvidence]) -> bool:
+    return any(marker.kind == "info" for marker in evidence)
 
 
 __all__ = ["TraderParserProfile", "UniversalParserRuntime", "parse"]

@@ -166,6 +166,7 @@ automaticamente al rilevamento senza toccare codice Python.
 | Rischio | Severità | Mitigazione attuale |
 |---------|----------|---------------------|
 | Multi-ref grouping incompleto (Fase 11) | Media | Fallback PARTIAL + warning, non errore |
+| Intents duplicati sullo stesso ref | Media | `ParsedIntent` resta lista di evidenze; manca deduplica semantica per `(intent_type, ref)` prima del canonical/reporting |
 | Struttura `RANGE` non implementata in SignalExtractor | Bassa | Rara nel dataset Trader A; produce TWO_STEP |
 | Confidence signal fissa (1.0 / 0.6) | Bassa | Conservativa, non produce falsi positivi |
 | Sintassi Python 3.12 PEP 695 — da non reintrodurre | Media | Fix applicato; usare TypeVar in nuovi file |
@@ -184,13 +185,14 @@ automaticamente al rilevamento senza toccare codice Python.
 ### Media priorità (iterazione successiva)
 5. Implementare `RANGE` entry structure in `SignalExtractor`
 6. Completare multi-ref grouping in `CanonicalTranslator`
-7. Aggiungere regola `cross_intent_suppression` nel resolver per span-containment
+7. Definire e applicare deduplica semantica degli intent uguali sullo stesso ref
+8. Aggiungere regola `cross_intent_suppression` nel resolver per span-containment
    (attualmente gestita nell'extractor come workaround)
 
 ### Bassa priorità (backlog)
-8. Field-level confidence scoring per signal (ora usa 1.0 / 0.6 fisso)
-9. Docstring per `LocalDisambiguator`
-10. Valutare `InstructionUnit` se multi-ref misto diventa frequente nei dati reali
+9. Field-level confidence scoring per signal (ora usa 1.0 / 0.6 fisso)
+10. Docstring per `LocalDisambiguator`
+11. Valutare `InstructionUnit` se multi-ref misto diventa frequente nei dati reali
 
 ---
 

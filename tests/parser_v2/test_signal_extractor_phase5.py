@@ -28,6 +28,13 @@ def test_complete_signal_extracts_required_fields() -> None:
     assert signal.completeness == "COMPLETE"
 
 
+def test_symbol_with_perpetual_suffix_is_normalized() -> None:
+    signal = _extract("FARTCOINUSDT.P long entry 0.3053 sl 0.3307 tp1 0.2737")
+
+    assert signal is not None
+    assert signal.symbol == "FARTCOINUSDT"
+
+
 def test_partial_signal_without_take_profits_reports_missing_field() -> None:
     signal = _extract("ETHUSDT short entry 3450 sl 3520")
 

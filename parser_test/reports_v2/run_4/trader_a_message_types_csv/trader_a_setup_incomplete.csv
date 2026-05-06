@@ -1,0 +1,5877 @@
+﻿primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,symbol,side,entry_structure,entries_count,entries_summary,stop_loss_price,take_profit_count,take_profit_prices,risk_hint_raw,risk_hint_value,risk_hint_min_value,risk_hint_max_value,leverage_hint,missing_fields,completeness
+SIGNAL,PARTIAL,2517,23,,"[trader#2] Coin: #1000RATSUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#1000RATS has already broken out of the symmetrical triangle and is looking bullish.
+
+Entry: 0.02960 - 0.02900$ (Buy partially)
+
+Targets: 0.03040 - 0.03120 - 0.03200 - 0.03280 - 0.03450 - 0.03700$ (Short term)
+
+Stoploss: 0.02800$",0.6,,1000RATSUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0296,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2515,25,,"[trader#2] Coin: #GMXUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#GMX has already broken out of the symmetrical triangle and is looking bullish.
+
+Entry: 10.580 - 10.400$ (Buy partially)
+
+Targets: 10.800 - 11.100 - 11.400 - 11.700 - 12.400 - 12.900 - 13.500$ (Short-mid term)
+
+Stoploss: 10.200$",0.6,,GMXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@10.58,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2510,30,,"[trader#2] Coin: #XRPUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#XRP has already broken out of the cup and handle pattern and is looking bullish.
+
+Entry: 2.58 - 2.52$ (Buy partially)
+
+Targets: 2.64 - 2.70 - 2.76 - 2.82 - 2.95 - 3.055$ (Short-mid term)
+
+Stoploss: 2.4800$",0.6,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.58,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2503,37,,"[trader#2] Coin: #SEIUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#SEI already broke out of the falling wedge pattern and is looking bullish.
+
+Entry: 0.1970 - 0.1920$ (Buy partially)
+
+Targets: 0.2020 - 0.2060 - 0.2100 - 0.2160 - 0.2270 - 0.2400$ (Short term)
+
+Stoploss: 0.1880$",0.6,,SEIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.197,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2501,39,,"[trader#1] Coin: $MANAUSDT Long
+Leverage: Isolated x3
+Entry: 0.2421 - 0.2144 
+Targets: 0.2712 - 0.33 - 0.3876 - 0.5203
+SL: 0.2008",0.6,,MANAUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2421,0.2008,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2491,49,,"[trader#2] Coin: #ETHUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#ETH already broke out of the symmetrical triangle and is looking bullish.
+
+Entry: 4060 - 3960$ (Buy partially)
+
+Targets: 4150 - 4250 - 4350 - 4450 - 4600 - 4800$ (Short term)
+
+Stoploss: 3880$",0.6,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@4060.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2487,53,,"[trader#2] Coin: #UNIUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#UNI already broke out of the symmetrical triangle and is looking bullish.
+
+Entry: 6.530 - 6.400$ (Buy partially)
+
+Targets: 6.700 - 6.850 - 7.000 - 7.150 - 7.450 - 7.700 - 8.000$ (Short term)
+
+Stop-loss: 6.250$",0.6,,UNIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@6.53,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2481,59,,"[trader#2] Coin: #BNBUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#BNB has already broken out of the cup and handle pattern and is looking bullish.
+
+Entry: 1165 - 1140$ (Buy partially)
+
+Targets: 1185 - 1210 - 1235 - 1280$ (Short term)
+
+Stoploss: 1130$",0.6,,BNBUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1165.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2479,61,,"[trader#1] Coin: $SKLUSDT Long
+Leverage: ISolated x5
+Entry: 0.0210 - 0.019
+Targets: 0.02332 - 0.02739 - 0.03518 - 0.04101 - 0.04668
+SL: 0.01812",0.6,,SKLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.021,0.01812,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2478,62,,"[trader#1] $AERGO LONG HERE
+
+Longing with x5 leverage, GOING BIG 🚀
+Entry: 0.07989 
+TARGETS: 0.08834 - 0.10008 - 0.11997 - 0.13803
+SL: 0.06855",0.6,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.07989,0.06855,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2476,64,,"[trader#1] $ATAUSDT Long
+Leverage: Isolated x10
+Entry: 0.0292 - 0.0285
+Targets: 0.0304 - 0.0322 - 0.0351 - 0.0416
+SL: 0.0275",0.6,,ATAUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0292,0.0275,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2475,65,,"[trader#1] Coin: CHZUSDT Short
+Leverage: Isolated x15
+Entry: 0.03217 - 0.03263
+Targets: 0.03150 - 0.03098 - 0.03038 - 0.02976
+SL: 0.03298",0.6,,CHZUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.03217,0.03298,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2474,66,,"[trader#1] Coin: $XLMUSDT Short
+Leverage: Isolated x10
+Entry: 0.3177 - 0.3256 
+Targets: 0.3103 - 0.3021 - 0.2899 - 0.2775
+SL: 0.3322",0.6,,XLMUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.3177,0.3322,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2468,91,,"[trader#1] $CFXUSDT Short 
+Leverage: Isolated x15
+Entry: 0.1062 - 0.1080
+Targets: 0.1039 - 0.1006 - 0.0968 - 0.0920
+SL: 0.1102",0.6,,CFXUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1062,0.1102,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2467,92,,"[trader#3] 📍SIGNAL ID: #1997📍
+COIN: $BTC/USDT (3-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 105200 - 107878
+
+TARGETS: 109600 - 111500 - 114000 - 116000 - 120000 - 126000
+
+STOP LOSS: 104103
+➖➖➖➖➖➖➖",0.6,,1997USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@105200.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2466,93,,"[trader#3] 📍SIGNAL ID: #1998📍
+COIN: $ETH/USDT (2–5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+ENTRY: 3,840 – 3,870
+
+TARGETS: 3,900 – 3,950 – 4,000 – 4,150 – 4,220 – 4,300 – 4,400 – 4,480 – 4,550 – 4,625
+
+STOP LOSS: 3,600
+➖➖➖➖➖➖➖",0.6,,1998USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3.84,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2465,94,,"[trader#3] 📍SIGNAL ID: #1999📍
+COIN: $BNB/USDT (2–5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+ENTRY: 1,040 – 1,070
+
+TARGETS: 1,110 – 1,150 – 1,200 – 1,240 – 1,280 – 1,320 – 1,340 – 1,360 – 1,372 – 1,380
+
+STOP LOSS: 1,000
+➖➖➖➖➖➖➖",0.6,,1999USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.04,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2455,105,,"[trader#3] 📍SIGNAL ID: #2000📍
+COIN: $NEAR/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+ENTRY: 2.08 – 2.12
+
+TARGETS: 2.17 – 2.27 – 2.35– 2.45 – 2.65 – 2.8  – 3.0 – 3.15– 3.28 – 3.37
+
+STOP LOSS: 1.85
+➖➖➖➖➖➖➖",0.6,,2000USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.08,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2443,127,,"[trader#3] 📍SIGNAL ID: #2001📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 172 - 176.40
+
+TARGETS: 179 - 185 - 195 - 210 - 237
+
+STOP LOSS: 170.23
+➖➖➖➖➖➖➖",0.6,,2001USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@172.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2427,147,,"[trader#1] Coin: $CHZUSDT Long
+Leverage: Isolated x10
+Entry: 0.02908 - 0.028
+Targets: 0.02975 - 0.03082 - 0.03281 - 0.03562 - 0.04002
+SL: 0.02734",0.6,,CHZUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.02908,0.02734,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2424,150,,"[trader#В]
+
+$ARBUSDT - Лонг (Сделка на споте)
+
+Вход: 0.275
+
+Тейк профит: 0.363
+
+Стоп лосс: 0.2532
+
+Риск на сделку 1%, соотношение РР 1:4",1.0,,ARBUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.275,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2400,179,,"[trader#В]
+
+$LTCUSDT - Лонг (Сделка на споте)
+
+Вход: 97
+
+Тейк профит: 154
+
+Стоп лосс: 85.95
+
+Риск на сделку 2%, соотношение РР 1:5",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@97.0,,0,,Риск на сделку 2%,2.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2396,183,,"[trader#3] 📍SIGNAL ID: #2002📍
+COIN: $TAO/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 345 – 360
+
+TARGETS: 380 – 400 – 420 – 440 – 460 – 480 – 500 – 520 – 540
+
+STOP LOSS: 320
+➖➖➖➖➖➖➖",0.6,,2002USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@345.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2390,189,,"[trader#2] Coin: #HOOKUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+Entry: 0.06478 - 0.06200$(Buy partially)
+
+Targets: 0.06800 - 0.07100 - 0.07400 - 0.07800$(Short term)
+
+Stoploss: 0.06000$",0.6,,HOOKUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.06478,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2384,196,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте)
+
+Вход: 158
+
+Тейк профит: 168.5
+
+Стоп лосс: 155.1
+
+Риск на сделку 1%, соотношение РР 1:3.6",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@158.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2378,202,,"[trader#A]
+
+$LINKUSDT – Шорт 
+Вход A (сейчас): 15.239
+Усреднение B: 15.713
+
+Стоп лосс (по позиции): 16.399
+
+Тейк-профиты (среднесрок 1–4 недели):
+
+TP1: 14.183 (≈−6.9%, RR от A ≈ 1:0.9)
+TP2: 13.517 (≈−11.3%, RR от A ≈ 1:1.5)
+TP3: 12.647 (≈−17.0%, RR от A ≈ 1:2.2)
+TP4: 11.927 (≈−21.7%, RR от A ≈ 1:2.9)
+TP5: 10.839 (≈−28.9%, RR от A ≈ 1:3.8)",1.0,,LINKUSDT,SHORT,,0,,,5,14.183|13.517|12.647|11.927|10.839,,,,,,entries|stop_loss,INCOMPLETE
+SIGNAL,PARTIAL,2377,203,,"[trader#3] 📍SIGNAL ID: #2003📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 14.5 - 15.165
+
+TARGETS: 15.34 - 15.6 - 16 - 18 - 22 - 28
+
+STOP LOSS: 14.2
+➖➖➖➖➖➖➖",0.6,,2003USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@14.5,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2361,219,,"[trader#1] Longing $XVG HERE!
+
+Expecting to see a massive pump
+
+
+Leverage: Isolated x5
+Entry: 0.008104 - 0.0077
+Targets: 0.008973 - 0.010135 - 0.011467 - 0.018690
+SL: 0.006474",0.6,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.008104,0.006474,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2358,222,,"[trader#3] 📍SIGNAL ID: #2003📍
+COIN: $WLFI/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 0.12 – 0.124
+
+TARGETS: 0.130 – 0.140 – 0.150 – 0.160 – 0.170 – 0.180 – 0.190 – 0.205 – 0.223
+
+STOP LOSS: 0.11
+➖➖➖➖➖➖➖",0.6,,2003USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.12,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2357,223,,"[trader#2] Coin: #XVGUSDT
+
+Direction: Long📈
+
+Breaking out of a Cup and handle pattern on hourly timeframe, which is a bullish pattern with a good bullish candle. So just buy it and hold it for good profits. This coin is in the bottom area, so we expect a massive pump.
+
+Entry: 0.0081 - 0.0070$
+
+Targets: 0.0086 - 0.0088 - 0.0092 - 0.0094$+
+
+Stoploss: 0.0064$
+
+Buy and hold🤑",0.6,,XVGUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0081,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2352,229,,"[trader#A]
+
+COAIUSDT Шорт (вход с текущих)
+
+Вход (2-фазный):
+— Вход с текущих
+— Усреднение: 1.1843
+
+Стоп:
+— SL: 1.2769
+
+4. Тейки (среднесрок):
+— TP1: 0.8627 (Δ ≈ -19.7%, ≈ 1.04R)
+— TP2: 0.7385 (Δ ≈ -31.2%, ≈ 1.65R)
+— TP3: 0.5473 (Δ ≈ -49.0%, ≈ 2.59R)
+— TP4: 0.3829 (Δ ≈ -64.3%, ≈ 3.40R)
+— TP5: 0.2617 (Δ ≈ -75.6%, ≈ 4.00R)",1.0,,COAIUSDT,SHORT,ONE_SHOT,1,1:LIMIT:AVERAGING@1.1843,,5,0.8627|0.7385|0.5473|0.3829|0.2617,,,,,,stop_loss,INCOMPLETE
+SIGNAL,PARTIAL,2350,231,,"[trader#3] 📍SIGNAL ID: #2005📍
+COIN: $AVAX/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 17.40 – 18.00
+
+TARGETS: 18.6 – 19.6 – 21.5 – 23.50 – 25.00 – 26.50 – 28.00 – 29.00 – 31.60
+
+STOP LOSS: 15.95
+➖➖➖➖➖➖➖",0.6,,2005USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@17.4,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2345,236,,"[trader#В]
+
+$ARBUSDT - Лонг (сделка на споте)
+
+Вход: 0.3007
+
+Тейк профит: 0.316
+
+Стоп лосс: 0.2956
+
+Риск на сделку 1%, соотношение РР 1:3",1.0,,ARBUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.3007,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2342,240,,"[trader#1] Coin: $LTCUSDT Short
+Leverage: x10
+Entry: 107.11
+Targets: 104.05 - 99.71 - 94.5 - 83.53
+SL: 113.78",0.6,,LTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@107.11,113.78,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2327,260,,"[trader#1] Longing $TAC Here
+Entry: 0.005591
+Targets: 0.006016 - 0.006623 - 0.007511 - 0.008746
+SL: 0.004909",0.6,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.005591,0.004909,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2300,288,287,"На примере этого сигнала объясню как я работаю со сделкой. Делать также или нет - решение полностью ваше
+
+
+ SEIUSDT.P — ЛОНГ (с текущих). Как работать
+
+Что поставить сразу
+
+* Покупка-1: 0.1803
+* Покупка-2 (добавка, только если дадут откат): 0.1749
+* Стоп: 0.1659
+* Цели (по очереди): 0.1933 → 0.2019 → 0.2147 → 0.2289 → 0.2463
+
+Риск и плечо
+
+* На весь план — до 1% депозита, пока нет подтверждения — лучше 0.3–0.5%.
+* Плечо — не больше 5×.
+
+Объём
+
+* Делим 60% на Покупку-1 и 40% на Покупку-2.
+* Третьей добавки не бывает.
+
+Порядок действий
+
+1. Ставлю лимит на 0.1803 (60% объёма), сразу же — стоп 0.1659 и все 5 целей.
+2. Если взяли Покупку-2 — она на 40% объёма, стоп не двигаю.
+
+После первой цели
+
+* Как только сработала цель-1 (0.1933) — перевожу в безубыток
+  (чуть ниже средней цены входа) и дальше выхожу «лесенкой» по остальным целям.
+
+Если пошло против
+
+* Пробили 0.1659 — полный выход.
+  Никаких «геройств», повторных входов в этот же план — ждём новый.
+
+Запреты
+
+* Только 2 входа. Доборов «по пути» нет.
+* Стоп «в минус» не переносим. Тянем только после цели-1.",1.0,update_intents_dropped_in_signal_message,SEIUSDT.P,LONG,,0,,0.1659,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2295,293,,"[trader#A]
+
+ORDIUSDT.P — ЛОНГ (вход с текущих)
+• Вход: 5.0113 (anti)
+• Усреднение: 4.7291 (~0.8×ATR(4H) ниже)
+• Стоп: 4.4913 (ниже 4H свинга; стоп ~10%)
+• TPs:
+— 5.8613 (+17.0%, ~1.63R)
+— 6.3269 (+26.3%, ~2.53R)
+— 7.2469 (+44.6%, ~4.30R)
+— 7.9369 (+58.4%, ~5.63R)
+— 8.7869 (+75.3%, ~7.26R)",0.8,,ORDIUSDT.P,LONG,TWO_STEP,2,1:LIMIT:PRIMARY@5.0113|2:LIMIT:AVERAGING@4.7291,4.4913,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2278,313,,"[trader#3] 📍SIGNAL ID: #2006📍
+COIN: $BTC/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 100,000– 101,600
+
+TARGETS: 102,000 – 103,000 – 105,000 – 106,530 – 109,400 – 112,586  – 114,900 – 117,000 – 119,800 – 121,500 – 123,000 – 125,800
+
+STOP LOSS: 97,000
+➖➖➖➖➖➖➖",0.6,,2006USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@100.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2267,324,,"[trader#3] 📍SIGNAL ID: #2007📍
+COIN: $SUI/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 1.95 – 2.01
+
+TARGETS: 2.06 – 2.11 – 2.20 – 2.28 – 2.35 – 2.42 – 2.50 – 2.65 – 2.78– 2.89
+
+STOP LOSS: 1.83
+➖➖➖➖➖➖➖",0.6,,2007USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.95,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2266,325,,"[trader#3] 📍SIGNAL ID: #2008📍
+COIN: $ETH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 3368 - 3333
+
+TARGETS: 3410 - 3500 - 3650 - 3800
+
+STOP LOSS: 3298
+➖➖➖➖➖➖➖",0.6,,2008USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3368.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2264,327,,"[trader#3] 📍SIGNAL ID: #2009📍
+COIN: $SOL/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 147.7 – 151
+
+TARGETS: 153 – 157 – 160 – 165 – 170 – 177 – 185 – 197 – 207 – 215 – 222 – 230
+
+STOP LOSS: 139
+➖➖➖➖➖➖➖",0.6,,2009USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@147.7,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2236,355,354,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 98
+
+Тейк профит: 115
+
+Стоп лосс: 93.2
+
+Риск на сделку 1%, соотношение РР 1:3.5",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@98.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2208,386,,"[trader#1] $BNBUSDT Long
+Leverage: Isolated x10
+Entry: 937.63 - 901.69
+Targets: 969 - 1011 - 1085 - 1186
+SL: 868.54",0.6,,BNBUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@937.63,868.54,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2207,387,,"[trader#1] Coin: CHZUSDT Short
+Leverage: Isolated x10
+Entry: 0.03155 - 0.03232
+Targets: 0.03092 - 0.03 - 0.02864
+SL: 0.03325",0.6,,CHZUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.03155,0.03325,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2202,392,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 95555
+
+Тейк профит: 97500
+
+Стоп лосс: 94840
+
+Риск на сделку выходит менее 1% - так как сделала на споте(т.е. заходить можно всем объемом, и тем самым риск будет менее 1%), потенциальная прибыль 2%
+
+Соотношение РР 1:2.7",1.0,update_intents_dropped_in_signal_message,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@95555.0,,0,,на сделку выходит менее 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2201,393,,"[trader#3] 📍SIGNAL ID: #2010📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 15.129 - 15.685
+
+TARGETS: 15.95 - 16.2 - 17 - 20 - 23  -28
+
+STOP LOSS: 14.814
+➖➖➖➖➖➖➖",0.6,,2010USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@15.129,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2189,412,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 13.40 – 13.95
+
+TARGETS: 14.50 – 15.20 – 16.00 – 17.20 – 18.50 – 19.80 – 21.00 – 22.30 – 23.50 – 24.47
+
+STOP LOSS: 12.5
+➖➖➖➖➖➖➖",0.6,,2011USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@13.4,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2187,414,,"[trader#1] Coin: $GNO Long
+Leverage: Isolated x10
+Entry: 128.73
+Targets: 132.04 - 137.10 - 142.93 - 153.85
+SL: 122.18",0.6,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@128.73,122.18,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2179,426,,"[trader#3] 📍SIGNAL ID: #2012📍
+COIN: $SOL/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Back above the horizontal support. Chances of a rebound.
+
+ENTRY: 126 - 130.20
+
+TARGETS: 132 - 135 - 140 - 150 - 175 - 200
+
+STOP LOSS: 124.74
+➖➖➖➖➖➖➖",0.6,,2012USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@126.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2167,445,,"[trader#1] Coin: $SYSUSDT Long
+Leverage: Isolated x5
+Entry: 0.069 - 0.06
+Targets: 0.072 - 0.0817 - 0.0909 - 0.11 - 0.1619
+SL: 0.0567",0.6,,SYSUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.069,0.0567,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2164,448,,"[trader#1] SYN IS THE COIN WE ARE LONGING,
+
+Coin: $SYNUSDT Long
+Leverage: Isolated x5
+Entry: 0.069 - 0.06
+Targets: 0.072 - 0.0817 - 0.0909 - 0.11 - 0.1619
+SL: 0.0567",0.6,,SYNUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.069,0.0567,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2161,451,,"[trader#3] 📍SIGNAL ID: #2013📍
+COIN: $XRP/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 2.15 – 2.188
+
+TARGETS: 2.225 – 2.25 – 2.35 – 2.46 – 2.54 – 2.62 – 2.70 – 2.78 – 2.86 – 3.00
+
+STOP LOSS: 2.02
+➖➖➖➖➖➖➖",0.6,,2013USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.15,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2156,456,,"[trader#1] Longing $OBOL Here
+Leverage: Isolated x10
+Entry: 0.0832 - 0.07
+Targets: 0.0891 - 0.1 - 0.1298 - 0.1593
+SL: 0.0658",0.6,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0832,0.0658,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2150,468,,"[trader#3] 📍SIGNAL ID: #2014📍
+COIN: $ETH/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Reached the S/R level. Chances of a bounce from this support.
+
+ENTRY: 2800 - 2880
+
+TARGETS: 2920 - 3000 - 3180 - 3500 - 3843
+
+STOP LOSS: 2753
+➖➖➖➖➖➖➖",0.6,,2014USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2800.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2145,475,,"[trader#В]
+
+$NEARUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.3
+
+Тейк профит: 3.8
+
+Стоп лосс: 2.178
+
+Риск на сделку 1%, соотношение РР 1:12.3",1.0,,NEARUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.3,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2130,495,,"[trader#3] 📍SIGNAL ID: #2015📍
+COIN: $BTC/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Reached the order block zone.
+
+ENTRY: 83700 - 86300
+
+TARGETS: 88000 - 90000 - 93000 - 97000 - 102000 - 107482
+
+STOP LOSS: 82846
+➖➖➖➖➖➖➖",0.6,,2015USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@83700.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2126,502,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 120 - 127.28
+
+TARGETS: 129.5 - 132 - 139 - 148 - 180 - 200 - 220
+
+STOP LOSS: 117.87
+➖➖➖➖➖➖➖",0.6,,2016USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@120.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2115,524,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 11.45 - 11.79
+
+TARGETS: 12 - 12.3 - 12.8 - 13.5 - 15 - 17 - 19
+
+STOP LOSS: 11.281
+➖➖➖➖➖➖➖",0.6,,2017USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@11.45,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2111,534,,"[trader#3] 📍SIGNAL ID: #2018📍
+COIN: $LTC/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 80.5 – 82
+
+TARGETS: 82.73 – 84 – 88 – 92 – 97.7 – 101.5 – 105.4 – 109.1 – 113.0 – 116.7
+
+STOP LOSS: 75.1
+➖➖➖➖➖➖➖",0.6,,2018USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@80.5,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2110,535,,"[trader#1] $ETCUSDT Long
+Leverage: Isolated x10
+Entry: 13.47 - 13.21
+Targets: 13.71 - 14.03 - 14.45 - 15.58
+SL: 13.02",0.6,,ETCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@13.47,13.02,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2094,562,,"[trader#1] Coin: $AAVEUSDT 
+Short
+Leverage: Isolated x10
+Entry: 170.14 - 177
+Targets: 165.69 - 161.05 - 153.90 - 142.86
+SL: 181.44",0.6,,AAVEUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@170.14,181.44,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2093,563,,"[trader#1] Coin: ZRXUSDT Short
+Leverage: Isolated x10
+Entry: 0.1524 - 0.1580
+Targets: 0.1495 - 0.1460 - 0.1410 - 0.1349
+SL: 0.1606",0.6,,ZRXUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1524,0.1606,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2078,582,,"[trader#2] Coin: #SOLUSDT
+
+Direction: Long
+
+Leverage: 5-10x
+
+#SOL has already broken out of the Falling Wedge pattern and is looking bullish.
+
+Entry: 139 - 134$ (Buy partially)
+
+Targets: 143 - 146 - 149 - 152 - 160$ (Short term)
+
+Stop-loss: 130$",0.6,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@139.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2061,623,,"[trader#3] 📍SIGNAL ID: #2019📍
+COIN: $NEAR/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 1.86 – 1.94
+
+TARGETS: 2.00 – 2.10 – 2.24 – 2.36 – 2.48 – 2.60 – 2.72 – 2.84 – 2.96 – 3.10
+
+STOP LOSS: 1.71
+➖➖➖➖➖➖➖",0.6,,2019USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.86,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2059,631,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 875 – 893
+
+TARGETS: 910 – 940 – 978 – 1,000 – 1,030 – 1,070 – 1,100– 1,150 – 1,220 – 1,275
+
+STOP LOSS: 810
+➖➖➖➖➖➖➖",0.6,,2020USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@875.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2052,640,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 875 – 890
+
+TARGETS: 910 – 940 – 978 – 1,000 – 1,030 – 1,070 – 1,100– 1,150 – 1,220 – 1,275
+
+STOP LOSS: 810
+➖➖➖➖➖➖➖",0.6,,2020USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@875.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2043,658,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 140.4
+
+Тейк профит: 145.76
+
+Стоп лосс: 138.95
+
+Риск на сделку 1%, соотношение РР 1:3.7",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@140.4,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2036,671,,"[trader#3] 📍SIGNAL ID: #2021📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.97 - 6.15
+
+TARGETS: 6.27 - 6.4 - 6.8 - 7.5 - 8.3 - 9.3 - 10.3
+
+STOP LOSS: 5.84
+➖➖➖➖➖➖➖",0.6,,2021USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@5.97,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2031,676,,"[trader#1] Coin: $CTKUSDT Short
+Leverage: Isolated x10
+Entry: 0.2472 - 0.2498
+Targets: 0.2427 - 0.2372 - 0.2293 - 0.2217
+SL: 0.2553",0.6,,CTKUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2472,0.2553,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,2026,686,,"[trader#A]
+
+🎈MLNUSDT 
+
+Вход (spot): 5.83000000
+Стоп:       5.22821429  (−10.3%)
+
+🎯 Тейки:
+— TP1: 7.28750000  (+25.0%, ~2.4R)
+— TP2: 8.74500000  (+50.0%, ~4.8R)
+— TP3: 11.66000000  (+100.0%, ~9.7R)
+
+Экспериментальная сделка. Вход не более 0.3% от депозита. 
+
+Исключительно спот",1.0,,MLNUSDT,,,0,,5.22821429,3,7.2875|8.745|11.66,Вход не более 0.3%,0.3,,,,side|entries,INCOMPLETE
+SIGNAL,PARTIAL,2023,690,,"[trader#1] Coin: MANAUSDT Short
+Leverage: Isolated x10
+Entry: 0.1638 - 0.1666
+Targets: 0.1606 - 0.1546 - 0.1466 - 0.1223
+SL: 0.1715",0.6,,MANAUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1638,0.1715,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1997,727,,"[trader#1] $CHESSUSDT IS GOING BIG REAL QUICK
+LONGING, LEVERAGE: X5 OR SPOT
+Entry: 0.04692 - 0.042
+Targets: 0.05197 - 0.05760 - 0.06457 - 0.08330
+SL: 0.03895",0.6,,CHESSUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.04692,0.03895,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1988,739,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Reaching the support zone, where a potential double-bottom formation is expected.
+
+ENTRY: 2600 - 2725
+
+TARGETS: 2780 - 2850 - 2950 - 3150 - 3300 - 3660
+
+STOP LOSS: 2598
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2022USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2600.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1979,748,,"[trader#A]
+
+за ноябрь осталось два сигнала, которые еще не взяли, минимум, 1 тейк или стоп:
+1. https://t.me/c/3171748254/686 p.s. стоп был, почему-то установил у себя другой стоп... -10.3%, но так как вход был на 0.3%, минус не должен был быть сильно неприятным
+2. https://t.me/c/3171748254/569",1.0,,,,,0,,1.0,0,,вход был на 0.3%,0.3,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1976,752,,"[trader#В]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.357
+
+Тейк профит: 1.42
+
+Стоп лосс: 1.336
+
+Риск на сделку 1%, соотношение РР 1:3",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.357,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1954,781,,"[trader#1] Coin: $BDXNUSDT Long
+Leverage: Isolated x10
+Entry: 0.05204 - 0.04700
+Targets: 0.05845 - 0.06565 - 0.07716 - 0.10341
+SL: 0.04372",0.6,,BDXNUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.05204,0.04372,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1953,782,,"[trader#2] Coin: #BDXNUSDT
+
+Direction: Long📈
+
+Leverage: 10x
+
+It has already broken out of the Falling Wedge pattern on the 4-hour timeframe and also closed, which is a bullish sign. So, add a bag of #BDXN for good long-term profits.
+
+Entry: 0.053 - $0.045
+
+Target: $0.060 - $0.065 - $0.070 - $0.075+
+
+Stop-loss: $0.038
+
+Buy and hold🤑",0.6,,BDXNUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.053,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1952,783,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 139.9
+
+Тейк профит: 146
+
+Стоп лосс: 137.9
+
+Риск на сделку 1%, соотношение РР 1:3",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@139.9,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1944,794,,"[trader#3] 📍SIGNAL ID: #2023📍
+COIN: $TRX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Completed the bullish bat pattern.
+
+ENTRY: 0.272 - 0.28
+
+TARGETS: 0.283 - 0.288 - 0.295 - 0.31 - 0.33 - 0.37
+
+STOP LOSS: 0.268
+➖➖➖➖➖➖➖",0.6,,2023USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.272,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1940,798,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 141.1
+
+Тейк профит: 146.3
+
+Стоп лосс: 140.05
+
+Риск на сделку менее 1%, потенциальная прибыль 3.6%
+Соотношение ≈ РР 1:5",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@141.1,,0,,Риск на сделку менее 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1920,825,,"[trader#3] 📍SIGNAL ID: #2024📍
+COIN: $BDXN/USDT (3-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Completed bottomed out and getting ready for a massive bullish rally 🚀
+
+Entry: Below 0.027
+
+Targets: 0.029 - 0.033 - 0.039 - 0.043 - 0.050 - 0.069 - 0.084 - 0.15 - 0.30 - 0.45 - 0.75
+
+SL: 0.019
+
+You can also buy on spot in exchanges like bybit, bitget, mexc and gate.
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2024USDT,LONG,,0,,0.019,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1915,830,,"[trader#В]
+
+$TONUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.533
+
+Тейк профит: 1.735
+
+Стоп лосс: 1.485
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",1.0,,TONUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.533,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1914,831,,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 80.5
+
+Тейк профит: 97.55
+
+Стоп лосс: 75
+
+Риск на сделку 1%
+Соотношение РР 1:3.1",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@80.5,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1912,833,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.369 - 0.38
+
+TARGETS: 0.386 - 0.393 - 0.40 - 0.42 - 0.45 - 0.50 - 0.55
+
+STOP LOSS: 0.361
+➖➖➖➖➖➖➖",0.6,,2025USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.369,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1909,836,,"[trader#1] $BTCUSDT Long
+Leverage: Isolated x10
+Entry: 89590 - 85000
+Targets: 92,780 - 96,624 - 103,737 - 116,259
+SL: 83,501",0.6,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@89590.0,83.501,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1907,840,,"[trader#3] 📍SIGNAL ID: #2026📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY:  1.996 - 2.032
+
+TARGETS: 2.064 - 2.1 - 2.2 - 2.35 - 2.45 - 2.60
+
+STOP LOSS: 1.9623
+➖➖➖➖➖➖➖",0.6,,2026USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.996,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1903,846,,"[trader#В]
+
+$APTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.705
+
+Тейк профит: 1.78
+
+Стоп лосс: 1.675
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,APTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.705,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1897,852,,"[trader#В]
+
+$TWTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.009
+
+Тейк профит: 1.1135
+
+Стоп лосс: 0.9841
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",1.0,,TWTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.009,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1896,853,,"[trader#В]
+
+$ICPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3.475
+
+Тейк профит: 4.515
+
+Стоп лосс: 3.345
+
+Риск на сделку 1%
+Соотношение РР 1:8",1.0,,ICPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3.475,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1890,859,,"[trader#В]
+
+$ATOMUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.235
+
+Тейк профит: 2.572
+
+Стоп лосс: 2.155
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",1.0,,ATOMUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.235,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1883,869,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3125
+
+Тейк профит: 3260.5
+
+Стоп лосс: 3092
+
+Риск на сделку 1%
+Соотношение РР 1:4.1",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3125.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1870,894,,"[trader#3] 📍SIGNAL ID: #2027📍
+COIN: $JUP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2244 - 0.2318
+
+TARGETS: 0.235 - 0.238 - 0.243 - 0.252 - 0.26 - 0.28 - 0.30
+
+STOP LOSS: 0.2211
+➖➖➖➖➖➖➖",0.6,,2027USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2244,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1868,896,,"[trader#В]
+
+$TWTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.002
+
+Тейк профит: 1.1123
+
+Стоп лосс: 0.978
+
+Риск на сделку 1%
+Соотношение РР 1:4.6",1.0,,TWTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.002,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1860,906,,"[trader#3] 📍SIGNAL ID: #2028📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.27 - 0.2747
+
+TARGETS: 0.279 - 0.29 - 0.30 - 0.315 - 0.33 - 0.36
+
+STOP LOSS: 0.2665
+➖➖➖➖➖➖➖",0.6,,2028USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.27,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1857,910,,"[trader#1] Coin: $SUIUSDT Long
+Leverage: Isolated x10
+Entry: 1.5512 - 1.4861
+Targets: 1.5977 - 1.6573 - 1.7356 - 1.8517
+SL: 1.4469",0.6,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.5512,1.4469,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1856,911,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 92370
+
+Тейк профит: 96350
+
+Стоп лосс: 91450
+
+Риск на сделку 1%
+Соотношение РР 1:4.3",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@92370.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1850,920,,"[trader#3] 📍SIGNAL ID: #2029📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2422 - 0.247
+
+TARGETS: 0.251 - 0.256 - 0.265 - 0.280 - 0.2934
+
+STOP LOSS: 0.239
+➖➖➖➖➖➖➖",0.6,,2029USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2422,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1844,930,,"[trader#1] Free Signal: CTKUSDT Long
+Leverage: Isolated x10
+Entry: 0.2507
+Target 1: 0.2570 - 0.2690  - 0.2827 - 0.3072 - 0.3363
+SL: 0.2385",0.6,,CTKUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2507,0.2385,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1843,931,,"[trader#1] Coin: $APTUSDT Long
+Leverage: Isolated X10
+Entry: 1.701 - 1.611
+Targets: 1.753 - 1.804 - 1.916 - 2.404
+SL: 1.564",0.6,,APTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.701,1.564,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1841,935,,"[trader#3] 📍SIGNAL ID: #2030📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 0.13362 - 0.13651
+
+TARGETS: 0.139 - 0.142 - 0.147 - 0.155 - 0.165 - 0.186
+
+STOP LOSS: 0.13128
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2030USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.13362,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1839,938,,"[trader#1] Coin: ADAUSDT Short
+Leverage: Isolated x20
+Entry: 0.399
+Target 1: 0.3887 
+Target 2: 0.3760
+Target 3: 0.3588
+Target 4: 0.3392
+SL: 0.4314",0.6,,ADAUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.399,0.4314,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1838,939,,"[trader#1] Coin: APEUSDT Short
+Leverage: Isolated x10
+Entry: 0.2234 - 0.2380
+Target 1: 0.2162
+Target 2: 0.2041
+Target 3: 0.1904
+Target 4: 0.1562
+SL: 0.2416",0.6,,APEUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2234,0.2416,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1832,947,,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 79.5
+
+Тейк профит: 88.5
+
+Стоп лосс: 78
+
+Риск на сделку 1%
+Соотношение РР 1:6",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@79.5,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1822,961,,"[trader#3] 📍SIGNAL ID: #2031📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 1.88 - 1.913
+
+TARGETS: 1.94 - 1.98 - 2 - 2.1 - 2.32
+
+STOP LOSS: 1.86
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2031USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.88,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1799,987,,"[trader#1] Coin: BCHUSDT Long
+Leverage: Isolated x5
+Entry 1: 547.7
+Entry 2: 506.8
+Target 1: 579.8
+Target 2: 604.8
+Target 3: 811.6
+SL: 484",0.6,,BCHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,484.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1798,988,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2940
+
+Тейк профит: 3028.5
+
+Стоп лосс: 2913
+
+Риск на сделку 1%, потенциальная прибыль 3%
+Соотношение РР 1:3.3",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2940.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1797,990,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 404
+
+Тейк профит: 419.2
+
+Стоп лосс: 396.4
+
+Риск на сделку 1%
+Соотношение РР 1:2",1.0,,ZECUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@404.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1793,996,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 392.5
+
+Тейк профит: 420
+
+Стоп лосс: 387
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,ZECUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@392.5,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1792,997,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2945
+
+Тейк профит: 3025.5
+
+Стоп лосс: 2918.5
+
+Риск на сделку 1%
+Соотношение РР 1:3 (потенциальная прибыль 2.7%)",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2945.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1790,1000,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 398.15
+
+Тейк профит: 420
+
+Стоп лосс: 394
+
+Риск на сделку 1%
+Соотношение РР ≈1:5.3
+
+UPD: -1%",1.0,,ZECUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@398.15,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1786,1006,,"[trader#3] 📍SIGNAL ID: #2032📍
+COIN: $LTC/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY:  74.63 - 76.2
+
+TARGETS: 77.2 - 78.5 - 82 - 88 - 100 - 113
+
+STOP LOSS: 73.05
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2032USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@74.63,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1782,1011,,"[trader#1] Coin: AVAXUSDT Short
+Leverage: Isolated x10
+Entry 1: 11.711
+Entry 2: 12
+Target 1: 11.343
+Target 2: 10.804
+Target 3: 9.999
+SL: 12.421",0.6,,AVAXUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,12.421,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1770,1025,,"[trader#2] Coin: #PEOPLEUSDT
+
+Direction: Short
+
+Leverage: 5-10x
+
+#PEOPLE has already broken down the Descending Triangle and is looking bearish.
+
+Entry: 0.00820 - 0.00900$ (Enter partially)
+
+Targets: 0.00780 - 0.00740 - 0.00700 - 0.00660 - 0.00600 - 0.00560 - 0.00500$ (Short-mid term)
+
+Stoploss: 0.00950$",0.6,,PEOPLEUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0082,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1765,1032,,"[trader#2] Coin: #USTCUSDT
+
+Direction: Short
+
+Leverage: 5-10x
+
+#USTC has already broken down the symmetrical triangle and is looking bearish.
+
+Entry: 0.006945 - 0.007100$ (Enter partially)
+
+Targets: 0.006800 - 0.006650 - 0.006500 - 0.006300 - 0.006000 - 0.005600$ (Short term)
+
+Stop-loss: 0.007250$",0.6,,USTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.006945,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1759,1039,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 400
+
+Тейк профит: 420
+
+Стоп лосс: 396
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,ZECUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@400.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1754,1045,,"[trader#3] 📍SIGNAL ID: #2033📍
+COIN: $SUI/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+ENTRY: 1.4675 - 1.43
+
+TARGETS: 1.4072 - 1.38 - 1.34 - 1.29 - 1.22
+
+STOP LOSS: 1.4954
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2033USDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1.4675,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1752,1048,,"[trader#3] 📍SIGNAL ID: #2034📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 0.196 - 0.203
+
+TARGETS: 0.206 - 0.21 - 0.22 - 0.23 - 0.245 - 0.264
+
+STOP LOSS: 0.1903
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2034USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.196,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1749,1054,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход с текущих (88000-87900) 
+
+Stop 88450.  1% деп
+
+Tейк-профит:
+1) 87100 (RR - 1:2)
+
+2) 86500 (RR - 1:3)
+
+3) 86000",1.0,,BTCUSDT,SHORT,,0,,88450.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1743,1062,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимиткой 
+
+1)88650(1/3)
+2)89100(2/3)
+
+Stop 89450.  1% деп
+
+Tейк-профит 
+
+1)87500(RR - 1:2)
+
+ 2)86800(RR - 1:3)
+
+ 3)85800",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,89450.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1735,1075,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2991
+
+Тейк профит: 3051
+
+Стоп лосс: 2974
+
+Риск на сделку 0.6%
+Потенциальная прибыль 2%
+Соотношение РР 1:3.5",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2991.0,,0,,Риск на сделку 0.6%,0.6,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1734,1076,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 126.15
+
+Тейк профит: 129.31
+
+Стоп лосс: 125.52
+
+Риск на сделку 0.5%
+Потенциальная прибыль 2.5%
+Соотношение РР 1:5",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@126.15,,0,,Риск на сделку 0.5%,0.5,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1732,1078,,"[trader#С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,519(1/3)
+2)0,508(2/3)
+
+Stop 0,498.  1% деп
+
+Tейк-профит 
+
+1)0,539(RR1-1)
+
+ 2)0,56(RR1-2)
+
+ 3)0,582(RR1-3)",1.0,,LDOUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.498,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1731,1079,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0675(1/3)
+2)0,066(2/3)
+
+Stop 0,065.  1% деп
+
+Tейк-профит 
+
+1)0,0698(RR1-1)
+
+ 2)0,0072(RR1-2)
+
+ 3)0,075(RR1-3)",1.0,,CFXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.065,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1721,1094,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход лимиткой 
+
+1)87650(1/3)
+2)87150(2/3)
+
+Stop 86700.  1% деп
+
+Tейк-профит 
+
+1)88300(RR1-2)
+
+ 2)89000(RR1-3)
+
+ 3)90500",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,86700.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1720,1095,," [trader#С]
+
+$BTCUSDT - LONG
+
+Вход с текущих (88000 +-100)
+
+Stop 87700.  1%деп
+
+Tейк-профит 
+
+1) 88600(RR1-2)
+
+ 2)88950 (RR1-3)
+
+ 3)89555-90",1.0,,BTCUSDT,LONG,,0,,87700.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1717,1100,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125.9
+
+Тейк профит: 129.7
+
+Стоп лосс: 124.8
+
+Риск на сделку 1%
+Потенциальная прибыль 3%
+Соотношение РР 1:3.45",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@125.9,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1716,1102,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 88435
+
+Тейк профит: 90205
+
+Стоп лосс: 88055
+
+Риск на сделку 0.5%
+Потенциальная прибыль 2%
+Соотношение РР 1:4.66",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@88435.0,,0,,Риск на сделку 0.5%,0.5,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1713,1107,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125(+- по текущим)
+
+Тейк профит: 129.4
+
+Стоп лосс: 124
+
+Риск на сделку 0.8%
+Потенциальная прибыль 3.5%",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@125.0,,0,,Риск на сделку 0.8%,0.8,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1706,1117,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125.15
+
+Тейк профит: 129.32
+
+Стоп лосс: 124.92
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@125.15,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1705,1118,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 77.8 (+- по текущим)
+
+Тейк профит: 88
+
+Стоп лосс: 75.8
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@77.8,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1702,1121,,"[trader#С]
+
+$SNXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,4(1/3)
+2)0,393(2/3)
+
+Stop 0,381.  1% деп
+
+Tейк-профит 
+
+1)0,419(RR1-1)
+
+ 2)0,435(RR1-2)
+
+ 3)0,45+(RR1-3)",1.0,,SNXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.381,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1701,1122,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0677(1/3)
+2)0,0662(2/3)
+
+Stop 0,065.  1% деп
+
+Tейк-профит 
+
+1)0,071(RR1-1)
+
+ 2)0,075(RR1-2)
+
+ 3)0,078(RR1-3)",1.0,,CFXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.065,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1698,1125,,"[trader#3] 📍SIGNAL ID: #2035📍
+COIN: $LTC/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+Facing horizontal and the EMA 200 resistance. Risky scalp take it with low leverage.
+
+ENTRY: 79.3 - 77.73
+
+TARGETS: 76.5 - 75 - 73 - 70 - 67
+
+STOP LOSS: 80.46
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,2035USDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@79.3,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1697,1127,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 126.5
+
+Тейк профит: 129.67
+
+Стоп лосс: 125.5
+
+Риск на сделку 0.8%
+Потенциальная прибыль 2.5%
+
+Ps: Либо я его, либо он меня",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@126.5,,0,,Риск на сделку 0.8%,0.8,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1681,1151,,"[trader#С]
+
+$BTCUSDT - LONG
+
+Вход с текущих (88000-88100)
+
+Stop 87800.  1%деп
+
+Tейк-профит 
+
+1) 88500(RR1-2)
+
+ 2)88850(RR1-3)
+
+ 3)89500",1.0,,BTCUSDT,LONG,,0,,87800.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1677,1156,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.218 - 0.223
+
+TARGETS: 0.2266 - 0.23 - 0.24 - 0.26 - 0.28 - 0.31
+
+STOP LOSS: 0.2134
+➖➖➖➖➖➖➖",0.6,,2036USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.218,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1673,1161,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход лимиткой 
+
+1)86710(1/3)
+2)85950(2/3)
+
+Stop 85600.  1% деп
+
+Tейк-профит 
+
+1)87709(RR1-1)
+
+ 2)88800(RR1-2)
+
+ 3)90600",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,85600.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1665,1175,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход с текущих (86700-800)
+
+Stop 86300. 1%деп
+
+Tейк-профит 
+
+1) 87500. (RR1-1,5)
+
+2) 88000. (RR1-2,4)
+
+3) 89000. (RR1-4)
+
+4)90600",1.0,,BTSUSDT,LONG,,0,,86300.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1662,1179,,"[trader#3] 📍SIGNAL ID: #2037 📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.4735 - 0.4750
+
+TARGETS: 0.49 - 0.51 - 0.535 - 0.56 - 0.58 - 0.61 - 0 .65  
+
+STOP LOSS: 0.46
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2037USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.4735,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1661,1181,,"[trader#B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 87400
+
+Тейк профит: 90900
+
+Стоп лосс: 86525
+
+Риск на сделку 1%
+Соотношение РР 1:4
+
+Upd: БУ",1.0,update_intents_dropped_in_signal_message,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@87400.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1653,1197,,"[trader#3] 📍SIGNAL ID: #2038📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3470 - 0.3480
+
+TARGETS: 0.35 - 0.352 - 0.355 - 0.36 - 0.37 - 0.38 - 0.40  
+
+STOP LOSS: 0.3430
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2038USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.347,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1649,1202,,"[trader#1] Coin: $AVAXUSDT Long
+Leverage: Isolated x30
+Entry: 12.426
+Targets: 12.492 - 12.635 - 12.859
+SL: 12.284",0.6,,AVAXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@12.426,12.284,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1645,1207,,"[trader#3] 📍SIGNAL ID: #2039📍
+COIN: $ARB/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Breakout the triangle after a good consolidation.
+
+ENTRY: 0.1877 - 0.1913
+
+TARGETS: 0.1942 - 0.198 - 0.205 - 0.22 - 0.23
+
+STOP LOSS: 0.1854
+➖➖➖➖➖➖➖",0.6,,2039USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1877,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1642,1214,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход с текущих (2920-8)
+
+Stop 2915. 1%деп
+
+Tейк-профит 
+
+1)2945. (RR1-1,5)
+
+2)2960.  (RR1-3)
+
+3)2970
+
+4)2990",1.0,,ETHUSDT,LONG,,0,,2915.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1639,1217,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход с лимиткой 
+
+2910 (1/3)
+2900 (2/3)
+
+Stop 2890. 1%деп
+
+Tейк-профит 
+
+1)2930. (RR1-1,5)
+
+2)2940.  (RR1-2)
+
+3)2960
+
+4)2990",1.0,,ETHUSDT,LONG,,0,,2890.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1636,1221,,"[trader#3] 📍SIGNAL ID: #2040📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Key reaction zone.
+
+ENTRY: 0.2100 - 0.2110
+
+TARGETS: 0.2130 - 0.2160 - 0.2200 - 0.2260 - 0.2325 - 0.2400
+
+STOP LOSS: 0.2060
+➖➖➖➖➖➖➖",0.6,,2040USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.21,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1635,1224,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход с текущих (87400-450)
+
+Stop 87200. 1%деп
+
+Tейк-профит 
+
+1) 87950. (RR1-2)
+
+2) 88500. (RR1-3)
+
+3) 89000
+
+4)90600",1.0,,BTCUSDT,LONG,,0,,87200.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1634,1225,,"[trader#B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.405
+
+Тейк профит: 1.4335
+
+Стоп лосс: 1.394
+
+Риск на сделку 0.8%
+Потенциальная прибыль 2%",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.405,,0,,Риск на сделку 0.8%,0.8,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1632,1228,,"[trader#B]
+
+$NEARUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.539
+
+Тейк профит: 1.59
+
+Стоп лосс: 1.524
+
+Риск на сделку 1%
+Соотношение РР 1:3.3",1.0,,NEARUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.539,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1626,1238,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 618.8
+
+Тейк профит: 634.3
+
+Стоп лосс: 612.7
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,BCHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@618.8,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1616,1248,,"[trader#3] 📍SIGNAL ID: #2041📍
+COIN: $DOT/USDT (2-5x)  
+Direction: SHORT
+➖➖➖➖➖➖➖  
+Getting rejected from the S/R level.
+
+ENTRY: 1.94 - 1.887
+
+TARGETS: 1.86 - 1.83 - 1.80 - 1.75 - 1.70 - 1.54
+
+STOP LOSS: 1.983
+➖➖➖➖➖➖➖",0.6,,2041USDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1.94,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1603,1274,,"[trader#B]
+
+$ZROUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.264
+
+Тейк профит: 1.381
+
+Стоп лосс: 1.238
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,ZROUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.264,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1602,1275,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход с текущих (90100-200) 
+
+Stop 90400.  1% деп
+
+Tейк-профит 
+
+1)89605(RR1-1)
+
+ 2)89200(RR1-2)
+
+ 3)88400(RR1-4)
+
+4)87000",1.0,,BTCUSDT,SHORT,,0,,90400.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1597,1281,,"[trader#3] 📍SIGNAL ID: #2042📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 12.3 - 12.71
+
+TARGETS: 12.9 - 13.1 - 13.5 - 14 - 15 - 16
+
+STOP LOSS: 12.109
+➖➖➖➖➖➖➖",0.6,,2042USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@12.3,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1592,1288,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход с текущих (87550-450)
+
+Stop 87222. 1%деп
+
+Tейк-профит 
+
+1) 87830. (RR1-1)
+
+2) 88150. (RR1-2)
+
+3) 88550. (RR1-3)
+
+4)90600",1.0,,BTSUSDT,LONG,,0,,87222.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1577,1321,,"[trader#B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.869
+
+Тейк профит: 2.31
+
+Стоп лосс: 1.814
+
+Риск на сделку 1%
+Соотношение РР 1:8",1.0,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.869,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1575,1323,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 595
+
+Тейк профит: 640
+
+Стоп лосс: 586
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,BCHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@595.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1574,1327,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  89600-700
+
+Stop 89900.  1% деп
+
+Tейк-профит 
+
+1)89000(RR1-2)
+
+ 2)88700(RR1-3)
+
+ 3)88000
+
+4)86600",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@89600.0,89900.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1573,1328,1327,"На байбит стоп 89950!!!!!!
+ [trader #C]",0.6,,,,,0,,89950.0,0,,,,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1564,1340,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  90500-600
+
+Stop 91000.  1% деп
+
+Tейк-профит 
+
+1)89800(RR1-2)
+
+ 2)89400(RR1-3)
+
+ 3)88600
+
+4)86600",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@90500.0,91000.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1554,1355,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте ⭐️)
+
+Вход: 632
+
+Тейк профит: 651.6
+
+Стоп лосс: 626.3
+
+Риск на сделку 1%
+Соотношение РР 1:3.1",1.0,,BCHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@632.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1547,1364,,"[trader#3] 📍SIGNAL ID: #2043📍
+COIN: $LTC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 80 - 80.20
+
+TARGETS: 84 - 89 - 95 - 102 - 108 - 115
+
+STOP LOSS: 75
+➖➖➖➖➖➖➖",0.6,,2043USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@80.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1543,1368,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 81.95
+
+Тейк профит: 87.95
+
+Стоп лосс: 80.77
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@81.95,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1541,1372,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  91500-600
+
+Stop 91800  1% деп
+
+Tейк-профит 
+
+1)91000(RR1-2)
+
+ 2)90700(RR1-3)
+
+ 3)90200
+
+4)88800",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@91500.0,91800.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1535,1382,,"[trader#3] 📍SIGNAL ID: #2044📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2280 - 0.23
+
+TARGETS: 0.235 - 0.245 - 0.26 - 0.28 - 0.30 - 0.32 - 0.34
+
+STOP LOSS: 0.22
+➖➖➖➖➖➖➖",0.6,,2044USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.228,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1533,1386,,"[trader#3] 📍SIGNAL ID: #2045📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.58 - 5.605
+
+TARGETS: 5.75 - 6.00 - 6.50 - 7.00 - 7.50 - 8.00
+
+STOP LOSS: 5.30
+
+Previous resistance is now acting as support.
+➖➖➖➖➖➖➖",0.6,,2045USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@5.58,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1530,1390,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  92850-950
+
+Stop 93400  1% деп
+
+Tейк-профит 
+
+1)92300(RR1-1)
+
+ 2)91700(RR1-2)
+
+ 3)91000
+
+4)90000",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@92850.0,93400.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1526,1394,,"[trader#B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 92850
+
+Тейк профит: 94740
+
+Стоп лосс: 92320
+
+Риск на сделку 0.6%
+Потенциальная прибыль 2%",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@92850.0,,0,,Риск на сделку 0.6%,0.6,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1520,1406,,"[trader#3] 📍SIGNAL ID: #2046 📍
+COIN: $ZEC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 470 - 480
+
+TARGETS: 500 - 530 - 570 - 625 - 680 - 750   
+
+STOP LOSS: 440
+
+Multiple resistance zones and a rising trend line from the lows.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2046USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@470.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1519,1407,,"[trader#d]
+
+Storjusdt SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.16134
+
+
+Тейки 
+• TP1: 0.1445
+TP2; 0,138",1.0,,STORJUSDT,SHORT,,0,,0.16134,1,0.1445,риск 0.5%,0.5,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1517,1409,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  93650-93750
+
+Stop 94070  1% деп
+
+Tейк-профит 
+
+1)93200(RR1-1)
+
+ 2)92700(RR1-2)
+
+ 3)92200
+
+4)90000",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@93650.0,94070.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1510,1416,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  94200-94300
+
+Stop 94500  1% деп
+
+Tейк-профит 
+
+1)93900(RR1-1)
+
+ 2)93400(RR1-2)
+
+ 3)92750
+
+4)91600",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@94200.0,94500.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1506,1421,,"[trader#3] 📍SIGNAL ID: #2047 📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.150 - 2.175
+
+TARGETS: 2.250 - 2.350 - 2.500 - 2.650 - 2.800 - 3.000   
+
+STOP LOSS: 2.050
+
+Strong confluence between support zones and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2047USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.15,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1504,1427,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 92450-550
+
+Stop 92250. 1%деп
+
+Tейк-профит 
+
+1) 93100. (RR1-2)
+
+2) 93400. (RR1-3)
+
+3) 93800
+
+4)94500",1.0,,BTSUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@92450.0,92250.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1502,1430,,"[trader#3] 📍SIGNAL ID: #2048📍
+COIN: $BCH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 605 - 610
+
+TARGETS: 625 - 640 - 665 -690 - 720 - 750 
+
+STOP LOSS: 585
+
+Strong confluence between support zones, ascending trend line and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2048USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@605.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1500,1435,,"[trader#3] 📍SIGNAL ID: #2049📍
+COIN: $MNT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.01 - 1.02
+
+TARGETS: 1.05 - 1.10 - 1.16 - 1.23 - 1.31 - 1.40 - 1.50 
+
+STOP LOSS: 0.95
+
+Strong confluence between support zones, ascending trend line and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2049USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.01,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1499,1436,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 91250-350
+
+Stop 90900. 1%деп
+
+Tейк-профит 
+
+1) 91800. (RR1-2)
+
+2) 92100. (RR1-3)
+
+3) 92600
+
+4)93300",1.0,,BTSUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@91250.0,90900.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1497,1439,,"[trader#d]
+
+Brev SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.5358
+
+
+Тейки 
+• TP1: 0.4283
+• TP2:0.3485",1.0,,,SHORT,,0,,0.5358,2,0.4283|0.3485,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1493,1443,,"[trader#d]
+
+Btc Long  вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 90939
+
+
+Тейки 
+• TP1: 92265
+• TP2:93704",1.0,,,LONG,,0,,90939.0,2,92265.0|93704.0,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1491,1446,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход лимитка  3145 (1/3)
+
+                             3133 (2/3)
+
+Stop 3115. 1%деп
+
+Tейк-профит 
+
+1)3155. (RR1-1)
+
+2)3170.  (RR1-2)
+
+3)3190 изменено!!!
+
+4)3220",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3145.0,3115.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1488,1449,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 90950-850
+
+Stop 90650. 1%деп
+
+Tейк-профит 
+
+1) 91500. (RR1-2)
+
+2) 91800. (RR1-3)
+
+3) 92300
+
+4)94500",1.0,,BTSUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@90950.0,90650.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1484,1456,,"https://t.me/c/3171748254/1449
+   
+Перезашел стоп 90550, изменённо !!! тп тоже
+
+[trader#C]",0.6,,,,,0,,90550.0,0,,,,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1480,1461,,"Trader#d
+Btc long
+рыночный
+стоп 89586
+тп1 91332
+тп2 94371",0.6,,,LONG,,0,,89586.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1476,1467,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 89650-750
+
+Stop 89200. 1%деп
+
+Tейк-профит 
+
+1) 90300. (RR1-1)
+
+2) 90800. (RR1-2)
+
+3) 91300
+
+4)92500",1.0,,BTSUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@89650.0,89200.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1472,1476,,"[trader#d]
+
+Iotx SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.009023
+
+
+Тейки 
+• TP1: 0.008629
+• TP2: 0.008498",1.0,,,SHORT,,0,,0.009023,2,0.008629|0.008498,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1467,1481,,"[trader#d]
+
+GUNUSDT SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.027288
+
+
+Тейки 
+• TP1: 0.024756
+• TP2: 0.021756",1.0,,GUNUSDT,SHORT,,0,,0.027288,2,0.024756|0.021756,риск 0.5%,0.5,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1464,1486,1481,"Trader#d
+GUNUSDT SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.027848
+
+
+Тейки 
+• TP1: 0.0245
+• TP2: 0.021758",1.0,,GUNUSDT,SHORT,,0,,0.027848,2,0.0245|0.021758,риск 0.5%,0.5,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1463,1487,,"[trader#d]
+
+GMT SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.020705
+
+
+Тейки 
+• TP1: 0.018264
+• TP2:0.017349",1.0,,,SHORT,,0,,0.020705,2,0.018264|0.017349,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1462,1488,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 634.2
+
+Тейк профит: 673
+
+Стоп лосс: 624.5
+
+Риск на сделку 1%
+Соотношение РР 1:4",1.0,,BCHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@634.2,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1459,1491,1489,"Попробую перезаход
+Sl 0.02902
+Tp 0.024482
+Tp2 0.021766",0.6,update_intents_dropped_in_signal_message,,,,0,,0.02902,2,0.024482|0.021766,,,,,,symbol|side|entries,INCOMPLETE
+SIGNAL,PARTIAL,1457,1494,,"[trader#3] 📍SIGNAL ID: #2050📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.04 - 2.05
+
+TARGETS: 2.10 - 2.25 - 2.40 - 2.60 - 2.80 - 3.00 
+
+STOP LOSS: 1.95
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2050USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.04,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1452,1503,,"[trader#3] 📍SIGNAL ID: #2051📍
+COIN: $HYPE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 23.825 - 23.875
+
+TARGETS: 24.5 - 25.75 - 27 - 28.25 - 30 - 32 
+
+STOP LOSS: 22.2
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2051USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@23.825,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1451,1504,,"[trader#С]
+
+$ICPUSDT - LONG 
+
+Вход лимиткой 
+
+1) 3,008(1/3)
+2) 2,856(2/3)
+
+Stop 2,785 1% деп
+
+Tейк-профит 
+
+1) 3,168 (RR 1-2,2)
+
+ 2) 3,38. (RR 1-4)
+
+ ",1.0,,ICPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,2.785,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1450,1505,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0744(1/3)
+2)0,0719(2/3)
+
+Stop 0,07.  1% деп
+
+Tейк-профит 
+
+1)0,0788(RR1-2,5)
+
+ 2)0,082(RR1-4)",1.0,,CFXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.07,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1438,1526,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  
+
+Stop 92550.      1% деп
+
+Tейк-профит 
+
+1).  91400(RR1-1)
+
+ 2). 90800(RR1-2)
+
+ 3) 90200
+
+4)89000",1.0,,BTCUSDT,SHORT,,0,,92550.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1433,1534,,"[trader#3] 📍SIGNAL ID: #2052📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1350 - 0.1355
+
+TARGETS: 0.139 - 0.144 - 0.150 - 0.157 - 0.165 - 0.174 - 0.185  
+
+STOP LOSS: 0.125
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2052USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.135,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1431,1536,,"[trader#d]
+
+ALCH SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.14893
+
+
+Тейки 
+• TP1: 0.13983
+• TP2: 0.12775",1.0,,,SHORT,,0,,0.14893,2,0.13983|0.12775,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1426,1541,,"[trader#d]
+
+BTC Long вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 90071
+
+
+Тейки 
+• TP1: 92488
+• TP2: 94763",1.0,,,LONG,,0,,90071.0,2,92488.0|94763.0,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1424,1544,,"[trader#d]
+
+ZIL LONG вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.005080
+
+
+Тейки 
+• TP1:  0.00654",1.0,,,LONG,,0,,0.00508,1,0.00654,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1423,1545,,"[trader#d]
+
+Link LONG вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 12.916
+
+
+Тейки 
+• TP1:  13.517
+Tp2; 14.226",1.0,,,LONG,,0,,12.916,1,13.517,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1416,1552,,"Trader#d
+Parti Шорт
+лимт 0,09287
+стоп 0,09494
+тп1 0,08977
+тп2 0,08584
+если достигнем тп1 то лимитку убираем",1.0,update_intents_dropped_in_signal_message,,SHORT,,0,,0.09494,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1413,1556,,"Trader#d
+Dolousdt Short 
+Вход по рынку риск 0.5%
+Стоп 0.07560
+Тп1 0.062
+Тп2 0.05562",0.6,,DOLOUSDT,SHORT,,0,,0.0756,0,,Вход по рынку риск 0.5%,0.5,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1408,1564,,"[trader#d]
+
+MTL SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.4382
+
+
+Тейки 
+• TP1: 0.4176
+• TP2:0.4054
+TP3; 0.3875",1.0,,,SHORT,,0,,0.4382,2,0.4176|0.4054,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1402,1575,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 92550
+
+Stop 92900  0,5!!!% деп
+
+Tейк-профит 
+
+1).  91700(RR1-2)
+
+ 2). 90950(RR1-4)
+
+ 3)
+
+4)",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@92550.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1400,1577,,"[trader#3] 🔥GEM SIGNAL: $ZIG🔥
+➖➖➖➖➖➖➖
+Exchanges: ByBit, Bitget, MEXC, Gate
+
+$ZIG has proven to be extremely resilient while the rest of the market dumped, and it has also been in heavy whale accumulation for he last months. 
+
+This is an an easy play, buying a heavy bag here🚀
+
+ENTRY: Below 0.06
+
+TARGETS: 0.062 – 0.064 – 0.067 - 0.070 - 0.075 - 0.081 - 0.090 - 0.117 - 0.144 - 0.182 - OPEN
+
+SL: 0.0528
+➖➖➖➖➖➖➖",0.6,,,LONG,,0,,0.0528,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1398,1579,,"[trader#d]
+
+Dash SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 62.74
+
+
+Тейки 
+• TP1: 52.39",1.0,,,SHORT,,0,,62.74,1,52.39,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1397,1580,,"[trader#С]
+
+$ETHUSDT - LONG 
+
+Вход лимит 3150
+
+Stop 3110. 0,5%деп
+
+Tейк-профит 
+
+1)   3190(RR1-1)
+
+2)   3230(RR1-2)
+
+3). 3300",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3150.0,3110.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1395,1582,,"[trader#d]
+
+AXS SHORT вход лимит 1,0573
+
+рыночный— риск 0.5% депо
+
+
+Стоп  1,1085
+
+
+Тейки 
+• TP1: 1,0049
+• TP2:0,9283",1.0,,,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0573,1.1085,2,1.0049|0.9283,риск 0.5%,0.5,,,,symbol,INCOMPLETE
+SIGNAL,PARTIAL,1389,1589,,"[trader#B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 142.7
+
+Тейк профит: 147.1
+
+Стоп лосс: 141.25
+
+Риск на сделку 1%
+Соотношение РР 1:3",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@142.7,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1383,1595,,"[trader#d]
+
+Pixel SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.009648
+
+
+Тейки 
+• TP1: 0.009
+• TP2: 0.008685",1.0,,,SHORT,,0,,0.009648,2,0.009|0.008685,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1382,1596,,"[trader#С]
+
+$LTCUSDT - LONG 
+
+Вход лимиткой 
+
+1) 76,5(1/3)
+2) 75(2/3)
+
+Stop 73,5. 1% деп
+
+Tейк-профит 
+
+1) 78(RR 1-1,5)
+
+ 2) 80. (RR 1-2)
+
+ 3) 83",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,73.5,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1378,1601,,"[trader#d]
+
+Aevo SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.04946
+
+
+Тейки 
+• TP1: 0.04146",1.0,,,SHORT,,0,,0.04946,1,0.04146,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1366,1615,,"Trader#d
+среднесрок
+Ltc Long с текущих
+риск 0,5
+sl:75.16
+tp:93.49",0.6,,,LONG,,0,,75.16,1,93.49,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1365,1616,,"[trader#d]
+
+AXS SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 1.3301
+
+
+Тейки 
+• TP1: 1.1337",1.0,,,SHORT,,0,,1.3301,1,1.1337,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1364,1617,,"[trader#B]
+
+$DOTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.25
+
+Тейк профит: 2.41
+
+Стоп лосс: 2.215
+
+Риск на сделку 1%
+Соотношение РР 1:4.57",1.0,,DOTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.25,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1359,1624,1622,"перезаход
+стоп 1,3085
+тп 1,1341",0.6,,,,,0,,1.3085,0,,,,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1357,1627,,"[trader#3] 📍SIGNAL ID: #2053📍
+COIN: $AAVE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 169 - 170
+
+TARGETS: 175 - 180 - 187 - 195 - 205 - 215 - 225
+
+STOP LOSS: 157.5
+
+Strong confluence between support zones.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,,2053USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@169.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1354,1630,,"[trader#d]
+
+Bera SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 0.8872
+
+
+Тейки 
+• TP1:  0.772
+• TP2: 0.676",1.0,,,SHORT,,0,,0.8872,2,0.772|0.676,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1347,1640,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 97250
+
+Stop 97800. 1% деп
+
+Tейк-профит 
+
+1).  96600(RR1-1)
+
+ 2). 95900(RR1-2)
+
+ 3). 95200(RR1-3)
+
+4)94400",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@97250.0,97800.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1342,1645,,"[trader#B]
+
+$DOTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.233
+
+Тейк профит: 2.404
+
+Стоп лосс: 2.195
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,DOTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.233,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1338,1652,,"trader#d
+dolo short
+вход по рынку риск 0,5
+sl 0.08116
+tp 0.05645",0.6,,,SHORT,,0,,0.08116,1,0.05645,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1333,1658,,"[trader#d]
+
+BTC SHORT вход с текущих
+
+рыночный— риск 0.5% депо
+
+
+Стоп 97968
+
+
+Тейки 
+• TP1: 94515
+• TP2:93530",1.0,,,SHORT,,0,,97968.0,2,94515.0|93530.0,риск 0.5%,0.5,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1331,1662,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3380
+
+Тейк профит: 3465
+
+Стоп лосс: 3357
+
+Риск на сделку 0.7%
+Соотношение РР 1:2.5",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3380.0,,0,,Риск на сделку 0.7%,0.7,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1328,1665,,"[trader#3] 📍SIGNAL ID: #2054📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.3 - 5.325
+
+TARGETS: 5.5 - 5.75 - 6.15 - 6.75 - 7.5 - 8.5
+
+STOP LOSS: 4.85
+
+Multiple support zones plus an order block.
+➖➖➖➖➖➖➖",0.6,,2054USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@5.3,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1325,1668,,"trader#d 
+long btc
+sl 95347
+tp1 97955
+tp2 99900
+tp3 107505",1.0,,,LONG,,0,,95347.0,3,97955.0|99900.0|107505.0,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1324,1669,,"Trader#d
+XRP Long
+риск 0,5
+sl 2.0673
+tp1 2.2
+tp2 2.3184
+tp3 2.415",1.0,,,LONG,,0,,2.0673,3,2.2|2.3184|2.415,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1323,1670,,"trader#d
+Usual short
+риск 0,5
+sl 0.03143
+tp 0.03013
+tp2 0.02987
+tp3 0.02918",0.8,,,SHORT,,0,,0.03143,3,0.03013|0.02987|0.02918,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1320,1673,,"Trader#d
+Sol Long
+риск 0,5 
+sl 141.67
+tp1 145.95
+tp2 148.93
+tp3 151",1.0,,,LONG,,0,,141.67,3,145.95|148.93|151.0,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1319,1674,,"[trader#С]
+
+$ETCUSDT - LONG 
+
+Вход лимиткой 
+
+1) 12,7(1/3)
+2) 12,42(2/3)
+
+Stop 12,09. 1% деп
+
+Tейк-профит 
+
+1) 13,3(RR 1-1)
+
+ 2) 13,9 (RR 1-2)
+
+ 3) 14,5",1.0,,ETCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,12.09,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1316,1678,,"[trader#3] 📍SIGNAL ID: #2055📍
+COIN: $ASTER/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.68 - 0.69
+
+TARGETS: 0.71 - 0.75 - 0.80 - 0.86 - 0.93 - 1.00
+
+STOP LOSS: 0.635
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2055USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.68,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1313,1683,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 
+
+Stop 95000. 0,5!!!%деп
+
+Tейк-профит 
+
+1)    95750(RR1-1)
+
+2)   96300(RR1-2)
+
+3)   97000
+
+4). 98000",1.0,,BTSUSDT,LONG,,0,,950000.5,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1308,1690,,"[trader#С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,592(1/3)
+2)0,578(2/3)
+
+Stop 0,565.  1% деп
+
+Tейк-профит 
+
+1)0,6255(RR1-1,5)
+
+ 2)0,65(RR1-2,5)
+
+ 3)0,682(RR1-4)
+Исправлено",1.0,,LDOUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.565,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1306,1692,,"Trader#d
+Dash Short 
+рыночный риск 0,5
+sl 96.69
+tp1 75.32",0.6,,,SHORT,,0,,96.69,1,75.32,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1304,1695,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку
+
+Stop 95000. 0,5%деп
+
+Tейк-профит 
+
+1)   95750 (RR1-1)
+
+2)   96400(RR1-2)
+
+3)   97000
+
+4). 98000",1.0,,BTSUSDT,LONG,,0,,95000.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1300,1699,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход рынок
+
+Stop 94700. 1%деп
+
+Tейк-профит 
+
+1)   95650 (RR1-1)
+
+2)   96400(RR1-2)
+
+3)   97000
+
+4). 98000",1.0,,BTSUSDT,LONG,,0,,94700.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1298,1701,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 
+
+Stop 94300. 1%деп
+
+Tейк-профит 
+
+1)   95250 (RR1-1)
+
+2)   95800(RR1-2)
+
+3) 96400
+
+4)97000",1.0,,BTSUSDT,LONG,,0,,94300.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1296,1703,1692,"перезаход
+Trader#d
+Dash Short 
+рыночный риск 0,5
+sl 96.69
+tp1 75.32",0.6,,,SHORT,,0,,96.69,1,75.32,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1291,1709,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по лимитке 94650
+
+Stop 94200. 1%деп
+
+Tейк-профит 
+
+1)   95500(RR1-2)
+
+2)  95950 (RR1-3)
+
+3) 96400
+
+4) 97200",1.0,,,LONG,,0,,94200.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1288,1715,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3290.5(+- с текущих)
+
+Тейк профит: 3455
+
+Стоп лосс: 3264.3
+
+Риск на сделку 0.8%
+Потенциальная прибыль 5%",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3290.5,,0,,Риск на сделку 0.8%,0.8,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1286,1720,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 3272
+
+Stop 3255. 0,5%деп
+
+Tейк-профит 
+
+1) 3295(RR1-1,5)
+
+2)3310 (RR1-2)
+
+3)3330
+
+4)3350",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@3272.0,3255.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1272,1744,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 73.5
+
+Тейк профит: 88.5
+
+Стоп лосс: 71
+
+Риск на сделку 1%
+Потенциальная прибыль 6%",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@73.5,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1271,1745,,"[trader#B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 142.75
+
+Тейк профит: 149.2
+
+Стоп лосс: 141.5
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@142.75,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1270,1747,,"[trader#3] 📍SIGNAL ID: #2056📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.520 - 0.525
+
+TARGETS: 0.540 - 0.570 - 0.600 - 0.640 - 0.690 - 0.750
+
+STOP LOSS: 0.480
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2056USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.52,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1260,1766,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 
+
+Stop 91200. 1%деп
+
+Tейк-профит 
+
+1)    92100(RR1-1)
+
+2)  92500 (RR1-2)
+
+3) 93000
+
+4)94500",1.0,,,LONG,,0,,91200.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1258,1770,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 91030
+
+Stop 90600. 1%деп
+
+Tейк-профит 
+
+1)   92000(RR1-1)
+
+2)  92500 (RR1-2)
+
+3)   93000
+
+4). 94000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@91030.0,90600.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1257,1771,,"Trader#d
+Axs short
+рыночный,риск 0,5
+sl 2.0839
+tp1  1.9775
+tp2 1.8968",0.8,,,SHORT,,0,,2.0839,2,1.9775|1.8968,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1254,1774,,"[trader#A]
+
+#среднесрок
+#AXSUSDT 🐂 Лонг 
+
+— Вход лимитным ордером: 1.844
+— Усреднение: нет
+
+— SL: 1.7917 🛡 2.8%
+
+🎯 Тейки:
+— TP1: 2.0421 +10.8%
+— TP2: 2.1417 +16.1%
+— TP3: 2.1990 +19.3%
+
+Вход не более 1-2% от депозита",1.0,,AXSUSDT,LONG,,0,,1.7917,3,2.0421|2.1417|2.199,Вход не более 1-2%,,1.0,2.0,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1250,1780,,"Trader#d
+ xrp long
+sl 1.9052
+tp1 2.0294",0.6,,,LONG,,0,,1.9052,1,2.0294,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1249,1781,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 90251
+
+Stop 89800. 1%деп
+
+Tейк-профит 
+
+1)   91000(RR1-1)
+
+2)  92000 (RR1-2)
+
+3)   93000
+
+4). 94000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@90251.0,89800.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1248,1782,,"trader#d
+Dusk Short 0.5
+sl 0.24914
+tp1 0.18268",0.6,,,SHORT,,0,,0.24914,1,0.18268,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1241,1790,,"[trader#3] 📍SIGNAL ID: #2057📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.348 - 0.350
+
+TARGETS: 0.362 - 0.375 - 0.390 - 0.410 - 0.435 - 0.465 - 0.500
+
+STOP LOSS: 0.325
+
+Support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2057USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.348,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1240,1791,,"[trader#3] 📍SIGNAL ID: #2058📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 12.00 - 12.10
+
+TARGETS: 12.45 - 12.90 - 13.50 - 14.25 - 15.10 - 16.00
+
+STOP LOSS: 11.00
+
+Support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2058USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@12.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1239,1792,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,07014
+
+Stop 0,0685 0,5% деп
+
+Tейк-профит 
+
+1)0,07353
+
+ 2)0,077",1.0,,CFXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.0685,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1233,1802,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 88250
+
+Stop 87750. 1%деп
+
+Tейк-профит 
+
+1)   88900(RR1-1)
+
+2)  90000 (RR1-2)
+
+3)   91000
+
+4). 92000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@88250.0,87750.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1227,1810,,"trader#d
+Sxt short 0.5
+tp1 0.03549
+tp2 0.03281",0.8,,,SHORT,,0,,,2,0.03549|0.03281,,,,,,symbol|entries|stop_loss,INCOMPLETE
+SIGNAL,PARTIAL,1226,1811,,"Trader#d
+Pha Short 0.5
+sl 0.04743
+tp1 0.03952
+tp2  0.03636",0.8,,,SHORT,,0,,0.04743,2,0.03952|0.03636,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1224,1813,,"Trader#d
+Axs Short 0.5
+sl 2.56
+tp1 1.6367",0.6,,,SHORT,,0,,2.56,1,1.6367,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1217,1822,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2955
+
+Тейк профит: 3060
+
+Стоп лосс: 2920
+
+Риск на сделку 1%
+Потенциальная прибыль 3%",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2955.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1215,1824,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2925
+
+Stop 2900. 0,5%деп
+
+Tейк-профит 
+
+1) 2950(RR1-1)
+
+2)3000(RR1-2)
+
+3)3030
+
+4)3060",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2925.0,2900.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1210,1830,,"[trader#A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт вход с текущих
+
+
+— Вход (A): 87600
+— Вход (B): - 
+
+— SL: 93558 🛡 (от A: -6.3%, от B: -)
+
+— TP: 76201 🎯 (от A: +13.4%, от B: -)",0.6,,BTCUSDT,SHORT,,0,,93558.0,1,76201.0,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1208,1832,,"[trader#A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт вход с текущих
+
+— Вход (A): 2906
+— Вход (B): -
+
+— SL: 3244 🛡 (от A: -11.6%, от B: -)
+
+— TP: 2228 🎯 (от A: +23.3%, от B: -)",0.6,,ETHUSDT,SHORT,,0,,3244.0,1,2228.0,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1205,1836,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 88450
+
+Stop 87350. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@88450.0,87350.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1204,1841,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68.88
+
+Тейк профит: 72
+
+Стоп лосс: 68.2
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@68.88,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1203,1844,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 
+
+Stop 88800. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",1.0,,,LONG,,0,,88800.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1200,1847,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 88900
+
+Stop 88400. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@88900.0,88400.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1198,1851,,"[trader#3] 📍SIGNAL ID: #2059📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.4750 - 1.4800
+
+TARGETS: 1.5400 - 1.6000 - 1.6800 - 1.7700 - 1.8800 - 2.0000 - 2.2500
+
+STOP LOSS: 1.3500
+
+Support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2059USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.475,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1197,1852,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68.3
+
+Тейк профит: 71.9
+
+Стоп лосс: 67.62
+
+Риск на сделку 1%
+Потенциальная прибыль 5.2%",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@68.3,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1194,1859,,"https://t.me/c/3171748254/1847
+ 
+Тп 1🥳. Стоп 88800
+
+[tradet#C]",0.6,,,,,0,,88800.0,0,,,,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1193,1860,,"Trader#d
+Stg short
+риск 0,5
+sl 0.20339
+tp1 0.17713
+tp2  0.16060",0.8,,,SHORT,,0,,0.20339,2,0.17713|0.1606,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1192,1861,,"Trader#d
+Zro Short
+риск 0,,5
+sl 2.3656
+tp1 2.1225
+tp2 1.7373",0.8,,,SHORT,,0,,2.3656,2,2.1225|1.7373,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1186,1872,,"[trader#3] 📍SIGNAL ID: #2060📍
+COIN: $POL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1240 - 0.1250
+
+TARGETS: 0.1300 - 0.1370 - 0.1450 - 0.1550 - 0.1680 - 0.1840 - 0.2000 
+
+STOP LOSS: 0.1150
+
+High-confluence support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2060USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.124,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1185,1876,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2965
+
+Тейк профит: 3084
+
+Стоп лосс: 2935.5
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2965.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1183,1884,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 88300-400
+
+Stop 88000. 1%деп
+
+Tейк-профит 
+
+1)   88850(RR1-1)
+
+2)  89250 (RR1-2)
+
+3)   90000
+
+4). 91000",1.0,,,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@88300.0,88000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1182,1885,,"https://t.me/c/3171748254/1884
+
+Изменения!!!
+Тп 1 сейчас 88600 +
+Тп 2 89000
+Тп 3 89500
+Тп 4 по сэтапу 
+
+Стоп 88300
+
+[trader #C]",0.6,,,,,0,,88300.0,0,,,,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1179,1893,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 87250
+
+Stop 86850. 1%деп
+
+Tейк-профит 
+
+1)   87700 (RR1-1)
+
+2)  88150 (RR1-2)
+
+3)  88800
+
+4). 90000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@87250.0,86850.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1175,1902,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 87250
+
+Stop 86850. 1%деп
+
+Tейк-профит 
+
+1)   87700 (RR1-1)
+
+2)  88150 (RR1-2)
+
+3)  88800
+
+4). 90000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@87250.0,86850.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1174,1906,,"[trader#3] 📍SIGNAL ID: #2061📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.4530 - 0.4550
+
+TARGETS: 0.4600 - 0.4800 - 0.5000 - 0.5300 - 0.5600 - 0.6000
+
+STOP LOSS: 0.4300
+
+High-confluence support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2061USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.453,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1170,1912,,"[trader#3] 📍SIGNAL ID: #2062📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.510 - 1.520
+
+TARGETS: 1.550 - 1.590 - 1.650 - 1.720 - 1.800 - 1.890 - 2.000
+
+STOP LOSS: 1.420
+
+High-confluence support zones and FVGs along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2062USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.51,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1167,1916,,"[trader#С]
+
+$ETHUSDT - Short 
+
+Вход лимитка 2970
+
+Stop 3000. 0,5%деп
+
+Tейк-профит 
+
+1) 2920(RR1-1)
+
+2)2880(RR1-2)
+
+3)2850
+
+4)2750",1.0,,ETHUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@2970.0,3000.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1165,1922,,"[trader#B]
+
+$ARBUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.171
+
+Тейк профит: 0.183
+
+Стоп лосс: 0.167
+
+Риск на сделку 1%
+Потенциальная прибыль 3%
+
+Upd: ожидания не подтвердились, (-1%)",1.0,,ARBUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.171,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1162,1929,,"[trader#С]
+
+ $LTCUSDT - LONG 
+
+Вход лимиткой 
+
+1)67,25
+2)
+
+Stop 65,2  0,5% деп
+
+Tейк-профит 
+
+1)70(RR1-1,5)
+
+ 2)72(RR1-2,5)
+
+ 3)74(RR1-3+)",1.0,,LTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,65.2,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1161,1930,,"[trader#A]
+
+#среднесрок
+#HYPEUSDT 🐻 Шорт
+
+— Вход (A): 33.758
+— Вход (B): 35.639
+
+— SL: 37.147 🛡 (от A: -10.0%, от B: -4.2%)
+
+— TP1: 30.719 🎯 (от A: +9.0%, от B: +13.8%)
+— TP2: 26.801 🎯 (от A: +20.6%, от B: +24.8%)
+— TP3: 25.487 🎯 (от A: +24.5%, от B: +28.5%)",1.0,,HYPEUSDT,SHORT,,0,,37.147,3,30.719|26.801|25.487,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1160,1931,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 90100
+
+Stop 90600  1% деп
+
+Tейк-профит 
+
+1).  89500(RR1-1)
+
+ 2). 89000(RR1-2)
+
+ 3). 88500
+
+4) 87000",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@90100.0,90600.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1158,1934,,"[trader#3] 📍SIGNAL ID: #2063📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.895 - 1.900
+
+TARGETS: 1.960 - 2.050 - 2.150 - 2.250 - 2.360 - 2.480 - 2.600 
+
+STOP LOSS: 1.760
+
+Entry sits on a support cluster with an FVG backing it.
+➖➖➖➖➖➖➖",0.6,,2063USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.895,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1155,1944,,"[trader#3] 📍SIGNAL ID: #2064📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1195 - 0.1200
+
+TARGETS: 0.1235 - 0.1270 - 0.1320 -0.1380 - 0.1450 - 0.1525 - 0.1600  
+
+STOP LOSS: 0.1125
+
+High-confluence HTF support cluster influencing the current entry zone.
+➖➖➖➖➖➖➖",0.6,,2064USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1195,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1150,1949,,"[trader #D]
+Sent short риск 0,5
+sl 0.034094
+tp 0.027789
+tp2 0.026276",0.6,,,SHORT,,0,,0.034094,2,0.027789|0.026276,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1147,1953,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 84600-650
+
+Stop 84250 1%деп
+
+Tейк-профит 
+
+1)   85200 (RR1-1)
+
+2)  85650(RR1-2)
+
+3)  86200
+
+4). 87000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@84600.0,84250.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1132,1976,,"[trader #D]
+Enj шорт риск 0,5
+sl 0.02832
+тп1 0,02751
+тп 2 0,0270
+тп3 0,02669",0.6,,,SHORT,,0,,0.02832,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1131,1977,,"[trader #D]
+Nmr шорт риск 0,5
+sl 10.294
+tp1 9.637
+tp2 9.307
+tp3 8.909",1.0,,,SHORT,,0,,10.294,3,9.637|9.307|8.909,,,,,,symbol|entries,INCOMPLETE
+SIGNAL,PARTIAL,1128,1982,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2670
+
+Stop 2635. 0,5%деп
+
+Tейк-профит 
+
+1) 2730(RR1-2)
+
+2)2770(RR1-3)
+
+3)2820
+
+4)2900",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2670.0,2635.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1122,1992,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 82420
+
+Stop 81820. 1%деп
+
+Tейк-профит 
+
+1)   83000 (RR1-1)
+
+2)  84000 (RR1-2)
+
+3)  85000
+
+4). 86500",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@82420.0,81820.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1119,1998,,"[trader#3] 📍SIGNAL ID: #2065📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 105 - 105.5
+
+TARGETS: 109 - 115 - 122 - 130 - 139 - 150  
+
+STOP LOSS: 97
+
+High-confluence support cluster and a descending channel structure along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2065USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@105.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1113,2010,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (лимиткой)
+
+Вход (2-фазный):
+— Вход A: 2 490
+— Вход B: 2 560
+
+Стоп:
+— SL: 2 640 🛡(от A: -6,0%, от B: -3,1%)
+
+Тейки (3 цели):
+— TP1: 2 330 🎯 (от A: +6,4%, от B: +9,0%)
+— TP2: 2 237,5 🎯 (от A: +10,1%, от B: +12,6%)
+— TP3: 2 000 🎯 (от A: +19,7%, от B: +21,9%)
+
+Вход на 1% от депозита",1.0,,ETHUSDT,SHORT,,0,,2640.0,3,2330.0|2237.5|2000.0,Вход на 1%,1.0,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,1101,2062,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2200
+
+Stop 2150  0,5%деп
+
+Tейк-профит 
+
+1) 2260 (RR1-1)
+
+2) 2310 (RR1-2)
+
+3) 2390
+
+4) 2460",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2200.0,2150.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1099,2064,,"[trader#3] 📍SIGNAL ID: #2066📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.290 - 0.291
+
+TARGETS: 0.300 - 0.315 - 0.335 - 0.355 - 0.375 - 0.400 
+
+STOP LOSS: 0.265
+
+Strong support confluence reinforced by an adjacent FVG.
+➖➖➖➖➖➖➖",0.6,,2066USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.29,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1098,2065,,"[trader#3] 📍SIGNAL ID: #2067📍
+COIN: $ETH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2290 - 2300
+
+TARGETS: 2350 - 2425 - 2500 - 2600 - 2725 - 2850 - 3000 
+
+STOP LOSS: 2150
+
+Confluent support zone backed by a higher-timeframe FVG and OB.
+➖➖➖➖➖➖➖",0.6,,2067USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2290.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1094,2070,,"[trader #D]
+PAXG Long 
+Вход по рынку 4678 - риск 0,5
+Sl: 4457.3
+Tp1: 4895
+TP2: 4971
+TP3: 5282
+TP4: 5631",1.0,,,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@4678.0,4457.3,4,4895.0|4971.0|5282.0|5631.0,,,,,,symbol,INCOMPLETE
+SIGNAL,PARTIAL,1092,2075,,"[trader #С]
+
+$KAS USDT - LONG 
+
+Вход лимиткой 
+
+1)0,031
+2)
+
+Stop 0,0295   0,5% деп
+
+Tейк-профит 
+
+1)  0,0331(RR1-1)
+
+ 2) 0,035 (RR1-2)
+
+ 3) 0,04 (RR1-4)",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.0295,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1091,2077,2070,"[trader #D]
+Tp 1 срезал 50% +0,245 
+стоп в бу",1.0,update_intents_dropped_in_signal_message,,,,0,,,1,1.0,,,,,,symbol|side|entries|stop_loss,INCOMPLETE
+SIGNAL,PARTIAL,1081,2090,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 77400-300
+
+Stop 77000.  0,5. %деп
+
+Tейк-профит 
+
+1)  78000 (RR1-1)
+
+2)  79000 (RR1-2)
+
+3)  80000
+
+4)  82000",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@77400.0,77000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,1013,2182,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 
+
+Stop 65300.  0,5%деп
+
+Tейк-профит 
+
+1)  67500 (RR1-1)
+
+2)  68500 (RR1-2)
+
+3)  70000
+
+4)  72000",1.0,,,LONG,,0,,65300.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,995,2209,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 70800-71000
+
+Stop 71500  0,5!!!% деп
+
+Tейк-профит 
+
+1)  70000(RR1-2)
+
+ 2)  69300(RR1-3)
+
+ 3) 68000
+
+4) 66000",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@70800.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,981,2226,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 
+
+-66220  0,5%
+-63750  0,5%
+
+Stop 61600.  1%деп
+
+Tейк-профит 
+
+1)  69000 (RR1-1)
+
+2)  71000 (RR1-2)
+
+3)  73000
+
+4)  76500",1.0,,,LONG,,0,,61600.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,975,2240,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 70000-69900
+
+Stop 69000.  0,3%деп
+
+Tейк-профит 
+
+1)  72000 (RR1-2)
+
+2)  73000 (RR1-3)
+
+3)  74000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@70000.0,69000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,963,2258,,"[trader #С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0431
+
+Stop 0,040 0,5% деп
+
+Tейк-профит 
+
+1) 0,0489
+
+2) 0,0534
+
+3) 0,0579",1.0,,CFXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.04,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,955,2269,,"[trader#3] 📍SIGNAL ID: #2068📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 8.40 - 8.50
+
+TARGETS: 8.80 - 9.35 - 10.00 - 10.70 - 11.45 - 12.20 - 13.00 
+
+STOP LOSS: 7.85
+
+Post sell-off consolidation below resistance favors a short-term reaction.
+➖➖➖➖➖➖➖",0.6,,2068USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@8.4,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,953,2272,,"[trader #B]
+
+$ZKUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.022
+
+Тейк профит: 0.02725
+
+Стоп лосс: 0.0205
+
+Риск на сделку 1%
+Потенциальная прибыль 3.5%",1.0,,ZKUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.022,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,950,2279,,"[trader#3] 📍SIGNAL ID: #2069📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3680 - 0.3700
+
+TARGETS: 0.3850 - 0.4100 - 0.4450 - 0.4800 - 0.5150 - 0.5500
+
+STOP LOSS: 0.3375
+
+Support area strengthened by confluence and a surrounding FVG.
+➖➖➖➖➖➖➖",0.6,,2069USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.368,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,947,2283,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 68950-850
+
+Stop 67850.  0,3%деп
+
+Tейк-профит 
+
+1)  70250 (RR1-1)
+
+2)  71500 (RR1-2)
+
+3)  73000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@68950.0,67850.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,946,2284,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2025
+
+Stop 1985  0,3%деп
+
+Tейк-профит 
+
+1) 2065(RR1-1)
+
+2) 2110(RR1-2)
+
+3) 2170",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2025.0,1985.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,944,2287,,"[trader #A]
+
+#интрадей
+#FARTCOINUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— Вход A: 0.1882
+— Вход B (усреднение/добор): 0.1900 
+
+Стоп:
+— SL: 0.1950 🛡 (от A: -3.6%, от B: -2.6%)
+
+Тейки (интрадей, 3 цели):
+— TP1: 0.1825 🎯 (от A: +3.0%, от B: +3.9%)
+— TP2: 0.1750 🎯 (от A: +7.0%, от B: +7.9%)
+— TP3: 0.1680 🎯 (от A: +10.7%, от B: +11.6%)",1.0,,FARTCOINUSDT,SHORT,,0,,0.195,3,0.1825|0.175|0.168,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,935,2300,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 66840
+
+Тейк профит: 68510
+
+Стоп лосс: 66370
+
+Риск на сделку 0.7%
+Потенциальная прибыль 2.5%",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66840.0,,0,,Риск на сделку 0.7%,0.7,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,933,2303,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66666
+
+Stop 66250.  0,3%деп
+
+Tейк-профит 
+
+1)  67460 (RR1-1)
+
+2)  68000 (RR1-3)
+
+3)  69000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66666.0,66250.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,925,2311,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1035 - 0.1080 - 0.1150 - 0.1250 - 0.1375 - 0.1500
+
+STOP LOSS: 0.0925
+
+Support confluence and liquidity sweep favor a reaction bounce.
+➖➖➖➖➖➖➖",0.6,,2070USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.099,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,923,2313,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 144 - 145
+
+TARGETS: 150 - 160 - 175 - 190 - 205 - 225 - 250
+
+STOP LOSS: 135
+
+Strong support zones and liquidity sweep along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2071USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@144.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,919,2317,,"[trader #B]
+
+$ZKUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.022
+
+Тейк профит: 0.0273
+
+Стоп лосс: 0.02085
+
+Риск на сделку 1%
+Потенциальная прибыль 4.7%",1.0,,ZKUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.022,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,877,2362,,"[trader #B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 80.4
+
+Тейк профит: 90
+
+Стоп лосс: 78.8
+
+Риск на сделку 1%
+Потенциальная прибыль 6%",1.0,,SOLUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@80.4,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,876,2364,2320,"Tp 1 
+Tp2
+Закрываем полностью",1.0,update_intents_dropped_in_signal_message,,,,0,,,1,1.0,,,,,,symbol|side|entries|stop_loss,INCOMPLETE
+SIGNAL,PARTIAL,862,2380,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 68100
+
+Stop 68950.  0,3%деп
+
+Tейк-профит 
+
+1)  67300 (RR1-1)
+
+2)  66400 (RR1-2)
+
+3)  65000
+
+4)",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@68100.0,68950.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,858,2385,,"[trader#3] 📍SIGNAL ID: #2072📍
+COIN: $TRX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2760 - 0.2770
+
+TARGETS: 0.2840 - 0.2940 - 0.3050 - 0.3180 - 0.3320 - 0.3500 - 0.3700
+
+STOP LOSS: 0.2600
+
+Strong support zones and a 4H FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2072USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.276,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,856,2387,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 
+
+-65200 0,5% вход по текущим 
+-63750  0,5%
+
+Stop 61600.  1%деп
+
+Tейк-профит 
+
+1)  69000 (RR1-1)
+
+2)  71000 (RR1-2)
+
+3)  73000
+
+4)  76500",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@652000.0,61600.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,850,2399,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 67900
+
+Stop  68700  0,3% деп
+
+Tейк-профит 
+
+1) 67000(RR1-1)
+
+ 2) 66000(RR1-2)
+
+ 3) 65000",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@67900.0,68700.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,834,2420,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.972
+
+Тейк профит: 1.036
+
+Стоп лосс: 0.956
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.972,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,828,2427,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 2092
+
+Stop 2109. 0,3%деп
+
+Tейк-профит 
+
+1)   2072(RR1-2)
+
+2)   2045(RR1-2)
+
+3)  2020",1.0,,ETHUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@2092.0,2109.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,805,2464,2459,"67330 добираю ,средняя 67030
+Стоп 67080 в бу
+
+Тп 69500 если придём
+
+[trader #C]",0.8,update_intents_dropped_in_signal_message,,,,0,,67080.0,0,,,,,,,symbol|side|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,790,2488,2475,"[trader #D]
+Tp 2😑",0.6,,,,,0,,,1,2.0,,,,,,symbol|side|entries|stop_loss,INCOMPLETE
+SIGNAL,PARTIAL,788,2490,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66200
+
+Stop 65100.  0,5%деп
+
+Tейк-профит 
+
+1)  67300 (RR1-1)
+
+2)  68400 (RR1-3)
+
+3)  69500
+
+4) 70700",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66200.0,65100.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,742,2552,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 1975
+
+Stop 1990. 0,3%деп
+
+Tейк-профит 
+
+1)   1945(RR1-2)
+
+2)   1920(RR1-2)
+
+3)  1890",1.0,,ETHUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1975.0,1990.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,738,2557,,"[trader#3] 📍SIGNAL ID: #2074📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.154 - 0.155
+
+TARGETS: 0.160 - 0.168 - 0.180 - 0.195 - 0.210 - 0.230 - 0.250
+
+STOP LOSS: 0.142
+
+Strong support zone and a 4H FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2074USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.154,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,734,2562,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66100.  0,5%
+65000.   0,5%
+
+Stop 64000.  1%деп
+
+Tейк-профит 
+
+1)  68000 (RR1-1)
+
+2)  70000 (RR1-2)
+
+3)   72000
+
+4)   74000",1.0,,,LONG,,0,,64000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,724,2575,,"[trader #A]
+
+#интрадей
+#HYPEUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— A (с текущих): 29,45
+— B (лимит/усреднение): 29,10
+
+Стоп:
+— SL: 28,85 🛡 (от A: −2,04%, от B: −0,86%)
+
+Тейк (1 цель):
+— TP1: 30,25 🎯 (от A: +2,72%, от B: +3,95%)
+
+Вход 1%",1.0,,HYPEUSDT,LONG,,0,,28.85,1,30.25,Вход 1%,1.0,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,722,2577,,"Trader #A 
+
+#интрадей
+#CYBERUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— A (с текущих): 0,5633
+— B (лимит/усреднение): -
+
+Стоп:
+— SL: 0,5450 🛡 (от A: −3,25%, от B: −)
+
+Тейк (1 цель):
+— TP1: 0,6000 🎯 (от A: +6,52%, от B: -)
+
+
+Риск 1% на сделку",1.0,,CYBERUSDT,LONG,,0,,0.545,1,0.6,Риск 1%,1.0,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,716,2584,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66666  0,5%
+65000.   0,5%
+
+Stop 64400.  1%деп
+
+Tейк-профит 
+
+1)  68000 (RR1-1)
+
+2)  70000 (RR1-2)
+
+3)   72000
+
+4)   74000",1.0,,,LONG,,0,,64400.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,713,2587,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66666
+
+Stop 66130.  0,5%деп
+
+Tейк-профит 
+
+1)  68400 (RR1-1)
+
+2)  70000 (RR1-3)
+
+3)  72500
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66666.0,66130.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,711,2589,,"Trader #A 
+
+#интрадей
+#ENAUSDT 🐂 Лонг (вход с текущих)
+
+Вход (2-фазный):
+— A (с текущих): 0.11044
+— B (лимит): -
+
+Стоп:
+— SL: 0.10720 🛡 (от A: -2.93%, от B: -)
+
+Тейк (1 цель):
+— TP1: 0.11500 🎯 (от A: +4.13%, от B:-)
+
+вход 1%",1.0,,ENAUSDT,LONG,,0,,0.1072,1,0.115,вход 1%,1.0,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,694,2609,,"[trader#3] 📍SIGNAL ID: #2075📍
+COIN: $SKY/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0620 - 0.0622
+
+TARGETS: 0.0640 - 0.0670 - 0.0720 - 0.0790 - 0.0880 - 0.1000
+
+STOP LOSS: 0.0575
+
+Strong support zone within the entry zone.
+➖➖➖➖➖➖➖",0.6,,2075USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.062,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,692,2611,,"[trader #С]
+
+$BTСUSDT - LONG перезахожу 
+
+Вход лимитка 67100
+
+Stop 66400.  0,5%деп
+
+Tейк-профит 
+
+1)  68400 (RR1-1)
+
+2)  70000 (RR1-3)
+
+3)  72500
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@67100.0,66400.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,688,2617,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 1950
+
+Stop 1935  0,5%деп
+
+Tейк-профит 
+
+1) 1980(RR1-1)
+
+2) 2000(RR1-2)
+
+3) 2045",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1950.0,1935.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,680,2634,,"[trader #A]
+
+#среднесрок
+#ADAUSDT 🐻 Шорт (вход лимиткой)
+
+Вход (2-фазный):
+— A (лимит): 0.2980 
+— B (лимит): -
+
+Стоп:
+— SL: 0.3043 🛡 (от A: -2.10%, от B: -)
+
+
+Тейк (1 цель):
+— TP1: 0.2680 🎯 (от A: +10.09%, от B: -)
+
+
+Риск 1% на сделку",1.0,,ADAUSDT,SHORT,,0,,0.3043,1,0.268,Риск 1%,1.0,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,679,2635,,"[trader #A]
+
+#среднесрок
+#SXPUSDT 🐻 Шорт (лимит)
+
+Вход (2-фазный):
+— A (лимит): 0.02755 
+— B (лимит): -
+
+Стоп:
+— SL: 0.02889 🛡 (от A: -4.85%, от B: -)
+
+Тейк (1 цель):
+— TP1: 0.02150 🎯 (от A: +21.96%, от B: -)
+
+
+Риск 1% от депозита",1.0,,SXPUSDT,SHORT,,0,,0.02889,1,0.0215,Риск 1%,1.0,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,675,2643,,"[trader #A]
+
+#среднесрок
+#1000BONKUSDT 🐻 Шорт (вход с текущих)
+
+2-фазный вход:
+— A (с текущих): 0.006156
+— B (усреднение): 0.006256
+
+Стоп:
+— SL: 0.006598 🛡(от A: -7.2%, от B: -5.5%)
+
+Тейки (3 цели):
+— TP1: 0.005721 🎯 (от A: +7.1%, от B: +8.6%)
+— TP2: 0.005269 🎯 (от A: +14.4%, от B: +15.8%)
+— TP3: 0.004709 🎯 (от A: +23.5%, от B: +24.7%)
+
+Вход не более 1–2%",1.0,,1000BONKUSDT,SHORT,,0,,0.006598,3,0.005721|0.005269|0.004709,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,672,2648,,"[trader#3] 📍SIGNAL ID: #2076📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1040 - 0.1100 - 0.1180 - 0.1280 - 0.1390 - 0.1500
+
+STOP LOSS: 0.0925
+
+Liquidity sweep into support favors a short-term reaction while structure holds.
+➖➖➖➖➖➖➖",0.6,,2076USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.099,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,662,2666,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 64330
+
+Stop 64100.  0,3%деп
+
+Tейк-профит 
+
+1)  64850 (RR1-1)
+
+2)  65600 (RR1-3)
+
+3)  66600
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@64330.0,64100.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,647,2687,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 62900
+
+Stop 62400.  0,3%деп
+
+Tейк-профит 
+
+1)  63600 (RR1-1)
+
+2)  64100 (RR1-3)
+
+3)  65600
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@62900.0,62400.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,646,2688,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 1820
+
+Stop 1795  0,3%деп
+
+Tейк-профит 
+
+1) 1845(RR1-1)
+
+2) 1870(RR1-2)
+
+3) 1900",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1820.0,1795.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,644,2690,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 63200
+
+Тейк профит: 66670
+
+Стоп лосс: 62510
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@63200.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,641,2696,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.885
+
+Тейк профит: 1.055
+
+Стоп лосс: 0.8572
+
+Риск на сделку 1%
+Соотношение РР 1:6.12",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.885,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,624,2717,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 66300-400
+
+Stop  66900  0,3% деп
+
+Tейк-профит 
+
+1) 65600(RR1-1)
+
+ 2) 64800(RR1-2)
+
+ 3) 63900",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@66300.0,66900.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,595,2747,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 69000-100
+
+Stop  69600  0,3% деп
+
+Tейк-профит 
+
+1) 68400(RR1-1)
+
+ 2) 67500(RR1-2)
+
+ 3) 66666",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@69000.0,69600.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,588,2760,,"[trader #С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,315 
+2)0,3088
+
+Stop 0,298 0,6% деп
+
+Tейк-профит 
+
+1) 0,33
+
+2) 0,345
+
+3) 0,36",1.0,,LDOUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.298,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,583,2765,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67600
+
+Stop 67000.  0,3%деп
+
+Tейк-профит 
+
+1)  68500 (RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@67600.0,67000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,580,2769,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67300-400
+
+Stop 66700.  0,3%деп
+
+Tейк-профит 
+
+1)  68200 (RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@67300.0,66700.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,574,2777,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67150
+
+Stop 66400.  0,3%деп
+
+Tейк-профит 
+
+1)  68500 (RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@67150.0,66400.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,572,2783,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2035 (по текущим) 
+
+Тейк профит: 2162
+
+Стоп лосс: 2000
+
+Риск на сделку 1%
+Соотношение РР 1:3.63",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2035.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,564,2795,,"[trader#3] 📍SIGNAL ID: #2077📍
+COIN: $BCH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 450 - 455
+
+TARGETS: 470 - 490 - 520 - 560 - 620 - 700
+
+STOP LOSS: 420
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,,2077USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@450.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,563,2796,,"[trader#3] 📍SIGNAL ID: #2078📍
+COIN: $CRO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0. 0745 - 0.0750
+
+TARGETS: 0.0775 - 0.0800 - 0.0840 - 0.0890 - 0.0940 - 0.1000 - 0.1100
+
+STOP LOSS: 0.0700
+
+Confluence of high-interest zones around the entry area.
+➖➖➖➖➖➖➖",0.6,,2078USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0745,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,562,2797,,"[trader#3] 📍SIGNAL ID: #2079📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.500 - 1.510
+
+TARGETS: 1.575 - 1.675 - 1.800 - 1.900 - 2.000 - 2.125 - 2.250
+
+STOP LOSS: 1.375
+
+Confluence between 4H FVG, support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2079USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.5,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,557,2806,,"[trader #С]
+
+$DOTUSDT - SHORT 
+
+Вход лимитка 1,54
+
+Stop  1.62  0,3% деп
+
+Tейк-профит 
+
+1) 1,43(RR1-2)
+
+ 2) 
+
+ 3)",1.0,,DOTUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@1.54,1.62,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,550,2815,,"[trader#3] 📍SIGNAL ID: #2080📍
+COIN: $ETC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 8.00 - 8.10
+
+TARGETS: 8.30 - 8.75 - 9.25 - 10.00 - 11.00 - 12.00
+
+STOP LOSS: 7.35
+
+Confluence between 4H FVG, support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2080USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@8.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,543,2827,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 67400
+
+Тейк профит: 72600
+
+Стоп лосс: 66250
+
+Риск на сделку 1%
+Соотношение РР 1:4.52",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@67400.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,539,2831,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66800
+
+Stop 65900.  0,3%деп
+
+Tейк-профит 
+
+1)  68200(RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66800.0,65900.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,531,2848,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66001
+
+Stop 65000.  0,3%деп
+
+Tейк-профит 
+
+1)  67000(RR1-1)
+
+2)  68200 (RR1-3)
+
+3)  69500
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66001.0,65000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,497,2893,,"[trader#3] 📍SIGNAL ID: #2081📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0895 - 0.0900
+
+TARGETS: 0.0940 - 0.0990 - 0.1050 - 0.1120 - 0.1200 - 0.1300
+
+STOP LOSS: 0.0825
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2081USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0895,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,490,2901,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+64630 0,3%
+
+63660 0,3%
+
+Stop 62500  0,6%деп
+
+Tейк-профит 
+
+1)  66600 (RR1-1)
+
+2)  67550 (RR1-2)
+
+3)  68800",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@646300.0,62500.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,488,2903,,"[trader #С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,291 0,3деп
+2)
+
+Stop 0,279 0,3% деп
+
+Tейк-профит 
+
+1) 0,31
+
+2) 0,325
+
+3)",1.0,,LDOUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.279,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,483,2911,,"[trader#3] 📍SIGNAL ID: #2082📍
+COIN: $HYPE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 29.90 - 30.00
+
+TARGETS: 31.25 - 33.00 - 35.00 - 37.50 - 41.00 - 45.00 - 50.00
+
+STOP LOSS: 27.50
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2082USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@29.9,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,471,2925,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+72000
+73300
+
+Stop  74500  0,6% деп
+
+Tейк-профит 
+
+1) 70500(RR1-1)
+
+ 2) 69000(RR1-2)
+
+ 3) 67500 
+
+4) 65000",1.0,,BTCUSDT,SHORT,,0,,74500.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,463,2934,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2054 (по текущим)
+
+Тейк профит: 2160
+
+Стоп лосс: 2033
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2054.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,452,2945,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+72000
+
+73300
+
+74500  0,6%
+
+Stop  75500  1,2% деп
+
+Tейк-профит 
+
+1) 70500(RR1-1)
+
+ 2) 69000(RR1-2)
+
+ 3) 67500 
+
+4)65000",1.0,,BTCUSDT,SHORT,,0,,75500.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,434,2970,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 72100
+
+Stop 71650.  0,3%депъ
+
+Tейк-профит 
+
+1)  72900(RR1-1)
+
+2)  73500 (RR1-3)
+
+3)  74500
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@72100.0,71650.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,432,2972,,"[trader#3] 📍SIGNAL ID: #2083📍
+COIN: $NEAR/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.240 - 1.250
+
+TARGETS: 1.300 - 1.375 - 1.475 - 1.600 - 1.750 - 1.900 - 50.00
+
+STOP LOSS: 1.150
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2083USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.24,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,431,2974,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 2115
+
+Stop 2165. 0,3%деп
+
+Tейк-профит 
+
+1)   2065(RR1-1)
+
+2)   2025(RR1-2)
+
+3)  1980",1.0,,ETHUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@2115.0,2165.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,424,2982,,"[trader#3] 📍SIGNAL ID: #2084📍
+COIN: $BNB/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 640 - 645
+
+TARGETS: 665 - 700 - 740 - 790 - 850 - 920 - 1000
+
+STOP LOSS: 585
+
+Strong support confluence reinforced by a 4H FVG and the retest of the upper trendline from a previously broken descending channel at entry.
+➖➖➖➖➖➖➖",0.6,,2084USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@640.0,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,415,2992,,"Trader [ #D]
+
+Kiteusdt Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.28281
+Tp1:0.26261
+Tp 2:0.2242
+Tp3: 0.18147",1.0,,KITEUSDT,SHORT,,0,,0.28281,3,0.26261|2.0|0.18147,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,412,2996,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 71000
+
+Тейк профит: 74200
+
+Стоп лосс: 70350
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@71000.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,407,3003,,"Trader [ #D]
+
+CVXUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 2.099
+Tp1: 2.023
+Tp 2: 1.988",0.8,,CVXUSDT,SHORT,,0,,2.099,2,2.023|2.0,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,401,3011,,"[trader#3] 📍SIGNAL ID: #2085📍
+COIN: $TON/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.290 - 1.300
+
+TARGETS: 1.350 - 1.420 - 1.500 - 1.600 - 1.720 - 1.850 - 2.000
+
+STOP LOSS: 1.200
+
+Strong support confluence reinforced by a daily FVG and an ascending trendline at entry zone.
+➖➖➖➖➖➖➖",0.6,,2085USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.29,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,389,3023,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+68400
+67300
+Stop 66000.  0,6%деп
+
+Tейк-профит 
+
+1)  69500(RR1-1)
+
+2)  71000 (RR1-3)
+
+3)  73000
+
+4) 75000",1.0,,,LONG,,0,,66000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,371,3049,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67190
+
+Stop 66600.  0,3%деп
+
+Tейк-профит 
+
+1)  68000(RR1-1)
+
+2)  69000 (RR1-3)
+
+3)  70000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@67190.0,66600.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,368,3054,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66950
+
+Stop 66450.  0,3%деп
+
+Tейк-профит 
+
+1)  68000(RR1-1)
+
+2)  69000 (RR1-3)
+
+3)  70000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66950.0,66450.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,360,3069,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+67100
+66100
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  68800(RR1-1)
+
+2)  69950 (RR1-2)
+
+3)  72000
+
+4) ",1.0,,,LONG,,0,,65000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,352,3082,,"[trader#3] 📍SIGNAL ID: #2086📍
+COIN: $JUP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1540 - 0.1550
+
+TARGETS: 0.1600 - 0.1675 - 0.1775 - 0.1900 - 0.2050 - 0.2250 - 0.2500
+
+STOP LOSS: 0.1425
+
+Strong support confluence reinforced by a 4h FVG and an ascending channel at entry zone.
+➖➖➖➖➖➖➖",0.6,,2086USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.154,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,345,3093,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.956 (по текущим)
+
+Тейк профит: 1.027
+
+Стоп лосс: 0.942
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.956,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,343,3095,,"Trader [ #D]
+
+KERNELUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.09859
+Tp1: 0.09508
+Tp2: 0.09271",0.8,,KERNELUSDT,SHORT,,0,,0.09859,2,0.09508|0.09271,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,338,3101,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.978
+
+Тейк профит: 1.0272
+
+Стоп лосс: 0.9616
+
+Риск на сделку 1%
+Соотношение РР 1:3",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.978,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,335,3107,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.977
+
+Тейк профит: 1.0522
+
+Стоп лосс: 0.961
+
+Риск на сделку 1%
+Соотношение РР 1:4.7",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.977,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,326,3117,,"[trader#3] 📍SIGNAL ID: #2087📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.9270 - 0.9300
+
+TARGETS: 0.9700 - 1.0300 - 1.1000 - 1.1750 - 1.2750 - 1.3850 - 1.5000
+
+STOP LOSS: 0.8500
+
+Strong support confluence reinforced by a 4h FVG and an ascending channel at entry zone.
+➖➖➖➖➖➖➖",0.6,,2087USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.927,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,325,3119,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+69500
+68300
+Stop 67000.  0,6%деп
+
+Tейк-профит 
+
+1)  71000(RR1-1)
+
+2)  72500 (RR1-2)
+
+3)  74000
+
+4) ",1.0,,,LONG,,0,,67000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,321,3128,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+71150
+
+72600
+
+
+Stop  74000  0,6% деп
+
+Tейк-профит 
+
+1) 68800(RR1-1)
+
+ 2) 67200(RR1-2)
+
+ 3) 65000
+
+4)",1.0,,BTCUSDT,SHORT,,0,,74000.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,320,3130,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+69500-по текущих взял 69300
+68300
+Stop 67000.  0,6%деп
+
+Tейк-профит 
+
+1)  71000(RR1-1)
+
+2)  72500 (RR1-2)
+
+3)  74000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@69500.0,67000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,309,3142,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 70650 (по текущим)
+
+Тейк профит: 74320
+
+Стоп лосс: 69870
+
+Риск на сделку 1%
+Соотношение РР 1:4.7",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@70650.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,308,3143,,"[trader #С]
+
+$DOTUSDT - LONG 
+
+Вход лимиткой 
+
+1)1,522  0,3деп
+2)
+
+Stop 1,465 0,3% деп
+
+Tейк-профит 
+
+1) 1,63
+
+2) 1,8
+
+3)",1.0,,DOTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,1.465,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,305,3151,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.38 (по текущим)
+
+Тейк профит: 1.479
+
+Стоп лосс: 1.366
+
+Риск на сделку 1%
+Соотношение РР 1:7",1.0,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.38,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,297,3161,3160,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.38 (по текущим)
+
+Тейк профит: 1.478
+
+Стоп лосс: 1.3663
+
+Риск на сделку 1%
+Соотношение РР 1:7",1.0,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.38,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,296,3162,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+70200-по текущим взял
+68700
+Stop 67500.  0,6%деп
+
+Tейк-профит 
+
+1)  71500(RR1-1)
+
+2)  72500 (RR1-2)
+
+3)  74000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@70200.0,67500.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,294,3166,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.385 (по текущим)
+
+Тейк профит: 1.497
+
+Стоп лосс: 1.371
+
+Риск на сделку 1%
+Соотношение РР 1:8",1.0,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.385,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,284,3178,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+73800
+
+74850
+
+75750 0,6%
+
+Stop  76500  1,2% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000",1.0,,BTCUSDT,SHORT,,0,,76500.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,274,3190,,"Trader [ #D]
+
+RENDERUSDT Short  РИСК 0,5
+Вход по рынку 
+SL : 1,948
+TP1: 1,7626
+Tp2: 1,5486",0.8,,RENDERUSDT,SHORT,,0,,1.948,2,1.7626|1.5486,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,272,3192,3162,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 72100 долил остаток позы к текущему сэтапу.
+
+Stop 71250 в бу .  0,2%деп
+
+Tейк-профит 
+
+1)  74500 на этот объем 
+
+2)  
+
+3)  
+
+4) ",1.0,update_intents_dropped_in_signal_message,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@72100.0,71250.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,263,3201,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+71750
+
+Stop 70000.  0,3%деп
+
+Tейк-профит 
+
+1)  73800(RR1-1)
+
+2)  74500(RR1-2)
+
+3)  
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@71750.0,70000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,262,3202,,"[trader#3] 📍SIGNAL ID: #2088📍
+COIN: $ICP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.530 - 2.550
+
+TARGETS: 2.700 - 3.000 - 3.350 - 3.800 - 4.300 - 4.800
+
+STOP LOSS: 2.250
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2088USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.53,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,260,3204,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.780 - 1.800
+
+TARGETS: 1.875 - 2.000 - 2.150 - 2.325 - 2.500 - 2.700
+
+STOP LOSS: 1.650
+
+Confluence between strong support zones in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2089USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.78,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,253,3220,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.412 (по текущим)
+
+Тейк профит: 1.497
+
+Стоп лосс: 1.398
+
+Риск на сделку 1%
+Соотношение РР 1:6",1.0,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.412,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,250,3223,,"[trader#3] 📍SIGNAL ID: #2090📍
+COIN: $MNT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.768 - 0.770
+
+TARGETS: 0.800 - 0.850 - 0.920 - 1.000 - 1.080 - 1.170
+
+STOP LOSS: 0.700
+
+Confluence between strong support zones, a 4H FVG and an ascending trend line in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2090USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.768,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,246,3232,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.446 (по текущим)
+
+Тейк профит: 1.52
+
+Стоп лосс: 1.432
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",1.0,,XRPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.446,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,243,3236,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+73800
+
+74850
+
+75750 0,6%
+
+Stop  76500  1,2% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000",1.0,,BTCUSDT,SHORT,,0,,76500.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,234,3248,,"[trader#3] 📍SIGNAL ID: #2091📍
+COIN: $POL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1040 - 0.1100 - 0.1170 - 0.1240 - 0.1320 - 0.1400 - 0.1500
+
+STOP LOSS: 0.0915
+
+Confluence between strong support zones, a 4H FVG and an ascending trend line in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2091USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.099,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,230,3252,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+73800
+
+74850
+
+75750 0,6%
+
+Stop  76500  1,2% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000
+
+Еще раз попробуем",1.0,update_intents_dropped_in_signal_message,BTCUSDT,SHORT,,0,,76500.0,0,,,,,,,entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,229,3254,,"Trader [ #D]
+
+TAOUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 300,76
+TP1:278,85
+TP2:245,30",0.8,,TAOUSDT,SHORT,,0,,300.76,2,278.85|245.3,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,228,3255,,"Trader [ #D]
+
+CFXUSDT Short  РИСК 0,5
+Вход по рынку
+Sl:0.0669
+TP1:0.06285
+Tp2:0.05948",0.8,,CFXUSDT,SHORT,,0,,0.0669,2,0.06285|0.05948,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,213,3274,,"[trader #С]
+
+$BTCUSDT - SHORT обновления 
+
+Вход лимитка 
+
+73800 сущес
+ 
+75050 0,3
+
+
+Stop  76500  0,6% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000",1.0,,BTCUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@73800.0,76500.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,212,3275,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 2360
+
+Stop 2410. 0,3%деп
+
+Tейк-профит 
+
+1)   2310(RR1-1)
+
+2)   2260(RR1-2)
+
+3)  2210",1.0,,ETHUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@2360.0,2410.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,203,3286,,"Trader [ #D]
+BTCUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 74837
+TP1: 72777
+TP2: 68974",0.8,,BTCUSDT,SHORT,,0,,74837.0,2,72777.0|68974.0,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,200,3289,,"Trader [ #D]
+VANRYUSDT Short  РИСК 0,5
+Вход по рынку
+Sl: 0.007383
+Tp1: 0.006583
+Tp2: 0.005613",0.8,,VANRYUSDT,SHORT,,0,,0.007383,2,0.006583|0.005613,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,199,3290,,"Trader [ #D]
+ANKRUSDT Short  РИСК 0,5
+Вход по рынку
+Sl:0.004989
+Tp1:0.004719
+Tp2:0.0044",0.8,,ANKRUSDT,SHORT,,0,,0.004989,2,0.004719|0.0044,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,195,3294,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+73200
+
+Stop 71000.  0,3%деп
+
+Tейк-профит 
+
+1)  75000(RR1-1)
+
+2)  76000(RR1-2)
+
+3)  77000
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@73200.0,71000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,194,3296,,"[trader#3] 📍SIGNAL ID: #2092📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2740 - 0.2750
+
+TARGETS: 0.2875 - 0.3000 - 0.3150 - 0.3300 - 0.3500 - 0.3750 - 0.4100 - 0.4500
+
+STOP LOSS: 0.2475
+
+Confluence between strong support zones, a 4h FVG and an ascending trend line in the entry zone.
+➖➖➖➖➖➖➖",0.6,,2092USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.274,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,191,3299,,"[trader#3] 📍SIGNAL ID: #2093📍
+COIN: $XTZ/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3740 - 0.3750
+
+TARGETS: 0.3900 - 0.4100 - 0.4400 - 0.4750 - 0.5100 - 0.5500 - 0.6000
+
+STOP LOSS: 0.3400
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2093USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.374,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,186,3305,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+71300-50
+
+Stop 69000.  0,3%деп
+
+Tейк-профит 
+
+1)  73100(RR1-1)
+
+2)  74500(RR1-2)
+
+3)  
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@71300.0,69000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,169,3328,,"[trader#3] 📍SIGNAL ID: #2094📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3180 - 0.3200
+
+TARGETS: 0.3300 - 0.3450 - 0.3650 - 0.3900 - 0.4200 - 0.4600 - 0.5000
+
+STOP LOSS: 0.2950
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2094USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.318,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,167,3330,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 70350
+
+Тейк профит: 72110
+
+Стоп лосс: 69650
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@70350.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,164,3333,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+70550
+
+Stop 69550.  0,3%деп
+
+Tейк-профит 
+
+1)  71700(RR1-1)
+
+2)  72700(RR1-2)
+
+3)  73700
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@70550.0,69550.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,157,3359,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+68300
+
+67000
+
+Stop 66000.  0,6%деп
+
+Tейк-профит 
+
+1)  69600(RR1-1)
+
+2)  71000(RR1-2)
+
+3)  72500
+
+4) ",1.0,,,LONG,,0,,66000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,156,3361,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68550
+
+Тейк профит: 71650
+
+Стоп лосс: 67865
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@68550.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,155,3362,,"[trader#3] 📍SIGNAL ID: #2095📍
+COIN: $ALGO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0844 - 0.0850
+
+TARGETS: 0.0890 - 0.0950 - 0.1020 - 0.1100 - 0.1190 - 0.1300
+
+STOP LOSS: 0.0775
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2095USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0844,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,152,3365,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+67300
+
+66000
+
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  69600(RR1-1)
+
+2)  71000(RR1-2)
+
+3)  72500
+
+4) ",1.0,,,LONG,,0,,65000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,139,3378,,"Trader [ #D]
+
+CVXUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 1.8703
+TP1: 1.8315
+TP2: 1.7802",0.8,,CVXUSDT,SHORT,,0,,1.8703,2,1.8315|1.7802,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,133,3384,,"[trader #С]
+
+$BTСUSDT - SHORT 
+
+Вход 71550 долил остаток позы к текущему сэтапу.
+
+Stop 71850 в бу .  0,1%деп
+
+Tейк-профит 
+
+1)  70000 на этот объем 
+
+2)  
+
+3)  
+
+4) ",1.0,update_intents_dropped_in_signal_message,,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@71550.0,71850.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,128,3389,,"Trader [ #D]
+
+FILUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.9124
+TP1: 0.8808
+TP2: 0.8736
+TP3: 0.8365",1.0,,FILUSDT,SHORT,,0,,0.9124,3,0.8808|0.8736|0.8365,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,126,3391,,"[trader#3] 📍SIGNAL ID: #2096📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 9.30 - 9.35
+
+TARGETS: 9.75 - 10.25 - 10.85 - 11.50 - 12.25 - 13.10 - 14.00 - 15.00
+
+STOP LOSS: 8.50
+
+Support cluster at entry zone plus an ascending trend line and a 6h FVG..
+➖➖➖➖➖➖➖",0.6,,2096USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@9.3,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,124,3393,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2164 (по текущим)
+
+Тейк профит: 2240
+
+Стоп лосс: 2147
+
+Риск на сделку 0.8%
+Потенциальная прибыль 3.5%",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2164.0,,0,,Риск на сделку 0.8%,0.8,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,122,3395,,"[trader #С]
+
+$KASUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0359  
+2)
+
+Stop 0,0341 0,3% деп
+
+Tейк-профит 
+
+1) 0,0415
+
+2) 0,045
+
+3)",1.0,,KASUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.0,0.0341,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,121,3396,,"Trader [ #D]
+
+ZBTUSDT LONG  РИСК 0,5
+Вход по рынку 
+Sl: 0.06772
+TP1: 0.06938
+TP2: 0,07215",0.8,,ZBTUSDT,LONG,,0,,0.06772,2,0.06938|0.07215,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,117,3400,,"Trader [ #D]
+
+ONTUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.6985
+TP1: 0.05992
+TP2: 0.05247",0.8,,ONTUSDT,SHORT,,0,,0.6985,2,0.05992|0.05247,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,116,3401,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+70050
+
+69050
+
+Stop 68000.  0,6%деп
+
+Tейк-профит 
+
+1)  72000(RR1-1)
+
+2)  73000(RR1-2)
+
+3)  74500
+
+4) ",1.0,,,LONG,,0,,68000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,106,3411,3401,"[trader #С]
+
+$BTСUSDT - LONG изменения!!! 
+Доп ТП 69666 на 0,3 объема 
+
+Вход лимитка
+
+70050
+
+69050
+
+Stop 68000.  0,6%деп
+
+Tейк-профит 
+
+1)  72000(RR1-1)
+
+2)  73000(RR1-2)
+
+3)  74500
+
+4) ",1.0,,,LONG,,0,,68000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,105,3412,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2114
+
+Stop 2100  0,3%деп
+
+Tейк-профит 
+
+1) 2128(RR1-1)
+
+2) 2141(RR1-2)
+
+3) 2160",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2114.0,2100.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,104,3413,,"[trader#3] 📍SIGNAL ID: #2097📍
+COIN: $ONDO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2440 - 0.2450
+
+TARGETS: 0.2550 - 0.2650 - 0.2775 - 0.2925 - 0.3100 - 0.3300 - 0.3600 - 0.4000
+
+STOP LOSS: 0.2250
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2097USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.244,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,102,3415,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2136
+
+Тейк профит: 2243
+
+Стоп лосс: 2115
+
+Риск на сделку 1%
+Потенциальная прибыль 5%",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2136.0,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,96,3421,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.96
+
+Тейк профит: 0.999
+
+Стоп лосс: 0.9505
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.96,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,87,3430,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.9725 (по текущим)
+
+Тейк профит: 0.997
+
+Стоп лосс: 0.9628
+
+Риск на сделку 1%
+Потенциальная прибыль 2.5%
+
+Попробуем повторно забрать*",1.0,update_intents_dropped_in_signal_message,SUIUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.9725,,0,,Риск на сделку 1%,1.0,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,84,3433,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2135
+
+Stop 2100  0,3%деп
+
+Tейк-профит 
+
+1) 2170(RR1-1)
+
+2) 2210(RR1-2)
+
+3) 2250",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2135.0,2100.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,81,3436,,"[trader #С]
+
+$BTСUSDT - LONG доливка к сущ. сэтапу
+
+Вход лимитка 70850
+
+Твх сместится 70200
+
+Stop 70250.  0,4%деп в бу
+
+Tейк-профит 
+
+1)  72000
+
+2)  75000
+
+На этот объем",1.0,update_intents_dropped_in_signal_message,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@70850.0,70250.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,80,3437,,"[trader#3] 📍SIGNAL ID: #2098📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.340 - 1.350
+
+TARGETS: 1.400 - 1.475 - 1.550 - 1.650 - 1.800 - 1.950 - 2.150 - 2.350
+
+STOP LOSS: 1.215
+
+Support cluster at entry zone plus a 4h FVG.
+➖➖➖➖➖➖➖",0.6,,2098USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.34,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,78,3439,,"[trader#3] 📍SIGNAL ID: #2099📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0965 - 0.0975
+
+TARGETS: 0.1010 - 0.1050 - 0.1100 - 0.1175 - 0.1275 - 0.1375 - 0.1500
+
+STOP LOSS: 0.0900
+
+4H FVG reinforcing a strong support cluster at entry.
+➖➖➖➖➖➖➖",0.6,,2099USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0965,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,76,3441,,"[trader #С]
+
+$ETHUSDT - LONG повторим
+
+Вход лимитка 2135
+
+Stop 2100  0,3%деп
+
+Tейк-профит 
+
+1) 2170(RR1-1)
+
+2) 2210(RR1-2)
+
+3) 2250",1.0,,ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2135.0,2100.0,0,,,,,,,take_profits,INCOMPLETE
+SIGNAL,PARTIAL,72,3445,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+69900
+
+68800
+
+Stop 67000.  0,6%деп
+
+Tейк-профит 
+
+1)  72000(RR1-1)
+
+2)  73000(RR1-2)
+
+3)  74500
+
+4) ",1.0,,,LONG,,0,,67000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,61,3456,,"Trader [ #D]
+
+CUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.090087
+TP1: 0.08333
+TP2: 0.07504",0.8,,CUSDT,SHORT,,0,,0.090087,2,0.08333|0.07504,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,53,3464,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66100
+
+
+
+Stop 65500.  0,3%деп
+
+Tейк-профит 
+
+1)  66700(RR1-1)
+
+2)  67400(RR1-2)
+
+3)  68100
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66100.0,65500.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,50,3467,,"[trader#3] 📍SIGNAL ID: #2100📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.940 - 0.950
+
+TARGETS: 1.000 - 1.075 - 1.150 - 1.250 - 1.375 - 1.500 - 1.650
+
+STOP LOSS: 0.850
+
+An ascending trendline reinforcing a strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2100USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.94,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,49,3468,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66100-200
+
+
+
+Stop 65500.  0,3%деп
+
+Tейк-профит 
+
+1)  66800(RR1-1)
+
+2)  67600(RR1-2)
+
+3)  68350
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66100.0,65500.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,48,3469,,"[trader#3] 📍SIGNAL ID: #2101📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1625 - 0.1635
+
+TARGETS: 0.1700 - 0.1775 - 0.1875 - 0.2000 - 0.2150 - 0.2300 - 0.2500
+
+STOP LOSS: 0.1500
+
+An ascending trendline reinforcing a strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2101USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1625,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,42,3475,,"[trader#3] 📍SIGNAL ID: #2102📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.3200 - 1.3250
+
+TARGETS: 1.3750 - 1.4500 - 1.5500 - 1.6500 - 1.7500 - 1.8750 - 2.0000
+
+STOP LOSS: 1.2000
+
+Strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2102USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.32,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,38,3479,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66350
+
+
+Stop 65000.  0,5%деп
+
+Tейк-профит 
+
+1)  67700(RR1-1)
+
+2)  69000(RR1-2)
+
+3)  70500
+
+4) ",1.0,,,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@66350.0,65000.0,0,,,,,,,symbol|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,31,3486,,"[trader #С]
+
+$BTСUSDT - SHORT 
+
+Вход лимитка
+
+68200
+
+69200
+
+
+Stop 70500.  0,6%деп
+
+Tейк-профит 
+
+1)  66500(RR1-1)
+
+2)  65500(RR1-2)
+
+3)  64000
+
+4) ",1.0,,,SHORT,,0,,70500.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,30,3487,,"Trader [ #D]
+
+CVXUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 1.775
+TP1: 1.7345
+TP2: 1.684",0.8,,CVXUSDT,SHORT,,0,,1.775,2,1.7345|1.684,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,27,3490,3479,"[trader #С]
+
+$BTСUSDT - LONG  Изменения! 
+
+Вход лимитка
+
+66350
+
+65770
+
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  67700(RR1-1)
+
+2)  69000(RR1-2)
+
+3)  70500
+
+4) ",1.0,,,LONG,,0,,65000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,18,3499,,"Trader [ #D]
+KERNELUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.09258
+TP1: 0.08169
+TP2: 0.0696",0.8,,KERNELUSDT,SHORT,,0,,0.09258,2,0.08169|0.0696,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,16,3501,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66350
+
+65770
+
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  67700(RR1-1)
+
+2)  69000(RR1-2)
+
+3)  70500
+
+4) перезашел",1.0,,,LONG,,0,,65000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,12,3505,,"[trader#3] 📍SIGNAL ID: #2103📍
+COIN: $TON/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.190 - 1.200
+
+TARGETS: 1.250 - 1.300 - 1.375 - 1.500 - 1.650 - 1.800 - 2.000
+
+STOP LOSS: 1.100
+
+Strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,,2103USDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.19,,0,,,,,,,stop_loss|take_profits,INCOMPLETE
+SIGNAL,PARTIAL,7,3510,,"Trader [ #D]
+QTUMUSDT Short  РИСК 0,5
+Вход по рынку 
+Sl: 0.8827
+TP1: 0.843",0.6,,QTUMUSDT,SHORT,,0,,0.8827,1,0.843,,,,,,entries,INCOMPLETE
+SIGNAL,PARTIAL,6,3511,,"[trader #С]
+
+$BTСUSDT - SHORT 
+
+Вход лимитка
+
+69350
+
+70650
+
+
+Stop 72000.  0,6%деп
+
+Tейк-профит 
+
+1)  67300(RR1-1)
+
+2)  66000(RR1-2)
+
+3)  64500
+
+4) 62500",1.0,,,SHORT,,0,,72000.0,0,,,,,,,symbol|entries|take_profits,INCOMPLETE

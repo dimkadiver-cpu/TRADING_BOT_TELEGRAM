@@ -720,6 +720,7 @@ Questa regola va in `rules.json` (vedi [06_MARKERS_RULES.md](06_MARKERS_RULES.md
 ### `info_markers` semplificato
 
 Il vecchio schema aveva sottocategorie (ADMIN, SCHEDULE, GREETING, DISCLAIMER, MARKET_COMMENT). Il nuovo parser **non le distingue**: il `InfoPayload` conserva solo `raw_fragment`. I marker informativi vengono aggregati in un'unica chiave `INFO`.
+Se un marker `info` valido sopravvive alla risoluzione locale, il runtime interrompe il parsing operativo e classifica il messaggio direttamente come `INFO`.
 
 ### `ignore_markers`
 

@@ -64,7 +64,15 @@
       "Bash(Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"C:\\\\TeleSignalBot\\\\src\\\\parser_v2\" -Recurse -Force)",
       "Bash(Select-Object FullName, PSIsContainer)",
-      "Bash(Sort-Object FullName)"
+      "Bash(Sort-Object FullName)",
+      "Bash(Test-Path *)",
+      "Bash(Get-Content -Path \"C:\\\\TeleSignalBot\\\\tests\\\\parser_v2\\\\__init__.py\" -Raw)",
+      "Bash(Format-Hex)",
+      "Bash(Select-Object -First 5)",
+      "PowerShell($content = Get-Content -Path \"C:\\\\TeleSignalBot\\\\tests\\\\parser_v2\\\\__init__.py\" -Raw; Write-Output \"Length: $\\($content.Length\\)\"; Write-Output \"Content repr: [$content]\")",
+      "Bash(dir /b C:\\\\TeleSignalBot\\\\parser_test\\\\db)",
+      "Bash(git *)",
+      "Bash(pytest *)"
     ]
   }
 }

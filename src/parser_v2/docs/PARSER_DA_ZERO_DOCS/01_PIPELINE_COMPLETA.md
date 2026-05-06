@@ -11,15 +11,17 @@ Input Telegram message
 ↓
 3. Resolve local evidence
 ↓
-4. Extract signal draft
+4. Short-circuit on info marker
 ↓
-5. Extract intent entities
+5. Extract signal draft
 ↓
-6. Classify message
+6. Extract intent entities
 ↓
-7. Build ParsedMessage
+7. Classify message
 ↓
-8. Translate to CanonicalMessage
+8. Build ParsedMessage
+↓
+9. Translate to CanonicalMessage
 ```
 
 \---
@@ -196,6 +198,8 @@ Non estrarre dati che il sistema non usa.
 
 La classificazione deve essere deterministica.
 
+Se la risoluzione dei marker lascia un `info` valido, il runtime chiude subito il flusso su `INFO` e non chiama signal/intent extraction. `info` non può quindi essere promosso a `UPDATE` o `SIGNAL`.
+
 ```python
 if signal\_draft is not None:
     primary\_class = "SIGNAL"
@@ -283,4 +287,3 @@ CanonicalMessage
 A questo punto il parser ha finito.
 
 Tutto ciò che riguarda target reale, DB, lifecycle ed esecuzione avviene dopo.
-

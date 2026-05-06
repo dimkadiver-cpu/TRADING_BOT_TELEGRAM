@@ -11,6 +11,7 @@ from src.parser_v2.contracts.entities import (
 )
 from src.parser_v2.contracts.markers import NormalizedText
 from src.parser_v2.contracts.parsed_message import SignalDraft
+from src.parser_v2.core.symbol_normalizer import normalize_symbol
 
 
 _NUMBER_PATTERN = r"\d(?:[\d\s.,]*\d)?"
@@ -74,7 +75,7 @@ class SignalExtractor:
         text = normalized.raw_text
         normalized_text = normalized.normalized_text
 
-        symbol = _extract_symbol(text)
+        symbol = normalize_symbol(_extract_symbol(text))
         side = _extract_side(normalized_text)
         entries = _extract_entries(text)
         stop_loss = _extract_stop_loss(text)

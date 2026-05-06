@@ -10,6 +10,7 @@ from src.parser_v2.contracts.context import ParserContext, TargetHints
 from src.parser_v2.contracts.enums import ScopeHint
 from src.parser_v2.contracts.markers import NormalizedText
 from src.parser_v2.contracts.rules import MarkerSet, SemanticMarkers
+from src.parser_v2.core.symbol_normalizer import normalize_symbol
 
 
 TELEGRAM_LINK_RE = re.compile(
@@ -96,7 +97,9 @@ def _extract_symbols(text: str, markers: SemanticMarkers) -> Iterable[str]:
         if not token:
             continue
         if any(marker in token and len(token) > len(marker) for marker in marker_values):
-            symbols.append(token.upper())
+            normalized = normalize_symbol(token)
+            if normalized is not None:
+                symbols.append(normalized)
     return symbols
 
 
