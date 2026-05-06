@@ -21,8 +21,8 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.core.logger import setup_logging
-from src.core.migrations import apply_migrations
 from src.storage.raw_messages import RawMessageStore
+from parser_test.db.schema import apply_parser_test_schema
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
 from parser_test.scripts.db_paths import resolve_parser_test_db_path
 
@@ -103,7 +103,8 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
     )
     _ensure_not_live_db(db_path)
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
-    apply_migrations(db_path=db_path, migrations_dir=str(PROJECT_ROOT / "db" / "migrations"))
+    with sqlite3.connect(db_path) as _conn:
+        apply_parser_test_schema(_conn)
 
     log_path = os.getenv("PARSER_TEST_LOG_PATH", str(parser_test_dir / "logs" / "import_history.log"))
     log_path = str((PROJECT_ROOT / log_path).resolve()) if not Path(log_path).is_absolute() else log_path
