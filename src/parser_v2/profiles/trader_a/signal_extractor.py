@@ -57,7 +57,7 @@ _STOP_LOSS_RE = re.compile(
 )
 _TAKE_PROFIT_RE = re.compile(rf"\btp(?P<index>\d+)?\b\s*:?\s*(?P<value>{_NUMBER_PATTERN})", re.IGNORECASE)
 
-_DEFAULT_RISK_PREFIXES = ["риск", "вход", "на сделку"]
+_DEFAULT_RISK_PREFIXES = ["risk", "риск", "вход", "на сделку"]
 _DEFAULT_RISK_SUFFIXES = ["от депозита", "риска", "на сделку"]
 
 
