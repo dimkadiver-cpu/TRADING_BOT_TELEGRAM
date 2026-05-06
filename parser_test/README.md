@@ -1,236 +1,164 @@
-# parser_test
+# parser_test — Ambiente di test e sviluppo per parser_v2
 
-Harness separato per rieseguire il parser sul database di test senza toccare il runtime live.
-
-## Obiettivo
-
-- Usare un DB dedicato in `parser_test/db/` (uno per canale o un DB condiviso)
-- Rileggere `raw_messages` storici importati da Telegram
-- Rieseguire il parser v1 (`parsed_message_v1`) e salvare il risultato in `parsed_messages`
-- Esportare report CSV per trader, divisi per tipo di messaggio
-
-## Setup rapido
-
-1. Copia `parser_test/.env.example` in `parser_test/.env` e modifica se serve.
-
-2. Importa storico Telegram nel DB di test:
-
-```bash
-python parser_test/scripts/import_history.py --chat-id -1001234567890 --db-per-chat --limit 2000
-```
-
-3. Esegui il parser v1 sui raw importati:
-
-```bash
-python parser_test/scripts/replay_parser.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --only-unparsed
-```
-
-4. Esporta i report CSV:
-
-```bash
-python parser_test/scripts/generate_parser_reports.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --report-system v1 \
-    --trader trader_all
-```
-
-I CSV vengono scritti in `parser_test/reports/<trader_id>_message_types_csv/`.
+Ambiente autonomo per importare messaggi reali da Telegram, eseguire `src/parser_v2`
+e produrre CSV leggibili per sviluppo e valutazione del parser.
 
 ---
 
-## Opzioni principali
+## Setup
 
-### `import_history.py`
+### 1. Dipendenze
 
-| Flag | Descrizione |
-|---|---|
-| `--chat-id <id\|@username\|link>` | Override di `PARSER_TEST_CHAT_ID` |
-| `--topic-id <msg_id>` | Importa solo un topic/thread del canale forum |
-| `--limit N` | Numero massimo di messaggi da importare |
-| `--from-date <YYYY-MM-DD>` | Limite inferiore incluso |
-| `--to-date <YYYY-MM-DD>` | Limite superiore incluso |
-| `--only-new` | Importa solo messaggi non ancora presenti nel DB |
-| `--reverse` | Importa dal più recente al più vecchio |
-| `--download-media` | Salva anche i media in `raw_messages.media_blob` |
-| `--db-path <path>` | Path esplicito del DB di test |
-| `--db-name <nome>` | Nome logico del DB sotto `parser_test/db/` |
-| `--db-per-chat` | Crea `parser_test/db/parser_test__chat_<chat>.sqlite3` |
+```bash
+pip install -r requirements.txt
+```
 
-### `replay_parser.py`
+### 2. File `.env`
 
-| Flag | Descrizione |
-|---|---|
-| `--parser-system parsed_message` | Default: usa il parser attuale e scrive in `parsed_messages` |
-| `--db-path <path>` | Path esplicito del DB di test |
-| `--db-name <nome>` | Nome logico del DB |
-| `--db-per-chat` | Usa lo stesso naming basato su `--chat-id` |
-| `--only-unparsed` | Processa solo i raw senza risultato in `parsed_messages` |
-| `--limit N` | Numero massimo di messaggi da processare |
-| `--chat-id <id>` | Filtra per `raw_messages.source_chat_id` |
-| `--trader <TRADER_ID>` | Filtra per trader (es. `trader_a`, `TA`) |
-| `--from-date <YYYY-MM-DD>` | Limite inferiore incluso |
-| `--to-date <YYYY-MM-DD>` | Limite superiore incluso |
+Copia `.env.example` (se presente) oppure crea `parser_test/.env`:
 
-### `generate_parser_reports.py`
+```env
+TELEGRAM_API_ID=<il tuo api_id>
+TELEGRAM_API_HASH=<il tuo api_hash>
+TELEGRAM_SESSION_NAME=parser_test
+```
 
-| Flag | Descrizione |
-|---|---|
-| `--parser-system parsed_message` | Default: replay con parser attuale prima dell'export |
-| `--report-system v1` | Default: esporta da `parsed_messages`, niente legacy |
-| `--db-path <path>` | Path esplicito del DB di test |
-| `--db-name <nome>` | Nome logico del DB |
-| `--db-per-chat` | Usa naming automatico basato su `--chat-id` |
-| `--trader <TRADER_ID>` | Filtra per trader (`trader_a`, `TA`, `trader_all`) |
-| `--from-date <YYYY-MM-DD>` | Limite inferiore incluso |
-| `--to-date <YYYY-MM-DD>` | Limite superiore incluso |
-| `--limit N` | Numero massimo di messaggi nel replay |
-| `--chat-id <id>` | Filtra per canale |
+Le credenziali Telegram si ottengono da https://my.telegram.org.
 
 ---
 
-## Comandi pratici
+## Flusso operativo
 
-### Import storico in un DB separato per canale
-
-```bash
-python parser_test/scripts/import_history.py \
-    --chat-id -1001234567890 --db-per-chat --limit 2000
 ```
-
-### Import solo un topic/thread del canale
-
-```bash
-python parser_test/scripts/import_history.py \
-    --chat-id -1003531875065 --topic-id 175 --db-per-chat
-```
-
-### Import storico con download media
-
-```bash
-python parser_test/scripts/import_history.py \
-    --chat-id -1001234567890 --db-per-chat --download-media
-```
-
-### Import incrementale (solo nuovi messaggi)
-
-```bash
-python parser_test/scripts/import_history.py \
-    --chat-id -1001234567890 --db-per-chat --only-new
-```
-
-### Import con finestra temporale
-
-```bash
-python parser_test/scripts/import_history.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --from-date 2026-03-01 --to-date 2026-03-29
-```
-
-### Replay parser v1 su DB separato per canale
-
-```bash
-python parser_test/scripts/replay_parser.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --only-unparsed
-```
-
-### Replay parser v1 filtrando un trader
-
-```bash
-python parser_test/scripts/replay_parser.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --trader trader_a --only-unparsed
-```
-
-### Replay con limite messaggi
-
-```bash
-python parser_test/scripts/replay_parser.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --parser-system parsed_message \
-    --only-unparsed --limit 500
-```
-
-### Usare un nome DB personalizzato
-
-```bash
-python parser_test/scripts/import_history.py \
-    --chat-id -1001234567890 --db-name canale_marzo
-
-python parser_test/scripts/replay_parser.py \
-    --db-name canale_marzo \
-    --parser-system parsed_message --only-unparsed
-```
-
-### Replay parser attuale + export CSV (tutto in un comando)
-
-```bash
-python parser_test/scripts/generate_parser_reports.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --trader trader_all
-```
-
-### Replay + report di un solo trader
-
-```bash
-python parser_test/scripts/generate_parser_reports.py \
-    --chat-id -1001234567890 --db-per-chat \
-    --trader trader_a
-```
-
-### Solo export CSV da un DB già popolato (skip replay)
-
-```bash
-python parser_test/scripts/generate_parser_reports.py \
-    --db-name canale_marzo \
-    --parser-system parsed_message \
-    --report-system v1 \
-    --trader trader_all \
-    --skip-replay
+import_history.py   →   raw_messages nel DB
+                              ↓
+generate_parser_reports_v2.py (--force-reparse)
+                              ↓
+  replay_parser_v2   →   parser_results_v2
+  report_export_v2   →   CSV in reports_v2/run_<id>/
 ```
 
 ---
 
-## Artefatti CSV prodotti
+## Comandi
 
-Per ogni trader vengono scritti in `parser_test/reports/<trader_id>_message_types_csv/`:
+### Import da Telegram
+
+Scarica i messaggi di un canale/topic nel DB locale.
+
+```bash
+python parser_test/scripts/import_history.py ^
+  --chat-id <CHAT_ID> ^
+  --topic-id <TOPIC_ID> ^
+  --db-name trader_a_topic ^
+  --from-date 2026-04-01 ^
+  --to-date 2026-05-01
+```
+
+| Argomento | Descrizione |
+|-----------|-------------|
+| `--chat-id` | ID numerico del canale Telegram |
+| `--topic-id` | ID del topic (se il canale usa topics) |
+| `--db-name` | Nome del DB locale (file in `db/parser_test__<name>.sqlite3`) |
+| `--from-date` | Data inizio (`YYYY-MM-DD`) |
+| `--to-date` | Data fine (`YYYY-MM-DD`) |
+| `--limit` | Numero massimo messaggi |
+| `--only-new` | Importa solo messaggi non ancora nel DB |
+| `--download-media` | Scarica anche media (immagini, documenti) |
+
+### Replay parser v2
+
+Riesegue `src/parser_v2` su tutti i messaggi raw salvati.
+
+```bash
+python parser_test/scripts/replay_parser_v2.py ^
+  --db-name trader_a_topic ^
+  --trader trader_a ^
+  --force-reparse
+```
+
+| Argomento | Descrizione |
+|-----------|-------------|
+| `--trader` | Profilo da usare (`trader_a`, `ta`, `a`) |
+| `--from-date / --to-date` | Filtra per data messaggio |
+| `--limit` | Processa solo N messaggi |
+| `--only-unparsed` | Salta messaggi già parsati con successo |
+| `--force-reparse` | Riprocessa anche se già presenti risultati |
+| `--show-samples N` | Stampa N esempi di output a schermo |
+
+### Genera CSV (da run esistente)
+
+```bash
+python parser_test/scripts/generate_parser_reports_v2.py ^
+  --db-name trader_a_topic ^
+  --run latest ^
+  --trader trader_a ^
+  --skip-replay
+```
+
+### Replay + CSV in un comando
+
+```bash
+python parser_test/scripts/generate_parser_reports_v2.py ^
+  --db-name trader_a_topic ^
+  --trader trader_a ^
+  --force-reparse
+```
+
+### Watch mode (sviluppo attivo)
+
+Monitora i file del profilo e rilancia automaticamente replay + CSV ad ogni modifica.
+
+```bash
+python parser_test/scripts/watch_parser.py ^
+  --trader trader_a ^
+  --db-name trader_a_topic
+```
+
+File monitorati: `semantic_markers.json`, `rules.json`, `profile.py`, `signal_extractor.py`,
+`intent_entity_extractor.py` in `src/parser_v2/profiles/trader_a/`.
+
+---
+
+## Output CSV
+
+I CSV vengono generati in:
+
+```
+parser_test/reports_v2/run_<run_id>/<trader>_message_types_csv/
+  <trader>_all_messages.csv
+  <trader>_new_signal.csv
+  <trader>_update.csv
+  <trader>_report.csv
+  <trader>_info_only.csv
+  <trader>_setup_incomplete.csv
+  <trader>_unclassified.csv
+  <trader>_errors.csv
+```
+
+### Scope CSV
 
 | File | Contenuto |
-|---|---|
-| `trader_..._all_messages.csv` | Tutti i messaggi parsati |
-| `trader_..._new_signal.csv` | `primary_class=SIGNAL` + `parse_status=PARSED` |
-| `trader_..._update.csv` | `primary_class=UPDATE` |
-| `trader_..._report.csv` | `primary_class=REPORT` |
-| `trader_..._info_only.csv` | `primary_class=INFO` |
-| `trader_..._setup_incomplete.csv` | `primary_class=SIGNAL` + `parse_status=PARTIAL` |
-| `trader_..._unclassified.csv` | `parse_status=UNCLASSIFIED` |
+|------|-----------|
+| `all_messages` | Tutti i messaggi parsati con successo |
+| `new_signal` | `primary_class=SIGNAL`, `parse_status=PARSED` |
+| `setup_incomplete` | `primary_class=SIGNAL`, `parse_status=PARTIAL` |
+| `update` | `primary_class=UPDATE` |
+| `report` | `primary_class=REPORT` |
+| `info_only` | `primary_class=INFO` |
+| `unclassified` | `parse_status=UNCLASSIFIED` |
+| `errors` | `error_status != OK` oppure `parse_status=ERROR` |
 
-### Colonne comuni a tutti i file
-
-`raw_message_id` · `reply_to_message_id` · `raw_text` · `parse_status` · `primary_class`
-
-### Colonne aggiuntive — UPDATE / REPORT / INFO / UNCLASSIFIED
-
-`warnings_summary` · `primary_intent` · `intents_confirmed` · `intents_candidate` · `intents_invalid` · `intents_invalid_reason` · `target_scope_scope` · `target_refs` · `new_stop_level` · `close_scope` · `close_fraction` · `hit_target` · `fill_state` · `cancel_scope` · `reported_results`
-
-### Colonne aggiuntive — NEW_SIGNAL / SETUP_INCOMPLETE
-
-`symbol` · `direction` · `risk_hint_value` · `market_type` · `completeness` · `entry_plan_type` · `entry_structure` · `entry_count` · `entries_summary` · `stop_loss_price` · `tp_prices` · `signal_id`
+I valori lista nelle celle CSV usano `|` come separatore.
+Encoding: UTF-8-sig (compatibile LibreOffice).
 
 ---
 
-## Note
+## Database
 
-- Lo script applica le migration sul DB di test, non sul DB live.
-- Non avvia il listener Telegram e non dipende da Telethon runtime.
-- `import_history.py` scrive solo su `raw_messages`; non tocca `parsed_messages`.
-- Il parser v1 scrive in `parsed_messages` (migration `022_parsed_messages.sql`). La tabella viene creata automaticamente al primo replay.
-- Con `--download-media`, i media vengono salvati come `BLOB` in `raw_messages.media_blob`; molti editor SQLite li mostrano in modalità `Image` se il contenuto è un'immagine.
-- Risoluzione chat target: `--chat-id` > `PARSER_TEST_CHAT_ID`; se assenti entrambi lo script termina con errore esplicito.
-- Se usi un link tipo `https://t.me/c/3531875065/175`, il `175` va passato come `--topic-id 175` e il canale come `--chat-id -1003531875065`.
+Il DB è un file SQLite in `parser_test/db/`. Ogni `--db-name` crea un file separato.
+
+Tabelle principali:
+- `raw_messages` — messaggi Telegram importati
+- `parser_runs` — metadati di ogni run di replay
+- `parser_results_v2` — risultati `CanonicalMessage` per ogni messaggio
