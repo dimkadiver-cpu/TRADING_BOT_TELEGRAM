@@ -1,10 +1,9 @@
-"""Watch parser source files and auto-rerun replay + report generation on change.
+"""Guarda i file del profilo parser_v2 e rilancia replay + CSV al cambio.
 
-Usage:
-    python parser_test/scripts/watch_parser.py --trader trader_3
-    python parser_test/scripts/watch_parser.py --trader trader_3 --dry-run
+Uso:
+    python parser_test/scripts/watch_parser.py --trader trader_a
+    python parser_test/scripts/watch_parser.py --trader trader_a --dry-run
 """
-
 from __future__ import annotations
 
 import argparse
@@ -24,105 +23,90 @@ except ImportError:
     _WATCHDOG_AVAILABLE = False
 
 _DEBOUNCE_SECONDS: float = 2.0
-_WATCHED_FILENAMES: tuple[str, ...] = ("semantic_markers.json", "rules.json", "profile.py", "extractors.py")
+_WATCHED_FILENAMES: tuple[str, ...] = (
+    "semantic_markers.json",
+    "semantic_markers_1.json",
+    "rules.json",
+    "profile.py",
+    "signal_extractor.py",
+    "intent_entity_extractor.py",
+)
 
 
 def _monitored_files(trader: str) -> list[Path]:
-    profile_dir = PROJECT_ROOT / "src" / "parser" / "trader_profiles" / trader
+    profile_dir = PROJECT_ROOT / "src" / "parser_v2" / "profiles" / trader
     return [profile_dir / name for name in _WATCHED_FILENAMES]
 
 
-def _run_pipeline(trader: str) -> None:
-    print(f"\n[watch_parser] change detected — running pipeline for {trader}", flush=True)
-    replay_script = PROJECT_ROOT / "parser_test" / "scripts" / "replay_parser.py"
-    report_script = PROJECT_ROOT / "parser_test" / "scripts" / "generate_parser_reports.py"
-
-    for script in (replay_script, report_script):
-        cmd = [sys.executable, str(script), "--trader", trader]
-        print(f"[watch_parser] running: {' '.join(cmd)}", flush=True)
+def _run_pipeline(trader: str, db_name: str | None, dry_run: bool) -> None:
+    print(f"\n[watch_parser] cambio rilevato — avvio pipeline per {trader}", flush=True)
+    report_script = PROJECT_ROOT / "parser_test" / "scripts" / "generate_parser_reports_v2.py"
+    cmd = [sys.executable, str(report_script), "--trader", trader, "--force-reparse"]
+    if db_name:
+        cmd += ["--db-name", db_name]
+    print(f"[watch_parser] {' '.join(cmd)}", flush=True)
+    if not dry_run:
         result = subprocess.run(cmd, cwd=str(PROJECT_ROOT))
         if result.returncode != 0:
-            print(
-                f"[watch_parser] WARNING: {script.name} exited with code {result.returncode}",
-                flush=True,
-            )
-
-    print(f"[watch_parser] pipeline done for {trader}", flush=True)
+            print(f"[watch_parser] WARNING: exit code {result.returncode}", flush=True)
+    print(f"[watch_parser] pipeline completata per {trader}", flush=True)
 
 
 if _WATCHDOG_AVAILABLE:
 
     class _DebounceHandler(FileSystemEventHandler):
-        def __init__(self, trader: str, watched_paths: set[Path]) -> None:
+        def __init__(self, trader: str, db_name: str | None, dry_run: bool, watched_paths: set[Path]) -> None:
             self._trader = trader
+            self._db_name = db_name
+            self._dry_run = dry_run
             self._watched = {str(p.resolve()) for p in watched_paths}
             self._last_trigger: float = 0.0
 
         def on_modified(self, event: FileSystemEvent) -> None:
-            if event.is_directory:
-                return
             if str(Path(event.src_path).resolve()) not in self._watched:
                 return
             now = time.monotonic()
             if now - self._last_trigger < _DEBOUNCE_SECONDS:
                 return
             self._last_trigger = now
-            _run_pipeline(self._trader)
-
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(
-        description="Watch parser files and auto-rerun replay + report generation."
-    )
-    parser.add_argument(
-        "--trader",
-        required=True,
-        help="Trader profile to watch (e.g. trader_3, trader_a).",
-    )
-    parser.add_argument(
-        "--dry-run",
-        action="store_true",
-        help="Print monitored files and exit without starting the watcher.",
-    )
-    return parser.parse_args()
+            _run_pipeline(self._trader, self._db_name, self._dry_run)
 
 
 def main() -> None:
-    args = parse_args()
-    files = _monitored_files(args.trader)
+    parser = argparse.ArgumentParser(description="Watch parser_v2 profile files and re-run pipeline")
+    parser.add_argument("--trader", required=True)
+    parser.add_argument("--db-name")
+    parser.add_argument("--dry-run", action="store_true")
+    args = parser.parse_args()
 
-    if args.dry_run:
-        print(f"[watch_parser] dry-run — monitored files for trader '{args.trader}':")
-        for f in files:
-            status = "exists" if f.exists() else "NOT FOUND"
-            print(f"  {f}  [{status}]")
-        return
+    watched = set(_monitored_files(args.trader))
+    existing = [p for p in watched if p.exists()]
 
-    if not _WATCHDOG_AVAILABLE:
-        print(
-            "[watch_parser] ERROR: watchdog is not installed. Run: pip install watchdog",
-            file=sys.stderr,
-        )
+    if not existing:
+        print(f"[watch_parser] ERRORE: nessun file trovato per trader={args.trader!r}")
+        print(f"  cercato in: {PROJECT_ROOT / 'src' / 'parser_v2' / 'profiles' / args.trader}")
         sys.exit(1)
 
-    profile_dir = PROJECT_ROOT / "src" / "parser" / "trader_profiles" / args.trader
-    handler = _DebounceHandler(trader=args.trader, watched_paths=set(files))
+    if not _WATCHDOG_AVAILABLE:
+        print("[watch_parser] watchdog non installato. Installa con: pip install watchdog")
+        sys.exit(1)
+
+    print(f"[watch_parser] monitoraggio trader={args.trader!r}")
+    for p in sorted(existing):
+        print(f"  {p.relative_to(PROJECT_ROOT)}")
+    print("[watch_parser] Ctrl+C per fermare\n")
+
+    handler = _DebounceHandler(args.trader, args.db_name, args.dry_run, watched)
     observer = Observer()
-    observer.schedule(handler, str(profile_dir), recursive=False)
+    for p in existing:
+        observer.schedule(handler, str(p.parent), recursive=False)
     observer.start()
-
-    print(f"[watch_parser] watching trader '{args.trader}':")
-    for f in files:
-        print(f"  {f}")
-    print("[watch_parser] press Ctrl+C to stop", flush=True)
-
     try:
-        while observer.is_alive():
-            observer.join(timeout=1.0)
+        while True:
+            time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
     observer.join()
-    print("[watch_parser] stopped", flush=True)
 
 
 if __name__ == "__main__":
