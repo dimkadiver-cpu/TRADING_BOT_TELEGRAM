@@ -212,7 +212,7 @@ def _extract_risk_hint(text: str, prefixes: list[str], suffixes: list[str]) -> R
 
     range_re = re.compile(
         rf"(?:{prefix_pattern})[^\d]{{0,24}}"
-        rf"(?P<min>\d+(?:[.,]\d+)?)\s*-\s*(?P<max>\d+(?:[.,]\d+)?)\s*%",
+        rf"(?P<min>\d+(?:[.,]\d+)?)\s*[-–—]\s*(?P<max>\d+(?:[.,]\d+)?)\s*%",
         re.IGNORECASE,
     )
     single_re = re.compile(

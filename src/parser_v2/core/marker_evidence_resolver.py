@@ -21,7 +21,7 @@ class MarkerEvidenceResolver:
         matches: list[MarkerMatch],
         rules: ParserRules,
         *,
-        raw_text: str | None = None,
+        text: str | None = None,
         semantic_markers: SemanticMarkers | None = None,
     ) -> MarkerEvidenceResolution:
         suppressed: dict[int, MarkerEvidence] = {}
@@ -50,7 +50,7 @@ class MarkerEvidenceResolver:
 
         # 2. weak_context_exclusions
         if marker_resolution.weak_context_exclusions:
-            if raw_text is None:
+            if text is None:
                 diagnostics_extra["weak_context_exclusions_skipped_no_text"] = [
                     r.name for r in marker_resolution.weak_context_exclusions
                 ]
@@ -65,7 +65,7 @@ class MarkerEvidenceResolver:
                             continue
                         if not _rule_markers_match(rule, weak_match, semantic_markers):
                             continue
-                        context_text = _extract_context(raw_text, weak_match.start, rule)
+                        context_text = _extract_context(text, weak_match.start, rule)
                         if _should_suppress_by_context(rule, context_text):
                             suppressed[weak_index] = _suppressed_evidence(
                                 weak_match,

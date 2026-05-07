@@ -31,7 +31,7 @@ def test_weak_marker_suppressed_by_historical_context():
         reason="historical_context",
     )
     resolver = MarkerEvidenceResolver()
-    result = resolver.resolve(matches, _make_rules([rule]), raw_text=text)
+    result = resolver.resolve(matches, _make_rules([rule]), text=text)
     assert len(result.evidence) == 0
     assert len(result.suppressed_markers) == 1
     assert result.suppressed_markers[0].reason == "historical_context"
@@ -49,7 +49,7 @@ def test_strong_marker_never_suppressed():
         if_contains_any=["после 1 тейка"],
     )
     resolver = MarkerEvidenceResolver()
-    result = resolver.resolve(matches, _make_rules([rule]), raw_text=text)
+    result = resolver.resolve(matches, _make_rules([rule]), text=text)
     assert len(result.evidence) == 1
     assert len(result.suppressed_markers) == 0
 
@@ -67,7 +67,7 @@ def test_unless_prevents_suppression():
         unless_contains_any=["тейк взят"],
     )
     resolver = MarkerEvidenceResolver()
-    result = resolver.resolve(matches, _make_rules([rule]), raw_text=text)
+    result = resolver.resolve(matches, _make_rules([rule]), text=text)
     assert len(result.evidence) == 1  # not suppressed due to "unless"
 
 
@@ -87,7 +87,7 @@ def test_scope_same_line_only_affects_same_line():
         if_contains_any=["после 1 тейка"],
     )
     resolver = MarkerEvidenceResolver()
-    result = resolver.resolve(matches, _make_rules([rule]), raw_text=text)
+    result = resolver.resolve(matches, _make_rules([rule]), text=text)
     assert len(result.evidence) == 1
     assert result.evidence[0].marker == "тейк взят"
 

@@ -3,13 +3,27 @@
     "suppress_weak_inside_strong_same_intent": true,
     "weak_context_exclusions": [
       {
+        "name": "move_stop_to_be_weak_context",
+        "intent": "MOVE_STOP_TO_BE",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
+        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
+      },
+      {
         "name": "tp_after_n_tp_historical_context",
         "intent": "TP_HIT",
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_regex_any": [
-          "после\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка"
+          "после\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка",
+          "(?:было|были|был|была)\\s+\\d+\\s+тейк(?:а|ов)?",
+          "дошли\\s+до\\s+\\d+(?:-х)?\\s+тейк(?:а|ов)?",
+          "дожидаться\\s+\\d+\\s+тейк(?:а|ов)?",
+          "у\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка"
         ],
+        "if_contains_any": ["стоял другой тейк","закрываю у тейка"],
         "unless_contains_any": [
           "тейк взят",
           "тейк взяли",
@@ -18,7 +32,31 @@
           "третий тейк взят"
         ],
         "reason": "historical_context"
+      },
+      {
+        "name": "sl_hit_ambiguous_general_context",
+        "intent": "SL_HIT",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_contains_any": [
+          "стопы переводить",
+          "стопы по",
+          "риск получить стоп",
+          "про стопы",
+          "стоп не двигаем",
+          "вышли стопы",
+          "стоп - это защита",
+          "стоп пока не переносим",
+          "стоп не переносим",
+          "стоп нужно ",
+          "стоп поставим",
+          "возьмет стоп",
+          "стоп возьмет"
+        ],
+      
+        "reason": "sl_markers_ambiguous_without_specific_context"
       }
+
     ],
     "cross_intent_suppression": [
       {
@@ -68,8 +106,8 @@
     {
       "name": "close_full_redundant_with_sl_hit",
       "when_all_detected": ["SL_HIT", "CLOSE_FULL"],
-      "prefer": "SL_HIT",
-      "over": ["CLOSE_FULL"]
+      "prefer": "CLOSE_FULL",
+      "over": ["SL_HIT"]
     },
      {
       "name": "sl_hit_redundant_with_tp_hit",

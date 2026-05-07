@@ -77,7 +77,7 @@ class UniversalParserRuntime:
 
         marker_matches = self._marker_matcher.match(normalized, markers)
         evidence_resolution = self._marker_evidence_resolver.resolve(
-            marker_matches, rules, raw_text=normalized.raw_text, semantic_markers=markers
+            marker_matches, rules, text=normalized.normalized_text, semantic_markers=markers
         )
 
         if _has_info_marker(evidence_resolution.evidence):
