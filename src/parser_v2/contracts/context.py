@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import Any
+
 from pydantic import BaseModel, ConfigDict, Field
 
-from .enums import ScopeHint
+from .enums import ScopeHint, TargetSource
 
 
 class ContextModel(BaseModel):
@@ -21,12 +23,26 @@ class RawContext(ContextModel):
 
 
 class TargetHints(ContextModel):
+    target_source: TargetSource = "UNKNOWN"
     reply_to_message_id: int | None = None
     telegram_message_ids: list[int] = Field(default_factory=list)
     telegram_links: list[str] = Field(default_factory=list)
     explicit_ids: list[str] = Field(default_factory=list)
     symbols: list[str] = Field(default_factory=list)
     scope_hint: ScopeHint = "UNKNOWN"
+
+
+class TargetCandidate(ContextModel):
+    source: TargetSource
+    value: Any
+    start: int | None = None
+    end: int | None = None
+    line_index: int | None = None
+
+
+class TargetExtractionResult(ContextModel):
+    message_target_hints: TargetHints
+    candidates: list[TargetCandidate] = Field(default_factory=list)
 
 
 class ParserContext(ContextModel):

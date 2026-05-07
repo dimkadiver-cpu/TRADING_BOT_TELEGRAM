@@ -76,6 +76,16 @@ MarkerKind = Literal[
     "info",
     "target_hint",
 ]
+TargetSource = Literal[
+    "LOCAL_TEXT_LINK",
+    "LOCAL_EXPLICIT_ID",
+    "MESSAGE_TEXT_LINK",
+    "MESSAGE_EXPLICIT_ID",
+    "REPLY",
+    "SYMBOL",
+    "GLOBAL_SCOPE",
+    "UNKNOWN",
+]
 Completeness = Literal["COMPLETE", "INCOMPLETE"]
 
 STRONG_WEIGHT: float = 1.0
