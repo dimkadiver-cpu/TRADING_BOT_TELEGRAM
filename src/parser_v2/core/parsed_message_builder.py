@@ -215,8 +215,8 @@ def _assign_occurrence_ids(intents: list[ParsedIntent]) -> list[ParsedIntent]:
 
 
 def _dedup(values: Iterable[_T]) -> list[_T]:
-    seen: set[T] = set()
-    result: list[T] = []
+    seen: set[_T] = set()
+    result: list[_T] = []
     for value in values:
         if value in seen:
             continue
