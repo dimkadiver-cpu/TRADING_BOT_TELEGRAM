@@ -52,6 +52,12 @@
       "prefer": "SL_HIT",
       "over": ["CLOSE_FULL"]
     },
+     {
+      "name": "sl_hit_redundant_with_tp_hit",
+      "when_all_detected": ["SL_HIT", "TP_HIT"],
+      "prefer": "SL_HIT",
+      "over": ["TP_HIT"]
+    },
     {
       "name": "context_market_marker",
       "when_marker_in": [
@@ -84,9 +90,9 @@
     }
   },
   "primary_intent_precedence": [
-    "SL_HIT",
     "EXIT_BE",
     "TP_HIT",
+    "SL_HIT",
     "REPORT_RESULT",
     "CLOSE_FULL",
     "CLOSE_PARTIAL",
