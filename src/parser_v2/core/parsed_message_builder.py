@@ -36,7 +36,7 @@ class ParsedMessageBuilder:
         warnings: list[str] | None = None,
         diagnostics: Mapping[str, Any] | None = None,
     ) -> ParsedMessage:
-        final_intents = intents or []
+        final_intents = _assign_occurrence_ids(intents or [])
         classification = ClassificationResolver().resolve(
             signal=signal,
             intents=final_intents,
@@ -199,6 +199,19 @@ def _format_markers(
         f"{marker.name}/{marker.strength}:{marker.marker}@{marker.start}:{marker.end}"
         for marker in markers
     ]
+
+
+def _assign_occurrence_ids(intents: list[ParsedIntent]) -> list[ParsedIntent]:
+    counters: dict[str, int] = {}
+    result: list[ParsedIntent] = []
+    for intent in intents:
+        idx = counters.get(intent.type, 0)
+        counters[intent.type] = idx + 1
+        result.append(intent.model_copy(update={
+            "occurrence_index": idx,
+            "intent_id": f"{intent.type}#{idx}",
+        }))
+    return result
 
 
 def _dedup(values: Iterable[_T]) -> list[_T]:
