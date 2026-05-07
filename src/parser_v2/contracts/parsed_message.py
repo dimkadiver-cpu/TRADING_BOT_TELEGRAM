@@ -36,6 +36,9 @@ class ParsedIntent(ParsedModel):
     line_index: int | None = Field(default=None, ge=0)
     span_start: int | None = Field(default=None, ge=0)
     span_end: int | None = Field(default=None, ge=0)
+    intent_id: str | None = None
+    occurrence_index: int | None = None
+    target_hints: TargetHints | None = None
 
 
 class ParsedMessage(ParsedModel):
