@@ -1,0 +1,122 @@
+from __future__ import annotations
+import pytest
+from src.parser_v2.contracts.context import ParserContext, RawContext, TargetHints
+from src.parser_v2.contracts.markers import NormalizedText
+from src.parser_v2.contracts.parsed_message import ParsedIntent, ParsedMessage
+from src.parser_v2.contracts.entities import MoveStopToBEEntities, CancelPendingEntities
+from src.parser_v2.translation.canonical_translator import CanonicalTranslator
+
+
+def _raw_ctx() -> RawContext:
+    return RawContext(raw_text="test")
+
+
+def _make_parsed(
+    intents: list[ParsedIntent],
+    target_hints: TargetHints | None = None,
+    parse_status: str = "PARSED",
+    warnings: list[str] | None = None,
+) -> ParsedMessage:
+    return ParsedMessage(
+        parser_profile="test",
+        primary_class="UPDATE",
+        parse_status=parse_status,
+        confidence=0.9,
+        intents=intents,
+        target_hints=target_hints,
+        warnings=warnings or [],
+        raw_context=_raw_ctx(),
+    )
+
+
+def _make_intent(type_: str, occurrence_index: int = 0, target_hints: TargetHints | None = None) -> ParsedIntent:
+    return ParsedIntent(
+        type=type_,
+        category="UPDATE",
+        confidence=0.9,
+        intent_id=f"{type_}#{occurrence_index}",
+        occurrence_index=occurrence_index,
+        target_hints=target_hints,
+    )
+
+
+def test_mixed_ops_on_global_target_produces_targeted_actions():
+    intents = [
+        _make_intent("MOVE_STOP_TO_BE", occurrence_index=0),
+        _make_intent("CANCEL_PENDING", occurrence_index=0),
+    ]
+    global_hints = TargetHints(
+        target_source="MESSAGE_TEXT_LINK",
+        telegram_message_ids=[111, 222],
+    )
+    parsed = _make_parsed(intents, target_hints=global_hints)
+    result = CanonicalTranslator().translate(parsed)
+
+    assert result.parse_status == "PARSED"
+    assert len(result.targeted_actions) == 2
+    action_types = {a.action_type for a in result.targeted_actions}
+    assert "SET_STOP" in action_types
+    assert "CANCEL_PENDING" in action_types
+    for action in result.targeted_actions:
+        assert action.target_hints.telegram_message_ids == [111, 222]
+
+
+def test_mixed_ops_no_partial_warning():
+    intents = [
+        _make_intent("MOVE_STOP_TO_BE", occurrence_index=0),
+        _make_intent("CANCEL_PENDING", occurrence_index=0),
+    ]
+    parsed = _make_parsed(intents, target_hints=TargetHints(telegram_message_ids=[111]))
+    result = CanonicalTranslator().translate(parsed)
+    assert "multi_ref_mixed_intents_not_supported" not in result.warnings
+    assert "ambiguous_target_intent_binding" not in result.warnings
+
+
+def test_source_intent_id_propagated():
+    intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=1)]
+    parsed = _make_parsed(intents, target_hints=TargetHints(telegram_message_ids=[111]))
+    result = CanonicalTranslator().translate(parsed)
+    assert result.targeted_actions[0].source_intent_id == "MOVE_STOP_TO_BE#1"
+
+
+def test_reply_generates_targeted_actions():
+    intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=0)]
+    hints = TargetHints(target_source="REPLY", reply_to_message_id=100)
+    parsed = _make_parsed(intents, target_hints=hints)
+    result = CanonicalTranslator().translate(parsed)
+    assert len(result.targeted_actions) == 1
+    assert result.targeted_actions[0].target_hints.reply_to_message_id == 100
+
+
+def test_per_intent_target_hints_override_global():
+    local_hints = TargetHints(target_source="LOCAL_TEXT_LINK", telegram_message_ids=[111])
+    global_hints = TargetHints(target_source="MESSAGE_TEXT_LINK", telegram_message_ids=[111, 222])
+    intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=0, target_hints=local_hints)]
+    parsed = _make_parsed(intents, target_hints=global_hints)
+    result = CanonicalTranslator().translate(parsed)
+    assert result.targeted_actions[0].target_hints.telegram_message_ids == [111]
+
+
+def test_intents_deduplicated_in_canonical():
+    intents = [
+        _make_intent("MOVE_STOP_TO_BE", occurrence_index=0),
+        _make_intent("MOVE_STOP_TO_BE", occurrence_index=1),
+    ]
+    parsed = _make_parsed(intents, target_hints=TargetHints(telegram_message_ids=[111, 222]))
+    result = CanonicalTranslator().translate(parsed)
+    assert result.intents.count("MOVE_STOP_TO_BE") == 1
+
+
+def test_line_level_intents_each_get_own_target():
+    intents = [
+        _make_intent("MOVE_STOP_TO_BE", occurrence_index=0,
+                     target_hints=TargetHints(target_source="LOCAL_TEXT_LINK", telegram_message_ids=[111])),
+        _make_intent("CLOSE_FULL", occurrence_index=0,
+                     target_hints=TargetHints(target_source="LOCAL_TEXT_LINK", telegram_message_ids=[222])),
+    ]
+    parsed = _make_parsed(intents, target_hints=None)
+    result = CanonicalTranslator().translate(parsed)
+    assert len(result.targeted_actions) == 2
+    ids = {a.action_type: a.target_hints.telegram_message_ids for a in result.targeted_actions}
+    assert ids["SET_STOP"] == [111]
+    assert ids["CLOSE"] == [222]
