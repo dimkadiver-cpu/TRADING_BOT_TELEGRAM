@@ -81,6 +81,7 @@ class UpdateOperation(CanonicalModel):
     modify_targets: ModifyTargetsOperation | None = None
     invalidate_setup: InvalidateSetupOperation | None = None
     source_intent: IntentType
+    source_intent_id: str | None = None
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
     raw_fragment: str | None = None
 
@@ -135,6 +136,7 @@ class TargetedAction(CanonicalModel):
     params: dict[str, Any] = Field(default_factory=dict)
     target_hints: TargetHints
     source_intent: IntentType
+    source_intent_id: str | None = None
     raw_fragment: str | None = None
     confidence: float | None = Field(default=None, ge=0.0, le=1.0)
 
@@ -177,11 +179,11 @@ class CanonicalMessage(CanonicalModel):
             if (
                 self.parse_status == "PARTIAL"
                 and not has_update_work
-                and "multi_ref_mixed_intents_not_supported" not in self.warnings
+                and "ambiguous_target_intent_binding" not in self.warnings
             ):
                 raise ValueError(
                     "PARTIAL UPDATE without operation or targeted_action requires "
-                    "multi_ref_mixed_intents_not_supported warning"
+                    "ambiguous_target_intent_binding warning"
                 )
 
         elif self.primary_class == "REPORT":
