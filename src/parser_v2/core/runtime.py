@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Protocol
 
 from src.parser_v2.contracts.canonical_message import CanonicalMessage
-from src.parser_v2.contracts.context import ParserContext, TargetExtractionResult, TargetHints
+from src.parser_v2.contracts.context import ParserContext, RawContext, TargetExtractionResult, TargetHints
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent, ParsedMessage, SignalDraft
 from src.parser_v2.contracts.rules import ParserRules, SemanticMarkers
