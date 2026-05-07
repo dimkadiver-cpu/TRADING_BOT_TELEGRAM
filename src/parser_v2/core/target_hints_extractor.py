@@ -2,12 +2,17 @@ from __future__ import annotations
 
 import re
 from collections.abc import Iterable
-from typing import TypeVar, cast
+from typing import TypeVar
 
 _T = TypeVar("_T")
 
-from src.parser_v2.contracts.context import ParserContext, TargetHints
-from src.parser_v2.contracts.enums import ScopeHint
+from src.parser_v2.contracts.context import (
+    ParserContext,
+    TargetCandidate,
+    TargetExtractionResult,
+    TargetHints,
+)
+from src.parser_v2.contracts.enums import ScopeHint, TargetSource
 from src.parser_v2.contracts.markers import NormalizedText
 from src.parser_v2.contracts.rules import MarkerSet, SemanticMarkers
 from src.parser_v2.core.symbol_normalizer import normalize_symbol
@@ -25,13 +30,19 @@ EXPLICIT_ID_PATTERNS = (
 TOKEN_RE = re.compile(r"#?[a-z0-9][a-z0-9._-]*", re.IGNORECASE)
 TRAILING_LINK_CHARS = ".,;:!?)]}\"'"
 SCOPE_HINTS: set[str] = {
-    "SINGLE_SIGNAL",
-    "SYMBOL",
-    "ALL_LONG",
-    "ALL_SHORT",
-    "ALL_POSITIONS",
-    "ALL_OPEN",
-    "ALL_REMAINING",
+    "SINGLE_SIGNAL", "SYMBOL", "ALL_LONG", "ALL_SHORT",
+    "ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING",
+}
+
+_SOURCE_PRIORITY: dict[str, int] = {
+    "LOCAL_TEXT_LINK": 0,
+    "LOCAL_EXPLICIT_ID": 1,
+    "MESSAGE_TEXT_LINK": 2,
+    "MESSAGE_EXPLICIT_ID": 3,
+    "REPLY": 4,
+    "SYMBOL": 5,
+    "GLOBAL_SCOPE": 6,
+    "UNKNOWN": 7,
 }
 
 
@@ -41,16 +52,69 @@ class TargetHintsExtractor:
         normalized: NormalizedText,
         context: ParserContext,
         markers: SemanticMarkers,
-    ) -> TargetHints:
-        links = _dedup(_extract_telegram_links(normalized.raw_text))
+    ) -> TargetExtractionResult:
+        candidates: list[TargetCandidate] = []
 
-        return TargetHints(
-            reply_to_message_id=_reply_to_message_id(context),
+        raw_text = normalized.raw_text
+        link_matches = list(TELEGRAM_LINK_RE.finditer(raw_text))
+        links: list[str] = []
+        message_ids: list[int] = []
+        for match in link_matches:
+            link = match.group(0).rstrip(TRAILING_LINK_CHARS)
+            if link in links:
+                continue
+            links.append(link)
+            msg_id = _message_id_from_link(link)
+            if msg_id is not None:
+                message_ids.append(msg_id)
+                line_idx = raw_text.count("\n", 0, match.start())
+                candidates.append(TargetCandidate(
+                    source="MESSAGE_TEXT_LINK",
+                    value=msg_id,
+                    start=match.start(),
+                    end=match.end(),
+                    line_index=line_idx,
+                ))
+
+        reply_id = _reply_to_message_id(context)
+        if reply_id is not None:
+            candidates.append(TargetCandidate(source="REPLY", value=reply_id))
+
+        explicit_ids = _dedup(_extract_explicit_ids(normalized.normalized_text))
+        for eid in explicit_ids:
+            candidates.append(TargetCandidate(source="MESSAGE_EXPLICIT_ID", value=eid))
+
+        symbols = _dedup(_extract_symbols(normalized.normalized_text, markers))
+        for sym in symbols:
+            candidates.append(TargetCandidate(source="SYMBOL", value=sym))
+
+        scope_hint = _extract_scope_hint(normalized.normalized_text, markers)
+
+        target_source: TargetSource = "UNKNOWN"
+        if message_ids:
+            target_source = "MESSAGE_TEXT_LINK"
+        elif explicit_ids:
+            target_source = "MESSAGE_EXPLICIT_ID"
+        elif reply_id is not None:
+            target_source = "REPLY"
+        elif symbols:
+            target_source = "SYMBOL"
+        elif scope_hint not in ("UNKNOWN", "SINGLE_SIGNAL"):
+            target_source = "GLOBAL_SCOPE"
+
+        message_target_hints = TargetHints(
+            target_source=target_source,
+            reply_to_message_id=reply_id,
             telegram_links=links,
-            telegram_message_ids=_dedup(_message_ids_from_links(links)),
-            explicit_ids=_dedup(_extract_explicit_ids(normalized.normalized_text)),
-            symbols=_dedup(_extract_symbols(normalized.normalized_text, markers)),
-            scope_hint=_extract_scope_hint(normalized.normalized_text, markers),
+            telegram_message_ids=message_ids,
+            explicit_ids=explicit_ids,
+            symbols=symbols,
+            scope_hint=scope_hint,
+        )
+
+        return TargetExtractionResult(
+            message_target_hints=message_target_hints,
+            candidates=candidates,
         )
 
 
@@ -62,16 +126,9 @@ def _reply_to_message_id(context: ParserContext) -> int | None:
     return None
 
 
-def _extract_telegram_links(text: str) -> Iterable[str]:
-    for match in TELEGRAM_LINK_RE.finditer(text):
-        yield match.group(0).rstrip(TRAILING_LINK_CHARS)
-
-
-def _message_ids_from_links(links: Iterable[str]) -> Iterable[int]:
-    for link in links:
-        tail = link.rstrip("/").rsplit("/", 1)[-1]
-        if tail.isdigit():
-            yield int(tail)
+def _message_id_from_link(link: str) -> int | None:
+    tail = link.rstrip("/").rsplit("/", 1)[-1]
+    return int(tail) if tail.isdigit() else None
 
 
 def _extract_explicit_ids(text: str) -> Iterable[str]:
@@ -81,16 +138,12 @@ def _extract_explicit_ids(text: str) -> Iterable[str]:
 
 
 def _extract_symbols(text: str, markers: SemanticMarkers) -> Iterable[str]:
-    symbol_markers = _target_marker_set(markers, "symbol")
-    if symbol_markers is None:
-        symbol_markers = _target_marker_set(markers, "SYMBOL")
+    symbol_markers = markers.target_hint_markers.get("symbol") or markers.target_hint_markers.get("SYMBOL")
     if symbol_markers is None:
         return []
-
-    marker_values = [marker.lower() for marker in _marker_values(symbol_markers) if marker]
+    marker_values = [m.lower() for m in _marker_values(symbol_markers) if m]
     if not marker_values:
         return []
-
     symbols: list[str] = []
     for match in TOKEN_RE.finditer(text):
         token = match.group(0).lstrip("#").strip(".,;:!?()[]{}")
@@ -104,6 +157,7 @@ def _extract_symbols(text: str, markers: SemanticMarkers) -> Iterable[str]:
 
 
 def _extract_scope_hint(text: str, markers: SemanticMarkers) -> ScopeHint:
+    from typing import cast
     candidates: list[tuple[int, int, str]] = []
     for name, marker_set in markers.target_hint_markers.items():
         if name not in SCOPE_HINTS or name == "UNKNOWN":
@@ -113,23 +167,15 @@ def _extract_scope_hint(text: str, markers: SemanticMarkers) -> ScopeHint:
             if start is not None:
                 candidates.append((strength_rank, start, name))
                 break
-
     if not candidates:
         return "UNKNOWN"
-
     candidates.sort(key=lambda item: (item[0], item[1]))
     return cast(ScopeHint, candidates[0][2])
 
 
 def _first_marker_position(text: str, marker_values: Iterable[str]) -> int | None:
     positions = [text.find(marker) for marker in marker_values if marker and marker in text]
-    if not positions:
-        return None
-    return min(positions)
-
-
-def _target_marker_set(markers: SemanticMarkers, key: str) -> MarkerSet | None:
-    return markers.target_hint_markers.get(key)
+    return min(positions) if positions else None
 
 
 def _marker_values(marker_set: MarkerSet) -> Iterable[str]:
@@ -138,8 +184,8 @@ def _marker_values(marker_set: MarkerSet) -> Iterable[str]:
 
 
 def _dedup(values: Iterable[_T]) -> list[_T]:
-    seen: set[T] = set()
-    result: list[T] = []
+    seen: set[_T] = set()
+    result: list[_T] = []
     for value in values:
         if value in seen:
             continue
