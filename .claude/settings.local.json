@@ -72,7 +72,9 @@
       "PowerShell($content = Get-Content -Path \"C:\\\\TeleSignalBot\\\\tests\\\\parser_v2\\\\__init__.py\" -Raw; Write-Output \"Length: $\\($content.Length\\)\"; Write-Output \"Content repr: [$content]\")",
       "Bash(dir /b C:\\\\TeleSignalBot\\\\parser_test\\\\db)",
       "Bash(git *)",
-      "Bash(pytest *)"
+      "Bash(pytest *)",
+      "Bash(ls -d .worktrees)",
+      "Bash(ls -d worktrees)"
     ]
   }
 }

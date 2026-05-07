@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 _COMMON_COLUMNS = [
+    "trader_id",
     "primary_class",
     "parse_status",
     "raw_message_id",

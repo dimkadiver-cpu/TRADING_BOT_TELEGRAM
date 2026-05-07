@@ -4,6 +4,71 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-07 — Occurrence Identity + Target Binding (parser_v2)
+
+### Step completato
+
+Implementazione completa del feature `occurrence-identity-target-binding` su `parser_v2`.
+12 task TDD completati, 66 test scritti, 0 regressioni.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/contracts/enums.py` | Modificato | Aggiunto `TargetSource` Literal (8 valori) |
+| `src/parser_v2/contracts/context.py` | Modificato | Aggiunto `target_source` a `TargetHints`, `TargetCandidate`, `TargetExtractionResult` |
+| `src/parser_v2/contracts/parsed_message.py` | Modificato | Aggiunto `intent_id`, `occurrence_index` (ge=0), `target_hints` a `ParsedIntent` |
+| `src/parser_v2/contracts/canonical_message.py` | Modificato | Aggiunto `source_intent_id` a `UpdateOperation` e `TargetedAction`; warning rinominato `ambiguous_target_intent_binding` |
+| `src/parser_v2/contracts/rules.py` | Modificato | Aggiunto `WeakContextExclusionRule` + `weak_context_exclusions` in `MarkerResolutionRules` |
+| `src/parser_v2/core/marker_evidence_resolver.py` | Riscritto | Supporto `weak_context_exclusions` con scope (same_sentence/same_line/window/whole_message) e `raw_text` |
+| `src/parser_v2/core/local_disambiguator.py` | Modificato | Supporto campo `scope` nelle regole (same_span, same_line, whole_message) |
+| `src/parser_v2/core/target_hints_extractor.py` | Riscritto | Ritorna `TargetExtractionResult` con `TargetCandidate` posizionali per ogni link |
+| `src/parser_v2/core/parsed_message_builder.py` | Modificato | Aggiunto `_assign_occurrence_ids()` — assegna `intent_id` e `occurrence_index` a tutti gli intent |
+| `src/parser_v2/core/target_binding_resolver.py` | Creato | Nuovo componente: binding riga-livello candidati→intent con regola D11 ambiguità |
+| `src/parser_v2/translation/canonical_translator.py` | Modificato | Multi-op su target globale produce `TargetedAction` per ciascuna (non PARTIAL); `source_intent_id` propagato; `intents` deduplicate |
+| `src/parser_v2/core/runtime.py` | Modificato | `TargetBindingResolver` integrato nel pipeline; `raw_text` passato al resolver; `_extract_target_hints` ritorna `TargetExtractionResult` |
+
+### Risultato test
+
+```
+pytest src/parser_v2/  →  66/66 passed (0 failures)
+```
+
+Distribuzione:
+- 15 test contratti (Tasks 1-4)
+- 5 test WeakContextExclusionRule (Task 5)
+- 4 test LocalDisambiguator scope (Task 6)
+- 7 test TargetHintsExtractor (Task 7)
+- 4+1 test ParsedMessageBuilder (Task 8)
+- 6 test TargetBindingResolver (Task 9)
+- 7 test CanonicalTranslator (Task 10)
+- 4 test Runtime (Task 11)
+- 5 test integrazione end-to-end (Task 12)
+
+### Decisioni architetturali chiave
+
+| Decisione | Scelta | Motivazione |
+|---|---|---|
+| D1 | `TargetBindingResolver` separato dal `IntentEntityExtractor` | Separazione responsabilità; il binding avviene dopo la disambiguazione |
+| D2 | Multi-op su global target → N `TargetedAction`, non PARTIAL | Ogni op agisce su un trade specifico downstream |
+| D7 | Rename immediato `multi_ref_mixed_intents_not_supported` → `ambiguous_target_intent_binding` | Semantica più precisa, evita confusione con vecchio comportamento |
+| D8 | `CanonicalMessage.intents` = lista deduplicata dei tipi | Indica quali tipi sono presenti, non quante occorrenze |
+| D9 | `ParsedMessageBuilder` assegna gli occurrence IDs | Momento post-disambiguazione, pre-binding |
+| D10 | Link nel testo batte reply per `target_source` | Il link è più specifico e intenzionale |
+| D11 | Ambiguità = N_links != N_intents AND entrambi > 1 sulla stessa riga | 1:N e N:1 sono risolvibili; solo N:M entrambi>1 è ambiguo |
+
+### Rischi aperti
+
+- `WeakContextExclusionRule.scope == "window"` implementato nel resolver ma senza test di integrazione con profilo reale — richiede `window_chars` configurato nel `rules.json` del trader.
+- I profili esistenti (`trader_a`, `trader_b`, `trader_c`, `trader_d`, `trader_3`) non usano ancora `weak_context_exclusions` — la feature è disponibile ma non attivata.
+- `SIGNAL` e `REPORT` in `CanonicalTranslator` non deduplicano `intents` (solo UPDATE lo fa). Da valutare se necessario per quei primary_class.
+
+### Branch
+
+`worktree-feat-occurrence-identity-target-binding` — pronto per merge su `main`.
+
+---
+
 ## 2026-05-06 — Verifica Fase 7 LocalDisambiguator e fix compatibilità Python 3.11
 
 ### Step completato

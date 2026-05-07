@@ -1,6 +1,25 @@
 {
   "marker_resolution": {
     "suppress_weak_inside_strong_same_intent": true,
+    "weak_context_exclusions": [
+      {
+        "name": "tp_after_n_tp_historical_context",
+        "intent": "TP_HIT",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_regex_any": [
+          "после\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка"
+        ],
+        "unless_contains_any": [
+          "тейк взят",
+          "тейк взяли",
+          "взяли тейк",
+          "второй тейк взят",
+          "третий тейк взят"
+        ],
+        "reason": "historical_context"
+      }
+    ],
     "cross_intent_suppression": [
       {
         "if_strong": "MOVE_STOP_TO_BE",
