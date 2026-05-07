@@ -65,6 +65,7 @@ def _apply_prefer_suppress_rule(
     suppressed: list[ParsedIntent],
     rule: dict[str, Any],
 ) -> bool:
+    scope = rule.get("scope", "whole_message")
     remove_types: set[str] = set()
     action = _rule_action(rule)
 
@@ -74,7 +75,6 @@ def _apply_prefer_suppress_rule(
         prefer = rule.get("prefer")
         if prefer is None:
             return False
-
         over = rule.get("over")
         if over is None:
             over = [
@@ -84,7 +84,40 @@ def _apply_prefer_suppress_rule(
             ]
         remove_types.update(over)
 
-    return _remove_types(active, suppressed, remove_types)
+    if scope == "whole_message":
+        return _remove_types(active, suppressed, remove_types)
+
+    # Find "preferred" intents to determine context
+    prefer_type = rule.get("prefer")
+    preferred_intents = [i for i in active if i.type == prefer_type] if prefer_type else []
+
+    if not preferred_intents:
+        return _remove_types(active, suppressed, remove_types)
+
+    removed_any = False
+    for preferred in preferred_intents:
+        to_remove = [
+            intent for intent in active
+            if intent.type in remove_types
+            and _scope_matches(preferred, intent, scope)
+        ]
+        for intent in to_remove:
+            active.remove(intent)
+            suppressed.append(intent)
+            removed_any = True
+    return removed_any
+
+
+def _scope_matches(preferred: ParsedIntent, candidate: ParsedIntent, scope: str) -> bool:
+    if scope == "same_span":
+        if preferred.span_start is None or preferred.span_end is None:
+            return False
+        if candidate.span_start is None or candidate.span_end is None:
+            return False
+        return not (candidate.span_end <= preferred.span_start or candidate.span_start >= preferred.span_end)
+    if scope in ("same_line", "same_sentence", "same_target_group"):
+        return preferred.line_index is not None and preferred.line_index == candidate.line_index
+    return True  # fallback whole_message
 
 
 def _apply_context_market_rule(
