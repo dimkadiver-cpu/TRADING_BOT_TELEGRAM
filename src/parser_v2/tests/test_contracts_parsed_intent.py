@@ -42,3 +42,9 @@ def test_parsed_intent_stores_target_hints():
     assert intent.target_hints is not None
     assert intent.target_hints.telegram_message_ids == [111]
     assert intent.target_hints.target_source == "LOCAL_TEXT_LINK"
+
+
+def test_parsed_intent_rejects_negative_occurrence_index():
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        _make_intent(occurrence_index=-1)

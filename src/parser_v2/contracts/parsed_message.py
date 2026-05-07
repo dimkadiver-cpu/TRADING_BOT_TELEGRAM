@@ -37,7 +37,7 @@ class ParsedIntent(ParsedModel):
     span_start: int | None = Field(default=None, ge=0)
     span_end: int | None = Field(default=None, ge=0)
     intent_id: str | None = None
-    occurrence_index: int | None = None
+    occurrence_index: int | None = Field(default=None, ge=0)
     target_hints: TargetHints | None = None
 
 
