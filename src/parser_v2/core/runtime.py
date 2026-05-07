@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from typing import Protocol
+from typing import Any, Protocol
 
 from src.parser_v2.contracts.canonical_message import CanonicalMessage
-from src.parser_v2.contracts.context import ParserContext, TargetHints
+from src.parser_v2.contracts.context import ParserContext, TargetExtractionResult, TargetHints
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent, ParsedMessage, SignalDraft
 from src.parser_v2.contracts.rules import ParserRules, SemanticMarkers
@@ -11,6 +11,7 @@ from src.parser_v2.core.local_disambiguator import LocalDisambiguator
 from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver
 from src.parser_v2.core.marker_matcher import MarkerMatcher
 from src.parser_v2.core.parsed_message_builder import ParsedMessageBuilder
+from src.parser_v2.core.target_binding_resolver import TargetBindingResolver
 from src.parser_v2.core.target_hints_extractor import TargetHintsExtractor
 from src.parser_v2.core.text_normalizer import TextNormalizer
 from src.parser_v2.translation.canonical_translator import CanonicalTranslator
@@ -51,6 +52,7 @@ class UniversalParserRuntime:
         marker_evidence_resolver: MarkerEvidenceResolver | None = None,
         local_disambiguator: LocalDisambiguator | None = None,
         target_hints_extractor: TargetHintsExtractor | None = None,
+        target_binding_resolver: TargetBindingResolver | None = None,
         parsed_message_builder: ParsedMessageBuilder | None = None,
         canonical_translator: CanonicalTranslator | None = None,
     ) -> None:
@@ -59,6 +61,7 @@ class UniversalParserRuntime:
         self._marker_evidence_resolver = marker_evidence_resolver or MarkerEvidenceResolver()
         self._local_disambiguator = local_disambiguator or LocalDisambiguator()
         self._target_hints_extractor = target_hints_extractor or TargetHintsExtractor()
+        self._target_binding_resolver = target_binding_resolver or TargetBindingResolver()
         self._parsed_message_builder = parsed_message_builder or ParsedMessageBuilder()
         self._canonical_translator = canonical_translator or CanonicalTranslator()
 
@@ -73,7 +76,9 @@ class UniversalParserRuntime:
         normalized = self._text_normalizer.normalize(text)
 
         marker_matches = self._marker_matcher.match(normalized, markers)
-        evidence_resolution = self._marker_evidence_resolver.resolve(marker_matches, rules)
+        evidence_resolution = self._marker_evidence_resolver.resolve(
+            marker_matches, rules, raw_text=normalized.raw_text, semantic_markers=markers
+        )
 
         if _has_info_marker(evidence_resolution.evidence):
             parsed = _build_info_parsed_message(
@@ -98,30 +103,36 @@ class UniversalParserRuntime:
             signal=signal,
             normalized=normalized,
         )
-        target_hints = self._extract_target_hints(normalized, context, profile, markers)
+        extraction = self._extract_target_hints(normalized, context, profile, markers)
+        binding = self._target_binding_resolver.bind(
+            disambiguation.intents,
+            extraction,
+        )
+
+        build_warnings = _warnings_from_disambiguation(disambiguation.diagnostics)
+        build_warnings = [*build_warnings, *binding.warnings]
+
+        build_diagnostics: dict[str, Any] = {
+            "suppressed_intents": disambiguation.diagnostics.get("suppressed_intents", []),
+            **binding.diagnostics,
+        }
 
         parsed = self._parsed_message_builder.build(
             parser_profile=profile.trader_code,
             normalized=normalized,
             context=context,
             signal=signal,
-            intents=disambiguation.intents,
+            intents=binding.intents,
             primary_intent=disambiguation.primary_intent,
-            target_hints=target_hints,
+            target_hints=binding.message_target_hints,
             matched_markers=marker_matches,
             suppressed_markers=evidence_resolution.suppressed_markers,
             applied_marker_rules=evidence_resolution.diagnostics.get("applied_marker_rules", []),
             applied_disambiguation_rules=disambiguation.diagnostics.get(
-                "applied_disambiguation_rules",
-                [],
+                "applied_disambiguation_rules", []
             ),
-            warnings=_warnings_from_disambiguation(disambiguation.diagnostics),
-            diagnostics={
-                "suppressed_intents": disambiguation.diagnostics.get(
-                    "suppressed_intents",
-                    [],
-                ),
-            },
+            warnings=build_warnings,
+            diagnostics=build_diagnostics,
         )
 
         return self._canonical_translator.translate(parsed)
@@ -132,11 +143,13 @@ class UniversalParserRuntime:
         context: ParserContext,
         profile: TraderParserProfile,
         markers: SemanticMarkers,
-    ) -> TargetHints:
+    ) -> TargetExtractionResult:
         custom_extractor = getattr(profile, "extract_target_hints", None)
         if callable(custom_extractor):
             custom_hints = custom_extractor(normalized, context, markers)
             if custom_hints is not None:
+                if isinstance(custom_hints, TargetHints):
+                    return TargetExtractionResult(message_target_hints=custom_hints)
                 return custom_hints
 
         return self._target_hints_extractor.extract(normalized, context, markers)
