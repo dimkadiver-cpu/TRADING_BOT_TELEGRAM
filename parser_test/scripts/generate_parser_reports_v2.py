@@ -13,7 +13,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from parser_test.db.schema import apply_parser_test_schema
 from parser_test.reporting.report_export_v2 import export_all
 from parser_test.scripts.db_paths import resolve_parser_test_db_path
-from parser_test.scripts.replay_parser_v2 import run_replay
+from parser_test.scripts.replay_parser_v2 import _resolve_trader_filter_from_args, run_replay
 from src.storage.parser_runs import ParserRunStore
 
 _DEFAULT_REPORTS_DIR = Path(__file__).resolve().parents[1] / "reports_v2"
@@ -25,6 +25,13 @@ def main() -> None:
     parser.add_argument("--db-name")
     parser.add_argument("--db-per-chat", action="store_true")
     parser.add_argument("--chat-id")
+    parser.add_argument("--trader-filter", dest="trader_filter")
+    parser.add_argument("--message-trader-filter", dest="trader_filter")
+    parser.add_argument("--assume-trader")
+    parser.add_argument("--parser-system", default="parser_v2")
+    parser.add_argument("--parser-profile", default="auto")
+    parser.add_argument("--allow-cross-profile-parse", action="store_true")
+    parser.add_argument("--audit-csv", action="store_true")
     parser.add_argument("--trader")
     parser.add_argument("--from-date")
     parser.add_argument("--to-date")
@@ -35,6 +42,8 @@ def main() -> None:
     parser.add_argument("--reports-dir", default=str(_DEFAULT_REPORTS_DIR))
     args = parser.parse_args()
 
+    trader_filter = _resolve_trader_filter_from_args(args)
+
     parser_test_dir = Path(__file__).resolve().parents[1]
     db_path = resolve_parser_test_db_path(
         project_root=PROJECT_ROOT,
@@ -44,15 +53,22 @@ def main() -> None:
         db_per_chat=args.db_per_chat,
         chat_ref=args.chat_id,
     )
+    reports_dir = Path(args.reports_dir)
     conn = sqlite3.connect(db_path)
     apply_parser_test_schema(conn)
 
     try:
         if not args.skip_replay:
+            audit_csv_dir = reports_dir if args.audit_csv else None
             run_id = run_replay(
                 conn,
                 db_path=db_path,
-                trader=args.trader,
+                trader_filter=trader_filter,
+                assume_trader=args.assume_trader,
+                parser_system=args.parser_system,
+                parser_profile=args.parser_profile,
+                allow_cross_profile_parse=args.allow_cross_profile_parse,
+                audit_csv_dir=audit_csv_dir,
                 chat_id=args.chat_id,
                 from_date=args.from_date,
                 to_date=args.to_date,
@@ -61,7 +77,7 @@ def main() -> None:
             )
         else:
             if args.run == "latest":
-                record = ParserRunStore(conn).get_latest_run(trader_filter=args.trader)
+                record = ParserRunStore(conn).get_latest_run(trader_filter=trader_filter)
                 if record is None:
                     print("[generate] Nessun run trovato. Esegui prima senza --skip-replay.")
                     sys.exit(1)
@@ -70,9 +86,8 @@ def main() -> None:
                 run_id = int(args.run)
             print(f"[generate] Uso run_id={run_id}")
 
-        reports_dir = Path(args.reports_dir)
         print(f"\n[generate] Produco CSV in {reports_dir}/run_{run_id}/")
-        generated = export_all(conn, run_id, args.trader, reports_dir)
+        generated = export_all(conn, run_id, trader_filter, reports_dir)
         print(f"\n[generate] {len(generated)} file generati.")
     finally:
         conn.close()
