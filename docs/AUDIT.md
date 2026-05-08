@@ -4,6 +4,88 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-08 — Fix _COMMON_COLUMNS in report_schema_v2.py
+
+### Step completato
+
+Fix di 2 test failure pre-esistenti in `parser_test/reporting/tests/test_flatteners_v2.py`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `parser_test/reporting/report_schema_v2.py` | Modificato | Aggiunti `run_id` e `diagnostics_summary` a `_COMMON_COLUMNS` |
+
+### Risultato test
+
+```
+pytest parser_test/ → 64 passed, 0 failed
+```
+
+### Causa
+
+`_COMMON_COLUMNS` non includeva `run_id` e `diagnostics_summary`, quindi `flatten_for_scope` non li emetteva nelle colonne dei CSV per gli scope `ALL`, `NEW_SIGNAL`, `UPDATE`, `REPORT`, `INFO_ONLY`, `UNCLASSIFIED`. `ERRORS` non era affetto (usa `_ERRORS_COLUMNS` separato che li aveva già).
+
+---
+
+## 2026-05-08 — Parser Test v2: Trader Filter & Parser Selection
+
+### Step completato
+
+Feature completa: separazione di `source_trader_id` / `resolved_trader_id` / `trader_filter` / `parser_profile` in quattro concetti indipendenti. 6 task TDD completati, 62 test verdi (+ 2 pre-esistenti in `test_flatteners_v2.py` non correlati).
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `parser_test/db/schema.py` | Modificato | `_add_column_if_missing` helper; aggiunge `resolved_trader_id TEXT` e `resolution_method TEXT` a `raw_messages` |
+| `parser_test/db/tests/test_schema.py` | Modificato | +3 test nuove colonne |
+| `parser_test/scripts/trader_resolution.py` | Creato | Modulo condiviso: `normalize_trader_id`, `build_trader_resolver`, `load_known_trader_ids` |
+| `parser_test/scripts/tests/test_trader_resolution.py` | Creato | 6 test `normalize_trader_id` |
+| `parser_test/scripts/import_history.py` | Modificato | Flag `--default-source-trader` per impostare `source_trader_id` all'import |
+| `parser_test/scripts/tests/test_import_history_topics.py` | Modificato | +2 test nuovo flag |
+| `parser_test/scripts/resolve_traders.py` | Creato | Script che persiste `resolved_trader_id` + `resolution_method` su `raw_messages` |
+| `parser_test/scripts/tests/test_resolve_traders.py` | Creato | 8 test (priorità, skip, force-re-resolve, normalizzazione alias) |
+| `parser_test/scripts/replay_parser_v2.py` | Riscritto | Nuovi flag `--trader-filter`, `--assume-trader`, `--parser-profile`, `--allow-cross-profile-parse`, `--audit-csv`; `--trader` deprecato |
+| `parser_test/scripts/tests/test_replay_parser_v2.py` | Creato | 15 test (trader filter, profile, cross-profile, audit CSV, deprecation) |
+| `parser_test/scripts/tests/test_replay_trader_resolution.py` | Eliminato | Sostituito da `test_replay_parser_v2.py` |
+| `parser_test/scripts/generate_parser_reports_v2.py` | Modificato | Stessi nuovi flag di `replay_parser_v2.py`; `--trader` deprecato con warning |
+
+### Risultato test
+
+```
+pytest parser_test/ → 62 passed, 2 failed (pre-esistenti, non correlati a questa feature)
+```
+
+I 2 failure pre-esistenti sono in `test_flatteners_v2.py` — bug in `parser_test/reporting/report_schema_v2.py` (`_COMMON_COLUMNS` mancanti `run_id` e `diagnostics_summary`). Non introdotti da questa feature.
+
+### Flussi operativi abilitati
+
+**Mono-trader:**
+```bash
+python parser_test/scripts/import_history.py --db-path db.sqlite3 --chat-id -123 --default-source-trader trader_a
+python parser_test/scripts/resolve_traders.py --db-path db.sqlite3
+python parser_test/scripts/replay_parser_v2.py --db-path db.sqlite3 --trader-filter trader_a --parser-profile trader_a --force-reparse
+```
+
+**Multitrader:**
+```bash
+python parser_test/scripts/import_history.py --db-path db.sqlite3 --chat-id -123
+python parser_test/scripts/resolve_traders.py --db-path db.sqlite3
+python parser_test/scripts/replay_parser_v2.py --db-path db.sqlite3 --trader-filter trader_a --parser-profile auto --force-reparse
+```
+
+### Rischi aperti
+- `replay_parser_v2.py:349` usa `except Exception` generico — logga solo `repr(exc)[:500]` senza stack trace. Debugging di errori parser richiederebbe `traceback.format_exc()`.
+- `run_replay()` accetta `parser_system` ma non lo usa (dead parameter).
+- `generate_parser_reports_v2.py` non espone `--only-unparsed` e `--show-samples` (presenti in `replay_parser_v2.py` ma non in questo wrapper).
+
+### Branch / commit
+
+Merge su `main`. Ultimo commit: `5488044`.
+
+---
+
 ## 2026-05-07 — Occurrence Identity + Target Binding (parser_v2)
 
 ### Step completato
