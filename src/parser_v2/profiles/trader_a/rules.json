@@ -9,6 +9,7 @@
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
         "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "unless_contains_any": ["поторопился", "судьбу", "борьбу", "разбу", "ребу"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -53,7 +54,8 @@
           "возьмет стоп",
           "стоп возьмет",
           "стоп поставить",
-          "стоп обязательно"
+          "стоп обязательно",
+          "переводе стопа"
         ],
       
         "reason": "sl_markers_ambiguous_without_specific_context"
@@ -128,6 +130,13 @@
       "when_all_detected": ["MOVE_STOP_TO_BE", "CLOSE_FULL"],
       "prefer": "CLOSE_FULL",
       "over": ["MOVE_STOP_TO_BE"]
+    },
+    {
+      "name": "exit_be_over_move_stop_to_be_in_sl_hit_context",
+      "when_all_detected": ["EXIT_BE", "MOVE_STOP_TO_BE", "SL_HIT"],
+      "prefer": "EXIT_BE",
+      "over": ["MOVE_STOP_TO_BE"],
+      "reason": "SL_HIT indicates status report context, not stop-moving command"
     },
     {
       "name": "context_market_marker",

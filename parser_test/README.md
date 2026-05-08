@@ -100,9 +100,11 @@ Risolve il trader effettivo per ogni messaggio e lo persiste in `raw_messages.re
 Da eseguire prima del replay per abilitare `--trader-filter`.
 
 ```bash
-python parser_test/scripts/resolve_traders.py ^
+python parser_test/scripts/resolve_traders.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3"
   --db-name trader_a_topic
 ```
+--db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3"
+
 
 Per canali dove non è possibile rilevare il trader automaticamente:
 
@@ -131,13 +133,17 @@ Output console:
 
 Riesegue `src/parser_v2` sui messaggi raw salvati.
 
+python parser_test/scripts/generate_parser_reports_v2.py --db-path "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3" --trader-filter trader_a  --parser-profile trader_a --force-reparse
+
 ```bash
-python parser_test/scripts/replay_parser_v2.py ^
+python parser_test/scripts/replay_parser_v2.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3"   --trader-filter trader_a --parser-profile trader_a --force-reparse 
   --db-name trader_a_topic ^
   --trader-filter trader_a ^
   --parser-profile trader_a ^
   --force-reparse
 ```
+
+--db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3"
 
 Per parsare tutto il DB con profilo automatico (usa `resolved_trader_id` come profilo):
 
