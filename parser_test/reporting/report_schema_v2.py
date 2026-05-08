@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 _COMMON_COLUMNS = [
+    "run_id",
     "trader_id",
     "primary_class",
     "parse_status",
@@ -10,6 +11,7 @@ _COMMON_COLUMNS = [
     "raw_text",
     "confidence",
     "warnings",
+    "diagnostics_summary",
 ]
 
 _SIGNAL_COLUMNS = [
