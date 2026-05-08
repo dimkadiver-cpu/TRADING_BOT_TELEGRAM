@@ -4,6 +4,39 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-08 — Fix Trader A: MOVE_STOP_TO_BE false positive in "поторопился"
+
+### Step completato
+
+Investigazione root cause e fix del caso 189 dove "поторопился" (fretta) innescava false positive per MOVE_STOP_TO_BE.
+
+### Root cause
+
+La parola "поторопился" contiene "БУ" (substring interna), che matchava sia il weak marker di MOVE_STOP_TO_BE ("в бу") che di EXIT_BE ("бу"). Questo causava una classificazione errata come UPDATE/MOVE_STOP_TO_BE invece di REPORT/EXIT_BE.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/profiles/trader_a/rules.json` | Modificato | Aggiunti pattern in `unless_contains_any` della regola `move_stop_to_be_weak_context` per escludere false positive in parole come "поторопился", "судьбу", "борьбу", ecc. |
+| `src/parser_v2/profiles/trader_a/rules.json` | Modificato | Aggiunta nuova disambiguazione rule `exit_be_over_move_stop_to_be_in_sl_hit_context` per preferire EXIT_BE quando SL_HIT è presente (contesto di status report). |
+
+### Risultato test
+
+```
+pytest src/parser_v2/tests/ → 71 passed, 0 failed
+Caso 189: PRIMARY_CLASS = REPORT, PRIMARY_INTENT = EXIT_BE (prima: UPDATE, MOVE_STOP_TO_BE)
+```
+
+### Metodologia
+
+- **Fase 1**: Root cause investigation — query database, analisi diagnostics
+- **Fase 2**: Pattern analysis — confronto con altri marker match
+- **Fase 3**: Hypothesis — la regex per "БУ dentro parola" è troppo permissiva
+- **Fase 4**: Fix con verifica test automatici
+
+---
+
 ## 2026-05-08 — Fix _COMMON_COLUMNS in report_schema_v2.py
 
 ### Step completato

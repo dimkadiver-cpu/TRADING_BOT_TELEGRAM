@@ -2,6 +2,15 @@
   "marker_resolution": {
     "suppress_weak_inside_strong_same_intent": true,
     "weak_context_exclusions": [
+
+       {
+        "name": "false_reentry",
+        "intent": "REENTER",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_contains_any": ["не перезаходим"],
+        "reason": "false_positive_weak_markers_in_reenter_context"
+      },
       {
         "name": "move_stop_to_be_weak_context",
         "intent": "MOVE_STOP_TO_BE",
@@ -9,9 +18,19 @@
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
         "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
-        "unless_contains_any": ["поторопился", "судьбу", "борьбу", "разбу", "ребу"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
+      {
+        "name": "exit_be_weak_context",
+        "intent": "EXIT_BE",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
+        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "reason": "false_positive_weak_markers_in_exit_be_context"
+      },
+
+
       {
         "name": "tp_after_n_tp_historical_context",
         "intent": "TP_HIT",
@@ -22,9 +41,10 @@
           "(?:было|были|был|была)\\s+\\d+\\s+тейк(?:а|ов)?",
           "дошли\\s+до\\s+\\d+(?:-х)?\\s+тейк(?:а|ов)?",
           "дожидаться\\s+\\d+\\s+тейк(?:а|ов)?",
-          "у\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка"
+          "у\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка",
+          "Не\\s+(?:дошло|дошли)\\s+до\\s+\\d+\\s+тейк(?:а|ов)?"
         ],
-        "if_contains_any": ["стоял другой тейк","закрываю у тейка"],
+        "if_contains_any": ["стоял другой тейк","закрываю у тейка","1 тейк должны","с тейком"],
         "unless_contains_any": [
           "тейк взят",
           "тейк взяли",
@@ -40,22 +60,10 @@
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_contains_any": [
-          "стопы переводить",
-          "стопы по",
-          "риск получить стоп",
-          "про стопы",
-          "стоп не двигаем",
-          "вышли стопы",
-          "стоп - это защита",
-          "стоп пока не переносим",
-          "стоп не переносим",
-          "стоп нужно ",
-          "стоп поставим",
-          "возьмет стоп",
-          "стоп возьмет",
-          "стоп поставить",
-          "стоп обязательно",
-          "переводе стопа"
+          "стопы переводить","стопы по","риск получить стоп","про стопы","стоп не двигаем","вышли стопы",
+          "стоп - это защита","стоп пока не переносим","стоп не переносим","стоп нужно ","стоп поставим",
+          "возьмет стоп","стоп возьмет","стоп поставить","стоп обязательно","переводе стопа","стоп уже в бу",
+          "стоп двигаем в бу","стопы в плюс","стопом в бу"
         ],
       
         "reason": "sl_markers_ambiguous_without_specific_context"
@@ -101,6 +109,18 @@
     ]
   },
   "disambiguation": [
+      {
+      "name": "prefer_move_stop_to_be_over_reentry_in_move_stop_to_be_context",
+      "when_all_detected": ["MOVE_STOP_TO_BE", "REENTER"],
+      "prefer": "MOVE_STOP_TO_BE",
+      "over": ["REENTER"]
+    },
+    {
+      "name": "prefer_move_stop_to_be_tp_hit",
+      "when_all_detected": ["TP_HIT", "MOVE_STOP"],
+      "prefer": "MOVE_STOP",
+      "over": ["TP_HIT"]
+    },
     {
       "name": "prefer_move_stop_to_be_over_move_stop",
       "when_all_detected": ["MOVE_STOP_TO_BE", "MOVE_STOP"],
@@ -108,10 +128,22 @@
       "over": ["MOVE_STOP"]
     },
     {
+      "name": "close_full_over_cancel_pending",
+      "when_all_detected": ["CANCEL_PENDING", "CLOSE_FULL"],
+      "prefer": "CLOSE_FULL",
+      "over": ["CANCEL_PENDING"]
+    },
+    {
       "name": "close_full_redundant_with_sl_hit",
       "when_all_detected": ["SL_HIT", "CLOSE_FULL"],
       "prefer": "CLOSE_FULL",
       "over": ["SL_HIT"]
+    },
+    {
+      "name": "close_partial_vs_close_full",
+      "when_all_detected": ["CLOSE_PARTIAL", "CLOSE_FULL"],
+      "prefer": "CLOSE_PARTIAL",
+      "over": ["CLOSE_FULL"]
     },
      {
       "name": "sl_hit_redundant_with_tp_hit",
@@ -137,6 +169,13 @@
       "prefer": "EXIT_BE",
       "over": ["MOVE_STOP_TO_BE"],
       "reason": "SL_HIT indicates status report context, not stop-moving command"
+    },
+     {
+      "name": "close_fullver_exit_be_context",
+      "when_all_detected": ["EXIT_BE", "CLOSE_FULL"],
+      "prefer": "CLOSE_FULL",
+      "over": ["EXIT_BE"],
+      "reason": "CLOSE_FULL status report context, not stop-moving command"
     },
     {
       "name": "context_market_marker",

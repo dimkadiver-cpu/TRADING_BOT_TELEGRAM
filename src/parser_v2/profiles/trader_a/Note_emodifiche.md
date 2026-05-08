@@ -1,16 +1,5 @@
 
 
-https://t.me/c/3171748254/2945
-
-Средняя на данный момент 72650
-
-Часть объём скину на 72480-0,3%
-
-- modifica TP  Часть объём скину на
-
-- 72480
-
-- 0.3% volume della posisizne
 
 
 
@@ -19,7 +8,7 @@ https://t.me/c/3171748254/2945
     1.19R  
     0.37R
 
-Close Full  vinche su Move_to_be (possibile preport) con scope global e non a singolo riferimento
+
 
 
 Perche ho tanti intens dello stesso tipo relativo a singolo ref? 
@@ -50,21 +39,9 @@ Vedere bene come gestire i ref
 
 
 
-1- caso : 2199  (ENTRY_FILLED|SL_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE) coretto solo  ENTRY_FILLED
 
 
-Взяли лимитку.
 
-Моя средняя 0.2265
-
-Стоп ставим обязательно. На 1 тейке, рекомендация, закрывать 80% позиции, касается всех сетапов, которые публикую. 
-
-Оставшуюся часть позиции тянуть по остальным тейкам. 
-
-При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа
-
-Soluzione: 
-TP_HIT:	 esclusione "При взятии 1 тейка"
 
 
 

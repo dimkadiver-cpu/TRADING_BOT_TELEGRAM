@@ -14,7 +14,7 @@ from src.parser_v2.contracts.parsed_message import SignalDraft
 from src.parser_v2.core.symbol_normalizer import normalize_symbol
 
 
-_NUMBER_PATTERN = r"\d(?:[\d\s.,]*\d)?"
+_NUMBER_PATTERN = r"\d(?:[\d \t.,]*\d)?"
 
 _CYR_LONG = "\u043b\u043e\u043d\u0433"
 _CYR_SHORT = "\u0448\u043e\u0440\u0442"
@@ -24,6 +24,8 @@ _CYR_STOP = "\u0441\u0442\u043e\u043f"
 _CYR_LIMIT_ROOT = "\u043b\u0438\u043c\u0438\u0442"
 _CYR_CURRENT_ROOT = "\u0442\u0435\u043a\u0443\u0449"
 _CYR_MARKET_ROOT = "\u0440\u044b\u043d"
+_CYR_SPOT_ROOT = "\u0441\u043f\u043e\u0442"
+_BULLET_CHARS = r"\-*•—–"
 
 _SYMBOL_RE = re.compile(
     r"(?:#|\$)?(?P<symbol>[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b",
@@ -40,7 +42,13 @@ _ENTRY_MARKET_RE = re.compile(
 _ENTRY_RE = re.compile(
     rf"\b(?:entry|vhod|{_CYR_ENTRY})"
     rf"(?:\s+(?:limit|limitka|{_CYR_LIMIT_ROOT}\w*))?"
+    rf"(?:\s+(?:\([^)\n]*\)|[^\n:()]{1,32}))*"
     rf"\s*[:=@-]?\s*(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
+    re.IGNORECASE,
+)
+_ENTRY_ORDER_RE = re.compile(
+    rf"\b(?:entry|vhod|{_CYR_ENTRY})\s+"
+    rf"(?:limit\w*\s+order\w*|{_CYR_LIMIT_ROOT}\w*\s+\w+)\s*[:=@-]\s*(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
     re.IGNORECASE,
 )
 _AVERAGING_RE = re.compile(
@@ -48,15 +56,23 @@ _AVERAGING_RE = re.compile(
     re.IGNORECASE,
 )
 _ENTRY_AB_RE = re.compile(
-    rf"(?:^|\n)\s*(?:[-*]\s*)?(?:entry\s*)?(?:\((?P<label_paren>[ab])\)|(?P<label>[ab]))"
+    rf"(?:^|\n)\s*(?:[{_BULLET_CHARS}]\s*)?"
+    rf"(?:(?:entry|vhod|{_CYR_ENTRY}|{_CYR_AVERAGING})\s*)?"
+    rf"(?:\((?P<label_paren>[ab])\)|(?P<label>[ab]))"
     rf"(?:\s*\((?P<qual>[^)]*)\))?\s*[:=@-]\s*(?P<value>{_NUMBER_PATTERN})",
     re.IGNORECASE,
 )
 _STOP_LOSS_RE = re.compile(
-    rf"(?:\bsl\b|stop|{_CYR_STOP})\s*:?\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d]*\s*%)",
+    rf"(?:\bsl\b|stop(?:\s+loss)?|{_CYR_STOP}(?:\s+\u043b\u043e\u0441\u0441)?)"
+    rf"(?:\s*\([^)]*\))?\s*:?\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
     re.IGNORECASE,
 )
 _TAKE_PROFIT_RE = re.compile(rf"\btp(?P<index>\d+)?\b\s*:?\s*(?P<value>{_NUMBER_PATTERN})", re.IGNORECASE)
+_TAKE_PROFIT_HEADER_RE = re.compile(r"^[^\n]*(?:\btps?\b|тейк\w*)[^\n]*:\s*$", re.IGNORECASE | re.MULTILINE)
+_TAKE_PROFIT_BARE_LINE_RE = re.compile(
+    rf"^\s*(?:[{_BULLET_CHARS}]\s*)?(?P<value>{_NUMBER_PATTERN})(?:\s|\(|$)",
+    re.IGNORECASE,
+)
 
 _DEFAULT_RISK_PREFIXES = ["risk", "риск", "вход", "на сделку"]
 _DEFAULT_RISK_SUFFIXES = ["от депозита", "риска", "на сделку"]
@@ -123,6 +139,8 @@ def _extract_side(normalized_text: str) -> str | None:
         return "LONG"
     if any(marker in normalized_text for marker in ("short", "sell", _CYR_SHORT)):
         return "SHORT"
+    if any(marker in normalized_text for marker in ("spot", _CYR_SPOT_ROOT)):
+        return "LONG"
     return None
 
 
@@ -134,6 +152,9 @@ def _extract_entries(text: str) -> list[EntryLeg]:
     entries: list[EntryLeg] = []
     primary_type = "MARKET"
     primary = _search_price(_ENTRY_MARKET_RE, text)
+    if primary is None:
+        primary = _search_price(_ENTRY_ORDER_RE, text)
+        primary_type = "LIMIT"
     if primary is None:
         primary = _search_price(_ENTRY_RE, text)
         primary_type = "LIMIT"
@@ -174,7 +195,11 @@ def _extract_ab_entries(text: str) -> list[EntryLeg]:
         label = (match.group("label") or match.group("label_paren") or "").lower()
         qual = (match.group("qual") or "").lower()
         role = "PRIMARY" if label == "a" or not entries else "AVERAGING"
-        entry_type = "MARKET" if role == "PRIMARY" and "market" in qual else "LIMIT"
+        entry_type = (
+            "MARKET"
+            if role == "PRIMARY" and any(token in qual for token in ("market", _CYR_CURRENT_ROOT, _CYR_SPOT_ROOT))
+            else "LIMIT"
+        )
         entries.append(
             EntryLeg(
                 sequence=len(entries) + 1,
@@ -201,6 +226,31 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
 
         index_raw = match.group("index")
         sequence = int(index_raw) if index_raw else fallback_sequence
+        take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
+
+    if take_profits:
+        return take_profits
+
+    header = _TAKE_PROFIT_HEADER_RE.search(text)
+    if not header:
+        return take_profits
+
+    started = False
+    for line in text[header.end():].splitlines():
+        if not line.strip():
+            if started:
+                break
+            continue
+        match = _TAKE_PROFIT_BARE_LINE_RE.match(line)
+        if not match:
+            if take_profits:
+                break
+            continue
+        price = _price_from_raw(match.group("value"))
+        if price is None:
+            continue
+        started = True
+        sequence = len(take_profits) + 1
         take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
 
     return take_profits
