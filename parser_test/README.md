@@ -27,22 +27,38 @@ Le credenziali Telegram si ottengono da https://my.telegram.org.
 
 ---
 
+## Concetti chiave
+
+Quattro concetti distinti gestiti separatamente:
+
+| Concetto | Significato |
+|---|---|
+| `source_trader_id` | Trader noto dalla sorgente/import (`--default-source-trader`) |
+| `resolved_trader_id` | Trader effettivo, risolto e persistito da `resolve_traders.py` |
+| `--trader-filter` | Quali messaggi includere nel replay (filtra per `resolved_trader_id`) |
+| `--parser-profile` | Quale profilo usare per parsare |
+
+---
+
 ## Flusso operativo
 
 ```
-import_history.py   →   raw_messages nel DB
-                              ↓
-generate_parser_reports_v2.py (--force-reparse)
-                              ↓
-  replay_parser_v2   →   parser_results_v2
-  report_export_v2   →   CSV in reports_v2/run_<id>/
+import_history.py          →   raw_messages nel DB
+                                       ↓
+resolve_traders.py         →   raw_messages.resolved_trader_id (persistito)
+                                       ↓
+replay_parser_v2.py        →   parser_results_v2
+                                       ↓
+report_export_v2.py        →   CSV in reports_v2/run_<id>/
 ```
+
+`generate_parser_reports_v2.py` esegue replay + export in un solo comando.
 
 ---
 
 ## Comandi
 
-### Import da Telegram
+### 1. Import da Telegram
 
 Scarica i messaggi di un canale/topic nel DB locale.
 
@@ -55,10 +71,13 @@ python parser_test/scripts/import_history.py ^
   --to-date 2026-05-01
 ```
 
+Per canali mono-trader, imposta subito `source_trader_id`:
+
 ```bash
-python parser_test/scripts/import_history.py --chat-id -1003171748254 --db-name trader_a_topic
-  --from-date 2026-04-01 ^
-  --to-date 2026-05-01
+python parser_test/scripts/import_history.py ^
+  --chat-id <CHAT_ID> ^
+  --db-name trader_a_topic ^
+  --default-source-trader trader_a
 ```
 
 | Argomento | Descrizione |
@@ -66,57 +85,126 @@ python parser_test/scripts/import_history.py --chat-id -1003171748254 --db-name 
 | `--chat-id` | ID numerico del canale Telegram |
 | `--topic-id` | ID del topic (se il canale usa topics) |
 | `--db-name` | Nome del DB locale (file in `db/telegram__<name>.sqlite3`) |
+| `--default-source-trader` | Imposta `source_trader_id` per tutti i messaggi importati |
 | `--from-date` | Data inizio (`YYYY-MM-DD`) |
 | `--to-date` | Data fine (`YYYY-MM-DD`) |
 | `--limit` | Numero massimo messaggi |
 | `--only-new` | Importa solo messaggi non ancora nel DB |
 | `--download-media` | Scarica anche media (immagini, documenti) |
 
-### Replay parser v2
+---
 
-Riesegue `src/parser_v2` su tutti i messaggi raw salvati.
+### 2. Risoluzione trader (opzionale ma consigliato)
+
+Risolve il trader effettivo per ogni messaggio e lo persiste in `raw_messages.resolved_trader_id`.
+Da eseguire prima del replay per abilitare `--trader-filter`.
 
 ```bash
-python parser_test/scripts/replay_parser_v2.py ^
-  --db-name trader_a_topic ^
-  --trader trader_a ^
-  --force-reparse
+python parser_test/scripts/resolve_traders.py ^
+  --db-name trader_a_topic
 ```
 
+Per canali dove non è possibile rilevare il trader automaticamente:
 
 ```bash
-python parser_test/scripts/replay_parser_v2.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3" --trader trader_a --force-reparse
+python parser_test/scripts/resolve_traders.py ^
+  --db-name trader_a_topic ^
+  --assume-trader trader_a
 ```
 
 | Argomento | Descrizione |
 |-----------|-------------|
-| `--trader` | Profilo da usare (`trader_a`, `ta`, `a`) |
+| `--db-name / --db-path` | DB da aggiornare |
+| `--assume-trader` | Trader di fallback se la risoluzione automatica fallisce |
+| `--force-re-resolve` | Riprocessa anche i messaggi già risolti |
+
+Output console:
+```
+[resolve] 1240 messaggi trovati
+[resolve] 980 già risolti (skip)
+[resolve] completato — source_trader_id: 200 | content_alias: 30 | assume_trader: 5 | unresolved: 15
+```
+
+---
+
+### 3. Replay parser v2
+
+Riesegue `src/parser_v2` sui messaggi raw salvati.
+
+```bash
+python parser_test/scripts/replay_parser_v2.py ^
+  --db-name trader_a_topic ^
+  --trader-filter trader_a ^
+  --parser-profile trader_a ^
+  --force-reparse
+```
+
+Per parsare tutto il DB con profilo automatico (usa `resolved_trader_id` come profilo):
+
+```bash
+python parser_test/scripts/replay_parser_v2.py ^
+  --db-name trader_a_topic ^
+  --parser-profile auto ^
+  --force-reparse
+```
+
+| Argomento | Descrizione |
+|-----------|-------------|
+| `--trader-filter` | Processa solo messaggi con `resolved_trader_id` uguale al valore indicato |
+| `--assume-trader` | Trader di fallback se `resolved_trader_id` è NULL |
+| `--parser-profile` | Profilo da usare: `auto` (usa `resolved_trader_id`) oppure nome esplicito (`trader_a`) |
+| `--allow-cross-profile-parse` | Permette di parsare messaggi di un trader con il profilo di un altro |
+| `--audit-csv` | Genera CSV audit con tutti gli stati inclusi gli skip |
 | `--from-date / --to-date` | Filtra per data messaggio |
 | `--limit` | Processa solo N messaggi |
 | `--only-unparsed` | Salta messaggi già parsati con successo |
 | `--force-reparse` | Riprocessa anche se già presenti risultati |
 | `--show-samples N` | Stampa N esempi di output a schermo |
+| `--trader` | **Deprecato** — usa `--trader-filter` |
 
-### Genera CSV (da run esistente)
+**Stati tracciati a console:**
+
+| Stato | Significato |
+|---|---|
+| `OK` / `PARTIAL` / `PARSED` | Parsato correttamente |
+| `UNRESOLVED_TRADER` | `resolved_trader_id` non determinabile — skip |
+| `SKIPPED_TRADER_FILTER` | `resolved_trader_id` != `--trader-filter` — skip |
+| `SKIPPED_UNSUPPORTED_PARSER_PROFILE` | Profilo non registrato — skip |
+| `PARSER_ERROR` | Eccezione nel parser — scritto in DB |
+
+---
+
+### 4. Genera CSV (da run esistente)
 
 ```bash
 python parser_test/scripts/generate_parser_reports_v2.py ^
   --db-name trader_a_topic ^
   --run latest ^
-  --trader trader_a ^
+  --trader-filter trader_a ^
   --skip-replay
 ```
 
 ### Replay + CSV in un comando
 
 ```bash
-python parser_test/scripts/generate_parser_reports_v2.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3" --trader trader_a --force-reparse
+python parser_test/scripts/generate_parser_reports_v2.py ^
   --db-name trader_a_topic ^
-  --trader trader_a ^
+  --trader-filter trader_a ^
+  --parser-profile trader_a ^
   --force-reparse
 ```
 
-### Watch mode (sviluppo attivo)
+Accetta tutti gli stessi argomenti di `replay_parser_v2.py` più:
+
+| Argomento | Descrizione |
+|---|---|
+| `--skip-replay` | Salta il replay, usa un run esistente |
+| `--run` | `latest` oppure run_id numerico (usato con `--skip-replay`) |
+| `--reports-dir` | Directory di output (default: `parser_test/reports_v2/`) |
+
+---
+
+### 5. Watch mode (sviluppo attivo)
 
 Monitora i file del profilo e rilancia automaticamente replay + CSV ad ogni modifica.
 
@@ -128,6 +216,32 @@ python parser_test/scripts/watch_parser.py ^
 
 File monitorati: `semantic_markers.json`, `rules.json`, `profile.py`, `signal_extractor.py`,
 `intent_entity_extractor.py` in `src/parser_v2/profiles/trader_a/`.
+
+---
+
+## Flussi tipici
+
+### Mono-trader (canale dedicato)
+
+```bash
+python parser_test/scripts/import_history.py --chat-id -123 --db-name trader_a --default-source-trader trader_a
+python parser_test/scripts/resolve_traders.py --db-name trader_a
+python parser_test/scripts/replay_parser_v2.py --db-name trader_a --trader-filter trader_a --parser-profile trader_a --force-reparse
+```
+
+### Multitrader (canale misto)
+
+```bash
+python parser_test/scripts/import_history.py --chat-id -123 --db-name multi
+python parser_test/scripts/resolve_traders.py --db-name multi
+python parser_test/scripts/replay_parser_v2.py --db-name multi --trader-filter trader_a --parser-profile trader_a --force-reparse
+```
+
+### Tutto il DB con profilo auto
+
+```bash
+python parser_test/scripts/replay_parser_v2.py --db-name multi --parser-profile auto --force-reparse
+```
 
 ---
 
@@ -160,6 +274,8 @@ parser_test/reports_v2/run_<run_id>/<trader>_message_types_csv/
 | `unclassified` | `parse_status=UNCLASSIFIED` |
 | `errors` | `error_status != OK` oppure `parse_status=ERROR` |
 
+Con `--audit-csv` viene generato anche `audit_run_<run_id>.csv` con tutti gli stati inclusi gli skip.
+
 I valori lista nelle celle CSV usano `|` come separatore.
 Encoding: UTF-8-sig (compatibile LibreOffice).
 
@@ -170,6 +286,12 @@ Encoding: UTF-8-sig (compatibile LibreOffice).
 Il DB è un file SQLite in `parser_test/db/`. Ogni `--db-name` crea un file separato.
 
 Tabelle principali:
-- `raw_messages` — messaggi Telegram importati
-- `parser_runs` — metadati di ogni run di replay
-- `parser_results_v2` — risultati `CanonicalMessage` per ogni messaggio
+
+| Tabella | Contenuto |
+|---|---|
+| `raw_messages` | Messaggi Telegram importati. Colonne chiave: `source_trader_id`, `resolved_trader_id`, `resolution_method` |
+| `parser_runs` | Metadati di ogni run di replay |
+| `parser_results_v2` | Risultati `CanonicalMessage` per ogni messaggio |
+
+`resolved_trader_id` è NULL finché `resolve_traders.py` non è stato eseguito.
+`resolution_method` traccia come è stato risolto: `source_trader_id` | `content_alias` | `reply_chain` | `assume_trader` | `unresolved`.
