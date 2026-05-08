@@ -46,3 +46,27 @@ Da spostarein altri:
 _dopo i parse verificare se seipuo eseguire un update. (Esempio muovere sto in Be se e gia la ecc)
 
 Vedere bene come gestire i ref 
+
+
+
+
+1- caso : 2199  (ENTRY_FILLED|SL_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE) coretto solo  ENTRY_FILLED
+
+
+Взяли лимитку.
+
+Моя средняя 0.2265
+
+Стоп ставим обязательно. На 1 тейке, рекомендация, закрывать 80% позиции, касается всех сетапов, которые публикую. 
+
+Оставшуюся часть позиции тянуть по остальным тейкам. 
+
+При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа
+
+Soluzione: 
+TP_HIT:	 esclusione "При взятии 1 тейка"
+
+
+
+
+
