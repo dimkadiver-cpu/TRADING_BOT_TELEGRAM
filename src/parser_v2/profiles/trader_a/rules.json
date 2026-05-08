@@ -115,6 +115,12 @@
       "prefer": "SL_HIT",
       "over": ["TP_HIT"]
     },
+      {
+      "name": "close_full_redundant_with_tp_hit",
+      "when_all_detected": ["TP_HIT", "CLOSE_FULL"],
+      "prefer": "CLOSE_FULL",
+      "over": ["TP_HIT"]
+    },
     {
       "name": "context_market_marker",
       "when_marker_in": [
