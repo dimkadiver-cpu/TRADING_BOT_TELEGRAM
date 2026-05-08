@@ -66,6 +66,11 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Download Telegram media and store it in raw_messages.media_blob when available.",
     )
+    parser.add_argument(
+        "--default-source-trader",
+        default=None,
+        help="Se fornito, valorizza source_trader_id per i messaggi importati senza trader noto.",
+    )
     return parser.parse_args()
 
 
@@ -165,7 +170,7 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
                 source_chat_id=source_chat_id,
                 source_chat_title=source_chat_title,
                 source_type=source_type,
-                source_trader_id=None,
+                source_trader_id=args.default_source_trader or None,
                 telegram_message_id=int(message.id),
                 reply_to_message_id=reply_to_message_id,
                 raw_text=message.message,

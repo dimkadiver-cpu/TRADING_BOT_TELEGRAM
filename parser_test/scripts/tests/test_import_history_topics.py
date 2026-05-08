@@ -54,3 +54,21 @@ def test_iter_target_messages_topic_respects_limit_with_root() -> None:
         return [msg.id async for msg in _iter_target_messages(client=client, entity=object(), limit=1, reverse=True, topic_id=175)]
 
     assert asyncio.run(_collect()) == [175]
+
+
+def test_parse_args_default_source_trader_present():
+    import sys
+    from unittest.mock import patch
+    with patch.object(sys, "argv", ["prog", "--chat-id", "-123", "--default-source-trader", "trader_a"]):
+        from parser_test.scripts.import_history import parse_args
+        args = parse_args()
+    assert args.default_source_trader == "trader_a"
+
+
+def test_parse_args_default_source_trader_absent():
+    import sys
+    from unittest.mock import patch
+    with patch.object(sys, "argv", ["prog", "--chat-id", "-123"]):
+        from parser_test.scripts.import_history import parse_args
+        args = parse_args()
+    assert args.default_source_trader is None
