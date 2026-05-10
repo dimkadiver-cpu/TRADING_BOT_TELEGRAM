@@ -34,7 +34,7 @@ Quattro concetti distinti gestiti separatamente:
 | Concetto | Significato |
 |---|---|
 | `source_trader_id` | Trader noto dalla sorgente/import (`--default-source-trader`) |
-| `resolved_trader_id` | Trader effettivo, risolto e persistito da `resolve_traders.py` |
+| `resolved_trader_id` | Trader effettivo usato dal replay; nei DB mono puo essere scritto gia in import, nei DB multi viene persistito da `resolve_traders.py` |
 | `--trader-filter` | Quali messaggi includere nel replay (filtra per `resolved_trader_id`) |
 | `--parser-profile` | Quale profilo usare per parsare |
 
@@ -71,7 +71,7 @@ python parser_test/scripts/import_history.py ^
   --to-date 2026-05-01
 ```
 
-Per canali mono-trader, imposta subito `source_trader_id`:
+Per canali mono-trader, imposta subito il trader in import. Questo valorizza `source_trader_id` e anche `resolved_trader_id`:
 
 ```bash
 python parser_test/scripts/import_history.py ^
@@ -85,7 +85,7 @@ python parser_test/scripts/import_history.py ^
 | `--chat-id` | ID numerico del canale Telegram |
 | `--topic-id` | ID del topic (se il canale usa topics) |
 | `--db-name` | Nome del DB locale (file in `db/telegram__<name>.sqlite3`) |
-| `--default-source-trader` | Imposta `source_trader_id` per tutti i messaggi importati |
+| `--default-source-trader` | Imposta `source_trader_id` e `resolved_trader_id` per tutti i messaggi importati |
 | `--from-date` | Data inizio (`YYYY-MM-DD`) |
 | `--to-date` | Data fine (`YYYY-MM-DD`) |
 | `--limit` | Numero massimo messaggi |
@@ -94,10 +94,10 @@ python parser_test/scripts/import_history.py ^
 
 ---
 
-### 2. Risoluzione trader (opzionale ma consigliato)
+### 2. Risoluzione trader
 
 Risolve il trader effettivo per ogni messaggio e lo persiste in `raw_messages.resolved_trader_id`.
-Da eseguire prima del replay per abilitare `--trader-filter`.
+Nei DB multi-trader e il passaggio obbligatorio prima del replay. Nei DB mono-trader e opzionale se l'import ha gia valorizzato `resolved_trader_id`.
 
 ```bash
 python parser_test/scripts/resolve_traders.py --db-path  "C:\TeleSignalBot\parser_test\db\parser_test__trader_a_topic.sqlite3"

@@ -1,0 +1,113 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
+14,trader_a,INFO,UNCLASSIFIED,2324,264,200,Эта сделка по прежнему в работе. Скорее всего возьмем лимитку,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,2320,268,,"[trader#A]
+
+📊 BTCUSDT — обзор на 11 ноября
+
+Биткоин торгуется у 105 000 USDT, под недельным и дневным сопротивлением.
+После неудачного прокола 106 000 актив сформировал CHoCH и пошёл в откат — это типичный ретест зоны предложения под EMA 200 (4H).
+Структура остаётся нисходящей: ЕМА 20<50<200, фон медвежий.
+
+Ближайшие цели — 104 100 → 101 900 → 98 500, пока цена ниже 106 300.
+Фон по RSI/ADX нейтральный, импульс слабый, рынок готовится к новому движению — скорее вниз.
+Для смены сценария нужно дневное закрепление выше 106 500.
+
+🟠 Направление: шортовое
+⚙️ Поддержки: 104.1k / 101.9k / 98.5k
+📈 Инвалидация: 106.6k+",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@70:74"", ""symbol/strong:usdt@70:74"", ""leverage/weak:x@388:389"", ""SHORT/strong:шорт@542:546""], ""suppressed_markers"": [], ""applied_marker_rules"": [], """
+14,trader_a,INFO,UNCLASSIFIED,2244,347,293,"Тут, увы, убыток почти 8%
+
+Не поздравляю",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1921,824,823,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1691,1133,,"[trader#A]
+
+PEOPLE - https://t.me/c/3171748254/1034 
+SXP - https://t.me/c/3171748254/1036 
+QTUM - https://t.me/c/3171748254/1038 
+HYPE - https://t.me/c/3171748254/1044
+JTO - https://t.me/c/3171748254/1081
+MANA - https://t.me/c/3171748254/1083
+
+
+Эти сделки продолжаю держать",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""telegram_link/strong:https://t.me/@20:33"", ""telegram_link/strong:t.me/@28:33"", ""leverage/weak:x@52:53"", ""telegram_link/strong:https://t.me/@57:70"", ""telegram_link/strong:t.me/@65:70"", ""telegram_link/strong:https://t.me/@95:"
+14,trader_a,INFO,UNCLASSIFIED,1619,1245,,"[trader#A]
+
+MANA - https://t.me/c/3171748254/1083
+SOL - https://t.me/c/3171748254/1159
+LINK - https://t.me/c/3171748254/1160
+SUI - https://t.me/c/3171748254/1168
+
+Должны остаться в работе. Ближе к вечеру гляну, что можно открыть",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""telegram_link/strong:https://t.me/@18:31"", ""telegram_link/strong:t.me/@26:31"", ""telegram_link/strong:https://t.me/@55:68"", ""telegram_link/strong:t.me/@63:68"", ""telegram_link/strong:https://t.me/@93:106"", ""telegram_link/stro"
+14,trader_a,INFO,UNCLASSIFIED,1392,1586,,"[trader#A]
+
+HOOK лонг с текущих.
+Остальные данные чуть позже",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""LONG/strong:лонг@16:20""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1391,1587,,"[trader#A]
+
+KAS лонг с текущих.
+Остальные данные чуть позже",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""LONG/strong:лонг@15:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1390,1588,,"[trader#A]
+
+STORJ лонг с текущих.
+Остальные данные чуть позже",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""LONG/strong:лонг@17:21""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1388,1590,,"[trader#A]
+
+TLM лонг с текущих.
+Остальные данные чуть позже
+
+финальная от меня",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""LONG/strong:лонг@15:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1312,1684,,"[trader#A]
+
+#среднесрок #MOVRUSDT 🐻 Шорт (вход с текущих)
+
+""sl"": 2.676,
+
+полная информация чуть позже",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_"
+14,trader_a,INFO,UNCLASSIFIED,1284,1723,,"[trader#A]
+
+#среднесрок #APEUSDT 🐂 Лонг (вход с текущих)
+""sl"": 0.20553
+
+полная информация через несколько минут",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@34:38"", ""entry/strong:(вход с текущих)@39:55"", ""MARKET/strong:вход с текущих@40:54""], ""suppressed_markers"": [], ""applie"
+14,trader_a,INFO,UNCLASSIFIED,1283,1724,,"[trader#A]
+
+
+#среднесрок #ILVUSDT 🐂 Лонг (вход с текущих)
+
+""sl"": 6.258
+
+
+полная информация через несколько минут",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@34:38"", ""entry/strong:(вход с текущих)@39:55"", ""MARKET/strong:вход с текущих@40:54""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_d"
+14,trader_a,INFO,UNCLASSIFIED,1133,1970,,"[trader#A]
+итог по сделкам:
+hype - 1.27R
+aave -1.67R
+aster - 1.15R
+xrp - 0.75R
+doge - 1.38R
+btc - 1.62R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""leverage/weak:x@67:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1070,2105,2093,Зайду по текущим,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MARKET_NOW/strong:зайду по текущим@0:16""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,1018,2176,2165,"И она закрылась
+итог - 1.19R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,977,2233,2192,"сделка закрылась
+итог 1.36R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,903,2334,,"trader #A
+
+пока ждем",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,844,2406,2405,"для чистоты статистики. у меня вход по 0.0332, считаться также будет от этой цифры",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/weak:бу@63:65""], ""suppressed_markers"": [""EXIT_BE/weak:бу@63:65""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""exit_be_weak_context""], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,829,2426,2348,Актуально,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,780,2503,2481,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,650,2682,2681,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,614,2728,2708,продолжаем,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,602,2740,2739,тут уже вход с текущих,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MARKET_NOW/strong:тут уже вход с текущих@0:22"", ""MARKET/strong:вход с текущих@8:22""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,576,2773,2772,точка входа 84.86,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,528,2852,2851,Тут с текущих,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MARKET_NOW/strong:тут с текущих@0:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,479,2917,2881,"Этот наконец-то вспомнил, что он интрадей, а не среднесрок…",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,429,2976,,"Trader #A
+
+Давайте начинать 
+
+Фиксация 50/40/10
+Вернемся к штатному формату фиксации",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+14,trader_a,INFO,UNCLASSIFIED,239,3241,3080,"позиция полностью закрылась
+итог - 1.33R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"

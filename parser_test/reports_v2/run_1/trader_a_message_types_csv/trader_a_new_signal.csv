@@ -1,0 +1,753 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,symbol,side,entry_structure,entries_count,entries_summary,stop_loss_price,take_profit_count,take_profit_prices,risk_hint_raw,risk_hint_value,risk_hint_min_value,risk_hint_max_value,leverage_hint,missing_fields,completeness
+1,trader_a,SIGNAL,PARSED,140,91,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 68 138.6
+— Усреднение: -
+
+— SL: 70 842.7 🛡(от A: -3.97%)
+
+— TP1: 65 982.3 🎯 (от A: +3.17%)
+— TP2: 61 274.6 🎯 (от A: +10.07%)
+— TP3: 54 386.2 🎯 (от A: +20.18%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@68138.6,70842.7,3,65982.3|61274.6|54386.2,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,139,94,,"[trader #A]
+
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.3792
+— Усреднение: -
+
+— SL: 1.4127 🛡(от A: -2.4%)
+
+— TP1: 1.3346 🎯 (от A: +3.2%)
+— TP2: 1.2843 🎯 (от A: +6.9%)
+— TP3: 1.2148 🎯 (от A: +11.9%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""leverage/weak:x@25:26"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ",XRPUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@1.3792,1.4127,3,1.3346|1.2843|1.2148,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,138,577,,"[trader #A]
+
+#среднесрок
+#DOGEUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.0934
+— Усреднение: -
+
+— SL: 0.0982 🛡(от A: -4.1%)
+
+— TP1: 0.0887 🎯 (от A: +5.9%)
+— TP2: 0.0844 🎯 (от A: +10.5%)
+— TP3: 0.0784 🎯 (от A: +16.9%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""SHORT/strong:шорт@36:40"", ""entry/strong:(вход с текущих)@41:57"", ""MARKET/strong:вход с текущих@42:56"", ""MARKET/strong:вход с текущих@60:74"", ""entry/strong:вход с теку",DOGEUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.0934,0.0982,3,0.0887|0.0844|0.0784,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,137,578,,"[trader #A]
+
+#среднесрок
+#LINKUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 9.031
+— Усреднение: -
+
+— SL: 9.377 🛡(от A: -3.8%)
+
+— TP1: 8.533 🎯 (от A: +5.5%)
+— TP2: 8.371 🎯 (от A: +7.3%)
+— TP3: 7.237 🎯 (от A: +19.9%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""SHORT/strong:шорт@36:40"", ""entry/strong:(вход с текущих)@41:57"", ""MARKET/strong:вход с текущих@42:56"", ""MARKET/strong:вход с текущих@60:74"", ""entry/strong:вход с теку",LINKUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@9.031,9.377,3,8.533|8.371|7.237,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,136,579,,"[trader #A]
+
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 88.77
+— Усреднение: -
+
+— SL: 92.73 🛡(от A: -4.5%)
+
+— TP1: 84.66 🎯 (от A: +4.6%)
+— TP2: 81.43 🎯 (от A: +8.3%)
+— TP3: 76.37 🎯 (от A: +14.0%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",SOLUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@88.77,92.73,3,84.66|81.43|76.37,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,134,744,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 71 753.80
+— Усреднение: -
+
+— SL: 68 437.80 🛡(от A: -4.1%)
+
+— TP1: 74 435.80 🎯 (от A: +4.3%)
+— TP2: 76 035.80 🎯 (от A: +6.5%)
+— TP3: 78 206.70 🎯 (от A: +9.6%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",BTCUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@71753.8,68437.8,3,74435.8|76035.8|78206.7,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,133,758,,"[trader #A]
+
+#среднесрок
+#ENAUSDT 🐂 Лонг  (вход с текущих)
+
+— Вход с текущих: 0.09887
+— Усреднение: -
+
+— SL: 0.09371 🛡(от A: -5.2%)
+
+— TP1: 0.10491 🎯 (от A: +6.1%)
+— TP2: 0.10981 🎯 (от A: +11.1%)
+— TP3: 0.11997 🎯 (от A: +21.3%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",ENAUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.09887,0.09371,3,0.10491|0.10981|0.11997,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,132,779,,"[trader #A]
+
+#среднесрок
+#DOTUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 1.3892
+— Усреднение: -
+
+— SL: 1.3456 🛡(от A: -3.1%)
+
+— TP1: 1.4725 🎯 (от A: +6.0%)
+— TP2: 1.5291 🎯 (от A: +10.1%)
+— TP3: 1.6458 🎯 (от A: +18.5%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",DOTUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@1.3892,1.3456,3,1.4725|1.5291|1.6458,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,131,781,,"[trader #A]
+
+#среднесрок
+#OPUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.1144
+— Усреднение: -
+
+— SL: 0.1099 🛡(от A: -3.9%)
+
+— TP1: 0.1238 🎯 (от A: +8.2%)
+— TP2: 0.1293 🎯 (от A: +13.0%)
+— TP3: 0.1397 🎯 (от A: +22.1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@34:38"", ""entry/strong:(вход с текущих)@39:55"", ""MARKET/strong:вход с текущих@40:54"", ""MARKET/strong:вход с текущих@58:72"", ""entry/strong:вход с текущ",OPUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.1144,0.1099,3,0.1238|0.1293|0.1397,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,130,802,,"[trader #A]
+
+#среднесрок #SCOUT
+#AAVEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 112.97
+— Усреднение: -
+
+— SL: 106.21 🛡(от A: -6.0%).
+
+— TP1: 120.43 🎯 (от A: +6.6%).
+— TP2: 125.41 🎯 (от A: +11.0%).
+— TP3: 129.43 🎯 (от A: +14.6%).
+
+— Цель: 150.43 💫 (от A: +33.2%).",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@31:33"", ""symbol/strong:usdt@36:40"", ""symbol/strong:usdt@36:40"", ""LONG/strong:лонг@43:47"", ""entry/strong:(вход с текущих)@48:64"", ""MARKET/strong:вход с текущих@49:63"", ""MARKET/strong:вход с текущих@67:",AAVEUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@112.97,106.21,3,120.43|125.41|129.43,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,129,807,,"[trader #A]
+
+#среднесрок
+#ADAUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.2711
+— Усреднение: -
+
+— SL: 0.2527 🛡(от A: -6.8%)
+
+— TP1: 0.2843 🎯 (от A: +4.9%)
+— TP2: 0.2977 🎯 (от A: +9.8%)
+— TP3: 0.3116 🎯 (от A: +15.0%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@24:26"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:",ADAUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.2711,0.2527,3,0.2843|0.2977|0.3116,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,117,1549,,"[trader #A]
+
+#среднесрок
+#ETHUSDT 🐂 Лонг (вход с текущих) — SCOUT
+
+— Вход с текущих: 2 036.35
+— Усреднение: -
+
+— SL: 1 862.15 🛡(от A: -8.6%).
+
+— TP1: 2 158.35 🎯 (от A: +6.0%).
+— TP2: 2 513.65 🎯 (от A: +23.5%).
+— TP3: 2 633.15 🎯 (от A: +29.3%).
+
+— Цель: 2 833.15 💫 (от A: +39.1%).
+
+— Вход не более 0.3-0.5% от депозита (SCOUT-режим)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@67:81"", ""entry/strong:вход с текущ",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2036.35,1862.15,3,2158.35|2513.65|2633.15,Вход не более 0.3-0.5%,,0.3,0.5,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,114,1567,,"[trader #A]
+
+#среднесрок
+#AVAXUSDT 🐂 Лонг (лимитный вход)
+
+— Вход с текущих: 8.356
+— Усреднение: -
+
+— SL: 8.019 🛡(от A: -4.0%)
+
+— TP1: 8.836 🎯 (от A: +5.7%)
+— TP2: 9.236 🎯 (от A: +10.5%)
+— TP3: 9.628 🎯 (от A: +15.2%)
+
+— Цель: 10.386 💫 (от A: +24.3%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@24:26"", ""leverage/weak:x@28:29"", ""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""LONG/strong:лонг@36:40"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущих:@59:74"", ""entry/we",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@8.356,8.019,3,8.836|9.236|9.628,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,112,1648,,"[trader #A]
+
+#среднесрок
+#BNBUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 614.36
+— Усреднение: -
+
+— SL: 623.18 🛡(от A: -1.4%)
+
+— TP1: 596.34 🎯 (от A: +2.9%)
+— TP2: 582.64 🎯 (от A: +5.2%)
+— TP3: 566.18 🎯 (от A: +7.8%)
+
+— Цель: 548.84 💫 (от A: +10.7%)
+
+Вход не более 1–2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",BNBUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@614.36,623.18,3,596.34|582.64|566.18,Вход не более 1–2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,111,1650,,"[trader #A]
+
+#среднесрок
+#TONUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.2104
+— Усреднение: -
+
+— SL: 1.3478 🛡(от A: -11.4%).
+
+— TP1: 1.1186 🎯 (от A: +7.6%).
+— TP2: 0.9864 🎯 (от A: +18.5%).
+— TP3: 0.8468 🎯 (от A: +30.0%).
+
+— Цель: 0.5846 💫 (от A: +51.7%).",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",TONUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@1.2104,1.3478,3,1.1186|0.9864|0.8468,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,109,1681,,"[trader #A]
+
+#среднесрок
+#AVAXUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 8.946
+— Усреднение: -
+
+— SL: 9.838 🛡(от A: -10.0%)
+
+— TP1: 8.396 🎯 (от A: +6.1%)
+— TP2: 7.348 🎯 (от A: +17.9%)
+— TP3: 6.182 🎯 (от A: +30.9%)
+
+— Цель: 5.842 💫 (от A: +34.7%)
+
+Вход не более 1% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@24:26"", ""leverage/weak:x@28:29"", ""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""SHORT/strong:шорт@36:40"", ""entry/strong:(вход с текущих)@41:57"", ""MARKET/strong:вход с текущих@42:56"", ""MARKET",AVAXUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@8.946,9.838,3,8.396|7.348|6.182,Вход не более 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,105,1700,,"[trader #A]
+
+#среднесрок
+#DOTUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 1.2292
+— Усреднение: -
+
+— SL: 1.3169 🛡(от A: -7.1%)
+
+— TP1: 1.0964 🎯 (от A: +10.8%)
+— TP2: 0.9868 🎯 (от A: +19.7%)
+— TP3: 0.8476 🎯 (от A: +31.0%)
+
+— Цель: 0.7427 💫 (от A: +39.6%)
+
+Вход не более 1–2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",DOTUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@1.2292,1.3169,3,1.0964|0.9868|0.8476,Вход не более 1–2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,104,1703,,"[trader #A]
+
+#среднесрок
+#ICPUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 2.2418
+— Усреднение: -
+
+— SL: 2.3356 🛡(от A: -4.2%)
+
+— TP1: 2.1184 🎯 (от A: +5.5%)
+— TP2: 1.9836 🎯 (от A: +11.5%)
+— TP3: 1.7468 🎯 (от A: +22.1%)
+
+— Цель: 1.6842 💫 (от A: +24.9%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",ICPUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@2.2418,2.3356,3,2.1184|1.9836|1.7468,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,103,1772,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 66 636.53
+— Усреднение: -
+
+— SL: 68 287.41 🛡(от A: -2.5%)
+
+— TP1: 64 437.26 🎯 (от A: +3.3%)
+— TP2: 62 387.28 🎯 (от A: +6.4%)
+— TP3: 59 917.42 🎯 (от A: +10.1%)
+
+— Цель: 53 647.18 💫 (от A: +19.5%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@66636.53,68287.41,3,64437.26|62387.28|59917.42,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,99,2025,,"[trader #A]
+
+#среднесрок
+#XAUTUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 4 660.00
+— Усреднение: -
+
+— SL: 4 826.74 🛡(от A: -2.9%)
+
+— TP1: 4 483.62 🎯 (от A: +4.4%)
+— TP2: 4 258.84 🎯 (от A: +9.2%)
+— TP3: 4 117.36 🎯 (от A: +12.2%)
+
+— Цель: 3 818.72 💫 (от A: +18.6%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""leverage/weak:x@25:26"", ""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""SHORT/strong:шорт@36:40"", ""entry/strong:(вход с текущих)@41:57"", ""MARKET/strong:вход с текущих@42:56"", ""MARKET/strong:вход с текущих@60:74"", ",XAUTUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@4660.0,4826.74,3,4483.62|4258.84|4117.36,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,97,2032,,"[trader #A]
+
+#среднесрок
+#STRKUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.03343
+— Усреднение: -
+
+— SL: 0.03638 🛡(от A: -8.8%).
+
+— TP1: 0.03163 🎯 (от A: +5.4%).
+— TP2: 0.02927 🎯 (от A: +12.4%).
+— TP3: 0.02747 🎯 (от A: +17.8%).",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""SHORT/strong:шорт@36:40"", ""entry/strong:(вход с текущих)@41:57"", ""MARKET/strong:вход с текущих@42:56"", ""MARKET/strong:вход с текущих@60:74"", ""entry/strong:вход с теку",STRKUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.03343,0.03638,3,0.03163|0.02927|0.02747,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,94,2084,,"[trader #A]
+
+#среднесрок
+#UKOUSD 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 110.39
+— Усреднение: -
+
+— SL: 88.97 🛡(от A: -19.4%).
+
+— TP1: 117.63 🎯 (от A: +6.6%).
+— TP2: 121.47 🎯 (от A: +10.0%).
+— TP3: 124.73 🎯 (от A: +13.0%).
+
+— Цель: 128.37 💫 (от A: +16.3%).",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""LONG/strong:лонг@34:38"", ""entry/strong:(вход с текущих)@39:55"", ""MARKET/strong:вход с текущих@40:54"", ""MARKET/strong:вход с текущих@58:72"", ""entry/strong:вход с текущих:@58:73"", ""entry/weak:усреднение@83:93"", ""stop_loss/st",UKOUSD,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@110.39,88.97,3,117.63|121.47|124.73,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,91,2096,,"[trader #A]
+
+#среднесрок
+#ARBUSDT 🐻 Шорт (лимитный вход)
+
+— Вход лимиткой: 0.09247
+— Усреднение: 0.09870
+
+— SL: 0.10170 🛡(от A: -10.0%).
+
+— TP1: 0.08650 🎯 (от A: +6.5%).
+— TP2: 0.08080 🎯 (от A: +12.6%).
+— TP3: 0.07580 🎯 (от A: +18.0%).
+
+— Цель: 0.06780 💫 (от A: +26.7%).",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@24:26"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:вход лимиткой@58:71"", ""LIMIT/strong:вход лимиткой@58:71"", ""entry/weak:усреднение@83:93"", ""stop_",ARBUSDT,SHORT,TWO_STEP,2,1:LIMIT:PRIMARY@0.09247|2:LIMIT:AVERAGING@0.0987,0.1017,3,0.0865|0.0808|0.0758,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,88,2215,,"Trader #A
+
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 2 051.73
+— Усреднение: 2 088.43
+
+— SL: 2 177.23 🛡(от A: -6.1%, от B: -4.2%)
+
+— TP1: 1 963.40 🎯 (от A: +4.3%, от B: +6.0%)
+— TP2: 1 808.30 🎯 (от A: +11.9%, от B: +13.4%)
+— TP3: 1 737.20 🎯 (от A: +15.3%, от B: +16.8%)
+
+Вход не более 1–2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@26:30"", ""symbol/strong:usdt@26:30"", ""SHORT/strong:шорт@33:37"", ""entry/strong:(вход с текущих)@38:54"", ""MARKET/strong:вход с текущих@39:53"", ""MARKET/strong:вход с текущих@57:71"", ""entry/strong:вход с текущ",ETHUSDT,SHORT,TWO_STEP,2,1:MARKET:PRIMARY@2051.73|2:LIMIT:AVERAGING@2088.43,2177.23,3,1963.4|1808.3|1737.2,Вход не более 1–2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,75,3270,,"[trader #A]
+#среднесрок 
+#1000PEPEUSDT 🐂 Лонг (вход с текущих)
+— Вход с текущих: 0.003657
+— Усреднение: —
+— SL: 0.003341 🛡 (от A: −8.6%)
+— TP1: 0.003893 🎯 (от A: +6.5%)
+— TP2: 0.004187 🎯 (от A: +14.5%)
+— TP3: 0.004483 🎯 (от A: +22.6%)
+— Спот (цель по 1W-ТФ):
+— Цель: 0.006444 💫 (от A: +76.2%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""LONG/strong:лонг@40:44"", ""entry/strong:(вход с текущих)@45:61"", ""MARKET/strong:вход с текущих@46:60"", ""MARKET/strong:вход с текущих@64:78"", ""entry/strong:вход с текущ",1000PEPEUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.003657,0.003341,3,0.003893|0.004187|0.004483,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,74,3278,,"[trader #A]
+#среднесрок
+#SOLUSDT 🐂 Лонг (вход с текущих) 
+— Вход с текущих: 83.71
+— Усреднение: —
+— SL: 80.08 🛡 (от A: −4.34%)
+— TP1: 87.07 🎯 (от A: +4.01%)
+— TP2: 90.17 🎯 (от A: +7.72%)
+— TP3: 93.63 🎯 (от A: +11.85%)
+— Спот (цель по 1W-ТФ): 106.08 💫 (от A: +26.72%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",SOLUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@83.71,80.08,3,87.07|90.17|93.63,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,73,3330,,"[trader #A]
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 74 052.30
+— Усреднение: -
+
+— SL: 71 973.80 🛡(от A: -2.8%)
+
+— TP1: 78 398.20 🎯 (от A: +5.9%)
+— TP2: 79 843.70 🎯 (от A: +7.8%)
+— TP3: 86 598.40 🎯 (от A: +16.9%)
+
+— Цель: 95 243.70 💫 (от A: +28.6%)
+
+Вход не более 1–2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",BTCUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@74052.3,71973.8,3,78398.2|79843.7|86598.4,Вход не более 1–2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,71,3433,,"[trader #A]
+
+#среднесрок
+#BNBUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 623.4
+— Усреднение: —
+
+— SL: 604.7 🛡 (от A: -3.00%)
+
+— TP1: 637.9 🎯 (от A: +2.32%)
+— TP2: 649.6 🎯 (от A: +4.19%)
+— TP3: 660.8 🎯 (от A: +5.97%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 685.4 💫 (от A: +9.97%)
+
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",BNBUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@623.4,604.7,3,637.9|649.6|660.8,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,70,3457,,"[trader #A]
+
+#среднесрок
+#TONUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 1.4034
+— Усреднение: —
+
+— SL: 1.3093 🛡 (от A: -6.7%)
+
+— TP1: 1.4528 🎯 (от A: +3.5%)
+— TP2: 1.5553 🎯 (от A: +10.8%)
+— TP3: 1.7483 🎯 (от A: +24.6%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 2.1993 💫 (от A: +56.7%)
+
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с текущ",TONUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@1.4034,1.3093,3,1.4528|1.5553|1.7483,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,66,3516,,"[trader #A]
+
+#среднесрок
+#ENAUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 0.10914
+— Усреднение: —
+
+— SL: 0.12213 🛡 (от A: -11.9%)
+
+— TP1: 0.09937 🎯 (от A: +9.0%)
+— TP2: 0.08963 🎯 (от A: +17.9%)
+— TP3: 0.07987 🎯 (от A: +26.8%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""SHORT/strong:шорт@35:39"", ""entry/strong:(вход с текущих)@40:56"", ""MARKET/strong:вход с текущих@41:55"", ""MARKET/strong:вход с текущих@59:73"", ""entry/strong:вход с теку",ENAUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.10914,0.12213,3,0.09937|0.08963|0.07987,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,56,3639,,"[trader #A] Signal ID: #a1
+#среднесрок 
+#DOGEUSDT 🐂 Лонг (вход с текущих)
+— Вход с текущих: 0.09568
+— Усреднение: —
+— SL: 0.08875 🛡 (от A: -7.24%)
+— TP1: 0.10178 🎯 (от A: +6.38%)
+— TP2: 0.10628 🎯 (от A: +11.08%)
+— TP3: 0.11778 🎯 (от A: +23.10%)
+— Спот (цель по 1W-ТФ):
+— Цель: 0.12478 💫 (от A: +30.42%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""MARKET/strong:вход с текущих@75:",DOGEUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.09568,0.08875,3,0.10178|0.10628|0.11778,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,55,3640,,"[trader #A] Signal ID: #a2
+
+#среднесрок
+#1INCHUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.09516
+— Усреднение: —
+
+— SL: 0.08777 🛡 (от A: -7.8%)
+
+— TP1: 0.09843 🎯 (от A: +3.4%)
+— TP2: 0.10548 🎯 (от A: +10.8%)
+— TP3: 0.12170 🎯 (от A: +27.9%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 0.12495 💫 (от A: +31.3%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@45:49"", ""symbol/strong:usdt@45:49"", ""LONG/strong:лонг@52:56"", ""entry/strong:(вход с текущих)@57:73"", ""MARKET/strong:вход с текущих@58:72"", ""MARKET/strong:вход с текущих@76:",1INCHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.09516,0.08777,3,0.09843|0.10548|0.1217,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,54,3647,,"[trader #A] Signal ID: #a3
+
+#среднесрок
+#ETHUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 2 347.20
+— Усреднение: —
+
+— SL: 2 237.80 🛡 (от A: -4.66%)
+
+— TP1: 2 484.70 🎯 (от A: +5.86%)
+— TP2: 2 534.30 🎯 (от A: +7.97%)
+— TP3: 2 633.40 🎯 (от A: +12.19%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 2 998.60 💫 (от A: +27.75%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@43:47"", ""symbol/strong:usdt@43:47"", ""LONG/strong:лонг@50:54"", ""entry/strong:(вход с текущих)@55:71"", ""MARKET/strong:вход с текущих@56:70"", ""MARKET/strong:вход с текущих@74:",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2347.2,2237.8,3,2484.7|2534.3|2633.4,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,53,3649,,"[trader #A] Signal ID: #a4
+
+#SUIUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 0.9568
+— Усреднение: —
+
+— SL: 0.9412 🛡 (от A: -1.63%)
+
+— TP1: 1.0028 🎯 (от A: +4.81%)
+— TP2: 1.0388 🎯 (от A: +8.57%)
+— TP3: 1.0488 🎯 (от A: +9.62%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 1.2988 💫 (от A: +35.74%)
+
+Вход не более 0.3–0.5% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""entry/strong:(вход с текущих)@43:59"", ""MARKET/strong:вход с текущих@44:58"", ""MARKET/strong:вход с текущих@62:",SUIUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.9568,0.9412,3,1.0028|1.0388|1.0488,Вход не более 0.3–0.5%,,0.3,0.5,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,50,3677,,"[trader #A] Signal ID: #a5
+
+#среднесрок 
+#AAVEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 90.72
+— Усреднение: —
+
+— SL: 87.83 🛡 (от A: -3.19%)
+
+— TP1: 93.12 🎯 (от A: +2.65%)
+— TP2: 97.07 🎯 (от A: +7.00%)
+— TP3: 101.03 🎯 (от A: +11.37%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 105.35 💫 (от A: +16.13%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""explicit_id/strong:#a@39:41"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""M",AAVEUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@90.72,87.83,3,93.12|97.07|101.03,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,47,3692,,"[trader #A] Signal ID: #a6
+
+#среднесрок
+#JASMYUSDT 🐂 Лонг (с текущих)
+
+Вход:
+— Тип: вход с текущих 0.005642
+— Усреднения: нет
+
+Стоп:
+— SL: 0.005497 🛡
+
+Тейк (интрадей, 1 цель):
+— TP1: 0.006287 🎯 (+10.41% /4.45R )",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк"", ""TP_HIT:tp1""], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@45:49"", ""symbol/strong:usdt@45:49"", ""LONG/strong:лонг@52:56"", ""entry/strong:вход:@69:74"", ""MARKET/strong:вход с текущих@82:96"", ""SL_HIT/weak:стоп",JASMYUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.005642,0.005497,1,0.006287,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,43,3720,,"[trader #A] Signal ID: #a7
+
+#среднесрок
+#BTCUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 75 147
+— Усреднение: —
+
+— SL: 72 287 🛡 (от A: −3.81%)
+
+— TP1: 77 217 🎯 (от A: +2.75%)
+— TP2: 79 247 🎯 (от A: +5.46%)
+— TP3: 82 287 🎯 (от A: +9.50%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 94 287 💫 (от A: +25.47%)
+
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@43:47"", ""symbol/strong:usdt@43:47"", ""LONG/strong:лонг@50:54"", ""entry/strong:(вход с текущих)@55:71"", ""MARKET/strong:вход с текущих@56:70"", ""MARKET/strong:вход с текущих@74:",BTCUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@75147.0,72287.0,3,77217.0|79247.0|82287.0,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,42,3721,,"[trader #A] Signal ID: #a8
+
+#среднесрок
+#INJUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 3.278
+— Усреднение: —
+
+— SL: 3.128 🛡 (от A: -4.6%)
+
+— TP1: 3.458 🎯 (от A: +5.5%)
+— TP2: 3.497 🎯 (от A: +6.7%)
+— TP3: 3.798 🎯 (от A: +15.9%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 4.285 💫 (от A: +30.7%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@43:47"", ""symbol/strong:usdt@43:47"", ""LONG/strong:лонг@50:54"", ""entry/strong:(вход с текущих)@55:71"", ""MARKET/strong:вход с текущих@56:70"", ""MARKET/strong:вход с текущих@74:",INJUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@3.278,3.128,3,3.458|3.497|3.798,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,41,3723,,"[trader #A] Signal ID: #a9
+
+#среднесрок 
+#AAVEUSDT 🐂 Лонг (вход с текущих)
+
+— Вход с текущих: 90.52
+— Усреднение: —
+
+— SL: 85.71 🛡 (от A: -4.90%)
+
+— TP1: 98.93 🎯 (от A: +9.77%)
+— TP2: 106.13 🎯 (от A: +17.75%)
+— TP3: 111.43 🎯 (от A: +23.63%)
+
+— Спот (цель по 1W-ТФ):
+— Цель: 128.77 💫 (от A: +42.87%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""explicit_id/strong:#a@39:41"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""M",AAVEUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@90.52,85.71,3,98.93|106.13|111.43,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,39,3921,,"[trader #A] Signal ID: #a10
+#среднесрок 
+#ARBUSDT 🐂 Лонг (вход с текущих)
+— Вход с текущих: 0.1273
+— Усреднение: —
+— SL: 0.1199 🛡 (от A: -5.8%)
+— TP1: 0.1334 🎯 (от A: +4.8%)
+— TP2: 0.1388 🎯 (от A: +9.0%)
+— TP3: 0.1547 🎯 (от A: +21.5%)
+— Спот (цель по 1W-ТФ):
+— Цель: 0.2027 💫 (от A: +59.2%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""explicit_id/strong:#a@40:42"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""M",ARBUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.1273,0.1199,3,0.1334|0.1388|0.1547,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,38,3923,,"[trader #A] Signal ID: #a11
+#среднесрок
+#AVAXUSDT 🐂 Лонг (вход с текущих)
+— Вход с текущих: 9.528
+— Усреднение: —
+— SL: 8.930 🛡 (от A: −6.3%)
+— TP1: 9.917 🎯 (от A: +4.1%)
+— TP2: 10.467 🎯 (от A: +9.9%)
+— TP3: 10.913 🎯 (от A: +14.5%)
+— Спот (цель по 1W-ТФ):
+— Цель: 11.337 💫 (от A: +19.0%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""explicit_id/strong:#a@40:42"", ""leverage/weak:x@44:45"", ""symbol/strong:usdt@45:49"", ""symbol/strong:usdt@45:49"", ""LONG/strong:лонг@52:56"", ""entry/strong:(вход с текущих)@57:73"", ""MARKET/strong:",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@9.528,8.93,3,9.917|10.467|10.913,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,37,3925,,"[trader #A] Signal ID: #a12
+#среднесрок
+#LINKUSDT 🐂 Лонг (вход с текущих)
+— Вход с текущих: 9.49
+— Усреднение: —
+— SL: 9.07 🛡 (от A: -4.4%)
+— TP1: 9.83 🎯 (от A: +3.6%)
+— TP2: 10.66 🎯 (от A: +12.3%)
+— TP3: 11.29 🎯 (от A: +19.0%)
+— Спот (цель по 1W-ТФ):
+— Цель: 13.14 💫 (от A: +38.5%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@45:49"", ""symbol/strong:usdt@45:49"", ""LONG/strong:лонг@52:56"", ""entry/strong:(вход с текущих)@57:73"", ""MARKET/strong:вход с текущих@58:72"", ""MARKET/strong:вход с текущих@76:",LINKUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@9.49,9.07,3,9.83|10.66|11.29,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,26,4137,,"[trader #A] Signal ID: #a13
+
+#среднесрок
+#ENAUSDT 🐂 Лонг (вход с текущих)
+
+Вход:
+— Вход с текущих: 0.1104
+— Усреднение: -
+
+Стоп:
+— SL: 0.1036 🛡 (от A: -6.2%)
+
+Тейки (среднесрок, 3 цели):
+— TP1: 0.1187 🎯 (от A: +7.5%)
+— TP2: 0.1289 🎯 (от A: +16.8%)
+— TP3: 0.1357 🎯 (от A: +22.9%)
+
+Спот (цель по 1W-ТФ):
+— Цель: 0.1668 💫 (от A: +51.1%)
+
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк"", ""TP_HIT:tp1"", ""TP_HIT:tp2"", ""TP_HIT:tp3""], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:в",ENAUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.1104,0.1036,3,0.1187|0.1289|0.1357,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,20,4191,,"[trader #A] #a14
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+— Вход с текущих: 85.07
+— Усреднение: -
+— SL: 88.13 🛡 (от A: -3.60%)
+— TP1: 81.97 🎯 (от A: +3.65%)
+— TP2: 79.27 🎯 (от A: +6.82%)
+— TP3: 76.43 🎯 (от A: +10.16%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@12:14"", ""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""SHORT/strong:шорт@40:44"", ""entry/strong:(вход с текущих)@45:61"", ""MARKET/strong:вход с текущих@46:60"", ""MARKET/strong:вход с текущих@64",SOLUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@85.07,88.13,3,81.97|79.27|76.43,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,19,4229,,"[trader #A] Signal ID: #a14
+#среднесрок
+#XRPUSDT 🐻 Шорт (вход с текущих)
+— Вход с текущих: 1.3893
+— Усреднение: -
+— SL: 1.4473 🛡 (от A: -4.18%)
+— TP1: 1.3399 🎯 (от A: +3.55%)
+— TP2: 1.2789 🎯 (от A: +7.94%)
+— TP3: 1.2197 🎯 (от A: +12.22%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""leverage/weak:x@41:42"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""SHORT/strong:шорт@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""MARKET",XRPUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@1.3893,1.4473,3,1.3399|1.2789|1.2197,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,18,4231,,"[trader #A] Signal ID: #a15
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+— Вход с текущих: 76 528
+— Усреднение: —
+🛡 SL: 78 696 (от A: -2.83%)
+🎯 TP1: 74 048 (от A: +3.24%)
+🎯 TP2: 73 444 (от A: +4.03%)
+🎯 TP3: 70 528 (от A: +7.84%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""SHORT/strong:шорт@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""MARKET/strong:вход с текущих@75",BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@76528.0,78696.0,3,74048.0|73444.0|70528.0,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,17,4239,,"[trader #A] Signal ID: #a16
+
+#среднесрок
+#BNBUSDT 🐻 Шорт (вход с текущих) 
+
+— Вход с текущих: 619.40
+— Усреднение: -
+
+— SL: 629.15 🛡 (от A: +1.57%)
+
+— TP1: 605.85 🎯 (от A: -2.19%)
+— TP2: 594.25 🎯 (от A: -4.06%)
+— TP3: 582.40 🎯 (от A: -5.97%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""SHORT/strong:шорт@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""MARKET/strong:вход с текущих@75",BNBUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@619.4,629.15,3,605.85|594.25|582.4,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,13,4360,,"[trader #A]  Signal ID: #a17
+
+#среднесрок
+#ETHUSDT 🐻 Шорт (вход с текущих)
+
+— Вход с текущих: 2 254.40
+— Усреднение: -
+
+— SL: 2 341.20 🛡 (от A: +3.85%)
+
+— TP1: 2 182.40 🎯 (от A: -3.19%)
+— TP2: 2 131.40 🎯 (от A: -5.45%)
+— TP3: 2 003.40 🎯 (от A: -11.13%)
+
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""SHORT/strong:шорт@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""MARKET/strong:вход с текущих@75",ETHUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@2254.4,2341.2,3,2182.4|2131.4|2003.4,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,9,4894,,"[trader #A]  Signal ID: #a18
+#среднесрок
+#BTCUSDT 🐻 Шорт (вход с текущих)
+— Вход с текущих: 80 779
+— Усреднение: -
+— SL: 81 400 🛡 (от A: +0.77%)
+— TP1: 80 500 🎯 (от A: -0.35%)
+— TP2: 79 500 🎯 (от A: -1.58%)
+— TP3: 78 800 🎯 (от A: -2.45%)
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""SHORT/strong:шорт@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""MARKET/strong:вход с текущих@75",BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@80779.0,81400.0,3,80500.0|79500.0|78800.0,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,7,4896,,"[trader #A]  Signal ID: #a18
+#среднесрок
+#BTCUSDT 🐂 Лонг (лимитный ордер)
+— Вход лимит: 78 800
+— Усреднение: -
+— SL: 76 800 🛡 (от A: -2.54%)
+— TP1: 81 100 🎯 (от A: +2.92%)
+— TP2: 82 045 🎯 (от A: +4.12%)
+— TP3: 86 500 🎯 (от A: +9.77%)
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/weak:усреднение@96:106"", ""stop_loss/strong:sl:@112:115"", ""TP_HIT/weak:tp1@142:145"", ""take_profit/strong",BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@78800.0,76800.0,3,81100.0|82045.0|86500.0,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,6,4897,,"[trader #A]  Signal ID: #a19
+#среднесрок
+#ETHUSDT 🐂 Лонг (лимитный ордер)
+— Вход: 2255
+— Усреднение: -
+— SL: 2200 🛡 (от A: -2.44%)
+— TP1: 2360 🎯 (от A: +4.66%)
+— TP2: 2410 🎯 (от A: +6.87%)
+— TP3: 2460 🎯 (от A: +9.09%)
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:вход:@75:80"", ""entry/weak:усреднение@88:98"", ""stop_loss/strong:sl:@104:107"", ""TP_HIT/weak:tp1@13",ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2255.0,2200.0,3,2360.0|2410.0|2460.0,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,5,4920,,"[trader #A]  Signal ID: #a20
+#среднесрок
+#ENAUSDT 🐂 Лонг (лимитный ордер)
+— Вход: 0.1150
+— Усреднение: -
+— SL: 0.1050 🛡 (от A: -8.70%)
+— TP1: 0.1300 🎯 (от A: +13.04%)
+— TP2: 0.1380 🎯 (от A: +20.00%)
+— TP3: 0.1550 🎯 (от A: +34.78%)
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""LONG/strong:лонг@51:55"", ""entry/strong:вход:@75:80"", ""entry/weak:усреднение@90:100"", ""stop_loss/strong:sl:@106:109"", ""TP_HIT/weak:tp1@1",ENAUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.115,0.105,3,0.13|0.138|0.155,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,4,5019,,"[trader #A]  Signal ID: #a21 
+#среднесрок
+#SOLUSDT 🐻 Шорт (вход с текущих)
+— Вход: 93.30
+— Усреднение: -
+— SL: 94.2 🛡 (от A: +1.84%)
+— TP1: 88.00 🎯 (от A: -4.66%)
+— TP2: 86.00 🎯 (от A: -6.83%)
+— TP3: 83.50 🎯 (от A: -9.53%)
+Вход не более 1-2% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48"", ""SHORT/strong:шорт@51:55"", ""entry/strong:(вход с текущих)@56:72"", ""MARKET/strong:вход с текущих@57:71"", ""entry/strong:вход:@75:80"", ""ent",SOLUSDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@93.3,94.2,3,88.0|86.0|83.5,Вход не более 1-2%,,1.0,2.0,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,3,5022,,"[trader #A]  Signal ID: #a22
+#среднесрок
+#ENA 🐻 Шорт (вход с текущих)
+— Вход: 0.1303
+— Усреднение: -
+— SL: 0.1380 🛡 (от A: +5.50%)
+— TP1: 0.1240 🎯 (от A: -5.20%)
+— TP2: 0.1200 🎯 (от A: -8.26%)
+— TP3: 0.1160 🎯 (от A: -11.31%)
+Вход не более 1% от депозита",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""SHORT/strong:шорт@47:51"", ""entry/strong:(вход с текущих)@52:68"", ""MARKET/strong:вход с текущих@53:67"", ""entry/strong:вход:@71:76"", ""entry/weak:усреднение@86:96"", ""stop_loss/strong:sl:@102:105",A22USDT,SHORT,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1303,0.138,3,0.124|0.12|0.116,Вход не более 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,1,5029,,"[trader #A]  Signal ID: #a23
+#среднесрок
+#1INCHUSDT 🐂 Лонг (лимитный ордер)
+— Вход: 0.0935
+— Усреднение: -
+— SL: 0.0888 🛡 (от A: −5.03%)
+— TP1: 0.1010 🎯 (от A: +8.02%) 
+— TP2: 0.1065 🎯 (от A: +13.90%) 
+— TP3: 0.1145 🎯 (от A: +22.46%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""symbol/strong:usdt@46:50"", ""symbol/strong:usdt@46:50"", ""LONG/strong:лонг@53:57"", ""entry/strong:вход:@77:82"", ""entry/weak:усреднение@92:102"", ""stop_loss/strong:sl:@108:111"", ""TP_HIT/weak:tp1@1",1INCHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0935,0.0888,3,0.101|0.1065|0.1145,,,,,,,COMPLETE

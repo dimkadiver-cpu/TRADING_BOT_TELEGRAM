@@ -93,17 +93,26 @@ def test_unresolved_trader_not_written_to_db():
     assert count == 0
 
 
-def test_assume_trader_used_when_resolved_is_null():
+def test_replay_does_not_use_assume_trader_when_resolved_is_null():
     conn = _make_db()
     _insert_raw(conn, resolved_trader_id=None)
     with patch("parser_test.scripts.replay_parser_v2.get_parser_v2_profile", return_value=MagicMock()):
         with patch("parser_test.scripts.replay_parser_v2.UniversalParserRuntime") as rt:
             rt.return_value.parse.return_value = _make_mock_canonical()
             run_replay(conn, assume_trader="trader_a", parser_profile="auto")
-    rows = conn.execute(
-        "SELECT trader_id, error_status FROM parser_results_v2"
-    ).fetchall()
-    assert rows == [("trader_a", "OK")]
+    count = conn.execute("SELECT COUNT(*) FROM parser_results_v2").fetchone()[0]
+    assert count == 0
+
+
+def test_replay_does_not_use_source_trader_id_when_resolved_is_null():
+    conn = _make_db()
+    _insert_raw(conn, source_trader_id="trader_a", resolved_trader_id=None)
+    with patch("parser_test.scripts.replay_parser_v2.get_parser_v2_profile", return_value=MagicMock()):
+        with patch("parser_test.scripts.replay_parser_v2.UniversalParserRuntime") as rt:
+            rt.return_value.parse.return_value = _make_mock_canonical()
+            run_replay(conn, parser_profile="auto")
+    count = conn.execute("SELECT COUNT(*) FROM parser_results_v2").fetchone()[0]
+    assert count == 0
 
 
 def test_parser_profile_auto_uses_resolved_trader():

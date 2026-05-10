@@ -3,10 +3,6 @@
 
 
 
-- Caso 2928  perche ho come intenst solo EXIT_BE
-
-    1.19R  
-    0.37R
 
 
 

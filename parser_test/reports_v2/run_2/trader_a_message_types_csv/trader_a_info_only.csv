@@ -1,0 +1,66 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,info_raw_fragment
+2,trader_a,INFO,UNCLASSIFIED,143,3,,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,
+2,trader_a,INFO,UNCLASSIFIED,116,1550,,"Trader #A
+#ETHUSDT
+
+входим на 1% от депозитв",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Trader #A
+#ETHUSDT
+
+входим на 1% от депозитв"
+2,trader_a,INFO,UNCLASSIFIED,113,1613,,"Trader #A
+
+https://t.me/c/3722628653/3/1567
+
+обратите внимание на заголовок  - лимитный вход
+
+как только возьмем лимитку, если возьмем - я сообщу",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""telegram_link/strong:https://t.me/@10:23"", ""telegram_link/strong:t.me/@18:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Trader #A
+
+https://t.me/c/3722628653/3/1567
+
+обратите внимание на заголовок  - лимитный вход
+
+как только возьмем лимитку, если возьмем - я сообщу"
+2,trader_a,INFO,UNCLASSIFIED,107,1689,,"Рынок максимально нервный, разнонаправленные сигналы, приходится лавировать",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Рынок максимально нервный, разнонаправленные сигналы, приходится лавировать"
+2,trader_a,INFO,UNCLASSIFIED,98,2026,2025,"твх изменю на текущую цену, для более верной статистики 4660",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"твх изменю на текущую цену, для более верной статистики 4660"
+2,trader_a,INFO,UNCLASSIFIED,93,2085,,"попробуем поторговать нефть
+ее можно найти в разделе TradeFi 
+
+входим на 0.5% от депозита",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/weak:бу@5:7""], ""suppressed_markers"": [""EXIT_BE/weak:бу@5:7""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""exit_be_weak_context""], ""category_scores"": {}}",,,"попробуем поторговать нефть
+ее можно найти в разделе TradeFi 
+
+входим на 0.5% от депозита"
+2,trader_a,INFO,UNCLASSIFIED,92,2091,2084,В статистку не идет,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,В статистку не идет
+2,trader_a,INFO,PARSED,89,2209,,По позициям все без изменений. Продолжаем удерживать,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INFO_ONLY/strong:продолжаем удерживать@31:52""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""INFO"": 1.0}}",INFO_ONLY,INFO_ONLY,По позициям все без изменений. Продолжаем удерживать
+2,trader_a,INFO,UNCLASSIFIED,87,2400,,"Всем привет, все продолжаем держать",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Всем привет, все продолжаем держать"
+2,trader_a,INFO,PARSED,86,2869,,"Админ на связи. 👋
+
+У trader #A временные проблемы с доступом к Telegram - человек сменил по работе дислокацию и где-то там ведёт незримую магическую битву выкрикивая в пространство заклинания вроде ПРОКСИмус и ВИПИЭНус! 🧙‍♂️
+
+Все результаты по сделкам, разумеется, никуда не делись и будут своевременно добавлены в ветку и общую статистику, как только связь восстановится.🤳
+
+Для тех, кто не терпит тишины в эфире -
+можете пока включить трек Славы КПСС “РКН” и прочувствовать атмосферу 😄
+
+Работаем, просто чуть тише обычного. 🤏
+#админ",1.0,,"{""matched_markers"": [""ADMIN/strong:админ на связи@0:14"", ""explicit_id/strong:#a@27:29"", ""EXIT_BE/weak:бу@282:284"", ""ADMIN/strong:#админ@523:529""], ""suppressed_markers"": [""EXIT_BE/weak:бу@282:284""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_disambiguation_rules"": [], ""applied_rules"":",,,"Админ на связи. 👋
+
+У trader #A временные проблемы с доступом к Telegram - человек сменил по работе дислокацию и где-то там ведёт незримую магическую битву выкрикивая в пространство заклинания вроде ПРОКСИмус и ВИПИЭНус! 🧙‍♂️
+
+Все результаты по сделкам, разумеется, никуда не делись и будут своевременно добавлены в ветку и общую статистику, как только связь восстановится.🤳
+
+Для тех, кто не терпит тишины в эфире -
+можете пока включить трек Славы КПСС “РКН” и прочувствовать атмосферу 😄
+
+Работаем, просто чуть тише обычного. 🤏
+#админ"
+2,trader_a,INFO,UNCLASSIFIED,85,3233,,"Привет! Прошу прощения за тишину — был в командировке и попал в место, где интернет просто умер. Накануне всё работало, а потом — ни связи, ни возможности хоть как-то обновиться. Уже на месте, включаюсь обратно 🙌",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Привет! Прошу прощения за тишину — был в командировке и попал в место, где интернет просто умер. Накануне всё работало, а потом — ни связи, ни возможности хоть как-то обновиться. Уже на месте, включаюсь обратно 🙌"
+2,trader_a,INFO,UNCLASSIFIED,21,4171,,"Итог по закрытым лонгам:
+#a3 -0.3R
+#a11 -0.46R
+#a12 -0.4R
+#a13 -0.54R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@17:21"", ""explicit_id/strong:#a@25:27"", ""explicit_id/strong:#a@35:37"", ""explicit_id/strong:#a@47:49"", ""explicit_id/strong:#a@58:60""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rul",,,"Итог по закрытым лонгам:
+#a3 -0.3R
+#a11 -0.46R
+#a12 -0.4R
+#a13 -0.54R"
+2,trader_a,INFO,UNCLASSIFIED,2,5023,4920,Лимитку оставляем,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,Лимитку оставляем

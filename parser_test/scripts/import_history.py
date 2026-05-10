@@ -23,6 +23,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.core.logger import setup_logging
 from src.storage.raw_messages import RawMessageStore
 from parser_test.db.schema import apply_parser_test_schema
+from parser_test.scripts.trader_resolution import normalize_trader_id
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
 from parser_test.scripts.db_paths import resolve_parser_test_db_path
 
@@ -70,6 +71,17 @@ def parse_args() -> argparse.Namespace:
         "--default-source-trader",
         default=None,
         help="Se fornito, valorizza source_trader_id per i messaggi importati senza trader noto.",
+    )
+    parser.add_argument(
+        "--debug-reply-metadata",
+        action="store_true",
+        help="Stampa i campi raw Telethon utili a distinguere topic/thread e reply reali.",
+    )
+    parser.add_argument(
+        "--debug-reply-metadata-limit",
+        type=int,
+        default=20,
+        help="Numero massimo di messaggi per cui stampare i metadata reply/topic in debug.",
     )
     return parser.parse_args()
 
@@ -127,6 +139,7 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
     raw_store = RawMessageStore(db_path=db_path)
     ingestion = RawMessageIngestionService(store=raw_store, logger=logger)
     stats = Stats()
+    debug_reply_remaining = max(0, args.debug_reply_metadata_limit)
 
     async with TelegramClient(session_name, api_id, api_hash) as client:
         entity, resolution_method = await _resolve_target_entity(client=client, chat_ref=str(chat_ref).strip())
@@ -157,25 +170,36 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
             if to_ts and message_ts > to_ts:
                 continue
 
-            reply_to_message_id = None
-            if message.reply_to and getattr(message.reply_to, "reply_to_msg_id", None):
-                reply_to_message_id = int(message.reply_to.reply_to_msg_id)
+            reply_to_message_id, source_topic_id = _extract_import_reply_and_topic(
+                message=message,
+                selected_topic_id=args.topic_id,
+            )
+            if args.debug_reply_metadata and debug_reply_remaining > 0:
+                print(_format_reply_metadata_debug_line(
+                    message=message,
+                    selected_topic_id=args.topic_id,
+                ))
+                debug_reply_remaining -= 1
             media_payload = await _extract_media_payload(
                 client=client,
                 message=message,
                 download_media=args.download_media,
+            )
+            source_trader_id, resolved_trader_id, resolution_method = _resolve_import_trader_fields(
+                args.default_source_trader
             )
 
             incoming = TelegramIncomingMessage(
                 source_chat_id=source_chat_id,
                 source_chat_title=source_chat_title,
                 source_type=source_type,
-                source_trader_id=args.default_source_trader or None,
+                source_trader_id=source_trader_id,
                 telegram_message_id=int(message.id),
                 reply_to_message_id=reply_to_message_id,
                 raw_text=message.message,
                 message_ts=message_ts,
                 acquisition_status="ACQUIRED_HISTORY",
+                source_topic_id=source_topic_id,
                 has_media=media_payload.has_media,
                 media_kind=media_payload.media_kind,
                 media_mime_type=media_payload.media_mime_type,
@@ -183,6 +207,14 @@ async def _run_import(args: argparse.Namespace, TelegramClient: object) -> None:
                 media_blob=media_payload.media_blob,
             )
             result = ingestion.ingest(incoming)
+            if result.raw_message_id is not None and resolved_trader_id is not None:
+                with sqlite3.connect(db_path) as conn:
+                    _persist_import_trader_resolution(
+                        conn,
+                        raw_message_id=result.raw_message_id,
+                        source_trader_id=resolved_trader_id,
+                        resolution_method=resolution_method or "source_trader_id",
+                    )
             if result.saved:
                 stats.inserted += 1
             else:
@@ -201,6 +233,84 @@ def _ensure_not_live_db(db_path: str) -> None:
     live = (PROJECT_ROOT / "db" / "tele_signal_bot.sqlite3").resolve()
     if candidate == live:
         raise RuntimeError(f"Refusing to run on live DB path: {db_path}")
+
+
+def _format_reply_metadata_debug_line(*, message: object, selected_topic_id: int | None) -> str:
+    reply_to = getattr(message, "reply_to", None)
+    forum_topic = getattr(reply_to, "forum_topic", None) if reply_to is not None else None
+    reply_to_msg_id = getattr(reply_to, "reply_to_msg_id", None) if reply_to is not None else None
+    reply_to_top_id = getattr(reply_to, "reply_to_top_id", None) if reply_to is not None else None
+    text = (getattr(message, "message", None) or "").replace("\r", " ").replace("\n", " ")
+    text_preview = text[:80]
+    return (
+        "[reply-debug] "
+        f"msg_id={getattr(message, 'id', None)} "
+        f"selected_topic_id={selected_topic_id} "
+        f"forum_topic={forum_topic!r} "
+        f"reply_to_msg_id={reply_to_msg_id!r} "
+        f"reply_to_top_id={reply_to_top_id!r} "
+        f"text={text_preview!r}"
+    )
+
+
+def _extract_import_reply_and_topic(
+    *,
+    message: object,
+    selected_topic_id: int | None,
+) -> tuple[int | None, int | None]:
+    reply_to = getattr(message, "reply_to", None)
+    if reply_to is None:
+        return None, selected_topic_id
+
+    reply_to_msg_id = getattr(reply_to, "reply_to_msg_id", None)
+    reply_to_msg_id = int(reply_to_msg_id) if reply_to_msg_id else None
+
+    if selected_topic_id is None:
+        return reply_to_msg_id, None
+
+    reply_to_top_id = getattr(reply_to, "reply_to_top_id", None)
+    reply_to_top_id = int(reply_to_top_id) if isinstance(reply_to_top_id, int) else None
+    forum_topic = getattr(reply_to, "forum_topic", None) is True
+
+    # In forum topics, a non-reply message can still point to the thread root.
+    # When importing a selected topic, keep the topic as provenance and drop
+    # the synthetic root reference so parser_v2 does not treat it as a reply target.
+    if forum_topic and reply_to_msg_id == selected_topic_id and reply_to_top_id is None:
+        return None, selected_topic_id
+
+    return reply_to_msg_id, selected_topic_id
+
+
+def _resolve_import_trader_fields(
+    default_source_trader: str | None,
+) -> tuple[str | None, str | None, str | None]:
+    normalized = normalize_trader_id(default_source_trader)
+    if normalized is None:
+        return None, None, None
+    return normalized, normalized, "source_trader_id"
+
+
+def _persist_import_trader_resolution(
+    conn: sqlite3.Connection,
+    *,
+    raw_message_id: int,
+    source_trader_id: str,
+    resolution_method: str = "source_trader_id",
+) -> None:
+    conn.execute(
+        """
+        UPDATE raw_messages
+        SET source_trader_id = COALESCE(source_trader_id, ?),
+            resolved_trader_id = COALESCE(resolved_trader_id, ?),
+            resolution_method = CASE
+                WHEN resolved_trader_id IS NULL THEN ?
+                ELSE resolution_method
+            END
+        WHERE raw_message_id = ?
+        """,
+        (source_trader_id, source_trader_id, resolution_method, raw_message_id),
+    )
+    conn.commit()
 
 
 async def _iter_target_messages(

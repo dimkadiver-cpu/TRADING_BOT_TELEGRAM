@@ -1,9 +1,17 @@
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 from types import SimpleNamespace
 
-from parser_test.scripts.import_history import _iter_target_messages
+from parser_test.db.schema import apply_parser_test_schema
+from parser_test.scripts.import_history import (
+    _extract_import_reply_and_topic,
+    _format_reply_metadata_debug_line,
+    _iter_target_messages,
+    _persist_import_trader_resolution,
+    _resolve_import_trader_fields,
+)
 
 
 class _FakeClient:
@@ -72,3 +80,140 @@ def test_parse_args_default_source_trader_absent():
         from parser_test.scripts.import_history import parse_args
         args = parse_args()
     assert args.default_source_trader is None
+
+
+def test_parse_args_debug_reply_metadata_flags() -> None:
+    import sys
+    from unittest.mock import patch
+    with patch.object(
+        sys,
+        "argv",
+        ["prog", "--chat-id", "-123", "--debug-reply-metadata", "--debug-reply-metadata-limit", "7"],
+    ):
+        from parser_test.scripts.import_history import parse_args
+        args = parse_args()
+    assert args.debug_reply_metadata is True
+    assert args.debug_reply_metadata_limit == 7
+
+
+def test_format_reply_metadata_debug_line_includes_reply_fields() -> None:
+    reply_to = SimpleNamespace(
+        forum_topic=True,
+        reply_to_msg_id=300,
+        reply_to_top_id=200,
+    )
+    message = SimpleNamespace(
+        id=999,
+        message="hello\nworld",
+        reply_to=reply_to,
+    )
+
+    line = _format_reply_metadata_debug_line(message=message, selected_topic_id=200)
+
+    assert "msg_id=999" in line
+    assert "selected_topic_id=200" in line
+    assert "forum_topic=True" in line
+    assert "reply_to_msg_id=300" in line
+    assert "reply_to_top_id=200" in line
+    assert "hello world" in line
+
+
+def test_extract_import_reply_and_topic_for_topic_root_message() -> None:
+    reply_to = SimpleNamespace(
+        forum_topic=True,
+        reply_to_msg_id=3,
+        reply_to_top_id=None,
+    )
+    message = SimpleNamespace(reply_to=reply_to)
+
+    reply_to_message_id, source_topic_id = _extract_import_reply_and_topic(
+        message=message,
+        selected_topic_id=3,
+    )
+
+    assert reply_to_message_id is None
+    assert source_topic_id == 3
+
+
+def test_extract_import_reply_and_topic_for_real_reply_inside_topic() -> None:
+    reply_to = SimpleNamespace(
+        forum_topic=True,
+        reply_to_msg_id=4894,
+        reply_to_top_id=3,
+    )
+    message = SimpleNamespace(reply_to=reply_to)
+
+    reply_to_message_id, source_topic_id = _extract_import_reply_and_topic(
+        message=message,
+        selected_topic_id=3,
+    )
+
+    assert reply_to_message_id == 4894
+    assert source_topic_id == 3
+
+
+def test_extract_import_reply_and_topic_without_selected_topic_preserves_legacy_behavior() -> None:
+    reply_to = SimpleNamespace(
+        forum_topic=True,
+        reply_to_msg_id=3,
+        reply_to_top_id=None,
+    )
+    message = SimpleNamespace(reply_to=reply_to)
+
+    reply_to_message_id, source_topic_id = _extract_import_reply_and_topic(
+        message=message,
+        selected_topic_id=None,
+    )
+
+    assert reply_to_message_id == 3
+    assert source_topic_id is None
+
+
+def test_resolve_import_trader_fields_for_mono_trader() -> None:
+    source_trader_id, resolved_trader_id, resolution_method = _resolve_import_trader_fields("trader_a")
+    assert source_trader_id == "trader_a"
+    assert resolved_trader_id == "trader_a"
+    assert resolution_method == "source_trader_id"
+
+
+def test_resolve_import_trader_fields_without_default_trader() -> None:
+    source_trader_id, resolved_trader_id, resolution_method = _resolve_import_trader_fields(None)
+    assert source_trader_id is None
+    assert resolved_trader_id is None
+    assert resolution_method is None
+
+
+def test_persist_import_trader_resolution_backfills_source_and_resolved() -> None:
+    conn = sqlite3.connect(":memory:")
+    apply_parser_test_schema(conn)
+    conn.execute(
+        """INSERT INTO raw_messages
+        (raw_message_id, source_chat_id, telegram_message_id, raw_text, message_ts, acquired_at)
+        VALUES (1, 'chat1', 100, 'hello', '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00')"""
+    )
+    conn.commit()
+
+    _persist_import_trader_resolution(conn, raw_message_id=1, source_trader_id="trader_a")
+
+    row = conn.execute(
+        "SELECT source_trader_id, resolved_trader_id, resolution_method FROM raw_messages WHERE raw_message_id = 1"
+    ).fetchone()
+    assert row == ("trader_a", "trader_a", "source_trader_id")
+
+
+def test_persist_import_trader_resolution_preserves_existing_resolved_trader() -> None:
+    conn = sqlite3.connect(":memory:")
+    apply_parser_test_schema(conn)
+    conn.execute(
+        """INSERT INTO raw_messages
+        (raw_message_id, source_chat_id, telegram_message_id, source_trader_id, raw_text, message_ts, acquired_at, resolved_trader_id, resolution_method)
+        VALUES (1, 'chat1', 100, NULL, 'hello', '2026-01-01T00:00:00+00:00', '2026-01-01T00:00:00+00:00', 'trader_b', 'content_alias')"""
+    )
+    conn.commit()
+
+    _persist_import_trader_resolution(conn, raw_message_id=1, source_trader_id="trader_a")
+
+    row = conn.execute(
+        "SELECT source_trader_id, resolved_trader_id, resolution_method FROM raw_messages WHERE raw_message_id = 1"
+    ).fetchone()
+    assert row == ("trader_a", "trader_b", "content_alias")

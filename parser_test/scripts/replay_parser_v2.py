@@ -18,13 +18,13 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from parser_test.db.schema import apply_parser_test_schema
 from parser_test.scripts.db_paths import resolve_parser_test_db_path
-from parser_test.scripts.trader_resolution import build_trader_resolver, normalize_trader_id
+from parser_test.scripts.trader_resolution import normalize_trader_id
 from src.parser_v2.contracts.context import ParserContext, RawContext
 from src.parser_v2.core.runtime import UniversalParserRuntime
 from src.parser_v2.profiles.registry import get_parser_v2_profile
 from src.storage.parser_results_v2 import ParserResultV2Record, ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
-from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTraderResolver
+from src.telegram.effective_trader import EffectiveTraderResolver
 
 _LINK_RE = re.compile(r"(?:https?://)?t\.me/(?:c/\d+|[A-Za-z0-9_]+)/\d+", re.IGNORECASE)
 _HASHTAG_RE = re.compile(r"#([A-Za-z0-9_]{2,64})")
@@ -68,22 +68,6 @@ def _resolve_trader_filter_from_args(args: argparse.Namespace) -> str | None:
         print(_TRADER_DEPRECATED_MSG, file=sys.stderr)
         return args.trader_filter if args.trader_filter is not None else args.trader
     return args.trader_filter
-
-
-def _resolve_inferred_trader(
-    resolver: EffectiveTraderResolver,
-    raw: _RawRow,
-) -> str | None:
-    result = resolver.resolve(
-        EffectiveTraderContext(
-            source_chat_id=raw.source_chat_id,
-            source_chat_username=None,
-            source_chat_title=None,
-            raw_text=raw.raw_text,
-            reply_to_message_id=raw.reply_to_message_id,
-        )
-    )
-    return result.trader_id
 
 
 def _extract_telegram_links(text: str) -> list[str]:
@@ -231,8 +215,6 @@ def run_replay(
     apply_parser_test_schema(conn)
     run_store = ParserRunStore(conn)
     result_store = ParserResultV2Store(conn)
-    if trader_resolver is None and db_path:
-        trader_resolver = build_trader_resolver(db_path)
 
     run_id = run_store.create_run(
         trader_filter=trader_filter,
@@ -257,11 +239,6 @@ def run_replay(
 
     for raw in rows:
         effective_trader = normalize_trader_id(raw.resolved_trader_id)
-        if effective_trader is None and trader_resolver is not None:
-            inferred = _resolve_inferred_trader(trader_resolver, raw)
-            effective_trader = normalize_trader_id(inferred)
-        if effective_trader is None and assume_trader is not None:
-            effective_trader = normalize_trader_id(assume_trader)
 
         if effective_trader is None:
             counts["UNRESOLVED_TRADER"] += 1

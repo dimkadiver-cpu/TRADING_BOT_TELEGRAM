@@ -1,0 +1,129 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,report_events_count,report_events_summary,report_event_types,report_event_levels,report_event_prices,report_event_source_intents,report_event_raw_fragments,report_result_raw_fragment,hit_target,hit_price
+1,trader_a,REPORT,PARSED,142,75,,"Trader #A
+1 Тейк",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""TP_HIT/weak:1 тейк@10:16"", ""TP_HIT/weak:тейк@12:16""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=1),TP_HIT,1,,TP_HIT,1 тейк,,TP1,
+1,trader_a,REPORT,PARSED,141,76,,"Trader #A 
+
+#BTCUSDT
+
+2 тейк",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18"", ""TP_HIT/weak:2 тейк@19:25"", ""TP_HIT/weak:тейк@21:25""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""c",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,,TP_HIT,2 тейк,,TP,
+1,trader_a,REPORT,PARSED,135,698,,"Trader #A
+
+#SOLUSDT
+
+стоп 🤦
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18"", ""SL_HIT/weak:стоп@19:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": ",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,128,821,,"Trader #A
+
+#DOTUSDT
+
+стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18"", ""SL_HIT/weak:стоп@19:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": ",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,126,832,,"Trader #A
+
+OPUSDT
+стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@12:16"", ""symbol/strong:usdt@12:16"", ""SL_HIT/weak:стоп@17:21""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": ",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,125,997,,"Trader #A
+
+#enausdt
+
+Закрылось в бу
+Итого 1.43R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18"", ""EXIT_BE/strong:закрылось в бу@19:33"", ""MOVE_STOP_TO_BE/weak:в бу@29:33"", ""EXIT_BE/weak:бу@31:33""], ""suppressed_markers"": [""EXIT_BE/weak:бу@31:33""], ""applied_marker_rul",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,1.43,EXIT_BE,закрылось в бу,,BE,1.43
+1,trader_a,REPORT,PARSED,124,998,,"Trader #A 
+
+#aaveusdt
+
+Стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""explicit_id/strong:#a@10:12"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@20:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,123,1099,,"Trader #A 
+
+#ADAUSDT 
+Стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""explicit_id/strong:#a@10:12"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18"", ""SL_HIT/weak:стоп@19:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,122,1100,,"Trader #A 
+
+#BTCUSDT
+Стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18"", ""SL_HIT/weak:стоп@19:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": ",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,121,1129,,"Trader #A 
+
+#DOGEUSDT
+
+1 тейк",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/weak:1 тейк@20:26"", ""TP_HIT/weak:тейк@22:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""c",TP_HIT,TP_HIT,1,TP_HIT(lvl=1),TP_HIT,1,,TP_HIT,1 тейк,,TP1,
+1,trader_a,REPORT,PARSED,120,1331,,"Trader #A
+
+#DOGEUSDT 
+
+отбой по тейку, поторопился
+
+при этом дал апдейт об этом в старом канале, в сообщество не запостил об этом информацию
+
+более подробная хронология, со всеми ссылками в ветке админа - https://t.me/c/3722628653/1/1330",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""CANCEL_PENDING/weak:отбой@20:25"", ""INVALIDATE_SETUP/weak:отбой@20:25"", ""TP_HIT/weak:тейк@29:33"", ""telegram_link/strong:https://t.me/@200:213"", ""telegram_link/strong:t.",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,3722628653.0,TP_HIT,тейк,,TP,3722628653.0
+1,trader_a,REPORT,PARSED,115,1561,,"trader #A
+
+
+#dogeusdt
+закрылось в бу
+итого 0.48R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""EXIT_BE/strong:закрылось в бу@20:34"", ""MOVE_STOP_TO_BE/weak:в бу@30:34"", ""EXIT_BE/weak:бу@32:34""], ""suppressed_markers"": [""EXIT_BE/weak:бу@32:34""], ""applied_marker_rul",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,0.48,EXIT_BE,закрылось в бу,,BE,0.48
+1,trader_a,REPORT,PARSED,106,1691,1549,в бу закрылись,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/strong:в бу закрылись@0:14"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""applied_marker_rules"": [""weak_inside_strong_same_intent"", ""move_stop_to_be_we",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,в бу закрылись,,BE,
+1,trader_a,REPORT,PARSED,102,1826,1772,"Стоп 
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,101,1841,1703,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,90,2105,2096,лимитка,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""ENTRY_FILLED/weak:лимитка@0:7""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",ENTRY_FILLED,ENTRY_FILLED,1,ENTRY_FILLED(lvl=None),ENTRY_FILLED,,,ENTRY_FILLED,лимитка,,ENTRY,
+1,trader_a,REPORT,PARSED,84,3243,1650,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,82,3245,1700,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,81,3246,1703,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,80,3247,1772,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,77,3250,2096,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,76,3251,2215,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,68,3505,3278,2 тейк,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:2 тейк@0:6"", ""TP_HIT/weak:тейк@2:6""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,,TP_HIT,2 тейк,,TP,
+1,trader_a,REPORT,PARSED,63,3539,3433,1 тейк,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=1),TP_HIT,1,,TP_HIT,1 тейк,,TP1,
+1,trader_a,REPORT,PARSED,62,3576,3516,"Стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,61,3585,3457,"Закрылся в бу
+Итого 0.26R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылся в бу@0:13"", ""MOVE_STOP_TO_BE/weak:в бу@9:13"", ""EXIT_BE/weak:бу@11:13""], ""suppressed_markers"": [""EXIT_BE/weak:бу@11:13""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_ru",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,0.26,EXIT_BE,закрылся в бу,,BE,0.26
+1,trader_a,REPORT,PARSED,60,3588,3270,Стоп поставим на 1 тейк,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""TP_HIT/weak:1 тейк@17:23"", ""TP_HIT/weak:тейк@19:23""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_am",TP_HIT,TP_HIT,1,TP_HIT(lvl=1),TP_HIT,1,,TP_HIT,1 тейк,,TP1,
+1,trader_a,REPORT,PARSED,58,3610,3433,"закрылся на 1 тейке
+итого 0.77R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@12:18"", ""TP_HIT/weak:тейк@14:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=1),TP_HIT,1,0.77,TP_HIT,1 тейк,,TP1,0.77
+1,trader_a,REPORT,PARSED,57,3611,3270,"закрылся на 1 тейке
+итого 0.75R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@12:18"", ""TP_HIT/weak:тейк@14:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=1),TP_HIT,1,0.75,TP_HIT,1 тейк,,TP1,0.75
+1,trader_a,REPORT,PARSED,51,3662,3649,"Signal ID: #a4
+стоп
+-0.5R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@11:13"", ""SL_HIT/weak:стоп@15:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,0.5,SL_HIT,стоп,,SL,0.5
+1,trader_a,REPORT,PARSED,48,3690,3677,"Signal ID: #a5
+закрылся в бу
+итого 0.41R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@11:13"", ""EXIT_BE/strong:закрылся в бу@15:28"", ""MOVE_STOP_TO_BE/weak:в бу@24:28"", ""EXIT_BE/weak:бу@26:28""], ""suppressed_markers"": [""EXIT_BE/weak:бу@26:28""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disam",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,0.41,EXIT_BE,закрылся в бу,,BE,0.41
+1,trader_a,REPORT,PARSED,45,3706,,"[trader #A] Signal ID: #a6
+
+закрылся в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@8:10"", ""explicit_id/strong:#a@23:25"", ""EXIT_BE/strong:закрылся в бу@27:40"", ""MOVE_STOP_TO_BE/weak:в бу@36:40"", ""EXIT_BE/weak:бу@38:40""], ""suppressed_markers"": [""EXIT_BE/weak:бу@38:40""], ""applied_marker_rules"": [""weak_inside_strong",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрылся в бу,,BE,
+1,trader_a,REPORT,PARSED,44,3707,3330,закрылся в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылся в бу@0:13"", ""MOVE_STOP_TO_BE/weak:в бу@9:13"", ""EXIT_BE/weak:бу@11:13""], ""suppressed_markers"": [""EXIT_BE/weak:бу@11:13""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_ru",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрылся в бу,,BE,
+1,trader_a,REPORT,PARSED,36,3930,3720,"#a7
+
+2 тейк",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@0:2"", ""TP_HIT/weak:2 тейк@4:10"", ""TP_HIT/weak:тейк@6:10""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,,TP_HIT,2 тейк,,TP,
+1,trader_a,REPORT,PARSED,33,3951,3921,"#a10
+Закрылся в бу
+
+Итого 0.41R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@0:2"", ""EXIT_BE/strong:закрылся в бу@5:18"", ""MOVE_STOP_TO_BE/weak:в бу@14:18"", ""EXIT_BE/weak:бу@16:18""], ""suppressed_markers"": [""EXIT_BE/weak:бу@16:18""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambig",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,0.41,EXIT_BE,закрылся в бу,,BE,0.41
+1,trader_a,REPORT,PARSED,32,3965,3720,"#a7
+
+остаток закрылся на первом тейке
+итого 1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@0:2"", ""TP_HIT/weak:тейк@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,1.0,TP_HIT,тейк,,TP,1.0
+1,trader_a,REPORT,PARSED,27,4128,3640,"#a2
+
+Закрылся в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#a@0:2"", ""EXIT_BE/strong:закрылся в бу@4:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambig",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрылся в бу,,BE,
+1,trader_a,REPORT,PARSED,15,4296,4239,"стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,14,4297,4191,закрылся в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылся в бу@0:13"", ""MOVE_STOP_TO_BE/weak:в бу@9:13"", ""EXIT_BE/weak:бу@11:13""], ""suppressed_markers"": [""EXIT_BE/weak:бу@11:13""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_ru",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрылся в бу,,BE,
+1,trader_a,REPORT,PARSED,12,4501,4231,"Стоп
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,11,4892,4360,"стоп 
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
+1,trader_a,REPORT,PARSED,10,4893,4229,"стоп 
+-1R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп,,SL,1.0
