@@ -3,6 +3,24 @@
     "suppress_weak_inside_strong_same_intent": true,
     "weak_context_exclusions": [
 
+      {
+        "name": "false_cancel_pending",
+        "intent": "CANCEL_PENDING",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку","отбой по стопу и тейку"],
+        "reason": "false_positive_weak_markers_in_cancel_pending_context"
+      },
+
+      {
+        "name": "false_invalidated_setup",
+        "intent": "INVALIDATE_SETUP",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку","отбой по стопу и тейку"],
+        "reason": "false_positive_weak_markers_in_invalidated_setup_context"
+      },
+
        {
         "name": "false_reentry",
         "intent": "REENTER",
@@ -39,7 +57,7 @@
         "if_regex_any": [
           "после\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка",
           "(?:было|были|был|была)\\s+\\d+\\s+тейк(?:а|ов)?",
-          "дошли\\s+до\\s+\\d+(?:-х)?\\s+тейк(?:а|ов)?",
+          "дошл(?:и|о)?\\s+до\\s+\\d+(?:-х)?\\s+тейк(?:а|ов)?",
           "дожидаться\\s+\\d+\\s+тейк(?:а|ов)?",
           "у\\s+(?:\\d+|первого|второго|третьего|четвертого|пятого)\\s+тейка",
           "Не\\s+(?:дошло|дошли)\\s+до\\s+\\d+\\s+тейк(?:а|ов)?"
@@ -69,6 +87,17 @@
         "reason": "sl_markers_ambiguous_without_specific_context"
       }
 
+    ],
+    "marker_context_exclusions": [
+      {
+        "name": "all_short_in_ps_informational_context",
+        "strength": "strong",
+        "marker_name": "ALL_SHORT",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["p.s.", "у вас прибыль по шортам"],
+        "reason": "scope_hint_in_postscript_not_actionable"
+      }
     ],
     "cross_intent_suppression": [
       {
@@ -126,6 +155,12 @@
       "when_all_detected": ["MOVE_STOP_TO_BE", "MOVE_STOP"],
       "prefer": "MOVE_STOP_TO_BE",
       "over": ["MOVE_STOP"]
+    },
+    {
+      "name": "cancel_pending_over_sl_hit",
+      "when_all_detected": ["CANCEL_PENDING", "SL_HIT"],
+      "prefer": "CANCEL_PENDING",
+      "over": ["SL_HIT"]
     },
     {
       "name": "close_full_over_cancel_pending",
