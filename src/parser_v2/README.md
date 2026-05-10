@@ -160,7 +160,55 @@ Sopprime marker weak quando il contesto circostante corrisponde a certe condizio
 
 ---
 
-#### 1c. `cross_intent_suppression` — soppressione cross-intent
+#### 1c. `marker_context_exclusions` — soppressione per contesto (weak **e** strong)
+
+Meccanismo unificato che sopprime marker di qualsiasi forza (`weak` o `strong`) quando il contesto testuale corrisponde a certe condizioni. Complementa `weak_context_exclusions` (che rimane per backward compat) e lo estende ai marker forti.
+
+```json
+"marker_context_exclusions": [
+  {
+    "name": "all_short_in_ps_informational_context",
+    "strength": "strong",
+    "marker_name": "ALL_SHORT",
+    "markers": {"source": "semantic"},
+    "scope": "whole_message",
+    "if_contains_any": ["p.s.", "у вас прибыль по шортам"],
+    "reason": "scope_hint_in_postscript_not_actionable"
+  }
+]
+```
+
+| Campo | Tipo | Significato |
+|-------|------|-------------|
+| `name` | string | Nome identificativo della regola |
+| `strength` | `"weak"` \| `"strong"` | Forza del marker da sopprimere |
+| `marker_name` | `string` \| `list[string]` | Nome del marker (o lista di nomi) — match su `match.name` |
+| `markers` | `list[str]` \| `{"source": "semantic"}` | Filtro sul testo del marker: lista esplicita oppure tutti i marker definiti in `semantic_markers.json` per quel nome+strength |
+| `scope` | enum | Contesto di analisi: `same_sentence`, `same_line`, `window`, `whole_message` |
+| `if_contains_any` | list[str] | Sopprimi SE il contesto contiene almeno uno di questi |
+| `if_regex_any` | list[str] | Sopprimi SE il contesto fa match con almeno una di queste regex |
+| `unless_contains_any` | list[str] | NON sopprimere SE il contesto contiene almeno uno di questi |
+| `reason` | string | Label diagnostica (appare nei diagnostics del messaggio) |
+
+**`marker_name` come lista:** una regola può coprire più marker con la stessa logica di soppressione:
+```json
+{
+  "name": "be_false_positive_context",
+  "strength": "weak",
+  "marker_name": ["EXIT_BE", "MOVE_STOP_TO_BE"],
+  "markers": {"source": "semantic"},
+  "scope": "same_sentence",
+  "if_contains_any": ["фактически в бу закрылись"]
+}
+```
+
+**`{"source": "semantic"}`:** pesca la lista dei testi da `semantic_markers.json` per quel `marker_name` e `strength`. Equivalente al vecchio `{"source": "intent_weak"}` di `weak_context_exclusions`, ma generico su kind e strength.
+
+**Nota scope:** usare `"whole_message"` quando la condizione può trovarsi in una parte del testo separata da punteggiatura (es. "p.s." contiene un punto che rompe `same_sentence`).
+
+---
+
+#### 1d. `cross_intent_suppression` — soppressione cross-intent
 
 Quando un intent **forte** è presente, sopprime intent più deboli che sarebbero ridondanti o in conflitto.
 
@@ -345,3 +393,4 @@ Questi non sono marker di rilevamento intent — sono pattern che guidano l'estr
 - La confidence finale è combinazione di: peso marker + completezza segnale (se SIGNAL).
 - Modificare `semantic_markers.json` non richiede toccare il codice Python — solo i JSON.
 - `rules.json` può essere testato con i test di integrazione in `tests/`.
+- **`scope_hint` e telegram link:** `TargetHintsExtractor` scansiona il testo completo autonomamente (pipeline separata dal `MarkerEvidenceResolver`). Se il messaggio contiene `telegram_message_ids` (link forti a signal specifici), qualsiasi `scope_hint` estratto dal testo (es. "по шортам" in un p.s.) viene azzerato a `UNKNOWN` — i link puntano già a target precisi e lo scope testuale sarebbe fuorviante.
