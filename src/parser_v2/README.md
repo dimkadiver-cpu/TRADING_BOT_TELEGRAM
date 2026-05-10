@@ -102,9 +102,47 @@ CanonicalTranslator     produce CanonicalMessage (contratto finale)
   },
   "info_markers": {
     "ADMIN": { "strong": ["maintenance", "bot offline"] }
+  },
+  "modify_entry_mode_markers": {
+    "MARKET_NOW":    { "strong": ["входим по рынку", "по текущим"], "weak": [] },
+    "UPDATE_PRICE":  { "strong": ["новый вход", "вход теперь", "переносим вход"], "weak": [] },
+    "UPDATE_RANGE":  { "strong": ["диапазон входа", "вход в диапазон"], "weak": [] },
+    "REPLACE_ENTRY": { "strong": ["заменяем вход", "полностью меняем вход"], "weak": [] },
+    "REMOVE":        { "strong": ["убираем вход"], "weak": [] }
+  },
+  "entry_selector_markers": {
+    "PRIMARY":   { "strong": ["основной вход", "первый вход"], "weak": [] },
+    "AVERAGING": { "strong": ["усреднение", "лимитка на усреднение"], "weak": [] }
   }
 }
 ```
+
+### `modify_entry_mode_markers`
+
+Sezione dedicata per il rilevamento del **mode** di modifica entry. Usata da `IntentEntityExtractor` quando rileva un intent `MODIFY_ENTRY` — cerca nei `MarkerEvidence` adiacenti con `kind="modify_entry_mode"` per determinare il tipo preciso di modifica.
+
+| Mode | Significato | Esempio marker |
+|---|---|---|
+| `MARKET_NOW` | Entrata a mercato immediata | `"входим по рынку"` |
+| `UPDATE_PRICE` | Aggiorna uno o più prezzi limite | `"новый вход"`, `"вход теперь"` |
+| `UPDATE_RANGE` | Aggiorna a zona prezzo (range) | `"диапазон входа"` — oppure rilevato automaticamente da pattern `2114-2120` |
+| `REPLACE_ENTRY` | Sostituisce completamente il setup entry | `"полностью меняем вход"` |
+| `REMOVE` | Rimuove una entry (legacy) | `"убираем вход"` |
+
+**Upgrade automatico mode**: se il testo contiene un pattern range (`2114-2120`) e il mode marker non è esplicito, l'extractor fa upgrade automatico da `UPDATE_PRICE` a `UPDATE_RANGE`.
+
+### `entry_selector_markers`
+
+Sezione dedicata per identificare **quale entry** viene modificata in un messaggio `MODIFY_ENTRY`. Usata da `IntentEntityExtractor` — cerca nei `MarkerEvidence` adiacenti con `kind="entry_selector"`.
+
+| Selector | `EntryRole` | `sequence` | Esempio marker |
+|---|---|---|---|
+| `PRIMARY` | `PRIMARY` | `1` | `"основной вход"`, `"первый вход"` |
+| `AVERAGING` | `AVERAGING` | `None` | `"усреднение"`, `"лимитка на усреднение"` |
+
+Se nessun selector è presente nel testo, `entry_selector = None`.
+
+Il risultato viene propagato nel canonical output come `ModifyEntriesOperation.entry_selector`.
 
 ---
 
