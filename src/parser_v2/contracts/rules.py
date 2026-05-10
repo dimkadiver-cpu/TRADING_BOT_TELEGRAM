@@ -4,7 +4,7 @@ from typing import Any, Literal, Union
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from .enums import EntryType, IntentType, ModifyEntryMode, ScopeHint, Side
+from .enums import EntryType, IntentType, MarkerStrength, ModifyEntryMode, ScopeHint, Side
 
 
 class RulesModel(BaseModel):
@@ -55,10 +55,32 @@ class WeakContextExclusionRule(RulesModel):
         return self
 
 
+class MarkerContextExclusionRule(RulesModel):
+    name: str
+    strength: MarkerStrength
+    marker_name: Union[str, list[str]]
+    markers: Union[list[str], dict[str, str]]
+    scope: Literal["same_sentence", "same_line", "window", "whole_message"]
+    window_chars: int | None = None
+    if_contains_any: list[str] = Field(default_factory=list)
+    if_regex_any: list[str] = Field(default_factory=list)
+    unless_contains_any: list[str] = Field(default_factory=list)
+    reason: str | None = None
+
+    @model_validator(mode="after")
+    def _require_at_least_one_condition(self) -> MarkerContextExclusionRule:
+        if not self.if_contains_any and not self.if_regex_any:
+            raise ValueError(
+                f"MarkerContextExclusionRule '{self.name}' requires if_contains_any or if_regex_any"
+            )
+        return self
+
+
 class MarkerResolutionRules(RulesModel):
     suppress_weak_inside_strong_same_intent: bool = False
     cross_intent_suppression: list[CrossIntentSuppressionRule] = Field(default_factory=list)
     weak_context_exclusions: list[WeakContextExclusionRule] = Field(default_factory=list)
+    marker_context_exclusions: list[MarkerContextExclusionRule] = Field(default_factory=list)
 
 
 class ParserRules(RulesModel):
