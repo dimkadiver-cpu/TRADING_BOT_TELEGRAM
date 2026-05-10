@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .context import RawContext, TargetHints
-from .entities import EntryLeg, Price, RiskHint, SignalFields, StopLoss, TakeProfit
+from .entities import EntryLeg, EntrySelector, Price, RiskHint, SignalFields, StopLoss, TakeProfit
 from .enums import (
     CANONICAL_MESSAGE_SCHEMA_VERSION,
     CancelScopeHint,
@@ -60,6 +60,7 @@ class ModifyEntriesOperation(CanonicalModel):
     kind: ModifyEntriesOperationKind
     entries: list[EntryLeg] = Field(default_factory=list)
     entry_structure: EntryStructure | None = None
+    entry_selector: EntrySelector | None = None
 
 
 class ModifyTargetsOperation(CanonicalModel):
@@ -223,6 +224,7 @@ __all__ = [
     "ModifyTargetsOperation",
     "InvalidateSetupOperation",
     "EntryLeg",
+    "EntrySelector",
     "Price",
     "RiskHint",
     "StopLoss",
