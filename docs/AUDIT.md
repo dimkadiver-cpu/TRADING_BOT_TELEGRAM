@@ -4,6 +4,31 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-10 — Trader A: Add marker_context_exclusions for ALL_SHORT in postscript
+
+### Step completato
+
+Aggiunta sezione `marker_context_exclusions` in `src/parser_v2/profiles/trader_a/rules.json` con regola per sopprimere il marker `ALL_SHORT/strong` quando appare in contesto di postscript informativo (p.s., "у вас прибыль по шортам").
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/profiles/trader_a/rules.json` | Modificato | Aggiunta sezione `marker_context_exclusions` con 1 regola: `all_short_in_ps_informational_context` (strength: strong, marker: ALL_SHORT, scope: whole_message, triggerato da p.s./postscript context) |
+
+### Verifica caricamento
+
+```
+python -c "from src.parser_v2.profiles.trader_a.profile import TraderAProfile; p = TraderAProfile(); r = p.load_rules(); print('marker_context_exclusions:', len(r.marker_resolution.marker_context_exclusions))"
+→ marker_context_exclusions: 1 ✓
+```
+
+### Rationale
+
+Postscript informativo (p.s.) non rappresenta un'azione comandata. Se la frase "у вас прибыль по шортам" appare in p.s., è solo una nota informativa sulla performance storica, non una direttiva di entrata. Scope `whole_message` è necessario perché il punto in "p.s." rompe il rilevamento a livello di frase.
+
+---
+
 ## 2026-05-08 — Fix Trader A: MOVE_STOP_TO_BE false positive in "поторопился"
 
 ### Step completato
