@@ -1,0 +1,1436 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
+26,trader_b,SIGNAL,PARSED,2424,150,,"[trader#В]
+
+$ARBUSDT - Лонг (Сделка на споте)
+
+Вход: 0.275
+
+Тейк профит: 0.363
+
+Стоп лосс: 0.2532
+
+Риск на сделку 1%, соотношение РР 1:4",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@45:50"", ""TP_HIT/weak:тейк@57:61"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@94:98""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,2400,179,,"[trader#В]
+
+$LTCUSDT - Лонг (Сделка на споте)
+
+Вход: 97
+
+Тейк профит: 154
+
+Стоп лосс: 85.95
+
+Риск на сделку 2%, соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@45:50"", ""TP_HIT/weak:тейк@54:58"", ""SL_HIT/weak:стоп@71:75"", ""risk/weak:риск@88:92""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,2384,196,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте)
+
+Вход: 158
+
+Тейк профит: 168.5
+
+Стоп лосс: 155.1
+
+Риск на сделку 1%, соотношение РР 1:3.6",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@45:50"", ""TP_HIT/weak:тейк@55:59"", ""SL_HIT/weak:стоп@74:78"", ""risk/weak:риск@91:95""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,2347,234,196,"[trader#В]
+
+Сделка полностью закрыта в + 3.6% к депозиту
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@28:35"", ""CLOSE_FULL/strong:закрыта в +@28:39""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрыта@28:35""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_ins"
+26,trader_b,SIGNAL,PARSED,2345,236,,"[trader#В]
+
+$ARBUSDT - Лонг (сделка на споте)
+
+Вход: 0.3007
+
+Тейк профит: 0.316
+
+Стоп лосс: 0.2956
+
+Риск на сделку 1%, соотношение РР 1:3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@45:50"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,REPORT,PARSED,2336,247,236,"Сделка закрыта по стоп лоссу (-1%)
+
+Напоминаю что у нас так же висит открытая свинг позиция по ARB, следите за обновлениями",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@7:14"", ""SL_HIT/strong:закрыта по стоп лоссу@7:28"", ""SL_HIT/weak:по стоп лоссу@15:28"", ""SL_HIT/weak:стоп@18:22""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@15:28"", ""SL_HIT/weak:стоп@18:22""], ""applied_marker_rules"": [""weak"
+26,trader_b,UPDATE,PARSED,2335,248,150,"[trader#В]
+
+В связи с приходом btc в зону сопротивления и возможного продолжения по нему нисходящего движения - принял решение закрыть позицию по ARB 1к1 (в +1%) 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:принял решение закрыть@111:133"", ""CLOSE_FULL/weak:закрыть@126:133"", ""CLOSE_FULL/strong:закрыть позицию по@126:144""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрыть@126:133""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""]"
+26,trader_b,UPDATE,PARSED,2277,314,179,"[trader#В]
+
+Тут не актуально, лонгов открытых нет - ждём биток по 98к$, после чего будут рассматриваться новые возможности",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:не актуально@15:27"", ""LONG/strong:лонг@29:33"", ""EXIT_BE/weak:бу@82:84""], ""suppressed_markers"": [""EXIT_BE/weak:бу@82:84""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""e"
+26,trader_b,INFO,UNCLASSIFIED,2237,354,314,"[trader#В]
+
+Как и ожидалось по btc, мы сняли 98k$, сейчас рассматриваю для вас новые возможности для открытия позиций, следующий пост",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+26,trader_b,SIGNAL,PARSED,2236,355,354,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 98
+
+Тейк профит: 115
+
+Стоп лосс: 93.2
+
+Риск на сделку 1%, соотношение РР 1:3.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@56:60"", ""SL_HIT/weak:стоп@73:77"", ""risk/weak:риск@89:93""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,2210,384,355,"[trader#В]
+
+$LTCUSDT update 
+
+Все пока идет по плану, стоп лосс переносим в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@51:55"", ""MOVE_STOP/strong:стоп лосс переносим@51:70"", ""MOVE_STOP_TO_BE/weak:в бу@71:75"", ""EXIT_BE/weak:бу@73:75""], ""suppressed_markers"": [""SL_HIT/we"
+26,trader_b,SIGNAL,PARSED,2202,392,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 95555
+
+Тейк профит: 97500
+
+Стоп лосс: 94840
+
+Риск на сделку выходит менее 1% - так как сделала на споте(т.е. заходить можно всем объемом, и тем самым риск будет менее 1%), потенциальная прибыль 2%
+
+Соотношение РР 1:2.7",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99"", ""risk/weak:риск@200:204"", ""EXIT_BE/weak:бу@205:207""], "
+26,trader_b,UPDATE,PARSED,2198,399,392,"Принял решение закрыть сделку в бу, не нравится как снизу копят ликвидность",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:принял решение закрыть@0:22"", ""CLOSE_FULL/weak:закрыть@15:22"", ""CLOSE_FULL/strong:закрыть сделку@15:29"", ""MOVE_STOP_TO_BE/weak:в бу@30:34"", ""EXIT_BE/weak:бу@32:34""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрыть@15:22"", ""MOVE_STOP_T"
+26,trader_b,REPORT,PARSED,2186,415,384,"[trader#В]
+
+Эта сделка тоже у нас ушла в БУ, ничего страшного это часть работы, скоро будем искать новые позиции",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:ушла в бу@33:42"", ""EXIT_BE/strong:ушла в бу@33:42"", ""MOVE_STOP_TO_BE/weak:в бу@38:42"", ""EXIT_BE/weak:бу@40:42"", ""EXIT_BE/weak:бу@85:87""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@38:42"", ""EXIT_BE/weak:бу@40:42"", ""EXIT_BE/weak:бу"
+26,trader_b,SIGNAL,PARSED,2145,475,,"[trader#В]
+
+$NEARUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.3
+
+Тейк профит: 3.8
+
+Стоп лосс: 2.178
+
+Риск на сделку 1%, соотношение РР 1:12.3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@75:79"", ""risk/weak:риск@92:96""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,INFO,UNCLASSIFIED,2131,494,475,"Тут позиция закрылась по SL, -1%",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+26,trader_b,SIGNAL,PARSED,2043,658,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 140.4
+
+Тейк профит: 145.76
+
+Стоп лосс: 138.95
+
+Риск на сделку 1%, соотношение РР 1:3.7",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@97:101""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,UPDATE,PARSED,2040,661,658,"[trader#В]
+
+Стоп лосс переносим в бу( как указано на изображении)",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP/strong:стоп лосс переносим@11:30"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""sl_hit_ambigu"
+26,trader_b,REPORT,PARSED,2038,667,661,"Закрылись в бу, слабый все еще рынок",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылись в бу@0:14"", ""MOVE_STOP_TO_BE/weak:в бу@10:14"", ""EXIT_BE/weak:бу@12:14""], ""suppressed_markers"": [""EXIT_BE/weak:бу@12:14""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_"
+26,trader_b,SIGNAL,PARSED,1976,752,,"[trader#В]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.357
+
+Тейк профит: 1.42
+
+Стоп лосс: 1.336
+
+Риск на сделку 1%, соотношение РР 1:3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@94:98""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,1974,755,752,"[trader#В] 
+
+Не актуально, цели достигнуты без теста точки входа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:не актуально@11:23"", ""TP_HIT/strong:цели достигнуты@25:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0, ""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,1952,783,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 139.9
+
+Тейк профит: 146
+
+Стоп лосс: 137.9
+
+Риск на сделку 1%, соотношение РР 1:3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@93:97""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,1942,796,783,"[trader#В]
+
+Стоп лосс переносим в БУ - как указанно на изображении",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP/strong:стоп лосс переносим@11:30"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""sl_hit_ambigu"
+26,trader_b,REPORT,PARSED,1941,797,796,"[trader#В]
+
+Закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""EXIT_BE/strong:закрыта в бу@11:23"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [""EXIT_BE/weak:бу@21:23""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disa"
+26,trader_b,SIGNAL,PARSED,1940,798,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 141.1
+
+Тейк профит: 146.3
+
+Стоп лосс: 140.05
+
+Риск на сделку менее 1%, потенциальная прибыль 3.6%
+Соотношение ≈ РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@96:100""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,REPORT,PARSED,1935,806,798,"[trader#В]
+
+Сделка полностью закрыта по тейк профиту, с прибылью в 3.68%
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@28:35"", ""TP_HIT/strong:закрыта по тейк профиту@28:51"", ""TP_HIT/weak:тейк@39:43""], ""suppressed_markers"": [""TP_HIT/weak:тейк@39:43""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], "
+26,trader_b,SIGNAL,PARSED,1915,830,,"[trader#В]
+
+$TONUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.533
+
+Тейк профит: 1.735
+
+Стоп лосс: 1.485
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1914,831,,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 80.5
+
+Тейк профит: 97.55
+
+Стоп лосс: 75
+
+Риск на сделку 1%
+Соотношение РР 1:3.1",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@91:95""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1903,846,,"[trader#В]
+
+$APTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.705
+
+Тейк профит: 1.78
+
+Стоп лосс: 1.675
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@94:98""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1897,852,,"[trader#В]
+
+$TWTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.009
+
+Тейк профит: 1.1135
+
+Стоп лосс: 0.9841
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@97:101""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,SIGNAL,PARSED,1896,853,,"[trader#В]
+
+$ICPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3.475
+
+Тейк профит: 4.515
+
+Стоп лосс: 3.345
+
+Риск на сделку 1%
+Соотношение РР 1:8",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,1895,854,830,"[trader#В]
+
+$TONUSDT update:
+
+Стоп лосс переносим на 1.553 тем самым делая позицию полностью без рисковой (см. изображение)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [""SL_HIT/weak:стоп@28:32""], ""applied_marker_rules"": [""sl_hit_ambiguous_general"
+26,trader_b,UPDATE,PARSED,1894,855,831,"[trader#В]
+
+$LTCUSDT update:
+
+Так же стоп лосс переносим можно сказать в БУ (на отмету 79.88 - как указано на изображении)",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@35:39"", ""MOVE_STOP/strong:стоп лосс переносим@35:54"", ""MOVE_STOP_TO_BE/weak:в бу@69:73"", ""EXIT_BE/weak:бу@71:73""], ""suppressed_markers"": [""SL_HIT/we"
+26,trader_b,REPORT,PARSED,1892,857,846,"[trader#В]
+
+Очень обидный стоп конечно же, идея в целом отработала себя, ошибки не вижу, единственное стоп можно было бы поставить за минимум, что есть то есть (-1%) 
+Стоп лосс это неотъемлемая часть работы трейдера",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:обидный стоп@17:29"", ""SL_HIT/strong:обидный стоп@17:29"", ""SL_HIT/weak:стоп@25:29"", ""SL_HIT/weak:стоп@101:105"", ""SL_HIT/weak:стоп@165:169""], ""suppressed_markers"": [""SL_HIT/weak:стоп@25:29""], ""applied_marker_rules"": [""weak_inside_strong_sam"
+26,trader_b,REPORT,PARSED,1891,858,853,"[trader#В]
+
+Так же по ICP - такой же обидный стоп в пипс (-1%) думаю в целом идея себя отработает",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:обидный стоп@36:48"", ""SL_HIT/strong:обидный стоп@36:48"", ""SL_HIT/weak:стоп@44:48""], ""suppressed_markers"": [""SL_HIT/weak:стоп@44:48""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied"
+26,trader_b,SIGNAL,PARSED,1890,859,,"[trader#В]
+
+$ATOMUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.235
+
+Тейк профит: 2.572
+
+Стоп лосс: 2.155
+
+Риск на сделку 1%
+Соотношение РР 1:4.2",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,UPDATE,PARSED,1888,863,,"[trader#В]
+
+У нас 4 открытые позиции, так как чарт показывает очень грязный прайс экшен принимаю решение закрыть все позиции по текущим, немного позже распишу итоги по позициям",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:принимаю решение закрыть@87:111"", ""CLOSE_FULL/weak:закрыть@104:111"", ""CLOSE_FULL/strong:закрыть все позиции@104:123"", ""ALL_POSITIONS/strong:все позиции@112:123"", ""MARKET/strong:по текущим@124:134"", ""MARKET_NOW/strong:по текущим@124:13"
+26,trader_b,UPDATE,PARSED,1887,864,852,"[trader#В]
+
+Закрыта вручную (-0.5%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""CLOSE_FULL/strong:закрыта вручную@11:26""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрыта@11:18""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak"
+26,trader_b,UPDATE,PARSED,1886,865,859,"[trader#В]
+
+Закрыта в районе БУ",0.4,,"{""suppressed_intents"": [""EXIT_BE:бу""], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""EXIT_BE/weak:бу@28:30""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_fullver_exit_be_context""], ""applied_rules"": [""close_fullver_exit_be_context""], ""category"
+26,trader_b,UPDATE,PARSED,1885,866,830,"[trader#В]
+
+Закрыта в +2.3%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""CLOSE_FULL/strong:закрыта в +@11:22""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрыта@11:18""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_ins"
+26,trader_b,UPDATE,PARSED,1884,867,831,"[trader#В]
+
+Закрыта в + 0.5%
+
+В целом мы в плюсе, всех с профитом 💸💸💸
+Как только появится ясная картина будем искать новые возможности для открытия качественных позиций",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""CLOSE_FULL/strong:закрыта в +@11:22"", ""EXIT_BE/weak:бу@102:104""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""EXIT_BE/weak:бу@102:104""], ""applied_marker_rules"": [""weak_inside_strong_same_intent"", ""exit_be_w"
+26,trader_b,SIGNAL,PARSED,1883,869,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3125
+
+Тейк профит: 3260.5
+
+Стоп лосс: 3092
+
+Риск на сделку 1%
+Соотношение РР 1:4.1",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@94:98""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,1881,872,869,"[trader#B]
+
+По эфиру у нас картина мне не нравится, копят много ликвидности снизу, для дальнейшего его снятия, поэтому думаю будет целесообразно закрыть позицию по текущим в -0.5% 
+
+И уже поэтом после снятия всей этой ликвидности искать новые возможности 
+
+Выше у нас так же много ликвидности и открытий FVG, поэтому еще будут возможности",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""EXIT_BE/weak:бу@124:126"", ""CLOSE_FULL/weak:закрыть@144:151"", ""CLOSE_FULL/strong:закрыть позицию по@144:162"", ""MARKET/strong:по текущим@160:170"", ""MARKET_NOW/strong:по текущим@160:170"", ""EXIT_BE/weak:бу@316:318""], ""suppresse"
+26,trader_b,SIGNAL,PARSED,1868,896,,"[trader#В]
+
+$TWTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.002
+
+Тейк профит: 1.1123
+
+Стоп лосс: 0.978
+
+Риск на сделку 1%
+Соотношение РР 1:4.6",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,REPORT,PARSED,1861,905,896,"[trader#В]
+
+Тут к сожалению закрылись по стоп лоссу, -1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:закрылись по стоп лоссу@27:50"", ""SL_HIT/weak:по стоп лоссу@37:50"", ""SL_HIT/weak:стоп@40:44""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@37:50"", ""SL_HIT/weak:стоп@40:44""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""],"
+26,trader_b,SIGNAL,PARSED,1856,911,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 92370
+
+Тейк профит: 96350
+
+Стоп лосс: 91450
+
+Риск на сделку 1%
+Соотношение РР 1:4.3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,REPORT,PARSED,1848,922,911,"[trader#В]
+
+Стоп лосс (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@11:15"", ""SL_HIT/strong:стоп лосс (-@11:23""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_inside_strong_same_i"
+26,trader_b,SIGNAL,PARSED,1832,947,,"[trader#В]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 79.5
+
+Тейк профит: 88.5
+
+Стоп лосс: 78
+
+Риск на сделку 1%
+Соотношение РР 1:6",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@90:94""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,REPORT,PARSED,1818,965,947,"[trader#В]
+
+К сожалению стоп лосс, рынок прям медвежий, не дает шансов быкам
+
+BTC с большей вероятностью собирается снимать ликвидность с 83822, и далее 80600 поэтому пока сложно с Лонгами, но ничего, риск менеджмент и дисциплина всегда решает на дистанции",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:к сожалению стоп@11:27"", ""SL_HIT/strong:к сожалению стоп@11:27"", ""SL_HIT/weak:стоп@23:27"", ""LONG/strong:лонг@179:183"", ""risk/weak:риск@199:203""], ""suppressed_markers"": [""SL_HIT/weak:стоп@23:27""], ""applied_marker_rules"": [""weak_inside_stro"
+26,trader_b,SIGNAL,PARSED,1798,988,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2940
+
+Тейк профит: 3028.5
+
+Стоп лосс: 2913
+
+Риск на сделку 1%, потенциальная прибыль 3%
+Соотношение РР 1:3.3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@94:98""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1797,990,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 404
+
+Тейк профит: 419.2
+
+Стоп лосс: 396.4
+
+Риск на сделку 1%
+Соотношение РР 1:2",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@57:61"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@93:97""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,1796,991,988,"[trader#В]
+
+Стоп лосс переносим в БУ на уровень 2941 (см. изображение)",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP/strong:стоп лосс переносим@11:30"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""sl_hit_ambigu"
+26,trader_b,REPORT,PARSED,1794,995,,"[trader#В]
+
+Эфир закрылся в БУ, zec по стоп лоссу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылся в бу@16:29"", ""MOVE_STOP_TO_BE/weak:в бу@25:29"", ""EXIT_BE/weak:бу@27:29"", ""SL_HIT/weak:по стоп лоссу@35:48"", ""SL_HIT/weak:стоп@38:42""], ""suppressed_markers"": [""EXIT_BE/weak:бу@27:29""], ""applied_marker_rules"": [""weak_inside_strong"
+26,trader_b,SIGNAL,PARSED,1793,996,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 392.5
+
+Тейк профит: 420
+
+Стоп лосс: 387
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@91:95""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1792,997,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2945
+
+Тейк профит: 3025.5
+
+Стоп лосс: 2918.5
+
+Риск на сделку 1%
+Соотношение РР 1:3 (потенциальная прибыль 2.7%)",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@96:100""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,UPDATE,PARSED,1791,998,996,"Eth стоп
+
+Zec закрываю в +0.5",1.0,close_full_redundant_with_sl_hit,"{""suppressed_intents"": [""SL_HIT:стоп""], ""matched_markers"": [""SL_HIT/weak:стоп@4:8"", ""CLOSE_FULL/weak:закрываю@13:21"", ""CLOSE_FULL/strong:закрываю в +@13:25""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@13:21""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation"
+26,trader_b,SIGNAL,PARSED,1790,1000,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 398.15
+
+Тейк профит: 420
+
+Стоп лосс: 394
+
+Риск на сделку 1%
+Соотношение РР ≈1:5.3
+
+UPD: -1%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@92:96""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1759,1039,,"[trader#В]
+
+$ZECUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 400
+
+Тейк профит: 420
+
+Стоп лосс: 396
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@57:61"", ""SL_HIT/weak:стоп@74:78"", ""risk/weak:риск@89:93""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,UPDATE,PARSED,1756,1042,1039,"[trader#В]
+
+Стоп лосс переносим в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP/strong:стоп лосс переносим@11:30"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""sl_hit_ambigu"
+26,trader_b,UPDATE,PARSED,1751,1049,1039,"[trader#B]
+
+Сделка закрыта в +5%  💸💸💸
+
+После череды стопов одна такая прибыльная сделка их стирает и даже может перекрыть в плюс, нужно понимать что череда стопов это нормально , это часть нашей работы, часть трейдинга и без этого никуда, тут самое важное не «не словить» стоп лосс, а (не устану повторять) - работать со строгим РМ и строгой дисциплиной, только тогда будет успех 
+
+Всем спасибо ребята ❤️",1.0,close_full_redundant_with_sl_hit,"{""suppressed_intents"": [""SL_HIT:стоп"", ""SL_HIT:стоп"", ""SL_HIT:стоп""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""CLOSE_FULL/strong:закрыта в +@18:29"", ""SL_HIT/weak:стоп@49:53"", ""SL_HIT/weak:стоп@153:157"", ""SL_HIT/weak:стоп@269:273"", ""EXIT_BE/weak:бу@365:367""],"
+26,trader_b,SIGNAL,PARSED,1735,1075,,"[trader#В]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2991
+
+Тейк профит: 3051
+
+Стоп лосс: 2974
+
+Риск на сделку 0.6%
+Потенциальная прибыль 2%
+Соотношение РР 1:3.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@92:96""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1734,1076,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 126.15
+
+Тейк профит: 129.31
+
+Стоп лосс: 125.52
+
+Риск на сделку 0.5%
+Потенциальная прибыль 2.5%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@80:84"", ""risk/weak:риск@98:102""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,UPDATE,PARSED,1723,1090,,"[trader#B]
+
+https://t.me/c/3171748254/1075 
+
+https://t.me/c/3171748254/1076 
+
+Закрываю сделки, не нравится как они себя ведут, зажаты в консолидации , sol уходит в БУ , eth в -0.4%",0.4,,"{""suppressed_intents"": [""MOVE_STOP_TO_BE:в бу""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@42:55"", ""telegram_link/strong:t.me/@50:55"", ""CLOSE_FULL/weak:закрываю@73:81"", ""MOVE_ST"
+26,trader_b,SIGNAL,PARSED,1717,1100,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125.9
+
+Тейк профит: 129.7
+
+Стоп лосс: 124.8
+
+Риск на сделку 1%
+Потенциальная прибыль 3%
+Соотношение РР 1:3.45",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,SIGNAL,PARSED,1716,1102,,"[trader#В]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 88435
+
+Тейк профит: 90205
+
+Стоп лосс: 88055
+
+Риск на сделку 0.5%
+Потенциальная прибыль 2%
+Соотношение РР 1:4.66",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+26,trader_b,REPORT,PARSED,1714,1106,,"[trader#B]
+
+https://t.me/c/3171748254/1102
+
+https://t.me/c/3171748254/1100
+
+Закрылись по стопу (-1.5% в общем)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@42:55"", ""telegram_link/strong:t.me/@50:55"", ""SL_HIT/strong:закрылись по стопу@73:91"", ""SL_HIT/weak:по стопу@"
+26,trader_b,SIGNAL,PARSED,1713,1107,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125(+- по текущим)
+
+Тейк профит: 129.4
+
+Стоп лосс: 124
+
+Риск на сделку 0.8%
+Потенциальная прибыль 3.5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""MARKET/strong:по текущим@60:70"", ""MARKET_NOW/strong:по текущим@60:70"", ""TP_HIT/weak:тейк@72:76"", ""SL_HIT/weak:стоп@91:95"", ""risk/"
+26,trader_b,UPDATE,PARSED,1709,1114,1107,"[trader#B]
+
+Стоп лосс переносим под минимум (как указанно на изображении), тем самым сокращаем его до 0.5% 
+В остальном пока в принципе все актуально",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP/strong:стоп лосс переносим@11:30""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], ""ap"
+26,trader_b,UPDATE,PARSED,1708,1115,1114,"[trader#B]
+
+Закрываю по текущим в небольшой + (≈0.2%), цена к сожалению немного не дошла до тейка и откатилась",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрываю@11:19"", ""CLOSE_FULL/strong:закрываю по текущим@11:30"", ""CLOSE_FULL/strong:закрываю по текущим@11:30"", ""MARKET/strong:по текущим@20:30"", ""MARKET_NOW/strong:по текущим@20:30"", ""TP_HIT/wea"
+26,trader_b,SIGNAL,PARSED,1706,1117,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 125.15
+
+Тейк профит: 129.32
+
+Стоп лосс: 124.92
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@80:84"", ""risk/weak:риск@98:102""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,SIGNAL,PARSED,1705,1118,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 77.8 (+- по текущим)
+
+Тейк профит: 88
+
+Стоп лосс: 75.8
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""MARKET/strong:по текущим@62:72"", ""MARKET_NOW/strong:по текущим@62:72"", ""TP_HIT/weak:тейк@74:78"", ""SL"
+26,trader_b,UPDATE,PARSED,1699,1124,1117,"[trader#B] 
+
+Закрываю в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP_TO_BE:в бу""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрываю@11:19"", ""MOVE_STOP_TO_BE/weak:в бу@20:24"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_stop_to_"
+26,trader_b,SIGNAL,PARSED,1697,1127,,"[trader#В]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 126.5
+
+Тейк профит: 129.67
+
+Стоп лосс: 125.5
+
+Риск на сделку 0.8%
+Потенциальная прибыль 2.5%
+
+Ps: Либо я его, либо он меня",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+26,trader_b,UPDATE,PARSED,1688,1138,1127,"[trader#B]
+
+Стоп лосс переносим в БУ как указано на картине",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP/strong:стоп лосс переносим@11:30"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_m"
+26,trader_b,UPDATE,PARSED,1686,1141,1138,"[trader#B]
+
+Закрываю в +0.5%
+Очень слабо себя ведет",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрываю@11:19"", ""CLOSE_FULL/strong:закрываю в +@11:23""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@11:19""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"":"
+26,trader_b,UPDATE,PARSED,1676,1158,1118,"[trader#B]
+
+Тут у нас была еще сделка по Ltc, так нарратив по битку шортовый у меня, закрываю ее по текущим, это в -0.5% 
+
+Больше пока нет открытых сделок, слежу за рынком, ожидаю новые возможности",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SHORT/strong:шорт@67:71"", ""CLOSE_FULL/weak:закрываю@84:92"", ""MARKET/strong:по текущим@96:106"", ""MARKET_NOW/strong:по текущим@96:106""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+26,trader_b,SIGNAL,PARSED,1661,1181,,"[trader#B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 87400
+
+Тейк профит: 90900
+
+Стоп лосс: 86525
+
+Риск на сделку 1%
+Соотношение РР 1:4
+
+Upd: БУ",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99"", ""EXIT_BE/weak:бу@137:139"""
+26,trader_b,UPDATE,PARSED,1652,1198,1181,"[trader#B]
+
+Стоп лосс в БУ переводим",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP_TO_BE/weak:в бу@21:25"", ""EXIT_BE/weak:бу@23:25""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_r"
+26,trader_b,SIGNAL,PARSED,1634,1225,,"[trader#B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.405
+
+Тейк профит: 1.4335
+
+Стоп лосс: 1.394
+
+Риск на сделку 0.8%
+Потенциальная прибыль 2%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": ["
+26,trader_b,UPDATE,PARSED,1633,1227,1225,"[trader#B]
+
+Не актуально, цена достигла цели, однако без теста нашей зоны интереса",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""INVALIDATE_SETUP/strong:не актуально@11:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,1632,1228,,"[trader#B]
+
+$NEARUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.539
+
+Тейк профит: 1.59
+
+Стоп лосс: 1.524
+
+Риск на сделку 1%
+Соотношение РР 1:3.3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1629,1234,1228,"[trader#B]
+
+Сделка полностью реализована в +3.3%
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""TP_HIT/strong:полностью реализована@18:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,1626,1238,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 618.8
+
+Тейк профит: 634.3
+
+Стоп лосс: 612.7
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1607,1265,1238,"[trader#B]
+
+Сделка полностью реализована в +2.5% 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""TP_HIT/strong:полностью реализована@18:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,1603,1274,,"[trader#B]
+
+$ZROUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.264
+
+Тейк профит: 1.381
+
+Стоп лосс: 1.238
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,PARSED,1596,1282,1274,"[trader#B]
+
+Эту позицию закрываю в районе БУ) крипто рынок выглядит не однозначно, лучшее что можно сделать, это отдохнуть от графиков и подвести итоги в эти предновогодние дни",1.0,,"{""suppressed_intents"": [""EXIT_BE:бу""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/strong:позицию закрываю@15:31"", ""CLOSE_FULL/weak:закрываю@23:31"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@23:31""], ""applied_marker_rules"": [""weak_inside_strong_same_"
+26,trader_b,SIGNAL,PARSED,1577,1321,,"[trader#B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.869
+
+Тейк профит: 2.31
+
+Стоп лосс: 1.814
+
+Риск на сделку 1%
+Соотношение РР 1:8",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""leverage/weak:x@12:13"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@94:98""],"
+26,trader_b,SIGNAL,PARSED,1575,1323,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 595
+
+Тейк профит: 640
+
+Стоп лосс: 586
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@57:61"", ""SL_HIT/weak:стоп@74:78"", ""risk/weak:риск@89:93""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,PARSED,1563,1341,,"[trader#B]
+
+https://t.me/c/3171748254/1321 - XRP
+
+https://t.me/c/3171748254/1323 - BCH
+
+По обоим сделкам - стопы переносим в БУ",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""leverage/weak:x@44:45"", ""telegram_link/strong:https://t.me/@48:61"", ""telegram_link/strong:t.me/@56:61"", ""SL_HIT/weak:стоп@104:108"", ""MOVE_STOP_"
+26,trader_b,REPORT,PARSED,1557,1352,1323,"[trader#B]
+
+Сделка полностью реализована в +5% 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""TP_HIT/strong:полностью реализована@18:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,1554,1355,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте ⭐️)
+
+Вход: 632
+
+Тейк профит: 651.6
+
+Стоп лосс: 626.3
+
+Риск на сделку 1%
+Соотношение РР 1:3.1",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@94:98""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,PARSED,1549,1362,1355,"[trader#B]
+
+Стоп лосс переводим в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@11:15"", ""MOVE_STOP_TO_BE/strong:переводим в бу@21:35"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""appli"
+26,trader_b,REPORT,PARSED,1544,1367,1362,"[trader#B]
+
+Закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@11:18"", ""EXIT_BE/strong:закрыта в бу@11:23"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [""EXIT_BE/weak:бу@21:23""], ""applied_marker_rules"": [""weak_inside_strong"
+26,trader_b,SIGNAL,PARSED,1543,1368,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 81.95
+
+Тейк профит: 87.95
+
+Стоп лосс: 80.77
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,PARSED,1539,1375,1367,"[trader#B] 
+
+В итоге наша сделка полностью себя реализовала, (если бы не переносили стоп в БУ) однако тут «если бы» «кабы» не катят - риск менеджмент и дисциплина всегда все решает (ну и конечно же стратегия, знания) 
+
+Идем дальше … 🤝",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@82:86"", ""MOVE_STOP_TO_BE/strong:стоп в бу@82:91"", ""MOVE_STOP_TO_BE/weak:в бу@87:91"", ""EXIT_BE/weak:бу@89:91"", ""risk/weak:риск@132:136""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@87:91"", ""EXIT_BE/we"
+26,trader_b,UPDATE,PARSED,1528,1392,1368,"[trader#B]
+
+Закрываю в БУ, очень слабо себя показывает",0.4,,"{""suppressed_intents"": [""MOVE_STOP_TO_BE:в бу""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрываю@11:19"", ""MOVE_STOP_TO_BE/weak:в бу@20:24"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_stop_to_"
+26,trader_b,SIGNAL,PARSED,1526,1394,,"[trader#B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 92850
+
+Тейк профит: 94740
+
+Стоп лосс: 92320
+
+Риск на сделку 0.6%
+Потенциальная прибыль 2%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,PARSED,1516,1410,1394,"[trader#B]
+
+$BTCUSDT Update:
+
+Стоп лосс переносим за указанный минимум, тем самым сокращаем риск до 0.5%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47"", ""risk/weak:риск@90:94""], ""suppressed_markers"": [""SL_HIT/weak:стоп@28:32""], ""applied_marker_rules"
+26,trader_b,REPORT,PARSED,1508,1418,1321,"[trader#B]
+
+$XRPUSDT Update:
+
+Сделка полностью реализована в +8% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""leverage/weak:x@12:13"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/strong:полностью реализована@35:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applie"
+26,trader_b,REPORT,PARSED,1507,1419,1394,"[trader#B]
+
+$BTCUSDT Update:
+
+Сделка по биткоину не заставила нас долго ждать и она так же полностью реализована в +2% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/strong:полностью реализована@89:110""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_"
+26,trader_b,SIGNAL,PARSED,1462,1488,,"[trader#B]
+
+$BCHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 634.2
+
+Тейк профит: 673
+
+Стоп лосс: 624.5
+
+Риск на сделку 1%
+Соотношение РР 1:4",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@93:97""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,ERROR,1443,1517,1488,"[trader#B]
+
+$BCHUSDT Update:
+
+Стоп лосс переносим в + как указанно на изображении",1.0,canonical_translation_without_update_operation,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47""], ""suppressed_markers"": [""SL_HIT/weak:стоп@28:32""], ""applied_marker_rules"": [""sl_hit_ambiguous_ge"
+26,trader_b,UPDATE,PARSED,1437,1528,1517,"[trader#B]
+
+$BCHUSDT Update:
+
+На Bybit, SL который переводили под указанный минимум снят не был, сделка закрывается по текущим в ≈ +1.4% к депозиту 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""CLOSE_FULL/weak:закрывается@102:113"", ""CLOSE_FULL/strong:закрывается по текущим@102:124"", ""MARKET/strong:по текущим@114:124"", ""MARKET_NOW/strong:по текущим@114:124""], "
+26,trader_b,SIGNAL,PARSED,1389,1589,,"[trader#B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 142.7
+
+Тейк профит: 147.1
+
+Стоп лосс: 141.25
+
+Риск на сделку 1%
+Соотношение РР 1:3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@96:100""], ""suppressed_markers"": ["
+26,trader_b,UPDATE,PARSED,1377,1602,1589,"[trader#B]
+
+$SOLUSDT Update:
+
+Стоп лосс переносим в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47"", ""MOVE_STOP_TO_BE/weak:в бу@48:52"", ""EXIT_BE/weak:бу@50:52""], ""sup"
+26,trader_b,REPORT,PARSED,1368,1613,1602,"[trader#B]
+
+$SOLUSDT Update:
+
+Сделка полностью реализована в +3% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/strong:полностью реализована@35:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_s"
+26,trader_b,SIGNAL,PARSED,1364,1617,,"[trader#B]
+
+$DOTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.25
+
+Тейк профит: 2.41
+
+Стоп лосс: 2.215
+
+Риск на сделку 1%
+Соотношение РР 1:4.57",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@93:97""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1346,1641,1617,"[trader#B]
+
+Сделка закрыта по стоп лоссу (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],"
+26,trader_b,SIGNAL,PARSED,1342,1645,,"[trader#B]
+
+$DOTUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2.233
+
+Тейк профит: 2.404
+
+Стоп лосс: 2.195
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1334,1657,1645,"[trader#B]
+
+Сделка закрыта по стоп лоссу (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],"
+26,trader_b,SIGNAL,PARSED,1331,1662,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3380
+
+Тейк профит: 3465
+
+Стоп лосс: 3357
+
+Риск на сделку 0.7%
+Соотношение РР 1:2.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@92:96""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1330,1663,1662,"[trader#B]
+
+Сделка закрыта по стоп лоссу (-0.7%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],"
+26,trader_b,SIGNAL,PARSED,1288,1715,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 3290.5(+- с текущих)
+
+Тейк профит: 3455
+
+Стоп лосс: 3264.3
+
+Риск на сделку 0.8%
+Потенциальная прибыль 5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""MARKET/strong:с текущих@63:72"", ""MARKET_NOW/strong:с текущих@63:72"", ""TP_HIT/weak:тейк@74:78"", ""SL_H"
+26,trader_b,UPDATE,PARSED,1280,1729,1715,"[trader#B]
+
+$ETHUSDT Update:
+
+Стоп лосс переносим за указанный минимум, в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47"", ""MOVE_STOP_TO_BE/weak:в бу@70:74"", ""EXIT_BE/weak:бу@72:74""], ""sup"
+26,trader_b,SIGNAL,PARSED,1272,1744,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 73.5
+
+Тейк профит: 88.5
+
+Стоп лосс: 71
+
+Риск на сделку 1%
+Потенциальная прибыль 6%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@90:94""], ""suppressed_markers"": []"
+26,trader_b,SIGNAL,PARSED,1271,1745,,"[trader#B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 142.75
+
+Тейк профит: 149.2
+
+Стоп лосс: 141.5
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": ["
+26,trader_b,REPORT,PARSED,1264,1755,,"[trader#B]
+
+https://t.me/c/3171748254/1745 (-1%)
+
+https://t.me/c/3171748254/1744 (-1%)
+
+https://t.me/c/3171748254/1729 БУ",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@48:61"", ""telegram_link/strong:t.me/@56:61"", ""telegram_link/strong:https://t.me/@85:98"", ""telegram_link/stron"
+26,trader_b,SIGNAL,PARSED,1217,1822,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2955
+
+Тейк профит: 3060
+
+Стоп лосс: 2920
+
+Риск на сделку 1%
+Потенциальная прибыль 3%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@92:96""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1209,1831,1822,"[trader#B]
+
+Сделка закрыта по стоп лоссу -1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],"
+26,trader_b,SIGNAL,PARSED,1204,1841,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68.88
+
+Тейк профит: 72
+
+Стоп лосс: 68.2
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@75:79"", ""risk/weak:риск@91:95""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1199,1850,1841,"[trader#B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@11:15"", ""SL_HIT/strong:стоп (-@11:18""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""w"
+26,trader_b,SIGNAL,PARSED,1197,1852,,"[trader#B]
+
+$LTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68.3
+
+Тейк профит: 71.9
+
+Стоп лосс: 67.62
+
+Риск на сделку 1%
+Потенциальная прибыль 5.2%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@93:97""], ""suppressed_markers"": []"
+26,trader_b,UPDATE,PARSED,1195,1857,1852,"[trader#B]
+
+$LTCUSDT Update:
+
+Стоп лосс переносим в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47"", ""MOVE_STOP_TO_BE/weak:в бу@48:52"", ""EXIT_BE/weak:бу@50:52""], ""sup"
+26,trader_b,REPORT,PARSED,1189,1865,1857,"[trader#B]
+
+Сделка закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""EXIT_BE/strong:закрыта в бу@18:30"", ""MOVE_STOP_TO_BE/weak:в бу@26:30"", ""EXIT_BE/weak:бу@28:30""], ""suppressed_markers"": [""EXIT_BE/weak:бу@28:30""], ""applied_marker_rules"": [""weak_inside_strong"
+26,trader_b,SIGNAL,PARSED,1185,1876,,"[trader#B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2965
+
+Тейк профит: 3084
+
+Стоп лосс: 2935.5
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@58:62"", ""SL_HIT/weak:стоп@76:80"", ""risk/weak:риск@94:98""], ""suppressed_markers"": []"
+26,trader_b,REPORT,PARSED,1184,1882,1876,"[trader#B] 
+
+Ожидания не оправдались , сделка закрыта по стоп лоссу (-1%)
+
+Тяжевый нудный боковик) ждём понятного ценообразования",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@44:51"", ""SL_HIT/strong:закрыта по стоп лоссу@44:65"", ""SL_HIT/weak:по стоп лоссу@52:65"", ""SL_HIT/weak:стоп@55:59""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@52:65"", ""SL_HIT/weak:стоп@55:59""],"
+26,trader_b,SIGNAL,PARSED,1165,1922,,"[trader#B]
+
+$ARBUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.171
+
+Тейк профит: 0.183
+
+Стоп лосс: 0.167
+
+Риск на сделку 1%
+Потенциальная прибыль 3%
+
+Upd: ожидания не подтвердились, (-1%)",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@95:99""], ""suppressed_markers"": []"
+26,trader_b,SIGNAL,PARSED,953,2272,,"[trader #B]
+
+$ZKUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.022
+
+Тейк профит: 0.02725
+
+Стоп лосс: 0.0205
+
+Риск на сделку 1%
+Потенциальная прибыль 3.5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@80:84"", ""risk/weak:риск@98:102""], ""suppressed_markers"": "
+26,trader_b,SIGNAL,PARSED,935,2300,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 66840
+
+Тейк профит: 68510
+
+Стоп лосс: 66370
+
+Риск на сделку 0.7%
+Потенциальная прибыль 2.5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,INFO,UNCLASSIFIED,929,2307,2300,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+26,trader_b,INFO,UNCLASSIFIED,928,2308,2300,"[trader #B]
+
+Небольшие изменения!",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+26,trader_b,UPDATE,PARSED,922,2314,2300,"[trader #B]
+
+Стоп лосс переносим в БУ, как указано на изображении",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP/strong:стоп лосс переносим@12:31"", ""MOVE_STOP_TO_BE/weak:в бу@32:36"", ""EXIT_BE/weak:бу@34:36""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_"
+26,trader_b,UPDATE,PARSED,920,2316,2272,"[trader #B]
+
+Эту сделку закрываем в БУ, открываем по нему новую",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/strong:сделку закрываем@16:32"", ""MOVE_STOP_TO_BE/weak:в бу@33:37"", ""EXIT_BE/weak:бу@35:37""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@33:37"", ""EXIT_BE/weak:бу@35:37""], ""applied_marker_rules"": [""move_sto"
+26,trader_b,SIGNAL,PARSED,919,2317,,"[trader #B]
+
+$ZKUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.022
+
+Тейк профит: 0.0273
+
+Стоп лосс: 0.02085
+
+Риск на сделку 1%
+Потенциальная прибыль 4.7%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:лонг@22:26"", ""entry/strong:вход:@47:52"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@98:102""], ""suppressed_markers"": "
+26,trader_b,REPORT,PARSED,917,2319,2314,"[trader #B]
+
+Сделка полностью реализована в +2.5% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""TP_HIT/strong:полностью реализована@19:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,877,2362,,"[trader #B]
+
+$SOLUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 80.4
+
+Тейк профит: 90
+
+Стоп лосс: 78.8
+
+Риск на сделку 1%
+Потенциальная прибыль 6%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@75:79"", ""risk/weak:риск@91:95""], ""suppressed_markers"": ["
+26,trader_b,UPDATE,PARSED,872,2369,2362,"[trader #B]
+
+Стоп лосс передвигаем в БУ, как это указано на изображении",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/weak:в бу@34:38"", ""EXIT_BE/weak:бу@36:38""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPO"
+26,trader_b,REPORT,PARSED,860,2382,2369,"[trader #B] 
+
+Закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/weak:закрыта@12:19"", ""EXIT_BE/strong:закрыта в бу@12:24"", ""MOVE_STOP_TO_BE/weak:в бу@20:24"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [""EXIT_BE/weak:бу@22:24""], ""applied_marker_rules"": [""weak_inside_stron"
+26,trader_b,SIGNAL,PARSED,834,2420,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.972
+
+Тейк профит: 1.036
+
+Стоп лосс: 0.956
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,827,2428,2420,"[trader #B]
+
+Сделку пока закрываем в ≈ (+1%) 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/strong:пока закрываем@19:33""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+26,trader_b,UPDATE,PARSED,824,2437,2272,"[trader #B]
+
+
+Закрываем сделку по текущим(+0.3%) так как показывает слабость, ждём новые возможности",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/strong:закрываем сделку@12:28"", ""MARKET/strong:по текущим@29:39"", ""MARKET_NOW/strong:по текущим@29:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"":"
+26,trader_b,SIGNAL,PARSED,644,2690,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 63200
+
+Тейк профит: 66670
+
+Стоп лосс: 62510
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,643,2693,2690,"[trader #B]
+
+Пока не актуально, цена ушла высоко, если далее появится ясная картина - будем искать твх повторно",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""INVALIDATE_SETUP/strong:не актуально@17:29"", ""EXIT_BE/weak:бу@85:87""], ""suppressed_markers"": [""EXIT_BE/weak:бу@85:87""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_disambiguation_rules"": [], ""applied_rules"":"
+26,trader_b,SIGNAL,PARSED,641,2696,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.885
+
+Тейк профит: 1.055
+
+Стоп лосс: 0.8572
+
+Риск на сделку 1%
+Соотношение РР 1:6.12",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@97:101""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,612,2730,2696,"[trader #B]
+
+Стоп лосс передвигаем в БУ",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/weak:в бу@34:38"", ""EXIT_BE/weak:бу@36:38""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPO"
+26,trader_b,SIGNAL,PARSED,572,2783,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2035 (по текущим) 
+
+Тейк профит: 2162
+
+Стоп лосс: 2000
+
+Риск на сделку 1%
+Соотношение РР 1:3.63",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@60:70"", ""MARKET_NOW/strong:по текущим@60:70"", ""TP_HIT/weak:тейк@72:76"", ""S"
+26,trader_b,UPDATE,PARSED,570,2785,2696,"[trader #B]
+
+Закрываем сделку по SUI в +2.2% к депозиту 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/strong:закрываем сделку@12:28""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+26,trader_b,REPORT,PARSED,568,2787,2783,"[trader #B]
+
+Тут стоп, (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/strong:тут стоп@12:20"", ""SL_HIT/weak:стоп@16:20""], ""suppressed_markers"": [""SL_HIT/weak:стоп@16:20""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": ["
+26,trader_b,SIGNAL,PARSED,543,2827,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 67400
+
+Тейк профит: 72600
+
+Стоп лосс: 66250
+
+Риск на сделку 1%
+Соотношение РР 1:4.52",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,REPORT,PARSED,537,2834,2827,"[trader #B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": ["""
+26,trader_b,SIGNAL,PARTIAL,533,2840,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: по текущим 
+
+Тейк профит: 2160
+
+Стоп лосс: 1972
+
+Риск на сделку 1%
+Соотношение РР 1:6",0.6,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@54:64"", ""MARKET_NOW/strong:по текущим@54:64"", ""TP_HIT/weak:тейк@65:69"", ""S"
+26,trader_b,REPORT,PARSED,532,2844,2840,"[trader #B] 
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": ["""
+26,trader_b,SIGNAL,PARSED,463,2934,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2054 (по текущим)
+
+Тейк профит: 2160
+
+Стоп лосс: 2033
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@60:70"", ""MARKET_NOW/strong:по текущим@60:70"", ""TP_HIT/weak:тейк@72:76"", ""S"
+26,trader_b,UPDATE,PARSED,459,2938,2934,"[trader #B]
+
+Стоп передвигаем в БУ",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/weak:в бу@29:33"", ""EXIT_BE/weak:бу@31:33""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPO"
+26,trader_b,REPORT,PARSED,449,2948,2934,"[trader #B]
+
+Сделка полностью реализована в +5% к депозиту
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""TP_HIT/strong:полностью реализована@19:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,412,2996,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 71000
+
+Тейк профит: 74200
+
+Стоп лосс: 70350
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,REPORT,PARSED,408,3002,2996,"[trader #B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": ["""
+26,trader_b,SIGNAL,PARSED,345,3093,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.956 (по текущим)
+
+Тейк профит: 1.027
+
+Стоп лосс: 0.942
+
+Риск на сделку 1%
+Соотношение РР 1:5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@61:71"", ""MARKET_NOW/strong:по текущим@61:71"", ""TP_HIT/weak:тейк@73:77"", ""S"
+26,trader_b,UPDATE,PARSED,340,3099,3093,"[trader #B]
+
+Стоп лосс переносим в БУ",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп лосс переносим""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP/strong:стоп лосс переносим@12:31"", ""MOVE_STOP_TO_BE/weak:в бу@32:36"", ""EXIT_BE/weak:бу@34:36""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_"
+26,trader_b,REPORT,PARSED,339,3100,3099,"[trader #B]
+
+Стоп подтягиваем за минимум, как указанно на изображении",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+26,trader_b,SIGNAL,PARSED,338,3101,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.978
+
+Тейк профит: 1.0272
+
+Стоп лосс: 0.9616
+
+Риск на сделку 1%
+Соотношение РР 1:3",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@80:84"", ""risk/weak:риск@98:102""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,336,3106,,"[trader #B]
+
+Закрываем сделки по текущим 
+
+https://t.me/c/3171748254/3101 -0.3
+
+https://t.me/c/3171748254/3093 +1.3
+
+В общем +1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/strong:закрываем сделки@12:28"", ""MARKET/strong:по текущим@29:39"", ""MARKET_NOW/strong:по текущим@29:39"", ""telegram_link/strong:https://t.me/@40:53"", ""telegram_link/strong:t.me/@48:53"", ""telegram_link/strong:https"
+26,trader_b,SIGNAL,PARSED,335,3107,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.977
+
+Тейк профит: 1.0522
+
+Стоп лосс: 0.961
+
+Риск на сделку 1%
+Соотношение РР 1:4.7",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@80:84"", ""risk/weak:риск@97:101""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,333,3109,3107,"[trader #B]
+
+Не актуально , ушли без нас",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""INVALIDATE_SETUP/strong:не актуально@12:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,309,3142,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 70650 (по текущим)
+
+Тейк профит: 74320
+
+Стоп лосс: 69870
+
+Риск на сделку 1%
+Соотношение РР 1:4.7",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@61:71"", ""MARKET_NOW/strong:по текущим@61:71"", ""TP_HIT/weak:тейк@73:77"", ""S"
+26,trader_b,REPORT,PARSED,306,3147,3142,Стоп (-1%),1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""SL_HIT/strong:стоп (-@0:7""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_inside_strong_same_intent""], ""c"
+26,trader_b,SIGNAL,PARSED,305,3151,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.38 (по текущим)
+
+Тейк профит: 1.479
+
+Стоп лосс: 1.366
+
+Риск на сделку 1%
+Соотношение РР 1:7",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""leverage/weak:x@13:14"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@60:70"", ""MARKET_NOW/strong:по текущим@60:70"", ""TP"
+26,trader_b,REPORT,PARSED,298,3160,3151,"[trader #B]
+
+Тут стоп, буду по нему же смотреть повторную точку входа, потенциал для роста все еще есть, технически смотрится хорошо",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/strong:тут стоп@12:20"", ""SL_HIT/weak:стоп@16:20"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [""SL_HIT/weak:стоп@16:20"", ""EXIT_BE/weak:бу@22:24""], ""applied_marker_rules"": [""weak_inside_strong_same_intent"", ""exit"
+26,trader_b,SIGNAL,PARSED,297,3161,3160,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.38 (по текущим)
+
+Тейк профит: 1.478
+
+Стоп лосс: 1.3663
+
+Риск на сделку 1%
+Соотношение РР 1:7",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""leverage/weak:x@13:14"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@60:70"", ""MARKET_NOW/strong:по текущим@60:70"", ""TP"
+26,trader_b,UPDATE,PARSED,295,3163,3161,"Закрываем по текущим в -0.4
+Рынок топчется, выглядит не уверенно, буду смотреть новые возможности",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:закрываем по текущим@0:20"", ""MARKET/strong:по текущим@10:20"", ""MARKET_NOW/strong:по текущим@10:20"", ""EXIT_BE/weak:бу@66:68""], ""suppressed_markers"": [""EXIT_BE/weak:бу@66:68""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_"
+26,trader_b,SIGNAL,PARSED,294,3166,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.385 (по текущим)
+
+Тейк профит: 1.497
+
+Стоп лосс: 1.371
+
+Риск на сделку 1%
+Соотношение РР 1:8",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""leverage/weak:x@13:14"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@61:71"", ""MARKET_NOW/strong:по текущим@61:71"", ""TP"
+26,trader_b,UPDATE,PARSED,287,3174,3166,"[trader #B]
+
+Стоп переводим в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/strong:стоп переводим в бу@12:31"", ""MOVE_STOP_TO_BE/strong:переводим в бу@17:31"", ""MOVE_STOP_TO_BE/weak:в бу@27:31"", ""EXIT_BE/weak:бу@29:31""], ""suppressed_markers"": [""MOVE_STOP_TO_"
+26,trader_b,UPDATE,PARSED,256,3209,3166,"Закрываю по текущим в +0.5
+В моменте было 4.5%, думал снимет компрессию выше, но рипл решил оставить на потом)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MARKET/strong:по текущим@9:19"", ""MARKET_NOW/strong:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8""], ""a"
+26,trader_b,SIGNAL,PARSED,253,3220,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.412 (по текущим)
+
+Тейк профит: 1.497
+
+Стоп лосс: 1.398
+
+Риск на сделку 1%
+Соотношение РР 1:6",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""leverage/weak:x@13:14"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@61:71"", ""MARKET_NOW/strong:по текущим@61:71"", ""TP"
+26,trader_b,UPDATE,PARSED,249,3227,3220,"[trader #B]
+ 
+Стоп в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/strong:стоп в бу@12:21"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""applied_m"
+26,trader_b,REPORT,PARSED,248,3229,3227,Upd: закрыта в БУ,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@5:12"", ""EXIT_BE/strong:закрыта в бу@5:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disamb"
+26,trader_b,SIGNAL,PARSED,246,3232,,"[trader #B]
+
+$XRPUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 1.446 (по текущим)
+
+Тейк профит: 1.52
+
+Стоп лосс: 1.432
+
+Риск на сделку 1%
+Соотношение РР 1:5.1",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""leverage/weak:x@13:14"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@61:71"", ""MARKET_NOW/strong:по текущим@61:71"", ""TP"
+26,trader_b,UPDATE,PARSED,242,3238,3232,"[trader #B]
+
+Стоп в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/strong:стоп в бу@12:21"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""applied_m"
+26,trader_b,REPORT,PARSED,223,3262,3232,"[trader #B]
+
+Сделка полностью реализована в +5.1% к депозиту 
+
+Поздравляю с профитом 💸💸💸
+
+P.s. все таки выжали с xrp 
+🤣",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""TP_HIT/strong:полностью реализована@19:40"", ""leverage/weak:x@109:110""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,167,3330,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 70350
+
+Тейк профит: 72110
+
+Стоп лосс: 69650
+
+Риск на сделку 1%
+Соотношение РР 1:2.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,161,3336,3330,"[trader #B]
+
+Не актуально",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""INVALIDATE_SETUP/strong:не актуально@12:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,156,3361,,"[trader #B]
+
+$BTCUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 68550
+
+Тейк профит: 71650
+
+Стоп лосс: 67865
+
+Риск на сделку 1%
+Соотношение РР 1:4.5",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@60:64"", ""SL_HIT/weak:стоп@79:83"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,REPORT,PARSED,148,3369,3361,"[trader #B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": ["""
+26,trader_b,SIGNAL,PARSED,124,3393,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2164 (по текущим)
+
+Тейк профит: 2240
+
+Стоп лосс: 2147
+
+Риск на сделку 0.8%
+Потенциальная прибыль 3.5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@60:70"", ""MARKET_NOW/strong:по текущим@60:70"", ""TP_HIT/weak:тейк@72:76"", ""S"
+26,trader_b,REPORT,PARSED,110,3407,3393,"[trader #B] 
+
+Стоп (-0.8%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": ["""
+26,trader_b,SIGNAL,PARSED,102,3415,,"[trader #B]
+
+$ETHUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 2136
+
+Тейк профит: 2243
+
+Стоп лосс: 2115
+
+Риск на сделку 1%
+Потенциальная прибыль 5%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@77:81"", ""risk/weak:риск@93:97""], ""suppressed_markers"": ["
+26,trader_b,UPDATE,PARSED,98,3419,3415,"[trader #B]
+
+Не актуально, ушла без нас",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""INVALIDATE_SETUP/strong:не актуально@12:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+26,trader_b,SIGNAL,PARSED,96,3421,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.96
+
+Тейк профит: 0.999
+
+Стоп лосс: 0.9505
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""TP_HIT/weak:тейк@59:63"", ""SL_HIT/weak:стоп@78:82"", ""risk/weak:риск@96:100""], ""suppressed_markers"": "
+26,trader_b,UPDATE,PARSED,93,3424,3421,"[trader #B]
+
+Стоп в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/strong:стоп в бу@12:21"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""applied_m"
+26,trader_b,REPORT,PARSED,88,3429,3421,"[trader #B]
+
+Ушла в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""EXIT_BE/strong:ушла в бу@12:21"", ""EXIT_BE/strong:ушла в бу@12:21"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""EXIT_BE/weak:бу@19:21""], ""applied_marker_rules"": [""weak_inside_strong_"
+26,trader_b,SIGNAL,PARSED,87,3430,,"[trader #B]
+
+$SUIUSDT - Лонг (сделка на споте⭐️)
+
+Вход: 0.9725 (по текущим)
+
+Тейк профит: 0.997
+
+Стоп лосс: 0.9628
+
+Риск на сделку 1%
+Потенциальная прибыль 2.5%
+
+Попробуем повторно забрать*",1.0,,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:лонг@23:27"", ""entry/strong:вход:@48:53"", ""MARKET/strong:по текущим@62:72"", ""MARKET_NOW/strong:по текущим@62:72"", ""TP_HIT/weak:тейк@74:78"", ""S"
+26,trader_b,UPDATE,PARSED,83,3434,3430,"[trader #B]
+
+Стоп (-1%), на этом месяц закрываю, очень вялый и не техничный рынок сейчас, всем благ !",0.4,close_full_redundant_with_sl_hit,"{""suppressed_intents"": [""SL_HIT:стоп (-""], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19"", ""CLOSE_FULL/weak:закрываю@38:46""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""appl"

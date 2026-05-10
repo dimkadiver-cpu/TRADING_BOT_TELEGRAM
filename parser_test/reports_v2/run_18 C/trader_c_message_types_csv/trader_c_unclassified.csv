@@ -1,0 +1,522 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
+18,trader_c,INFO,UNCLASSIFIED,1742,1063,,"[trader#C]
+
+https://t.me/c/3171748254/1054
+Ушли в б/у",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1679,1153,,"https://t.me/c/3171748254/1151  
+Тп2 🥳
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1665,1175,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход с текущих (86700-800)
+
+Stop 86300. 1%деп
+
+Tейк-профит 
+
+1) 87500. (RR1-1,5)
+
+2) 88000. (RR1-2,4)
+
+3) 89000. (RR1-4)
+
+4)90600",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:с текущих@32:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""appl"
+18,trader_c,INFO,UNCLASSIFIED,1664,1177,,"https://t.me/c/3171748254/1175
+
+🥳🥳🥳🥳
+  Тп 1
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1663,1178,,"https://t.me/c/3171748254/1175
+Изменения -
+Тп2 88150
+ 
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1651,1199,,"https://t.me/c/3171748254/1178
+
+Тп 2 RR1-3+ 🥳🥳🥳
+[trader#c]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1644,1209,,"https://t.me/c/3171748254/1175
+ 
+Тп3 🥳🥳🥳 RR 1-4
+
+[trader#C ]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1642,1214,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход с текущих (2920-8)
+
+Stop 2915. 1%деп
+
+Tейк-профит 
+
+1)2945. (RR1-1,5)
+
+2)2960.  (RR1-3)
+
+3)2970
+
+4)2990",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:с текущих@32:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""appl"
+18,trader_c,INFO,UNCLASSIFIED,1639,1217,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход с лимиткой 
+
+2910 (1/3)
+2900 (2/3)
+
+Stop 2890. 1%деп
+
+Tейк-профит 
+
+1)2930. (RR1-1,5)
+
+2)2940.  (RR1-2)
+
+3)2960
+
+4)2990",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1638,1219,,"https://t.me/c/3171748254/1217
+
+Тп1🥳 RR1-1
+ 
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1635,1224,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход с текущих (87400-450)
+
+Stop 87200. 1%деп
+
+Tейк-профит 
+
+1) 87950. (RR1-2)
+
+2) 88500. (RR1-3)
+
+3) 89000
+
+4)90600",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:с текущих@32:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""appl"
+18,trader_c,INFO,UNCLASSIFIED,1599,1278,,"https://t.me/c/3171748254/1275
+ 
+Тп2🥳 
+ [trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1598,1279,,"https://t.me/c/3171748254/1275
+
+Тп 3🥳🥳🥳
+
+Остаток объема везём дальше 
+87000
+86444
+ [trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1595,1283,,"https://t.me/c/3171748254/1275
+  
+Тп 4 🥳🥳🥳 RR1-7
+ 
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1592,1288,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход с текущих (87550-450)
+
+Stop 87222. 1%деп
+
+Tейк-профит 
+
+1) 87830. (RR1-1)
+
+2) 88150. (RR1-2)
+
+3) 88550. (RR1-3)
+
+4)90600",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:с текущих@32:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""appl"
+18,trader_c,INFO,UNCLASSIFIED,1591,1289,,"https://t.me/c/3171748254/1288
+ 
+🥳 Тп1
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1589,1292,1287,"Тп 1 🥳
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1570,1333,1327,"Тп1🥳
+ [trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1569,1334,,"https://t.me/c/3171748254/1327
+ Тп2🥳
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1561,1344,,"https://t.me/c/3171748254/1340
+
+Тп1🥳
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1555,1354,,"https://t.me/c/3171748254/1340
+
+Тп 2🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1531,1389,,"https://t.me/c/3171748254/1381
+ Сэтап закрыт в 0
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1495,1441,1440,"На байбит не закрыло,)
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1494,1442,,"https://t.me/c/3171748254/1441
+Теперь закрыто до тп не дошли 30 пунктов (.
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1475,1469,1467,"Тп1🥳
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1473,1471,,"https://t.me/c/3171748254/1467
+
+Тп3🥳 
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1468,1480,1478,"Закрыт остаток 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1438,1526,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  
+
+Stop 92550.      1% деп
+
+Tейк-профит 
+
+1).  91400(RR1-1)
+
+ 2). 90800(RR1-2)
+
+ 3) 90200
+
+4)89000",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""MARKET_NOW/strong:вход по рынку@28:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"
+18,trader_c,INFO,UNCLASSIFIED,1436,1530,,"https://t.me/c/3171748254/1526
+
+Тп 1🥳
+ 
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1427,1540,1526,"Тр 3🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1353,1631,,"https://t.me/c/3171748254/1596
+
+Тп2🥳
+
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1310,1687,,"https://t.me/c/3171748254/1683
+
+
+Тр1🥳
+
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1304,1695,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку
+
+Stop 95000. 0,5%деп
+
+Tейк-профит 
+
+1)   95750 (RR1-1)
+
+2)   96400(RR1-2)
+
+3)   97000
+
+4). 98000",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET_NOW/strong:вход по рынку@27:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"":"
+18,trader_c,INFO,UNCLASSIFIED,1300,1699,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход рынок
+
+Stop 94700. 1%деп
+
+Tейк-профит 
+
+1)   95650 (RR1-1)
+
+2)   96400(RR1-2)
+
+3)   97000
+
+4). 98000",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1298,1701,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 
+
+Stop 94300. 1%деп
+
+Tейк-профит 
+
+1)   95250 (RR1-1)
+
+2)   95800(RR1-2)
+
+3) 96400
+
+4)97000",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET_NOW/strong:вход по рынку@27:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"":"
+18,trader_c,INFO,UNCLASSIFIED,1291,1709,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по лимитке 94650
+
+Stop 94200. 1%деп
+
+Tейк-профит 
+
+1)   95500(RR1-2)
+
+2)  95950 (RR1-3)
+
+3) 96400
+
+4) 97200",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1287,1716,,"https://t.me/c/3171748254/1709
+
+Тп1🥳
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1260,1766,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 
+
+Stop 91200. 1%деп
+
+Tейк-профит 
+
+1)    92100(RR1-1)
+
+2)  92500 (RR1-2)
+
+3) 93000
+
+4)94500",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET_NOW/strong:вход по рынку@27:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"":"
+18,trader_c,INFO,UNCLASSIFIED,1251,1779,1770,"Закрыл по рынку 
+91000
+
+[ trader#C ]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1219,1820,,"https://t.me/c/3171748254/1802
+Изменения 89900 тп 2 
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1218,1821,1820,"Тп 2🥳
+
+[tradet#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1203,1844,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 
+
+Stop 88800. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MARKET_NOW/strong:вход по рынку@27:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"":"
+18,trader_c,INFO,UNCLASSIFIED,1188,1867,1847,"Остаток закрыт по рынку 
+89100
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1166,1919,,"Закрыл 2980 -
+
+https://t.me/c/3171748254/1916
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@14:27"", ""telegram_link/strong:t.me/@22:27""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1159,1933,,"https://t.me/c/3171748254/1931
+
+Фрс скоро. убрал лимитку
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,1121,1995,,"https://t.me/c/3171748254/1992
+
+Закрыл не нравится 82500
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,970,2247,,"https://t.me/c/3171748254/2240
+
+Закрыл часть по  70950 
+
+Тп1 и Тп 2 актуально если придём 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,966,2254,2226,Актуально,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,942,2289,2284,"Закрыл -0,11 RR 
+2015
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,938,2296,2226,Актуально,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,843,2407,2387,"Тп 1🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,810,2459,,"https://t.me/c/3171748254/2452
+ С профитом 🥳🥳🥳 + RR 0,45
+
+[trader #C]. 
+остаток в позе 0,375
+Тп далее по сэтапу, будет дополнения",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/weak:бу@110:112""], ""suppressed_markers"": [""EXIT_BE/weak:бу@110:112""], ""applied_marker_rules"": [""exit_be_weak_context""], ""applied_disambiguation_rules"": [], ""applied_r"
+18,trader_c,INFO,UNCLASSIFIED,804,2465,2464,"Изменения делим объем который добрали 0,375
+На тп 
+68000-
+68750-
+69500-
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,803,2467,2465,"Тп1
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,775,2510,,"https://t.me/c/3171748254/2451
+ 
+Активировалась
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,744,2547,,"https://t.me/c/3171748254/2490
+
+Тп 1🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,690,2614,,"https://t.me/c/3171748254/2563
+
+Тп 1🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,673,2647,,"На руках solusdt 
+
+Лимиток не каких нет актуальных
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@12:16"", ""symbol/strong:usdt@12:16""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,551,2813,,"https://t.me/c/3171748254/2806
+
+Снял часть по текущим 1,475 ( 0,1%)
+
+И тп переставил 1,41
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MARKET_NOW/strong:по текущим@42:52""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,511,2873,2848,"https://t.me/c/3171748254/2848
+
+Тп 2 🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 2848, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,509,2876,2848,"Тп 3 🥳 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,427,2978,2974,"Тп 1🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,400,3012,,"https://t.me/c/3171748254/2945
+
+Тп 2 🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,399,3013,2974,"https://t.me/c/3171748254/2945
+
+Тп 2🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 2974, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,383,3030,3023,"Закрыл в минус 67800,лимитку убрал слабая реакция ,на ночь не хочу оставилять.
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,378,3038,2945,"Тп 3🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,348,3088,3077,"Закрыл в микро + по 70200
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,307,3144,3143,"Изменения лишний 0, был",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,304,3152,,"https://t.me/c/3171748254/3143
+
+Закрыл у твх 1,524
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,285,3177,,"https://t.me/c/3171748254/3162
+
+Тп 2🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,269,3195,3178,"https://t.me/c/3171748254/3192
+
+Тп 1🥳
+
+[trader C]",0.0,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 3178, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,258,3207,3178,"Изменения второй тп на 70000
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,231,3251,3245,"Лимитки убрал наблюдаем 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,220,3265,3252,"Риски сократил лимитки на ночь убрал 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""risk/weak:риск@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,188,3302,3274,"Тп 1 🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,185,3306,3274,"Тп 2 единственный ставим на 69000 на остаток позиции 
+
+Изменения 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,180,3312,3274,"Тп 2🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,159,3338,3325,"С профитом 🥳 Tp после доливки
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,149,3368,3274,"Тп 3🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,114,3403,3384,"Тп🥳
+[trаdеr #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,107,3410,3395,"Закрыл у твх
+
+[ trader #C ]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,100,3417,3412,"Тп 3🥳
+Сэтап закрыт
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,95,3422,3418,"Тп 1 🥳
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,65,3452,3445,"Закрыл лишнее объем по 69100(0,3)
+Микро- 
+BTCUSDT 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,52,3465,3464,"Btcusdt long
+
+Закрыл у твх слабо 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@3:7"", ""symbol/strong:usdt@3:7"", ""LONG/strong:long@8:12""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,46,3471,3468,"Тп 1🥳
+
+Btcusdt 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@9:13"", ""symbol/strong:usdt@9:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,11,3506,,"Btcusdt 
+
+Лимитку на 65770 убрал
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@3:7"", ""symbol/strong:usdt@3:7""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+18,trader_c,INFO,UNCLASSIFIED,9,3508,,"Тп 1🥳 
+
+BTCUSDT 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@9:13"", ""symbol/strong:usdt@9:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"

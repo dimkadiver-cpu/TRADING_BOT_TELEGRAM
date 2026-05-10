@@ -1,0 +1,6 @@
+﻿run_id,raw_message_id,telegram_message_id,primary_intent,intents,trader_id,parser_profile,primary_class,parse_status,primary_intent,error_status,error_message,warnings,diagnostics_summary,raw_text
+26,1443,1517,MOVE_STOP,MOVE_STOP,trader_b,trader_b,UPDATE,ERROR,MOVE_STOP,OK,,canonical_translation_without_update_operation,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP/strong:стоп лосс переносим@28:47""], ""suppressed_markers"": [""SL_HIT/weak:стоп@28:32""], ""applied_marker_rules"": [""sl_hit_ambiguous_ge","[trader#B]
+
+$BCHUSDT Update:
+
+Стоп лосс переносим в + как указанно на изображении"

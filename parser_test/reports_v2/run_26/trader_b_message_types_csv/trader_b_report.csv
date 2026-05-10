@@ -1,0 +1,163 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,report_events_count,report_events_summary,report_event_types,report_event_levels,report_event_prices,report_event_source_intents,report_event_raw_fragments,report_result_raw_fragment,hit_target,hit_price
+26,trader_b,REPORT,PARSED,2336,247,236,"Сделка закрыта по стоп лоссу (-1%)
+
+Напоминаю что у нас так же висит открытая свинг позиция по ARB, следите за обновлениями",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@7:14"", ""SL_HIT/strong:закрыта по стоп лоссу@7:28"", ""SL_HIT/weak:по стоп лоссу@15:28"", ""SL_HIT/weak:стоп@18:22""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@15:28"", ""SL_HIT/weak:стоп@18:22""], ""applied_marker_rules"": [""weak",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,закрыта по стоп лоссу,,SL,1.0
+26,trader_b,REPORT,PARSED,2186,415,384,"[trader#В]
+
+Эта сделка тоже у нас ушла в БУ, ничего страшного это часть работы, скоро будем искать новые позиции",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:ушла в бу@33:42"", ""EXIT_BE/strong:ушла в бу@33:42"", ""MOVE_STOP_TO_BE/weak:в бу@38:42"", ""EXIT_BE/weak:бу@40:42"", ""EXIT_BE/weak:бу@85:87""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@38:42"", ""EXIT_BE/weak:бу@40:42"", ""EXIT_BE/weak:бу",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,ушла в бу,,BE,
+26,trader_b,REPORT,PARSED,2038,667,661,"Закрылись в бу, слабый все еще рынок",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылись в бу@0:14"", ""MOVE_STOP_TO_BE/weak:в бу@10:14"", ""EXIT_BE/weak:бу@12:14""], ""suppressed_markers"": [""EXIT_BE/weak:бу@12:14""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрылись в бу,,BE,
+26,trader_b,REPORT,PARSED,1941,797,796,"[trader#В]
+
+Закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@11:18"", ""EXIT_BE/strong:закрыта в бу@11:23"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [""EXIT_BE/weak:бу@21:23""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disa",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрыта в бу,,BE,
+26,trader_b,REPORT,PARSED,1935,806,798,"[trader#В]
+
+Сделка полностью закрыта по тейк профиту, с прибылью в 3.68%
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@28:35"", ""TP_HIT/strong:закрыта по тейк профиту@28:51"", ""TP_HIT/weak:тейк@39:43""], ""suppressed_markers"": [""TP_HIT/weak:тейк@39:43""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,3.68,TP_HIT,закрыта по тейк профиту,,TP,3.68
+26,trader_b,REPORT,PARSED,1892,857,846,"[trader#В]
+
+Очень обидный стоп конечно же, идея в целом отработала себя, ошибки не вижу, единственное стоп можно было бы поставить за минимум, что есть то есть (-1%) 
+Стоп лосс это неотъемлемая часть работы трейдера",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:обидный стоп@17:29"", ""SL_HIT/strong:обидный стоп@17:29"", ""SL_HIT/weak:стоп@25:29"", ""SL_HIT/weak:стоп@101:105"", ""SL_HIT/weak:стоп@165:169""], ""suppressed_markers"": [""SL_HIT/weak:стоп@25:29""], ""applied_marker_rules"": [""weak_inside_strong_sam",SL_HIT,SL_HIT|SL_HIT|SL_HIT,3,SL_HIT(lvl=None)|SL_HIT(lvl=None)|SL_HIT(lvl=None),SL_HIT|SL_HIT|SL_HIT,||,1.0|1.0|,SL_HIT|SL_HIT|SL_HIT,обидный стоп|стоп|стоп,,SL,1.0
+26,trader_b,REPORT,PARSED,1891,858,853,"[trader#В]
+
+Так же по ICP - такой же обидный стоп в пипс (-1%) думаю в целом идея себя отработает",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:обидный стоп@36:48"", ""SL_HIT/strong:обидный стоп@36:48"", ""SL_HIT/weak:стоп@44:48""], ""suppressed_markers"": [""SL_HIT/weak:стоп@44:48""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,обидный стоп,,SL,1.0
+26,trader_b,REPORT,PARSED,1861,905,896,"[trader#В]
+
+Тут к сожалению закрылись по стоп лоссу, -1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:закрылись по стоп лоссу@27:50"", ""SL_HIT/weak:по стоп лоссу@37:50"", ""SL_HIT/weak:стоп@40:44""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@37:50"", ""SL_HIT/weak:стоп@40:44""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,закрылись по стоп лоссу,,SL,1.0
+26,trader_b,REPORT,PARSED,1848,922,911,"[trader#В]
+
+Стоп лосс (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@11:15"", ""SL_HIT/strong:стоп лосс (-@11:23""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_inside_strong_same_i",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп лосс (-,,SL,1.0
+26,trader_b,REPORT,PARSED,1818,965,947,"[trader#В]
+
+К сожалению стоп лосс, рынок прям медвежий, не дает шансов быкам
+
+BTC с большей вероятностью собирается снимать ликвидность с 83822, и далее 80600 поэтому пока сложно с Лонгами, но ничего, риск менеджмент и дисциплина всегда решает на дистанции",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:к сожалению стоп@11:27"", ""SL_HIT/strong:к сожалению стоп@11:27"", ""SL_HIT/weak:стоп@23:27"", ""LONG/strong:лонг@179:183"", ""risk/weak:риск@199:203""], ""suppressed_markers"": [""SL_HIT/weak:стоп@23:27""], ""applied_marker_rules"": [""weak_inside_stro",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,83822.0,SL_HIT,к сожалению стоп,,SL,83822.0
+26,trader_b,REPORT,PARSED,1794,995,,"[trader#В]
+
+Эфир закрылся в БУ, zec по стоп лоссу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрылся в бу@16:29"", ""MOVE_STOP_TO_BE/weak:в бу@25:29"", ""EXIT_BE/weak:бу@27:29"", ""SL_HIT/weak:по стоп лоссу@35:48"", ""SL_HIT/weak:стоп@38:42""], ""suppressed_markers"": [""EXIT_BE/weak:бу@27:29""], ""applied_marker_rules"": [""weak_inside_strong",EXIT_BE,EXIT_BE|SL_HIT,2,EXIT_BE(lvl=None)|SL_HIT(lvl=None),EXIT_BE|SL_HIT,|,|,EXIT_BE|SL_HIT,закрылся в бу|по стоп лоссу,,BE,
+26,trader_b,REPORT,PARSED,1714,1106,,"[trader#B]
+
+https://t.me/c/3171748254/1102
+
+https://t.me/c/3171748254/1100
+
+Закрылись по стопу (-1.5% в общем)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@42:55"", ""telegram_link/strong:t.me/@50:55"", ""SL_HIT/strong:закрылись по стопу@73:91"", ""SL_HIT/weak:по стопу@",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.5,SL_HIT,закрылись по стопу,,SL,1.5
+26,trader_b,REPORT,PARSED,1629,1234,1228,"[trader#B]
+
+Сделка полностью реализована в +3.3%
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""TP_HIT/strong:полностью реализована@18:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,3.3,TP_HIT,полностью реализована,,TP,3.3
+26,trader_b,REPORT,PARSED,1607,1265,1238,"[trader#B]
+
+Сделка полностью реализована в +2.5% 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""TP_HIT/strong:полностью реализована@18:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,2.5,TP_HIT,полностью реализована,,TP,2.5
+26,trader_b,REPORT,PARSED,1557,1352,1323,"[trader#B]
+
+Сделка полностью реализована в +5% 
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""TP_HIT/strong:полностью реализована@18:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,5.0,TP_HIT,полностью реализована,,TP,5.0
+26,trader_b,REPORT,PARSED,1544,1367,1362,"[trader#B]
+
+Закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@11:18"", ""EXIT_BE/strong:закрыта в бу@11:23"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [""EXIT_BE/weak:бу@21:23""], ""applied_marker_rules"": [""weak_inside_strong",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрыта в бу,,BE,
+26,trader_b,REPORT,PARSED,1508,1418,1321,"[trader#B]
+
+$XRPUSDT Update:
+
+Сделка полностью реализована в +8% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""leverage/weak:x@12:13"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/strong:полностью реализована@35:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applie",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,8.0,TP_HIT,полностью реализована,,TP,8.0
+26,trader_b,REPORT,PARSED,1507,1419,1394,"[trader#B]
+
+$BTCUSDT Update:
+
+Сделка по биткоину не заставила нас долго ждать и она так же полностью реализована в +2% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/strong:полностью реализована@89:110""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,2.0,TP_HIT,полностью реализована,,TP,2.0
+26,trader_b,REPORT,PARSED,1368,1613,1602,"[trader#B]
+
+$SOLUSDT Update:
+
+Сделка полностью реализована в +3% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""TP_HIT/strong:полностью реализована@35:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_s",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,3.0,TP_HIT,полностью реализована,,TP,3.0
+26,trader_b,REPORT,PARSED,1346,1641,1617,"[trader#B]
+
+Сделка закрыта по стоп лоссу (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,закрыта по стоп лоссу,,SL,1.0
+26,trader_b,REPORT,PARSED,1334,1657,1645,"[trader#B]
+
+Сделка закрыта по стоп лоссу (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,закрыта по стоп лоссу,,SL,1.0
+26,trader_b,REPORT,PARSED,1330,1663,1662,"[trader#B]
+
+Сделка закрыта по стоп лоссу (-0.7%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,0.7,SL_HIT,закрыта по стоп лоссу,,SL,0.7
+26,trader_b,REPORT,PARSED,1264,1755,,"[trader#B]
+
+https://t.me/c/3171748254/1745 (-1%)
+
+https://t.me/c/3171748254/1744 (-1%)
+
+https://t.me/c/3171748254/1729 БУ",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@48:61"", ""telegram_link/strong:t.me/@56:61"", ""telegram_link/strong:https://t.me/@85:98"", ""telegram_link/stron",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,бу,,BE,
+26,trader_b,REPORT,PARSED,1209,1831,1822,"[trader#B]
+
+Сделка закрыта по стоп лоссу -1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""SL_HIT/strong:закрыта по стоп лоссу@18:39"", ""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@26:39"", ""SL_HIT/weak:стоп@29:33""],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,закрыта по стоп лоссу,,SL,1.0
+26,trader_b,REPORT,PARSED,1199,1850,1841,"[trader#B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""SL_HIT/weak:стоп@11:15"", ""SL_HIT/strong:стоп (-@11:18""], ""suppressed_markers"": [""SL_HIT/weak:стоп@11:15""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""w",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп (-,,SL,1.0
+26,trader_b,REPORT,PARSED,1189,1865,1857,"[trader#B]
+
+Сделка закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@18:25"", ""EXIT_BE/strong:закрыта в бу@18:30"", ""MOVE_STOP_TO_BE/weak:в бу@26:30"", ""EXIT_BE/weak:бу@28:30""], ""suppressed_markers"": [""EXIT_BE/weak:бу@28:30""], ""applied_marker_rules"": [""weak_inside_strong",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрыта в бу,,BE,
+26,trader_b,REPORT,PARSED,1184,1882,1876,"[trader#B] 
+
+Ожидания не оправдались , сделка закрыта по стоп лоссу (-1%)
+
+Тяжевый нудный боковик) ждём понятного ценообразования",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@7:9"", ""CLOSE_FULL/weak:закрыта@44:51"", ""SL_HIT/strong:закрыта по стоп лоссу@44:65"", ""SL_HIT/weak:по стоп лоссу@52:65"", ""SL_HIT/weak:стоп@55:59""], ""suppressed_markers"": [""SL_HIT/weak:по стоп лоссу@52:65"", ""SL_HIT/weak:стоп@55:59""],",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,закрыта по стоп лоссу,,SL,1.0
+26,trader_b,REPORT,PARSED,917,2319,2314,"[trader #B]
+
+Сделка полностью реализована в +2.5% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""TP_HIT/strong:полностью реализована@19:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,2.5,TP_HIT,полностью реализована,,TP,2.5
+26,trader_b,REPORT,PARSED,860,2382,2369,"[trader #B] 
+
+Закрыта в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""CLOSE_FULL/weak:закрыта@12:19"", ""EXIT_BE/strong:закрыта в бу@12:24"", ""MOVE_STOP_TO_BE/weak:в бу@20:24"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [""EXIT_BE/weak:бу@22:24""], ""applied_marker_rules"": [""weak_inside_stron",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрыта в бу,,BE,
+26,trader_b,REPORT,PARSED,568,2787,2783,"[trader #B]
+
+Тут стоп, (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/strong:тут стоп@12:20"", ""SL_HIT/weak:стоп@16:20""], ""suppressed_markers"": [""SL_HIT/weak:стоп@16:20""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,тут стоп,,SL,1.0
+26,trader_b,REPORT,PARSED,537,2834,2827,"[trader #B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп (-,,SL,1.0
+26,trader_b,REPORT,PARSED,532,2844,2840,"[trader #B] 
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп (-,,SL,1.0
+26,trader_b,REPORT,PARSED,449,2948,2934,"[trader #B]
+
+Сделка полностью реализована в +5% к депозиту
+
+Поздравляю с профитом 💸💸💸",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""TP_HIT/strong:полностью реализована@19:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,5.0,TP_HIT,полностью реализована,,TP,5.0
+26,trader_b,REPORT,PARSED,408,3002,2996,"[trader #B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп (-,,SL,1.0
+26,trader_b,REPORT,PARSED,339,3100,3099,"[trader #B]
+
+Стоп подтягиваем за минимум, как указанно на изображении",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,,SL_HIT,стоп,,SL,
+26,trader_b,REPORT,PARSED,306,3147,3142,Стоп (-1%),1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""SL_HIT/strong:стоп (-@0:7""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_inside_strong_same_intent""], ""c",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп (-,,SL,1.0
+26,trader_b,REPORT,PARSED,298,3160,3151,"[trader #B]
+
+Тут стоп, буду по нему же смотреть повторную точку входа, потенциал для роста все еще есть, технически смотрится хорошо",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/strong:тут стоп@12:20"", ""SL_HIT/weak:стоп@16:20"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [""SL_HIT/weak:стоп@16:20"", ""EXIT_BE/weak:бу@22:24""], ""applied_marker_rules"": [""weak_inside_strong_same_intent"", ""exit",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,,SL_HIT,тут стоп,,SL,
+26,trader_b,REPORT,PARSED,248,3229,3227,Upd: закрыта в БУ,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@5:12"", ""EXIT_BE/strong:закрыта в бу@5:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disamb",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрыта в бу,,BE,
+26,trader_b,REPORT,PARSED,223,3262,3232,"[trader #B]
+
+Сделка полностью реализована в +5.1% к депозиту 
+
+Поздравляю с профитом 💸💸💸
+
+P.s. все таки выжали с xrp 
+🤣",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""TP_HIT/strong:полностью реализована@19:40"", ""leverage/weak:x@109:110""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 1.0}}",TP_HIT,TP_HIT,1,TP_HIT(lvl=None),TP_HIT,,5.1,TP_HIT,полностью реализована,,TP,5.1
+26,trader_b,REPORT,PARSED,148,3369,3361,"[trader #B]
+
+Стоп (-1%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,1.0,SL_HIT,стоп (-,,SL,1.0
+26,trader_b,REPORT,PARSED,110,3407,3393,"[trader #B] 
+
+Стоп (-0.8%)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""SL_HIT/weak:стоп@12:16"", ""SL_HIT/strong:стоп (-@12:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,0.8,SL_HIT,стоп (-,,SL,0.8
+26,trader_b,REPORT,PARSED,88,3429,3421,"[trader #B]
+
+Ушла в БУ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10"", ""EXIT_BE/strong:ушла в бу@12:21"", ""EXIT_BE/strong:ушла в бу@12:21"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""EXIT_BE/weak:бу@19:21""], ""applied_marker_rules"": [""weak_inside_strong_",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,ушла в бу,,BE,
