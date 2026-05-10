@@ -222,7 +222,11 @@ def test_context_window_stops_at_next_intent():
         _ev("UPDATE_PRICE", "modify_entry_mode", modify_marker, 0),
         _ev("TP_HIT", "intent", tp_marker, tp_start),
     ]
-    e = _extract_first(text, evidence)
+    intents = _extractor.extract(_normalized(text), evidence)
+    modify_intents = [i for i in intents if i.type == "MODIFY_ENTRY"]
+    assert len(modify_intents) == 1, f"Expected 1 MODIFY_ENTRY intent, got {modify_intents}"
+    e = modify_intents[0].entities
+    assert isinstance(e, ModifyEntryEntities), f"Expected ModifyEntryEntities, got {type(e)}"
     assert len(e.entries) == 1
     assert e.entries[0].price.value == 2114.0
 

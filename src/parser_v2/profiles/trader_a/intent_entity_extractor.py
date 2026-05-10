@@ -10,6 +10,7 @@ from src.parser_v2.contracts.entities import (
     ClosePartialEntities,
     EntryFilledEntities,
     EntryLeg,
+    EntrySelector,
     ExitBeEntities,
     InfoOnlyEntities,
     InvalidateSetupEntities,
@@ -23,7 +24,7 @@ from src.parser_v2.contracts.entities import (
     SlHitEntities,
     TpHitEntities,
 )
-from src.parser_v2.contracts.enums import INTENT_CATEGORY_BY_TYPE, STRONG_WEIGHT, WEAK_WEIGHT
+from src.parser_v2.contracts.enums import INTENT_CATEGORY_BY_TYPE, ModifyEntryMode, STRONG_WEIGHT, WEAK_WEIGHT
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent
 
@@ -42,8 +43,7 @@ _RE_TP_LEVEL = re.compile(
 _RE_PCT = re.compile(r"(?P<pct>\d+(?:[.,]\d+)?)\s*%")
 _RE_HALF = re.compile(r"\bhalf\b|половин", re.IGNORECASE)
 _RE_TP1 = re.compile(r"первый|тп\s*1|tp\s*1|1\s*тейк", re.IGNORECASE)
-_RE_MARKET_NOW = re.compile(r"рынк|market", re.IGNORECASE)
-_RE_REMOVE = re.compile(r"убира|remove|delete", re.IGNORECASE)
+_RANGE_RE = re.compile(r"(?P<p1>\d[\d.,]*) *- *(?P<p2>\d[\d.,]*)")
 
 _TP_ORDINAL_MAP = {"перв": 1, "втор": 2, "треть": 3}
 
@@ -76,16 +76,20 @@ class IntentEntityExtractor:
                 continue
             if has_strong_info and ev.strength == "weak":
                 continue
-            builder = _ENTITY_BUILDERS.get(ev.name)
-            if builder is None:
-                continue
             confidence = STRONG_WEIGHT if ev.strength == "strong" else WEAK_WEIGHT
+            if ev.name == "MODIFY_ENTRY":
+                entities = _modify_entry_entities(ev, normalized, evidence)
+            else:
+                builder = _ENTITY_BUILDERS.get(ev.name)
+                if builder is None:
+                    continue
+                entities = builder(ev, normalized)
             intents.append(
                 ParsedIntent(
                     type=ev.name,
                     category=INTENT_CATEGORY_BY_TYPE[ev.name],
                     confidence=confidence,
-                    entities=builder(ev, normalized),
+                    entities=entities,
                     evidence=[ev],
                     raw_fragment=ev.marker,
                     span_start=ev.start,
@@ -166,19 +170,106 @@ def _add_entry_entities(ev: MarkerEvidence, normalized: NormalizedText) -> AddEn
     return AddEntryEntities(entry_price=price, entry_type="LIMIT" if price is not None else None)
 
 
-def _modify_entry_entities(ev: MarkerEvidence, normalized: NormalizedText) -> ModifyEntryEntities:
-    entries: list[EntryLeg] = []
-    if _RE_MARKET_NOW.search(ev.marker):
-        mode = "MARKET_NOW"
-        entries.append(EntryLeg(sequence=1, entry_type="MARKET", role="PRIMARY"))
-    elif _RE_REMOVE.search(ev.marker):
-        mode = "REMOVE"
-    else:
+def _modify_entry_entities(
+    ev: MarkerEvidence,
+    normalized: NormalizedText,
+    all_evidence: list[MarkerEvidence],
+) -> ModifyEntryEntities:
+    text = normalized.normalized_text
+    window = _modify_entry_context_window(ev, all_evidence, text)
+
+    mode, raw_mode_marker = _detect_modify_entry_mode(ev, all_evidence)
+    selector = _detect_entry_selector(ev, all_evidence)
+    entries, entry_structure = _extract_modify_entry_prices(window, mode)
+
+    # Upgrade mode dal price structure quando il marker non è esplicito
+    if entry_structure == "RANGE" and mode in ("UPDATE_PRICE", "UNKNOWN"):
+        mode = "UPDATE_RANGE"
+    elif entries and mode == "UNKNOWN":
         mode = "UPDATE_PRICE"
-        price = _first_price_after(normalized.normalized_text, ev.end)
-        if price is not None:
-            entries.append(EntryLeg(sequence=1, entry_type="LIMIT", price=price, role="PRIMARY"))
-    return ModifyEntryEntities(mode=mode, entries=entries, raw_mode_marker=ev.marker)
+
+    return ModifyEntryEntities(
+        mode=mode,
+        entry_selector=selector,
+        entries=entries,
+        entry_structure=entry_structure,
+        raw_mode_marker=raw_mode_marker,
+        raw_selector_marker=selector.raw if selector else None,
+    )
+
+
+def _modify_entry_context_window(
+    ev: MarkerEvidence,
+    all_evidence: list[MarkerEvidence],
+    text: str,
+) -> str:
+    next_intent_start = min(
+        (e.start for e in all_evidence if e.kind == "intent" and e.start > ev.end),
+        default=len(text),
+    )
+    return text[ev.start:next_intent_start]
+
+
+def _detect_modify_entry_mode(
+    ev: MarkerEvidence,
+    all_evidence: list[MarkerEvidence],
+) -> tuple[ModifyEntryMode, str | None]:
+    for e in all_evidence:
+        if e.kind == "modify_entry_mode" and not e.suppressed:
+            if _spans_overlap_or_adjacent(e, ev):
+                return e.name, e.marker  # type: ignore[return-value]
+    return "UNKNOWN", ev.marker
+
+
+def _detect_entry_selector(
+    ev: MarkerEvidence,
+    all_evidence: list[MarkerEvidence],
+) -> EntrySelector | None:
+    for e in all_evidence:
+        if e.kind == "entry_selector" and not e.suppressed:
+            if _spans_overlap_or_adjacent(e, ev):
+                role = e.name  # "PRIMARY" | "AVERAGING"
+                seq = 1 if role == "PRIMARY" else None
+                return EntrySelector(role=role, sequence=seq, raw=e.marker)  # type: ignore[arg-type]
+    return None
+
+
+def _extract_modify_entry_prices(
+    window: str,
+    mode: ModifyEntryMode,
+) -> tuple[list[EntryLeg], str | None]:
+    if mode == "MARKET_NOW":
+        return [EntryLeg(sequence=1, entry_type="MARKET", role="PRIMARY")], "ONE_SHOT"
+    if mode == "REMOVE":
+        return [], None
+
+    range_match = _RANGE_RE.search(window)
+    if range_match:
+        p1 = _price_from_raw(range_match.group("p1"))
+        p2 = _price_from_raw(range_match.group("p2"))
+        if p1 and p2:
+            return (
+                [
+                    EntryLeg(sequence=1, entry_type="LIMIT", price=p1),
+                    EntryLeg(sequence=2, entry_type="LIMIT", price=p2),
+                ],
+                "RANGE",
+            )
+
+    prices = _prices_in_window(window)
+    if not prices:
+        return [], None
+    legs = [EntryLeg(sequence=i, entry_type="LIMIT", price=p) for i, p in enumerate(prices, 1)]
+    structure = "ONE_SHOT" if len(legs) == 1 else "LADDER"
+    return legs, structure
+
+
+def _spans_overlap_or_adjacent(a: MarkerEvidence, b: MarkerEvidence, gap: int = 5) -> bool:
+    return a.start <= b.end + gap and b.start <= a.end + gap
+
+
+def _prices_in_window(window: str) -> list[Price]:
+    return [p for m in _PRICE_RE.finditer(window) if (p := _price_from_raw(m.group(0)))]
 
 
 def _modify_targets_entities(ev: MarkerEvidence, normalized: NormalizedText) -> ModifyTargetsEntities:
@@ -221,7 +312,6 @@ _ENTITY_BUILDERS: dict[str, EntityBuilder] = {
     "INVALIDATE_SETUP": lambda ev, n: InvalidateSetupEntities(reason_text=n.raw_text.strip() or None),
     "REENTER": _reenter_entities,
     "ADD_ENTRY": _add_entry_entities,
-    "MODIFY_ENTRY": _modify_entry_entities,
     "MODIFY_TARGETS": _modify_targets_entities,
     "ENTRY_FILLED": _entry_filled_entities,
     "TP_HIT": _tp_hit_entities,
