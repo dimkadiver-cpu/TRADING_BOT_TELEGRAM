@@ -253,7 +253,12 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
     if intent.type == "MODIFY_ENTRY" and isinstance(entities, ModifyEntryEntities):
         return UpdateOperation(
             op_type="MODIFY_ENTRIES",
-            modify_entries=ModifyEntriesOperation(kind=entities.mode, entries=entities.entries),
+            modify_entries=ModifyEntriesOperation(
+                kind=entities.mode,
+                entries=entities.entries,
+                entry_structure=entities.entry_structure,
+                entry_selector=entities.entry_selector,
+            ),
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
             confidence=intent.confidence,

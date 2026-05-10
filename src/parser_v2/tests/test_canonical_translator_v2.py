@@ -120,3 +120,66 @@ def test_line_level_intents_each_get_own_target():
     ids = {a.action_type: a.target_hints.telegram_message_ids for a in result.targeted_actions}
     assert ids["SET_STOP"] == [111]
     assert ids["CLOSE"] == [222]
+
+
+def test_modify_entry_propagates_entry_selector_and_structure():
+    from src.parser_v2.contracts.entities import EntryLeg, EntrySelector, ModifyEntryEntities, Price
+
+    selector = EntrySelector(role="PRIMARY", sequence=1, raw="основной вход")
+    entities = ModifyEntryEntities(
+        mode="UPDATE_PRICE",
+        entry_structure="ONE_SHOT",
+        entry_selector=selector,
+        entries=[EntryLeg(sequence=1, entry_type="LIMIT", price=Price(raw="2114", value=2114.0))],
+    )
+    intent = ParsedIntent(
+        type="MODIFY_ENTRY",
+        category="UPDATE",
+        confidence=0.9,
+        entities=entities,
+        intent_id="MODIFY_ENTRY#0",
+        occurrence_index=0,
+    )
+    parsed = _make_parsed([intent])
+    result = CanonicalTranslator().translate(parsed)
+
+    assert result.primary_class == "UPDATE"
+    ops = result.update.operations
+    assert len(ops) == 1
+    me = ops[0].modify_entries
+    assert me is not None
+    assert me.kind == "UPDATE_PRICE"
+    assert me.entry_structure == "ONE_SHOT"
+    assert me.entry_selector is not None
+    assert me.entry_selector.role == "PRIMARY"
+    assert me.entry_selector.sequence == 1
+    assert len(me.entries) == 1
+    assert me.entries[0].price.value == 2114.0
+
+
+def test_modify_entry_update_range_propagates():
+    from src.parser_v2.contracts.entities import EntryLeg, ModifyEntryEntities, Price
+
+    entities = ModifyEntryEntities(
+        mode="UPDATE_RANGE",
+        entry_structure="RANGE",
+        entries=[
+            EntryLeg(sequence=1, entry_type="LIMIT", price=Price(raw="2114", value=2114.0)),
+            EntryLeg(sequence=2, entry_type="LIMIT", price=Price(raw="2120", value=2120.0)),
+        ],
+    )
+    intent = ParsedIntent(
+        type="MODIFY_ENTRY",
+        category="UPDATE",
+        confidence=0.9,
+        entities=entities,
+        intent_id="MODIFY_ENTRY#0",
+        occurrence_index=0,
+    )
+    parsed = _make_parsed([intent])
+    result = CanonicalTranslator().translate(parsed)
+
+    me = result.update.operations[0].modify_entries
+    assert me.kind == "UPDATE_RANGE"
+    assert me.entry_structure == "RANGE"
+    assert len(me.entries) == 2
