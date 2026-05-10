@@ -4,7 +4,7 @@ import re
 from dataclasses import dataclass, field
 
 from src.parser_v2.contracts.markers import MarkerEvidence, MarkerMatch
-from src.parser_v2.contracts.rules import ParserRules, WeakContextExclusionRule
+from src.parser_v2.contracts.rules import ParserRules, WeakContextExclusionRule, MarkerContextExclusionRule
 from src.parser_v2.contracts.rules import SemanticMarkers
 
 
@@ -71,6 +71,38 @@ class MarkerEvidenceResolver:
                                 weak_match,
                                 suppressed_by=rule.name,
                                 reason=rule.reason or "weak_context_exclusion",
+                            )
+                            _append_once(applied_rules, rule.name)
+                            break
+
+        # 2b. marker_context_exclusions (unified: weak + strong)
+        if marker_resolution.marker_context_exclusions:
+            if text is None:
+                diagnostics_extra["marker_context_exclusions_skipped_no_text"] = [
+                    r.name for r in marker_resolution.marker_context_exclusions
+                ]
+            else:
+                for idx, match in enumerate(matches):
+                    if idx in suppressed:
+                        continue
+                    for rule in marker_resolution.marker_context_exclusions:
+                        target_names = (
+                            rule.marker_name
+                            if isinstance(rule.marker_name, list)
+                            else [rule.marker_name]
+                        )
+                        if match.name not in target_names:
+                            continue
+                        if match.strength != rule.strength:
+                            continue
+                        if not _rule_markers_match_ctx(rule, match, semantic_markers):
+                            continue
+                        context_text = _extract_context(text, match.start, rule)
+                        if _should_suppress_by_context(rule, context_text):
+                            suppressed[idx] = _suppressed_evidence(
+                                match,
+                                suppressed_by=rule.name,
+                                reason=rule.reason or "marker_context_exclusion",
                             )
                             _append_once(applied_rules, rule.name)
                             break
@@ -144,6 +176,32 @@ def _rule_markers_match(
         if intent_marker_set is None:
             return False
         return match.marker in intent_marker_set.weak
+    return match.marker in markers
+
+
+def _rule_markers_match_ctx(
+    rule: MarkerContextExclusionRule,
+    match: MarkerMatch,
+    semantic_markers: SemanticMarkers | None,
+) -> bool:
+    markers = rule.markers
+    if isinstance(markers, dict):
+        source = markers.get("source")
+        if source in ("semantic", "intent_weak", "intent_strong"):
+            if semantic_markers is None:
+                return True  # fallback: applica la regola
+            kind_map: dict[str, dict] = {
+                "intent": semantic_markers.intent_markers,
+                "target_hint": semantic_markers.target_hint_markers,
+                "side": semantic_markers.side_markers,
+                "entry_type": semantic_markers.entry_type_markers,
+            }
+            marker_dict = kind_map.get(str(match.kind), {})
+            marker_set = marker_dict.get(match.name)
+            if marker_set is None:
+                return True  # fallback: nessuna lista → applica
+            pool = marker_set.strong if rule.strength == "strong" else marker_set.weak
+            return match.marker in pool
     return match.marker in markers
 
 
