@@ -205,7 +205,7 @@ def _rule_markers_match_ctx(
     return match.marker in markers
 
 
-def _extract_context(text: str, marker_start: int, rule: WeakContextExclusionRule) -> str:
+def _extract_context(text: str, marker_start: int, rule: WeakContextExclusionRule | MarkerContextExclusionRule) -> str:
     scope = rule.scope
     if scope == "whole_message":
         return text
@@ -240,7 +240,7 @@ def _extract_context(text: str, marker_start: int, rule: WeakContextExclusionRul
     return text
 
 
-def _should_suppress_by_context(rule: WeakContextExclusionRule, context: str) -> bool:
+def _should_suppress_by_context(rule: WeakContextExclusionRule | MarkerContextExclusionRule, context: str) -> bool:
     condition_met = False
     if rule.if_contains_any:
         condition_met = any(phrase in context for phrase in rule.if_contains_any)
