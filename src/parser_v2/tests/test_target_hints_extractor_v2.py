@@ -1,16 +1,28 @@
 from __future__ import annotations
-import pytest
+
 from src.parser_v2.contracts.context import ParserContext, RawContext, TargetExtractionResult
 from src.parser_v2.contracts.markers import NormalizedText
-from src.parser_v2.contracts.rules import SemanticMarkers
+from src.parser_v2.contracts.rules import MarkerSet, SemanticMarkers
 from src.parser_v2.core.target_hints_extractor import TargetHintsExtractor
 
 
-def _extract(text: str, reply_id: int | None = None) -> TargetExtractionResult:
+def _extract(
+    text: str,
+    reply_id: int | None = None,
+    markers: SemanticMarkers | None = None,
+) -> TargetExtractionResult:
     raw_ctx = RawContext(raw_text=text, reply_to_message_id=reply_id)
     context = ParserContext(raw_context=raw_ctx, reply_to_message_id=reply_id)
     normalized = NormalizedText(raw_text=text, normalized_text=text.lower())
-    return TargetHintsExtractor().extract(normalized, context, SemanticMarkers())
+    return TargetHintsExtractor().extract(normalized, context, markers or SemanticMarkers())
+
+
+def _markers_with_explicit_id(*values: str) -> SemanticMarkers:
+    return SemanticMarkers(
+        target_hint_markers={
+            "explicit_id": MarkerSet(strong=list(values)),
+        }
+    )
 
 
 def test_extract_returns_extraction_result():
@@ -64,3 +76,74 @@ def test_extract_target_source_set_on_message_hints():
 def test_extract_reply_target_source_when_no_link():
     result = _extract("стоп в бу", reply_id=100)
     assert result.message_target_hints.target_source == "REPLY"
+
+
+def test_extract_signal_id_with_hashtag_becomes_explicit_id():
+    result = _extract("Signal ID: #a15", markers=_markers_with_explicit_id("Signal ID: #a"))
+    assert result.message_target_hints.explicit_ids == ["a15"]
+    assert result.message_target_hints.target_source == "MESSAGE_EXPLICIT_ID"
+
+
+def test_extract_multiple_signal_ids_with_hashtags():
+    result = _extract(
+        "Signal ID: #a15 #a16",
+        markers=_markers_with_explicit_id("Signal ID: #a"),
+    )
+    assert result.message_target_hints.explicit_ids == ["a15", "a16"]
+
+
+def test_extract_multiple_signal_ids_without_hashtags():
+    result = _extract(
+        "Signal ID: a15 a16",
+        markers=_markers_with_explicit_id("Signal ID: a"),
+    )
+    assert result.message_target_hints.explicit_ids == ["a15", "a16"]
+
+
+def test_extract_standalone_hashtag_id_becomes_explicit_id():
+    result = _extract("#a15", markers=_markers_with_explicit_id("#a"))
+    assert result.message_target_hints.explicit_ids == ["a15"]
+    assert result.message_target_hints.target_source == "MESSAGE_EXPLICIT_ID"
+
+
+def test_extract_multiple_standalone_hashtag_ids_become_explicit_ids():
+    result = _extract("#b7 #d32", markers=_markers_with_explicit_id("#a"))
+    assert result.message_target_hints.explicit_ids == ["b7", "d32"]
+
+
+def test_extract_explicit_ids_not_emitted_without_explicit_id_markers():
+    result = _extract("Signal ID: #a15 #b7")
+    assert result.message_target_hints.explicit_ids == []
+
+
+def test_extract_numeric_signal_id_with_hashtag_becomes_explicit_id():
+    result = _extract("Signal ID:#2205", markers=_markers_with_explicit_id("Signal ID:#0"))
+    assert result.message_target_hints.explicit_ids == ["2205"]
+
+
+def test_extract_standalone_numeric_hashtag_id_becomes_explicit_id():
+    result = _extract("#2205", markers=_markers_with_explicit_id("#0"))
+    assert result.message_target_hints.explicit_ids == ["2205"]
+
+
+def test_scope_hint_ignored_when_telegram_message_ids_present():
+    from src.parser_v2.contracts.context import ParserContext, RawContext
+    from src.parser_v2.core.runtime import UniversalParserRuntime
+    from src.parser_v2.profiles.trader_a.profile import TraderAProfile
+
+    text = (
+        "[trader#A]\n\n"
+        "XRP - https://t.me/c/3171748254/822 3.94% прибыли\n"
+        "ENA - https://t.me/c/3171748254/856 убыток 9.32\n"
+        "LDO - https://t.me/c/3171748254/861 прибыль 4.2%\n"
+        "SHIB - https://t.me/c/3171748254/870 прибыль 3.4%\n\n"
+        "Эти монеты закрываю по текущим, так как нет времени за ними следить\n\n"
+        "p.s. проценты указал без учета усреднения. "
+        "кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше"
+    )
+    context = ParserContext(raw_context=RawContext(raw_text=text))
+    result = UniversalParserRuntime().parse(text, context, TraderAProfile())
+
+    assert result.target_hints is not None
+    assert len(result.target_hints.telegram_message_ids) == 4
+    assert result.target_hints.scope_hint != "ALL_SHORT"

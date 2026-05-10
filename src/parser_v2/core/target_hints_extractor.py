@@ -4,8 +4,6 @@ import re
 from collections.abc import Iterable
 from typing import TypeVar
 
-_T = TypeVar("_T")
-
 from src.parser_v2.contracts.context import (
     ParserContext,
     TargetCandidate,
@@ -17,18 +15,16 @@ from src.parser_v2.contracts.markers import NormalizedText
 from src.parser_v2.contracts.rules import MarkerSet, SemanticMarkers
 from src.parser_v2.core.symbol_normalizer import normalize_symbol
 
+_T = TypeVar("_T")
+
 
 TELEGRAM_LINK_RE = re.compile(
     r"\b(?:https?://)?t\.me/(?:c/\d+|[a-zA-Z0-9_]+)/\d+\b",
     re.IGNORECASE,
 )
-EXPLICIT_ID_PATTERNS = (
-    re.compile(r"\bsignal\s+id\s*:?\s*([a-z0-9_-]+)", re.IGNORECASE),
-    re.compile(r"\bсигнал\s+id\s*:?\s*([a-z0-9_-]+)", re.IGNORECASE),
-    re.compile(r"\bid\s+сигнала\s*:?\s*([a-z0-9_-]+)", re.IGNORECASE),
-)
 TOKEN_RE = re.compile(r"#?[a-z0-9][a-z0-9._-]*", re.IGNORECASE)
 TRAILING_LINK_CHARS = ".,;:!?)]}\"'"
+_EXPLICIT_ID_SAMPLE_SUFFIX_RE = re.compile(r"(#?(?:[a-z]|0))$", re.IGNORECASE)
 SCOPE_HINTS: set[str] = {
     "SINGLE_SIGNAL", "SYMBOL", "ALL_LONG", "ALL_SHORT",
     "ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING",
@@ -80,7 +76,7 @@ class TargetHintsExtractor:
         if reply_id is not None:
             candidates.append(TargetCandidate(source="REPLY", value=reply_id))
 
-        explicit_ids = _dedup(_extract_explicit_ids(normalized.normalized_text))
+        explicit_ids = _dedup(_extract_explicit_ids(normalized.normalized_text, markers))
         for eid in explicit_ids:
             candidates.append(TargetCandidate(source="MESSAGE_EXPLICIT_ID", value=eid))
 
@@ -89,6 +85,12 @@ class TargetHintsExtractor:
             candidates.append(TargetCandidate(source="SYMBOL", value=sym))
 
         scope_hint = _extract_scope_hint(normalized.normalized_text, markers)
+
+        # Se il messaggio punta già a signal specifici via link, lo scope_hint testuale
+        # (es. "по шортам" in un p.s.) è informativo e non deve diventare scope dell'azione.
+        effective_scope_hint: ScopeHint = scope_hint
+        if message_ids and scope_hint not in ("UNKNOWN", "SINGLE_SIGNAL"):
+            effective_scope_hint = "UNKNOWN"
 
         target_source: TargetSource = "UNKNOWN"
         if message_ids:
@@ -99,7 +101,7 @@ class TargetHintsExtractor:
             target_source = "REPLY"
         elif symbols:
             target_source = "SYMBOL"
-        elif scope_hint not in ("UNKNOWN", "SINGLE_SIGNAL"):
+        elif effective_scope_hint not in ("UNKNOWN", "SINGLE_SIGNAL"):
             target_source = "GLOBAL_SCOPE"
 
         message_target_hints = TargetHints(
@@ -109,7 +111,7 @@ class TargetHintsExtractor:
             telegram_message_ids=message_ids,
             explicit_ids=explicit_ids,
             symbols=symbols,
-            scope_hint=scope_hint,
+            scope_hint=effective_scope_hint,
         )
 
         return TargetExtractionResult(
@@ -131,10 +133,49 @@ def _message_id_from_link(link: str) -> int | None:
     return int(tail) if tail.isdigit() else None
 
 
-def _extract_explicit_ids(text: str) -> Iterable[str]:
-    for pattern in EXPLICIT_ID_PATTERNS:
-        for match in pattern.finditer(text):
-            yield match.group(1)
+def _extract_explicit_ids(text: str, markers: SemanticMarkers) -> Iterable[str]:
+    explicit_markers = (
+        markers.target_hint_markers.get("explicit_id")
+        or markers.target_hint_markers.get("EXPLICIT_ID")
+    )
+    if explicit_markers is None:
+        return []
+
+    for marker in _marker_values(explicit_markers):
+        value = marker.strip().lower()
+        if not value:
+            continue
+
+        suffix_match = _EXPLICIT_ID_SAMPLE_SUFFIX_RE.search(value)
+        if suffix_match is None:
+            prefix = value
+            token_pattern = r"#?(?:[a-z]\d+|\d+)"
+        else:
+            sample = suffix_match.group(1)
+            prefix = value[:-len(sample)]
+            sample_body = sample.lstrip("#")
+            if sample_body == "0":
+                token_pattern = r"#\d+" if sample.startswith("#") else r"\d+"
+            else:
+                token_pattern = r"#[a-z]\d+" if sample.startswith("#") else r"[a-z]\d+"
+
+        if prefix:
+            pattern = re.compile(
+                re.escape(prefix) + rf"((?:{token_pattern})(?:\s+(?:{token_pattern}))*)",
+                re.IGNORECASE,
+            )
+            for match in pattern.finditer(text):
+                for token in re.findall(token_pattern, match.group(1), re.IGNORECASE):
+                    cleaned = token.lstrip("#")
+                    if cleaned:
+                        yield cleaned
+            continue
+
+        standalone_pattern = re.compile(rf"(?<!\w)({token_pattern})\b", re.IGNORECASE)
+        for match in standalone_pattern.finditer(text):
+            cleaned = match.group(1).lstrip("#")
+            if cleaned:
+                yield cleaned
 
 
 def _extract_symbols(text: str, markers: SemanticMarkers) -> Iterable[str]:
