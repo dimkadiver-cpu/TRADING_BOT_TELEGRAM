@@ -31,12 +31,21 @@ EntryStructure = Literal["ONE_SHOT", "TWO_STEP", "RANGE", "LADDER"]
 EntryType = Literal["MARKET", "LIMIT"]
 EntryRole = Literal["PRIMARY", "AVERAGING", "UNKNOWN"]
 
-ModifyEntryMode = Literal["MARKET_NOW", "UPDATE_PRICE", "REMOVE", "UNKNOWN"]
+ModifyEntryMode = Literal[
+    "MARKET_NOW",
+    "UPDATE_PRICE",
+    "UPDATE_RANGE",
+    "REPLACE_ENTRY",
+    "REMOVE",
+    "UNKNOWN",
+]
 ModifyEntriesOperationKind = Literal[
     "ADD",
     "REENTER",
     "MARKET_NOW",
     "UPDATE_PRICE",
+    "UPDATE_RANGE",
+    "REPLACE_ENTRY",
     "REMOVE",
     "UNKNOWN",
 ]
@@ -73,6 +82,7 @@ MarkerKind = Literal[
     "side",
     "entry_type",
     "modify_entry_mode",
+    "entry_selector",
     "info",
     "target_hint",
 ]
