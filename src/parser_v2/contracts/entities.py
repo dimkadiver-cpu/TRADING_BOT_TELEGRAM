@@ -143,10 +143,20 @@ class AddEntryEntities(IntentEntities):
     entry_type: EntryType | None = None
 
 
+class EntrySelector(ContractModel):
+    role: EntryRole | None = None
+    sequence: int | None = Field(default=None, ge=1)
+    label: str | None = None
+    raw: str | None = None
+
+
 class ModifyEntryEntities(IntentEntities):
     mode: ModifyEntryMode = "UNKNOWN"
+    entry_selector: EntrySelector | None = None
     entries: list[EntryLeg] = Field(default_factory=list)
+    entry_structure: EntryStructure | None = None
     raw_mode_marker: str | None = None
+    raw_selector_marker: str | None = None
 
 
 class ModifyTargetsEntities(IntentEntities):

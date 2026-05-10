@@ -48,3 +48,32 @@ def test_parsed_intent_rejects_negative_occurrence_index():
     from pydantic import ValidationError
     with pytest.raises(ValidationError):
         _make_intent(occurrence_index=-1)
+
+
+def test_entry_selector_instantiation():
+    from src.parser_v2.contracts.entities import EntrySelector
+    s = EntrySelector(role="PRIMARY", sequence=1, raw="основной вход")
+    assert s.role == "PRIMARY"
+    assert s.sequence == 1
+    assert s.label is None
+
+
+def test_entry_selector_empty():
+    from src.parser_v2.contracts.entities import EntrySelector
+    s = EntrySelector()
+    assert s.role is None
+    assert s.sequence is None
+
+
+def test_modify_entry_entities_new_fields():
+    from src.parser_v2.contracts.entities import EntrySelector, ModifyEntryEntities
+    e = ModifyEntryEntities(
+        mode="UPDATE_RANGE",
+        entry_structure="RANGE",
+        entry_selector=EntrySelector(role="PRIMARY", sequence=1, raw="основной вход"),
+        raw_selector_marker="основной вход",
+    )
+    assert e.mode == "UPDATE_RANGE"
+    assert e.entry_selector.role == "PRIMARY"
+    assert e.entry_structure == "RANGE"
+    assert e.raw_selector_marker == "основной вход"
