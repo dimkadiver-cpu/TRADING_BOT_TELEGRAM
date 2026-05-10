@@ -110,3 +110,37 @@ def test_marker_resolution_rules_accepts_marker_context_exclusion():
     )
     rules = MarkerResolutionRules(marker_context_exclusions=[rule])
     assert len(rules.marker_context_exclusions) == 1
+
+
+def test_semantic_markers_accepts_entry_selector_markers():
+    from src.parser_v2.contracts.rules import SemanticMarkers, MarkerSet
+    sm = SemanticMarkers(
+        entry_selector_markers={
+            "PRIMARY": MarkerSet(strong=["основной вход", "первый вход"], weak=[]),
+            "AVERAGING": MarkerSet(strong=["усреднение"], weak=[]),
+        },
+    )
+    assert "PRIMARY" in sm.entry_selector_markers
+    assert sm.entry_selector_markers["PRIMARY"].strong == ["основной вход", "первый вход"]
+
+
+def test_marker_matcher_produces_entry_selector_evidence():
+    from src.parser_v2.core.marker_matcher import MarkerMatcher
+    from src.parser_v2.contracts.markers import NormalizedText
+    from src.parser_v2.contracts.rules import SemanticMarkers, MarkerSet
+
+    sm = SemanticMarkers(
+        entry_selector_markers={
+            "PRIMARY": MarkerSet(strong=["основной вход"], weak=[]),
+        },
+    )
+    normalized = NormalizedText(
+        raw_text="основной вход переносим на 2114",
+        normalized_text="основной вход переносим на 2114",
+        lines=["основной вход переносим на 2114"],
+    )
+    matches = MarkerMatcher().match(normalized, sm)
+    selector_matches = [m for m in matches if m.kind == "entry_selector"]
+    assert len(selector_matches) == 1
+    assert selector_matches[0].name == "PRIMARY"
+    assert selector_matches[0].marker == "основной вход"

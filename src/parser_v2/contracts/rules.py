@@ -24,6 +24,7 @@ class SemanticMarkers(RulesModel):
     side_markers: dict[Side, MarkerSet] = Field(default_factory=dict)
     entry_type_markers: dict[EntryType, MarkerSet] = Field(default_factory=dict)
     modify_entry_mode_markers: dict[ModifyEntryMode, MarkerSet] = Field(default_factory=dict)
+    entry_selector_markers: dict[str, MarkerSet] = Field(default_factory=dict)
     info_markers: dict[str, MarkerSet] = Field(default_factory=dict)
     target_hint_markers: dict[str, MarkerSet] = Field(default_factory=dict)
     ignore_markers: list[str] = Field(default_factory=list)

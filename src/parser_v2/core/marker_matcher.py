@@ -49,6 +49,7 @@ def _iter_marker_groups(
         ("side", markers.side_markers),
         ("entry_type", markers.entry_type_markers),
         ("modify_entry_mode", markers.modify_entry_mode_markers),
+        ("entry_selector", markers.entry_selector_markers),
         ("info", markers.info_markers),
         ("target_hint", markers.target_hint_markers),
     )
