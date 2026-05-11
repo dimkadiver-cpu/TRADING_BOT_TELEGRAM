@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any
+from typing import Any, Literal
 
 from src.parser.canonical_v1.models import (
     EntryLeg,
@@ -36,6 +36,8 @@ _PRICE_CAPTURE = r"\d[\d\s]*(?:[.,]\d+)?"
 
 _SYMBOL_RE = re.compile(r"(?:#|\$)?(?P<symbol>[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b", re.IGNORECASE)
 _ENTRY_CURRENT_RE = re.compile(r"вход\s+с\s+текущих\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
+# Detects MARKET marker without requiring a price — _ENTRY_CURRENT_RE needs a numeric value.
+_MARKET_MARKER_ONLY_RE = re.compile(r"вход\s+с\s+текущих", re.IGNORECASE)
 _ENTRY_LIMIT_RE = re.compile(r"(?:вход|entry)\s+(?:лимиткой|лимитным\s+ордером)?\s*:?\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _ENTRY_SIMPLE_RE = re.compile(r"(?:^|\n)\s*(?:[-—•]\s*)?(?:entry|вход)\s*[:=@-]\s*(?P<value>" + _PRICE_CAPTURE + r")", re.IGNORECASE)
 _ENTRY_AB_RE = re.compile(
@@ -291,7 +293,7 @@ def _extract_entries(text: str) -> list[EntryLeg]:
             entry_type = "MARKET" if sequence == 1 and "текущ" in qual else "LIMIT"
             role = "PRIMARY" if label in {"a", "а"} or sequence == 1 else "AVERAGING"
             price = _price_from_match(match.group("value"))
-            if price is None:
+            if price is None and entry_type == "LIMIT":
                 continue
             entries.append(
                 EntryLeg(
@@ -306,13 +308,21 @@ def _extract_entries(text: str) -> list[EntryLeg]:
             return entries
 
     primary = _search_price(_ENTRY_CURRENT_RE, text)
-    primary_type = "MARKET"
-    if primary is None:
-        primary = _search_price(_ENTRY_LIMIT_RE, text) or _search_price(_ENTRY_SIMPLE_RE, text)
-        primary_type = "LIMIT"
-    averaging = _search_price(_AVERAGING_RE, text)
+    has_market_marker = bool(_MARKET_MARKER_ONLY_RE.search(text))
 
     if primary is not None:
+        primary_type: Literal["MARKET", "LIMIT"] = "MARKET"
+    elif has_market_marker:
+        primary_type = "MARKET"
+        # primary rimane None — entry at market, nessun livello numerico specificato.
+        # Il marker MARKET ha priorità: eventuali pattern LIMIT nel testo vengono ignorati.
+    else:
+        primary = _search_price(_ENTRY_LIMIT_RE, text) or _search_price(_ENTRY_SIMPLE_RE, text)
+        primary_type = "LIMIT"
+
+    averaging = _search_price(_AVERAGING_RE, text)
+
+    if primary is not None or has_market_marker:
         entries.append(
             EntryLeg(
                 sequence=1,
