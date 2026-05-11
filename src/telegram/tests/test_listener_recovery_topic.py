@@ -32,10 +32,16 @@ def _listener(config: ChannelsConfig) -> TelegramListener:
     )
 
 
-def _reply_to(*, forum_topic: bool, reply_to_top_id: int | None) -> object:
+def _reply_to(
+    *,
+    forum_topic: bool,
+    reply_to_top_id: int | None,
+    reply_to_msg_id: int | None = None,
+) -> object:
     rt = MagicMock()
     rt.forum_topic = forum_topic
     rt.reply_to_top_id = reply_to_top_id
+    rt.reply_to_msg_id = reply_to_msg_id
     return rt
 
 
@@ -206,6 +212,44 @@ async def test_catchup_enqueues_correct_topic_message() -> None:
     assert lst._queue.qsize() == 1
     item = await lst._queue.get()
     assert item.source_topic_id == 3
+
+
+@pytest.mark.asyncio
+async def test_catchup_synthetic_topic_root_is_not_saved_as_reply_target() -> None:
+    """Telethon root-topic references are topic provenance, not real replies."""
+    cfg = _cfg([_entry(-1001, topic_id=3)])
+    lst = _listener(cfg)
+    lst._status_store.get_last_telegram_message_id.return_value = 0
+    lst._ingestion.ingest.return_value = MagicMock(saved=True, raw_message_id=6)
+
+    fake_msg = MagicMock()
+    fake_msg.id = 11
+    fake_msg.message = "root topic signal"
+    fake_msg.media = None
+    fake_msg.date = datetime.now(timezone.utc)
+    fake_msg.reply_to = _reply_to(
+        forum_topic=True,
+        reply_to_top_id=None,
+        reply_to_msg_id=3,
+    )
+
+    client = MagicMock()
+    client.get_messages = AsyncMock(return_value=[fake_msg])
+
+    import src.telegram.listener as listener_mod
+    orig = listener_mod.Message
+    listener_mod.Message = type(fake_msg)
+    try:
+        await lst._catchup_from_telegram(client)
+    finally:
+        listener_mod.Message = orig
+
+    call_args = lst._ingestion.ingest.call_args[0][0]
+    item = await lst._queue.get()
+    assert call_args.source_topic_id == 3
+    assert call_args.reply_to_message_id is None
+    assert item.source_topic_id == 3
+    assert item.reply_to_message_id is None
 
 
 @pytest.mark.asyncio

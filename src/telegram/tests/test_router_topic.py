@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from src.telegram.channel_config import ChannelEntry, ChannelsConfig
 from src.telegram.effective_trader import EffectiveTraderResult
 from src.telegram.router import MessageRouter, QueueItem, is_blacklisted_text
+from src.parser.trader_profiles.base import ParserContext, TraderParseResult
 
 
 def _cfg(
@@ -241,3 +242,32 @@ def test_resolve_trader_primary_resolver_wins_over_entry_fallback() -> None:
 
     assert result.trader_id == "primary_trader"
     assert result.method == "signal_id"
+
+
+def test_route_passes_source_topic_id_to_parser_context() -> None:
+    class CapturingProfile:
+        captured_context: ParserContext | None = None
+
+        def parse_message(self, text: str, context: ParserContext) -> TraderParseResult:
+            self.captured_context = context
+            return TraderParseResult(message_type="INFO_ONLY", confidence=1.0)
+
+    profile = CapturingProfile()
+    router = _router(_cfg([_entry(-1001, topic_id=3, trader_id="trader_a")]))
+    router._trader_resolver.resolve.return_value = EffectiveTraderResult(
+        trader_id="trader_a",
+        method="config",
+        detail=None,
+    )
+    router._eligibility.evaluate.return_value = MagicMock(
+        status="ACQUIRED_ELIGIBLE",
+        reason="eligible",
+        strong_link_method=None,
+    )
+
+    with patch("src.telegram.router.get_profile_parser", return_value=profile):
+        router.route(_item(source_topic_id=3))
+
+    assert profile.captured_context is not None
+    assert profile.captured_context.source_topic_id == 3
+    assert profile.captured_context.reply_to_message_id is None

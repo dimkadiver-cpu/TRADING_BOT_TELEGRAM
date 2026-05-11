@@ -375,6 +375,7 @@ def _build_raw_context(context: ParserContext) -> RawContext:
         extracted_links=list(context.extracted_links or []),
         hashtags=list(context.hashtags or []),
         source_chat_id=str(context.channel_id) if context.channel_id is not None else None,
+        source_topic_id=context.source_topic_id,
     )
 
 

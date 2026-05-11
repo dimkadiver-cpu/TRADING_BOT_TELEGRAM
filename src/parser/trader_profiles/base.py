@@ -19,6 +19,7 @@ class ParserContext:
     reply_raw_text: str | None = None
     extracted_links: list[str] = field(default_factory=list)
     hashtags: list[str] = field(default_factory=list)
+    source_topic_id: int | None = None
 
 
 @dataclass(slots=True)

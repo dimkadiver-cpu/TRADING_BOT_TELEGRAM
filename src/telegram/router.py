@@ -266,6 +266,7 @@ class MessageRouter:
             reply_raw_text=reply_raw_text,
             extracted_links=_extract_links(item.raw_text),
             hashtags=_extract_hashtags(item.raw_text),
+            source_topic_id=item.source_topic_id,
         )
         result = profile_parser.parse_message(text=item.raw_text, context=context)
 

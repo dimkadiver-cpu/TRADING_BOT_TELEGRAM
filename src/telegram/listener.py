@@ -26,7 +26,7 @@ from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.storage.review_queue import ReviewQueueStore
 from src.telegram.channel_config import ChannelsConfig
-from src.telegram.topic_utils import extract_message_topic_id
+from src.telegram.topic_utils import extract_message_topic_id, extract_real_reply_to_message_id
 from src.telegram.effective_trader import EffectiveTraderResolver
 from src.telegram.eligibility import MessageEligibilityEvaluator
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
@@ -168,7 +168,10 @@ class TelegramListener:
                         min_last_id,
                     )
                 for msg in catchup_messages:
-                    topic_id = extract_message_topic_id(msg)
+                    topic_id = extract_message_topic_id(
+                        msg,
+                        known_topic_ids=_known_topic_ids(entries),
+                    )
                     if not self._is_allowed_message(chat_id, topic_id):
                         continue
                     await self._ingest_and_enqueue(
@@ -239,7 +242,7 @@ class TelegramListener:
     ) -> None:
         message: Message = event.message
         chat_id_raw = int(event.chat_id) if event.chat_id is not None else None
-        topic_id = extract_message_topic_id(message)
+        topic_id = self._extract_topic_id(chat_id_raw, message)
 
         if not self._is_allowed_message(chat_id_raw, topic_id):
             return
@@ -329,10 +332,9 @@ class TelegramListener:
             )
             return
 
-        reply_to_message_id = (
-            int(message.reply_to.reply_to_msg_id)
-            if message.reply_to and getattr(message.reply_to, "reply_to_msg_id", None)
-            else None
+        reply_to_message_id = extract_real_reply_to_message_id(
+            message,
+            source_topic_id=source_topic_id,
         )
         await self._queue.put(
             _QueueItem(
@@ -371,6 +373,12 @@ class TelegramListener:
     def _is_blacklisted(self, raw_text: str, chat_id: int | None, topic_id: int | None = None) -> bool:
         return is_blacklisted_text(self._config, raw_text, chat_id, topic_id)
 
+    def _extract_topic_id(self, chat_id: int | None, message: Message) -> int | None:
+        if chat_id is None:
+            return extract_message_topic_id(message)
+        entries = [entry for entry in self._config.active_channels if entry.chat_id == chat_id]
+        return extract_message_topic_id(message, known_topic_ids=_known_topic_ids(entries))
+
 
 def _is_media_only(message: Message) -> bool:
     return message.media is not None and not bool(message.message)
@@ -398,10 +406,9 @@ def _build_incoming(
         source_type=_resolve_source_type(chat_title, chat_username),
         source_trader_id=trader_id,
         telegram_message_id=int(message.id),
-        reply_to_message_id=(
-            int(message.reply_to.reply_to_msg_id)
-            if message.reply_to and getattr(message.reply_to, "reply_to_msg_id", None)
-            else None
+        reply_to_message_id=extract_real_reply_to_message_id(
+            message,
+            source_topic_id=source_topic_id,
         ),
         raw_text=message.message,
         message_ts=message.date or datetime.now(timezone.utc),
@@ -416,3 +423,12 @@ def _resolve_source_type(chat_title: str | None, chat_username: str | None) -> s
     if chat_username:
         return "user"
     return None
+
+
+def _known_topic_ids(entries: Iterable[object]) -> set[int]:
+    return {
+        topic_id
+        for entry in entries
+        for topic_id in [getattr(entry, "topic_id", None)]
+        if isinstance(topic_id, int)
+    }

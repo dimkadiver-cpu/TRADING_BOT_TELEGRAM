@@ -18,10 +18,16 @@ from src.telegram.topic_utils import extract_message_topic_id
 # ---------------------------------------------------------------------------
 
 
-def _reply_to(*, forum_topic: bool, reply_to_top_id: int | None) -> object:
+def _reply_to(
+    *,
+    forum_topic: bool,
+    reply_to_top_id: int | None,
+    reply_to_msg_id: int | None = None,
+) -> object:
     rt = MagicMock()
     rt.forum_topic = forum_topic
     rt.reply_to_top_id = reply_to_top_id
+    rt.reply_to_msg_id = reply_to_msg_id
     return rt
 
 
@@ -43,10 +49,22 @@ def test_extract_named_topic() -> None:
     assert extract_message_topic_id(msg) == 3
 
 
+def test_extract_topic_root_from_synthetic_reply_to_msg_id() -> None:
+    msg = MagicMock()
+    msg.reply_to = _reply_to(forum_topic=True, reply_to_top_id=None, reply_to_msg_id=3)
+    assert extract_message_topic_id(msg, known_topic_ids={3}) == 3
+
+
 def test_extract_general_topic_no_top_id() -> None:
     msg = MagicMock()
     msg.reply_to = _reply_to(forum_topic=True, reply_to_top_id=None)
     assert extract_message_topic_id(msg) == 1
+
+
+def test_extract_general_topic_with_real_reply_when_topic_id_is_not_configured() -> None:
+    msg = MagicMock()
+    msg.reply_to = _reply_to(forum_topic=True, reply_to_top_id=None, reply_to_msg_id=4894)
+    assert extract_message_topic_id(msg, known_topic_ids={3}) == 1
 
 
 def test_extract_general_topic_explicit_id_1() -> None:
@@ -250,6 +268,46 @@ async def test_source_topic_id_forwarded_to_ingestion() -> None:
 
     call_args = lst._ingestion.ingest.call_args[0][0]
     assert call_args.source_topic_id == 3
+
+
+@pytest.mark.asyncio
+async def test_synthetic_topic_root_is_not_saved_as_reply_target() -> None:
+    lst = _listener(_cfg([_entry(-1001, topic_id=3)]))
+    lst._ingestion.ingest.return_value = MagicMock(saved=True, raw_message_id=8)
+    event = _make_event(
+        -1001,
+        "root topic signal",
+        _reply_to(forum_topic=True, reply_to_top_id=None, reply_to_msg_id=3),
+    )
+
+    await lst._handle_new_message(event, acquisition_mode="live")
+
+    call_args = lst._ingestion.ingest.call_args[0][0]
+    item = await lst._queue.get()
+    assert call_args.source_topic_id == 3
+    assert call_args.reply_to_message_id is None
+    assert item.source_topic_id == 3
+    assert item.reply_to_message_id is None
+
+
+@pytest.mark.asyncio
+async def test_real_reply_inside_topic_keeps_reply_target_and_topic_provenance() -> None:
+    lst = _listener(_cfg([_entry(-1001, topic_id=3)]))
+    lst._ingestion.ingest.return_value = MagicMock(saved=True, raw_message_id=9)
+    event = _make_event(
+        -1001,
+        "reply update",
+        _reply_to(forum_topic=True, reply_to_top_id=3, reply_to_msg_id=4894),
+    )
+
+    await lst._handle_new_message(event, acquisition_mode="live")
+
+    call_args = lst._ingestion.ingest.call_args[0][0]
+    item = await lst._queue.get()
+    assert call_args.source_topic_id == 3
+    assert call_args.reply_to_message_id == 4894
+    assert item.source_topic_id == 3
+    assert item.reply_to_message_id == 4894
 
 
 # ---------------------------------------------------------------------------
