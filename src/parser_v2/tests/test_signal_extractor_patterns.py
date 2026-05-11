@@ -98,6 +98,27 @@ def test_entry_paren_qualifier_rynok_produces_market_entry() -> None:
     assert signal.entries[0].entry_type == "MARKET"
 
 
+def test_market_hint_no_price_produces_market_leg_price_none() -> None:
+    """Case 533: 'Вход: по текущим' — no numeric price at all.
+    market_hint=True from evidence must produce EntryLeg(MARKET, price=None)."""
+    text = "$ETHUSDT - Лонг\nВход: по текущим\nТейк профит: 2160\nСтоп лосс: 1972"
+    signal = _extract(text, market_hint=True)
+    assert signal is not None
+    assert len(signal.entries) == 1
+    leg = signal.entries[0]
+    assert leg.entry_type == "MARKET"
+    assert leg.price is None
+
+
+def test_no_market_hint_no_price_produces_no_entry() -> None:
+    """Without market_hint, 'Вход: по текущим' yields no entry (no number to parse)."""
+    text = "$ETHUSDT - Лонг\nВход: по текущим\nТейк профит: 2160\nСтоп лосс: 1972"
+    signal = _extract(text, market_hint=False)
+    # SL and TP still parsed, so signal is not None but entries is empty
+    assert signal is not None
+    assert signal.entries == []
+
+
 def test_extracts_bare_take_profit_lines_under_tps_header() -> None:
     text = (
         "[trader#A]\n\n"

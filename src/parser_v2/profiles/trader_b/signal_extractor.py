@@ -174,7 +174,7 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
         primary = _search_price(_ENTRY_RE, text)
         primary_type = "MARKET" if market_hint else "LIMIT"
 
-    if primary is not None:
+    if primary is not None or market_hint:
         entries.append(
             EntryLeg(
                 sequence=1,
