@@ -162,6 +162,7 @@ class TestTraderBCanonicalNewSignal(unittest.TestCase):
         text = "$BTCUSDT - Лонг\nвход с текущих: 90000\nСтоп лосс: 89000\nТП1: 93000"
         msg = self.parser.parse_canonical(text, _ctx(text=text))
         assert msg.signal is not None
+        self.assertEqual(len(msg.signal.entries), 1)
         leg = msg.signal.entries[0]
         self.assertEqual(leg.entry_type, "MARKET")
         self.assertIsNotNone(leg.price)
