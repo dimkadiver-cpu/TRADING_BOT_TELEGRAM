@@ -96,6 +96,14 @@ class CanonicalTranslator:
             ]
             intent_op_pairs = [(i, op) for i, op in intent_op_pairs if op is not None]
 
+            for _intent, _op in intent_op_pairs:
+                if (
+                    _intent.type == "MOVE_STOP"
+                    and _op.set_stop is not None
+                    and _op.set_stop.target_type == "ENTRY"
+                ):
+                    warnings = _append_once(warnings, "move_stop_no_price_defaulted_to_be")
+
             has_any_local_target = any(
                 i.target_hints is not None for i, _ in intent_op_pairs
             )
@@ -192,7 +200,7 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         elif entities.stop_to_tp_level is not None:
             set_stop = SetStopOperation(target_type="TP_LEVEL", tp_level=entities.stop_to_tp_level)
         else:
-            return None
+            set_stop = SetStopOperation(target_type="ENTRY")
         return UpdateOperation(
             op_type="SET_STOP",
             set_stop=set_stop,

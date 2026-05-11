@@ -183,3 +183,60 @@ def test_modify_entry_update_range_propagates():
     assert me.kind == "UPDATE_RANGE"
     assert me.entry_structure == "RANGE"
     assert len(me.entries) == 2
+
+
+def test_move_stop_no_price_defaults_to_be() -> None:
+    """MOVE_STOP senza prezzo né tp_level → SET_STOP/ENTRY + warning."""
+    from src.parser_v2.contracts.entities import MoveStopEntities
+
+    intent = ParsedIntent(
+        type="MOVE_STOP",
+        category="UPDATE",
+        confidence=0.8,
+        entities=MoveStopEntities(),  # new_stop_price=None, stop_to_tp_level=None
+        intent_id="MOVE_STOP#0",
+        occurrence_index=0,
+    )
+    parsed = _make_parsed([intent])
+    result = CanonicalTranslator().translate(parsed)
+
+    assert result.parse_status == "PARSED"
+    ops = result.update.operations
+    assert len(ops) == 1
+    assert ops[0].op_type == "SET_STOP"
+    assert ops[0].set_stop is not None
+    assert ops[0].set_stop.target_type == "ENTRY"
+    assert "move_stop_no_price_defaulted_to_be" in result.warnings
+
+
+def test_move_stop_with_price_no_warning() -> None:
+    """MOVE_STOP con prezzo → comportamento invariato, nessun nuovo warning."""
+    from src.parser_v2.contracts.entities import MoveStopEntities, Price
+
+    intent = ParsedIntent(
+        type="MOVE_STOP",
+        category="UPDATE",
+        confidence=0.9,
+        entities=MoveStopEntities(new_stop_price=Price(raw="89000", value=89000.0)),
+        intent_id="MOVE_STOP#0",
+        occurrence_index=0,
+    )
+    parsed = _make_parsed([intent])
+    result = CanonicalTranslator().translate(parsed)
+
+    assert result.parse_status == "PARSED"
+    ops = result.update.operations
+    assert len(ops) == 1
+    assert ops[0].set_stop.target_type == "PRICE"
+    assert ops[0].set_stop.price.value == 89000.0
+    assert "move_stop_no_price_defaulted_to_be" not in result.warnings
+
+
+def test_move_stop_to_be_intent_no_new_warning() -> None:
+    """MOVE_STOP_TO_BE (intent distinto) non acquisisce il nuovo warning."""
+    intent = _make_intent("MOVE_STOP_TO_BE")
+    parsed = _make_parsed([intent])
+    result = CanonicalTranslator().translate(parsed)
+
+    assert result.parse_status == "PARSED"
+    assert "move_stop_no_price_defaulted_to_be" not in result.warnings
