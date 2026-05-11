@@ -1,9 +1,0 @@
-﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
-26,trader_b,INFO,UNCLASSIFIED,2237,354,314,"[trader#В]
-
-Как и ожидалось по btc, мы сняли 98k$, сейчас рассматриваю для вас новые возможности для открытия позиций, следующий пост",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
-26,trader_b,INFO,UNCLASSIFIED,2131,494,475,"Тут позиция закрылась по SL, -1%",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
-26,trader_b,INFO,UNCLASSIFIED,929,2307,2300,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
-26,trader_b,INFO,UNCLASSIFIED,928,2308,2300,"[trader #B]
-
-Небольшие изменения!",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""explicit_id/strong:#b@8:10""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"

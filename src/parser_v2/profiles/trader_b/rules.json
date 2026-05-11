@@ -26,7 +26,7 @@
         "intent": "REENTER",
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
-        "if_contains_any": ["не перезаходим"],
+        "if_contains_any": ["не перезаходим","покажет - перезайдем"],
         "reason": "false_positive_weak_markers_in_reenter_context"
       },
       {
@@ -36,7 +36,7 @@
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
         "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись", "закрыть сделку в бу",
-         "закрыть позицию в бу","закрываем в бу"],
+         "закрыть позицию в бу","закрываем в бу","закрыто в бу","закрыт в бу"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -120,7 +120,7 @@
       },
       {
         "if_strong": "SL_HIT",
-        "suppress_weak": ["MOVE_STOP", "MOVE_STOP_TO_BE"],
+        "suppress_weak": ["MOVE_STOP", "MOVE_STOP_TO_BE","CLOSE_FULL"],
         "reason": "sl_hit_is_report_not_command"
       },
       {

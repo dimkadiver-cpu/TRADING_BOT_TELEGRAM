@@ -80,6 +80,16 @@ python parser_test/scripts/import_history.py ^
   --default-source-trader trader_a
 ```
 
+python parser_test/scripts/import_history.py --chat-id -1003722628653 --topic-id 4 --db-name trader_B_NOW --default-source-trader trader_b
+
+python parser_test/scripts/import_history.py --chat-id -1003722628653 --topic-id 3 --db-name trader_A_NOW --default-source-trader trader_a
+
+ python parser_test/scripts/generate_parser_reports_v2.py --db-path "C:\TeleSignalBot\parser_test\db\parser_test__trader_b_now.sqlite3" --trader-filter trader_b  --parser-profile trader_b --force-reparse
+                   
+
+"C:\TeleSignalBot\parser_test\db\parser_test__trader_b_now.sqlite3"
+
+
 | Argomento | Descrizione |
 |-----------|-------------|
 | `--chat-id` | ID numerico del canale Telegram |
