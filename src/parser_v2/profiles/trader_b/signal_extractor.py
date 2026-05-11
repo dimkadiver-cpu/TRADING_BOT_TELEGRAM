@@ -46,6 +46,10 @@ _ENTRY_MARKET_PAREN_RE = re.compile(
     rf"\s*\((?=[^)]*(?:{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT}|market))[^)]*\)",
     re.IGNORECASE,
 )
+_ENTRY_KEYWORD_RE = re.compile(
+    rf"\b(?:entry|enter|vhod|{_CYR_ENTRY})\b",
+    re.IGNORECASE,
+)
 _ENTRY_RE = re.compile(
     rf"\b(?:entry|vhod|{_CYR_ENTRY})"
     rf"(?:\s+(?:limit|limitka|{_CYR_LIMIT_ROOT}\w*))?"
@@ -162,6 +166,7 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
     if ab_entries:
         return ab_entries
 
+    has_entry_keyword = bool(_ENTRY_KEYWORD_RE.search(text))
     entries: list[EntryLeg] = []
     primary_type = "MARKET"
     primary = _search_price(_ENTRY_MARKET_RE, text)
@@ -174,7 +179,7 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
         primary = _search_price(_ENTRY_RE, text)
         primary_type = "MARKET" if market_hint else "LIMIT"
 
-    if primary is not None or market_hint:
+    if primary is not None or (market_hint and has_entry_keyword):
         entries.append(
             EntryLeg(
                 sequence=1,

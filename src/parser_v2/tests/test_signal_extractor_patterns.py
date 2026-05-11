@@ -119,6 +119,21 @@ def test_no_market_hint_no_price_produces_no_entry() -> None:
     assert signal.entries == []
 
 
+def test_close_message_with_market_hint_does_not_produce_entry() -> None:
+    """Cases 77/73/66/62: 'Закрываем по текущим' has no entry keyword.
+    market_hint=True from 'по текущим' evidence must NOT emit a false EntryLeg."""
+    texts = [
+        "Закрываем по текущим в +2%, пока выглядит не уверенно",
+        "Закрываем по текущим на точке входа в БУ, топчется на месте",
+        "Закрываем по текущим в небольшой минус (-0.3%)",
+        "Закрываем по текущим в +2%",
+    ]
+    for text in texts:
+        signal = _extract(text, market_hint=True)
+        if signal is not None:
+            assert signal.entries == [], f"False entry leg for: {text!r}"
+
+
 def test_extracts_bare_take_profit_lines_under_tps_header() -> None:
     text = (
         "[trader#A]\n\n"
