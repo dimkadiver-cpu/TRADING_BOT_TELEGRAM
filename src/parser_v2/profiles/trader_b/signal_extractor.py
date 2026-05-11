@@ -41,6 +41,11 @@ _ENTRY_MARKET_RE = re.compile(
     rf"\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
     re.IGNORECASE,
 )
+_ENTRY_MARKET_PAREN_RE = re.compile(
+    rf"(?:entry|enter|vhod|{_CYR_ENTRY})\s*:?\s*(?P<value>{_NUMBER_PATTERN})"
+    rf"\s*\((?=[^)]*(?:{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT}|market))[^)]*\)",
+    re.IGNORECASE,
+)
 _ENTRY_RE = re.compile(
     rf"\b(?:entry|vhod|{_CYR_ENTRY})"
     rf"(?:\s+(?:limit|limitka|{_CYR_LIMIT_ROOT}\w*))?"
@@ -95,13 +100,13 @@ class SignalExtractor:
         self._risk_prefixes = risk_prefixes or _DEFAULT_RISK_PREFIXES
         self._risk_suffixes = risk_suffixes or _DEFAULT_RISK_SUFFIXES
 
-    def extract(self, normalized: NormalizedText) -> SignalDraft | None:
+    def extract(self, normalized: NormalizedText, market_hint: bool = False) -> SignalDraft | None:
         text = normalized.raw_text
         normalized_text = normalized.normalized_text
 
         symbol = normalize_symbol(_extract_symbol(text))
         side = _extract_side(normalized_text)
-        entries = _extract_entries(text)
+        entries = _extract_entries(text, market_hint=market_hint)
         stop_loss = _extract_stop_loss(text)
         take_profits = _extract_take_profits(text)
         risk_hint = _extract_risk_hint(text, self._risk_prefixes, self._risk_suffixes)
@@ -152,7 +157,7 @@ def _extract_side(normalized_text: str) -> str | None:
     return None
 
 
-def _extract_entries(text: str) -> list[EntryLeg]:
+def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
     ab_entries = _extract_ab_entries(text)
     if ab_entries:
         return ab_entries
@@ -161,11 +166,13 @@ def _extract_entries(text: str) -> list[EntryLeg]:
     primary_type = "MARKET"
     primary = _search_price(_ENTRY_MARKET_RE, text)
     if primary is None:
+        primary = _search_price(_ENTRY_MARKET_PAREN_RE, text)
+    if primary is None:
         primary = _search_price(_ENTRY_ORDER_RE, text)
         primary_type = "LIMIT"
     if primary is None:
         primary = _search_price(_ENTRY_RE, text)
-        primary_type = "LIMIT"
+        primary_type = "MARKET" if market_hint else "LIMIT"
 
     if primary is not None:
         entries.append(

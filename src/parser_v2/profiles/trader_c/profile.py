@@ -50,7 +50,11 @@ class TraderCProfile:
         context: ParserContext,
         evidence: list[MarkerEvidence],
     ) -> SignalDraft | None:
-        return self._signal_extractor.extract(text)
+        market_hint = any(
+            e.kind == "entry_type" and e.name == "MARKET" and not e.suppressed
+            for e in evidence
+        )
+        return self._signal_extractor.extract(text, market_hint=market_hint)
 
     def extract_intent_entities(
         self,
