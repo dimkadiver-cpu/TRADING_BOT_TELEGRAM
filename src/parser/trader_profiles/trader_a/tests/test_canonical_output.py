@@ -56,6 +56,34 @@ class TestTraderACanonicalSignal(unittest.TestCase):
         assert msg.signal is not None
         self.assertEqual(msg.signal.completeness, "INCOMPLETE")
 
+    def test_market_signal_without_price_produces_market_leg(self) -> None:
+        """MARKET entry senza prezzo numerico — price must be None, entry_type MARKET."""
+        text = "BTCUSDT long\nвход с текущих\nSL: 89000\nTP1: 93000"
+        msg = self.parser.parse_canonical(text, _ctx(text=text))
+        self.assertEqual(msg.primary_class, "SIGNAL")
+        assert msg.signal is not None
+        self.assertEqual(len(msg.signal.entries), 1)
+        leg = msg.signal.entries[0]
+        self.assertEqual(leg.entry_type, "MARKET")
+        self.assertIsNone(leg.price)
+
+    def test_market_signal_without_price_entry_structure_one_shot(self) -> None:
+        text = "BTCUSDT long\nвход с текущих\nSL: 89000\nTP1: 93000"
+        msg = self.parser.parse_canonical(text, _ctx(text=text))
+        assert msg.signal is not None
+        self.assertEqual(msg.signal.entry_structure, "ONE_SHOT")
+
+    def test_market_signal_with_price_still_works(self) -> None:
+        """Regressione: MARKET con prezzo indicativo deve funzionare come prima."""
+        text = "BTCUSDT long\nвход с текущих 90000\nSL: 89000\nTP1: 93000"
+        msg = self.parser.parse_canonical(text, _ctx(text=text))
+        assert msg.signal is not None
+        self.assertEqual(len(msg.signal.entries), 1)
+        leg = msg.signal.entries[0]
+        self.assertEqual(leg.entry_type, "MARKET")
+        self.assertIsNotNone(leg.price)
+        self.assertAlmostEqual(leg.price.value, 90000.0)
+
 
 class TestTraderACanonicalUpdate(unittest.TestCase):
     def setUp(self) -> None:
