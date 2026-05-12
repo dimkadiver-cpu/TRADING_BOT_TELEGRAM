@@ -1,90 +1,154 @@
-# Documento madre di riprogettazione — TRADING\_BOT\_TELEGRAM
+# Documento madre di riprogettazione — TRADING_BOT_TELEGRAM
 
-**Stato:** Bozza architetturale v0.1\
-**Scopo:** definire il ridisegno del progetto prima di avviare lo sviluppo del nuovo runtime.\
-**Ambito:** nuovo sistema per acquisizione messaggi Telegram, parsing con `parser_v2`, applicazione di policy/regole operative, gestione del ciclo di vita dei segnali e predisposizione all’esecuzione tramite adapter neutro.
+**Stato:** Revisione architetturale v0.2 dopo lettura di `docs/Raggionamento` e codebase.
+**Scopo:** fissare una direzione di redesign verificata sul repository, prima di aprire il nuovo runtime.
+**Ambito:** acquisizione messaggi Telegram, parser unico `parser_v2`, regole operative, lifecycle dei segnali/istruzioni, persistenza, audit e predisposizione a un execution adapter neutro.
 
 ---
 
-# 1. Obiettivo del ridisegno
+# 0. Sintesi della revisione
+
+La direzione della v0.1 è corretta: il nuovo runtime deve nascere come **clean core in parallelo**, non come ulteriore patch del router attuale.
+
+La revisione aggiunge però quattro correzioni importanti:
+
+1. `parser_v2` esiste già come pipeline autonoma e produce `CanonicalMessage` tipizzato con `schema_version = "canonical_message_v2"`; quindi il documento deve chiamarlo con il nome reale del contratto, non con un nuovo modello astratto scollegato dal codice.
+2. `parser_test` esiste già come harness v2 con `parser_runs`, `parser_results_v2`, replay, report e risoluzione trader; va elevato a strumento ufficiale di qualità del nuovo runtime.
+3. Il runtime live attuale è ancora centrato su `MessageRouter`, parser legacy `src/parser`, canonical v1, operation rules e execution Freqtrade nello stesso flusso; quindi va tenuto come baseline, ma non deve diventare il modello del clean core.
+4. I promemoria in `docs/Raggionamento` spingono verso una separazione forte tra parser/core operativo/execution. La decisione aggiornata è: **iniziare con un unico DB fisico solo se accelera la migrazione locale, ma modellare da subito bounded context e tabelle come se parser DB e ops DB fossero separabili**.
+
+---
+
+# 1. Fonti lette e fatti verificati
+
+## 1.1 Documenti letti
+
+- `docs/Raggionamento/Hummingbot_execution_lifecycle_summary.md`
+- `docs/Raggionamento/OPS_DB_Lifecycle_Workers_Summary.md`
+- `docs/Raggionamento/PROMEMORIA_DB_parser_vs_operativo.md`
+- `docs/Raggionamento/PROMEMORIA_new_operation_template_review.md`
+- `docs/Raggionamento/PROMEMORIA_regole_policy_lifecycle_execution.md`
+- `docs/Raggionamento/documento_madre_riprogettazione_trading_bot_telegram_v_0_1.md`
+- `README.md`
+- `src/parser_v2/README.md`
+
+## 1.2 Codebase verificata
+
+Aree ispezionate:
+
+- `src/telegram/` — listener, ingestion, router, topic, effective trader, eligibility;
+- `src/storage/` — raw messages, processing status, parse results, parser results v2, operational signals;
+- `src/parser_v2/` — contratti, runtime, core, translation, profili trader;
+- `parser_test/` — schema DB, replay parser v2, report, trader resolution;
+- `src/operation_rules/` — engine corrente, loader, risk calculator;
+- `src/execution/` — Freqtrade/exchange bridge, planner/applier, reconciliation;
+- `src/target_resolver/` e `src/validation/` — layer attuali accoppiati al router.
+
+## 1.3 Fatti di repository da rispettare
+
+- Il parser v2 reale produce `src.parser_v2.contracts.canonical_message.CanonicalMessage`.
+- Le classi messaggio reali sono `SIGNAL`, `UPDATE`, `REPORT`, `INFO`.
+- Gli stati parse reali sono `PARSED`, `PARTIAL`, `UNCLASSIFIED`, `ERROR`.
+- Il runtime reale è `UniversalParserRuntime` in `src/parser_v2/core/runtime.py`.
+- Il contratto canonical v2 è strict Pydantic con `extra="forbid"`.
+- `parser_test/db/schema.py` definisce già `raw_messages`, `parser_runs`, `parser_results_v2` e colonne di `resolved_trader_id`/`resolution_method`.
+- `parser_test/scripts/trader_resolution.py` riusa `EffectiveTraderResolver`, `TelegramSourceTraderMapper`, alias e profili `parser_v2`.
+- `src/telegram/router.py` importa ancora parser legacy, canonical v1, operation rules, target resolver, execution planner/applier e store operativi: è il punto principale da decomporre.
+- `src/operation_rules/engine.py` oggi contiene logiche utili di policy/risk/sizing, ma accetta formati adattati/legacy e non deve essere copiato tale e quale nel nuovo core.
+
+---
+
+# 2. Obiettivo del ridisegno
 
 Il progetto deve essere riprogettato a partire dall’esperienza accumulata, **senza trascinare nel nuovo runtime l’architettura ibrida attuale**.
 
 Il nuovo sistema deve:
 
 1. mantenere la logica valida di ascolto/acquisizione Telegram;
-2. usare **solo **`` come parser del runtime nuovo;
-3. mantenere e consolidare `` come harness ufficiale di replay, sviluppo e regressione del parser;
+2. usare **solo `parser_v2`** come parser del runtime nuovo;
+3. mantenere e consolidare **`parser_test`** come harness ufficiale di replay, sviluppo e regressione del parser;
 4. rifare il layer delle **operation rules** affinché lavori direttamente sul contratto canonico di `parser_v2`;
 5. introdurre un layer esplicito di **lifecycle / signal state management**;
-6. predisporre un **execution adapter neutro**, senza accoppiare il dominio interno a Hummingbot, OctoBot o altri motori;
+6. predisporre un **execution adapter neutro**, senza accoppiare il dominio interno a Hummingbot, Freqtrade, OctoBot o altri motori;
 7. semplificare la persistenza, distinguendo chiaramente:
    - messaggi acquisiti;
    - output parser;
    - decisioni operative;
    - stato dei segnali/istruzioni;
-   - eventi di esecuzione e audit.
+   - richieste/eventi di esecuzione;
+   - audit/review.
 
 ---
 
-# 2. Principio guida
+# 3. Principio guida
 
-## 2.1 Il progetto attuale non è la base architetturale del nuovo
+## 3.1 Il runtime attuale non è lo scheletro del nuovo sistema
 
 Il repository attuale va trattato come:
 
 - **prototipo avanzato**;
 - **fonte di logiche validate**;
 - **fonte di test e casi reali**;
-- **fonte di moduli riusabili selettivamente**.
+- **fonte di contratti/parsers riusabili selettivamente**;
+- **baseline funzionante** per confrontare regressioni.
 
 Non va trattato come uno scheletro da continuare a patchare.
 
-## 2.2 Strategia adottata
+## 3.2 Strategia adottata
 
-La strategia consigliata è:
+La strategia raccomandata è:
 
 > **Clean-core redesign in parallelo, nello stesso repository, con sostituzione progressiva dei moduli utili.**
 
-Il vecchio runtime resta disponibile come baseline e riferimento.\
+Il vecchio runtime resta disponibile come baseline e riferimento.
 Il nuovo runtime viene sviluppato con confini autonomi, contratti nuovi e responsabilità esplicite.
+
+## 3.3 Vincolo anti-big-bang
+
+Non sostituire tutto in un unico taglio. Procedere per vertical slice, mantenendo:
+
+- confronto live/replay;
+- audit delle decisioni;
+- test automatici su contratti;
+- possibilità di spegnere il nuovo runtime senza rompere la baseline.
 
 ---
 
-# 3. Decisioni già assunte
+# 4. Decisioni già assunte
 
-## 3.1 Moduli da preservare
+## 4.1 Moduli da preservare e adattare
 
-### 3.1.1 Telegram listening / ingestion
+### 4.1.1 Telegram listening / ingestion
 
-Da preservare e adattare:
+Da preservare:
 
 - ascolto live dei messaggi Telegram;
 - recupero in catchup/recovery;
 - supporto canali e topic;
 - deduplicazione;
 - persistenza dei raw messages;
-- configurazione canali;
+- configurazione canali/source mapping;
 - hot reload della configurazione, se già stabile.
 
-Il listener deve restare **sottile**: acquisisce, normalizza il contesto minimo e passa il messaggio alla pipeline; non deve contenere parsing pesante, operation rules o logiche di esecuzione.
+Il listener deve restare **sottile**: acquisisce, normalizza il contesto minimo e passa il messaggio alla pipeline. Non deve contenere parsing pesante, operation rules, lifecycle o logiche di esecuzione.
 
-### 3.1.2 `parser_v2`
+### 4.1.2 `parser_v2`
 
-`parser_v2` è la base del nuovo parser live.\
+`parser_v2` è la base del nuovo parser live.
 Non va più tenuto come componente solo da test/replay: nel nuovo sistema deve diventare **il parser unico e ufficiale**.
 
 Vanno preservati:
 
 - `UniversalParserRuntime`;
+- `CanonicalMessage` da `src.parser_v2.contracts.canonical_message`;
 - profili trader dedicati;
 - semantic markers;
 - disambiguazione locale;
 - target hints / target binding;
 - translator verso output canonico;
-- contratti tipizzati di `CanonicalMessage`.
+- contratti Pydantic strict.
 
-### 3.1.3 `parser_test`
+### 4.1.3 `parser_test`
 
 `parser_test` va mantenuto e consolidato come tool ufficiale per:
 
@@ -94,10 +158,11 @@ Vanno preservati:
 - selezionare i messaggi da parsare tramite filtro trader;
 - selezionare il parser/profile in modo separato dal filtro dei messaggi;
 - eseguire `parser_v2` su dati reali;
-- salvare run e risultati;
-- produrre CSV/report di qualità.
+- salvare run e risultati in `parser_results_v2`;
+- produrre CSV/report di qualità;
+- confrontare replay e futuro live v2.
 
-### 3.1.4 Concetto di operation rules
+### 4.1.4 Concetto di operation rules
 
 Va preservata l’idea di un layer che:
 
@@ -109,26 +174,41 @@ Va preservata l’idea di un layer che:
 
 Va invece **ripensata l’implementazione**, perché deve ricevere direttamente il `CanonicalMessage` di `parser_v2`, non adattarsi a formati legacy o intermedi.
 
+### 4.1.5 Logiche execution già validate
+
+I moduli in `src/execution/` contengono conoscenza utile su:
+
+- Freqtrade bridge;
+- planner/applier di update;
+- market entry dispatch;
+- order reconciliation;
+- protective orders;
+- dynamic pairlist.
+
+Queste logiche sono patrimonio tecnico, ma nel nuovo runtime vanno rientrate dietro una **porta di execution neutra**. Il core non deve dipendere da Freqtrade né da Hummingbot.
+
 ---
 
-# 4. Cosa viene abbandonato nel nuovo runtime
+# 5. Cosa viene abbandonato nel nuovo runtime
 
-## 4.1 Parser legacy `src/parser`
+## 5.1 Parser legacy `src/parser`
 
 Nel nuovo runtime non deve più esistere un dual-stack tra:
 
 - parser vecchio;
-- ParsedMessage intermedio;
+- `ParsedMessage` intermedio legacy;
 - canonical v1;
-- parser\_v2.
+- `parser_v2`.
 
-Il nuovo sistema deve avere un solo percorso ufficiale:
+Il nuovo percorso ufficiale deve essere:
 
 ```text
-Raw message → parser_v2 → CanonicalMessageV2
+Raw message → parser_v2 → CanonicalMessage
 ```
 
-## 4.2 `MessageRouter` monolitico attuale
+Dove `CanonicalMessage.schema_version == "canonical_message_v2"`.
+
+## 5.2 `MessageRouter` monolitico attuale
 
 L’attuale router concentra responsabilità eterogenee:
 
@@ -140,27 +220,29 @@ L’attuale router concentra responsabilità eterogenee:
 - operation rules;
 - target resolving;
 - update runtime;
-- persistenza segnali operativi.
+- persistenza segnali operativi;
+- integrazione verso execution.
 
-Nel nuovo progetto questa centralizzazione va eliminata.
+Nel nuovo progetto questa centralizzazione va eliminata. Il router attuale resta una baseline da cui estrarre casi e test, non un pattern da replicare.
 
-## 4.3 Bridge e compatibilità temporanee
+## 5.3 Bridge e compatibilità temporanee
 
-Da non portare nel nuovo sistema:
+Da non portare nel nuovo sistema, salvo strumenti di migrazione isolati:
 
 - shadow normalizer;
 - dual-stack parser;
-- conversioni verso canonical v1 se non strettamente necessarie per migrazione dati;
-- adattatori temporanei costruiti solo per tenere vivo il vecchio runtime.
+- conversioni verso canonical v1;
+- adattatori temporanei costruiti solo per tenere vivo il vecchio runtime;
+- payload operativi basati su dict non tipizzati quando esiste un contratto Pydantic.
 
-## 4.4 Accoppiamento precoce con execution engine
+## 5.4 Accoppiamento precoce con execution engine
 
-Il nuovo core non va costruito “per Hummingbot” o “per OctoBot”.\
+Il nuovo core non va costruito “per Hummingbot”, “per Freqtrade” o “per OctoBot”.
 L’esecuzione deve entrare tramite **porta/adattatore**.
 
 ---
 
-# 5. Architettura target — vista d’insieme
+# 6. Architettura target — vista d’insieme
 
 ```text
 Telegram Listener
@@ -173,11 +255,11 @@ Trader Resolution
         ↓
 Parser V2 Runtime
         ↓
-CanonicalMessageV2 Store
+Canonical Message Store
         ↓
 Operation Rules Engine V2
         ↓
-OperationalDecision Store
+Operational Decision Store
         ↓
 Lifecycle Engine
         ↓
@@ -204,16 +286,16 @@ CSV / report / regressioni
 
 ---
 
-# 6. Responsabilità dei layer
+# 7. Responsabilità dei layer
 
-## 6.1 Telegram Listener
+## 7.1 Telegram Listener
 
 **Responsabilità:** ricevere messaggi Telegram live o recuperarli in recovery.
 
 **Fa:**
 
 - legge evento Telegram;
-- rileva chat, topic, message id, reply id;
+- rileva chat, topic, message id, reply id, media metadata;
 - inoltra a ingestion;
 - accoda il messaggio per il processing.
 
@@ -225,9 +307,7 @@ CSV / report / regressioni
 - esecuzione;
 - accesso a modelli di trading.
 
----
-
-## 6.2 Raw Message Ingestion
+## 7.2 Raw Message Ingestion
 
 **Responsabilità:** rendere persistente il dato grezzo e tracciabile.
 
@@ -237,8 +317,9 @@ CSV / report / regressioni
 
 - deduplicazione;
 - salvataggio raw;
-- stato acquisizione;
-- eventuale metadata di media, topic, chat, trader hint.
+- stato acquisizione/processing;
+- metadata di media, topic, chat, trader hint;
+- idempotenza su `(source_chat_id, telegram_message_id)`.
 
 **Non fa:**
 
@@ -246,25 +327,24 @@ CSV / report / regressioni
 - trasformare in segnale;
 - applicare regole operative.
 
----
-
-## 6.3 Trader Resolution
+## 7.3 Trader Resolution
 
 **Responsabilità:** determinare il trader effettivo a cui associare il messaggio.
 
-**Input:** `RawMessageEnvelope` + config/source mapping + contesto reply/ref.\
+**Input:** `RawMessageEnvelope` + source mapping + alias + contesto reply/ref.
 **Output:** `ResolvedTraderContext`.
 
-**Deve essere condiviso concettualmente tra live e parser\_test**, così da evitare dataset contaminati o comportamenti divergenti.
+Deve restare concettualmente condiviso tra live e `parser_test`, perché il repository ha già dimostrato il rischio di divergenza tra:
 
----
+- trader del messaggio da filtrare;
+- profilo parser da applicare.
 
-## 6.4 Parser V2 Runtime
+## 7.4 Parser V2 Runtime
 
 **Responsabilità:** interpretare linguisticamente il messaggio.
 
-**Input:** testo + contesto + profilo trader.\
-**Output:** `CanonicalMessageV2`.
+**Input:** testo + `ParserContext`/raw context + profilo trader.
+**Output:** `CanonicalMessage` (`schema_version = "canonical_message_v2"`).
 
 **Fa:**
 
@@ -273,6 +353,7 @@ CSV / report / regressioni
 - evidenze semantiche;
 - estrazione signal/update/report/info;
 - disambiguazione;
+- target hints;
 - target binding;
 - traduzione in contratto canonico tipizzato.
 
@@ -283,13 +364,11 @@ CSV / report / regressioni
 - modificare lo stato operativo del trade;
 - inviare ordini.
 
----
-
-## 6.5 Operation Rules Engine V2
+## 7.5 Operation Rules Engine V2
 
 **Responsabilità:** trasformare un messaggio canonico in una decisione operativa.
 
-**Input:** `CanonicalMessageV2` + regole globali/trader + eventuale stato operativo necessario ai gate.\
+**Input:** `CanonicalMessage` + regole globali/trader + eventuale stato operativo letto solo per gate/policy.
 **Output:** `OperationalDecision`.
 
 **Fa:**
@@ -306,30 +385,32 @@ CSV / report / regressioni
 
 - interpretazione linguistica;
 - aggiornamento diretto delle posizioni;
-- invio comandi a exchange.
+- invio comandi a exchange;
+- risoluzione definitiva dello stato lifecycle.
 
----
+## 7.6 Lifecycle Engine
 
-## 6.6 Lifecycle Engine
-
-**Responsabilità:** applicare decisioni e messaggi canonici allo stato di segnali, setup, trade e istruzioni.
+**Responsabilità:** applicare decisioni e messaggi canonici allo stato di segnali, setup, ordini logici, posizioni e istruzioni.
 
 **Input:**
 
-- `CanonicalMessageV2`;
+- `CanonicalMessage`;
 - `OperationalDecision`;
-- stato attuale del dominio.
+- stato attuale del dominio;
+- eventuali eventi executor/exchange normalizzati.
 
 **Output:**
 
-- `LifecycleCommand` o `DomainEvent`;
-- nuove snapshot di stato.
+- `LifecycleCommand`;
+- `DomainEvent`;
+- nuove snapshot di stato;
+- eventuale `ExecutionIntent`.
 
 **Fa:**
 
 - creare un setup/segnale operativo;
-- applicare UPDATE targetizzati;
-- registrare REPORT;
+- applicare update targetizzati;
+- registrare report;
 - gestire invalidazioni/cancellazioni;
 - mantenere la storia degli eventi;
 - preparare comandi neutri verso l’execution layer.
@@ -338,18 +419,17 @@ CSV / report / regressioni
 
 - parsing;
 - accesso diretto alla rete exchange;
-- calcolo semantico dei marker.
+- calcolo semantico dei marker;
+- policy risk iniziale già decisa dalle operation rules.
 
----
-
-## 6.7 Execution Gateway / Adapter
+## 7.7 Execution Gateway / Adapter
 
 **Responsabilità:** tradurre comandi interni neutri in comandi dell’esecutore scelto.
 
-**Input:** `ExecutionIntent`.\
-**Output:** richieste verso Hummingbot / altro engine + eventi di risposta.
+**Input:** `ExecutionIntent`.
+**Output:** richieste verso Hummingbot / Freqtrade / exchange API + eventi di risposta normalizzati.
 
-**Deve essere neutro rispetto al dominio interno.**
+Deve essere neutro rispetto al dominio interno.
 
 Esempi di intent:
 
@@ -363,51 +443,64 @@ Esempi di intent:
 
 ---
 
-# 7. Contratti centrali da definire
+# 8. Contratti centrali da definire
 
-## 7.1 `RawMessageEnvelope`
+## 8.1 `RawMessageEnvelope`
+
+Bozza coerente con gli store attuali e con `parser_test`:
 
 ```python
 class RawMessageEnvelope:
     raw_message_id: int
     source_chat_id: str
+    source_chat_title: str | None
+    source_type: str | None
     source_topic_id: int | None
     telegram_message_id: int
     reply_to_message_id: int | None
-    raw_text: str
-    acquired_at: datetime
+    raw_text: str | None
     message_ts: datetime
+    acquired_at: datetime
     acquisition_mode: Literal["live", "catchup", "import"]
+    acquisition_status: str
+    processing_status: str | None
     source_trader_id: str | None
     resolved_trader_id: str | None
     resolution_method: str | None
+    has_media: bool
+    media_kind: str | None
+    media_mime_type: str | None
+    media_filename: str | None
 ```
 
-## 7.2 `CanonicalMessageV2`
+## 8.2 `CanonicalMessage`
 
-Il contratto di riferimento è quello di `src/parser_v2/contracts/canonical_message.py`.
+Il contratto di riferimento è:
+
+```python
+src.parser_v2.contracts.canonical_message.CanonicalMessage
+```
 
 Classi principali:
 
-- `SIGNAL`;
-- `UPDATE`;
-- `REPORT`;
-- `INFO`.
+- `SIGNAL`
+- `UPDATE`
+- `REPORT`
+- `INFO`
 
 Stati parser:
 
-- `PARSED`;
-- `PARTIAL`;
-- `UNCLASSIFIED` o equivalenti già previsti dal contratto.
+- `PARSED`
+- `PARTIAL`
+- `UNCLASSIFIED`
+- `ERROR`
 
 ### Regola di sistema
 
-Il parser deve produrre output **schema-valid** anche quando il messaggio non è eseguibile.\
+Il parser deve produrre output **schema-valid** anche quando il messaggio non è eseguibile.
 La non eseguibilità va espressa con `parse_status`, warning, diagnostics o successiva decisione delle operation rules, non rompendo il contratto.
 
----
-
-## 7.3 `OperationalDecision`
+## 8.3 `OperationalDecision`
 
 Bozza di contratto:
 
@@ -415,13 +508,16 @@ Bozza di contratto:
 class OperationalDecision:
     decision_id: int
     canonical_message_id: int
+    raw_message_id: int
     trader_id: str
-    decision_type: Literal["ACCEPT", "BLOCK", "REVIEW", "IGNORE"]
+    decision_type: Literal["ACCEPT", "BLOCK", "REVIEW", "IGNORE", "LOG_ONLY"]
+    decision_scope: Literal["SIGNAL", "UPDATE", "REPORT", "INFO"]
     reason_code: str | None
     warnings: list[str]
     applied_rules: list[str]
     policy_snapshot: dict
     risk_decision: RiskDecision | None
+    idempotency_key: str
     created_at: datetime
 ```
 
@@ -431,7 +527,7 @@ class OperationalDecision:
 
 ```text
 ACCEPT
-risk computed
+risk computed or deferred
 lifecycle may create setup
 ```
 
@@ -449,18 +545,24 @@ REVIEW
 reason = unresolved_target | ambiguous_scope
 ```
 
----
+#### Info/report solo log
 
-## 7.4 `RiskDecision`
+```text
+LOG_ONLY
+reason = informational_message | report_without_lifecycle_effect
+```
+
+## 8.4 `RiskDecision`
 
 ```python
 class RiskDecision:
-    sizing_mode: Literal["IMMEDIATE", "DEFERRED"]
+    sizing_mode: Literal["IMMEDIATE", "DEFERRED", "NOT_APPLICABLE"]
     risk_pct_of_capital: float | None
     risk_budget_usdt: float | None
     position_size_usdt: float | None
     leverage: float | None
     entry_split: dict[str, float] | None
+    deferred_reason: str | None
 ```
 
 ### Nota MARKET
@@ -471,32 +573,33 @@ Per entry MARKET senza prezzo affidabile, il sistema deve poter produrre:
 sizing_mode = DEFERRED
 ```
 
-Il sizing finale verrà completato quando l’entry price diventa disponibile secondo la politica definita.
+Il sizing finale verrà completato quando l’entry price diventa disponibile secondo la policy definita.
 
----
-
-## 7.5 `LifecycleCommand`
+## 8.5 `LifecycleCommand`
 
 ```python
 class LifecycleCommand:
+    command_id: int
     command_type: Literal[
         "CREATE_SETUP",
         "APPLY_UPDATE",
         "REGISTER_REPORT",
         "INVALIDATE_SETUP",
         "SEND_TO_REVIEW",
-        "IGNORE"
+        "IGNORE",
     ]
+    signal_root_id: int | None
     target_ref: dict | None
     payload: dict
+    idempotency_key: str
+    created_at: datetime
 ```
 
----
-
-## 7.6 `ExecutionIntent`
+## 8.6 `ExecutionIntent`
 
 ```python
 class ExecutionIntent:
+    intent_id: int
     intent_type: Literal[
         "SUBMIT_NEW_SIGNAL",
         "PLACE_ENTRY",
@@ -506,42 +609,54 @@ class ExecutionIntent:
         "MOVE_STOP",
         "CLOSE_PARTIAL",
         "CLOSE_FULL",
-        "SYNC_STATE"
+        "SYNC_STATE",
     ]
+    signal_root_id: int
     attempt_key: str
     payload: dict
+    created_at: datetime
 ```
 
 ---
 
-# 8. Data stores e persistenza — proposta concettuale
+# 9. Data stores e persistenza — decisione aggiornata
 
-## 8.1 Principio
+## 9.1 Principio
 
 Separare le famiglie di dati:
 
-1. **Acquisition DB / Raw layer**;
-2. **Parser DB / Canonical layer**;
-3. **Operational DB / Decision + lifecycle layer**;
-4. **Execution state / sync layer**.
+1. **Acquisition / Raw layer**;
+2. **Parser / Canonical layer**;
+3. **Operational decision layer**;
+4. **Lifecycle state layer**;
+5. **Execution state / sync layer**;
+6. **Audit / Review layer**.
 
-Nel primo ciclo di riprogettazione si può restare su un unico DB fisico, ma con **tabelle logicamente separate**.\
-La separazione fisica in più DB va decisa solo quando il dominio e i flussi sono maturi.
+## 9.2 Decisione pratica
 
----
+I documenti di ragionamento propongono anche la separazione fisica `parser_db` / `ops_db`. Questa è architetturalmente corretta perché parser e operativo hanno rischi diversi.
 
-## 8.2 Tabelle minime suggerite — nuova architettura
+Decisione per la prima implementazione:
+
+- modellare da subito tabelle e repository come bounded context separati;
+- evitare foreign key/coupling non necessari tra parser e operativo;
+- consentire un unico SQLite locale per sviluppo e test;
+- non bloccare la futura separazione fisica in `parser_db` e `ops_db`.
+
+Quindi: **separazione logica obbligatoria, separazione fisica rimandabile ma non ostacolata dal design**.
+
+## 9.3 Tabelle minime suggerite
 
 ### Raw / intake
 
 - `raw_messages`
-- `processing_jobs` o `message_processing_status`
+- `message_processing_jobs` o `message_processing_status`
 
 ### Parser
 
-- `parser_runs` — per replay/test
-- `parser_results_v2`
-- `canonical_messages_live` oppure una tabella comune parametrizzata per `source=live|replay`
+- `parser_runs` — replay/test
+- `parser_results_v2` — harness parser_test
+- `canonical_messages` — output canonical live e/o replay normalizzato
 
 ### Operation rules
 
@@ -568,16 +683,16 @@ La separazione fisica in più DB va decisa solo quando il dominio e i flussi son
 
 ---
 
-# 9. Flussi principali
+# 10. Flussi principali
 
-## 9.1 Flusso live — nuovo messaggio
+## 10.1 Flusso live — nuovo messaggio
 
 ```text
 1. TelegramListener riceve messaggio
 2. RawMessageIngestion salva raw_messages
 3. Dispatcher apre job di processing
 4. TraderResolver risolve il trader effettivo
-5. ParserV2 produce CanonicalMessageV2
+5. ParserV2 produce CanonicalMessage
 6. Persist canonical output
 7. OperationRulesEngineV2 produce OperationalDecision
 8. Persist operational decision
@@ -587,53 +702,59 @@ La separazione fisica in più DB va decisa solo quando il dominio e i flussi son
 12. Audit trail aggiornato
 ```
 
----
-
-## 9.2 Flusso parser\_test
+## 10.2 Flusso `parser_test`
 
 ```text
 1. Import/scarico messaggi Telegram in raw_messages del DB test
 2. Risoluzione effective_trader_id
 3. Selezione messaggi tramite trader_filter
 4. Selezione parser/profile tramite parser_system / parser_profile
-5. ParserV2 produce CanonicalMessageV2
+5. ParserV2 produce CanonicalMessage
 6. Salvataggio in parser_results_v2
 7. Export CSV / report qualità
 ```
 
 Regola: **filtro del trader dei messaggi** e **profilo parser da applicare** devono restare concetti separati.
 
----
-
-## 9.3 Flusso update operativo
+## 10.3 Flusso update operativo
 
 ```text
 1. ParserV2 classifica UPDATE
-2. Target hints / targeted actions vengono prodotti nel CanonicalMessageV2
+2. Target hints / targeted actions vengono prodotti nel CanonicalMessage
 3. OperationRules decide se l’update è ammissibile / bloccato / review
 4. LifecycleEngine risolve target nello stato operativo
 5. Applica modifica: SL, cancel pending, close partial, close full, modify entry, modify TP...
 6. Genera eventuale ExecutionIntent
 ```
 
+## 10.4 Flusso eventi executor/exchange
+
+```text
+1. ExecutionAdapter riceve ack/fill/reject/sync state
+2. Normalizza in ExecutionEvent
+3. Persist execution_events
+4. LifecycleEngine aggiorna signal/order/position state
+5. Produce eventuali nuovi LifecycleCommand o review
+6. Audit trail aggiornato
+```
+
 ---
 
-# 10. Boundary decisivi tra i layer
+# 11. Boundary decisivi tra i layer
 
-## 10.1 Parser vs Operation Rules
+## 11.1 Parser vs Operation Rules
 
 | Tema                               | Parser | Operation Rules |
 | ---------------------------------- | ------ | --------------- |
-| Riconosce MOVE\_STOP               | Sì     | No              |
-| Decide se MOVE\_STOP è applicabile | No     | Sì              |
+| Riconosce MOVE_STOP                | Sì     | No              |
+| Decide se MOVE_STOP è applicabile  | No     | Sì              |
 | Estrae entry/SL/TP                 | Sì     | No              |
 | Calcola risk/sizing                | No     | Sì              |
 | Produce schema-valid output        | Sì     | No              |
 | Decide block/review                | No     | Sì              |
+| Legge testo grezzo per policy      | No     | No              |
 
----
-
-## 10.2 Operation Rules vs Lifecycle
+## 11.2 Operation Rules vs Lifecycle
 
 | Tema                                              | Operation Rules | Lifecycle |
 | ------------------------------------------------- | --------------- | --------- |
@@ -642,10 +763,9 @@ Regola: **filtro del trader dei messaggi** e **profilo parser da applicare** dev
 | Crea lo stato del segnale                         | No              | Sì        |
 | Applica update a un setup già noto                | No              | Sì        |
 | Verifica target del messaggio rispetto allo stato | Solo pre-check  | Sì        |
+| Decide idempotenza degli eventi dominio           | No              | Sì        |
 
----
-
-## 10.3 Lifecycle vs Execution
+## 11.3 Lifecycle vs Execution
 
 | Tema                               | Lifecycle | Execution                    |
 | ---------------------------------- | --------- | ---------------------------- |
@@ -653,12 +773,13 @@ Regola: **filtro del trader dei messaggi** e **profilo parser da applicare** dev
 | Traduce in ordine API specifico    | No        | Sì                           |
 | Tiene stato dominio                | Sì        | No, salvo sync/cache tecnica |
 | Gestisce ritardi/ack dell’executor | Coordina  | Comunica eventi              |
+| Decide policy/risk                 | No        | No                           |
 
 ---
 
-# 11. Operation Rules V2 — direzione di redesign
+# 12. Operation Rules V2 — direzione di redesign
 
-## 11.1 Input corretto
+## 12.1 Input corretto
 
 L’engine deve ricevere:
 
@@ -670,9 +791,10 @@ Non:
 
 - `TraderParseResult` legacy;
 - `CanonicalMessage v1` del parser precedente;
-- payload dict non tipizzati.
+- payload dict non tipizzati;
+- testo grezzo da interpretare.
 
-## 11.2 Classificazione operativa
+## 12.2 Classificazione operativa
 
 L’engine deve gestire almeno:
 
@@ -699,11 +821,26 @@ L’engine deve gestire almeno:
 
 - normalmente `IGNORE` o `LOG_ONLY`.
 
+## 12.3 Riuso ammesso dal codice attuale
+
+Da `src/operation_rules/` si possono recuperare:
+
+- calcoli risk/sizing già testati;
+- schema mentale delle policy per trader;
+- configurazione YAML e snapshot;
+- casi limite già coperti dai test.
+
+Non si deve recuperare:
+
+- dipendenza da modelli legacy;
+- conversioni ad hoc;
+- accoppiamento al router attuale.
+
 ---
 
-# 12. Lifecycle Engine — direzione di progettazione
+# 13. Lifecycle Engine — direzione di progettazione
 
-Il lifecycle è il blocco che manca davvero nell’attuale ridisegno.
+Il lifecycle è il blocco che manca come responsabilità autonoma.
 
 Deve occuparsi di:
 
@@ -711,9 +848,10 @@ Deve occuparsi di:
 - distinzione tra setup, ordine pending, posizione aperta, posizione parzialmente chiusa, chiusa, invalidata;
 - applicazione degli update Telegram;
 - reazione a eventi di mercato/esecuzione;
+- idempotenza di update e command;
 - emissione di comandi neutri verso executor.
 
-## 12.1 Esempi di stati dominio
+## 13.1 Esempi di stati dominio
 
 ```text
 SETUP_RECEIVED
@@ -726,18 +864,24 @@ CLOSED
 CANCELLED
 INVALIDATED
 REVIEW_REQUIRED
+ERROR
 ```
 
 Questi stati sono preliminari e vanno validati in una specifica dedicata.
 
+## 13.2 Regola chiave su target/update
+
+Il parser può indicare target hints e targeted actions.
+La risoluzione definitiva contro lo stato operativo spetta al lifecycle, perché solo il lifecycle sa quali chain sono aperte, pending, chiuse, parzialmente fillate o già invalidate.
+
 ---
 
-# 13. Execution Layer — principio di neutralità
+# 14. Execution Layer — principio di neutralità
 
-Il core deve esporre un contratto neutro.\
-Hummingbot è una possibile implementazione futura, ma non deve entrare nei modelli di dominio.
+Il core deve esporre un contratto neutro.
+Hummingbot, Freqtrade o un adapter exchange diretto sono implementazioni possibili, ma non devono entrare nei modelli di dominio.
 
-## 13.1 Vincolo
+## 14.1 Vincolo
 
 L’autorità su:
 
@@ -747,14 +891,43 @@ L’autorità su:
 - decisioni operative;
 - lifecycle;
 
-resta nel progetto.\
+resta nel progetto.
 L’executor esegue istruzioni e restituisce eventi/stato.
+
+## 14.2 Nota Hummingbot/Freqtrade
+
+I documenti di ragionamento su Hummingbot sono coerenti con questa direzione: Hummingbot deve essere motore di esecuzione/monitoraggio, non cervello decisionale. Lo stesso vale per Freqtrade nel codice attuale.
 
 ---
 
-# 14. Metodo di sviluppo consigliato
+# 15. Package target raccomandati
 
-## 14.1 Governo del progetto
+Decisione proposta per evitare un Domain-Driven Design eccessivo ma separare bene le responsabilità:
+
+```text
+src/runtime_v2/
+    intake/
+    trader_resolution/
+    parser_pipeline/
+    operation_rules/
+    lifecycle/
+    execution_gateway/
+    audit/
+    persistence/
+```
+
+Regole:
+
+- `src/parser_v2/` resta dove si trova: è un modulo già autonomo e testato;
+- `parser_test/` resta tool separato, ma deve usare lo stesso parser runtime del live;
+- `src/runtime_v2/` orchestra il nuovo flusso senza importare `src/telegram/router.py`;
+- eventuali adapter verso vecchi store devono stare in `runtime_v2/persistence` o in moduli di migrazione, non nel dominio.
+
+---
+
+# 16. Metodo di sviluppo consigliato
+
+## 16.1 Governo del progetto
 
 Usare un approccio a due livelli:
 
@@ -774,7 +947,7 @@ Usare un approccio a due livelli:
 - review tecnica;
 - chiusura fase e aggiornamento documentazione.
 
-## 14.2 Regola operativa
+## 16.2 Regola operativa
 
 Non iniziare lo sviluppo di un blocco finché non sono definiti:
 
@@ -782,11 +955,12 @@ Non iniziare lo sviluppo di un blocco finché non sono definiti:
 2. input/output;
 3. contratti;
 4. casi principali;
-5. test minimi di accettazione.
+5. test minimi di accettazione;
+6. criterio di migrazione dal runtime attuale.
 
 ---
 
-# 15. Roadmap di realizzazione proposta
+# 17. Roadmap di realizzazione proposta
 
 ## Fase A — Documento madre e decisioni architetturali
 
@@ -797,11 +971,10 @@ Obiettivi:
 - fissare cosa si salva e cosa si abbandona;
 - fissare architettura target;
 - fissare contratti principali;
-- fissare la strategia di sviluppo.
+- fissare la strategia di sviluppo;
+- allineare la terminologia al codice reale.
 
----
-
-## Fase B — Specifica e pulizia della pipeline intake + trader resolution
+## Fase B — Specifica intake + trader resolution
 
 **Output:** PRD dedicato.
 
@@ -809,36 +982,33 @@ Obiettivi:
 
 - definire `RawMessageEnvelope`;
 - formalizzare risoluzione trader;
-- chiarire allineamento live/parser\_test;
-- decidere schema raw persistente nuovo.
+- chiarire allineamento live/`parser_test`;
+- decidere schema raw persistente nuovo;
+- definire idempotenza job/processing.
 
----
+## Fase C — Consolidamento `parser_v2` come parser ufficiale
 
-## Fase C — Consolidamento parser\_v2 come parser ufficiale
-
-**Output:** parser\_v2 stabilizzato e contratto blindato.
+**Output:** `parser_v2` stabilizzato e contratto blindato.
 
 Obiettivi:
 
-- chiudere gap aperti del parser\_v2;
+- chiudere gap aperti del parser v2;
 - fissare comportamento multi-ref e priorità dei riferimenti;
 - garantire parser output schema-valid;
-- aggiornare parser\_test come harness ufficiale.
-
----
+- aggiornare `parser_test` come harness ufficiale;
+- aggiungere test di compatibilità live/replay sui contratti.
 
 ## Fase D — Operation Rules Engine V2
 
-**Output:** nuovo engine basato su `CanonicalMessageV2`.
+**Output:** nuovo engine basato su `CanonicalMessage` v2.
 
 Obiettivi:
 
 - definire `OperationalDecision`;
 - rifare risk/sizing/policy gate;
 - supportare MARKET deferred sizing;
-- gestire UPDATE/REPORT/INFO a livello decisionale.
-
----
+- gestire UPDATE/REPORT/INFO a livello decisionale;
+- separare completamente policy da lifecycle.
 
 ## Fase E — Lifecycle Engine
 
@@ -849,9 +1019,8 @@ Obiettivi:
 - definire state machine;
 - definire applicazione update;
 - gestire setup/order/position state;
-- produrre `LifecycleCommand` ed `ExecutionIntent`.
-
----
+- produrre `LifecycleCommand` ed `ExecutionIntent`;
+- gestire eventi executor/exchange normalizzati.
 
 ## Fase F — Execution Adapter
 
@@ -862,9 +1031,7 @@ Obiettivi:
 - definire adapter neutro;
 - implementare una strategia MVP verso il motore scelto;
 - ricevere eventi/stati di ritorno;
-- testare sync e gestione degli errori.
-
----
+- testare sync, retry, idempotenza e gestione degli errori.
 
 ## Fase G — Observability, audit, review queue
 
@@ -879,17 +1046,18 @@ Obiettivi:
 
 ---
 
-# 16. Prima vertical slice da sviluppare
+# 18. Prima vertical slice da sviluppare
 
 La prima fetta end-to-end deve essere:
 
 ```text
-Telegram/raw import
+Raw message già presente o importato
 → trader resolution
 → parser_v2
-→ persistence CanonicalMessageV2
+→ persistence CanonicalMessage
 → operation rules v2 minimale
 → OperationalDecision persistita
+→ audit minimo
 ```
 
 Questa slice serve a validare:
@@ -897,7 +1065,8 @@ Questa slice serve a validare:
 - i confini dei layer;
 - il contratto parser → rules;
 - lo schema DB;
-- la qualità del flusso live/replay.
+- la qualità del flusso live/replay;
+- l’assenza di dipendenza dal `MessageRouter` monolitico.
 
 Non deve ancora includere:
 
@@ -906,9 +1075,17 @@ Non deve ancora includere:
 - gestione posizione avanzata;
 - dashboard.
 
+## 18.1 Criteri di accettazione della prima slice
+
+1. Un raw message con trader risolto produce un `CanonicalMessage` v2 persistito.
+2. Un messaggio non eseguibile resta schema-valid e produce `OperationalDecision` `BLOCK`, `REVIEW`, `IGNORE` o `LOG_ONLY`.
+3. `parser_test` e runtime v2 usano lo stesso `UniversalParserRuntime` e lo stesso contratto canonical.
+4. Nessun codice della slice importa `src/telegram/router.py`.
+5. La decisione operativa contiene policy snapshot, warnings e reason code tracciabili.
+
 ---
 
-# 17. Criteri di qualità del nuovo design
+# 19. Criteri di qualità del nuovo design
 
 Il ridisegno è corretto se:
 
@@ -921,66 +1098,65 @@ Il ridisegno è corretto se:
 7. ogni layer ha input/output testabili;
 8. ogni decisione importante è tracciabile in DB/audit;
 9. si può cambiare executor senza riscrivere parser/rules/lifecycle;
-10. i casi non eseguibili non rompono la pipeline, ma vengono classificati e tracciati.
+10. i casi non eseguibili non rompono la pipeline, ma vengono classificati e tracciati;
+11. replay e live sono comparabili almeno su raw input, trader resolution, canonical output e decisione operativa;
+12. la futura separazione fisica parser DB / ops DB resta possibile.
 
 ---
 
-# 18. Decisioni ancora aperte
+# 20. Decisioni ancora aperte
 
-## 18.1 Nuovo runtime nello stesso repository o repository separato?
+## 20.1 Un DB fisico o più DB?
 
-**Proposta:** stesso repository durante il refactoring.\
-Eventuale separazione in repo nuovo solo dopo stabilizzazione del clean core.
+**Decisione provvisoria:** separazione logica obbligatoria; separazione fisica rimandata.
+Il design deve poter evolvere verso `parser_db` e `ops_db` senza riscrivere il dominio.
 
-## 18.2 Un DB fisico o più DB?
+## 20.2 Nome definitivo dei nuovi package
 
-**Proposta:** un DB fisico iniziale con tabelle ben separate per bounded context.\
-Separazione fisica successiva solo se emerge un motivo tecnico concreto.
+**Proposta:** `src/runtime_v2/` con sottopackage per bounded context leggeri.
 
-## 18.3 Nome dei nuovi package
+Da confermare prima della prima implementazione.
 
-Possibili direzioni:
-
-```text
-src/runtime_v2/
-src/domain/
-src/application/
-src/infrastructure/
-```
-
-Va scelto dopo aver definito il livello di Domain-Driven Design che si vuole realmente adottare.
-
-## 18.4 Lifecycle state machine definitiva
+## 20.3 Lifecycle state machine definitiva
 
 Da definire in una specifica dedicata dopo il consolidamento del contratto parser → rules.
 
-## 18.5 Executor target MVP
+## 20.4 Executor target MVP
 
-Da non decidere dentro questo documento.\
-Il documento deve solo imporre il contratto neutro `ExecutionIntent`.
+Da non decidere dentro questo documento.
+Il documento impone solo il contratto neutro `ExecutionIntent`.
+
+## 20.5 Strategia di migrazione dati
+
+Da definire dopo la prima vertical slice:
+
+- quali tabelle legacy leggere;
+- quali dati convertire;
+- quali store lasciare storici;
+- quali report usare per validare la migrazione.
 
 ---
 
-# 19. Deliverable successivi a questo documento
+# 21. Deliverable successivi a questo documento
 
 Dopo la chiusura del documento madre, produrre in ordine:
 
 1. **PRD 01 — Intake, Raw Messages e Trader Resolution**
-2. **PRD 02 — Parser V2 come parser ufficiale live + parser\_test consolidato**
-3. **PRD 03 — Operation Rules Engine V2 su CanonicalMessageV2**
+2. **PRD 02 — Parser V2 come parser ufficiale live + parser_test consolidato**
+3. **PRD 03 — Operation Rules Engine V2 su CanonicalMessage v2**
 4. **PRD 04 — Lifecycle Engine e Signal State Model**
 5. **PRD 05 — Execution Contract neutro e Adapter MVP**
 6. **PRD 06 — Audit, Review Queue, Observability**
+7. **Piano migrazione — dal MessageRouter monolitico a runtime_v2**
 
 ---
 
-# 20. Decisione raccomandata di partenza
+# 22. Decisione raccomandata di partenza
 
 Prima di scrivere codice nuovo, chiudere questi tre punti:
 
-1. confermare l’architettura target di questo documento;
+1. confermare `src/runtime_v2/` come package del clean core;
 2. fissare definitivamente il contratto `OperationalDecision`;
-3. decidere la struttura dei package del nuovo runtime.
+3. scrivere il PRD 01 su intake/trader resolution con test di accettazione.
 
 Solo dopo conviene aprire la prima fase implementativa.
-
