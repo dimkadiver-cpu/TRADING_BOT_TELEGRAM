@@ -326,7 +326,7 @@ def test_prd2b_signal_persisted_in_canonical_messages(db_path):
 
     assert isinstance(result, CanonicalParseResult)
     assert result.primary_class == "SIGNAL"
-    assert result.parse_status in {"PARSED", "PARTIAL"}
+    assert result.parse_status == "PARSED"
     stored = CanonicalMessageRepository(db_path).get_by_raw_message_id(
         candidate.raw_message.raw_message_id
     )
@@ -345,7 +345,7 @@ def test_prd2b_info_message_persisted_schema_valid(db_path):
     result = processor.process(candidate)
 
     assert isinstance(result, CanonicalParseResult)
-    assert result.primary_class in {"INFO", "UNCLASSIFIED", "SIGNAL", "UPDATE", "REPORT"}
+    assert result.primary_class == "INFO"
     assert CanonicalMessageRepository(db_path).get_by_raw_message_id(
         candidate.raw_message.raw_message_id
     ) is not None
