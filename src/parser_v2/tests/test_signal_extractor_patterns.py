@@ -152,3 +152,48 @@ def test_extracts_bare_take_profit_lines_under_tps_header() -> None:
     assert signal is not None
     assert signal.completeness == "COMPLETE"
     assert [tp.price.value for tp in signal.take_profits] == [5.8613, 6.3269, 7.2469]
+
+
+def test_range_entry_format_produces_range_structure() -> None:
+    """entry: N-M deve produrre entry_structure=RANGE con 2 leg LIMIT."""
+    text = (
+        "BTCUSDT Лонг\n"
+        "Вход: 64000-66000\n"
+        "SL: 62000\n"
+        "TP1: 70000\n"
+    )
+    signal = _extract(text)
+    assert signal is not None
+    assert signal.entry_structure == "RANGE"
+    assert len(signal.entries) == 2
+    assert signal.entries[0].entry_type == "LIMIT"
+    assert signal.entries[1].entry_type == "LIMIT"
+    assert signal.entries[0].price.value == 64000.0
+    assert signal.entries[1].price.value == 66000.0
+    assert signal.entries[0].sequence == 1
+    assert signal.entries[1].sequence == 2
+
+
+def test_two_discrete_entries_produce_two_step_not_range() -> None:
+    """Due entry separate devono produrre TWO_STEP, non RANGE."""
+    text = (
+        "BTCUSDT Лонг\n"
+        "Вход A: 64000\n"
+        "Вход B: 66000\n"
+        "SL: 62000\n"
+        "TP1: 70000\n"
+    )
+    signal = _extract(text)
+    assert signal is not None
+    assert signal.entry_structure == "TWO_STEP"
+    assert len(signal.entries) == 2
+
+
+def test_range_entry_english_format() -> None:
+    """entry: N-M in formato inglese deve produrre RANGE."""
+    text = "ETHUSDT Long\nentry: 2000-2100\nSL: 1900\nTP1: 2300\n"
+    signal = _extract(text)
+    assert signal is not None
+    assert signal.entry_structure == "RANGE"
+    assert signal.entries[0].price.value == 2000.0
+    assert signal.entries[1].price.value == 2100.0
