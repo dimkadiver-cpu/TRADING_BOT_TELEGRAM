@@ -23,9 +23,9 @@ ResolvedTraderContext
 input pronto per parser_v2
 ```
 
-L'obiettivo e' separare in modo esplicito cio' che oggi e' disperso tra `TelegramListener`, `RawMessageIngestionService`, `RawMessageStore`, `EffectiveTraderResolver`, `MessageEligibilityEvaluator`, `parser_test` e `MessageRouter`.
+L'obiettivo e' separare in modo esplicito cio' che oggi e' disperso tra `TelegramListener`, `RawMessageIngestionService`, `RawMessageStore`, `EffectiveTraderResolver`, `MessageEligibilityEvaluator`, `[...]
 
-Il risultato della fase non deve ancora parsare con `parser_v2`: deve consegnare un raw message persistito e un trader effettivo tracciabile, con gli stessi criteri usabili dal live e da `parser_test`.
+Il risultato della fase non deve ancora parsare con `parser_v2`: deve consegnare un raw message persistito e un trader effettivo tracciabile, con gli stessi criteri usabili dal live e da `parser_test`[...]
 
 ---
 
@@ -100,21 +100,67 @@ Il listener non deve:
 
 La blacklist di rumore configurato puo' essere applicata prima del job parser, ma il messaggio resta persistito in `raw_messages` con stato tracciabile.
 
-L'eligibility iniziale non decide se un segnale e' tradabile. Decide solo se un messaggio puo' passare alla fase parser o deve andare in review/log per contesto insufficiente, ad esempio short update senza strong link.
+L'eligibility iniziale non decide se un segnale e' tradabile. Decide solo se un messaggio puo' passare alla fase parser o deve andare in review/log per contesto insufficiente, ad esempio short update [...]
 
-### 5.3 Trader resolution e' un servizio condiviso
+### 5.3 Trader resolution: config-driven first, then algorithm
 
 Il resolver deve essere lo stesso concetto per live e `parser_test`.
 
-Priorita' raccomandata:
+**Strategia raccomandata per live:**
 
-1. alias/tag esplicito nel testo del messaggio;
-2. trader gia' risolto o `source_trader_id` nella reply-chain;
-3. alias/tag nel testo degli antenati della reply-chain;
-4. mapping sorgente da chat id, username, title, topic/config;
-5. fallback esplicito solo nei tool di import/replay, mai silenzioso nel live.
+```
+1. Lookup channels.yaml per chat_id (e topic_id se presente)
+   → Se entry ha trader_id valorizzato
+      → Usa direttamente, metodo="source_chat_id" o "source_topic_config"
+      → FINE (risolto)
+   → Se entry NON ha trader_id (multi-trader)
+      → Prosegui a step 2
+
+2. Chiama EffectiveTraderResolver con questa priorità:
+   a) alias/tag esplicito nel testo del messaggio
+   b) trader già risolto o source_trader_id nella reply-chain
+   c) alias/tag nel testo degli antenati della reply-chain
+   → Se risolto
+      → Usa il risultato
+      → FINE
+   → Se non risolto
+      → Vai a step 3
+
+3. Unresolved
+   → processing_status=review
+   → reason="unresolved_trader"
+```
 
 Un risultato ambiguo e' diverso da un risultato assente: entrambi non passano al parser live, ma devono avere `resolution_method` e reason distinguibili.
+
+**Strategia per parser_test:**
+
+```
+1. Se --default-source-trader fornito
+   → Assegna source_trader_id = --default-source-trader
+   → Assegna resolved_trader_id = normalized(--default-source-trader)
+   → Metodo = "source_trader_id"
+   → FINE
+
+2. Altrimenti, per ogni raw_message:
+   a) Se source_trader_id già valorizzato (da import precedente)
+      → Usa direttamente, metodo="source_trader_id"
+      → FINE
+   
+   b) Se NO, chiama EffectiveTraderResolver (stessa priorità del live):
+      - alias nel testo
+      - reply-chain
+      - alias negli antenati
+      → Se risolto → usa quello
+      → Se non risolto → prosegui a step c
+   
+   c) Se --assume-trader fornito (fallback SOLO parser_test)
+      → Usa --assume-trader, metodo="assume_trader"
+      → FINE
+   
+   d) Altrimenti
+      → resolved_trader_id=NULL, metodo="unresolved"
+```
 
 ### 5.4 Filtro messaggi e profilo parser restano separati
 
@@ -326,7 +372,24 @@ Colonne candidate da aggiungere al live:
 6. Altrimenti crea job/processing_status=pending.
 7. Worker prende il job.
 8. Eligibility iniziale valuta strong link per short update.
-9. TraderResolver produce ResolvedTraderContext.
+9. TraderResolver:
+   9a. Lookup channels.yaml per (source_chat_id, source_topic_id)
+       → Se entry.trader_id valorizzato
+          → resolved_trader_id = entry.trader_id
+          → resolution_method = "source_chat_id" o "source_topic_config"
+          → processing_status = done
+          → GOTO step 12
+   9b. Altrimenti chiama EffectiveTraderResolver con priorità:
+       1) alias/tag nel testo
+       2) reply-chain (trader_id o source_trader_id ereditato)
+       3) alias negli antenati reply-chain
+       → Se risolto
+          → resolved_trader_id = result.trader_id
+          → resolution_method = result.method
+          → processing_status = done
+          → GOTO step 12
+       → Se ambiguo/unresolved
+          → GOTO step 10
 10. Se unresolved/ambiguous, processing_status=review e review_queue/audit riceve reason.
 11. Se risolto, persist resolved_trader_id/resolution_method.
 12. Produce ParserDispatchCandidate per la fase parser.
@@ -339,7 +402,7 @@ Colonne candidate da aggiungere al live:
 2. Per ogni chat/topic attivo, recupero da checkpoint topic-aware.
 3. Persistenza raw con acquisition_mode=catchup.
 4. Dedup evita doppia acquisizione.
-5. Processing segue lo stesso flusso del live.
+5. Processing segue lo stesso flusso del live (sezione 8.1).
 ```
 
 Regola: il fatto che un messaggio sia `catchup` non lo rende non parsabile. Eventuali policy operative su MARKET catchup appartengono alle operation rules, non all'intake.
@@ -348,8 +411,38 @@ Regola: il fatto che un messaggio sia `catchup` non lo rende non parsabile. Even
 
 ```text
 1. import_history.py salva raw_messages con acquisition_mode=import.
-2. Se --default-source-trader e' presente, valorizza source_trader_id e resolved_trader_id con method source/import esplicito.
-3. resolve_traders.py ricalcola/persiste resolved_trader_id quando serve.
+
+2. Se --default-source-trader è presente:
+   → source_trader_id = --default-source-trader
+   → resolved_trader_id = normalize(--default-source-trader)
+   → resolution_method = "source_trader_id"
+   → FINE (skip resolve_traders per questi messaggi)
+
+3. resolve_traders.py (per messaggi senza resolved_trader_id già valorizzato):
+   a) Se source_trader_id già presente (da import precedente)
+      → resolved_trader_id = normalize(source_trader_id)
+      → resolution_method = "source_trader_id"
+      → FINE
+   
+   b) Altrimenti chiama EffectiveTraderResolver (stessa priorità del live):
+      1) alias nel testo
+      2) reply-chain
+      3) alias negli antenati
+      → Se risolto
+         → resolved_trader_id = result.trader_id
+         → resolution_method = result.method
+         → FINE
+      → Se non risolto, prosegui a step c
+   
+   c) Se --assume-trader fornito (fallback SOLO parser_test)
+      → resolved_trader_id = normalize(--assume-trader)
+      → resolution_method = "assume_trader"
+      → FINE
+   
+   d) Altrimenti
+      → resolved_trader_id = NULL
+      → resolution_method = "unresolved"
+
 4. replay_parser_v2.py filtra per trader_filter e sceglie parser_profile.
 ```
 
@@ -419,6 +512,7 @@ src/runtime_v2/
     trader_resolution/
         resolver.py
         models.py
+        channel_config_resolver.py
     persistence/
         raw_messages.py
         processing_jobs.py
@@ -431,6 +525,7 @@ Uso dei moduli esistenti:
 - riusare o adattare `src.storage.raw_messages.RawMessageStore`;
 - riusare `src.telegram.effective_trader.EffectiveTraderResolver` come base della logica;
 - riusare `src.telegram.trader_mapping.TelegramSourceTraderMapper`;
+- caricare `config/channels.yaml` per lookup rapido;
 - non importare `src.telegram.router.MessageRouter`;
 - non importare parser legacy `src/parser`;
 - non importare operation rules o execution.
@@ -443,27 +538,28 @@ Per una prima slice e' accettabile creare adapter sottili in `runtime_v2/persist
 
 ### 11.1 Done significa
 
-La fase PRD 01 e' implementata quando un messaggio live, catchup o importato puo' essere salvato come raw, processato in modo idempotente, risolto a trader effettivo o mandato in review con reason tracciabile, senza passare dal `MessageRouter`.
+La fase PRD 01 e' implementata quando un messaggio live, catchup o importato puo' essere salvato come raw, processato in modo idempotente, risolto a trader effettivo o mandato in review con reason tra[...]
 
 ### 11.2 Criteri pass/fail
 
 1. Un messaggio nuovo produce un solo `raw_message_id` anche se ricevuto due volte.
 2. Un messaggio con topic conserva `source_topic_id` e partecipa a checkpoint/recovery topic-aware.
-3. Un messaggio mono-trader risolve il trader da source mapping o config.
-4. Un messaggio multi-trader con alias nel testo risolve `resolved_trader_id` e `resolution_method=content_alias`.
-5. Un update breve senza reply/link/ref forte va in review con `short_update_without_strong_link`.
-6. Un reply-to-reply eredita il trader dalla chain entro depth limit e senza loop.
-7. Un alias ambiguo non viene forzato a un trader: va in review.
-8. `parser_test` e live usano la stessa semantica di `source_trader_id`, `resolved_trader_id`, `resolution_method`.
-9. Nessun modulo del nuovo intake importa `src.telegram.router`.
-10. Il risultato finale della fase e' un `ParserDispatchCandidate`, non un parse result.
+3. Un messaggio da canale mono-trader (con trader_id in channels.yaml) risolve trader da config subito.
+4. Un messaggio da canale multi-trader con alias nel testo risolve `resolved_trader_id` e `resolution_method=content_alias`.
+5. Un messaggio da canale multi-trader senza alias va in review e prova reply-chain.
+6. Un update breve senza reply/link/ref forte va in review con `short_update_without_strong_link`.
+7. Un reply-to-reply eredita il trader dalla chain entro depth limit e senza loop.
+8. Un alias ambiguo non viene forzato a un trader: va in review.
+9. `parser_test` e live usano la stessa semantica di trader resolution: config → text → reply-chain.
+10. Nessun modulo del nuovo intake importa `src.telegram.router`.
+11. Il risultato finale della fase e' un `ParserDispatchCandidate`, non un parse result.
 
 ### 11.3 Segnale primario
 
 Il segnale primario e' una suite mirata che dimostri:
 
 ```text
-raw ingest -> trader resolution -> ParserDispatchCandidate oppure review
+raw ingest → trader resolution (config-driven first) → ParserDispatchCandidate oppure review
 ```
 
 su casi live-like e parser_test-like.
@@ -472,7 +568,7 @@ su casi live-like e parser_test-like.
 
 - Test storage raw messages e dedup.
 - Test topic/recovery sui checkpoint.
-- Test effective trader resolver.
+- Test effective trader resolver con priorità config → text → reply-chain.
 - Test review queue per unresolved/ambiguous.
 - Test import/replay compatibility su DB `parser_test`.
 
@@ -485,17 +581,20 @@ su casi live-like e parser_test-like.
 - `RawMessageEnvelope` rifiuta campi incoerenti o mancanti.
 - Dedup raw su `(source_chat_id, telegram_message_id)`.
 - Salvataggio metadata topic/media senza perdere compatibilita' con schemi vecchi.
-- Mapping source chat id / username / title / topic.
-- Alias nel testo con un solo trader.
-- Alias nel testo con piu' trader -> ambiguous.
+- Lookup channels.yaml per (chat_id, topic_id) -> trader_id risolve direttamente.
+- Canale multi-trader: alias nel testo con un solo trader.
+- Canale multi-trader: alias nel testo con piu' trader -> ambiguous.
 - Reply-chain transitiva, max depth e loop protection.
 - Short update senza strong link -> review-only.
 
 ### 12.2 Integration
 
-- Ingest live-like -> raw -> job -> resolved trader.
+- Ingest live-like (canale mono-trader) → risolve da config.
+- Ingest live-like (canale multi-trader + alias) → risolve da text.
+- Ingest live-like (reply-chain) → eredita trader.
 - Catchup duplicate -> non crea doppio raw ne' doppio job attivo.
-- Parser test DB -> resolve traders -> stessi method/reason del live.
+- Import con --default-source-trader → assegna subito resolved_trader_id.
+- Parser test DB resolve_traders.py → stessi method/reason del live.
 - Canale/topic configurato inattivo -> skip tracciato.
 - Nuovo package `runtime_v2` non importa `src.telegram.router`.
 
@@ -517,11 +616,18 @@ Usare come base i test esistenti:
 
 1. Aggiungere migrazioni additive per colonne mancanti in `raw_messages`.
 2. Introdurre modelli `runtime_v2.intake` e `runtime_v2.trader_resolution`.
-3. Creare adapter persistence su `RawMessageStore` e processing status esistenti.
-4. Estrarre un servizio `RuntimeV2IntakeProcessor` che fa eligibility + trader resolution.
-5. Allineare `parser_test` a eventuali enum/method condivisi senza cambiare il suo flusso.
-6. Aggiungere test mirati su live-like e parser_test-like.
-7. Solo dopo, passare al PRD 02 per chiamare `parser_v2`.
+3. Creare modulo `runtime_v2.trader_resolution.channel_config_resolver` che:
+   - Carica e cache `config/channels.yaml`
+   - Lookup per `(source_chat_id, source_topic_id)` → restituisce `trader_id` se presente
+4. Creare adapter persistence su `RawMessageStore` e processing status esistenti.
+5. Estrarre un servizio `RuntimeV2IntakeProcessor` che:
+   - Prova channel_config_resolver FIRST
+   - Se no result, chiama EffectiveTraderResolver
+   - Gestisce unresolved/ambiguous → review
+6. Refactor `EffectiveTraderResolver.resolve()` per mantenere priorità: text → reply-chain.
+7. Allineare `parser_test/scripts/resolve_traders.py` a stessa logica.
+8. Aggiungere test mirati su live-like (mono-trader + multi-trader) e parser_test-like.
+9. Solo dopo, passare al PRD 02 per chiamare `parser_v2`.
 
 ---
 
@@ -543,18 +649,24 @@ Decisione: mantenere unique attuale e usare topic per checkpoint, filtri e conte
 
 `assume_trader` e' utile nei tool e per dataset mono-trader. Nel live puo' nascondere errori di configurazione.
 
-Decisione: fallback live solo se configurato esplicitamente e auditato.
+Decisione: fallback live solo se configurato esplicitamente e auditato. parser_test ha --assume-trader come fallback opzionale.
 
 ### 14.4 Media
 
 L'MVP del parser lavora sul testo. I media con caption possono essere acquisiti; i media-only senza testo possono essere loggati/skippati. L'analisi del contenuto media e' fuori ambito.
+
+### 14.5 Cache channels.yaml
+
+La config `channels.yaml` deve essere caricata al bootstrap e hot-reloadata su modifica (via watchdog).
+
+Decisione: singleton cache in `runtime_v2.trader_resolution.channel_config_resolver` per evitare lookup ripetuti.
 
 ---
 
 ## 15. Documentazione da allineare dopo implementazione
 
 - `README.md`: stato del nuovo runtime e comandi di test.
-- `parser_test/README.md`: se vengono introdotti enum condivisi per `resolution_method`.
+- `parser_test/README.md`: aggiornare logica resolve_traders con nuova priorità.
 - `docs/PRD_listener.md` e `docs/PRD_router.md`: indicare che descrivono il runtime legacy/baseline, non il clean core.
 - Documento madre: aggiornare lo stato della fase B quando la slice sara' implementata.
 
@@ -567,7 +679,7 @@ Il PRD 02 puo' partire quando PRD 01 consegna questo oggetto logico:
 ```text
 ParserDispatchCandidate(
     raw_message=RawMessageEnvelope(raw_message_id=123, source_chat_id="-1003722628653"),
-    resolved_trader=ResolvedTraderContext(trader_id="trader_a", method="content_alias"),
+    resolved_trader=ResolvedTraderContext(trader_id="trader_a", method="source_chat_id"),
     parser_profile="trader_a",
     parser_context_payload={"telegram_message_id": 456, "source_topic_id": 3}
 )
