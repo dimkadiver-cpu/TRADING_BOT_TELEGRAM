@@ -235,3 +235,158 @@ def test_criterion_13_acquisition_status_immutable(db_path):
     # Changing processing_status must not affect acquisition_status
     repo.update_processing_status(env.raw_message_id, "review")
     assert repo.get_by_id(env.raw_message_id).acquisition_status == "BLACKLISTED"
+
+
+# ---------------------------------------------------------------------------
+# PRD 2.b — Acceptance: slice end-to-end PRD 01 → parser_pipeline
+# ---------------------------------------------------------------------------
+
+_SIGNAL_TEXT_PRD2B = (
+    "[trader#A]\n"
+    "BTCUSDT Лонг\n"
+    "Вход: 65000\n"
+    "SL: 62000\n"
+    "TP1: 70000\n"
+)
+_INFO_TEXT_PRD2B = "#admin Технические работы на сервере"
+_PARTIAL_TEXT_PRD2B = "BTCUSDT Лонг\nВход: 65000"  # missing SL/TP → PARTIAL or UNCLASSIFIED
+
+
+def _run_intake_prd2b(
+    db_path: str,
+    text: str,
+    msg_id: int,
+    trader_id: str = "trader_a",
+) -> "ParserDispatchCandidate":
+    """Run PRD 01 intake to produce a ParserDispatchCandidate."""
+    from src.runtime_v2.intake.models import IntakeConfig
+    from src.runtime_v2.intake.eligibility import IntakeEligibilityCheck
+    from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
+    from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+    from src.runtime_v2.trader_resolution.resolver import RuntimeV2TraderResolver
+    from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
+    from src.runtime_v2.intake.processor import RuntimeV2IntakeProcessor
+    from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+
+    repo = RawMessageRepository(db_path=db_path)
+
+    channel_entry = ChannelEntry(
+        chat_id="-100123",
+        topic_id=3,
+        label="Test",
+        active=True,
+        trader_id=trader_id,
+        parser_profile=trader_id,
+        blacklist=[],
+    )
+    channel_config = MagicMock(spec=ChannelConfigResolver)
+    channel_config.is_globally_blacklisted.return_value = False
+    channel_config.lookup.return_value = channel_entry
+
+    resolved_ctx = ResolvedTraderContext(
+        raw_message_id=0,
+        trader_id=trader_id,
+        method="source_chat_id",
+        detail=None,
+        is_ambiguous=False,
+        resolved_at=_TS,
+    )
+    resolver = MagicMock(spec=RuntimeV2TraderResolver)
+    resolver.resolve.return_value = resolved_ctx
+
+    eligibility = MagicMock(spec=IntakeEligibilityCheck)
+    eligibility.check.return_value = MagicMock(eligible=True, review_reason=None)
+
+    processor = RuntimeV2IntakeProcessor(
+        repo=repo,
+        eligibility=eligibility,
+        resolver=resolver,
+        channel_config=channel_config,
+        config=IntakeConfig(),
+    )
+
+    item = _make_item(chat_id="-100123", msg_id=msg_id, text=text, topic_id=3)
+
+    with patch("src.runtime_v2.intake.processor.list_parser_v2_profiles", return_value=[trader_id]):
+        result = processor.process(item)
+
+    assert result is not None, "Intake produced no ParserDispatchCandidate"
+    return result
+
+
+def test_prd2b_signal_persisted_in_canonical_messages(db_path):
+    from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+    from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+
+    candidate = _run_intake_prd2b(db_path, _SIGNAL_TEXT_PRD2B, msg_id=100)
+    repo = CanonicalMessageRepository(db_path)
+    processor = ParserPipelineProcessor(canonical_repo=repo)
+    result = processor.process(candidate)
+
+    assert isinstance(result, CanonicalParseResult)
+    assert result.primary_class == "SIGNAL"
+    assert result.parse_status in {"PARSED", "PARTIAL"}
+    stored = CanonicalMessageRepository(db_path).get_by_raw_message_id(
+        candidate.raw_message.raw_message_id
+    )
+    assert stored is not None
+    assert stored.primary_class == "SIGNAL"
+
+
+def test_prd2b_info_message_persisted_schema_valid(db_path):
+    from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+    from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+
+    candidate = _run_intake_prd2b(db_path, _INFO_TEXT_PRD2B, msg_id=101)
+    repo = CanonicalMessageRepository(db_path)
+    processor = ParserPipelineProcessor(canonical_repo=repo)
+    result = processor.process(candidate)
+
+    assert isinstance(result, CanonicalParseResult)
+    assert result.primary_class in {"INFO", "UNCLASSIFIED", "SIGNAL", "UPDATE", "REPORT"}
+    assert CanonicalMessageRepository(db_path).get_by_raw_message_id(
+        candidate.raw_message.raw_message_id
+    ) is not None
+
+
+def test_prd2b_partial_message_persisted_not_failed(db_path):
+    from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+    from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+
+    candidate = _run_intake_prd2b(db_path, _PARTIAL_TEXT_PRD2B, msg_id=102)
+    repo = CanonicalMessageRepository(db_path)
+    processor = ParserPipelineProcessor(canonical_repo=repo)
+    result = processor.process(candidate)
+
+    assert isinstance(result, CanonicalParseResult)
+    assert result.parse_status in {"PARTIAL", "UNCLASSIFIED", "PARSED"}
+    assert CanonicalMessageRepository(db_path).get_by_raw_message_id(
+        candidate.raw_message.raw_message_id
+    ) is not None
+
+
+def test_prd2b_idempotent_second_process_same_canonical_id(db_path):
+    from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+    from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+
+    candidate = _run_intake_prd2b(db_path, _SIGNAL_TEXT_PRD2B, msg_id=103)
+    repo = CanonicalMessageRepository(db_path)
+    processor = ParserPipelineProcessor(canonical_repo=repo)
+    result1 = processor.process(candidate)
+    result2 = processor.process(candidate)
+
+    assert isinstance(result1, CanonicalParseResult)
+    assert isinstance(result2, CanonicalParseResult)
+    assert result1.canonical_message_id == result2.canonical_message_id
+
+
+def test_prd2b_no_router_import_in_parser_pipeline():
+    import importlib
+    import sys
+
+    importlib.import_module("src.runtime_v2.parser_pipeline.processor")
+    assert "src.telegram.router" not in sys.modules
