@@ -240,3 +240,44 @@ def test_move_stop_to_be_intent_no_new_warning() -> None:
 
     assert result.parse_status == "PARSED"
     assert "move_stop_no_price_defaulted_to_be" not in result.warnings
+
+
+def test_no_target_hints_uses_plain_operations_not_targeted() -> None:
+    """Senza target hints, le operazioni vanno in update.operations, non targeted_actions."""
+    intents = [_make_intent("MOVE_STOP_TO_BE")]
+    parsed = _make_parsed(intents, target_hints=None)
+    result = CanonicalTranslator().translate(parsed)
+
+    assert len(result.targeted_actions) == 0
+    assert result.update is not None
+    assert len(result.update.operations) == 1
+    assert result.update.operations[0].op_type == "SET_STOP"
+
+
+def test_message_target_hints_forces_all_to_targeted_operations_empty() -> None:
+    """Con target hints a livello messaggio, tutto in targeted_actions e update.operations vuoto."""
+    intents = [_make_intent("MOVE_STOP_TO_BE"), _make_intent("CANCEL_PENDING")]
+    parsed = _make_parsed(intents, target_hints=TargetHints(telegram_message_ids=[99]))
+    result = CanonicalTranslator().translate(parsed)
+
+    assert len(result.targeted_actions) == 2
+    assert result.update is not None
+    assert len(result.update.operations) == 0
+
+
+def test_per_intent_local_target_forces_all_to_targeted_no_mix() -> None:
+    """Se almeno un intent ha target locale, tutti vanno in targeted_actions — anche quelli senza."""
+    local_hints = TargetHints(target_source="LOCAL_TEXT_LINK", telegram_message_ids=[11])
+    intents = [
+        _make_intent("MOVE_STOP_TO_BE", target_hints=local_hints),
+        _make_intent("CANCEL_PENDING"),  # nessun target locale
+    ]
+    parsed = _make_parsed(intents, target_hints=None)
+    result = CanonicalTranslator().translate(parsed)
+
+    assert len(result.targeted_actions) == 2
+    assert result.update is not None
+    assert len(result.update.operations) == 0
+    action_types = {a.action_type for a in result.targeted_actions}
+    assert "SET_STOP" in action_types
+    assert "CANCEL_PENDING" in action_types
