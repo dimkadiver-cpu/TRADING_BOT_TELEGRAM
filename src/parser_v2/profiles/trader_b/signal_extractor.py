@@ -29,6 +29,14 @@ _CYR_MARKET_ROOT = "\u0440\u044b\u043d"
 _CYR_SPOT_ROOT = "\u0441\u043f\u043e\u0442"
 _BULLET_CHARS = r"\-*•—–"
 
+_ENTRY_RANGE_RE = re.compile(
+    rf"\b(?:entry|vhod|{_CYR_ENTRY})\b"
+    rf"(?:\s+(?:\([^)\n]*\)|[^\n:(){{}}]{{1,32}}))?"
+    rf"\s*[:=@]?\s*"
+    rf"(?P<min>{_NUMBER_PATTERN})\s*[-–—]\s*(?P<max>{_NUMBER_PATTERN})(?!\s*%)",
+    re.IGNORECASE,
+)
+
 _SYMBOL_RE = re.compile(
     r"(?:#|\$)?(?P<symbol>[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b",
     re.IGNORECASE,
@@ -95,6 +103,22 @@ _DEFAULT_RISK_PREFIXES = ["risk", "риск", "вход", "на сделку"]
 _DEFAULT_RISK_SUFFIXES = ["от депозита", "риска", "на сделку"]
 
 
+def _try_range_entry(text: str) -> list[EntryLeg] | None:
+    match = _ENTRY_RANGE_RE.search(text)
+    if not match:
+        return None
+    min_price = _price_from_raw(match.group("min"))
+    max_price = _price_from_raw(match.group("max"))
+    if min_price is None or max_price is None:
+        return None
+    if min_price.value > max_price.value:
+        min_price, max_price = max_price, min_price
+    return [
+        EntryLeg(sequence=1, entry_type="LIMIT", price=min_price, role="PRIMARY", is_optional=False),
+        EntryLeg(sequence=2, entry_type="LIMIT", price=max_price, role="AVERAGING", is_optional=False),
+    ]
+
+
 class SignalExtractor:
     def __init__(
         self,
@@ -110,7 +134,15 @@ class SignalExtractor:
 
         symbol = normalize_symbol(_extract_symbol(text))
         side = _extract_side(normalized_text)
-        entries = _extract_entries(text, market_hint=market_hint)
+
+        range_entries = _try_range_entry(text)
+        if range_entries is not None:
+            entries = range_entries
+            entry_structure = "RANGE"
+        else:
+            entries = _extract_entries(text, market_hint=market_hint)
+            entry_structure = _entry_structure(entries)
+
         stop_loss = _extract_stop_loss(text)
         take_profits = _extract_take_profits(text)
         risk_hint = _extract_risk_hint(text, self._risk_prefixes, self._risk_suffixes)
@@ -129,7 +161,7 @@ class SignalExtractor:
         return SignalDraft(
             symbol=symbol,
             side=side,
-            entry_structure=_entry_structure(entries),
+            entry_structure=entry_structure,
             entries=entries,
             stop_loss=stop_loss,
             take_profits=take_profits,

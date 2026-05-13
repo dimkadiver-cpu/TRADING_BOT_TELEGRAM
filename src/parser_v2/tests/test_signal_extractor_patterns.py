@@ -197,3 +197,17 @@ def test_range_entry_english_format() -> None:
     assert signal.entry_structure == "RANGE"
     assert signal.entries[0].price.value == 2000.0
     assert signal.entries[1].price.value == 2100.0
+
+
+def test_trader_b_range_entry_produces_range_structure() -> None:
+    from src.parser_v2.profiles.trader_b.signal_extractor import SignalExtractor as TraderBExtractor
+
+    extractor = TraderBExtractor()
+    text = "ETHUSDT.P Лонг\nВход: 2000-2100\nSL: 1900\nTP1: 2300\n"
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = extractor.extract(normalized)
+    assert signal is not None
+    assert signal.entry_structure == "RANGE"
+    assert len(signal.entries) == 2
+    assert signal.entries[0].price.value == 2000.0
+    assert signal.entries[1].price.value == 2100.0
