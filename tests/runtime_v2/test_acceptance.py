@@ -62,6 +62,22 @@ def _make_item(
     )
 
 
+def _make_resolved(
+    trader_id: str | None,
+    method: str,
+    is_ambiguous: bool = False,
+) -> ResolvedTraderContext:
+    """Helper to create ResolvedTraderContext with consistent defaults."""
+    return ResolvedTraderContext(
+        raw_message_id=0,
+        trader_id=trader_id,
+        method=method,
+        detail=None,
+        is_ambiguous=is_ambiguous,
+        resolved_at=_TS,
+    )
+
+
 def _build(
     db_path: str,
     *,
@@ -70,6 +86,7 @@ def _build(
     active: bool = True,
     globally_blacklisted: bool = False,
     eligible: bool = True,
+    review_reason: str | None = None,
     resolved_trader_id: str | None = "trader_a",
     resolved_method: str = "source_chat_id",
     is_ambiguous: bool = False,
@@ -95,19 +112,18 @@ def _build(
     )
 
     resolver = MagicMock(spec=RuntimeV2TraderResolver)
-    resolver.resolve.return_value = ResolvedTraderContext(
-        raw_message_id=0,
-        trader_id=resolved_trader_id,
-        method=resolved_method,
-        detail=None,
-        is_ambiguous=is_ambiguous,
-        resolved_at=_TS,
+    resolver.resolve.return_value = _make_resolved(
+        resolved_trader_id, resolved_method, is_ambiguous
+    )
+
+    _review_reason = review_reason if review_reason is not None else (
+        "short_update_without_strong_link" if not eligible else None
     )
 
     eligibility = MagicMock(spec=IntakeEligibilityCheck)
     eligibility.check.return_value = MagicMock(
         eligible=eligible,
-        review_reason=None if eligible else "short_update_without_strong_link",
+        review_reason=_review_reason,
     )
 
     processor = RuntimeV2IntakeProcessor(
@@ -150,7 +166,11 @@ def test_criterion_3_mono_trader_from_config(mock_profiles, db_path):
 
 # Criterion 6: short update without strong link → processing_status=review, acquisition_status=ACQUIRED
 def test_criterion_6_short_update_review(db_path):
-    p, repo = _build(db_path, eligible=False)
+    p, repo = _build(
+        db_path,
+        eligible=False,
+        review_reason="short_update_without_strong_link",
+    )
     result = p.process(_make_item(text="ok"))
     assert result is None
     env = repo.get_by_id(1)
