@@ -87,3 +87,50 @@ CREATE INDEX IF NOT EXISTS idx_raw_messages_resolved_trader_id
 ```bash
 pytest tests/runtime_v2/test_raw_message_repository.py -v
 ```
+
+---
+
+## Applicare la migration 024
+
+Prima di usare `CanonicalMessageRepository`, la tabella `canonical_messages` deve esistere.
+
+```bash
+python -c "
+import sqlite3, pathlib
+conn = sqlite3.connect('db/live.db')
+conn.executescript(pathlib.Path('db/migrations/024_runtime_v2_canonical_messages.sql').read_text())
+conn.commit()
+tables = [r[0] for r in conn.execute(\"SELECT name FROM sqlite_master WHERE type='table'\")]
+print('canonical_messages' in tables)
+conn.close()
+"
+```
+
+Output atteso: `True`
+
+## Usare CanonicalMessageRepository
+
+```python
+from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
+
+repo = CanonicalMessageRepository(db_path="db/live.db")
+
+# Salva (idempotente — secondo save con stesso raw_message_id e run_context restituisce l'ID esistente)
+canonical_id = repo.save(raw_message_id=42, canonical=canonical_msg)
+print(canonical_id)   # int > 0
+
+# Salva in contesto diverso (es. re-parse)
+canonical_id2 = repo.save(raw_message_id=42, canonical=canonical_msg, run_context="reparse_20260513")
+
+# Recupera per raw_message_id (default run_context="live")
+msg = repo.get_by_raw_message_id(raw_message_id=42)
+if msg is not None:
+    print(msg.primary_class)   # "SIGNAL", "UPDATE", "REPORT", "INFO"
+    print(msg.parse_status)    # "PARSED", "PARTIAL", "UNCLASSIFIED"
+```
+
+## Test
+
+```bash
+pytest tests/runtime_v2/test_canonical_message_repository.py -v
+```

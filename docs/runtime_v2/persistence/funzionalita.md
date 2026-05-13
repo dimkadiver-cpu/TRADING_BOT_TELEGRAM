@@ -2,9 +2,9 @@
 
 ## Responsabilità
 
-Il package `persistence` espone un adapter thin su `RawMessageStore` e `ProcessingStatusStore` (storage legacy) con l'aggiunta della gestione delle colonne introdotte dalla migration 023.
+Il package `persistence` gestisce tutta la persistenza del runtime_v2: messaggi raw (migration 023) e messaggi canonici parsati (migration 024).
 
-## Componente
+## Componenti
 
 ### `raw_messages.py`
 
@@ -53,3 +53,48 @@ Deve essere applicata prima di usare `RawMessageRepository`. Vedi `docs/runtime_
 - `set_media_only_skipped()` → `MEDIA_ONLY_SKIPPED`
 
 `update_processing_status()` modifica **solo** `processing_status` e non tocca `acquisition_status`.
+
+---
+
+### `canonical_messages.py`
+
+- **`CanonicalMessageRepository`** — unica classe pubblica. Persiste i `CanonicalMessage` prodotti da `ParserPipelineProcessor` nella tabella `canonical_messages`.
+
+  **Costruttore:** `CanonicalMessageRepository(db_path: str)`
+
+  **Metodi pubblici:**
+
+  | Metodo | Descrizione |
+  |--------|-------------|
+  | `save(raw_message_id, canonical, run_context="live") -> int` | Persiste il `CanonicalMessage`. Idempotente: secondo salvataggio con stesso `(raw_message_id, run_context)` restituisce l'ID esistente senza creare duplicati. |
+  | `get_by_raw_message_id(raw_message_id, run_context="live") -> CanonicalMessage \| None` | Recupera il `CanonicalMessage` dal DB. Restituisce `None` se non trovato. |
+
+## Schema tabella `canonical_messages`
+
+| Colonna | Tipo | Note |
+|---------|------|------|
+| `canonical_message_id` | INTEGER PK | Autoincrement |
+| `raw_message_id` | INTEGER NOT NULL | Reference logica a `raw_messages` (no FK) |
+| `run_context` | TEXT DEFAULT 'live' | Distingue live da re-parse futuri |
+| `parser_profile` | TEXT NOT NULL | Profilo usato |
+| `schema_version` | TEXT NOT NULL | `canonical_message_v2` |
+| `primary_class` | TEXT NOT NULL | `SIGNAL \| UPDATE \| REPORT \| INFO` |
+| `parse_status` | TEXT NOT NULL | `PARSED \| PARTIAL \| UNCLASSIFIED` |
+| `primary_intent` | TEXT nullable | Intent principale (UPDATE) |
+| `confidence` | REAL NOT NULL | Score classificazione |
+| `canonical_json` | TEXT NOT NULL | `CanonicalMessage.model_dump_json()` |
+| `warnings_json` | TEXT DEFAULT '[]' | Warning list JSON |
+| `diagnostics_json` | TEXT DEFAULT '{}' | Diagnostics dict JSON |
+| `parsed_at` | TEXT NOT NULL | ISO 8601 UTC |
+
+**Constraint:** `UNIQUE(raw_message_id, run_context)` — un messaggio raw non produce due righe nello stesso contesto.
+
+**Principio di separazione:** `canonical_messages` appartiene al parser bounded context. Nessuna FK verso tabelle operative. Il `processing_status` di `raw_messages` non viene mai modificato dal parser pipeline — resta `done` come impostato dall'intake.
+
+## Migration DB
+
+```
+db/migrations/024_runtime_v2_canonical_messages.sql
+```
+
+Additiva. Non modifica tabelle esistenti. Vedi `docs/runtime_v2/config/migration_024.md`.
