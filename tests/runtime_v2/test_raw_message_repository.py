@@ -1,0 +1,108 @@
+from __future__ import annotations
+import pytest
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+from src.runtime_v2.intake.models import RawIngestItem
+from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
+
+_TS = datetime(2026, 5, 13, 12, 0, 0, tzinfo=timezone.utc)
+
+
+def _apply_migrations(db_path: str) -> None:
+    conn = sqlite3.connect(db_path)
+    for f in sorted(Path("db/migrations").glob("*.sql")):
+        conn.executescript(f.read_text())
+    conn.commit()
+    conn.close()
+
+
+@pytest.fixture
+def db_path(tmp_path):
+    path = str(tmp_path / "test.db")
+    _apply_migrations(path)
+    return path
+
+
+@pytest.fixture
+def repo(db_path):
+    return RawMessageRepository(db_path=db_path)
+
+
+def _make_item(chat_id: str = "-100123", msg_id: int = 456, mode: str = "live") -> RawIngestItem:
+    return RawIngestItem(
+        source_chat_id=chat_id,
+        source_chat_title="Test",
+        source_type="channel",
+        source_topic_id=3,
+        telegram_message_id=msg_id,
+        reply_to_message_id=None,
+        raw_text="BUY BTC",
+        message_ts=_TS,
+        acquisition_mode=mode,
+        has_media=False,
+        media_kind=None,
+        media_mime_type=None,
+        media_filename=None,
+    )
+
+
+def test_save_raw_returns_envelope(repo):
+    env = repo.save_raw(_make_item())
+    assert env.raw_message_id > 0
+    assert env.source_chat_id == "-100123"
+    assert env.acquisition_status == "ACQUIRED"
+    assert env.processing_status == "pending"
+    assert env.acquisition_mode == "live"
+
+
+def test_save_raw_dedup_same_id(repo):
+    env1 = repo.save_raw(_make_item())
+    env2 = repo.save_raw(_make_item())
+    assert env1.raw_message_id == env2.raw_message_id
+
+
+def test_save_raw_catchup_mode(repo):
+    env = repo.save_raw(_make_item(mode="catchup"))
+    assert env.acquisition_mode == "catchup"
+
+
+def test_set_blacklisted(repo):
+    env = repo.save_raw(_make_item())
+    repo.set_blacklisted(env.raw_message_id)
+    updated = repo.get_by_id(env.raw_message_id)
+    assert updated.acquisition_status == "BLACKLISTED"
+    assert updated.processing_status == "blacklisted"
+
+
+def test_set_media_only_skipped(repo):
+    env = repo.save_raw(_make_item())
+    repo.set_media_only_skipped(env.raw_message_id)
+    updated = repo.get_by_id(env.raw_message_id)
+    assert updated.acquisition_status == "MEDIA_ONLY_SKIPPED"
+    assert updated.processing_status == "skipped"
+
+
+def test_update_processing_status(repo):
+    env = repo.save_raw(_make_item())
+    repo.update_processing_status(env.raw_message_id, "review")
+    updated = repo.get_by_id(env.raw_message_id)
+    assert updated.processing_status == "review"
+
+
+def test_update_trader_resolution(repo):
+    env = repo.save_raw(_make_item())
+    ctx = ResolvedTraderContext(
+        raw_message_id=env.raw_message_id,
+        trader_id="trader_a",
+        method="source_chat_id",
+        detail=None,
+        is_ambiguous=False,
+        resolved_at=_TS,
+    )
+    repo.update_trader_resolution(env.raw_message_id, ctx)
+    updated = repo.get_by_id(env.raw_message_id)
+    assert updated.resolved_trader_id == "trader_a"
+    assert updated.resolution_method == "source_chat_id"
+    assert updated.resolution_detail is None
