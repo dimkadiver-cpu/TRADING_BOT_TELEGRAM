@@ -85,3 +85,28 @@ def test_assume_trader_fallback(tmp_path: Path) -> None:
     tid, method = _get_resolution(conn, 3)
     assert tid == "trader_fallback"
     assert method == "assume_trader"
+
+
+def test_config_driven_with_topic_id(tmp_path: Path) -> None:
+    _db_path, conn = _create_test_db(tmp_path)
+    # Insert raw message with source_topic_id=5
+    conn.execute(
+        """INSERT INTO raw_messages
+           (source_chat_id, source_topic_id, telegram_message_id, raw_text, message_ts, acquired_at, acquisition_status)
+           VALUES (?, ?, ?, ?, '2026-01-01', '2026-01-01', 'ACQUIRED')""",
+        ("-100777", 5, 10, "BUY SOL"),
+    )
+    conn.commit()
+
+    # channels.yaml with topic_id=5
+    data = {
+        "blacklist_global": [],
+        "channels": [{"chat_id": -100777, "topic_id": 5, "active": True, "trader_id": "trader_topic", "blacklist": []}],
+    }
+    p = tmp_path / "channels_topic.yaml"
+    p.write_text(yaml.dump(data))
+
+    resolve_all(conn, channels_yaml=str(p))
+    tid, method = _get_resolution(conn, 10)
+    assert tid == "trader_topic"
+    assert method == "source_topic_config"

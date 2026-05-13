@@ -22,6 +22,7 @@ from src.telegram.effective_trader import EffectiveTraderContext, EffectiveTrade
 class _RawRow:
     raw_message_id: int
     source_chat_id: str
+    source_topic_id: int | None
     telegram_message_id: int
     source_trader_id: str | None
     raw_text: str | None
@@ -34,14 +35,15 @@ def _fetch_rows(conn: sqlite3.Connection) -> list[_RawRow]:
         _RawRow(
             raw_message_id=r[0],
             source_chat_id=r[1],
-            telegram_message_id=r[2],
-            source_trader_id=r[3],
-            raw_text=r[4],
-            reply_to_message_id=r[5],
-            resolved_trader_id=r[6],
+            source_topic_id=r[2],
+            telegram_message_id=r[3],
+            source_trader_id=r[4],
+            raw_text=r[5],
+            reply_to_message_id=r[6],
+            resolved_trader_id=r[7],
         )
         for r in conn.execute(
-            "SELECT raw_message_id, source_chat_id, telegram_message_id, "
+            "SELECT raw_message_id, source_chat_id, source_topic_id, telegram_message_id, "
             "source_trader_id, raw_text, reply_to_message_id, resolved_trader_id "
             "FROM raw_messages ORDER BY raw_message_id ASC"
         ).fetchall()
@@ -90,7 +92,7 @@ def resolve_all(
 
         # config-driven: channels.yaml lookup before text-based resolution
         if _channel_config is not None:
-            entry = _channel_config.lookup(str(raw.source_chat_id), topic_id=None)
+            entry = _channel_config.lookup(str(raw.source_chat_id), topic_id=raw.source_topic_id)
             if entry is not None and entry.active and entry.trader_id:
                 method = "source_topic_config" if entry.topic_id is not None else "source_chat_id"
                 _write(conn, raw.raw_message_id, entry.trader_id, method)
