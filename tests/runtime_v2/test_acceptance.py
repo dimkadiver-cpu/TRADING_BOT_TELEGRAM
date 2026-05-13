@@ -259,15 +259,6 @@ def _run_intake_prd2b(
     trader_id: str = "trader_a",
 ) -> "ParserDispatchCandidate":
     """Run PRD 01 intake to produce a ParserDispatchCandidate."""
-    from src.runtime_v2.intake.models import IntakeConfig
-    from src.runtime_v2.intake.eligibility import IntakeEligibilityCheck
-    from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
-    from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
-    from src.runtime_v2.trader_resolution.resolver import RuntimeV2TraderResolver
-    from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
-    from src.runtime_v2.intake.processor import RuntimeV2IntakeProcessor
-    from src.runtime_v2.persistence.raw_messages import RawMessageRepository
-
     repo = RawMessageRepository(db_path=db_path)
 
     channel_entry = ChannelEntry(
