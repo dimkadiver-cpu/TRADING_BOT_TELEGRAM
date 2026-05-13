@@ -72,7 +72,7 @@ def _make_resolved(trader_id: str | None, method: str, is_ambiguous: bool = Fals
     )
 
 
-def _build_processor(repo, trader_id="trader_a", profiles=("trader_a",), globally_blacklisted=False):
+def _build_processor(repo, trader_id="trader_a", globally_blacklisted=False):
     """Builds a RuntimeV2IntakeProcessor with mocked dependencies.
     Does NOT patch list_parser_v2_profiles — individual tests do that."""
     channel_config = MagicMock(spec=ChannelConfigResolver)
@@ -126,12 +126,9 @@ def test_globally_blacklisted_returns_none(repo):
     processor, _, _, _ = _build_processor(repo, globally_blacklisted=True)
     candidate = processor.process(_make_item(text="#admin"))
     assert candidate is None
-    conn = sqlite3.connect(repo._db_path)
-    conn.row_factory = sqlite3.Row
-    row = conn.execute("SELECT acquisition_status, processing_status FROM raw_messages LIMIT 1").fetchone()
-    conn.close()
-    assert row["acquisition_status"] == "BLACKLISTED"
-    assert row["processing_status"] == "blacklisted"
+    env = repo.get_by_id(1)
+    assert env.acquisition_status == "BLACKLISTED"
+    assert env.processing_status == "blacklisted"
 
 
 def test_media_only_no_text_returns_none(repo):
@@ -139,11 +136,8 @@ def test_media_only_no_text_returns_none(repo):
     item = _make_item(text=None, has_media=True)
     candidate = processor.process(item)
     assert candidate is None
-    conn = sqlite3.connect(repo._db_path)
-    conn.row_factory = sqlite3.Row
-    row = conn.execute("SELECT acquisition_status, processing_status FROM raw_messages LIMIT 1").fetchone()
-    conn.close()
-    assert row["acquisition_status"] == "MEDIA_ONLY_SKIPPED"
+    env = repo.get_by_id(1)
+    assert env.acquisition_status == "MEDIA_ONLY_SKIPPED"
 
 
 def test_eligibility_review_returns_none(repo):
