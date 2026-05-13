@@ -67,9 +67,13 @@ def resolve_all(
     db_path: str | None = None,
     assume_trader: str | None = None,
     force_re_resolve: bool = False,
+    channels_yaml: str | None = None,
 ) -> Counter[str]:
     if resolver is None and db_path:
         resolver = build_trader_resolver(db_path)
+
+    from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+    _channel_config = ChannelConfigResolver(channels_yaml) if channels_yaml else None
 
     rows = _fetch_rows(conn)
     counts: Counter[str] = Counter()
@@ -83,6 +87,15 @@ def resolve_all(
             _write(conn, raw.raw_message_id, normalize_trader_id(raw.source_trader_id), "source_trader_id")
             counts["source_trader_id"] += 1
             continue
+
+        # config-driven: channels.yaml lookup before text-based resolution
+        if _channel_config is not None:
+            entry = _channel_config.lookup(str(raw.source_chat_id), topic_id=None)
+            if entry is not None and entry.active and entry.trader_id:
+                method = "source_topic_config" if entry.topic_id is not None else "source_chat_id"
+                _write(conn, raw.raw_message_id, entry.trader_id, method)
+                counts[method] += 1
+                continue
 
         inferred_id: str | None = None
         inferred_method: str = "unresolved"
@@ -124,6 +137,7 @@ def main() -> None:
     parser.add_argument("--db-per-chat", action="store_true")
     parser.add_argument("--assume-trader")
     parser.add_argument("--force-re-resolve", action="store_true")
+    parser.add_argument("--channels-yaml", default=None, help="Path to channels.yaml for config-driven resolution")
     args = parser.parse_args()
 
     parser_test_dir = Path(__file__).resolve().parents[1]
@@ -145,6 +159,7 @@ def main() -> None:
             db_path=db_path,
             assume_trader=args.assume_trader,
             force_re_resolve=args.force_re_resolve,
+            channels_yaml=args.channels_yaml,
         )
         summary = " | ".join(f"{k}: {v}" for k, v in sorted(counts.items()))
         print(f"[resolve] completato — {summary}")
