@@ -23,6 +23,7 @@ from src.storage.signals_store import SignalsStore
 from src.target_resolver.resolver import TargetResolver
 from src.operation_rules.loader import validate_operation_rules_config
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
+from src.runtime_v2.listener_sidecar import RuntimeV2ListenerSidecar
 from src.telegram.listener import (
     TelegramListener,
     build_effective_trader_resolver,
@@ -154,6 +155,15 @@ async def _async_main(
     )
     logger.info("canonical_v1 normalization active | table=parse_results_v1")
 
+    sidecar: RuntimeV2ListenerSidecar | None = None
+    if _is_enabled_env(os.getenv("USE_RUNTIME_V2")):
+        sidecar = RuntimeV2ListenerSidecar(
+            db_path=db_path,
+            channels_config_path=channels_yaml_path,
+            logger=logger,
+        )
+        logger.info("runtime_v2 sidecar enabled")
+
     listener = TelegramListener(
         ingestion_service=ingestion_service,
         processing_status_store=processing_status_store,
@@ -161,6 +171,7 @@ async def _async_main(
         logger=logger,
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,
+        sidecar=sidecar,
     )
 
     watcher = ChannelConfigWatcher(

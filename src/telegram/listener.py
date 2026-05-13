@@ -80,6 +80,7 @@ class TelegramListener:
         logger: logging.Logger,
         channels_config: ChannelsConfig,
         fallback_allowed_chat_ids: Iterable[int] | None = None,
+        sidecar: object | None = None,
     ) -> None:
         self._ingestion = ingestion_service
         self._status_store = processing_status_store
@@ -88,10 +89,13 @@ class TelegramListener:
         self._config = channels_config
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
         self._queue: asyncio.Queue[_QueueItem] = asyncio.Queue()
+        self._sidecar = sidecar
 
     def update_config(self, new_config: ChannelsConfig) -> None:
         self._config = new_config
         self._router.update_config(new_config)
+        if self._sidecar is not None:
+            self._sidecar.reload_config()
         self._logger.info(
             "listener config updated | active_channels=%d",
             len(new_config.active_channels),
@@ -359,6 +363,8 @@ class TelegramListener:
 
     def _process_item(self, item: _QueueItem) -> None:
         self._router.route(item)
+        if self._sidecar is not None:
+            self._sidecar.process_queue_item(item)
 
     def _is_allowed_message(self, chat_id: int | None, topic_id: int | None) -> bool:
         if chat_id is None:
