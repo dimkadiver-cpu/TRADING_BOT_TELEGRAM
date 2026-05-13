@@ -103,6 +103,8 @@ def _try_range_entry(text: str) -> list[EntryLeg] | None:
     max_price = _price_from_raw(match.group("max"))
     if min_price is None or max_price is None:
         return None
+    if min_price.value > max_price.value:
+        min_price, max_price = max_price, min_price
     return [
         EntryLeg(sequence=1, entry_type="LIMIT", price=min_price, role="PRIMARY", is_optional=False),
         EntryLeg(sequence=2, entry_type="LIMIT", price=max_price, role="AVERAGING", is_optional=False),
