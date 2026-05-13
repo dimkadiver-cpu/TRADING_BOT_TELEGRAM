@@ -77,7 +77,8 @@
       "Bash(ls -d worktrees)",
       "Bash(sqlite3 \"parser_test/db/parser_test__trader_a_topic.sqlite3\" \"SELECT raw_message_id, raw_text, raw_timestamp FROM raw_messages WHERE raw_message_id = 1862 LIMIT 1;\")",
       "Bash(tee test_output.txt)",
-      "Bash(Get-ChildItem *)"
+      "Bash(Get-ChildItem *)",
+      "Bash(dir \"C:\\\\TeleSignalBot\\\\db\\\\migrations\")"
     ]
   }
 }
