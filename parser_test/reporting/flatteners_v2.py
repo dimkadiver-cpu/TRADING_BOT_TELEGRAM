@@ -48,11 +48,9 @@ def _build_all_fields(row: ReportRow, canonical: dict[str, Any]) -> dict[str, An
     if signal:
         fields.update(_signal_fields(signal))
 
-    update = canonical.get("update") or {}
-    targeted_actions = canonical.get("targeted_actions") or []
-    target_hints = canonical.get("target_hints") or {}
-    if update or targeted_actions:
-        fields.update(_update_fields(update, targeted_actions, target_hints))
+    target_action_groups = canonical.get("target_action_groups") or []
+    if target_action_groups:
+        fields.update(_update_fields(target_action_groups))
 
     report = canonical.get("report") or {}
     if report:
@@ -130,34 +128,43 @@ def _signal_fields(signal: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _update_fields(
-    update: dict[str, Any],
-    targeted_actions: list[dict[str, Any]],
-    target_hints: dict[str, Any],
-) -> dict[str, Any]:
-    operations: list[dict[str, Any]] = update.get("operations") or []
-    first_set_stop = next((v for o in operations if (v := o.get("set_stop"))), {})
-    first_close = next((v for o in operations if (v := o.get("close"))), {})
-    first_cancel = next((v for o in operations if (v := o.get("cancel_pending"))), {})
-    first_mod_entries = next((v for o in operations if (v := o.get("modify_entries"))), {})
-    first_mod_targets = next((v for o in operations if (v := o.get("modify_targets"))), {})
-    first_invalidate = next((v for o in operations if (v := o.get("invalidate_setup"))), {})
+def _update_fields(target_action_groups: list[dict[str, Any]]) -> dict[str, Any]:
+    all_actions: list[dict[str, Any]] = [
+        action
+        for group in target_action_groups
+        for action in (group.get("actions") or [])
+    ]
+    first_group = target_action_groups[0] if target_action_groups else {}
+    first_targeting = first_group.get("targeting") or {}
+    first_action = all_actions[0] if all_actions else {}
+
+    first_set_stop = first_action.get("set_stop") or {}
+    first_close = first_action.get("close") or {}
+    first_cancel = first_action.get("cancel_pending") or {}
+    first_mod_entries = first_action.get("modify_entries") or {}
+    first_mod_targets = first_action.get("modify_targets") or {}
+    first_invalidate = first_action.get("invalidate_setup") or {}
     mod_entries_entries = first_mod_entries.get("entries") or []
     mod_targets_tps = first_mod_targets.get("take_profits") or []
 
     return {
-        "operations_count": len(operations),
-        "operations_summary": "|".join(f"{o.get('op_type')}({o.get('source_intent')})" for o in operations),
-        "operation_types": "|".join(o.get("op_type", "") for o in operations),
-        "source_intents": "|".join(o.get("source_intent", "") for o in operations),
-        "operation_confidences": "|".join(str(o.get("confidence", "")) for o in operations),
-        "operation_raw_fragments": "|".join(o.get("raw_fragment", "") or "" for o in operations),
-        "target_scope_hint": target_hints.get("scope_hint"),
-        "target_reply_to_message_id": target_hints.get("reply_to_message_id"),
-        "target_telegram_message_ids": "|".join(str(v) for v in (target_hints.get("telegram_message_ids") or [])),
-        "target_telegram_links": "|".join(target_hints.get("telegram_links") or []),
-        "target_explicit_ids": "|".join(target_hints.get("explicit_ids") or []),
-        "target_symbols": "|".join(target_hints.get("symbols") or []),
+        "groups_count": len(target_action_groups),
+        "actions_count": len(all_actions),
+        "actions_summary": "|".join(
+            f"{a.get('action_type')}({a.get('source_intent')})" for a in all_actions
+        ),
+        "action_types": "|".join(a.get("action_type", "") for a in all_actions),
+        "source_intents": "|".join(a.get("source_intent", "") for a in all_actions),
+        "action_confidences": "|".join(str(a.get("confidence", "")) for a in all_actions),
+        "action_raw_fragments": "|".join(a.get("raw_fragment", "") or "" for a in all_actions),
+        "target_scope_hint": first_targeting.get("scope_hint"),
+        "target_reply_to_message_id": first_targeting.get("reply_to_message_id"),
+        "target_telegram_message_ids": "|".join(
+            str(v) for v in (first_targeting.get("telegram_message_ids") or [])
+        ),
+        "target_telegram_links": "|".join(first_targeting.get("telegram_links") or []),
+        "target_explicit_ids": "|".join(first_targeting.get("explicit_ids") or []),
+        "target_symbols": "|".join(first_targeting.get("symbols") or []),
         "set_stop_target_type": first_set_stop.get("target_type"),
         "set_stop_price": (first_set_stop.get("price") or {}).get("value"),
         "set_stop_tp_level": first_set_stop.get("tp_level"),
@@ -179,10 +186,6 @@ def _update_fields(
         ),
         "modify_targets_target_tp_level": first_mod_targets.get("target_tp_level"),
         "invalidate_reason_text": first_invalidate.get("reason_text"),
-        "targeted_actions_count": len(targeted_actions),
-        "targeted_actions_summary": "|".join(
-            f"{a.get('action_type')}({a.get('source_intent')})" for a in targeted_actions
-        ),
     }
 
 

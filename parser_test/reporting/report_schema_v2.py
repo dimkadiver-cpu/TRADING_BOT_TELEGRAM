@@ -35,12 +35,13 @@ _SIGNAL_COLUMNS = [
 _UPDATE_COLUMNS = [
     "primary_intent",
     "intents",
-    "operations_count",
-    "operations_summary",
-    "operation_types",
+    "groups_count",
+    "actions_count",
+    "actions_summary",
+    "action_types",
     "source_intents",
-    "operation_confidences",
-    "operation_raw_fragments",
+    "action_confidences",
+    "action_raw_fragments",
     "target_scope_hint",
     "target_reply_to_message_id",
     "target_telegram_message_ids",
@@ -63,8 +64,6 @@ _UPDATE_COLUMNS = [
     "modify_targets_prices",
     "modify_targets_target_tp_level",
     "invalidate_reason_text",
-    "targeted_actions_count",
-    "targeted_actions_summary",
 ]
 
 _REPORT_COLUMNS = [

@@ -130,24 +130,40 @@ def test_flatten_update_scope():
         "parser_profile": "trader_a",
         "primary_class": "UPDATE",
         "parse_status": "PARSED",
-        "primary_intent": "U_MOVE_STOP",
-        "intents": ["U_MOVE_STOP"],
+        "primary_intent": "MOVE_STOP_TO_BE",
+        "intents": ["MOVE_STOP_TO_BE"],
         "confidence": 0.9,
         "warnings": [],
         "diagnostics": {},
-        "update": {
-            "operations": [
-                {
-                    "op_type": "SET_STOP",
-                    "source_intent": "U_MOVE_STOP",
-                    "confidence": 0.9,
-                    "raw_fragment": "move sl to 29500",
-                    "set_stop": {"target_type": "PRICE", "price": {"raw": "29500", "value": 29500.0}, "tp_level": None},
-                }
-            ]
-        },
-        "targeted_actions": [],
-        "target_hints": {},
+        "target_action_groups": [
+            {
+                "targeting": {
+                    "telegram_message_ids": [],
+                    "scope_hint": "SINGLE_SIGNAL",
+                    "telegram_links": [],
+                    "explicit_ids": [],
+                    "symbols": [],
+                    "target_source": "UNKNOWN",
+                    "reply_to_message_id": None,
+                },
+                "secondary_targeting": None,
+                "actions": [
+                    {
+                        "action_type": "SET_STOP",
+                        "set_stop": {"target_type": "PRICE", "price": {"raw": "29500", "value": 29500.0}, "tp_level": None},
+                        "close": None,
+                        "cancel_pending": None,
+                        "modify_entries": None,
+                        "modify_targets": None,
+                        "invalidate_setup": None,
+                        "source_intent": "MOVE_STOP_TO_BE",
+                        "source_intent_id": "MOVE_STOP_TO_BE#0",
+                        "confidence": 0.9,
+                        "raw_fragment": "move sl to 29500",
+                    }
+                ],
+            }
+        ],
         "raw_context": {"raw_text": "move sl to 29500"},
     }
     row = ReportRow(
@@ -157,7 +173,7 @@ def test_flatten_update_scope():
         parser_profile="trader_a",
         primary_class="UPDATE",
         parse_status="PARSED",
-        primary_intent="U_MOVE_STOP",
+        primary_intent="MOVE_STOP_TO_BE",
         confidence=0.9,
         canonical_json=json.dumps(canonical),
         warnings_json=None,
@@ -172,8 +188,113 @@ def test_flatten_update_scope():
         raw_text="move sl to 29500",
     )
     result = flatten_for_scope("UPDATE", row)
-    assert result["operations_count"] == 1
-    assert result["operation_types"] == "SET_STOP"
+    assert result["groups_count"] == 1
+    assert result["action_types"] == "SET_STOP"
+
+
+def _update_row_new() -> ReportRow:
+    canonical = {
+        "schema_version": "2.0",
+        "parser_profile": "trader_a",
+        "primary_class": "UPDATE",
+        "parse_status": "PARSED",
+        "primary_intent": "MOVE_STOP_TO_BE",
+        "intents": ["MOVE_STOP_TO_BE", "CANCEL_PENDING"],
+        "confidence": 0.9,
+        "warnings": [],
+        "diagnostics": {},
+        "target_action_groups": [
+            {
+                "targeting": {
+                    "telegram_message_ids": [2712, 2713, 2718],
+                    "scope_hint": "SINGLE_SIGNAL",
+                    "telegram_links": [],
+                    "explicit_ids": [],
+                    "symbols": [],
+                    "target_source": "UNKNOWN",
+                    "reply_to_message_id": None,
+                },
+                "secondary_targeting": None,
+                "actions": [
+                    {
+                        "action_type": "SET_STOP",
+                        "set_stop": {"target_type": "ENTRY"},
+                        "close": None,
+                        "cancel_pending": None,
+                        "modify_entries": None,
+                        "modify_targets": None,
+                        "invalidate_setup": None,
+                        "source_intent": "MOVE_STOP_TO_BE",
+                        "source_intent_id": "MOVE_STOP_TO_BE#0",
+                        "confidence": 0.9,
+                        "raw_fragment": "стоп в бу",
+                    },
+                    {
+                        "action_type": "CANCEL_PENDING",
+                        "set_stop": None,
+                        "close": None,
+                        "cancel_pending": {"cancel_scope_hint": "TARGETED"},
+                        "modify_entries": None,
+                        "modify_targets": None,
+                        "invalidate_setup": None,
+                        "source_intent": "CANCEL_PENDING",
+                        "source_intent_id": "CANCEL_PENDING#0",
+                        "confidence": 0.9,
+                        "raw_fragment": "лимитки убираем",
+                    },
+                ],
+            }
+        ],
+        "raw_context": {"raw_text": "стоп в бу\nлимитки убираем"},
+    }
+    return ReportRow(
+        run_id=2,
+        raw_message_id=20,
+        trader_id="trader_a",
+        parser_profile="trader_a",
+        primary_class="UPDATE",
+        parse_status="PARSED",
+        primary_intent="MOVE_STOP_TO_BE",
+        confidence=0.9,
+        canonical_json=json.dumps(canonical),
+        warnings_json=None,
+        diagnostics_json=None,
+        error_status="OK",
+        error_message=None,
+        telegram_message_id=99,
+        source_chat_id="chat1",
+        source_topic_id=None,
+        reply_to_message_id=None,
+        message_ts="2026-05-14T10:00:00",
+        raw_text="стоп в бу\nлимитки убираем",
+    )
+
+
+def test_flatten_update_groups_count():
+    row = _update_row_new()
+    result = flatten_for_scope("UPDATE", row)
+    assert result["groups_count"] == 1
+    assert result["actions_count"] == 2
+
+
+def test_flatten_update_actions_summary():
+    row = _update_row_new()
+    result = flatten_for_scope("UPDATE", row)
+    assert "SET_STOP" in result["actions_summary"]
+    assert "CANCEL_PENDING" in result["actions_summary"]
+
+
+def test_flatten_update_target_info():
+    row = _update_row_new()
+    result = flatten_for_scope("UPDATE", row)
+    assert result["target_scope_hint"] == "SINGLE_SIGNAL"
+    assert result["target_telegram_message_ids"] == "2712|2713|2718"
+
+
+def test_flatten_update_first_action_details():
+    row = _update_row_new()
+    result = flatten_for_scope("UPDATE", row)
+    assert result["set_stop_target_type"] == "ENTRY"
 
 
 def test_flatten_report_scope():
