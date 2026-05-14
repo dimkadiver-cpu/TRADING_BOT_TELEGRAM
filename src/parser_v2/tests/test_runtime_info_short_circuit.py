@@ -47,7 +47,7 @@ def test_info_marker_short_circuits_operational_parsing() -> None:
     assert parsed.signal is None
     assert parsed.intents == []
     assert parsed.primary_intent is None
-    assert parsed.update is None
+    assert parsed.target_action_groups == []
     assert parsed.report is None
     assert parsed.info is not None
     assert parsed.info.raw_fragment == text

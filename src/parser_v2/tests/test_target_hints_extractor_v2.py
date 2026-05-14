@@ -144,6 +144,8 @@ def test_scope_hint_ignored_when_telegram_message_ids_present():
     context = ParserContext(raw_context=RawContext(raw_text=text))
     result = UniversalParserRuntime().parse(text, context, TraderAProfile())
 
-    assert result.target_hints is not None
-    assert len(result.target_hints.telegram_message_ids) == 4
-    assert result.target_hints.scope_hint != "ALL_SHORT"
+    assert len(result.target_action_groups) >= 1
+    all_ids = [mid for g in result.target_action_groups for mid in g.targeting.telegram_message_ids]
+    assert len(all_ids) == 4
+    for g in result.target_action_groups:
+        assert g.targeting.scope_hint != "ALL_SHORT"
