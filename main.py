@@ -1,4 +1,4 @@
-"""TeleSignalBot entrypoint (H1 single-process)."""
+"""TeleSignalBot entrypoint — runtime_v2 stack."""
 
 from __future__ import annotations
 
@@ -10,31 +10,18 @@ from pathlib import Path
 from dotenv import load_dotenv
 from telethon import TelegramClient
 
-from src.core.config_loader import load_config
 from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
-from src.execution.dynamic_pairlist import DynamicPairlistManager
-from src.operation_rules.engine import OperationRulesEngine
-from src.parser.intent_validator import HistoryBackedIntentValidator
-from src.storage.operational_signals_store import OperationalSignalsStore
-from src.storage.parse_results_v1 import ParseResultV1Store
-from src.storage.parsed_messages import ParsedMessageStore
-from src.storage.signals_store import SignalsStore
-from src.target_resolver.resolver import TargetResolver
-from src.operation_rules.loader import validate_operation_rules_config
+from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
+from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
-from src.runtime_v2.listener_sidecar import RuntimeV2ListenerSidecar
 from src.telegram.listener import (
     TelegramListener,
-    build_effective_trader_resolver,
-    build_eligibility_evaluator,
     build_ingestion_service,
-    build_parse_results_store,
     build_processing_status_store,
-    build_review_queue_store,
 )
-from src.telegram.router import MessageRouter
-from src.telegram.trader_mapping import TelegramSourceTraderMapper
 
 
 def _required_env(name: str) -> str:
@@ -45,7 +32,6 @@ def _required_env(name: str) -> str:
 
 
 def _parse_fallback_chat_ids(raw: str | None) -> set[int]:
-    """Parse TELEGRAM_ALLOWED_CHAT_IDS env var — kept as temporary fallback."""
     if not raw:
         return set()
     values: set[int] = set()
@@ -54,26 +40,6 @@ def _parse_fallback_chat_ids(raw: str | None) -> set[int]:
         if token:
             values.add(int(token))
     return values
-
-
-def _is_enabled_env(raw: str | None) -> bool:
-    if raw is None:
-        return False
-    return raw.strip().lower() in {"1", "true", "yes", "on"}
-
-
-def _configure_shadow_mode(
-    *,
-    router: MessageRouter,
-    db_path: str,
-    logger,
-) -> bool:
-    """Enable canonical_v1 shadow mode when explicitly requested by env."""
-    if not _is_enabled_env(os.getenv("PARSER_V1_SHADOW_MODE")):
-        return False
-    router.enable_shadow_normalizer(ParseResultV1Store(db_path=db_path))
-    logger.info("canonical_v1 shadow mode enabled | table=parse_results_v1")
-    return True
 
 
 async def _async_main(
@@ -93,7 +59,6 @@ async def _async_main(
     api_hash = _required_env("TELEGRAM_API_HASH")
     session_name = os.getenv("TELEGRAM_SESSION", "tele_signal_bot")
 
-    # channels.yaml is the primary source; TELEGRAM_ALLOWED_CHAT_IDS is a fallback
     channels_yaml_path = str(root_dir / "config" / "channels.yaml")
     channels_config = load_channels_config(channels_yaml_path)
     fallback_ids = _parse_fallback_chat_ids(os.getenv("TELEGRAM_ALLOWED_CHAT_IDS"))
@@ -104,74 +69,23 @@ async def _async_main(
             len(fallback_ids),
         )
 
-    source_map_path = os.getenv(
-        "TELEGRAM_SOURCE_MAP_PATH",
-        str(root_dir / "config" / "telegram_source_map.json"),
-    )
-    validate_operation_rules_config(rules_dir=str(root_dir / "config"))
-    logger.info("operation rules config validation passed")
-    config = load_config(str(root_dir))
-    trader_mapper = TelegramSourceTraderMapper.from_json_file(
-        file_path=source_map_path,
-        trader_aliases=config.trader_aliases,
-        known_trader_ids=set(config.traders.keys()),
-    )
-    dynamic_pairlist_path = os.getenv(
-        'FREQTRADE_DYNAMIC_PAIRLIST_PATH',
-        str(root_dir / 'freqtrade' / 'user_data' / 'dynamic_pairs.json'),
-    )
-    dynamic_pairlist_refresh = int(os.getenv('FREQTRADE_DYNAMIC_PAIRLIST_REFRESH_PERIOD', '10'))
-    dynamic_pairlist_manager = DynamicPairlistManager(
-        dynamic_pairlist_path,
-        refresh_period=dynamic_pairlist_refresh,
-    )
-
     ingestion_service = build_ingestion_service(db_path=db_path, logger=logger)
     processing_status_store = build_processing_status_store(db_path=db_path)
 
-    router = MessageRouter(
-        effective_trader_resolver=build_effective_trader_resolver(
-            db_path=db_path,
-            trader_mapper=trader_mapper,
-            trader_aliases=config.trader_aliases,
-            known_trader_ids=set(config.traders.keys()),
-        ),
-        eligibility_evaluator=build_eligibility_evaluator(db_path=db_path),
-        parse_results_store=build_parse_results_store(db_path=db_path),
-        processing_status_store=processing_status_store,
-        review_queue_store=build_review_queue_store(db_path=db_path),
-        raw_message_store=ingestion_service.store,
-        logger=logger,
-        channels_config=channels_config,
-        db_path=db_path,
-        operation_rules_engine=OperationRulesEngine(rules_dir=str(root_dir / "config")),
-        target_resolver=TargetResolver(),
-        signals_store=SignalsStore(db_path=db_path),
-        operational_signals_store=OperationalSignalsStore(db_path=db_path),
-        dynamic_pairlist_manager=dynamic_pairlist_manager,
-        parse_results_v1_store=ParseResultV1Store(db_path=db_path),
-        parsed_messages_store=ParsedMessageStore(db_path=db_path),
-        intent_validator=HistoryBackedIntentValidator(db_path=db_path),
-    )
-    logger.info("canonical_v1 normalization active | table=parse_results_v1")
-
-    sidecar: RuntimeV2ListenerSidecar | None = None
-    if _is_enabled_env(os.getenv("USE_RUNTIME_V2")):
-        sidecar = RuntimeV2ListenerSidecar(
-            db_path=db_path,
-            channels_config_path=channels_yaml_path,
-            logger=logger,
-        )
-        logger.info("runtime_v2 sidecar enabled")
+    raw_repo = RawMessageRepository(db_path=db_path)
+    channel_resolver = ChannelConfigResolver(config_path=channels_yaml_path)
+    canonical_repo = CanonicalMessageRepository(db_path=db_path)
+    parser_pipeline = ParserPipelineProcessor(canonical_repo=canonical_repo)
 
     listener = TelegramListener(
         ingestion_service=ingestion_service,
         processing_status_store=processing_status_store,
-        router=router,
+        raw_repo=raw_repo,
+        channel_resolver=channel_resolver,
+        parser_pipeline=parser_pipeline,
         logger=logger,
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,
-        sidecar=sidecar,
     )
 
     watcher = ChannelConfigWatcher(
