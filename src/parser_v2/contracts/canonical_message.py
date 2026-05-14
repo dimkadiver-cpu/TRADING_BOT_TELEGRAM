@@ -195,58 +195,53 @@ class CanonicalMessage(CanonicalModel):
     primary_intent: IntentType | None = None
     intents: list[IntentType] = Field(default_factory=list)
     signal: SignalPayload | None = None
-    update: UpdatePayload | None = None
     report: ReportPayload | None = None
     info: InfoPayload | None = None
-    targeted_actions: list[TargetedAction] = Field(default_factory=list)
-    target_hints: TargetHints | None = None
+    target_action_groups: list[TargetActionGroup] = Field(default_factory=list)
     warnings: list[str] = Field(default_factory=list)
     diagnostics: dict[str, Any] = Field(default_factory=dict)
     raw_context: RawContext
 
     @model_validator(mode="after")
     def _validate_primary_class_payloads(self) -> CanonicalMessage:
-        has_update_work = bool((self.update and self.update.operations) or self.targeted_actions)
+        has_update_work = bool(self.target_action_groups)
 
         if self.primary_class == "SIGNAL":
             if self.signal is None:
                 raise ValueError("SIGNAL requires signal payload")
-            if self.update is not None:
-                raise ValueError("SIGNAL forbids update payload")
-            if self.targeted_actions:
-                raise ValueError("SIGNAL forbids targeted_actions")
+            if self.target_action_groups:
+                raise ValueError("SIGNAL forbids target_action_groups")
 
         elif self.primary_class == "UPDATE":
             if self.signal is not None:
                 raise ValueError("UPDATE forbids signal payload")
             if self.parse_status == "PARSED" and not has_update_work:
-                raise ValueError("PARSED UPDATE requires at least one operation or targeted_action")
+                raise ValueError("PARSED UPDATE requires at least one target_action_group")
             if (
                 self.parse_status == "PARTIAL"
                 and not has_update_work
                 and "ambiguous_target_intent_binding" not in self.warnings
             ):
                 raise ValueError(
-                    "PARTIAL UPDATE without operation or targeted_action requires "
+                    "PARTIAL UPDATE without target_action_groups requires "
                     "ambiguous_target_intent_binding warning"
                 )
 
         elif self.primary_class == "REPORT":
             if self.report is None:
                 raise ValueError("REPORT requires report payload")
-            if self.signal is not None or self.update is not None:
-                raise ValueError("REPORT forbids signal/update payloads")
-            if self.targeted_actions:
-                raise ValueError("REPORT forbids targeted_actions")
+            if self.signal is not None:
+                raise ValueError("REPORT forbids signal payload")
+            if self.target_action_groups:
+                raise ValueError("REPORT forbids target_action_groups")
 
         elif self.primary_class == "INFO":
             if (
                 self.signal is not None
-                or self.update is not None
                 or self.report is not None
-                or self.targeted_actions
+                or self.target_action_groups
             ):
-                raise ValueError("INFO forbids signal/update/report payloads and targeted_actions")
+                raise ValueError("INFO forbids signal/report payloads and target_action_groups")
 
         return self
 
@@ -254,13 +249,11 @@ class CanonicalMessage(CanonicalModel):
 __all__ = [
     "CanonicalMessage",
     "SignalPayload",
-    "UpdatePayload",
     "ReportPayload",
     "InfoPayload",
     "UpdateOperation",
     "ReportEvent",
     "ReportResult",
-    "TargetedAction",
     "SetStopOperation",
     "CloseOperation",
     "CancelPendingOperation",

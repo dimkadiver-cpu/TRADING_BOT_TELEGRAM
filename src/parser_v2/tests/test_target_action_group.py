@@ -82,3 +82,76 @@ def test_target_action_group_rejects_empty_actions():
             targeting=TargetHints(reply_to_message_id=100),
             actions=[],
         )
+
+
+def test_canonical_message_update_uses_target_action_groups():
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage
+    from src.parser_v2.contracts.context import RawContext
+    msg = CanonicalMessage(
+        parser_profile="test",
+        primary_class="UPDATE",
+        parse_status="PARSED",
+        confidence=0.9,
+        target_action_groups=[
+            TargetActionGroup(
+                targeting=TargetHints(reply_to_message_id=100),
+                actions=[
+                    ActionItem(
+                        action_type="SET_STOP",
+                        set_stop=SetStopOperation(target_type="ENTRY"),
+                        source_intent="MOVE_STOP_TO_BE",
+                    )
+                ],
+            )
+        ],
+        raw_context=RawContext(raw_text="стоп в бу"),
+    )
+    assert len(msg.target_action_groups) == 1
+    assert msg.target_action_groups[0].targeting.reply_to_message_id == 100
+
+
+def test_canonical_message_update_requires_target_action_groups_when_parsed():
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage
+    from src.parser_v2.contracts.context import RawContext
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        CanonicalMessage(
+            parser_profile="test",
+            primary_class="UPDATE",
+            parse_status="PARSED",
+            confidence=0.9,
+            target_action_groups=[],
+            raw_context=RawContext(raw_text="test"),
+        )
+
+
+def test_canonical_message_signal_forbids_target_action_groups():
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage, SignalPayload
+    from src.parser_v2.contracts.context import RawContext
+    from src.parser_v2.contracts.entities import EntryLeg, StopLoss, TakeProfit, Price
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
+        CanonicalMessage(
+            parser_profile="test",
+            primary_class="SIGNAL",
+            parse_status="PARSED",
+            confidence=0.9,
+            signal=SignalPayload(
+                symbol="BTCUSDT", side="LONG",
+                entry_structure="ONE_SHOT",
+                entries=[EntryLeg(sequence=1, entry_type="LIMIT", price=Price(raw="100", value=100.0))],
+                stop_loss=StopLoss(price=Price(raw="90", value=90.0)),
+                take_profits=[TakeProfit(sequence=1, price=Price(raw="110", value=110.0))],
+            ),
+            target_action_groups=[
+                TargetActionGroup(
+                    targeting=TargetHints(reply_to_message_id=1),
+                    actions=[ActionItem(
+                        action_type="SET_STOP",
+                        set_stop=SetStopOperation(target_type="ENTRY"),
+                        source_intent="MOVE_STOP_TO_BE",
+                    )],
+                )
+            ],
+            raw_context=RawContext(raw_text="test"),
+        )
