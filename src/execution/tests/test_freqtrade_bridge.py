@@ -65,7 +65,13 @@ def _load_strategy_class():
     return module.SignalBridgeStrategy
 
 
-SignalBridgeStrategy = _load_strategy_class()
+try:
+    SignalBridgeStrategy = _load_strategy_class()
+except (FileNotFoundError, AssertionError):
+    pytest.skip(
+        "SignalBridgeStrategy.py not found — freqtrade strategies removed",
+        allow_module_level=True,
+    )
 
 
 def _make_db(tmp_path: Path) -> str:

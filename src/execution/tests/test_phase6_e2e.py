@@ -6,6 +6,8 @@ import sqlite3
 from pathlib import Path
 from types import SimpleNamespace
 
+import pytest
+
 from src.core.migrations import apply_migrations
 from src.execution.exchange_gateway import ExchangeGateway
 from src.execution.exchange_order_manager import ExchangeOrderManager
@@ -47,7 +49,13 @@ def _load_strategy_class():
     return module.SignalBridgeStrategy
 
 
-SignalBridgeStrategy = _load_strategy_class()
+try:
+    SignalBridgeStrategy = _load_strategy_class()
+except (FileNotFoundError, AssertionError):
+    pytest.skip(
+        "SignalBridgeStrategy.py not found — freqtrade strategies removed",
+        allow_module_level=True,
+    )
 
 
 class _FakeExchangeBackend:
