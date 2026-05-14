@@ -73,6 +73,50 @@ class InvalidateSetupOperation(CanonicalModel):
     reason_text: str | None = None
 
 
+class ActionItem(CanonicalModel):
+    action_type: UpdateOperationType
+    set_stop: SetStopOperation | None = None
+    close: CloseOperation | None = None
+    cancel_pending: CancelPendingOperation | None = None
+    modify_entries: ModifyEntriesOperation | None = None
+    modify_targets: ModifyTargetsOperation | None = None
+    invalidate_setup: InvalidateSetupOperation | None = None
+    source_intent: IntentType
+    source_intent_id: str | None = None
+    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
+    raw_fragment: str | None = None
+
+    @model_validator(mode="after")
+    def _validate_payload_matches_type(self) -> ActionItem:
+        expected_by_type = {
+            "SET_STOP": "set_stop",
+            "CLOSE": "close",
+            "CANCEL_PENDING": "cancel_pending",
+            "MODIFY_ENTRIES": "modify_entries",
+            "MODIFY_TARGETS": "modify_targets",
+            "INVALIDATE_SETUP": "invalidate_setup",
+        }
+        expected = expected_by_type[self.action_type]
+        populated = [f for f in expected_by_type.values() if getattr(self, f) is not None]
+        if populated != [expected]:
+            raise ValueError(
+                f"{self.action_type} requires only `{expected}` to be populated; got {populated}"
+            )
+        return self
+
+
+class TargetActionGroup(CanonicalModel):
+    targeting: TargetHints
+    secondary_targeting: TargetHints | None = None
+    actions: list[ActionItem] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _validate_actions_non_empty(self) -> TargetActionGroup:
+        if not self.actions:
+            raise ValueError("TargetActionGroup requires non-empty actions")
+        return self
+
+
 class UpdateOperation(CanonicalModel):
     op_type: UpdateOperationType
     set_stop: SetStopOperation | None = None
@@ -223,6 +267,8 @@ __all__ = [
     "ModifyEntriesOperation",
     "ModifyTargetsOperation",
     "InvalidateSetupOperation",
+    "ActionItem",
+    "TargetActionGroup",
     "EntryLeg",
     "EntrySelector",
     "Price",
