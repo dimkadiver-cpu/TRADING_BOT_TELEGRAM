@@ -71,6 +71,7 @@ Nessuna variabile d'ambiente aggiuntiva necessaria. Il runtime_v2 è sempre atti
 | `ParserDispatchCandidate` | Contratto tra intake e parser pipeline — envelope + resolved trader + parser_profile + parser_context |
 | `CanonicalParseResult` | Output del parser pipeline — contiene `CanonicalMessage` e metadata. Input per PRD 03 (Operation Rules). |
 | `ParserJobStatus` | Restituito in caso di failure del parsing — `status: failed/skipped`, con `reason`. |
+| `target_action_groups` | Campo UPDATE di `CanonicalMessage` — sostituisce `update`/`targeted_actions`. Lista di `TargetActionGroup` (targeting + actions). Struttura consumata da PRD 03. |
 
 ## Wiring in main.py
 
@@ -125,7 +126,7 @@ src/telegram/tests/
 └── test_listener_process_item.py         ← _process_item con runtime_v2 pipeline
 ```
 
-74 test runtime_v2 + 113 test telegram, tutti passing.
+68 test runtime_v2 + 113 test telegram, tutti passing.
 
 ## Stato PRD
 

@@ -86,6 +86,34 @@ CanonicalParseResult
 
 Stesso `UniversalParserRuntime` e stessi profili — i risultati sono confrontabili a parità di testo e contesto.
 
+## Struttura CanonicalMessage UPDATE (per PRD 03)
+
+Quando `primary_class == "UPDATE"`, il `CanonicalMessage` contiene:
+
+```python
+target_action_groups: list[TargetActionGroup]
+```
+
+Ogni `TargetActionGroup` raggruppa:
+- `targeting: TargetHints` — chi è il target (telegram_message_ids, reply_to_message_id, scope_hint, …)
+- `secondary_targeting: TargetHints | None` — reply degradato (quando sono presenti link espliciti + reply)
+- `actions: list[ActionItem]` — azioni da eseguire su quel target
+
+Ogni `ActionItem` ha:
+- `action_type: UpdateOperationType` — `"SET_STOP" | "CLOSE" | "CANCEL_PENDING" | "MODIFY_ENTRIES" | "MODIFY_TARGETS" | "INVALIDATE_SETUP"`
+- payload tipizzato nel campo corrispondente (`set_stop`, `close`, ecc.)
+- `source_intent`, `source_intent_id`, `confidence`, `raw_fragment`
+
+Pattern di accesso per PRD 03:
+
+```python
+for group in result.canonical_message.target_action_groups:
+    targets = resolver.resolve(group.targeting)      # → lista posizioni
+    for position in targets:
+        for action in group.actions:
+            executor.try_execute(action, position)
+```
+
 ## Cosa sblocca
 
 `CanonicalParseResult` è il contratto di ingresso per PRD 03 (Operation Rules Engine V2).
