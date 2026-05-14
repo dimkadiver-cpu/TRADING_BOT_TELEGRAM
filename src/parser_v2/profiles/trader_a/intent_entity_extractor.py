@@ -94,6 +94,7 @@ class IntentEntityExtractor:
                     raw_fragment=ev.marker,
                     span_start=ev.start,
                     span_end=ev.end,
+                    line_index=normalized.normalized_text[:ev.start].count("\n"),
                 )
             )
         return _deduplicate_by_span(intents)

@@ -51,8 +51,8 @@ class TargetHintsExtractor:
     ) -> TargetExtractionResult:
         candidates: list[TargetCandidate] = []
 
-        raw_text = normalized.raw_text
-        link_matches = list(TELEGRAM_LINK_RE.finditer(raw_text))
+        norm_text = normalized.normalized_text
+        link_matches = list(TELEGRAM_LINK_RE.finditer(norm_text))
         links: list[str] = []
         message_ids: list[int] = []
         for match in link_matches:
@@ -63,7 +63,7 @@ class TargetHintsExtractor:
             msg_id = _message_id_from_link(link)
             if msg_id is not None:
                 message_ids.append(msg_id)
-                line_idx = raw_text.count("\n", 0, match.start())
+                line_idx = norm_text.count("\n", 0, match.start())
                 candidates.append(TargetCandidate(
                     source="MESSAGE_TEXT_LINK",
                     value=msg_id,
