@@ -117,43 +117,6 @@ class TargetActionGroup(CanonicalModel):
         return self
 
 
-class UpdateOperation(CanonicalModel):
-    op_type: UpdateOperationType
-    set_stop: SetStopOperation | None = None
-    close: CloseOperation | None = None
-    cancel_pending: CancelPendingOperation | None = None
-    modify_entries: ModifyEntriesOperation | None = None
-    modify_targets: ModifyTargetsOperation | None = None
-    invalidate_setup: InvalidateSetupOperation | None = None
-    source_intent: IntentType
-    source_intent_id: str | None = None
-    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
-    raw_fragment: str | None = None
-
-    @model_validator(mode="after")
-    def _validate_payload_matches_type(self) -> UpdateOperation:
-        expected_by_type = {
-            "SET_STOP": "set_stop",
-            "CLOSE": "close",
-            "CANCEL_PENDING": "cancel_pending",
-            "MODIFY_ENTRIES": "modify_entries",
-            "MODIFY_TARGETS": "modify_targets",
-            "INVALIDATE_SETUP": "invalidate_setup",
-        }
-        expected = expected_by_type[self.op_type]
-        populated = [
-            field_name
-            for field_name in expected_by_type.values()
-            if getattr(self, field_name) is not None
-        ]
-        if populated != [expected]:
-            raise ValueError(f"{self.op_type} requires only `{expected}` to be populated; got {populated}")
-        return self
-
-
-# Transitional: used by canonical_translator — will be removed in Task 6 cleanup
-class UpdatePayload(CanonicalModel):
-    operations: list[UpdateOperation] = Field(default_factory=list)
 
 
 class ReportEvent(CanonicalModel):
@@ -176,16 +139,6 @@ class ReportPayload(CanonicalModel):
 class InfoPayload(CanonicalModel):
     raw_fragment: str | None = None
 
-
-# Transitional: used by canonical_translator — will be removed in Task 6 cleanup
-class TargetedAction(CanonicalModel):
-    action_type: UpdateOperationType
-    params: dict[str, Any] = Field(default_factory=dict)
-    target_hints: TargetHints
-    source_intent: IntentType
-    source_intent_id: str | None = None
-    raw_fragment: str | None = None
-    confidence: float | None = Field(default=None, ge=0.0, le=1.0)
 
 
 class CanonicalMessage(CanonicalModel):
@@ -253,7 +206,6 @@ __all__ = [
     "SignalPayload",
     "ReportPayload",
     "InfoPayload",
-    "UpdateOperation",
     "ReportEvent",
     "ReportResult",
     "SetStopOperation",
