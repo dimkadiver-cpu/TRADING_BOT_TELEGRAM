@@ -40,7 +40,7 @@ def _make_intent(type_: str, occurrence_index: int = 0, target_hints: TargetHint
     )
 
 
-def test_mixed_ops_on_global_target_produces_targeted_actions():
+def test_mixed_ops_on_global_target_produces_target_action_group():
     intents = [
         _make_intent("MOVE_STOP_TO_BE", occurrence_index=0),
         _make_intent("CANCEL_PENDING", occurrence_index=0),
@@ -53,12 +53,12 @@ def test_mixed_ops_on_global_target_produces_targeted_actions():
     result = CanonicalTranslator().translate(parsed)
 
     assert result.parse_status == "PARSED"
-    assert len(result.targeted_actions) == 2
-    action_types = {a.action_type for a in result.targeted_actions}
+    assert len(result.target_action_groups) == 1
+    group = result.target_action_groups[0]
+    action_types = {a.action_type for a in group.actions}
     assert "SET_STOP" in action_types
     assert "CANCEL_PENDING" in action_types
-    for action in result.targeted_actions:
-        assert action.target_hints.telegram_message_ids == [111, 222]
+    assert group.targeting.telegram_message_ids == [111, 222]
 
 
 def test_mixed_ops_no_partial_warning():
@@ -76,16 +76,16 @@ def test_source_intent_id_propagated():
     intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=1)]
     parsed = _make_parsed(intents, target_hints=TargetHints(telegram_message_ids=[111]))
     result = CanonicalTranslator().translate(parsed)
-    assert result.targeted_actions[0].source_intent_id == "MOVE_STOP_TO_BE#1"
+    assert result.target_action_groups[0].actions[0].source_intent_id == "MOVE_STOP_TO_BE#1"
 
 
-def test_reply_generates_targeted_actions():
+def test_reply_generates_target_action_group():
     intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=0)]
     hints = TargetHints(target_source="REPLY", reply_to_message_id=100)
     parsed = _make_parsed(intents, target_hints=hints)
     result = CanonicalTranslator().translate(parsed)
-    assert len(result.targeted_actions) == 1
-    assert result.targeted_actions[0].target_hints.reply_to_message_id == 100
+    assert len(result.target_action_groups) == 1
+    assert result.target_action_groups[0].targeting.reply_to_message_id == 100
 
 
 def test_per_intent_target_hints_override_global():
@@ -94,7 +94,7 @@ def test_per_intent_target_hints_override_global():
     intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=0, target_hints=local_hints)]
     parsed = _make_parsed(intents, target_hints=global_hints)
     result = CanonicalTranslator().translate(parsed)
-    assert result.targeted_actions[0].target_hints.telegram_message_ids == [111]
+    assert result.target_action_groups[0].targeting.telegram_message_ids == [111]
 
 
 def test_intents_deduplicated_in_canonical():
@@ -116,8 +116,8 @@ def test_line_level_intents_each_get_own_target():
     ]
     parsed = _make_parsed(intents, target_hints=None)
     result = CanonicalTranslator().translate(parsed)
-    assert len(result.targeted_actions) == 2
-    ids = {a.action_type: a.target_hints.telegram_message_ids for a in result.targeted_actions}
+    assert len(result.target_action_groups) == 2
+    ids = {g.actions[0].action_type: g.targeting.telegram_message_ids for g in result.target_action_groups}
     assert ids["SET_STOP"] == [111]
     assert ids["CLOSE"] == [222]
 
@@ -144,9 +144,9 @@ def test_modify_entry_propagates_entry_selector_and_structure():
     result = CanonicalTranslator().translate(parsed)
 
     assert result.primary_class == "UPDATE"
-    ops = result.update.operations
-    assert len(ops) == 1
-    me = ops[0].modify_entries
+    assert len(result.target_action_groups) == 1
+    action = result.target_action_groups[0].actions[0]
+    me = action.modify_entries
     assert me is not None
     assert me.kind == "UPDATE_PRICE"
     assert me.entry_structure == "ONE_SHOT"
@@ -179,7 +179,8 @@ def test_modify_entry_update_range_propagates():
     parsed = _make_parsed([intent])
     result = CanonicalTranslator().translate(parsed)
 
-    me = result.update.operations[0].modify_entries
+    action = result.target_action_groups[0].actions[0]
+    me = action.modify_entries
     assert me.kind == "UPDATE_RANGE"
     assert me.entry_structure == "RANGE"
     assert len(me.entries) == 2
@@ -193,7 +194,7 @@ def test_move_stop_no_price_defaults_to_be() -> None:
         type="MOVE_STOP",
         category="UPDATE",
         confidence=0.8,
-        entities=MoveStopEntities(),  # new_stop_price=None, stop_to_tp_level=None
+        entities=MoveStopEntities(),
         intent_id="MOVE_STOP#0",
         occurrence_index=0,
     )
@@ -201,11 +202,11 @@ def test_move_stop_no_price_defaults_to_be() -> None:
     result = CanonicalTranslator().translate(parsed)
 
     assert result.parse_status == "PARSED"
-    ops = result.update.operations
-    assert len(ops) == 1
-    assert ops[0].op_type == "SET_STOP"
-    assert ops[0].set_stop is not None
-    assert ops[0].set_stop.target_type == "ENTRY"
+    assert len(result.target_action_groups) == 1
+    action = result.target_action_groups[0].actions[0]
+    assert action.action_type == "SET_STOP"
+    assert action.set_stop is not None
+    assert action.set_stop.target_type == "ENTRY"
     assert "move_stop_no_price_defaulted_to_be" in result.warnings
 
 
@@ -225,10 +226,10 @@ def test_move_stop_with_price_no_warning() -> None:
     result = CanonicalTranslator().translate(parsed)
 
     assert result.parse_status == "PARSED"
-    ops = result.update.operations
-    assert len(ops) == 1
-    assert ops[0].set_stop.target_type == "PRICE"
-    assert ops[0].set_stop.price.value == 89000.0
+    assert len(result.target_action_groups) == 1
+    action = result.target_action_groups[0].actions[0]
+    assert action.set_stop.target_type == "PRICE"
+    assert action.set_stop.price.value == 89000.0
     assert "move_stop_no_price_defaulted_to_be" not in result.warnings
 
 
@@ -242,31 +243,33 @@ def test_move_stop_to_be_intent_no_new_warning() -> None:
     assert "move_stop_no_price_defaulted_to_be" not in result.warnings
 
 
-def test_no_target_hints_uses_plain_operations_not_targeted() -> None:
-    """Senza target hints, le operazioni vanno in update.operations, non targeted_actions."""
+def test_no_target_hints_produces_single_group_with_scope_single_signal() -> None:
+    """Senza target hints, le operazioni vanno in un gruppo con scope SINGLE_SIGNAL."""
     intents = [_make_intent("MOVE_STOP_TO_BE")]
     parsed = _make_parsed(intents, target_hints=None)
     result = CanonicalTranslator().translate(parsed)
 
-    assert len(result.targeted_actions) == 0
-    assert result.update is not None
-    assert len(result.update.operations) == 1
-    assert result.update.operations[0].op_type == "SET_STOP"
+    assert len(result.target_action_groups) == 1
+    group = result.target_action_groups[0]
+    assert group.targeting.scope_hint == "SINGLE_SIGNAL"
+    assert len(group.actions) == 1
+    assert group.actions[0].action_type == "SET_STOP"
 
 
-def test_message_target_hints_forces_all_to_targeted_operations_empty() -> None:
-    """Con target hints a livello messaggio, tutto in targeted_actions e update.operations vuoto."""
+def test_message_target_hints_all_in_single_group() -> None:
+    """Con target hints a livello messaggio, tutti gli intenti vanno in 1 gruppo."""
     intents = [_make_intent("MOVE_STOP_TO_BE"), _make_intent("CANCEL_PENDING")]
     parsed = _make_parsed(intents, target_hints=TargetHints(telegram_message_ids=[99]))
     result = CanonicalTranslator().translate(parsed)
 
-    assert len(result.targeted_actions) == 2
-    assert result.update is not None
-    assert len(result.update.operations) == 0
+    assert len(result.target_action_groups) == 1
+    group = result.target_action_groups[0]
+    assert group.targeting.telegram_message_ids == [99]
+    assert len(group.actions) == 2
 
 
-def test_per_intent_local_target_forces_all_to_targeted_no_mix() -> None:
-    """Se almeno un intent ha target locale, tutti vanno in targeted_actions — anche quelli senza."""
+def test_per_intent_local_target_each_gets_own_group() -> None:
+    """Se ogni intent ha target locale diverso, ognuno ottiene il proprio gruppo."""
     local_hints = TargetHints(target_source="LOCAL_TEXT_LINK", telegram_message_ids=[11])
     intents = [
         _make_intent("MOVE_STOP_TO_BE", target_hints=local_hints),
@@ -275,9 +278,7 @@ def test_per_intent_local_target_forces_all_to_targeted_no_mix() -> None:
     parsed = _make_parsed(intents, target_hints=None)
     result = CanonicalTranslator().translate(parsed)
 
-    assert len(result.targeted_actions) == 2
-    assert result.update is not None
-    assert len(result.update.operations) == 0
-    action_types = {a.action_type for a in result.targeted_actions}
+    all_actions = [a for g in result.target_action_groups for a in g.actions]
+    action_types = {a.action_type for a in all_actions}
     assert "SET_STOP" in action_types
     assert "CANCEL_PENDING" in action_types

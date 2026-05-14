@@ -47,19 +47,20 @@ def test_runtime_assigns_occurrence_ids():
         ParsedIntent(type="MOVE_STOP_TO_BE", category="UPDATE", confidence=0.9),
     ])
     result = _run("стоп в бу\nстоп в бу", profile)
-    if result.update and result.update.operations:
-        ids = [op.source_intent_id for op in result.update.operations]
-        assert ids[0] != ids[1]
+    all_actions = [a for g in result.target_action_groups for a in g.actions]
+    ids = [a.source_intent_id for a in all_actions]
+    assert len(ids) == 2
+    assert ids[0] != ids[1]
 
 
-def test_runtime_with_reply_produces_targeted_actions():
+def test_runtime_with_reply_produces_target_action_group():
     profile = _MockProfile()
     profile.set_intents([
         ParsedIntent(type="MOVE_STOP_TO_BE", category="UPDATE", confidence=0.9),
     ])
     result = _run("стоп в бу", profile, reply_id=100)
-    assert len(result.targeted_actions) == 1
-    assert result.targeted_actions[0].target_hints.reply_to_message_id == 100
+    assert len(result.target_action_groups) == 1
+    assert result.target_action_groups[0].targeting.reply_to_message_id == 100
 
 
 def test_runtime_global_refs_two_ops_not_partial():
@@ -71,4 +72,5 @@ def test_runtime_global_refs_two_ops_not_partial():
     text = "https://t.me/c/777/111\nhttps://t.me/c/777/222\nстоп в бу\nлимитки убираем"
     result = _run(text, profile)
     assert result.parse_status != "PARTIAL"
-    assert len(result.targeted_actions) == 2
+    all_actions = [a for g in result.target_action_groups for a in g.actions]
+    assert len(all_actions) == 2

@@ -41,13 +41,9 @@ def test_B1_two_same_intents_preserved():
         ParsedIntent(type="MOVE_STOP_TO_BE", category="UPDATE", confidence=0.9),
     ]
     result = _run("стоп в бу\nстоп в бу", _SimpleProfile(intents))
-    assert result.update is not None or len(result.targeted_actions) >= 1
-    all_ids = (
-        [op.source_intent_id for op in result.update.operations]
-        if result.update and result.update.operations
-        else [a.source_intent_id for a in result.targeted_actions]
-    )
-    assert len(set(all_ids)) == 2
+    all_actions = [a for g in result.target_action_groups for a in g.actions]
+    ids = [a.source_intent_id for a in all_actions]
+    assert len(set(ids)) == 2
 
 
 def test_B1_intents_in_canonical_deduplicated():
@@ -67,13 +63,14 @@ def test_C1_reply_applies_to_multiple_operations():
         ParsedIntent(type="CANCEL_PENDING", category="UPDATE", confidence=0.9),
     ]
     result = _run("стоп в бу\nлимитки убираем", _SimpleProfile(intents), reply_id=100)
-    assert len(result.targeted_actions) == 2
-    for action in result.targeted_actions:
-        assert action.target_hints.reply_to_message_id == 100
+    assert len(result.target_action_groups) == 1
+    group = result.target_action_groups[0]
+    assert group.targeting.reply_to_message_id == 100
+    assert len(group.actions) == 2
 
 
 def test_C3_global_ref_list_multiple_ops_not_partial():
-    """Global link list + multiple ops → PARSED, not PARTIAL."""
+    """Global link list + multiple ops → PARSED, 1 group with 2 actions."""
     intents = [
         ParsedIntent(type="MOVE_STOP_TO_BE", category="UPDATE", confidence=0.9),
         ParsedIntent(type="CANCEL_PENDING", category="UPDATE", confidence=0.9),
@@ -81,10 +78,11 @@ def test_C3_global_ref_list_multiple_ops_not_partial():
     text = "https://t.me/c/777/111\nhttps://t.me/c/777/222\nстоп в бу\nлимитки убираем"
     result = _run(text, _SimpleProfile(intents))
     assert result.parse_status == "PARSED"
-    assert len(result.targeted_actions) == 2
-    for action in result.targeted_actions:
-        assert 111 in action.target_hints.telegram_message_ids
-        assert 222 in action.target_hints.telegram_message_ids
+    assert len(result.target_action_groups) == 1
+    group = result.target_action_groups[0]
+    assert 111 in group.targeting.telegram_message_ids
+    assert 222 in group.targeting.telegram_message_ids
+    assert len(group.actions) == 2
 
 
 def test_D2_different_types_not_deduplicated():
