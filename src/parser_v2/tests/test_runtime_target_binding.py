@@ -71,6 +71,6 @@ def test_runtime_global_refs_two_ops_not_partial():
     ])
     text = "https://t.me/c/777/111\nhttps://t.me/c/777/222\nстоп в бу\nлимитки убираем"
     result = _run(text, profile)
-    assert result.parse_status != "PARTIAL"
+    assert result.parse_status == "PARSED"
     all_actions = [a for g in result.target_action_groups for a in g.actions]
     assert len(all_actions) == 2

@@ -69,7 +69,8 @@ def test_canonical_message_validator_uses_new_warning():
 def test_canonical_message_validator_rejects_old_warning():
     from src.parser_v2.contracts.canonical_message import CanonicalMessage
     from src.parser_v2.contracts.context import RawContext
-    with pytest.raises(Exception):
+    from pydantic import ValidationError
+    with pytest.raises(ValidationError):
         CanonicalMessage(
             parser_profile="test",
             primary_class="UPDATE",

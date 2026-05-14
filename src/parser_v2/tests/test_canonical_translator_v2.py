@@ -278,7 +278,27 @@ def test_per_intent_local_target_each_gets_own_group() -> None:
     parsed = _make_parsed(intents, target_hints=None)
     result = CanonicalTranslator().translate(parsed)
 
+    assert len(result.target_action_groups) == 2
     all_actions = [a for g in result.target_action_groups for a in g.actions]
     action_types = {a.action_type for a in all_actions}
     assert "SET_STOP" in action_types
     assert "CANCEL_PENDING" in action_types
+
+
+def test_explicit_link_and_reply_demotes_reply_to_secondary():
+    """Quando ci sono link espliciti + reply, il reply va in secondary_targeting."""
+    hints = TargetHints(
+        target_source="MESSAGE_TEXT_LINK",
+        telegram_message_ids=[2712],
+        reply_to_message_id=100,
+    )
+    intents = [_make_intent("MOVE_STOP_TO_BE", occurrence_index=0)]
+    parsed = _make_parsed(intents, target_hints=hints)
+    result = CanonicalTranslator().translate(parsed)
+
+    assert len(result.target_action_groups) == 1
+    group = result.target_action_groups[0]
+    assert group.targeting.telegram_message_ids == [2712]
+    assert group.targeting.reply_to_message_id is None
+    assert group.secondary_targeting is not None
+    assert group.secondary_targeting.reply_to_message_id == 100
