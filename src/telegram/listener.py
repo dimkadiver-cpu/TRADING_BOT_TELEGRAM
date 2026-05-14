@@ -21,51 +21,58 @@ except ModuleNotFoundError:  # pragma: no cover - test fallback when Telethon is
     events = _EventsModule()  # type: ignore[assignment]
     Message = object  # type: ignore[assignment]
 
-from src.storage.parse_results import ParseResultStore
+from dataclasses import dataclass
+
+from src.parser_v2.contracts.context import ParserContext, RawContext
+from src.runtime_v2.parser_pipeline.models import CanonicalParseResult, ParserJobStatus
+from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+from src.runtime_v2.trader_resolution.models import ParserDispatchCandidate, ResolvedTraderContext
 from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
-from src.storage.review_queue import ReviewQueueStore
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.topic_utils import extract_message_topic_id, extract_real_reply_to_message_id
-from src.telegram.effective_trader import EffectiveTraderResolver
-from src.telegram.eligibility import MessageEligibilityEvaluator
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
-from src.telegram.router import MessageRouter, QueueItem as _QueueItem, is_blacklisted_text
-from src.telegram.trader_mapping import TelegramSourceTraderMapper
+
+
+@dataclass(slots=True)
+class _QueueItem:
+    raw_message_id: int
+    source_chat_id: str
+    telegram_message_id: int
+    raw_text: str
+    source_trader_id: str | None
+    reply_to_message_id: int | None
+    acquisition_mode: str
+    source_topic_id: int | None = None
+
+
+def _is_blacklisted_text(
+    config: ChannelsConfig,
+    raw_text: str,
+    chat_id: int | None,
+    topic_id: int | None = None,
+) -> bool:
+    text_lower = raw_text.lower()
+    for tag in config.blacklist_global:
+        if tag.lower() in text_lower:
+            return True
+    if chat_id is not None:
+        entry = config.match_entry(chat_id, topic_id)
+        if entry is not None:
+            for tag in entry.blacklist:
+                if tag.lower() in text_lower:
+                    return True
+    return False
 
 
 def build_ingestion_service(db_path: str, logger: logging.Logger) -> RawMessageIngestionService:
     return RawMessageIngestionService(store=RawMessageStore(db_path=db_path), logger=logger)
 
 
-def build_effective_trader_resolver(
-    db_path: str,
-    trader_mapper: TelegramSourceTraderMapper,
-    trader_aliases: dict[str, str],
-    known_trader_ids: set[str],
-) -> EffectiveTraderResolver:
-    return EffectiveTraderResolver(
-        source_mapper=trader_mapper,
-        raw_store=RawMessageStore(db_path=db_path),
-        trader_aliases=trader_aliases,
-        known_trader_ids=known_trader_ids,
-    )
-
-
-def build_eligibility_evaluator(db_path: str) -> MessageEligibilityEvaluator:
-    return MessageEligibilityEvaluator(raw_store=RawMessageStore(db_path=db_path))
-
-
-def build_parse_results_store(db_path: str) -> ParseResultStore:
-    return ParseResultStore(db_path=db_path)
-
-
 def build_processing_status_store(db_path: str) -> ProcessingStatusStore:
     return ProcessingStatusStore(db_path=db_path)
-
-
-def build_review_queue_store(db_path: str) -> ReviewQueueStore:
-    return ReviewQueueStore(db_path=db_path)
 
 
 class TelegramListener:
@@ -76,26 +83,26 @@ class TelegramListener:
         *,
         ingestion_service: RawMessageIngestionService,
         processing_status_store: ProcessingStatusStore,
-        router: MessageRouter,
+        raw_repo: RawMessageRepository,
+        channel_resolver: ChannelConfigResolver,
+        parser_pipeline: ParserPipelineProcessor,
         logger: logging.Logger,
         channels_config: ChannelsConfig,
         fallback_allowed_chat_ids: Iterable[int] | None = None,
-        sidecar: object | None = None,
     ) -> None:
         self._ingestion = ingestion_service
         self._status_store = processing_status_store
-        self._router = router
+        self._raw_repo = raw_repo
+        self._channel_resolver = channel_resolver
+        self._parser_pipeline = parser_pipeline
         self._logger = logger
         self._config = channels_config
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
         self._queue: asyncio.Queue[_QueueItem] = asyncio.Queue()
-        self._sidecar = sidecar
 
     def update_config(self, new_config: ChannelsConfig) -> None:
         self._config = new_config
-        self._router.update_config(new_config)
-        if self._sidecar is not None:
-            self._sidecar.reload_config()
+        self._channel_resolver.reload()
         self._logger.info(
             "listener config updated | active_channels=%d",
             len(new_config.active_channels),
@@ -362,9 +369,62 @@ class TelegramListener:
         )
 
     def _process_item(self, item: _QueueItem) -> None:
-        self._router.route(item)
-        if self._sidecar is not None:
-            self._sidecar.process_queue_item(item)
+        entry = self._channel_resolver.lookup(item.source_chat_id, item.source_topic_id)
+        if entry is None or not entry.active:
+            self._logger.debug(
+                "no active channel entry | raw_message_id=%s chat=%s topic=%s",
+                item.raw_message_id,
+                item.source_chat_id,
+                item.source_topic_id,
+            )
+            return
+
+        envelope = self._raw_repo.get_by_id(item.raw_message_id)
+
+        raw_context = RawContext(
+            raw_text=envelope.raw_text or "",
+            message_id=envelope.telegram_message_id,
+            reply_to_message_id=envelope.reply_to_message_id,
+            source_chat_id=envelope.source_chat_id,
+            source_topic_id=envelope.source_topic_id,
+        )
+        parser_context = ParserContext(
+            raw_context=raw_context,
+            message_id=envelope.telegram_message_id,
+            reply_to_message_id=envelope.reply_to_message_id,
+            source_chat_id=envelope.source_chat_id,
+            source_topic_id=envelope.source_topic_id,
+        )
+        resolved = ResolvedTraderContext(
+            raw_message_id=item.raw_message_id,
+            trader_id=entry.trader_id,
+            method="source_chat_id",
+            detail=None,
+            is_ambiguous=False,
+            resolved_at=datetime.now(timezone.utc),
+        )
+        candidate = ParserDispatchCandidate(
+            raw_message=envelope,
+            resolved_trader=resolved,
+            parser_profile=entry.parser_profile,
+            parser_context=parser_context,
+        )
+
+        result = self._parser_pipeline.process(candidate)
+        if isinstance(result, ParserJobStatus):
+            self._logger.warning(
+                "parse failed | raw_message_id=%s reason=%s",
+                item.raw_message_id,
+                result.reason,
+            )
+        else:
+            self._logger.info(
+                "parsed | raw_message_id=%s canonical_id=%s class=%s status=%s",
+                item.raw_message_id,
+                result.canonical_message_id,
+                result.primary_class,
+                result.parse_status,
+            )
 
     def _is_allowed_message(self, chat_id: int | None, topic_id: int | None) -> bool:
         if chat_id is None:
@@ -377,7 +437,7 @@ class TelegramListener:
         return entry is not None and entry.active
 
     def _is_blacklisted(self, raw_text: str, chat_id: int | None, topic_id: int | None = None) -> bool:
-        return is_blacklisted_text(self._config, raw_text, chat_id, topic_id)
+        return _is_blacklisted_text(self._config, raw_text, chat_id, topic_id)
 
     def _extract_topic_id(self, chat_id: int | None, message: Message) -> int | None:
         if chat_id is None:
