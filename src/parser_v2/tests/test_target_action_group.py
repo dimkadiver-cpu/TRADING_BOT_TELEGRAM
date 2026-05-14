@@ -1,5 +1,6 @@
 from __future__ import annotations
 import pytest
+from pydantic import ValidationError
 from src.parser_v2.contracts.canonical_message import ActionItem, TargetActionGroup, SetStopOperation
 from src.parser_v2.contracts.context import TargetHints
 
@@ -16,7 +17,7 @@ def test_action_item_set_stop_valid():
 
 def test_action_item_rejects_wrong_payload():
     from src.parser_v2.contracts.canonical_message import CloseOperation
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ActionItem(
             action_type="SET_STOP",
             close=CloseOperation(close_scope="FULL"),
@@ -24,11 +25,22 @@ def test_action_item_rejects_wrong_payload():
         )
 
 
-def test_action_item_requires_exactly_one_payload():
+def test_action_item_rejects_missing_payload():
     from src.parser_v2.contracts.canonical_message import CancelPendingOperation
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         ActionItem(
             action_type="CANCEL_PENDING",
+            source_intent="CANCEL_PENDING",
+        )
+
+
+def test_action_item_rejects_dual_payload():
+    from src.parser_v2.contracts.canonical_message import CancelPendingOperation
+    with pytest.raises(ValidationError):
+        ActionItem(
+            action_type="CANCEL_PENDING",
+            cancel_pending=CancelPendingOperation(cancel_scope_hint="UNKNOWN"),
+            set_stop=SetStopOperation(target_type="ENTRY"),
             source_intent="CANCEL_PENDING",
         )
 
@@ -65,7 +77,7 @@ def test_target_action_group_with_secondary_targeting():
 
 
 def test_target_action_group_rejects_empty_actions():
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         TargetActionGroup(
             targeting=TargetHints(reply_to_message_id=100),
             actions=[],
