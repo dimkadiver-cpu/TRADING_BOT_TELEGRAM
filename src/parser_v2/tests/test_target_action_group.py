@@ -113,7 +113,6 @@ def test_canonical_message_update_uses_target_action_groups():
 def test_canonical_message_update_requires_target_action_groups_when_parsed():
     from src.parser_v2.contracts.canonical_message import CanonicalMessage
     from src.parser_v2.contracts.context import RawContext
-    from pydantic import ValidationError
     with pytest.raises(ValidationError):
         CanonicalMessage(
             parser_profile="test",
@@ -129,7 +128,6 @@ def test_canonical_message_signal_forbids_target_action_groups():
     from src.parser_v2.contracts.canonical_message import CanonicalMessage, SignalPayload
     from src.parser_v2.contracts.context import RawContext
     from src.parser_v2.contracts.entities import EntryLeg, StopLoss, TakeProfit, Price
-    from pydantic import ValidationError
     with pytest.raises(ValidationError):
         CanonicalMessage(
             parser_profile="test",

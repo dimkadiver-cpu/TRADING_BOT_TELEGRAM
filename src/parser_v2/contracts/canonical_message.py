@@ -151,6 +151,7 @@ class UpdateOperation(CanonicalModel):
         return self
 
 
+# Transitional: used by canonical_translator — will be removed in Task 6 cleanup
 class UpdatePayload(CanonicalModel):
     operations: list[UpdateOperation] = Field(default_factory=list)
 
@@ -176,6 +177,7 @@ class InfoPayload(CanonicalModel):
     raw_fragment: str | None = None
 
 
+# Transitional: used by canonical_translator — will be removed in Task 6 cleanup
 class TargetedAction(CanonicalModel):
     action_type: UpdateOperationType
     params: dict[str, Any] = Field(default_factory=dict)
