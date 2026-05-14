@@ -1,0 +1,158 @@
+  
+  # Operation Config — configurazione globale
+  # ─────────────────────────────────────────────────────────────────────────────
+  # Merge priority: global_hard_caps > defaults + traders/<id>.yaml
+  # Sezioni: signal_enrichment (stateless) | management_plan (lifecycle) | risk (lifecycle entry gate)
+
+  # ── Sicurezza assoluta (mai overridabile) ────────────────────────────────────
+  global_safety:
+    allow_unprotected_positions: false
+
+  # ── Hard caps (mai overridabili, solo se account_mode: single) ───────────────
+  global_hard_caps:
+    max_capital_at_risk_pct: 10.0         # % portfolio totale su tutti i trader
+    hard_max_per_signal_risk_pct: 2.0     # rischio massimo per singolo segnale
+
+  # ── Account routing ──────────────────────────────────────────────────────────
+  account_mode: single                    # single | per_trader_subaccount
+
+  accounts:
+    _default:
+      account_id: "main"
+      capital_base_usdt: 1000.0
+      max_leverage: 5
+      max_capital_at_risk_pct: 10.0       # usato solo se account_mode: per_trader_subaccount
+
+  # ── Trader autorizzati ───────────────────────────────────────────────────────
+  # Segnale bloccato con trader_not_registered se non in lista.
+  registered_traders:
+    - trader_3
+    - trader_a
+    - trader_b
+    - trader_c
+    - trader_d
+
+  # ── Symbol blacklist ─────────────────────────────────────────────────────────
+  symbol_blacklist:
+    global: []
+    per_trader: {}
+
+  # ── Defaults (overridabili in config/traders/<id>.yaml) ──────────────────────
+  defaults:
+    enabled: true
+    gate_mode: block                      # block | warn
+    operation_rules: override             # override | global
+
+    # ── Signal Enrichment (stateless — letto da SignalEnrichmentProcessor) ──────
+    signal_policy:
+      require_sl: true
+      accepted_entry_structures:
+        - ONE_SHOT
+        - TWO_STEP
+        - RANGE
+        - LADDER
+
+      # Politica esecuzione MARKET entry (spostata da global_hard_caps — non è un hard cap)
+      market_execution:
+        mode: tolerance                   # tolerance | free
+        tolerance_pct: 0.5               # finestra ±% attorno al prezzo indicativo
+        range_tolerance_pct: 0.2         # % oltre gli estremi del range
+
+      # Frazionamento entry per struttura canonica:
+      #   ONE_SHOT  + MARKET → MARKET.single
+      #   ONE_SHOT  + LIMIT  → LIMIT.single
+      #   TWO_STEP  + MARKET → MARKET.averaging
+      #   TWO_STEP  + LIMIT  → LIMIT.averaging
+      #   RANGE              → LIMIT.range
+      #   LADDER             → LIMIT.ladder
+      entry_split:
+        LIMIT:
+          single:
+            weights: {E1: 1.0}
+          range:
+            split_mode: endpoints         # endpoints | firstpoint | lastpoint | midpoint
+            weights: {E1: 0.50, E2: 0.50}
+          averaging:
+            weights: {E1: 0.70, E2: 0.30}
+          ladder:
+            weights: {E1: 0.50, E2: 0.30, E3: 0.20}
+        MARKET:
+          single:
+            weights: {E1: 1.0}
+          averaging:
+            weights: {E1: 0.70, E2: 0.30}
+
+      tp:
+        use_tp_count: null                # null = tutti i TP | N = primi N
+
+      sl:
+        use_original_sl: true             # conserva SL originale del segnale
+        require_sl: true                  # blocca segnale senza SL
+
+      price_corrections:
+        enabled: false
+        round_to_tick: false
+        clamp_to_exchange_precision: false
+
+      price_sanity:
+        enabled: false
+        symbol_ranges: {}
+
+    # Ammissione update dal trader (nomi da parser_v2 action_type)
+    update_admission:
+      apply_move_stop: true
+      apply_move_stop_to_be: true
+      apply_close_partial: true
+      apply_close_full: true
+      apply_cancel_pending: true
+      apply_add_entry: true
+      apply_modify_entry: true
+      apply_update_take_profits: true
+      apply_reenter: true
+
+    # ── Management Plan (embedded nella trade_chain — letto dal Lifecycle Engine) ─
+    management_plan:
+      # Break-even automatico dopo hit TP (spostato da sl.be_trigger)
+      be_trigger: null                    # null | tp1 | tp2 | tp3
+      be_buffer_pct: 0.0                  # SL a BE + offset% per coprire commissioni
+
+      # Distribuzione size di uscita sui TP (spostata da tp.close_distribution)
+      close_distribution:
+        mode: table                       # table | equal
+        table:
+          1: [100]
+          2: [50, 50]
+          3: [30, 30, 40]
+          4: [25, 25, 25, 25]
+          5: [20, 20, 20, 20, 20]
+          6: [20, 20, 20, 20, 10, 10]
+
+      # Gestione ordini pending (spostata da pending:)
+      cancel_pending_by_engine: true      # master switch logiche cancel TP-triggered
+      cancel_pending_on_timeout: true
+      pending_timeout_hours: 24
+      chain_timeout_hours: 168
+
+      # Cancella entry pending rimasti dopo TP hit con open_size > 0
+      # Scenario: E1 fillato, E2 averaging pending → TP1 hit → cancella E2
+      cancel_averaging_pending_after: null  # null | tp1 | tp2
+
+      # Cancella TUTTI i pending se TP raggiunto senza alcun fill (open_size == 0)
+      # Scenario: LIMIT a 100, prezzo sale a TP1 senza toccare 100 → cancella tutto
+      cancel_unfilled_pending_after: null   # null | tp1 | tp2
+
+      risk_freed_by_be: true              # SL a BE → at_risk_usdt = 0 per capacity check
+      protective_sl_mode: exchange_native_first  # exchange_native_first | bot_managed
+
+    # ── Risk (letto dal Lifecycle Entry Gate — PRD 04) ──────────────────────────
+    risk:
+      mode: risk_pct_of_capital           # risk_pct_of_capital | risk_usdt_fixed
+      risk_pct_of_capital: 1.0            # % capitale che puoi perdere su un singolo trade
+      risk_usdt_fixed: 10.0               # perdita fissa USDT se mode=risk_usdt_fixed
+      capital_base_mode: static_config    # static_config | live_equity
+      capital_base_usdt: 1000.0           # capitale di riferimento (se static_config)
+      leverage: 1
+      use_trader_risk_hint: false         # usa risk_hint estratto dal parser
+      max_capital_at_risk_per_trader_pct: 5.0
+      max_concurrent_trades: 5
+      max_concurrent_same_symbol: 1
