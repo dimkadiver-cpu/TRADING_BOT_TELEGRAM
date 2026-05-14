@@ -80,7 +80,8 @@
       "Bash(Get-ChildItem *)",
       "Bash(dir \"C:\\\\TeleSignalBot\\\\db\\\\migrations\")",
       "Bash(Select-Object Name)",
-      "Bash(xargs grep -l \"from src.parser[^_v2]\\\\|from src.storage.parse_results\\\\|from src.storage.parsed_messages\\\\|from src.storage.review_queue\\\\|from src.storage.operational_signals_store\\\\|from src.operation_rules\\\\|from src.target_resolver\\\\|from src.execution\\\\|from src.validation\\\\|from src.intent_translator\")"
+      "Bash(xargs grep -l \"from src.parser[^_v2]\\\\|from src.storage.parse_results\\\\|from src.storage.parsed_messages\\\\|from src.storage.review_queue\\\\|from src.storage.operational_signals_store\\\\|from src.operation_rules\\\\|from src.target_resolver\\\\|from src.execution\\\\|from src.validation\\\\|from src.intent_translator\")",
+      "Skill(superpowers:using-superpowers)"
     ]
   }
 }

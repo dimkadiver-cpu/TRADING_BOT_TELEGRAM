@@ -6,7 +6,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-AcquisitionStatus = Literal["ACQUIRED", "BLACKLISTED", "MEDIA_ONLY_SKIPPED"]
+AcquisitionStatus = Literal["ACQUIRED", "ACQUIRED_ELIGIBLE", "BLACKLISTED", "MEDIA_ONLY_SKIPPED"]
 ProcessingStatusV2 = Literal[
     "pending", "processing", "done", "failed", "blacklisted", "review", "skipped"
 ]

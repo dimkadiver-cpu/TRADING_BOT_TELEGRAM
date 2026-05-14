@@ -10,12 +10,16 @@ from pathlib import Path
 from dotenv import load_dotenv
 from telethon import TelegramClient
 
+import sqlite3
+
 from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
 from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
 from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
 from src.runtime_v2.persistence.raw_messages import RawMessageRepository
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+from src.storage.parser_results_v2 import ParserResultV2Store
+from src.storage.parser_runs import ParserRunStore
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
 from src.telegram.listener import (
     TelegramListener,
@@ -75,7 +79,17 @@ async def _async_main(
     raw_repo = RawMessageRepository(db_path=db_path)
     channel_resolver = ChannelConfigResolver(config_path=channels_yaml_path)
     canonical_repo = CanonicalMessageRepository(db_path=db_path)
-    parser_pipeline = ParserPipelineProcessor(canonical_repo=canonical_repo)
+
+    live_conn = sqlite3.connect(db_path, check_same_thread=False)
+    run_store = ParserRunStore(live_conn)
+    live_run_id = run_store.create_run(notes="live")
+    result_v2_store = ParserResultV2Store(live_conn)
+
+    parser_pipeline = ParserPipelineProcessor(
+        canonical_repo=canonical_repo,
+        result_v2_store=result_v2_store,
+        live_run_id=live_run_id,
+    )
 
     listener = TelegramListener(
         ingestion_service=ingestion_service,
