@@ -92,7 +92,9 @@ def _listener(config: ChannelsConfig) -> TelegramListener:
     return TelegramListener(
         ingestion_service=MagicMock(),
         processing_status_store=MagicMock(),
-        router=MagicMock(),
+        raw_repo=MagicMock(),
+        channel_resolver=MagicMock(),
+        parser_pipeline=MagicMock(),
         logger=MagicMock(),
         channels_config=config,
     )
@@ -153,7 +155,9 @@ def test_allowed_fallback_ids_ignores_topic() -> None:
     lst = TelegramListener(
         ingestion_service=MagicMock(),
         processing_status_store=MagicMock(),
-        router=MagicMock(),
+        raw_repo=MagicMock(),
+        channel_resolver=MagicMock(),
+        parser_pipeline=MagicMock(),
         logger=MagicMock(),
         channels_config=_cfg([]),
         fallback_allowed_chat_ids=[-1001],

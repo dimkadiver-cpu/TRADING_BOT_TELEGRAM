@@ -55,7 +55,9 @@ def _listener(config: ChannelsConfig) -> TelegramListener:
     return TelegramListener(
         ingestion_service=MagicMock(),
         processing_status_store=MagicMock(),
-        router=MagicMock(),
+        raw_repo=MagicMock(),
+        channel_resolver=MagicMock(),
+        parser_pipeline=MagicMock(),
         logger=MagicMock(),
         channels_config=config,
     )

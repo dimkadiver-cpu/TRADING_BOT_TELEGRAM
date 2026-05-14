@@ -30,7 +30,9 @@ def _make_listener(config: ChannelsConfig) -> TelegramListener:
     return TelegramListener(
         ingestion_service=MagicMock(),
         processing_status_store=MagicMock(),
-        router=MagicMock(),
+        raw_repo=MagicMock(),
+        channel_resolver=MagicMock(),
+        parser_pipeline=MagicMock(),
         logger=MagicMock(),
         channels_config=config,
     )
@@ -133,7 +135,8 @@ async def test_catchup_enqueues_new_messages() -> None:
 
 
 @pytest.mark.asyncio
-async def test_catchup_skips_channel_with_no_last_id() -> None:
+async def test_catchup_uses_min_id_zero_when_no_checkpoint() -> None:
+    """When no checkpoint exists for a channel, catchup fetches from min_id=0."""
     channel = ChannelEntry(chat_id=-100999, label="x", active=True, trader_id=None)
     cfg = _make_config(channels=[channel])
     lst = _make_listener(cfg)
@@ -144,7 +147,7 @@ async def test_catchup_skips_channel_with_no_last_id() -> None:
 
     await lst._catchup_from_telegram(client)
 
-    client.get_messages.assert_not_called()
+    client.get_messages.assert_called_once_with(-100999, min_id=0, limit=200)
     assert lst._queue.qsize() == 0
 
 
