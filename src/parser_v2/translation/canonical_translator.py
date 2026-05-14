@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
-
 from src.parser_v2.contracts.canonical_message import (
+    ActionItem,
+    TargetActionGroup,
     CancelPendingOperation,
     CanonicalMessage,
     CloseOperation,
@@ -15,9 +15,6 @@ from src.parser_v2.contracts.canonical_message import (
     ReportResult,
     SetStopOperation,
     SignalPayload,
-    TargetedAction,
-    UpdateOperation,
-    UpdatePayload,
 )
 from src.parser_v2.contracts.context import TargetHints
 from src.parser_v2.contracts.entities import (
@@ -82,7 +79,6 @@ class CanonicalTranslator:
                 primary_intent=parsed.primary_intent if parsed.primary_intent not in UPDATE_INTENTS else None,
                 intents=intents,
                 signal=_signal_payload(parsed.signal),
-                target_hints=parsed.target_hints,
                 warnings=warnings,
                 diagnostics=parsed.diagnostics,
                 raw_context=parsed.raw_context,
@@ -104,27 +100,10 @@ class CanonicalTranslator:
                 ):
                     warnings = _append_once(warnings, "move_stop_no_price_defaulted_to_be")
 
-            has_any_local_target = any(
-                i.target_hints is not None for i, _ in intent_op_pairs
-            )
-            use_targeted = (
-                _should_use_targeted_actions(parsed.target_hints) or has_any_local_target
-            )
-
-            targeted_actions: list[TargetedAction] = []
-            plain_operations: list[UpdateOperation] = []
-
-            if use_targeted and intent_op_pairs:
-                targeted_actions = [
-                    _make_targeted_action(intent, op, parsed.target_hints)
-                    for intent, op in intent_op_pairs
-                ]
-            else:
-                plain_operations = [op for _, op in intent_op_pairs]
+            target_action_groups = _build_target_action_groups(intent_op_pairs, parsed.target_hints)
 
             if (
-                not plain_operations
-                and not targeted_actions
+                not target_action_groups
                 and parse_status in {"PARSED", "PARTIAL"}
                 and "ambiguous_target_intent_binding" not in warnings
             ):
@@ -138,10 +117,8 @@ class CanonicalTranslator:
                 confidence=parsed.confidence,
                 primary_intent=parsed.primary_intent,
                 intents=list(dict.fromkeys(intents)),
-                update=UpdatePayload(operations=plain_operations),
                 report=_report_payload(parsed.intents),
-                targeted_actions=targeted_actions,
-                target_hints=parsed.target_hints,
+                target_action_groups=target_action_groups,
                 warnings=warnings,
                 diagnostics=parsed.diagnostics,
                 raw_context=parsed.raw_context,
@@ -156,7 +133,6 @@ class CanonicalTranslator:
                 primary_intent=parsed.primary_intent,
                 intents=intents,
                 report=_report_payload(parsed.intents) or ReportPayload(),
-                target_hints=parsed.target_hints,
                 warnings=warnings,
                 diagnostics=parsed.diagnostics,
                 raw_context=parsed.raw_context,
@@ -170,7 +146,6 @@ class CanonicalTranslator:
             primary_intent=parsed.primary_intent,
             intents=intents,
             info=_info_payload(parsed),
-            target_hints=parsed.target_hints,
             warnings=warnings,
             diagnostics=parsed.diagnostics,
             raw_context=parsed.raw_context,
@@ -181,12 +156,12 @@ def _signal_payload(signal: SignalDraft) -> SignalPayload:
     return SignalPayload(**signal.model_dump())
 
 
-def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
+def _operation_from_intent(intent: ParsedIntent) -> ActionItem | None:
     entities = intent.entities
 
     if intent.type == "MOVE_STOP_TO_BE":
-        return UpdateOperation(
-            op_type="SET_STOP",
+        return ActionItem(
+            action_type="SET_STOP",
             set_stop=SetStopOperation(target_type="ENTRY"),
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
@@ -201,8 +176,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
             set_stop = SetStopOperation(target_type="TP_LEVEL", tp_level=entities.stop_to_tp_level)
         else:
             set_stop = SetStopOperation(target_type="ENTRY")
-        return UpdateOperation(
-            op_type="SET_STOP",
+        return ActionItem(
+            action_type="SET_STOP",
             set_stop=set_stop,
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
@@ -212,8 +187,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
 
     if intent.type == "CLOSE_FULL":
         close_price = entities.close_price if isinstance(entities, CloseFullEntities) else None
-        return UpdateOperation(
-            op_type="CLOSE",
+        return ActionItem(
+            action_type="CLOSE",
             close=CloseOperation(close_scope="FULL", close_price=close_price),
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
@@ -222,8 +197,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         )
 
     if intent.type == "CLOSE_PARTIAL" and isinstance(entities, ClosePartialEntities):
-        return UpdateOperation(
-            op_type="CLOSE",
+        return ActionItem(
+            action_type="CLOSE",
             close=CloseOperation(
                 close_scope="PARTIAL",
                 fraction=entities.fraction,
@@ -239,8 +214,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         cancel_scope_hint: CancelScopeHint = (
             entities.cancel_scope_hint if isinstance(entities, CancelPendingEntities) else "UNKNOWN"
         )
-        return UpdateOperation(
-            op_type="CANCEL_PENDING",
+        return ActionItem(
+            action_type="CANCEL_PENDING",
             cancel_pending=CancelPendingOperation(cancel_scope_hint=cancel_scope_hint),
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
@@ -249,8 +224,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         )
 
     if intent.type == "INVALIDATE_SETUP" and isinstance(entities, InvalidateSetupEntities):
-        return UpdateOperation(
-            op_type="INVALIDATE_SETUP",
+        return ActionItem(
+            action_type="INVALIDATE_SETUP",
             invalidate_setup=InvalidateSetupOperation(reason_text=entities.reason_text),
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
@@ -259,8 +234,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         )
 
     if intent.type == "MODIFY_ENTRY" and isinstance(entities, ModifyEntryEntities):
-        return UpdateOperation(
-            op_type="MODIFY_ENTRIES",
+        return ActionItem(
+            action_type="MODIFY_ENTRIES",
             modify_entries=ModifyEntriesOperation(
                 kind=entities.mode,
                 entries=entities.entries,
@@ -283,8 +258,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
                     price=entities.entry_price,
                 )
             )
-        return UpdateOperation(
-            op_type="MODIFY_ENTRIES",
+        return ActionItem(
+            action_type="MODIFY_ENTRIES",
             modify_entries=ModifyEntriesOperation(kind="ADD", entries=entries),
             source_intent=intent.type,
             source_intent_id=intent.intent_id,
@@ -301,8 +276,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
             )
             for index, price in enumerate(entities.entries, start=1)
         ]
-        return UpdateOperation(
-            op_type="MODIFY_ENTRIES",
+        return ActionItem(
+            action_type="MODIFY_ENTRIES",
             modify_entries=ModifyEntriesOperation(
                 kind="REENTER",
                 entries=entries,
@@ -315,8 +290,8 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         )
 
     if intent.type == "MODIFY_TARGETS" and isinstance(entities, ModifyTargetsEntities):
-        return UpdateOperation(
-            op_type="MODIFY_TARGETS",
+        return ActionItem(
+            action_type="MODIFY_TARGETS",
             modify_targets=ModifyTargetsOperation(
                 mode=entities.mode,
                 take_profits=[
@@ -332,6 +307,63 @@ def _operation_from_intent(intent: ParsedIntent) -> UpdateOperation | None:
         )
 
     return None
+
+
+def _build_target_action_groups(
+    intent_op_pairs: list[tuple[ParsedIntent, ActionItem]],
+    message_target_hints: TargetHints | None,
+) -> list[TargetActionGroup]:
+    if not intent_op_pairs:
+        return []
+
+    groups: dict[str, tuple[TargetHints, TargetHints | None, list[ActionItem]]] = {}
+
+    for intent, action in intent_op_pairs:
+        primary_hints, secondary_hints = _resolve_target_hints(intent, message_target_hints)
+        group_key = _targeting_key(primary_hints)
+
+        if group_key not in groups:
+            groups[group_key] = (primary_hints, secondary_hints, [action])
+        else:
+            groups[group_key][2].append(action)
+
+    return [
+        TargetActionGroup(targeting=primary, secondary_targeting=secondary, actions=actions)
+        for primary, secondary, actions in groups.values()
+    ]
+
+
+def _resolve_target_hints(
+    intent: ParsedIntent,
+    message_target_hints: TargetHints | None,
+) -> tuple[TargetHints, TargetHints | None]:
+    base = intent.target_hints or message_target_hints
+    if base is None:
+        return TargetHints(scope_hint="SINGLE_SIGNAL"), None
+
+    if (
+        base.scope_hint == "UNKNOWN"
+        and (base.telegram_message_ids or base.telegram_links or base.explicit_ids)
+    ):
+        base = base.model_copy(update={"scope_hint": "SINGLE_SIGNAL"})
+
+    has_explicit = bool(base.telegram_message_ids or base.telegram_links or base.explicit_ids)
+    has_reply = bool(base.reply_to_message_id)
+
+    if has_explicit and has_reply:
+        secondary = TargetHints(reply_to_message_id=base.reply_to_message_id)
+        primary = base.model_copy(update={"reply_to_message_id": None})
+        return primary, secondary
+
+    return base, None
+
+
+def _targeting_key(hints: TargetHints) -> str:
+    ids = "|".join(str(x) for x in sorted(hints.telegram_message_ids))
+    links = "|".join(sorted(hints.telegram_links))
+    explicit = "|".join(sorted(hints.explicit_ids))
+    symbols = "|".join(sorted(hints.symbols))
+    return f"ids:{ids};links:{links};explicit:{explicit};reply:{hints.reply_to_message_id};scope:{hints.scope_hint};symbols:{symbols}"
 
 
 def _report_payload(intents: list[ParsedIntent]) -> ReportPayload | None:
@@ -391,59 +423,6 @@ def _info_payload(parsed: ParsedMessage) -> InfoPayload:
         if intent.type == "INFO_ONLY" and isinstance(intent.entities, InfoOnlyEntities):
             return InfoPayload(raw_fragment=intent.entities.raw_fragment or intent.raw_fragment)
     return InfoPayload(raw_fragment=parsed.raw_context.raw_text)
-
-
-def _should_use_targeted_actions(target_hints: TargetHints | None) -> bool:
-    if target_hints is None:
-        return False
-    return bool(
-        target_hints.telegram_message_ids
-        or target_hints.telegram_links
-        or target_hints.explicit_ids
-        or target_hints.reply_to_message_id
-        or target_hints.scope_hint in GLOBAL_SCOPE_HINTS
-    )
-
-
-def _make_targeted_action(
-    intent: ParsedIntent,
-    op: UpdateOperation,
-    message_target_hints: TargetHints | None,
-) -> TargetedAction:
-    resolved_hints = intent.target_hints or message_target_hints
-    if resolved_hints is None:
-        resolved_hints = TargetHints(scope_hint="SINGLE_SIGNAL")
-    elif (
-        resolved_hints.scope_hint == "UNKNOWN"
-        and (resolved_hints.telegram_message_ids or resolved_hints.telegram_links or resolved_hints.explicit_ids)
-    ):
-        resolved_hints = resolved_hints.model_copy(update={"scope_hint": "SINGLE_SIGNAL"})
-
-    return TargetedAction(
-        action_type=op.op_type,
-        params=_operation_params(op),
-        target_hints=resolved_hints,
-        source_intent=op.source_intent,
-        source_intent_id=intent.intent_id,
-        raw_fragment=op.raw_fragment,
-        confidence=op.confidence,
-    )
-
-
-def _operation_params(operation: UpdateOperation) -> dict[str, Any]:
-    if operation.set_stop is not None:
-        return operation.set_stop.model_dump(exclude_none=True)
-    if operation.close is not None:
-        return operation.close.model_dump(exclude_none=True)
-    if operation.cancel_pending is not None:
-        return operation.cancel_pending.model_dump(exclude_none=True)
-    if operation.modify_entries is not None:
-        return operation.modify_entries.model_dump(exclude_none=True)
-    if operation.modify_targets is not None:
-        return operation.modify_targets.model_dump(exclude_none=True)
-    if operation.invalidate_setup is not None:
-        return operation.invalidate_setup.model_dump(exclude_none=True)
-    return {}
 
 
 def _append_once(values: list[str], value: str) -> list[str]:
