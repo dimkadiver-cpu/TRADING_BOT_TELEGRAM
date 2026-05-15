@@ -22,6 +22,12 @@ src/runtime_v2/
 │   ├── __init__.py
 │   ├── models.py          — CanonicalParseResult, ParserJobStatus
 │   └── processor.py       — ParserPipelineProcessor (orchestratore parsing)
+├── signal_enrichment/
+│   ├── __init__.py
+│   ├── models.py          — EffectiveEnrichmentConfig, EnrichedCanonicalMessage, ManagementPlanConfig, …
+│   ├── config_loader.py   — OperationConfigLoader (merge globale + per-trader, hot-reload, policy_version)
+│   ├── repository.py      — EnrichedCanonicalMessageRepository (save idempotente, get_by_canonical_message_id)
+│   └── processor.py       — SignalEnrichmentProcessor (Gate 1 stateless: SIGNAL / UPDATE / REPORT+INFO)
 └── persistence/
     ├── raw_messages.py    — RawMessageRepository (adapter su storage)
     └── canonical_messages.py  — CanonicalMessageRepository (store risultati)
@@ -49,9 +55,18 @@ ParserPipelineProcessor.process(candidate)
       ↓
 CanonicalMessage (via UniversalParserRuntime + profilo parser_v2)
       ↓
-canonical_messages (DB)  —  UNIQUE(raw_message_id, run_context='live')
+canonical_messages (parser.sqlite3)  —  UNIQUE(raw_message_id, run_context='live')
       ↓
-log: parsed | raw_message_id=X canonical_id=Y class=SIGNAL status=PARSED
+SignalEnrichmentProcessor.process(CanonicalParseResult)        ← PRD 03
+      ↓ carica config effettiva per trader (config/operation_config.yaml + config/traders/<id>.yaml)
+      │
+      ├── SIGNAL → gate blacklist / entry_structure / SL / TP trim / weights → PASS | BLOCK | REVIEW
+      ├── UPDATE → gate update_admission per source_intent               → PASS | BLOCK | REVIEW
+      └── REPORT / INFO → PASS diretto (lifecycle_processed=True, skip PRD 04)
+      ↓
+enriched_canonical_messages (parser.sqlite3)
+      lifecycle_processed=0 → eleggibile per worker PRD 04 (SIGNAL/UPDATE PASS)
+      lifecycle_processed=1 → solo audit (BLOCK, REVIEW, REPORT, INFO)
 ```
 
 ## Come si avvia
@@ -69,9 +84,12 @@ Nessuna variabile d'ambiente aggiuntiva necessaria. Il runtime_v2 è sempre atti
 | `acquisition_status` | Immutabile — impostato una volta: `ACQUIRED`, `BLACKLISTED`, `MEDIA_ONLY_SKIPPED` |
 | `processing_status` | Mutabile — traccia lo stato intake: `pending → processing → done / review / failed`. Il parser pipeline non lo modifica. |
 | `ParserDispatchCandidate` | Contratto tra intake e parser pipeline — envelope + resolved trader + parser_profile + parser_context |
-| `CanonicalParseResult` | Output del parser pipeline — contiene `CanonicalMessage` e metadata. Input per PRD 03 (Operation Rules). |
+| `CanonicalParseResult` | Output del parser pipeline — contiene `CanonicalMessage` e metadata. Input per `SignalEnrichmentProcessor`. |
 | `ParserJobStatus` | Restituito in caso di failure del parsing — `status: failed/skipped`, con `reason`. |
-| `target_action_groups` | Campo UPDATE di `CanonicalMessage` — sostituisce `update`/`targeted_actions`. Lista di `TargetActionGroup` (targeting + actions). Struttura consumata da PRD 03. |
+| `target_action_groups` | Campo UPDATE di `CanonicalMessage` — lista di `TargetActionGroup` (targeting + actions). Consumato da PRD 03 gate UPDATE. |
+| `EffectiveEnrichmentConfig` | Config effettiva per trader — merge di `operation_config.yaml` + `config/traders/<id>.yaml`. Contiene `signal_policy`, `update_admission`, `management_plan`, `risk`, `hedge_mode`. |
+| `EnrichedCanonicalMessage` | Output di PRD 03 — `enrichment_decision` (PASS/BLOCK/REVIEW), `enriched_signal`, `enriched_actions`, `management_plan`, `lifecycle_processed`. Persistito in `enriched_canonical_messages`. |
+| `lifecycle_processed` | Flag int (0/1) in DB — 0 = eleggibile per PRD 04 worker; 1 = audit only. I BLOCK/REVIEW e tutti i REPORT/INFO hanno `lifecycle_processed=1` al momento del salvataggio. |
 
 ## Wiring in main.py
 
@@ -93,20 +111,48 @@ listener = TelegramListener(
 
 `TelegramListener._process_item` chiama direttamente `channel_resolver.lookup()` + `raw_repo.get_by_id()` + `parser_pipeline.process()`. Non esiste più un router legacy né un sidecar.
 
-## Tabelle DB
+## DB
 
-| Tabella | Stack | Stato |
+### File separati (da PRD 03)
+
+| File | Scopo |
+|---|---|
+| `db/parser.sqlite3` | Copia di `tele_signal_bot.sqlite3` — contiene `raw_messages`, `canonical_messages`, `enriched_canonical_messages` e tutte le tabelle parser |
+| `db/ops.sqlite3` | Vuoto — riservato per PRD 04+ (lifecycle, risk, execution) |
+
+La separazione è eseguita una volta tramite `scripts/setup_parser_db_separation.py`.
+
+### Tabelle
+
+| Tabella | DB | Stato |
 |---|---|---|
-| `raw_messages` | Condivisa | Attiva — usata da listener + runtime_v2 |
-| `canonical_messages` | runtime_v2 | Attiva — output del parser pipeline |
+| `raw_messages` | parser.sqlite3 | Attiva — usata da listener + runtime_v2 |
+| `canonical_messages` | parser.sqlite3 | Attiva — output del parser pipeline |
+| `parser_runs` / `parser_results_v2` | parser.sqlite3 | Attive — audit run di parsing |
+| `enriched_canonical_messages` | parser.sqlite3 | Attiva (PRD 03) — output del signal enrichment gate |
 | Tutte le altre | Legacy | Droppate (migration 025) |
+
+### Query handoff PRD 04
+
+Il worker PRD 04 legge da `parser.sqlite3`:
+```sql
+SELECT * FROM enriched_canonical_messages
+WHERE lifecycle_processed = 0
+  AND enrichment_decision = 'PASS'
+  AND primary_class IN ('SIGNAL', 'UPDATE')
+ORDER BY created_at ASC
+```
 
 ## File configurabili
 
 - `config/channels.yaml` — mappa canali Telegram → trader_id, parser_profile, blacklist, topic_id
+- `config/operation_config.yaml` — config globale signal enrichment: account, trader registrati, blacklist, defaults policy/risk/management
+- `config/traders/<id>.yaml` — override per-trader di operation_config.yaml
 - `db/migrations/023_runtime_v2_raw_messages.sql` — colonne runtime_v2 su `raw_messages`
 - `db/migrations/024_runtime_v2_canonical_messages.sql` — tabella `canonical_messages`
 - `db/migrations/025_drop_legacy_tables.sql` — DROP 16 tabelle legacy
+- `db/migrations/026_parser_results_v2.sql` — tabelle `parser_runs` e `parser_results_v2`
+- `db/migrations/027_enriched_canonical_messages.sql` — tabella `enriched_canonical_messages` (PRD 03)
 
 ## Test
 
@@ -120,13 +166,21 @@ tests/runtime_v2/
 ├── test_intake_processor.py
 ├── test_canonical_message_repository.py
 ├── test_parser_pipeline_processor.py
-└── test_acceptance.py                    ← slice end-to-end PRD 01 + PRD 2.b
+├── test_acceptance.py                    ← slice end-to-end PRD 01 + PRD 2.b
+└── signal_enrichment/
+    ├── test_models.py                    ← modelli Pydantic (4 test)
+    ├── test_config_loader.py             ← OperationConfigLoader (9 test)
+    ├── test_repository.py                ← repository idempotenza (5 test)
+    ├── test_processor_signal.py          ← SIGNAL gate (10 test)
+    ├── test_processor_update.py          ← UPDATE admission gate (3 test)
+    ├── test_processor_routing.py         ← REPORT/INFO routing (2 test)
+    └── test_integration.py               ← end-to-end con config reale (5 test)
 
 src/telegram/tests/
 └── test_listener_process_item.py         ← _process_item con runtime_v2 pipeline
 ```
 
-68 test runtime_v2 + 113 test telegram, tutti passing.
+559 test totali passing (suite completa).
 
 ## Stato PRD
 
@@ -136,4 +190,5 @@ src/telegram/tests/
 | PRD 2.a | Parser v2 gap closure (RANGE, GAP A7, round-trip) | ✅ done |
 | PRD 2.b | Parser pipeline integration (canonical_messages) | ✅ done |
 | PRD 2.c | Legacy elimination (router rimosso, 16 tabelle droppate) | ✅ done |
-| PRD 03 | Operation Rules Engine V2 | 🔜 prossimo |
+| PRD 03 | Signal Enrichment Layer — Gate 1 stateless | ✅ done |
+| PRD 04 | Lifecycle Entry Gate (stateful, usa enriched_canonical_messages) | 🔜 prossimo |
