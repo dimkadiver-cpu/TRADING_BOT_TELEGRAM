@@ -139,3 +139,34 @@ def test_warn_mode_produces_review(tmp_path):
     assert enriched.enrichment_decision == "REVIEW"
     assert "MOVE_STOP_TO_BE" in (enriched.reason_code or "")
     assert enriched.lifecycle_processed is True
+
+
+def test_empty_target_action_groups_is_review(tmp_path):
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage
+    from src.parser_v2.contracts.context import RawContext
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    canonical = CanonicalMessage(
+        parser_profile="trader_a", primary_class="UPDATE",
+        parse_status="PARTIAL", confidence=0.5,
+        target_action_groups=[],
+        warnings=["ambiguous_target_intent_binding"],
+        raw_context=RawContext(raw_text="close it"),
+    )
+    result = CanonicalParseResult(
+        raw_message_id=99, canonical_message_id=4,
+        parser_profile="trader_a", primary_class="UPDATE",
+        parse_status="PARTIAL", canonical_message=canonical,
+        warnings=["ambiguous_target_intent_binding"],
+        parsed_at=datetime.now(timezone.utc),
+    )
+
+    proc = _make_processor(tmp_path)
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "REVIEW"
+    assert enriched.reason_code == "no_actionable_targets"
+    assert enriched.lifecycle_processed is True
+    assert enriched.enriched_actions is None

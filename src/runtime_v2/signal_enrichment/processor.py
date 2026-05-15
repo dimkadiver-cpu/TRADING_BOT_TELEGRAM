@@ -201,6 +201,15 @@ class SignalEnrichmentProcessor:
         trader_id = result.parser_profile
         tags = result.canonical_message.target_action_groups
 
+        if not tags:
+            return self._make_outcome(
+                result, "REVIEW", "no_actionable_targets",
+                lifecycle_processed=True,
+                policy_snapshot=policy_snapshot,
+                policy_version=policy_version,
+                config=config,
+            )
+
         for tag in tags:
             for action_item in tag.actions:
                 intent = action_item.source_intent
