@@ -53,6 +53,8 @@ class LifecycleEventProcessor:
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
         fill_price = payload.get("fill_price")
+        if fill_price is None:
+            logger.warning("ENTRY_FILLED event %s for chain %s has no fill_price", exchange_event.exchange_event_id, chain.trade_chain_id)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         return EventProcessorResult(
@@ -80,22 +82,13 @@ class LifecycleEventProcessor:
         active_commands: list[ExecutionCommand],
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
-        tp_level = payload.get("tp_level", 1)
+        tp_level = int(payload.get("tp_level", 1))  # cast to int to avoid "tp1.0" mismatch
         is_final = bool(payload.get("is_final", False))
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
 
         new_state: LifecycleState = "CLOSED" if is_final else "PARTIALLY_CLOSED"
-        events: list[LifecycleEvent] = [LifecycleEvent(
-            trade_chain_id=chain_id,
-            event_type="TP_FILLED",
-            source_type="exchange_event",
-            source_id=str(eid),
-            previous_state=chain.lifecycle_state,
-            next_state=new_state,
-            payload_json=json.dumps({"tp_level": tp_level, "is_final": is_final}),
-            idempotency_key=f"tp_filled:{chain_id}:{eid}",
-        )]
+        events: list[LifecycleEvent] = []
         commands: list[ExecutionCommand] = []
         new_be: BeProtectionStatus | None = None
 
@@ -149,6 +142,19 @@ class LifecycleEventProcessor:
                         ))
                         new_state = "BE_MOVE_PENDING"
                         new_be = "BE_MOVE_PENDING"
+
+        # Build the main TP event AFTER final new_state is determined
+        tp_event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="TP_FILLED",
+            source_type="exchange_event",
+            source_id=str(eid),
+            previous_state=chain.lifecycle_state,
+            next_state=new_state,
+            payload_json=json.dumps({"tp_level": tp_level, "is_final": is_final}),
+            idempotency_key=f"tp_filled:{chain_id}:{eid}",
+        )
+        events.insert(0, tp_event)  # TP event first, then NOOP/BE events
 
         return EventProcessorResult(
             new_lifecycle_state=new_state,
