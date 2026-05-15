@@ -1,0 +1,115 @@
+# src/runtime_v2/lifecycle/models.py
+from __future__ import annotations
+
+from datetime import datetime
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict
+
+LifecycleState = Literal[
+    "CREATED", "WAITING_ENTRY", "OPEN", "PARTIALLY_CLOSED",
+    "BE_MOVE_PENDING", "PROTECTED_BE", "CLOSED", "CANCELLED",
+    "EXPIRED", "REVIEW_REQUIRED", "ERROR",
+]
+TERMINAL_STATES: frozenset[str] = frozenset({"CLOSED", "CANCELLED", "EXPIRED"})
+
+CommandType = Literal[
+    "PLACE_ENTRY", "PLACE_PROTECTIVE_STOP", "PLACE_TAKE_PROFIT",
+    "MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP", "CANCEL_PENDING_ENTRY",
+    "CLOSE_PARTIAL", "CLOSE_FULL",
+]
+CommandStatus = Literal["PENDING", "SENT", "ACK", "DONE", "FAILED", "CANCELLED"]
+
+LifecycleEventType = Literal[
+    "SIGNAL_ACCEPTED", "TRADE_CHAIN_CREATED", "ENTRY_COMMAND_CREATED",
+    "ENTRY_FILLED", "TP_FILLED", "SL_FILLED", "TIMEOUT_REACHED",
+    "TELEGRAM_UPDATE_ACCEPTED", "BE_MOVE_REQUESTED",
+    "NOOP_ALREADY_PROTECTED_BE", "NOOP_DUPLICATE_COMMAND",
+    "NOOP_ALREADY_CLOSED", "NOOP_NOT_PENDING", "NOOP_NO_APPLICABLE_TARGET",
+    "REVIEW_REQUIRED",
+]
+ControlMode = Literal["NONE", "BLOCK_NEW_ENTRIES", "FULL_STOP"]
+BeProtectionStatus = Literal["NOT_PROTECTED", "BE_MOVE_PENDING", "PROTECTED"]
+
+
+class TradeChain(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    trade_chain_id: int | None = None
+    source_enrichment_id: int
+    canonical_message_id: int
+    raw_message_id: int
+    trader_id: str
+    account_id: str
+    symbol: str
+    side: str
+    lifecycle_state: LifecycleState
+    entry_mode: str
+    entry_avg_price: float | None = None
+    current_stop_price: float | None = None
+    expected_stop_price: float | None = None
+    be_protection_status: BeProtectionStatus = "NOT_PROTECTED"
+    entry_timeout_at: datetime | None = None
+    management_plan_json: str
+    risk_snapshot_json: str = "{}"
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class LifecycleEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    event_id: int | None = None
+    trade_chain_id: int | None = None
+    event_type: LifecycleEventType
+    source_type: str
+    source_id: str | None = None
+    previous_state: str | None = None
+    next_state: str | None = None
+    payload_json: str = "{}"
+    idempotency_key: str
+    created_at: datetime | None = None
+
+
+class ExecutionCommand(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    command_id: int | None = None
+    trade_chain_id: int
+    command_type: CommandType
+    status: CommandStatus = "PENDING"
+    payload_json: str = "{}"
+    idempotency_key: str
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ControlState(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    control_id: int | None = None
+    scope_type: str
+    scope_value: str | None = None
+    execution_pause_mode: ControlMode = "NONE"
+    emergency_action: str | None = None
+    reason: str | None = None
+    created_by: str | None = None
+    active: bool = True
+    created_at: datetime | None = None
+    updated_at: datetime | None = None
+
+
+class ExchangeEvent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    exchange_event_id: int | None = None
+    trade_chain_id: int | None = None
+    event_type: str
+    payload_json: str = "{}"
+    processing_status: str = "NEW"
+    idempotency_key: str
+    received_at: datetime | None = None
+    processed_at: datetime | None = None
+
+
+__all__ = [
+    "LifecycleState", "TERMINAL_STATES", "CommandType", "CommandStatus",
+    "LifecycleEventType", "ControlMode", "BeProtectionStatus",
+    "TradeChain", "LifecycleEvent", "ExecutionCommand",
+    "ControlState", "ExchangeEvent",
+]
