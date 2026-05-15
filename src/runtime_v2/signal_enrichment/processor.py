@@ -197,7 +197,44 @@ class SignalEnrichmentProcessor:
         policy_snapshot: dict,
         policy_version: str,
     ) -> EnrichedCanonicalMessage:
-        raise NotImplementedError("Implementato in Task 7")
+        log: list[EnrichmentLogEntry] = []
+        trader_id = result.parser_profile
+        tags = result.canonical_message.target_action_groups
+
+        for tag in tags:
+            for action_item in tag.actions:
+                intent = action_item.source_intent
+                admitted = config.update_admission.get(intent, False)
+                if not admitted:
+                    decision = "BLOCK" if config.gate_mode == "block" else "REVIEW"
+                    reason = f"action_type_{'disabled' if decision == 'BLOCK' else 'warned'}:{intent}"
+                    return EnrichedCanonicalMessage(
+                        canonical_message_id=result.canonical_message_id,
+                        raw_message_id=result.raw_message_id,
+                        trader_id=trader_id,
+                        account_id=config.account_id,
+                        primary_class=result.primary_class,
+                        enrichment_decision=decision,
+                        reason_code=reason,
+                        enrichment_log=log,
+                        policy_snapshot=policy_snapshot,
+                        policy_version=policy_version,
+                        lifecycle_processed=True,
+                    )
+
+        return EnrichedCanonicalMessage(
+            canonical_message_id=result.canonical_message_id,
+            raw_message_id=result.raw_message_id,
+            trader_id=trader_id,
+            account_id=config.account_id,
+            primary_class=result.primary_class,
+            enrichment_decision="PASS",
+            enriched_actions=list(tags),
+            enrichment_log=log,
+            policy_snapshot=policy_snapshot,
+            policy_version=policy_version,
+            lifecycle_processed=False,
+        )
 
     # ── REPORT / INFO ─────────────────────────────────────────────────────────
 
