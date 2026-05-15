@@ -235,3 +235,147 @@ def test_worker_block_new_entries_produces_review(dbs):
     conn.close()
     assert chains[0] == 0
     assert review_events[0] == 1
+
+
+def _make_chain_in_db(ops_db: str, *, trade_chain_id_hint: int, state: str,
+                      timeout_at_isoformat: str | None = None, symbol: str = "BTC/USDT") -> int:
+    import sqlite3
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    cursor = conn.execute(
+        """
+        INSERT INTO ops_trade_chains (
+            source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, created_at, updated_at, entry_timeout_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+        """,
+        (
+            trade_chain_id_hint, trade_chain_id_hint * 10, trade_chain_id_hint * 100,
+            "trader_a", "acc_1", symbol, "LONG", state, "ONE_SHOT",
+            "{}", now, now, timeout_at_isoformat,
+        ),
+    )
+    conn.commit()
+    inserted_id = cursor.lastrowid
+    conn.close()
+    return inserted_id
+
+
+def test_timeout_worker_expires_waiting_entry(dbs):
+    import sqlite3
+    from datetime import datetime, timedelta, timezone
+    _, ops_db = dbs
+    past_timeout = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    chain_id = _make_chain_in_db(ops_db, trade_chain_id_hint=50, state="WAITING_ENTRY",
+                                  timeout_at_isoformat=past_timeout)
+
+    from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+    from src.runtime_v2.lifecycle.workers import TimeoutWorker
+    worker = TimeoutWorker(ops_db_path=ops_db, chain_repo=TradeChainRepository(ops_db))
+    count = worker.run_once()
+    assert count == 1
+
+    conn = sqlite3.connect(ops_db)
+    state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()[0]
+    cmds = conn.execute(
+        "SELECT command_type FROM ops_execution_commands WHERE trade_chain_id=?", (chain_id,)
+    ).fetchall()
+    events = conn.execute(
+        "SELECT event_type FROM ops_lifecycle_events WHERE trade_chain_id=?", (chain_id,)
+    ).fetchall()
+    conn.close()
+
+    assert state == "EXPIRED"
+    assert any(c[0] == "CANCEL_PENDING_ENTRY" for c in cmds)
+    assert any(e[0] == "TIMEOUT_REACHED" for e in events)
+
+
+def test_timeout_worker_ignores_future_timeout(dbs):
+    from datetime import datetime, timedelta, timezone
+    _, ops_db = dbs
+    future_timeout = (datetime.now(timezone.utc) + timedelta(hours=24)).isoformat()
+    _make_chain_in_db(ops_db, trade_chain_id_hint=51, state="WAITING_ENTRY",
+                       timeout_at_isoformat=future_timeout)
+
+    from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+    from src.runtime_v2.lifecycle.workers import TimeoutWorker
+    worker = TimeoutWorker(ops_db_path=ops_db, chain_repo=TradeChainRepository(ops_db))
+    count = worker.run_once()
+    assert count == 0
+
+
+def test_timeout_worker_idempotent(dbs):
+    import sqlite3
+    from datetime import datetime, timedelta, timezone
+    _, ops_db = dbs
+    past = (datetime.now(timezone.utc) - timedelta(hours=1)).isoformat()
+    chain_id = _make_chain_in_db(ops_db, trade_chain_id_hint=52, state="WAITING_ENTRY",
+                                  timeout_at_isoformat=past)
+
+    from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+    from src.runtime_v2.lifecycle.workers import TimeoutWorker
+    worker = TimeoutWorker(ops_db_path=ops_db, chain_repo=TradeChainRepository(ops_db))
+    worker.run_once()
+    worker.run_once()  # segundo run non trova WAITING_ENTRY scaduto
+
+    conn = sqlite3.connect(ops_db)
+    cmd_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_execution_commands WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()[0]
+    conn.close()
+    assert cmd_count == 1  # no duplicati
+
+
+def test_lifecycle_event_worker_processes_tp_filled(dbs):
+    import sqlite3
+    import json
+    from datetime import datetime, timezone
+    _, ops_db = dbs
+    chain_id = _make_chain_in_db(ops_db, trade_chain_id_hint=60, state="OPEN")
+
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        """
+        INSERT INTO ops_exchange_events (trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at)
+        VALUES (?,?,?,?,?,?)
+        """,
+        (chain_id, "TP_FILLED", json.dumps({"tp_level": 1, "is_final": False}),
+         "NEW", f"tp_filled:{chain_id}:1", now),
+    )
+    conn.commit()
+    conn.close()
+
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    worker = LifecycleEventWorker(
+        ops_db_path=ops_db,
+        processor=LifecycleEventProcessor(),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        exchange_event_repo=ExchangeEventRepository(ops_db),
+    )
+    count = worker.run_once()
+    assert count == 1
+
+    conn = sqlite3.connect(ops_db)
+    state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()[0]
+    status = conn.execute(
+        "SELECT processing_status FROM ops_exchange_events WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()[0]
+    conn.close()
+    assert state == "PARTIALLY_CLOSED"
+    assert status == "DONE"
