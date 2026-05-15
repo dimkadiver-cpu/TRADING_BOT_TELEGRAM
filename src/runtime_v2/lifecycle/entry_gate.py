@@ -1,0 +1,564 @@
+from __future__ import annotations
+
+import json
+import logging
+from dataclasses import dataclass, field
+from datetime import datetime, timedelta, timezone
+
+from src.runtime_v2.lifecycle.models import (
+    BeProtectionStatus, ControlMode, ExecutionCommand,
+    LifecycleEvent, LifecycleState, TradeChain,
+)
+from src.runtime_v2.lifecycle.ports import (
+    AccountStateSnapshot, ExchangeDataPort, SymbolMarketSnapshot,
+)
+from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+from src.runtime_v2.signal_enrichment.models import (
+    EnrichedCanonicalMessage, ManagementPlanConfig,
+)
+
+logger = logging.getLogger(__name__)
+
+GLOBAL_SCOPES = frozenset({"ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"})
+
+
+@dataclass
+class SignalGateResult:
+    trade_chain: TradeChain | None
+    lifecycle_events: list[LifecycleEvent]
+    execution_commands: list[ExecutionCommand]
+    account_snapshot: AccountStateSnapshot | None
+    market_snapshot: SymbolMarketSnapshot | None
+    review_reason: str | None
+
+
+@dataclass
+class UpdateChainResult:
+    trade_chain_id: int
+    new_lifecycle_state: LifecycleState | None
+    new_be_protection_status: BeProtectionStatus | None
+    lifecycle_events: list[LifecycleEvent]
+    execution_commands: list[ExecutionCommand]
+
+
+@dataclass
+class UpdateGateResult:
+    chain_results: list[UpdateChainResult]
+    review_events: list[LifecycleEvent]
+
+
+class LifecycleEntryGate:
+    def __init__(self, risk_engine: RiskCapacityEngine, exchange_port: ExchangeDataPort) -> None:
+        self._risk = risk_engine
+        self._port = exchange_port
+
+    # ── SIGNAL ────────────────────────────────────────────────────────────────
+
+    def process_signal(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        open_chains: list[TradeChain],
+        control_mode: ControlMode,
+    ) -> SignalGateResult:
+        eid = enriched.enrichment_id
+
+        if control_mode in ("BLOCK_NEW_ENTRIES", "FULL_STOP"):
+            return self._review_signal(eid, "control_mode:new_entries_paused")
+
+        signal = enriched.enriched_signal
+        if signal is None or not signal.symbol or not signal.side:
+            return self._review_signal(eid, "missing_symbol_or_side")
+
+        account_snapshot = self._port.get_account_state(enriched.account_id)
+        market_snapshot = self._port.get_symbol_market_state(enriched.account_id, signal.symbol)
+
+        decision = self._risk.validate(enriched, open_chains, account_snapshot, market_snapshot)
+        if not decision.passed:
+            return self._review_signal(eid, decision.reason or "risk_check_failed")
+
+        management_plan = enriched.management_plan or ManagementPlanConfig()
+        timeout_at = None
+        if management_plan.cancel_pending_on_timeout:
+            timeout_at = datetime.now(timezone.utc) + timedelta(
+                hours=management_plan.pending_timeout_hours
+            )
+
+        chain = TradeChain(
+            source_enrichment_id=eid,
+            canonical_message_id=enriched.canonical_message_id,
+            raw_message_id=enriched.raw_message_id,
+            trader_id=enriched.trader_id,
+            account_id=enriched.account_id,
+            symbol=signal.symbol,
+            side=signal.side,
+            lifecycle_state="WAITING_ENTRY",
+            entry_mode=signal.entry_structure or "ONE_SHOT",
+            expected_stop_price=(
+                signal.stop_loss.price.value
+                if signal.stop_loss and signal.stop_loss.price else None
+            ),
+            be_protection_status="NOT_PROTECTED",
+            entry_timeout_at=timeout_at,
+            management_plan_json=management_plan.model_dump_json(),
+            risk_snapshot_json=json.dumps(decision.risk_snapshot),
+        )
+
+        events = [
+            LifecycleEvent(
+                event_type="SIGNAL_ACCEPTED",
+                source_type="enrichment",
+                source_id=str(eid),
+                next_state="WAITING_ENTRY",
+                idempotency_key=f"sig_accepted:{eid}",
+            ),
+            LifecycleEvent(
+                event_type="TRADE_CHAIN_CREATED",
+                source_type="enrichment",
+                source_id=str(eid),
+                idempotency_key=f"chain_created:{eid}",
+            ),
+        ]
+
+        commands = self._build_entry_commands(enriched)
+
+        return SignalGateResult(
+            trade_chain=chain,
+            lifecycle_events=events,
+            execution_commands=commands,
+            account_snapshot=account_snapshot,
+            market_snapshot=market_snapshot,
+            review_reason=None,
+        )
+
+    def _review_signal(self, eid: int | None, reason: str) -> SignalGateResult:
+        event = LifecycleEvent(
+            event_type="REVIEW_REQUIRED",
+            source_type="enrichment",
+            source_id=str(eid),
+            payload_json=json.dumps({"reason": reason}),
+            idempotency_key=f"review_signal:{eid}",
+        )
+        return SignalGateResult(
+            trade_chain=None,
+            lifecycle_events=[event],
+            execution_commands=[],
+            account_snapshot=None,
+            market_snapshot=None,
+            review_reason=reason,
+        )
+
+    def _build_entry_commands(self, enriched: EnrichedCanonicalMessage) -> list[ExecutionCommand]:
+        signal = enriched.enriched_signal
+        management_plan = enriched.management_plan or ManagementPlanConfig()
+        eid = enriched.enrichment_id
+
+        commands: list[ExecutionCommand] = []
+
+        tp_count = len(signal.take_profits)
+        close_pcts = self._get_close_pcts(management_plan, tp_count)
+
+        for leg in signal.entries:
+            payload = {
+                "symbol": signal.symbol,
+                "side": signal.side,
+                "entry_type": leg.entry_type,
+                "price": leg.price.value if leg.price else None,
+                "weight": leg.weight,
+                "sequence": leg.sequence,
+            }
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="PLACE_ENTRY",
+                payload_json=json.dumps(payload),
+                idempotency_key=f"place_entry:{eid}:leg{leg.sequence}",
+            ))
+
+        if signal.stop_loss and signal.stop_loss.price:
+            payload = {
+                "symbol": signal.symbol,
+                "side": signal.side,
+                "stop_price": signal.stop_loss.price.value,
+            }
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="PLACE_PROTECTIVE_STOP",
+                payload_json=json.dumps(payload),
+                idempotency_key=f"place_stop:{eid}",
+            ))
+
+        for i, tp in enumerate(signal.take_profits):
+            close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
+            payload = {
+                "symbol": signal.symbol,
+                "side": signal.side,
+                "tp_price": tp.price.value if tp.price else None,
+                "sequence": tp.sequence,
+                "close_pct": close_pct,
+            }
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="PLACE_TAKE_PROFIT",
+                payload_json=json.dumps(payload),
+                idempotency_key=f"place_tp:{eid}:tp{tp.sequence}",
+            ))
+
+        return commands
+
+    @staticmethod
+    def _get_close_pcts(management_plan: ManagementPlanConfig, tp_count: int) -> list[float]:
+        if tp_count == 0:
+            return []
+        dist = management_plan.close_distribution
+        if dist.mode == "table" and tp_count in dist.table:
+            return [float(p) for p in dist.table[tp_count]]
+        pct = 100.0 / tp_count
+        return [pct] * tp_count
+
+    # ── UPDATE ────────────────────────────────────────────────────────────────
+
+    def process_update(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        open_chains: list[TradeChain],
+        active_commands_by_chain: dict[int, list[ExecutionCommand]],
+    ) -> UpdateGateResult:
+        tags = enriched.enriched_actions or []
+        if not tags:
+            event = self._make_review_event_no_chain(enriched, "no_actionable_targets")
+            return UpdateGateResult(chain_results=[], review_events=[event])
+
+        chain_results: list[UpdateChainResult] = []
+        review_events: list[LifecycleEvent] = []
+
+        for tag in tags:
+            matched = self._resolve_targets(enriched, open_chains, tag)
+
+            if matched is None:
+                review_events.append(
+                    self._make_review_event_no_chain(enriched, "ambiguous_update_target")
+                )
+                continue
+            if len(matched) == 0:
+                review_events.append(
+                    self._make_review_event_no_chain(enriched, "no_update_target")
+                )
+                continue
+
+            for chain in matched:
+                chain_cmds = active_commands_by_chain.get(chain.trade_chain_id or 0, [])
+                for action in tag.actions:
+                    chain_results.append(
+                        self._apply_action_to_chain(enriched, chain, action, chain_cmds)
+                    )
+
+        return UpdateGateResult(chain_results=chain_results, review_events=review_events)
+
+    def _resolve_targets(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        open_chains: list[TradeChain],
+        tag,
+    ) -> list[TradeChain] | None:
+        scope = tag.targeting.scope_hint
+        trader_chains = [c for c in open_chains if c.trader_id == enriched.trader_id]
+
+        if scope == "ALL_SHORT":
+            return [c for c in trader_chains if c.side == "SHORT"]
+        if scope == "ALL_LONG":
+            return [c for c in trader_chains if c.side == "LONG"]
+        if scope in GLOBAL_SCOPES:
+            return trader_chains
+
+        if scope == "SYMBOL":
+            symbols = tag.targeting.symbols
+            return [c for c in trader_chains if c.symbol in symbols] if symbols else []
+
+        # SINGLE_SIGNAL or UNKNOWN — try symbol matching then explicit_ids
+        if tag.targeting.symbols:
+            matched = [c for c in trader_chains if c.symbol in tag.targeting.symbols]
+            if len(matched) == 1:
+                return matched
+            if len(matched) > 1:
+                return None
+
+        if tag.targeting.explicit_ids:
+            matched = [
+                c for c in trader_chains
+                if str(c.canonical_message_id) in tag.targeting.explicit_ids
+            ]
+            if matched:
+                return matched
+
+        if len(trader_chains) > 1:
+            return None
+        return trader_chains
+
+    def _apply_action_to_chain(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        chain: TradeChain,
+        action,
+        active_commands: list[ExecutionCommand],
+    ) -> UpdateChainResult:
+        action_type = action.action_type
+        if action_type == "SET_STOP":
+            op = action.set_stop
+            if op and op.target_type == "ENTRY":
+                return self._apply_move_to_be(enriched, chain, active_commands)
+            return self._review_chain(enriched, chain, "unsupported_set_stop_target_type")
+
+        if action_type == "CLOSE":
+            op = action.close
+            if op and op.close_scope == "FULL":
+                return self._apply_close_full(enriched, chain)
+            if op and op.close_scope == "PARTIAL":
+                return self._apply_close_partial(enriched, chain, op)
+            return self._review_chain(enriched, chain, "unknown_close_scope")
+
+        if action_type == "CANCEL_PENDING":
+            return self._apply_cancel_pending(enriched, chain)
+
+        return self._review_chain(enriched, chain, f"unsupported_action_type:{action_type}")
+
+    def _apply_move_to_be(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        chain: TradeChain,
+        active_commands: list[ExecutionCommand],
+    ) -> UpdateChainResult:
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+
+        if self._is_already_be(chain):
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_ALREADY_PROTECTED_BE",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_be:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
+        active_be = [
+            c for c in active_commands
+            if c.command_type == "MOVE_STOP_TO_BREAKEVEN" and c.status in ("PENDING", "SENT", "ACK")
+        ]
+        if active_be:
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_DUPLICATE_COMMAND",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_dup_be:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
+        try:
+            mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
+        except Exception:
+            mp = ManagementPlanConfig()
+
+        cmd = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="MOVE_STOP_TO_BREAKEVEN",
+            payload_json=json.dumps({
+                "symbol": chain.symbol, "side": chain.side,
+                "target_price": chain.entry_avg_price,
+                "be_buffer_pct": mp.be_buffer_pct,
+            }),
+            idempotency_key=f"move_be:{chain_id}:{cmid}",
+        )
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="BE_MOVE_REQUESTED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            previous_state=chain.lifecycle_state,
+            next_state="BE_MOVE_PENDING",
+            idempotency_key=f"be_requested:{chain_id}:{cmid}",
+        )
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state="BE_MOVE_PENDING",
+            new_be_protection_status="BE_MOVE_PENDING",
+            lifecycle_events=[event],
+            execution_commands=[cmd],
+        )
+
+    def _apply_close_full(
+        self, enriched: EnrichedCanonicalMessage, chain: TradeChain
+    ) -> UpdateChainResult:
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+        state = chain.lifecycle_state
+
+        if state in ("CLOSED", "CANCELLED", "EXPIRED"):
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_ALREADY_CLOSED",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_closed:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
+        cmd = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="CLOSE_FULL",
+            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+            idempotency_key=f"close_full:{chain_id}:{cmid}",
+        )
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="TELEGRAM_UPDATE_ACCEPTED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            payload_json=json.dumps({"action": "CLOSE_FULL"}),
+            idempotency_key=f"update_close_full:{chain_id}:{cmid}",
+        )
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state=None,
+            new_be_protection_status=None,
+            lifecycle_events=[event],
+            execution_commands=[cmd],
+        )
+
+    def _apply_close_partial(
+        self, enriched: EnrichedCanonicalMessage, chain: TradeChain, op
+    ) -> UpdateChainResult:
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+        fraction = op.fraction or 0.5
+        cmd = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="CLOSE_PARTIAL",
+            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side, "fraction": fraction}),
+            idempotency_key=f"close_partial:{chain_id}:{cmid}",
+        )
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="TELEGRAM_UPDATE_ACCEPTED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            payload_json=json.dumps({"action": "CLOSE_PARTIAL", "fraction": fraction}),
+            idempotency_key=f"update_close_partial:{chain_id}:{cmid}",
+        )
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state=None,
+            new_be_protection_status=None,
+            lifecycle_events=[event],
+            execution_commands=[cmd],
+        )
+
+    def _apply_cancel_pending(
+        self, enriched: EnrichedCanonicalMessage, chain: TradeChain
+    ) -> UpdateChainResult:
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+
+        if chain.lifecycle_state != "WAITING_ENTRY":
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_NOT_PENDING",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_not_pending:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
+        cmd = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="CANCEL_PENDING_ENTRY",
+            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+            idempotency_key=f"cancel_pending:{chain_id}:{cmid}",
+        )
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="TELEGRAM_UPDATE_ACCEPTED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            payload_json=json.dumps({"action": "CANCEL_PENDING"}),
+            idempotency_key=f"update_cancel:{chain_id}:{cmid}",
+        )
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state="CANCELLED",
+            new_be_protection_status=None,
+            lifecycle_events=[event],
+            execution_commands=[cmd],
+        )
+
+    @staticmethod
+    def _is_already_be(chain: TradeChain) -> bool:
+        if chain.be_protection_status == "PROTECTED":
+            return True
+        if chain.entry_avg_price is None or chain.current_stop_price is None:
+            return False
+        try:
+            mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
+            buffer = mp.be_buffer_pct
+        except Exception:
+            buffer = 0.0
+        if chain.side == "LONG":
+            return chain.current_stop_price >= chain.entry_avg_price * (1 + buffer)
+        return chain.current_stop_price <= chain.entry_avg_price * (1 - buffer)
+
+    def _review_chain(
+        self, enriched: EnrichedCanonicalMessage, chain: TradeChain, reason: str
+    ) -> UpdateChainResult:
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state=None,
+            new_be_protection_status=None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="REVIEW_REQUIRED",
+                source_type="telegram_update",
+                source_id=str(cmid),
+                payload_json=json.dumps({"reason": reason}),
+                idempotency_key=f"review_chain:{chain_id}:{cmid}:{reason}",
+            )],
+            execution_commands=[],
+        )
+
+    def _make_review_event_no_chain(
+        self, enriched: EnrichedCanonicalMessage, reason: str
+    ) -> LifecycleEvent:
+        cmid = enriched.canonical_message_id
+        return LifecycleEvent(
+            event_type="REVIEW_REQUIRED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            payload_json=json.dumps({"reason": reason}),
+            idempotency_key=f"review_update:{cmid}:{reason}",
+        )
+
+
+__all__ = [
+    "LifecycleEntryGate", "SignalGateResult",
+    "UpdateGateResult", "UpdateChainResult",
+]
