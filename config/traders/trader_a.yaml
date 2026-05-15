@@ -1,0 +1,18 @@
+# config/traders/trader_a.yaml
+enabled: true
+gate_mode: block
+
+signal_policy:
+  tp:
+    use_tp_count: 2
+
+update_admission:
+  MOVE_STOP_TO_BE: true
+
+management_plan:
+  be_trigger: tp2
+  be_buffer_pct: 0.05
+
+risk:
+  risk_pct_of_capital: 0.5
+  max_concurrent_trades: 3

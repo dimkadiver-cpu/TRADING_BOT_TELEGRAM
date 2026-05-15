@@ -1,0 +1,3 @@
+# config/traders/trader_b.yaml
+enabled: true
+gate_mode: block

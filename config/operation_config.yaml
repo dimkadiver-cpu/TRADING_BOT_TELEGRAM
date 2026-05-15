@@ -1,0 +1,123 @@
+# config/operation_config.yaml
+
+global_safety:
+  allow_unprotected_positions: false
+
+account_mode: single
+
+# single: unico account condiviso — max_capital_at_risk_pct e hard_max_per_signal_risk_pct
+#         sono hard cap non overridabili.
+# per_trader_subaccount: ogni config/traders/<id>.yaml definisce il proprio blocco account:
+account:
+  id: "main"
+  capital_base_usdt: 1000.0
+  max_leverage: 5
+  max_capital_at_risk_pct: 10.0
+  hard_max_per_signal_risk_pct: 2.0
+
+registered_traders:
+  - trader_3
+  - trader_a
+  - trader_b
+  - trader_c
+  - trader_d
+
+symbol_blacklist:
+  global: []
+  per_trader: {}
+
+defaults:
+  enabled: true
+  gate_mode: block
+  hedge_mode: false
+
+  signal_policy:
+    accepted_entry_structures:
+      - ONE_SHOT
+      - TWO_STEP
+      - RANGE
+      - LADDER
+
+    market_execution:
+      mode: tolerance
+      tolerance_pct: 0.5
+      range_tolerance_pct: 0.2
+
+    # MARKET.range non esiste: RANGE richiede leg LIMIT — errore esplicito del loader.
+    entry_split:
+      LIMIT:
+        single:
+          weights: {E1: 1.0}
+        range:
+          split_mode: endpoints
+          weights: {E1: 0.50, E2: 0.50}
+        averaging:
+          weights: {E1: 0.70, E2: 0.30}
+        ladder:
+          weights: {E1: 0.50, E2: 0.30, E3: 0.20}
+      MARKET:
+        single:
+          weights: {E1: 1.0}
+        averaging:
+          weights: {E1: 0.70, E2: 0.30}
+
+    tp:
+      use_tp_count: null
+
+    sl:
+      use_original_sl: true
+      require_sl: true
+
+    price_corrections:
+      enabled: false
+      round_to_tick: false
+      clamp_to_exchange_precision: false
+
+    price_sanity:
+      enabled: false
+      symbol_ranges: {}
+
+  # Ammissione update Telegram (source_intent da parser_v2, senza prefisso U_)
+  update_admission:
+    MOVE_STOP: true
+    MOVE_STOP_TO_BE: false
+    CLOSE_FULL: true
+    CLOSE_PARTIAL: true
+    CANCEL_PENDING: true
+    ADD_ENTRY: false
+    REENTER: false
+    MODIFY_ENTRY: false
+    MODIFY_TARGETS: false
+    INVALIDATE_SETUP: false
+
+  management_plan:
+    be_trigger: null
+    be_buffer_pct: 0.0
+    close_distribution:
+      mode: table
+      table:
+        1: [100]
+        2: [50, 50]
+        3: [30, 30, 40]
+        4: [25, 25, 25, 25]
+        5: [20, 20, 20, 20, 20]
+        6: [20, 20, 20, 20, 10, 10]
+    cancel_pending_by_engine: true
+    cancel_pending_on_timeout: true
+    pending_timeout_hours: 24
+    cancel_averaging_pending_after: null
+    cancel_unfilled_pending_after: null
+    risk_freed_by_be: true
+    protective_sl_mode: exchange_native_first
+
+  risk:
+    mode: risk_pct_of_capital
+    risk_pct_of_capital: 1.0
+    risk_usdt_fixed: 10.0
+    capital_base_mode: static_config
+    capital_base_usdt: 1000.0
+    leverage: 1
+    use_trader_risk_hint: false
+    max_capital_at_risk_per_trader_pct: 5.0
+    max_concurrent_trades: 5
+    max_concurrent_same_symbol: 1
