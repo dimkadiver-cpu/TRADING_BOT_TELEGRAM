@@ -84,7 +84,13 @@
       "Skill(superpowers:using-superpowers)",
       "Bash(Select-Object -ExpandProperty FullName)",
       "Skill(superpowers:writing-plans)",
-      "Skill(superpowers:subagent-driven-development)"
+      "Skill(superpowers:subagent-driven-development)",
+      "Bash(mkdir -p /c/TeleSignalBot/tests/runtime_v2/signal_enrichment)",
+      "Read(//c/TeleSignalBot/tests/runtime_v2//**)",
+      "PowerShell(head *)",
+      "Bash(findstr /i \"db_path\\\\|DB_PATH\\\\|sqlite\")",
+      "Bash(Select-String -Pattern \"TERMINAL_STATES\" \"C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\lifecycle\\\\entry_gate.py\",\"C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\lifecycle\\\\workers.py\",\"C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\lifecycle\\\\models.py\")",
+      "Bash(Select-Object Path,LineNumber,Line)"
     ]
   }
 }
