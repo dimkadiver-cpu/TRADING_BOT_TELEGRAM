@@ -1,6 +1,7 @@
 # src/runtime_v2/lifecycle/workers.py
 from __future__ import annotations
 
+import json
 import logging
 import sqlite3
 from datetime import datetime, timezone
@@ -63,7 +64,7 @@ class TimeoutWorker:
                     ) VALUES (?,?,?,?,?,?,?)
                     """,
                     (chain_id, "CANCEL_PENDING_ENTRY", "PENDING",
-                     f'{{"symbol": "{chain.symbol}", "side": "{chain.side}"}}',
+                     json.dumps({"symbol": chain.symbol, "side": chain.side}),
                      f"cancel_timeout:{chain_id}", now, now),
                 )
         finally:
@@ -117,14 +118,14 @@ class LifecycleEventWorker:
         conn = sqlite3.connect(self._ops_db)
         try:
             with conn:
-                if result.new_lifecycle_state or result.new_be_protection_status or \
+                if result.new_lifecycle_state is not None or result.new_be_protection_status is not None or \
                    result.entry_avg_price is not None or result.current_stop_price is not None:
                     fields = ["updated_at=?"]
                     vals: list = [now]
-                    if result.new_lifecycle_state:
+                    if result.new_lifecycle_state is not None:
                         fields.append("lifecycle_state=?")
                         vals.append(result.new_lifecycle_state)
-                    if result.new_be_protection_status:
+                    if result.new_be_protection_status is not None:
                         fields.append("be_protection_status=?")
                         vals.append(result.new_be_protection_status)
                     if result.entry_avg_price is not None:
