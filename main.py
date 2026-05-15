@@ -51,14 +51,14 @@ def _parse_fallback_chat_ids(raw: str | None) -> set[int]:
 
 async def _async_main(
     *,
-    db_path: str,
+    parser_db_path: str,
     migrations_dir: str,
     log_path: str,
     root_dir: Path,
 ) -> None:
     logger = setup_logging(log_path=log_path, level=os.getenv("LOG_LEVEL", "INFO"))
 
-    applied = apply_migrations(db_path=db_path, migrations_dir=migrations_dir)
+    applied = apply_migrations(db_path=parser_db_path, migrations_dir=migrations_dir)
     if applied:
         logger.info("applied %s migrations", applied)
 
@@ -76,14 +76,14 @@ async def _async_main(
             len(fallback_ids),
         )
 
-    ingestion_service = build_ingestion_service(db_path=db_path, logger=logger)
-    processing_status_store = build_processing_status_store(db_path=db_path)
+    ingestion_service = build_ingestion_service(db_path=parser_db_path, logger=logger)
+    processing_status_store = build_processing_status_store(db_path=parser_db_path)
 
-    raw_repo = RawMessageRepository(db_path=db_path)
+    raw_repo = RawMessageRepository(db_path=parser_db_path)
     channel_resolver = ChannelConfigResolver(config_path=channels_yaml_path)
-    canonical_repo = CanonicalMessageRepository(db_path=db_path)
+    canonical_repo = CanonicalMessageRepository(db_path=parser_db_path)
 
-    live_conn = sqlite3.connect(db_path, check_same_thread=False)
+    live_conn = sqlite3.connect(parser_db_path, check_same_thread=False)
     run_store = ParserRunStore(live_conn)
     live_run_id = run_store.create_run(notes="live")
     result_v2_store = ParserResultV2Store(live_conn)
@@ -97,7 +97,7 @@ async def _async_main(
     config_dir = str(root_dir / "config")
     enrichment_processor = SignalEnrichmentProcessor(
         config_loader=OperationConfigLoader(config_dir),
-        repository=EnrichedCanonicalMessageRepository(db_path),
+        repository=EnrichedCanonicalMessageRepository(parser_db_path),
     )
 
     listener = TelegramListener(
@@ -123,7 +123,7 @@ async def _async_main(
     await client.start()
     try:
         listener.register_handlers(client)
-        logger.info("telegram listener started")
+        logger.info("telegram listener started | parser_db=%s", parser_db_path)
         await listener.run_recovery(client)
         worker_task = asyncio.create_task(listener.run_worker())
         try:
@@ -142,20 +142,20 @@ def main() -> None:
 
     load_dotenv()
     root_dir = Path(__file__).resolve().parent
-    db_path = os.getenv("DB_PATH", str(root_dir / "db" / "tele_signal_bot.sqlite3"))
+    parser_db_path = os.getenv("PARSER_DB_PATH", str(root_dir / "db" / "parser.sqlite3"))
     migrations_dir = str(root_dir / "db" / "migrations")
     log_path = os.getenv("LOG_PATH", str(root_dir / "logs" / "bot.log"))
 
     if args.migrate:
         logger = setup_logging(log_path=log_path, level=os.getenv("LOG_LEVEL", "INFO"))
-        applied = apply_migrations(db_path=db_path, migrations_dir=migrations_dir)
+        applied = apply_migrations(db_path=parser_db_path, migrations_dir=migrations_dir)
         logger.info("applied %s migrations", applied)
         print(f"Migrations applied: {applied}")
         return
 
     asyncio.run(
         _async_main(
-            db_path=db_path,
+            parser_db_path=parser_db_path,
             migrations_dir=migrations_dir,
             log_path=log_path,
             root_dir=root_dir,
