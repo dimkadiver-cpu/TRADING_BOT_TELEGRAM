@@ -27,6 +27,7 @@ from src.parser_v2.contracts.context import ParserContext, RawContext
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult, ParserJobStatus
 from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
 from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
 from src.runtime_v2.trader_resolution.models import ParserDispatchCandidate, ResolvedTraderContext
 from src.storage.processing_status import ProcessingStatusStore
@@ -86,6 +87,7 @@ class TelegramListener:
         raw_repo: RawMessageRepository,
         channel_resolver: ChannelConfigResolver,
         parser_pipeline: ParserPipelineProcessor,
+        enrichment_processor: SignalEnrichmentProcessor,
         logger: logging.Logger,
         channels_config: ChannelsConfig,
         fallback_allowed_chat_ids: Iterable[int] | None = None,
@@ -95,6 +97,7 @@ class TelegramListener:
         self._raw_repo = raw_repo
         self._channel_resolver = channel_resolver
         self._parser_pipeline = parser_pipeline
+        self._enrichment_processor = enrichment_processor
         self._logger = logger
         self._config = channels_config
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
@@ -424,6 +427,14 @@ class TelegramListener:
                 result.canonical_message_id,
                 result.primary_class,
                 result.parse_status,
+            )
+            enriched = self._enrichment_processor.process(result)
+            self._logger.info(
+                "enriched | canonical_id=%s decision=%s reason=%s lifecycle_processed=%s",
+                enriched.canonical_message_id,
+                enriched.enrichment_decision,
+                enriched.reason_code,
+                enriched.lifecycle_processed,
             )
 
     def _is_allowed_message(self, chat_id: int | None, topic_id: int | None) -> bool:

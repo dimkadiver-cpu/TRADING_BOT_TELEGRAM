@@ -17,6 +17,9 @@ from src.core.migrations import apply_migrations
 from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
 from src.runtime_v2.persistence.canonical_messages import CanonicalMessageRepository
 from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
 from src.storage.parser_results_v2 import ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
@@ -91,12 +94,19 @@ async def _async_main(
         live_run_id=live_run_id,
     )
 
+    config_dir = str(root_dir / "config")
+    enrichment_processor = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(config_dir),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+
     listener = TelegramListener(
         ingestion_service=ingestion_service,
         processing_status_store=processing_status_store,
         raw_repo=raw_repo,
         channel_resolver=channel_resolver,
         parser_pipeline=parser_pipeline,
+        enrichment_processor=enrichment_processor,
         logger=logger,
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,

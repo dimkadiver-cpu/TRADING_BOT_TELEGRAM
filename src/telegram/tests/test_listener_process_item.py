@@ -23,6 +23,7 @@ def _make_listener(
     channel_resolver: MagicMock | None = None,
     parser_pipeline: MagicMock | None = None,
     raw_repo: MagicMock | None = None,
+    enrichment_processor: MagicMock | None = None,
 ) -> TelegramListener:
     return TelegramListener(
         ingestion_service=MagicMock(),
@@ -30,6 +31,7 @@ def _make_listener(
         raw_repo=raw_repo or MagicMock(),
         channel_resolver=channel_resolver or MagicMock(),
         parser_pipeline=parser_pipeline or MagicMock(),
+        enrichment_processor=enrichment_processor or MagicMock(),
         logger=MagicMock(),
         channels_config=_make_config(),
     )
@@ -159,6 +161,7 @@ def test_process_item_logs_warning_on_failed_parse() -> None:
         raw_repo=raw_repo,
         channel_resolver=resolver,
         parser_pipeline=pipeline,
+        enrichment_processor=MagicMock(),
         logger=logger,
         channels_config=_make_config(),
     )
