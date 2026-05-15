@@ -121,7 +121,7 @@ CREATE INDEX IF NOT EXISTS idx_otc_trader_state
 CREATE INDEX IF NOT EXISTS idx_otc_symbol_state
     ON ops_trade_chains(symbol, lifecycle_state);
 CREATE INDEX IF NOT EXISTS idx_ole_chain
-    ON ops_lifecycle_events(trade_chain_id);
+    ON ops_lifecycle_events(trade_chain_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_oec_chain_status
     ON ops_execution_commands(trade_chain_id, status);
 CREATE INDEX IF NOT EXISTS idx_oee_status
