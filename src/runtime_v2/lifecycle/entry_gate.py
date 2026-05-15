@@ -558,7 +558,300 @@ class LifecycleEntryGate:
         )
 
 
+import sqlite3 as _sqlite3
+
+
+class LifecycleGateWorker:
+    def __init__(
+        self,
+        parser_db_path: str,
+        ops_db_path: str,
+        gate: LifecycleEntryGate,
+        chain_repo,
+        event_repo,
+        command_repo,
+        snapshot_repo,
+        control_repo,
+    ) -> None:
+        self._parser_db = parser_db_path
+        self._ops_db = ops_db_path
+        self._gate = gate
+        self._chain_repo = chain_repo
+        self._event_repo = event_repo
+        self._command_repo = command_repo
+        self._snapshot_repo = snapshot_repo
+        self._control_repo = control_repo
+
+    def run_once(self, batch_size: int = 50) -> int:
+        rows = self._fetch_pending(batch_size)
+        processed = 0
+        for row in rows:
+            try:
+                self._process_row(row)
+                processed += 1
+            except Exception:
+                logger.exception("error processing enrichment_id=%s", row[0])
+        return processed
+
+    def _fetch_pending(self, limit: int) -> list[tuple]:
+        conn = _sqlite3.connect(self._parser_db)
+        try:
+            return conn.execute(
+                """
+                SELECT enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,
+                       primary_class, enrichment_decision, enriched_signal_json,
+                       enriched_actions_json, management_plan_json, policy_snapshot_json
+                FROM enriched_canonical_messages
+                WHERE lifecycle_processed=0
+                  AND enrichment_decision='PASS'
+                  AND primary_class IN ('SIGNAL','UPDATE')
+                ORDER BY created_at
+                LIMIT ?
+                """,
+                (limit,),
+            ).fetchall()
+        finally:
+            conn.close()
+
+    def _process_row(self, row: tuple) -> None:
+        import json as _json
+        from src.runtime_v2.signal_enrichment.models import (
+            EnrichedCanonicalMessage, EnrichedSignalPayload, ManagementPlanConfig,
+        )
+        from src.parser_v2.contracts.canonical_message import TargetActionGroup
+
+        (
+            enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,
+            primary_class, enrichment_decision, enriched_signal_json,
+            enriched_actions_json, management_plan_json, policy_snapshot_json,
+        ) = row
+
+        enriched_signal = (
+            EnrichedSignalPayload.model_validate_json(enriched_signal_json)
+            if enriched_signal_json else None
+        )
+        enriched_actions = None
+        if enriched_actions_json:
+            enriched_actions = [
+                TargetActionGroup.model_validate(a)
+                for a in _json.loads(enriched_actions_json)
+            ]
+        management_plan = (
+            ManagementPlanConfig.model_validate_json(management_plan_json)
+            if management_plan_json else ManagementPlanConfig()
+        )
+
+        enriched = EnrichedCanonicalMessage(
+            enrichment_id=enrichment_id,
+            canonical_message_id=canonical_message_id,
+            raw_message_id=raw_message_id,
+            trader_id=trader_id,
+            account_id=account_id,
+            primary_class=primary_class,
+            enrichment_decision=enrichment_decision,
+            enriched_signal=enriched_signal,
+            enriched_actions=enriched_actions,
+            management_plan=management_plan,
+            policy_snapshot=_json.loads(policy_snapshot_json or "{}"),
+        )
+
+        open_chains = self._chain_repo.get_active_by_trader(trader_id)
+        symbol = enriched_signal.symbol or "" if enriched_signal else ""
+        side = enriched_signal.side or "" if enriched_signal else ""
+        control_mode = self._control_repo.get_effective_mode(account_id, trader_id, symbol, side)
+
+        if primary_class == "SIGNAL":
+            result = self._gate.process_signal(enriched, open_chains, control_mode)
+            self._persist_signal(enriched, result)
+        else:
+            active_cmds = {
+                c.trade_chain_id: self._command_repo.get_active_for_chain(c.trade_chain_id)
+                for c in open_chains
+            }
+            result = self._gate.process_update(enriched, open_chains, active_cmds)
+            self._persist_update(enriched, result)
+
+    def _persist_signal(self, enriched: EnrichedCanonicalMessage, result: SignalGateResult) -> None:
+        now = datetime.now(timezone.utc).isoformat()
+        conn = _sqlite3.connect(self._ops_db)
+        try:
+            with conn:
+                chain_id = None
+                if result.trade_chain is not None:
+                    c = result.trade_chain
+                    cursor = conn.execute(
+                        """
+                        INSERT OR IGNORE INTO ops_trade_chains (
+                            source_enrichment_id, canonical_message_id, raw_message_id,
+                            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+                            entry_avg_price, current_stop_price, expected_stop_price,
+                            be_protection_status, entry_timeout_at, management_plan_json,
+                            risk_snapshot_json, created_at, updated_at
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        """,
+                        (
+                            c.source_enrichment_id, c.canonical_message_id, c.raw_message_id,
+                            c.trader_id, c.account_id, c.symbol, c.side,
+                            c.lifecycle_state, c.entry_mode,
+                            c.entry_avg_price, c.current_stop_price, c.expected_stop_price,
+                            c.be_protection_status,
+                            c.entry_timeout_at.isoformat() if c.entry_timeout_at else None,
+                            c.management_plan_json, c.risk_snapshot_json, now, now,
+                        ),
+                    )
+                    if cursor.lastrowid and cursor.rowcount > 0:
+                        chain_id = cursor.lastrowid
+                    else:
+                        row = conn.execute(
+                            "SELECT trade_chain_id FROM ops_trade_chains WHERE source_enrichment_id=?",
+                            (c.source_enrichment_id,),
+                        ).fetchone()
+                        chain_id = row[0] if row else None
+
+                for event in result.lifecycle_events:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO ops_lifecycle_events (
+                            trade_chain_id, event_type, source_type, source_id,
+                            previous_state, next_state, payload_json, idempotency_key, created_at
+                        ) VALUES (?,?,?,?,?,?,?,?,?)
+                        """,
+                        (
+                            chain_id, event.event_type, event.source_type, event.source_id,
+                            event.previous_state, event.next_state, event.payload_json,
+                            event.idempotency_key, now,
+                        ),
+                    )
+
+                for cmd in result.execution_commands:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO ops_execution_commands (
+                            trade_chain_id, command_type, status, payload_json,
+                            idempotency_key, created_at, updated_at
+                        ) VALUES (?,?,?,?,?,?,?)
+                        """,
+                        (
+                            chain_id, cmd.command_type, cmd.status, cmd.payload_json,
+                            cmd.idempotency_key, now, now,
+                        ),
+                    )
+
+                if result.account_snapshot:
+                    s = result.account_snapshot
+                    conn.execute(
+                        """
+                        INSERT INTO ops_account_snapshots (
+                            account_id, equity_usdt, available_balance_usdt,
+                            total_open_risk_usdt, total_margin_used_usdt,
+                            source, captured_at, payload_json
+                        ) VALUES (?,?,?,?,?,?,?,?)
+                        """,
+                        (
+                            enriched.account_id, s.equity_usdt, s.available_balance_usdt,
+                            s.total_open_risk_usdt, s.total_margin_used_usdt,
+                            s.source, s.captured_at.isoformat(), "{}",
+                        ),
+                    )
+
+                if result.market_snapshot:
+                    s = result.market_snapshot
+                    conn.execute(
+                        """
+                        INSERT INTO ops_market_snapshots (
+                            account_id, symbol, mark_price, bid, ask, min_order_size,
+                            price_precision, qty_precision, source, captured_at, payload_json
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
+                        """,
+                        (
+                            enriched.account_id, s.symbol, s.mark_price, s.bid, s.ask,
+                            s.min_order_size, s.price_precision, s.qty_precision,
+                            s.source, s.captured_at.isoformat(), "{}",
+                        ),
+                    )
+        finally:
+            conn.close()
+
+        self._mark_processed(enriched.enrichment_id)
+
+    def _persist_update(self, enriched: EnrichedCanonicalMessage, result: UpdateGateResult) -> None:
+        now = datetime.now(timezone.utc).isoformat()
+        conn = _sqlite3.connect(self._ops_db)
+        try:
+            with conn:
+                for cr in result.chain_results:
+                    if cr.new_lifecycle_state or cr.new_be_protection_status:
+                        fields = ["updated_at=?"]
+                        vals: list = [now]
+                        if cr.new_lifecycle_state:
+                            fields.append("lifecycle_state=?")
+                            vals.append(cr.new_lifecycle_state)
+                        if cr.new_be_protection_status:
+                            fields.append("be_protection_status=?")
+                            vals.append(cr.new_be_protection_status)
+                        vals.append(cr.trade_chain_id)
+                        conn.execute(
+                            f"UPDATE ops_trade_chains SET {', '.join(fields)} WHERE trade_chain_id=?",
+                            vals,
+                        )
+                    for event in cr.lifecycle_events:
+                        conn.execute(
+                            """
+                            INSERT OR IGNORE INTO ops_lifecycle_events (
+                                trade_chain_id, event_type, source_type, source_id,
+                                previous_state, next_state, payload_json, idempotency_key, created_at
+                            ) VALUES (?,?,?,?,?,?,?,?,?)
+                            """,
+                            (
+                                cr.trade_chain_id, event.event_type, event.source_type,
+                                event.source_id, event.previous_state, event.next_state,
+                                event.payload_json, event.idempotency_key, now,
+                            ),
+                        )
+                    for cmd in cr.execution_commands:
+                        conn.execute(
+                            """
+                            INSERT OR IGNORE INTO ops_execution_commands (
+                                trade_chain_id, command_type, status, payload_json,
+                                idempotency_key, created_at, updated_at
+                            ) VALUES (?,?,?,?,?,?,?)
+                            """,
+                            (
+                                cr.trade_chain_id, cmd.command_type, cmd.status, cmd.payload_json,
+                                cmd.idempotency_key, now, now,
+                            ),
+                        )
+                for event in result.review_events:
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO ops_lifecycle_events (
+                            trade_chain_id, event_type, source_type, source_id,
+                            payload_json, idempotency_key, created_at
+                        ) VALUES (?,?,?,?,?,?,?)
+                        """,
+                        (
+                            None, event.event_type, event.source_type, event.source_id,
+                            event.payload_json, event.idempotency_key, now,
+                        ),
+                    )
+        finally:
+            conn.close()
+
+        self._mark_processed(enriched.enrichment_id)
+
+    def _mark_processed(self, enrichment_id: int) -> None:
+        conn = _sqlite3.connect(self._parser_db)
+        try:
+            conn.execute(
+                "UPDATE enriched_canonical_messages SET lifecycle_processed=1 WHERE enrichment_id=?",
+                (enrichment_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+
 __all__ = [
-    "LifecycleEntryGate", "SignalGateResult",
-    "UpdateGateResult", "UpdateChainResult",
+    "LifecycleEntryGate", "LifecycleGateWorker",
+    "SignalGateResult", "UpdateGateResult", "UpdateChainResult",
 ]
