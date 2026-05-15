@@ -82,7 +82,7 @@ La separazione fisica `parser_db` / `ops_db` parte da questo PRD. PRD 03 include
 
 ```
 config/
-├── operation_config.yaml       ← globale: safety, hard caps, accounts, blacklist, defaults
+├── operation_config.yaml       ← globale: safety, account, blacklist, defaults
 └── traders/
     ├── trader_a.yaml
     ├── trader_b.yaml
@@ -91,8 +91,11 @@ config/
     └── trader_3.yaml
 ```
 
-Merge priority: `global_hard_caps` > `defaults` + `traders/<id>.yaml`  
-`global_safety` non è mai overridabile.
+Merge priority: `account.max_capital_at_risk_pct` / `account.hard_max_per_signal_risk_pct` > `defaults` + `traders/<id>.yaml`
+
+- `account_mode: single` → un unico account condiviso tra tutti i trader; i cap definiti in `account:` sono non-overridabili.
+- `account_mode: per_trader_subaccount` → ogni `traders/<id>.yaml` definisce il proprio blocco `account:` con cap specifici.
+- `global_safety` non è mai overridabile in nessuna modalità.
 
 ### 3.6 Risk e capacity check: PRD 04
 
@@ -109,20 +112,18 @@ Risk calculation, capacity check (`max_concurrent_trades`, `max_capital_at_risk_
 global_safety:
   allow_unprotected_positions: false
 
-# ── Hard caps (non overridabili, solo se account_mode: single) ────────────────
-global_hard_caps:
-  max_capital_at_risk_pct: 10.0         # % portfolio totale
-  hard_max_per_signal_risk_pct: 2.0     # rischio max per singolo segnale
-
 # ── Account routing ───────────────────────────────────────────────────────────
 account_mode: single                    # single | per_trader_subaccount
 
-accounts:
-  _default:
-    account_id: "main"
-    capital_base_usdt: 1000.0
-    max_leverage: 5
-    max_capital_at_risk_pct: 10.0       # usato solo se account_mode: per_trader_subaccount
+# single: unico account condiviso — max_capital_at_risk_pct e hard_max_per_signal_risk_pct
+#         sono hard cap non overridabili.
+# per_trader_subaccount: ogni config/traders/<id>.yaml definisce il proprio blocco account:
+account:
+  id: "main"
+  capital_base_usdt: 1000.0
+  max_leverage: 5
+  max_capital_at_risk_pct: 10.0         # % portfolio totale — hard cap
+  hard_max_per_signal_risk_pct: 2.0     # rischio max per singolo segnale — hard cap
 
 # ── Trader autorizzati ────────────────────────────────────────────────────────
 # BLOCK con reason=trader_not_registered se trader non in lista.
@@ -142,11 +143,10 @@ symbol_blacklist:
 defaults:
   enabled: true
   gate_mode: block                      # block | warn
-  operation_rules: override             # override | global
+  hedge_mode: false                     # true = consente posizioni opposte sullo stesso symbol (letto da PRD 04)
 
   # ── Signal Policy (Signal Enrichment — stateless) ─────────────────────────
   signal_policy:
-    require_sl: true
     accepted_entry_structures:
       - ONE_SHOT
       - TWO_STEP
@@ -159,13 +159,8 @@ defaults:
       tolerance_pct: 0.5
       range_tolerance_pct: 0.2
 
-    # Frazionamento entry per struttura canonica:
-    #   ONE_SHOT + MARKET  → MARKET.single
-    #   ONE_SHOT + LIMIT   → LIMIT.single
-    #   TWO_STEP + MARKET  → MARKET.averaging
-    #   TWO_STEP + LIMIT   → LIMIT.averaging
-    #   RANGE              → LIMIT.range
-    #   LADDER             → LIMIT.ladder
+    # MARKET.range non esiste: RANGE richiede leg LIMIT per contratto canonico.
+    # Il loader deve sollevare errore esplicito se trovata tale combinazione nella config.
     entry_split:
       LIMIT:
         single:
@@ -199,7 +194,7 @@ defaults:
       enabled: false
       symbol_ranges: {}
 
-  # Ammissione update Telegram (usa source_intent da parser_v2)
+  # Ammissione update Telegram (usa source_intent da parser_v2, senza prefisso U_)
   update_admission:
     MOVE_STOP: true
     MOVE_STOP_TO_BE: false
@@ -214,7 +209,7 @@ defaults:
 
   # ── Management Plan (embedded nella trade_chain — letto da Lifecycle PRD 04) ─
   management_plan:
-    be_trigger: null                    # null | tp1 | tp2 | tp3
+    be_trigger: null                    # null | tp1 | tp2 | tp3 | tp4
     be_buffer_pct: 0.0                  # SL a BE + offset% per commissioni
 
     close_distribution:
@@ -230,7 +225,6 @@ defaults:
     cancel_pending_by_engine: true      # master switch logiche cancel TP-triggered
     cancel_pending_on_timeout: true
     pending_timeout_hours: 24
-    chain_timeout_hours: 168
     cancel_averaging_pending_after: null  # null | tp1 | tp2
     cancel_unfilled_pending_after: null   # null | tp1 | tp2
     risk_freed_by_be: true
@@ -255,6 +249,15 @@ defaults:
 ```yaml
 enabled: true
 gate_mode: block
+
+# Solo in account_mode: per_trader_subaccount — definisce il subaccount del trader.
+# In account_mode: single questo blocco viene ignorato.
+account:
+  id: "trader_a_sub"
+  capital_base_usdt: 300.0
+  max_leverage: 3
+  max_capital_at_risk_pct: 8.0
+  hard_max_per_signal_risk_pct: 2.0
 
 signal_policy:
   tp:
@@ -285,9 +288,10 @@ class EffectiveEnrichmentConfig:
     trader_id: str
     enabled: bool
     gate_mode: Literal["block", "warn"]
-    account_id: str
+    hedge_mode: bool                    # letto da PRD 04, non da PRD 03
+    account_id: str                     # da account.id (single) o traders/<id>.yaml account.id
     signal_policy: SignalPolicyConfig
-    update_admission: dict[str, bool]   # source_intent → bool
+    update_admission: dict[str, bool]   # source_intent → bool (senza prefisso U_)
     management_plan: ManagementPlanConfig
     risk: RiskConfig                    # letto da PRD 04, non da PRD 03
 ```
@@ -301,14 +305,16 @@ class EnrichedCanonicalMessage:
     raw_message_id: int
     trader_id: str
     account_id: str
+    primary_class: Literal["SIGNAL", "UPDATE", "REPORT", "INFO"]
     enrichment_decision: Literal["PASS", "BLOCK", "REVIEW"]
     reason_code: str | None
     enriched_signal: EnrichedSignalPayload | None   # solo SIGNAL PASS
-    enriched_actions: list[EnrichedTargetActionGroup] | None  # solo UPDATE
+    enriched_actions: list[EnrichedTargetActionGroup] | None  # solo UPDATE PASS
     management_plan: ManagementPlanConfig | None    # solo SIGNAL PASS
     enrichment_log: list[EnrichmentLogEntry]
     policy_snapshot: dict
     policy_version: str
+    lifecycle_processed: bool   # True = già consumato da PRD 04 o non eleggibile
     created_at: datetime
 ```
 
@@ -332,7 +338,6 @@ class ManagementPlanConfig:
     cancel_pending_by_engine: bool
     cancel_pending_on_timeout: bool
     pending_timeout_hours: int
-    chain_timeout_hours: int
     cancel_averaging_pending_after: Literal["tp1", "tp2"] | None
     cancel_unfilled_pending_after: Literal["tp1", "tp2"] | None
     risk_freed_by_be: bool
@@ -350,9 +355,11 @@ class ManagementPlanConfig:
 ```
 SIGNAL  → _check_signal_gate() → _enrich_signal() → _build_management_plan()
 UPDATE  → _check_update_admission()
-REPORT  → PASS diretto, nessun enrichment
-INFO    → PASS diretto (o REVIEW se gate_mode=warn)
+REPORT  → PASS diretto, nessun enrichment, lifecycle_processed=1 (audit only, mai al lifecycle)
+INFO    → PASS diretto (o REVIEW se gate_mode=warn), lifecycle_processed=1 (audit only, mai al lifecycle)
 ```
+
+REPORT e INFO non entrano mai nel Lifecycle Entry Gate. Il campo `lifecycle_processed` viene impostato a `1` al momento della persistenza per escluderli automaticamente dalla query del worker di PRD 04, senza richiedere logica extra nel consumer.
 
 ### 6.2 Check SIGNAL (in ordine)
 
@@ -412,6 +419,7 @@ CREATE TABLE enriched_canonical_messages (
     raw_message_id           INTEGER NOT NULL,
     trader_id                TEXT NOT NULL,
     account_id               TEXT NOT NULL,
+    primary_class            TEXT NOT NULL,   -- SIGNAL | UPDATE | REPORT | INFO
     enrichment_decision      TEXT NOT NULL,   -- PASS | BLOCK | REVIEW
     reason_code              TEXT,
     enriched_signal_json     TEXT,
@@ -420,15 +428,19 @@ CREATE TABLE enriched_canonical_messages (
     enrichment_log_json      TEXT NOT NULL,
     policy_snapshot_json     TEXT NOT NULL,
     policy_version           TEXT NOT NULL,
+    lifecycle_processed      INTEGER NOT NULL DEFAULT 0,  -- 1 = già consumato o non eleggibile
     created_at               TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX idx_ecm_trader_id ON enriched_canonical_messages(trader_id);
-CREATE INDEX idx_ecm_decision  ON enriched_canonical_messages(enrichment_decision);
-CREATE INDEX idx_ecm_created   ON enriched_canonical_messages(created_at);
+CREATE INDEX idx_ecm_trader_id  ON enriched_canonical_messages(trader_id);
+CREATE INDEX idx_ecm_decision   ON enriched_canonical_messages(enrichment_decision);
+CREATE INDEX idx_ecm_lifecycle  ON enriched_canonical_messages(lifecycle_processed, enrichment_decision, primary_class);
+CREATE INDEX idx_ecm_created    ON enriched_canonical_messages(created_at);
 ```
 
 **Idempotenza:** `UNIQUE(canonical_message_id)` — se enrichment esiste già, viene restituito senza rieseguire.
+
+**`lifecycle_processed`:** impostato a `1` direttamente alla persistenza per `primary_class IN ('REPORT', 'INFO')`. Per SIGNAL/UPDATE con decisione BLOCK o REVIEW viene anch'esso impostato a `1` (non eleggibili al lifecycle). Solo SIGNAL/UPDATE con PASS hanno `lifecycle_processed=0` al momento della scrittura e vengono consumati dal worker di PRD 04.
 
 ### 7.3 Migrazioni
 
@@ -472,6 +484,8 @@ enrichment_proc     = SignalEnrichmentProcessor(
 
 ## 9. Flusso live aggiornato
 
+Il handoff tra PRD 03 e PRD 04 avviene tramite DB (architettura disaccoppiata):
+
 ```
 TelegramListener
     ↓
@@ -482,11 +496,27 @@ ChannelConfigResolver + RawMessageRepository
 ParserPipelineProcessor
     ↓  CanonicalParseResult
 SignalEnrichmentProcessor
-    ├── BLOCK/REVIEW → log + audit, fine
-    └── PASS → EnrichedCanonicalMessage persistito
-        ↓
-[Lifecycle Entry Gate — PRD 04]
+    ↓  persiste EnrichedCanonicalMessage in parser.sqlite3
+    │     REPORT / INFO          → lifecycle_processed=1  (audit only, stop)
+    │     SIGNAL/UPDATE BLOCK    → lifecycle_processed=1  (audit only, stop)
+    │     SIGNAL/UPDATE REVIEW   → lifecycle_processed=1  (audit only, stop)
+    └──── SIGNAL/UPDATE PASS     → lifecycle_processed=0  (eleggibile al lifecycle)
+
+                        ↓  (processo separato — PRD 04)
+
+LifecycleGateWorker
+    → polling su parser.sqlite3:
+      SELECT * FROM enriched_canonical_messages
+       WHERE lifecycle_processed = 0
+         AND enrichment_decision = 'PASS'
+         AND primary_class IN ('SIGNAL', 'UPDATE')
+       ORDER BY created_at ASC
+    → per ogni record: LifecycleEntryGate.process(enriched_msg)
+    → crea TradeChain in ops.sqlite3
+    → UPDATE enriched_canonical_messages SET lifecycle_processed=1
 ```
+
+PRD 03 e PRD 04 sono processi/worker indipendenti. `parser.sqlite3` è il punto di handoff. Il worker di PRD 04 non importa codice di `signal_enrichment/` — legge solo dalla tabella.
 
 ---
 
@@ -495,6 +525,8 @@ SignalEnrichmentProcessor
 ### 10.1 Done significa
 
 Un `CanonicalMessage v2` da `canonical_messages` produce un `EnrichedCanonicalMessage` persistito in `enriched_canonical_messages` con decisione `PASS/BLOCK/REVIEW`, `enrichment_log` tracciabile e `policy_snapshot` — senza importare codice lifecycle, risk o execution. I DB sono fisicamente separati in `parser.sqlite3` e `ops.sqlite3`.
+
+Il handoff verso PRD 04 avviene tramite DB: solo record con `enrichment_decision=PASS` e `primary_class IN ('SIGNAL','UPDATE')` hanno `lifecycle_processed=0` e sono visibili al `LifecycleGateWorker`. REPORT, INFO e qualsiasi BLOCK/REVIEW hanno `lifecycle_processed=1` già al momento della persistenza.
 
 ### 10.2 Criteri pass/fail
 
@@ -511,15 +543,19 @@ Un `CanonicalMessage v2` da `canonical_messages` produce un `EnrichedCanonicalMe
 | 9 | UPDATE con tutte actions ammesse | PASS, `enriched_actions` popolato |
 | 10 | UPDATE con mix ammesse/bloccate, `gate_mode: block` | BLOCK |
 | 11 | UPDATE con mix ammesse/bloccate, `gate_mode: warn` | REVIEW |
-| 12 | REPORT | PASS, nessun enriched_signal/actions, nessun management_plan |
+| 12 | REPORT | PASS, nessun enriched_signal/actions, nessun management_plan, lifecycle_processed=1 |
 | 13 | Override trader: `trader_a.use_tp_count: 2`, 3 TP | PASS, log `tp_count_trimmed:3→2` |
-| 14 | `account_id` assegnato da `accounts` config | corretto in output |
+| 14 | `account_id` assegnato da `account.id` (single) o `traders/<id>.yaml account.id` (per_trader_subaccount) | corretto in output |
 | 15 | `management_plan` costruito da config effettiva | tutti i campi valorizzati |
 | 16 | `policy_snapshot` in DB | auditabile |
 | 17 | Stessa `canonical_message_id` rielaborata | enrichment esistente restituito, no duplicato |
 | 18 | Nessun import lifecycle/risk/execution | verificato da test di importazione |
 | 19 | DB `parser.sqlite3` e `ops.sqlite3` separati | due file fisici distinti |
 | 20 | `ops.sqlite3` creato ma vuoto | pronto per PRD 04 |
+| 21 | REPORT PASS → `lifecycle_processed=1` in DB | non consumato da PRD 04 |
+| 22 | INFO PASS → `lifecycle_processed=1` in DB | non consumato da PRD 04 |
+| 23 | SIGNAL BLOCK → `lifecycle_processed=1` in DB | non consumato da PRD 04 |
+| 24 | SIGNAL PASS → `lifecycle_processed=0` in DB | eleggibile al worker PRD 04 |
 
 ---
 
@@ -542,8 +578,10 @@ Un `CanonicalMessage v2` da `canonical_messages` produce un `EnrichedCanonicalMe
 - `update_admission`: `MOVE_STOP: true` → PASS
 - `gate_mode: warn` → REVIEW invece di BLOCK per violazioni non hard
 - `management_plan` costruito correttamente da defaults + override
-- `account_id` assegnato da `accounts._default` se `account_mode: single`
-- `account_id` assegnato da `accounts.trader_a` se `account_mode: per_trader_subaccount`
+- `account_id` assegnato da `account.id` se `account_mode: single`
+- `account_id` assegnato da `traders/<id>.yaml account.id` se `account_mode: per_trader_subaccount`
+- Loader: `account.max_capital_at_risk_pct` e `hard_max_per_signal_risk_pct` non overridabili in single mode
+- Loader: errore esplicito se `entry_split` contiene chiave `MARKET.range`
 
 ### 11.2 Integration
 
