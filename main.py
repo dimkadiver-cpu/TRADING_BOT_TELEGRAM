@@ -21,6 +21,19 @@ from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
 from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate, LifecycleGateWorker
+from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+from src.runtime_v2.lifecycle.repositories import (
+    ControlStateRepository,
+    ExchangeEventRepository,
+    ExecutionCommandRepository,
+    LifecycleEventRepository,
+    SnapshotRepository,
+    TradeChainRepository,
+)
+from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
 from src.storage.parser_results_v2 import ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
@@ -53,6 +66,8 @@ async def _async_main(
     *,
     parser_db_path: str,
     migrations_dir: str,
+    ops_db_path: str,
+    ops_migrations_dir: str,
     log_path: str,
     root_dir: Path,
 ) -> None:
@@ -60,7 +75,11 @@ async def _async_main(
 
     applied = apply_migrations(db_path=parser_db_path, migrations_dir=migrations_dir)
     if applied:
-        logger.info("applied %s migrations", applied)
+        logger.info("applied %s parser migrations", applied)
+
+    ops_applied = apply_migrations(db_path=ops_db_path, migrations_dir=ops_migrations_dir)
+    if ops_applied:
+        logger.info("applied %s ops migrations", ops_applied)
 
     api_id = int(_required_env("TELEGRAM_API_ID"))
     api_hash = _required_env("TELEGRAM_API_HASH")
@@ -112,6 +131,48 @@ async def _async_main(
         fallback_allowed_chat_ids=fallback_ids,
     )
 
+    # PRD-04 lifecycle layer
+    chain_repo = TradeChainRepository(ops_db_path)
+    event_repo = LifecycleEventRepository(ops_db_path)
+    command_repo = ExecutionCommandRepository(ops_db_path)
+    control_repo = ControlStateRepository(ops_db_path)
+    snapshot_repo = SnapshotRepository(ops_db_path)
+    exchange_event_repo = ExchangeEventRepository(ops_db_path)
+
+    exchange_port = StaticExchangeDataPort()
+    risk_engine = RiskCapacityEngine()
+    entry_gate = LifecycleEntryGate(risk_engine=risk_engine, exchange_port=exchange_port)
+
+    gate_worker = LifecycleGateWorker(
+        parser_db_path=parser_db_path,
+        ops_db_path=ops_db_path,
+        gate=entry_gate,
+        chain_repo=chain_repo,
+        event_repo=event_repo,
+        command_repo=command_repo,
+        snapshot_repo=snapshot_repo,
+        control_repo=control_repo,
+    )
+    timeout_worker = TimeoutWorker(ops_db_path=ops_db_path, chain_repo=chain_repo)
+    lifecycle_event_worker = LifecycleEventWorker(
+        ops_db_path=ops_db_path,
+        processor=LifecycleEventProcessor(),
+        chain_repo=chain_repo,
+        event_repo=event_repo,
+        command_repo=command_repo,
+        exchange_event_repo=exchange_event_repo,
+    )
+
+    async def _run_lifecycle_workers() -> None:
+        while True:
+            try:
+                gate_worker.run_once()
+                timeout_worker.run_once()
+                lifecycle_event_worker.run_once()
+            except Exception:
+                logger.exception("lifecycle worker error")
+            await asyncio.sleep(10)
+
     watcher = ChannelConfigWatcher(
         path=channels_yaml_path,
         on_reload=listener.update_config,
@@ -123,13 +184,15 @@ async def _async_main(
     await client.start()
     try:
         listener.register_handlers(client)
-        logger.info("telegram listener started | parser_db=%s", parser_db_path)
+        logger.info("telegram listener started | parser_db=%s | ops_db=%s", parser_db_path, ops_db_path)
         await listener.run_recovery(client)
         worker_task = asyncio.create_task(listener.run_worker())
+        lifecycle_task = asyncio.create_task(_run_lifecycle_workers())
         try:
             await client.run_until_disconnected()
         finally:
             worker_task.cancel()
+            lifecycle_task.cancel()
     finally:
         await client.disconnect()
         watcher.stop()
@@ -144,19 +207,24 @@ def main() -> None:
     root_dir = Path(__file__).resolve().parent
     parser_db_path = os.getenv("PARSER_DB_PATH", str(root_dir / "db" / "parser.sqlite3"))
     migrations_dir = str(root_dir / "db" / "migrations")
+    ops_db_path = os.getenv("OPS_DB_PATH", str(root_dir / "db" / "ops.sqlite3"))
+    ops_migrations_dir = str(root_dir / "db" / "ops_migrations")
     log_path = os.getenv("LOG_PATH", str(root_dir / "logs" / "bot.log"))
 
     if args.migrate:
         logger = setup_logging(log_path=log_path, level=os.getenv("LOG_LEVEL", "INFO"))
         applied = apply_migrations(db_path=parser_db_path, migrations_dir=migrations_dir)
-        logger.info("applied %s migrations", applied)
-        print(f"Migrations applied: {applied}")
+        ops_applied = apply_migrations(db_path=ops_db_path, migrations_dir=ops_migrations_dir)
+        logger.info("applied %s parser migrations, %s ops migrations", applied, ops_applied)
+        print(f"Parser migrations applied: {applied} | Ops migrations applied: {ops_applied}")
         return
 
     asyncio.run(
         _async_main(
             parser_db_path=parser_db_path,
             migrations_dir=migrations_dir,
+            ops_db_path=ops_db_path,
+            ops_migrations_dir=ops_migrations_dir,
             log_path=log_path,
             root_dir=root_dir,
         )
