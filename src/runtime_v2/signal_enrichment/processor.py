@@ -1,0 +1,242 @@
+# src/runtime_v2/signal_enrichment/processor.py
+from __future__ import annotations
+
+import logging
+
+from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+from src.runtime_v2.signal_enrichment.models import (
+    EffectiveEnrichmentConfig,
+    EnrichedCanonicalMessage,
+    EnrichedEntryLeg,
+    EnrichedSignalPayload,
+    EnrichmentLogEntry,
+)
+from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+
+logger = logging.getLogger(__name__)
+
+
+class SignalEnrichmentProcessor:
+    def __init__(
+        self,
+        config_loader: OperationConfigLoader,
+        repository: EnrichedCanonicalMessageRepository,
+    ) -> None:
+        self._config = config_loader
+        self._repo = repository
+
+    def process(self, result: CanonicalParseResult) -> EnrichedCanonicalMessage:
+        existing = self._repo.get_by_canonical_message_id(result.canonical_message_id)
+        if existing is not None:
+            return existing
+
+        self._config.reload_if_changed()
+        trader_id = result.parser_profile
+        config = self._config.get_effective_config(trader_id)
+
+        if config is None:
+            enriched = self._make_outcome(result, "BLOCK", "trader_not_registered",
+                                          lifecycle_processed=True)
+        elif not config.enabled:
+            enriched = self._make_outcome(result, "BLOCK", "trader_disabled",
+                                          lifecycle_processed=True)
+        else:
+            policy_snapshot = config.model_dump()
+            policy_version = self._config.get_policy_version()
+            enriched = self._route(result, config, policy_snapshot, policy_version)
+
+        return self._repo.save(enriched)
+
+    # ── Routing ───────────────────────────────────────────────────────────────
+
+    def _route(
+        self,
+        result: CanonicalParseResult,
+        config: EffectiveEnrichmentConfig,
+        policy_snapshot: dict,
+        policy_version: str,
+    ) -> EnrichedCanonicalMessage:
+        pc = result.primary_class
+        if pc == "SIGNAL":
+            return self._process_signal(result, config, policy_snapshot, policy_version)
+        if pc == "UPDATE":
+            return self._process_update(result, config, policy_snapshot, policy_version)
+        return self._pass_direct(result, config, policy_snapshot, policy_version)
+
+    # ── SIGNAL gate ───────────────────────────────────────────────────────────
+
+    def _process_signal(
+        self,
+        result: CanonicalParseResult,
+        config: EffectiveEnrichmentConfig,
+        policy_snapshot: dict,
+        policy_version: str,
+    ) -> EnrichedCanonicalMessage:
+        log: list[EnrichmentLogEntry] = []
+        signal = result.canonical_message.signal
+        trader_id = result.parser_profile
+        symbol = signal.symbol or ""
+
+        def block(reason: str) -> EnrichedCanonicalMessage:
+            return self._make_outcome(
+                result, "BLOCK", reason, lifecycle_processed=True,
+                log=log, policy_snapshot=policy_snapshot, policy_version=policy_version,
+                config=config,
+            )
+
+        # 1. Blacklist globale
+        if symbol in self._config.get_symbol_blacklist_global():
+            return block("symbol_blacklisted_global")
+
+        # 2. Blacklist per-trader
+        if symbol in self._config.get_symbol_blacklist_for_trader(trader_id):
+            return block("symbol_blacklisted_trader")
+
+        # 3. Entry structure accettata
+        if signal.entry_structure not in config.signal_policy.accepted_entry_structures:
+            return block("unsupported_entry_structure")
+
+        # 4. SL richiesto
+        if config.signal_policy.sl.require_sl:
+            if signal.stop_loss is None or signal.stop_loss.price is None:
+                return block("missing_stop_loss")
+
+        # 5. TP trim
+        take_profits = list(signal.take_profits)
+        use_tp_count = config.signal_policy.tp.use_tp_count
+        if use_tp_count is not None and len(take_profits) > use_tp_count:
+            original_count = len(take_profits)
+            take_profits = take_profits[:use_tp_count]
+            log.append(EnrichmentLogEntry(
+                check="tp_count_trimmed",
+                original=str(original_count),
+                result=str(use_tp_count),
+            ))
+
+        # 6. Entry split weights
+        entries = self._apply_entry_weights(signal, config)
+
+        # 7. Price sanity (se abilitata)
+        if config.signal_policy.price_sanity.enabled:
+            ranges = config.signal_policy.price_sanity.symbol_ranges.get(symbol)
+            if ranges and len(ranges) == 2:
+                for tp in take_profits:
+                    if not (ranges[0] <= tp.price.value <= ranges[1]):
+                        return block("price_out_of_range")
+
+        enriched_signal = EnrichedSignalPayload(
+            symbol=symbol or None,
+            side=signal.side,
+            entry_structure=signal.entry_structure,
+            entries=entries,
+            take_profits=take_profits,
+            stop_loss=signal.stop_loss,
+        )
+
+        return EnrichedCanonicalMessage(
+            canonical_message_id=result.canonical_message_id,
+            raw_message_id=result.raw_message_id,
+            trader_id=trader_id,
+            account_id=config.account_id,
+            primary_class=result.primary_class,
+            enrichment_decision="PASS",
+            enriched_signal=enriched_signal,
+            management_plan=config.management_plan,
+            enrichment_log=log,
+            policy_snapshot=policy_snapshot,
+            policy_version=policy_version,
+            lifecycle_processed=False,
+        )
+
+    def _apply_entry_weights(self, signal, config: EffectiveEnrichmentConfig) -> list[EnrichedEntryLeg]:
+        split = config.signal_policy.entry_split
+        structure = signal.entry_structure
+        first_leg = signal.entries[0] if signal.entries else None
+        entry_type_key = first_leg.entry_type if first_leg else "LIMIT"
+
+        if entry_type_key == "LIMIT":
+            limit = split.LIMIT
+            if structure == "ONE_SHOT":
+                weights_map = dict(limit.single.weights)
+            elif structure == "RANGE":
+                weights_map = dict(limit.range.weights)
+            elif structure == "TWO_STEP":
+                weights_map = dict(limit.averaging.weights)
+            else:
+                weights_map = dict(limit.ladder.weights)
+        else:
+            market = split.MARKET
+            if structure == "TWO_STEP":
+                weights_map = dict(market.averaging.weights)
+            else:
+                weights_map = dict(market.single.weights)
+
+        total = sum(weights_map.values())
+        if total > 0 and abs(total - 1.0) > 0.001:
+            weights_map = {k: v / total for k, v in weights_map.items()}
+
+        result = []
+        for i, leg in enumerate(signal.entries):
+            key = f"E{i + 1}"
+            result.append(EnrichedEntryLeg(
+                sequence=leg.sequence,
+                entry_type=leg.entry_type,
+                price=leg.price,
+                role=leg.role,
+                weight=weights_map.get(key, 0.0),
+            ))
+        return result
+
+    # ── UPDATE gate (Task 7) ──────────────────────────────────────────────────
+
+    def _process_update(
+        self,
+        result: CanonicalParseResult,
+        config: EffectiveEnrichmentConfig,
+        policy_snapshot: dict,
+        policy_version: str,
+    ) -> EnrichedCanonicalMessage:
+        raise NotImplementedError("Implementato in Task 7")
+
+    # ── REPORT / INFO ─────────────────────────────────────────────────────────
+
+    def _pass_direct(
+        self,
+        result: CanonicalParseResult,
+        config: EffectiveEnrichmentConfig,
+        policy_snapshot: dict,
+        policy_version: str,
+    ) -> EnrichedCanonicalMessage:
+        raise NotImplementedError("Implementato in Task 8")
+
+    # ── Utility ───────────────────────────────────────────────────────────────
+
+    def _make_outcome(
+        self,
+        result: CanonicalParseResult,
+        decision: str,
+        reason_code: str | None = None,
+        *,
+        lifecycle_processed: bool,
+        log: list[EnrichmentLogEntry] | None = None,
+        policy_snapshot: dict | None = None,
+        policy_version: str = "",
+        config: EffectiveEnrichmentConfig | None = None,
+    ) -> EnrichedCanonicalMessage:
+        return EnrichedCanonicalMessage(
+            canonical_message_id=result.canonical_message_id,
+            raw_message_id=result.raw_message_id,
+            trader_id=result.parser_profile,
+            account_id=config.account_id if config else "",
+            primary_class=result.primary_class,
+            enrichment_decision=decision,
+            reason_code=reason_code,
+            enrichment_log=log or [],
+            policy_snapshot=policy_snapshot or {},
+            policy_version=policy_version,
+            lifecycle_processed=lifecycle_processed,
+        )
+
+
+__all__ = ["SignalEnrichmentProcessor"]
