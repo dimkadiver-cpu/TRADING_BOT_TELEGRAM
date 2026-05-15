@@ -245,7 +245,18 @@ class SignalEnrichmentProcessor:
         policy_snapshot: dict,
         policy_version: str,
     ) -> EnrichedCanonicalMessage:
-        raise NotImplementedError("Implementato in Task 8")
+        return EnrichedCanonicalMessage(
+            canonical_message_id=result.canonical_message_id,
+            raw_message_id=result.raw_message_id,
+            trader_id=result.parser_profile,
+            account_id=config.account_id,
+            primary_class=result.primary_class,
+            enrichment_decision="PASS",
+            enrichment_log=[],
+            policy_snapshot=policy_snapshot,
+            policy_version=policy_version,
+            lifecycle_processed=True,
+        )
 
     # ── Utility ───────────────────────────────────────────────────────────────
 
