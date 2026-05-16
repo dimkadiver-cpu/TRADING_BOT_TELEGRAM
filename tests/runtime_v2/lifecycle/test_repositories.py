@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 
 
-def _apply_migrations(db_path: str) -> None:
+def _apply_migrations(db_path: str, migrations_dir: Path) -> None:
     conn = sqlite3.connect(db_path)
-    for f in sorted(Path("db/migrations").glob("*.sql")):
+    for f in sorted(migrations_dir.glob("*.sql")):
         conn.executescript(f.read_text(encoding="utf-8"))
     conn.commit()
     conn.close()
@@ -17,7 +17,7 @@ def _apply_migrations(db_path: str) -> None:
 @pytest.fixture
 def ops_db(tmp_path):
     db_path = str(tmp_path / "ops.sqlite3")
-    _apply_migrations(db_path)
+    _apply_migrations(db_path, Path("db/ops_migrations"))
     return db_path
 
 

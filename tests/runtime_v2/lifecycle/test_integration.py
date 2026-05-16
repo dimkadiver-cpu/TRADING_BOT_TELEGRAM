@@ -12,9 +12,9 @@ from pathlib import Path
 import pytest
 
 
-def _apply_migrations(db_path: str) -> None:
+def _apply_migrations(db_path: str, migrations_dir: Path) -> None:
     conn = sqlite3.connect(db_path)
-    for f in sorted(Path("db/migrations").glob("*.sql")):
+    for f in sorted(migrations_dir.glob("*.sql")):
         conn.executescript(f.read_text(encoding="utf-8"))
     conn.commit()
     conn.close()
@@ -107,8 +107,8 @@ def _make_enriched_signal(
 def dbs(tmp_path):
     parser_db = str(tmp_path / "parser.sqlite3")
     ops_db = str(tmp_path / "ops.sqlite3")
-    for db in (parser_db, ops_db):
-        _apply_migrations(db)
+    _apply_migrations(parser_db, Path("db/migrations"))
+    _apply_migrations(ops_db, Path("db/ops_migrations"))
     return parser_db, ops_db
 
 

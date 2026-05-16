@@ -90,7 +90,26 @@
       "PowerShell(head *)",
       "Bash(findstr /i \"db_path\\\\|DB_PATH\\\\|sqlite\")",
       "Bash(Select-String -Pattern \"TERMINAL_STATES\" \"C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\lifecycle\\\\entry_gate.py\",\"C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\lifecycle\\\\workers.py\",\"C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\lifecycle\\\\models.py\")",
-      "Bash(Select-Object Path,LineNumber,Line)"
+      "Bash(Select-Object Path,LineNumber,Line)",
+      "Skill(superpowers:brainstorming)",
+      "WebSearch",
+      "WebFetch(domain:hummingbot.org)",
+      "WebFetch(domain:github.com)",
+      "Bash(mkdir -p /c/TeleSignalBot/src/runtime_v2/execution_gateway/adapters)",
+      "Bash(mkdir -p /c/TeleSignalBot/tests/runtime_v2/execution_gateway)",
+      "Bash(dir C:TeleSignalBotsrcruntime_v2execution_gateway *)",
+      "Bash(pip install *)",
+      "Bash(dir C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\execution_gateway *)",
+      "Bash(dir C:\\\\TeleSignalBot\\\\tests\\\\runtime_v2 *)",
+      "Bash(dir C:\\\\TeleSignalBot\\\\src\\\\runtime_v2\\\\execution_gateway\\\\adapters *)",
+      "Bash(dir C:\\\\TeleSignalBot\\\\db\\\\ops_migrations *)",
+      "Bash(dir C:\\\\TeleSignalBot\\\\tests\\\\runtime_v2\\\\execution_gateway *)",
+      "Bash(pip show *)",
+      "Bash(where hummingbot *)",
+      "Bash(pip list *)",
+      "Bash(curl -s http://localhost:8000/health)",
+      "Bash(curl -s http://localhost:15888)",
+      "Bash(Remove-Item *)"
     ]
   }
 }

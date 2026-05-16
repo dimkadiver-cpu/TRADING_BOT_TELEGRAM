@@ -127,13 +127,11 @@ def test_policy_snapshot_is_auditabile(setup):
     assert "signal_policy" in from_db.policy_snapshot
 
 
-def test_ops_db_is_empty(tmp_path):
-    ops_path = Path("db/ops.sqlite3")
-    if not ops_path.exists():
-        pytest.skip("db/ops.sqlite3 non trovato — esegui setup_parser_db_separation.py prima")
-    conn = sqlite3.connect(str(ops_path))
+def test_parser_db_has_no_ops_tables(setup):
+    _, repo = setup
+    conn = sqlite3.connect(repo._db_path)
     tables = [r[0] for r in conn.execute(
-        "SELECT name FROM sqlite_master WHERE type='table' AND name != 'schema_migrations'"
+        "SELECT name FROM sqlite_master WHERE type='table' AND name LIKE 'ops_%'"
     )]
     conn.close()
-    assert tables == [], f"ops.sqlite3 dovrebbe essere vuoto, trovate tabelle: {tables}"
+    assert tables == []

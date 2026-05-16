@@ -61,3 +61,7 @@ parser_test/db/NEW_DB/
 # Claude Code worktrees / local settings
 .claude/worktrees/
 .claude/settings.json
+
+
+hummingbot_config/
+hummingbot_logs/
