@@ -34,6 +34,12 @@ from src.runtime_v2.lifecycle.repositories import (
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
+from src.runtime_v2.execution_gateway.adapters.hummingbot_api_paper import HummingbotApiPaperAdapter
+from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
+from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 from src.storage.parser_results_v2 import ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
@@ -163,12 +169,55 @@ async def _async_main(
         exchange_event_repo=exchange_event_repo,
     )
 
+    # PRD-05 execution gateway layer (abilitato solo se HUMMINGBOT_BASE_URL è configurato)
+    hummingbot_url = os.getenv("HUMMINGBOT_BASE_URL", "")
+    execution_worker: ExecutionCommandWorker | None = None
+    sync_worker: ExchangeEventSyncWorker | None = None
+
+    if hummingbot_url:
+        execution_config_path = str(root_dir / "config" / "execution.yaml")
+        exec_config = ExecutionConfigLoader(execution_config_path).load()
+        adapter_name = exec_config.default_adapter
+        adapter_cfg = exec_config.adapters[adapter_name]
+        hb_adapter = HummingbotApiPaperAdapter(
+            base_url=hummingbot_url,
+            connector=adapter_cfg.connector,
+        )
+        gateway_repo = GatewayCommandRepository(ops_db_path)
+        gateway = ExecutionGateway(
+            config=exec_config,
+            adapter_registry={adapter_name: hb_adapter},
+            repo=gateway_repo,
+        )
+        routing, _ = exec_config.resolve_routing("default")
+        execution_worker = ExecutionCommandWorker(
+            ops_db_path=ops_db_path,
+            gateway=gateway,
+            repo=gateway_repo,
+        )
+        sync_worker = ExchangeEventSyncWorker(
+            ops_db_path=ops_db_path,
+            adapter=hb_adapter,
+            repo=gateway_repo,
+            execution_account_id=routing.execution_account_id,
+        )
+        logger.info(
+            "execution gateway started | adapter=%s | url=%s | account=%s",
+            adapter_name, hummingbot_url, routing.execution_account_id,
+        )
+    else:
+        logger.warning("HUMMINGBOT_BASE_URL not set — execution gateway disabled (paper commands will queue but not be sent)")
+
     async def _run_lifecycle_workers() -> None:
         while True:
             try:
                 gate_worker.run_once()
                 timeout_worker.run_once()
                 lifecycle_event_worker.run_once()
+                if execution_worker is not None:
+                    execution_worker.run_once()
+                if sync_worker is not None:
+                    sync_worker.run_once()
             except Exception:
                 logger.exception("lifecycle worker error")
             await asyncio.sleep(10)
