@@ -1,0 +1,32 @@
+ # docker-compose.yml
+  version: '3'
+  services:
+    hummingbot:
+      image: hummingbot/hummingbot:latest
+      container_name: hummingbot
+      environment:
+        - CONFIG_PASSWORD=test1234
+      volumes:
+        - ./hummingbot_conf:/home/hummingbot/conf
+        - ./hummingbot_logs:/home/hummingbot/logs
+      networks:
+        - hbot-network
+
+    backend-api:
+      image: hummingbot/backend-api:latest
+      container_name: hummingbot-backend-api
+      ports:
+        - "8000:8000"
+      environment:
+        - CONFIG_PASSWORD=test1234
+      volumes:
+        - ./hummingbot_conf:/home/hummingbot/conf
+        - ./hummingbot_logs:/home/hummingbot/logs
+      networks:
+        - hbot-network
+      depends_on:
+        - hummingbot
+
+  networks:
+    hbot-network:
+      driver: bridge
