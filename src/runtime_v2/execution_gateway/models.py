@@ -1,7 +1,7 @@
 # src/runtime_v2/execution_gateway/models.py
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, field_validator
 
 
 class AdapterCapabilities(BaseModel):
@@ -54,6 +54,13 @@ class AdapterConfig(BaseModel):
     leverage: int = 1
     secret: str | None = None          # Bearer token for execution adapter auth
     entry_execution: EntryExecutionConfig = EntryExecutionConfig()
+
+    @field_validator("secret", mode="before")
+    @classmethod
+    def _coerce_empty_secret(cls, v: object) -> object:
+        if v == "":
+            return None
+        return v
     retry: RetryConfig = RetryConfig()
     capabilities: AdapterCapabilities = AdapterCapabilities()
     take_profit: TakeProfitConfig = TakeProfitConfig()

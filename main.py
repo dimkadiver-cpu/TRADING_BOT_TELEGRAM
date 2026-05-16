@@ -181,7 +181,7 @@ async def _async_main(
             exec_config = ExecutionConfigLoader(execution_config_path).load()
             adapter_name = exec_config.default_adapter
             routing, adapter_cfg = exec_config.resolve_routing("default")
-            hb_secret = os.getenv("HUMMINGBOT_SECRET")
+            hb_secret = os.getenv("HUMMINGBOT_SECRET")  # `or None` below guards against ""
             hb_adapter = HummingbotApiPaperAdapter(
                 base_url=hummingbot_url,
                 connector=adapter_cfg.connector,
