@@ -52,25 +52,15 @@ class ExecutionCommandWorker:
         # Query 3: WAITING_POSITION on OPEN chains → reset to PENDING then process
         waiting = self._repo.get_waiting_on_open_chains(self._batch_size)
         for cmd in waiting:
-            conn = sqlite3.connect(self._ops_db)
-            try:
-                conn.execute(
-                    "UPDATE ops_execution_commands SET status='PENDING', updated_at=datetime('now') "
-                    "WHERE command_id=?", (cmd.command_id,)
-                )
-                conn.commit()
-            finally:
-                conn.close()
+            self._repo.reset_waiting_to_pending(cmd.command_id)
             account_id = self._get_account_id(cmd.trade_chain_id)
             if account_id is None:
                 continue
             try:
-                pending = self._repo.get_pending_batch(self._batch_size)
-                for fresh in pending:
-                    if fresh.command_id == cmd.command_id:
-                        self._gw.process(fresh, account_id=account_id)
-                        processed += 1
-                        break
+                fresh = self._repo.get_by_id(cmd.command_id)
+                if fresh is not None:
+                    self._gw.process(fresh, account_id=account_id)
+                    processed += 1
             except Exception:
                 logger.exception("gateway waiting error for command %s", cmd.command_id)
 

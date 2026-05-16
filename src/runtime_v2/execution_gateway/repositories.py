@@ -221,6 +221,29 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def reset_waiting_to_pending(self, command_id: int) -> None:
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            conn.execute(
+                "UPDATE ops_execution_commands SET status='PENDING', updated_at=? "
+                "WHERE command_id=?", (now, command_id)
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def get_by_id(self, command_id: int) -> "ExecutionCommand | None":
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                f"SELECT {_BASE_COLS} FROM ops_execution_commands WHERE command_id=?",
+                (command_id,),
+            ).fetchone()
+            return _cmd_from_row(row) if row else None
+        finally:
+            conn.close()
+
     def get_entry_client_order_id(self, trade_chain_id: int) -> str | None:
         conn = sqlite3.connect(self._db)
         try:

@@ -43,20 +43,21 @@ class ExchangeEventSyncWorker:
                     execution_account_id=self._execution_account_id,
                 )
                 if raw and raw.is_filled:
-                    self._normalize_and_save(client_order_id, raw)
-                    self._repo.mark_done(cmd.command_id)
-                    processed += 1
+                    saved = self._normalize_and_save(client_order_id, raw)
+                    if saved:
+                        self._repo.mark_done(cmd.command_id)
+                        processed += 1
             except Exception:
                 logger.exception("sync error for %s", client_order_id)
 
         return processed
 
-    def _normalize_and_save(self, client_order_id: str, raw) -> None:
+    def _normalize_and_save(self, client_order_id: str, raw) -> bool:
         try:
             coid = coid_mod.parse(client_order_id)
         except ValueError:
             logger.warning("cannot parse client_order_id: %s", client_order_id)
-            return
+            return False
 
         exchange_order_id = raw.exchange_order_id or client_order_id
 
@@ -86,8 +87,8 @@ class ExchangeEventSyncWorker:
                 "command_id": coid.command_id,
             }
         else:
-            logger.warning("unknown role '%s' in %s", coid.role, client_order_id)
-            return
+            logger.warning("unknown role '%s' in %s — skipping mark_done", coid.role, client_order_id)
+            return False
 
         idempotency_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
         now = _now()
@@ -101,6 +102,7 @@ class ExchangeEventSyncWorker:
                  "NEW", idempotency_key, now),
             )
             conn.commit()
+            return True
         finally:
             conn.close()
 

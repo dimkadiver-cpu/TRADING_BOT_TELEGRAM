@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
-from src.runtime_v2.execution_gateway.models import ExecutionConfig
+from src.runtime_v2.execution_gateway.models import AdapterConfig, ExecutionConfig
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 from src.runtime_v2.lifecycle.models import ExecutionCommand
 
@@ -133,7 +133,7 @@ class ExecutionGateway:
             exchange_order_id=result.exchange_order_id,
         )
 
-    def _handle_error(self, cmd: ExecutionCommand, adapter_cfg, error_str: str) -> None:
+    def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, error_str: str) -> None:
         retry_cfg = adapter_cfg.retry
         current_retry = self._repo.get_retry_count(cmd.command_id)
 

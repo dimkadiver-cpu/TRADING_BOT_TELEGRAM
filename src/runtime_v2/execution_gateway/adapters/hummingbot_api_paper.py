@@ -109,9 +109,13 @@ class HummingbotApiPaperAdapter(ExecutionAdapter):
                 filled_qty=float(o.get("executed_amount_base", 0)),
                 average_price=float(o.get("average_executed_price", 0)) or None,
             )
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code == 404:
+                return None
+            logger.warning("get_order_status HTTP error for %s: %s", client_order_id, e)
+            raise  # re-raise non-404 HTTP errors for retry
         except Exception:
-            logger.warning("get_order_status failed for %s", client_order_id)
-            return None
+            raise  # re-raise network/timeout errors for retry
 
     def get_position_qty(
         self,
