@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from base64 import b64encode
 
 import httpx
 
@@ -24,12 +25,21 @@ class HummingbotApiPaperAdapter(ExecutionAdapter):
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._connector = connector
-        headers = {"Authorization": f"Bearer {secret}"} if secret else {}
+        headers = self._auth_headers(secret)
         self._client = httpx.Client(
             base_url=self._base_url,
             timeout=timeout,
             headers=headers,
         )
+
+    @staticmethod
+    def _auth_headers(secret: str | None) -> dict[str, str]:
+        if not secret:
+            return {}
+        if ":" in secret:
+            token = b64encode(secret.encode("utf-8")).decode("ascii")
+            return {"Authorization": f"Basic {token}"}
+        return {"Authorization": f"Bearer {secret}"}
 
     def close(self) -> None:
         self._client.close()
@@ -48,9 +58,7 @@ class HummingbotApiPaperAdapter(ExecutionAdapter):
 
     def set_leverage(self, symbol: str, leverage: int, execution_account_id: str) -> None:
         trading_pair = symbol.replace("/", "-")
-        self._client.post("/trading/leverage", json={
-            "account_name": execution_account_id,
-            "connector_name": self._connector,
+        self._client.post(f"/trading/{execution_account_id}/{self._connector}/leverage", json={
             "trading_pair": trading_pair,
             "leverage": leverage,
         }).raise_for_status()
@@ -73,8 +81,8 @@ class HummingbotApiPaperAdapter(ExecutionAdapter):
             data = resp.json()
             return AdapterResult(
                 success=True,
-                adapter_order_id=str(data.get("id", "")),
-                exchange_order_id=str(data.get("exchange_order_id", "")),
+                adapter_order_id=str(data.get("id") or data.get("order_id") or ""),
+                exchange_order_id=str(data.get("exchange_order_id") or data.get("order_id") or ""),
             )
         except httpx.HTTPStatusError as e:
             return AdapterResult(success=False, error=str(e), reason="exchange_rejected")
@@ -105,20 +113,27 @@ class HummingbotApiPaperAdapter(ExecutionAdapter):
     ) -> RawAdapterOrder | None:
         try:
             resp = self._client.post("/trading/orders/search", json={
-                "client_order_id": client_order_id,
-                "account_name": execution_account_id,
+                "account_names": [execution_account_id],
+                "connector_names": [self._connector],
+                "limit": 100,
             })
             resp.raise_for_status()
             data = resp.json()
             orders = data.get("data") or (data if isinstance(data, list) else [])
+            orders = [
+                o for o in orders
+                if o.get("client_order_id") == client_order_id
+                or o.get("order_id") == client_order_id
+                or o.get("id") == client_order_id
+            ]
             if not orders:
                 return None
             o = orders[0]
-            status = "FILLED" if o.get("is_done") else "OPEN"
+            status = str(o.get("status") or ("FILLED" if o.get("is_done") else "OPEN")).upper()
             return RawAdapterOrder(
                 client_order_id=client_order_id,
-                exchange_order_id=str(o.get("exchange_order_id", "")),
-                adapter_order_id=str(o.get("id", "")),
+                exchange_order_id=str(o.get("exchange_order_id") or o.get("order_id") or ""),
+                adapter_order_id=str(o.get("id") or o.get("order_id") or ""),
                 status=status,
                 filled_qty=float(o.get("executed_amount_base", 0)),
                 average_price=float(o.get("average_executed_price", 0)) or None,

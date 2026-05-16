@@ -66,6 +66,16 @@ docker images | grep hummingbot
 
 ## Passo 4 — Avvia il container
 
+Opzione consigliata per questo repository:
+
+```bash
+docker compose up
+```
+
+Il compose avvia anche `hummingbot-backend-api` sulla porta `8000`, PostgreSQL ed EMQX. Il mount di `/var/run/docker.sock` è necessario al backend API per orchestrare i bot via Docker; EMQX è il broker MQTT usato per comunicare con le istanze Hummingbot.
+
+In alternativa, per la sola console interattiva Hummingbot:
+
 ```bash
 docker run -it \
   --name hummingbot \
@@ -108,10 +118,10 @@ gateway start
 Lascia il container in esecuzione. Apri un **secondo terminale** (fuori dal container) e verifica:
 
 ```bash
-curl http://localhost:8000/health
+curl -I http://localhost:8000/docs
 ```
 
-**Verifica attesa:** risposta HTTP 200 con body tipo `{"status": "ok"}` o simile.
+**Verifica attesa:** risposta HTTP 200. L'API corrente espone Swagger/OpenAPI su `/docs`; non tutte le versioni espongono `/health`.
 
 Se ottieni `Connection refused`, il server non è ancora attivo — attendi qualche secondo e riprova. Se il problema persiste, controlla i log nel primo terminale.
 
@@ -122,7 +132,7 @@ Se ottieni `Connection refused`, il server non è ancora attivo — attendi qual
 Dentro la console Hummingbot:
 
 ```
-connect bybit_perpetual_paper_trade
+connect bybit_perpetual_testnet
 ```
 
 Hummingbot chiede l'API key e il secret della tua chiave Bybit **testnet** (non mainnet). Le trovi su https://testnet.bybit.com → profilo → "API Management" → crea una chiave con permessi di trading.
@@ -133,7 +143,7 @@ Al termine:
 status
 ```
 
-**Verifica:** la riga relativa a `bybit_perpetual_paper_trade` mostra `CONNECTED`.
+**Verifica:** la riga relativa a `bybit_perpetual_testnet` mostra `CONNECTED`.
 
 ---
 
@@ -143,8 +153,10 @@ Nella root del progetto crea il file `.env` (se non esiste):
 
 ```
 HUMMINGBOT_BASE_URL=http://localhost:8000
-HUMMINGBOT_SECRET=test1234
+HUMMINGBOT_SECRET=admin:admin
 ```
+
+`HUMMINGBOT_SECRET` accetta token Bearer semplici oppure credenziali Basic nel formato `username:password`. L'immagine corrente `hummingbot/hummingbot-api` usa HTTP Basic e il default locale è `admin:admin`.
 
 > `.env` è già gitignored. Verifica con:
 > ```bash
@@ -175,7 +187,7 @@ $env:TELEGRAM_API_ID="<id>"; $env:TELEGRAM_API_HASH="<hash>"; python main.py 2>&
 
 **Verifica attesa nel log:**
 ```
-execution gateway started | adapter=hummingbot_api_paper | url=http://localhost:8000 | account=bybit_paper_main
+execution gateway started | adapter=hummingbot_api_paper | url=http://localhost:8000 | account=master_account
 ```
 
 Se vedi invece `execution gateway disabled`, il file `.env` non viene caricato — assicurati che `python-dotenv` sia installato e che `load_dotenv()` sia chiamato in `main.py` prima di `os.getenv`.
@@ -205,22 +217,25 @@ docker stop hummingbot
 | Sintomo | Causa probabile | Soluzione |
 |---------|----------------|-----------|
 | `Connection refused` su porta 8000 | REST server non avviato | Dentro Hummingbot: `start --script rest_api_server` |
-| `401 Unauthorized` nelle chiamate API | Secret errato o assente | Verifica `HUMMINGBOT_SECRET` in `.env` |
+| `401 Unauthorized` nelle chiamate API | Secret errato o assente | Con `hummingbot/hummingbot-api`, usa `HUMMINGBOT_SECRET=admin:admin` oppure le credenziali impostate nell'API |
 | `422 Unprocessable Entity` | Body della richiesta non valido | Vedi Task 4 del piano di gap closure — endpoint da verificare |
 | `Container name already in use` | Container precedente non rimosso | `docker rm hummingbot` poi ripeti il `docker run` |
+| `docker.errors.DockerException` nel container `hummingbot-backend-api` | Docker socket non montato | Usa `docker compose up`; il compose monta `/var/run/docker.sock` |
+| `ConnectionRefusedError` verso MQTT nel backend API | Broker EMQX assente o non pronto | Usa il compose aggiornato e verifica `docker ps` per `hummingbot-broker` |
 | `execution gateway disabled` nel log | `HUMMINGBOT_BASE_URL` non caricato | Verifica che `.env` esista e che `load_dotenv()` sia chiamato |
-| `bybit_perpetual_paper_trade: DISCONNECTED` | API keys scadute o errate | Rigenera le API keys su testnet.bybit.com |
+| `bybit_perpetual_testnet: DISCONNECTED` | API keys scadute o errate | Rigenera le API keys su testnet.bybit.com |
 
 ---
 
 ## Passo successivo
 
-Con Hummingbot attivo e `curl http://localhost:8000/health` che risponde OK, esegui il Task 4 del piano di gap closure: verifica degli endpoint e fix dei mismatch.
+Con Hummingbot attivo e `curl -I http://localhost:8000/docs` che risponde OK, esegui il Task 4 del piano di gap closure: verifica degli endpoint e fix dei mismatch.
 
 ```bash
 RUN_HUMMINGBOT_API_TESTS=1 \
 HUMMINGBOT_API_URL=http://localhost:8000 \
-HUMMINGBOT_CONNECTOR=bybit_perpetual_paper_trade \
-HUMMINGBOT_ACCOUNT=bybit_paper_main \
+HUMMINGBOT_CONNECTOR=bybit_perpetual_testnet \
+HUMMINGBOT_ACCOUNT=master_account \
+HUMMINGBOT_SECRET=admin:admin \
 pytest tests/runtime_v2/execution_gateway/test_hummingbot_adapter.py -v
 ```

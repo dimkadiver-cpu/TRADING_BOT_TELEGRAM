@@ -56,6 +56,32 @@ def test_adapter_no_auth_header_when_no_secret(respx_mock):
     assert "authorization" not in sent_request.headers
 
 
+def test_adapter_sends_basic_header_when_secret_is_username_password(respx_mock):
+    """Con secret nel formato user:password, usa HTTP Basic per Hummingbot API v2."""
+    from src.runtime_v2.execution_gateway.adapters.hummingbot_api_paper import HummingbotApiPaperAdapter
+
+    respx_mock.post("http://localhost:8000/trading/orders").mock(
+        return_value=httpx.Response(201, json={"order_id": "abc"})
+    )
+
+    adapter = HummingbotApiPaperAdapter(
+        base_url="http://localhost:8000",
+        connector="bybit_perpetual_paper_trade",
+        secret="admin:admin",
+    )
+    result = adapter.place_order(
+        command_type="PLACE_ENTRY",
+        payload={"symbol": "BTC/USDT", "side": "LONG",
+                 "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1},
+        client_order_id="tsb:1:4:entry:1",
+        execution_account_id="acc_main",
+        connector="bybit_perpetual_paper_trade",
+    )
+    assert result.success
+    sent_request = respx_mock.calls[0].request
+    assert sent_request.headers.get("authorization") == "Basic YWRtaW46YWRtaW4="
+
+
 def test_adapter_no_auth_header_when_empty_string_secret(respx_mock):
     """secret='' è equivalente a secret=None — nessun header Authorization."""
     from src.runtime_v2.execution_gateway.adapters.hummingbot_api_paper import HummingbotApiPaperAdapter

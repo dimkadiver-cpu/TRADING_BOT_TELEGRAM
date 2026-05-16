@@ -1,32 +1,83 @@
- # docker-compose.yml
-  version: '3'
-  services:
-    hummingbot:
-      image: hummingbot/hummingbot:latest
-      container_name: hummingbot
-      environment:
-        - CONFIG_PASSWORD=test1234
-      volumes:
-        - ./hummingbot_conf:/home/hummingbot/conf
-        - ./hummingbot_logs:/home/hummingbot/logs
-      networks:
-        - hbot-network
+services:
+  hummingbot:
+    image: hummingbot/hummingbot:latest
+    container_name: hummingbot
+    stdin_open: true
+    tty: true
+    environment:
+      - CONFIG_PASSWORD=test1234
+    volumes:
+      - ./hummingbot_conf:/home/hummingbot/conf
+      - ./hummingbot_logs:/home/hummingbot/logs
+    networks:
+      - hbot-network
 
-    backend-api:
-      image: hummingbot/backend-api:latest
-      container_name: hummingbot-backend-api
-      ports:
-        - "8000:8000"
-      environment:
-        - CONFIG_PASSWORD=test1234
-      volumes:
-        - ./hummingbot_conf:/home/hummingbot/conf
-        - ./hummingbot_logs:/home/hummingbot/logs
-      networks:
-        - hbot-network
-      depends_on:
-        - hummingbot
+  backend-api:
+    image: hummingbot/hummingbot-api:latest
+    container_name: hummingbot-backend-api
+    ports:
+      - "8000:8000"
+    environment:
+      - CONFIG_PASSWORD=test1234
+      - BROKER_HOST=emqx
+      - BROKER_PORT=1883
+      - DATABASE_URL=postgresql+asyncpg://hbot:hummingbot-api@postgres:5432/hummingbot_api
+      - GATEWAY_URL=http://host.docker.internal:15888
+    volumes:
+      - ./hummingbot_conf/bots:/hummingbot-api/bots
+      - /var/run/docker.sock:/var/run/docker.sock
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - hbot-network
+    depends_on:
+      - hummingbot
+      - emqx
+      - postgres
 
-  networks:
-    hbot-network:
-      driver: bridge
+  emqx:
+    image: emqx:5
+    container_name: hummingbot-broker
+    restart: unless-stopped
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=node1.emqx.local
+      - EMQX_CLUSTER__DISCOVERY_STRATEGY=static
+      - EMQX_CLUSTER__STATIC__SEEDS=[emqx@node1.emqx.local]
+    ports:
+      - "1883:1883"
+      - "18083:18083"
+    volumes:
+      - emqx-data:/opt/emqx/data
+      - emqx-log:/opt/emqx/log
+      - emqx-etc:/opt/emqx/etc
+    networks:
+      hbot-network:
+        aliases:
+          - node1.emqx.local
+
+  postgres:
+    image: postgres:16
+    container_name: hummingbot-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=hummingbot_api
+      - POSTGRES_USER=hbot
+      - POSTGRES_PASSWORD=hummingbot-api
+      - POSTGRES_INITDB_ARGS=--encoding=UTF8
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - hbot-network
+
+networks:
+  hbot-network:
+    driver: bridge
+
+volumes:
+  emqx-data:
+  emqx-log:
+  emqx-etc:
+  postgres-data:

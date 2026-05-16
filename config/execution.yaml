@@ -5,14 +5,14 @@ execution:
   account_routing:
     default:
       adapter: hummingbot_api_paper
-      execution_account_id: bybit_paper_main
+      execution_account_id: master_account
 
   adapters:
     hummingbot_api_paper:
       type: hummingbot_api
       mode: paper
       base_url: http://localhost:8000
-      connector: bybit_perpetual_paper_trade
+      connector: bybit_perpetual_testnet
       leverage: 1
 
       entry_execution:

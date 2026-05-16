@@ -14,19 +14,20 @@ pytestmark = pytest.mark.skipif(
 )
 
 HUMMINGBOT_URL = os.environ.get("HUMMINGBOT_API_URL", "http://localhost:8000")
-CONNECTOR = os.environ.get("HUMMINGBOT_CONNECTOR", "bybit_perpetual_paper_trade")
-ACCOUNT = os.environ.get("HUMMINGBOT_ACCOUNT", "bybit_paper_main")
+CONNECTOR = os.environ.get("HUMMINGBOT_CONNECTOR", "bybit_perpetual_testnet")
+ACCOUNT = os.environ.get("HUMMINGBOT_ACCOUNT", "master_account")
+SECRET = os.environ.get("HUMMINGBOT_SECRET")
 
 
 @pytest.fixture
 def adapter():
     from src.runtime_v2.execution_gateway.adapters.hummingbot_api_paper import HummingbotApiPaperAdapter
-    return HummingbotApiPaperAdapter(base_url=HUMMINGBOT_URL, connector=CONNECTOR)
+    return HummingbotApiPaperAdapter(base_url=HUMMINGBOT_URL, connector=CONNECTOR, secret=SECRET)
 
 
 def test_api_reachable(adapter):
     import httpx
-    resp = httpx.get(f"{HUMMINGBOT_URL}/health", timeout=5)
+    resp = httpx.get(f"{HUMMINGBOT_URL}/docs", timeout=5)
     assert resp.status_code == 200
 
 
