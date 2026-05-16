@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import logging
-import sqlite3
 from datetime import datetime, timedelta, timezone
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
@@ -136,13 +135,7 @@ class ExecutionGateway:
 
     def _handle_error(self, cmd: ExecutionCommand, adapter_cfg, error_str: str) -> None:
         retry_cfg = adapter_cfg.retry
-        conn = sqlite3.connect(self._repo._db)
-        row = conn.execute(
-            "SELECT retry_count FROM ops_execution_commands WHERE command_id=?",
-            (cmd.command_id,),
-        ).fetchone()
-        conn.close()
-        current_retry = row[0] if row else 0
+        current_retry = self._repo.get_retry_count(cmd.command_id)
 
         if current_retry >= retry_cfg.max_attempts:
             self._repo.mark_failed(cmd.command_id, reason=error_str)

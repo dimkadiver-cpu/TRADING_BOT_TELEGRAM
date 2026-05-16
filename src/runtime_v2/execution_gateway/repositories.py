@@ -210,6 +210,17 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def get_retry_count(self, command_id: int) -> int:
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT retry_count FROM ops_execution_commands WHERE command_id=?",
+                (command_id,),
+            ).fetchone()
+            return row[0] if row else 0
+        finally:
+            conn.close()
+
     def get_entry_client_order_id(self, trade_chain_id: int) -> str | None:
         conn = sqlite3.connect(self._db)
         try:
