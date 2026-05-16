@@ -52,6 +52,7 @@ class AdapterConfig(BaseModel):
     base_url: str
     connector: str
     leverage: int = 1
+    secret: str | None = None          # Bearer token for execution adapter auth
     entry_execution: EntryExecutionConfig = EntryExecutionConfig()
     retry: RetryConfig = RetryConfig()
     capabilities: AdapterCapabilities = AdapterCapabilities()

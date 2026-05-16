@@ -15,10 +15,21 @@ _CLOSE_SIDE_MAP = {"LONG": "SELL", "SHORT": "BUY"}
 
 
 class HummingbotApiPaperAdapter(ExecutionAdapter):
-    def __init__(self, base_url: str, connector: str, timeout: float = 10.0) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        connector: str,
+        timeout: float = 10.0,
+        secret: str | None = None,
+    ) -> None:
         self._base_url = base_url.rstrip("/")
         self._connector = connector
-        self._client = httpx.Client(base_url=self._base_url, timeout=timeout)
+        headers = {"Authorization": f"Bearer {secret}"} if secret else {}
+        self._client = httpx.Client(
+            base_url=self._base_url,
+            timeout=timeout,
+            headers=headers,
+        )
 
     def close(self) -> None:
         self._client.close()
