@@ -57,3 +57,11 @@ def test_terminal_states():
     assert "CANCELLED" in TERMINAL_STATES
     assert "EXPIRED" in TERMINAL_STATES
     assert "OPEN" not in TERMINAL_STATES
+
+
+def test_command_status_includes_prd05_states():
+    from src.runtime_v2.lifecycle.models import CommandStatus
+    import typing
+    args = typing.get_args(CommandStatus)
+    assert "WAITING_POSITION" in args
+    assert "REVIEW_REQUIRED" in args

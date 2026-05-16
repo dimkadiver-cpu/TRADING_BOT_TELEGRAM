@@ -18,7 +18,16 @@ CommandType = Literal[
     "MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP", "CANCEL_PENDING_ENTRY",
     "CLOSE_PARTIAL", "CLOSE_FULL",
 ]
-CommandStatus = Literal["PENDING", "SENT", "ACK", "DONE", "FAILED", "CANCELLED"]
+CommandStatus = Literal[
+    "PENDING",           # creato da PRD-04, non ancora inviato
+    "SENT",              # richiesta inviata all'adapter
+    "ACK",               # exchange ha accettato l'ordine
+    "WAITING_POSITION",  # attende fill reale (TP prima di entry fill)
+    "DONE",              # ordine completato
+    "FAILED",            # errore terminale
+    "REVIEW_REQUIRED",   # richiede intervento manuale
+    "CANCELLED",         # annullato da lifecycle o sostituito
+]
 
 LifecycleEventType = Literal[
     "SIGNAL_ACCEPTED", "TRADE_CHAIN_CREATED", "ENTRY_COMMAND_CREATED",
