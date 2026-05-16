@@ -173,40 +173,43 @@ async def _async_main(
     hummingbot_url = os.getenv("HUMMINGBOT_BASE_URL", "")
     execution_worker: ExecutionCommandWorker | None = None
     sync_worker: ExchangeEventSyncWorker | None = None
+    hb_adapter: HummingbotApiPaperAdapter | None = None
 
     if hummingbot_url:
-        execution_config_path = str(root_dir / "config" / "execution.yaml")
-        exec_config = ExecutionConfigLoader(execution_config_path).load()
-        adapter_name = exec_config.default_adapter
-        adapter_cfg = exec_config.adapters[adapter_name]
-        hb_adapter = HummingbotApiPaperAdapter(
-            base_url=hummingbot_url,
-            connector=adapter_cfg.connector,
-        )
-        gateway_repo = GatewayCommandRepository(ops_db_path)
-        gateway = ExecutionGateway(
-            config=exec_config,
-            adapter_registry={adapter_name: hb_adapter},
-            repo=gateway_repo,
-        )
-        routing, _ = exec_config.resolve_routing("default")
-        execution_worker = ExecutionCommandWorker(
-            ops_db_path=ops_db_path,
-            gateway=gateway,
-            repo=gateway_repo,
-        )
-        sync_worker = ExchangeEventSyncWorker(
-            ops_db_path=ops_db_path,
-            adapter=hb_adapter,
-            repo=gateway_repo,
-            execution_account_id=routing.execution_account_id,
-        )
-        logger.info(
-            "execution gateway started | adapter=%s | url=%s | account=%s",
-            adapter_name, hummingbot_url, routing.execution_account_id,
-        )
+        try:
+            execution_config_path = str(root_dir / "config" / "execution.yaml")
+            exec_config = ExecutionConfigLoader(execution_config_path).load()
+            adapter_name = exec_config.default_adapter
+            routing, adapter_cfg = exec_config.resolve_routing("default")
+            hb_adapter = HummingbotApiPaperAdapter(
+                base_url=hummingbot_url,
+                connector=adapter_cfg.connector,
+            )
+            gateway_repo = GatewayCommandRepository(ops_db_path)
+            gateway = ExecutionGateway(
+                config=exec_config,
+                adapter_registry={adapter_name: hb_adapter},
+                repo=gateway_repo,
+            )
+            execution_worker = ExecutionCommandWorker(
+                ops_db_path=ops_db_path,
+                gateway=gateway,
+                repo=gateway_repo,
+            )
+            sync_worker = ExchangeEventSyncWorker(
+                ops_db_path=ops_db_path,
+                adapter=hb_adapter,
+                repo=gateway_repo,
+                execution_account_id=routing.execution_account_id,
+            )
+            logger.info(
+                "execution gateway started | adapter=%s | url=%s | account=%s",
+                adapter_name, hummingbot_url, routing.execution_account_id,
+            )
+        except Exception:
+            logger.exception("execution gateway init failed — gateway disabled")
     else:
-        logger.warning("HUMMINGBOT_BASE_URL not set — execution gateway disabled (paper commands will queue but not be sent)")
+        logger.info("HUMMINGBOT_BASE_URL not set — execution gateway disabled (paper commands will queue but not be sent)")
 
     async def _run_lifecycle_workers() -> None:
         while True:
@@ -245,6 +248,8 @@ async def _async_main(
     finally:
         await client.disconnect()
         watcher.stop()
+        if hb_adapter is not None:
+            hb_adapter.close()
 
 
 def main() -> None:

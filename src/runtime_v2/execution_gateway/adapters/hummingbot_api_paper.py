@@ -20,6 +20,9 @@ class HummingbotApiPaperAdapter(ExecutionAdapter):
         self._connector = connector
         self._client = httpx.Client(base_url=self._base_url, timeout=timeout)
 
+    def close(self) -> None:
+        self._client.close()
+
     def get_capabilities(self) -> AdapterCapabilities:
         return AdapterCapabilities(
             place_entry=True,
