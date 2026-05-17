@@ -134,7 +134,10 @@
       "Bash(curl -s http://localhost:8001/api/v1/status)",
       "Bash(curl -s http://localhost:8001/openapi.json)",
       "Bash(curl *)",
-      "Bash(docker exec *)"
+      "Bash(docker exec *)",
+      "Bash(grep -E \"__pycache__|\\\\.pyc$|\\\\.pyo$\")",
+      "Bash(grep -E \"__pycache__|\\\\.pyc$\")",
+      "Bash(grep -E \"\\\\.session$|\\\\.sqlite3$|\\\\.log$\")"
     ]
   }
 }

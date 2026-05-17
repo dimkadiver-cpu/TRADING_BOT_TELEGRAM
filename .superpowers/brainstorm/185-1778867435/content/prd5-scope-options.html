@@ -1,0 +1,64 @@
+<h2>PRD 5: dove mettere il confine?</h2>
+<p class="subtitle">Scegliamo il contratto che evita di riscrivere tutto quando cambi executor.</p>
+
+<div class="cards">
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">A · Hummingbot-first</div>
+        <div class="mockup-body">
+          <div class="placeholder">ops_execution_commands</div>
+          <div style="text-align:center;margin:8px 0">↓</div>
+          <div class="placeholder">Hummingbot Adapter</div>
+          <div style="text-align:center;margin:8px 0">↓</div>
+          <div class="placeholder">ops_exchange_events</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>PRD quasi Hummingbot</h3>
+      <p>Veloce, ma rischia di contaminare il contratto interno con dettagli Hummingbot.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">B · Gateway neutro + Hummingbot paper</div>
+        <div class="mockup-body">
+          <div class="placeholder">ops_execution_commands</div>
+          <div style="text-align:center;margin:8px 0">↓</div>
+          <div class="placeholder">Execution Gateway</div>
+          <div style="text-align:center;margin:8px 0">↓</div>
+          <div class="placeholder">HummingbotPaperAdapter</div>
+          <div style="text-align:center;margin:8px 0">↓</div>
+          <div class="placeholder">ops_exchange_events</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Neutro, MVP concreto</h3>
+      <p>Il contratto resta nostro. Hummingbot paper diventa il primo adapter reale.</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image">
+      <div class="mockup">
+        <div class="mockup-header">C · Multi-adapter subito</div>
+        <div class="mockup-body">
+          <div class="placeholder">Execution Gateway</div>
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <div class="placeholder" style="flex:1">HB Paper</div>
+            <div class="placeholder" style="flex:1">Internal</div>
+            <div class="placeholder" style="flex:1">Future</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>Astrazione ampia</h3>
+      <p>Più flessibile sulla carta, ma rischia di progettare adapter futuri senza evidenza.</p>
+    </div>
+  </div>
+</div>

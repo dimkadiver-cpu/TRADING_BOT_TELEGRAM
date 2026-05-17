@@ -15,8 +15,9 @@ venv/
 logs/
 *.log
 
-# Runtime / sessions 
+# Runtime / sessions
 *.session
+*.session-journal
 
 
 # OS / editor
@@ -28,26 +29,13 @@ Thumbs.db
 .pytest_cache/
 .test_tmp/
 .codex_tmp/
+test_output.txt
 
-# Freqtrade local runtime config / secrets
-freqtrade/user_data/config.json
-freqtrade/user_data/config.local.json
-freqtrade/user_data/dynamic_pairs.json
-
-# Freqtrade runtime state
-freqtrade/tradesv3.dryrun.sqlite
-freqtrade/tradesv3.dryrun.sqlite-shm
-freqtrade/tradesv3.dryrun.sqlite-wal
-freqtrade/user_data/data/
-freqtrade/user_data/backtest_results/
 
 # Database files (runtime state — never commit)
 *.sqlite3
 *.sqlite3-shm
 *.sqlite3-wal
-
-# Dedicated freqtrade virtualenv
-.venv-freqtrade/
 
 # Local user data
 .local/
@@ -62,12 +50,24 @@ parser_test/db/NEW_DB/
 .claude/worktrees/
 .claude/settings.json
 
+# Codex / Clone / Superpowers tool artifacts
+.codex/
+.clone/
 
+# Temporary root-level scripts (replay, check, debug one-offs)
+_tmp_*.py
+check_db.py
+db_schema.txt
+
+# Accidental files (pip install typos, etc.)
+=*
+
+# Hummingbot main stack runtime dirs
 hummingbot_config/
 hummingbot_conf/
 hummingbot_logs/
 
-# Hummingbot demo stack — runtime dirs
+# Hummingbot demo stack — runtime dirs and secrets
 hummingbot_demo_conf/
 hummingbot_demo_logs/
 hummingbot_demo_data/
