@@ -48,9 +48,11 @@ src/runtime_v2/
 │   ├── repositories.py    — GatewayCommandRepository
 │   ├── client_order_id.py — builder/parser `tsb:<chain>:<command>:<role>:<seq>`
 │   └── adapters/
-│       ├── base.py        — ExecutionAdapter ABC
-│       ├── fake.py        — test double
-│       └── hummingbot_api_paper.py — adapter Hummingbot API paper/testnet
+│       ├── base.py              — ExecutionAdapter ABC
+│       ├── fake.py              — test double
+│       ├── hummingbot_api.py    — adapter neutro Hummingbot API (capabilities da config)
+│       ├── hummingbot_api_paper.py — alias retrocompatibile → HummingbotApiAdapter
+│       └── factory.py           — build_adapter(name, cfg): crea adapter da AdapterConfig.type
 └── persistence/
     ├── raw_messages.py    — RawMessageRepository (adapter su storage)
     └── canonical_messages.py  — CanonicalMessageRepository (store risultati)
@@ -117,8 +119,10 @@ ExecutionCommandWorker.run_once()                                    ← PRD 05
 ExecutionGateway.process()
       ↓ risolve routing account da config/execution.yaml
       ↓ valida safety/capabilities/idempotenza
+      ↓ se mode=live: controlla allow_live_trading + env TSB_ALLOW_LIVE_TRADING
       ↓
-HummingbotApiPaperAdapter
+HummingbotApiAdapter (hummingbot_api_demo o hummingbot_api_paper)
+      ↓ capabilities iniettate dalla config, non hardcoded
       ↓ invia ordine/cancel/leverage a Hummingbot API
       ↓ aggiorna ops_execution_commands: SENT / DONE / RETRY / REVIEW_REQUIRED / WAITING_POSITION
 
@@ -165,7 +169,9 @@ Senza `HUMMINGBOT_BASE_URL`, i worker lifecycle restano attivi e i comandi paper
 | `EventProcessorResult` | Output di `LifecycleEventProcessor.process` — `new_lifecycle_state`, `new_be_protection_status`, `entry_avg_price`, `lifecycle_events`, `execution_commands`. |
 | ops-first atomicity | Pattern di scrittura PRD 04: prima scrivi su `ops.sqlite3` (INSERT OR IGNORE, idempotente), poi aggiorna `lifecycle_processed=1` su `parser.sqlite3`. Su retry dopo crash, i duplicati sono silenziosi. |
 | `ExecutionConfig` | Config PRD 05 caricata da `config/execution.yaml`: `default_adapter`, `account_routing`, `adapters`. |
-| `AdapterCapabilities` | Contratto capabilities adapter: entry, stop nativo, TP nativo, move stop, close partial/full, executor_position. |
+| `AdapterCapabilities` | Contratto capabilities adapter: entry, stop nativo, TP nativo, move stop, close partial/full, executor_position. Iniettate al costruttore, non hardcoded nell'adapter. |
+| `HummingbotApiAdapter` | Adapter neutro; sostituisce `HummingbotApiPaperAdapter` (ora alias). Riceve `capabilities` da `AdapterConfig`. |
+| `build_adapter(name, cfg)` | Factory in `adapters/factory.py`: crea l'adapter concreto da `AdapterConfig.type`. Aggiungere qui nuovi tipi. |
 | `client_order_id` | Identificatore deterministico inviato all'exchange: `tsb:<trade_chain_id>:<command_id>:<role>:<sequence>`. Serve per idempotenza e correlazione fill. |
 | `GatewayCommandRepository` | Repository PRD 05 su `ops_execution_commands`: batch pending/retry, mark sent/done/retry/review/waiting. |
 | `ExecutionCommandWorker` | Worker che consuma comandi neutrali PRD 04 e li passa all'`ExecutionGateway`. |
@@ -266,8 +272,11 @@ L'`ExchangeEventSyncWorker` legge i comandi già inviati con `client_order_id`, 
 - `config/channels.yaml` — mappa canali Telegram → trader_id, parser_profile, blacklist, topic_id
 - `config/operation_config.yaml` — config globale signal enrichment: account, trader registrati, blacklist, defaults policy/risk/management
 - `config/traders/<id>.yaml` — override per-trader di operation_config.yaml
-- `config/execution.yaml` — config PRD 05: adapter Hummingbot API, routing account, capabilities, retry, live safety
+- `config/execution.yaml` — config PRD 05: adapter Hummingbot API, routing account, capabilities, retry, live safety; default corrente: `hummingbot_api_demo` su porta 8001
 - `.env` — opzionale: `HUMMINGBOT_BASE_URL` abilita l'Execution Gateway; `HUMMINGBOT_SECRET` imposta Bearer token o Basic auth `username:password`
+- `.env.demo` — non versionato: credenziali stack demo (`BYBIT_DEMO_API_KEY`, `BYBIT_DEMO_API_SECRET`, password Docker)
+- `docker-compose.demo.yml` — stack Hummingbot demo parallelo: porta 8001, rete `hummingbot-demo-net`, volumi isolati
+- `hummingbot_demo_patch/bybit_perpetual_constants.py` — patch connector: aggiunge `bybit_perpetual_demo → https://api-demo.bybit.com/`
 - `db/migrations/023_runtime_v2_raw_messages.sql` — colonne runtime_v2 su `raw_messages`
 - `db/migrations/024_runtime_v2_canonical_messages.sql` — tabella `canonical_messages`
 - `db/migrations/025_drop_legacy_tables.sql` — DROP 16 tabelle legacy
@@ -312,22 +321,33 @@ tests/runtime_v2/
     ├── test_config_loader.py             ← config/execution.yaml
     ├── test_event_sync.py                ← ExchangeEventSyncWorker
     ├── test_gateway.py                   ← ExecutionGateway
-    ├── test_hummingbot_adapter.py        ← gated real API (`RUN_HUMMINGBOT_API_TESTS=1`)
+    ├── test_hummingbot_adapter.py        ← gated stack paper/testnet (`RUN_HUMMINGBOT_API_TESTS=1`)
+    ├── test_hummingbot_demo_gated.py     ← gated stack demo porta 8001 (`RUN_HUMMINGBOT_DEMO_TESTS=1`)
     └── test_integration.py               ← acceptance contract PRD 05
 
 src/telegram/tests/
 └── test_listener_process_item.py         ← _process_item con runtime_v2 pipeline
 ```
 
-Ultima validazione mirata: `pytest tests/runtime_v2 -v --tb=short` → 216 passed, 3 skipped.
+Ultima validazione mirata: `pytest tests/runtime_v2 -v --tb=short` → 232 passed, 3 skipped.
 
-I test gated Hummingbot richiedono API attiva:
+Test gated stack paper/testnet (porta 8000):
 
 ```bash
 RUN_HUMMINGBOT_API_TESTS=1 \
 HUMMINGBOT_API_URL=http://localhost:8000 \
 HUMMINGBOT_SECRET=admin:admin \
 pytest tests/runtime_v2/execution_gateway/test_hummingbot_adapter.py -v
+```
+
+Test gated stack demo (porta 8001):
+
+```bash
+RUN_HUMMINGBOT_DEMO_TESTS=1 \
+HUMMINGBOT_DEMO_API_URL=http://localhost:8001 \
+HUMMINGBOT_DEMO_CONNECTOR=bybit_perpetual_demo \
+HUMMINGBOT_DEMO_ACCOUNT=master_account \
+pytest tests/runtime_v2/execution_gateway/test_hummingbot_demo_gated.py -v -s
 ```
 
 ## Stato PRD
@@ -340,4 +360,5 @@ pytest tests/runtime_v2/execution_gateway/test_hummingbot_adapter.py -v
 | PRD 2.c | Legacy elimination (router rimosso, 16 tabelle droppate) | ✅ done |
 | PRD 03 | Signal Enrichment Layer — Gate 1 stateless | ✅ done |
 | PRD 04 | Lifecycle Entry Gate — stateful, ops-first atomicity, 3 worker | ✅ done |
-| PRD 05 | Execution Gateway — adapter Hummingbot API, command worker, event sync | ⚠️ implementato; ordine reale ancora dipende dalla salute dell'ambiente Hummingbot/API |
+| PRD 05 | Execution Gateway — adapter Hummingbot API, command worker, event sync | ✅ implementato; stack demo avviato su porta 8001 |
+| Demo stack | Hummingbot parallelo + connector `bybit_perpetual_demo` → `api-demo.bybit.com` | ✅ infrastruttura ok; ordini reali bloccati finché API key Bybit Demo non configurate |

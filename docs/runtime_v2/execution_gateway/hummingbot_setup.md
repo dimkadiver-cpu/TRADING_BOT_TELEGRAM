@@ -227,9 +227,9 @@ docker stop hummingbot
 
 ---
 
-## Passo successivo
+## Passo successivo — paper/testnet
 
-Con Hummingbot attivo e `curl -I http://localhost:8000/docs` che risponde OK, esegui il Task 4 del piano di gap closure: verifica degli endpoint e fix dei mismatch.
+Con Hummingbot attivo e `curl -I http://localhost:8000/docs` che risponde OK, esegui i test gated:
 
 ```bash
 RUN_HUMMINGBOT_API_TESTS=1 \
@@ -239,3 +239,25 @@ HUMMINGBOT_ACCOUNT=master_account \
 HUMMINGBOT_SECRET=admin:admin \
 pytest tests/runtime_v2/execution_gateway/test_hummingbot_adapter.py -v
 ```
+
+---
+
+## Stack demo (Bybit Main Demo)
+
+Per usare Bybit Main Demo invece di testnet, lo stack principale **non viene modificato**.
+Esiste uno stack parallelo separato su porta 8001 con connector `bybit_perpetual_demo`.
+
+Guida completa: `COMANDI_DEMO.md`.
+
+Differenze rispetto allo stack paper/testnet:
+
+| Aspetto | Paper/Testnet | Demo |
+|---|---|---|
+| Compose | `docker-compose.yml` | `docker-compose.demo.yml` |
+| Porta backend-api | 8000 | 8001 |
+| Connector | `bybit_perpetual_testnet` | `bybit_perpetual_demo` |
+| URL exchange | `api-testnet.bybit.com` | `api-demo.bybit.com` |
+| Patch necessaria | No | Sì (volume mount `bybit_perpetual_constants.py`) |
+| Broker | EMQX 5 | Mosquitto 2.0 |
+| Network Docker | `hbot-network` | `hummingbot-demo-net` |
+| Env file | `.env` | `.env.demo` |

@@ -5,10 +5,10 @@
 
 services:
   hummingbot-demo:
-    image: hummingbot/hummingbot:2.3.0
+    image: hummingbot/hummingbot:latest
     container_name: hummingbot-demo
     volumes:
-      - ./hummingbot_demo_patch/bybit_perpetual_constants.py:/hummingbot_src/hummingbot/connector/derivative/bybit_perpetual/bybit_perpetual_constants.py:ro
+      - ./hummingbot_demo_patch/bybit_perpetual_constants.py:/home/hummingbot/hummingbot/connector/derivative/bybit_perpetual/bybit_perpetual_constants.py:ro
       - ./hummingbot_demo_conf:/conf
       - ./hummingbot_demo_logs:/logs
       - ./hummingbot_demo_data:/data
@@ -22,14 +22,18 @@ services:
     restart: unless-stopped
 
   hummingbot-demo-backend-api:
-    image: hummingbot/backend-api:latest
+    image: hummingbot/hummingbot-api:latest
     container_name: hummingbot-demo-backend-api
     ports:
       - "8001:8000"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
     environment:
       - BROKER_HOST=hummingbot-demo-broker
       - BROKER_PORT=1883
       - DATABASE_URL=postgresql://hummingbot:${HUMMINGBOT_DEMO_DB_PASSWORD}@hummingbot-demo-postgres/hummingbot_demo
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - hummingbot-demo-net
     depends_on:

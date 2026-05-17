@@ -109,7 +109,32 @@
       "Bash(pip list *)",
       "Bash(curl -s http://localhost:8000/health)",
       "Bash(curl -s http://localhost:15888)",
-      "Bash(Remove-Item *)"
+      "Bash(Remove-Item *)",
+      "Read(//c/Users/dimka/.claude/plugins/**)",
+      "Read(//c/Users/dimka/.claude/skills/**)",
+      "Bash(gh issue *)",
+      "PowerShell(docker compose *)",
+      "PowerShell(mkdir -p \"C:\\\\TeleSignalBot\\\\hummingbot_demo_conf\", \"C:\\\\TeleSignalBot\\\\hummingbot_demo_logs\", \"C:\\\\TeleSignalBot\\\\hummingbot_demo_data\" -ErrorAction SilentlyContinue; Get-ChildItem -Path \"C:\\\\TeleSignalBot\" -Directory | Where-Object { $_.Name -match \"hummingbot_demo\" } | ForEach-Object { Write-Output \"Created: $\\($_.FullName\\)\" })",
+      "PowerShell(Get-ChildItem -Path \"C:\\\\TeleSignalBot\" -Force | Where-Object { $_.Name -match \"demo\" -or $_.Name -eq \".env.demo.example\" } | Select-Object FullName, @{N=\"Type\";E={if\\($_.PSIsContainer\\){\"Dir\"}else{\"File\"}}}; Write-Output \"`n--- hummingbot_demo_patch contents ---\"; Get-ChildItem -Path \"C:\\\\TeleSignalBot\\\\hummingbot_demo_patch\" -Force | Select-Object Name)",
+      "Bash(Select-Object -First 20)",
+      "PowerShell(Get-Content *)",
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(docker pull *)",
+      "Bash(docker run *)",
+      "Bash(docker create *)",
+      "Bash(docker export *)",
+      "Bash(tar -t)",
+      "Bash(docker rm *)",
+      "Bash(docker cp *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:8001/docs)",
+      "Bash(RUN_HUMMINGBOT_DEMO_TESTS=1 HUMMINGBOT_DEMO_API_URL=http://localhost:8001 HUMMINGBOT_SECRET=changeme_hbot_secret python -m pytest tests/runtime_v2/execution_gateway/test_hummingbot_demo_gated.py::test_api_reachable tests/runtime_v2/execution_gateway/test_hummingbot_demo_gated.py::test_connector_available -v)",
+      "Bash(RUN_HUMMINGBOT_DEMO_TESTS=1 HUMMINGBOT_DEMO_API_URL=http://localhost:8001 HUMMINGBOT_SECRET=changeme_hbot_secret python -m pytest tests/runtime_v2/execution_gateway/test_hummingbot_demo_gated.py::test_01_api_reachable tests/runtime_v2/execution_gateway/test_hummingbot_demo_gated.py::test_02_connector_available -v)",
+      "Bash(docker exec hummingbot-demo *)",
+      "Bash(curl -s http://localhost:8001/api/v1/status)",
+      "Bash(curl -s http://localhost:8001/openapi.json)",
+      "Bash(curl *)",
+      "Bash(docker exec *)"
     ]
   }
 }
