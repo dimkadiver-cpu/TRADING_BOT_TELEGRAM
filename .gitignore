@@ -66,3 +66,9 @@ parser_test/db/NEW_DB/
 hummingbot_config/
 hummingbot_conf/
 hummingbot_logs/
+
+# Hummingbot demo stack — runtime dirs
+hummingbot_demo_conf/
+hummingbot_demo_logs/
+hummingbot_demo_data/
+.env.demo
