@@ -200,6 +200,50 @@ def test_ac3_signal_creates_entry_commands(dbs):
     assert "PLACE_TAKE_PROFIT" in cmd_types
 
 
+def test_ac3b_signal_commands_are_hummingbot_gateway_ready(dbs):
+    parser_db, ops_db = dbs
+    enriched = _make_enriched_signal(
+        enrichment_id=31,
+        entry_price=50000.0,
+        sl_price=49000.0,
+        tp_prices=[51000.0, 52000.0],
+    )
+    _insert_enriched_row(parser_db, 31, enriched)
+    worker = _make_full_worker(parser_db, ops_db)
+    worker.run_once()
+
+    from src.runtime_v2.execution_gateway.adapters.hummingbot_api_paper import (
+        HummingbotApiPaperAdapter,
+    )
+
+    adapter = HummingbotApiPaperAdapter(
+        base_url="http://localhost:8000",
+        connector="bybit_perpetual_testnet",
+    )
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        """
+        SELECT command_id, command_type, payload_json
+        FROM ops_execution_commands
+        ORDER BY command_id
+        """
+    ).fetchall()
+    conn.close()
+    try:
+        for command_id, command_type, payload_json in rows:
+            body = adapter._build_order_body(
+                command_type,
+                json.loads(payload_json),
+                f"tsb:1:{command_id}:entry:1",
+                "master_account",
+            )
+            assert body["amount"] > 0
+            if command_type == "PLACE_TAKE_PROFIT":
+                assert body["price"] in {51000.0, 52000.0}
+    finally:
+        adapter.close()
+
+
 # AC6: Timeout su WAITING_ENTRY → EXPIRED + CANCEL_PENDING_ENTRY
 def test_ac6_timeout_produces_cancel_and_expired(dbs):
     _, ops_db = dbs

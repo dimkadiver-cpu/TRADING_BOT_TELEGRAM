@@ -119,7 +119,7 @@ class LifecycleEntryGate:
             ),
         ]
 
-        commands = self._build_entry_commands(enriched)
+        commands = self._build_entry_commands(enriched, decision)
 
         return SignalGateResult(
             trade_chain=chain,
@@ -147,7 +147,11 @@ class LifecycleEntryGate:
             review_reason=reason,
         )
 
-    def _build_entry_commands(self, enriched: EnrichedCanonicalMessage) -> list[ExecutionCommand]:
+    def _build_entry_commands(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        decision,
+    ) -> list[ExecutionCommand]:
         signal = enriched.enriched_signal
         management_plan = enriched.management_plan or ManagementPlanConfig()
         eid = enriched.enrichment_id
@@ -156,13 +160,19 @@ class LifecycleEntryGate:
 
         tp_count = len(signal.take_profits)
         close_pcts = self._get_close_pcts(management_plan, tp_count)
+        size_usdt = float(decision.size_usdt or 0.0)
+        fallback_entry_price = float(decision.risk_snapshot.get("entry_price") or 0.0)
+        total_qty = self._qty_from_notional(size_usdt, fallback_entry_price)
 
         for leg in signal.entries:
+            leg_price = leg.price.value if leg.price else fallback_entry_price
+            leg_notional = size_usdt * float(leg.weight or 0.0)
             payload = {
                 "symbol": signal.symbol,
                 "side": signal.side,
                 "entry_type": leg.entry_type,
                 "price": leg.price.value if leg.price else None,
+                "qty": self._qty_from_notional(leg_notional, leg_price),
                 "weight": leg.weight,
                 "sequence": leg.sequence,
             }
@@ -178,6 +188,8 @@ class LifecycleEntryGate:
                 "symbol": signal.symbol,
                 "side": signal.side,
                 "stop_price": signal.stop_loss.price.value,
+                "qty": total_qty,
+                "reduce_only": True,
             }
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
@@ -188,12 +200,16 @@ class LifecycleEntryGate:
 
         for i, tp in enumerate(signal.take_profits):
             close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
+            price = tp.price.value if tp.price else None
             payload = {
                 "symbol": signal.symbol,
                 "side": signal.side,
-                "tp_price": tp.price.value if tp.price else None,
+                "price": price,
+                "tp_price": price,
                 "sequence": tp.sequence,
                 "close_pct": close_pct,
+                "qty": total_qty * float(close_pct) / 100.0,
+                "reduce_only": True,
             }
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
@@ -203,6 +219,12 @@ class LifecycleEntryGate:
             ))
 
         return commands
+
+    @staticmethod
+    def _qty_from_notional(notional: float, price: float) -> float:
+        if notional <= 0 or price <= 0:
+            return 0.0
+        return notional / price
 
     @staticmethod
     def _get_close_pcts(management_plan: ManagementPlanConfig, tp_count: int) -> list[float]:
