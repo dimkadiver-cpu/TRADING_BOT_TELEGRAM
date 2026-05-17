@@ -68,7 +68,7 @@ def test_place_entry_pending_to_sent(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"hummingbot_api_paper": FakeAdapter()},
+        adapter_registry={"hummingbot_api_demo": FakeAdapter()},
         repo=repo,
     )
     cmd = repo.get_pending_batch()[0]
@@ -97,7 +97,7 @@ def test_capability_missing_produces_review_required(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"hummingbot_api_paper": FakeAdapter(
+        adapter_registry={"hummingbot_api_demo": FakeAdapter(
             capabilities=AdapterCapabilities(protective_stop_native=False)
         )},
         repo=repo,
@@ -126,7 +126,7 @@ def test_adapter_error_sets_retry(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"hummingbot_api_paper": FakeAdapter(simulate_timeout=True)},
+        adapter_registry={"hummingbot_api_demo": FakeAdapter(simulate_timeout=True)},
         repo=repo,
     )
     cmd = repo.get_pending_batch()[0]

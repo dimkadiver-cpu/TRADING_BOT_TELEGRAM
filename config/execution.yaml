@@ -1,10 +1,10 @@
 # config/execution.yaml
 execution:
-  default_adapter: hummingbot_api_paper
+  default_adapter: hummingbot_api_demo
 
   account_routing:
     default:
-      adapter: hummingbot_api_paper
+      adapter: hummingbot_api_demo
       execution_account_id: master_account
 
   adapters:
@@ -28,6 +28,42 @@ execution:
         take_profit_native: true
         bracket_order: false
         move_stop: true
+        close_partial: true
+        close_full: true
+        executor_position: false
+
+      take_profit:
+        min_order_policy: review
+        residual_policy: assign_to_last_tp
+
+      position_management:
+        same_symbol_same_side_policy: block
+        same_symbol_opposite_side_policy: allow_if_hedge_mode
+        require_client_order_id_correlation: true
+
+      live_safety:
+        allow_live_trading: false
+
+    hummingbot_api_demo:
+      type: hummingbot_api
+      mode: demo
+      base_url: http://localhost:8001
+      connector: bybit_perpetual_demo
+      leverage: 1
+
+      entry_execution:
+        mode: b_entry_stop_then_tp
+
+      retry:
+        max_attempts: 3
+        backoff_seconds: [30, 90, 300]
+
+      capabilities:
+        place_entry: true
+        protective_stop_native: false
+        take_profit_native: false
+        bracket_order: false
+        move_stop: false
         close_partial: true
         close_full: true
         executor_position: false
