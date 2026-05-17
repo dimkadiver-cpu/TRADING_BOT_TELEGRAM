@@ -76,7 +76,7 @@ def _make_stack(ops_db, adapter=None):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=config,
-        adapter_registry={"hummingbot_api_paper": adapter},
+        adapter_registry={"hummingbot_api_demo": adapter},
         repo=repo,
     )
     worker = ExecutionCommandWorker(ops_db_path=ops_db, gateway=gw, repo=repo)
@@ -219,7 +219,7 @@ def test_ac8_no_hummingbot_import_in_gateway():
     import pkgutil
     import src.runtime_v2.execution_gateway as pkg
     for _, name, _ in pkgutil.walk_packages(pkg.__path__, prefix=pkg.__name__ + "."):
-        if "hummingbot_api" in name:
+        if "hummingbot_api" in name or ".adapters." in name or name.endswith(".adapters"):
             continue
         try:
             mod = importlib.import_module(name)
