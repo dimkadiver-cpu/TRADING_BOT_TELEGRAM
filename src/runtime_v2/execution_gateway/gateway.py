@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import logging
+import os
 from datetime import datetime, timedelta, timezone
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
@@ -57,12 +58,17 @@ class ExecutionGateway:
             )
             return
 
-        # Live safety check — always block live mode in MVP
         if adapter_cfg.mode == "live":
-            self._repo.mark_review_required(
-                cmd.command_id, reason="live_trading_blocked_mvp"
-            )
-            return
+            if not adapter_cfg.live_safety.allow_live_trading:
+                self._repo.mark_review_required(
+                    cmd.command_id, reason="live_trading_not_allowed_in_config"
+                )
+                return
+            if os.environ.get("TSB_ALLOW_LIVE_TRADING") != "YES_I_UNDERSTAND":
+                self._repo.mark_review_required(
+                    cmd.command_id, reason="live_trading_env_gate_not_set"
+                )
+                return
 
         # Capability check
         cap_field = _CAPABILITY_MAP.get(cmd.command_type)
