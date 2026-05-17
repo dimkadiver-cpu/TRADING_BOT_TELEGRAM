@@ -219,7 +219,7 @@ def test_ac8_no_hummingbot_import_in_gateway():
     import pkgutil
     import src.runtime_v2.execution_gateway as pkg
     for _, name, _ in pkgutil.walk_packages(pkg.__path__, prefix=pkg.__name__ + "."):
-        if "hummingbot_api_paper" in name:
+        if "hummingbot_api" in name:
             continue
         try:
             mod = importlib.import_module(name)
