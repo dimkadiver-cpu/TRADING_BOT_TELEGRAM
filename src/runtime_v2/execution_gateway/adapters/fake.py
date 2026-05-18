@@ -25,6 +25,7 @@ class FakeAdapter(ExecutionAdapter):
             close_partial=True,
             close_full=True,
             executor_position=False,
+            sync_protective_orders=True,
         )
         self._fail_on = fail_on or set()
         self._simulate_timeout = simulate_timeout
@@ -60,6 +61,8 @@ class FakeAdapter(ExecutionAdapter):
             adapter_order_id=f"hb_{client_order_id}",
             status="OPEN",
         )
+        if command_type == "SYNC_PROTECTIVE_ORDERS":
+            order = order.model_copy(update={"status": "FILLED", "filled_qty": 1.0, "average_price": 0.0})
         self._orders[client_order_id] = order
         return AdapterResult(
             success=True,
