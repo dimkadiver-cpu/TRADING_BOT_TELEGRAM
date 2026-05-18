@@ -14,16 +14,17 @@ class StatusMapper:
         "rejected": "FAILED",
     }
 
-    @classmethod
-    def map(cls, ccxt_order: dict, client_order_id: str | None = None) -> RawAdapterOrder:
-        average = ccxt_order.get("average")
+    @staticmethod
+    def map(ccxt_order: dict, *, client_order_id: str = "") -> RawAdapterOrder:
+        raw_status = str(ccxt_order.get("status") or "open").lower()
+        avg = ccxt_order.get("average")
 
         return RawAdapterOrder(
-            client_order_id=client_order_id or ccxt_order.get("clientOrderId"),
-            exchange_order_id=ccxt_order.get("id"),
-            status=cls._STATUS_MAP.get(ccxt_order.get("status"), "OPEN"),
-            filled_qty=ccxt_order.get("filled", 0.0),
-            average_price=float(average) if average else None,
+            client_order_id=client_order_id or str(ccxt_order.get("clientOrderId") or ""),
+            exchange_order_id=str(ccxt_order.get("id") or ""),
+            status=StatusMapper._STATUS_MAP.get(raw_status, "OPEN"),
+            filled_qty=float(ccxt_order.get("filled") or 0.0),
+            average_price=float(avg) if avg else None,
         )
 
 

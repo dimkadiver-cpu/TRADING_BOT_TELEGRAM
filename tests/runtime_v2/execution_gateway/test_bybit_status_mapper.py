@@ -63,3 +63,32 @@ def test_status_mapper_uses_client_order_id():
 def test_status_mapper_unknown_status_defaults_open():
     raw = StatusMapper.map(_order("pending"), client_order_id="tsb:1:2:entry:1")
     assert raw.status == "OPEN"
+
+
+def test_status_mapper_normalizes_uppercase_status():
+    raw = StatusMapper.map(_order("CLOSED"), client_order_id="tsb:1:2:entry:1")
+    assert raw.status == "FILLED"
+
+
+@pytest.mark.parametrize("ccxt_order", [
+    {"id": "ord123", "filled": 0.0, "average": None},
+    {"id": "ord123", "status": None, "filled": 0.0, "average": None},
+])
+def test_status_mapper_missing_status_defaults_open(ccxt_order):
+    raw = StatusMapper.map(ccxt_order, client_order_id="tsb:1:2:entry:1")
+    assert raw.status == "OPEN"
+
+
+def test_status_mapper_uses_fallback_client_order_id():
+    raw = StatusMapper.map({"clientOrderId": "tsb:fallback", "status": "open"})
+    assert raw.client_order_id == "tsb:fallback"
+
+
+def test_status_mapper_missing_id_maps_empty_exchange_order_id():
+    raw = StatusMapper.map({"status": "open"}, client_order_id="tsb:1:2:entry:1")
+    assert raw.exchange_order_id == ""
+
+
+def test_status_mapper_converts_string_filled_to_float():
+    raw = StatusMapper.map(_order("closed", filled="0.05"), client_order_id="tsb:1:2:entry:1")
+    assert raw.filled_qty == 0.05
