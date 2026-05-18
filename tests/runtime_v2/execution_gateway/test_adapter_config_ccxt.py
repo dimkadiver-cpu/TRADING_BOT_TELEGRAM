@@ -69,3 +69,22 @@ def test_adapter_config_base_url_still_accepted_when_provided():
         "base_url": "http://localhost:8001",
     })
     assert cfg.base_url == "http://localhost:8001"
+
+
+def test_adapter_config_hummingbot_api_without_base_url_fails_validation():
+    with pytest.raises(ValueError, match="base_url is required"):
+        AdapterConfig.model_validate({
+            "type": "hummingbot_api",
+            "mode": "demo",
+            "connector": "bybit_perpetual_demo",
+        })
+
+
+def test_adapter_config_hummingbot_api_empty_base_url_fails_validation():
+    with pytest.raises(ValueError, match="base_url is required"):
+        AdapterConfig.model_validate({
+            "type": "hummingbot_api",
+            "mode": "demo",
+            "connector": "bybit_perpetual_demo",
+            "base_url": "",
+        })

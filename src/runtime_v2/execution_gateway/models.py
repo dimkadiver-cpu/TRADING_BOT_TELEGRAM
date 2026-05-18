@@ -1,7 +1,7 @@
 # src/runtime_v2/execution_gateway/models.py
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class AdapterCapabilities(BaseModel):
@@ -64,6 +64,13 @@ class AdapterConfig(BaseModel):
         if v == "":
             return None
         return v
+
+    @model_validator(mode="after")
+    def _require_base_url_for_hummingbot_api(self) -> AdapterConfig:
+        if self.type == "hummingbot_api" and not self.base_url:
+            raise ValueError("base_url is required for hummingbot_api adapter config")
+        return self
+
     retry: RetryConfig = RetryConfig()
     capabilities: AdapterCapabilities = AdapterCapabilities()
     take_profit: TakeProfitConfig = TakeProfitConfig()
