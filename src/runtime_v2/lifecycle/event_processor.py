@@ -22,6 +22,10 @@ class EventProcessorResult:
     current_stop_price: float | None
     lifecycle_events: list[LifecycleEvent]
     execution_commands: list[ExecutionCommand]
+    new_filled_entry_qty: float | None = None
+    new_open_position_qty: float | None = None
+    new_closed_position_qty: float | None = None
+    release_waiting_position: bool = False
 
 
 class LifecycleEventProcessor:

@@ -118,8 +118,16 @@ class LifecycleEventWorker:
         conn = sqlite3.connect(self._ops_db)
         try:
             with conn:
-                if result.new_lifecycle_state is not None or result.new_be_protection_status is not None or \
-                   result.entry_avg_price is not None or result.current_stop_price is not None:
+                has_chain_update = (
+                    result.new_lifecycle_state is not None
+                    or result.new_be_protection_status is not None
+                    or result.entry_avg_price is not None
+                    or result.current_stop_price is not None
+                    or result.new_filled_entry_qty is not None
+                    or result.new_open_position_qty is not None
+                    or result.new_closed_position_qty is not None
+                )
+                if has_chain_update:
                     fields = ["updated_at=?"]
                     vals: list = [now]
                     if result.new_lifecycle_state is not None:
@@ -134,10 +142,26 @@ class LifecycleEventWorker:
                     if result.current_stop_price is not None:
                         fields.append("current_stop_price=?")
                         vals.append(result.current_stop_price)
+                    if result.new_filled_entry_qty is not None:
+                        fields.append("filled_entry_qty=?")
+                        vals.append(result.new_filled_entry_qty)
+                    if result.new_open_position_qty is not None:
+                        fields.append("open_position_qty=?")
+                        vals.append(result.new_open_position_qty)
+                    if result.new_closed_position_qty is not None:
+                        fields.append("closed_position_qty=?")
+                        vals.append(result.new_closed_position_qty)
                     vals.append(chain_id)
                     conn.execute(
                         f"UPDATE ops_trade_chains SET {', '.join(fields)} WHERE trade_chain_id=?",
                         vals,
+                    )
+
+                if result.release_waiting_position:
+                    conn.execute(
+                        "UPDATE ops_execution_commands SET status='PENDING', updated_at=? "
+                        "WHERE trade_chain_id=? AND status='WAITING_POSITION'",
+                        (now, chain_id),
                     )
 
                 for event in result.lifecycle_events:

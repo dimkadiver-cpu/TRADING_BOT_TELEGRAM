@@ -174,3 +174,40 @@ def test_tp_filled_with_be_trigger_does_not_set_lifecycle_state_to_be():
     # lifecycle_state must be PARTIALLY_CLOSED, never BE_MOVE_PENDING
     assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
     assert result.new_be_protection_status == "BE_MOVE_PENDING"
+
+
+from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+
+
+def test_event_processor_result_has_qty_fields():
+    r = EventProcessorResult(
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[],
+        execution_commands=[],
+        new_filled_entry_qty=0.01,
+        new_open_position_qty=0.01,
+        new_closed_position_qty=0.0,
+        release_waiting_position=True,
+    )
+    assert r.new_filled_entry_qty == 0.01
+    assert r.new_open_position_qty == 0.01
+    assert r.new_closed_position_qty == 0.0
+    assert r.release_waiting_position is True
+
+
+def test_event_processor_result_qty_defaults_to_none():
+    r = EventProcessorResult(
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[],
+        execution_commands=[],
+    )
+    assert r.new_filled_entry_qty is None
+    assert r.new_open_position_qty is None
+    assert r.new_closed_position_qty is None
+    assert r.release_waiting_position is False
