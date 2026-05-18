@@ -475,3 +475,122 @@ def test_move_to_be_does_not_set_lifecycle_state():
     assert cr.new_lifecycle_state is None
     # Must set be_protection_status
     assert cr.new_be_protection_status == "BE_MOVE_PENDING"
+
+
+# ── execution_mode tests (Mode A / B / C) ─────────────────────────────────────
+
+def _make_risk_decision(size_usdt=500.0, entry_price=50000.0):
+    from src.runtime_v2.lifecycle.risk_capacity import RiskDecision
+    return RiskDecision(
+        passed=True,
+        reason=None,
+        size_usdt=size_usdt,
+        leverage=10,
+        risk_snapshot={"entry_price": entry_price, "size_usdt": size_usdt},
+    )
+
+
+def _make_enriched_signal_for_mode(tp_count: int = 2):
+    from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+    from src.runtime_v2.signal_enrichment.models import (
+        EnrichedCanonicalMessage, EnrichedEntryLeg, EnrichedSignalPayload, ManagementPlanConfig,
+    )
+
+    entries = [EnrichedEntryLeg(
+        sequence=1, entry_type="LIMIT",
+        price=Price(raw="50000", value=50000.0),
+        weight=1.0,
+    )]
+    tps = [
+        TakeProfit(sequence=i + 1, price=Price(raw=str(51000 + i * 1000), value=51000.0 + i * 1000))
+        for i in range(tp_count)
+    ]
+    sl = StopLoss(price=Price(raw="49000", value=49000.0))
+    signal = EnrichedSignalPayload(
+        symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+        entries=entries, take_profits=tps, stop_loss=sl,
+    )
+    mp = ManagementPlanConfig()
+    return EnrichedCanonicalMessage(
+        enrichment_id=1, canonical_message_id=2, raw_message_id=3,
+        trader_id="t1", account_id="acc1",
+        primary_class="SIGNAL", enrichment_decision="PASS",
+        enriched_signal=signal, management_plan=mp,
+        policy_snapshot={},
+    )
+
+
+def _make_gate_with_mode(execution_mode: str):
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(),
+        execution_mode=execution_mode,
+    )
+    gate._risk.validate = lambda *a, **kw: _make_risk_decision()
+    return gate
+
+
+def test_mode_a_sl_and_tp_are_waiting_position():
+    gate = _make_gate_with_mode("a_sequential")
+    enriched = _make_enriched_signal_for_mode(tp_count=2)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
+    sl_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_PROTECTIVE_STOP")
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_TAKE_PROFIT"]
+    assert entry_cmd.status == "PENDING"
+    assert sl_cmd.status == "WAITING_POSITION"
+    assert all(c.status == "WAITING_POSITION" for c in tp_cmds)
+
+
+def test_mode_b_sl_pending_tp_waiting_position():
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    enriched = _make_enriched_signal_for_mode(tp_count=2)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
+    sl_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_PROTECTIVE_STOP")
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_TAKE_PROFIT"]
+    assert entry_cmd.status == "PENDING"
+    assert sl_cmd.status == "PENDING"
+    assert all(c.status == "WAITING_POSITION" for c in tp_cmds)
+
+
+def test_mode_c_entry_has_native_tpsl_no_sl_command():
+    gate = _make_gate_with_mode("c_native_attached_tpsl")
+    enriched = _make_enriched_signal_for_mode(tp_count=2)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    cmd_types = [c.command_type for c in result.execution_commands]
+    assert "PLACE_PROTECTIVE_STOP" not in cmd_types
+    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
+    entry_payload = json.loads(entry_cmd.payload_json)
+    assert entry_payload["native_attached_tpsl"] is True
+    assert "attached_stop_loss" in entry_payload
+    assert "attached_take_profit" in entry_payload
+    # With 2 TPs: last is attached, first is WAITING_POSITION
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_TAKE_PROFIT"]
+    assert len(tp_cmds) == 1
+    assert tp_cmds[0].status == "WAITING_POSITION"
+
+
+def test_mode_c_single_tp_no_intermediate_commands():
+    gate = _make_gate_with_mode("c_native_attached_tpsl")
+    enriched = _make_enriched_signal_for_mode(tp_count=1)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    cmd_types = [c.command_type for c in result.execution_commands]
+    assert "PLACE_TAKE_PROFIT" not in cmd_types
+    assert "PLACE_PROTECTIVE_STOP" not in cmd_types
+
+
+def test_process_signal_writes_execution_mode_to_chain():
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    enriched = _make_enriched_signal_for_mode()
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "b_entry_stop_then_tp"

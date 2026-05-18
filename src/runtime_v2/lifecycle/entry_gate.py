@@ -48,9 +48,15 @@ class UpdateGateResult:
 
 
 class LifecycleEntryGate:
-    def __init__(self, risk_engine: RiskCapacityEngine, exchange_port: ExchangeDataPort) -> None:
+    def __init__(
+        self,
+        risk_engine: RiskCapacityEngine,
+        exchange_port: ExchangeDataPort,
+        execution_mode: str = "a_sequential",
+    ) -> None:
         self._risk = risk_engine
         self._port = exchange_port
+        self._execution_mode = execution_mode
 
     # ── SIGNAL ────────────────────────────────────────────────────────────────
 
@@ -83,6 +89,10 @@ class LifecycleEntryGate:
                 hours=management_plan.pending_timeout_hours
             )
 
+        size_usdt = float(decision.size_usdt or 0.0)
+        fallback_entry_price = float(decision.risk_snapshot.get("entry_price") or 1.0)
+        planned_qty = size_usdt / fallback_entry_price if fallback_entry_price > 0 else 0.0
+
         chain = TradeChain(
             source_enrichment_id=eid,
             canonical_message_id=enriched.canonical_message_id,
@@ -101,6 +111,8 @@ class LifecycleEntryGate:
             entry_timeout_at=timeout_at,
             management_plan_json=management_plan.model_dump_json(),
             risk_snapshot_json=json.dumps(decision.risk_snapshot),
+            planned_entry_qty=planned_qty,
+            execution_mode=self._execution_mode,
         )
 
         events = [
@@ -155,6 +167,7 @@ class LifecycleEntryGate:
         signal = enriched.enriched_signal
         management_plan = enriched.management_plan or ManagementPlanConfig()
         eid = enriched.enrichment_id
+        mode = self._execution_mode
 
         commands: list[ExecutionCommand] = []
 
@@ -164,10 +177,17 @@ class LifecycleEntryGate:
         fallback_entry_price = float(decision.risk_snapshot.get("entry_price") or 0.0)
         total_qty = self._qty_from_notional(size_usdt, fallback_entry_price)
 
+        sl_price = (
+            signal.stop_loss.price.value
+            if signal.stop_loss and signal.stop_loss.price else None
+        )
+        last_tp = signal.take_profits[-1] if signal.take_profits else None
+
+        # ── ENTRY LEGS ──────────────────────────────────────────────────────────
         for leg in signal.entries:
             leg_price = leg.price.value if leg.price else fallback_entry_price
             leg_notional = size_usdt * float(leg.weight or 0.0)
-            payload = {
+            payload: dict = {
                 "symbol": signal.symbol,
                 "side": signal.side,
                 "entry_type": leg.entry_type,
@@ -176,45 +196,58 @@ class LifecycleEntryGate:
                 "weight": leg.weight,
                 "sequence": leg.sequence,
             }
+            if mode == "c_native_attached_tpsl":
+                payload["native_attached_tpsl"] = True
+                payload["attached_stop_loss"] = sl_price
+                if last_tp and last_tp.price:
+                    payload["attached_take_profit"] = last_tp.price.value
+                    payload["attached_take_profit_sequence"] = last_tp.sequence
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
                 command_type="PLACE_ENTRY",
+                status="PENDING",
                 payload_json=json.dumps(payload),
                 idempotency_key=f"place_entry:{eid}:leg{leg.sequence}",
             ))
 
-        if signal.stop_loss and signal.stop_loss.price:
-            payload = {
-                "symbol": signal.symbol,
-                "side": signal.side,
-                "stop_price": signal.stop_loss.price.value,
-                "qty": total_qty,
-                "reduce_only": True,
-            }
+        # ── PROTECTIVE STOP ─────────────────────────────────────────────────────
+        if sl_price and mode != "c_native_attached_tpsl":
+            sl_status: str = "WAITING_POSITION" if mode == "a_sequential" else "PENDING"
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
                 command_type="PLACE_PROTECTIVE_STOP",
-                payload_json=json.dumps(payload),
+                status=sl_status,
+                payload_json=json.dumps({
+                    "symbol": signal.symbol,
+                    "side": signal.side,
+                    "stop_price": sl_price,
+                    "qty": total_qty,
+                    "reduce_only": True,
+                }),
                 idempotency_key=f"place_stop:{eid}",
             ))
 
+        # ── TAKE PROFITS ────────────────────────────────────────────────────────
         for i, tp in enumerate(signal.take_profits):
+            is_last = (i == len(signal.take_profits) - 1)
+            if mode == "c_native_attached_tpsl" and is_last:
+                continue  # last TP is attached to entry in Mode C
             close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
             price = tp.price.value if tp.price else None
-            payload = {
-                "symbol": signal.symbol,
-                "side": signal.side,
-                "price": price,
-                "tp_price": price,
-                "sequence": tp.sequence,
-                "close_pct": close_pct,
-                "qty": total_qty * float(close_pct) / 100.0,
-                "reduce_only": True,
-            }
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
                 command_type="PLACE_TAKE_PROFIT",
-                payload_json=json.dumps(payload),
+                status="WAITING_POSITION",
+                payload_json=json.dumps({
+                    "symbol": signal.symbol,
+                    "side": signal.side,
+                    "price": price,
+                    "tp_price": price,
+                    "sequence": tp.sequence,
+                    "close_pct": close_pct,
+                    "qty": total_qty * float(close_pct) / 100.0,
+                    "reduce_only": True,
+                }),
                 idempotency_key=f"place_tp:{eid}:tp{tp.sequence}",
             ))
 
@@ -708,8 +741,9 @@ class LifecycleGateWorker:
                             trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
                             entry_avg_price, current_stop_price, expected_stop_price,
                             be_protection_status, entry_timeout_at, management_plan_json,
-                            risk_snapshot_json, created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            risk_snapshot_json, planned_entry_qty, execution_mode,
+                            created_at, updated_at
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                         """,
                         (
                             c.source_enrichment_id, c.canonical_message_id, c.raw_message_id,
@@ -718,7 +752,9 @@ class LifecycleGateWorker:
                             c.entry_avg_price, c.current_stop_price, c.expected_stop_price,
                             c.be_protection_status,
                             c.entry_timeout_at.isoformat() if c.entry_timeout_at else None,
-                            c.management_plan_json, c.risk_snapshot_json, now, now,
+                            c.management_plan_json, c.risk_snapshot_json,
+                            c.planned_entry_qty, c.execution_mode,
+                            now, now,
                         ),
                     )
                     if cursor.lastrowid and cursor.rowcount > 0:
