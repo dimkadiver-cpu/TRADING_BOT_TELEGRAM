@@ -287,7 +287,9 @@ def test_update_move_to_be_creates_command():
     assert len(result.chain_results) == 1
     cr = result.chain_results[0]
     assert any(c.command_type == "MOVE_STOP_TO_BREAKEVEN" for c in cr.execution_commands)
-    assert cr.new_lifecycle_state == "BE_MOVE_PENDING"
+    # lifecycle_state must NOT change — only be_protection_status should reflect BE pending
+    assert cr.new_lifecycle_state is None
+    assert cr.new_be_protection_status == "BE_MOVE_PENDING"
 
 
 def test_update_move_to_be_already_protected_noop():
@@ -429,3 +431,47 @@ def test_update_batch_idempotency_keys_per_chain():
     result = gate.process_update(enriched, chains, {})
     all_keys = [c.idempotency_key for cr in result.chain_results for c in cr.execution_commands]
     assert len(all_keys) == len(set(all_keys))
+
+
+def _make_chain_simple(state="OPEN"):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state=state,
+        entry_mode="ONE_SHOT",
+        management_plan_json='{"be_trigger": null, "be_buffer_pct": 0.0}',
+        entry_avg_price=50000.0,
+    )
+
+
+def _make_enriched_update_simple(action_type="SET_STOP"):
+    from unittest.mock import MagicMock
+    enriched = MagicMock()
+    enriched.enrichment_id = 99
+    enriched.canonical_message_id = 55
+    enriched.trader_id = "t1"
+    action = MagicMock()
+    action.action_type = action_type
+    action.set_stop = MagicMock()
+    action.set_stop.target_type = "ENTRY"
+    tag = MagicMock()
+    tag.actions = [action]
+    tag.targeting.scope_hint = "SYMBOL"
+    tag.targeting.symbols = {"BTC/USDT"}
+    tag.targeting.explicit_ids = None
+    enriched.enriched_actions = [tag]
+    return enriched
+
+
+def test_move_to_be_does_not_set_lifecycle_state():
+    gate = _make_gate()
+    chain = _make_chain_simple("OPEN")
+    enriched = _make_enriched_update_simple("SET_STOP")
+    result = gate.process_update(enriched, [chain], {10: []})
+    assert len(result.chain_results) == 1
+    cr = result.chain_results[0]
+    # Must NOT set lifecycle_state to a BE state
+    assert cr.new_lifecycle_state is None
+    # Must set be_protection_status
+    assert cr.new_be_protection_status == "BE_MOVE_PENDING"

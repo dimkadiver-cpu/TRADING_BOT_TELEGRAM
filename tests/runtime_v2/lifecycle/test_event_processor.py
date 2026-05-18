@@ -143,3 +143,34 @@ def test_sl_filled_transitions_to_closed():
     result = proc.process(event, chain, [])
     assert result.new_lifecycle_state == "CLOSED"
     assert any(e.event_type == "SL_FILLED" for e in result.lifecycle_events)
+
+
+def test_tp_filled_with_be_trigger_does_not_set_lifecycle_state_to_be():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent, TradeChain
+    proc = LifecycleEventProcessor()
+    chain = TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT",
+        management_plan_json='{"be_trigger": "tp1", "be_buffer_pct": 0.0, "close_distribution": {"mode": "table", "table": {}}}',
+        entry_avg_price=50000.0,
+        open_position_qty=0.01,
+        filled_entry_qty=0.01,
+    )
+    import json as _json
+    ev = ExchangeEvent(
+        exchange_event_id=1,
+        trade_chain_id=chain.trade_chain_id,
+        event_type="TP_FILLED",
+        payload_json=_json.dumps({
+            "tp_level": 1, "is_final": False,
+            "fill_price": 51000.0, "filled_qty": 0.005,
+        }),
+        idempotency_key="tp_filled:10:1",
+    )
+    result = proc.process(ev, chain, [])
+    # lifecycle_state must be PARTIALLY_CLOSED, never BE_MOVE_PENDING
+    assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
+    assert result.new_be_protection_status == "BE_MOVE_PENDING"

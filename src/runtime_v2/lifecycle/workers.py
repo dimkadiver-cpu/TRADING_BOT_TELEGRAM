@@ -7,7 +7,7 @@ import sqlite3
 from datetime import datetime, timezone
 
 from src.runtime_v2.lifecycle.event_processor import EventProcessorResult, LifecycleEventProcessor
-from src.runtime_v2.lifecycle.models import TERMINAL_STATES, ExecutionCommand, LifecycleEvent
+from src.runtime_v2.lifecycle.models import TERMINAL_STATES, LEGACY_BE_STATES, ExecutionCommand, LifecycleEvent
 from src.runtime_v2.lifecycle.repositories import (
     ExecutionCommandRepository, ExchangeEventRepository,
     LifecycleEventRepository, TradeChainRepository,
@@ -99,7 +99,7 @@ class LifecycleEventWorker:
                     continue
 
                 chain = self._chain_repo.get_by_id(exchange_event.trade_chain_id)
-                if chain is None or chain.lifecycle_state in TERMINAL_STATES:
+                if chain is None or chain.lifecycle_state in TERMINAL_STATES or chain.lifecycle_state in LEGACY_BE_STATES:
                     self._exchange_event_repo.mark_processed(exchange_event.exchange_event_id)
                     processed += 1
                     continue

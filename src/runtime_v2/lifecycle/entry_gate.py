@@ -406,12 +406,12 @@ class LifecycleEntryGate:
             source_type="telegram_update",
             source_id=str(cmid),
             previous_state=chain.lifecycle_state,
-            next_state="BE_MOVE_PENDING",
+            next_state=None,
             idempotency_key=f"be_requested:{chain_id}:{cmid}",
         )
         return UpdateChainResult(
             trade_chain_id=chain_id,
-            new_lifecycle_state="BE_MOVE_PENDING",
+            new_lifecycle_state=None,
             new_be_protection_status="BE_MOVE_PENDING",
             lifecycle_events=[event],
             execution_commands=[cmd],

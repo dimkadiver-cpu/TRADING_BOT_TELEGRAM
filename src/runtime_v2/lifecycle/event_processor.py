@@ -140,7 +140,6 @@ class LifecycleEventProcessor:
                             source_id=str(eid),
                             idempotency_key=f"be_req_tp:{chain_id}:{eid}",
                         ))
-                        new_state = "BE_MOVE_PENDING"
                         new_be = "BE_MOVE_PENDING"
 
         # Build the main TP event AFTER final new_state is determined
