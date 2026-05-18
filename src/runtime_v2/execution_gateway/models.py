@@ -14,6 +14,7 @@ class AdapterCapabilities(BaseModel):
     close_partial: bool = False
     close_full: bool = False
     executor_position: bool = False
+    sync_protective_orders: bool = True
 
 
 class RetryConfig(BaseModel):

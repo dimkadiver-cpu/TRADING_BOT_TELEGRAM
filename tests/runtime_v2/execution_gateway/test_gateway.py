@@ -140,6 +140,21 @@ def test_adapter_error_sets_retry(ops_db):
     assert retry_count == 1
 
 
+def test_close_partial_uses_exit_partial_role():
+    from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
+    assert _ROLE_MAP["CLOSE_PARTIAL"] == "exit_partial"
+
+
+def test_close_full_uses_exit_full_role():
+    from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
+    assert _ROLE_MAP["CLOSE_FULL"] == "exit_full"
+
+
+def test_sync_protective_orders_uses_sync_role():
+    from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
+    assert _ROLE_MAP["SYNC_PROTECTIVE_ORDERS"] == "sync"
+
+
 def test_live_trading_blocked(ops_db):
     import yaml
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter

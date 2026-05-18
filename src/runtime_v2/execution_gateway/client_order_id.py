@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 _PREFIX = "tsb"
-_VALID_ROLES = frozenset({"entry", "sl", "tp"})
+_VALID_ROLES = frozenset({"entry", "sl", "tp", "exit_partial", "exit_full", "sync"})
 
 
 @dataclass(frozen=True)

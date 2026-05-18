@@ -86,6 +86,25 @@ class ExchangeEventSyncWorker:
                 "filled_qty": raw.filled_qty,
                 "command_id": coid.command_id,
             }
+        elif coid.role == "exit_partial":
+            event_type = "CLOSE_PARTIAL_FILLED"
+            payload = {
+                "fill_price": raw.average_price,
+                "filled_qty": raw.filled_qty,
+                "command_id": coid.command_id,
+            }
+        elif coid.role == "exit_full":
+            event_type = "CLOSE_FULL_FILLED"
+            payload = {
+                "fill_price": raw.average_price,
+                "filled_qty": raw.filled_qty,
+                "command_id": coid.command_id,
+            }
+        elif coid.role == "sync":
+            event_type = "PROTECTIVE_ORDERS_SYNCED"
+            payload = {
+                "command_id": coid.command_id,
+            }
         else:
             logger.warning("unknown role '%s' in %s — skipping mark_done", coid.role, client_order_id)
             return False

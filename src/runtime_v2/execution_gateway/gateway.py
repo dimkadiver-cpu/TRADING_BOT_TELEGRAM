@@ -23,6 +23,7 @@ _CAPABILITY_MAP: dict[str, str] = {
     "CANCEL_PENDING_ENTRY": "place_entry",
     "CLOSE_PARTIAL": "close_partial",
     "CLOSE_FULL": "close_full",
+    "SYNC_PROTECTIVE_ORDERS": "sync_protective_orders",
 }
 
 _ROLE_MAP: dict[str, str] = {
@@ -32,8 +33,9 @@ _ROLE_MAP: dict[str, str] = {
     "MOVE_STOP_TO_BREAKEVEN": "sl",
     "MOVE_STOP": "sl",
     "CANCEL_PENDING_ENTRY": "entry",
-    "CLOSE_PARTIAL": "entry",
-    "CLOSE_FULL": "entry",
+    "CLOSE_PARTIAL": "exit_partial",
+    "CLOSE_FULL": "exit_full",
+    "SYNC_PROTECTIVE_ORDERS": "sync",
 }
 
 
