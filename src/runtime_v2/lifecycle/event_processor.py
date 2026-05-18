@@ -46,6 +46,10 @@ class LifecycleEventProcessor:
             return self._process_close_full_filled(exchange_event, chain)
         if etype == "CLOSE_PARTIAL_FILLED":
             return self._process_close_partial_filled(exchange_event, chain)
+        if etype == "STOP_MOVED_CONFIRMED":
+            return self._process_stop_moved_confirmed(exchange_event, chain)
+        if etype == "PENDING_ENTRY_CANCELLED_CONFIRMED":
+            return self._process_pending_entry_cancelled_confirmed(exchange_event, chain)
         logger.warning("unhandled exchange event type: %s", etype)
         return EventProcessorResult(
             new_lifecycle_state=None,
@@ -310,6 +314,68 @@ class LifecycleEventProcessor:
             execution_commands=commands,
             new_open_position_qty=new_open,
             new_closed_position_qty=new_closed,
+        )
+
+
+    def _process_stop_moved_confirmed(
+        self, exchange_event: ExchangeEvent, chain: TradeChain
+    ) -> EventProcessorResult:
+        payload = json.loads(exchange_event.payload_json)
+        new_stop_price = float(payload.get("new_stop_price") or 0.0)
+        is_breakeven = bool(payload.get("is_breakeven", False))
+        eid = exchange_event.exchange_event_id
+        chain_id = chain.trade_chain_id
+        new_be: BeProtectionStatus | None = "PROTECTED" if is_breakeven else None
+        return EventProcessorResult(
+            new_lifecycle_state=None,
+            new_be_protection_status=new_be,
+            entry_avg_price=None,
+            current_stop_price=new_stop_price if new_stop_price > 0 else None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="STOP_MOVE_CONFIRMED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                payload_json=json.dumps({"new_stop_price": new_stop_price, "is_breakeven": is_breakeven}),
+                idempotency_key=f"stop_moved:{chain_id}:{eid}",
+            )],
+            execution_commands=[],
+        )
+
+    def _process_pending_entry_cancelled_confirmed(
+        self, exchange_event: ExchangeEvent, chain: TradeChain
+    ) -> EventProcessorResult:
+        payload = json.loads(exchange_event.payload_json)
+        position_already_open = bool(payload.get("position_already_open", False))
+        eid = exchange_event.exchange_event_id
+        chain_id = chain.trade_chain_id
+        commands: list[ExecutionCommand] = []
+        new_state: str | None = None
+        if position_already_open:
+            commands.append(ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type="SYNC_PROTECTIVE_ORDERS",
+                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+                idempotency_key=f"sync_after_cancel:{chain_id}:{eid}",
+            ))
+        else:
+            new_state = "CANCELLED"
+        return EventProcessorResult(
+            new_lifecycle_state=new_state,
+            new_be_protection_status=None,
+            entry_avg_price=None,
+            current_stop_price=None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="PENDING_ENTRY_CANCELLED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                previous_state=chain.lifecycle_state,
+                next_state=new_state,
+                payload_json=exchange_event.payload_json,
+                idempotency_key=f"pending_cancelled:{chain_id}:{eid}",
+            )],
+            execution_commands=commands,
         )
 
 

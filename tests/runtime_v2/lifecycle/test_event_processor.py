@@ -452,3 +452,80 @@ def test_close_partial_filled_partially_closes_chain():
     assert result.new_open_position_qty == 0.005
     sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
     assert len(sync_cmds) == 1
+
+
+# --- Task 8: STOP_MOVED_CONFIRMED and PENDING_ENTRY_CANCELLED_CONFIRMED ---
+
+def test_stop_moved_confirmed_updates_be_protection_and_stop_price():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent, TradeChain
+    proc = LifecycleEventProcessor()
+    chain = TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT", management_plan_json='{}',
+        be_protection_status="BE_MOVE_PENDING",
+        entry_avg_price=50000.0, open_position_qty=0.01,
+    )
+    ev = ExchangeEvent(
+        exchange_event_id=20, trade_chain_id=10,
+        event_type="STOP_MOVED_CONFIRMED",
+        payload_json=json.dumps({"new_stop_price": 50000.0, "is_breakeven": True}),
+        idempotency_key="stop_moved:10:20",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state is None
+    assert result.new_be_protection_status == "PROTECTED"
+    assert result.current_stop_price == 50000.0
+
+
+def test_pending_entry_cancelled_confirmed_no_position():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent, TradeChain
+    proc = LifecycleEventProcessor()
+    chain = TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="WAITING_ENTRY",
+        entry_mode="ONE_SHOT", management_plan_json='{}',
+    )
+    ev = ExchangeEvent(
+        exchange_event_id=21, trade_chain_id=10,
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload_json=json.dumps({
+            "cancelled_order_ids": ["tsb:10:1:entry:1"],
+            "cancelled_pending_qty": 0.01,
+            "position_already_open": False,
+        }),
+        idempotency_key="cancel_confirmed:10:21",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "CANCELLED"
+
+
+def test_pending_entry_cancelled_confirmed_with_position_open():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent, TradeChain
+    proc = LifecycleEventProcessor()
+    chain = TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT", management_plan_json='{}',
+        open_position_qty=0.005,
+    )
+    ev = ExchangeEvent(
+        exchange_event_id=22, trade_chain_id=10,
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload_json=json.dumps({
+            "cancelled_order_ids": ["tsb:10:2:entry:2"],
+            "cancelled_pending_qty": 0.005,
+            "position_already_open": True,
+        }),
+        idempotency_key="cancel_confirmed:10:22",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state is None
+    sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+    assert len(sync_cmds) == 1
