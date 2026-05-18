@@ -67,7 +67,7 @@ class AdapterConfig(BaseModel):
 
     @model_validator(mode="after")
     def _require_base_url_for_hummingbot_api(self) -> AdapterConfig:
-        if self.type == "hummingbot_api" and not self.base_url:
+        if self.type == "hummingbot_api" and not self.base_url.strip():
             raise ValueError("base_url is required for hummingbot_api adapter config")
         return self
 
