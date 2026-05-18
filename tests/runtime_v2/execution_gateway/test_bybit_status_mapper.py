@@ -4,7 +4,7 @@ import pytest
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper
 
 
-def _order(status: str, filled: float = 0.0, average: float | None = None) -> dict:
+def _order(status: str, filled: float | str = 0.0, average: float | None = None) -> dict:
     return {"id": "ord123", "status": status, "filled": filled, "average": average}
 
 
