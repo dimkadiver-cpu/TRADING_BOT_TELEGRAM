@@ -50,9 +50,11 @@ class AdapterConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     type: str
     mode: str
-    base_url: str
+    base_url: str = ""
     connector: str
     leverage: int = 1
+    api_key: str | None = None
+    testnet: bool = False
     secret: str | None = None          # Bearer token for execution adapter auth
     entry_execution: EntryExecutionConfig = EntryExecutionConfig()
 
