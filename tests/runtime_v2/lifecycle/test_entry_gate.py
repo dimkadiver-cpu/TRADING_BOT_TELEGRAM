@@ -490,10 +490,16 @@ def _make_risk_decision(size_usdt=500.0, entry_price=50000.0):
     )
 
 
-def _make_enriched_signal_for_mode(tp_count: int = 2):
+def _make_enriched_signal_for_mode(
+    tp_count: int = 2,
+    *,
+    side: str = "LONG",
+    close_distribution_table: dict[int, list[int]] | None = None,
+):
     from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
     from src.runtime_v2.signal_enrichment.models import (
-        EnrichedCanonicalMessage, EnrichedEntryLeg, EnrichedSignalPayload, ManagementPlanConfig,
+        CloseDistributionConfig, EnrichedCanonicalMessage, EnrichedEntryLeg,
+        EnrichedSignalPayload, ManagementPlanConfig,
     )
 
     entries = [EnrichedEntryLeg(
@@ -507,10 +513,14 @@ def _make_enriched_signal_for_mode(tp_count: int = 2):
     ]
     sl = StopLoss(price=Price(raw="49000", value=49000.0))
     signal = EnrichedSignalPayload(
-        symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+        symbol="BTC/USDT", side=side, entry_structure="ONE_SHOT",
         entries=entries, take_profits=tps, stop_loss=sl,
     )
-    mp = ManagementPlanConfig()
+    mp = ManagementPlanConfig(
+        close_distribution=CloseDistributionConfig(
+            table=close_distribution_table or {},
+        )
+    )
     return EnrichedCanonicalMessage(
         enrichment_id=1, canonical_message_id=2, raw_message_id=3,
         trader_id="t1", account_id="acc1",
@@ -586,6 +596,52 @@ def test_mode_c_single_tp_no_intermediate_commands():
     cmd_types = [c.command_type for c in result.execution_commands]
     assert "PLACE_TAKE_PROFIT" not in cmd_types
     assert "PLACE_PROTECTIVE_STOP" not in cmd_types
+
+
+def test_mode_c_multi_tp_entry_payload_includes_builder_fields_and_final_tp_slice_qty():
+    gate = _make_gate_with_mode("c_native_attached_tpsl")
+    enriched = _make_enriched_signal_for_mode(
+        tp_count=2,
+        close_distribution_table={2: [60, 40]},
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+
+    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
+    payload = json.loads(entry_cmd.payload_json)
+
+    assert payload["attached_take_profit"] == 52000.0
+    assert payload["attached_stop_loss"] == 49000.0
+    assert payload["tp_count"] == 2
+    assert payload["qty"] == pytest.approx(0.01)
+    assert payload["attached_take_profit_qty"] == pytest.approx(0.004)
+
+
+def test_mode_c_single_tp_entry_payload_uses_full_leg_qty_for_attached_tp():
+    gate = _make_gate_with_mode("c_native_attached_tpsl")
+    enriched = _make_enriched_signal_for_mode(tp_count=1)
+    result = gate.process_signal(enriched, [], "NONE")
+
+    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
+    payload = json.loads(entry_cmd.payload_json)
+
+    assert payload["tp_count"] == 1
+    assert payload["qty"] == pytest.approx(0.01)
+    assert payload["attached_take_profit_qty"] == pytest.approx(0.01)
+
+
+def test_update_move_to_be_payload_uses_target_price_and_buffer_pct():
+    gate = _make_gate()
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    chain = _make_open_chain(entry_avg_price=50000.0, current_stop_price=49000.0)
+    chain = chain.model_copy(update={"management_plan_json": '{"be_trigger": null, "be_buffer_pct": 0.01}'})
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["target_price"] == 50000.0
+    assert payload["be_buffer_pct"] == 0.01
 
 
 def test_process_signal_writes_execution_mode_to_chain():

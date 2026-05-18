@@ -97,6 +97,100 @@ def test_place_entry_without_native_attached_tpsl_uses_empty_extra_params() -> N
     assert params.extra_params == {}
 
 
+def test_place_entry_mode_c_multi_tp_uses_attached_payload_fields() -> None:
+    params = _builder().build(
+        "PLACE_ENTRY",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "entry_type": "LIMIT",
+            "qty": 0.01,
+            "price": 50000.0,
+            "native_attached_tpsl": True,
+            "attached_take_profit": 53000.0,
+            "attached_stop_loss": 49000.0,
+            "attached_take_profit_qty": 0.004,
+            "tp_count": 2,
+        },
+        "tsb:10:5:entry:modec:1",
+    )
+
+    assert params.action == "create_order"
+    assert params.side == "buy"
+    assert params.extra_params == {
+        "takeProfit": 53000.0,
+        "stopLoss": 49000.0,
+        "tpslMode": "Partial",
+        "tpOrderType": "Limit",
+        "tpLimitPrice": 53000.0,
+        "tpSize": 0.004,
+    }
+
+
+def test_place_entry_mode_c_single_tp_uses_total_qty_for_tp_size() -> None:
+    params = _builder().build(
+        "PLACE_ENTRY",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "entry_type": "LIMIT",
+            "qty": 0.01,
+            "price": 50000.0,
+            "native_attached_tpsl": True,
+            "attached_take_profit": 51000.0,
+            "attached_stop_loss": 49000.0,
+            "attached_take_profit_qty": 0.003,
+            "tp_count": 1,
+        },
+        "tsb:10:5:entry:modec:2",
+    )
+
+    assert params.extra_params["tpslMode"] == "Partial"
+    assert params.extra_params["tpSize"] == 0.01
+
+
+def test_place_entry_mode_c_short_preserves_sell_entry_side() -> None:
+    params = _builder().build(
+        "PLACE_ENTRY",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "SHORT",
+            "entry_type": "LIMIT",
+            "qty": 0.02,
+            "price": 48000.0,
+            "native_attached_tpsl": True,
+            "attached_take_profit": 47000.0,
+            "attached_stop_loss": 49000.0,
+            "attached_take_profit_qty": 0.01,
+            "tp_count": 2,
+        },
+        "tsb:10:5:entry:modec:3",
+    )
+
+    assert params.side == "sell"
+    assert params.extra_params["tpslMode"] == "Partial"
+
+
+def test_place_entry_mode_c_defaults_tp_count_to_one() -> None:
+    params = _builder().build(
+        "PLACE_ENTRY",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "entry_type": "LIMIT",
+            "qty": 0.01,
+            "price": 50000.0,
+            "native_attached_tpsl": True,
+            "attached_take_profit": 51000.0,
+            "attached_stop_loss": 49000.0,
+            "attached_take_profit_qty": 0.002,
+        },
+        "tsb:10:5:entry:modec:4",
+    )
+
+    assert params.extra_params["tpSize"] == 0.01
+
+
 @pytest.mark.parametrize(
     ("side", "qty", "stop_price", "expected_side", "client_order_id"),
     [
@@ -211,6 +305,66 @@ def test_sync_protective_orders_returns_noop() -> None:
     params = _builder().build("SYNC_PROTECTIVE_ORDERS", {}, "tsb:10:5:sync:1")
 
     assert params.action == "noop"
+
+
+def test_cancel_pending_entry_keeps_cancel_by_link_contract() -> None:
+    params = _builder().build(
+        "CANCEL_PENDING_ENTRY",
+        {"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        "tsb:10:5:cancel:1",
+    )
+
+    assert params.action == "cancel_by_link"
+    assert params.symbol == "BTC/USDT:USDT"
+    assert params.order_link_id == "tsb:10:5:cancel:1"
+
+
+@pytest.mark.parametrize(
+    ("side", "target_price", "be_buffer_pct", "expected_trigger"),
+    [
+        ("LONG", 50000.0, 0.0, 50000.0),
+        ("LONG", 50000.0, 0.01, 50500.0),
+        ("SHORT", 50000.0, 0.0, 50000.0),
+        ("SHORT", 50000.0, 0.01, 49500.0),
+    ],
+)
+def test_move_stop_to_breakeven_uses_target_price_and_buffer(
+    side: str,
+    target_price: float,
+    be_buffer_pct: float,
+    expected_trigger: float,
+) -> None:
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": side,
+            "target_price": target_price,
+            "be_buffer_pct": be_buffer_pct,
+        },
+        "tsb:10:5:be:1",
+    )
+
+    assert params.action == "edit_sl"
+    assert params.symbol == "BTC/USDT:USDT"
+    assert params.position_side == side
+    assert params.new_trigger_price == expected_trigger
+
+
+def test_move_stop_uses_new_stop_price() -> None:
+    params = _builder().build(
+        "MOVE_STOP",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "new_stop_price": 50123.0,
+        },
+        "tsb:10:5:move:1",
+    )
+
+    assert params.action == "edit_sl"
+    assert params.new_trigger_price == 50123.0
+    assert params.position_side == "LONG"
 
 
 def test_unknown_command_raises_value_error() -> None:

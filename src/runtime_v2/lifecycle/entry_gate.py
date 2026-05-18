@@ -187,21 +187,26 @@ class LifecycleEntryGate:
         for leg in signal.entries:
             leg_price = leg.price.value if leg.price else fallback_entry_price
             leg_notional = size_usdt * float(leg.weight or 0.0)
+            leg_qty = self._qty_from_notional(leg_notional, leg_price)
             payload: dict = {
                 "symbol": signal.symbol,
                 "side": signal.side,
                 "entry_type": leg.entry_type,
                 "price": leg.price.value if leg.price else None,
-                "qty": self._qty_from_notional(leg_notional, leg_price),
+                "qty": leg_qty,
                 "weight": leg.weight,
                 "sequence": leg.sequence,
             }
             if mode == "c_native_attached_tpsl":
                 payload["native_attached_tpsl"] = True
                 payload["attached_stop_loss"] = sl_price
+                payload["tp_count"] = tp_count
                 if last_tp and last_tp.price:
                     payload["attached_take_profit"] = last_tp.price.value
                     payload["attached_take_profit_sequence"] = last_tp.sequence
+                    last_close_pct = close_pcts[-1] if close_pcts else 100.0
+                    attached_tp_qty = leg_qty if tp_count <= 1 else leg_qty * float(last_close_pct) / 100.0
+                    payload["attached_take_profit_qty"] = attached_tp_qty
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
                 command_type="PLACE_ENTRY",

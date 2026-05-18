@@ -62,11 +62,11 @@ class BybitOrderBuilder:
         tp_size = float(payload["attached_take_profit_qty"]) if tp_count > 1 else total_qty
 
         return {
-            "takeProfit": float(payload["attached_take_profit_price"]),
-            "stopLoss": float(payload["attached_stop_loss_price"]),
+            "takeProfit": float(payload["attached_take_profit"]),
+            "stopLoss": float(payload["attached_stop_loss"]),
             "tpslMode": "Partial",
             "tpOrderType": "Limit",
-            "tpLimitPrice": float(payload["attached_take_profit_price"]),
+            "tpLimitPrice": float(payload["attached_take_profit"]),
             "tpSize": tp_size,
         }
 
@@ -119,7 +119,12 @@ class BybitOrderBuilder:
 
     def _move_stop(self, command_type: str, payload: dict) -> BybitOrderParams:
         if command_type == "MOVE_STOP_TO_BREAKEVEN":
-            new_trigger_price = float(payload["entry_price"])
+            target_price = float(payload["target_price"])
+            buffer_pct = float(payload.get("be_buffer_pct") or 0.0)
+            if payload["side"] == "LONG":
+                new_trigger_price = target_price * (1 + buffer_pct)
+            else:
+                new_trigger_price = target_price * (1 - buffer_pct)
         else:
             new_trigger_price = float(payload["new_stop_price"])
 
