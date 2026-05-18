@@ -56,27 +56,62 @@ class LifecycleEventProcessor:
         self, exchange_event: ExchangeEvent, chain: TradeChain
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
-        fill_price = payload.get("fill_price")
-        if fill_price is None:
-            logger.warning("ENTRY_FILLED event %s for chain %s has no fill_price", exchange_event.exchange_event_id, chain.trade_chain_id)
+        fill_price = float(payload.get("fill_price") or 0.0)
+        fill_qty = float(payload.get("filled_qty") or 0.0)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
-        return EventProcessorResult(
-            new_lifecycle_state="OPEN",
-            new_be_protection_status=None,
-            entry_avg_price=fill_price,
-            current_stop_price=None,
-            lifecycle_events=[LifecycleEvent(
+
+        old_filled = chain.filled_entry_qty
+        old_avg = chain.entry_avg_price or 0.0
+        new_filled = old_filled + fill_qty
+        if new_filled > 0:
+            new_avg = ((old_avg * old_filled) + (fill_price * fill_qty)) / new_filled
+        else:
+            new_avg = fill_price
+        new_open = chain.open_position_qty + fill_qty
+
+        is_first_fill = chain.lifecycle_state == "WAITING_ENTRY"
+        new_state: LifecycleState | None = "OPEN" if is_first_fill else None
+
+        events: list[LifecycleEvent] = [
+            LifecycleEvent(
                 trade_chain_id=chain_id,
                 event_type="ENTRY_FILLED",
                 source_type="exchange_event",
                 source_id=str(eid),
                 previous_state=chain.lifecycle_state,
-                next_state="OPEN",
-                payload_json=json.dumps({"fill_price": fill_price}),
+                next_state=new_state or chain.lifecycle_state,
+                payload_json=json.dumps({"fill_price": fill_price, "filled_qty": fill_qty}),
                 idempotency_key=f"entry_filled:{chain_id}:{eid}",
-            )],
+            ),
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="POSITION_SIZE_UPDATED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                payload_json=json.dumps({"filled_entry_qty": new_filled, "open_position_qty": new_open}),
+                idempotency_key=f"pos_size_updated:{chain_id}:{eid}",
+            ),
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="ENTRY_AVG_PRICE_UPDATED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                payload_json=json.dumps({"entry_avg_price": new_avg}),
+                idempotency_key=f"avg_price_updated:{chain_id}:{eid}",
+            ),
+        ]
+
+        return EventProcessorResult(
+            new_lifecycle_state=new_state,
+            new_be_protection_status=None,
+            entry_avg_price=new_avg,
+            current_stop_price=None,
+            lifecycle_events=events,
             execution_commands=[],
+            new_filled_entry_qty=new_filled,
+            new_open_position_qty=new_open,
+            release_waiting_position=is_first_fill,
         )
 
     def _process_tp_filled(

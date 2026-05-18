@@ -211,3 +211,123 @@ def test_event_processor_result_qty_defaults_to_none():
     assert r.new_open_position_qty is None
     assert r.new_closed_position_qty is None
     assert r.release_waiting_position is False
+
+
+# --- Task 6: ENTRY_FILLED qty tracking + weighted avg + WAITING_POSITION release ---
+
+def _make_entry_event(chain_id: int, fill_price: float, filled_qty: float,
+                      order_fully_filled: bool = True) -> "ExchangeEvent":
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    return ExchangeEvent(
+        exchange_event_id=42,
+        trade_chain_id=chain_id,
+        event_type="ENTRY_FILLED",
+        payload_json=json.dumps({
+            "fill_price": fill_price,
+            "filled_qty": filled_qty,
+            "order_fully_filled": order_fully_filled,
+        }),
+        idempotency_key=f"entry_filled:{chain_id}:42",
+    )
+
+
+def _make_chain_waiting() -> "TradeChain":
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="WAITING_ENTRY",
+        entry_mode="ONE_SHOT", management_plan_json='{}',
+        planned_entry_qty=0.01,
+    )
+
+
+def _make_chain_open_filled() -> "TradeChain":
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT",
+        management_plan_json='{"be_trigger": "tp1", "be_buffer_pct": 0.0, "close_distribution": {"mode": "table", "table": {}}}',
+        entry_avg_price=50000.0,
+        open_position_qty=0.01,
+        filled_entry_qty=0.01,
+    )
+
+
+def test_entry_filled_first_fill_transitions_to_open():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_waiting()
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.01)
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "OPEN"
+
+
+def test_entry_filled_subsequent_fill_keeps_open():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.005)
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state is None
+
+
+def test_entry_filled_updates_qty():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_waiting()
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.01)
+    result = proc.process(ev, chain, [])
+    assert result.new_filled_entry_qty == 0.01
+    assert result.new_open_position_qty == 0.01
+
+
+def test_entry_filled_weighted_average():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import TradeChain
+    proc = LifecycleEventProcessor()
+    chain = TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT", management_plan_json='{}',
+        filled_entry_qty=0.006, open_position_qty=0.006,
+        entry_avg_price=50000.0,
+    )
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=52000.0, filled_qty=0.004)
+    result = proc.process(ev, chain, [])
+    expected_avg = (50000.0 * 0.006 + 52000.0 * 0.004) / 0.010
+    assert abs(result.entry_avg_price - expected_avg) < 0.01
+    assert result.new_filled_entry_qty == 0.010
+    assert result.new_open_position_qty == 0.010
+
+
+def test_entry_filled_first_fill_releases_waiting_position():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_waiting()
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.01)
+    result = proc.process(ev, chain, [])
+    assert result.release_waiting_position is True
+
+
+def test_entry_filled_subsequent_fill_does_not_release_waiting_position():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.005)
+    result = proc.process(ev, chain, [])
+    assert result.release_waiting_position is False
+
+
+def test_entry_filled_emits_position_size_updated_event():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_waiting()
+    ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.01)
+    result = proc.process(ev, chain, [])
+    event_types = [e.event_type for e in result.lifecycle_events]
+    assert "POSITION_SIZE_UPDATED" in event_types
+    assert "ENTRY_AVG_PRICE_UPDATED" in event_types
