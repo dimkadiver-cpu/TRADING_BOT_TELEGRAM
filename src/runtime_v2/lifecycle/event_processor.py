@@ -42,6 +42,10 @@ class LifecycleEventProcessor:
             return self._process_tp_filled(exchange_event, chain, active_commands)
         if etype == "SL_FILLED":
             return self._process_sl_filled(exchange_event, chain)
+        if etype == "CLOSE_FULL_FILLED":
+            return self._process_close_full_filled(exchange_event, chain)
+        if etype == "CLOSE_PARTIAL_FILLED":
+            return self._process_close_partial_filled(exchange_event, chain)
         logger.warning("unhandled exchange event type: %s", etype)
         return EventProcessorResult(
             new_lifecycle_state=None,
@@ -123,10 +127,13 @@ class LifecycleEventProcessor:
         payload = json.loads(exchange_event.payload_json)
         tp_level = int(payload.get("tp_level", 1))  # cast to int to avoid "tp1.0" mismatch
         is_final = bool(payload.get("is_final", False))
+        fill_qty = float(payload.get("filled_qty") or 0.0)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
 
         new_state: LifecycleState = "CLOSED" if is_final else "PARTIALLY_CLOSED"
+        new_open = 0.0 if is_final else max(chain.open_position_qty - fill_qty, 0.0)
+        new_closed = chain.closed_position_qty + fill_qty
         events: list[LifecycleEvent] = []
         commands: list[ExecutionCommand] = []
         new_be: BeProtectionStatus | None = None
@@ -181,6 +188,14 @@ class LifecycleEventProcessor:
                         ))
                         new_be = "BE_MOVE_PENDING"
 
+            # Non-final TP: emit SYNC_PROTECTIVE_ORDERS so exchange orders reflect new qty
+            commands.append(ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type="SYNC_PROTECTIVE_ORDERS",
+                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+                idempotency_key=f"sync_after_tp:{chain_id}:{eid}",
+            ))
+
         # Build the main TP event AFTER final new_state is determined
         tp_event = LifecycleEvent(
             trade_chain_id=chain_id,
@@ -201,11 +216,15 @@ class LifecycleEventProcessor:
             current_stop_price=None,
             lifecycle_events=events,
             execution_commands=commands,
+            new_open_position_qty=new_open,
+            new_closed_position_qty=new_closed,
         )
 
     def _process_sl_filled(
         self, exchange_event: ExchangeEvent, chain: TradeChain
     ) -> EventProcessorResult:
+        payload = json.loads(exchange_event.payload_json)
+        fill_qty = float(payload.get("filled_qty") or chain.open_position_qty)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         return EventProcessorResult(
@@ -224,6 +243,73 @@ class LifecycleEventProcessor:
                 idempotency_key=f"sl_filled:{chain_id}:{eid}",
             )],
             execution_commands=[],
+            new_open_position_qty=0.0,
+            new_closed_position_qty=chain.closed_position_qty + fill_qty,
+        )
+
+    def _process_close_full_filled(
+        self, exchange_event: ExchangeEvent, chain: TradeChain
+    ) -> EventProcessorResult:
+        payload = json.loads(exchange_event.payload_json)
+        fill_qty = float(payload.get("filled_qty") or chain.open_position_qty)
+        eid = exchange_event.exchange_event_id
+        chain_id = chain.trade_chain_id
+        return EventProcessorResult(
+            new_lifecycle_state="CLOSED",
+            new_be_protection_status=None,
+            entry_avg_price=None,
+            current_stop_price=None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="CLOSE_FULL_FILLED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                previous_state=chain.lifecycle_state,
+                next_state="CLOSED",
+                payload_json=exchange_event.payload_json,
+                idempotency_key=f"close_full_filled:{chain_id}:{eid}",
+            )],
+            execution_commands=[],
+            new_open_position_qty=0.0,
+            new_closed_position_qty=chain.closed_position_qty + fill_qty,
+        )
+
+    def _process_close_partial_filled(
+        self, exchange_event: ExchangeEvent, chain: TradeChain
+    ) -> EventProcessorResult:
+        payload = json.loads(exchange_event.payload_json)
+        fill_qty = float(payload.get("filled_qty") or 0.0)
+        eid = exchange_event.exchange_event_id
+        chain_id = chain.trade_chain_id
+        new_open = max(chain.open_position_qty - fill_qty, 0.0)
+        new_closed = chain.closed_position_qty + fill_qty
+        new_state: LifecycleState = "CLOSED" if new_open <= 0 else "PARTIALLY_CLOSED"
+        commands: list[ExecutionCommand] = []
+        if new_state == "PARTIALLY_CLOSED":
+            commands.append(ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type="SYNC_PROTECTIVE_ORDERS",
+                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+                idempotency_key=f"sync_after_close_partial:{chain_id}:{eid}",
+            ))
+        return EventProcessorResult(
+            new_lifecycle_state=new_state,
+            new_be_protection_status=None,
+            entry_avg_price=None,
+            current_stop_price=None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="CLOSE_PARTIAL_FILLED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                previous_state=chain.lifecycle_state,
+                next_state=new_state,
+                payload_json=exchange_event.payload_json,
+                idempotency_key=f"close_partial_filled:{chain_id}:{eid}",
+            )],
+            execution_commands=commands,
+            new_open_position_qty=new_open,
+            new_closed_position_qty=new_closed,
         )
 
 

@@ -331,3 +331,124 @@ def test_entry_filled_emits_position_size_updated_event():
     event_types = [e.event_type for e in result.lifecycle_events]
     assert "POSITION_SIZE_UPDATED" in event_types
     assert "ENTRY_AVG_PRICE_UPDATED" in event_types
+
+
+# --- Task 7: TP/SL/Close fill qty tracking + SYNC_PROTECTIVE_ORDERS ---
+
+def _make_tp_event(chain_id: int, tp_level: int, is_final: bool, fill_qty: float) -> "ExchangeEvent":
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    return ExchangeEvent(
+        exchange_event_id=5,
+        trade_chain_id=chain_id,
+        event_type="TP_FILLED",
+        payload_json=json.dumps({
+            "fill_price": 51000.0, "filled_qty": fill_qty,
+            "tp_level": tp_level, "is_final": is_final,
+        }),
+        idempotency_key=f"tp_filled:{chain_id}:5",
+    )
+
+
+def _make_close_event(chain_id: int, event_type: str, fill_qty: float) -> "ExchangeEvent":
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    return ExchangeEvent(
+        exchange_event_id=5,
+        trade_chain_id=chain_id,
+        event_type=event_type,
+        payload_json=json.dumps({
+            "fill_price": 51000.0, "filled_qty": fill_qty,
+            "tp_level": 1, "is_final": False,
+        }),
+        idempotency_key=f"{event_type}:{chain_id}:5",
+    )
+
+
+def test_tp_filled_reduces_open_qty():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()  # open_position_qty=0.01
+    ev = _make_tp_event(chain.trade_chain_id, tp_level=1, is_final=False, fill_qty=0.005)
+    result = proc.process(ev, chain, [])
+    assert result.new_open_position_qty == 0.005
+    assert result.new_closed_position_qty == 0.005
+
+
+def test_tp_filled_final_closes_chain():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = _make_tp_event(chain.trade_chain_id, tp_level=2, is_final=True, fill_qty=0.01)
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "CLOSED"
+    assert result.new_open_position_qty == 0.0
+
+
+def test_tp_filled_non_final_generates_sync_protective_orders():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = _make_tp_event(chain.trade_chain_id, tp_level=1, is_final=False, fill_qty=0.005)
+    result = proc.process(ev, chain, [])
+    sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+    assert len(sync_cmds) == 1
+
+
+def test_tp_filled_final_no_sync_protective_orders():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = _make_tp_event(chain.trade_chain_id, tp_level=2, is_final=True, fill_qty=0.01)
+    result = proc.process(ev, chain, [])
+    sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+    assert len(sync_cmds) == 0
+
+
+def test_sl_filled_closes_chain_and_zeroes_open_qty():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = ExchangeEvent(
+        exchange_event_id=7, trade_chain_id=chain.trade_chain_id,
+        event_type="SL_FILLED",
+        payload_json=json.dumps({"fill_price": 49000.0, "filled_qty": 0.01}),
+        idempotency_key="sl_filled:10:7",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "CLOSED"
+    assert result.new_open_position_qty == 0.0
+    assert result.new_closed_position_qty == 0.01
+
+
+def test_close_full_filled_closes_chain():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = ExchangeEvent(
+        exchange_event_id=8, trade_chain_id=chain.trade_chain_id,
+        event_type="CLOSE_FULL_FILLED",
+        payload_json=json.dumps({"fill_price": 51000.0, "filled_qty": 0.01}),
+        idempotency_key="close_full_filled:10:8",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "CLOSED"
+    assert result.new_open_position_qty == 0.0
+
+
+def test_close_partial_filled_partially_closes_chain():
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = ExchangeEvent(
+        exchange_event_id=9, trade_chain_id=chain.trade_chain_id,
+        event_type="CLOSE_PARTIAL_FILLED",
+        payload_json=json.dumps({"fill_price": 51000.0, "filled_qty": 0.005}),
+        idempotency_key="close_partial_filled:10:9",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
+    assert result.new_open_position_qty == 0.005
+    sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+    assert len(sync_cmds) == 1
