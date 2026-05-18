@@ -16,7 +16,7 @@ TERMINAL_STATES: frozenset[str] = frozenset({"CLOSED", "CANCELLED", "EXPIRED"})
 CommandType = Literal[
     "PLACE_ENTRY", "PLACE_PROTECTIVE_STOP", "PLACE_TAKE_PROFIT",
     "MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP", "CANCEL_PENDING_ENTRY",
-    "CLOSE_PARTIAL", "CLOSE_FULL",
+    "CLOSE_PARTIAL", "CLOSE_FULL", "SYNC_PROTECTIVE_ORDERS",
 ]
 CommandStatus = Literal[
     "PENDING",           # creato da PRD-04, non ancora inviato
@@ -36,7 +36,19 @@ LifecycleEventType = Literal[
     "NOOP_ALREADY_PROTECTED_BE", "NOOP_DUPLICATE_COMMAND",
     "NOOP_ALREADY_CLOSED", "NOOP_NOT_PENDING", "NOOP_NO_APPLICABLE_TARGET",
     "REVIEW_REQUIRED",
+    "POSITION_SIZE_UPDATED", "ENTRY_AVG_PRICE_UPDATED",
+    "PROTECTIVE_SYNC_REQUESTED", "STOP_MOVE_CONFIRMED", "PENDING_ENTRY_CANCELLED",
 ]
+
+ExchangeEventType = Literal[
+    "ENTRY_FILLED", "TP_FILLED", "SL_FILLED",
+    "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED",
+    "STOP_MOVED_CONFIRMED", "PENDING_ENTRY_CANCELLED_CONFIRMED",
+    "PROTECTIVE_ORDERS_SYNCED", "ORDER_REJECTED", "ORDER_CANCELLED",
+]
+
+LEGACY_BE_STATES: frozenset[str] = frozenset({"BE_MOVE_PENDING", "PROTECTED_BE"})
+
 ControlMode = Literal["NONE", "BLOCK_NEW_ENTRIES", "FULL_STOP"]
 BeProtectionStatus = Literal["NOT_PROTECTED", "BE_MOVE_PENDING", "PROTECTED"]
 
@@ -124,7 +136,8 @@ class ExchangeEvent(BaseModel):
 
 __all__ = [
     "LifecycleState", "TERMINAL_STATES", "CommandType", "CommandStatus",
-    "LifecycleEventType", "ControlMode", "BeProtectionStatus",
+    "LifecycleEventType", "ExchangeEventType", "LEGACY_BE_STATES",
+    "ControlMode", "BeProtectionStatus",
     "TradeChain", "LifecycleEvent", "ExecutionCommand",
     "ControlState", "ExchangeEvent",
 ]

@@ -104,6 +104,43 @@ def test_trade_chain_qty_defaults_to_zero():
     assert chain.execution_mode == "a_sequential"
 
 
+from src.runtime_v2.lifecycle.models import (
+    CommandType, LifecycleEventType, ExchangeEventType, LEGACY_BE_STATES,
+    ExecutionCommand, LifecycleEvent,
+)
+
+def test_sync_protective_orders_in_command_type():
+    cmd = ExecutionCommand(
+        trade_chain_id=1,
+        command_type="SYNC_PROTECTIVE_ORDERS",
+        idempotency_key="k1",
+    )
+    assert cmd.command_type == "SYNC_PROTECTIVE_ORDERS"
+
+def test_new_lifecycle_event_types_exist():
+    ev = LifecycleEvent(
+        event_type="POSITION_SIZE_UPDATED",
+        source_type="exchange_event",
+        idempotency_key="k2",
+    )
+    assert ev.event_type == "POSITION_SIZE_UPDATED"
+
+def test_exchange_event_type_literals():
+    import typing
+    args = typing.get_args(ExchangeEventType)
+    required = {
+        "ENTRY_FILLED", "TP_FILLED", "SL_FILLED",
+        "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED",
+        "STOP_MOVED_CONFIRMED", "PENDING_ENTRY_CANCELLED_CONFIRMED",
+        "PROTECTIVE_ORDERS_SYNCED", "ORDER_REJECTED", "ORDER_CANCELLED",
+    }
+    assert required.issubset(set(args))
+
+def test_legacy_be_states_constant():
+    assert "BE_MOVE_PENDING" in LEGACY_BE_STATES
+    assert "PROTECTED_BE" in LEGACY_BE_STATES
+
+
 import sqlite3, os, tempfile
 
 
