@@ -60,6 +60,12 @@ class TradeChain(BaseModel):
     entry_timeout_at: datetime | None = None
     management_plan_json: str
     risk_snapshot_json: str = "{}"
+    planned_entry_qty: float = 0.0
+    filled_entry_qty: float = 0.0
+    open_position_qty: float = 0.0
+    closed_position_qty: float = 0.0
+    last_position_sync_at: datetime | None = None
+    execution_mode: str = "a_sequential"
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
