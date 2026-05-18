@@ -594,3 +594,83 @@ def test_process_signal_writes_execution_mode_to_chain():
     result = gate.process_signal(enriched, [], "NONE")
     assert result.trade_chain is not None
     assert result.trade_chain.execution_mode == "b_entry_stop_then_tp"
+
+
+# ── CANCEL_PENDING on OPEN/PARTIALLY_CLOSED chains ───────────────────────────
+
+def _make_gate_default():
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+    return LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(),
+    )
+
+
+def _make_chain(state="OPEN"):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=10, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state=state,
+        entry_mode="ONE_SHOT",
+        management_plan_json='{"be_trigger": null, "be_buffer_pct": 0.0}',
+        entry_avg_price=50000.0,
+    )
+
+
+def _make_enriched_cancel():
+    from unittest.mock import MagicMock
+    enriched = MagicMock()
+    enriched.enrichment_id = 99
+    enriched.canonical_message_id = 55
+    enriched.trader_id = "t1"
+    action = MagicMock()
+    action.action_type = "CANCEL_PENDING"
+    tag = MagicMock()
+    tag.actions = [action]
+    tag.targeting.scope_hint = "SYMBOL"
+    tag.targeting.symbols = {"BTC/USDT"}
+    tag.targeting.explicit_ids = None
+    enriched.enriched_actions = [tag]
+    return enriched
+
+
+def test_cancel_pending_on_waiting_entry_becomes_cancelled():
+    gate = _make_gate_default()
+    chain = _make_chain("WAITING_ENTRY")
+    enriched = _make_enriched_cancel()
+    result = gate.process_update(enriched, [chain], {10: []})
+    assert len(result.chain_results) == 1
+    cr = result.chain_results[0]
+    assert cr.new_lifecycle_state == "CANCELLED"
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert "CANCEL_PENDING_ENTRY" in cmd_types
+    assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
+
+
+def test_cancel_pending_on_open_emits_sync_not_cancelled():
+    gate = _make_gate_default()
+    chain = _make_chain("OPEN")
+    chain = chain.model_copy(update={"open_position_qty": 0.005})
+    enriched = _make_enriched_cancel()
+    result = gate.process_update(enriched, [chain], {10: []})
+    assert len(result.chain_results) == 1
+    cr = result.chain_results[0]
+    assert cr.new_lifecycle_state is None
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert "CANCEL_PENDING_ENTRY" in cmd_types
+    assert "SYNC_PROTECTIVE_ORDERS" in cmd_types
+
+
+def test_cancel_pending_on_partially_closed_emits_sync():
+    gate = _make_gate_default()
+    chain = _make_chain("PARTIALLY_CLOSED")
+    chain = chain.model_copy(update={"open_position_qty": 0.005})
+    enriched = _make_enriched_cancel()
+    result = gate.process_update(enriched, [chain], {10: []})
+    cr = result.chain_results[0]
+    assert cr.new_lifecycle_state is None
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert "SYNC_PROTECTIVE_ORDERS" in cmd_types

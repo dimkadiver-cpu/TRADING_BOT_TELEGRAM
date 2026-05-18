@@ -527,8 +527,9 @@ class LifecycleEntryGate:
     ) -> UpdateChainResult:
         chain_id = chain.trade_chain_id
         cmid = enriched.canonical_message_id
+        state = chain.lifecycle_state
 
-        if chain.lifecycle_state != "WAITING_ENTRY":
+        if state not in ("WAITING_ENTRY", "OPEN", "PARTIALLY_CLOSED"):
             return UpdateChainResult(
                 trade_chain_id=chain_id,
                 new_lifecycle_state=None,
@@ -543,12 +544,13 @@ class LifecycleEntryGate:
                 execution_commands=[],
             )
 
-        cmd = ExecutionCommand(
+        commands = [ExecutionCommand(
             trade_chain_id=chain_id,
             command_type="CANCEL_PENDING_ENTRY",
             payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
             idempotency_key=f"cancel_pending:{chain_id}:{cmid}",
-        )
+        )]
+
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
@@ -557,12 +559,29 @@ class LifecycleEntryGate:
             payload_json=json.dumps({"action": "CANCEL_PENDING"}),
             idempotency_key=f"update_cancel:{chain_id}:{cmid}",
         )
+
+        if state == "WAITING_ENTRY":
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state="CANCELLED",
+                new_be_protection_status=None,
+                lifecycle_events=[event],
+                execution_commands=commands,
+            )
+
+        # OPEN or PARTIALLY_CLOSED — position exists; cancel pending orders but keep chain alive
+        commands.append(ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="SYNC_PROTECTIVE_ORDERS",
+            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+            idempotency_key=f"sync_after_cancel_pending:{chain_id}:{cmid}",
+        ))
         return UpdateChainResult(
             trade_chain_id=chain_id,
-            new_lifecycle_state="CANCELLED",
+            new_lifecycle_state=None,
             new_be_protection_status=None,
             lifecycle_events=[event],
-            execution_commands=[cmd],
+            execution_commands=commands,
         )
 
     @staticmethod
