@@ -57,6 +57,38 @@ execution:
 
 Per tornare a paper/testnet: cambia `default_adapter` e `account_routing.default.adapter` a `hummingbot_api_paper`.
 
+### Stack ccxt_bybit / Bybit testnet (Fase 1)
+
+Sostituisce il blocco `execution:` in `execution.yaml` (l'esempio commentato è già nel file):
+
+```yaml
+execution:
+  default_adapter: bybit_main
+
+  account_routing:
+    default:
+      adapter: bybit_main
+      execution_account_id: bybit_main
+
+  adapters:
+    bybit_main:
+      type: ccxt_bybit
+      mode: paper
+      connector: bybit
+      testnet: true
+      api_key: "abc123"
+      leverage: 10
+```
+
+Credenziali: il secret **non va in YAML** — si passa via env:
+
+```bash
+BYBIT_API_SECRET_BYBIT_MAIN=<tua_api_secret>
+```
+
+Pattern env: `BYBIT_API_SECRET_<ADAPTER_NAME_UPPERCASE>`.
+Multi-account: aggiungere un secondo adapter e definire `BYBIT_API_SECRET_BYBIT_TRADER_B`, ecc.
+
 ## Variabili ambiente
 
 Per lo stack demo:
@@ -177,6 +209,26 @@ $env:HUMMINGBOT_DEMO_ACCOUNT="master_account"
 pytest tests\runtime_v2\execution_gateway\test_hummingbot_demo_gated.py -v -s
 ```
 
+## Test gated Bybit testnet (ccxt_bybit)
+
+Unit test (nessuna chiamata di rete):
+
+```powershell
+pytest tests\runtime_v2\execution_gateway\test_bybit_order_builder.py `
+       tests\runtime_v2\execution_gateway\test_bybit_status_mapper.py `
+       tests\runtime_v2\execution_gateway\test_ccxt_bybit_adapter_unit.py -v
+```
+
+Integration test gated (richiede account Bybit testnet reale):
+
+```powershell
+$env:BYBIT_TESTNET_API_KEY="<tua_api_key>"
+$env:BYBIT_API_SECRET_BYBIT_TESTNET="<tua_api_secret>"
+pytest tests\runtime_v2\execution_gateway\test_ccxt_bybit_gated.py -v -s -m bybit_testnet
+```
+
+Prerequisiti account testnet: Unified Trading Account, USDT perpetual abilitato, almeno 10 USDT testnet.
+
 ## Troubleshooting rapido
 
 | Sintomo | Causa probabile | Azione |
@@ -191,4 +243,7 @@ pytest tests\runtime_v2\execution_gateway\test_hummingbot_demo_gated.py -v -s
 | Patch connector assente in `hummingbot_demo_patch/` | File non estratto | Seguire Passo 3 di `COMANDI_DEMO.md` (estrazione da container) |
 | `bybit_perpetual_paper_trade` non trovato | Nome connector vecchio | Usa `bybit_perpetual_testnet` per lo stack paper |
 | `place_order` 500 con SSL/certificati | Errore interno API/rate oracle | Verificare `docker logs hummingbot-demo-backend-api` |
+| `ccxt_bybit`: `AuthenticationError` | API key/secret errati o permessi mancanti | Verifica env vars `BYBIT_API_SECRET_*` e permessi account Bybit |
+| `ccxt_bybit`: `sl_order_not_found` su MOVE_STOP | Nessun ordine SL aperto trovato per il symbol | Verificare che l'ordine SL sia ancora aperto su Bybit testnet |
+| OD-F1-2 aperta | `get_order_status` non restituisce SL/TP attached via `orderLinkId` | Usare `fetch_positions` come fallback — da implementare in Fase 2 |
 

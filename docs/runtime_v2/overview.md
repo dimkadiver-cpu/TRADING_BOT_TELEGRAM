@@ -52,7 +52,11 @@ src/runtime_v2/
 │       ├── fake.py              — test double
 │       ├── hummingbot_api.py    — adapter neutro Hummingbot API (capabilities da config)
 │       ├── hummingbot_api_paper.py — alias retrocompatibile → HummingbotApiAdapter
-│       └── factory.py           — build_adapter(name, cfg): crea adapter da AdapterConfig.type
+│       ├── factory.py           — build_adapter(name, cfg): crea adapter da AdapterConfig.type
+│       └── ccxt_bybit/          — adapter CCXT Bybit (Fase 1)
+│           ├── adapter.py       — CcxtBybitAdapter (place_order, get_order_status, set_leverage, …)
+│           ├── order_builder.py — BybitOrderBuilder: command_type + payload → BybitOrderParams
+│           └── status_mapper.py — CCXT status → RawAdapterOrder.status
 └── persistence/
     ├── raw_messages.py    — RawMessageRepository (adapter su storage)
     └── canonical_messages.py  — CanonicalMessageRepository (store risultati)
@@ -122,8 +126,9 @@ ExecutionGateway.process()
       ↓ se mode=live: controlla allow_live_trading + env TSB_ALLOW_LIVE_TRADING
       ↓
 HummingbotApiAdapter (hummingbot_api_demo o hummingbot_api_paper)
+   oppure CcxtBybitAdapter (ccxt_bybit, Fase 1)
       ↓ capabilities iniettate dalla config, non hardcoded
-      ↓ invia ordine/cancel/leverage a Hummingbot API
+      ↓ invia ordine/cancel/leverage a Hummingbot API o Bybit via CCXT
       ↓ aggiorna ops_execution_commands: SENT / DONE / RETRY / REVIEW_REQUIRED / WAITING_POSITION
 
 ExchangeEventSyncWorker.run_once()                                   ← PRD 05
@@ -171,7 +176,9 @@ Senza `HUMMINGBOT_BASE_URL`, i worker lifecycle restano attivi e i comandi paper
 | `ExecutionConfig` | Config PRD 05 caricata da `config/execution.yaml`: `default_adapter`, `account_routing`, `adapters`. |
 | `AdapterCapabilities` | Contratto capabilities adapter: entry, stop nativo, TP nativo, move stop, close partial/full, executor_position. Iniettate al costruttore, non hardcoded nell'adapter. |
 | `HummingbotApiAdapter` | Adapter neutro; sostituisce `HummingbotApiPaperAdapter` (ora alias). Riceve `capabilities` da `AdapterConfig`. |
-| `build_adapter(name, cfg)` | Factory in `adapters/factory.py`: crea l'adapter concreto da `AdapterConfig.type`. Aggiungere qui nuovi tipi. |
+| `CcxtBybitAdapter` | Adapter CCXT Bybit (Fase 1): piazza ordini su Bybit perpetuals USDT via `ccxt.bybit`. Supporta entry, SL, TP, close, move stop, Mode C. |
+| `BybitOrderBuilder` | Traduce `command_type + payload → BybitOrderParams`. Puro, testabile senza rete. |
+| `build_adapter(name, cfg)` | Factory in `adapters/factory.py`: crea l'adapter concreto da `AdapterConfig.type`. Supporta `hummingbot_api` e `ccxt_bybit`. |
 | `client_order_id` | Identificatore deterministico inviato all'exchange: `tsb:<trade_chain_id>:<command_id>:<role>:<sequence>`. Serve per idempotenza e correlazione fill. |
 | `GatewayCommandRepository` | Repository PRD 05 su `ops_execution_commands`: batch pending/retry, mark sent/done/retry/review/waiting. |
 | `ExecutionCommandWorker` | Worker che consuma comandi neutrali PRD 04 e li passa all'`ExecutionGateway`. |
@@ -272,7 +279,7 @@ L'`ExchangeEventSyncWorker` legge i comandi già inviati con `client_order_id`, 
 - `config/channels.yaml` — mappa canali Telegram → trader_id, parser_profile, blacklist, topic_id
 - `config/operation_config.yaml` — config globale signal enrichment: account, trader registrati, blacklist, defaults policy/risk/management
 - `config/traders/<id>.yaml` — override per-trader di operation_config.yaml
-- `config/execution.yaml` — config PRD 05: adapter Hummingbot API, routing account, capabilities, retry, live safety; default corrente: `hummingbot_api_demo` su porta 8001
+- `config/execution.yaml` — config PRD 05: adapter Hummingbot API e `ccxt_bybit`, routing account, capabilities, retry, live safety; default corrente: `hummingbot_api_demo` su porta 8001. Sezione `ccxt_bybit` commentata come esempio.
 - `.env` — opzionale: `HUMMINGBOT_BASE_URL` abilita l'Execution Gateway; `HUMMINGBOT_SECRET` imposta Bearer token o Basic auth `username:password`
 - `.env.demo` — non versionato: credenziali stack demo (`BYBIT_DEMO_API_KEY`, `BYBIT_DEMO_API_SECRET`, password Docker)
 - `docker-compose.demo.yml` — stack Hummingbot demo parallelo: porta 8001, rete `hummingbot-demo-net`, volumi isolati
@@ -323,6 +330,12 @@ tests/runtime_v2/
     ├── test_gateway.py                   ← ExecutionGateway
     ├── test_hummingbot_adapter.py        ← gated stack paper/testnet (`RUN_HUMMINGBOT_API_TESTS=1`)
     ├── test_hummingbot_demo_gated.py     ← gated stack demo porta 8001 (`RUN_HUMMINGBOT_DEMO_TESTS=1`)
+    ├── test_bybit_order_builder.py       ← unit: BybitOrderBuilder + Mode C (nessuna rete)
+    ├── test_bybit_status_mapper.py       ← unit: StatusMapper CCXT → RawAdapterOrder
+    ├── test_ccxt_bybit_adapter_unit.py   ← unit: CcxtBybitAdapter con exchange iniettato
+    ├── test_ccxt_bybit_gated.py          ← gated Bybit testnet reale (`@pytest.mark.bybit_testnet`)
+    ├── test_adapter_config_ccxt.py       ← AdapterConfig con campi ccxt_bybit
+    ├── test_adapter_factory.py           ← factory build_adapter branch ccxt_bybit
     └── test_integration.py               ← acceptance contract PRD 05
 
 src/telegram/tests/
@@ -361,4 +374,5 @@ pytest tests/runtime_v2/execution_gateway/test_hummingbot_demo_gated.py -v -s
 | PRD 03 | Signal Enrichment Layer — Gate 1 stateless | ✅ done |
 | PRD 04 | Lifecycle Entry Gate — stateful, ops-first atomicity, 3 worker | ✅ done |
 | PRD 05 | Execution Gateway — adapter Hummingbot API, command worker, event sync | ✅ implementato; stack demo avviato su porta 8001 |
+| PRD 05 Fase 1 | CcxtBybitAdapter — Bybit testnet via CCXT, Mode C, multi-account | ✅ implementato; gated integration test disponibili |
 | Demo stack | Hummingbot parallelo + connector `bybit_perpetual_demo` → `api-demo.bybit.com` | ✅ infrastruttura ok; ordini reali bloccati finché API key Bybit Demo non configurate |

@@ -79,3 +79,37 @@ execution:
 
       live_safety:
         allow_live_trading: false
+
+# --- ccxt_bybit example (Fase 1) ---
+# Per attivare: sostituire il blocco execution sopra, impostare api_key,
+# e definire le env vars:
+#   BYBIT_API_SECRET_BYBIT_MAIN=<secret>
+#   BYBIT_API_SECRET_BYBIT_TRADER_B=<secret>
+#
+# execution:
+#   default_adapter: bybit_main
+#
+#   account_routing:
+#     default:
+#       adapter: bybit_main
+#       execution_account_id: bybit_main
+#     trader_b:
+#       adapter: bybit_trader_b
+#       execution_account_id: bybit_trader_b
+#
+#   adapters:
+#     bybit_main:
+#       type: ccxt_bybit
+#       mode: paper
+#       connector: bybit
+#       testnet: true
+#       api_key: "abc123"
+#       leverage: 10
+#
+#     bybit_trader_b:
+#       type: ccxt_bybit
+#       mode: paper
+#       connector: bybit
+#       testnet: true
+#       api_key: "xyz789"
+#       leverage: 5

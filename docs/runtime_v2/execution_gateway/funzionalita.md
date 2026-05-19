@@ -82,19 +82,70 @@ Nessuna logica propria. Mantenuto per compatibilità con codice e test esistenti
 
 `build_adapter(adapter_name, cfg: AdapterConfig) -> ExecutionAdapter`
 
-Crea l'adapter concreto dal campo `cfg.type`. Attualmente supporta `"hummingbot_api"`.
-Inietta `cfg.capabilities` e risolve il secret da `cfg.secret` o dalla variabile d'ambiente `HUMMINGBOT_SECRET`.
+Crea l'adapter concreto dal campo `cfg.type`. Supporta `"hummingbot_api"` e `"ccxt_bybit"`.
 
-Per aggiungere un nuovo tipo adapter: aggiungere un branch `if cfg.type == "nuovo_tipo"` qui.
+- Per `hummingbot_api`: inietta `cfg.capabilities` e risolve il secret da `cfg.secret` o `HUMMINGBOT_SECRET`.
+- Per `ccxt_bybit`: legge `cfg.api_key` dallo YAML e `api_secret` dall'env `BYBIT_API_SECRET_<ADAPTER_NAME_UPPERCASE>`.
+
+### `adapters/ccxt_bybit/`
+
+Adapter CCXT per Bybit perpetuals USDT (Fase 1). Composto da tre moduli:
+
+**`adapter.py` — `CcxtBybitAdapter`**
+
+Implementa `ExecutionAdapter` via `ccxt.bybit`. Usa `options.defaultType=linear` (USDT perpetual). In testnet: `set_sandbox_mode(True)`. Il campo `_exchange` è iniettabile per unit test.
+
+Metodi:
+- `place_order` — delega a `BybitOrderBuilder`, poi chiama CCXT (`create_order` / `cancel_order` / `edit_order`). Gestisce `noop` (SYNC_PROTECTIVE_ORDERS), `cancel_by_link`, `edit_sl`.
+- `get_order_status` — `fetch_open_orders` poi `fetch_closed_orders` per `orderLinkId`; restituisce `RawAdapterOrder | None`.
+- `cancel_order` — no-op (la cancellazione passa via `CANCEL_PENDING_ENTRY` in `place_order`).
+- `set_leverage` — chiama `set_leverage` con `buyLeverage`/`sellLeverage` come stringa.
+- `get_position_qty` — `fetch_positions` + filtra per `side`; restituisce `float | None`.
+
+Error handling:
+| Eccezione | Comportamento |
+|---|---|
+| `ccxt.NetworkError`, `ccxt.RateLimitExceeded` | propagata → gateway retry |
+| `ccxt.InvalidOrder` | `AdapterResult(success=False, reason="invalid_order")` |
+| `ccxt.InsufficientFunds` | `AdapterResult(success=False, reason="insufficient_funds")` |
+| altri `ccxt.BaseError` | `AdapterResult(success=False, error=...)` → retry |
+
+**`order_builder.py` — `BybitOrderBuilder`**
+
+Traduce `command_type + payload + client_order_id → BybitOrderParams`. Puro, nessuna chiamata di rete.
+
+| command_type | action | Note |
+|---|---|---|
+| `PLACE_ENTRY` | `create_order` | `orderLinkId=client_order_id`; Mode C se `native_attached_tpsl=True` |
+| `PLACE_PROTECTIVE_STOP` | `create_order` | `reduceOnly=True`, `triggerPrice` |
+| `PLACE_TAKE_PROFIT` | `create_order` | `reduceOnly=True`, type=limit |
+| `CANCEL_PENDING_ENTRY` | `cancel_by_link` | cerca ordine aperto per `orderLinkId` |
+| `CLOSE_PARTIAL`, `CLOSE_FULL` | `create_order` | type=market, `reduceOnly=True` |
+| `MOVE_STOP_TO_BREAKEVEN`, `MOVE_STOP` | `edit_sl` | amend triggerPrice ordine SL aperto |
+| `SYNC_PROTECTIVE_ORDERS` | `noop` | no-op, Fase 2 |
+
+Mode C (`native_attached_tpsl=True`): aggiunge `takeProfit`, `stopLoss`, `tpslMode=Partial`, `tpOrderType=Limit`, `tpLimitPrice`, `tpSize` esplicito (risolve OD-C1).
+
+**`status_mapper.py` — `StatusMapper`**
+
+Mappa `ccxt_order["status"]` → `RawAdapterOrder.status`:
+
+| CCXT | RawAdapterOrder |
+|---|---|
+| `open`, `partially_filled` | `OPEN` |
+| `closed` | `FILLED` |
+| `canceled`, `cancelled`, `expired` | `CANCELLED` |
+| `rejected` | `FAILED` |
 
 ## Adapter configurati in `config/execution.yaml`
 
-| Nome | Tipo | Porta | Connector | Capabilities |
+| Nome | Tipo | Endpoint | Connector | Capabilities |
 |---|---|---|---|---|
-| `hummingbot_api_paper` | `hummingbot_api` | 8000 | `bybit_perpetual_testnet` | Full (stop nativo, TP nativo, move stop) |
-| `hummingbot_api_demo` | `hummingbot_api` | 8001 | `bybit_perpetual_demo` | Solo entry + close (stop/TP non nativi) |
+| `hummingbot_api_paper` | `hummingbot_api` | porta 8000 | `bybit_perpetual_testnet` | Full (stop nativo, TP nativo, move stop) |
+| `hummingbot_api_demo` | `hummingbot_api` | porta 8001 | `bybit_perpetual_demo` | Solo entry + close (stop/TP non nativi) |
+| `bybit_main` *(esempio)* | `ccxt_bybit` | CCXT direct | `bybit` | Full (stop nativo, TP nativo, move stop, Mode C) |
 
-`default_adapter` corrente: `hummingbot_api_demo`.
+`default_adapter` corrente: `hummingbot_api_demo`. L'esempio `ccxt_bybit` è in `execution.yaml` come sezione commentata.
 
 ## Stack Docker demo
 
