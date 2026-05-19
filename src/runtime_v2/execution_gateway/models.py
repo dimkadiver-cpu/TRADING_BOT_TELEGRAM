@@ -1,7 +1,7 @@
 # src/runtime_v2/execution_gateway/models.py
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class AdapterCapabilities(BaseModel):
@@ -20,7 +20,7 @@ class AdapterCapabilities(BaseModel):
 class RetryConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     max_attempts: int = 3
-    backoff_seconds: list[int] = [30, 90, 300]
+    backoff_seconds: list[int] = Field(default_factory=lambda: [30, 90, 300])
 
 
 class TakeProfitConfig(BaseModel):
@@ -41,6 +41,13 @@ class LiveSafetyConfig(BaseModel):
     allow_live_trading: bool = False
 
 
+class WebsocketConfig(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    enabled: bool = False
+    poll_fallback_enabled: bool = True
+    poll_fallback_period_seconds: int = 60
+
+
 class EntryExecutionConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     mode: str = "b_entry_stop_then_tp"
@@ -55,8 +62,10 @@ class AdapterConfig(BaseModel):
     leverage: int = 1
     api_key: str | None = None
     testnet: bool = False
+    hedge_mode: bool = False
+    websocket: WebsocketConfig = Field(default_factory=WebsocketConfig)
     secret: str | None = None          # Bearer token for execution adapter auth
-    entry_execution: EntryExecutionConfig = EntryExecutionConfig()
+    entry_execution: EntryExecutionConfig = Field(default_factory=EntryExecutionConfig)
 
     @field_validator("secret", mode="before")
     @classmethod
@@ -65,11 +74,17 @@ class AdapterConfig(BaseModel):
             return None
         return v
 
-    retry: RetryConfig = RetryConfig()
-    capabilities: AdapterCapabilities = AdapterCapabilities()
-    take_profit: TakeProfitConfig = TakeProfitConfig()
-    position_management: PositionManagementConfig = PositionManagementConfig()
-    live_safety: LiveSafetyConfig = LiveSafetyConfig()
+    @model_validator(mode="after")
+    def _validate_adapter_specific_invariants(self) -> AdapterConfig:
+        if self.type.endswith("_api") and not self.base_url.strip():
+            raise ValueError("base_url is required")
+        return self
+
+    retry: RetryConfig = Field(default_factory=RetryConfig)
+    capabilities: AdapterCapabilities = Field(default_factory=AdapterCapabilities)
+    take_profit: TakeProfitConfig = Field(default_factory=TakeProfitConfig)
+    position_management: PositionManagementConfig = Field(default_factory=PositionManagementConfig)
+    live_safety: LiveSafetyConfig = Field(default_factory=LiveSafetyConfig)
 
 
 class AccountRoutingEntry(BaseModel):
@@ -111,12 +126,13 @@ class AdapterResult(BaseModel):
     exchange_order_id: str | None = None
     error: str | None = None
     reason: str | None = None
-    warnings: list[str] = []
+    warnings: list[str] = Field(default_factory=list)
 
 
 __all__ = [
     "AdapterCapabilities", "RetryConfig", "TakeProfitConfig",
-    "PositionManagementConfig", "LiveSafetyConfig", "EntryExecutionConfig",
+    "PositionManagementConfig", "LiveSafetyConfig", "WebsocketConfig",
+    "EntryExecutionConfig",
     "AdapterConfig", "AccountRoutingEntry", "ExecutionConfig",
     "RawAdapterOrder", "AdapterResult",
 ]

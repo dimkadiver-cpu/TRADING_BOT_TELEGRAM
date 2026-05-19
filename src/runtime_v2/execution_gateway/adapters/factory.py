@@ -32,6 +32,7 @@ def build_adapter(adapter_name: str, cfg: AdapterConfig) -> ExecutionAdapter:
             testnet=cfg.testnet,
             connector=cfg.connector,
             capabilities=cfg.capabilities,
+            hedge_mode=cfg.hedge_mode,
         )
     raise ValueError(f"Unknown adapter type '{cfg.type}' for adapter '{adapter_name}'")
 

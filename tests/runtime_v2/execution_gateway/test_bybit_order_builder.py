@@ -301,10 +301,16 @@ def test_close_commands_build_market_reduce_only_orders(
     assert params.extra_params == {"reduceOnly": True}
 
 
-def test_sync_protective_orders_returns_noop() -> None:
-    params = _builder().build("SYNC_PROTECTIVE_ORDERS", {}, "tsb:10:5:sync:1")
+def test_sync_protective_orders_returns_amend_sl_qty() -> None:
+    params = _builder().build(
+        "SYNC_PROTECTIVE_ORDERS",
+        {"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        "tsb:10:5:sync:1",
+    )
 
-    assert params.action == "noop"
+    assert params.action == "amend_sl_qty"
+    assert params.symbol == "BTC/USDT:USDT"
+    assert params.position_side == "LONG"
 
 
 def test_cancel_pending_entry_keeps_cancel_by_link_contract() -> None:
@@ -370,3 +376,128 @@ def test_move_stop_uses_new_stop_price() -> None:
 def test_unknown_command_raises_value_error() -> None:
     with pytest.raises(ValueError, match="Unknown command_type"):
         _builder().build("DO_SOMETHING_ELSE", {}, "tsb:10:5:unknown:1")
+
+
+@pytest.mark.parametrize(
+    ("command_type", "payload", "expected_position_idx"),
+    [
+        (
+            "PLACE_ENTRY",
+            {
+                "symbol": "BTC/USDT:USDT",
+                "side": "LONG",
+                "entry_type": "LIMIT",
+                "qty": 0.01,
+                "price": 50000.0,
+            },
+            1,
+        ),
+        (
+            "PLACE_ENTRY",
+            {
+                "symbol": "BTC/USDT:USDT",
+                "side": "SHORT",
+                "entry_type": "LIMIT",
+                "qty": 0.01,
+                "price": 50000.0,
+            },
+            2,
+        ),
+    ],
+)
+def test_hedge_mode_adds_position_idx_to_entries(
+    command_type: str,
+    payload: dict,
+    expected_position_idx: int,
+) -> None:
+    params = BybitOrderBuilder().build(
+        command_type,
+        payload,
+        "tsb:1:1:entry:1",
+        hedge_mode=True,
+    )
+
+    assert params.extra_params.get("positionIdx") == expected_position_idx
+    assert "reduceOnly" not in params.extra_params
+
+
+@pytest.mark.parametrize(
+    ("command_type", "payload", "expected_position_idx", "expected_reduce_only"),
+    [
+        (
+            "PLACE_PROTECTIVE_STOP",
+            {
+                "symbol": "BTC/USDT:USDT",
+                "side": "LONG",
+                "qty": 0.01,
+                "stop_price": 45000.0,
+            },
+            1,
+            True,
+        ),
+        (
+            "PLACE_TAKE_PROFIT",
+            {
+                "symbol": "BTC/USDT:USDT",
+                "side": "LONG",
+                "qty": 0.01,
+                "price": 55000.0,
+            },
+            1,
+            True,
+        ),
+        (
+            "CLOSE_FULL",
+            {
+                "symbol": "BTC/USDT:USDT",
+                "side": "SHORT",
+                "qty": 0.01,
+            },
+            2,
+            True,
+        ),
+    ],
+)
+def test_hedge_mode_preserves_reduce_only_for_closing_orders(
+    command_type: str,
+    payload: dict,
+    expected_position_idx: int,
+    expected_reduce_only: bool,
+) -> None:
+    params = BybitOrderBuilder().build(
+        command_type,
+        payload,
+        "tsb:1:1:closing:1",
+        hedge_mode=True,
+    )
+
+    assert params.extra_params.get("positionIdx") == expected_position_idx
+    assert params.extra_params.get("reduceOnly") is expected_reduce_only
+
+
+def test_hedge_mode_false_no_position_idx() -> None:
+    params = BybitOrderBuilder().build(
+        "PLACE_ENTRY",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "entry_type": "LIMIT",
+            "qty": 0.01,
+            "price": 50000.0,
+        },
+        "tsb:1:1:entry:1",
+        hedge_mode=False,
+    )
+
+    assert "positionIdx" not in params.extra_params
+
+
+def test_hedge_mode_sync_protective_orders_returns_amend_sl_qty() -> None:
+    params = BybitOrderBuilder().build(
+        "SYNC_PROTECTIVE_ORDERS",
+        {"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        "tsb:1:1:sync:1",
+        hedge_mode=True,
+    )
+
+    assert params.action == "amend_sl_qty"

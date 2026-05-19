@@ -91,6 +91,17 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def get_active_client_order_ids(self) -> set[str]:
+        conn = sqlite3.connect(self._db)
+        try:
+            rows = conn.execute(
+                "SELECT client_order_id FROM ops_execution_commands "
+                "WHERE status IN ('SENT','ACK') AND client_order_id IS NOT NULL"
+            ).fetchall()
+            return {row[0] for row in rows}
+        finally:
+            conn.close()
+
     def count_active_tps(self, trade_chain_id: int) -> int:
         conn = sqlite3.connect(self._db)
         try:
@@ -254,6 +265,20 @@ class GatewayCommandRepository:
                 (trade_chain_id,),
             ).fetchone()
             return row[0] if row else None
+        finally:
+            conn.close()
+
+    def get_payload_by_client_order_id(self, client_order_id: str) -> dict | None:
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT payload_json FROM ops_execution_commands "
+                "WHERE client_order_id=? LIMIT 1",
+                (client_order_id,),
+            ).fetchone()
+            if not row:
+                return None
+            return json.loads(row[0] or "{}")
         finally:
             conn.close()
 

@@ -159,7 +159,8 @@
       "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests\\\\runtime_v2\\\\lifecycle\\\\test_entry_gate.py::test_mode_a_sl_and_tp_are_waiting_position tests\\\\runtime_v2\\\\lifecycle\\\\test_entry_gate.py::test_mode_b_sl_pending_tp_waiting_position tests\\\\runtime_v2\\\\lifecycle\\\\test_entry_gate.py::test_mode_c_entry_has_native_tpsl_no_sl_command -v 2>&1)",
       "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests\\\\runtime_v2\\\\lifecycle\\\\test_event_processor.py::test_entry_filled_weighted_average tests\\\\runtime_v2\\\\lifecycle\\\\test_event_processor.py::test_entry_filled_first_fill_releases_waiting_position -v 2>&1)",
       "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests\\\\runtime_v2\\\\lifecycle\\\\test_entry_gate.py::test_move_to_be_does_not_set_lifecycle_state tests\\\\runtime_v2\\\\lifecycle\\\\test_event_processor.py::test_tp_filled_with_be_trigger_does_not_set_lifecycle_state_to_be -v 2>&1)",
-      "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests\\\\runtime_v2\\\\ -q --ignore=tests\\\\runtime_v2\\\\execution_gateway\\\\test_hummingbot_api.py 2>&1 | Select-Object -Last 5)"
+      "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests\\\\runtime_v2\\\\ -q --ignore=tests\\\\runtime_v2\\\\execution_gateway\\\\test_hummingbot_api.py 2>&1 | Select-Object -Last 5)",
+      "Skill(superpowers:using-git-worktrees)"
     ]
   }
 }

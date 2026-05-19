@@ -31,6 +31,9 @@ class ExchangeEventSyncWorker:
         self._execution_account_id = execution_account_id
 
     def run_once(self) -> int:
+        return self.run_reconciliation()
+
+    def run_reconciliation(self) -> int:
         active = self._repo.get_sent_or_ack()
         processed = 0
 
@@ -48,7 +51,7 @@ class ExchangeEventSyncWorker:
                         self._repo.mark_done(cmd.command_id)
                         processed += 1
             except Exception:
-                logger.exception("sync error for %s", client_order_id)
+                logger.exception("reconciliation error for %s", client_order_id)
 
         return processed
 

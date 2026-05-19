@@ -72,3 +72,29 @@ def test_build_ccxt_bybit_adapter(monkeypatch):
     })
     adapter = build_adapter("bybit_testnet", cfg)
     assert isinstance(adapter, CcxtBybitAdapter)
+
+
+def test_factory_ccxt_bybit_passes_hedge_mode(monkeypatch):
+    monkeypatch.setenv("BYBIT_API_SECRET_HEDGE_MAIN", "secret123")
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+        "testnet": True,
+        "api_key": "key123",
+        "hedge_mode": True,
+    })
+    adapter = build_adapter("hedge_main", cfg)
+    assert adapter._hedge_mode is True
+
+
+def test_factory_ccxt_bybit_hedge_mode_false_by_default(monkeypatch):
+    monkeypatch.setenv("BYBIT_API_SECRET_BYBIT_MAIN", "secret123")
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+        "testnet": True,
+    })
+    adapter = build_adapter("bybit_main", cfg)
+    assert adapter._hedge_mode is False

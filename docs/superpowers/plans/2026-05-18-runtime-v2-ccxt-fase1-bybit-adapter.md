@@ -8,7 +8,10 @@
 
 **Tech Stack:** `ccxt>=4.0` (sync mode), existing `pydantic>=2.0`, `pytest` with custom marker, Python 3.12+.
 
-## Execution Status (updated 2026-05-18)
+## Execution Status (updated 2026-05-19) — FASE 1 COMPLETATA ✅
+
+Tutti i task completati e mergiati su `main` (merge commit `9484b26`).
+Suite finale: **367 passed, 10 skipped, 6 deselected (bybit_testnet), 0 failed**.
 
 - `Task 1` completed.
   Commits:
@@ -35,13 +38,25 @@
   1. Mode C payload names were aligned with the actual lifecycle producer (`attached_take_profit`, `attached_stop_loss`).
   2. `MOVE_STOP_TO_BREAKEVEN` now consumes `target_price` + `be_buffer_pct` and computes the trigger price consistently with lifecycle semantics.
 
-- `Task 4` is partially absorbed into the Task 3 fix.
-  Current state:
-  the advanced builder coverage for Mode C, `CANCEL_PENDING_ENTRY`, `MOVE_STOP_TO_BREAKEVEN`, and `MOVE_STOP` has already been added in `tests/runtime_v2/execution_gateway/test_bybit_order_builder.py`, and targeted lifecycle assertions were added in `tests/runtime_v2/lifecycle/test_entry_gate.py`.
-  Important deviation from the original plan:
-  the assumption "No code changes needed" turned out to be false. Fixing Task 3 required real code changes in both `order_builder.py` and `entry_gate.py` to align producer/consumer contracts.
+- `Task 4` completed (partially absorbed into Task 3 fix).
+  Advanced builder coverage for Mode C, `CANCEL_PENDING_ENTRY`, `MOVE_STOP_TO_BREAKEVEN`, and `MOVE_STOP` added in `tests/runtime_v2/execution_gateway/test_bybit_order_builder.py`. Lifecycle assertions in `tests/runtime_v2/lifecycle/test_entry_gate.py`.
+  Deviation: "No code changes needed" was false — fixing Task 3 required real code changes in both `order_builder.py` and `entry_gate.py`.
 
-- `Task 5` through `Task 8` are still pending.
+- `Task 5` completed.
+  Commit: `c11fb67` (`feat(execution): implement CcxtBybitAdapter with injectable exchange for unit testing`).
+  Result: `CcxtBybitAdapter` fully implemented — `place_order` (create_order / cancel_by_link / edit_sl / noop), `get_order_status` (open→closed fallback), `get_position_qty`, `set_leverage`, `get_capabilities`. 23 unit tests, all pass. Injectable `_exchange` for mock-based testing.
+
+- `Task 6` completed.
+  Commit: `685697c` (`feat(execution): wire ccxt_bybit into factory; add bybit_testnet pytest marker with auto-skip`).
+  Result: `factory.py` updated with `ccxt_bybit` branch (reads `BYBIT_API_SECRET_{adapter_name}` from env). `bybit_testnet` marker registered in `pytest.ini`. `conftest.py` auto-skips gated tests when `BYBIT_TESTNET_API_KEY` absent.
+
+- `Task 7` completed.
+  Commit: `d42c0f8` (`test(execution): add gated integration tests for CcxtBybitAdapter against Bybit testnet`).
+  Result: 6 gated integration tests covering leverage, entry placement, order status, cancel, protective stop, position qty. Auto-skipped without env var.
+
+- `Task 8` completed — regression suite clean.
+  367 tests pass on `main`. No new regressions.
+  Additional fix: `0883f29` (`fix(execution): move hummingbot_api base_url validation to factory; update tests`) — moved adapter-specific base_url validation out of `models.py` into `factory.py` to satisfy architecture test `test_ac8_no_hummingbot_import_in_gateway`.
 
 ---
 

@@ -1,15 +1,29 @@
 # tests/runtime_v2/execution_gateway/test_ccxt_bybit_adapter_unit.py
 from __future__ import annotations
 
+import json
+import sqlite3
+from pathlib import Path
+
 import pytest
 import ccxt
 from unittest.mock import MagicMock
 
 
-def _make_adapter(exchange):
+def _make_adapter(exchange, hedge_mode=False):
     from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
     return CcxtBybitAdapter(
         api_key="key", api_secret="secret", testnet=True, connector="bybit",
+        hedge_mode=hedge_mode,
+        _exchange=exchange,
+    )
+
+
+def _make_adapter_with_repo(exchange, repo, hedge_mode=False):
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    return CcxtBybitAdapter(
+        api_key="key", api_secret="secret", testnet=True, connector="bybit",
+        hedge_mode=hedge_mode, repo=repo,
         _exchange=exchange,
     )
 
@@ -23,6 +37,21 @@ def _place_entry(adapter, symbol="BTC/USDT:USDT", side="LONG", qty=0.01, price=5
         execution_account_id="bybit_main",
         connector="bybit",
     )
+
+
+def _apply_migrations(db_path: str) -> None:
+    conn = sqlite3.connect(db_path)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+    conn.close()
+
+
+@pytest.fixture
+def ops_db(tmp_path):
+    db = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db)
+    return db
 
 
 # --- place_order: create_order happy path ---
@@ -79,23 +108,151 @@ def test_place_protective_stop_calls_create_order():
     assert kwargs["params"]["reduceOnly"] is True
 
 
-# --- place_order: noop (SYNC_PROTECTIVE_ORDERS) ---
-
-def test_sync_protective_orders_noop_no_exchange_call():
+def test_hedge_mode_place_entry_adds_position_idx():
     exchange = MagicMock()
+    exchange.create_order.return_value = {"id": "123"}
+    adapter = _make_adapter(exchange, hedge_mode=True)
+
+    adapter.place_order(
+        command_type="PLACE_ENTRY",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG",
+                 "entry_type": "LIMIT", "qty": 0.01, "price": 50000.0},
+        client_order_id="tsb:1:1:entry:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    call_params = exchange.create_order.call_args[1]["params"]
+    assert call_params.get("positionIdx") == 1
+    assert "reduceOnly" not in call_params
+
+
+# --- place_order: SYNC_PROTECTIVE_ORDERS ---
+
+def test_sync_protective_orders_mode_b_amends_sl_qty():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "side": "long",
+            "contracts": 0.5,
+            "info": {"symbol": "BTCUSDT", "stopLoss": "0"},
+        }
+    ]
+    exchange.fetch_open_orders.return_value = [
+        {
+            "id": "sl-order-1",
+            "side": "sell",
+            "type": "stop",
+            "amount": 1.0,
+            "reduceOnly": True,
+            "stopPrice": "45000.0",
+            "info": {},
+        }
+    ]
+    exchange.edit_order.return_value = {"id": "sl-order-1"}
     adapter = _make_adapter(exchange)
 
     result = adapter.place_order(
         command_type="SYNC_PROTECTIVE_ORDERS",
-        payload={"symbol": "BTC/USDT:USDT"},
-        client_order_id="tsb:10:5:sync:1",
-        execution_account_id="bybit_main",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        client_order_id="tsb:1:1:sync:1",
+        execution_account_id="main",
         connector="bybit",
     )
 
     assert result.success is True
-    exchange.create_order.assert_not_called()
-    exchange.cancel_order.assert_not_called()
+    exchange.edit_order.assert_called_once_with(
+        "sl-order-1",
+        "BTC/USDT:USDT",
+        "stop",
+        "sell",
+        0.5,
+        params={"triggerPrice": 45000.0},
+    )
+
+
+def test_sync_protective_orders_mode_c_calls_trading_stop():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "side": "long",
+            "contracts": 0.7,
+            "info": {"symbol": "BTCUSDT", "stopLoss": "45000.0"},
+        }
+    ]
+    exchange.fetch_open_orders.return_value = []
+    exchange.private_post_v5_position_trading_stop = MagicMock(return_value={})
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="SYNC_PROTECTIVE_ORDERS",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        client_order_id="tsb:1:1:sync:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.private_post_v5_position_trading_stop.assert_called_once_with(
+        {
+            "category": "linear",
+            "symbol": "BTCUSDT",
+            "positionIdx": 1,
+            "stopLoss": "45000.0",
+            "slSize": "0.7",
+        }
+    )
+
+
+def test_sync_protective_orders_qty_zero_cancels_reduce_only():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "side": "long",
+            "contracts": 0.0,
+            "info": {"symbol": "BTCUSDT", "stopLoss": "0"},
+        }
+    ]
+    exchange.fetch_open_orders.return_value = [
+        {"id": "sl-1", "side": "sell", "reduceOnly": True, "stopPrice": "45000"},
+        {"id": "tp-1", "side": "sell", "reduceOnly": True, "stopPrice": None},
+    ]
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="SYNC_PROTECTIVE_ORDERS",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        client_order_id="tsb:1:1:sync:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    assert exchange.cancel_order.call_count == 2
+
+
+def test_sync_protective_orders_no_sl_found_returns_success():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "side": "long",
+            "contracts": 0.5,
+            "info": {"symbol": "BTCUSDT", "stopLoss": "0"},
+        }
+    ]
+    exchange.fetch_open_orders.return_value = []
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="SYNC_PROTECTIVE_ORDERS",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        client_order_id="tsb:1:1:sync:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.edit_order.assert_not_called()
 
 
 # --- place_order: cancel_by_link (CANCEL_PENDING_ENTRY) ---
@@ -301,6 +458,162 @@ def test_get_order_status_open_orders_exception_falls_back():
     assert raw.status == "FILLED"
 
 
+def test_od_f1_2_fallback_returns_filled_when_position_closed():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.return_value = []
+    exchange.fetch_closed_orders.return_value = []
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.0, "info": {}}
+    ]
+    repo = MagicMock()
+    repo.get_payload_by_client_order_id.return_value = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+    }
+    adapter = _make_adapter_with_repo(exchange, repo)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:1:1:sl:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is not None
+    assert raw.status == "FILLED"
+    exchange.fetch_positions.assert_called_once_with(["BTC/USDT:USDT"])
+
+
+def test_od_f1_2_fallback_returns_none_when_position_still_open():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.return_value = []
+    exchange.fetch_closed_orders.return_value = []
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.5, "info": {}}
+    ]
+    repo = MagicMock()
+    repo.get_payload_by_client_order_id.return_value = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+    }
+    adapter = _make_adapter_with_repo(exchange, repo)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:1:1:sl:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is None
+
+
+def test_od_f1_2_fallback_returns_none_when_fetch_positions_empty():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.return_value = []
+    exchange.fetch_closed_orders.return_value = []
+    exchange.fetch_positions.return_value = []
+    repo = MagicMock()
+    repo.get_payload_by_client_order_id.return_value = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+    }
+    adapter = _make_adapter_with_repo(exchange, repo)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:1:1:sl:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is None
+
+
+def test_od_f1_2_fallback_returns_none_when_only_opposite_side_exists():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.return_value = []
+    exchange.fetch_closed_orders.return_value = []
+    exchange.fetch_positions.return_value = [
+        {"side": "short", "contracts": 0.0, "info": {}}
+    ]
+    repo = MagicMock()
+    repo.get_payload_by_client_order_id.return_value = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+    }
+    adapter = _make_adapter_with_repo(exchange, repo)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:1:1:sl:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is None
+
+
+def test_od_f1_2_fallback_skipped_for_entry_role():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.return_value = []
+    exchange.fetch_closed_orders.return_value = []
+    repo = MagicMock()
+    repo.get_payload_by_client_order_id.return_value = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+    }
+    adapter = _make_adapter_with_repo(exchange, repo)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:1:1:entry:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is None
+    exchange.fetch_positions.assert_not_called()
+
+
+def test_od_f1_2_fallback_recovers_when_open_and_closed_polling_fail():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.side_effect = Exception("open failed")
+    exchange.fetch_closed_orders.side_effect = Exception("closed failed")
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.0, "info": {}}
+    ]
+    repo = MagicMock()
+    repo.get_payload_by_client_order_id.return_value = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+    }
+    adapter = _make_adapter_with_repo(exchange, repo)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:1:1:sl:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is not None
+    assert raw.status == "FILLED"
+
+
+def test_get_payload_by_client_order_id_returns_payload_dict(ops_db):
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, client_order_id, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (
+            1001,
+            42,
+            "PLACE_PROTECTIVE_STOP",
+            "SENT",
+            json.dumps({"symbol": "BTC/USDT:USDT", "side": "LONG"}),
+            "idem:1001",
+            "tsb:42:1001:sl:1",
+            "2026-05-19T00:00:00+00:00",
+            "2026-05-19T00:00:00+00:00",
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(ops_db)
+
+    payload = repo.get_payload_by_client_order_id("tsb:42:1001:sl:1")
+
+    assert payload == {"symbol": "BTC/USDT:USDT", "side": "LONG"}
+
+
 # --- get_position_qty ---
 
 def test_get_position_qty_long():
@@ -370,6 +683,26 @@ def test_set_leverage_calls_exchange_with_buy_sell_params():
         10, "BTC/USDT:USDT",
         params={"buyLeverage": "10", "sellLeverage": "10"},
     )
+
+
+def test_hedge_mode_set_leverage_passes_position_idx_zero():
+    exchange = MagicMock()
+    adapter = _make_adapter(exchange, hedge_mode=True)
+
+    adapter.set_leverage("BTC/USDT:USDT", 10, "main")
+
+    call_params = exchange.set_leverage.call_args[1]["params"]
+    assert call_params.get("positionIdx") == 0
+
+
+def test_one_way_mode_set_leverage_no_position_idx():
+    exchange = MagicMock()
+    adapter = _make_adapter(exchange, hedge_mode=False)
+
+    adapter.set_leverage("BTC/USDT:USDT", 10, "main")
+
+    call_params = exchange.set_leverage.call_args[1]["params"]
+    assert "positionIdx" not in call_params
 
 
 # --- get_capabilities ---

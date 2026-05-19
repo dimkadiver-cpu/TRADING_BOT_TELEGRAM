@@ -105,6 +105,11 @@ execution:
 #       testnet: true
 #       api_key: "abc123"
 #       leverage: 10
+#       hedge_mode: false        # true se account Bybit in hedge mode
+#       websocket:
+#         enabled: true
+#         poll_fallback_enabled: true
+#         poll_fallback_period_seconds: 60
 #
 #     bybit_trader_b:
 #       type: ccxt_bybit
@@ -113,3 +118,8 @@ execution:
 #       testnet: true
 #       api_key: "xyz789"
 #       leverage: 5
+#       hedge_mode: false
+#       websocket:
+#         enabled: true
+#         poll_fallback_enabled: true
+#         poll_fallback_period_seconds: 60

@@ -73,32 +73,73 @@ def test_adapter_config_base_url_still_accepted_when_provided():
 
 
 def test_adapter_config_hummingbot_api_without_base_url_fails_validation():
-    cfg = AdapterConfig.model_validate({
-        "type": "hummingbot_api",
-        "mode": "demo",
-        "connector": "bybit_perpetual_demo",
-    })
     with pytest.raises(ValueError, match="base_url is required"):
-        build_adapter("demo", cfg)
+        AdapterConfig.model_validate({
+            "type": "hummingbot_api",
+            "mode": "demo",
+            "connector": "bybit_perpetual_demo",
+        })
 
 
 def test_adapter_config_hummingbot_api_empty_base_url_fails_validation():
-    cfg = AdapterConfig.model_validate({
-        "type": "hummingbot_api",
-        "mode": "demo",
-        "connector": "bybit_perpetual_demo",
-        "base_url": "",
-    })
     with pytest.raises(ValueError, match="base_url is required"):
-        build_adapter("demo", cfg)
+        AdapterConfig.model_validate({
+            "type": "hummingbot_api",
+            "mode": "demo",
+            "connector": "bybit_perpetual_demo",
+            "base_url": "",
+        })
 
 
 def test_adapter_config_hummingbot_api_blank_base_url_fails_validation():
-    cfg = AdapterConfig.model_validate({
-        "type": "hummingbot_api",
-        "mode": "demo",
-        "connector": "bybit_perpetual_demo",
-        "base_url": "   ",
-    })
     with pytest.raises(ValueError, match="base_url is required"):
-        build_adapter("demo", cfg)
+        AdapterConfig.model_validate({
+            "type": "hummingbot_api",
+            "mode": "demo",
+            "connector": "bybit_perpetual_demo",
+            "base_url": "   ",
+        })
+
+
+def test_adapter_config_hedge_mode_defaults_false():
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+    })
+    assert cfg.hedge_mode is False
+
+
+def test_adapter_config_hedge_mode_true():
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+        "hedge_mode": True,
+    })
+    assert cfg.hedge_mode is True
+
+
+def test_adapter_config_websocket_defaults():
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+    })
+    assert cfg.websocket.enabled is False
+    assert cfg.websocket.poll_fallback_enabled is True
+    assert cfg.websocket.poll_fallback_period_seconds == 60
+
+
+def test_adapter_config_websocket_custom():
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+        "websocket": {
+            "enabled": True,
+            "poll_fallback_period_seconds": 30,
+        },
+    })
+    assert cfg.websocket.enabled is True
+    assert cfg.websocket.poll_fallback_period_seconds == 30

@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -126,3 +127,106 @@ def test_idempotency_no_duplicate_events(ops_db):
     count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
     conn.close()
     assert count == 1
+
+
+def test_run_reconciliation_processes_sent_commands(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_sent_cmd(ops_db, 4001, 5, "PLACE_ENTRY", "tsb:5:4001:entry:1")
+
+    adapter = MagicMock()
+    adapter.get_order_status.return_value = RawAdapterOrder(
+        client_order_id="tsb:5:4001:entry:1",
+        exchange_order_id="ex-1",
+        status="FILLED",
+        filled_qty=0.01,
+        average_price=50000.0,
+    )
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="main",
+    )
+
+    count = worker.run_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=4001"
+    ).fetchone()
+    events = conn.execute(
+        "SELECT event_type FROM ops_exchange_events WHERE trade_chain_id=5"
+    ).fetchall()
+    conn.close()
+    assert row[0] == "DONE"
+    assert events == [("ENTRY_FILLED",)]
+
+
+def test_run_reconciliation_skips_commands_without_client_order_id(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_sent_cmd(ops_db, 4002, 6, "PLACE_ENTRY", None)
+
+    adapter = MagicMock()
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="main",
+    )
+
+    count = worker.run_reconciliation()
+
+    assert count == 0
+    adapter.get_order_status.assert_not_called()
+
+
+def test_run_reconciliation_continues_after_single_order_error(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_sent_cmd(ops_db, 4003, 7, "PLACE_ENTRY", "tsb:7:4003:entry:1")
+    _insert_sent_cmd(ops_db, 4004, 8, "PLACE_ENTRY", "tsb:8:4004:entry:1")
+
+    adapter = MagicMock()
+    adapter.get_order_status.side_effect = [
+        RuntimeError("boom"),
+        RawAdapterOrder(
+            client_order_id="tsb:8:4004:entry:1",
+            exchange_order_id="ex-2",
+            status="FILLED",
+            filled_qty=0.02,
+            average_price=51000.0,
+        ),
+    ]
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="main",
+    )
+
+    count = worker.run_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT command_id, status FROM ops_execution_commands "
+        "WHERE command_id IN (4003, 4004) ORDER BY command_id"
+    ).fetchall()
+    events = conn.execute(
+        "SELECT event_type, trade_chain_id FROM ops_exchange_events "
+        "ORDER BY trade_chain_id, event_type"
+    ).fetchall()
+    conn.close()
+    assert rows == [(4003, "SENT"), (4004, "DONE")]
+    assert events == [("ENTRY_FILLED", 8)]

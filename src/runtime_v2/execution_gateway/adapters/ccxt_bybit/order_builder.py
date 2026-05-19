@@ -22,7 +22,24 @@ class BybitOrderParams:
 
 
 class BybitOrderBuilder:
-    def build(self, command_type: str, payload: dict, client_order_id: str) -> BybitOrderParams:
+    def build(
+        self,
+        command_type: str,
+        payload: dict,
+        client_order_id: str,
+        *,
+        hedge_mode: bool = False,
+    ) -> BybitOrderParams:
+        params = self._dispatch(command_type, payload, client_order_id)
+        if hedge_mode and params.action == "create_order":
+            params.extra_params["positionIdx"] = (
+                1 if payload.get("side") == "LONG" else 2
+            )
+        return params
+
+    def _dispatch(
+        self, command_type: str, payload: dict, client_order_id: str
+    ) -> BybitOrderParams:
         if command_type == "PLACE_ENTRY":
             return self._place_entry(payload, client_order_id)
         if command_type == "PLACE_PROTECTIVE_STOP":
@@ -36,7 +53,11 @@ class BybitOrderBuilder:
         if command_type in {"MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP"}:
             return self._move_stop(command_type, payload)
         if command_type == "SYNC_PROTECTIVE_ORDERS":
-            return BybitOrderParams(action="noop")
+            return BybitOrderParams(
+                action="amend_sl_qty",
+                symbol=payload["symbol"],
+                position_side=payload["side"],
+            )
         raise ValueError(f"Unknown command_type: {command_type!r}")
 
     def _place_entry(self, payload: dict, client_order_id: str) -> BybitOrderParams:

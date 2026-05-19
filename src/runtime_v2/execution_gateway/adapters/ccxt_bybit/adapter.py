@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 
 import ccxt
 
@@ -9,6 +10,9 @@ from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.order_builder import BybitOrderBuilder
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper
 from src.runtime_v2.execution_gateway.models import AdapterCapabilities, AdapterResult, RawAdapterOrder
+
+if TYPE_CHECKING:
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +37,8 @@ class CcxtBybitAdapter(ExecutionAdapter):
         testnet: bool,
         connector: str,
         capabilities: AdapterCapabilities | None = None,
+        hedge_mode: bool = False,
+        repo: GatewayCommandRepository | None = None,
         _exchange=None,  # injectable for unit tests
     ) -> None:
         if _exchange is not None:
@@ -47,16 +53,21 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 self._exchange.set_sandbox_mode(True)
         self._connector = connector
         self._capabilities = capabilities or _DEFAULT_CAPABILITIES
+        self._hedge_mode = hedge_mode
+        self._repo = repo
         self._builder = BybitOrderBuilder()
 
     def get_capabilities(self) -> AdapterCapabilities:
         return self._capabilities
 
     def set_leverage(self, symbol: str, leverage: int, execution_account_id: str) -> None:
-        self._exchange.set_leverage(leverage, symbol, params={
+        extra = {
             "buyLeverage": str(leverage),
             "sellLeverage": str(leverage),
-        })
+        }
+        if self._hedge_mode:
+            extra["positionIdx"] = 0
+        self._exchange.set_leverage(leverage, symbol, params=extra)
 
     def place_order(
         self,
@@ -72,7 +83,12 @@ class CcxtBybitAdapter(ExecutionAdapter):
         if command_type == "MOVE_STOP_TO_BREAKEVEN" and "entry_price" in payload and "target_price" not in payload:
             payload = {**payload, "target_price": payload["entry_price"]}
 
-        params = self._builder.build(command_type, payload, client_order_id)
+        params = self._builder.build(
+            command_type,
+            payload,
+            client_order_id,
+            hedge_mode=self._hedge_mode,
+        )
 
         if params.action == "noop":
             return AdapterResult(success=True)
@@ -118,6 +134,9 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 )
                 return AdapterResult(success=True)
 
+            if params.action == "amend_sl_qty":
+                return self._handle_amend_sl_qty(params.symbol, params.position_side)
+
         except ccxt.InvalidOrder as e:
             return AdapterResult(success=False, reason="invalid_order", error=str(e))
         except ccxt.InsufficientFunds as e:
@@ -145,13 +164,13 @@ class CcxtBybitAdapter(ExecutionAdapter):
         client_order_id: str,
         execution_account_id: str,
     ) -> RawAdapterOrder | None:
+        orders = []
         try:
             orders = self._exchange.fetch_open_orders(
                 None, params={"orderLinkId": client_order_id}
             )
         except Exception as exc:
             logger.debug("fetch_open_orders error: %s", exc)
-            orders = []
         if not orders:
             try:
                 orders = self._exchange.fetch_closed_orders(
@@ -159,10 +178,9 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 )
             except Exception as exc:
                 logger.debug("fetch_closed_orders error: %s", exc)
-                orders = []
-        if not orders:
-            return None
-        return StatusMapper.map(orders[-1], client_order_id=client_order_id)
+        if orders:
+            return StatusMapper.map(orders[-1], client_order_id=client_order_id)
+        return self._get_attached_order_status_from_positions(client_order_id)
 
     def get_position_qty(
         self,
@@ -180,6 +198,119 @@ class CcxtBybitAdapter(ExecutionAdapter):
         except Exception:
             logger.warning("get_position_qty failed for %s %s", symbol, side)
             return None
+
+    def _handle_amend_sl_qty(self, symbol: str, side: str) -> AdapterResult:
+        close_side = "sell" if side == "LONG" else "buy"
+        position_idx = 1 if side == "LONG" else 2
+
+        try:
+            positions = self._exchange.fetch_positions([symbol])
+        except Exception as exc:
+            return AdapterResult(success=False, error=f"fetch_positions failed: {exc}")
+
+        current_qty = 0.0
+        pos_info: dict = {}
+        for pos in positions:
+            if str(pos.get("side") or "").lower() == side.lower():
+                current_qty = float(pos.get("contracts") or 0.0)
+                pos_info = pos.get("info") or {}
+                break
+
+        try:
+            open_orders = self._exchange.fetch_open_orders(symbol)
+        except Exception:
+            open_orders = []
+
+        if current_qty == 0.0:
+            for order in open_orders:
+                if order.get("reduceOnly") and order.get("side") == close_side:
+                    try:
+                        self._exchange.cancel_order(order["id"], symbol)
+                    except Exception as exc:
+                        logger.warning("cancel residual reduceOnly order failed: %s", exc)
+            return AdapterResult(success=True)
+
+        sl_orders = [
+            order
+            for order in open_orders
+            if order.get("reduceOnly") and order.get("stopPrice") and order.get("side") == close_side
+        ]
+        if sl_orders:
+            sl_order = sl_orders[-1]
+            try:
+                self._exchange.edit_order(
+                    sl_order["id"],
+                    symbol,
+                    sl_order["type"],
+                    sl_order["side"],
+                    current_qty,
+                    params={"triggerPrice": float(sl_order["stopPrice"])},
+                )
+            except Exception as exc:
+                return AdapterResult(success=False, error=f"edit_order sl failed: {exc}")
+            return AdapterResult(success=True)
+
+        attached_sl = pos_info.get("stopLoss", "0")
+        if attached_sl and float(attached_sl) > 0:
+            bybit_symbol = pos_info.get("symbol") or symbol.replace("/", "").replace(":USDT", "")
+            try:
+                self._exchange.private_post_v5_position_trading_stop(
+                    {
+                        "category": "linear",
+                        "symbol": bybit_symbol,
+                        "positionIdx": position_idx,
+                        "stopLoss": str(attached_sl),
+                        "slSize": str(current_qty),
+                    }
+                )
+            except Exception as exc:
+                return AdapterResult(success=False, error=f"trading_stop failed: {exc}")
+            return AdapterResult(success=True)
+
+        return AdapterResult(success=True)
+
+    def _get_attached_order_status_from_positions(
+        self,
+        client_order_id: str,
+    ) -> RawAdapterOrder | None:
+        from src.runtime_v2.execution_gateway import client_order_id as coid_mod
+
+        try:
+            coid = coid_mod.parse(client_order_id)
+        except ValueError:
+            return None
+        if coid.role not in {"sl", "tp"} or self._repo is None:
+            return None
+
+        payload = self._repo.get_payload_by_client_order_id(client_order_id)
+        if payload is None:
+            return None
+
+        symbol = payload.get("symbol")
+        side = payload.get("side")
+        if not symbol or not side:
+            return None
+
+        try:
+            positions = self._exchange.fetch_positions([symbol])
+        except Exception as exc:
+            logger.debug("fetch_positions fallback error: %s", exc)
+            return None
+
+        matched_side = False
+        current_qty = 0.0
+        for pos in positions:
+            if str(pos.get("side") or "").lower() == str(side).lower():
+                matched_side = True
+                current_qty = float(pos.get("contracts") or 0.0)
+                break
+
+        if matched_side and current_qty == 0.0:
+            return RawAdapterOrder(
+                client_order_id=client_order_id,
+                status="FILLED",
+            )
+        return None
 
 
 __all__ = ["CcxtBybitAdapter"]
