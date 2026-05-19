@@ -58,3 +58,17 @@ def test_build_adapter_testnet_mode():
     )
     adapter = build_adapter("hummingbot_api_testnet", cfg)
     assert isinstance(adapter, HummingbotApiAdapter)
+
+
+def test_build_ccxt_bybit_adapter(monkeypatch):
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    monkeypatch.setenv("BYBIT_API_SECRET_BYBIT_TESTNET", "test_secret")
+    cfg = AdapterConfig.model_validate({
+        "type": "ccxt_bybit",
+        "mode": "paper",
+        "connector": "bybit",
+        "api_key": "test_key",
+        "testnet": True,
+    })
+    adapter = build_adapter("bybit_testnet", cfg)
+    assert isinstance(adapter, CcxtBybitAdapter)
