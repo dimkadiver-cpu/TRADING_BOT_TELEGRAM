@@ -35,6 +35,9 @@ class BybitOrderBuilder:
             params.extra_params["positionIdx"] = (
                 1 if payload.get("side") == "LONG" else 2
             )
+            # Bybit hedge mode uses positionIdx to identify the position side; reduceOnly
+            # conflicts with positionIdx on the V5 API and must be removed for all order types.
+            params.extra_params.pop("reduceOnly", None)
         return params
 
     def _dispatch(
@@ -56,7 +59,7 @@ class BybitOrderBuilder:
             return BybitOrderParams(
                 action="amend_sl_qty",
                 symbol=payload["symbol"],
-                position_side=payload["side"],
+                position_side=payload.get("side", ""),
             )
         raise ValueError(f"Unknown command_type: {command_type!r}")
 

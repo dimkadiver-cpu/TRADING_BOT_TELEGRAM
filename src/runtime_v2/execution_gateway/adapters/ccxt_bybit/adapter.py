@@ -11,6 +11,8 @@ from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.order_builder import B
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper
 from src.runtime_v2.execution_gateway.models import AdapterCapabilities, AdapterResult, RawAdapterOrder
 
+from src.runtime_v2.execution_gateway import client_order_id as coid_mod
+
 if TYPE_CHECKING:
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
@@ -273,8 +275,6 @@ class CcxtBybitAdapter(ExecutionAdapter):
         self,
         client_order_id: str,
     ) -> RawAdapterOrder | None:
-        from src.runtime_v2.execution_gateway import client_order_id as coid_mod
-
         try:
             coid = coid_mod.parse(client_order_id)
         except ValueError:

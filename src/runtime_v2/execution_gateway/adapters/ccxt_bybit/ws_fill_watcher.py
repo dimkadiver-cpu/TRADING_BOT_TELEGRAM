@@ -41,6 +41,7 @@ class BybitWsFillWatcher:
         self._repo = repo
         self._reconciliation_callback = reconciliation_callback
         self._stop_event = threading.Event()
+        self._loop_ready = threading.Event()
         self._thread: threading.Thread | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
         self._watch_task: asyncio.Task | None = None
@@ -58,6 +59,7 @@ class BybitWsFillWatcher:
 
     def stop(self) -> None:
         self._stop_event.set()
+        self._loop_ready.wait(timeout=2)
         loop = self._loop
         if loop is not None and loop.is_running():
             loop.call_soon_threadsafe(self._cancel_watch_task)
@@ -69,6 +71,7 @@ class BybitWsFillWatcher:
         loop = asyncio.new_event_loop()
         self._loop = loop
         asyncio.set_event_loop(loop)
+        self._loop_ready.set()
         self._watch_task = loop.create_task(self._watch_orders_forever())
         try:
             loop.run_until_complete(self._watch_task)

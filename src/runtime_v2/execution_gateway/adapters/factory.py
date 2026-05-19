@@ -26,6 +26,8 @@ def build_adapter(adapter_name: str, cfg: AdapterConfig) -> ExecutionAdapter:
     if cfg.type == "ccxt_bybit":
         from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
         api_secret = os.environ.get(f"BYBIT_API_SECRET_{adapter_name.upper()}")
+        # repo is not injected here — must be wired by ExecutionCommandWorker to enable
+        # the OD-F1-2 get_order_status fallback (Mode C attached SL/TP).
         return CcxtBybitAdapter(
             api_key=cfg.api_key or "",
             api_secret=api_secret or "",

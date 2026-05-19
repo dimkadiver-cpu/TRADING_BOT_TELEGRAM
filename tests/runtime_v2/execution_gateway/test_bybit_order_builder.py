@@ -422,7 +422,7 @@ def test_hedge_mode_adds_position_idx_to_entries(
 
 
 @pytest.mark.parametrize(
-    ("command_type", "payload", "expected_position_idx", "expected_reduce_only"),
+    ("command_type", "payload", "expected_position_idx"),
     [
         (
             "PLACE_PROTECTIVE_STOP",
@@ -433,7 +433,6 @@ def test_hedge_mode_adds_position_idx_to_entries(
                 "stop_price": 45000.0,
             },
             1,
-            True,
         ),
         (
             "PLACE_TAKE_PROFIT",
@@ -444,7 +443,6 @@ def test_hedge_mode_adds_position_idx_to_entries(
                 "price": 55000.0,
             },
             1,
-            True,
         ),
         (
             "CLOSE_FULL",
@@ -454,15 +452,13 @@ def test_hedge_mode_adds_position_idx_to_entries(
                 "qty": 0.01,
             },
             2,
-            True,
         ),
     ],
 )
-def test_hedge_mode_preserves_reduce_only_for_closing_orders(
+def test_hedge_mode_removes_reduce_only_from_closing_orders(
     command_type: str,
     payload: dict,
     expected_position_idx: int,
-    expected_reduce_only: bool,
 ) -> None:
     params = BybitOrderBuilder().build(
         command_type,
@@ -472,7 +468,7 @@ def test_hedge_mode_preserves_reduce_only_for_closing_orders(
     )
 
     assert params.extra_params.get("positionIdx") == expected_position_idx
-    assert params.extra_params.get("reduceOnly") is expected_reduce_only
+    assert "reduceOnly" not in params.extra_params
 
 
 def test_hedge_mode_false_no_position_idx() -> None:
