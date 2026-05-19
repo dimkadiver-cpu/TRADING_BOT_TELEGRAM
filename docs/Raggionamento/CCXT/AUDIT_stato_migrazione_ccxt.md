@@ -1,160 +1,207 @@
-# AUDIT — Stato migrazione CCXT / eliminazione Hummingbot
+# AUDIT - Stato migrazione CCXT / eliminazione Hummingbot
 
 **Data:** 2026-05-19  
 **Riferimento PRD:** `PRD_runtime_v2_passaggio_hummingbot_a_ccxt_lifecycle_rev2.md`  
-**Branch verificato:** `main` (HEAD `367aee5`)
+**Branch verificato:** `main`
 
 ---
 
 ## Sintesi
 
-La migrazione da Hummingbot a CCXT è **sostanzialmente completata** per le Fasi 0–4.  
-Reconciliation periodica (Fase 5) e pulizia Hummingbot (Fase 6) sono le uniche parti rimaste.  
-I piani non sono stati marcati `done/` ma il codice è in main e i test passano.
+La migrazione da Hummingbot a CCXT e' operativamente completata per le Fasi 0-4 e per il wiring runtime della Fase 5.
+
+Verifica eseguita oggi:
+
+- `main.py` non usa piu' `hb_adapter`
+- il bootstrap runtime centralizza adapter, worker, watcher WS e cleanup in `ExecutionRuntime`
+- `BybitWsFillWatcher` viene avviato se `config/execution.yaml` ha `websocket.enabled: true`
+- la reconciliation periodica viene schedulata con `websocket.poll_fallback_period_seconds` quando `poll_fallback_enabled: true`
+- la suite `execution_gateway + lifecycle` e' verde sul perimetro verificato
+
+Restano aperti:
+
+- validazione end-to-end reale su Bybit Demo
+- rafforzamento del recovery con cross-check posizione lifecycle-side
+- pulizia finale dei documenti storici Hummingbot
 
 ---
 
 ## Stato per fase
 
-| Fase PRD | Descrizione | Stato | Commit chiave |
+| Fase PRD | Descrizione | Stato | Nota |
 |---|---|---|---|
-| Fase 0 | Refactor lifecycle contract | ✅ Completata | `d6326bf`, `1237d19`, `91286de`, `105ea97` |
-| Fase 1 | CcxtBybitAdapter REST | ✅ Completata | `c11fb67`, `685697c`, `9484b26` (merge) |
-| Fase 2 | CCXT Pro WebSocket event stream | ✅ Completata | `070cbc1` (`ws_fill_watcher.py`, hedge_mode, run_reconciliation) |
-| Fase 3 | Lifecycle processor corretto | ✅ Completata | `8464e78`, `cdb77bf`, `33cfd59`, `276728b` |
-| Fase 4 | Protective sync (adapter side) | ✅ Completata | `f0acd5c` (`_handle_amend_sl_qty`, `amend_sl_qty` in order_builder) |
-| Fase 5 | Recovery e reconciliation robusta | ⚠️ Parziale | `run_reconciliation()` esiste ma non periodica |
-| Fase 6 | Pulizia Hummingbot | ❌ Non completata | Hummingbot ancora presente |
+| Fase 0 | Refactor lifecycle contract | Completata | presente in main |
+| Fase 1 | CcxtBybitAdapter REST | Completata | presente in main |
+| Fase 2 | CCXT Pro WebSocket event stream | Completata | watcher disponibile e ora wired dal bootstrap |
+| Fase 3 | Lifecycle processor corretto | Completata | suite lifecycle verde |
+| Fase 4 | Protective sync adapter-side | Completata | presente in main |
+| Fase 5 | Recovery e reconciliation robusta | Parziale | wiring runtime chiuso, recovery ancora da rafforzare |
+| Fase 6 | Pulizia finale Hummingbot | Parziale | runtime pulito, docs storiche ancora da riallineare |
 
 ---
 
-## Cosa è implementato (Fasi 0–4)
+## Cosa e' implementato
 
-### Fase 0 — Lifecycle contract
+### Fase 0 - Lifecycle contract
 
-- `db/ops_migrations/003_ops_quantity_runtime.sql` — nuovi campi `filled_entry_qty`, `open_position_qty`, `closed_position_qty`, `planned_entry_qty`, `execution_mode`
-- `src/runtime_v2/lifecycle/models.py` — `TradeChain` con qty runtime, `be_protection_status` separato da `lifecycle_state`, `SYNC_PROTECTIVE_ORDERS` in `CommandType`, `LEGACY_BE_STATES`
-- `src/runtime_v2/execution_gateway/client_order_id.py` — ruoli `exit_partial`, `exit_full`, `sync`
+- `db/ops_migrations/003_ops_quantity_runtime.sql`
+- `src/runtime_v2/lifecycle/models.py`
+- `src/runtime_v2/execution_gateway/client_order_id.py`
 
-### Fase 1 — CcxtBybitAdapter REST
+### Fase 1 - Adapter REST Bybit via CCXT
 
-```
+File principali:
+
+```text
 src/runtime_v2/execution_gateway/adapters/ccxt_bybit/
-├── adapter.py          CcxtBybitAdapter — place, cancel, get_status, move_stop, close
-├── order_builder.py    BybitOrderBuilder — traduce CommandType → params CCXT
-└── status_mapper.py    Mappa risposta CCXT → RawAdapterOrder
+  adapter.py
+  order_builder.py
+  status_mapper.py
 ```
 
-Factory wired per `ccxt_bybit` con `hedge_mode`, `testnet`, `api_key`.
+### Fase 2 - WebSocket + hedge mode
 
-### Fase 2 — WebSocket + hedge mode
+- `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/ws_fill_watcher.py`
+- `AdapterConfig.websocket`
+- `AdapterConfig.hedge_mode`
+- wiring bootstrap in `main.py`
 
-- `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/ws_fill_watcher.py` — `BybitWsFillWatcher` (ccxt.pro `watchOrders` → `ops_exchange_events`)
-- `AdapterConfig.hedge_mode` + `WebsocketConfig` in `models.py`
-- `BybitOrderBuilder.build()` — aggiunge `positionIdx` in hedge mode
-- `CcxtBybitAdapter` — passa `hedge_mode` al builder, `set_leverage` con `positionIdx=0`
-- `run_reconciliation()` in `ExchangeEventSyncWorker` — polling REST startup/post-WS-error
+### Fase 3 - Lifecycle processor corretto
 
-### Fase 3 — Lifecycle processor corretto
+- gestione `ENTRY_FILLED`, `TP_FILLED`, `SL_FILLED`
+- gestione `CLOSE_PARTIAL_FILLED`, `CLOSE_FULL_FILLED`
+- gestione `STOP_MOVED_CONFIRMED`
+- gestione `PENDING_ENTRY_CANCELLED_CONFIRMED`
+- `SYNC_PROTECTIVE_ORDERS` su eventi parziali
 
-- `ENTRY_FILLED` handler — aggiorna `filled_entry_qty`, `open_position_qty`, avg ponderata, sblocca SL/TP da `WAITING_POSITION`
-- `TP_FILLED` / `SL_FILLED` handlers — riducono `open_position_qty`, aggiornano `lifecycle_state`, emettono `SYNC_PROTECTIVE_ORDERS` se non finale
-- `CLOSE_FULL_FILLED` / `CLOSE_PARTIAL_FILLED` — eventi dedicati (non `ENTRY_FILLED`)
-- `STOP_MOVED_CONFIRMED` / `PENDING_ENTRY_CANCELLED_CONFIRMED` — handlers dedicati
-- `CANCEL_PENDING_ENTRY` su chain già `OPEN` — cancella solo entry residue, emette `SYNC_PROTECTIVE_ORDERS`
-- `be_protection_status` aggiornato senza toccare `lifecycle_state`
+### Fase 4 - Protective sync
 
-### Fase 4 — Protective sync (adapter)
+- `BybitOrderBuilder` genera `amend_sl_qty`
+- `CcxtBybitAdapter._handle_amend_sl_qty()`
+- repository gateway con lookup payload/client order id
 
-- `BybitOrderBuilder` — `SYNC_PROTECTIVE_ORDERS` produce `action="amend_sl_qty"`
-- `CcxtBybitAdapter._handle_amend_sl_qty()` — Mode B (edit SL reduce-only) + Mode C (trading_stop attached) + qty=0 (cancel residui)
-- `repositories.py` — `get_active_client_order_ids()`, `get_payload_by_client_order_id()`
-- Lifecycle emette `SYNC_PROTECTIVE_ORDERS` su TP non finale, SL parziale, close parziale
+### Fase 5 - Wiring runtime verificato oggi
+
+- `ExecutionRuntime` in `main.py`
+- `_build_execution_runtime()`
+- `_close_execution_runtime()`
+- `_run_reconciliation_periodically()`
+- start opzionale di `BybitWsFillWatcher`
+- stop corretto del watcher e dell'adapter in shutdown
 
 ---
 
-## Fase 5 — Gap residuo
+## Gap residui Fase 5
 
-| Deliverable PRD | Stato |
+| Deliverable | Stato |
 |---|---|
-| Recovery on boot (`run_reconciliation`) | ✅ Implementato |
-| Post-WS-error reconciliation callback | ✅ In `ws_fill_watcher.py` |
-| Reconciliation **periodica** (ogni 30–60s) | ❌ Non implementata |
-| Cross-check posizione via `fetchPositions` | ⚠️ In `_handle_amend_sl_qty`, non in path lifecycle |
-| Deduplica eventi (idempotency_key UNIQUE) | ✅ In `ops_exchange_events` schema |
+| Recovery on boot (`run_reconciliation`) | Implementato |
+| Callback di reconciliation dopo errore WS | Implementato |
+| Reconciliation periodica | Implementata |
+| Cross-check posizione nel path lifecycle | Parziale |
+| Deduplica eventi | Implementata |
+
+Il punto ancora aperto non e' il wiring, ma la robustezza del recovery: serve una verifica lifecycle-side piu' esplicita dello stato posizione exchange.
 
 ---
 
-## File Hummingbot ancora presenti (Fase 6)
+## Stato reale Hummingbot nel runtime verificato
 
-```
+Verifica repository del 2026-05-19:
+
+```text
 src/runtime_v2/execution_gateway/adapters/
-├── hummingbot_api.py
-└── hummingbot_api_paper.py
-
-tests/runtime_v2/execution_gateway/
-├── test_hummingbot_adapter.py
-├── test_hummingbot_api_neutral.py
-└── test_hummingbot_demo_gated.py
-
-hummingbot_conf/hummingbot_logs.yml
-hummingbot_logs/logs_hummingbot.log
-docs/runtime_v2/execution_gateway/hummingbot_setup.md
+  base.py
+  factory.py
+  fake.py
+  ccxt_bybit/
 ```
 
-Factory (`factory.py`) supporta ancora `hummingbot_api` come tipo valido.
+Nel path runtime verificato non risultano adapter Hummingbot attivi.
+
+Inoltre:
+
+- il test lifecycle che referenziava ancora Hummingbot e' stato riallineato al builder CCXT
+- gli eventuali riferimenti Hummingbot residui sono da considerare documentali/storici, non parte del runtime attivo verificato oggi
 
 ---
 
-## Test
+## Test eseguiti
+
+Comandi:
+
+```bash
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2\test_main_runtime_bootstrap.py -q --tb=short
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2\lifecycle\test_integration.py -q --tb=short
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway tests\runtime_v2\lifecycle -q --tb=short
+```
+
+Risultati:
 
 | Suite | Risultato |
 |---|---|
-| `tests/runtime_v2/execution_gateway/` | 175 passed, 16 skipped |
-| `tests/runtime_v2/lifecycle/` | 118 passed |
-| Skipped | `@pytest.mark.bybit_testnet` — richiedono API key Bybit reale |
+| `tests/runtime_v2/test_main_runtime_bootstrap.py` | 3 passed |
+| `tests/runtime_v2/lifecycle/test_integration.py` | 10 passed |
+| `tests/runtime_v2/execution_gateway + tests/runtime_v2/lifecycle` | 273 passed, 6 skipped |
+
+Gli `skipped` residui sono test gated `bybit_testnet` che richiedono credenziali reali.
 
 ---
 
-## Analisi gap vs acceptance criteria PRD
+## Analisi gap vs acceptance criteria
 
-| Criterio PRD | Stato |
+| Criterio | Stato |
 |---|---|
-| 1. Runtime esegue ordini Bybit Demo senza Hummingbot | ✅ Configurando `ccxt_bybit` in `execution.yaml` |
-| 2. Adapter configurabile per Bybit Live con safety gate | ✅ `allow_live_trading` in config |
-| 3. Nuovo segnale → chain `WAITING_ENTRY`, SL/TP `WAITING_POSITION` | ✅ Gate Mode A/B/C implementato |
-| 4. Primo fill entry → chain aperta, qty aggiornata, avg corretta | ✅ `ENTRY_FILLED` handler con weighted avg |
-| 5. TP fill → size ridotta, BE generato, protective sync | ✅ `TP_FILLED` handler completo |
-| 6. SL fill → chiusura/riduzione corretta | ✅ `SL_FILLED` handler |
-| 7. `CLOSE_PARTIAL` / `CLOSE_FULL` con eventi dedicati | ✅ `CLOSE_PARTIAL_FILLED` / `CLOSE_FULL_FILLED` |
-| 8. `MOVE_STOP_TO_BREAKEVEN` → `PROTECTED` solo dopo conferma | ✅ `be_protection_status` separato |
-| 9. `CANCEL_PENDING_ENTRY` funziona su chain già `OPEN` | ✅ Emette `SYNC_PROTECTIVE_ORDERS` |
-| 10. `client_order_id` come chiave di correlazione | ✅ |
-| 11. Fill parziali non persi per idempotency key grossolana | ✅ Chiave `event_type:chain_id:exchange_order_id` |
-| 12. Reconciliation recupera eventi persi dopo downtime | ⚠️ On-boot OK; reconciliation periodica mancante |
-| 13. Hummingbot non più necessario al runtime finale | ⚠️ Non più necessario tecnicamente, ma ancora nel codice |
-| 14. Multi-entry o supportato o bloccato esplicitamente | ✅ Supportato via `SYNC_PROTECTIVE_ORDERS` |
+| Runtime esegue ordini Bybit Demo senza Hummingbot | Si, lato wiring/runtime |
+| Adapter configurabile per live con safety gate | Si |
+| Segnale nuovo genera chain e comandi coerenti | Si |
+| Fill entry aggiorna qty e stato | Si |
+| TP fill riduce size e sincronizza protezioni | Si |
+| SL fill chiude o riduce correttamente | Si |
+| `CLOSE_PARTIAL` / `CLOSE_FULL` hanno eventi dedicati | Si |
+| `MOVE_STOP_TO_BREAKEVEN` conferma protezione senza sporcare lifecycle state | Si |
+| `CANCEL_PENDING_ENTRY` funziona anche su chain OPEN | Si |
+| `client_order_id` resta chiave di correlazione | Si |
+| Eventi parziali non vengono persi per chiave idempotenza grossolana | Si |
+| Recovery dopo downtime | Parzialmente validato |
+| Hummingbot non e' piu' richiesto dal runtime finale verificato | Si |
 
 ---
 
-## Cosa manca per poter eliminare Hummingbot
+## Cosa manca prima di considerare chiusa la migrazione
 
-Il sistema è già funzionale su CCXT. Per eseguire la Fase 6 (pulizia formale) mancano solo:
-
-1. **Reconciliation periodica** — schedulare `run_reconciliation()` ogni 30–60s in `main.py` (o nel worker)
-2. **Wiring `ws_fill_watcher` in `main.py`** — il file esiste ma non è avviato
-3. **Validazione end-to-end su Bybit Demo** — almeno un ciclo completo (entry → SL/TP → close) testato live
-
-Solo dopo questi tre punti ha senso eseguire la Fase 6 (rimuovere hummingbot_api.py, i test Hummingbot, i config/log, e aggiornare i docs).
+1. Eseguire un ciclo reale Bybit Demo: entry -> TP/SL -> close.
+2. Rafforzare il recovery con cross-check posizione lifecycle-side.
+3. Ripulire i documenti storici che parlano ancora di Hummingbot come runtime attivo.
 
 ---
 
 ## Debito tecnico residuo
 
-| Item | Priorità |
+| Item | Priorita' |
 |---|---|
-| `ws_fill_watcher` non avviato in `main.py` | Alta |
-| `run_reconciliation()` non chiamato periodicamente | Alta |
-| Piani CCXT (Fase 0–2) non marcati `done/` in `docs/superpowers/plans/` | Bassa |
-| `hummingbot_setup.md` e doc Hummingbot nei docs | Bassa (Fase 6) |
-| Env vars `HUMMINGBOT_BASE_URL` / `HUMMINGBOT_SECRET` non rimosse da config di esempio | Bassa (Fase 6) |
+| Validazione live Bybit Demo non eseguita in questa sessione | Alta |
+| Cross-check posizione recovery/lifecycle non ancora esplicito | Media |
+| Documenti storici Hummingbot da riallineare | Bassa |
+| Variabili/env obsolete nei docs operativi | Bassa |
+
+---
+
+## Verifica 2026-05-19 - note di sessione
+
+Modifiche introdotte in questa sessione:
+
+- fix bootstrap/shutdown `main.py`
+- wiring opzionale `BybitWsFillWatcher`
+- scheduling reconciliation periodica
+- test di regressione su bootstrap runtime
+- riallineamento test lifecycle AC3B da Hummingbot a CCXT
+
+Primary signal di questa sessione:
+
+- bootstrap runtime CCXT verificato
+- suite gateway+lifecycle verde sul perimetro locale verificato
+
+Secondary signal:
+
+- nessuna prova live Bybit Demo eseguita in questa sessione

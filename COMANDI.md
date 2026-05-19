@@ -1,7 +1,8 @@
 # Comandi principali - TeleSignalBot Runtime V2
 
-Questa guida descrive il flusso runtime attuale. Per approfondimenti tecnici
-fare riferimento a `docs/runtime_v2/`.
+Questa guida descrive il runtime reale attuale del progetto.
+Per approfondimenti tecnici vedere `docs/runtime_v2/` e
+`docs/Raggionamento/CCXT/AUDIT_stato_migrazione_ccxt.md`.
 
 ## Flusso Runtime V2
 
@@ -13,51 +14,44 @@ Telegram -> main.py
   -> enriched_canonical_messages
   -> LifecycleGateWorker
   -> ops_trade_chains / ops_execution_commands su db/ops.sqlite3
-  -> ExecutionGateway, solo se HUMMINGBOT_BASE_URL e' configurato
-  -> Hummingbot API paper/testnet
+  -> ExecutionGateway (CCXT Bybit, se bootstrap gateway valido)
   -> ops_exchange_events
   -> LifecycleEventWorker
+
+Opzionale:
+  -> BybitWsFillWatcher, se execution.yaml ha websocket.enabled: true
+  -> reconciliation periodica, se poll_fallback_enabled: true
 ```
 
-Senza Hummingbot attivo il bot puo' comunque acquisire, parsare, arricchire e
-generare comandi operativi. I comandi restano in `ops_execution_commands` finche'
-il gateway non riesce a inviarli.
+Il bot puo' acquisire, parsare, arricchire e generare comandi operativi anche
+senza credenziali exchange valide. In quel caso i comandi restano in
+`ops_execution_commands` oppure vanno in stati diagnostici del gateway.
 
 ## Prerequisiti
 
 Da `C:\TeleSignalBot`:
 
 ```powershell
-# Verifica Python
 python --version
-
-# Verifica Docker, necessario solo per Hummingbot API
-docker --version
-
-# Verifica che la venv esista
 Test-Path .\.venv\Scripts\python.exe
-```
-
-Se usi la venv esplicitamente:
-
-```powershell
 .\.venv\Scripts\python.exe -m pytest --version
 ```
+
+Docker non e' richiesto per il runtime CCXT corrente.
 
 ## File da configurare
 
 | File | Obbligatorio | Scopo |
 |---|---:|---|
-| `.env` | Si | Credenziali Telegram, path DB, opzioni gateway |
-| `config/channels.yaml` | Si | Canali/topic Telegram attivi, trader, profilo parser, blacklist |
-| `config/operation_config.yaml` | Si | Policy globali di enrichment, risk, account, trader abilitati |
-| `config/traders/<trader_id>.yaml` | Si | Override per trader: risk, management, admission update |
-| `config/execution.yaml` | Solo gateway | Adapter Hummingbot, routing account, connector, retry, safety |
-| `docker-compose.yml` | Solo gateway | Hummingbot API, broker EMQX, Postgres, container Hummingbot |
+| `.env` | Si | Credenziali Telegram, path DB, secret gateway |
+| `config/channels.yaml` | Si | Canali/topic Telegram attivi, trader, parser profile |
+| `config/operation_config.yaml` | Si | Policy enrichment, risk, account, trader |
+| `config/traders/<trader_id>.yaml` | Si | Override trader-specific |
+| `config/execution.yaml` | Solo gateway | Adapter CCXT, routing account, retry, websocket, safety |
 
-### `.env`
+## `.env`
 
-Minimo per avviare il listener Telegram:
+Minimo per avviare listener + runtime:
 
 ```text
 TELEGRAM_API_ID=<id>
@@ -69,156 +63,73 @@ LOG_PATH=C:\TeleSignalBot\logs\bot.log
 LOG_LEVEL=INFO
 ```
 
-Per abilitare anche l'Execution Gateway:
+Per l'adapter CCXT Bybit demo configurato di default:
 
 ```text
-HUMMINGBOT_BASE_URL=http://localhost:8000
-HUMMINGBOT_SECRET=admin:admin
+BYBIT_API_SECRET_BYBIT_DEMO=<secret>
 ```
 
-Non stampare mai i valori reali delle chiavi Telegram, exchange o API.
+Note:
 
-### `config/channels.yaml`
+- la `api_key` oggi viene letta da `config/execution.yaml`
+- il `secret` viene letto da env come `BYBIT_API_SECRET_<ADAPTER_NAME_UPPER>`
+- per `mode: live` serve anche:
+
+```text
+TSB_ALLOW_LIVE_TRADING=YES_I_UNDERSTAND
+```
+
+Non stampare mai chiavi Telegram o exchange nei log o nei report.
+
+## `config/channels.yaml`
 
 Controlli principali:
 
-- `recovery.max_hours`: finestra di recupero messaggi al restart.
-- `blacklist_global`: frasi/tag da scartare.
-- `channels[].active`: solo `true` viene processato.
-- `channels[].chat_id` e `topic_id`: sorgente Telegram.
-- `channels[].trader_id`: trader risolto.
-- `channels[].parser_profile`: profilo parser_v2 da usare.
+- `recovery.max_hours`: finestra di recupero messaggi al restart
+- `blacklist_global`: frasi/tag da scartare
+- `channels[].active`: solo `true` viene processato
+- `channels[].chat_id` e `topic_id`: sorgente Telegram
+- `channels[].trader_id`: trader risolto
+- `channels[].parser_profile`: profilo parser_v2 da usare
 
 Il file viene riletto automaticamente da `main.py` senza restart.
 
-### `config/execution.yaml`
+## `config/execution.yaml`
 
-Default locale previsto per paper/testnet:
+Default locale attuale:
 
 ```yaml
 execution:
-  default_adapter: hummingbot_api_paper
+  default_adapter: bybit_demo
   account_routing:
     default:
-      adapter: hummingbot_api_paper
+      adapter: bybit_demo
       execution_account_id: master_account
   adapters:
-    hummingbot_api_paper:
-      type: hummingbot_api
-      mode: paper
-      base_url: http://localhost:8000
-      connector: bybit_perpetual_testnet
-      leverage: 1
+    bybit_demo:
+      type: ccxt_bybit
+      mode: demo
+      connector: bybit
+      testnet: true
+      api_key: ""
+      leverage: 10
+      hedge_mode: false
+      websocket:
+        enabled: false
+        poll_fallback_enabled: true
+        poll_fallback_period_seconds: 60
       live_safety:
         allow_live_trading: false
 ```
 
-Non impostare `mode: live` per i primi test. Il codice blocca comunque il live
-trading MVP con `REVIEW_REQUIRED`.
+Lettura pratica:
 
-## Primo avvio solo Runtime V2, senza Hummingbot
+- `default_adapter: bybit_demo`: bootstrap gateway predefinito
+- `websocket.enabled: true`: avvia `BybitWsFillWatcher`
+- `poll_fallback_enabled: true`: schedula reconciliation periodica
+- `mode: live` senza gate esplicito resta bloccato
 
-Usa questo quando vuoi testare intake, parser, enrichment e lifecycle senza
-mandare ordini a Hummingbot.
-
-```powershell
-cd C:\TeleSignalBot
-python main.py --migrate
-python main.py
-```
-
-Log atteso:
-
-```text
-telegram listener started | parser_db=... | ops_db=...
-HUMMINGBOT_BASE_URL not set - execution gateway disabled
-listener worker started
-```
-
-Se `HUMMINGBOT_BASE_URL` e' presente in `.env`, il gateway prova ad avviarsi.
-
-## Primo avvio completo con Hummingbot API
-
-### 1. Avvia Docker Desktop
-
-Verifica:
-
-```powershell
-docker ps
-```
-
-Se fallisce, Docker Desktop o il Linux engine non sono disponibili.
-
-### 2. Avvia lo stack Hummingbot
-
-```powershell
-cd C:\TeleSignalBot
-docker compose up -d
-```
-
-Servizi attesi:
-
-```powershell
-docker ps
-```
-
-Dovresti vedere almeno:
-
-- `hummingbot`
-- `hummingbot-backend-api`
-- `hummingbot-broker`
-- `hummingbot-postgres`
-
-Verifica API:
-
-```powershell
-Invoke-WebRequest -Uri http://localhost:8000/docs -UseBasicParsing -TimeoutSec 10
-```
-
-`/health` puo' non esistere: usare `/docs` o `/openapi.json`.
-
-### 3. Configura Hummingbot/connector
-
-Il connector previsto e':
-
-```text
-bybit_perpetual_testnet
-```
-
-Apri la console gia' avviata nel container:
-
-```powershell
-docker attach hummingbot
-```
-
-Se la schermata resta vuota, premi `Enter`.
-
-Per staccarti dalla console senza fermare il container:
-
-```text
-Ctrl+P poi Ctrl+Q
-```
-
-Dentro la console Hummingbot configura il connector:
-
-```text
-connect bybit_perpetual_testnet
-```
-
-Inserisci API key e secret Bybit testnet quando richiesti. Le chiavi testnet
-non vanno scritte nei documenti o nei log.
-
-Non avviare manualmente `bin/hummingbot.py` da una shell `docker exec`: il
-container ha gia' il processo console come entrypoint.
-
-### 4. Abilita gateway in `.env`
-
-```text
-HUMMINGBOT_BASE_URL=http://localhost:8000
-HUMMINGBOT_SECRET=admin:admin
-```
-
-### 5. Applica migrazioni e avvia il bot
+## Avvio runtime locale
 
 ```powershell
 cd C:\TeleSignalBot
@@ -226,13 +137,39 @@ python main.py --migrate
 python main.py
 ```
 
-Log atteso:
+Log attesi, se il bootstrap gateway CCXT riesce:
 
 ```text
-execution gateway started | adapter=hummingbot_api_paper | url=http://localhost:8000 | account=master_account
+execution gateway started | adapter=bybit_demo | account=master_account
 telegram listener started | parser_db=... | ops_db=...
-listener worker started
 ```
+
+Se il bootstrap gateway fallisce, il listener parte comunque e nel log compare:
+
+```text
+execution gateway init failed - gateway disabled
+```
+
+In quel caso intake/parser/lifecycle continuano, ma il gateway exchange resta spento.
+
+## Abilitare watcher WS e reconciliation periodica
+
+In `config/execution.yaml`:
+
+```yaml
+websocket:
+  enabled: true
+  poll_fallback_enabled: true
+  poll_fallback_period_seconds: 60
+```
+
+Comportamento:
+
+- `enabled: true` avvia `BybitWsFillWatcher`
+- se il watcher incontra errori, invoca la callback di reconciliation
+- `poll_fallback_enabled: true` avvia anche un ciclo periodico di `run_reconciliation()`
+
+Se `enabled: false`, il runtime usa solo il path polling/reconciliation dei worker.
 
 ## Monitoraggio live
 
@@ -242,27 +179,13 @@ Log del bot:
 Get-Content logs\bot.log -Wait -Tail 80
 ```
 
-Log Hummingbot API:
+Se vuoi verificare che il processo stia girando:
 
 ```powershell
-docker logs hummingbot-backend-api --tail 100
-```
-
-Log broker:
-
-```powershell
-docker logs hummingbot-broker --tail 100
-```
-
-Stato container:
-
-```powershell
-docker ps
+Get-Process python | Where-Object { $_.Path -like '*TeleSignalBot*' }
 ```
 
 ## Controllo DB Runtime V2
-
-Usa questi comandi per capire dove si e' fermato il flusso.
 
 Conteggi parser DB:
 
@@ -288,55 +211,60 @@ Ultimi comandi execution:
 python -c "import sqlite3; c=sqlite3.connect('db/ops.sqlite3'); [print(r) for r in c.execute('SELECT command_id, trade_chain_id, command_type, status, retry_count, client_order_id, next_retry_at FROM ops_execution_commands ORDER BY command_id DESC LIMIT 20')]; c.close()"
 ```
 
+Ultimi exchange events:
+
+```powershell
+python -c "import sqlite3; c=sqlite3.connect('db/ops.sqlite3'); [print(r) for r in c.execute('SELECT exchange_event_id, trade_chain_id, event_type, processing_status, received_at FROM ops_exchange_events ORDER BY exchange_event_id DESC LIMIT 20')]; c.close()"
+```
+
 Lettura rapida degli stati:
 
 | Stato | Significato |
 |---|---|
-| `enriched_canonical_messages.lifecycle_processed=0` | Pronto per lifecycle worker |
-| `ops_execution_commands.status=PENDING` | Comando pronto per gateway |
-| `SENT` o `ACK` | Comando inviato/riconosciuto |
-| `WAITING_POSITION` | Comando in attesa che la chain diventi `OPEN` |
-| `RETRY` / `next_retry_at` valorizzato | Invio fallito, ritentera' |
-| `FAILED` | Errore terminale |
-| `REVIEW_REQUIRED` | Serve intervento manuale |
+| `enriched_canonical_messages.lifecycle_processed=0` | pronto per lifecycle worker |
+| `ops_execution_commands.status=PENDING` | comando pronto per gateway |
+| `SENT` o `ACK` | comando inviato/riconosciuto |
+| `WAITING_POSITION` | comando in attesa che la chain diventi `OPEN` |
+| `RETRY` / `next_retry_at` valorizzato | invio fallito, ritentera' |
+| `FAILED` | errore terminale |
+| `REVIEW_REQUIRED` | serve intervento manuale |
 
 ## Test
 
-Suite Runtime V2 completa:
+Suite runtime_v2 completa:
 
 ```powershell
-pytest tests\runtime_v2 -q --tb=short
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2 -q --tb=short
 ```
 
-Lifecycle + execution gateway:
+Gateway + lifecycle:
 
 ```powershell
-pytest tests\runtime_v2\lifecycle tests\runtime_v2\execution_gateway -q --tb=short
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway tests\runtime_v2\lifecycle -q --tb=short
 ```
 
-Solo gateway:
+Test bootstrap runtime:
 
 ```powershell
-pytest tests\runtime_v2\execution_gateway -q --tb=short
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2\test_main_runtime_bootstrap.py -q --tb=short
 ```
 
-Test gated contro Hummingbot API reale:
+Test gated Bybit testnet:
 
 ```powershell
-$env:RUN_HUMMINGBOT_API_TESTS="1"
-$env:HUMMINGBOT_API_URL="http://localhost:8000"
-$env:HUMMINGBOT_CONNECTOR="bybit_perpetual_testnet"
-$env:HUMMINGBOT_ACCOUNT="master_account"
-$env:HUMMINGBOT_SECRET="admin:admin"
-pytest tests\runtime_v2\execution_gateway\test_hummingbot_adapter.py -v
+$env:BYBIT_TESTNET_API_KEY="<key>"
+$env:BYBIT_API_SECRET_BYBIT_TESTNET="<secret>"
+.\.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_ccxt_bybit_gated.py -v -s -m bybit_testnet
 ```
 
-Nota: `test_api_reachable` e `test_capabilities_declared` non piazzano ordini.
-`test_place_and_query_order` richiede account/connector realmente funzionanti.
+Nota:
+
+- i test gated richiedono credenziali reali Bybit testnet
+- non sono una prova end-to-end completa dell'intera catena Telegram -> lifecycle -> exchange
 
 ## Reset DB per test pulito
 
-Operazione distruttiva. Fare sempre backup prima.
+Operazione distruttiva. Fare backup prima.
 
 ```powershell
 Copy-Item db\parser.sqlite3 db\parser.backup.sqlite3
@@ -355,29 +283,39 @@ python main.py --migrate
 
 | Sintomo | Verifica | Azione |
 |---|---|---|
-| Nessun messaggio entra | `config/channels.yaml`, `active: true`, `chat_id`, `topic_id` | Attiva il canale corretto e guarda `logs/bot.log` |
-| Messaggi in `raw_messages` ma non in `canonical_messages` | Log `parse failed` | Controlla `parser_profile` e profilo in `src/parser_v2/profiles/` |
-| Enrichment `BLOCK` o `REVIEW` | `reason_code` in `enriched_canonical_messages` | Controlla `operation_config.yaml` e `config/traders/*.yaml` |
-| `ops_execution_commands` resta `PENDING` | Log gateway e `HUMMINGBOT_BASE_URL` | Avvia Hummingbot API o configura `.env` |
-| `execution gateway disabled` | `.env` | Aggiungi `HUMMINGBOT_BASE_URL` e riavvia `main.py` |
-| Docker non risponde | `docker ps` | Avvia Docker Desktop/Linux engine |
-| API Hummingbot 401 | `HUMMINGBOT_SECRET` | Verifica credenziali, senza stamparle nei log |
-| API Hummingbot 404 su `/health` | Endpoint assente | Usa `/docs` o `/openapi.json` |
-| Ordine va in `REVIEW_REQUIRED` | `result_payload_json` su comando | Controlla capability, live safety, connector, account |
+| Nessun messaggio entra | `config/channels.yaml`, `active: true`, `chat_id`, `topic_id` | attiva il canale corretto e guarda `logs/bot.log` |
+| Messaggi in `raw_messages` ma non in `canonical_messages` | log `parse failed` | controlla `parser_profile` e il profilo in `src/parser_v2/profiles/` |
+| Enrichment `BLOCK` o `REVIEW` | `reason_code` in `enriched_canonical_messages` | controlla `operation_config.yaml` e `config/traders/*.yaml` |
+| `ops_execution_commands` resta `PENDING` | log gateway e `config/execution.yaml` | verifica bootstrap adapter, credenziali e routing |
+| `execution gateway init failed - gateway disabled` | log bootstrap | correggi `config/execution.yaml`, `api_key` e env `BYBIT_API_SECRET_*` |
+| Nessun `ops_exchange_events` nonostante comandi `SENT` | watcher/reconciliation | abilita `websocket.enabled` oppure controlla polling/reconciliation |
+| Ordine va in `REVIEW_REQUIRED` | `result_payload_json` sul comando | controlla capability, safety gate, payload, connector |
+| Test gated saltati | env mancanti | imposta `BYBIT_TESTNET_API_KEY` e `BYBIT_API_SECRET_BYBIT_TESTNET` |
 
-## Sequenza consigliata per il primo test end-to-end
+## Sequenza consigliata per il primo test end-to-end demo
 
-1. Controlla `.env`, `channels.yaml`, `operation_config.yaml`, `config/traders/trader_a.yaml`, `execution.yaml`.
-2. Avvia Docker Desktop.
-3. Esegui `docker compose up -d`.
-4. Esegui `docker attach hummingbot`.
-5. Configura `connect bybit_perpetual_testnet`.
-6. Staccati con `Ctrl+P` poi `Ctrl+Q`.
-7. Verifica `http://localhost:8000/docs`.
-8. Esegui `python main.py --migrate`.
-9. Esegui `python main.py`.
-10. Invia o attendi un messaggio Telegram su un canale `active: true`.
-11. Guarda `logs\bot.log`.
-12. Controlla `raw_messages`, `canonical_messages`, `enriched_canonical_messages`.
-13. Controlla `ops_trade_chains`, `ops_execution_commands`, `ops_exchange_events`.
-14. Se Hummingbot e' configurato, verifica che i comandi passino da `PENDING` a `SENT`/`ACK`/`DONE` oppure a uno stato diagnostico.
+1. Controlla `.env`, `channels.yaml`, `operation_config.yaml`, `config/traders/*.yaml`, `execution.yaml`.
+2. Imposta la `api_key` dell'adapter demo in `config/execution.yaml`.
+3. Imposta `BYBIT_API_SECRET_BYBIT_DEMO` in `.env`.
+4. Decidi se attivare `websocket.enabled`.
+5. Esegui `python main.py --migrate`.
+6. Esegui `python main.py`.
+7. Verifica nel log `execution gateway started | adapter=bybit_demo | account=master_account`.
+8. Invia o attendi un messaggio Telegram su un canale `active: true`.
+9. Guarda `logs\bot.log`.
+10. Controlla `raw_messages`, `canonical_messages`, `enriched_canonical_messages`.
+11. Controlla `ops_trade_chains`, `ops_execution_commands`, `ops_exchange_events`.
+12. Verifica che i comandi transitino da `PENDING` a `SENT`/`ACK`/`DONE` oppure a uno stato diagnostico comprensibile.
+
+## Limite attuale
+
+Anche con il wiring runtime sistemato, la migrazione non va considerata chiusa
+senza una prova reale Bybit Demo completa del lifecycle:
+
+```text
+entry -> fill -> TP/SL/close -> exchange events -> lifecycle update
+```
+
+Per lo stato piu' aggiornato del lavoro guarda:
+
+- `docs/Raggionamento/CCXT/AUDIT_stato_migrazione_ccxt.md`

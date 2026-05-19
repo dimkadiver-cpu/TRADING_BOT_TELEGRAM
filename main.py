@@ -5,12 +5,12 @@ from __future__ import annotations
 import argparse
 import asyncio
 import os
+import sqlite3
+from dataclasses import dataclass
 from pathlib import Path
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
-
-import sqlite3
 
 from src.core.logger import setup_logging
 from src.core.migrations import apply_migrations
@@ -35,6 +35,8 @@ from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
 from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
+from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
+from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
 from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
 from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
 from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
@@ -47,6 +49,15 @@ from src.telegram.listener import (
     build_ingestion_service,
     build_processing_status_store,
 )
+
+
+@dataclass
+class ExecutionRuntime:
+    adapter: object
+    execution_worker: ExecutionCommandWorker
+    sync_worker: ExchangeEventSyncWorker
+    ws_watcher: BybitWsFillWatcher | None
+    reconciliation_interval_seconds: int | None
 
 
 def _required_env(name: str) -> str:
@@ -65,6 +76,88 @@ def _parse_fallback_chat_ids(raw: str | None) -> set[int]:
         if token:
             values.add(int(token))
     return values
+
+
+def _build_execution_runtime(
+    *,
+    root_dir: Path,
+    ops_db_path: str,
+    logger,
+) -> ExecutionRuntime | None:
+    execution_config_path = str(root_dir / "config" / "execution.yaml")
+    exec_config = ExecutionConfigLoader(execution_config_path).load()
+    adapter_name = exec_config.default_adapter
+    routing, adapter_cfg = exec_config.resolve_routing("default")
+    adapter = build_adapter(adapter_name, adapter_cfg)
+    gateway_repo = GatewayCommandRepository(ops_db_path)
+    gateway = ExecutionGateway(
+        config=exec_config,
+        adapter_registry={adapter_name: adapter},
+        repo=gateway_repo,
+    )
+    execution_worker = ExecutionCommandWorker(
+        ops_db_path=ops_db_path,
+        gateway=gateway,
+        repo=gateway_repo,
+    )
+    sync_worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db_path,
+        adapter=adapter,
+        repo=gateway_repo,
+        execution_account_id=routing.execution_account_id,
+    )
+
+    ws_watcher = None
+    reconciliation_interval_seconds = None
+    if adapter_cfg.type == "ccxt_bybit" and adapter_cfg.websocket.enabled:
+        api_secret = os.environ.get(f"BYBIT_API_SECRET_{adapter_name.upper()}") or ""
+        ws_watcher = BybitWsFillWatcher(
+            api_key=adapter_cfg.api_key or "",
+            api_secret=api_secret,
+            testnet=adapter_cfg.testnet,
+            ops_db_path=ops_db_path,
+            repo=gateway_repo,
+            reconciliation_callback=sync_worker.run_reconciliation,
+        )
+        ws_watcher.start()
+        if adapter_cfg.websocket.poll_fallback_enabled:
+            reconciliation_interval_seconds = adapter_cfg.websocket.poll_fallback_period_seconds
+
+    logger.info(
+        "execution gateway started | adapter=%s | account=%s",
+        adapter_name, routing.execution_account_id,
+    )
+    return ExecutionRuntime(
+        adapter=adapter,
+        execution_worker=execution_worker,
+        sync_worker=sync_worker,
+        ws_watcher=ws_watcher,
+        reconciliation_interval_seconds=reconciliation_interval_seconds,
+    )
+
+
+def _close_execution_runtime(runtime: ExecutionRuntime | None) -> None:
+    if runtime is None:
+        return
+    if runtime.ws_watcher is not None:
+        runtime.ws_watcher.stop()
+    close = getattr(runtime.adapter, "close", None)
+    if callable(close):
+        close()
+
+
+async def _run_reconciliation_periodically(
+    *,
+    sync_worker: ExchangeEventSyncWorker,
+    interval_seconds: int,
+    logger,
+) -> None:
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            sync_worker.run_reconciliation()
+        except Exception:
+            logger.exception("periodic reconciliation error")
 
 
 async def _async_main(
@@ -169,36 +262,13 @@ async def _async_main(
     )
 
     # PRD-05 execution gateway layer (CCXT/Bybit)
-    execution_worker: ExecutionCommandWorker | None = None
-    sync_worker: ExchangeEventSyncWorker | None = None
+    execution_runtime: ExecutionRuntime | None = None
 
     try:
-        from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
-        execution_config_path = str(root_dir / "config" / "execution.yaml")
-        exec_config = ExecutionConfigLoader(execution_config_path).load()
-        adapter_name = exec_config.default_adapter
-        routing, adapter_cfg = exec_config.resolve_routing("default")
-        ccxt_adapter = build_adapter(adapter_name, adapter_cfg)
-        gateway_repo = GatewayCommandRepository(ops_db_path)
-        gateway = ExecutionGateway(
-            config=exec_config,
-            adapter_registry={adapter_name: ccxt_adapter},
-            repo=gateway_repo,
-        )
-        execution_worker = ExecutionCommandWorker(
+        execution_runtime = _build_execution_runtime(
+            root_dir=root_dir,
             ops_db_path=ops_db_path,
-            gateway=gateway,
-            repo=gateway_repo,
-        )
-        sync_worker = ExchangeEventSyncWorker(
-            ops_db_path=ops_db_path,
-            adapter=ccxt_adapter,
-            repo=gateway_repo,
-            execution_account_id=routing.execution_account_id,
-        )
-        logger.info(
-            "execution gateway started | adapter=%s | account=%s",
-            adapter_name, routing.execution_account_id,
+            logger=logger,
         )
     except Exception:
         logger.exception("execution gateway init failed — gateway disabled")
@@ -209,10 +279,9 @@ async def _async_main(
                 gate_worker.run_once()
                 timeout_worker.run_once()
                 lifecycle_event_worker.run_once()
-                if execution_worker is not None:
-                    execution_worker.run_once()
-                if sync_worker is not None:
-                    sync_worker.run_once()
+                if execution_runtime is not None:
+                    execution_runtime.execution_worker.run_once()
+                    execution_runtime.sync_worker.run_once()
             except Exception:
                 logger.exception("lifecycle worker error")
             await asyncio.sleep(10)
@@ -232,16 +301,29 @@ async def _async_main(
         await listener.run_recovery(client)
         worker_task = asyncio.create_task(listener.run_worker())
         lifecycle_task = asyncio.create_task(_run_lifecycle_workers())
+        reconciliation_task = None
+        if (
+            execution_runtime is not None
+            and execution_runtime.reconciliation_interval_seconds is not None
+        ):
+            reconciliation_task = asyncio.create_task(
+                _run_reconciliation_periodically(
+                    sync_worker=execution_runtime.sync_worker,
+                    interval_seconds=execution_runtime.reconciliation_interval_seconds,
+                    logger=logger,
+                )
+            )
         try:
             await client.run_until_disconnected()
         finally:
             worker_task.cancel()
             lifecycle_task.cancel()
+            if reconciliation_task is not None:
+                reconciliation_task.cancel()
     finally:
         await client.disconnect()
         watcher.stop()
-        if hb_adapter is not None:
-            hb_adapter.close()
+        _close_execution_runtime(execution_runtime)
 
 
 def main() -> None:
