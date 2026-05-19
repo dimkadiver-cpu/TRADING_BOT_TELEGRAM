@@ -1,7 +1,7 @@
 # src/runtime_v2/execution_gateway/models.py
 from __future__ import annotations
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, model_validator
 
 
 class AdapterCapabilities(BaseModel):
@@ -50,9 +50,11 @@ class AdapterConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     type: str
     mode: str
-    base_url: str
+    base_url: str = ""
     connector: str
     leverage: int = 1
+    api_key: str | None = None
+    testnet: bool = False
     secret: str | None = None          # Bearer token for execution adapter auth
     entry_execution: EntryExecutionConfig = EntryExecutionConfig()
 
@@ -62,6 +64,7 @@ class AdapterConfig(BaseModel):
         if v == "":
             return None
         return v
+
     retry: RetryConfig = RetryConfig()
     capabilities: AdapterCapabilities = AdapterCapabilities()
     take_profit: TakeProfitConfig = TakeProfitConfig()
