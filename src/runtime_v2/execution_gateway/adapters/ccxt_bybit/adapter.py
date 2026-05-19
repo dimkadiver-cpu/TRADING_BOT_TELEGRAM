@@ -38,6 +38,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
         api_secret: str,
         testnet: bool,
         connector: str,
+        mode: str = "live",
         capabilities: AdapterCapabilities | None = None,
         hedge_mode: bool = False,
         repo: GatewayCommandRepository | None = None,
@@ -51,7 +52,10 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 "secret": api_secret,
                 "options": {"defaultType": "linear"},
             })
-            if testnet:
+            if mode == "demo":
+                # Bybit Demo Trading — usa api-demo.bybit.com, non testnet
+                self._exchange.enable_demo_trading(True)
+            elif testnet:
                 self._exchange.set_sandbox_mode(True)
         self._connector = connector
         self._capabilities = capabilities or _DEFAULT_CAPABILITIES

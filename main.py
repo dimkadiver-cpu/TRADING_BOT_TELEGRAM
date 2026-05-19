@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import truststore
+truststore.inject_into_ssl()
+
 import argparse
 import asyncio
 import os
@@ -118,6 +121,7 @@ def _build_execution_runtime(
             ops_db_path=ops_db_path,
             repo=gateway_repo,
             reconciliation_callback=sync_worker.run_reconciliation,
+            mode=adapter_cfg.mode,
         )
         ws_watcher.start()
         if adapter_cfg.websocket.poll_fallback_enabled:

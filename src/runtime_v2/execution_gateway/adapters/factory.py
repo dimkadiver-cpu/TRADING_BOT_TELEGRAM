@@ -22,6 +22,7 @@ def build_adapter(adapter_name: str, cfg: AdapterConfig) -> ExecutionAdapter:
             api_secret=api_secret or "",
             testnet=cfg.testnet,
             connector=cfg.connector,
+            mode=cfg.mode,
             capabilities=cfg.capabilities,
             hedge_mode=cfg.hedge_mode,
         )

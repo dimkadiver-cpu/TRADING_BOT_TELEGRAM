@@ -18,7 +18,7 @@ execution:
       mode: demo
       connector: bybit
       testnet: true
-      api_key: ""
+      api_key: "KERZhXVVVaTrRjuyBo"
       leverage: 10
       hedge_mode: false
 
@@ -36,8 +36,8 @@ execution:
 
       capabilities:
         place_entry: true
-        protective_stop_native: false
-        take_profit_native: false
+        protective_stop_native: true
+        take_profit_native: true
         bracket_order: false
         move_stop: true
         close_partial: true

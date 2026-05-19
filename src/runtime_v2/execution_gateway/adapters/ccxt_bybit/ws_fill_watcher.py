@@ -33,10 +33,12 @@ class BybitWsFillWatcher:
         ops_db_path: str,
         repo: GatewayCommandRepository,
         reconciliation_callback=None,
+        mode: str = "live",
     ) -> None:
         self._api_key = api_key
         self._api_secret = api_secret
         self._testnet = testnet
+        self._mode = mode
         self._ops_db_path = ops_db_path
         self._repo = repo
         self._reconciliation_callback = reconciliation_callback
@@ -113,14 +115,14 @@ class BybitWsFillWatcher:
     def _build_exchange(self):
         if ccxtpro is None:
             raise RuntimeError("ccxt.pro is not installed")
-        exchange = ccxtpro.bybit(
-            {
-                "apiKey": self._api_key,
-                "secret": self._api_secret,
-                "options": {"defaultType": "linear"},
-            }
-        )
-        if self._testnet:
+        exchange = ccxtpro.bybit({
+            "apiKey": self._api_key,
+            "secret": self._api_secret,
+            "options": {"defaultType": "linear"},
+        })
+        if self._mode == "demo":
+            exchange.enable_demo_trading(True)
+        elif self._testnet:
             exchange.set_sandbox_mode(True)
         return exchange
 
