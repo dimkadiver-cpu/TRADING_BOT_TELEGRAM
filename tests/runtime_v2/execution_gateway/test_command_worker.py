@@ -69,7 +69,7 @@ def _make_worker(ops_db):
     adapter = FakeAdapter()
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"hummingbot_api_demo": adapter},
+        adapter_registry={"bybit_demo": adapter},
         repo=repo,
     )
     return ExecutionCommandWorker(ops_db_path=ops_db, gateway=gw, repo=repo), adapter

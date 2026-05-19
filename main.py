@@ -34,7 +34,6 @@ from src.runtime_v2.lifecycle.repositories import (
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
-from src.runtime_v2.execution_gateway.adapters.hummingbot_api_paper import HummingbotApiPaperAdapter
 from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
 from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
 from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
@@ -169,49 +168,40 @@ async def _async_main(
         exchange_event_repo=exchange_event_repo,
     )
 
-    # PRD-05 execution gateway layer (abilitato solo se HUMMINGBOT_BASE_URL è configurato)
-    hummingbot_url = os.getenv("HUMMINGBOT_BASE_URL", "")
+    # PRD-05 execution gateway layer (CCXT/Bybit)
     execution_worker: ExecutionCommandWorker | None = None
     sync_worker: ExchangeEventSyncWorker | None = None
-    hb_adapter: HummingbotApiPaperAdapter | None = None
 
-    if hummingbot_url:
-        try:
-            execution_config_path = str(root_dir / "config" / "execution.yaml")
-            exec_config = ExecutionConfigLoader(execution_config_path).load()
-            adapter_name = exec_config.default_adapter
-            routing, adapter_cfg = exec_config.resolve_routing("default")
-            hb_secret = os.getenv("HUMMINGBOT_SECRET")  # `or None` below guards against ""
-            hb_adapter = HummingbotApiPaperAdapter(
-                base_url=hummingbot_url,
-                connector=adapter_cfg.connector,
-                secret=hb_secret or None,
-            )
-            gateway_repo = GatewayCommandRepository(ops_db_path)
-            gateway = ExecutionGateway(
-                config=exec_config,
-                adapter_registry={adapter_name: hb_adapter},
-                repo=gateway_repo,
-            )
-            execution_worker = ExecutionCommandWorker(
-                ops_db_path=ops_db_path,
-                gateway=gateway,
-                repo=gateway_repo,
-            )
-            sync_worker = ExchangeEventSyncWorker(
-                ops_db_path=ops_db_path,
-                adapter=hb_adapter,
-                repo=gateway_repo,
-                execution_account_id=routing.execution_account_id,
-            )
-            logger.info(
-                "execution gateway started | adapter=%s | url=%s | account=%s",
-                adapter_name, hummingbot_url, routing.execution_account_id,
-            )
-        except Exception:
-            logger.exception("execution gateway init failed — gateway disabled")
-    else:
-        logger.info("HUMMINGBOT_BASE_URL not set — execution gateway disabled (paper commands will queue but not be sent)")
+    try:
+        from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
+        execution_config_path = str(root_dir / "config" / "execution.yaml")
+        exec_config = ExecutionConfigLoader(execution_config_path).load()
+        adapter_name = exec_config.default_adapter
+        routing, adapter_cfg = exec_config.resolve_routing("default")
+        ccxt_adapter = build_adapter(adapter_name, adapter_cfg)
+        gateway_repo = GatewayCommandRepository(ops_db_path)
+        gateway = ExecutionGateway(
+            config=exec_config,
+            adapter_registry={adapter_name: ccxt_adapter},
+            repo=gateway_repo,
+        )
+        execution_worker = ExecutionCommandWorker(
+            ops_db_path=ops_db_path,
+            gateway=gateway,
+            repo=gateway_repo,
+        )
+        sync_worker = ExchangeEventSyncWorker(
+            ops_db_path=ops_db_path,
+            adapter=ccxt_adapter,
+            repo=gateway_repo,
+            execution_account_id=routing.execution_account_id,
+        )
+        logger.info(
+            "execution gateway started | adapter=%s | account=%s",
+            adapter_name, routing.execution_account_id,
+        )
+    except Exception:
+        logger.exception("execution gateway init failed — gateway disabled")
 
     async def _run_lifecycle_workers() -> None:
         while True:

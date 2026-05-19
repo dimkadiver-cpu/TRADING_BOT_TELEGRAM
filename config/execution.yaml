@@ -1,55 +1,31 @@
 # config/execution.yaml
+# Env vars richieste:
+#   BYBIT_API_SECRET_BYBIT_DEMO=<secret>
+#   BYBIT_API_SECRET_BYBIT_PAPER=<secret>  (opzionale)
+#   TSB_ALLOW_LIVE_TRADING=YES_I_UNDERSTAND  (solo per mode: live)
+
 execution:
-  default_adapter: hummingbot_api_demo
+  default_adapter: bybit_demo
 
   account_routing:
     default:
-      adapter: hummingbot_api_demo
+      adapter: bybit_demo
       execution_account_id: master_account
 
   adapters:
-    hummingbot_api_paper:
-      type: hummingbot_api
-      mode: paper
-      base_url: http://localhost:8000
-      connector: bybit_perpetual_testnet
-      leverage: 1
-
-      entry_execution:
-        mode: b_entry_stop_then_tp
-
-      retry:
-        max_attempts: 3
-        backoff_seconds: [30, 90, 300]
-
-      capabilities:
-        place_entry: true
-        protective_stop_native: true
-        take_profit_native: true
-        bracket_order: false
-        move_stop: true
-        close_partial: true
-        close_full: true
-        executor_position: false
-
-      take_profit:
-        min_order_policy: review
-        residual_policy: assign_to_last_tp
-
-      position_management:
-        same_symbol_same_side_policy: block
-        same_symbol_opposite_side_policy: allow_if_hedge_mode
-        require_client_order_id_correlation: true
-
-      live_safety:
-        allow_live_trading: false
-
-    hummingbot_api_demo:
-      type: hummingbot_api
+    bybit_demo:
+      type: ccxt_bybit
       mode: demo
-      base_url: http://localhost:8001
-      connector: bybit_perpetual_demo
-      leverage: 1
+      connector: bybit
+      testnet: true
+      api_key: ""
+      leverage: 10
+      hedge_mode: false
+
+      websocket:
+        enabled: false
+        poll_fallback_enabled: true
+        poll_fallback_period_seconds: 60
 
       entry_execution:
         mode: b_entry_stop_then_tp
@@ -63,10 +39,11 @@ execution:
         protective_stop_native: false
         take_profit_native: false
         bracket_order: false
-        move_stop: false
+        move_stop: true
         close_partial: true
         close_full: true
         executor_position: false
+        sync_protective_orders: true
 
       take_profit:
         min_order_policy: review
@@ -80,46 +57,41 @@ execution:
       live_safety:
         allow_live_trading: false
 
-# --- ccxt_bybit example (Fase 1) ---
-# Per attivare: sostituire il blocco execution sopra, impostare api_key,
-# e definire le env vars:
-#   BYBIT_API_SECRET_BYBIT_MAIN=<secret>
-#   BYBIT_API_SECRET_BYBIT_TRADER_B=<secret>
-#
-# execution:
-#   default_adapter: bybit_main
-#
-#   account_routing:
-#     default:
-#       adapter: bybit_main
-#       execution_account_id: bybit_main
-#     trader_b:
-#       adapter: bybit_trader_b
-#       execution_account_id: bybit_trader_b
-#
-#   adapters:
-#     bybit_main:
-#       type: ccxt_bybit
-#       mode: paper
-#       connector: bybit
-#       testnet: true
-#       api_key: "abc123"
-#       leverage: 10
-#       hedge_mode: false        # true se account Bybit in hedge mode
-#       websocket:
-#         enabled: true
-#         poll_fallback_enabled: true
-#         poll_fallback_period_seconds: 60
-#
-#     bybit_trader_b:
-#       type: ccxt_bybit
-#       mode: paper
-#       connector: bybit
-#       testnet: true
-#       api_key: "xyz789"
-#       leverage: 5
-#       hedge_mode: false
-#       websocket:
-#         enabled: true
-#         poll_fallback_enabled: true
-#         poll_fallback_period_seconds: 60
+    bybit_paper:
+      type: ccxt_bybit
+      mode: paper
+      connector: bybit
+      testnet: true
+      api_key: ""
+      leverage: 10
+      hedge_mode: false
+
+      entry_execution:
+        mode: b_entry_stop_then_tp
+
+      retry:
+        max_attempts: 3
+        backoff_seconds: [30, 90, 300]
+
+      capabilities:
+        place_entry: true
+        protective_stop_native: false
+        take_profit_native: false
+        bracket_order: false
+        move_stop: true
+        close_partial: true
+        close_full: true
+        executor_position: false
+        sync_protective_orders: true
+
+      take_profit:
+        min_order_policy: review
+        residual_policy: assign_to_last_tp
+
+      position_management:
+        same_symbol_same_side_policy: block
+        same_symbol_opposite_side_policy: allow_if_hedge_mode
+        require_client_order_id_correlation: true
+
+      live_safety:
+        allow_live_trading: false

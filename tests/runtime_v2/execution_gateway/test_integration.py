@@ -76,7 +76,7 @@ def _make_stack(ops_db, adapter=None):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=config,
-        adapter_registry={"hummingbot_api_demo": adapter},
+        adapter_registry={"bybit_demo": adapter},
         repo=repo,
     )
     worker = ExecutionCommandWorker(ops_db_path=ops_db, gateway=gw, repo=repo)
@@ -193,7 +193,7 @@ def test_ac7_live_trading_blocked(ops_db):
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     raw = yaml.safe_load(open("config/execution.yaml").read())
-    raw["execution"]["adapters"]["hummingbot_api_paper"]["mode"] = "live"
+    raw["execution"]["adapters"]["bybit_paper"]["mode"] = "live"
     config = ExecutionConfig.model_validate(raw["execution"])
 
     _insert_chain(ops_db)
@@ -201,7 +201,7 @@ def test_ac7_live_trading_blocked(ops_db):
     adapter = FakeAdapter()
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(config=config,
-                          adapter_registry={"hummingbot_api_paper": adapter}, repo=repo)
+                          adapter_registry={"bybit_paper": adapter}, repo=repo)
     worker = ExecutionCommandWorker(ops_db_path=ops_db, gateway=gw, repo=repo)
     worker.run_once()
 
@@ -219,7 +219,7 @@ def test_ac8_no_hummingbot_import_in_gateway():
     import pkgutil
     import src.runtime_v2.execution_gateway as pkg
     for _, name, _ in pkgutil.walk_packages(pkg.__path__, prefix=pkg.__name__ + "."):
-        if "hummingbot_api" in name or ".adapters." in name or name.endswith(".adapters"):
+        if ".adapters." in name or name.endswith(".adapters"):
             continue
         try:
             mod = importlib.import_module(name)

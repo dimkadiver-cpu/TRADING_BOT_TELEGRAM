@@ -52,10 +52,9 @@ def _live_config():
         "account_routing": {"default": {"adapter": "live_adapter", "execution_account_id": "acc_1"}},
         "adapters": {
             "live_adapter": {
-                "type": "hummingbot_api",
+                "type": "ccxt_bybit",
                 "mode": "live",
-                "base_url": "http://localhost:8002",
-                "connector": "bybit_perpetual_main",
+                "connector": "bybit",
                 "live_safety": {"allow_live_trading": True},
             }
         },
@@ -70,10 +69,9 @@ def _live_config_not_allowed():
         "account_routing": {"default": {"adapter": "live_adapter", "execution_account_id": "acc_1"}},
         "adapters": {
             "live_adapter": {
-                "type": "hummingbot_api",
+                "type": "ccxt_bybit",
                 "mode": "live",
-                "base_url": "http://localhost:8002",
-                "connector": "bybit_perpetual_main",
+                "connector": "bybit",
                 "live_safety": {"allow_live_trading": False},
             }
         },
@@ -143,7 +141,7 @@ def test_demo_mode_is_not_blocked_by_live_gate(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"hummingbot_api_demo": FakeAdapter()},
+        adapter_registry={"bybit_demo": FakeAdapter()},
         repo=repo,
     )
     cmd = repo.get_pending_batch()[0]

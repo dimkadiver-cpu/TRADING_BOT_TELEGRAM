@@ -52,55 +52,6 @@ def test_adapter_config_api_key_defaults_none():
     assert cfg.api_key is None
 
 
-def test_adapter_config_base_url_optional_no_default_required():
-    # ccxt_bybit doesn't use base_url - must work without it
-    cfg = AdapterConfig.model_validate({
-        "type": "ccxt_bybit",
-        "mode": "paper",
-        "connector": "bybit",
-    })
-    assert cfg.base_url == ""
-
-
-def test_adapter_config_base_url_still_accepted_when_provided():
-    cfg = AdapterConfig.model_validate({
-        "type": "hummingbot_api",
-        "mode": "demo",
-        "connector": "bybit_perpetual_demo",
-        "base_url": "http://localhost:8001",
-    })
-    assert cfg.base_url == "http://localhost:8001"
-
-
-def test_adapter_config_hummingbot_api_without_base_url_fails_validation():
-    with pytest.raises(ValueError, match="base_url is required"):
-        AdapterConfig.model_validate({
-            "type": "hummingbot_api",
-            "mode": "demo",
-            "connector": "bybit_perpetual_demo",
-        })
-
-
-def test_adapter_config_hummingbot_api_empty_base_url_fails_validation():
-    with pytest.raises(ValueError, match="base_url is required"):
-        AdapterConfig.model_validate({
-            "type": "hummingbot_api",
-            "mode": "demo",
-            "connector": "bybit_perpetual_demo",
-            "base_url": "",
-        })
-
-
-def test_adapter_config_hummingbot_api_blank_base_url_fails_validation():
-    with pytest.raises(ValueError, match="base_url is required"):
-        AdapterConfig.model_validate({
-            "type": "hummingbot_api",
-            "mode": "demo",
-            "connector": "bybit_perpetual_demo",
-            "base_url": "   ",
-        })
-
-
 def test_adapter_config_hedge_mode_defaults_false():
     cfg = AdapterConfig.model_validate({
         "type": "ccxt_bybit",

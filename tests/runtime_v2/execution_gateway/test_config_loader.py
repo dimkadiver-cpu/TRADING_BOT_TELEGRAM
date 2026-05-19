@@ -17,7 +17,6 @@ def minimal_config(tmp_path) -> Path:
             "adapters": {
                 "fake": {
                     "type": "fake", "mode": "paper",
-                    "base_url": "http://localhost:9999",
                     "connector": "fake_connector",
                 }
             },
@@ -56,7 +55,6 @@ def test_resolve_routing_specific(tmp_path):
             "adapters": {
                 "fake": {
                     "type": "fake", "mode": "paper",
-                    "base_url": "http://localhost:9999",
                     "connector": "fake_connector",
                 }
             },
@@ -78,7 +76,6 @@ def test_missing_default_routing_raises(tmp_path):
             "adapters": {
                 "fake": {
                     "type": "fake", "mode": "paper",
-                    "base_url": "http://localhost:9999",
                     "connector": "fake_connector",
                 }
             },
@@ -96,22 +93,22 @@ def test_load_multi_adapter_config(tmp_path):
     import yaml
     cfg = {
         "execution": {
-            "default_adapter": "hummingbot_api_demo",
+            "default_adapter": "bybit_demo",
             "account_routing": {
-                "default": {"adapter": "hummingbot_api_demo", "execution_account_id": "master_account"}
+                "default": {"adapter": "bybit_demo", "execution_account_id": "master_account"}
             },
             "adapters": {
-                "hummingbot_api_paper": {
-                    "type": "hummingbot_api",
+                "bybit_paper": {
+                    "type": "ccxt_bybit",
                     "mode": "paper",
-                    "base_url": "http://localhost:8000",
-                    "connector": "bybit_perpetual_testnet",
+                    "connector": "bybit",
+                    "testnet": True,
                 },
-                "hummingbot_api_demo": {
-                    "type": "hummingbot_api",
+                "bybit_demo": {
+                    "type": "ccxt_bybit",
                     "mode": "demo",
-                    "base_url": "http://localhost:8001",
-                    "connector": "bybit_perpetual_demo",
+                    "connector": "bybit",
+                    "testnet": True,
                 },
             },
         }
@@ -119,17 +116,17 @@ def test_load_multi_adapter_config(tmp_path):
     p = tmp_path / "execution.yaml"
     p.write_text(yaml.dump(cfg))
     config = ExecutionConfigLoader(str(p)).load()
-    assert config.default_adapter == "hummingbot_api_demo"
-    assert "hummingbot_api_paper" in config.adapters
-    assert "hummingbot_api_demo" in config.adapters
-    assert config.adapters["hummingbot_api_demo"].connector == "bybit_perpetual_demo"
-    assert config.adapters["hummingbot_api_demo"].mode == "demo"
+    assert config.default_adapter == "bybit_demo"
+    assert "bybit_paper" in config.adapters
+    assert "bybit_demo" in config.adapters
+    assert config.adapters["bybit_demo"].connector == "bybit"
+    assert config.adapters["bybit_demo"].mode == "demo"
 
 
 def test_demo_adapter_capabilities_parse():
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     config = ExecutionConfigLoader("config/execution.yaml").load()
-    demo_caps = config.adapters["hummingbot_api_demo"].capabilities
+    demo_caps = config.adapters["bybit_demo"].capabilities
     assert demo_caps.place_entry is True
     assert demo_caps.protective_stop_native is False
     assert demo_caps.take_profit_native is False
@@ -139,4 +136,4 @@ def test_demo_adapter_capabilities_parse():
 def test_demo_adapter_live_safety_false():
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     config = ExecutionConfigLoader("config/execution.yaml").load()
-    assert config.adapters["hummingbot_api_demo"].live_safety.allow_live_trading is False
+    assert config.adapters["bybit_demo"].live_safety.allow_live_trading is False
