@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 def build_adapter(adapter_name: str, cfg: AdapterConfig) -> ExecutionAdapter:
     logger.debug("build_adapter: type=%s name=%s", cfg.type, adapter_name)
     if cfg.type == "hummingbot_api":
+        if not cfg.base_url.strip():
+            raise ValueError("base_url is required for hummingbot_api adapter config")
         secret = cfg.secret or os.environ.get("HUMMINGBOT_SECRET")
         return HummingbotApiAdapter(
             base_url=cfg.base_url,

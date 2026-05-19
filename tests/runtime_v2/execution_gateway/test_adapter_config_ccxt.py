@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
 from src.runtime_v2.execution_gateway.models import AdapterConfig
 
 
@@ -72,29 +73,32 @@ def test_adapter_config_base_url_still_accepted_when_provided():
 
 
 def test_adapter_config_hummingbot_api_without_base_url_fails_validation():
+    cfg = AdapterConfig.model_validate({
+        "type": "hummingbot_api",
+        "mode": "demo",
+        "connector": "bybit_perpetual_demo",
+    })
     with pytest.raises(ValueError, match="base_url is required"):
-        AdapterConfig.model_validate({
-            "type": "hummingbot_api",
-            "mode": "demo",
-            "connector": "bybit_perpetual_demo",
-        })
+        build_adapter("demo", cfg)
 
 
 def test_adapter_config_hummingbot_api_empty_base_url_fails_validation():
+    cfg = AdapterConfig.model_validate({
+        "type": "hummingbot_api",
+        "mode": "demo",
+        "connector": "bybit_perpetual_demo",
+        "base_url": "",
+    })
     with pytest.raises(ValueError, match="base_url is required"):
-        AdapterConfig.model_validate({
-            "type": "hummingbot_api",
-            "mode": "demo",
-            "connector": "bybit_perpetual_demo",
-            "base_url": "",
-        })
+        build_adapter("demo", cfg)
 
 
 def test_adapter_config_hummingbot_api_blank_base_url_fails_validation():
+    cfg = AdapterConfig.model_validate({
+        "type": "hummingbot_api",
+        "mode": "demo",
+        "connector": "bybit_perpetual_demo",
+        "base_url": "   ",
+    })
     with pytest.raises(ValueError, match="base_url is required"):
-        AdapterConfig.model_validate({
-            "type": "hummingbot_api",
-            "mode": "demo",
-            "connector": "bybit_perpetual_demo",
-            "base_url": "   ",
-        })
+        build_adapter("demo", cfg)
