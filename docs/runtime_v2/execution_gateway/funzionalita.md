@@ -11,10 +11,11 @@ Il lifecycle decide cosa va fatto. L'Execution Gateway decide come tradurre il c
 ### `models.py`
 
 - **`ExecutionConfig`** — configurazione caricata da `config/execution.yaml`: adapter di default, routing account, adapter concreti.
-- **`AdapterConfig`** — configurazione adapter: `type`, `mode`, `base_url`, `connector`, `leverage`, `secret`, `entry_execution`, `retry`, `capabilities`, `take_profit`, `position_management`, `live_safety`.
+- **`AdapterConfig`** — configurazione adapter: `type`, `mode`, `base_url`, `connector`, `leverage`, `secret`, `entry_execution`, `retry`, `capabilities`, `take_profit`, `position_management`, `live_safety`, `hedge_mode`, `websocket`.
 - **`AdapterCapabilities`** — dichiara cosa può fare l'adapter: entry, stop nativo, TP nativo, move stop, close partial/full, executor_position.
 - **`AdapterResult`** — risultato normalizzato di un invio ordine/cancel.
 - **`RawAdapterOrder`** — stato ordine letto dall'adapter e normalizzato per il sync fill.
+- **`WebsocketConfig`** — sotto-config opzionale per adapter con stream real-time (`enabled`, `reconnect_backoff_sec`).
 
 ### `config_loader.py`
 
@@ -48,11 +49,13 @@ Il worker è istanziato da `main.py` solo quando `HUMMINGBOT_BASE_URL` è config
 
 ### `event_sync.py`
 
-`ExchangeEventSyncWorker.run_once()` legge comandi inviati con `client_order_id`, interroga l'adapter e, se l'ordine risulta filled, inserisce un evento normalizzato in `ops_exchange_events`:
+`ExchangeEventSyncWorker.run_once()` esegue una reconciliation REST: legge comandi inviati con `client_order_id`, interroga l'adapter e, se l'ordine risulta filled, inserisce un evento normalizzato in `ops_exchange_events`:
 
 - `ENTRY_FILLED`
 - `TP_FILLED`
 - `SL_FILLED`
+
+Il worker espone anche `run_reconciliation()` per startup/reconnect.
 
 Il `LifecycleEventWorker` consuma questi eventi al giro successivo.
 
@@ -85,22 +88,27 @@ Nessuna logica propria. Mantenuto per compatibilità con codice e test esistenti
 Crea l'adapter concreto dal campo `cfg.type`. Supporta `"hummingbot_api"` e `"ccxt_bybit"`.
 
 - Per `hummingbot_api`: inietta `cfg.capabilities` e risolve il secret da `cfg.secret` o `HUMMINGBOT_SECRET`.
-- Per `ccxt_bybit`: legge `cfg.api_key` dallo YAML e `api_secret` dall'env `BYBIT_API_SECRET_<ADAPTER_NAME_UPPERCASE>`.
+- Per `ccxt_bybit`: legge `cfg.api_key` dallo YAML, `api_secret` dall'env `BYBIT_API_SECRET_<ADAPTER_NAME_UPPERCASE>` e propaga `cfg.hedge_mode`.
 
 ### `adapters/ccxt_bybit/`
 
-Adapter CCXT per Bybit perpetuals USDT (Fase 1). Composto da tre moduli:
+Adapter CCXT per Bybit perpetuals USDT. Composto da quattro moduli:
 
 **`adapter.py` — `CcxtBybitAdapter`**
 
 Implementa `ExecutionAdapter` via `ccxt.bybit`. Usa `options.defaultType=linear` (USDT perpetual). In testnet: `set_sandbox_mode(True)`. Il campo `_exchange` è iniettabile per unit test.
 
 Metodi:
-- `place_order` — delega a `BybitOrderBuilder`, poi chiama CCXT (`create_order` / `cancel_order` / `edit_order`). Gestisce `noop` (SYNC_PROTECTIVE_ORDERS), `cancel_by_link`, `edit_sl`.
-- `get_order_status` — `fetch_open_orders` poi `fetch_closed_orders` per `orderLinkId`; restituisce `RawAdapterOrder | None`.
+- `place_order` — delega a `BybitOrderBuilder`, poi chiama CCXT (`create_order` / `cancel_order` / `edit_order`). Gestisce `cancel_by_link`, `edit_sl` e `amend_sl_qty` per `SYNC_PROTECTIVE_ORDERS`.
+- `get_order_status` — `fetch_open_orders` poi `fetch_closed_orders` per `orderLinkId`; per ordini attached `sl`/`tp` può usare un fallback repository + `fetch_positions`.
 - `cancel_order` — no-op (la cancellazione passa via `CANCEL_PENDING_ENTRY` in `place_order`).
-- `set_leverage` — chiama `set_leverage` con `buyLeverage`/`sellLeverage` come stringa.
+- `set_leverage` — chiama `set_leverage` con `buyLeverage`/`sellLeverage` come stringa; in hedge mode passa `positionIdx=0`.
 - `get_position_qty` — `fetch_positions` + filtra per `side`; restituisce `float | None`.
+
+Dettagli Bybit:
+- `hedge_mode=True` abilita `positionIdx` coerente per ordini long/short.
+- `SYNC_PROTECTIVE_ORDERS` non è più un no-op: riallinea la quantità dello stop residuo.
+- Per gli ordini attached Mode C, Bybit/CCXT non espongono sempre uno stato recuperabile via `orderLinkId`; il fallback owner-layer usa repository + `fetch_positions`.
 
 Error handling:
 | Eccezione | Comportamento |
@@ -116,13 +124,13 @@ Traduce `command_type + payload + client_order_id → BybitOrderParams`. Puro, n
 
 | command_type | action | Note |
 |---|---|---|
-| `PLACE_ENTRY` | `create_order` | `orderLinkId=client_order_id`; Mode C se `native_attached_tpsl=True` |
-| `PLACE_PROTECTIVE_STOP` | `create_order` | `reduceOnly=True`, `triggerPrice` |
-| `PLACE_TAKE_PROFIT` | `create_order` | `reduceOnly=True`, type=limit |
+| `PLACE_ENTRY` | `create_order` | `orderLinkId=client_order_id`; Mode C se `native_attached_tpsl=True`; in hedge mode aggiunge `positionIdx` |
+| `PLACE_PROTECTIVE_STOP` | `create_order` | `reduceOnly=True`, `triggerPrice`, `positionIdx` coerente se hedge |
+| `PLACE_TAKE_PROFIT` | `create_order` | `reduceOnly=True`, type=limit, `positionIdx` coerente se hedge |
 | `CANCEL_PENDING_ENTRY` | `cancel_by_link` | cerca ordine aperto per `orderLinkId` |
-| `CLOSE_PARTIAL`, `CLOSE_FULL` | `create_order` | type=market, `reduceOnly=True` |
+| `CLOSE_PARTIAL`, `CLOSE_FULL` | `create_order` | type=market, `reduceOnly=True`, `positionIdx` coerente se hedge |
 | `MOVE_STOP_TO_BREAKEVEN`, `MOVE_STOP` | `edit_sl` | amend triggerPrice ordine SL aperto |
-| `SYNC_PROTECTIVE_ORDERS` | `noop` | no-op, Fase 2 |
+| `SYNC_PROTECTIVE_ORDERS` | `amend_sl_qty` | riallinea la quantità dello stop residuo |
 
 Mode C (`native_attached_tpsl=True`): aggiunge `takeProfit`, `stopLoss`, `tpslMode=Partial`, `tpOrderType=Limit`, `tpLimitPrice`, `tpSize` esplicito (risolve OD-C1).
 
@@ -137,13 +145,23 @@ Mappa `ccxt_order["status"]` → `RawAdapterOrder.status`:
 | `canceled`, `cancelled`, `expired` | `CANCELLED` |
 | `rejected` | `FAILED` |
 
+**`ws_fill_watcher.py` — `BybitWsFillWatcher`**
+
+Watcher opzionale real-time basato su `ccxt.pro.watch_orders()`:
+
+- gira in thread dedicato con loop asyncio proprio;
+- filtra gli ordini sui `client_order_id` ancora attivi in `GatewayCommandRepository`;
+- normalizza lo status con `StatusMapper`;
+- persiste eventi fill idempotenti in `ops_exchange_events`;
+- dopo errori WebSocket può richiamare una reconciliation REST.
+
 ## Adapter configurati in `config/execution.yaml`
 
 | Nome | Tipo | Endpoint | Connector | Capabilities |
 |---|---|---|---|---|
 | `hummingbot_api_paper` | `hummingbot_api` | porta 8000 | `bybit_perpetual_testnet` | Full (stop nativo, TP nativo, move stop) |
 | `hummingbot_api_demo` | `hummingbot_api` | porta 8001 | `bybit_perpetual_demo` | Solo entry + close (stop/TP non nativi) |
-| `bybit_main` *(esempio)* | `ccxt_bybit` | CCXT direct | `bybit` | Full (stop nativo, TP nativo, move stop, Mode C) |
+| `bybit_main` *(esempio)* | `ccxt_bybit` | CCXT direct | `bybit` | Full (stop nativo, TP nativo, move stop, Mode C, hedge mode opzionale, watcher WS opzionale) |
 
 `default_adapter` corrente: `hummingbot_api_demo`. L'esempio `ccxt_bybit` è in `execution.yaml` come sezione commentata.
 
@@ -174,4 +192,4 @@ Per avviare: `docker compose -f docker-compose.demo.yml --env-file .env.demo up 
 - `HUMMINGBOT_BASE_URL` è il gate operativo: senza questa variabile, l'execution gateway resta disabilitato.
 - `allow_live_trading=false` blocca modalità live anche se l'adapter è configurato.
 - La modalità `live` richiede anche `TSB_ALLOW_LIVE_TRADING=YES_I_UNDERSTAND` come secondo gate in env.
-
+- Per `ccxt_bybit`, il canale WebSocket accelera la rilevazione fill ma la recovery rimane demandata alla reconciliation REST.

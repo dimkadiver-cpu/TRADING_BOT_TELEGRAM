@@ -57,7 +57,7 @@ execution:
 
 Per tornare a paper/testnet: cambia `default_adapter` e `account_routing.default.adapter` a `hummingbot_api_paper`.
 
-### Stack ccxt_bybit / Bybit testnet (Fase 1)
+### Stack ccxt_bybit / Bybit testnet
 
 Sostituisce il blocco `execution:` in `execution.yaml` (l'esempio commentato è già nel file):
 
@@ -78,6 +78,10 @@ execution:
       testnet: true
       api_key: "abc123"
       leverage: 10
+      hedge_mode: false
+      websocket:
+        enabled: true
+        reconnect_backoff_sec: 5
 ```
 
 Credenziali: il secret **non va in YAML** — si passa via env:
@@ -88,6 +92,10 @@ BYBIT_API_SECRET_BYBIT_MAIN=<tua_api_secret>
 
 Pattern env: `BYBIT_API_SECRET_<ADAPTER_NAME_UPPERCASE>`.
 Multi-account: aggiungere un secondo adapter e definire `BYBIT_API_SECRET_BYBIT_TRADER_B`, ecc.
+
+Note operative:
+- `hedge_mode=true` va usato solo se l'account Bybit è realmente in hedge mode.
+- `websocket.enabled=true` richiede `ccxt.pro` disponibile nell'ambiente.
 
 ## Variabili ambiente
 
@@ -165,13 +173,24 @@ execution gateway disabled
 Suite del package:
 
 ```powershell
-pytest tests\runtime_v2\execution_gateway -v --tb=short
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway -q --tb=short
 ```
 
 Suite runtime completa:
 
 ```powershell
-pytest tests\runtime_v2 -v --tb=short
+.venv\Scripts\python.exe -m pytest tests\runtime_v2 -q --tb=short
+```
+
+Suite mirate utili per `ccxt_bybit`:
+
+```powershell
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_adapter_config_ccxt.py -q
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_bybit_order_builder.py -q
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_ccxt_bybit_adapter_unit.py -q
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_bybit_ws_fill_watcher.py -q
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_event_sync.py -q
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_adapter_factory.py -q
 ```
 
 ## Test gated stack paper/testnet (porta 8000)
@@ -214,9 +233,12 @@ pytest tests\runtime_v2\execution_gateway\test_hummingbot_demo_gated.py -v -s
 Unit test (nessuna chiamata di rete):
 
 ```powershell
-pytest tests\runtime_v2\execution_gateway\test_bybit_order_builder.py `
+.venv\Scripts\python.exe -m pytest tests\runtime_v2\execution_gateway\test_bybit_order_builder.py `
        tests\runtime_v2\execution_gateway\test_bybit_status_mapper.py `
-       tests\runtime_v2\execution_gateway\test_ccxt_bybit_adapter_unit.py -v
+       tests\runtime_v2\execution_gateway\test_ccxt_bybit_adapter_unit.py `
+       tests\runtime_v2\execution_gateway\test_bybit_ws_fill_watcher.py `
+       tests\runtime_v2\execution_gateway\test_event_sync.py `
+       tests\runtime_v2\execution_gateway\test_adapter_factory.py -v
 ```
 
 Integration test gated (richiede account Bybit testnet reale):
@@ -245,5 +267,5 @@ Prerequisiti account testnet: Unified Trading Account, USDT perpetual abilitato,
 | `place_order` 500 con SSL/certificati | Errore interno API/rate oracle | Verificare `docker logs hummingbot-demo-backend-api` |
 | `ccxt_bybit`: `AuthenticationError` | API key/secret errati o permessi mancanti | Verifica env vars `BYBIT_API_SECRET_*` e permessi account Bybit |
 | `ccxt_bybit`: `sl_order_not_found` su MOVE_STOP | Nessun ordine SL aperto trovato per il symbol | Verificare che l'ordine SL sia ancora aperto su Bybit testnet |
-| OD-F1-2 aperta | `get_order_status` non restituisce SL/TP attached via `orderLinkId` | Usare `fetch_positions` come fallback — da implementare in Fase 2 |
-
+| `ccxt_bybit`: watcher WS non parte | `ccxt.pro` non installato o `websocket.enabled=false` | Verifica `requirements.txt`, `python -c "import ccxt.pro"` e config adapter |
+| `ccxt_bybit`: stato `sl/tp` attached non visibile via `orderLinkId` | Limite Bybit/CCXT sugli ordini attached Mode C | Il fallback repository + `fetch_positions` copre il caso quando il repo è disponibile |
