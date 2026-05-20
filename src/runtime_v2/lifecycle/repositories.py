@@ -259,6 +259,19 @@ class ExecutionCommandRepository:
         finally:
             conn.close()
 
+    def get_entry_client_order_id(self, trade_chain_id: int) -> str | None:
+        conn = sqlite3.connect(self._db_path)
+        try:
+            row = conn.execute(
+                "SELECT client_order_id FROM ops_execution_commands "
+                "WHERE trade_chain_id=? AND command_type='PLACE_ENTRY' "
+                "AND client_order_id IS NOT NULL LIMIT 1",
+                (trade_chain_id,),
+            ).fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
+
 
 class ControlStateRepository:
     def __init__(self, db_path: str) -> None:

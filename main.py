@@ -164,6 +164,20 @@ async def _run_reconciliation_periodically(
             logger.exception("periodic reconciliation error")
 
 
+async def _run_position_reconciliation_periodically(
+    *,
+    sync_worker: ExchangeEventSyncWorker,
+    interval_seconds: int,
+    logger,
+) -> None:
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            sync_worker.run_position_reconciliation()
+        except Exception:
+            logger.exception("periodic position reconciliation error")
+
+
 async def _async_main(
     *,
     parser_db_path: str,
@@ -306,6 +320,7 @@ async def _async_main(
         worker_task = asyncio.create_task(listener.run_worker())
         lifecycle_task = asyncio.create_task(_run_lifecycle_workers())
         reconciliation_task = None
+        position_reconciliation_task = None
         if (
             execution_runtime is not None
             and execution_runtime.reconciliation_interval_seconds is not None
@@ -317,6 +332,14 @@ async def _async_main(
                     logger=logger,
                 )
             )
+        if execution_runtime is not None:
+            position_reconciliation_task = asyncio.create_task(
+                _run_position_reconciliation_periodically(
+                    sync_worker=execution_runtime.sync_worker,
+                    interval_seconds=60,
+                    logger=logger,
+                )
+            )
         try:
             await client.run_until_disconnected()
         finally:
@@ -324,6 +347,8 @@ async def _async_main(
             lifecycle_task.cancel()
             if reconciliation_task is not None:
                 reconciliation_task.cancel()
+            if position_reconciliation_task is not None:
+                position_reconciliation_task.cancel()
     finally:
         await client.disconnect()
         watcher.stop()

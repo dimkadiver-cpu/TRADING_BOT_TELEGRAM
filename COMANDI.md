@@ -4,6 +4,22 @@ Questa guida descrive il runtime reale attuale del progetto.
 Per approfondimenti tecnici vedere `docs/runtime_v2/` e
 `docs/Raggionamento/CCXT/AUDIT_stato_migrazione_ccxt.md`.
 
+
+
+● Funziona. Script in scripts/reset_dbs.py.
+
+  Utilizzo:
+  # Con conferma interattiva
+  python scripts/reset_dbs.py
+
+  # Skip conferma (utile tra un test e l'altro)
+  python scripts/reset_dbs.py --yes
+
+  Cosa fa:
+  - Cancella tutte le righe dalle tabelle runtime di entrambi i DB (ordine corretto per evitare FK violations)
+  - Resetta i contatori autoincrement (sqlite_sequence)
+  - Esegue VACUUM per liberare spazio
+  - Non tocca schema_migrations, tele_signal_bot.sqlite3, né i DB di test
 ## Flusso Runtime V2
 
 ```text

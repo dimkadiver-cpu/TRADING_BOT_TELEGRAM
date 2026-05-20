@@ -50,10 +50,102 @@ class ExchangeEventSyncWorker:
                     if saved:
                         self._repo.mark_done(cmd.command_id)
                         processed += 1
+                elif raw and raw.status == "CANCELLED":
+                    saved = self._handle_cancelled_order(client_order_id, raw)
+                    if saved:
+                        self._repo.mark_done(cmd.command_id)
+                        processed += 1
             except Exception:
                 logger.exception("reconciliation error for %s", client_order_id)
 
         return processed
+
+    def run_position_reconciliation(self) -> int:
+        """Detect positions closed externally on the exchange (manual close)."""
+        chains = self._get_open_chains()
+        processed = 0
+        for chain_id, symbol, side, open_qty in chains:
+            try:
+                qty = self._adapter.get_position_qty(
+                    symbol=symbol,
+                    side=side,
+                    execution_account_id=self._execution_account_id,
+                )
+                if qty is None:
+                    continue
+                if qty == 0.0 and open_qty > 0.0:
+                    saved = self._save_externally_closed(chain_id, symbol, side, open_qty)
+                    if saved:
+                        logger.info(
+                            "externally closed position detected: chain=%s %s %s qty=%s",
+                            chain_id, symbol, side, open_qty,
+                        )
+                        processed += 1
+            except Exception:
+                logger.exception("position reconciliation error for chain %s", chain_id)
+        return processed
+
+    def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            rows = conn.execute(
+                "SELECT trade_chain_id, symbol, side, open_position_qty "
+                "FROM ops_trade_chains "
+                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
+            ).fetchall()
+            return [(int(r[0]), str(r[1]), str(r[2]), float(r[3] or 0.0)) for r in rows]
+        finally:
+            conn.close()
+
+    def _save_externally_closed(
+        self, chain_id: int, symbol: str, side: str, open_qty: float
+    ) -> bool:
+        idempotency_key = f"CLOSE_FULL_FILLED:ext:{chain_id}"
+        payload = json.dumps({"filled_qty": open_qty, "fill_price": None, "source": "position_reconciliation"})
+        now = _now()
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO ops_exchange_events "
+                "(trade_chain_id, event_type, payload_json, processing_status, "
+                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
+                (chain_id, "CLOSE_FULL_FILLED", payload, "NEW", idempotency_key, now),
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
+    def _handle_cancelled_order(self, client_order_id: str, raw) -> bool:
+        try:
+            coid = coid_mod.parse(client_order_id)
+        except ValueError:
+            logger.warning("cannot parse client_order_id: %s", client_order_id)
+            return False
+
+        if coid.role != "entry":
+            # Non-entry orders cancelled externally: stop polling, no lifecycle event needed.
+            logger.warning("cancelled non-entry order detected: %s — marking done", client_order_id)
+            return True
+
+        exchange_order_id = raw.exchange_order_id or client_order_id
+        position_already_open = raw.filled_qty > 0.0
+        idempotency_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
+        payload = json.dumps({"command_id": coid.command_id, "position_already_open": position_already_open})
+        now = _now()
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO ops_exchange_events "
+                "(trade_chain_id, event_type, payload_json, processing_status, "
+                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
+                (coid.trade_chain_id, "PENDING_ENTRY_CANCELLED_CONFIRMED", payload,
+                 "NEW", idempotency_key, now),
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
 
     def _normalize_and_save(self, client_order_id: str, raw) -> bool:
         try:
