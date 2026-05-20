@@ -123,6 +123,13 @@ class ExchangeEventSyncWorker:
             logger.warning("cannot parse client_order_id: %s", client_order_id)
             return False
 
+        if coid.role != "entry" and raw.filled_qty > 0.0:
+            logger.warning(
+                "cancelled non-entry order has fill: coid=%s status=%s filled_qty=%s reason=%s",
+                client_order_id, raw.status, raw.filled_qty, raw.cancel_reason,
+            )
+            return self._normalize_and_save(client_order_id, raw)
+
         if coid.role != "entry":
             # Non-entry orders cancelled externally: stop polling, no lifecycle event needed.
             logger.warning("cancelled non-entry order detected: %s — marking done", client_order_id)

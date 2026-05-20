@@ -80,7 +80,7 @@ def test_place_entry_pending_to_sent(ops_db):
     ).fetchone()
     conn.close()
     assert status == "SENT"
-    assert coid == "tsb:1:1001:entry:1"
+    assert coid.startswith("tsb:1:1001:entry:1:")
 
 
 def test_capability_missing_produces_review_required(ops_db):
@@ -160,8 +160,9 @@ def test_idempotency_recovery_stores_client_order_id(ops_db):
     so ExchangeEventSyncWorker can reconcile the fill (it filters client_order_id IS NOT NULL)."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.adapters.base import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.client_order_id import build
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway, _command_nonce
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     _insert_cmd(ops_db, 1010, payload={
@@ -169,10 +170,11 @@ def test_idempotency_recovery_stores_client_order_id(ops_db):
         "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1,
     })
     repo = GatewayCommandRepository(ops_db)
+    cmd = repo.get_pending_batch()[0]
 
     # Pre-populate fake adapter so idempotency check finds an existing order
     # (simulates: process crashed after place_order but before mark_sent)
-    expected_coid = "tsb:1:1010:entry:1"
+    expected_coid = build(1, 1010, "entry", 1, nonce=_command_nonce(cmd))
     adapter = FakeAdapter()
     adapter._orders[expected_coid] = RawAdapterOrder(
         client_order_id=expected_coid,
@@ -186,7 +188,6 @@ def test_idempotency_recovery_stores_client_order_id(ops_db):
         adapter_registry={"bybit_demo": adapter},
         repo=repo,
     )
-    cmd = repo.get_pending_batch()[0]
     gw.process(cmd, account_id="acc_1")
 
     conn = sqlite3.connect(ops_db)
@@ -196,6 +197,49 @@ def test_idempotency_recovery_stores_client_order_id(ops_db):
     conn.close()
     assert status == "ACK"
     assert coid == expected_coid, f"client_order_id must be stored for reconciliation, got: {coid}"
+
+
+def test_new_command_id_includes_nonce_so_db_reset_does_not_hit_stale_order(ops_db):
+    """A local DB reset can reuse ids while the exchange still has old orderLinkIds.
+    The current command must use a fresh id, not recover stale terminal exchange state.
+    """
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.adapters.base import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 1011, payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    old_coid = "tsb:1:1011:entry:1"
+    adapter = FakeAdapter()
+    adapter._orders[old_coid] = RawAdapterOrder(
+        client_order_id=old_coid,
+        exchange_order_id="old_cancelled_order",
+        status="CANCELLED",
+        cancel_reason="CancelByUser|EC_PerCancelRequest",
+    )
+
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    status, coid = conn.execute(
+        "SELECT status, client_order_id FROM ops_execution_commands WHERE command_id=1011"
+    ).fetchone()
+    conn.close()
+    assert status == "SENT"
+    assert coid.startswith("tsb:1:1011:entry:1:")
+    assert any(call["action"] == "place_order" for call in adapter.calls)
+    assert adapter._orders[coid].status == "OPEN"
 
 
 def test_live_trading_blocked(ops_db):

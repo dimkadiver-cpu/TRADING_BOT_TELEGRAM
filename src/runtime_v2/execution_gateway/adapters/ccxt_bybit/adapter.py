@@ -193,7 +193,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
         if orders:
             order = orders[-1]
             returned_coid = str(order.get("clientOrderId") or "")
-            if returned_coid and returned_coid != client_order_id:
+            if returned_coid != client_order_id:
                 logger.warning(
                     "get_order_status: orderLinkId filter ignored by Bybit — "
                     "requested=%s got=%s — skipping",

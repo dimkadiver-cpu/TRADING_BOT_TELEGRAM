@@ -189,6 +189,10 @@ Per avviare: `docker compose -f docker-compose.demo.yml --env-file .env.demo up 
 - Il gateway non crea decisioni operative nuove: esegue comandi già prodotti dal lifecycle.
 - Il lifecycle non importa Hummingbot né exchange SDK.
 - Ogni ordine inviato usa un `client_order_id` deterministico per correlare retry, query e fill.
+  Formato corrente: `tsb:<trade_chain_id>:<command_id>:<role>:<sequence>:<nonce>`.
+  Il `nonce` deriva dal `created_at` del comando: resta stabile sui retry dello stesso comando,
+  ma evita collisioni con ordini storici rimasti sull'exchange dopo reset del DB locale.
+  Il parser accetta ancora il formato legacy senza nonce.
 - `HUMMINGBOT_BASE_URL` è il gate operativo: senza questa variabile, l'execution gateway resta disabilitato.
 - `allow_live_trading=false` blocca modalità live anche se l'adapter è configurato.
 - La modalità `live` richiede anche `TSB_ALLOW_LIVE_TRADING=YES_I_UNDERSTAND` come secondo gate in env.

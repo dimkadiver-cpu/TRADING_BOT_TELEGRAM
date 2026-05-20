@@ -156,7 +156,12 @@ def test_ac5_fill_produces_entry_filled_event(ops_db):
     _insert_cmd(ops_db, 1005)
     worker, sync, adapter = _make_stack(ops_db)
     worker.run_once()
-    adapter.simulate_fill("tsb:1:1005:entry:1", price=50050.0, qty=0.02)
+    conn = sqlite3.connect(ops_db)
+    client_order_id = conn.execute(
+        "SELECT client_order_id FROM ops_execution_commands WHERE command_id=1005"
+    ).fetchone()[0]
+    conn.close()
+    adapter.simulate_fill(client_order_id, price=50050.0, qty=0.02)
     sync.run_once()
     conn = sqlite3.connect(ops_db)
     events = conn.execute(

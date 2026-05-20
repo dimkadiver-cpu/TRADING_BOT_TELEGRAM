@@ -32,6 +32,18 @@ def test_roundtrip():
         assert build(parsed.trade_chain_id, parsed.command_id, parsed.role, parsed.sequence) == coid
 
 
+def test_build_with_nonce_roundtrip():
+    from src.runtime_v2.execution_gateway.client_order_id import build, parse
+    coid = build(1, 2, "entry", 1, nonce="mabc123")
+    assert coid == "tsb:1:2:entry:1:mabc123"
+    parsed = parse(coid)
+    assert parsed.trade_chain_id == 1
+    assert parsed.command_id == 2
+    assert parsed.role == "entry"
+    assert parsed.sequence == 1
+    assert parsed.nonce == "mabc123"
+
+
 def test_parse_invalid_raises():
     from src.runtime_v2.execution_gateway.client_order_id import parse
     with pytest.raises(ValueError):

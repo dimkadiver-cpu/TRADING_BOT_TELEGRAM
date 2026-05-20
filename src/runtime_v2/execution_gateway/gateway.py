@@ -39,6 +39,25 @@ _ROLE_MAP: dict[str, str] = {
 }
 
 
+def _base36(value: int) -> str:
+    alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
+    if value == 0:
+        return "0"
+    digits = []
+    while value:
+        value, rem = divmod(value, 36)
+        digits.append(alphabet[rem])
+    return "".join(reversed(digits))
+
+
+def _command_nonce(cmd: ExecutionCommand) -> str | None:
+    if cmd.created_at is None:
+        return None
+    # Keep orderLinkId compact while making ids unique across local DB resets.
+    timestamp_ms = int(cmd.created_at.timestamp() * 1000)
+    return _base36(timestamp_ms)
+
+
 class ExecutionGateway:
     def __init__(
         self,
@@ -101,6 +120,7 @@ class ExecutionGateway:
             command_id=cmd.command_id,
             role=role,
             sequence=sequence,
+            nonce=_command_nonce(cmd),
         )
 
         # Idempotency check
@@ -108,7 +128,7 @@ class ExecutionGateway:
             client_order_id=client_order_id,
             execution_account_id=routing.execution_account_id,
         )
-        if existing is not None:
+        if existing is not None and existing.status not in ("CANCELLED", "FAILED"):
             logger.info("command %s already sent, recovering state", cmd.command_id)
             # Must store client_order_id so ExchangeEventSyncWorker can reconcile the fill
             # (it filters WHERE client_order_id IS NOT NULL)

@@ -397,7 +397,8 @@ def test_other_base_error_returns_failed():
 def test_get_order_status_finds_open_order():
     exchange = MagicMock()
     exchange.fetch_open_orders.return_value = [{
-        "id": "exch_123", "status": "open", "filled": 0.0, "average": None,
+        "id": "exch_123", "clientOrderId": "tsb:10:5:entry:1",
+        "status": "open", "filled": 0.0, "average": None,
     }]
     adapter = _make_adapter(exchange)
 
@@ -415,7 +416,8 @@ def test_get_order_status_falls_back_to_closed_orders():
     exchange = MagicMock()
     exchange.fetch_open_orders.return_value = []
     exchange.fetch_closed_orders.return_value = [{
-        "id": "exch_456", "status": "closed", "filled": 0.01, "average": 50000.0,
+        "id": "exch_456", "clientOrderId": "tsb:10:5:entry:1",
+        "status": "closed", "filled": 0.01, "average": 50000.0,
     }]
     adapter = _make_adapter(exchange)
 
@@ -446,7 +448,8 @@ def test_get_order_status_open_orders_exception_falls_back():
     exchange = MagicMock()
     exchange.fetch_open_orders.side_effect = Exception("network blip")
     exchange.fetch_closed_orders.return_value = [{
-        "id": "exch_789", "status": "closed", "filled": 0.005, "average": 48000.0,
+        "id": "exch_789", "clientOrderId": "tsb:10:5:entry:1",
+        "status": "closed", "filled": 0.005, "average": 48000.0,
     }]
     adapter = _make_adapter(exchange)
 
@@ -456,6 +459,24 @@ def test_get_order_status_open_orders_exception_falls_back():
 
     assert raw is not None
     assert raw.status == "FILLED"
+
+
+def test_get_order_status_skips_closed_order_without_matching_client_order_id():
+    exchange = MagicMock()
+    exchange.fetch_open_orders.return_value = []
+    exchange.fetch_closed_orders.return_value = [{
+        "id": "unrelated_closed_order",
+        "status": "closed",
+        "filled": 500.0,
+        "average": 1.3702,
+    }]
+    adapter = _make_adapter(exchange)
+
+    raw = adapter.get_order_status(
+        client_order_id="tsb:10:5:entry:1", execution_account_id="bybit_main"
+    )
+
+    assert raw is None
 
 
 def test_od_f1_2_fallback_returns_filled_when_position_closed():
