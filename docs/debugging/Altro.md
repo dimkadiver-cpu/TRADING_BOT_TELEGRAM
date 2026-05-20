@@ -3,10 +3,11 @@
 
 
 
-- Pulizia dei BD in prova
+Pulizia dei BD in prova
 
-- Aggiornare file Readme. Claude.md
+Aggiornare file Readme. Claude.md
 
+- pulizia finale da vecchi file/non in uso ecc.
 
 - verifica bene C:\TeleSignalBot\docs\debugging\market_entry_qty_deferred.md prima di implimentare!
 
