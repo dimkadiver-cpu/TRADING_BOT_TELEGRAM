@@ -356,10 +356,13 @@ class LifecycleEntryGate:
             if matched:
                 return matched
 
-        if tag.targeting.telegram_message_ids and tg_id_to_raw_id:
+        tg_ids_to_check = list(tag.targeting.telegram_message_ids)
+        if tag.targeting.reply_to_message_id is not None:
+            tg_ids_to_check.append(tag.targeting.reply_to_message_id)
+        if tg_ids_to_check and tg_id_to_raw_id:
             raw_ids = {
                 tg_id_to_raw_id[tid]
-                for tid in tag.targeting.telegram_message_ids
+                for tid in tg_ids_to_check
                 if tid in tg_id_to_raw_id
             }
             if raw_ids:
@@ -713,6 +716,8 @@ class LifecycleGateWorker:
         all_tg_ids: set[int] = set()
         for tag in (enriched_actions or []):
             all_tg_ids.update(tag.targeting.telegram_message_ids)
+            if tag.targeting.reply_to_message_id is not None:
+                all_tg_ids.add(tag.targeting.reply_to_message_id)
         if not all_tg_ids:
             return {}
         placeholders = ",".join("?" for _ in all_tg_ids)
