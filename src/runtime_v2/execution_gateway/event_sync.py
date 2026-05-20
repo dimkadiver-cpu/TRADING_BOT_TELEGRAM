@@ -130,8 +130,17 @@ class ExchangeEventSyncWorker:
 
         exchange_order_id = raw.exchange_order_id or client_order_id
         position_already_open = raw.filled_qty > 0.0
+        if raw.cancel_reason:
+            logger.warning(
+                "entry order cancelled by exchange: coid=%s reason=%s",
+                client_order_id, raw.cancel_reason,
+            )
         idempotency_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
-        payload = json.dumps({"command_id": coid.command_id, "position_already_open": position_already_open})
+        payload = json.dumps({
+            "command_id": coid.command_id,
+            "position_already_open": position_already_open,
+            "cancel_reason": raw.cancel_reason,
+        })
         now = _now()
         conn = sqlite3.connect(self._ops_db)
         try:

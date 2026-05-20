@@ -97,6 +97,7 @@ class RawAdapterOrder(BaseModel):
     status: str  # OPEN | FILLED | CANCELLED | FAILED
     filled_qty: float = 0.0
     average_price: float | None = None
+    cancel_reason: str | None = None  # Bybit cancelType/rejectReason if available
 
     @property
     def is_filled(self) -> bool:
