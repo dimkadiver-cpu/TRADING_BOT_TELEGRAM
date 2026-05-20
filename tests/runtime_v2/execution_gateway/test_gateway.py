@@ -155,6 +155,49 @@ def test_sync_protective_orders_uses_sync_role():
     assert _ROLE_MAP["SYNC_PROTECTIVE_ORDERS"] == "sync"
 
 
+def test_idempotency_recovery_stores_client_order_id(ops_db):
+    """BUG: when idempotency check finds existing order, client_order_id must be stored
+    so ExchangeEventSyncWorker can reconcile the fill (it filters client_order_id IS NOT NULL)."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.adapters.base import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 1010, payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+
+    # Pre-populate fake adapter so idempotency check finds an existing order
+    # (simulates: process crashed after place_order but before mark_sent)
+    expected_coid = "tsb:1:1010:entry:1"
+    adapter = FakeAdapter()
+    adapter._orders[expected_coid] = RawAdapterOrder(
+        client_order_id=expected_coid,
+        exchange_order_id="exch_abc123",
+        adapter_order_id="hb_abc123",
+        status="OPEN",
+    )
+
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    status, coid = conn.execute(
+        "SELECT status, client_order_id FROM ops_execution_commands WHERE command_id=1010"
+    ).fetchone()
+    conn.close()
+    assert status == "ACK"
+    assert coid == expected_coid, f"client_order_id must be stored for reconciliation, got: {coid}"
+
+
 def test_live_trading_blocked(ops_db):
     import yaml
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter

@@ -110,6 +110,16 @@ class ExecutionGateway:
         )
         if existing is not None:
             logger.info("command %s already sent, recovering state", cmd.command_id)
+            # Must store client_order_id so ExchangeEventSyncWorker can reconcile the fill
+            # (it filters WHERE client_order_id IS NOT NULL)
+            self._repo.mark_sent(
+                cmd.command_id,
+                client_order_id=client_order_id,
+                adapter=routing.adapter,
+                execution_account_id=routing.execution_account_id,
+                adapter_order_id=existing.adapter_order_id,
+                exchange_order_id=existing.exchange_order_id,
+            )
             self._repo.mark_ack(cmd.command_id)
             return
 
