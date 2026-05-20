@@ -707,6 +707,24 @@ class LifecycleGateWorker:
         finally:
             conn.close()
 
+    def _build_tg_id_to_raw_id(self, enriched_actions) -> dict[int, int]:
+        all_tg_ids: set[int] = set()
+        for tag in (enriched_actions or []):
+            all_tg_ids.update(tag.targeting.telegram_message_ids)
+        if not all_tg_ids:
+            return {}
+        placeholders = ",".join("?" for _ in all_tg_ids)
+        conn = _sqlite3.connect(self._parser_db)
+        try:
+            rows = conn.execute(
+                f"SELECT telegram_message_id, raw_message_id FROM raw_messages "
+                f"WHERE telegram_message_id IN ({placeholders})",
+                list(all_tg_ids),
+            ).fetchall()
+        finally:
+            conn.close()
+        return {int(r[0]): int(r[1]) for r in rows}
+
     def _process_row(self, row: tuple) -> None:
         import json as _json
         from src.runtime_v2.signal_enrichment.models import (
@@ -762,7 +780,11 @@ class LifecycleGateWorker:
                 c.trade_chain_id: self._command_repo.get_active_for_chain(c.trade_chain_id)
                 for c in open_chains
             }
-            result = self._gate.process_update(enriched, open_chains, active_cmds)
+            tg_id_to_raw_id = self._build_tg_id_to_raw_id(enriched.enriched_actions)
+            result = self._gate.process_update(
+                enriched, open_chains, active_cmds,
+                tg_id_to_raw_id=tg_id_to_raw_id,
+            )
             self._persist_update(enriched, result)
 
     def _persist_signal(self, enriched: EnrichedCanonicalMessage, result: SignalGateResult) -> None:

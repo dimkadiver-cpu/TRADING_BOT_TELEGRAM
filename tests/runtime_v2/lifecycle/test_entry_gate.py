@@ -882,3 +882,114 @@ def test_process_update_uses_tg_id_to_raw_id():
     cmds = result.chain_results[0].execution_commands
     assert any(c.command_type == "CLOSE_FULL" for c in cmds)
     assert result.review_events == []
+
+
+def test_lifecycle_gate_worker_builds_tg_mapping_and_resolves_chain(tmp_path):
+    """Worker queries parser DB and passes tg_id_to_raw_id to gate, resolving ambiguous update."""
+    import json as _json
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+
+    # ── parser DB with raw_messages ──────────────────────────────────────────
+    from src.core.migrations import apply_migrations as _core_apply
+    parser_db = str(tmp_path / "parser.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    pconn = sqlite3.connect(parser_db)
+    # Signal raw message: Telegram ID 50 → raw_message_id 1
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (1, 'chat1', 50, NULL, '2026-01-01', '2026-01-01')"
+    )
+    # Update raw message: Telegram ID 51 → raw_message_id 2
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (2, 'chat1', 51, 50, '2026-01-01', '2026-01-01')"
+    )
+
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, CloseOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+
+    action = ActionItem(
+        action_type="CLOSE",
+        close=CloseOperation(close_scope="FULL"),
+        source_intent="CLOSE_FULL",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(
+            telegram_message_ids=[50],
+            scope_hint="SINGLE_SIGNAL",
+        ),
+        actions=[action],
+    )
+    actions_json = _json.dumps([tag.model_dump()])
+    pconn.execute(
+        "INSERT INTO enriched_canonical_messages "
+        "(enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,"
+        " primary_class, enrichment_decision, enriched_actions_json, lifecycle_processed, created_at)"
+        " VALUES (3, 3, 2, 'trader_a', 'acc', 'UPDATE', 'PASS', ?, 0, '2026-01-01')",
+        (actions_json,),
+    )
+    pconn.commit()
+    pconn.close()
+
+    # ── ops DB ───────────────────────────────────────────────────────────────
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(ops_db, "db/ops_migrations")
+    oconn = sqlite3.connect(ops_db)
+    now = "2026-01-01T00:00:00+00:00"
+    # Two chains: XRPUSDT (raw_message_id=1) and XRPSDTUSDT (raw_message_id=99)
+    oconn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, source_enrichment_id, canonical_message_id,"
+        " raw_message_id, trader_id, account_id, symbol, side, lifecycle_state, entry_mode,"
+        " management_plan_json, created_at, updated_at)"
+        " VALUES (1, 1, 1, 1, 'trader_a', 'acc', 'XRPUSDT', 'SHORT', 'OPEN',"
+        " 'b_entry_stop_then_tp', '{}', ?, ?)",
+        (now, now),
+    )
+    oconn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, source_enrichment_id, canonical_message_id,"
+        " raw_message_id, trader_id, account_id, symbol, side, lifecycle_state, entry_mode,"
+        " management_plan_json, created_at, updated_at)"
+        " VALUES (2, 2, 2, 99, 'trader_a', 'acc', 'XRPSDTUSDT', 'SHORT', 'WAITING_ENTRY',"
+        " 'b_entry_stop_then_tp', '{}', ?, ?)",
+        (now, now),
+    )
+    oconn.commit()
+    oconn.close()
+
+    # ── repos & worker ────────────────────────────────────────────────────────
+    from src.runtime_v2.lifecycle.repositories import (
+        ControlStateRepository, ExecutionCommandRepository,
+        LifecycleEventRepository, SnapshotRepository, TradeChainRepository,
+    )
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=gate,
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        snapshot_repo=SnapshotRepository(ops_db),
+        control_repo=ControlStateRepository(ops_db),
+    )
+
+    processed = worker.run_once()
+
+    assert processed == 1
+    oconn2 = sqlite3.connect(ops_db)
+    events = oconn2.execute(
+        "SELECT event_type FROM ops_lifecycle_events ORDER BY event_id"
+    ).fetchall()
+    oconn2.close()
+    event_types = [e[0] for e in events]
+    assert "REVIEW_REQUIRED" not in event_types
+    cmds = sqlite3.connect(ops_db).execute(
+        "SELECT command_type, trade_chain_id FROM ops_execution_commands"
+    ).fetchall()
+    assert any(c[0] == "CLOSE_FULL" and c[1] == 1 for c in cmds)
