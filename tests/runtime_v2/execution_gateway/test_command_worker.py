@@ -99,6 +99,20 @@ def test_double_run_does_not_resend(ops_db):
     assert len(place_calls) == 1
 
 
+def test_command_with_missing_chain_gets_review_required(ops_db):
+    """BUG 5: PENDING command whose chain doesn't exist must be marked REVIEW_REQUIRED,
+    not silently skipped forever."""
+    _insert_cmd(ops_db, 2001, chain_id=9999)  # chain 9999 does not exist
+    worker, _ = _make_worker(ops_db)
+    worker.run_once()
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2001"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "REVIEW_REQUIRED"
+
+
 def test_waiting_position_on_open_chain_becomes_pending(ops_db):
     _insert_chain(ops_db, state="OPEN")
     _insert_cmd(ops_db, 1003, cmd_type="PLACE_TAKE_PROFIT", status="WAITING_POSITION",

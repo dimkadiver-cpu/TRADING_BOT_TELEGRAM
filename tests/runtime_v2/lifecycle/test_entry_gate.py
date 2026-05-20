@@ -861,6 +861,33 @@ def test_resolve_targets_single_chain_telegram_id_no_match_returns_chain():
     assert result == []  # Telegram evidence pointed elsewhere → do not apply to wrong chain
 
 
+def test_gate_signal_empty_entries_produces_review():
+    """BUG 3: signal with no entry legs must be rejected, not create a stuck WAITING_ENTRY chain."""
+    from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+    from src.runtime_v2.signal_enrichment.models import (
+        EnrichedCanonicalMessage, EnrichedSignalPayload, ManagementPlanConfig,
+    )
+
+    signal = EnrichedSignalPayload(
+        symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+        entries=[],  # ← empty — no legs resolved by enrichment
+        take_profits=[TakeProfit(sequence=1, price=Price(raw="51000", value=51000.0))],
+        stop_loss=StopLoss(price=Price(raw="49000", value=49000.0)),
+    )
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=99, canonical_message_id=990, raw_message_id=9900,
+        trader_id="trader_a", account_id="acc_1",
+        primary_class="SIGNAL", enrichment_decision="PASS",
+        enriched_signal=signal, management_plan=ManagementPlanConfig(),
+        policy_snapshot={},
+    )
+    gate = _make_gate()
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.trade_chain is None
+    assert result.review_reason == "no_entry_legs"
+    assert any(e.event_type == "REVIEW_REQUIRED" for e in result.lifecycle_events)
+
+
 def test_process_update_uses_tg_id_to_raw_id():
     """process_update routes CLOSE_FULL to the correct chain via Telegram ID."""
     chain_xrp = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=2)

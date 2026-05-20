@@ -75,6 +75,9 @@ class LifecycleEntryGate:
         if signal is None or not signal.symbol or not signal.side:
             return self._review_signal(eid, "missing_symbol_or_side")
 
+        if not signal.entries:
+            return self._review_signal(eid, "no_entry_legs")
+
         account_snapshot = self._port.get_account_state(enriched.account_id)
         market_snapshot = self._port.get_symbol_market_state(enriched.account_id, signal.symbol)
 

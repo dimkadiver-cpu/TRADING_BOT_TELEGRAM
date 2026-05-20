@@ -30,7 +30,8 @@ class ExecutionCommandWorker:
         for cmd in self._repo.get_pending_batch(self._batch_size):
             account_id = self._get_account_id(cmd.trade_chain_id)
             if account_id is None:
-                logger.warning("no account_id for chain %s", cmd.trade_chain_id)
+                logger.warning("no account_id for chain %s — marking REVIEW_REQUIRED", cmd.trade_chain_id)
+                self._repo.mark_review_required(cmd.command_id, reason="chain_not_found")
                 continue
             try:
                 self._gw.process(cmd, account_id=account_id)
