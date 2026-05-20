@@ -73,7 +73,13 @@ class CcxtBybitAdapter(ExecutionAdapter):
         }
         if self._hedge_mode:
             extra["positionIdx"] = 0
-        self._exchange.set_leverage(leverage, symbol, params=extra)
+        try:
+            self._exchange.set_leverage(leverage, symbol, params=extra)
+        except Exception as e:
+            # retCode 110043 = "leverage not modified" — already at target, treat as success
+            if "110043" in str(e):
+                return
+            raise
 
     def place_order(
         self,
@@ -185,7 +191,16 @@ class CcxtBybitAdapter(ExecutionAdapter):
             except Exception as exc:
                 logger.debug("fetch_closed_orders error: %s", exc)
         if orders:
-            return StatusMapper.map(orders[-1], client_order_id=client_order_id)
+            order = orders[-1]
+            returned_coid = str(order.get("clientOrderId") or "")
+            if returned_coid and returned_coid != client_order_id:
+                logger.warning(
+                    "get_order_status: orderLinkId filter ignored by Bybit — "
+                    "requested=%s got=%s — skipping",
+                    client_order_id, returned_coid,
+                )
+                return None
+            return StatusMapper.map(order, client_order_id=client_order_id)
         return self._get_attached_order_status_from_positions(client_order_id)
 
     def get_position_qty(
