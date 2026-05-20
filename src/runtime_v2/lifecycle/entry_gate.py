@@ -361,8 +361,7 @@ class LifecycleEntryGate:
             }
             if raw_ids:
                 matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
-                if matched:
-                    return matched
+                return matched  # [] if no chain matched — do NOT fall through to single-chain
 
         if len(trader_chains) > 1:
             return None

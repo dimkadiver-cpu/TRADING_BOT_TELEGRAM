@@ -810,7 +810,7 @@ def test_resolve_targets_matches_via_telegram_message_id():
 
 
 def test_resolve_targets_telegram_id_no_match_falls_through_to_ambiguous():
-    """If Telegram IDs don't match any chain, falls back to ambiguous."""
+    """If Telegram IDs resolve to an absent chain, return [] (specific miss — not ambiguous)."""
     chain_a = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
     chain_b = _make_chain_with_raw_id(2, "trader_a", "ADAUSDT", "SHORT", raw_message_id=20)
 
@@ -824,7 +824,7 @@ def test_resolve_targets_telegram_id_no_match_falls_through_to_ambiguous():
         tg_id_to_raw_id=tg_id_to_raw_id,
     )
 
-    assert result is None  # ambiguous — two chains, no Telegram match
+    assert result == []  # Telegram evidence pointed to absent chain → specific miss, not ambiguous
 
 
 def test_resolve_targets_telegram_id_empty_mapping_falls_through():
@@ -845,7 +845,7 @@ def test_resolve_targets_telegram_id_empty_mapping_falls_through():
 
 
 def test_resolve_targets_single_chain_telegram_id_no_match_returns_chain():
-    """Single open chain + telegram ID not matching via mapping → returns it (unambiguous fallback)."""
+    """Single open chain + telegram ID resolves to absent chain → returns [] (specific miss)."""
     chain_a = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
 
     enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[99])
@@ -858,7 +858,7 @@ def test_resolve_targets_single_chain_telegram_id_no_match_returns_chain():
         tg_id_to_raw_id=tg_id_to_raw_id,
     )
 
-    assert result == [chain_a]  # only one chain → unambiguous, returned regardless
+    assert result == []  # Telegram evidence pointed elsewhere → do not apply to wrong chain
 
 
 def test_process_update_uses_tg_id_to_raw_id():
@@ -993,3 +993,4 @@ def test_lifecycle_gate_worker_builds_tg_mapping_and_resolves_chain(tmp_path):
         "SELECT command_type, trade_chain_id FROM ops_execution_commands"
     ).fetchall()
     assert any(c[0] == "CLOSE_FULL" and c[1] == 1 for c in cmds)
+    assert not any(c[1] == 2 for c in cmds)  # chain 2 must not be touched
