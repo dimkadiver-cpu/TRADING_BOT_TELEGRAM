@@ -95,6 +95,9 @@ class BybitOrderBuilder:
         }
 
     def _place_protective_stop(self, payload: dict, client_order_id: str) -> BybitOrderParams:
+        # SHORT stop triggers when price rises above stop → ascending
+        # LONG stop triggers when price falls below stop → descending
+        trigger_direction = "ascending" if payload["side"] == "SHORT" else "descending"
         return BybitOrderParams(
             action="create_order",
             symbol=payload["symbol"],
@@ -107,6 +110,7 @@ class BybitOrderBuilder:
                 "reduceOnly": True,
                 "triggerPrice": float(payload["stop_price"]),
                 "triggerBy": "LastPrice",
+                "triggerDirection": trigger_direction,
             },
         )
 
@@ -135,10 +139,11 @@ class BybitOrderBuilder:
         )
 
     def _cancel_pending_entry(self, payload: dict, client_order_id: str) -> BybitOrderParams:
+        order_link_id = payload.get("entry_client_order_id") or client_order_id
         return BybitOrderParams(
             action="cancel_by_link",
             symbol=payload["symbol"],
-            order_link_id=client_order_id,
+            order_link_id=order_link_id,
         )
 
     def _move_stop(self, command_type: str, payload: dict) -> BybitOrderParams:

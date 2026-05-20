@@ -223,10 +223,12 @@ def test_place_protective_stop_builds_stop_reduce_only_order(
     assert params.amount == qty
     assert params.price is None
     assert params.order_link_id == client_order_id
+    expected_trigger_direction = "descending" if side == "LONG" else "ascending"
     assert params.extra_params == {
         "reduceOnly": True,
         "triggerPrice": stop_price,
         "triggerBy": "LastPrice",
+        "triggerDirection": expected_trigger_direction,
     }
 
 
