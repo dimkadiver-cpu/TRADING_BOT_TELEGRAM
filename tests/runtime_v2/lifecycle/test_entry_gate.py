@@ -796,8 +796,8 @@ def test_resolve_targets_matches_via_telegram_message_id():
     chain_xrp = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
     chain_ada = _make_chain_with_raw_id(2, "trader_a", "ADAUSDT", "SHORT", raw_message_id=20)
 
-    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[10])
-    tg_id_to_raw_id = {10: 10, 20: 20}
+    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[50])
+    tg_id_to_raw_id = {50: 10, 51: 20}  # telegram IDs 50,51 map to raw_message_ids 10,20
 
     gate = _make_gate_with_mode("b_entry_stop_then_tp")
     tag = enriched.enriched_actions[0]
@@ -842,6 +842,23 @@ def test_resolve_targets_telegram_id_empty_mapping_falls_through():
     )
 
     assert result is None  # ambiguous
+
+
+def test_resolve_targets_single_chain_telegram_id_no_match_returns_chain():
+    """Single open chain + telegram ID not matching via mapping → returns it (unambiguous fallback)."""
+    chain_a = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
+
+    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[99])
+    tg_id_to_raw_id = {99: 999}  # maps to raw_id 999 — no chain has this
+
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    tag = enriched.enriched_actions[0]
+    result = gate._resolve_targets(
+        enriched, [chain_a], tag,
+        tg_id_to_raw_id=tg_id_to_raw_id,
+    )
+
+    assert result == [chain_a]  # only one chain → unambiguous, returned regardless
 
 
 def test_process_update_uses_tg_id_to_raw_id():
