@@ -730,3 +730,138 @@ def test_cancel_pending_on_partially_closed_emits_sync():
     assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
     assert "SYNC_PROTECTIVE_ORDERS" in cmd_types
+
+
+# ── Telegram message ID resolution tests ──────────────────────────────────────
+
+def _make_chain_with_raw_id(
+    trade_chain_id: int,
+    trader_id: str,
+    symbol: str,
+    side: str,
+    raw_message_id: int,
+) -> "TradeChain":
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=trade_chain_id,
+        source_enrichment_id=trade_chain_id,
+        canonical_message_id=trade_chain_id,
+        raw_message_id=raw_message_id,
+        trader_id=trader_id,
+        account_id="acc",
+        symbol=symbol,
+        side=side,
+        lifecycle_state="OPEN",
+        entry_mode="b_entry_stop_then_tp",
+        management_plan_json="{}",
+    )
+
+
+def _make_enriched_update_tg(
+    trader_id: str,
+    telegram_message_ids: list[int],
+) -> "EnrichedCanonicalMessage":
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, CloseOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+    from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
+
+    action = ActionItem(
+        action_type="CLOSE",
+        close=CloseOperation(close_scope="FULL"),
+        source_intent="CLOSE_FULL",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(
+            telegram_message_ids=telegram_message_ids,
+            scope_hint="SINGLE_SIGNAL",
+        ),
+        actions=[action],
+    )
+    return EnrichedCanonicalMessage(
+        enrichment_id=99,
+        canonical_message_id=99,
+        raw_message_id=99,
+        trader_id=trader_id,
+        account_id="acc",
+        primary_class="UPDATE",
+        enrichment_decision="PASS",
+        enriched_actions=[tag],
+    )
+
+
+def test_resolve_targets_matches_via_telegram_message_id():
+    """When two chains are open, Telegram ID resolves to the correct one."""
+    chain_xrp = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
+    chain_ada = _make_chain_with_raw_id(2, "trader_a", "ADAUSDT", "SHORT", raw_message_id=20)
+
+    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[10])
+    tg_id_to_raw_id = {10: 10, 20: 20}
+
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    tag = enriched.enriched_actions[0]
+    result = gate._resolve_targets(
+        enriched, [chain_xrp, chain_ada], tag,
+        tg_id_to_raw_id=tg_id_to_raw_id,
+    )
+
+    assert result == [chain_xrp]
+
+
+def test_resolve_targets_telegram_id_no_match_falls_through_to_ambiguous():
+    """If Telegram IDs don't match any chain, falls back to ambiguous."""
+    chain_a = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
+    chain_b = _make_chain_with_raw_id(2, "trader_a", "ADAUSDT", "SHORT", raw_message_id=20)
+
+    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[99])
+    tg_id_to_raw_id = {99: 999}  # maps to raw_id=999 which no chain has
+
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    tag = enriched.enriched_actions[0]
+    result = gate._resolve_targets(
+        enriched, [chain_a, chain_b], tag,
+        tg_id_to_raw_id=tg_id_to_raw_id,
+    )
+
+    assert result is None  # ambiguous — two chains, no Telegram match
+
+
+def test_resolve_targets_telegram_id_empty_mapping_falls_through():
+    """Empty tg_id_to_raw_id → no Telegram resolution, falls to ambiguous."""
+    chain_a = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=10)
+    chain_b = _make_chain_with_raw_id(2, "trader_a", "ADAUSDT", "SHORT", raw_message_id=20)
+
+    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[10])
+
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    tag = enriched.enriched_actions[0]
+    result = gate._resolve_targets(
+        enriched, [chain_a, chain_b], tag,
+        tg_id_to_raw_id={},
+    )
+
+    assert result is None  # ambiguous
+
+
+def test_process_update_uses_tg_id_to_raw_id():
+    """process_update routes CLOSE_FULL to the correct chain via Telegram ID."""
+    chain_xrp = _make_chain_with_raw_id(1, "trader_a", "XRPUSDT", "SHORT", raw_message_id=2)
+    chain_bad = _make_chain_with_raw_id(2, "trader_a", "XRPSDTUSDT", "SHORT", raw_message_id=1)
+
+    enriched = _make_enriched_update_tg("trader_a", telegram_message_ids=[50])
+    tg_id_to_raw_id = {50: 2}  # Telegram msg 50 → raw_message_id 2 → chain_xrp
+
+    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    result = gate.process_update(
+        enriched,
+        [chain_xrp, chain_bad],
+        active_commands_by_chain={},
+        tg_id_to_raw_id=tg_id_to_raw_id,
+    )
+
+    assert len(result.chain_results) == 1
+    assert result.chain_results[0].trade_chain_id == 1
+    cmds = result.chain_results[0].execution_commands
+    assert any(c.command_type == "CLOSE_FULL" for c in cmds)
+    assert result.review_events == []

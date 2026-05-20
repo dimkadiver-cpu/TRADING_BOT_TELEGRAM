@@ -281,6 +281,8 @@ class LifecycleEntryGate:
         enriched: EnrichedCanonicalMessage,
         open_chains: list[TradeChain],
         active_commands_by_chain: dict[int, list[ExecutionCommand]],
+        *,
+        tg_id_to_raw_id: dict[int, int] | None = None,
     ) -> UpdateGateResult:
         tags = enriched.enriched_actions or []
         if not tags:
@@ -291,7 +293,7 @@ class LifecycleEntryGate:
         review_events: list[LifecycleEvent] = []
 
         for tag in tags:
-            matched = self._resolve_targets(enriched, open_chains, tag)
+            matched = self._resolve_targets(enriched, open_chains, tag, tg_id_to_raw_id=tg_id_to_raw_id)
 
             if matched is None:
                 review_events.append(
@@ -318,6 +320,8 @@ class LifecycleEntryGate:
         enriched: EnrichedCanonicalMessage,
         open_chains: list[TradeChain],
         tag,
+        *,
+        tg_id_to_raw_id: dict[int, int] | None = None,
     ) -> list[TradeChain] | None:
         scope = tag.targeting.scope_hint
         trader_chains = [c for c in open_chains if c.trader_id == enriched.trader_id]
@@ -333,7 +337,7 @@ class LifecycleEntryGate:
             symbols = tag.targeting.symbols
             return [c for c in trader_chains if c.symbol in symbols] if symbols else []
 
-        # SINGLE_SIGNAL or UNKNOWN — try symbol matching then explicit_ids
+        # SINGLE_SIGNAL or UNKNOWN — try symbol matching then explicit_ids then telegram IDs
         if tag.targeting.symbols:
             matched = [c for c in trader_chains if c.symbol in tag.targeting.symbols]
             if len(matched) == 1:
@@ -348,6 +352,17 @@ class LifecycleEntryGate:
             ]
             if matched:
                 return matched
+
+        if tag.targeting.telegram_message_ids and tg_id_to_raw_id:
+            raw_ids = {
+                tg_id_to_raw_id[tid]
+                for tid in tag.targeting.telegram_message_ids
+                if tid in tg_id_to_raw_id
+            }
+            if raw_ids:
+                matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
+                if matched:
+                    return matched
 
         if len(trader_chains) > 1:
             return None
@@ -891,6 +906,14 @@ class LifecycleGateWorker:
                             ),
                         )
                     for cmd in cr.execution_commands:
+                        payload_json = cmd.payload_json
+                        if cmd.command_type == "CANCEL_PENDING_ENTRY":
+                            import json as _json_inner
+                            entry_coid = self._command_repo.get_entry_client_order_id(cr.trade_chain_id)
+                            if entry_coid:
+                                p = _json_inner.loads(payload_json)
+                                p["entry_client_order_id"] = entry_coid
+                                payload_json = _json_inner.dumps(p)
                         conn.execute(
                             """
                             INSERT OR IGNORE INTO ops_execution_commands (
@@ -899,7 +922,7 @@ class LifecycleGateWorker:
                             ) VALUES (?,?,?,?,?,?,?)
                             """,
                             (
-                                cr.trade_chain_id, cmd.command_type, cmd.status, cmd.payload_json,
+                                cr.trade_chain_id, cmd.command_type, cmd.status, payload_json,
                                 cmd.idempotency_key, now, now,
                             ),
                         )
