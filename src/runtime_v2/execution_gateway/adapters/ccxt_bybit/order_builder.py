@@ -101,7 +101,7 @@ class BybitOrderBuilder:
         return BybitOrderParams(
             action="create_order",
             symbol=payload["symbol"],
-            order_type="stop",
+            order_type="market",
             side=_CLOSE_SIDE[payload["side"]],
             amount=float(payload["qty"]),
             price=None,

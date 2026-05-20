@@ -217,7 +217,7 @@ def test_place_protective_stop_builds_stop_reduce_only_order(
     )
 
     assert params.action == "create_order"
-    assert params.order_type == "stop"
+    assert params.order_type == "market"
     assert params.side == expected_side
     assert params.symbol == "BTC/USDT:USDT"
     assert params.amount == qty
