@@ -347,8 +347,8 @@ class LifecycleEntryGate:
             "execution_strategy": "C_SIMPLE_ATTACHED",
             "symbol": signal.symbol,
             "side": signal.side,
-            "entry_type": str(leg.entry_type),
-            "price": leg_price if str(leg.entry_type) == "LIMIT" else None,
+            "entry_type": leg.entry_type,
+            "price": leg_price if leg.entry_type == "LIMIT" else None,
             "qty": leg_qty,
             "leverage": leverage,
             "hedge_mode": hedge_mode,
@@ -388,8 +388,8 @@ class LifecycleEntryGate:
                     "execution_strategy": "D_POSITION_TPSL",
                     "symbol": signal.symbol,
                     "side": signal.side,
-                    "entry_type": str(leg.entry_type),
-                    "price": leg_price if str(leg.entry_type) == "LIMIT" else None,
+                    "entry_type": leg.entry_type,
+                    "price": leg_price if leg.entry_type == "LIMIT" else None,
                     "qty": leg_qty,
                     "leverage": leverage,
                     "hedge_mode": hedge_mode,
@@ -399,7 +399,7 @@ class LifecycleEntryGate:
                 idempotency_key=f"place_entry:{eid}:leg{leg.sequence}",
             ))
 
-        if tp_count == 0 or sl_price is None:
+        if tp_count == 0:
             return commands
 
         total_qty = self._qty_from_notional(size_usdt, fallback_entry_price)
@@ -586,7 +586,7 @@ class LifecycleEntryGate:
         action,
         active_commands: list[ExecutionCommand],
     ) -> UpdateChainResult:
-        chain_exec_mode = getattr(chain, "execution_mode", "")
+        chain_exec_mode = chain.execution_mode
         if chain_exec_mode == "C_SIMPLE_ATTACHED":
             entry_pending = any(
                 c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
