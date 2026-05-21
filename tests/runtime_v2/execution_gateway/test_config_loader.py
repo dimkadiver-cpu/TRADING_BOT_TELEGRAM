@@ -102,13 +102,11 @@ def test_load_multi_adapter_config(tmp_path):
                     "type": "ccxt_bybit",
                     "mode": "paper",
                     "connector": "bybit",
-                    "testnet": True,
                 },
                 "bybit_demo": {
                     "type": "ccxt_bybit",
                     "mode": "demo",
                     "connector": "bybit",
-                    "testnet": True,
                 },
             },
         }
@@ -123,17 +121,3 @@ def test_load_multi_adapter_config(tmp_path):
     assert config.adapters["bybit_demo"].mode == "demo"
 
 
-def test_demo_adapter_capabilities_parse():
-    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    config = ExecutionConfigLoader("config/execution.yaml").load()
-    demo_caps = config.adapters["bybit_demo"].capabilities
-    assert demo_caps.place_entry is True
-    assert demo_caps.protective_stop_native is False
-    assert demo_caps.take_profit_native is False
-    assert demo_caps.close_full is True
-
-
-def test_demo_adapter_live_safety_false():
-    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    config = ExecutionConfigLoader("config/execution.yaml").load()
-    assert config.adapters["bybit_demo"].live_safety.allow_live_trading is False

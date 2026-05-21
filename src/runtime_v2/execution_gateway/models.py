@@ -1,39 +1,14 @@
-# src/runtime_v2/execution_gateway/models.py
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field
-
-
-class AdapterCapabilities(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    place_entry: bool = True
-    protective_stop_native: bool = False
-    take_profit_native: bool = False
-    bracket_order: bool = False
-    move_stop: bool = False
-    close_partial: bool = False
-    close_full: bool = False
-    executor_position: bool = False
-    sync_protective_orders: bool = True
 
 
 class RetryConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
     max_attempts: int = 3
     backoff_seconds: list[int] = Field(default_factory=lambda: [30, 90, 300])
-
-
-class TakeProfitConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    min_order_policy: str = "review"
-    residual_policy: str = "assign_to_last_tp"
-
-
-class PositionManagementConfig(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-    same_symbol_same_side_policy: str = "block"
-    same_symbol_opposite_side_policy: str = "allow_if_hedge_mode"
-    require_client_order_id_correlation: bool = True
 
 
 class LiveSafetyConfig(BaseModel):
@@ -48,9 +23,27 @@ class WebsocketConfig(BaseModel):
     poll_fallback_period_seconds: int = 60
 
 
-class EntryExecutionConfig(BaseModel):
+class ExecutionStrategyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    mode: str = "b_entry_stop_then_tp"
+    default_mode: Literal["C_SIMPLE_ATTACHED", "D_POSITION_TPSL"] = "D_POSITION_TPSL"
+    simple_attached_enabled: bool = True
+    trigger_by: Literal["MarkPrice", "LastPrice", "IndexPrice"] = "MarkPrice"
+    one_tp_mode: Literal["FULL"] = "FULL"
+    multi_tp_mode: Literal["PARTIAL"] = "PARTIAL"
+
+
+class AdapterCapabilities(BaseModel):
+    """Adapter runtime capability flags. Kept for adapter-layer compatibility."""
+    model_config = ConfigDict(extra="forbid")
+    place_entry: bool = True
+    protective_stop_native: bool = False
+    take_profit_native: bool = False
+    bracket_order: bool = False
+    move_stop: bool = False
+    close_partial: bool = False
+    close_full: bool = False
+    executor_position: bool = False
+    sync_protective_orders: bool = True
 
 
 class AdapterConfig(BaseModel):
@@ -58,16 +51,11 @@ class AdapterConfig(BaseModel):
     type: str
     mode: str
     connector: str
-    leverage: int = 1
-    api_key: str | None = None
-    testnet: bool = False
-    hedge_mode: bool = False
+    api_key_env: str | None = None
+    api_secret_env: str | None = None
+    strategy: ExecutionStrategyConfig = Field(default_factory=ExecutionStrategyConfig)
     websocket: WebsocketConfig = Field(default_factory=WebsocketConfig)
-    entry_execution: EntryExecutionConfig = Field(default_factory=EntryExecutionConfig)
     retry: RetryConfig = Field(default_factory=RetryConfig)
-    capabilities: AdapterCapabilities = Field(default_factory=AdapterCapabilities)
-    take_profit: TakeProfitConfig = Field(default_factory=TakeProfitConfig)
-    position_management: PositionManagementConfig = Field(default_factory=PositionManagementConfig)
     live_safety: LiveSafetyConfig = Field(default_factory=LiveSafetyConfig)
 
 
@@ -94,10 +82,10 @@ class RawAdapterOrder(BaseModel):
     client_order_id: str
     exchange_order_id: str | None = None
     adapter_order_id: str | None = None
-    status: str  # OPEN | FILLED | CANCELLED | FAILED
+    status: str
     filled_qty: float = 0.0
     average_price: float | None = None
-    cancel_reason: str | None = None  # Bybit cancelType/rejectReason if available
+    cancel_reason: str | None = None
 
     @property
     def is_filled(self) -> bool:
@@ -115,9 +103,9 @@ class AdapterResult(BaseModel):
 
 
 __all__ = [
-    "AdapterCapabilities", "RetryConfig", "TakeProfitConfig",
-    "PositionManagementConfig", "LiveSafetyConfig", "WebsocketConfig",
-    "EntryExecutionConfig",
+    "RetryConfig", "LiveSafetyConfig", "WebsocketConfig",
+    "ExecutionStrategyConfig",
+    "AdapterCapabilities",
     "AdapterConfig", "AccountRoutingEntry", "ExecutionConfig",
     "RawAdapterOrder", "AdapterResult",
 ]
