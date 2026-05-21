@@ -18,8 +18,9 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
 
     adapter_cfg = SimpleNamespace(
         type="ccxt_bybit",
-        api_key="key123",
-        testnet=True,
+        mode="demo",
+        api_key_env="BYBIT_API_KEY_BYBIT_DEMO",
+        api_secret_env="BYBIT_API_SECRET_BYBIT_DEMO",
         websocket=SimpleNamespace(
             enabled=True,
             poll_fallback_enabled=True,
@@ -58,11 +59,14 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
         "ExchangeEventSyncWorker",
         lambda **kwargs: sync_worker,
     )
-    monkeypatch.setattr(
-        app_main,
-        "BybitWsFillWatcher",
-        lambda **kwargs: watcher,
-    )
+    watcher_kwargs = {}
+
+    def fake_ws_watcher(**kwargs):
+        watcher_kwargs.update(kwargs)
+        return watcher
+
+    monkeypatch.setattr(app_main, "BybitWsFillWatcher", fake_ws_watcher)
+    monkeypatch.setenv("BYBIT_API_KEY_BYBIT_DEMO", "key123")
     monkeypatch.setenv("BYBIT_API_SECRET_BYBIT_DEMO", "secret123")
 
     runtime = app_main._build_execution_runtime(
@@ -77,6 +81,10 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
     assert runtime.sync_worker is sync_worker
     assert runtime.ws_watcher is watcher
     assert runtime.reconciliation_interval_seconds == 45
+    assert watcher_kwargs["api_key"] == "key123"
+    assert watcher_kwargs["api_secret"] == "secret123"
+    assert watcher_kwargs["testnet"] is False
+    assert watcher_kwargs["mode"] == "demo"
     watcher.start.assert_called_once_with()
 
 

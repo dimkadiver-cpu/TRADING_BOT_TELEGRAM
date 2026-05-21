@@ -101,7 +101,7 @@ def test_place_protective_stop_calls_create_order():
 
     assert result.success is True
     args, kwargs = exchange.create_order.call_args
-    assert args[1] == "stop"
+    assert args[1] == "market"
     assert args[2] == "sell"
     assert kwargs["params"]["triggerPrice"] == 49000.0
     assert kwargs["params"]["reduceOnly"] is True
@@ -784,6 +784,33 @@ def test_set_position_tpsl_full_calls_trading_stop():
     call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
     assert call_args["tpslMode"] == "Full"
     assert call_args["positionIdx"] == 0
+
+
+def test_set_position_tpsl_partial_calls_trading_stop():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop.return_value = {"retCode": 0}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    result = adapter.place_order(
+        command_type="SET_POSITION_TPSL_PARTIAL",
+        payload={
+            "symbol": "BTCUSDT", "side": "LONG", "position_idx": 0,
+            "take_profit": 67000.0, "stop_loss": 63000.0,
+            "tp_size": 0.01, "sl_size": 0.01,
+            "tp_order_type": "Limit", "tp_limit_price": 67000.0,
+            "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+        },
+        client_order_id="tsb:1:1:tpsl_partial:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    assert result.success is True
+    exchange.private_post_v5_position_trading_stop.assert_called_once()
+    call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_args["tpslMode"] == "Partial"
+    assert call_args["tpSize"] == "0.01"
+    assert call_args["slSize"] == "0.01"
+    assert call_args["tpLimitPrice"] == "67000.0"
 
 
 def test_move_position_stop_calls_trading_stop_only_sl():

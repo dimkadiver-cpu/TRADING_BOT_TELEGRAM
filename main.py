@@ -113,11 +113,13 @@ def _build_execution_runtime(
     ws_watcher = None
     reconciliation_interval_seconds = None
     if adapter_cfg.type == "ccxt_bybit" and adapter_cfg.websocket.enabled:
-        api_secret = os.environ.get(f"BYBIT_API_SECRET_{adapter_name.upper()}") or ""
+        api_key = os.environ.get(adapter_cfg.api_key_env or "") if adapter_cfg.api_key_env else ""
+        api_secret = os.environ.get(adapter_cfg.api_secret_env or "") if adapter_cfg.api_secret_env else ""
+        testnet = bool(getattr(adapter_cfg, "testnet", False) or adapter_cfg.mode == "testnet")
         ws_watcher = BybitWsFillWatcher(
-            api_key=adapter_cfg.api_key or "",
+            api_key=api_key,
             api_secret=api_secret,
-            testnet=adapter_cfg.testnet,
+            testnet=testnet,
             ops_db_path=ops_db_path,
             repo=gateway_repo,
             reconciliation_callback=sync_worker.run_reconciliation,

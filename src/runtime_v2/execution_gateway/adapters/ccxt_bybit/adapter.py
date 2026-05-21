@@ -142,31 +142,17 @@ class CcxtBybitAdapter(ExecutionAdapter):
             if params.action == "amend_sl_qty":
                 return self._handle_amend_sl_qty(params.symbol, params.position_side)
 
-            if params.action == "trading_stop_full":
-                bybit_symbol = payload.get("symbol", params.symbol)
-                self._exchange.private_post_v5_position_trading_stop({
+            if params.action in {"trading_stop_full", "trading_stop_partial", "trading_stop_move_sl"}:
+                resp = self._exchange.private_post_v5_position_trading_stop({
                     "category": "linear",
-                    "symbol": bybit_symbol,
+                    "symbol": params.symbol,
                     **params.extra_params,
                 })
-                return AdapterResult(success=True)
-
-            if params.action == "trading_stop_partial":
-                bybit_symbol = payload.get("symbol", params.symbol)
-                self._exchange.private_post_v5_position_trading_stop({
-                    "category": "linear",
-                    "symbol": bybit_symbol,
-                    **params.extra_params,
-                })
-                return AdapterResult(success=True)
-
-            if params.action == "trading_stop_move_sl":
-                bybit_symbol = payload.get("symbol", params.symbol)
-                self._exchange.private_post_v5_position_trading_stop({
-                    "category": "linear",
-                    "symbol": bybit_symbol,
-                    **params.extra_params,
-                })
+                ret_code = (resp or {}).get("retCode", 0)
+                if ret_code != 0:
+                    ret_msg = (resp or {}).get("retMsg", "")
+                    logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)
+                    return AdapterResult(success=False, error=f"retCode={ret_code}: {ret_msg}")
                 return AdapterResult(success=True)
 
         except ccxt.InvalidOrder as e:
