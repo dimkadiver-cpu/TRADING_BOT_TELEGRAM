@@ -1,4 +1,3 @@
-# src/runtime_v2/execution_gateway/adapters/ccxt_bybit/adapter.py
 from __future__ import annotations
 
 import logging
@@ -18,29 +17,14 @@ if TYPE_CHECKING:
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_CAPABILITIES = AdapterCapabilities(
-    place_entry=True,
-    protective_stop_native=True,
-    take_profit_native=True,
-    bracket_order=False,
-    move_stop=True,
-    close_partial=True,
-    close_full=True,
-    executor_position=False,
-    sync_protective_orders=True,
-)
-
 
 class CcxtBybitAdapter(ExecutionAdapter):
     def __init__(
         self,
         api_key: str,
         api_secret: str,
-        testnet: bool,
         connector: str,
         mode: str = "live",
-        capabilities: AdapterCapabilities | None = None,
-        hedge_mode: bool = False,
         repo: GatewayCommandRepository | None = None,
         _exchange=None,  # injectable for unit tests
     ) -> None:
@@ -55,24 +39,31 @@ class CcxtBybitAdapter(ExecutionAdapter):
             if mode == "demo":
                 # Bybit Demo Trading — usa api-demo.bybit.com, non testnet
                 self._exchange.enable_demo_trading(True)
-            elif testnet:
-                self._exchange.set_sandbox_mode(True)
         self._connector = connector
-        self._capabilities = capabilities or _DEFAULT_CAPABILITIES
-        self._hedge_mode = hedge_mode
         self._repo = repo
         self._builder = BybitOrderBuilder()
 
     def get_capabilities(self) -> AdapterCapabilities:
-        return self._capabilities
+        return AdapterCapabilities(
+            place_entry=True,
+            protective_stop_native=True,
+            take_profit_native=True,
+            bracket_order=False,
+            move_stop=True,
+            close_partial=True,
+            close_full=True,
+            executor_position=False,
+            sync_protective_orders=True,
+        )
 
-    def set_leverage(self, symbol: str, leverage: int, execution_account_id: str) -> None:
+    def set_leverage(self, symbol: str, leverage: int, execution_account_id: str,
+                     *, position_idx: int = 0) -> None:
         extra = {
             "buyLeverage": str(leverage),
             "sellLeverage": str(leverage),
         }
-        if self._hedge_mode:
-            extra["positionIdx"] = 0
+        if position_idx != 0:
+            extra["positionIdx"] = position_idx
         try:
             self._exchange.set_leverage(leverage, symbol, params=extra)
         except Exception as e:
@@ -95,11 +86,13 @@ class CcxtBybitAdapter(ExecutionAdapter):
         if command_type == "MOVE_STOP_TO_BREAKEVEN" and "entry_price" in payload and "target_price" not in payload:
             payload = {**payload, "target_price": payload["entry_price"]}
 
+        hedge_mode = bool(payload.get("hedge_mode", False))
+
         params = self._builder.build(
             command_type,
             payload,
             client_order_id,
-            hedge_mode=self._hedge_mode,
+            hedge_mode=hedge_mode,
         )
 
         if params.action == "noop":
