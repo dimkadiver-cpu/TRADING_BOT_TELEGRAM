@@ -103,11 +103,14 @@ class ExecutionGateway:
         payload = json.loads(cmd.payload_json)
         symbol = payload.get("symbol", "")
 
-        # Set leverage once per account+symbol
+        # Set leverage once per account+symbol — leverage comes from payload (set by LifecycleEntryGate)
+        leverage = int(payload.get("leverage", 1))
+        position_idx = int(payload.get("position_idx", 0))
         leverage_key = f"{routing.execution_account_id}:{symbol}"
-        if leverage_key not in self._leverage_set and adapter_cfg.leverage > 1:
+        if leverage_key not in self._leverage_set and leverage > 1:
             try:
-                adapter.set_leverage(symbol, adapter_cfg.leverage, routing.execution_account_id)
+                adapter.set_leverage(symbol, leverage, routing.execution_account_id,
+                                     position_idx=position_idx)
                 self._leverage_set.add(leverage_key)
             except Exception as e:
                 logger.warning("set_leverage failed for %s: %s", leverage_key, e)
