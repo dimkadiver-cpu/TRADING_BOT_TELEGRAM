@@ -39,6 +39,8 @@ class CcxtBybitAdapter(ExecutionAdapter):
             if mode == "demo":
                 # Bybit Demo Trading — usa api-demo.bybit.com, non testnet
                 self._exchange.enable_demo_trading(True)
+            elif mode == "testnet":
+                self._exchange.set_sandbox_mode(True)
         self._connector = connector
         self._repo = repo
         self._builder = BybitOrderBuilder()

@@ -737,6 +737,23 @@ def test_one_way_mode_set_leverage_no_position_idx():
     assert "positionIdx" not in call_params
 
 
+def test_testnet_mode_enables_ccxt_sandbox(monkeypatch):
+    import src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter as amod
+
+    exchange = MagicMock()
+    monkeypatch.setattr(amod.ccxt, "bybit", MagicMock(return_value=exchange))
+
+    amod.CcxtBybitAdapter(
+        api_key="key",
+        api_secret="secret",
+        connector="bybit",
+        mode="testnet",
+    )
+
+    exchange.set_sandbox_mode.assert_called_once_with(True)
+    exchange.enable_demo_trading.assert_not_called()
+
+
 # --- place_order: trading_stop actions ---
 
 def test_place_entry_with_attached_tpsl_calls_create_order():

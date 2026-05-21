@@ -31,8 +31,8 @@ def adapter():
     return CcxtBybitAdapter(
         api_key=os.environ["BYBIT_TESTNET_API_KEY"],
         api_secret=os.environ["BYBIT_API_SECRET_BYBIT_TESTNET"],
-        testnet=True,
         connector="bybit",
+        mode="testnet",
     )
 
 
