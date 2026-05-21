@@ -105,7 +105,6 @@ class AdapterResult(BaseModel):
 __all__ = [
     "RetryConfig", "LiveSafetyConfig", "WebsocketConfig",
     "ExecutionStrategyConfig",
-    "AdapterCapabilities",
     "AdapterConfig", "AccountRoutingEntry", "ExecutionConfig",
     "RawAdapterOrder", "AdapterResult",
 ]
