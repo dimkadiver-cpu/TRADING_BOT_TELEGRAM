@@ -107,6 +107,7 @@ def _make_gate():
     return LifecycleEntryGate(
         risk_engine=RiskCapacityEngine(),
         exchange_port=StaticExchangeDataPort(),
+        simple_attached_enabled=False,
     )
 
 
@@ -120,8 +121,9 @@ def test_gate_signal_pass_creates_chain_and_commands():
     assert result.trade_chain.symbol == "BTC/USDT"
     assert result.trade_chain.side == "LONG"
     assert any(c.command_type == "PLACE_ENTRY" for c in result.execution_commands)
-    assert any(c.command_type == "PLACE_PROTECTIVE_STOP" for c in result.execution_commands)
-    assert any(c.command_type == "PLACE_TAKE_PROFIT" for c in result.execution_commands)
+    # D mode (simple_attached_enabled=False) generates SET_POSITION_TPSL_FULL instead of
+    # PLACE_PROTECTIVE_STOP + PLACE_TAKE_PROFIT (legacy a_sequential behavior)
+    assert any(c.command_type == "SET_POSITION_TPSL_FULL" for c in result.execution_commands)
 
 
 def test_gate_signal_events_include_signal_accepted_and_chain_created():
