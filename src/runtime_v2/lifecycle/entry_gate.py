@@ -586,6 +586,18 @@ class LifecycleEntryGate:
         action,
         active_commands: list[ExecutionCommand],
     ) -> UpdateChainResult:
+        chain_exec_mode = getattr(chain, "execution_mode", "")
+        if chain_exec_mode == "C_SIMPLE_ATTACHED":
+            entry_pending = any(
+                c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
+                and c.status in ("PENDING", "SENT", "ACK")
+                for c in active_commands
+            )
+            if entry_pending:
+                return self._review_chain(
+                    enriched, chain,
+                    "c_mode_update_blocked:entry_pending_not_filled",
+                )
         action_type = action.action_type
         if action_type == "SET_STOP":
             op = action.set_stop
