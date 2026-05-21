@@ -72,7 +72,11 @@ class ExecutionConfig(BaseModel):
     adapters: dict[str, AdapterConfig]
 
     def resolve_routing(self, account_id: str) -> tuple[AccountRoutingEntry, AdapterConfig]:
-        routing = self.account_routing.get(account_id) or self.account_routing["default"]
+        routing = self.account_routing.get(account_id) or self.account_routing.get("default")
+        if routing is None:
+            raise KeyError(
+                f"No routing for account_id={account_id!r} and no 'default' fallback defined"
+            )
         adapter_cfg = self.adapters[routing.adapter]
         return routing, adapter_cfg
 

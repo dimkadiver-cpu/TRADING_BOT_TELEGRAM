@@ -90,7 +90,6 @@ def test_missing_default_routing_raises(tmp_path):
 
 def test_load_multi_adapter_config(tmp_path):
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    import yaml
     cfg = {
         "execution": {
             "default_adapter": "bybit_demo",
