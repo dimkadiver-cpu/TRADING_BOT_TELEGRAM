@@ -22,8 +22,8 @@ DB_PATH=db/tele_signal_bot.sqlite3
 # ---------------------------------------------------------------------------
 
 # Required by main.py.
-TELEGRAM_API_ID=33118095
-TELEGRAM_API_HASH=5d1145a020a67c
+TELEGRAM_API_ID=
+TELEGRAM_API_HASH=
 
 # Optional. Defaults to "tele_signal_bot" when unset.
 TELEGRAM_SESSION=tele_signal_bot
@@ -67,8 +67,8 @@ BYBIT_API_SECRET_BYBIT_TESTNET=
 
 # Older modules or local scripts may still reference these names.
 # Prefer BYBIT_API_KEY_BYBIT_DEMO / BYBIT_API_SECRET_BYBIT_DEMO for runtime_v2.
-BYBIT_API_KEY=9vaWpi7sm8ktvE28i4
-BYBIT_API_SECRET=jTQEGXxxO61ADNKAV67SSaXjuRHFdhezMUgW
+BYBIT_API_KEY=
+BYBIT_API_SECRET=j
 BYBIT_TESTNET=
 BYBIT_REST_URL=
 BYBIT_WS_PRIVATE_URL=
@@ -85,4 +85,4 @@ TELESIGNALBOT_FREQTRADE_TRADES_DB_PATH=
 # Recovery / operations tuning
 # ---------------------------------------------------------------------------
 
-RECOVERY_INTERVAL_SECONDS=60
+RECOVERY_INTERVAL_SECONDS=120

@@ -20,6 +20,22 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _load_pending_entry_client_order_ids(conn: sqlite3.Connection, chain_id: int) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT client_order_id
+        FROM ops_execution_commands
+        WHERE trade_chain_id = ?
+          AND command_type = 'PLACE_ENTRY'
+          AND status IN ('PENDING','SENT','ACK')
+          AND client_order_id IS NOT NULL
+        ORDER BY command_id
+        """,
+        (chain_id,),
+    ).fetchall()
+    return [str(row[0]) for row in rows if row and row[0]]
+
+
 class TimeoutWorker:
     def __init__(self, ops_db_path: str, chain_repo: TradeChainRepository) -> None:
         self._ops_db = ops_db_path
@@ -56,17 +72,27 @@ class TimeoutWorker:
                     (chain_id, "TIMEOUT_REACHED", "timeout_worker",
                      "WAITING_ENTRY", "EXPIRED", "{}", f"timeout:{chain_id}", now),
                 )
-                conn.execute(
-                    """
-                    INSERT OR IGNORE INTO ops_execution_commands (
-                        trade_chain_id, command_type, status, payload_json,
-                        idempotency_key, created_at, updated_at
-                    ) VALUES (?,?,?,?,?,?,?)
-                    """,
-                    (chain_id, "CANCEL_PENDING_ENTRY", "PENDING",
-                     json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                     f"cancel_timeout:{chain_id}", now, now),
-                )
+                entry_client_order_ids = _load_pending_entry_client_order_ids(conn, chain_id)
+                if not entry_client_order_ids:
+                    entry_client_order_ids = [""]
+                for entry_client_order_id in entry_client_order_ids:
+                    payload = {"symbol": chain.symbol, "side": chain.side}
+                    idempotency_key = f"cancel_timeout:{chain_id}"
+                    if entry_client_order_id:
+                        payload["entry_client_order_id"] = entry_client_order_id
+                        idempotency_key = f"{idempotency_key}:{entry_client_order_id}"
+                    conn.execute(
+                        """
+                        INSERT OR IGNORE INTO ops_execution_commands (
+                            trade_chain_id, command_type, status, payload_json,
+                            idempotency_key, created_at, updated_at
+                        ) VALUES (?,?,?,?,?,?,?)
+                        """,
+                        (
+                            chain_id, "CANCEL_PENDING_ENTRY", "PENDING",
+                            json.dumps(payload), idempotency_key, now, now,
+                        ),
+                    )
         finally:
             conn.close()
 

@@ -1153,26 +1153,25 @@ class LifecycleGateWorker:
                             ),
                         )
                     for cmd in cr.execution_commands:
-                        payload_json = cmd.payload_json
-                        if cmd.command_type == "CANCEL_PENDING_ENTRY":
-                            import json as _json_inner
-                            entry_coid = self._command_repo.get_entry_client_order_id(cr.trade_chain_id)
-                            if entry_coid:
-                                p = _json_inner.loads(payload_json)
-                                p["entry_client_order_id"] = entry_coid
-                                payload_json = _json_inner.dumps(p)
-                        conn.execute(
-                            """
-                            INSERT OR IGNORE INTO ops_execution_commands (
-                                trade_chain_id, command_type, status, payload_json,
-                                idempotency_key, created_at, updated_at
-                            ) VALUES (?,?,?,?,?,?,?)
-                            """,
-                            (
-                                cr.trade_chain_id, cmd.command_type, cmd.status, payload_json,
-                                cmd.idempotency_key, now, now,
-                            ),
-                        )
+                        for payload_json, idempotency_key in _expand_cancel_pending_commands(
+                            conn,
+                            trade_chain_id=cr.trade_chain_id,
+                            command_type=cmd.command_type,
+                            payload_json=cmd.payload_json,
+                            idempotency_key=cmd.idempotency_key,
+                        ):
+                            conn.execute(
+                                """
+                                INSERT OR IGNORE INTO ops_execution_commands (
+                                    trade_chain_id, command_type, status, payload_json,
+                                    idempotency_key, created_at, updated_at
+                                ) VALUES (?,?,?,?,?,?,?)
+                                """,
+                                (
+                                    cr.trade_chain_id, cmd.command_type, cmd.status, payload_json,
+                                    idempotency_key, now, now,
+                                ),
+                            )
                 for event in result.review_events:
                     conn.execute(
                         """
@@ -1201,6 +1200,54 @@ class LifecycleGateWorker:
             conn.commit()
         finally:
             conn.close()
+
+
+def _expand_cancel_pending_commands(
+    conn: _sqlite3.Connection,
+    *,
+    trade_chain_id: int,
+    command_type: str,
+    payload_json: str,
+    idempotency_key: str,
+) -> list[tuple[str, str]]:
+    if command_type != "CANCEL_PENDING_ENTRY":
+        return [(payload_json, idempotency_key)]
+
+    entry_client_order_ids = _load_pending_entry_client_order_ids(conn, trade_chain_id)
+    if not entry_client_order_ids:
+        return [(payload_json, idempotency_key)]
+
+    payload = json.loads(payload_json or "{}")
+    expanded: list[tuple[str, str]] = []
+    for entry_client_order_id in entry_client_order_ids:
+        item = dict(payload)
+        item["entry_client_order_id"] = entry_client_order_id
+        expanded.append(
+            (
+                json.dumps(item),
+                f"{idempotency_key}:{entry_client_order_id}",
+            )
+        )
+    return expanded
+
+
+def _load_pending_entry_client_order_ids(
+    conn: _sqlite3.Connection,
+    trade_chain_id: int,
+) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT client_order_id
+        FROM ops_execution_commands
+        WHERE trade_chain_id = ?
+          AND command_type = 'PLACE_ENTRY'
+          AND status IN ('PENDING','SENT','ACK')
+          AND client_order_id IS NOT NULL
+        ORDER BY command_id
+        """,
+        (trade_chain_id,),
+    ).fetchall()
+    return [str(row[0]) for row in rows if row and row[0]]
 
 
 __all__ = [
