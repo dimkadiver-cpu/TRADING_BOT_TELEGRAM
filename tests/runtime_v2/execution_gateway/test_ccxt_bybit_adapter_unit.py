@@ -737,6 +737,75 @@ def test_one_way_mode_set_leverage_no_position_idx():
     assert "positionIdx" not in call_params
 
 
+# --- place_order: trading_stop actions ---
+
+def test_place_entry_with_attached_tpsl_calls_create_order():
+    exchange = MagicMock()
+    exchange.create_order.return_value = {"id": "ord123"}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    result = adapter.place_order(
+        command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        payload={
+            "symbol": "BTC/USDT:USDT", "side": "LONG", "entry_type": "LIMIT",
+            "price": 65000.0, "qty": 0.01, "leverage": 5,
+            "hedge_mode": False, "position_idx": 0,
+            "attached_tpsl": {
+                "mode": "FULL", "take_profit": 70000.0, "stop_loss": 63000.0,
+                "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+            },
+        },
+        client_order_id="tsb:1:1:entry:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    assert result.success is True
+    exchange.create_order.assert_called_once()
+
+
+def test_set_position_tpsl_full_calls_trading_stop():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop.return_value = {"retCode": 0}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    result = adapter.place_order(
+        command_type="SET_POSITION_TPSL_FULL",
+        payload={
+            "symbol": "BTCUSDT", "side": "LONG", "position_idx": 0,
+            "take_profit": 70000.0, "stop_loss": 63000.0,
+            "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+        },
+        client_order_id="tsb:1:1:tpsl_full:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    assert result.success is True
+    exchange.private_post_v5_position_trading_stop.assert_called_once()
+    call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_args["tpslMode"] == "Full"
+    assert call_args["positionIdx"] == 0
+
+
+def test_move_position_stop_calls_trading_stop_only_sl():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop.return_value = {"retCode": 0}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    adapter.place_order(
+        command_type="MOVE_POSITION_STOP",
+        payload={
+            "symbol": "BTCUSDT", "side": "LONG", "position_idx": 0,
+            "new_stop_loss": 65000.0,
+        },
+        client_order_id="tsb:1:1:move_stop:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert "stopLoss" in call_args
+    assert "takeProfit" not in call_args
+
+
 # --- get_capabilities ---
 
 def test_get_capabilities_returns_correct_flags():

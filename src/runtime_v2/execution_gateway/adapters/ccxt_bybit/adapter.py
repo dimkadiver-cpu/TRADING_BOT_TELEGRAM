@@ -142,6 +142,33 @@ class CcxtBybitAdapter(ExecutionAdapter):
             if params.action == "amend_sl_qty":
                 return self._handle_amend_sl_qty(params.symbol, params.position_side)
 
+            if params.action == "trading_stop_full":
+                bybit_symbol = payload.get("symbol", params.symbol)
+                self._exchange.private_post_v5_position_trading_stop({
+                    "category": "linear",
+                    "symbol": bybit_symbol,
+                    **params.extra_params,
+                })
+                return AdapterResult(success=True)
+
+            if params.action == "trading_stop_partial":
+                bybit_symbol = payload.get("symbol", params.symbol)
+                self._exchange.private_post_v5_position_trading_stop({
+                    "category": "linear",
+                    "symbol": bybit_symbol,
+                    **params.extra_params,
+                })
+                return AdapterResult(success=True)
+
+            if params.action == "trading_stop_move_sl":
+                bybit_symbol = payload.get("symbol", params.symbol)
+                self._exchange.private_post_v5_position_trading_stop({
+                    "category": "linear",
+                    "symbol": bybit_symbol,
+                    **params.extra_params,
+                })
+                return AdapterResult(success=True)
+
         except ccxt.InvalidOrder as e:
             return AdapterResult(success=False, reason="invalid_order", error=str(e))
         except ccxt.InsufficientFunds as e:
