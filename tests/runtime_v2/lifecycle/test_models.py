@@ -175,3 +175,20 @@ def test_migration_003_creates_qty_columns():
         conn.close()
     finally:
         os.unlink(db_path)
+
+
+def test_new_command_types_valid():
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+    for ct in [
+        "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        "SET_POSITION_TPSL_FULL",
+        "SET_POSITION_TPSL_PARTIAL",
+        "MOVE_POSITION_STOP",
+        "CANCEL_POSITION_TPSL",
+    ]:
+        cmd = ExecutionCommand(
+            trade_chain_id=1,
+            command_type=ct,
+            idempotency_key=f"test:{ct}",
+        )
+        assert cmd.command_type == ct
