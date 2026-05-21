@@ -45,6 +45,8 @@ def test_place_entry_with_attached_tpsl_limit():
     assert params.extra_params["positionIdx"] == 0
     assert params.extra_params["tpTriggerBy"] == "MarkPrice"
     assert params.extra_params["slTriggerBy"] == "MarkPrice"
+    assert params.extra_params["tpOrderType"] == "Market"
+    assert params.extra_params["slOrderType"] == "Market"
 
 
 def test_place_entry_with_attached_tpsl_hedge_long():
@@ -95,6 +97,7 @@ def test_set_position_tpsl_full():
     assert params.extra_params["takeProfit"] == "70000.0"
     assert params.extra_params["stopLoss"] == "63000.0"
     assert params.extra_params["tpTriggerBy"] == "MarkPrice"
+    assert params.extra_params["slTriggerBy"] == "MarkPrice"
     assert params.extra_params["tpOrderType"] == "Market"
     assert params.extra_params["slOrderType"] == "Market"
 
