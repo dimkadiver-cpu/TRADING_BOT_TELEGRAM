@@ -108,6 +108,14 @@ class RiskCapacityEngine:
         if current_open_risk + risk_amount > max_risk:
             return RiskDecision(passed=False, reason="max_capital_at_risk_exceeded")
 
+        # ── max_leverage guard ────────────────────────────────────────────────
+        if config.account is not None:
+            if risk.leverage > config.account.max_leverage:
+                return RiskDecision(
+                    passed=False,
+                    reason="risk_leverage_exceeds_account_max_leverage",
+                )
+
         # ── size calculation ──────────────────────────────────────────────────
         size_usdt = risk_amount / risk_distance * entry_price
         leverage = risk.leverage
@@ -120,6 +128,7 @@ class RiskCapacityEngine:
             "risk_distance": risk_distance,
             "size_usdt": size_usdt,
             "leverage": leverage,
+            "hedge_mode": config.hedge_mode,
             "capital_base_mode": risk.capital_base_mode,
         }
 
