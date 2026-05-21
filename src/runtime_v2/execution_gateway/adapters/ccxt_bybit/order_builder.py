@@ -177,9 +177,8 @@ class BybitOrderBuilder:
         entry_type = payload["entry_type"]
         price = float(payload["price"]) if entry_type == "LIMIT" and payload.get("price") else None
         tpsl = payload["attached_tpsl"]
-        position_idx = int(payload.get("position_idx", 0))
+        # positionIdx is not set here — build() sets it from hedge_mode kwarg, same as _place_entry
         extra = {
-            "positionIdx": position_idx,
             "takeProfit": float(tpsl["take_profit"]),
             "stopLoss": float(tpsl["stop_loss"]),
             "tpslMode": "Full",

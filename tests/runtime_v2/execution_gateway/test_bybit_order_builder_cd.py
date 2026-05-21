@@ -42,11 +42,12 @@ def test_place_entry_with_attached_tpsl_limit():
     assert params.extra_params["takeProfit"] == 70000.0
     assert params.extra_params["stopLoss"] == 63000.0
     assert params.extra_params["tpslMode"] == "Full"
-    assert params.extra_params["positionIdx"] == 0
     assert params.extra_params["tpTriggerBy"] == "MarkPrice"
     assert params.extra_params["slTriggerBy"] == "MarkPrice"
     assert params.extra_params["tpOrderType"] == "Market"
     assert params.extra_params["slOrderType"] == "Market"
+    # one-way mode: build() does not inject positionIdx (it only does so for hedge_mode=True)
+    assert "positionIdx" not in params.extra_params
 
 
 def test_place_entry_with_attached_tpsl_hedge_long():
@@ -70,6 +71,7 @@ def test_place_entry_with_attached_tpsl_hedge_long():
             },
         },
         "tsb:1:1:entry:1",
+        hedge_mode=True,
     )
     assert params.extra_params["positionIdx"] == 1
 
