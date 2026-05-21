@@ -107,6 +107,7 @@ def _make_gate():
     return LifecycleEntryGate(
         risk_engine=RiskCapacityEngine(),
         exchange_port=StaticExchangeDataPort(),
+        simple_attached_enabled=False,
     )
 
 
@@ -120,8 +121,9 @@ def test_gate_signal_pass_creates_chain_and_commands():
     assert result.trade_chain.symbol == "BTC/USDT"
     assert result.trade_chain.side == "LONG"
     assert any(c.command_type == "PLACE_ENTRY" for c in result.execution_commands)
-    assert any(c.command_type == "PLACE_PROTECTIVE_STOP" for c in result.execution_commands)
-    assert any(c.command_type == "PLACE_TAKE_PROFIT" for c in result.execution_commands)
+    # D mode (simple_attached_enabled=False) generates SET_POSITION_TPSL_FULL instead of
+    # PLACE_PROTECTIVE_STOP + PLACE_TAKE_PROFIT (legacy a_sequential behavior)
+    assert any(c.command_type == "SET_POSITION_TPSL_FULL" for c in result.execution_commands)
 
 
 def test_gate_signal_events_include_signal_accepted_and_chain_created():
@@ -1125,3 +1127,122 @@ def test_lifecycle_gate_worker_builds_tg_mapping_and_resolves_chain(tmp_path):
     ).fetchall()
     assert any(c[0] == "CLOSE_FULL" and c[1] == 1 for c in cmds)
     assert not any(c[1] == 2 for c in cmds)  # chain 2 must not be touched
+
+
+def test_lifecycle_gate_worker_expands_cancel_pending_for_each_active_entry_leg(tmp_path):
+    """UPDATE cancel on a multi-leg waiting chain must emit one cancel command per active entry."""
+    import json as _json
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ControlStateRepository, ExecutionCommandRepository,
+        LifecycleEventRepository, SnapshotRepository, TradeChainRepository,
+    )
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, CancelPendingOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+
+    parser_db = str(tmp_path / "parser.sqlite3")
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    _core_apply(ops_db, "db/ops_migrations")
+
+    pconn = sqlite3.connect(parser_db)
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (1, 'chat1', 50, NULL, '2026-01-01', '2026-01-01')"
+    )
+    action = ActionItem(
+        action_type="CANCEL_PENDING",
+        cancel_pending=CancelPendingOperation(),
+        source_intent="CANCEL_PENDING",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(
+            telegram_message_ids=[50],
+            scope_hint="SINGLE_SIGNAL",
+        ),
+        actions=[action],
+    )
+    pconn.execute(
+        "INSERT INTO enriched_canonical_messages "
+        "(enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,"
+        " primary_class, enrichment_decision, enriched_actions_json, lifecycle_processed, created_at)"
+        " VALUES (3, 3, 2, 'trader_a', 'acc', 'UPDATE', 'PASS', ?, 0, '2026-01-01')",
+        (_json.dumps([tag.model_dump()]),),
+    )
+    pconn.commit()
+    pconn.close()
+
+    oconn = sqlite3.connect(ops_db)
+    now = "2026-01-01T00:00:00+00:00"
+    oconn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, source_enrichment_id, canonical_message_id,"
+        " raw_message_id, trader_id, account_id, symbol, side, lifecycle_state, entry_mode,"
+        " management_plan_json, created_at, updated_at)"
+        " VALUES (1, 1, 1, 1, 'trader_a', 'acc', 'TONUSDT', 'LONG', 'WAITING_ENTRY',"
+        " 'b_entry_stop_then_tp', '{}', ?, ?)",
+        (now, now),
+    )
+    oconn.executemany(
+        """
+        INSERT INTO ops_execution_commands (
+            command_id, trade_chain_id, command_type, status, payload_json,
+            idempotency_key, created_at, updated_at, client_order_id
+        ) VALUES (?,?,?,?,?,?,?,?,?)
+        """,
+        [
+            (
+                1, 1, "PLACE_ENTRY", "SENT",
+                '{"symbol":"TONUSDT","side":"LONG","sequence":1}',
+                "place_entry:1:leg1", now, now, "tsb:1:1:entry:1:aaa",
+            ),
+            (
+                2, 1, "PLACE_ENTRY", "ACK",
+                '{"symbol":"TONUSDT","side":"LONG","sequence":2}',
+                "place_entry:1:leg2", now, now, "tsb:1:2:entry:2:bbb",
+            ),
+        ],
+    )
+    oconn.commit()
+    oconn.close()
+
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=_make_gate_with_mode("b_entry_stop_then_tp"),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        snapshot_repo=SnapshotRepository(ops_db),
+        control_repo=ControlStateRepository(ops_db),
+    )
+
+    processed = worker.run_once()
+
+    assert processed == 1
+    conn = sqlite3.connect(ops_db)
+    cancel_rows = conn.execute(
+        """
+        SELECT payload_json, idempotency_key
+        FROM ops_execution_commands
+        WHERE command_type='CANCEL_PENDING_ENTRY'
+        ORDER BY command_id
+        """
+    ).fetchall()
+    state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert state == "CANCELLED"
+    assert len(cancel_rows) == 2
+    payloads = [_json.loads(row[0]) for row in cancel_rows]
+    assert {payload["entry_client_order_id"] for payload in payloads} == {
+        "tsb:1:1:entry:1:aaa",
+        "tsb:1:2:entry:2:bbb",
+    }
+    assert len({row[1] for row in cancel_rows}) == 2

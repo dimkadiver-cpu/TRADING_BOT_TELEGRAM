@@ -47,16 +47,28 @@ class UpdateGateResult:
     review_events: list[LifecycleEvent]
 
 
+_LEGACY_EXECUTION_MODES = frozenset({"a_sequential", "b_entry_stop_then_tp", "c_native_attached_tpsl"})
+
+
 class LifecycleEntryGate:
     def __init__(
         self,
         risk_engine: RiskCapacityEngine,
         exchange_port: ExchangeDataPort,
         execution_mode: str = "a_sequential",
+        simple_attached_enabled: bool | None = None,
     ) -> None:
         self._risk = risk_engine
         self._port = exchange_port
         self._execution_mode = execution_mode
+        # None = use legacy routing when execution_mode is a legacy string.
+        # True/False = always use new C/D routing (True enables C mode, False forces D mode).
+        self._simple_attached_enabled = simple_attached_enabled
+
+    @property
+    def _use_legacy_routing(self) -> bool:
+        """True when caller has not opted in to C/D routing and execution_mode is a legacy mode."""
+        return self._simple_attached_enabled is None and self._execution_mode in _LEGACY_EXECUTION_MODES
 
     # ── SIGNAL ────────────────────────────────────────────────────────────────
 
@@ -96,6 +108,24 @@ class LifecycleEntryGate:
         fallback_entry_price = float(decision.risk_snapshot.get("entry_price") or 1.0)
         planned_qty = size_usdt / fallback_entry_price if fallback_entry_price > 0 else 0.0
 
+        # Determine execution mode for the TradeChain record
+        if self._use_legacy_routing:
+            chain_execution_mode = self._execution_mode
+        else:
+            sl_price_for_decision = (
+                signal.stop_loss.price.value
+                if signal.stop_loss and signal.stop_loss.price else None
+            )
+            tp_count_for_decision = len(signal.take_profits)
+            entry_count_for_decision = len(signal.entries)
+            use_c = (
+                self._simple_attached_enabled is True
+                and entry_count_for_decision == 1
+                and tp_count_for_decision == 1
+                and sl_price_for_decision is not None
+            )
+            chain_execution_mode = "C_SIMPLE_ATTACHED" if use_c else "D_POSITION_TPSL"
+
         chain = TradeChain(
             source_enrichment_id=eid,
             canonical_message_id=enriched.canonical_message_id,
@@ -115,7 +145,7 @@ class LifecycleEntryGate:
             management_plan_json=management_plan.model_dump_json(),
             risk_snapshot_json=json.dumps(decision.risk_snapshot),
             planned_entry_qty=planned_qty,
-            execution_mode=self._execution_mode,
+            execution_mode=chain_execution_mode,
         )
 
         events = [
@@ -170,8 +200,53 @@ class LifecycleEntryGate:
         signal = enriched.enriched_signal
         management_plan = enriched.management_plan or ManagementPlanConfig()
         eid = enriched.enrichment_id
-        mode = self._execution_mode
 
+        # ── Legacy execution mode paths (a_sequential, b_entry_stop_then_tp, c_native_attached_tpsl)
+        if self._use_legacy_routing:
+            return self._build_legacy_commands(signal, management_plan, eid, decision)
+
+        # ── New C/D decision matrix ──────────────────────────────────────────────
+        tp_count = len(signal.take_profits)
+        entry_count = len(signal.entries)
+        size_usdt = float(decision.size_usdt or 0.0)
+        fallback_entry_price = float(decision.risk_snapshot.get("entry_price") or 0.0)
+        leverage = int(decision.risk_snapshot.get("leverage") or 1)
+        hedge_mode = bool(decision.risk_snapshot.get("hedge_mode", False))
+        position_idx = self.resolve_position_idx(signal.side, hedge_mode)
+        close_pcts = self._get_close_pcts(management_plan, tp_count)
+
+        sl_price = (
+            signal.stop_loss.price.value
+            if signal.stop_loss and signal.stop_loss.price else None
+        )
+
+        use_c = (
+            self._simple_attached_enabled is True
+            and entry_count == 1
+            and tp_count == 1
+            and sl_price is not None
+        )
+
+        if use_c:
+            return self._build_c_commands(
+                signal, eid, size_usdt, fallback_entry_price,
+                leverage, hedge_mode, position_idx, sl_price,
+            )
+        return self._build_d_commands(
+            signal, eid, size_usdt, fallback_entry_price,
+            leverage, hedge_mode, position_idx, sl_price,
+            tp_count, close_pcts,
+        )
+
+    def _build_legacy_commands(
+        self,
+        signal,
+        management_plan: ManagementPlanConfig,
+        eid: int,
+        decision,
+    ) -> list[ExecutionCommand]:
+        """Preserve original a_sequential / b_entry_stop_then_tp / c_native_attached_tpsl behavior."""
+        mode = self._execution_mode
         commands: list[ExecutionCommand] = []
 
         tp_count = len(signal.take_profits)
@@ -186,7 +261,6 @@ class LifecycleEntryGate:
         )
         last_tp = signal.take_profits[-1] if signal.take_profits else None
 
-        # ── ENTRY LEGS ──────────────────────────────────────────────────────────
         for leg in signal.entries:
             leg_price = leg.price.value if leg.price else fallback_entry_price
             leg_notional = size_usdt * float(leg.weight or 0.0)
@@ -218,7 +292,6 @@ class LifecycleEntryGate:
                 idempotency_key=f"place_entry:{eid}:leg{leg.sequence}",
             ))
 
-        # ── PROTECTIVE STOP ─────────────────────────────────────────────────────
         if sl_price and mode != "c_native_attached_tpsl":
             sl_status: str = "WAITING_POSITION" if mode == "a_sequential" else "PENDING"
             commands.append(ExecutionCommand(
@@ -235,11 +308,10 @@ class LifecycleEntryGate:
                 idempotency_key=f"place_stop:{eid}",
             ))
 
-        # ── TAKE PROFITS ────────────────────────────────────────────────────────
         for i, tp in enumerate(signal.take_profits):
             is_last = (i == len(signal.take_profits) - 1)
             if mode == "c_native_attached_tpsl" and is_last:
-                continue  # last TP is attached to entry in Mode C
+                continue
             close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
             price = tp.price.value if tp.price else None
             commands.append(ExecutionCommand(
@@ -260,6 +332,140 @@ class LifecycleEntryGate:
             ))
 
         return commands
+
+    def _build_c_commands(
+        self, signal, eid, size_usdt, fallback_entry_price,
+        leverage, hedge_mode, position_idx, sl_price,
+    ) -> list[ExecutionCommand]:
+        leg = signal.entries[0]
+        leg_price = leg.price.value if leg.price else fallback_entry_price
+        leg_qty = self._qty_from_notional(size_usdt, leg_price)
+        tp = signal.take_profits[0]
+        tp_price = tp.price.value if tp.price else None
+
+        payload = {
+            "execution_strategy": "C_SIMPLE_ATTACHED",
+            "symbol": signal.symbol,
+            "side": signal.side,
+            "entry_type": leg.entry_type,
+            "price": leg_price if leg.entry_type == "LIMIT" else None,
+            "qty": leg_qty,
+            "leverage": leverage,
+            "hedge_mode": hedge_mode,
+            "position_idx": position_idx,
+            "attached_tpsl": {
+                "mode": "FULL",
+                "take_profit": tp_price,
+                "stop_loss": sl_price,
+                "tp_trigger_by": "MarkPrice",
+                "sl_trigger_by": "MarkPrice",
+            },
+        }
+        return [ExecutionCommand(
+            trade_chain_id=0,
+            command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
+            status="PENDING",
+            payload_json=json.dumps(payload),
+            idempotency_key=f"place_entry_attached:{eid}",
+        )]
+
+    def _build_d_commands(
+        self, signal, eid, size_usdt, fallback_entry_price,
+        leverage, hedge_mode, position_idx, sl_price,
+        tp_count, close_pcts,
+    ) -> list[ExecutionCommand]:
+        commands: list[ExecutionCommand] = []
+
+        for leg in signal.entries:
+            leg_price = leg.price.value if leg.price else fallback_entry_price
+            leg_notional = size_usdt * float(leg.weight or 0.0)
+            leg_qty = self._qty_from_notional(leg_notional, leg_price)
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="PLACE_ENTRY",
+                status="PENDING",
+                payload_json=json.dumps({
+                    "execution_strategy": "D_POSITION_TPSL",
+                    "symbol": signal.symbol,
+                    "side": signal.side,
+                    "entry_type": leg.entry_type,
+                    "price": leg_price if leg.entry_type == "LIMIT" else None,
+                    "qty": leg_qty,
+                    "leverage": leverage,
+                    "hedge_mode": hedge_mode,
+                    "position_idx": position_idx,
+                    "sequence": leg.sequence,
+                }),
+                idempotency_key=f"place_entry:{eid}:leg{leg.sequence}",
+            ))
+
+        if tp_count == 0:
+            return commands
+
+        total_qty = self._qty_from_notional(size_usdt, fallback_entry_price)
+
+        if tp_count == 1:
+            tp = signal.take_profits[0]
+            tp_price = tp.price.value if tp.price else None
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="SET_POSITION_TPSL_FULL",
+                status="WAITING_POSITION",
+                payload_json=json.dumps({
+                    "execution_strategy": "D_POSITION_TPSL",
+                    "symbol": signal.symbol,
+                    "side": signal.side,
+                    "leverage": leverage,
+                    "hedge_mode": hedge_mode,
+                    "position_idx": position_idx,
+                    "take_profit": tp_price,
+                    "stop_loss": sl_price,
+                    "tp_trigger_by": "MarkPrice",
+                    "sl_trigger_by": "MarkPrice",
+                }),
+                idempotency_key=f"set_tpsl_full:{eid}",
+            ))
+        else:
+            allocated_qty = 0.0
+            for i, tp in enumerate(signal.take_profits):
+                is_last = (i == len(signal.take_profits) - 1)
+                tp_price = tp.price.value if tp.price else None
+                close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
+                if is_last:
+                    tp_qty = max(0.0, total_qty - allocated_qty)
+                else:
+                    tp_qty = round(total_qty * close_pct / 100.0, 8)
+                    allocated_qty += tp_qty
+
+                commands.append(ExecutionCommand(
+                    trade_chain_id=0,
+                    command_type="SET_POSITION_TPSL_PARTIAL",
+                    status="WAITING_POSITION",
+                    payload_json=json.dumps({
+                        "execution_strategy": "D_POSITION_TPSL",
+                        "symbol": signal.symbol,
+                        "side": signal.side,
+                        "position_idx": position_idx,
+                        "tp_sequence": tp.sequence,
+                        "take_profit": tp_price,
+                        "stop_loss": sl_price,
+                        "tp_size": tp_qty,
+                        "sl_size": tp_qty,
+                        "tp_order_type": "Limit",
+                        "tp_limit_price": tp_price,
+                        "tp_trigger_by": "MarkPrice",
+                        "sl_trigger_by": "MarkPrice",
+                    }),
+                    idempotency_key=f"set_tpsl_partial:{eid}:tp{tp.sequence}",
+                ))
+
+        return commands
+
+    @staticmethod
+    def resolve_position_idx(side: str, hedge_mode: bool) -> int:
+        if not hedge_mode:
+            return 0
+        return 1 if side == "LONG" else 2
 
     @staticmethod
     def _qty_from_notional(notional: float, price: float) -> float:
@@ -380,6 +586,18 @@ class LifecycleEntryGate:
         action,
         active_commands: list[ExecutionCommand],
     ) -> UpdateChainResult:
+        chain_exec_mode = chain.execution_mode
+        if chain_exec_mode == "C_SIMPLE_ATTACHED":
+            entry_pending = any(
+                c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
+                and c.status in ("PENDING", "SENT", "ACK")
+                for c in active_commands
+            )
+            if entry_pending:
+                return self._review_chain(
+                    enriched, chain,
+                    "c_mode_update_blocked:entry_pending_not_filled",
+                )
         action_type = action.action_type
         if action_type == "SET_STOP":
             op = action.set_stop
@@ -935,26 +1153,25 @@ class LifecycleGateWorker:
                             ),
                         )
                     for cmd in cr.execution_commands:
-                        payload_json = cmd.payload_json
-                        if cmd.command_type == "CANCEL_PENDING_ENTRY":
-                            import json as _json_inner
-                            entry_coid = self._command_repo.get_entry_client_order_id(cr.trade_chain_id)
-                            if entry_coid:
-                                p = _json_inner.loads(payload_json)
-                                p["entry_client_order_id"] = entry_coid
-                                payload_json = _json_inner.dumps(p)
-                        conn.execute(
-                            """
-                            INSERT OR IGNORE INTO ops_execution_commands (
-                                trade_chain_id, command_type, status, payload_json,
-                                idempotency_key, created_at, updated_at
-                            ) VALUES (?,?,?,?,?,?,?)
-                            """,
-                            (
-                                cr.trade_chain_id, cmd.command_type, cmd.status, payload_json,
-                                cmd.idempotency_key, now, now,
-                            ),
-                        )
+                        for payload_json, idempotency_key in _expand_cancel_pending_commands(
+                            conn,
+                            trade_chain_id=cr.trade_chain_id,
+                            command_type=cmd.command_type,
+                            payload_json=cmd.payload_json,
+                            idempotency_key=cmd.idempotency_key,
+                        ):
+                            conn.execute(
+                                """
+                                INSERT OR IGNORE INTO ops_execution_commands (
+                                    trade_chain_id, command_type, status, payload_json,
+                                    idempotency_key, created_at, updated_at
+                                ) VALUES (?,?,?,?,?,?,?)
+                                """,
+                                (
+                                    cr.trade_chain_id, cmd.command_type, cmd.status, payload_json,
+                                    idempotency_key, now, now,
+                                ),
+                            )
                 for event in result.review_events:
                     conn.execute(
                         """
@@ -983,6 +1200,54 @@ class LifecycleGateWorker:
             conn.commit()
         finally:
             conn.close()
+
+
+def _expand_cancel_pending_commands(
+    conn: _sqlite3.Connection,
+    *,
+    trade_chain_id: int,
+    command_type: str,
+    payload_json: str,
+    idempotency_key: str,
+) -> list[tuple[str, str]]:
+    if command_type != "CANCEL_PENDING_ENTRY":
+        return [(payload_json, idempotency_key)]
+
+    entry_client_order_ids = _load_pending_entry_client_order_ids(conn, trade_chain_id)
+    if not entry_client_order_ids:
+        return [(payload_json, idempotency_key)]
+
+    payload = json.loads(payload_json or "{}")
+    expanded: list[tuple[str, str]] = []
+    for entry_client_order_id in entry_client_order_ids:
+        item = dict(payload)
+        item["entry_client_order_id"] = entry_client_order_id
+        expanded.append(
+            (
+                json.dumps(item),
+                f"{idempotency_key}:{entry_client_order_id}",
+            )
+        )
+    return expanded
+
+
+def _load_pending_entry_client_order_ids(
+    conn: _sqlite3.Connection,
+    trade_chain_id: int,
+) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT client_order_id
+        FROM ops_execution_commands
+        WHERE trade_chain_id = ?
+          AND command_type = 'PLACE_ENTRY'
+          AND status IN ('PENDING','SENT','ACK')
+          AND client_order_id IS NOT NULL
+        ORDER BY command_id
+        """,
+        (trade_chain_id,),
+    ).fetchall()
+    return [str(row[0]) for row in rows if row and row[0]]
 
 
 __all__ = [

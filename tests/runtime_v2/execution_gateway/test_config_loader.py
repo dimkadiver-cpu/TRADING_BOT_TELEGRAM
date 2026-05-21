@@ -90,7 +90,6 @@ def test_missing_default_routing_raises(tmp_path):
 
 def test_load_multi_adapter_config(tmp_path):
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    import yaml
     cfg = {
         "execution": {
             "default_adapter": "bybit_demo",
@@ -102,13 +101,11 @@ def test_load_multi_adapter_config(tmp_path):
                     "type": "ccxt_bybit",
                     "mode": "paper",
                     "connector": "bybit",
-                    "testnet": True,
                 },
                 "bybit_demo": {
                     "type": "ccxt_bybit",
                     "mode": "demo",
                     "connector": "bybit",
-                    "testnet": True,
                 },
             },
         }
@@ -123,17 +120,22 @@ def test_load_multi_adapter_config(tmp_path):
     assert config.adapters["bybit_demo"].mode == "demo"
 
 
-def test_demo_adapter_capabilities_parse():
+def test_real_execution_yaml_loads():
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     config = ExecutionConfigLoader("config/execution.yaml").load()
-    demo_caps = config.adapters["bybit_demo"].capabilities
-    assert demo_caps.place_entry is True
-    assert demo_caps.protective_stop_native is False
-    assert demo_caps.take_profit_native is False
-    assert demo_caps.close_full is True
-
-
-def test_demo_adapter_live_safety_false():
-    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    config = ExecutionConfigLoader("config/execution.yaml").load()
+    assert config.default_adapter == "bybit_demo"
+    assert config.adapters["bybit_demo"].strategy.default_mode == "D_POSITION_TPSL"
+    assert config.adapters["bybit_demo"].strategy.simple_attached_enabled is True
     assert config.adapters["bybit_demo"].live_safety.allow_live_trading is False
+
+
+def test_real_execution_yaml_no_deprecated_fields():
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    config = ExecutionConfigLoader("config/execution.yaml").load()
+    demo = config.adapters["bybit_demo"]
+    assert not hasattr(demo, "leverage")
+    assert not hasattr(demo, "hedge_mode")
+    assert not hasattr(demo, "capabilities")
+    assert not hasattr(demo, "entry_execution")
+
+

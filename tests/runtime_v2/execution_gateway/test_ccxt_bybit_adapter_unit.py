@@ -13,8 +13,7 @@ from unittest.mock import MagicMock
 def _make_adapter(exchange, hedge_mode=False):
     from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
     return CcxtBybitAdapter(
-        api_key="key", api_secret="secret", testnet=True, connector="bybit",
-        hedge_mode=hedge_mode,
+        api_key="key", api_secret="secret", connector="bybit",
         _exchange=exchange,
     )
 
@@ -22,8 +21,8 @@ def _make_adapter(exchange, hedge_mode=False):
 def _make_adapter_with_repo(exchange, repo, hedge_mode=False):
     from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
     return CcxtBybitAdapter(
-        api_key="key", api_secret="secret", testnet=True, connector="bybit",
-        hedge_mode=hedge_mode, repo=repo,
+        api_key="key", api_secret="secret", connector="bybit",
+        repo=repo,
         _exchange=exchange,
     )
 
@@ -102,7 +101,7 @@ def test_place_protective_stop_calls_create_order():
 
     assert result.success is True
     args, kwargs = exchange.create_order.call_args
-    assert args[1] == "stop"
+    assert args[1] == "market"
     assert args[2] == "sell"
     assert kwargs["params"]["triggerPrice"] == 49000.0
     assert kwargs["params"]["reduceOnly"] is True
@@ -111,12 +110,13 @@ def test_place_protective_stop_calls_create_order():
 def test_hedge_mode_place_entry_adds_position_idx():
     exchange = MagicMock()
     exchange.create_order.return_value = {"id": "123"}
-    adapter = _make_adapter(exchange, hedge_mode=True)
+    adapter = _make_adapter(exchange)
 
     adapter.place_order(
         command_type="PLACE_ENTRY",
         payload={"symbol": "BTC/USDT:USDT", "side": "LONG",
-                 "entry_type": "LIMIT", "qty": 0.01, "price": 50000.0},
+                 "entry_type": "LIMIT", "qty": 0.01, "price": 50000.0,
+                 "hedge_mode": True},
         client_order_id="tsb:1:1:entry:1",
         execution_account_id="main",
         connector="bybit",
@@ -708,22 +708,146 @@ def test_set_leverage_calls_exchange_with_buy_sell_params():
 
 def test_hedge_mode_set_leverage_passes_position_idx_zero():
     exchange = MagicMock()
-    adapter = _make_adapter(exchange, hedge_mode=True)
+    adapter = _make_adapter(exchange)
 
-    adapter.set_leverage("BTC/USDT:USDT", 10, "main")
+    # position_idx=0 is the default — should NOT add positionIdx to params
+    adapter.set_leverage("BTC/USDT:USDT", 10, "main", position_idx=0)
 
     call_params = exchange.set_leverage.call_args[1]["params"]
-    assert call_params.get("positionIdx") == 0
+    assert "positionIdx" not in call_params
+
+
+def test_set_leverage_with_nonzero_position_idx():
+    exchange = MagicMock()
+    adapter = _make_adapter(exchange)
+
+    adapter.set_leverage("BTC/USDT:USDT", 10, "main", position_idx=1)
+
+    call_params = exchange.set_leverage.call_args[1]["params"]
+    assert call_params.get("positionIdx") == 1
 
 
 def test_one_way_mode_set_leverage_no_position_idx():
     exchange = MagicMock()
-    adapter = _make_adapter(exchange, hedge_mode=False)
+    adapter = _make_adapter(exchange)
 
     adapter.set_leverage("BTC/USDT:USDT", 10, "main")
 
     call_params = exchange.set_leverage.call_args[1]["params"]
     assert "positionIdx" not in call_params
+
+
+def test_testnet_mode_enables_ccxt_sandbox(monkeypatch):
+    import src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter as amod
+
+    exchange = MagicMock()
+    monkeypatch.setattr(amod.ccxt, "bybit", MagicMock(return_value=exchange))
+
+    amod.CcxtBybitAdapter(
+        api_key="key",
+        api_secret="secret",
+        connector="bybit",
+        mode="testnet",
+    )
+
+    exchange.set_sandbox_mode.assert_called_once_with(True)
+    exchange.enable_demo_trading.assert_not_called()
+
+
+# --- place_order: trading_stop actions ---
+
+def test_place_entry_with_attached_tpsl_calls_create_order():
+    exchange = MagicMock()
+    exchange.create_order.return_value = {"id": "ord123"}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    result = adapter.place_order(
+        command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        payload={
+            "symbol": "BTC/USDT:USDT", "side": "LONG", "entry_type": "LIMIT",
+            "price": 65000.0, "qty": 0.01, "leverage": 5,
+            "hedge_mode": False, "position_idx": 0,
+            "attached_tpsl": {
+                "mode": "FULL", "take_profit": 70000.0, "stop_loss": 63000.0,
+                "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+            },
+        },
+        client_order_id="tsb:1:1:entry:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    assert result.success is True
+    exchange.create_order.assert_called_once()
+
+
+def test_set_position_tpsl_full_calls_trading_stop():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop.return_value = {"retCode": 0}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    result = adapter.place_order(
+        command_type="SET_POSITION_TPSL_FULL",
+        payload={
+            "symbol": "BTCUSDT", "side": "LONG", "position_idx": 0,
+            "take_profit": 70000.0, "stop_loss": 63000.0,
+            "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+        },
+        client_order_id="tsb:1:1:tpsl_full:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    assert result.success is True
+    exchange.private_post_v5_position_trading_stop.assert_called_once()
+    call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_args["tpslMode"] == "Full"
+    assert call_args["positionIdx"] == 0
+
+
+def test_set_position_tpsl_partial_calls_trading_stop():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop.return_value = {"retCode": 0}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    result = adapter.place_order(
+        command_type="SET_POSITION_TPSL_PARTIAL",
+        payload={
+            "symbol": "BTCUSDT", "side": "LONG", "position_idx": 0,
+            "take_profit": 67000.0, "stop_loss": 63000.0,
+            "tp_size": 0.01, "sl_size": 0.01,
+            "tp_order_type": "Limit", "tp_limit_price": 67000.0,
+            "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+        },
+        client_order_id="tsb:1:1:tpsl_partial:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    assert result.success is True
+    exchange.private_post_v5_position_trading_stop.assert_called_once()
+    call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_args["tpslMode"] == "Partial"
+    assert call_args["tpSize"] == "0.01"
+    assert call_args["slSize"] == "0.01"
+    assert call_args["tpLimitPrice"] == "67000.0"
+
+
+def test_move_position_stop_calls_trading_stop_only_sl():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop.return_value = {"retCode": 0}
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+    adapter = CcxtBybitAdapter(api_key="", api_secret="", connector="bybit", _exchange=exchange)
+    adapter.place_order(
+        command_type="MOVE_POSITION_STOP",
+        payload={
+            "symbol": "BTCUSDT", "side": "LONG", "position_idx": 0,
+            "new_stop_loss": 65000.0,
+        },
+        client_order_id="tsb:1:1:move_stop:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+    call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert "stopLoss" in call_args
+    assert "takeProfit" not in call_args
 
 
 # --- get_capabilities ---

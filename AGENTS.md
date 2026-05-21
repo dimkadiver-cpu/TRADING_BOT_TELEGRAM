@@ -23,6 +23,10 @@ This file applies to the whole repository unless a deeper `AGENTS.md` overrides 
 - Use the repository's existing package manager, scripts, test runner, formatter, linter, build tools, and generators.
 - In Codex shell sessions, do not assume JS tooling is already on `PATH`. For `node`, `npm`, and `bun`, prefer `PATH="/opt/homebrew/bin:$HOME/.bun/bin:$PATH"`.
 - Do not add new production dependencies without explicit user approval. Prefer existing utilities, framework APIs, and the standard library.
+- When code discovery is needed, keep the main process focused on decisions and implementation; delegate broad repository search to a Codex 5.3 Spark subagent when available, if Spark is not available use Codex 5.3 subagent.
+- The subagent must return a compact evidence map only: `path:line`, symbol/component/route name, the relevant code snippet or signature, and why it matters for the main task.
+- The main process should use that map for targeted reading and implementation, verifying critical findings before editing.
+
 
 ## Task Mode
 

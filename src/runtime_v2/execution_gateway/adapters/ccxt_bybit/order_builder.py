@@ -61,6 +61,14 @@ class BybitOrderBuilder:
                 symbol=payload["symbol"],
                 position_side=payload.get("side", ""),
             )
+        if command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL":
+            return self._place_entry_with_attached_tpsl(payload, client_order_id)
+        if command_type == "SET_POSITION_TPSL_FULL":
+            return self._set_position_tpsl_full(payload)
+        if command_type == "SET_POSITION_TPSL_PARTIAL":
+            return self._set_position_tpsl_partial(payload)
+        if command_type == "MOVE_POSITION_STOP":
+            return self._move_position_stop(payload)
         raise ValueError(f"Unknown command_type: {command_type!r}")
 
     def _place_entry(self, payload: dict, client_order_id: str) -> BybitOrderParams:
@@ -162,6 +170,83 @@ class BybitOrderBuilder:
             symbol=payload["symbol"],
             new_trigger_price=new_trigger_price,
             position_side=payload["side"],
+        )
+
+
+    def _place_entry_with_attached_tpsl(self, payload: dict, client_order_id: str) -> BybitOrderParams:
+        entry_type = payload["entry_type"]
+        price = float(payload["price"]) if entry_type == "LIMIT" and payload.get("price") else None
+        tpsl = payload["attached_tpsl"]
+        # positionIdx is not set here — build() sets it from hedge_mode kwarg, same as _place_entry
+        extra = {
+            "takeProfit": float(tpsl["take_profit"]),
+            "stopLoss": float(tpsl["stop_loss"]),
+            "tpslMode": "Full",
+            "tpOrderType": "Market",
+            "slOrderType": "Market",
+            "tpTriggerBy": tpsl.get("tp_trigger_by", "MarkPrice"),
+            "slTriggerBy": tpsl.get("sl_trigger_by", "MarkPrice"),
+        }
+        return BybitOrderParams(
+            action="create_order",
+            symbol=payload["symbol"],
+            order_type=entry_type.lower(),
+            side=_ENTRY_SIDE[payload["side"]],
+            amount=float(payload["qty"]),
+            price=price,
+            order_link_id=client_order_id,
+            extra_params=extra,
+        )
+
+    def _set_position_tpsl_full(self, payload: dict) -> BybitOrderParams:
+        return BybitOrderParams(
+            action="trading_stop_full",
+            symbol=payload["symbol"],
+            position_side=payload["side"],
+            extra_params={
+                "positionIdx": int(payload.get("position_idx", 0)),
+                "tpslMode": "Full",
+                "takeProfit": str(float(payload["take_profit"])),
+                "stopLoss": str(float(payload["stop_loss"])),
+                "tpTriggerBy": payload.get("tp_trigger_by", "MarkPrice"),
+                "slTriggerBy": payload.get("sl_trigger_by", "MarkPrice"),
+                "tpOrderType": "Market",
+                "slOrderType": "Market",
+            },
+        )
+
+    def _set_position_tpsl_partial(self, payload: dict) -> BybitOrderParams:
+        tp_order_type = payload.get("tp_order_type", "Limit")
+        extra: dict = {
+            "positionIdx": int(payload.get("position_idx", 0)),
+            "tpslMode": "Partial",
+            "takeProfit": str(float(payload["take_profit"])),
+            "stopLoss": str(float(payload["stop_loss"])),
+            "tpSize": str(float(payload["tp_size"])),
+            "slSize": str(float(payload["sl_size"])),
+            "tpOrderType": tp_order_type,
+            "slOrderType": payload.get("sl_order_type", "Market"),
+            "tpTriggerBy": payload.get("tp_trigger_by", "MarkPrice"),
+            "slTriggerBy": payload.get("sl_trigger_by", "MarkPrice"),
+        }
+        if tp_order_type == "Limit" and payload.get("tp_limit_price"):
+            extra["tpLimitPrice"] = str(float(payload["tp_limit_price"]))
+        return BybitOrderParams(
+            action="trading_stop_partial",
+            symbol=payload["symbol"],
+            position_side=payload["side"],
+            extra_params=extra,
+        )
+
+    def _move_position_stop(self, payload: dict) -> BybitOrderParams:
+        return BybitOrderParams(
+            action="trading_stop_move_sl",
+            symbol=payload["symbol"],
+            position_side=payload["side"],
+            extra_params={
+                "positionIdx": int(payload.get("position_idx", 0)),
+                "stopLoss": str(float(payload["new_stop_loss"])),
+            },
         )
 
 

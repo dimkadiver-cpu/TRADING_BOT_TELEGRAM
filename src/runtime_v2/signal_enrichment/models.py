@@ -123,6 +123,7 @@ class EffectiveEnrichmentConfig(BaseModel):
     update_admission: dict[str, bool]
     management_plan: ManagementPlanConfig
     risk: RiskConfig
+    account: AccountConfig | None = None
 
 
 # ── Enrichment models ──────────────────────────────────────────────────────────

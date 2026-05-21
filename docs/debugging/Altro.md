@@ -1,11 +1,8 @@
-- Cosa succede se un ordine non parte per un errore? poi metto un ordine  con stesso symbolo?
+- Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?
 
+- Pulizia dei BD in prova
 
-
-
-Pulizia dei BD in prova
-
-Aggiornare file Readme. Claude.md
+-Aggiornare file Readme. Claude.md
 
 - pulizia finale da vecchi file/non in uso ecc.
 
@@ -13,3 +10,9 @@ Aggiornare file Readme. Claude.md
 
 
 ottimizare il worker di esecuizione dei comandi su cicle life
+
+
+Domande aperte da verificare:
+
+- Verificare come vengono gestiti i ordini su exchange:
+    tre modalita

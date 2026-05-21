@@ -9,6 +9,7 @@ from pathlib import Path
 import yaml
 
 from src.runtime_v2.signal_enrichment.models import (
+    AccountConfig,
     CloseDistributionConfig,
     EffectiveEnrichmentConfig,
     EntryRangeConfig,
@@ -175,6 +176,21 @@ class OperationConfigLoader:
             protective_sl_mode=mgmt_raw.get("protective_sl_mode", "exchange_native_first"),
         )
 
+        # Populate AccountConfig from global account block
+        account_raw = global_raw.get("account", {})
+        account = None
+        if account_raw:
+            try:
+                account = AccountConfig(
+                    id=account_raw.get("id", "main"),
+                    capital_base_usdt=float(account_raw.get("capital_base_usdt", 1000.0)),
+                    max_leverage=int(account_raw.get("max_leverage", 10)),
+                    max_capital_at_risk_pct=float(account_raw.get("max_capital_at_risk_pct", 10.0)),
+                    hard_max_per_signal_risk_pct=float(account_raw.get("hard_max_per_signal_risk_pct", 2.0)),
+                )
+            except Exception:
+                pass
+
         return EffectiveEnrichmentConfig(
             trader_id=trader_id,
             enabled=merged.get("enabled", True),
@@ -185,6 +201,7 @@ class OperationConfigLoader:
             update_admission=merged.get("update_admission", {}),
             management_plan=management_plan,
             risk=RiskConfig(**merged.get("risk", {})),
+            account=account,
         )
 
 
