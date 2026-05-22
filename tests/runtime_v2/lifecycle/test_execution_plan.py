@@ -112,3 +112,31 @@ def test_final_tp_is_last_tp():
     plan = _build(5, entries, tps, risk_snap)
     assert plan["final_tp"] == 53000.0
     assert plan["intermediate_tps"] == [51000.0, 52000.0]
+
+
+def test_entry_gate_populates_plan_state_json():
+    """Integration: process_signal must set plan_state_json on the returned TradeChain."""
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+    from tests.runtime_v2.lifecycle.test_entry_gate import _make_enriched_signal
+
+    enriched = _make_enriched_signal(
+        enrichment_id=10,
+        entry_type="LIMIT",
+        entry_price=50000.0,
+        sl_price=49000.0,
+        tp_prices=[51000.0],
+        capital_base_usdt=1000.0,
+    )
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(),
+        simple_attached_enabled=True,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.trade_chain is not None
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert plan["plan_version"] == 1
+    assert plan["rebuild_policy"] == "NONE"
+    assert plan["legs"][0]["client_order_id"] == "place_entry_attached:10:leg1"

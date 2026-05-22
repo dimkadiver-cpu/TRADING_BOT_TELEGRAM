@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
+from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
 from src.runtime_v2.lifecycle.models import (
     BeProtectionStatus, ControlMode, ExecutionCommand,
     LifecycleEvent, LifecycleState, TradeChain,
@@ -176,6 +177,13 @@ class LifecycleEntryGate:
                 ]
             }
 
+        plan_state = ExecutionPlanBuilder.build(
+            eid,
+            signal.entries,
+            signal.take_profits,
+            decision.risk_snapshot,
+        )
+
         chain = TradeChain(
             source_enrichment_id=eid,
             canonical_message_id=enriched.canonical_message_id,
@@ -196,6 +204,7 @@ class LifecycleEntryGate:
             risk_snapshot_json=json.dumps(decision.risk_snapshot),
             planned_entry_qty=planned_qty,
             execution_mode=chain_execution_mode,
+            plan_state_json=plan_state,
         )
 
         events = [
