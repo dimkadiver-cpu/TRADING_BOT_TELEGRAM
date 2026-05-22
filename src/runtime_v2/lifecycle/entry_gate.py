@@ -557,6 +557,7 @@ class LifecycleEntryGate:
         tpsl_mode: str = "FULL",
         tp_price: float | None = None,
         tp_qty: float | None = None,
+        tp_qty_ratio: float | None = None,
     ) -> ExecutionCommand:
         is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
         attached_tpsl: dict = {
@@ -587,6 +588,11 @@ class LifecycleEntryGate:
                 "risk_amount": float(leg_snap["risk_amount"]),
                 "sl_price": sl_price,
             }
+            if tpsl_mode == "PARTIAL_TP":
+                payload["attached_tpsl"] = {
+                    **attached_tpsl,
+                    "tp_qty_ratio": tp_qty_ratio,
+                }
         else:
             payload = {**base, "qty": qty}
         return ExecutionCommand(
@@ -618,16 +624,13 @@ class LifecycleEntryGate:
         last_tp = signal.take_profits[-1]
         last_tp_price = last_tp.price.value if last_tp.price else None
         last_close_pct = close_pcts[-1] if close_pcts else (100.0 / tp_count)
-        last_tp_qty = round(leg_qty * last_close_pct / 100.0, 8) if not is_deferred else None
-
         entry_cmd = self._place_entry_attached_cmd(
             signal=signal, leg=leg, eid=eid, label="C_MULTI_TP",
             leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
             sl_price=sl_price, leg_snap=leg_snap,
             qty=leg_qty if not is_deferred else None,
-            tpsl_mode="PARTIAL_TP",
+            tpsl_mode="FULL",
             tp_price=last_tp_price,
-            tp_qty=last_tp_qty,
         )
 
         commands: list[ExecutionCommand] = [entry_cmd]
@@ -635,7 +638,6 @@ class LifecycleEntryGate:
         for i, tp in enumerate(signal.take_profits[:-1]):
             tp_price = tp.price.value if tp.price else None
             close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
-            tp_qty = round(leg_qty * close_pct / 100.0, 8) if not is_deferred else 0.0
             partial_payload: dict = {
                 "execution_strategy": "C_MULTI_TP",
                 "symbol": signal.symbol,
@@ -643,12 +645,16 @@ class LifecycleEntryGate:
                 "position_idx": position_idx,
                 "tp_sequence": tp.sequence,
                 "take_profit": tp_price,
-                "tp_size": tp_qty,
                 "tp_order_type": "Limit",
                 "tp_limit_price": tp_price,
                 "tp_trigger_by": "MarkPrice",
                 "preserve_sl": True,
             }
+            if is_deferred:
+                partial_payload["tp_qty_mode"] = "filled_entry_pct"
+                partial_payload["close_pct"] = close_pct
+            else:
+                partial_payload["tp_size"] = round(leg_qty * close_pct / 100.0, 8)
             commands.append(ExecutionCommand(
                 trade_chain_id=0,
                 command_type="SET_POSITION_TPSL_PARTIAL",
@@ -698,6 +704,8 @@ class LifecycleEntryGate:
         tp_count, close_pcts, legs_snap,
     ) -> list[ExecutionCommand]:
         commands: list[ExecutionCommand] = []
+        last_tp = signal.take_profits[-1] if signal.take_profits else None
+        last_tp_price = last_tp.price.value if last_tp and last_tp.price else None
 
         for leg in signal.entries:
             leg_snap = _find_leg_snap(legs_snap, leg.sequence)
@@ -718,7 +726,10 @@ class LifecycleEntryGate:
                 leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
                 sl_price=sl_price, leg_snap=leg_snap,
                 qty=leg_qty,
-                tpsl_mode="SL_ONLY",
+                tpsl_mode="PARTIAL_TP",
+                tp_price=last_tp_price,
+                tp_qty=leg_qty,
+                tp_qty_ratio=float(leg.weight) if is_deferred and leg.weight else None,
             ))
 
         return commands
@@ -1502,7 +1513,7 @@ def _load_pending_entry_client_order_ids(
         SELECT client_order_id
         FROM ops_execution_commands
         WHERE trade_chain_id = ?
-          AND command_type = 'PLACE_ENTRY'
+          AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL')
           AND status IN ('PENDING','SENT','ACK')
           AND client_order_id IS NOT NULL
         ORDER BY command_id
