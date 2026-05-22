@@ -58,29 +58,35 @@ class RiskCapacityEngine:
         if any(c.symbol == symbol and c.side == side for c in trader_chains):
             return RiskDecision(passed=False, reason="duplicate_position")
 
-        # ── entry price resolution ────────────────────────────────────────────
-        if not signal.entries:
-            return RiskDecision(passed=False, reason="no_entry_legs")
-
-        first_leg = signal.entries[0]
-
-        if first_leg.entry_type == "MARKET":
-            if market_snapshot is None or market_snapshot.mark_price is None:
-                return RiskDecision(passed=False, reason="missing_market_price_for_market_entry")
-            entry_price = market_snapshot.mark_price
-        else:
-            if first_leg.price is None:
-                return RiskDecision(passed=False, reason="missing_limit_price")
-            entry_price = first_leg.price.value
-
         # ── stop-loss required ────────────────────────────────────────────────
         if signal.stop_loss is None or signal.stop_loss.price is None:
             return RiskDecision(passed=False, reason="missing_stop_loss_for_risk_calc")
         sl_price = signal.stop_loss.price.value
 
-        risk_distance = abs(entry_price - sl_price)
-        if risk_distance == 0:
-            return RiskDecision(passed=False, reason="zero_risk_distance")
+        # ── entry price resolution ────────────────────────────────────────────
+        if not signal.entries:
+            return RiskDecision(passed=False, reason="no_entry_legs")
+
+        first_leg = signal.entries[0]
+        entry_price_deferred = False
+
+        if first_leg.entry_type == "MARKET":
+            if market_snapshot is not None and market_snapshot.mark_price is not None:
+                entry_price: float | None = market_snapshot.mark_price
+            else:
+                entry_price = None
+                entry_price_deferred = True
+        else:
+            if first_leg.price is None:
+                return RiskDecision(passed=False, reason="missing_limit_price")
+            entry_price = first_leg.price.value
+
+        if not entry_price_deferred:
+            risk_distance: float | None = abs(entry_price - sl_price)  # type: ignore[arg-type]
+            if risk_distance == 0:
+                return RiskDecision(passed=False, reason="zero_risk_distance")
+        else:
+            risk_distance = None
 
         # ── capital base ──────────────────────────────────────────────────────
         if risk.capital_base_mode == "live_equity":
@@ -116,20 +122,52 @@ class RiskCapacityEngine:
                     reason="risk_leverage_exceeds_account_max_leverage",
                 )
 
+        # ── per-leg risk allocation ───────────────────────────────────────────
+        n_legs = len(signal.entries)
+        legs_snapshot: list[dict] = []
+        for leg in signal.entries:
+            w = float(leg.weight) if leg.weight is not None else 1.0 / n_legs
+            leg_risk = risk_amount * w
+            leg_price_val: float | None = leg.price.value if leg.price else (
+                entry_price if not entry_price_deferred else None
+            )
+            is_leg_deferred = leg.entry_type == "MARKET" and entry_price_deferred
+            if not is_leg_deferred and leg_price_val is not None:
+                leg_rd = abs(leg_price_val - sl_price)
+                leg_qty_val: float | None = leg_risk / leg_rd if leg_rd > 0 else 0.0
+                qty_mode = "fixed"
+            else:
+                leg_qty_val = None
+                qty_mode = "deferred_market"
+            legs_snapshot.append({
+                "sequence": leg.sequence,
+                "entry_type": leg.entry_type,
+                "weight": w,
+                "price": leg_price_val,
+                "risk_amount": leg_risk,
+                "qty": leg_qty_val,
+                "qty_mode": qty_mode,
+            })
+
         # ── size calculation ──────────────────────────────────────────────────
-        size_usdt = risk_amount / risk_distance * entry_price
+        if not entry_price_deferred:
+            size_usdt: float | None = risk_amount / risk_distance * entry_price  # type: ignore[operator]
+        else:
+            size_usdt = None
         leverage = risk.leverage
 
         risk_snapshot = {
             "capital": capital,
             "risk_amount": risk_amount,
             "entry_price": entry_price,
+            "entry_price_deferred": entry_price_deferred,
             "sl_price": sl_price,
             "risk_distance": risk_distance,
             "size_usdt": size_usdt,
             "leverage": leverage,
             "hedge_mode": config.hedge_mode,
             "capital_base_mode": risk.capital_base_mode,
+            "legs": legs_snapshot,
         }
 
         return RiskDecision(
