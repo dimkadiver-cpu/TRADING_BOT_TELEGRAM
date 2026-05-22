@@ -338,6 +338,96 @@ def test_move_stop_sl_not_found_returns_failed():
     assert result.reason == "sl_order_not_found"
 
 
+def test_move_stop_be_attached_calls_trading_stop_api():
+    """Attached/full BE move must call private_post_v5_position_trading_stop, not edit_order."""
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        return_value={"retCode": 0}
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "target_price": 50000.0,
+            "be_buffer_pct": 0.0,
+            "protection_style": "attached_full",
+            "position_idx": 0,
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.edit_order.assert_not_called()
+    exchange.fetch_open_orders.assert_not_called()
+    exchange.private_post_v5_position_trading_stop.assert_called_once()
+    call_body = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_body["category"] == "linear"
+    assert call_body["symbol"] == "BTC/USDT:USDT"
+    assert call_body["stopLoss"] == "50000.0"
+    assert call_body["positionIdx"] == 0
+
+
+def test_move_stop_be_attached_hedge_mode_long_position_idx_1():
+    """Hedge mode LONG should use positionIdx=1 in trading_stop payload."""
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        return_value={"retCode": 0}
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "XRP/USDT:USDT",
+            "side": "LONG",
+            "target_price": 0.5,
+            "be_buffer_pct": 0.0,
+            "protection_style": "attached_full",
+            "position_idx": 1,
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    call_body = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_body["positionIdx"] == 1
+
+
+def test_move_stop_be_standalone_still_calls_edit_order():
+    """Legacy standalone flow must still use edit_order path."""
+    exchange = MagicMock()
+    sl_order = {
+        "id": "sl_ord_1", "side": "sell",
+        "type": "stop", "amount": 0.01, "reduceOnly": True, "stopPrice": "49000",
+    }
+    exchange.fetch_open_orders.return_value = [sl_order]
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "target_price": 50000.0,
+            "protection_style": "standalone_order",
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.edit_order.assert_called_once()
+    exchange.private_post_v5_position_trading_stop.assert_not_called()
+
+
 # --- place_order: error handling ---
 
 def test_invalid_order_returns_failed_with_reason():
@@ -741,6 +831,8 @@ def test_testnet_mode_enables_ccxt_sandbox(monkeypatch):
     import src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter as amod
 
     exchange = MagicMock()
+    exchange.options = {}
+    exchange.load_time_difference.return_value = 123
     monkeypatch.setattr(amod.ccxt, "bybit", MagicMock(return_value=exchange))
 
     amod.CcxtBybitAdapter(
@@ -752,6 +844,53 @@ def test_testnet_mode_enables_ccxt_sandbox(monkeypatch):
 
     exchange.set_sandbox_mode.assert_called_once_with(True)
     exchange.enable_demo_trading.assert_not_called()
+    exchange.load_time_difference.assert_called_once_with()
+    assert exchange.options["adjustForTimeDifference"] is True
+    assert exchange.options["recvWindow"] == 10000
+    assert exchange.options["recv_window"] == 10000
+
+
+def test_demo_mode_enables_time_sync_and_recv_window(monkeypatch):
+    import src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter as amod
+
+    exchange = MagicMock()
+    exchange.options = {}
+    exchange.load_time_difference.return_value = 321
+    monkeypatch.setattr(amod.ccxt, "bybit", MagicMock(return_value=exchange))
+
+    amod.CcxtBybitAdapter(
+        api_key="key",
+        api_secret="secret",
+        connector="bybit",
+        mode="demo",
+        adjust_for_time_difference=True,
+        recv_window_ms=15000,
+        time_sync_on_startup=True,
+    )
+
+    exchange.enable_demo_trading.assert_called_once_with(True)
+    exchange.load_time_difference.assert_called_once_with()
+    assert exchange.options["recvWindow"] == 15000
+    assert exchange.options["recv_window"] == 15000
+
+
+def test_time_sync_can_be_disabled(monkeypatch):
+    import src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter as amod
+
+    exchange = MagicMock()
+    exchange.options = {}
+    monkeypatch.setattr(amod.ccxt, "bybit", MagicMock(return_value=exchange))
+
+    amod.CcxtBybitAdapter(
+        api_key="key",
+        api_secret="secret",
+        connector="bybit",
+        adjust_for_time_difference=False,
+        time_sync_on_startup=False,
+    )
+
+    exchange.load_time_difference.assert_not_called()
+    assert exchange.options["adjustForTimeDifference"] is False
 
 
 # --- place_order: trading_stop actions ---
