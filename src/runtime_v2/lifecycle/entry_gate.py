@@ -541,24 +541,187 @@ class LifecycleEntryGate:
 
         return commands
 
+    def _place_entry_attached_cmd(
+        self,
+        *,
+        signal,
+        leg,
+        eid: int,
+        label: str,
+        leverage: int,
+        hedge_mode: bool,
+        position_idx: int,
+        sl_price: float,
+        leg_snap: dict | None,
+        qty: float | None,
+        tpsl_mode: str = "FULL",
+        tp_price: float | None = None,
+        tp_qty: float | None = None,
+    ) -> ExecutionCommand:
+        is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
+        attached_tpsl: dict = {
+            "mode": tpsl_mode,
+            "stop_loss": sl_price,
+            "sl_trigger_by": "MarkPrice",
+        }
+        if tpsl_mode != "SL_ONLY" and tp_price is not None:
+            attached_tpsl["take_profit"] = tp_price
+            attached_tpsl["tp_trigger_by"] = "MarkPrice"
+            if tpsl_mode == "PARTIAL_TP" and tp_qty is not None:
+                attached_tpsl["tp_qty"] = tp_qty
+        base: dict = {
+            "execution_strategy": label,
+            "symbol": signal.symbol,
+            "side": signal.side,
+            "entry_type": leg.entry_type,
+            "price": leg.price.value if leg.entry_type == "LIMIT" else None,
+            "leverage": leverage,
+            "hedge_mode": hedge_mode,
+            "position_idx": position_idx,
+            "attached_tpsl": attached_tpsl,
+        }
+        if is_deferred:
+            payload: dict = {
+                **base,
+                "qty_mode": "deferred_market",
+                "risk_amount": float(leg_snap["risk_amount"]),
+                "sl_price": sl_price,
+            }
+        else:
+            payload = {**base, "qty": qty}
+        return ExecutionCommand(
+            trade_chain_id=0,
+            command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
+            status="PENDING",
+            payload_json=json.dumps(payload),
+            idempotency_key=f"place_entry_attached:{eid}:leg{leg.sequence}",
+        )
+
     def _build_c_multi_tp_commands(
         self, signal, eid, size_usdt, fallback_entry_price,
         leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
     ) -> list[ExecutionCommand]:
-        return []  # stub — implemented in Task 4
+        leg = signal.entries[0]
+        tp_count = len(signal.take_profits)
+        leg_snap = _find_leg_snap(legs_snap, leg.sequence)
+        is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
+
+        if not is_deferred:
+            if leg_snap and leg_snap.get("qty") is not None:
+                leg_qty = float(leg_snap["qty"])
+            else:
+                leg_price = leg.price.value if leg.price else fallback_entry_price
+                leg_qty = self._qty_from_notional(size_usdt, leg_price)
+        else:
+            leg_qty = 0.0
+
+        last_tp = signal.take_profits[-1]
+        last_tp_price = last_tp.price.value if last_tp.price else None
+        last_close_pct = close_pcts[-1] if close_pcts else (100.0 / tp_count)
+        last_tp_qty = round(leg_qty * last_close_pct / 100.0, 8) if not is_deferred else None
+
+        entry_cmd = self._place_entry_attached_cmd(
+            signal=signal, leg=leg, eid=eid, label="C_MULTI_TP",
+            leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
+            sl_price=sl_price, leg_snap=leg_snap,
+            qty=leg_qty if not is_deferred else None,
+            tpsl_mode="PARTIAL_TP",
+            tp_price=last_tp_price,
+            tp_qty=last_tp_qty,
+        )
+
+        commands: list[ExecutionCommand] = [entry_cmd]
+
+        for i, tp in enumerate(signal.take_profits[:-1]):
+            tp_price = tp.price.value if tp.price else None
+            close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
+            tp_qty = round(leg_qty * close_pct / 100.0, 8) if not is_deferred else 0.0
+            partial_payload: dict = {
+                "execution_strategy": "C_MULTI_TP",
+                "symbol": signal.symbol,
+                "side": signal.side,
+                "position_idx": position_idx,
+                "tp_sequence": tp.sequence,
+                "take_profit": tp_price,
+                "tp_size": tp_qty,
+                "tp_order_type": "Limit",
+                "tp_limit_price": tp_price,
+                "tp_trigger_by": "MarkPrice",
+                "preserve_sl": True,
+            }
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="SET_POSITION_TPSL_PARTIAL",
+                status="WAITING_POSITION",
+                payload_json=json.dumps(partial_payload),
+                idempotency_key=f"set_tp_partial:{eid}:tp{tp.sequence}",
+            ))
+
+        return commands
 
     def _build_d_multi_entry_1tp_commands(
         self, signal, eid, size_usdt, fallback_entry_price,
         leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
     ) -> list[ExecutionCommand]:
-        return []  # stub — implemented in Task 5
+        tp = signal.take_profits[0]
+        tp_price = tp.price.value if tp.price else None
+        commands: list[ExecutionCommand] = []
+
+        for leg in signal.entries:
+            leg_snap = _find_leg_snap(legs_snap, leg.sequence)
+            is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
+
+            if not is_deferred:
+                if leg_snap and leg_snap.get("qty") is not None:
+                    leg_qty = float(leg_snap["qty"])
+                else:
+                    leg_price = leg.price.value if leg.price else fallback_entry_price
+                    leg_notional = size_usdt * float(leg.weight or 0.0)
+                    leg_qty = self._qty_from_notional(leg_notional, leg_price)
+            else:
+                leg_qty = None
+
+            commands.append(self._place_entry_attached_cmd(
+                signal=signal, leg=leg, eid=eid, label="D_MULTI_ENTRY_1TP",
+                leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
+                sl_price=sl_price, leg_snap=leg_snap,
+                qty=leg_qty,
+                tpsl_mode="FULL",
+                tp_price=tp_price,
+            ))
+
+        return commands
 
     def _build_d_multi_entry_multi_tp_commands(
         self, signal, eid, size_usdt, fallback_entry_price,
         leverage, hedge_mode, position_idx, sl_price,
         tp_count, close_pcts, legs_snap,
     ) -> list[ExecutionCommand]:
-        return []  # stub — implemented in Task 6
+        commands: list[ExecutionCommand] = []
+
+        for leg in signal.entries:
+            leg_snap = _find_leg_snap(legs_snap, leg.sequence)
+            is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
+
+            if not is_deferred:
+                if leg_snap and leg_snap.get("qty") is not None:
+                    leg_qty = float(leg_snap["qty"])
+                else:
+                    leg_price = leg.price.value if leg.price else fallback_entry_price
+                    leg_notional = size_usdt * float(leg.weight or 0.0)
+                    leg_qty = self._qty_from_notional(leg_notional, leg_price)
+            else:
+                leg_qty = None
+
+            commands.append(self._place_entry_attached_cmd(
+                signal=signal, leg=leg, eid=eid, label="D_MULTI_ENTRY_MULTI_TP",
+                leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
+                sl_price=sl_price, leg_snap=leg_snap,
+                qty=leg_qty,
+                tpsl_mode="SL_ONLY",
+            ))
+
+        return commands
 
     @staticmethod
     def resolve_position_idx(side: str, hedge_mode: bool) -> int:
