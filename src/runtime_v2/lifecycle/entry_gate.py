@@ -56,6 +56,26 @@ class UpdateGateResult:
 
 _LEGACY_EXECUTION_MODES = frozenset({"a_sequential", "b_entry_stop_then_tp", "c_native_attached_tpsl"})
 
+_ATTACHED_PROTECTION_MODES = frozenset({
+    "C_SIMPLE_ATTACHED", "C_MULTI_TP",
+    "D_MULTI_ENTRY_1TP", "D_MULTI_ENTRY_MULTI_TP", "D_POSITION_TPSL",
+})
+
+
+def _be_move_extra(chain: "TradeChain") -> dict:
+    try:
+        rs = json.loads(chain.risk_snapshot_json or "{}")
+        hedge_mode = bool(rs.get("hedge_mode", False))
+    except Exception:
+        hedge_mode = False
+    position_idx = LifecycleEntryGate.resolve_position_idx(chain.side, hedge_mode)
+    protection_style = (
+        "attached_full"
+        if chain.execution_mode in _ATTACHED_PROTECTION_MODES
+        else "standalone_order"
+    )
+    return {"protection_style": protection_style, "position_idx": position_idx}
+
 
 class LifecycleEntryGate:
     def __init__(
@@ -946,6 +966,7 @@ class LifecycleEntryGate:
                 "symbol": chain.symbol, "side": chain.side,
                 "target_price": chain.entry_avg_price,
                 "be_buffer_pct": mp.be_buffer_pct,
+                **_be_move_extra(chain),
             }),
             idempotency_key=f"move_be:{chain_id}:{cmid}",
         )
