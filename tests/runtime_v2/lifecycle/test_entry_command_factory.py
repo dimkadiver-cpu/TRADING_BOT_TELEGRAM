@@ -121,3 +121,31 @@ def test_no_tps_attached_tpsl_has_no_take_profit_key():
                  [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)])
     p = json.loads(cmds[0].payload_json)
     assert "take_profit" not in p["attached_tpsl"]
+
+
+def test_deferred_leg2_carries_sl_price():
+    """Non-attached deferred legs must include sl_price for adapter qty computation."""
+    cmds = _cmds(9,
+                 [_leg(1, "LIMIT", 50000.0, 0.5), _leg(2, "MARKET", None, 0.5)],
+                 [_tp(1, 51000.0)],
+                 [_snap(1, "LIMIT", 50000.0, 50.0, 0.005, "fixed", 0.5),
+                  _snap(2, "MARKET", None, 50.0, None, "deferred_market", 0.5)])
+    assert cmds[1].command_type == "PLACE_ENTRY"
+    p2 = json.loads(cmds[1].payload_json)
+    assert p2["qty_mode"] == "deferred_market"
+    assert p2["sl_price"] == 49000.0  # default sl in _cmds helper
+    assert "qty" not in p2
+
+
+def test_trade_chain_id_is_zero():
+    cmds = _cmds(10, [_leg(1, "LIMIT", 50000.0, 1.0)], [_tp(1, 51000.0)],
+                 [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)])
+    assert cmds[0].trade_chain_id == 0
+
+
+def test_attached_block_trigger_fields():
+    cmds = _cmds(11, [_leg(1, "LIMIT", 50000.0, 1.0)], [_tp(1, 51000.0)],
+                 [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)])
+    p = json.loads(cmds[0].payload_json)
+    assert p["attached_tpsl"]["sl_trigger_by"] == "MarkPrice"
+    assert p["attached_tpsl"]["tp_trigger_by"] == "MarkPrice"

@@ -71,12 +71,16 @@ class EntryCommandFactory:
             if is_deferred:
                 payload["qty_mode"] = "deferred_market"
                 payload["risk_amount"] = float(snap.get("risk_amount") or 0.0)
+                if sl_price is None:
+                    raise ValueError("sl_price required for deferred legs")
                 payload["sl_price"] = sl_price  # always needed for qty at fill time
             else:
                 qty_val = float(snap.get("qty") or 0.0)
                 payload["qty"] = qty_val
 
             if is_attached:
+                if sl_price is None:
+                    raise ValueError("sl_price required for attached TPSL")
                 # Build attached_tpsl block
                 attached: dict = {
                     "mode": "FULL",
@@ -96,8 +100,6 @@ class EntryCommandFactory:
                     idempotency_key=f"place_entry_attached:{enrichment_id}:leg{leg.sequence}",
                 )
             else:
-                payload["sequence"] = leg.sequence
-
                 command = ExecutionCommand(
                     trade_chain_id=0,
                     command_type="PLACE_ENTRY",
