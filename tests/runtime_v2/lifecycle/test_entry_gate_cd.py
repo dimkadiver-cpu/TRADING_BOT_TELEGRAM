@@ -405,6 +405,13 @@ def test_c_multi_tp_market_no_mark_price_produces_deferred_payload():
     assert payload["qty_mode"] == "deferred_market"
     assert payload["risk_amount"] > 0
     assert "qty" not in payload
+    assert payload["attached_tpsl"]["mode"] == "FULL"
+
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
+    assert len(tp_cmds) == 1
+    tp_payload = json.loads(tp_cmds[0].payload_json)
+    assert tp_payload["tp_qty_mode"] == "filled_entry_pct"
+    assert tp_payload["close_pct"] == 50.0
 
 
 def test_d_multi_entry_1tp_mixed_market_limit_legs():
@@ -592,10 +599,10 @@ def test_c_multi_tp_entry_has_sl_and_last_tp_attached():
     assert len(entry_cmds) == 1
     p = json.loads(entry_cmds[0].payload_json)
     tpsl = p["attached_tpsl"]
-    assert tpsl["mode"] == "PARTIAL_TP"
+    assert tpsl["mode"] == "FULL"
     assert tpsl["stop_loss"] == 63000.0
     assert tpsl["take_profit"] == 70500.0   # sequence=2, price=70000+1*500
-    assert tpsl["tp_qty"] > 0
+    assert "tp_qty" not in tpsl
 
 
 def test_c_multi_tp_intermediate_tps_are_waiting_position():
@@ -663,8 +670,8 @@ def test_d_multi_entry_1tp_idempotency_keys_are_distinct():
 
 # ── D_MULTI_ENTRY_MULTI_TP (2 entry + 2 TP) ──────────────────────────────────
 
-def test_d_multi_entry_multi_tp_each_leg_has_sl_only_attached():
-    """D_MULTI_ENTRY_MULTI_TP: ogni leg ha PLACE_ENTRY_WITH_ATTACHED_TPSL mode SL_ONLY."""
+def test_d_multi_entry_multi_tp_each_leg_has_partial_tp_attached():
+    """D_MULTI_ENTRY_MULTI_TP: ogni leg ha PLACE_ENTRY_WITH_ATTACHED_TPSL mode PARTIAL_TP con SL + ultimo TP."""
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
     cmds = result.execution_commands
@@ -673,12 +680,13 @@ def test_d_multi_entry_multi_tp_each_leg_has_sl_only_attached():
     for c in entry_cmds:
         p = json.loads(c.payload_json)
         tpsl = p["attached_tpsl"]
-        assert tpsl["mode"] == "SL_ONLY"
+        assert tpsl["mode"] == "PARTIAL_TP"
         assert tpsl["stop_loss"] == 63000.0
-        assert "take_profit" not in tpsl
+        assert tpsl["take_profit"] == 70500.0    # TP2 price: 70000 + 1*500
+        assert tpsl["tp_qty"] > 0
 
 
-def test_d_multi_entry_multi_tp_no_tp_commands_at_creation():
+def test_d_multi_entry_multi_tp_no_set_position_tpsl_at_creation():
     """D_MULTI_ENTRY_MULTI_TP: nessun comando SET_POSITION_TPSL al momento della creazione."""
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
