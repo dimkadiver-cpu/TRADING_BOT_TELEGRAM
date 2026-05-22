@@ -103,6 +103,29 @@ class ExecutionGateway:
         payload = json.loads(cmd.payload_json)
         symbol = payload.get("symbol", "")
 
+        # ── Resolve deferred MARKET qty ───────────────────────────────────────
+        if payload.get("qty_mode") == "deferred_market":
+            mark_price = adapter.fetch_mark_price(symbol, routing.execution_account_id)
+            if mark_price is None:
+                self._repo.mark_review_required(
+                    cmd.command_id, reason="deferred_market_no_mark_price"
+                )
+                return
+            risk_amount_leg = float(payload["risk_amount"])
+            sl_price_val = float(payload["sl_price"])
+            risk_dist = abs(mark_price - sl_price_val)
+            if risk_dist == 0.0:
+                self._repo.mark_review_required(
+                    cmd.command_id, reason="deferred_market_zero_risk_distance"
+                )
+                return
+            computed_qty = risk_amount_leg / risk_dist
+            payload = {
+                k: v for k, v in payload.items()
+                if k not in ("qty_mode", "risk_amount", "sl_price")
+            }
+            payload["qty"] = computed_qty
+
         # Set leverage once per account+symbol — leverage comes from payload (set by LifecycleEntryGate)
         leverage = int(payload.get("leverage", 1))
         position_idx = int(payload.get("position_idx", 0))

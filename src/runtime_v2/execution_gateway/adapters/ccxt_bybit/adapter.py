@@ -228,6 +228,15 @@ class CcxtBybitAdapter(ExecutionAdapter):
             logger.warning("get_position_qty failed for %s %s", symbol, side)
             return None
 
+    def fetch_mark_price(self, symbol: str, execution_account_id: str) -> float | None:
+        try:
+            ticker = self._exchange.fetch_ticker(symbol)
+            mark = ticker.get("markPrice") or ticker.get("last")
+            return float(mark) if mark is not None else None
+        except Exception as exc:
+            logger.warning("fetch_mark_price failed for %s: %s", symbol, exc)
+            return None
+
     def _handle_amend_sl_qty(self, symbol: str, side: str) -> AdapterResult:
         close_side = "sell" if side == "LONG" else "buy"
         position_idx = 1 if side == "LONG" else 2

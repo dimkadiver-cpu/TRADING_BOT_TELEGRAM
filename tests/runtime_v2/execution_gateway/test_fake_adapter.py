@@ -37,3 +37,19 @@ def test_normal_order_is_not_immediately_filled():
     )
     assert order is not None
     assert order.is_filled is False
+
+
+def test_fake_adapter_fetch_mark_price_configured():
+    adapter = FakeAdapter(mark_prices={"BTC/USDT": 50000.0})
+    assert adapter.fetch_mark_price("BTC/USDT", "acc1") == 50000.0
+
+
+def test_fake_adapter_fetch_mark_price_missing_returns_none():
+    adapter = FakeAdapter()
+    assert adapter.fetch_mark_price("BTC/USDT", "acc1") is None
+
+
+def test_fake_adapter_set_mark_price():
+    adapter = FakeAdapter()
+    adapter.set_mark_price("ETH/USDT", 3000.0)
+    assert adapter.fetch_mark_price("ETH/USDT", "acc1") == 3000.0

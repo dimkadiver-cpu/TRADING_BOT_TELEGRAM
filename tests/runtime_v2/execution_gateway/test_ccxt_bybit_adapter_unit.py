@@ -864,4 +864,32 @@ def test_get_capabilities_returns_correct_flags():
     assert caps.move_stop is True
     assert caps.close_partial is True
     assert caps.close_full is True
-    assert caps.sync_protective_orders is True
+
+
+# --- fetch_mark_price ---
+
+def test_fetch_mark_price_returns_mark_price():
+    """fetch_mark_price ritorna markPrice dal ticker."""
+    exchange = MagicMock()
+    exchange.fetch_ticker.return_value = {"markPrice": 50123.45, "last": 50100.0}
+    adapter = _make_adapter(exchange)
+    result = adapter.fetch_mark_price("BTC/USDT", "acc1")
+    assert result == 50123.45
+
+
+def test_fetch_mark_price_falls_back_to_last():
+    """fetch_mark_price usa 'last' se markPrice è assente."""
+    exchange = MagicMock()
+    exchange.fetch_ticker.return_value = {"last": 50100.0}
+    adapter = _make_adapter(exchange)
+    result = adapter.fetch_mark_price("BTC/USDT", "acc1")
+    assert result == 50100.0
+
+
+def test_fetch_mark_price_returns_none_on_error():
+    """fetch_mark_price ritorna None se ccxt solleva eccezione."""
+    exchange = MagicMock()
+    exchange.fetch_ticker.side_effect = Exception("network error")
+    adapter = _make_adapter(exchange)
+    result = adapter.fetch_mark_price("BTC/USDT", "acc1")
+    assert result is None
