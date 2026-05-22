@@ -177,16 +177,34 @@ class BybitOrderBuilder:
         entry_type = payload["entry_type"]
         price = float(payload["price"]) if entry_type == "LIMIT" and payload.get("price") else None
         tpsl = payload["attached_tpsl"]
+        mode = tpsl.get("mode", "FULL")
+
         # positionIdx is not set here — build() sets it from hedge_mode kwarg, same as _place_entry
-        extra = {
-            "takeProfit": float(tpsl["take_profit"]),
-            "stopLoss": float(tpsl["stop_loss"]),
-            "tpslMode": "Full",
-            "tpOrderType": "Market",
+        extra: dict = {
             "slOrderType": "Market",
-            "tpTriggerBy": tpsl.get("tp_trigger_by", "MarkPrice"),
             "slTriggerBy": tpsl.get("sl_trigger_by", "MarkPrice"),
         }
+
+        if mode == "SL_ONLY":
+            extra["stopLoss"] = float(tpsl["stop_loss"])
+        elif mode == "PARTIAL_TP":
+            extra.update({
+                "takeProfit": float(tpsl["take_profit"]),
+                "stopLoss": float(tpsl["stop_loss"]),
+                "tpslMode": "Partial",
+                "tpOrderType": "Market",
+                "tpTriggerBy": tpsl.get("tp_trigger_by", "MarkPrice"),
+                "tpSize": str(float(tpsl["tp_qty"])),
+            })
+        else:  # "FULL"
+            extra.update({
+                "takeProfit": float(tpsl["take_profit"]),
+                "stopLoss": float(tpsl["stop_loss"]),
+                "tpslMode": "Full",
+                "tpOrderType": "Market",
+                "tpTriggerBy": tpsl.get("tp_trigger_by", "MarkPrice"),
+            })
+
         return BybitOrderParams(
             action="create_order",
             symbol=payload["symbol"],
@@ -217,18 +235,20 @@ class BybitOrderBuilder:
 
     def _set_position_tpsl_partial(self, payload: dict) -> BybitOrderParams:
         tp_order_type = payload.get("tp_order_type", "Limit")
+        preserve_sl = bool(payload.get("preserve_sl", False))
         extra: dict = {
             "positionIdx": int(payload.get("position_idx", 0)),
             "tpslMode": "Partial",
             "takeProfit": str(float(payload["take_profit"])),
-            "stopLoss": str(float(payload["stop_loss"])),
             "tpSize": str(float(payload["tp_size"])),
-            "slSize": str(float(payload["sl_size"])),
             "tpOrderType": tp_order_type,
-            "slOrderType": payload.get("sl_order_type", "Market"),
             "tpTriggerBy": payload.get("tp_trigger_by", "MarkPrice"),
-            "slTriggerBy": payload.get("sl_trigger_by", "MarkPrice"),
         }
+        if not preserve_sl:
+            extra["stopLoss"] = str(float(payload["stop_loss"]))
+            extra["slSize"] = str(float(payload["sl_size"]))
+            extra["slOrderType"] = payload.get("sl_order_type", "Market")
+            extra["slTriggerBy"] = payload.get("sl_trigger_by", "MarkPrice")
         if tp_order_type == "Limit" and payload.get("tp_limit_price"):
             extra["tpLimitPrice"] = str(float(payload["tp_limit_price"]))
         return BybitOrderParams(

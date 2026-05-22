@@ -152,3 +152,122 @@ def test_move_position_stop():
     assert params.extra_params["positionIdx"] == 0
     # takeProfit must not be present (we only want to move stop, not affect TP)
     assert "takeProfit" not in params.extra_params
+
+
+# ── PLACE_ENTRY_WITH_ATTACHED_TPSL — nuovi modi ──────────────────────────────
+
+def test_place_entry_attached_sl_only():
+    """SL_ONLY: solo stopLoss nel payload Bybit, nessun takeProfit/tpslMode."""
+    params = _b().build(
+        "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        {
+            "symbol": "BTC/USDT:USDT", "side": "LONG",
+            "entry_type": "LIMIT", "price": 65000.0, "qty": 0.01,
+            "leverage": 5, "hedge_mode": False, "position_idx": 0,
+            "attached_tpsl": {
+                "mode": "SL_ONLY",
+                "stop_loss": 63000.0,
+                "sl_trigger_by": "MarkPrice",
+            },
+        },
+        "tsb:1:1:entry:1",
+    )
+    assert params.action == "create_order"
+    assert params.extra_params["stopLoss"] == 63000.0
+    assert "takeProfit" not in params.extra_params
+    assert "tpslMode" not in params.extra_params
+    assert params.extra_params["slOrderType"] == "Market"
+    assert params.extra_params["slTriggerBy"] == "MarkPrice"
+
+
+def test_place_entry_attached_partial_tp():
+    """PARTIAL_TP: SL full + TP parziale con tpSize."""
+    params = _b().build(
+        "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        {
+            "symbol": "BTC/USDT:USDT", "side": "LONG",
+            "entry_type": "LIMIT", "price": 65000.0, "qty": 0.01,
+            "leverage": 5, "hedge_mode": False, "position_idx": 0,
+            "attached_tpsl": {
+                "mode": "PARTIAL_TP",
+                "stop_loss": 63000.0,
+                "take_profit": 70000.0,
+                "tp_qty": 0.005,
+                "tp_trigger_by": "MarkPrice",
+                "sl_trigger_by": "MarkPrice",
+            },
+        },
+        "tsb:1:1:entry:1",
+    )
+    assert params.extra_params["tpslMode"] == "Partial"
+    assert params.extra_params["takeProfit"] == 70000.0
+    assert params.extra_params["stopLoss"] == 63000.0
+    assert params.extra_params["tpSize"] == "0.005"
+    assert params.extra_params["tpTriggerBy"] == "MarkPrice"
+    assert params.extra_params["slTriggerBy"] == "MarkPrice"
+
+
+def test_place_entry_attached_full_mode_unchanged():
+    """FULL mode (o mode assente): comportamento invariato rispetto al test esistente."""
+    params = _b().build(
+        "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        {
+            "symbol": "BTC/USDT:USDT", "side": "LONG",
+            "entry_type": "LIMIT", "price": 65000.0, "qty": 0.01,
+            "leverage": 5, "hedge_mode": False, "position_idx": 0,
+            "attached_tpsl": {
+                "mode": "FULL",
+                "take_profit": 70000.0,
+                "stop_loss": 63000.0,
+                "tp_trigger_by": "MarkPrice",
+                "sl_trigger_by": "MarkPrice",
+            },
+        },
+        "tsb:1:1:entry:1",
+    )
+    assert params.extra_params["tpslMode"] == "Full"
+    assert params.extra_params["takeProfit"] == 70000.0
+    assert params.extra_params["stopLoss"] == 63000.0
+    assert "tpSize" not in params.extra_params
+
+
+# ── SET_POSITION_TPSL_PARTIAL — preserve_sl ──────────────────────────────────
+
+def test_set_position_tpsl_partial_preserve_sl_omits_sl_fields():
+    """preserve_sl=True: stopLoss e slSize assenti dal payload Bybit."""
+    params = _b().build(
+        "SET_POSITION_TPSL_PARTIAL",
+        {
+            "symbol": "BTC/USDT:USDT", "side": "LONG",
+            "position_idx": 0, "tp_sequence": 1,
+            "take_profit": 70000.0, "tp_size": 0.005,
+            "tp_order_type": "Limit", "tp_limit_price": 70000.0,
+            "tp_trigger_by": "MarkPrice",
+            "preserve_sl": True,
+        },
+        "tsb:1:1:tp:1",
+    )
+    assert params.action == "trading_stop_partial"
+    assert params.extra_params["takeProfit"] == "70000.0"
+    assert params.extra_params["tpSize"] == "0.005"
+    assert "stopLoss" not in params.extra_params
+    assert "slSize" not in params.extra_params
+    assert "slOrderType" not in params.extra_params
+
+
+def test_set_position_tpsl_partial_default_includes_sl():
+    """preserve_sl assente (default False): stopLoss e slSize presenti."""
+    params = _b().build(
+        "SET_POSITION_TPSL_PARTIAL",
+        {
+            "symbol": "BTC/USDT:USDT", "side": "LONG",
+            "position_idx": 0, "tp_sequence": 1,
+            "take_profit": 70000.0, "stop_loss": 63000.0,
+            "tp_size": 0.005, "sl_size": 0.005,
+            "tp_order_type": "Limit", "tp_limit_price": 70000.0,
+            "tp_trigger_by": "MarkPrice", "sl_trigger_by": "MarkPrice",
+        },
+        "tsb:1:1:tp:1",
+    )
+    assert "stopLoss" in params.extra_params
+    assert "slSize" in params.extra_params
