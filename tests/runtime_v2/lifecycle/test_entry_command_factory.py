@@ -149,3 +149,29 @@ def test_attached_block_trigger_fields():
     p = json.loads(cmds[0].payload_json)
     assert p["attached_tpsl"]["sl_trigger_by"] == "MarkPrice"
     assert p["attached_tpsl"]["tp_trigger_by"] == "MarkPrice"
+
+
+def test_deferred_leg_raises_if_sl_none():
+    from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
+    with pytest.raises(ValueError, match="sl_price required for deferred"):
+        EntryCommandFactory().build_entry_commands(
+            enrichment_id=99, symbol="BTC/USDT", side="LONG",
+            entries=[_leg(1, "MARKET", None, 1.0)],
+            take_profits=[],
+            sl_price=None,
+            leverage=10, hedge_mode=False, position_idx=0,
+            risk_snapshot={"legs": [_snap(1, "MARKET", None, 100.0, None, "deferred_market", 1.0)]},
+        )
+
+
+def test_attached_block_raises_if_sl_none():
+    from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
+    with pytest.raises(ValueError, match="sl_price required for attached"):
+        EntryCommandFactory().build_entry_commands(
+            enrichment_id=99, symbol="BTC/USDT", side="LONG",
+            entries=[_leg(1, "LIMIT", 50000.0, 1.0)],
+            take_profits=[],
+            sl_price=None,
+            leverage=10, hedge_mode=False, position_idx=0,
+            risk_snapshot={"legs": [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)]},
+        )

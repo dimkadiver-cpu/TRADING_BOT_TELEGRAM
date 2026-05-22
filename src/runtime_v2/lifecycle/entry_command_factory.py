@@ -70,13 +70,22 @@ class EntryCommandFactory:
             # Quantity fields
             if is_deferred:
                 payload["qty_mode"] = "deferred_market"
-                payload["risk_amount"] = float(snap.get("risk_amount") or 0.0)
+                risk_raw = snap.get("risk_amount")
+                if risk_raw is None:
+                    raise ValueError(
+                        f"risk_amount missing in risk snapshot for deferred leg sequence={leg.sequence}"
+                    )
+                payload["risk_amount"] = float(risk_raw)
                 if sl_price is None:
                     raise ValueError("sl_price required for deferred legs")
                 payload["sl_price"] = sl_price  # always needed for qty at fill time
             else:
-                qty_val = float(snap.get("qty") or 0.0)
-                payload["qty"] = qty_val
+                qty_raw = snap.get("qty")
+                if qty_raw is None:
+                    raise ValueError(
+                        f"qty missing in risk snapshot for fixed leg sequence={leg.sequence}"
+                    )
+                payload["qty"] = float(qty_raw)
 
             if is_attached:
                 if sl_price is None:
