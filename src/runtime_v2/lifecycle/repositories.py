@@ -15,7 +15,9 @@ _CHAIN_COLS = (
     "trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
     "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
     "entry_avg_price, current_stop_price, expected_stop_price, be_protection_status, "
-    "entry_timeout_at, management_plan_json, risk_snapshot_json, created_at, updated_at"
+    "entry_timeout_at, management_plan_json, risk_snapshot_json, "
+    "planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty, "
+    "last_position_sync_at, execution_mode, plan_state_json, created_at, updated_at"
 )
 
 
@@ -27,7 +29,9 @@ def _chain_from_row(row: tuple) -> TradeChain:
     (trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id,
      trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
      entry_avg_price, current_stop_price, expected_stop_price, be_protection_status,
-     entry_timeout_at, management_plan_json, risk_snapshot_json, created_at, updated_at) = row
+     entry_timeout_at, management_plan_json, risk_snapshot_json,
+     planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty,
+     last_position_sync_at, execution_mode, plan_state_json, created_at, updated_at) = row
     return TradeChain(
         trade_chain_id=trade_chain_id,
         source_enrichment_id=source_enrichment_id,
@@ -46,6 +50,16 @@ def _chain_from_row(row: tuple) -> TradeChain:
         entry_timeout_at=datetime.fromisoformat(entry_timeout_at) if entry_timeout_at else None,
         management_plan_json=management_plan_json or "{}",
         risk_snapshot_json=risk_snapshot_json or "{}",
+        planned_entry_qty=planned_entry_qty or 0.0,
+        filled_entry_qty=filled_entry_qty or 0.0,
+        open_position_qty=open_position_qty or 0.0,
+        closed_position_qty=closed_position_qty or 0.0,
+        last_position_sync_at=(
+            datetime.fromisoformat(last_position_sync_at)
+            if last_position_sync_at else None
+        ),
+        execution_mode=execution_mode or "a_sequential",
+        plan_state_json=plan_state_json or "{}",
         created_at=datetime.fromisoformat(created_at) if created_at else None,
         updated_at=datetime.fromisoformat(updated_at) if updated_at else None,
     )
@@ -66,8 +80,10 @@ class TradeChainRepository:
                     trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
                     entry_avg_price, current_stop_price, expected_stop_price,
                     be_protection_status, entry_timeout_at, management_plan_json,
-                    risk_snapshot_json, created_at, updated_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    risk_snapshot_json, planned_entry_qty, filled_entry_qty,
+                    open_position_qty, closed_position_qty, last_position_sync_at,
+                    execution_mode, plan_state_json, created_at, updated_at
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     chain.source_enrichment_id, chain.canonical_message_id, chain.raw_message_id,
@@ -76,7 +92,11 @@ class TradeChainRepository:
                     chain.entry_avg_price, chain.current_stop_price, chain.expected_stop_price,
                     chain.be_protection_status,
                     chain.entry_timeout_at.isoformat() if chain.entry_timeout_at else None,
-                    chain.management_plan_json, chain.risk_snapshot_json, now, now,
+                    chain.management_plan_json, chain.risk_snapshot_json,
+                    chain.planned_entry_qty, chain.filled_entry_qty,
+                    chain.open_position_qty, chain.closed_position_qty,
+                    chain.last_position_sync_at.isoformat() if chain.last_position_sync_at else None,
+                    chain.execution_mode, chain.plan_state_json, now, now,
                 ),
             )
             conn.commit()
@@ -264,7 +284,8 @@ class ExecutionCommandRepository:
         try:
             row = conn.execute(
                 "SELECT client_order_id FROM ops_execution_commands "
-                "WHERE trade_chain_id=? AND command_type='PLACE_ENTRY' "
+                "WHERE trade_chain_id=? "
+                "AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL') "
                 "AND client_order_id IS NOT NULL LIMIT 1",
                 (trade_chain_id,),
             ).fetchone()
