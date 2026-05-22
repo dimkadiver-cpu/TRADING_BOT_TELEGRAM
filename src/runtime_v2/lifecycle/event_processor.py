@@ -13,6 +13,29 @@ from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
 
 logger = logging.getLogger(__name__)
 
+_ATTACHED_PROTECTION_MODES = frozenset({
+    "C_SIMPLE_ATTACHED", "C_MULTI_TP",
+    "D_MULTI_ENTRY_1TP", "D_MULTI_ENTRY_MULTI_TP", "D_POSITION_TPSL",
+})
+
+
+def _be_move_extra(chain: TradeChain) -> dict:
+    try:
+        rs = json.loads(chain.risk_snapshot_json or "{}")
+        hedge_mode = bool(rs.get("hedge_mode", False))
+    except Exception:
+        hedge_mode = False
+    if not hedge_mode:
+        position_idx = 0
+    else:
+        position_idx = 1 if chain.side == "LONG" else 2
+    protection_style = (
+        "attached_full"
+        if chain.execution_mode in _ATTACHED_PROTECTION_MODES
+        else "standalone_order"
+    )
+    return {"protection_style": protection_style, "position_idx": position_idx}
+
 
 @dataclass
 class EventProcessorResult:
@@ -229,6 +252,7 @@ class LifecycleEventProcessor:
                             "symbol": chain.symbol, "side": chain.side,
                             "target_price": chain.entry_avg_price,
                             "be_buffer_pct": mp.be_buffer_pct,
+                            **_be_move_extra(chain),
                         }
                         commands.append(ExecutionCommand(
                             trade_chain_id=chain_id,
