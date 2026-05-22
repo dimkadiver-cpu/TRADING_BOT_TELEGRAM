@@ -126,6 +126,17 @@ class ExecutionGateway:
             }
             payload["qty"] = computed_qty
 
+        # Cancel previous SET_POSITION_TPSL_PARTIAL commands for this chain when superseded
+        if (
+            cmd.command_type == "SET_POSITION_TPSL_PARTIAL"
+            and payload.get("supersedes_previous")
+            and cmd.command_id is not None
+        ):
+            self._repo.cancel_tp_partial_commands(
+                cmd.trade_chain_id, exclude_command_id=cmd.command_id
+            )
+            payload = {k: v for k, v in payload.items() if k != "supersedes_previous"}
+
         # Set leverage once per account+symbol — leverage comes from payload (set by LifecycleEntryGate)
         leverage = int(payload.get("leverage", 1))
         position_idx = int(payload.get("position_idx", 0))

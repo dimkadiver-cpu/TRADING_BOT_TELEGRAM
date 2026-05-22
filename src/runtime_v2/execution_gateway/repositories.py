@@ -282,5 +282,20 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def cancel_tp_partial_commands(self, trade_chain_id: int, exclude_command_id: int) -> None:
+        """Marks CANCELLED all active SET_POSITION_TPSL_PARTIAL for the chain except the current one."""
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            conn.execute(
+                "UPDATE ops_execution_commands SET status='CANCELLED', updated_at=? "
+                "WHERE trade_chain_id=? AND command_type='SET_POSITION_TPSL_PARTIAL' "
+                "AND status IN ('PENDING','SENT','ACK') AND command_id != ?",
+                (now, trade_chain_id, exclude_command_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
 
 __all__ = ["GatewayCommandRepository"]

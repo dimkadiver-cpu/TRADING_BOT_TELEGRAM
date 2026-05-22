@@ -343,3 +343,51 @@ def test_deferred_market_no_mark_price_marks_review_required(ops_db):
     conn.close()
     assert row[0] == "REVIEW_REQUIRED"
     assert "deferred_market_no_mark_price" in (row[1] or "")
+
+
+def test_supersedes_previous_cancels_old_tp_partial_commands(ops_db):
+    """supersedes_previous=True: i vecchi SET_POSITION_TPSL_PARTIAL PENDING per la chain
+    vengono marcati CANCELLED prima dell'invio del nuovo comando."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 3001, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 70000.0,
+                         "tp_size": 0.007, "tp_order_type": "Limit",
+                         "tp_limit_price": 70000.0, "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True})
+    _insert_cmd(ops_db, 3002, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 75000.0,
+                         "tp_size": 0.003, "tp_order_type": "Limit",
+                         "tp_limit_price": 75000.0, "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True})
+    _insert_cmd(ops_db, 3003, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG",
+                         "take_profit": 70000.0, "tp_size": 0.01,
+                         "tp_order_type": "Limit", "tp_limit_price": 70000.0,
+                         "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True,
+                         "supersedes_previous": True})
+
+    repo = GatewayCommandRepository(ops_db)
+    cmd = repo.get_pending_batch()[-1]  # command 3003 (most recent)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    statuses = {
+        r[0]: r[1] for r in conn.execute(
+            "SELECT command_id, status FROM ops_execution_commands "
+            "WHERE command_id IN (3001, 3002, 3003)"
+        ).fetchall()
+    }
+    conn.close()
+    assert statuses[3001] == "CANCELLED"
+    assert statuses[3002] == "CANCELLED"
+    assert statuses[3003] in ("SENT", "ACK", "DONE")
