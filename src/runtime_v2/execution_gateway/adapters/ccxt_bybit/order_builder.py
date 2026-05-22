@@ -165,6 +165,18 @@ class BybitOrderBuilder:
         else:
             new_trigger_price = float(payload["new_stop_price"])
 
+        protection_style = payload.get("protection_style", "standalone_order")
+        if protection_style == "attached_full":
+            return BybitOrderParams(
+                action="trading_stop_move_sl",
+                symbol=payload["symbol"],
+                position_side=payload["side"],
+                extra_params={
+                    "positionIdx": int(payload.get("position_idx", 0)),
+                    "stopLoss": str(new_trigger_price),
+                },
+            )
+
         return BybitOrderParams(
             action="edit_sl",
             symbol=payload["symbol"],
