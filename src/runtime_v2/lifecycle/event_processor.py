@@ -96,6 +96,9 @@ class LifecycleEventProcessor:
         fill_price = float(payload.get("fill_price") or 0.0)
         fill_qty = float(payload.get("filled_qty") or 0.0)
         filled_client_order_id = payload.get("entry_client_order_id")
+        filled_command_payload = payload.get("entry_command_payload")
+        if not isinstance(filled_command_payload, dict):
+            filled_command_payload = None
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
 
@@ -161,6 +164,7 @@ class LifecycleEventProcessor:
         new_plan_state_json = self._mark_entry_leg_status(
             chain.plan_state_json,
             client_order_ids=[filled_client_order_id] if filled_client_order_id else [],
+            command_payload=filled_command_payload,
             new_status="FILLED",
             fallback_first_pending=True,
         )
@@ -185,6 +189,7 @@ class LifecycleEventProcessor:
         plan_state_json: str,
         *,
         client_order_ids: list[str],
+        command_payload: dict | None = None,
         new_status: str,
         fallback_first_pending: bool = False,
     ) -> str | None:
@@ -203,6 +208,11 @@ class LifecycleEventProcessor:
             if leg.get("client_order_id") in client_order_ids
             and leg.get("status") == "PENDING"
         ]
+        if not target_legs and command_payload:
+            target_legs = self._match_pending_legs_by_command_payload(
+                legs,
+                command_payload,
+            )
         if not target_legs and fallback_first_pending:
             pending_legs = [leg for leg in legs if leg.get("status") == "PENDING"]
             target_legs = pending_legs if len(pending_legs) == 1 else []
@@ -217,6 +227,43 @@ class LifecycleEventProcessor:
                 new_status,
             )
         return updated
+
+    def _match_pending_legs_by_command_payload(
+        self,
+        legs: list[dict],
+        command_payload: dict,
+    ) -> list[dict]:
+        pending_legs = [leg for leg in legs if leg.get("status") == "PENDING"]
+        sequence = command_payload.get("sequence")
+        if sequence is not None:
+            try:
+                seq_int = int(sequence)
+            except (TypeError, ValueError):
+                seq_int = None
+            if seq_int is not None:
+                matches = [leg for leg in pending_legs if leg.get("sequence") == seq_int]
+                if len(matches) == 1:
+                    return matches
+
+        entry_type = command_payload.get("entry_type")
+        price = command_payload.get("price")
+        qty = command_payload.get("qty")
+
+        def _same_number(left, right) -> bool:
+            if left is None or right is None:
+                return left is right
+            try:
+                return abs(float(left) - float(right)) <= 1e-9
+            except (TypeError, ValueError):
+                return left == right
+
+        matches = [
+            leg for leg in pending_legs
+            if (entry_type is None or leg.get("entry_type") == entry_type)
+            and _same_number(leg.get("price"), price)
+            and _same_number(leg.get("qty"), qty)
+        ]
+        return matches if len(matches) == 1 else []
 
     def _process_tp_filled(
         self,
@@ -461,6 +508,7 @@ class LifecycleEventProcessor:
         new_plan_state_json = self._mark_entry_leg_status(
             chain.plan_state_json,
             client_order_ids=cancelled_order_ids,
+            command_payload=None,
             new_status="CANCELLED",
         )
         return EventProcessorResult(

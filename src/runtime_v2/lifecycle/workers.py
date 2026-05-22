@@ -38,14 +38,14 @@ def _load_pending_entry_client_order_ids(conn: sqlite3.Connection, chain_id: int
     return [str(row[0]) for row in rows if row and row[0]]
 
 
-def _load_entry_client_order_id_for_command(
+def _load_entry_command_for_command(
     conn: sqlite3.Connection,
     chain_id: int,
     command_id: int,
-) -> str | None:
+) -> tuple[str | None, dict | None]:
     row = conn.execute(
         """
-        SELECT client_order_id
+        SELECT client_order_id, payload_json
         FROM ops_execution_commands
         WHERE trade_chain_id = ?
           AND command_id = ?
@@ -55,7 +55,14 @@ def _load_entry_client_order_id_for_command(
         """,
         (chain_id, command_id),
     ).fetchone()
-    return str(row[0]) if row and row[0] else None
+    if not row:
+        return None, None
+    payload: dict | None
+    try:
+        payload = json.loads(row[1] or "{}")
+    except Exception:
+        payload = None
+    return (str(row[0]) if row[0] else None), payload
 
 
 def _with_entry_client_order_id_from_command(
@@ -80,17 +87,20 @@ def _with_entry_client_order_id_from_command(
 
     conn = sqlite3.connect(ops_db_path)
     try:
-        client_order_id = _load_entry_client_order_id_for_command(
+        client_order_id, command_payload = _load_entry_command_for_command(
             conn,
             int(exchange_event.trade_chain_id),
             command_id,
         )
     finally:
         conn.close()
-    if not client_order_id:
+    if not client_order_id and not command_payload:
         return exchange_event
 
-    payload["entry_client_order_id"] = client_order_id
+    if client_order_id:
+        payload["entry_client_order_id"] = client_order_id
+    if command_payload:
+        payload["entry_command_payload"] = command_payload
     return exchange_event.model_copy(update={"payload_json": json.dumps(payload)})
 
 

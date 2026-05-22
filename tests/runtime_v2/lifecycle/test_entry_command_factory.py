@@ -63,7 +63,10 @@ def test_2a_multi_limit_1tp_leg1_attached_leg2_plain():
     assert len(cmds) == 2
     assert cmds[0].command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
     assert cmds[1].command_type == "PLACE_ENTRY"
+    p0 = json.loads(cmds[0].payload_json)
     p2 = json.loads(cmds[1].payload_json)
+    assert p0["sequence"] == 1
+    assert p2["sequence"] == 2
     assert "attached_tpsl" not in p2
     assert cmds[1].idempotency_key == "place_entry:3:leg2"
 

@@ -60,6 +60,7 @@ class EntryCommandFactory:
             payload: dict = {
                 "symbol": symbol,
                 "side": side,
+                "sequence": leg.sequence,
                 "entry_type": leg.entry_type,
                 "price": leg.price.value if leg.entry_type == "LIMIT" and leg.price else None,
                 "leverage": leverage,
