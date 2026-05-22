@@ -646,6 +646,62 @@ def test_update_move_to_be_payload_uses_target_price_and_buffer_pct():
     assert payload["be_buffer_pct"] == 0.01
 
 
+def test_update_move_to_be_payload_contains_protection_style_standalone_for_sequential():
+    """Manual BE move on a_sequential chain → protection_style='standalone_order'."""
+    gate = _make_gate()
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    chain = _make_open_chain(entry_avg_price=50000.0)
+    chain = chain.model_copy(update={
+        "execution_mode": "a_sequential",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["protection_style"] == "standalone_order"
+    assert "position_idx" in payload
+
+
+def test_update_move_to_be_payload_contains_protection_style_attached_for_c_multi_tp():
+    """Manual BE move on C_MULTI_TP chain → protection_style='attached_full'."""
+    gate = _make_gate()
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    chain = _make_open_chain(entry_avg_price=50000.0)
+    chain = chain.model_copy(update={
+        "execution_mode": "C_MULTI_TP",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["protection_style"] == "attached_full"
+    assert "position_idx" in payload
+
+
+def test_update_move_to_be_payload_position_idx_zero_for_one_way_mode():
+    """Manual BE move with hedge_mode=false → position_idx=0 regardless of execution_mode."""
+    gate = _make_gate()
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    chain = _make_open_chain(entry_avg_price=50000.0, side="LONG")
+    chain = chain.model_copy(update={
+        "execution_mode": "C_MULTI_TP",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["position_idx"] == 0
+
+
 def test_process_signal_writes_execution_mode_to_chain():
     gate = _make_gate_with_mode("b_entry_stop_then_tp")
     enriched = _make_enriched_signal_for_mode()
@@ -1246,3 +1302,214 @@ def test_lifecycle_gate_worker_expands_cancel_pending_for_each_active_entry_leg(
         "tsb:1:2:entry:2:bbb",
     }
     assert len({row[1] for row in cancel_rows}) == 2
+
+
+# ── UNIFIED_PLAN path tests ────────────────────────────────────────────────────
+
+def _make_risk_decision_with_legs(
+    size_usdt: float = 500.0,
+    entry_price: float = 50000.0,
+    legs: list[dict] | None = None,
+):
+    """Risk decision that includes per-leg qty snapshots required by EntryCommandFactory."""
+    from src.runtime_v2.lifecycle.risk_capacity import RiskDecision
+    if legs is None:
+        legs = [{"sequence": 1, "qty": size_usdt / entry_price}]
+    return RiskDecision(
+        passed=True,
+        reason=None,
+        size_usdt=size_usdt,
+        leverage=10,
+        risk_snapshot={
+            "entry_price": entry_price,
+            "size_usdt": size_usdt,
+            "leverage": 10,
+            "legs": legs,
+        },
+    )
+
+
+def _make_gate_unified(simple_attached_enabled: bool = True):
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(),
+        simple_attached_enabled=simple_attached_enabled,
+    )
+    gate._risk.validate = lambda *a, **kw: _make_risk_decision_with_legs()
+    return gate
+
+
+def _make_enriched_signal_unified(
+    tp_count: int = 1,
+    entry_count: int = 1,
+    *,
+    sl_price: float = 49000.0,
+):
+    """Enriched signal for UNIFIED_PLAN path tests."""
+    from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+    from src.runtime_v2.signal_enrichment.models import (
+        EnrichedCanonicalMessage, EnrichedEntryLeg,
+        EnrichedSignalPayload, ManagementPlanConfig,
+    )
+
+    entries = [
+        EnrichedEntryLeg(
+            sequence=i + 1, entry_type="LIMIT",
+            price=Price(raw=str(50000 - i * 500), value=50000.0 - i * 500),
+            weight=round(1.0 / entry_count, 6),
+        )
+        for i in range(entry_count)
+    ]
+    tps = [
+        TakeProfit(sequence=i + 1, price=Price(raw=str(51000 + i * 1000), value=51000.0 + i * 1000))
+        for i in range(tp_count)
+    ]
+    sl = StopLoss(price=Price(raw=str(sl_price), value=sl_price))
+    signal = EnrichedSignalPayload(
+        symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT" if entry_count == 1 else "TWO_STEP",
+        entries=entries, take_profits=tps, stop_loss=sl,
+    )
+    return EnrichedCanonicalMessage(
+        enrichment_id=1, canonical_message_id=2, raw_message_id=3,
+        trader_id="t1", account_id="acc1",
+        primary_class="SIGNAL", enrichment_decision="PASS",
+        enriched_signal=signal, management_plan=ManagementPlanConfig(),
+        policy_snapshot={},
+    )
+
+
+def test_unified_plan_single_entry_single_tp_emits_place_entry_with_attached_tpsl():
+    """1 entry, 1 TP → single PLACE_ENTRY_WITH_ATTACHED_TPSL command, no extra TP commands."""
+    gate = _make_gate_unified()
+    enriched = _make_enriched_signal_unified(tp_count=1, entry_count=1)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
+    cmd_types = [c.command_type for c in result.execution_commands]
+    assert cmd_types == ["PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    payload = json.loads(result.execution_commands[0].payload_json)
+    assert payload["attached_tpsl"]["stop_loss"] == 49000.0
+    assert payload["attached_tpsl"]["take_profit"] == 51000.0
+    assert payload["attached_tpsl"]["mode"] == "FULL"
+
+
+def test_unified_plan_single_entry_multi_tp_no_intermediate_tp_commands():
+    """1 entry, 2 TPs → only 1 PLACE_ENTRY_WITH_ATTACHED_TPSL, final TP attached, no intermediate commands."""
+    gate = _make_gate_unified()
+    gate._risk.validate = lambda *a, **kw: _make_risk_decision_with_legs(
+        legs=[{"sequence": 1, "qty": 0.01}],
+    )
+    enriched = _make_enriched_signal_unified(tp_count=2, entry_count=1)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
+    cmd_types = [c.command_type for c in result.execution_commands]
+    # Only one command — no intermediate TP placement at signal time
+    assert cmd_types == ["PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    payload = json.loads(result.execution_commands[0].payload_json)
+    # Final TP (highest sequence) is attached
+    assert payload["attached_tpsl"]["take_profit"] == 52000.0
+    assert payload["attached_tpsl"]["stop_loss"] == 49000.0
+
+
+def test_unified_plan_multi_entry_single_tp_leg1_attached_legs2plus_plain():
+    """2 entries, 1 TP → leg 1 = PLACE_ENTRY_WITH_ATTACHED_TPSL, leg 2 = PLACE_ENTRY (no TPSL)."""
+    gate = _make_gate_unified()
+    gate._risk.validate = lambda *a, **kw: _make_risk_decision_with_legs(
+        legs=[{"sequence": 1, "qty": 0.005}, {"sequence": 2, "qty": 0.005}],
+    )
+    enriched = _make_enriched_signal_unified(tp_count=1, entry_count=2)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
+    cmd_types = [c.command_type for c in result.execution_commands]
+    assert cmd_types == ["PLACE_ENTRY_WITH_ATTACHED_TPSL", "PLACE_ENTRY"]
+    # Leg 1 has attached TPSL
+    leg1_payload = json.loads(result.execution_commands[0].payload_json)
+    assert "attached_tpsl" in leg1_payload
+    assert leg1_payload["attached_tpsl"]["stop_loss"] == 49000.0
+    # Leg 2 has no attached TPSL
+    leg2_payload = json.loads(result.execution_commands[1].payload_json)
+    assert "attached_tpsl" not in leg2_payload
+
+
+def test_unified_plan_multi_entry_multi_tp_leg1_attached_final_tp_legs2plus_plain():
+    """2 entries, 2 TPs → leg 1 = PLACE_ENTRY_WITH_ATTACHED_TPSL with final TP, leg 2 = PLACE_ENTRY."""
+    gate = _make_gate_unified()
+    gate._risk.validate = lambda *a, **kw: _make_risk_decision_with_legs(
+        legs=[{"sequence": 1, "qty": 0.005}, {"sequence": 2, "qty": 0.005}],
+    )
+    enriched = _make_enriched_signal_unified(tp_count=2, entry_count=2)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
+    cmd_types = [c.command_type for c in result.execution_commands]
+    assert cmd_types == ["PLACE_ENTRY_WITH_ATTACHED_TPSL", "PLACE_ENTRY"]
+    leg1_payload = json.loads(result.execution_commands[0].payload_json)
+    # Final TP (sequence 2 = 52000.0) attached to leg 1
+    assert leg1_payload["attached_tpsl"]["take_profit"] == 52000.0
+    assert leg1_payload["attached_tpsl"]["stop_loss"] == 49000.0
+
+
+def test_unified_plan_no_sl_falls_through_to_d_position_tpsl():
+    """When sl_price is None, UNIFIED_PLAN is not selected — chain gets D_POSITION_TPSL."""
+    from src.parser_v2.contracts.entities import Price, TakeProfit
+    from src.runtime_v2.signal_enrichment.models import (
+        EnrichedCanonicalMessage, EnrichedEntryLeg,
+        EnrichedSignalPayload, ManagementPlanConfig,
+    )
+    from src.runtime_v2.lifecycle.risk_capacity import RiskDecision
+
+    gate = _make_gate_unified()
+    entries = [EnrichedEntryLeg(
+        sequence=1, entry_type="LIMIT",
+        price=Price(raw="50000", value=50000.0), weight=1.0,
+    )]
+    tps = [TakeProfit(sequence=1, price=Price(raw="51000", value=51000.0))]
+    signal = EnrichedSignalPayload(
+        symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+        entries=entries, take_profits=tps, stop_loss=None,  # no SL
+    )
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=5, canonical_message_id=50, raw_message_id=500,
+        trader_id="t1", account_id="acc1",
+        primary_class="SIGNAL", enrichment_decision="PASS",
+        enriched_signal=signal, management_plan=ManagementPlanConfig(),
+        policy_snapshot={},
+    )
+    gate._risk.validate = lambda *a, **kw: RiskDecision(
+        passed=True, reason=None, size_usdt=500.0, leverage=10,
+        risk_snapshot={"entry_price": 50000.0, "size_usdt": 500.0, "leverage": 10},
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason is None
+    assert result.trade_chain.execution_mode == "D_POSITION_TPSL"
+
+
+def test_unified_plan_execution_mode_written_to_chain():
+    """Chain record carries UNIFIED_PLAN execution_mode when path is active."""
+    gate = _make_gate_unified()
+    enriched = _make_enriched_signal_unified(tp_count=1, entry_count=1)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
+
+
+def test_unified_plan_protection_style_attached_full_for_be_move():
+    """BE move on UNIFIED_PLAN chain reports protection_style='attached_full'."""
+    gate = _make_gate()
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    chain = _make_open_chain(entry_avg_price=50000.0)
+    chain = chain.model_copy(update={
+        "execution_mode": "UNIFIED_PLAN",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+    result = gate.process_update(enriched, [chain], {})
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["protection_style"] == "attached_full"

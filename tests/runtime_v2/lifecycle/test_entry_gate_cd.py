@@ -291,7 +291,8 @@ def test_c_mode_sets_execution_mode_on_chain():
     gate = _make_gate(simple_attached_enabled=True)
     enriched = _make_enriched_signal(tp_count=1, entry_count=1)
     result = gate.process_signal(enriched, [], "NONE")
-    assert result.trade_chain.execution_mode == "C_SIMPLE_ATTACHED"
+    # All simple_attached_enabled + SL paths now use UNIFIED_PLAN
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
 
 # ── D Full tests ──────────────────────────────────────────────────────────────
@@ -343,13 +344,15 @@ def test_d_multi_tp_partial_tp_size_equals_sl_size():
 
 
 def test_d_multi_entry_1tp_uses_attached_per_leg():
-    """Multi-entry + 1 TP routes to D_MULTI_ENTRY_1TP producing PLACE_ENTRY_WITH_ATTACHED_TPSL per leg."""
+    """Multi-entry + 1 TP: leg 1 = PLACE_ENTRY_WITH_ATTACHED_TPSL, leg 2+ = PLACE_ENTRY (unified rule)."""
     gate = _make_gate(simple_attached_enabled=True)
     enriched = _make_enriched_signal(tp_count=1, entry_count=2)
     result = gate.process_signal(enriched, [], "NONE")
-    assert result.trade_chain.execution_mode == "D_MULTI_ENTRY_1TP"
-    entry_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
-    assert len(entry_cmds) == 2
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
+    attached_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    plain_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY"]
+    assert len(attached_cmds) == 1   # only leg 1 gets attached TPSL
+    assert len(plain_cmds) == 1      # leg 2 is plain
 
 
 def test_d_sets_execution_mode_on_chain():
@@ -392,13 +395,17 @@ def test_c_mode_market_no_mark_price_produces_deferred_payload():
 
 
 def test_c_multi_tp_market_no_mark_price_produces_deferred_payload():
-    """C_MULTI_TP con MARKET senza mark_price: PLACE_ENTRY_WITH_ATTACHED_TPSL ha qty_mode=deferred_market."""
+    """1 entry MARKET no mark_price + 2 TP: UNIFIED_PLAN, 1 deferred PLACE_ENTRY_WITH_ATTACHED_TPSL.
+
+    Intermediate TPs are NOT emitted at signal time under the unified rule.
+    Only the final (highest-sequence) TP is attached.
+    """
     gate = _make_gate_no_mark(simple_attached_enabled=True)
     enriched = _make_enriched_market_d_multi_tp(sl_price=0.45)
     result = gate.process_signal(enriched, [], "NONE")
 
     assert result.review_reason is None, result.review_reason
-    assert result.trade_chain.execution_mode == "C_MULTI_TP"
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
     entry_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
     assert len(entry_cmds) == 1
     payload = json.loads(entry_cmds[0].payload_json)
@@ -406,40 +413,45 @@ def test_c_multi_tp_market_no_mark_price_produces_deferred_payload():
     assert payload["risk_amount"] > 0
     assert "qty" not in payload
     assert payload["attached_tpsl"]["mode"] == "FULL"
+    # Final TP (sequence 2, price=0.65) is attached; no intermediate TP commands
+    assert payload["attached_tpsl"]["take_profit"] == 0.65
 
+    # No intermediate TP commands — all deferred to post-fill
     tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    assert len(tp_cmds) == 1
-    tp_payload = json.loads(tp_cmds[0].payload_json)
-    assert tp_payload["tp_qty_mode"] == "filled_entry_pct"
-    assert tp_payload["close_pct"] == 50.0
+    assert len(tp_cmds) == 0
 
 
 def test_d_multi_entry_1tp_mixed_market_limit_legs():
-    """D_MULTI_ENTRY_1TP mixed: leg1 MARKET deferred + leg2 LIMIT, entrambi con PLACE_ENTRY_WITH_ATTACHED_TPSL."""
+    """2 entries (MARKET seq=1 deferred + LIMIT seq=2), 1 TP — unified rule applies.
+
+    leg 1 (MARKET, deferred) → PLACE_ENTRY_WITH_ATTACHED_TPSL with qty_mode=deferred_market
+    leg 2 (LIMIT, fixed qty) → PLACE_ENTRY (no attached TPSL)
+    """
     gate = _make_gate_no_mark(simple_attached_enabled=True)
     enriched = _make_enriched_mixed_legs(sl_price=0.45, limit_price=0.48)
     result = gate.process_signal(enriched, [], "NONE")
 
     assert result.review_reason is None, result.review_reason
-    assert result.trade_chain.execution_mode == "D_MULTI_ENTRY_1TP"
-    entry_cmds = sorted(
-        [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"],
-        key=lambda c: json.loads(c.payload_json)["entry_type"],
-    )
-    assert len(entry_cmds) == 2
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
-    # LIMIT leg
-    limit_cmd = next(c for c in entry_cmds if json.loads(c.payload_json)["entry_type"] == "LIMIT")
-    p_limit = json.loads(limit_cmd.payload_json)
-    assert "qty" in p_limit
-    assert p_limit["qty"] > 0
-    assert "qty_mode" not in p_limit
+    attached_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    plain_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_ENTRY"]
+    assert len(attached_cmds) == 1  # leg 1 only
+    assert len(plain_cmds) == 1     # leg 2 only
 
-    # MARKET leg (deferred)
-    market_cmd = next(c for c in entry_cmds if json.loads(c.payload_json)["entry_type"] == "MARKET")
-    p_market = json.loads(market_cmd.payload_json)
-    assert p_market["qty_mode"] == "deferred_market"
-    assert "qty" not in p_market
+    # leg 1 = MARKET, deferred
+    p_leg1 = json.loads(attached_cmds[0].payload_json)
+    assert p_leg1["entry_type"] == "MARKET"
+    assert p_leg1["qty_mode"] == "deferred_market"
+    assert "qty" not in p_leg1
+    assert "attached_tpsl" in p_leg1
+
+    # leg 2 = LIMIT, fixed qty, no attached TPSL
+    p_leg2 = json.loads(plain_cmds[0].payload_json)
+    assert p_leg2["entry_type"] == "LIMIT"
+    assert "qty" in p_leg2
+    assert p_leg2["qty"] > 0
+    assert "attached_tpsl" not in p_leg2
 
 
 def test_c_mode_update_blocked_while_entry_pending():
@@ -494,32 +506,33 @@ def test_c_mode_update_blocked_while_entry_pending():
 
 # ── Routing matrix ────────────────────────────────────────────────────────────
 
-def test_routing_1entry_1tp_uses_c_simple_attached():
+def test_routing_1entry_1tp_uses_unified_plan():
+    """All simple_attached_enabled + SL paths now use UNIFIED_PLAN regardless of entry/TP counts."""
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=1, tp_count=1), [], "NONE")
     assert result.trade_chain is not None
-    assert result.trade_chain.execution_mode == "C_SIMPLE_ATTACHED"
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
 
-def test_routing_1entry_multi_tp_uses_c_multi_tp():
+def test_routing_1entry_multi_tp_uses_unified_plan():
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=1, tp_count=2), [], "NONE")
     assert result.trade_chain is not None
-    assert result.trade_chain.execution_mode == "C_MULTI_TP"
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
 
-def test_routing_multi_entry_1tp_uses_d_multi_entry_1tp():
+def test_routing_multi_entry_1tp_uses_unified_plan():
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=1), [], "NONE")
     assert result.trade_chain is not None
-    assert result.trade_chain.execution_mode == "D_MULTI_ENTRY_1TP"
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
 
-def test_routing_multi_entry_multi_tp_uses_d_multi_entry_multi_tp():
+def test_routing_multi_entry_multi_tp_uses_unified_plan():
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
     assert result.trade_chain is not None
-    assert result.trade_chain.execution_mode == "D_MULTI_ENTRY_MULTI_TP"
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
 
 def test_routing_no_sl_falls_back_to_review():
@@ -574,18 +587,14 @@ def test_routing_no_sl_falls_back_to_review():
     assert result.review_reason == "missing_stop_loss_for_risk_calc"
 
 
-def test_routing_d_multi_entry_multi_tp_injects_tp_rebuild_in_snapshot():
-    """D_MULTI_ENTRY_MULTI_TP: risk_snapshot_json contiene tp_rebuild con 2 livelli."""
+def test_routing_unified_plan_no_tp_rebuild_in_snapshot():
+    """UNIFIED_PLAN: tp_rebuild is NOT injected into risk_snapshot (removed with the old routing)."""
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
     assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
     snap = json.loads(result.trade_chain.risk_snapshot_json)
-    assert "tp_rebuild" in snap
-    levels = snap["tp_rebuild"]["levels"]
-    assert len(levels) == 2
-    assert levels[0]["sequence"] == 1
-    assert levels[1]["sequence"] == 2
-    assert all("price" in lv and "close_pct" in lv for lv in levels)
+    assert "tp_rebuild" not in snap
 
 
 # ── C_MULTI_TP (1 entry + 2 TP) ──────────────────────────────────────────────
@@ -605,29 +614,33 @@ def test_c_multi_tp_entry_has_sl_and_last_tp_attached():
     assert "tp_qty" not in tpsl
 
 
-def test_c_multi_tp_intermediate_tps_are_waiting_position():
-    """C_MULTI_TP: TP intermedi (non ultimo) sono SET_POSITION_TPSL_PARTIAL WAITING_POSITION con preserve_sl=True."""
+def test_unified_plan_multi_tp_no_intermediate_commands():
+    """UNIFIED_PLAN: NO intermediate TP commands emitted at signal time (all deferred to post-fill).
+
+    Only 1 PLACE_ENTRY_WITH_ATTACHED_TPSL with final TP attached.
+    """
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=1, tp_count=2), [], "NONE")
     cmds = result.execution_commands
+    # No intermediate TP commands
     tp_cmds = [c for c in cmds if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    assert len(tp_cmds) == 1    # 1 intermedio (TP seq=1), l'ultimo è attached
-    assert tp_cmds[0].status == "WAITING_POSITION"
-    p = json.loads(tp_cmds[0].payload_json)
-    assert p["preserve_sl"] is True
-    assert p["take_profit"] == 70000.0   # TP sequence=1
+    assert len(tp_cmds) == 0
+    # Only 1 entry command with final TP attached
+    entry_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    assert len(entry_cmds) == 1
+    p = json.loads(entry_cmds[0].payload_json)
+    assert p["attached_tpsl"]["take_profit"] == 70500.0   # seq=2, price=70000+1*500
 
 
-def test_c_multi_tp_3tp_has_2_intermediate_commands():
-    """C_MULTI_TP con 3 TP: 2 comandi WAITING_POSITION (seq 1,2), 1 TP attached (seq 3)."""
+def test_unified_plan_3tp_no_intermediate_commands():
+    """UNIFIED_PLAN con 3 TP: nessun comando intermedio, solo 1 PLACE_ENTRY_WITH_ATTACHED_TPSL con TP finale."""
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=1, tp_count=3), [], "NONE")
     cmds = result.execution_commands
     tp_cmds = [c for c in cmds if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    assert len(tp_cmds) == 2
-    seqs = sorted(json.loads(c.payload_json)["tp_sequence"] for c in tp_cmds)
-    assert seqs == [1, 2]
+    assert len(tp_cmds) == 0
     entry_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    assert len(entry_cmds) == 1
     p = json.loads(entry_cmds[0].payload_json)
     assert p["attached_tpsl"]["take_profit"] == 71000.0  # seq=3, price=70000+2*500
 
@@ -635,17 +648,21 @@ def test_c_multi_tp_3tp_has_2_intermediate_commands():
 # ── D_MULTI_ENTRY_1TP (2 entry + 1 TP) ──────────────────────────────────────
 
 def test_d_multi_entry_1tp_each_leg_has_attached_tpsl():
-    """D_MULTI_ENTRY_1TP: ogni leg produce PLACE_ENTRY_WITH_ATTACHED_TPSL mode FULL con SL+TP."""
+    """UNIFIED_PLAN multi-entry + 1 TP: only leg 1 has PLACE_ENTRY_WITH_ATTACHED_TPSL mode FULL.
+
+    Leg 2+ gets plain PLACE_ENTRY (no attached TPSL) — unified rule.
+    """
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=1), [], "NONE")
     cmds = result.execution_commands
-    entry_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
-    assert len(entry_cmds) == 2
-    for c in entry_cmds:
-        p = json.loads(c.payload_json)
-        assert p["attached_tpsl"]["mode"] == "FULL"
-        assert p["attached_tpsl"]["take_profit"] == 70000.0
-        assert p["attached_tpsl"]["stop_loss"] == 63000.0
+    attached_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    plain_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY"]
+    assert len(attached_cmds) == 1  # leg 1 only
+    assert len(plain_cmds) == 1     # leg 2
+    p = json.loads(attached_cmds[0].payload_json)
+    assert p["attached_tpsl"]["mode"] == "FULL"
+    assert p["attached_tpsl"]["take_profit"] == 70000.0
+    assert p["attached_tpsl"]["stop_loss"] == 63000.0
 
 
 def test_d_multi_entry_1tp_no_waiting_position_commands():
@@ -659,31 +676,34 @@ def test_d_multi_entry_1tp_no_waiting_position_commands():
 
 
 def test_d_multi_entry_1tp_idempotency_keys_are_distinct():
-    """D_MULTI_ENTRY_1TP: ogni leg ha una idempotency_key diversa."""
+    """UNIFIED_PLAN multi-entry: all entry commands have distinct idempotency keys."""
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=1), [], "NONE")
-    entry_cmds = [c for c in result.execution_commands
-                  if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
-    keys = [c.idempotency_key for c in entry_cmds]
-    assert len(set(keys)) == 2
+    all_entry_cmds = [c for c in result.execution_commands
+                      if c.command_type in ("PLACE_ENTRY_WITH_ATTACHED_TPSL", "PLACE_ENTRY")]
+    keys = [c.idempotency_key for c in all_entry_cmds]
+    assert len(set(keys)) == 2  # 2 distinct keys for 2 legs
 
 
 # ── D_MULTI_ENTRY_MULTI_TP (2 entry + 2 TP) ──────────────────────────────────
 
 def test_d_multi_entry_multi_tp_each_leg_has_partial_tp_attached():
-    """D_MULTI_ENTRY_MULTI_TP: ogni leg ha PLACE_ENTRY_WITH_ATTACHED_TPSL mode PARTIAL_TP con SL + ultimo TP."""
+    """UNIFIED_PLAN multi-entry + multi-TP: leg 1 = PLACE_ENTRY_WITH_ATTACHED_TPSL (FULL mode, final TP).
+
+    Leg 2+ = PLACE_ENTRY (no attached TPSL). No PARTIAL_TP mode under unified rule.
+    """
     gate = _make_gate(simple_attached_enabled=True)
     result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
     cmds = result.execution_commands
-    entry_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
-    assert len(entry_cmds) == 2
-    for c in entry_cmds:
-        p = json.loads(c.payload_json)
-        tpsl = p["attached_tpsl"]
-        assert tpsl["mode"] == "PARTIAL_TP"
-        assert tpsl["stop_loss"] == 63000.0
-        assert tpsl["take_profit"] == 70500.0    # TP2 price: 70000 + 1*500
-        assert tpsl["tp_qty"] > 0
+    attached_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"]
+    plain_cmds = [c for c in cmds if c.command_type == "PLACE_ENTRY"]
+    assert len(attached_cmds) == 1  # leg 1 only
+    assert len(plain_cmds) == 1     # leg 2
+    p = json.loads(attached_cmds[0].payload_json)
+    tpsl = p["attached_tpsl"]
+    assert tpsl["mode"] == "FULL"   # unified factory always uses FULL mode
+    assert tpsl["stop_loss"] == 63000.0
+    assert tpsl["take_profit"] == 70500.0   # final TP (seq=2, price=70000+1*500)
 
 
 def test_d_multi_entry_multi_tp_no_set_position_tpsl_at_creation():

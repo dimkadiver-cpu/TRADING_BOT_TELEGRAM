@@ -5,6 +5,7 @@ import logging
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
+from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
 from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
 from src.runtime_v2.lifecycle.models import (
     BeProtectionStatus, ControlMode, ExecutionCommand,
@@ -58,6 +59,7 @@ class UpdateGateResult:
 _LEGACY_EXECUTION_MODES = frozenset({"a_sequential", "b_entry_stop_then_tp", "c_native_attached_tpsl"})
 
 _ATTACHED_PROTECTION_MODES = frozenset({
+    "UNIFIED_PLAN",
     "C_SIMPLE_ATTACHED", "C_MULTI_TP",
     "D_MULTI_ENTRY_1TP", "D_MULTI_ENTRY_MULTI_TP", "D_POSITION_TPSL",
 })
@@ -144,38 +146,10 @@ class LifecycleEntryGate:
                 signal.stop_loss.price.value
                 if signal.stop_loss and signal.stop_loss.price else None
             )
-            tp_count_for_decision = len(signal.take_profits)
-            entry_count_for_decision = len(signal.entries)
             if self._simple_attached_enabled is True and sl_price_for_decision is not None:
-                if entry_count_for_decision == 1 and tp_count_for_decision == 1:
-                    chain_execution_mode = "C_SIMPLE_ATTACHED"
-                elif entry_count_for_decision == 1 and tp_count_for_decision > 1:
-                    chain_execution_mode = "C_MULTI_TP"
-                elif entry_count_for_decision > 1 and tp_count_for_decision == 1:
-                    chain_execution_mode = "D_MULTI_ENTRY_1TP"
-                else:
-                    chain_execution_mode = "D_MULTI_ENTRY_MULTI_TP"
+                chain_execution_mode = "UNIFIED_PLAN"
             else:
                 chain_execution_mode = "D_POSITION_TPSL"
-
-        if chain_execution_mode == "D_MULTI_ENTRY_MULTI_TP":
-            _mp = enriched.management_plan or ManagementPlanConfig()
-            _tp_count = len(signal.take_profits)
-            _close_pcts = self._get_close_pcts(_mp, _tp_count)
-            decision.risk_snapshot["tp_rebuild"] = {
-                "levels": [
-                    {
-                        "sequence": tp.sequence,
-                        "price": tp.price.value if tp.price else None,
-                        "close_pct": (
-                            _close_pcts[i]
-                            if i < len(_close_pcts)
-                            else 100.0 / _tp_count
-                        ),
-                    }
-                    for i, tp in enumerate(signal.take_profits)
-                ]
-            }
 
         plan_state = ExecutionPlanBuilder.build(
             eid,
@@ -257,23 +231,12 @@ class LifecycleEntryGate:
         decision,
     ) -> list[ExecutionCommand]:
         signal = enriched.enriched_signal
-        management_plan = enriched.management_plan or ManagementPlanConfig()
         eid = enriched.enrichment_id
 
-        # ── Legacy execution mode paths (a_sequential, b_entry_stop_then_tp, c_native_attached_tpsl)
         if self._use_legacy_routing:
-            return self._build_legacy_commands(signal, management_plan, eid, decision)
-
-        # ── New C/D decision matrix ──────────────────────────────────────────────
-        tp_count = len(signal.take_profits)
-        entry_count = len(signal.entries)
-        size_usdt = float(decision.size_usdt or 0.0)
-        fallback_entry_price = float(decision.risk_snapshot.get("entry_price") or 0.0)
-        leverage = int(decision.risk_snapshot.get("leverage") or 1)
-        hedge_mode = bool(decision.risk_snapshot.get("hedge_mode", False))
-        position_idx = self.resolve_position_idx(signal.side, hedge_mode)
-        close_pcts = self._get_close_pcts(management_plan, tp_count)
-        legs_snap: list[dict] = decision.risk_snapshot.get("legs", [])
+            return self._build_legacy_commands(
+                signal, enriched.management_plan or ManagementPlanConfig(), eid, decision
+            )
 
         sl_price = (
             signal.stop_loss.price.value
@@ -282,30 +245,32 @@ class LifecycleEntryGate:
 
         if not (self._simple_attached_enabled is True and sl_price is not None):
             return self._build_d_commands(
-                signal, eid, size_usdt, fallback_entry_price,
-                leverage, hedge_mode, position_idx, sl_price,
-                tp_count, close_pcts, legs_snap,
+                signal, eid,
+                float(decision.size_usdt or 0.0),
+                float(decision.risk_snapshot.get("entry_price") or 0.0),
+                int(decision.risk_snapshot.get("leverage") or 1),
+                bool(decision.risk_snapshot.get("hedge_mode", False)),
+                self.resolve_position_idx(signal.side, bool(decision.risk_snapshot.get("hedge_mode", False))),
+                sl_price,
+                len(signal.take_profits),
+                self._get_close_pcts(enriched.management_plan or ManagementPlanConfig(), len(signal.take_profits)),
+                decision.risk_snapshot.get("legs", []),
             )
 
-        if entry_count == 1 and tp_count == 1:
-            return self._build_c_commands(
-                signal, eid, size_usdt, fallback_entry_price,
-                leverage, hedge_mode, position_idx, sl_price, legs_snap,
-            )
-        if entry_count == 1 and tp_count > 1:
-            return self._build_c_multi_tp_commands(
-                signal, eid, size_usdt, fallback_entry_price,
-                leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
-            )
-        if entry_count > 1 and tp_count == 1:
-            return self._build_d_multi_entry_1tp_commands(
-                signal, eid, size_usdt, fallback_entry_price,
-                leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
-            )
-        return self._build_d_multi_entry_multi_tp_commands(
-            signal, eid, size_usdt, fallback_entry_price,
-            leverage, hedge_mode, position_idx, sl_price,
-            tp_count, close_pcts, legs_snap,
+        factory = EntryCommandFactory()
+        return factory.build_entry_commands(
+            enrichment_id=eid,
+            symbol=signal.symbol,
+            side=signal.side,
+            entries=signal.entries,
+            take_profits=signal.take_profits,
+            sl_price=sl_price,
+            leverage=int(decision.risk_snapshot.get("leverage") or 1),
+            hedge_mode=bool(decision.risk_snapshot.get("hedge_mode", False)),
+            position_idx=self.resolve_position_idx(
+                signal.side, bool(decision.risk_snapshot.get("hedge_mode", False))
+            ),
+            risk_snapshot=decision.risk_snapshot,
         )
 
     def _build_legacy_commands(
@@ -402,58 +367,6 @@ class LifecycleEntryGate:
             ))
 
         return commands
-
-    def _build_c_commands(
-        self, signal, eid, size_usdt, fallback_entry_price,
-        leverage, hedge_mode, position_idx, sl_price, legs_snap: list[dict],
-    ) -> list[ExecutionCommand]:
-        leg = signal.entries[0]
-        tp = signal.take_profits[0]
-        tp_price = tp.price.value if tp.price else None
-
-        leg_snap = _find_leg_snap(legs_snap, leg.sequence)
-        is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
-
-        base_payload: dict = {
-            "execution_strategy": "C_SIMPLE_ATTACHED",
-            "symbol": signal.symbol,
-            "side": signal.side,
-            "entry_type": leg.entry_type,
-            "price": leg.price.value if leg.entry_type == "LIMIT" else None,
-            "leverage": leverage,
-            "hedge_mode": hedge_mode,
-            "position_idx": position_idx,
-            "attached_tpsl": {
-                "mode": "FULL",
-                "take_profit": tp_price,
-                "stop_loss": sl_price,
-                "tp_trigger_by": "MarkPrice",
-                "sl_trigger_by": "MarkPrice",
-            },
-        }
-
-        if is_deferred:
-            payload = {
-                **base_payload,
-                "qty_mode": "deferred_market",
-                "risk_amount": leg_snap["risk_amount"],
-                "sl_price": sl_price,
-            }
-        else:
-            if leg_snap and leg_snap.get("qty") is not None:
-                leg_qty = float(leg_snap["qty"])
-            else:
-                leg_price = leg.price.value if leg.price else fallback_entry_price
-                leg_qty = self._qty_from_notional(size_usdt, leg_price)
-            payload = {**base_payload, "qty": leg_qty}
-
-        return [ExecutionCommand(
-            trade_chain_id=0,
-            command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
-            status="PENDING",
-            payload_json=json.dumps(payload),
-            idempotency_key=f"place_entry_attached:{eid}",
-        )]
 
     def _build_d_commands(
         self, signal, eid, size_usdt, fallback_entry_price,
@@ -567,199 +480,6 @@ class LifecycleEntryGate:
                     }),
                     idempotency_key=f"set_tpsl_partial:{eid}:tp{tp.sequence}",
                 ))
-
-        return commands
-
-    def _place_entry_attached_cmd(
-        self,
-        *,
-        signal,
-        leg,
-        eid: int,
-        label: str,
-        leverage: int,
-        hedge_mode: bool,
-        position_idx: int,
-        sl_price: float,
-        leg_snap: dict | None,
-        qty: float | None,
-        tpsl_mode: str = "FULL",
-        tp_price: float | None = None,
-        tp_qty: float | None = None,
-        tp_qty_ratio: float | None = None,
-    ) -> ExecutionCommand:
-        is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
-        attached_tpsl: dict = {
-            "mode": tpsl_mode,
-            "stop_loss": sl_price,
-            "sl_trigger_by": "MarkPrice",
-        }
-        if tpsl_mode != "SL_ONLY" and tp_price is not None:
-            attached_tpsl["take_profit"] = tp_price
-            attached_tpsl["tp_trigger_by"] = "MarkPrice"
-            if tpsl_mode == "PARTIAL_TP" and tp_qty is not None:
-                attached_tpsl["tp_qty"] = tp_qty
-        base: dict = {
-            "execution_strategy": label,
-            "symbol": signal.symbol,
-            "side": signal.side,
-            "entry_type": leg.entry_type,
-            "price": leg.price.value if leg.entry_type == "LIMIT" else None,
-            "leverage": leverage,
-            "hedge_mode": hedge_mode,
-            "position_idx": position_idx,
-            "attached_tpsl": attached_tpsl,
-        }
-        if is_deferred:
-            payload: dict = {
-                **base,
-                "qty_mode": "deferred_market",
-                "risk_amount": float(leg_snap["risk_amount"]),
-                "sl_price": sl_price,
-            }
-            if tpsl_mode == "PARTIAL_TP":
-                payload["attached_tpsl"] = {
-                    **attached_tpsl,
-                    "tp_qty_ratio": tp_qty_ratio,
-                }
-        else:
-            payload = {**base, "qty": qty}
-        return ExecutionCommand(
-            trade_chain_id=0,
-            command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
-            status="PENDING",
-            payload_json=json.dumps(payload),
-            idempotency_key=f"place_entry_attached:{eid}:leg{leg.sequence}",
-        )
-
-    def _build_c_multi_tp_commands(
-        self, signal, eid, size_usdt, fallback_entry_price,
-        leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
-    ) -> list[ExecutionCommand]:
-        leg = signal.entries[0]
-        tp_count = len(signal.take_profits)
-        leg_snap = _find_leg_snap(legs_snap, leg.sequence)
-        is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
-
-        if not is_deferred:
-            if leg_snap and leg_snap.get("qty") is not None:
-                leg_qty = float(leg_snap["qty"])
-            else:
-                leg_price = leg.price.value if leg.price else fallback_entry_price
-                leg_qty = self._qty_from_notional(size_usdt, leg_price)
-        else:
-            leg_qty = 0.0
-
-        last_tp = signal.take_profits[-1]
-        last_tp_price = last_tp.price.value if last_tp.price else None
-        last_close_pct = close_pcts[-1] if close_pcts else (100.0 / tp_count)
-        entry_cmd = self._place_entry_attached_cmd(
-            signal=signal, leg=leg, eid=eid, label="C_MULTI_TP",
-            leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
-            sl_price=sl_price, leg_snap=leg_snap,
-            qty=leg_qty if not is_deferred else None,
-            tpsl_mode="FULL",
-            tp_price=last_tp_price,
-        )
-
-        commands: list[ExecutionCommand] = [entry_cmd]
-
-        for i, tp in enumerate(signal.take_profits[:-1]):
-            tp_price = tp.price.value if tp.price else None
-            close_pct = close_pcts[i] if i < len(close_pcts) else (100.0 / tp_count)
-            partial_payload: dict = {
-                "execution_strategy": "C_MULTI_TP",
-                "symbol": signal.symbol,
-                "side": signal.side,
-                "position_idx": position_idx,
-                "tp_sequence": tp.sequence,
-                "take_profit": tp_price,
-                "tp_order_type": "Limit",
-                "tp_limit_price": tp_price,
-                "tp_trigger_by": "MarkPrice",
-                "preserve_sl": True,
-            }
-            if is_deferred:
-                partial_payload["tp_qty_mode"] = "filled_entry_pct"
-                partial_payload["close_pct"] = close_pct
-            else:
-                partial_payload["tp_size"] = round(leg_qty * close_pct / 100.0, 8)
-            commands.append(ExecutionCommand(
-                trade_chain_id=0,
-                command_type="SET_POSITION_TPSL_PARTIAL",
-                status="WAITING_POSITION",
-                payload_json=json.dumps(partial_payload),
-                idempotency_key=f"set_tp_partial:{eid}:tp{tp.sequence}",
-            ))
-
-        return commands
-
-    def _build_d_multi_entry_1tp_commands(
-        self, signal, eid, size_usdt, fallback_entry_price,
-        leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
-    ) -> list[ExecutionCommand]:
-        tp = signal.take_profits[0]
-        tp_price = tp.price.value if tp.price else None
-        commands: list[ExecutionCommand] = []
-
-        for leg in signal.entries:
-            leg_snap = _find_leg_snap(legs_snap, leg.sequence)
-            is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
-
-            if not is_deferred:
-                if leg_snap and leg_snap.get("qty") is not None:
-                    leg_qty = float(leg_snap["qty"])
-                else:
-                    leg_price = leg.price.value if leg.price else fallback_entry_price
-                    leg_notional = size_usdt * float(leg.weight or 0.0)
-                    leg_qty = self._qty_from_notional(leg_notional, leg_price)
-            else:
-                leg_qty = None
-
-            commands.append(self._place_entry_attached_cmd(
-                signal=signal, leg=leg, eid=eid, label="D_MULTI_ENTRY_1TP",
-                leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
-                sl_price=sl_price, leg_snap=leg_snap,
-                qty=leg_qty,
-                tpsl_mode="FULL",
-                tp_price=tp_price,
-            ))
-
-        return commands
-
-    def _build_d_multi_entry_multi_tp_commands(
-        self, signal, eid, size_usdt, fallback_entry_price,
-        leverage, hedge_mode, position_idx, sl_price,
-        tp_count, close_pcts, legs_snap,
-    ) -> list[ExecutionCommand]:
-        commands: list[ExecutionCommand] = []
-        last_tp = signal.take_profits[-1] if signal.take_profits else None
-        last_tp_price = last_tp.price.value if last_tp and last_tp.price else None
-
-        for leg in signal.entries:
-            leg_snap = _find_leg_snap(legs_snap, leg.sequence)
-            is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
-
-            if not is_deferred:
-                if leg_snap and leg_snap.get("qty") is not None:
-                    leg_qty = float(leg_snap["qty"])
-                else:
-                    leg_price = leg.price.value if leg.price else fallback_entry_price
-                    leg_notional = size_usdt * float(leg.weight or 0.0)
-                    leg_qty = self._qty_from_notional(leg_notional, leg_price)
-            else:
-                leg_qty = None
-
-            commands.append(self._place_entry_attached_cmd(
-                signal=signal, leg=leg, eid=eid, label="D_MULTI_ENTRY_MULTI_TP",
-                leverage=leverage, hedge_mode=hedge_mode, position_idx=position_idx,
-                sl_price=sl_price, leg_snap=leg_snap,
-                qty=leg_qty,
-                tpsl_mode="PARTIAL_TP",
-                tp_price=last_tp_price,
-                tp_qty=leg_qty,
-                tp_qty_ratio=float(leg.weight) if is_deferred and leg.weight else None,
-            ))
 
         return commands
 
