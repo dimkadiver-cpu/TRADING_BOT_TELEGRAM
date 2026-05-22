@@ -185,7 +185,7 @@ def test_ac2_risk_fail_produces_review(dbs):
     assert reviews == 1
 
 
-# AC3: SIGNAL valido crea PLACE_ENTRY, PLACE_PROTECTIVE_STOP, PLACE_TAKE_PROFIT
+# AC3: SIGNAL valido crea comando entry con TP/SL attached nella pipeline unificata.
 def test_ac3_signal_creates_entry_commands(dbs):
     parser_db, ops_db = dbs
     enriched = _make_enriched_signal(enrichment_id=3)
@@ -195,9 +195,7 @@ def test_ac3_signal_creates_entry_commands(dbs):
     conn = sqlite3.connect(ops_db)
     cmd_types = {r[0] for r in conn.execute("SELECT command_type FROM ops_execution_commands").fetchall()}
     conn.close()
-    assert "PLACE_ENTRY" in cmd_types
-    assert "PLACE_PROTECTIVE_STOP" in cmd_types
-    assert "PLACE_TAKE_PROFIT" in cmd_types
+    assert "PLACE_ENTRY_WITH_ATTACHED_TPSL" in cmd_types
 
 
 def test_ac3b_signal_commands_are_ccxt_gateway_ready(dbs):

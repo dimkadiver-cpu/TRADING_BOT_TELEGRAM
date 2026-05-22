@@ -488,7 +488,18 @@ def _make_risk_decision(size_usdt=500.0, entry_price=50000.0):
         reason=None,
         size_usdt=size_usdt,
         leverage=10,
-        risk_snapshot={"entry_price": entry_price, "size_usdt": size_usdt},
+        risk_snapshot={
+            "entry_price": entry_price,
+            "size_usdt": size_usdt,
+            "leverage": 10,
+            "legs": [{
+                "sequence": 1,
+                "qty": size_usdt / entry_price,
+                "qty_mode": "fixed",
+                "risk_amount": 10.0,
+                "weight": 1.0,
+            }],
+        },
     )
 
 
@@ -532,7 +543,7 @@ def _make_enriched_signal_for_mode(
     )
 
 
-def _make_gate_with_mode(execution_mode: str):
+def _make_gate_with_mode(execution_mode: str | None = None):
     from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
     from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
     from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
@@ -540,95 +551,10 @@ def _make_gate_with_mode(execution_mode: str):
     gate = LifecycleEntryGate(
         risk_engine=RiskCapacityEngine(),
         exchange_port=StaticExchangeDataPort(),
-        execution_mode=execution_mode,
+        simple_attached_enabled=True,
     )
     gate._risk.validate = lambda *a, **kw: _make_risk_decision()
     return gate
-
-
-def test_mode_a_sl_and_tp_are_waiting_position():
-    gate = _make_gate_with_mode("a_sequential")
-    enriched = _make_enriched_signal_for_mode(tp_count=2)
-    result = gate.process_signal(enriched, [], "NONE")
-    assert result.review_reason is None
-    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
-    sl_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_PROTECTIVE_STOP")
-    tp_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_TAKE_PROFIT"]
-    assert entry_cmd.status == "PENDING"
-    assert sl_cmd.status == "WAITING_POSITION"
-    assert all(c.status == "WAITING_POSITION" for c in tp_cmds)
-
-
-def test_mode_b_sl_pending_tp_waiting_position():
-    gate = _make_gate_with_mode("b_entry_stop_then_tp")
-    enriched = _make_enriched_signal_for_mode(tp_count=2)
-    result = gate.process_signal(enriched, [], "NONE")
-    assert result.review_reason is None
-    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
-    sl_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_PROTECTIVE_STOP")
-    tp_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_TAKE_PROFIT"]
-    assert entry_cmd.status == "PENDING"
-    assert sl_cmd.status == "PENDING"
-    assert all(c.status == "WAITING_POSITION" for c in tp_cmds)
-
-
-def test_mode_c_entry_has_native_tpsl_no_sl_command():
-    gate = _make_gate_with_mode("c_native_attached_tpsl")
-    enriched = _make_enriched_signal_for_mode(tp_count=2)
-    result = gate.process_signal(enriched, [], "NONE")
-    assert result.review_reason is None
-    cmd_types = [c.command_type for c in result.execution_commands]
-    assert "PLACE_PROTECTIVE_STOP" not in cmd_types
-    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
-    entry_payload = json.loads(entry_cmd.payload_json)
-    assert entry_payload["native_attached_tpsl"] is True
-    assert "attached_stop_loss" in entry_payload
-    assert "attached_take_profit" in entry_payload
-    # With 2 TPs: last is attached, first is WAITING_POSITION
-    tp_cmds = [c for c in result.execution_commands if c.command_type == "PLACE_TAKE_PROFIT"]
-    assert len(tp_cmds) == 1
-    assert tp_cmds[0].status == "WAITING_POSITION"
-
-
-def test_mode_c_single_tp_no_intermediate_commands():
-    gate = _make_gate_with_mode("c_native_attached_tpsl")
-    enriched = _make_enriched_signal_for_mode(tp_count=1)
-    result = gate.process_signal(enriched, [], "NONE")
-    assert result.review_reason is None
-    cmd_types = [c.command_type for c in result.execution_commands]
-    assert "PLACE_TAKE_PROFIT" not in cmd_types
-    assert "PLACE_PROTECTIVE_STOP" not in cmd_types
-
-
-def test_mode_c_multi_tp_entry_payload_includes_builder_fields_and_final_tp_slice_qty():
-    gate = _make_gate_with_mode("c_native_attached_tpsl")
-    enriched = _make_enriched_signal_for_mode(
-        tp_count=2,
-        close_distribution_table={2: [60, 40]},
-    )
-    result = gate.process_signal(enriched, [], "NONE")
-
-    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
-    payload = json.loads(entry_cmd.payload_json)
-
-    assert payload["attached_take_profit"] == 52000.0
-    assert payload["attached_stop_loss"] == 49000.0
-    assert payload["tp_count"] == 2
-    assert payload["qty"] == pytest.approx(0.01)
-    assert payload["attached_take_profit_qty"] == pytest.approx(0.004)
-
-
-def test_mode_c_single_tp_entry_payload_uses_full_leg_qty_for_attached_tp():
-    gate = _make_gate_with_mode("c_native_attached_tpsl")
-    enriched = _make_enriched_signal_for_mode(tp_count=1)
-    result = gate.process_signal(enriched, [], "NONE")
-
-    entry_cmd = next(c for c in result.execution_commands if c.command_type == "PLACE_ENTRY")
-    payload = json.loads(entry_cmd.payload_json)
-
-    assert payload["tp_count"] == 1
-    assert payload["qty"] == pytest.approx(0.01)
-    assert payload["attached_take_profit_qty"] == pytest.approx(0.01)
 
 
 def test_update_move_to_be_payload_uses_target_price_and_buffer_pct():
@@ -703,11 +629,11 @@ def test_update_move_to_be_payload_position_idx_zero_for_one_way_mode():
 
 
 def test_process_signal_writes_execution_mode_to_chain():
-    gate = _make_gate_with_mode("b_entry_stop_then_tp")
+    gate = _make_gate_with_mode()
     enriched = _make_enriched_signal_for_mode()
     result = gate.process_signal(enriched, [], "NONE")
     assert result.trade_chain is not None
-    assert result.trade_chain.execution_mode == "b_entry_stop_then_tp"
+    assert result.trade_chain.execution_mode == "UNIFIED_PLAN"
 
 
 # ── CANCEL_PENDING on OPEN/PARTIALLY_CLOSED chains ───────────────────────────
@@ -1513,3 +1439,201 @@ def test_unified_plan_protection_style_attached_full_for_be_move():
     command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
     payload = json.loads(command.payload_json)
     assert payload["protection_style"] == "attached_full"
+
+
+def test_entry_changing_update_limit_to_market_emits_cancel_and_new_entry():
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, ModifyEntriesOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+    from src.parser_v2.contracts.entities import EntryLeg
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "NONE",
+        "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "stop_loss": 49000.0,
+        "final_tp": 51000.0,
+        "intermediate_tps": [],
+        "legs": [{
+            "leg_id": "leg_1",
+            "sequence": 1,
+            "entry_type": "LIMIT",
+            "price": 50000.0,
+            "risk_budget": 100.0,
+            "qty": 0.01,
+            "qty_mode": "fixed",
+            "status": "PENDING",
+            "client_order_id": "place_entry_attached:1:leg1",
+        }],
+    })
+    chain = _make_open_chain(state="WAITING_ENTRY")
+    chain = chain.model_copy(update={
+        "execution_mode": "UNIFIED_PLAN",
+        "expected_stop_price": 49000.0,
+        "risk_snapshot_json": json.dumps({
+            "sl_price": 49000.0,
+            "risk_amount": 100.0,
+            "entry_price": 50000.0,
+            "leverage": 1,
+            "hedge_mode": False,
+            "legs": [{
+                "sequence": 1,
+                "entry_type": "LIMIT",
+                "price": 50000.0,
+                "risk_amount": 100.0,
+                "qty": 0.01,
+                "qty_mode": "fixed",
+                "weight": 1.0,
+            }],
+        }),
+        "plan_state_json": plan_state,
+        "risk_remaining": 100.0,
+    })
+    action = ActionItem(
+        action_type="MODIFY_ENTRIES",
+        modify_entries=ModifyEntriesOperation(
+            kind="MARKET_NOW",
+            entries=[EntryLeg(sequence=1, entry_type="MARKET")],
+        ),
+        source_intent="MODIFY_ENTRY",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"]),
+        actions=[action],
+    )
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    enriched.enriched_actions = [tag]
+    active_cmds = [
+        ExecutionCommand(
+            trade_chain_id=chain.trade_chain_id,
+            command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
+            payload_json="{}",
+            idempotency_key="place_entry_attached:1:leg1",
+            status="PENDING",
+        )
+    ]
+
+    result = _make_gate().process_update(enriched, [chain], {chain.trade_chain_id: active_cmds})
+    all_cmds = [c for cr in result.chain_results for c in cr.execution_commands]
+    cmd_types = {c.command_type for c in all_cmds}
+    assert "CANCEL_PENDING_ENTRY" in cmd_types
+    assert "PLACE_ENTRY_WITH_ATTACHED_TPSL" in cmd_types
+    new_entry = next(c for c in all_cmds if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL")
+    payload = json.loads(new_entry.payload_json)
+    assert payload["entry_type"] == "MARKET"
+
+
+def test_entry_changing_update_leg2_replacement_stays_plain_place_entry():
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, ModifyEntriesOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+    from src.parser_v2.contracts.entities import EntryLeg, Price
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "NONE",
+        "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "stop_loss": 49000.0,
+        "final_tp": 51000.0,
+        "intermediate_tps": [],
+        "legs": [
+            {
+                "leg_id": "leg_1",
+                "sequence": 1,
+                "entry_type": "LIMIT",
+                "price": 50000.0,
+                "risk_budget": 50.0,
+                "qty": 0.005,
+                "qty_mode": "fixed",
+                "status": "FILLED",
+                "client_order_id": "place_entry_attached:1:leg1",
+            },
+            {
+                "leg_id": "leg_2",
+                "sequence": 2,
+                "entry_type": "LIMIT",
+                "price": 48000.0,
+                "risk_budget": 50.0,
+                "qty": 0.0167,
+                "qty_mode": "fixed",
+                "status": "PENDING",
+                "client_order_id": "place_entry:1:leg2",
+            },
+        ],
+    })
+    chain = _make_open_chain(state="OPEN")
+    chain = chain.model_copy(update={
+        "execution_mode": "UNIFIED_PLAN",
+        "expected_stop_price": 49000.0,
+        "risk_snapshot_json": json.dumps({
+            "sl_price": 49000.0,
+            "risk_amount": 100.0,
+            "entry_price": 50000.0,
+            "leverage": 1,
+            "hedge_mode": False,
+            "legs": [
+                {
+                    "sequence": 1,
+                    "entry_type": "LIMIT",
+                    "price": 50000.0,
+                    "risk_amount": 50.0,
+                    "qty": 0.005,
+                    "qty_mode": "fixed",
+                    "weight": 0.5,
+                },
+                {
+                    "sequence": 2,
+                    "entry_type": "LIMIT",
+                    "price": 48000.0,
+                    "risk_amount": 50.0,
+                    "qty": 0.0167,
+                    "qty_mode": "fixed",
+                    "weight": 0.5,
+                },
+            ],
+        }),
+        "plan_state_json": plan_state,
+        "risk_remaining": 50.0,
+    })
+    action = ActionItem(
+        action_type="MODIFY_ENTRIES",
+        modify_entries=ModifyEntriesOperation(
+            kind="UPDATE_PRICE",
+            entries=[
+                EntryLeg(
+                    sequence=2,
+                    entry_type="LIMIT",
+                    price=Price(raw="47000", value=47000.0),
+                )
+            ],
+        ),
+        source_intent="MODIFY_ENTRY",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"]),
+        actions=[action],
+    )
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    enriched.enriched_actions = [tag]
+    active_cmds = [
+        ExecutionCommand(
+            trade_chain_id=chain.trade_chain_id,
+            command_type="PLACE_ENTRY",
+            payload_json="{}",
+            idempotency_key="place_entry:1:leg2",
+            status="PENDING",
+        )
+    ]
+
+    result = _make_gate().process_update(enriched, [chain], {chain.trade_chain_id: active_cmds})
+    all_cmds = [c for cr in result.chain_results for c in cr.execution_commands]
+    assert [c.command_type for c in all_cmds] == ["CANCEL_PENDING_ENTRY", "PLACE_ENTRY"]
+    new_entry = all_cmds[1]
+    payload = json.loads(new_entry.payload_json)
+    assert payload["entry_type"] == "LIMIT"
+    assert payload["price"] == 47000.0
+    assert "attached_tpsl" not in payload

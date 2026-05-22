@@ -127,3 +127,53 @@ def test_waiting_position_on_open_chain_becomes_pending(ops_db):
     ).fetchone()[0]
     conn.close()
     assert status == "SENT"
+
+
+def test_retry_batch_is_processed_after_backoff_expires(ops_db):
+    _insert_chain(ops_db)
+    _insert_cmd(ops_db, 1004)
+
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    failing_adapter = FakeAdapter(simulate_timeout=True)
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": failing_adapter},
+        repo=repo,
+    )
+    worker = ExecutionCommandWorker(ops_db_path=ops_db, gateway=gw, repo=repo)
+    worker.run_once()
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_execution_commands SET next_retry_at=datetime('now','-1 second') "
+        "WHERE command_id=1004"
+    )
+    conn.commit()
+    conn.close()
+
+    healthy_adapter = FakeAdapter()
+    retry_gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": healthy_adapter},
+        repo=repo,
+    )
+    retry_worker = ExecutionCommandWorker(ops_db_path=ops_db, gateway=retry_gw, repo=repo)
+    processed = retry_worker.run_once()
+
+    assert processed == 1
+    place_calls = [c for c in healthy_adapter.calls if c["action"] == "place_order"]
+    assert len(place_calls) == 1
+
+    conn = sqlite3.connect(ops_db)
+    status, retry_count = conn.execute(
+        "SELECT status, retry_count FROM ops_execution_commands WHERE command_id=1004"
+    ).fetchone()
+    conn.close()
+    assert status == "SENT"
+    assert retry_count == 1

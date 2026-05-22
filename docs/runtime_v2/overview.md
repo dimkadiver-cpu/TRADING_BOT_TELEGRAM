@@ -223,6 +223,8 @@ listener = TelegramListener(
 
 La separazione è eseguita una volta tramite `scripts/setup_parser_db_separation.py`.
 
+Per una descrizione estesa di ogni tabella `ops`, vedere `docs/runtime_v2/ops_tables.md`.
+
 ### Tabelle
 
 | Tabella | DB | Stato |

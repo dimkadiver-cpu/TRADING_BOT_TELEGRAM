@@ -44,6 +44,7 @@ def test_chain_repo_save_and_get(ops_db):
         source_enrichment_id=1, canonical_message_id=10, raw_message_id=100,
         trader_id="trader_a", account_id="acc_1", symbol="BTC/USDT", side="LONG",
         lifecycle_state="WAITING_ENTRY", entry_mode="ONE_SHOT", management_plan_json="{}",
+        execution_mode="C_MULTI_TP",
     )
     saved = repo.save(chain)
     assert saved.trade_chain_id is not None
@@ -51,6 +52,7 @@ def test_chain_repo_save_and_get(ops_db):
     assert fetched is not None
     assert fetched.symbol == "BTC/USDT"
     assert fetched.lifecycle_state == "WAITING_ENTRY"
+    assert fetched.execution_mode == "C_MULTI_TP"
 
 
 def test_chain_repo_save_idempotent(ops_db):

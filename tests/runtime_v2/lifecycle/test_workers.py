@@ -176,7 +176,7 @@ def test_worker_processes_signal_creates_chain(dbs):
     commands = conn.execute("SELECT command_type FROM ops_execution_commands").fetchall()
     conn.close()
     assert len(chains) == 1
-    assert any(c[0] == "PLACE_ENTRY" for c in commands)
+    assert any(c[0] == "PLACE_ENTRY_WITH_ATTACHED_TPSL" for c in commands)
 
 
 def test_worker_marks_lifecycle_processed(dbs):
@@ -379,3 +379,184 @@ def test_lifecycle_event_worker_processes_tp_filled(dbs):
     conn.close()
     assert state == "PARTIALLY_CLOSED"
     assert status == "DONE"
+
+
+def test_lifecycle_event_worker_marks_filled_leg_in_plan_state(dbs):
+    import sqlite3
+    import json
+    from datetime import datetime, timezone
+    _, ops_db = dbs
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "NONE",
+        "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "stop_loss": 49000.0,
+        "final_tp": 51000.0,
+        "intermediate_tps": [],
+        "legs": [{
+            "leg_id": "leg_1",
+            "sequence": 1,
+            "entry_type": "LIMIT",
+            "price": 50000.0,
+            "risk_budget": 100.0,
+            "qty": 0.01,
+            "qty_mode": "fixed",
+            "status": "PENDING",
+            "client_order_id": "place_entry_attached:60:leg1",
+        }],
+    })
+    chain_id = _make_chain_in_db(ops_db, trade_chain_id_hint=61, state="WAITING_ENTRY")
+
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        """
+        UPDATE ops_trade_chains
+        SET risk_snapshot_json=?, plan_state_json=?
+        WHERE trade_chain_id=?
+        """,
+        (json.dumps({"sl_price": 49000.0, "risk_amount": 100.0}), plan_state, chain_id),
+    )
+    conn.execute(
+        """
+        INSERT INTO ops_exchange_events (trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at)
+        VALUES (?,?,?,?,?,?)
+        """,
+        (
+            chain_id,
+            "ENTRY_FILLED",
+            json.dumps({
+                "fill_price": 50000.0,
+                "filled_qty": 0.01,
+                "entry_client_order_id": "place_entry_attached:60:leg1",
+            }),
+            "NEW",
+            f"entry_filled:{chain_id}:1",
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    worker = LifecycleEventWorker(
+        ops_db_path=ops_db,
+        processor=LifecycleEventProcessor(),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        exchange_event_repo=ExchangeEventRepository(ops_db),
+    )
+    count = worker.run_once()
+    assert count == 1
+
+    conn = sqlite3.connect(ops_db)
+    persisted = conn.execute(
+        "SELECT plan_state_json FROM ops_trade_chains WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()[0]
+    conn.close()
+    persisted_plan = json.loads(persisted)
+    assert persisted_plan["legs"][0]["status"] == "FILLED"
+
+
+def test_lifecycle_event_worker_marks_cancelled_leg_in_plan_state(dbs):
+    import sqlite3
+    import json
+    from datetime import datetime, timezone
+    _, ops_db = dbs
+    client_order_id = "place_entry:62:leg2"
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "NONE",
+        "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "stop_loss": 49000.0,
+        "final_tp": 51000.0,
+        "intermediate_tps": [],
+        "legs": [
+            {
+                "leg_id": "leg_1",
+                "sequence": 1,
+                "entry_type": "LIMIT",
+                "price": 50000.0,
+                "risk_budget": 50.0,
+                "qty": 0.005,
+                "qty_mode": "fixed",
+                "status": "FILLED",
+                "client_order_id": "place_entry_attached:62:leg1",
+            },
+            {
+                "leg_id": "leg_2",
+                "sequence": 2,
+                "entry_type": "LIMIT",
+                "price": 48000.0,
+                "risk_budget": 50.0,
+                "qty": 0.0167,
+                "qty_mode": "fixed",
+                "status": "PENDING",
+                "client_order_id": client_order_id,
+            },
+        ],
+    })
+    chain_id = _make_chain_in_db(ops_db, trade_chain_id_hint=62, state="OPEN")
+
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_trade_chains SET plan_state_json=? WHERE trade_chain_id=?",
+        (plan_state, chain_id),
+    )
+    conn.execute(
+        """
+        INSERT INTO ops_exchange_events (trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at)
+        VALUES (?,?,?,?,?,?)
+        """,
+        (
+            chain_id,
+            "PENDING_ENTRY_CANCELLED_CONFIRMED",
+            json.dumps({
+                "cancelled_order_ids": [client_order_id],
+                "cancelled_pending_qty": 0.0167,
+                "position_already_open": True,
+            }),
+            "NEW",
+            f"cancel_confirmed:{chain_id}:1",
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    worker = LifecycleEventWorker(
+        ops_db_path=ops_db,
+        processor=LifecycleEventProcessor(),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        exchange_event_repo=ExchangeEventRepository(ops_db),
+    )
+    count = worker.run_once()
+    assert count == 1
+
+    conn = sqlite3.connect(ops_db)
+    persisted = conn.execute(
+        "SELECT plan_state_json FROM ops_trade_chains WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()[0]
+    conn.close()
+    persisted_plan = json.loads(persisted)
+    leg2 = next(leg for leg in persisted_plan["legs"] if leg["leg_id"] == "leg_2")
+    assert leg2["status"] == "CANCELLED"

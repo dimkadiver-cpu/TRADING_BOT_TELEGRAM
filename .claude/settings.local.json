@@ -166,7 +166,10 @@
       "Bash(Select-Object Name, FullName)",
       "Bash(Select-Object FullName, LastWriteTime)",
       "Bash(Sort-Object LastWriteTime -Descending)",
-      "Bash(Select-Object -First 10)"
+      "Bash(Select-Object -First 10)",
+      "Bash(New-Item -ItemType Directory -Force \"C:\\\\TeleSignalBot\\\\docs\\\\superpowers\\\\plans\")",
+      "Bash(Out-Null)",
+      "PowerShell(New-Item *)"
     ]
   }
 }

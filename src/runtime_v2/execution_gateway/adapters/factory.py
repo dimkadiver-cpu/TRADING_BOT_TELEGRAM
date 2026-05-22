@@ -20,6 +20,9 @@ def build_adapter(adapter_name: str, cfg: AdapterConfig) -> ExecutionAdapter:
             api_secret=api_secret or "",
             connector=cfg.connector,
             mode=cfg.mode,
+            adjust_for_time_difference=cfg.adjust_for_time_difference,
+            recv_window_ms=cfg.recv_window_ms,
+            time_sync_on_startup=cfg.time_sync_on_startup,
         )
     raise ValueError(f"Unknown adapter type '{cfg.type}' for adapter '{adapter_name}'")
 

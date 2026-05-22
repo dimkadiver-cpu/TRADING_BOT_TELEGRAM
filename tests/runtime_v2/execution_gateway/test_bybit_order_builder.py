@@ -499,3 +499,79 @@ def test_hedge_mode_sync_protective_orders_returns_amend_sl_qty() -> None:
     )
 
     assert params.action == "amend_sl_qty"
+
+
+def test_move_stop_be_attached_flow_routes_to_trading_stop_move_sl() -> None:
+    """C/D flows with attached TPSL must use trading_stop, not edit_order."""
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "target_price": 50000.0,
+            "be_buffer_pct": 0.0,
+            "protection_style": "attached_full",
+            "position_idx": 0,
+        },
+        "tsb:10:5:sl:1",
+    )
+
+    assert params.action == "trading_stop_move_sl"
+    assert params.symbol == "BTC/USDT:USDT"
+    assert params.position_side == "LONG"
+    assert params.extra_params["stopLoss"] == "50000.0"
+    assert params.extra_params["positionIdx"] == 0
+
+
+def test_move_stop_be_attached_flow_long_applies_buffer() -> None:
+    """Buffer is still applied before routing to trading_stop_move_sl."""
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "ETH/USDT:USDT",
+            "side": "LONG",
+            "target_price": 3000.0,
+            "be_buffer_pct": 0.002,
+            "protection_style": "attached_full",
+            "position_idx": 1,
+        },
+        "tsb:10:5:sl:1",
+    )
+
+    assert params.action == "trading_stop_move_sl"
+    assert params.extra_params["stopLoss"] == "3006.0"
+    assert params.extra_params["positionIdx"] == 1
+
+
+def test_move_stop_be_standalone_flow_still_uses_edit_sl() -> None:
+    """Legacy flows with protection_style=standalone_order keep edit_sl path."""
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "target_price": 50000.0,
+            "be_buffer_pct": 0.0,
+            "protection_style": "standalone_order",
+        },
+        "tsb:10:5:sl:1",
+    )
+
+    assert params.action == "edit_sl"
+    assert params.new_trigger_price == 50000.0
+
+
+def test_move_stop_be_no_protection_style_defaults_to_edit_sl() -> None:
+    """Payload without protection_style defaults to standalone (backward-compatible)."""
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "target_price": 50000.0,
+        },
+        "tsb:10:5:sl:1",
+    )
+
+    assert params.action == "edit_sl"
+    assert params.new_trigger_price == 50000.0

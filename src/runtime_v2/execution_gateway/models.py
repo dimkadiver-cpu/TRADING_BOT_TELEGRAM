@@ -53,6 +53,9 @@ class AdapterConfig(BaseModel):
     connector: str
     api_key_env: str | None = None
     api_secret_env: str | None = None
+    adjust_for_time_difference: bool = True
+    recv_window_ms: int = 10000
+    time_sync_on_startup: bool = True
     strategy: ExecutionStrategyConfig = Field(default_factory=ExecutionStrategyConfig)
     websocket: WebsocketConfig = Field(default_factory=WebsocketConfig)
     retry: RetryConfig = Field(default_factory=RetryConfig)

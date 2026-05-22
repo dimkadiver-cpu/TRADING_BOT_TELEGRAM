@@ -133,11 +133,15 @@ def test_adapter_error_sets_retry(ops_db):
     gw.process(cmd, account_id="acc_1")
 
     conn = sqlite3.connect(ops_db)
-    retry_count = conn.execute(
+    retry_row = conn.execute(
         "SELECT retry_count FROM ops_execution_commands WHERE command_id=1003"
     ).fetchone()[0]
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=1003"
+    ).fetchone()[0]
     conn.close()
-    assert retry_count == 1
+    assert status == "SENT"
+    assert retry_row == 1
 
 
 def test_close_partial_uses_exit_partial_role():
@@ -306,6 +310,52 @@ def test_deferred_market_resolves_qty_from_mark_price(ops_db):
     assert len(place_calls) == 1
     # qty = risk_amount / abs(mark_price - sl_price) = 10.0 / abs(150.0 - 140.0) = 1.0
     assert abs(adapter._last_place_qty - 1.0) < 0.001
+
+
+def test_waiting_partial_tp_resolves_size_from_filled_entry_qty(ops_db):
+    """Gateway WAITING_POSITION partial TP calcola tp_size da filled_entry_qty reale."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute("UPDATE ops_trade_chains SET filled_entry_qty=0.006 WHERE trade_chain_id=1")
+    conn.commit()
+    conn.close()
+
+    payload = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "SHORT",
+        "execution_strategy": "C_MULTI_TP",
+        "position_idx": 0,
+        "take_profit": 76000.26,
+        "tp_qty_mode": "filled_entry_pct",
+        "close_pct": 50.0,
+        "tp_order_type": "Limit",
+        "tp_limit_price": 76000.26,
+        "tp_trigger_by": "MarkPrice",
+        "preserve_sl": True,
+        "sequence": 1,
+    }
+    _insert_cmd(ops_db, 2003, cmd_type="SET_POSITION_TPSL_PARTIAL", payload=payload)
+    repo = GatewayCommandRepository(ops_db)
+
+    adapter = FakeAdapter()
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 2003)
+    gw.process(cmd, account_id="acc_1")
+
+    place_calls = [c for c in adapter.calls if c["action"] == "place_order"]
+    assert len(place_calls) == 1
+    sent_payload = place_calls[0]["payload"]
+    assert abs(float(sent_payload["tp_size"]) - 0.003) < 0.000001
+    assert "tp_qty_mode" not in sent_payload
+    assert "close_pct" not in sent_payload
 
 
 def test_deferred_market_no_mark_price_marks_review_required(ops_db):

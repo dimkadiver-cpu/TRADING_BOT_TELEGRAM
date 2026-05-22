@@ -82,6 +82,8 @@ class TradeChain(BaseModel):
     closed_position_qty: float = 0.0
     last_position_sync_at: datetime | None = None
     execution_mode: str = "a_sequential"
+    risk_already_realized: float = 0.0
+    risk_remaining: float = 0.0
     plan_state_json: str = "{}"
     created_at: datetime | None = None
     updated_at: datetime | None = None

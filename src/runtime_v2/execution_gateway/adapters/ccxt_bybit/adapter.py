@@ -25,6 +25,9 @@ class CcxtBybitAdapter(ExecutionAdapter):
         api_secret: str,
         connector: str,
         mode: str = "live",
+        adjust_for_time_difference: bool = True,
+        recv_window_ms: int = 10000,
+        time_sync_on_startup: bool = True,
         repo: GatewayCommandRepository | None = None,
         _exchange=None,  # injectable for unit tests
     ) -> None:
@@ -34,16 +37,59 @@ class CcxtBybitAdapter(ExecutionAdapter):
             self._exchange = ccxt.bybit({
                 "apiKey": api_key,
                 "secret": api_secret,
-                "options": {"defaultType": "linear"},
+                "options": {
+                    "defaultType": "linear",
+                    "adjustForTimeDifference": adjust_for_time_difference,
+                    "recvWindow": recv_window_ms,
+                    "recv_window": recv_window_ms,
+                },
             })
             if mode == "demo":
                 # Bybit Demo Trading — usa api-demo.bybit.com, non testnet
                 self._exchange.enable_demo_trading(True)
             elif mode == "testnet":
                 self._exchange.set_sandbox_mode(True)
+            self._configure_time_sync(
+                adjust_for_time_difference=adjust_for_time_difference,
+                recv_window_ms=recv_window_ms,
+                time_sync_on_startup=time_sync_on_startup,
+            )
         self._connector = connector
         self._repo = repo
         self._builder = BybitOrderBuilder()
+
+    def _configure_time_sync(
+        self,
+        *,
+        adjust_for_time_difference: bool,
+        recv_window_ms: int,
+        time_sync_on_startup: bool,
+    ) -> None:
+        options = getattr(self._exchange, "options", None)
+        if isinstance(options, dict):
+            options["adjustForTimeDifference"] = adjust_for_time_difference
+            options["recvWindow"] = recv_window_ms
+            options["recv_window"] = recv_window_ms
+
+        if hasattr(self._exchange, "recvWindow"):
+            try:
+                self._exchange.recvWindow = recv_window_ms
+            except Exception:
+                logger.debug("unable to set exchange recvWindow", exc_info=True)
+
+        if not (adjust_for_time_difference and time_sync_on_startup):
+            return
+
+        load_time_difference = getattr(self._exchange, "load_time_difference", None)
+        if not callable(load_time_difference):
+            return
+
+        try:
+            delta_ms = load_time_difference()
+            if delta_ms is not None:
+                logger.info("Bybit time sync delta_ms=%s", delta_ms)
+        except Exception as exc:
+            logger.warning("Bybit time sync bootstrap failed: %s", exc)
 
     def get_capabilities(self) -> AdapterCapabilities:
         return AdapterCapabilities(
@@ -150,7 +196,11 @@ class CcxtBybitAdapter(ExecutionAdapter):
                     "symbol": params.symbol,
                     **params.extra_params,
                 })
-                ret_code = (resp or {}).get("retCode", 0)
+                raw_ret_code = (resp or {}).get("retCode", 0)
+                try:
+                    ret_code = int(raw_ret_code)
+                except (TypeError, ValueError):
+                    ret_code = -1
                 if ret_code != 0:
                     ret_msg = (resp or {}).get("retMsg", "")
                     logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)

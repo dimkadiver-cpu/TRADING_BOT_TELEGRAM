@@ -4,6 +4,8 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
+import pytest
+
 
 def _now():
     return datetime.now(timezone.utc)
@@ -97,6 +99,57 @@ def test_tp_filled_be_trigger_creates_be_command():
     result = proc.process(event, chain, [])
     assert any(c.command_type == "MOVE_STOP_TO_BREAKEVEN" for c in result.execution_commands)
     assert result.new_be_protection_status == "BE_MOVE_PENDING"
+
+
+def test_tp_filled_be_trigger_payload_contains_protection_style_standalone_for_sequential():
+    """Automatic BE trigger on a_sequential chain → protection_style='standalone_order'."""
+    proc = _make_processor()
+    event = _make_exchange_event(event_type="TP_FILLED",
+                                  payload={"tp_level": 1, "is_final": False})
+    chain = _make_chain(state="OPEN", be_trigger="tp1")
+    chain = chain.model_copy(update={
+        "execution_mode": "a_sequential",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+    result = proc.process(event, chain, [])
+    command = next(c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["protection_style"] == "standalone_order"
+    assert "position_idx" in payload
+
+
+def test_tp_filled_be_trigger_payload_contains_protection_style_attached_for_c_multi_tp():
+    """Automatic BE trigger on C_MULTI_TP chain → protection_style='attached_full'."""
+    proc = _make_processor()
+    event = _make_exchange_event(event_type="TP_FILLED",
+                                  payload={"tp_level": 1, "is_final": False})
+    chain = _make_chain(state="OPEN", be_trigger="tp1")
+    chain = chain.model_copy(update={
+        "execution_mode": "C_MULTI_TP",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+    result = proc.process(event, chain, [])
+    command = next(c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["protection_style"] == "attached_full"
+    assert "position_idx" in payload
+
+
+def test_tp_filled_be_trigger_payload_contains_protection_style_attached_for_unified_plan():
+    """Automatic BE trigger on UNIFIED_PLAN chain -> protection_style='attached_full'."""
+    proc = _make_processor()
+    event = _make_exchange_event(event_type="TP_FILLED",
+                                  payload={"tp_level": 1, "is_final": False})
+    chain = _make_chain(state="OPEN", be_trigger="tp1")
+    chain = chain.model_copy(update={
+        "execution_mode": "UNIFIED_PLAN",
+        "risk_snapshot_json": '{"hedge_mode": false}',
+    })
+    result = proc.process(event, chain, [])
+    command = next(c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["protection_style"] == "attached_full"
+    assert "position_idx" in payload
 
 
 def test_tp_filled_be_trigger_already_protected_noop():
@@ -333,6 +386,70 @@ def test_entry_filled_emits_position_size_updated_event():
     assert "ENTRY_AVG_PRICE_UPDATED" in event_types
 
 
+def test_entry_filled_with_multi_tp_plan_emits_intermediate_tp_commands():
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "ON_EACH_ENTRY_FILL",
+        "intermediate_tps": [51000.0],
+        "final_tp": 52000.0,
+    })
+    chain = _make_chain(state="WAITING_ENTRY")
+    chain = chain.model_copy(update={
+        "plan_state_json": plan_state,
+        "execution_mode": "UNIFIED_PLAN",
+    })
+    event = _make_exchange_event(
+        event_type="ENTRY_FILLED",
+        payload={"fill_price": 50000.0, "filled_qty": 0.01},
+    )
+    result = _make_processor().process(event, chain, [])
+    tp_cmds = [
+        c for c in result.execution_commands
+        if c.command_type == "SET_POSITION_TPSL_PARTIAL"
+    ]
+    assert len(tp_cmds) == 1
+    payload = json.loads(tp_cmds[0].payload_json)
+    assert payload["take_profit"] == 51000.0
+
+
+def test_entry_filled_with_single_tp_plan_emits_no_intermediate_cmds():
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "NONE",
+        "intermediate_tps": [],
+        "final_tp": 51000.0,
+    })
+    chain = _make_chain(state="WAITING_ENTRY")
+    chain = chain.model_copy(update={
+        "plan_state_json": plan_state,
+        "execution_mode": "UNIFIED_PLAN",
+    })
+    event = _make_exchange_event(
+        event_type="ENTRY_FILLED",
+        payload={"fill_price": 50000.0, "filled_qty": 0.01},
+    )
+    result = _make_processor().process(event, chain, [])
+    tp_cmds = [
+        c for c in result.execution_commands
+        if c.command_type == "SET_POSITION_TPSL_PARTIAL"
+    ]
+    assert tp_cmds == []
+
+
+def test_entry_filled_updates_risk_already_realized():
+    chain = _make_chain(state="WAITING_ENTRY")
+    chain = chain.model_copy(update={
+        "expected_stop_price": 49000.0,
+        "risk_snapshot_json": json.dumps({"sl_price": 49000.0}),
+    })
+    event = _make_exchange_event(
+        event_type="ENTRY_FILLED",
+        payload={"fill_price": 50000.0, "filled_qty": 0.01},
+    )
+    result = _make_processor().process(event, chain, [])
+    assert result.new_risk_already_realized == pytest.approx(10.0)
+
+
 # --- Task 7: TP/SL/Close fill qty tracking + SYNC_PROTECTIVE_ORDERS ---
 
 def _make_tp_event(chain_id: int, tp_level: int, is_final: bool, fill_qty: float) -> "ExchangeEvent":
@@ -554,6 +671,12 @@ def _make_chain_multi_tp(
             ]
         }
     }
+    plan_state = {
+        "plan_version": 1,
+        "rebuild_policy": "ON_EACH_ENTRY_FILL",
+        "intermediate_tps": [0.52],
+        "final_tp": 0.55,
+    }
     return TradeChain(
         trade_chain_id=trade_chain_id,
         source_enrichment_id=trade_chain_id,
@@ -565,6 +688,7 @@ def _make_chain_multi_tp(
         entry_mode="TWO_STEP",
         management_plan_json=mp.model_dump_json(),
         risk_snapshot_json=_json.dumps(risk_snap),
+        plan_state_json=_json.dumps(plan_state),
         execution_mode="D_MULTI_ENTRY_MULTI_TP",
         filled_entry_qty=filled_entry_qty,
         open_position_qty=open_position_qty,

@@ -20,6 +20,9 @@ execution:
 
       api_key_env: BYBIT_API_KEY_BYBIT_DEMO
       api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO
+      adjust_for_time_difference: true
+      recv_window_ms: 10000
+      time_sync_on_startup: true
 
       strategy:
         default_mode: D_POSITION_TPSL
@@ -44,6 +47,9 @@ execution:
       type: ccxt_bybit
       mode: paper
       connector: bybit
+      adjust_for_time_difference: true
+      recv_window_ms: 10000
+      time_sync_on_startup: true
 
       strategy:
         default_mode: D_POSITION_TPSL

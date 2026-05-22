@@ -213,7 +213,7 @@ class GatewayCommandRepository:
         conn = sqlite3.connect(self._db)
         try:
             conn.execute(
-                "UPDATE ops_execution_commands SET retry_count=?, "
+                "UPDATE ops_execution_commands SET status='SENT', retry_count=?, "
                 "next_retry_at=?, updated_at=? WHERE command_id=?",
                 (retry_count, next_retry_at, now, command_id),
             )
@@ -260,7 +260,8 @@ class GatewayCommandRepository:
         try:
             row = conn.execute(
                 "SELECT client_order_id FROM ops_execution_commands "
-                "WHERE trade_chain_id=? AND command_type='PLACE_ENTRY' "
+                "WHERE trade_chain_id=? "
+                "AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL') "
                 "AND client_order_id IS NOT NULL LIMIT 1",
                 (trade_chain_id,),
             ).fetchone()
@@ -279,6 +280,19 @@ class GatewayCommandRepository:
             if not row:
                 return None
             return json.loads(row[0] or "{}")
+        finally:
+            conn.close()
+
+    def get_chain_filled_entry_qty(self, trade_chain_id: int) -> float | None:
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT filled_entry_qty FROM ops_trade_chains WHERE trade_chain_id=?",
+                (trade_chain_id,),
+            ).fetchone()
+            if not row or row[0] is None:
+                return None
+            return float(row[0])
         finally:
             conn.close()
 

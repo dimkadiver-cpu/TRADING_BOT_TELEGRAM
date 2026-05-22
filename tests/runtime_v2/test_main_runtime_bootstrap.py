@@ -88,6 +88,35 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
     watcher.start.assert_called_once_with()
 
 
+def test_build_lifecycle_entry_gate_uses_simple_attached_strategy(monkeypatch, tmp_path):
+    import main as app_main
+
+    adapter_cfg = SimpleNamespace(
+        strategy=SimpleNamespace(
+            default_mode="D_POSITION_TPSL",
+            simple_attached_enabled=True,
+        )
+    )
+    routing = SimpleNamespace(execution_account_id="master_account")
+    exec_config = SimpleNamespace(
+        resolve_routing=lambda account_id: (routing, adapter_cfg),
+    )
+
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionConfigLoader",
+        lambda path: SimpleNamespace(load=lambda: exec_config),
+    )
+
+    gate = app_main._build_lifecycle_entry_gate(
+        root_dir=tmp_path,
+        risk_engine=MagicMock(),
+        exchange_port=MagicMock(),
+    )
+
+    assert gate._simple_attached_enabled is True
+
+
 def test_close_execution_runtime_stops_watcher_and_closes_adapter():
     import main as app_main
 

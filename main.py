@@ -142,6 +142,23 @@ def _build_execution_runtime(
     )
 
 
+def _build_lifecycle_entry_gate(
+    *,
+    root_dir: Path,
+    risk_engine: RiskCapacityEngine,
+    exchange_port: StaticExchangeDataPort,
+) -> LifecycleEntryGate:
+    execution_config_path = str(root_dir / "config" / "execution.yaml")
+    exec_config = ExecutionConfigLoader(execution_config_path).load()
+    _, adapter_cfg = exec_config.resolve_routing("default")
+    strategy = adapter_cfg.strategy
+    return LifecycleEntryGate(
+        risk_engine=risk_engine,
+        exchange_port=exchange_port,
+        simple_attached_enabled=strategy.simple_attached_enabled,
+    )
+
+
 def _close_execution_runtime(runtime: ExecutionRuntime | None) -> None:
     if runtime is None:
         return
@@ -259,7 +276,11 @@ async def _async_main(
 
     exchange_port = StaticExchangeDataPort()
     risk_engine = RiskCapacityEngine()
-    entry_gate = LifecycleEntryGate(risk_engine=risk_engine, exchange_port=exchange_port)
+    entry_gate = _build_lifecycle_entry_gate(
+        root_dir=root_dir,
+        risk_engine=risk_engine,
+        exchange_port=exchange_port,
+    )
 
     gate_worker = LifecycleGateWorker(
         parser_db_path=parser_db_path,

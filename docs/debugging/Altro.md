@@ -1,4 +1,4 @@
-- Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?
+- Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?fi
 
 - Pulizia dei BD in prova
 
@@ -16,3 +16,7 @@ Domande aperte da verificare:
 
 - Verificare come vengono gestiti i ordini su exchange:
     tre modalita
+
+- Velocizare i passaggi ? sync, ecc
+
+- Aggioramento manuale su exchange, vine rigestrato su DB?

@@ -17,7 +17,8 @@ _CHAIN_COLS = (
     "entry_avg_price, current_stop_price, expected_stop_price, be_protection_status, "
     "entry_timeout_at, management_plan_json, risk_snapshot_json, "
     "planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty, "
-    "last_position_sync_at, execution_mode, plan_state_json, created_at, updated_at"
+    "last_position_sync_at, execution_mode, risk_already_realized, risk_remaining, "
+    "plan_state_json, created_at, updated_at"
 )
 
 
@@ -31,7 +32,8 @@ def _chain_from_row(row: tuple) -> TradeChain:
      entry_avg_price, current_stop_price, expected_stop_price, be_protection_status,
      entry_timeout_at, management_plan_json, risk_snapshot_json,
      planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty,
-     last_position_sync_at, execution_mode, plan_state_json, created_at, updated_at) = row
+     last_position_sync_at, execution_mode, risk_already_realized, risk_remaining,
+     plan_state_json, created_at, updated_at) = row
     return TradeChain(
         trade_chain_id=trade_chain_id,
         source_enrichment_id=source_enrichment_id,
@@ -59,6 +61,8 @@ def _chain_from_row(row: tuple) -> TradeChain:
             if last_position_sync_at else None
         ),
         execution_mode=execution_mode or "a_sequential",
+        risk_already_realized=risk_already_realized or 0.0,
+        risk_remaining=risk_remaining or 0.0,
         plan_state_json=plan_state_json or "{}",
         created_at=datetime.fromisoformat(created_at) if created_at else None,
         updated_at=datetime.fromisoformat(updated_at) if updated_at else None,
@@ -82,8 +86,9 @@ class TradeChainRepository:
                     be_protection_status, entry_timeout_at, management_plan_json,
                     risk_snapshot_json, planned_entry_qty, filled_entry_qty,
                     open_position_qty, closed_position_qty, last_position_sync_at,
-                    execution_mode, plan_state_json, created_at, updated_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                    execution_mode, risk_already_realized, risk_remaining,
+                    plan_state_json, created_at, updated_at
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     chain.source_enrichment_id, chain.canonical_message_id, chain.raw_message_id,
@@ -96,7 +101,8 @@ class TradeChainRepository:
                     chain.planned_entry_qty, chain.filled_entry_qty,
                     chain.open_position_qty, chain.closed_position_qty,
                     chain.last_position_sync_at.isoformat() if chain.last_position_sync_at else None,
-                    chain.execution_mode, chain.plan_state_json, now, now,
+                    chain.execution_mode, chain.risk_already_realized, chain.risk_remaining,
+                    chain.plan_state_json, now, now,
                 ),
             )
             conn.commit()

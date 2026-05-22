@@ -9,11 +9,14 @@ from src.runtime_v2.lifecycle.models import (
     BeProtectionStatus, ExecutionCommand, ExchangeEvent,
     LifecycleEvent, LifecycleState, TradeChain,
 )
+from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+from src.runtime_v2.lifecycle.post_fill_rebuilder import PostFillProtectionRebuilder
 from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
 
 logger = logging.getLogger(__name__)
 
 _ATTACHED_PROTECTION_MODES = frozenset({
+    "UNIFIED_PLAN",
     "C_SIMPLE_ATTACHED", "C_MULTI_TP",
     "D_MULTI_ENTRY_1TP", "D_MULTI_ENTRY_MULTI_TP", "D_POSITION_TPSL",
 })
@@ -48,6 +51,9 @@ class EventProcessorResult:
     new_filled_entry_qty: float | None = None
     new_open_position_qty: float | None = None
     new_closed_position_qty: float | None = None
+    new_risk_already_realized: float | None = None
+    new_risk_remaining: float | None = None
+    new_plan_state_json: str | None = None
     release_waiting_position: bool = False
 
 
@@ -89,6 +95,7 @@ class LifecycleEventProcessor:
         payload = json.loads(exchange_event.payload_json)
         fill_price = float(payload.get("fill_price") or 0.0)
         fill_qty = float(payload.get("filled_qty") or 0.0)
+        filled_client_order_id = payload.get("entry_client_order_id")
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
 
@@ -100,6 +107,23 @@ class LifecycleEventProcessor:
         else:
             new_avg = fill_price
         new_open = chain.open_position_qty + fill_qty
+        risk_snapshot = {}
+        sl_price: float | None = None
+        try:
+            risk_snapshot = json.loads(chain.risk_snapshot_json or "{}")
+            sl_raw = risk_snapshot.get("sl_price")
+            sl_price = float(sl_raw) if sl_raw is not None else None
+        except Exception:
+            sl_price = None
+
+        new_risk_already_realized: float | None = None
+        new_risk_remaining: float | None = None
+        if sl_price is not None:
+            fill_risk = fill_qty * abs(fill_price - sl_price)
+            new_risk_already_realized = chain.risk_already_realized + fill_risk
+            risk_total = float(risk_snapshot.get("risk_amount", 0.0) or 0.0)
+            if risk_total > 0:
+                new_risk_remaining = max(0.0, risk_total - new_risk_already_realized)
 
         is_first_fill = chain.lifecycle_state == "WAITING_ENTRY"
         new_state: LifecycleState | None = "OPEN" if is_first_fill else None
@@ -133,9 +157,13 @@ class LifecycleEventProcessor:
             ),
         ]
 
-        commands: list[ExecutionCommand] = []
-        if chain.execution_mode == "D_MULTI_ENTRY_MULTI_TP":
-            commands = self._build_tp_partial_commands_after_fill(chain, new_filled, eid)
+        commands = PostFillProtectionRebuilder().build_after_fill(chain, new_filled, eid or 0)
+        new_plan_state_json = self._mark_entry_leg_status(
+            chain.plan_state_json,
+            client_order_ids=[filled_client_order_id] if filled_client_order_id else [],
+            new_status="FILLED",
+            fallback_first_pending=True,
+        )
 
         return EventProcessorResult(
             new_lifecycle_state=new_state,
@@ -146,57 +174,52 @@ class LifecycleEventProcessor:
             execution_commands=commands,
             new_filled_entry_qty=new_filled,
             new_open_position_qty=new_open,
+            new_risk_already_realized=new_risk_already_realized,
+            new_risk_remaining=new_risk_remaining,
+            new_plan_state_json=new_plan_state_json,
             release_waiting_position=is_first_fill,
         )
 
-    def _build_tp_partial_commands_after_fill(
-        self, chain: TradeChain, new_filled: float, exchange_event_id: int
-    ) -> list[ExecutionCommand]:
+    def _mark_entry_leg_status(
+        self,
+        plan_state_json: str,
+        *,
+        client_order_ids: list[str],
+        new_status: str,
+        fallback_first_pending: bool = False,
+    ) -> str | None:
         try:
-            risk_snap = json.loads(chain.risk_snapshot_json or "{}")
-            levels = risk_snap.get("tp_rebuild", {}).get("levels", [])
+            current_plan_json = plan_state_json or "{}"
+            plan = json.loads(current_plan_json)
         except Exception:
-            return []
-        if not levels:
-            return []
+            return None
 
-        # Last TP is attached at entry order level for D_MULTI_ENTRY_MULTI_TP.
-        # Only emit intermediate levels (all except last) as position-level partial TPs.
-        intermediate_levels = levels[:-1]
-        if not intermediate_levels:
-            return []
+        legs = plan.get("legs", [])
+        if not legs:
+            return None
 
-        chain_id = chain.trade_chain_id
-        commands: list[ExecutionCommand] = []
+        target_legs = [
+            leg for leg in legs
+            if leg.get("client_order_id") in client_order_ids
+            and leg.get("status") == "PENDING"
+        ]
+        if not target_legs and fallback_first_pending:
+            first_pending = next(
+                (leg for leg in legs if leg.get("status") == "PENDING"),
+                None,
+            )
+            target_legs = [first_pending] if first_pending is not None else []
+        if not target_legs:
+            return None
 
-        for level in intermediate_levels:
-            tp_price = level.get("price")
-            close_pct = float(level.get("close_pct", 100.0 / len(intermediate_levels)))
-            sequence = int(level.get("sequence", 1))
-            tp_qty = round(new_filled * close_pct / 100.0, 8)
-
-            payload: dict = {
-                "symbol": chain.symbol,
-                "side": chain.side,
-                "tp_sequence": sequence,
-                "take_profit": tp_price,
-                "tp_size": tp_qty,
-                "tp_order_type": "Limit",
-                "tp_limit_price": tp_price,
-                "tp_trigger_by": "MarkPrice",
-                "preserve_sl": True,
-                "supersedes_previous": True,
-            }
-            commands.append(ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type="SET_POSITION_TPSL_PARTIAL",
-                payload_json=json.dumps(payload),
-                idempotency_key=(
-                    f"tp_partial_fill:{chain_id}:{exchange_event_id}:tp{sequence}"
-                ),
-            ))
-
-        return commands
+        updated = current_plan_json
+        for leg in target_legs:
+            updated = ExecutionPlanBuilder.update_leg_status(
+                updated,
+                str(leg.get("leg_id")),
+                new_status,
+            )
+        return updated
 
     def _process_tp_filled(
         self,
@@ -424,6 +447,7 @@ class LifecycleEventProcessor:
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
         position_already_open = bool(payload.get("position_already_open", False))
+        cancelled_order_ids = [str(v) for v in payload.get("cancelled_order_ids", []) if v]
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         commands: list[ExecutionCommand] = []
@@ -437,6 +461,11 @@ class LifecycleEventProcessor:
             ))
         else:
             new_state = "CANCELLED"
+        new_plan_state_json = self._mark_entry_leg_status(
+            chain.plan_state_json,
+            client_order_ids=cancelled_order_ids,
+            new_status="CANCELLED",
+        )
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,
@@ -453,6 +482,7 @@ class LifecycleEventProcessor:
                 idempotency_key=f"pending_cancelled:{chain_id}:{eid}",
             )],
             execution_commands=commands,
+            new_plan_state_json=new_plan_state_json,
         )
 
 

@@ -1,0 +1,93 @@
+{
+  "language": "en",
+  "shared_vocabulary": null,
+  "number_format": {
+    "decimal_separator": ".",
+    "thousands_separator": ","
+  },
+  "entity_policy": {
+    "market_type": "DECLARED",
+    "entry_order_type": "DECLARED"
+  },
+  "classification_markers": {
+    "info_only": [
+      "vip market update",
+      "market analysis"
+    ],
+    "new_signal": {
+      "strong": [
+        "coin:",
+        "direction:",
+        "entry:",
+        "targets:"
+      ],
+      "weak": [
+        "signal id",
+        "stop loss:",
+        "sl:",
+        "long",
+        "short"
+      ]
+    },
+    "update": {
+      "strong": [
+        "closed manually",
+        "re-enter",
+        "% profit (",
+        "% loss (",
+        "✅"
+      ],
+      "weak": [
+        "target",
+        "update"
+      ]
+    }
+  },
+  "combination_rules": [
+    {
+      "if": ["stop loss:", "coin:"],
+      "then": "new_signal",
+      "confidence_boost": 0.5
+    },
+    {
+      "if": ["coin:", "direction:"],
+      "then": "new_signal",
+      "confidence_boost": 0.3
+    }
+  ],
+  "intent_markers": {
+    "U_TP_HIT": [
+      "✅",
+      "% profit ("
+    ],
+    "U_STOP_HIT": [
+      "% loss (",
+      "broke down",
+      "stop loss hit"
+    ],
+    "U_CLOSE_FULL": [
+      "closed manually"
+    ],
+    "U_REENTER": [
+      "re-enter",
+      "re-entry",
+      "reenter"
+    ],
+    "U_CLOSE_PARTIAL": []
+  },
+  "target_ref_markers": {
+    "strong": {
+      "telegram_link": "t\\.me/",
+      "explicit_id": ["signal id"]
+    },
+    "weak": {
+      "pronouns": []
+    }
+  },
+  "blacklist": [],
+  "fallback_hook": {
+    "enabled": false,
+    "provider": null,
+    "model": null
+  }
+}

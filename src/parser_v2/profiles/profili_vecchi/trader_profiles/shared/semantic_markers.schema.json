@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "parser_profile_semantic_markers_v1",
+  "title": "Parser Profile Semantic Markers Schema v1",
+  "type": "object",
+  "required": ["classification_markers", "intent_markers"],
+  "properties": {
+    "language": { "type": "string" },
+    "number_format": {
+      "type": "object",
+      "properties": {
+        "decimal_separator": { "type": "string" },
+        "thousands_separator": { "type": "string" }
+      }
+    },
+    "blacklist": { "type": "array", "items": { "type": "string" } },
+    "classification_markers": {
+      "type": "object",
+      "required": ["new_signal", "update", "info_only"],
+      "additionalProperties": { "$ref": "#/$defs/marker_group" }
+    },
+    "field_markers": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/marker_group" }
+    },
+    "intent_markers": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/marker_group" }
+    },
+    "side_markers": { "type": "object" },
+    "entry_type_markers": { "type": "object" },
+    "target_markers": { "type": "object" },
+    "global_target_markers": { "type": "object" },
+    "symbol_aliases": { "type": "object" },
+    "extraction_markers": {
+      "type": "object",
+      "additionalProperties": { "$ref": "#/$defs/marker_group" }
+    }
+  },
+  "$defs": {
+    "marker_group": {
+      "type": "object",
+      "required": ["strong", "weak"],
+      "properties": {
+        "strong": { "type": "array", "items": { "type": "string" } },
+        "weak": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": false
+    }
+  }
+}

@@ -125,6 +125,19 @@ class ExecutionGateway:
                 if k not in ("qty_mode", "risk_amount", "sl_price")
             }
             payload["qty"] = computed_qty
+        if payload.get("tp_qty_mode") == "filled_entry_pct":
+            filled_entry_qty = self._repo.get_chain_filled_entry_qty(cmd.trade_chain_id)
+            if filled_entry_qty is None or filled_entry_qty <= 0.0:
+                self._repo.mark_review_required(
+                    cmd.command_id, reason="filled_entry_qty_unavailable_for_partial_tp"
+                )
+                return
+            close_pct = float(payload["close_pct"])
+            payload = {
+                k: v for k, v in payload.items()
+                if k not in ("tp_qty_mode", "close_pct")
+            }
+            payload["tp_size"] = round(filled_entry_qty * close_pct / 100.0, 8)
 
         # Cancel previous SET_POSITION_TPSL_PARTIAL commands for this chain when superseded
         if (
