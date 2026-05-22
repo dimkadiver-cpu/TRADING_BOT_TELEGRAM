@@ -67,6 +67,26 @@ class ChannelsConfig:
         return None
 
 
+def is_blacklisted_text(
+    config: ChannelsConfig,
+    raw_text: str,
+    chat_id: int | None,
+    topic_id: int | None = None,
+) -> bool:
+    """Return True if raw_text matches blacklist_global or the scope-matched entry blacklist."""
+    text_lower = raw_text.lower()
+    for tag in config.blacklist_global:
+        if tag.lower() in text_lower:
+            return True
+    if chat_id is not None:
+        entry = config.match_entry(chat_id, topic_id)
+        if entry is not None:
+            for tag in entry.blacklist:
+                if tag.lower() in text_lower:
+                    return True
+    return False
+
+
 def _parse_topic_id(value: object) -> int | None:
     if value is None:
         return None

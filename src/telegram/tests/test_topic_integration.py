@@ -14,9 +14,8 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from src.telegram.channel_config import ChannelEntry, ChannelsConfig
+from src.telegram.channel_config import ChannelEntry, ChannelsConfig, is_blacklisted_text
 from src.telegram.listener import TelegramListener
-from src.telegram.router import is_blacklisted_text
 from src.telegram.topic_utils import extract_message_topic_id
 
 
