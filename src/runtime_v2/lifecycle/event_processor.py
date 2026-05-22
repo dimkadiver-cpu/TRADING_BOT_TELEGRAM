@@ -148,7 +148,7 @@ class LifecycleEventProcessor:
 
         for level in intermediate_levels:
             tp_price = level.get("price")
-            close_pct = float(level.get("close_pct", 100.0 / len(levels)))
+            close_pct = float(level.get("close_pct", 100.0 / len(intermediate_levels)))
             sequence = int(level.get("sequence", 1))
             tp_qty = round(new_filled * close_pct / 100.0, 8)
 
