@@ -15,6 +15,7 @@ class FakeAdapter(ExecutionAdapter):
         fail_on: set[str] | None = None,
         simulate_timeout: bool = False,
         positions: dict[str, float] | None = None,
+        mark_prices: dict[str, float] | None = None,
     ) -> None:
         self._capabilities = capabilities or AdapterCapabilities(
             place_entry=True,
@@ -30,8 +31,10 @@ class FakeAdapter(ExecutionAdapter):
         self._fail_on = fail_on or set()
         self._simulate_timeout = simulate_timeout
         self._positions = positions or {}
+        self._mark_prices: dict[str, float] = mark_prices or {}
         self._orders: dict[str, RawAdapterOrder] = {}
         self.calls: list[dict] = []
+        self._last_place_qty: float | None = None
 
     def get_capabilities(self) -> AdapterCapabilities:
         return self._capabilities
@@ -49,7 +52,8 @@ class FakeAdapter(ExecutionAdapter):
         connector: str,
     ) -> AdapterResult:
         self.calls.append({"action": "place_order", "command_type": command_type,
-                           "client_order_id": client_order_id})
+                           "client_order_id": client_order_id, "payload": payload})
+        self._last_place_qty = float(payload.get("qty", 0.0))
         if self._simulate_timeout:
             raise TimeoutError("fake timeout")
         if command_type in self._fail_on:
@@ -107,6 +111,12 @@ class FakeAdapter(ExecutionAdapter):
         execution_account_id: str,
     ) -> float | None:
         return self._positions.get(f"{symbol}:{side}")
+
+    def fetch_mark_price(self, symbol: str, execution_account_id: str) -> float | None:
+        return self._mark_prices.get(symbol)
+
+    def set_mark_price(self, symbol: str, price: float) -> None:
+        self._mark_prices[symbol] = price
 
 
 __all__ = ["FakeAdapter"]

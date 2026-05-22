@@ -52,5 +52,12 @@ class ExecutionAdapter(ABC):
         execution_account_id: str,
     ) -> float | None: ...
 
+    @abstractmethod
+    def fetch_mark_price(
+        self,
+        symbol: str,
+        execution_account_id: str,
+    ) -> float | None: ...
+
 
 __all__ = ["ExecutionAdapter"]
