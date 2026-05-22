@@ -110,17 +110,72 @@ class LifecycleEventProcessor:
             ),
         ]
 
+        commands: list[ExecutionCommand] = []
+        if chain.execution_mode == "D_MULTI_ENTRY_MULTI_TP":
+            commands = self._build_tp_partial_commands_after_fill(chain, new_filled, eid)
+
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,
             entry_avg_price=new_avg,
             current_stop_price=None,
             lifecycle_events=events,
-            execution_commands=[],
+            execution_commands=commands,
             new_filled_entry_qty=new_filled,
             new_open_position_qty=new_open,
             release_waiting_position=is_first_fill,
         )
+
+    def _build_tp_partial_commands_after_fill(
+        self, chain: TradeChain, new_filled: float, exchange_event_id: int
+    ) -> list[ExecutionCommand]:
+        try:
+            risk_snap = json.loads(chain.risk_snapshot_json or "{}")
+            levels = risk_snap.get("tp_rebuild", {}).get("levels", [])
+        except Exception:
+            return []
+        if not levels:
+            return []
+
+        chain_id = chain.trade_chain_id
+        total_levels = len(levels)
+        commands: list[ExecutionCommand] = []
+        allocated_qty = 0.0
+
+        for i, level in enumerate(levels):
+            is_last = (i == total_levels - 1)
+            tp_price = level.get("price")
+            close_pct = float(level.get("close_pct", 100.0 / total_levels))
+            sequence = int(level.get("sequence", i + 1))
+
+            if is_last:
+                tp_qty = round(max(0.0, new_filled - allocated_qty), 8)
+            else:
+                tp_qty = round(new_filled * close_pct / 100.0, 8)
+                allocated_qty += tp_qty
+
+            payload: dict = {
+                "symbol": chain.symbol,
+                "side": chain.side,
+                "tp_sequence": sequence,
+                "take_profit": tp_price,
+                "tp_size": tp_qty,
+                "tp_order_type": "Limit",
+                "tp_limit_price": tp_price,
+                "tp_trigger_by": "MarkPrice",
+                "preserve_sl": True,
+                "supersedes_previous": True,
+            }
+            commands.append(ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type="SET_POSITION_TPSL_PARTIAL",
+                payload_json=json.dumps(payload),
+                idempotency_key=(
+                    f"tp_partial_fill:{chain_id}:{exchange_event_id}:tp{sequence}"
+                ),
+            ))
+
+        return commands
 
     def _process_tp_filled(
         self,
