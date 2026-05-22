@@ -90,6 +90,9 @@ def test_3a_market_deferred_uses_qty_mode_deferred():
     assert p["risk_amount"] == pytest.approx(100.0)
     assert p["sl_price"] == 49000.0
     assert "qty" not in p
+    assert "attached_tpsl" in p
+    assert p["attached_tpsl"]["stop_loss"] == 49000.0
+    assert p["attached_tpsl"]["sl_trigger_by"] == "MarkPrice"
 
 
 def test_4b_market_plus_limits_multi_tp():
@@ -152,8 +155,9 @@ def test_attached_block_trigger_fields():
 
 
 def test_deferred_leg_raises_if_sl_none():
+    # seq=1 MARKET → hits attached guard first ("sl_price required for attached TPSL")
     from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
-    with pytest.raises(ValueError, match="sl_price required for deferred"):
+    with pytest.raises(ValueError, match="sl_price required for attached"):
         EntryCommandFactory().build_entry_commands(
             enrichment_id=99, symbol="BTC/USDT", side="LONG",
             entries=[_leg(1, "MARKET", None, 1.0)],

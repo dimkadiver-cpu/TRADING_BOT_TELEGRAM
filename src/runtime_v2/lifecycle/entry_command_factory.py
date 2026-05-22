@@ -67,6 +67,10 @@ class EntryCommandFactory:
                 "position_idx": position_idx,
             }
 
+            # Guard: attached TPSL requires sl_price regardless of qty mode
+            if is_attached and sl_price is None:
+                raise ValueError("sl_price required for attached TPSL")
+
             # Quantity fields
             if is_deferred:
                 payload["qty_mode"] = "deferred_market"
@@ -88,9 +92,7 @@ class EntryCommandFactory:
                 payload["qty"] = float(qty_raw)
 
             if is_attached:
-                if sl_price is None:
-                    raise ValueError("sl_price required for attached TPSL")
-                # Build attached_tpsl block
+                # Build attached_tpsl block (sl_price already validated above)
                 attached: dict = {
                     "mode": "FULL",
                     "stop_loss": sl_price,
