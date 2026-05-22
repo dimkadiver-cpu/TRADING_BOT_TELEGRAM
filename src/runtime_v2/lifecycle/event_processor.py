@@ -137,22 +137,20 @@ class LifecycleEventProcessor:
         if not levels:
             return []
 
+        # Last TP is attached at entry order level for D_MULTI_ENTRY_MULTI_TP.
+        # Only emit intermediate levels (all except last) as position-level partial TPs.
+        intermediate_levels = levels[:-1]
+        if not intermediate_levels:
+            return []
+
         chain_id = chain.trade_chain_id
-        total_levels = len(levels)
         commands: list[ExecutionCommand] = []
-        allocated_qty = 0.0
 
-        for i, level in enumerate(levels):
-            is_last = (i == total_levels - 1)
+        for level in intermediate_levels:
             tp_price = level.get("price")
-            close_pct = float(level.get("close_pct", 100.0 / total_levels))
-            sequence = int(level.get("sequence", i + 1))
-
-            if is_last:
-                tp_qty = round(max(0.0, new_filled - allocated_qty), 8)
-            else:
-                tp_qty = round(new_filled * close_pct / 100.0, 8)
-                allocated_qty += tp_qty
+            close_pct = float(level.get("close_pct", 100.0 / len(levels)))
+            sequence = int(level.get("sequence", 1))
+            tp_qty = round(new_filled * close_pct / 100.0, 8)
 
             payload: dict = {
                 "symbol": chain.symbol,
