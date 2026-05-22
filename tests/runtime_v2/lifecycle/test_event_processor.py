@@ -572,7 +572,7 @@ def _make_chain_multi_tp(
 
 
 def test_d_multi_entry_multi_tp_first_fill_emits_tp_partial_commands():
-    """Primo fill: emette SET_POSITION_TPSL_PARTIAL per ogni livello TP."""
+    """Primo fill: emette SET_POSITION_TPSL_PARTIAL solo per i TP intermedi (non l'ultimo)."""
     proc = _make_processor()
     chain = _make_chain_multi_tp(state="WAITING_ENTRY")
     event = _make_exchange_event(
@@ -581,14 +581,15 @@ def test_d_multi_entry_multi_tp_first_fill_emits_tp_partial_commands():
     )
     result = proc.process(event, chain, [])
     tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    assert len(tp_cmds) == 2
-    sizes = sorted(float(_json.loads(c.payload_json)["tp_size"]) for c in tp_cmds)
-    assert abs(sizes[0] - 0.35) < 1e-6   # 0.7 * 50%
-    assert abs(sizes[1] - 0.35) < 1e-6   # residuo
+    # 2 levels in tp_rebuild, last is attached at entry → only 1 intermediate emitted
+    assert len(tp_cmds) == 1
+    p = _json.loads(tp_cmds[0].payload_json)
+    assert abs(float(p["tp_size"]) - 0.35) < 1e-6   # 0.7 * 50%
+    assert p["take_profit"] == 0.52                   # TP1 price (intermediate)
 
 
 def test_d_multi_entry_multi_tp_second_fill_emits_supersedes_previous():
-    """Secondo fill: i nuovi comandi TP hanno supersedes_previous=True e qty aggiornata."""
+    """Secondo fill: il TP intermedio aggiornato ha supersedes_previous=True e qty ricalcolata."""
     proc = _make_processor()
     chain = _make_chain_multi_tp(
         state="OPEN",
@@ -601,17 +602,15 @@ def test_d_multi_entry_multi_tp_second_fill_emits_supersedes_previous():
     )
     result = proc.process(event, chain, [])
     tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    assert len(tp_cmds) == 2
-    for c in tp_cmds:
-        p = _json.loads(c.payload_json)
-        assert p.get("supersedes_previous") is True
-    sizes = sorted(float(_json.loads(c.payload_json)["tp_size"]) for c in tp_cmds)
-    assert abs(sizes[0] - 0.5) < 1e-6   # 1.0 * 50%
-    assert abs(sizes[1] - 0.5) < 1e-6   # residuo
+    # Only 1 intermediate TP, last is attached
+    assert len(tp_cmds) == 1
+    p = _json.loads(tp_cmds[0].payload_json)
+    assert p.get("supersedes_previous") is True
+    assert abs(float(p["tp_size"]) - 0.5) < 1e-6   # 1.0 * 50%
 
 
 def test_d_multi_entry_multi_tp_tp_prices_match_tp_rebuild_levels():
-    """I comandi TP emessi hanno i prezzi corretti dai livelli tp_rebuild."""
+    """Solo il prezzo del TP intermedio (TP1=0.52) viene emesso; TP2 (0.55) e' attached e non viene rebuild."""
     proc = _make_processor()
     chain = _make_chain_multi_tp(state="WAITING_ENTRY")
     event = _make_exchange_event(
@@ -619,10 +618,9 @@ def test_d_multi_entry_multi_tp_tp_prices_match_tp_rebuild_levels():
         payload={"fill_price": 0.50, "filled_qty": 1.0},
     )
     result = proc.process(event, chain, [])
-    tp_cmds = result.execution_commands
-    prices = {_json.loads(c.payload_json)["take_profit"] for c in tp_cmds
-              if c.command_type == "SET_POSITION_TPSL_PARTIAL"}
-    assert prices == {0.52, 0.55}
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
+    prices = {_json.loads(c.payload_json)["take_profit"] for c in tp_cmds}
+    assert prices == {0.52}      # TP1 only; TP2 (0.55) stays attached
 
 
 def test_non_multi_entry_multi_tp_entry_fill_emits_no_tp_commands():
