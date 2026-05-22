@@ -22,6 +22,13 @@ logger = logging.getLogger(__name__)
 GLOBAL_SCOPES = frozenset({"ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"})
 
 
+def _find_leg_snap(legs_snap: list[dict], sequence: int) -> dict | None:
+    for snap in legs_snap or []:
+        if snap.get("sequence") == sequence:
+            return snap
+    return None
+
+
 @dataclass
 class SignalGateResult:
     trade_chain: TradeChain | None
@@ -214,6 +221,7 @@ class LifecycleEntryGate:
         hedge_mode = bool(decision.risk_snapshot.get("hedge_mode", False))
         position_idx = self.resolve_position_idx(signal.side, hedge_mode)
         close_pcts = self._get_close_pcts(management_plan, tp_count)
+        legs_snap: list[dict] = decision.risk_snapshot.get("legs", [])
 
         sl_price = (
             signal.stop_loss.price.value
@@ -230,12 +238,12 @@ class LifecycleEntryGate:
         if use_c:
             return self._build_c_commands(
                 signal, eid, size_usdt, fallback_entry_price,
-                leverage, hedge_mode, position_idx, sl_price,
+                leverage, hedge_mode, position_idx, sl_price, legs_snap,
             )
         return self._build_d_commands(
             signal, eid, size_usdt, fallback_entry_price,
             leverage, hedge_mode, position_idx, sl_price,
-            tp_count, close_pcts,
+            tp_count, close_pcts, legs_snap,
         )
 
     def _build_legacy_commands(
@@ -335,21 +343,21 @@ class LifecycleEntryGate:
 
     def _build_c_commands(
         self, signal, eid, size_usdt, fallback_entry_price,
-        leverage, hedge_mode, position_idx, sl_price,
+        leverage, hedge_mode, position_idx, sl_price, legs_snap: list[dict],
     ) -> list[ExecutionCommand]:
         leg = signal.entries[0]
-        leg_price = leg.price.value if leg.price else fallback_entry_price
-        leg_qty = self._qty_from_notional(size_usdt, leg_price)
         tp = signal.take_profits[0]
         tp_price = tp.price.value if tp.price else None
 
-        payload = {
+        leg_snap = _find_leg_snap(legs_snap, leg.sequence)
+        is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
+
+        base_payload: dict = {
             "execution_strategy": "C_SIMPLE_ATTACHED",
             "symbol": signal.symbol,
             "side": signal.side,
             "entry_type": leg.entry_type,
-            "price": leg_price if leg.entry_type == "LIMIT" else None,
-            "qty": leg_qty,
+            "price": leg.price.value if leg.entry_type == "LIMIT" else None,
             "leverage": leverage,
             "hedge_mode": hedge_mode,
             "position_idx": position_idx,
@@ -361,6 +369,22 @@ class LifecycleEntryGate:
                 "sl_trigger_by": "MarkPrice",
             },
         }
+
+        if is_deferred:
+            payload = {
+                **base_payload,
+                "qty_mode": "deferred_market",
+                "risk_amount": leg_snap["risk_amount"],
+                "sl_price": sl_price,
+            }
+        else:
+            if leg_snap and leg_snap.get("qty") is not None:
+                leg_qty = float(leg_snap["qty"])
+            else:
+                leg_price = leg.price.value if leg.price else fallback_entry_price
+                leg_qty = self._qty_from_notional(size_usdt, leg_price)
+            payload = {**base_payload, "qty": leg_qty}
+
         return [ExecutionCommand(
             trade_chain_id=0,
             command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
@@ -372,30 +396,53 @@ class LifecycleEntryGate:
     def _build_d_commands(
         self, signal, eid, size_usdt, fallback_entry_price,
         leverage, hedge_mode, position_idx, sl_price,
-        tp_count, close_pcts,
+        tp_count, close_pcts, legs_snap: list[dict],
     ) -> list[ExecutionCommand]:
         commands: list[ExecutionCommand] = []
 
         for leg in signal.entries:
-            leg_price = leg.price.value if leg.price else fallback_entry_price
-            leg_notional = size_usdt * float(leg.weight or 0.0)
-            leg_qty = self._qty_from_notional(leg_notional, leg_price)
-            commands.append(ExecutionCommand(
-                trade_chain_id=0,
-                command_type="PLACE_ENTRY",
-                status="PENDING",
-                payload_json=json.dumps({
+            leg_snap = _find_leg_snap(legs_snap, leg.sequence)
+            is_deferred = leg_snap is not None and leg_snap.get("qty_mode") == "deferred_market"
+
+            if is_deferred:
+                entry_payload: dict = {
                     "execution_strategy": "D_POSITION_TPSL",
                     "symbol": signal.symbol,
                     "side": signal.side,
                     "entry_type": leg.entry_type,
-                    "price": leg_price if leg.entry_type == "LIMIT" else None,
+                    "price": None,
+                    "qty_mode": "deferred_market",
+                    "risk_amount": leg_snap["risk_amount"],
+                    "sl_price": sl_price,
+                    "leverage": leverage,
+                    "hedge_mode": hedge_mode,
+                    "position_idx": position_idx,
+                    "sequence": leg.sequence,
+                }
+            else:
+                if leg_snap and leg_snap.get("qty") is not None:
+                    leg_qty = float(leg_snap["qty"])
+                else:
+                    leg_price = leg.price.value if leg.price else fallback_entry_price
+                    leg_notional = size_usdt * float(leg.weight or 0.0)
+                    leg_qty = self._qty_from_notional(leg_notional, leg_price)
+                entry_payload = {
+                    "execution_strategy": "D_POSITION_TPSL",
+                    "symbol": signal.symbol,
+                    "side": signal.side,
+                    "entry_type": leg.entry_type,
+                    "price": leg.price.value if leg.entry_type == "LIMIT" else None,
                     "qty": leg_qty,
                     "leverage": leverage,
                     "hedge_mode": hedge_mode,
                     "position_idx": position_idx,
                     "sequence": leg.sequence,
-                }),
+                }
+            commands.append(ExecutionCommand(
+                trade_chain_id=0,
+                command_type="PLACE_ENTRY",
+                status="PENDING",
+                payload_json=json.dumps(entry_payload),
                 idempotency_key=f"place_entry:{eid}:leg{leg.sequence}",
             ))
 
