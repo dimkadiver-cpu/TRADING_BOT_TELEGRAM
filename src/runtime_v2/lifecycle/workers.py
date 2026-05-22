@@ -7,7 +7,9 @@ import sqlite3
 from datetime import datetime, timezone
 
 from src.runtime_v2.lifecycle.event_processor import EventProcessorResult, LifecycleEventProcessor
-from src.runtime_v2.lifecycle.models import TERMINAL_STATES, LEGACY_BE_STATES, ExecutionCommand, LifecycleEvent
+from src.runtime_v2.lifecycle.models import (
+    TERMINAL_STATES, LEGACY_BE_STATES, ExchangeEvent, ExecutionCommand, LifecycleEvent,
+)
 from src.runtime_v2.lifecycle.repositories import (
     ExecutionCommandRepository, ExchangeEventRepository,
     LifecycleEventRepository, TradeChainRepository,
@@ -34,6 +36,62 @@ def _load_pending_entry_client_order_ids(conn: sqlite3.Connection, chain_id: int
         (chain_id,),
     ).fetchall()
     return [str(row[0]) for row in rows if row and row[0]]
+
+
+def _load_entry_client_order_id_for_command(
+    conn: sqlite3.Connection,
+    chain_id: int,
+    command_id: int,
+) -> str | None:
+    row = conn.execute(
+        """
+        SELECT client_order_id
+        FROM ops_execution_commands
+        WHERE trade_chain_id = ?
+          AND command_id = ?
+          AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL')
+          AND client_order_id IS NOT NULL
+        LIMIT 1
+        """,
+        (chain_id, command_id),
+    ).fetchone()
+    return str(row[0]) if row and row[0] else None
+
+
+def _with_entry_client_order_id_from_command(
+    ops_db_path: str,
+    exchange_event: ExchangeEvent,
+) -> ExchangeEvent:
+    if exchange_event.event_type != "ENTRY_FILLED" or exchange_event.trade_chain_id is None:
+        return exchange_event
+
+    try:
+        payload = json.loads(exchange_event.payload_json or "{}")
+    except Exception:
+        return exchange_event
+
+    if payload.get("entry_client_order_id") or payload.get("command_id") is None:
+        return exchange_event
+
+    try:
+        command_id = int(payload["command_id"])
+    except (TypeError, ValueError):
+        return exchange_event
+
+    conn = sqlite3.connect(ops_db_path)
+    try:
+        client_order_id = _load_entry_client_order_id_for_command(
+            conn,
+            int(exchange_event.trade_chain_id),
+            command_id,
+        )
+    finally:
+        conn.close()
+    if not client_order_id:
+        return exchange_event
+
+    payload["entry_client_order_id"] = client_order_id
+    return exchange_event.model_copy(update={"payload_json": json.dumps(payload)})
 
 
 class TimeoutWorker:
@@ -131,6 +189,10 @@ class LifecycleEventWorker:
                     continue
 
                 active_commands = self._command_repo.get_active_for_chain(chain.trade_chain_id)
+                exchange_event = _with_entry_client_order_id_from_command(
+                    self._ops_db,
+                    exchange_event,
+                )
                 result = self._processor.process(exchange_event, chain, active_commands)
                 self._persist_result(chain.trade_chain_id, result)
                 self._exchange_event_repo.mark_processed(exchange_event.exchange_event_id)

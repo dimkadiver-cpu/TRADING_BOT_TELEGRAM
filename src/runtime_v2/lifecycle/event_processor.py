@@ -204,11 +204,8 @@ class LifecycleEventProcessor:
             and leg.get("status") == "PENDING"
         ]
         if not target_legs and fallback_first_pending:
-            first_pending = next(
-                (leg for leg in legs if leg.get("status") == "PENDING"),
-                None,
-            )
-            target_legs = [first_pending] if first_pending is not None else []
+            pending_legs = [leg for leg in legs if leg.get("status") == "PENDING"]
+            target_legs = pending_legs if len(pending_legs) == 1 else []
         if not target_legs:
             return None
 
