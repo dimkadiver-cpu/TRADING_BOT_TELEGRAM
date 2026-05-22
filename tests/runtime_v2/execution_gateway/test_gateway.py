@@ -275,3 +275,71 @@ def test_live_trading_blocked(ops_db):
     ).fetchone()[0]
     conn.close()
     assert status == "REVIEW_REQUIRED"
+
+
+def test_deferred_market_resolves_qty_from_mark_price(ops_db):
+    """Gateway con payload deferred_market: fetcha mark_price e calcola qty prima del place_order."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    payload = {
+        "symbol": "SOL/USDT", "side": "LONG", "entry_type": "MARKET",
+        "qty_mode": "deferred_market", "risk_amount": 10.0, "sl_price": 140.0,
+        "leverage": 1, "hedge_mode": False, "position_idx": 0,
+        "execution_strategy": "D_POSITION_TPSL", "sequence": 1,
+    }
+    _insert_cmd(ops_db, 2001, payload=payload)
+    repo = GatewayCommandRepository(ops_db)
+
+    adapter = FakeAdapter(mark_prices={"SOL/USDT": 150.0})
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    place_calls = [c for c in adapter.calls if c["action"] == "place_order"]
+    assert len(place_calls) == 1
+    # qty = risk_amount / abs(mark_price - sl_price) = 10.0 / abs(150.0 - 140.0) = 1.0
+    assert abs(adapter._last_place_qty - 1.0) < 0.001
+
+
+def test_deferred_market_no_mark_price_marks_review_required(ops_db):
+    """Gateway con deferred_market e nessun mark_price: REVIEW_REQUIRED, no place_order."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    payload = {
+        "symbol": "SOL/USDT", "side": "LONG", "entry_type": "MARKET",
+        "qty_mode": "deferred_market", "risk_amount": 10.0, "sl_price": 140.0,
+        "leverage": 1, "hedge_mode": False, "position_idx": 0,
+        "execution_strategy": "D_POSITION_TPSL", "sequence": 1,
+    }
+    _insert_cmd(ops_db, 2002, payload=payload)
+    repo = GatewayCommandRepository(ops_db)
+
+    adapter = FakeAdapter()  # nessun mark_price configurato
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    place_calls = [c for c in adapter.calls if c["action"] == "place_order"]
+    assert len(place_calls) == 0
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status, result_payload_json FROM ops_execution_commands WHERE command_id=2002"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "REVIEW_REQUIRED"
+    assert "deferred_market_no_mark_price" in (row[1] or "")
