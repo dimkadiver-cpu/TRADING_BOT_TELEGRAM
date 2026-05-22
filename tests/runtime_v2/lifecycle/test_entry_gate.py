@@ -665,13 +665,13 @@ def test_update_move_to_be_payload_contains_protection_style_standalone_for_sequ
     assert "position_idx" in payload
 
 
-def test_update_move_to_be_payload_contains_protection_style_attached_for_c_multi_tp():
-    """Manual BE move on C_MULTI_TP chain → protection_style='attached_full'."""
+def test_update_move_to_be_payload_contains_protection_style_attached_for_unified_plan():
+    """Manual BE move on UNIFIED_PLAN chain → protection_style='attached_full'."""
     gate = _make_gate()
     enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
     chain = _make_open_chain(entry_avg_price=50000.0)
     chain = chain.model_copy(update={
-        "execution_mode": "C_MULTI_TP",
+        "execution_mode": "UNIFIED_PLAN",
         "risk_snapshot_json": '{"hedge_mode": false}',
     })
 
@@ -690,7 +690,7 @@ def test_update_move_to_be_payload_position_idx_zero_for_one_way_mode():
     enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
     chain = _make_open_chain(entry_avg_price=50000.0, side="LONG")
     chain = chain.model_copy(update={
-        "execution_mode": "C_MULTI_TP",
+        "execution_mode": "UNIFIED_PLAN",
         "risk_snapshot_json": '{"hedge_mode": false}',
     })
 
