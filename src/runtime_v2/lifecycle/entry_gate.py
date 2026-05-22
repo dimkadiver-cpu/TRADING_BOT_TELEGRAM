@@ -125,13 +125,36 @@ class LifecycleEntryGate:
             )
             tp_count_for_decision = len(signal.take_profits)
             entry_count_for_decision = len(signal.entries)
-            use_c = (
-                self._simple_attached_enabled is True
-                and entry_count_for_decision == 1
-                and tp_count_for_decision == 1
-                and sl_price_for_decision is not None
-            )
-            chain_execution_mode = "C_SIMPLE_ATTACHED" if use_c else "D_POSITION_TPSL"
+            if self._simple_attached_enabled is True and sl_price_for_decision is not None:
+                if entry_count_for_decision == 1 and tp_count_for_decision == 1:
+                    chain_execution_mode = "C_SIMPLE_ATTACHED"
+                elif entry_count_for_decision == 1 and tp_count_for_decision > 1:
+                    chain_execution_mode = "C_MULTI_TP"
+                elif entry_count_for_decision > 1 and tp_count_for_decision == 1:
+                    chain_execution_mode = "D_MULTI_ENTRY_1TP"
+                else:
+                    chain_execution_mode = "D_MULTI_ENTRY_MULTI_TP"
+            else:
+                chain_execution_mode = "D_POSITION_TPSL"
+
+        if chain_execution_mode == "D_MULTI_ENTRY_MULTI_TP":
+            _mp = enriched.management_plan or ManagementPlanConfig()
+            _tp_count = len(signal.take_profits)
+            _close_pcts = self._get_close_pcts(_mp, _tp_count)
+            decision.risk_snapshot["tp_rebuild"] = {
+                "levels": [
+                    {
+                        "sequence": tp.sequence,
+                        "price": tp.price.value if tp.price else None,
+                        "close_pct": (
+                            _close_pcts[i]
+                            if i < len(_close_pcts)
+                            else 100.0 / _tp_count
+                        ),
+                    }
+                    for i, tp in enumerate(signal.take_profits)
+                ]
+            }
 
         chain = TradeChain(
             source_enrichment_id=eid,
@@ -228,19 +251,29 @@ class LifecycleEntryGate:
             if signal.stop_loss and signal.stop_loss.price else None
         )
 
-        use_c = (
-            self._simple_attached_enabled is True
-            and entry_count == 1
-            and tp_count == 1
-            and sl_price is not None
-        )
+        if not (self._simple_attached_enabled is True and sl_price is not None):
+            return self._build_d_commands(
+                signal, eid, size_usdt, fallback_entry_price,
+                leverage, hedge_mode, position_idx, sl_price,
+                tp_count, close_pcts, legs_snap,
+            )
 
-        if use_c:
+        if entry_count == 1 and tp_count == 1:
             return self._build_c_commands(
                 signal, eid, size_usdt, fallback_entry_price,
                 leverage, hedge_mode, position_idx, sl_price, legs_snap,
             )
-        return self._build_d_commands(
+        if entry_count == 1 and tp_count > 1:
+            return self._build_c_multi_tp_commands(
+                signal, eid, size_usdt, fallback_entry_price,
+                leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
+            )
+        if entry_count > 1 and tp_count == 1:
+            return self._build_d_multi_entry_1tp_commands(
+                signal, eid, size_usdt, fallback_entry_price,
+                leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
+            )
+        return self._build_d_multi_entry_multi_tp_commands(
             signal, eid, size_usdt, fallback_entry_price,
             leverage, hedge_mode, position_idx, sl_price,
             tp_count, close_pcts, legs_snap,
@@ -507,6 +540,25 @@ class LifecycleEntryGate:
                 ))
 
         return commands
+
+    def _build_c_multi_tp_commands(
+        self, signal, eid, size_usdt, fallback_entry_price,
+        leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
+    ) -> list[ExecutionCommand]:
+        return []  # stub — implemented in Task 4
+
+    def _build_d_multi_entry_1tp_commands(
+        self, signal, eid, size_usdt, fallback_entry_price,
+        leverage, hedge_mode, position_idx, sl_price, close_pcts, legs_snap,
+    ) -> list[ExecutionCommand]:
+        return []  # stub — implemented in Task 5
+
+    def _build_d_multi_entry_multi_tp_commands(
+        self, signal, eid, size_usdt, fallback_entry_price,
+        leverage, hedge_mode, position_idx, sl_price,
+        tp_count, close_pcts, legs_snap,
+    ) -> list[ExecutionCommand]:
+        return []  # stub — implemented in Task 6
 
     @staticmethod
     def resolve_position_idx(side: str, hedge_mode: bool) -> int:

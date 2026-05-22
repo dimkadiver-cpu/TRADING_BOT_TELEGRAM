@@ -478,3 +478,99 @@ def test_c_mode_update_blocked_while_entry_pending():
     chain_result = result.chain_results[0]
     events = chain_result.lifecycle_events
     assert any(e.event_type == "REVIEW_REQUIRED" for e in events)
+
+
+# ── Routing matrix ────────────────────────────────────────────────────────────
+
+def test_routing_1entry_1tp_uses_c_simple_attached():
+    gate = _make_gate(simple_attached_enabled=True)
+    result = gate.process_signal(_make_enriched_signal(entry_count=1, tp_count=1), [], "NONE")
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "C_SIMPLE_ATTACHED"
+
+
+def test_routing_1entry_multi_tp_uses_c_multi_tp():
+    gate = _make_gate(simple_attached_enabled=True)
+    result = gate.process_signal(_make_enriched_signal(entry_count=1, tp_count=2), [], "NONE")
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "C_MULTI_TP"
+
+
+def test_routing_multi_entry_1tp_uses_d_multi_entry_1tp():
+    gate = _make_gate(simple_attached_enabled=True)
+    result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=1), [], "NONE")
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "D_MULTI_ENTRY_1TP"
+
+
+def test_routing_multi_entry_multi_tp_uses_d_multi_entry_multi_tp():
+    gate = _make_gate(simple_attached_enabled=True)
+    result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
+    assert result.trade_chain is not None
+    assert result.trade_chain.execution_mode == "D_MULTI_ENTRY_MULTI_TP"
+
+
+def test_routing_no_sl_falls_back_to_review():
+    """Senza SL il risk engine blocca il segnale."""
+    from src.runtime_v2.signal_enrichment.models import (
+        AccountConfig, EffectiveEnrichmentConfig, EnrichedCanonicalMessage,
+        EnrichedEntryLeg, EnrichedSignalPayload, EntryRangeConfig,
+        EntrySplitConfig, LimitEntrySplitConfig, ManagementPlanConfig,
+        MarketEntrySplitConfig, MarketExecutionConfig, PriceCorrectionsConfig,
+        PriceSanityConfig, RiskConfig, SignalPolicyConfig, SlConfig,
+        TpConfig, EntryWeightsConfig,
+    )
+    from src.parser_v2.contracts.entities import Price, TakeProfit
+
+    entries = [EnrichedEntryLeg(sequence=1, entry_type="LIMIT",
+                                price=Price(raw="65000", value=65000.0), weight=1.0)]
+    tps = [TakeProfit(price=Price(raw="70000", value=70000.0), sequence=1)]
+    signal = EnrichedSignalPayload(
+        symbol="BTC/USDT:USDT", side="LONG", entry_structure="ONE_SHOT",
+        entries=entries, take_profits=tps, stop_loss=None,
+    )
+    w = EntryWeightsConfig(weights={"E1": 1.0})
+    r = EntryRangeConfig(weights={"E1": 0.5, "E2": 0.5})
+    risk = RiskConfig(leverage=5, capital_base_usdt=1000.0, risk_pct_of_capital=1.0)
+    account = AccountConfig(id="main", capital_base_usdt=1000.0, max_leverage=10,
+                            max_capital_at_risk_pct=10.0, hard_max_per_signal_risk_pct=2.0)
+    sp = SignalPolicyConfig(
+        accepted_entry_structures=["ONE_SHOT"],
+        market_execution=MarketExecutionConfig(),
+        entry_split=EntrySplitConfig(
+            LIMIT=LimitEntrySplitConfig(single=w, range=r, averaging=w, ladder=w),
+            MARKET=MarketEntrySplitConfig(single=w, averaging=w),
+        ),
+        tp=TpConfig(), sl=SlConfig(),
+        price_corrections=PriceCorrectionsConfig(),
+        price_sanity=PriceSanityConfig(),
+    )
+    cfg = EffectiveEnrichmentConfig(
+        trader_id="t1", enabled=True, gate_mode="block", hedge_mode=False,
+        account_id="main", signal_policy=sp, update_admission={},
+        management_plan=ManagementPlanConfig(),
+        risk=risk, account=account,
+    )
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=99, canonical_message_id=990, raw_message_id=9900,
+        trader_id="t1", account_id="main", primary_class="SIGNAL",
+        enrichment_decision="PASS", enriched_signal=signal, enriched_actions=None,
+        management_plan=ManagementPlanConfig(), policy_snapshot=cfg.model_dump(),
+    )
+    gate = _make_gate(simple_attached_enabled=True)
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.review_reason == "missing_stop_loss_for_risk_calc"
+
+
+def test_routing_d_multi_entry_multi_tp_injects_tp_rebuild_in_snapshot():
+    """D_MULTI_ENTRY_MULTI_TP: risk_snapshot_json contiene tp_rebuild con 2 livelli."""
+    gate = _make_gate(simple_attached_enabled=True)
+    result = gate.process_signal(_make_enriched_signal(entry_count=2, tp_count=2), [], "NONE")
+    assert result.trade_chain is not None
+    snap = json.loads(result.trade_chain.risk_snapshot_json)
+    assert "tp_rebuild" in snap
+    levels = snap["tp_rebuild"]["levels"]
+    assert len(levels) == 2
+    assert levels[0]["sequence"] == 1
+    assert levels[1]["sequence"] == 2
+    assert all("price" in lv and "close_pct" in lv for lv in levels)
