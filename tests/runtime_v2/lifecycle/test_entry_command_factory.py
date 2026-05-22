@@ -88,6 +88,7 @@ def test_3a_market_deferred_uses_qty_mode_deferred():
     p = json.loads(cmds[0].payload_json)
     assert p["qty_mode"] == "deferred_market"
     assert p["risk_amount"] == pytest.approx(100.0)
+    assert p["sl_price"] == 49000.0
     assert "qty" not in p
 
 

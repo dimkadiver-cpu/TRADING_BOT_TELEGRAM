@@ -14,6 +14,11 @@ class EntryCommandFactory:
     - leg sequence == 1 → PLACE_ENTRY_WITH_ATTACHED_TPSL, tpsl_mode=FULL, SL + final TP attached
     - leg sequence >  1 → PLACE_ENTRY (no attached TPSL)
     Intermediate TPs are NOT emitted here (handled after fills).
+
+    NOTE: Payloads from this factory do not include 'execution_strategy'.
+    The adapter must route solely on command_type (PLACE_ENTRY_WITH_ATTACHED_TPSL
+    vs PLACE_ENTRY), not on payload fields. Verify adapter routing before wiring
+    this factory in place of the legacy builders (Task 5).
     """
 
     def build_entry_commands(
@@ -65,11 +70,11 @@ class EntryCommandFactory:
             # Quantity fields
             if is_deferred:
                 payload["qty_mode"] = "deferred_market"
-                payload["risk_amount"] = snap.get("risk_amount")
-                if is_attached:
-                    payload["sl_price"] = sl_price
+                payload["risk_amount"] = float(snap.get("risk_amount") or 0.0)
+                payload["sl_price"] = sl_price  # always needed for qty at fill time
             else:
-                payload["qty"] = snap.get("qty")
+                qty_val = float(snap.get("qty") or 0.0)
+                payload["qty"] = qty_val
 
             if is_attached:
                 # Build attached_tpsl block
