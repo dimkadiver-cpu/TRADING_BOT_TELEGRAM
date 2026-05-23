@@ -15,11 +15,7 @@ from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
 
 logger = logging.getLogger(__name__)
 
-_ATTACHED_PROTECTION_MODES = frozenset({
-    "UNIFIED_PLAN",
-    "C_SIMPLE_ATTACHED", "C_MULTI_TP",
-    "D_MULTI_ENTRY_1TP", "D_MULTI_ENTRY_MULTI_TP", "D_POSITION_TPSL",
-})
+_ATTACHED_PROTECTION_MODES = frozenset({"UNIFIED_PLAN", "D_POSITION_TPSL"})
 
 
 def _be_move_extra(chain: TradeChain) -> dict:

@@ -169,7 +169,10 @@
       "Bash(Select-Object -First 10)",
       "Bash(New-Item -ItemType Directory -Force \"C:\\\\TeleSignalBot\\\\docs\\\\superpowers\\\\plans\")",
       "Bash(Out-Null)",
-      "PowerShell(New-Item *)"
+      "PowerShell(New-Item *)",
+      "Bash(Select-Object FullName, LastWriteTime, Length)",
+      "Bash(sqlite3 db/ops.sqlite3 \".schema\")",
+      "Bash(xargs grep -l \"BybitWsFillWatcher\")"
     ]
   }
 }

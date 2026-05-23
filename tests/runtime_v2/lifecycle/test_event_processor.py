@@ -118,23 +118,6 @@ def test_tp_filled_be_trigger_payload_contains_protection_style_standalone_for_s
     assert "position_idx" in payload
 
 
-def test_tp_filled_be_trigger_payload_contains_protection_style_attached_for_c_multi_tp():
-    """Automatic BE trigger on C_MULTI_TP chain → protection_style='attached_full'."""
-    proc = _make_processor()
-    event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
-    chain = _make_chain(state="OPEN", be_trigger="tp1")
-    chain = chain.model_copy(update={
-        "execution_mode": "C_MULTI_TP",
-        "risk_snapshot_json": '{"hedge_mode": false}',
-    })
-    result = proc.process(event, chain, [])
-    command = next(c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
-    payload = json.loads(command.payload_json)
-    assert payload["protection_style"] == "attached_full"
-    assert "position_idx" in payload
-
-
 def test_tp_filled_be_trigger_payload_contains_protection_style_attached_for_unified_plan():
     """Automatic BE trigger on UNIFIED_PLAN chain -> protection_style='attached_full'."""
     proc = _make_processor()
@@ -644,8 +627,9 @@ def test_pending_entry_cancelled_confirmed_with_position_open():
     )
     result = proc.process(ev, chain, [])
     assert result.new_lifecycle_state is None
+    # D_POSITION_TPSL uses position-level SL — no qty sync needed after cancel_pending
     sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
-    assert len(sync_cmds) == 1
+    assert len(sync_cmds) == 0
 
 
 # ── D_MULTI_ENTRY_MULTI_TP post-fill ─────────────────────────────────────────

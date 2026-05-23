@@ -85,6 +85,132 @@ class ExchangeEventSyncWorker:
                 logger.exception("position reconciliation error for chain %s", chain_id)
         return processed
 
+    def run_tp_reconciliation(self) -> int:
+        """Detect TP partial closes by checking if position has decreased."""
+        sent_tp_cmds = self._get_sent_tp_commands()
+        processed = 0
+        for cmd_id, trade_chain_id, tp_size, tp_level, symbol, side in sent_tp_cmds:
+            try:
+                # Check if TP event already exists
+                if self._tp_fill_event_exists(trade_chain_id, tp_level):
+                    # Already recorded, nothing to do
+                    continue
+
+                # Get current position qty
+                qty = self._adapter.get_position_qty(
+                    symbol=symbol,
+                    side=side,
+                    execution_account_id=self._execution_account_id,
+                )
+                if qty is None:
+                    continue
+
+                # Get filled entry qty at time of TP command (approximation: current filled_entry_qty)
+                filled_qty = self._get_filled_entry_qty(trade_chain_id)
+                if filled_qty is None:
+                    continue
+
+                # If position has decreased by at least tp_size, TP was likely hit
+                # Check with some tolerance for slippage
+                expected_after_tp = filled_qty - tp_size
+                if qty < expected_after_tp * 0.95:  # 5% tolerance for slippage
+                    saved = self._save_tp_fill(trade_chain_id, tp_level, cmd_id, qty)
+                    if saved:
+                        logger.info(
+                            "TP partial fill detected: chain=%s level=%s qty_closed=%s",
+                            trade_chain_id, tp_level, tp_size,
+                        )
+                        processed += 1
+            except Exception:
+                logger.exception("TP reconciliation error for command %s", cmd_id)
+        return processed
+
+    def _get_sent_tp_commands(self) -> list[tuple[int, int, float, int, str, str]]:
+        """Get all SENT TP commands: (command_id, trade_chain_id, tp_size, tp_level, symbol, side)."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            rows = conn.execute(
+                "SELECT command_id, trade_chain_id, payload_json "
+                "FROM ops_execution_commands "
+                "WHERE status = 'SENT' AND command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL')"
+            ).fetchall()
+            result = []
+            for cmd_id, chain_id, payload_json in rows:
+                try:
+                    payload = json.loads(payload_json)
+                    # Get symbol and side from trade_chain
+                    tc_row = conn.execute(
+                        "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id = ?",
+                        (chain_id,)
+                    ).fetchone()
+                    if not tc_row:
+                        continue
+                    symbol, side = tc_row
+                    tp_size = float(payload.get("tp_size", 0))
+                    tp_level = int(payload.get("tp_sequence", 1))
+                    result.append((cmd_id, chain_id, tp_size, tp_level, symbol, side))
+                except Exception:
+                    pass
+            return result
+        finally:
+            conn.close()
+
+    def _tp_fill_event_exists(self, trade_chain_id: int, tp_level: int) -> bool:
+        """Check if TP_FILLED event already exists for this TP level."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            rows = conn.execute(
+                "SELECT payload_json FROM ops_exchange_events "
+                "WHERE trade_chain_id = ? AND event_type = 'TP_FILLED'",
+                (trade_chain_id,)
+            ).fetchall()
+            for row in rows:
+                try:
+                    payload = json.loads(row[0])
+                    if payload.get("tp_level") == tp_level:
+                        return True
+                except Exception:
+                    pass
+            return False
+        finally:
+            conn.close()
+
+    def _get_filled_entry_qty(self, trade_chain_id: int) -> float | None:
+        """Get current filled entry qty for a trade chain."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            row = conn.execute(
+                "SELECT filled_entry_qty FROM ops_trade_chains WHERE trade_chain_id = ?",
+                (trade_chain_id,)
+            ).fetchone()
+            return float(row[0]) if row else None
+        finally:
+            conn.close()
+
+    def _save_tp_fill(self, trade_chain_id: int, tp_level: int, command_id: int, current_qty: float) -> bool:
+        """Save TP_FILLED exchange event."""
+        idempotency_key = f"TP_FILLED:reconciliation:{trade_chain_id}:{tp_level}"
+        payload = json.dumps({
+            "tp_level": tp_level,
+            "is_final": current_qty == 0.0,
+            "fill_price": None,  # Unknown without trade details
+            "filled_qty": None,  # Unknown without trade details
+            "command_id": command_id,
+        })
+        now = _now()
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO ops_exchange_events "
+                "(trade_chain_id, event_type, payload_json, processing_status, "
+                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
+                (trade_chain_id, "TP_FILLED", payload, "NEW", idempotency_key, now),
+            )
+            conn.commit()
+            return True
+        finally:
+            conn.close()
+
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
         conn = sqlite3.connect(self._ops_db)
         try:
@@ -186,17 +312,6 @@ class ExchangeEventSyncWorker:
                 "filled_qty": raw.filled_qty,
                 "command_id": coid.command_id,
             }
-        elif coid.role == "tp":
-            remaining = self._repo.count_active_tps(coid.trade_chain_id)
-            is_final = remaining <= 1
-            event_type = "TP_FILLED"
-            payload = {
-                "tp_level": coid.sequence,
-                "is_final": is_final,
-                "fill_price": raw.average_price,
-                "filled_qty": raw.filled_qty,
-                "command_id": coid.command_id,
-            }
         elif coid.role == "exit_partial":
             event_type = "CLOSE_PARTIAL_FILLED"
             payload = {
@@ -207,6 +322,15 @@ class ExchangeEventSyncWorker:
         elif coid.role == "exit_full":
             event_type = "CLOSE_FULL_FILLED"
             payload = {
+                "fill_price": raw.average_price,
+                "filled_qty": raw.filled_qty,
+                "command_id": coid.command_id,
+            }
+        elif coid.role == "tp":
+            event_type = "TP_FILLED"
+            payload = {
+                "tp_level": coid.sequence,
+                "is_final": self._repo.count_active_tps(coid.trade_chain_id) <= 1,
                 "fill_price": raw.average_price,
                 "filled_qty": raw.filled_qty,
                 "command_id": coid.command_id,

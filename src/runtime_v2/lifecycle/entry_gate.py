@@ -56,11 +56,7 @@ class UpdateGateResult:
     review_events: list[LifecycleEvent]
 
 
-_ATTACHED_PROTECTION_MODES = frozenset({
-    "UNIFIED_PLAN",
-    "C_SIMPLE_ATTACHED", "C_MULTI_TP",
-    "D_MULTI_ENTRY_1TP", "D_MULTI_ENTRY_MULTI_TP", "D_POSITION_TPSL",
-})
+_ATTACHED_PROTECTION_MODES = frozenset({"UNIFIED_PLAN", "D_POSITION_TPSL"})
 
 
 def _be_move_extra(chain: "TradeChain") -> dict:
@@ -266,7 +262,7 @@ class LifecycleEntryGate:
 
             if is_deferred:
                 entry_payload: dict = {
-                    "execution_strategy": "D_POSITION_TPSL",
+
                     "symbol": signal.symbol,
                     "side": signal.side,
                     "entry_type": leg.entry_type,
@@ -287,7 +283,7 @@ class LifecycleEntryGate:
                     leg_notional = size_usdt * float(leg.weight or 0.0)
                     leg_qty = self._qty_from_notional(leg_notional, leg_price)
                 entry_payload = {
-                    "execution_strategy": "D_POSITION_TPSL",
+
                     "symbol": signal.symbol,
                     "side": signal.side,
                     "entry_type": leg.entry_type,
@@ -319,7 +315,7 @@ class LifecycleEntryGate:
                 command_type="SET_POSITION_TPSL_FULL",
                 status="WAITING_POSITION",
                 payload_json=json.dumps({
-                    "execution_strategy": "D_POSITION_TPSL",
+
                     "symbol": signal.symbol,
                     "side": signal.side,
                     "leverage": leverage,
@@ -349,7 +345,7 @@ class LifecycleEntryGate:
                     command_type="SET_POSITION_TPSL_PARTIAL",
                     status="WAITING_POSITION",
                     payload_json=json.dumps({
-                        "execution_strategy": "D_POSITION_TPSL",
+    
                         "symbol": signal.symbol,
                         "side": signal.side,
                         "position_idx": position_idx,
@@ -493,18 +489,6 @@ class LifecycleEntryGate:
         action,
         active_commands: list[ExecutionCommand],
     ) -> UpdateChainResult:
-        chain_exec_mode = chain.execution_mode
-        if chain_exec_mode == "C_SIMPLE_ATTACHED":
-            entry_pending = any(
-                c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
-                and c.status in ("PENDING", "SENT", "ACK")
-                for c in active_commands
-            )
-            if entry_pending:
-                return self._review_chain(
-                    enriched, chain,
-                    "c_mode_update_blocked:entry_pending_not_filled",
-                )
         action_type = action.action_type
         if action_type == "SET_STOP":
             op = action.set_stop
@@ -886,7 +870,7 @@ class LifecycleEntryGate:
         if state == "WAITING_ENTRY":
             return UpdateChainResult(
                 trade_chain_id=chain_id,
-                new_lifecycle_state="CANCELLED",
+                new_lifecycle_state=None,
                 new_be_protection_status=None,
                 lifecycle_events=[event],
                 execution_commands=commands,
@@ -961,6 +945,12 @@ class LifecycleEntryGate:
 import sqlite3 as _sqlite3
 
 
+_ENTRY_HISTORY_EVENT_TYPES = frozenset({"ENTRY_FILLED"})
+_EXIT_HISTORY_EVENT_TYPES = frozenset({
+    "TP_FILLED", "SL_FILLED", "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED",
+})
+
+
 class LifecycleGateWorker:
     def __init__(
         self,
@@ -1033,6 +1023,103 @@ class LifecycleGateWorker:
             conn.close()
         return {int(r[0]): int(r[1]) for r in rows}
 
+    def _rehydrate_active_chains(self, chains: list[TradeChain]) -> list[TradeChain]:
+        if not chains:
+            return chains
+        conn = _sqlite3.connect(self._ops_db)
+        try:
+            return [self._rehydrate_chain_from_history(conn, chain) for chain in chains]
+        finally:
+            conn.close()
+
+    def _rehydrate_chain_from_history(
+        self,
+        conn: _sqlite3.Connection,
+        chain: TradeChain,
+    ) -> TradeChain:
+        chain_id = chain.trade_chain_id
+        if chain_id is None:
+            return chain
+
+        rows = conn.execute(
+            """
+            SELECT event_type, payload_json
+            FROM ops_exchange_events
+            WHERE trade_chain_id=?
+              AND processing_status='DONE'
+            ORDER BY received_at, exchange_event_id
+            """,
+            (chain_id,),
+        ).fetchall()
+        if not rows:
+            return chain
+
+        entry_notional = 0.0
+        filled_entry_qty = 0.0
+        closed_position_qty = 0.0
+        for event_type, payload_json in rows:
+            try:
+                payload = json.loads(payload_json or "{}")
+            except Exception:
+                continue
+            try:
+                qty = float(payload.get("filled_qty") or 0.0)
+            except (TypeError, ValueError):
+                continue
+            if qty <= 0:
+                continue
+            if event_type in _ENTRY_HISTORY_EVENT_TYPES:
+                try:
+                    fill_price = float(payload.get("fill_price") or 0.0)
+                except (TypeError, ValueError):
+                    fill_price = 0.0
+                entry_notional += fill_price * qty
+                filled_entry_qty += qty
+            elif event_type in _EXIT_HISTORY_EVENT_TYPES:
+                closed_position_qty += qty
+
+        if filled_entry_qty <= 0:
+            return chain
+
+        derived_entry_avg_price = entry_notional / filled_entry_qty if entry_notional > 0 else None
+        derived_open_position_qty = max(0.0, filled_entry_qty - closed_position_qty)
+        needs_rehydrate = (
+            chain.entry_avg_price is None
+            or chain.filled_entry_qty <= 0
+            or (derived_open_position_qty > 0 and chain.open_position_qty <= 0)
+        )
+        if not needs_rehydrate:
+            return chain
+
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            """
+            UPDATE ops_trade_chains
+            SET entry_avg_price=?,
+                filled_entry_qty=?,
+                open_position_qty=?,
+                closed_position_qty=?,
+                updated_at=?
+            WHERE trade_chain_id=?
+            """,
+            (
+                derived_entry_avg_price,
+                filled_entry_qty,
+                derived_open_position_qty,
+                closed_position_qty,
+                now,
+                chain_id,
+            ),
+        )
+        conn.commit()
+        return chain.model_copy(update={
+            "entry_avg_price": derived_entry_avg_price,
+            "filled_entry_qty": filled_entry_qty,
+            "open_position_qty": derived_open_position_qty,
+            "closed_position_qty": closed_position_qty,
+            "updated_at": datetime.fromisoformat(now),
+        })
+
     def _process_row(self, row: tuple) -> None:
         import json as _json
         from src.runtime_v2.signal_enrichment.models import (
@@ -1075,7 +1162,9 @@ class LifecycleGateWorker:
             policy_snapshot=_json.loads(policy_snapshot_json or "{}"),
         )
 
-        open_chains = self._chain_repo.get_active_by_trader(trader_id)
+        open_chains = self._rehydrate_active_chains(
+            self._chain_repo.get_active_by_trader(trader_id)
+        )
         symbol = enriched_signal.symbol or "" if enriched_signal else ""
         side = enriched_signal.side or "" if enriched_signal else ""
         control_mode = self._control_repo.get_effective_mode(account_id, trader_id, symbol, side)

@@ -45,10 +45,6 @@ class BybitOrderBuilder:
     ) -> BybitOrderParams:
         if command_type == "PLACE_ENTRY":
             return self._place_entry(payload, client_order_id)
-        if command_type == "PLACE_PROTECTIVE_STOP":
-            return self._place_protective_stop(payload, client_order_id)
-        if command_type == "PLACE_TAKE_PROFIT":
-            return self._place_take_profit(payload, client_order_id)
         if command_type in {"CLOSE_PARTIAL", "CLOSE_FULL"}:
             return self._close_market(payload, client_order_id)
         if command_type == "CANCEL_PENDING_ENTRY":
@@ -75,7 +71,6 @@ class BybitOrderBuilder:
         entry_type = payload["entry_type"]
         order_type = entry_type.lower()
         price = float(payload["price"]) if entry_type == "LIMIT" and payload.get("price") else None
-        extra_params = self._mode_c_params(payload) if payload.get("native_attached_tpsl") else {}
 
         return BybitOrderParams(
             action="create_order",
@@ -85,53 +80,7 @@ class BybitOrderBuilder:
             amount=float(payload["qty"]),
             price=price,
             order_link_id=client_order_id,
-            extra_params=extra_params,
-        )
-
-    def _mode_c_params(self, payload: dict) -> dict:
-        tp_count = int(payload.get("tp_count", 1))
-        total_qty = float(payload["qty"])
-        tp_size = float(payload["attached_take_profit_qty"]) if tp_count > 1 else total_qty
-
-        return {
-            "takeProfit": float(payload["attached_take_profit"]),
-            "stopLoss": float(payload["attached_stop_loss"]),
-            "tpslMode": "Partial",
-            "tpOrderType": "Limit",
-            "tpLimitPrice": float(payload["attached_take_profit"]),
-            "tpSize": tp_size,
-        }
-
-    def _place_protective_stop(self, payload: dict, client_order_id: str) -> BybitOrderParams:
-        # SHORT stop triggers when price rises above stop → ascending
-        # LONG stop triggers when price falls below stop → descending
-        trigger_direction = "ascending" if payload["side"] == "SHORT" else "descending"
-        return BybitOrderParams(
-            action="create_order",
-            symbol=payload["symbol"],
-            order_type="market",
-            side=_CLOSE_SIDE[payload["side"]],
-            amount=float(payload["qty"]),
-            price=None,
-            order_link_id=client_order_id,
-            extra_params={
-                "reduceOnly": True,
-                "triggerPrice": float(payload["stop_price"]),
-                "triggerBy": "LastPrice",
-                "triggerDirection": trigger_direction,
-            },
-        )
-
-    def _place_take_profit(self, payload: dict, client_order_id: str) -> BybitOrderParams:
-        return BybitOrderParams(
-            action="create_order",
-            symbol=payload["symbol"],
-            order_type="limit",
-            side=_CLOSE_SIDE[payload["side"]],
-            amount=float(payload["qty"]),
-            price=float(payload["price"]),
-            order_link_id=client_order_id,
-            extra_params={"reduceOnly": True},
+            extra_params={},
         )
 
     def _close_market(self, payload: dict, client_order_id: str) -> BybitOrderParams:

@@ -677,20 +677,20 @@ def _make_enriched_cancel():
     return enriched
 
 
-def test_cancel_pending_on_waiting_entry_becomes_cancelled():
+def test_cancel_pending_on_waiting_entry_does_not_immediately_cancel():
     gate = _make_gate_default()
     chain = _make_chain("WAITING_ENTRY")
     enriched = _make_enriched_cancel()
     result = gate.process_update(enriched, [chain], {10: []})
     assert len(result.chain_results) == 1
     cr = result.chain_results[0]
-    assert cr.new_lifecycle_state == "CANCELLED"
+    assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
     assert "CANCEL_PENDING_ENTRY" in cmd_types
     assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
 
 
-def test_cancel_pending_on_open_emits_sync_not_cancelled():
+def test_cancel_pending_on_open_emits_cancel_not_cancelled():
     gate = _make_gate_default()
     chain = _make_chain("OPEN")
     chain = chain.model_copy(update={"open_position_qty": 0.005})
@@ -701,10 +701,11 @@ def test_cancel_pending_on_open_emits_sync_not_cancelled():
     assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
     assert "CANCEL_PENDING_ENTRY" in cmd_types
-    assert "SYNC_PROTECTIVE_ORDERS" in cmd_types
+    # D_POSITION_TPSL uses position-level SL — no qty sync needed on cancel_pending
+    assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
 
 
-def test_cancel_pending_on_partially_closed_emits_sync():
+def test_cancel_pending_on_partially_closed_emits_cancel_entry():
     gate = _make_gate_default()
     chain = _make_chain("PARTIALLY_CLOSED")
     chain = chain.model_copy(update={"open_position_qty": 0.005})
@@ -713,7 +714,9 @@ def test_cancel_pending_on_partially_closed_emits_sync():
     cr = result.chain_results[0]
     assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
-    assert "SYNC_PROTECTIVE_ORDERS" in cmd_types
+    assert "CANCEL_PENDING_ENTRY" in cmd_types
+    # D_POSITION_TPSL uses position-level SL — no qty sync needed on cancel_pending
+    assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
 
 
 # ── Telegram message ID resolution tests ──────────────────────────────────────
@@ -1220,7 +1223,7 @@ def test_lifecycle_gate_worker_expands_cancel_pending_for_each_active_entry_leg(
     ).fetchone()[0]
     conn.close()
 
-    assert state == "CANCELLED"
+    assert state == "WAITING_ENTRY"
     assert len(cancel_rows) == 2
     payloads = [_json.loads(row[0]) for row in cancel_rows]
     assert {payload["entry_client_order_id"] for payload in payloads} == {
@@ -1231,6 +1234,275 @@ def test_lifecycle_gate_worker_expands_cancel_pending_for_each_active_entry_leg(
 
 
 # ── UNIFIED_PLAN path tests ────────────────────────────────────────────────────
+
+def test_lifecycle_gate_worker_rehydrates_entry_avg_price_from_exchange_history(tmp_path):
+    """Processed exchange fills must backfill active chains before BE updates are built."""
+    import json as _json
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ControlStateRepository, ExecutionCommandRepository,
+        LifecycleEventRepository, SnapshotRepository, TradeChainRepository,
+    )
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, SetStopOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+
+    parser_db = str(tmp_path / "parser.sqlite3")
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    _core_apply(ops_db, "db/ops_migrations")
+
+    pconn = sqlite3.connect(parser_db)
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (1, 'chat1', 50, NULL, '2026-01-01', '2026-01-01')"
+    )
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (2, 'chat1', 51, 50, '2026-01-01', '2026-01-01')"
+    )
+    action = ActionItem(
+        action_type="SET_STOP",
+        set_stop=SetStopOperation(target_type="ENTRY"),
+        source_intent="MOVE_STOP_TO_BE",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(
+            telegram_message_ids=[50],
+            scope_hint="SINGLE_SIGNAL",
+        ),
+        actions=[action],
+    )
+    pconn.execute(
+        "INSERT INTO enriched_canonical_messages "
+        "(enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,"
+        " primary_class, enrichment_decision, enriched_actions_json, lifecycle_processed, created_at)"
+        " VALUES (3, 3, 2, 'trader_a', 'acc', 'UPDATE', 'PASS', ?, 0, '2026-01-01')",
+        (_json.dumps([tag.model_dump()]),),
+    )
+    pconn.commit()
+    pconn.close()
+
+    oconn = sqlite3.connect(ops_db)
+    now = "2026-01-01T00:00:00+00:00"
+    oconn.execute(
+        """
+        INSERT INTO ops_trade_chains (
+            trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, risk_snapshot_json, be_protection_status,
+            execution_mode, created_at, updated_at
+        ) VALUES (1, 1, 1, 1, 'trader_a', 'acc', 'BTC/USDT', 'LONG', 'OPEN',
+                  'ONE_SHOT', '{"be_buffer_pct":0.01}', '{"hedge_mode":false}',
+                  'NOT_PROTECTED', 'UNIFIED_PLAN', ?, ?)
+        """,
+        (now, now),
+    )
+    oconn.execute(
+        """
+        INSERT INTO ops_exchange_events (
+            exchange_event_id, trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at, processed_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            1,
+            1,
+            "ENTRY_FILLED",
+            '{"fill_price":50000.0,"filled_qty":0.01,"command_id":10}',
+            "DONE",
+            "evt:entry-filled:1",
+            now,
+            now,
+        ),
+    )
+    oconn.commit()
+    oconn.close()
+
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=_make_gate_with_mode("b_entry_stop_then_tp"),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        snapshot_repo=SnapshotRepository(ops_db),
+        control_repo=ControlStateRepository(ops_db),
+    )
+
+    processed = worker.run_once()
+
+    assert processed == 1
+    conn = sqlite3.connect(ops_db)
+    payload_json = conn.execute(
+        """
+        SELECT payload_json
+        FROM ops_execution_commands
+        WHERE command_type='MOVE_STOP_TO_BREAKEVEN'
+        ORDER BY command_id DESC
+        LIMIT 1
+        """
+    ).fetchone()[0]
+    chain_row = conn.execute(
+        """
+        SELECT entry_avg_price, filled_entry_qty, open_position_qty
+        FROM ops_trade_chains
+        WHERE trade_chain_id=1
+        """
+    ).fetchone()
+    conn.close()
+
+    payload = _json.loads(payload_json)
+    assert payload["target_price"] == 50000.0
+    assert chain_row == (50000.0, 0.01, 0.01)
+
+
+def test_lifecycle_gate_worker_rehydrates_weighted_entry_avg_from_multiple_fills(tmp_path):
+    """Backfill from history must use weighted average across multiple entry fills."""
+    import json as _json
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ControlStateRepository, ExecutionCommandRepository,
+        LifecycleEventRepository, SnapshotRepository, TradeChainRepository,
+    )
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, SetStopOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+
+    parser_db = str(tmp_path / "parser.sqlite3")
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    _core_apply(ops_db, "db/ops_migrations")
+
+    pconn = sqlite3.connect(parser_db)
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (1, 'chat1', 50, NULL, '2026-01-01', '2026-01-01')"
+    )
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (2, 'chat1', 51, 50, '2026-01-01', '2026-01-01')"
+    )
+    action = ActionItem(
+        action_type="SET_STOP",
+        set_stop=SetStopOperation(target_type="ENTRY"),
+        source_intent="MOVE_STOP_TO_BE",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(
+            telegram_message_ids=[50],
+            scope_hint="SINGLE_SIGNAL",
+        ),
+        actions=[action],
+    )
+    pconn.execute(
+        "INSERT INTO enriched_canonical_messages "
+        "(enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,"
+        " primary_class, enrichment_decision, enriched_actions_json, lifecycle_processed, created_at)"
+        " VALUES (3, 3, 2, 'trader_a', 'acc', 'UPDATE', 'PASS', ?, 0, '2026-01-01')",
+        (_json.dumps([tag.model_dump()]),),
+    )
+    pconn.commit()
+    pconn.close()
+
+    oconn = sqlite3.connect(ops_db)
+    now = "2026-01-01T00:00:00+00:00"
+    oconn.execute(
+        """
+        INSERT INTO ops_trade_chains (
+            trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, risk_snapshot_json, be_protection_status,
+            execution_mode, created_at, updated_at
+        ) VALUES (1, 1, 1, 1, 'trader_a', 'acc', 'BTC/USDT', 'LONG', 'OPEN',
+                  'ONE_SHOT', '{"be_buffer_pct":0.01}', '{"hedge_mode":false}',
+                  'NOT_PROTECTED', 'UNIFIED_PLAN', ?, ?)
+        """,
+        (now, now),
+    )
+    oconn.executemany(
+        """
+        INSERT INTO ops_exchange_events (
+            exchange_event_id, trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at, processed_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        [
+            (
+                1,
+                1,
+                "ENTRY_FILLED",
+                '{"fill_price":50000.0,"filled_qty":0.01,"command_id":10}',
+                "DONE",
+                "evt:entry-filled:1",
+                now,
+                now,
+            ),
+            (
+                2,
+                1,
+                "ENTRY_FILLED",
+                '{"fill_price":49000.0,"filled_qty":0.02,"command_id":11}',
+                "DONE",
+                "evt:entry-filled:2",
+                "2026-01-01T00:01:00+00:00",
+                "2026-01-01T00:01:00+00:00",
+            ),
+        ],
+    )
+    oconn.commit()
+    oconn.close()
+
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=_make_gate_with_mode("b_entry_stop_then_tp"),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        snapshot_repo=SnapshotRepository(ops_db),
+        control_repo=ControlStateRepository(ops_db),
+    )
+
+    processed = worker.run_once()
+
+    assert processed == 1
+    conn = sqlite3.connect(ops_db)
+    payload_json = conn.execute(
+        """
+        SELECT payload_json
+        FROM ops_execution_commands
+        WHERE command_type='MOVE_STOP_TO_BREAKEVEN'
+        ORDER BY command_id DESC
+        LIMIT 1
+        """
+    ).fetchone()[0]
+    chain_row = conn.execute(
+        """
+        SELECT entry_avg_price, filled_entry_qty, open_position_qty
+        FROM ops_trade_chains
+        WHERE trade_chain_id=1
+        """
+    ).fetchone()
+    conn.close()
+
+    payload = _json.loads(payload_json)
+    assert payload["target_price"] == pytest.approx((50000.0 * 0.01 + 49000.0 * 0.02) / 0.03)
+    assert chain_row[0] == pytest.approx((50000.0 * 0.01 + 49000.0 * 0.02) / 0.03)
+    assert chain_row[1:] == (0.03, 0.03)
+
 
 def _make_risk_decision_with_legs(
     size_usdt: float = 500.0,

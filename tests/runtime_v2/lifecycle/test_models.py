@@ -101,7 +101,7 @@ def test_trade_chain_qty_defaults_to_zero():
     assert chain.filled_entry_qty == 0.0
     assert chain.open_position_qty == 0.0
     assert chain.closed_position_qty == 0.0
-    assert chain.execution_mode == "a_sequential"
+    assert chain.execution_mode == "D_POSITION_TPSL"
 
 
 from src.runtime_v2.lifecycle.models import (

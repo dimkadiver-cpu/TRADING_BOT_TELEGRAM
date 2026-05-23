@@ -25,7 +25,6 @@ class WebsocketConfig(BaseModel):
 
 class ExecutionStrategyConfig(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    default_mode: Literal["C_SIMPLE_ATTACHED", "D_POSITION_TPSL"] = "D_POSITION_TPSL"
     simple_attached_enabled: bool = True
     trigger_by: Literal["MarkPrice", "LastPrice", "IndexPrice"] = "MarkPrice"
     one_tp_mode: Literal["FULL"] = "FULL"

@@ -81,7 +81,7 @@ def test_place_entry_market_builds_create_order_without_price(
     assert params.order_link_id == client_order_id
 
 
-def test_place_entry_without_native_attached_tpsl_uses_empty_extra_params() -> None:
+def test_place_entry_uses_empty_extra_params() -> None:
     params = _builder().build(
         "PLACE_ENTRY",
         {
@@ -95,176 +95,6 @@ def test_place_entry_without_native_attached_tpsl_uses_empty_extra_params() -> N
     )
 
     assert params.extra_params == {}
-
-
-def test_place_entry_mode_c_multi_tp_uses_attached_payload_fields() -> None:
-    params = _builder().build(
-        "PLACE_ENTRY",
-        {
-            "symbol": "BTC/USDT:USDT",
-            "side": "LONG",
-            "entry_type": "LIMIT",
-            "qty": 0.01,
-            "price": 50000.0,
-            "native_attached_tpsl": True,
-            "attached_take_profit": 53000.0,
-            "attached_stop_loss": 49000.0,
-            "attached_take_profit_qty": 0.004,
-            "tp_count": 2,
-        },
-        "tsb:10:5:entry:modec:1",
-    )
-
-    assert params.action == "create_order"
-    assert params.side == "buy"
-    assert params.extra_params == {
-        "takeProfit": 53000.0,
-        "stopLoss": 49000.0,
-        "tpslMode": "Partial",
-        "tpOrderType": "Limit",
-        "tpLimitPrice": 53000.0,
-        "tpSize": 0.004,
-    }
-
-
-def test_place_entry_mode_c_single_tp_uses_total_qty_for_tp_size() -> None:
-    params = _builder().build(
-        "PLACE_ENTRY",
-        {
-            "symbol": "BTC/USDT:USDT",
-            "side": "LONG",
-            "entry_type": "LIMIT",
-            "qty": 0.01,
-            "price": 50000.0,
-            "native_attached_tpsl": True,
-            "attached_take_profit": 51000.0,
-            "attached_stop_loss": 49000.0,
-            "attached_take_profit_qty": 0.003,
-            "tp_count": 1,
-        },
-        "tsb:10:5:entry:modec:2",
-    )
-
-    assert params.extra_params["tpslMode"] == "Partial"
-    assert params.extra_params["tpSize"] == 0.01
-
-
-def test_place_entry_mode_c_short_preserves_sell_entry_side() -> None:
-    params = _builder().build(
-        "PLACE_ENTRY",
-        {
-            "symbol": "BTC/USDT:USDT",
-            "side": "SHORT",
-            "entry_type": "LIMIT",
-            "qty": 0.02,
-            "price": 48000.0,
-            "native_attached_tpsl": True,
-            "attached_take_profit": 47000.0,
-            "attached_stop_loss": 49000.0,
-            "attached_take_profit_qty": 0.01,
-            "tp_count": 2,
-        },
-        "tsb:10:5:entry:modec:3",
-    )
-
-    assert params.side == "sell"
-    assert params.extra_params["tpslMode"] == "Partial"
-
-
-def test_place_entry_mode_c_defaults_tp_count_to_one() -> None:
-    params = _builder().build(
-        "PLACE_ENTRY",
-        {
-            "symbol": "BTC/USDT:USDT",
-            "side": "LONG",
-            "entry_type": "LIMIT",
-            "qty": 0.01,
-            "price": 50000.0,
-            "native_attached_tpsl": True,
-            "attached_take_profit": 51000.0,
-            "attached_stop_loss": 49000.0,
-            "attached_take_profit_qty": 0.002,
-        },
-        "tsb:10:5:entry:modec:4",
-    )
-
-    assert params.extra_params["tpSize"] == 0.01
-
-
-@pytest.mark.parametrize(
-    ("side", "qty", "stop_price", "expected_side", "client_order_id"),
-    [
-        ("LONG", 0.01, 49000.0, "sell", "tsb:10:5:sl:1"),
-        ("SHORT", 0.02, 51000.0, "buy", "tsb:10:5:sl:2"),
-    ],
-)
-def test_place_protective_stop_builds_stop_reduce_only_order(
-    side: str,
-    qty: float,
-    stop_price: float,
-    expected_side: str,
-    client_order_id: str,
-) -> None:
-    params = _builder().build(
-        "PLACE_PROTECTIVE_STOP",
-        {
-            "symbol": "BTC/USDT:USDT",
-            "side": side,
-            "qty": qty,
-            "stop_price": stop_price,
-        },
-        client_order_id,
-    )
-
-    assert params.action == "create_order"
-    assert params.order_type == "market"
-    assert params.side == expected_side
-    assert params.symbol == "BTC/USDT:USDT"
-    assert params.amount == qty
-    assert params.price is None
-    assert params.order_link_id == client_order_id
-    expected_trigger_direction = "descending" if side == "LONG" else "ascending"
-    assert params.extra_params == {
-        "reduceOnly": True,
-        "triggerPrice": stop_price,
-        "triggerBy": "LastPrice",
-        "triggerDirection": expected_trigger_direction,
-    }
-
-
-@pytest.mark.parametrize(
-    ("side", "qty", "price", "expected_side", "client_order_id"),
-    [
-        ("LONG", 0.01, 52000.0, "sell", "tsb:10:5:tp:1"),
-        ("SHORT", 0.02, 47000.0, "buy", "tsb:10:5:tp:2"),
-    ],
-)
-def test_place_take_profit_builds_limit_reduce_only_order(
-    side: str,
-    qty: float,
-    price: float,
-    expected_side: str,
-    client_order_id: str,
-) -> None:
-    params = _builder().build(
-        "PLACE_TAKE_PROFIT",
-        {
-            "symbol": "BTC/USDT:USDT",
-            "side": side,
-            "qty": qty,
-            "price": price,
-        },
-        client_order_id,
-    )
-
-    assert params.action == "create_order"
-    assert params.order_type == "limit"
-    assert params.side == expected_side
-    assert params.symbol == "BTC/USDT:USDT"
-    assert params.amount == qty
-    assert params.price == price
-    assert params.order_link_id == client_order_id
-    assert params.extra_params == {"reduceOnly": True}
 
 
 @pytest.mark.parametrize(
@@ -426,26 +256,6 @@ def test_hedge_mode_adds_position_idx_to_entries(
 @pytest.mark.parametrize(
     ("command_type", "payload", "expected_position_idx"),
     [
-        (
-            "PLACE_PROTECTIVE_STOP",
-            {
-                "symbol": "BTC/USDT:USDT",
-                "side": "LONG",
-                "qty": 0.01,
-                "stop_price": 45000.0,
-            },
-            1,
-        ),
-        (
-            "PLACE_TAKE_PROFIT",
-            {
-                "symbol": "BTC/USDT:USDT",
-                "side": "LONG",
-                "qty": 0.01,
-                "price": 55000.0,
-            },
-            1,
-        ),
         (
             "CLOSE_FULL",
             {

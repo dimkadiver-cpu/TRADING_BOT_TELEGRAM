@@ -232,8 +232,6 @@ def test_ac3b_signal_commands_are_ccxt_gateway_ready(dbs):
         )
         if params.action == "create_order":
             assert params.amount > 0
-        if command_type == "PLACE_TAKE_PROFIT":
-            assert params.price in {51000.0, 52000.0}
 
 
 # AC6: Timeout su WAITING_ENTRY → EXPIRED + CANCEL_PENDING_ENTRY

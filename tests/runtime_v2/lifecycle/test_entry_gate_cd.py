@@ -454,56 +454,6 @@ def test_d_multi_entry_1tp_mixed_market_limit_legs():
     assert "attached_tpsl" not in p_leg2
 
 
-def test_c_mode_update_blocked_while_entry_pending():
-    from src.parser_v2.contracts.canonical_message import (
-        ActionItem, CloseOperation, TargetActionGroup,
-    )
-    from src.parser_v2.contracts.context import TargetHints
-    from src.runtime_v2.lifecycle.models import ExecutionCommand, TradeChain
-
-    gate = _make_gate(simple_attached_enabled=True)
-
-    chain = TradeChain(
-        trade_chain_id=99,
-        source_enrichment_id=1, canonical_message_id=10, raw_message_id=5,
-        trader_id="t1", account_id="main", symbol="BTC/USDT:USDT", side="LONG",
-        lifecycle_state="WAITING_ENTRY", entry_mode="ONE_SHOT",
-        management_plan_json="{}", execution_mode="C_SIMPLE_ATTACHED",
-    )
-    pending_cmd = ExecutionCommand(
-        trade_chain_id=99,
-        command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
-        status="PENDING",
-        payload_json="{}",
-        idempotency_key="test:1",
-    )
-    action = ActionItem(
-        action_type="CLOSE",
-        close=CloseOperation(close_scope="FULL"),
-        source_intent="CLOSE_FULL",
-    )
-    tag = TargetActionGroup(
-        targeting=TargetHints(scope_hint="SINGLE_SIGNAL", symbols=[]),
-        actions=[action],
-    )
-    from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
-    enriched_update = EnrichedCanonicalMessage(
-        enrichment_id=2, canonical_message_id=11, raw_message_id=50,
-        trader_id="t1", account_id="main",
-        primary_class="UPDATE", enrichment_decision="PASS",
-        enriched_actions=[tag], policy_snapshot={},
-    )
-
-    result = gate.process_update(
-        enriched_update,
-        open_chains=[chain],
-        active_commands_by_chain={99: [pending_cmd]},
-    )
-    chain_result = result.chain_results[0]
-    events = chain_result.lifecycle_events
-    assert any(e.event_type == "REVIEW_REQUIRED" for e in events)
-
-
 # ── Routing matrix ────────────────────────────────────────────────────────────
 
 def test_routing_1entry_1tp_uses_unified_plan():

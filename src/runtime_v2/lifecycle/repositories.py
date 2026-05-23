@@ -60,7 +60,7 @@ def _chain_from_row(row: tuple) -> TradeChain:
             datetime.fromisoformat(last_position_sync_at)
             if last_position_sync_at else None
         ),
-        execution_mode=execution_mode or "a_sequential",
+        execution_mode=execution_mode or "D_POSITION_TPSL",
         risk_already_realized=risk_already_realized or 0.0,
         risk_remaining=risk_remaining or 0.0,
         plan_state_json=plan_state_json or "{}",

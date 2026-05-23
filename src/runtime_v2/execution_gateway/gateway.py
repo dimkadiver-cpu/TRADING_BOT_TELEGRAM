@@ -16,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 _CAPABILITY_MAP: dict[str, str] = {
     "PLACE_ENTRY": "place_entry",
-    "PLACE_PROTECTIVE_STOP": "protective_stop_native",
-    "PLACE_TAKE_PROFIT": "take_profit_native",
     "MOVE_STOP_TO_BREAKEVEN": "move_stop",
     "MOVE_STOP": "move_stop",
     "CANCEL_PENDING_ENTRY": "place_entry",
@@ -28,14 +26,14 @@ _CAPABILITY_MAP: dict[str, str] = {
 
 _ROLE_MAP: dict[str, str] = {
     "PLACE_ENTRY": "entry",
-    "PLACE_PROTECTIVE_STOP": "sl",
-    "PLACE_TAKE_PROFIT": "tp",
     "MOVE_STOP_TO_BREAKEVEN": "sl",
     "MOVE_STOP": "sl",
     "CANCEL_PENDING_ENTRY": "entry",
     "CLOSE_PARTIAL": "exit_partial",
     "CLOSE_FULL": "exit_full",
     "SYNC_PROTECTIVE_ORDERS": "sync",
+    "SET_POSITION_TPSL_PARTIAL": "tp",
+    "SET_POSITION_TPSL_FULL": "tp",
 }
 
 # Commands that execute synchronously and create no pollable exchange order.
@@ -46,8 +44,6 @@ _FIRE_AND_FORGET: frozenset[str] = frozenset({
     "MOVE_STOP_TO_BREAKEVEN",
     "MOVE_STOP",
     "MOVE_POSITION_STOP",
-    "SET_POSITION_TPSL_FULL",
-    "SET_POSITION_TPSL_PARTIAL",
 })
 
 

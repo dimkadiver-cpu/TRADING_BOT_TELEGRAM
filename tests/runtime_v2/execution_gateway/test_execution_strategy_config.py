@@ -8,16 +8,10 @@ from src.runtime_v2.execution_gateway.models import AdapterConfig, ExecutionStra
 
 def test_strategy_config_defaults():
     s = ExecutionStrategyConfig()
-    assert s.default_mode == "D_POSITION_TPSL"
     assert s.simple_attached_enabled is True
     assert s.trigger_by == "MarkPrice"
     assert s.one_tp_mode == "FULL"
     assert s.multi_tp_mode == "PARTIAL"
-
-
-def test_strategy_config_invalid_mode():
-    with pytest.raises(ValidationError):
-        ExecutionStrategyConfig(default_mode="X_UNKNOWN")
 
 
 def test_adapter_config_new_format_accepted():
@@ -30,7 +24,7 @@ def test_adapter_config_new_format_accepted():
     })
     assert cfg.api_key_env == "BYBIT_API_KEY_DEMO"
     assert cfg.api_secret_env == "BYBIT_API_SECRET_DEMO"
-    assert cfg.strategy.default_mode == "D_POSITION_TPSL"
+    assert cfg.strategy.simple_attached_enabled is True
 
 
 def test_adapter_config_strategy_block_accepted():
@@ -39,11 +33,9 @@ def test_adapter_config_strategy_block_accepted():
         "mode": "demo",
         "connector": "bybit",
         "strategy": {
-            "default_mode": "C_SIMPLE_ATTACHED",
             "simple_attached_enabled": False,
         },
     })
-    assert cfg.strategy.default_mode == "C_SIMPLE_ATTACHED"
     assert cfg.strategy.simple_attached_enabled is False
 
 

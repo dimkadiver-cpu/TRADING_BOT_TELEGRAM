@@ -85,28 +85,6 @@ def test_place_entry_short_uses_sell_side():
     assert args[2] == "sell"
 
 
-def test_place_protective_stop_calls_create_order():
-    exchange = MagicMock()
-    exchange.create_order.return_value = {"id": "exch_sl"}
-    adapter = _make_adapter(exchange)
-
-    result = adapter.place_order(
-        command_type="PLACE_PROTECTIVE_STOP",
-        payload={"symbol": "BTC/USDT:USDT", "side": "LONG",
-                 "qty": 0.01, "stop_price": 49000.0},
-        client_order_id="tsb:10:5:sl:1",
-        execution_account_id="bybit_main",
-        connector="bybit",
-    )
-
-    assert result.success is True
-    args, kwargs = exchange.create_order.call_args
-    assert args[1] == "market"
-    assert args[2] == "sell"
-    assert kwargs["params"]["triggerPrice"] == 49000.0
-    assert kwargs["params"]["reduceOnly"] is True
-
-
 def test_hedge_mode_place_entry_adds_position_idx():
     exchange = MagicMock()
     exchange.create_order.return_value = {"id": "123"}

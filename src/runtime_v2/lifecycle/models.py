@@ -15,7 +15,6 @@ TERMINAL_STATES: frozenset[str] = frozenset({"CLOSED", "CANCELLED", "EXPIRED"})
 
 CommandType = Literal[
     "PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL",
-    "PLACE_PROTECTIVE_STOP", "PLACE_TAKE_PROFIT",
     "SET_POSITION_TPSL_FULL", "SET_POSITION_TPSL_PARTIAL",
     "MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP", "MOVE_POSITION_STOP",
     "CANCEL_PENDING_ENTRY", "CANCEL_POSITION_TPSL",
@@ -81,7 +80,7 @@ class TradeChain(BaseModel):
     open_position_qty: float = 0.0
     closed_position_qty: float = 0.0
     last_position_sync_at: datetime | None = None
-    execution_mode: str = "a_sequential"
+    execution_mode: str = "D_POSITION_TPSL"
     risk_already_realized: float = 0.0
     risk_remaining: float = 0.0
     plan_state_json: str = "{}"

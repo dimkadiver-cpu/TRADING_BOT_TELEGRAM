@@ -75,34 +75,6 @@ def test_entry_fill_writes_entry_filled_event(ops_db):
     assert payload["filled_qty"] == 0.02
 
 
-def test_tp_fill_last_writes_is_final_true(ops_db):
-    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_sent_cmd(ops_db, 2001, 42, "PLACE_TAKE_PROFIT", "tsb:42:2001:tp:1")
-    adapter = FakeAdapter()
-    adapter.place_order(
-        command_type="PLACE_TAKE_PROFIT",
-        payload={}, client_order_id="tsb:42:2001:tp:1",
-        execution_account_id="acc", connector="c",
-    )
-    adapter.simulate_fill("tsb:42:2001:tp:1", price=51000.0, qty=0.02)
-
-    repo = GatewayCommandRepository(ops_db)
-    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter,
-                                     repo=repo, execution_account_id="acc")
-    worker.run_once()
-
-    conn = sqlite3.connect(ops_db)
-    payload = json.loads(conn.execute(
-        "SELECT payload_json FROM ops_exchange_events WHERE event_type='TP_FILLED'"
-    ).fetchone()[0])
-    conn.close()
-    assert payload["is_final"] is True
-    assert payload["tp_level"] == 1
-
-
 def test_idempotency_no_duplicate_events(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
@@ -259,7 +231,7 @@ def test_cancelled_non_entry_marks_done_no_event(ops_db):
     from src.runtime_v2.execution_gateway.models import RawAdapterOrder
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
-    _insert_sent_cmd(ops_db, 5003, 12, "PLACE_PROTECTIVE_STOP", "tsb:12:5003:sl:1")
+    _insert_sent_cmd(ops_db, 5003, 12, "PLACE_ENTRY_WITH_ATTACHED_TPSL", "tsb:12:5003:sl:1")
 
     adapter = MagicMock()
     adapter.get_order_status.return_value = RawAdapterOrder(
@@ -285,49 +257,6 @@ def test_cancelled_non_entry_marks_done_no_event(ops_db):
     conn.close()
     assert status == "DONE"
     assert event_count == 0
-
-
-def test_cancelled_tp_with_fill_writes_tp_filled_event(ops_db):
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_sent_cmd(ops_db, 5004, 13, "PLACE_TAKE_PROFIT", "tsb:13:5004:tp:1")
-
-    adapter = MagicMock()
-    adapter.get_order_status.return_value = RawAdapterOrder(
-        client_order_id="tsb:13:5004:tp:1",
-        exchange_order_id="ex-tp-cancel-filled",
-        status="CANCELLED",
-        filled_qty=0.5,
-        average_price=1.33,
-        cancel_reason="CancelByReduceOnly|EC_PerCancelRequest",
-    )
-    repo = GatewayCommandRepository(ops_db)
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db,
-        adapter=adapter,
-        repo=repo,
-        execution_account_id="main",
-    )
-
-    count = worker.run_reconciliation()
-
-    assert count == 1
-    conn = sqlite3.connect(ops_db)
-    status = conn.execute(
-        "SELECT status FROM ops_execution_commands WHERE command_id=5004"
-    ).fetchone()[0]
-    event_type, payload_json = conn.execute(
-        "SELECT event_type, payload_json FROM ops_exchange_events WHERE trade_chain_id=13"
-    ).fetchone()
-    conn.close()
-    payload = json.loads(payload_json)
-    assert status == "DONE"
-    assert event_type == "TP_FILLED"
-    assert payload["tp_level"] == 1
-    assert payload["filled_qty"] == 0.5
-    assert payload["fill_price"] == 1.33
 
 
 def _insert_open_chain(db_path, chain_id, symbol, side, open_qty):

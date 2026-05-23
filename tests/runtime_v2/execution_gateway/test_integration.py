@@ -106,11 +106,10 @@ def test_ac2_capability_missing_review_required(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.models import AdapterCapabilities
     _insert_chain(ops_db)
-    _insert_cmd(ops_db, 1002, cmd_type="PLACE_PROTECTIVE_STOP", payload={
-        "symbol": "BTC/USDT", "side": "LONG",
-        "stop_price": 49000.0, "qty": 0.02, "reduce_only": True,
+    _insert_cmd(ops_db, 1002, cmd_type="CLOSE_PARTIAL", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "qty": 0.01,
     })
-    adapter = FakeAdapter(capabilities=AdapterCapabilities(protective_stop_native=False))
+    adapter = FakeAdapter(capabilities=AdapterCapabilities(close_partial=False))
     worker, _, _ = _make_stack(ops_db, adapter)
     worker.run_once()
     conn = sqlite3.connect(ops_db)
@@ -174,10 +173,11 @@ def test_ac5_fill_produces_entry_filled_event(ops_db):
 # AC6: TP WAITING_POSITION su chain non-OPEN rimane in waiting
 def test_ac6_tp_waiting_position_before_fill(ops_db):
     _insert_chain(ops_db)  # state=WAITING_ENTRY (not OPEN)
-    _insert_cmd(ops_db, 2001, cmd_type="PLACE_TAKE_PROFIT", status="WAITING_POSITION",
+    _insert_cmd(ops_db, 2001, cmd_type="SET_POSITION_TPSL_PARTIAL", status="WAITING_POSITION",
                 payload={"symbol": "BTC/USDT", "side": "LONG",
-                         "tp_sequence": 1, "price": 51000.0,
-                         "close_pct": 50.0, "reduce_only": True})
+                         "take_profit": 51000.0, "tp_size": 0.01,
+                         "stop_loss": 49000.0, "sl_size": 0.02,
+                         "position_idx": 0})
     worker, _, _ = _make_stack(ops_db)
     worker.run_once()
     conn = sqlite3.connect(ops_db)

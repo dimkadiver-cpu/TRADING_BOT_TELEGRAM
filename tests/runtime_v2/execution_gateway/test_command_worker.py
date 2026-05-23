@@ -115,10 +115,11 @@ def test_command_with_missing_chain_gets_review_required(ops_db):
 
 def test_waiting_position_on_open_chain_becomes_pending(ops_db):
     _insert_chain(ops_db, state="OPEN")
-    _insert_cmd(ops_db, 1003, cmd_type="PLACE_TAKE_PROFIT", status="WAITING_POSITION",
+    _insert_cmd(ops_db, 1003, cmd_type="SET_POSITION_TPSL_PARTIAL", status="WAITING_POSITION",
                 payload={"symbol": "BTC/USDT", "side": "LONG",
-                         "tp_sequence": 1, "price": 51000.0,
-                         "close_pct": 100.0, "reduce_only": True})
+                         "take_profit": 51000.0, "tp_size": 0.02,
+                         "stop_loss": 49000.0, "sl_size": 0.02,
+                         "position_idx": 0})
     worker, _ = _make_worker(ops_db)
     worker.run_once()
     conn = sqlite3.connect(ops_db)
@@ -126,7 +127,7 @@ def test_waiting_position_on_open_chain_becomes_pending(ops_db):
         "SELECT status FROM ops_execution_commands WHERE command_id=1003"
     ).fetchone()[0]
     conn.close()
-    assert status == "SENT"
+    assert status == "DONE"  # SET_POSITION_TPSL_PARTIAL is fire-and-forget
 
 
 def test_retry_batch_is_processed_after_backoff_expires(ops_db):

@@ -88,7 +88,7 @@ def test_get_active_client_order_ids_returns_only_sent_and_ack(ops_db):
         ops_db,
         command_id=2,
         trade_chain_id=10,
-        command_type="PLACE_TAKE_PROFIT",
+        command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
         status="ACK",
         client_order_id="tsb:10:2:tp:1",
     )
@@ -96,7 +96,7 @@ def test_get_active_client_order_ids_returns_only_sent_and_ack(ops_db):
         ops_db,
         command_id=3,
         trade_chain_id=10,
-        command_type="PLACE_PROTECTIVE_STOP",
+        command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
         status="DONE",
         client_order_id="tsb:10:3:sl:1",
     )

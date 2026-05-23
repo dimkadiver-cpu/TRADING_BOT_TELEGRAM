@@ -102,18 +102,6 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def count_active_tps(self, trade_chain_id: int) -> int:
-        conn = sqlite3.connect(self._db)
-        try:
-            return conn.execute(
-                "SELECT COUNT(*) FROM ops_execution_commands "
-                "WHERE trade_chain_id=? AND command_type='PLACE_TAKE_PROFIT' "
-                "AND status IN ('PENDING','SENT','ACK','WAITING_POSITION')",
-                (trade_chain_id,),
-            ).fetchone()[0]
-        finally:
-            conn.close()
-
     def mark_sent(
         self,
         command_id: int,

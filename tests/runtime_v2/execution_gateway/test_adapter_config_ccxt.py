@@ -63,7 +63,6 @@ def test_adapter_config_strategy_defaults():
         "mode": "paper",
         "connector": "bybit",
     })
-    assert cfg.strategy.default_mode == "D_POSITION_TPSL"
     assert cfg.strategy.simple_attached_enabled is True
 
 

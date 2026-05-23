@@ -193,8 +193,9 @@ async def _run_position_reconciliation_periodically(
         await asyncio.sleep(interval_seconds)
         try:
             sync_worker.run_position_reconciliation()
+            sync_worker.run_tp_reconciliation()
         except Exception:
-            logger.exception("periodic position reconciliation error")
+            logger.exception("periodic position/tp reconciliation error")
 
 
 async def _async_main(

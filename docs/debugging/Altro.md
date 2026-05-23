@@ -1,22 +1,29 @@
-- Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?fi
+- Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?
 
-- Pulizia dei BD in prova
-
--Aggiornare file Readme. Claude.md
+- Aggiornare file Readme, CLAUDE.md
 
 - pulizia finale da vecchi file/non in uso ecc.
 
-- verifica bene C:\TeleSignalBot\docs\debugging\market_entry_qty_deferred.md prima di implimentare!
+- verifica bene C:\TeleSignalBot\docs\debugging\market_entry_qty_deferred.md prima di implementare!
 
-
-ottimizare il worker di esecuizione dei comandi su cicle life
-
+- ottimizare il worker di esecuizione dei comandi su cicle life
 
 Domande aperte da verificare:
 
-- Verificare come vengono gestiti i ordini su exchange:
-    tre modalita
+- Verificare come vengono gestiti i ordini su exchange: tre modalita
 
-- Velocizare i passaggi ? sync, ecc
+- Velocizare i passaggi? sync, ecc
 
-- Aggioramento manuale su exchange, vine rigestrato su DB?
+- manpulazioni manuale su exchange, vengono rivelati e  rigestrati su DB?
+
+---
+
+Domande risolte (2026-05-23):
+
+- [x] in ops execution_commands dopo aver fatto "sent" fa il sync per vedere se operazione andato a buon fine? e poi segna done?
+  → I comandi fire-and-forget (CANCEL, SYNC, MOVE_STOP, SET_TPSL) non creano ordini pollabili.
+     Ora vengono marcati DONE immediatamente dopo mark_sent (_FIRE_AND_FORGET in gateway.py).
+     I comandi con ordine reale (PLACE_ENTRY, PLACE_STOP, PLACE_TP) vengono marcati DONE
+     dal sync worker quando trova il fill/cancel sull'exchange.
+
+→ Vedi stato completo: docs/debugging/stato_runtime_v2.md

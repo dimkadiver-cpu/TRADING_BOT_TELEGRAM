@@ -58,16 +58,18 @@ LIMIT 20;
 
 Verifica principale del flusso.
 
-- [ ] Inviare segnale `LIMIT`
-- [ ] Verificare creazione chain in `ops_trade_chains`
-- [ ] Verificare `PLACE_ENTRY`
-- [ ] Verificare `PLACE_PROTECTIVE_STOP` e `PLACE_TAKE_PROFIT` se previsti dalla strategia
-- [ ] Verificare apertura ordine su exchange demo
-- [ ] Verificare `CANCEL_PENDING_ENTRY` quando cancelli l'entry pendente
+- [x] Inviare segnale `LIMIT`
+- [x] Verificare creazione chain in `ops_trade_chains`
+- [x] Verificare `PLACE_ENTRY`
+- [x] Verificare `PLACE_PROTECTIVE_STOP` e `PLACE_TAKE_PROFIT` se previsti dalla strategia
+- [x] Verificare apertura ordine su exchange demo
+- [x] Verificare `CANCEL_PENDING_ENTRY` quando cancelli l'entry pendente
 - [ ] Verificare chiusura parziale con `CLOSE_PARTIAL`
 - [ ] Verificare chiusura totale con `CLOSE_FULL`
 - [ ] Verificare `MOVE_STOP_TO_BREAKEVEN`
-- [ ] Verificare `MOVE_STOP`
+- [ ] Verificare `MOVE_STOP` (non implimitato)
+- [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` in unico messaggio
+- [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` dopo `TP_HIT`
 
 Atteso:
 
@@ -79,10 +81,10 @@ Atteso:
 
 Verifica multi-leg e gestione ordini non fillati.
 
-- [ ] Inviare segnale con due entry limit
-- [ ] Verificare che entrambe le entry siano create
+- [X] Inviare segnale con due entry limit
+- [X] Verificare che entrambe le entry siano create
 - [ ] Verificare cancellazione del primo ordine non fillato
-- [ ] Verificare cancellazione del secondo ordine non fillato
+- [X] Verificare cancellazione del secondo ordine non fillato
 - [ ] Verificare modifica del primo ordine al market, se prevista dal flusso
 - [ ] Verificare apertura del secondo ordine
 - [ ] Verificare chiusura totale

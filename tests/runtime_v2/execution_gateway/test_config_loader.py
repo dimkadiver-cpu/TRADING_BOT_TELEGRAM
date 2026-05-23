@@ -124,7 +124,6 @@ def test_real_execution_yaml_loads():
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     config = ExecutionConfigLoader("config/execution.yaml").load()
     assert config.default_adapter == "bybit_demo"
-    assert config.adapters["bybit_demo"].strategy.default_mode == "D_POSITION_TPSL"
     assert config.adapters["bybit_demo"].strategy.simple_attached_enabled is True
     assert config.adapters["bybit_demo"].live_safety.allow_live_trading is False
 

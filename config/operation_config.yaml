@@ -86,9 +86,9 @@ defaults:
     CANCEL_PENDING: true
     ADD_ENTRY: false
     REENTER: false
-    MODIFY_ENTRY: false
+    MODIFY_ENTRY: true
     MODIFY_TARGETS: false
-    INVALIDATE_SETUP: false
+    INVALIDATE_SETUP: true
 
   management_plan:
     be_trigger: null

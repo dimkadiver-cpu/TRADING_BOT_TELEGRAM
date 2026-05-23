@@ -90,15 +90,14 @@ def test_capability_missing_produces_review_required(ops_db):
     from src.runtime_v2.execution_gateway.models import AdapterCapabilities
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
-    _insert_cmd(ops_db, 1002, cmd_type="PLACE_PROTECTIVE_STOP", payload={
-        "symbol": "BTC/USDT", "side": "LONG",
-        "stop_price": 49000.0, "qty": 0.02, "reduce_only": True,
+    _insert_cmd(ops_db, 1002, cmd_type="CLOSE_PARTIAL", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "qty": 0.01,
     })
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
         adapter_registry={"bybit_demo": FakeAdapter(
-            capabilities=AdapterCapabilities(protective_stop_native=False)
+            capabilities=AdapterCapabilities(close_partial=False)
         )},
         repo=repo,
     )
