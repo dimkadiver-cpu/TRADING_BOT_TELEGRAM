@@ -38,6 +38,18 @@ _ROLE_MAP: dict[str, str] = {
     "SYNC_PROTECTIVE_ORDERS": "sync",
 }
 
+# Commands that execute synchronously and create no pollable exchange order.
+# Marked DONE immediately after mark_sent — the sync worker has nothing to poll.
+_FIRE_AND_FORGET: frozenset[str] = frozenset({
+    "CANCEL_PENDING_ENTRY",
+    "SYNC_PROTECTIVE_ORDERS",
+    "MOVE_STOP_TO_BREAKEVEN",
+    "MOVE_STOP",
+    "MOVE_POSITION_STOP",
+    "SET_POSITION_TPSL_FULL",
+    "SET_POSITION_TPSL_PARTIAL",
+})
+
 
 def _base36(value: int) -> str:
     alphabet = "0123456789abcdefghijklmnopqrstuvwxyz"
@@ -220,6 +232,8 @@ class ExecutionGateway:
             adapter_order_id=result.adapter_order_id,
             exchange_order_id=result.exchange_order_id,
         )
+        if cmd.command_type in _FIRE_AND_FORGET:
+            self._repo.mark_done(cmd.command_id)
 
     def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, error_str: str) -> None:
         retry_cfg = adapter_cfg.retry

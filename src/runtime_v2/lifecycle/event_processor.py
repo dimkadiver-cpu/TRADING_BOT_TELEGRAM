@@ -490,19 +490,24 @@ class LifecycleEventProcessor:
         self, exchange_event: ExchangeEvent, chain: TradeChain
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
-        position_already_open = bool(payload.get("position_already_open", False))
+        # payload["position_already_open"] reflects only whether the cancelled order itself
+        # had fills — wrong for multi-leg entries where leg 1 opened the position.
+        # Use chain state directly instead.
+        position_already_open = (chain.open_position_qty or 0.0) > 0.0
         cancelled_order_ids = [str(v) for v in payload.get("cancelled_order_ids", []) if v]
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         commands: list[ExecutionCommand] = []
         new_state: str | None = None
         if position_already_open:
-            commands.append(ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type="SYNC_PROTECTIVE_ORDERS",
-                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                idempotency_key=f"sync_after_cancel:{chain_id}:{eid}",
-            ))
+            # Attached-SL modes use a position-level SL — no qty sync needed.
+            if chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
+                commands.append(ExecutionCommand(
+                    trade_chain_id=chain_id,
+                    command_type="SYNC_PROTECTIVE_ORDERS",
+                    payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+                    idempotency_key=f"sync_after_cancel:{chain_id}:{eid}",
+                ))
         else:
             new_state = "CANCELLED"
         new_plan_state_json = self._mark_entry_leg_status(

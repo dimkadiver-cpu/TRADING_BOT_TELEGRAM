@@ -334,9 +334,11 @@ class CcxtBybitAdapter(ExecutionAdapter):
                     current_qty,
                     params={"triggerPrice": float(sl_order["stopPrice"])},
                 )
+                return AdapterResult(success=True)
             except Exception as exc:
-                return AdapterResult(success=False, error=f"edit_order sl failed: {exc}")
-            return AdapterResult(success=True)
+                # Attached position-level SLs (set via trading_stop) appear in fetch_open_orders
+                # but cannot be amended via edit_order on Bybit V5 — fall through to trading_stop.
+                logger.debug("edit_order sl failed (%s), falling through to trading_stop", exc)
 
         attached_sl = pos_info.get("stopLoss", "0")
         if attached_sl and float(attached_sl) > 0:
