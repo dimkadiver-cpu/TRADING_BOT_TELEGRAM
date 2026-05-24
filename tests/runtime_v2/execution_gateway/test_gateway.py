@@ -619,6 +619,32 @@ def test_move_stop_emits_stop_moved_confirmed_not_breakeven(ops_db):
     assert events[0][1]["new_stop_price"] == 48000.0
 
 
+def test_move_position_stop_emits_stop_moved_confirmed(ops_db):
+    """MOVE_POSITION_STOP con retCode=0 → STOP_MOVED_CONFIRMED con is_breakeven=False."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 5006, cmd_type="MOVE_POSITION_STOP", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "new_stop_price": 47000.0,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert len(events) == 1
+    assert events[0][0] == "STOP_MOVED_CONFIRMED"
+    assert events[0][1]["is_breakeven"] is False
+    assert events[0][1]["new_stop_price"] == 47000.0
+
+
 def test_sync_protective_orders_emits_protective_orders_synced(ops_db):
     """SYNC_PROTECTIVE_ORDERS con retCode=0 → PROTECTIVE_ORDERS_SYNCED."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
