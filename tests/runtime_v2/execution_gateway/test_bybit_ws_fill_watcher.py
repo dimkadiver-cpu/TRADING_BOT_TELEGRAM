@@ -310,3 +310,99 @@ def _assert_exchange_event_count(db_path: str, *, expected: int) -> None:
 def _assert_thread_stopped(watcher) -> None:
     assert watcher._thread is not None
     assert not watcher._thread.is_alive()
+
+
+# ── wake_callback tests ───────────────────────────────────────────────────────
+
+def _make_watcher_with_callback(ops_db, wake_callback=None):
+    """Costruisce BybitWsFillWatcher con callback iniettato e repo reale."""
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+    repo = GatewayCommandRepository(ops_db)
+    return BybitWsFillWatcher(
+        api_key="key",
+        api_secret="secret",
+        testnet=True,
+        ops_db_path=ops_db,
+        repo=repo,
+        wake_callback=wake_callback,
+    )
+
+
+def _insert_chain_open(db_path: str, chain_id: int = 1) -> None:
+    import sqlite3
+    now = "2026-01-01T00:00:00+00:00"
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(source_enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id, "
+        "symbol, side, lifecycle_state, entry_mode, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, 100 + chain_id, 200 + chain_id, "trader_a", "main", "BTCUSDT", "LONG",
+         "OPEN", "TWO_STEP", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_wake_callback_called_on_save_fill(ops_db):
+    """wake_callback viene chiamato dopo _save_fill (ENTRY_FILLED)."""
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+
+    called = []
+    watcher = _make_watcher_with_callback(ops_db, wake_callback=lambda: called.append(1))
+
+    _insert_chain_open(ops_db, chain_id=1)
+    _insert_command(ops_db, command_id=1, trade_chain_id=1,
+                    command_type="PLACE_ENTRY", status="SENT",
+                    client_order_id="tsb:1:1:entry:1")
+
+    raw = RawAdapterOrder(
+        exchange_order_id="ex-001",
+        client_order_id="tsb:1:1:entry:1",
+        status="closed",
+        is_filled=True,
+        average_price=60000.0,
+        filled_qty=0.001,
+    )
+    watcher._save_fill("tsb:1:1:entry:1", raw)
+    assert called == [1]
+
+
+def test_wake_callback_called_on_save_tp_fill_from_trade(ops_db):
+    """wake_callback viene chiamato dopo _save_tp_fill_from_trade."""
+    called = []
+    watcher = _make_watcher_with_callback(ops_db, wake_callback=lambda: called.append(1))
+
+    _insert_chain_open(ops_db, chain_id=2)
+
+    watcher._save_tp_fill_from_trade(
+        chain_id=2,
+        tp_level=1,
+        fill_price=65000.0,
+        filled_qty=0.001,
+        is_final=False,
+        exchange_trade_id="trade-001",
+    )
+    assert called == [1]
+
+
+def test_wake_callback_none_does_not_raise(ops_db):
+    """wake_callback=None (default) non causa errori."""
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+
+    watcher = _make_watcher_with_callback(ops_db, wake_callback=None)
+    _insert_chain_open(ops_db, chain_id=3)
+    _insert_command(ops_db, command_id=3, trade_chain_id=3,
+                    command_type="PLACE_ENTRY", status="SENT",
+                    client_order_id="tsb:3:3:entry:1")
+
+    raw = RawAdapterOrder(
+        exchange_order_id="ex-003",
+        client_order_id="tsb:3:3:entry:1",
+        status="closed",
+        is_filled=True,
+        average_price=60000.0,
+        filled_qty=0.001,
+    )
+    watcher._save_fill("tsb:3:3:entry:1", raw)  # non deve sollevare

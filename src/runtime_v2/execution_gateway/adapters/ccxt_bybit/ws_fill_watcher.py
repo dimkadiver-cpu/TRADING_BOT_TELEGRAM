@@ -5,6 +5,7 @@ import json
 import logging
 import sqlite3
 import threading
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 try:
@@ -34,6 +35,7 @@ class BybitWsFillWatcher:
         repo: GatewayCommandRepository,
         reconciliation_callback=None,
         mode: str = "live",
+        wake_callback: Callable[[], None] | None = None,
     ) -> None:
         self._api_key = api_key
         self._api_secret = api_secret
@@ -42,6 +44,7 @@ class BybitWsFillWatcher:
         self._ops_db_path = ops_db_path
         self._repo = repo
         self._reconciliation_callback = reconciliation_callback
+        self._wake_callback = wake_callback
         self._stop_event = threading.Event()
         self._loop_ready = threading.Event()
         self._thread: threading.Thread | None = None
@@ -170,6 +173,8 @@ class BybitWsFillWatcher:
             "TP_FILLED inserted from watch_my_trades: chain=%d level=%d price=%.4f trade_id=%s",
             chain_id, tp_level, fill_price, exchange_trade_id,
         )
+        if self._wake_callback:
+            self._wake_callback()
 
     def _process_trade_batch(self, trades: list[dict] | None) -> None:
         """Elabora batch di trade da watchMyTrades. Inserisce TP_FILLED per fill position-level.
@@ -356,6 +361,9 @@ class BybitWsFillWatcher:
             conn.commit()
         finally:
             conn.close()
+
+        if self._wake_callback:
+            self._wake_callback()
 
     @staticmethod
     def _base_fill_payload(raw: RawAdapterOrder, command_id: int) -> dict[str, object]:
