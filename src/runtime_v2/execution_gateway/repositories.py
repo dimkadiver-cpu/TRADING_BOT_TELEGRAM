@@ -348,5 +348,50 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def get_active_tp_commands(self, trade_chain_id: int) -> list[dict]:
+        """Payload dei SET_POSITION_TPSL_* SENT/DONE per chain OPEN/PARTIALLY_CLOSED.
+
+        Usato da watchMyTrades per confrontare il fill price con i TP attivi.
+        """
+        conn = sqlite3.connect(self._db)
+        try:
+            rows = conn.execute(
+                "SELECT c.payload_json "
+                "FROM ops_execution_commands c "
+                "JOIN ops_trade_chains t ON c.trade_chain_id = t.trade_chain_id "
+                "WHERE c.trade_chain_id = ? "
+                "AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL') "
+                "AND c.status IN ('SENT', 'DONE') "
+                "AND t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
+                (trade_chain_id,),
+            ).fetchall()
+            result = []
+            for (payload_json,) in rows:
+                try:
+                    result.append(json.loads(payload_json))
+                except Exception:
+                    pass
+            return result
+        finally:
+            conn.close()
+
+    def get_open_chains_for_symbol(self, symbol: str, side: str) -> list[int]:
+        """Lista di trade_chain_id OPEN/PARTIALLY_CLOSED per symbol+side.
+
+        Usato da watchMyTrades per trovare le chain candidate per un fill TP.
+        `side` è il lato della posizione (LONG/SHORT), non il lato del fill.
+        """
+        conn = sqlite3.connect(self._db)
+        try:
+            rows = conn.execute(
+                "SELECT trade_chain_id FROM ops_trade_chains "
+                "WHERE symbol=? AND side=? "
+                "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
+                (symbol, side),
+            ).fetchall()
+            return [int(r[0]) for r in rows]
+        finally:
+            conn.close()
+
 
 __all__ = ["GatewayCommandRepository"]
