@@ -260,6 +260,7 @@ class SignalEnrichmentProcessor:
         policy_snapshot: dict,
         policy_version: str,
     ) -> EnrichedCanonicalMessage:
+        # lifecycle_processed=True: REPORT/INFO non richiedono azione downstream, on_pass non scatta
         return EnrichedCanonicalMessage(
             canonical_message_id=result.canonical_message_id,
             raw_message_id=result.raw_message_id,

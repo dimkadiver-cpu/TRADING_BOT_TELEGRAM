@@ -310,7 +310,12 @@ def test_trader_override_tp_count_via_yaml(tmp_path):
 # di lifecycle_processed restituito da save().
 
 def _make_processor_mock(on_pass=None):
-    """Costruisce SignalEnrichmentProcessor con repo e config interamente mockati."""
+    """Costruisce SignalEnrichmentProcessor con repo e config interamente mockati.
+
+    Nota: get_effective_config restituisce None → il processor prende il percorso BLOCK.
+    Il valore di lifecycle_processed viene controllato tramite mock_repo.save() per
+    isolare il meccanismo di dispatch del callback dalla logica di routing completa.
+    """
     from unittest.mock import MagicMock
     from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
     mock_config = MagicMock()
@@ -389,3 +394,22 @@ def test_on_pass_none_default_does_not_raise():
     mock_repo.save.return_value = saved
 
     processor.process(_fake_result(99))  # deve completare senza eccezioni
+
+
+def test_on_pass_not_called_on_idempotency_short_circuit():
+    """on_pass NON viene chiamato quando il messaggio è già stato processato (idempotency path)."""
+    from unittest.mock import MagicMock
+    called = []
+    processor, mock_repo = _make_processor_mock(on_pass=lambda: called.append(1))
+
+    # La prima chiamata salva e chiama on_pass
+    saved = MagicMock()
+    saved.lifecycle_processed = False
+    mock_repo.save.return_value = saved
+    processor.process(_fake_result(50))
+    assert called == [1]
+
+    # La seconda chiamata con stesso canonical_message_id → early return, on_pass non chiamato
+    mock_repo.get_by_canonical_message_id.return_value = saved  # simula già esistente
+    processor.process(_fake_result(50))
+    assert called == [1]  # ancora 1, non 2
