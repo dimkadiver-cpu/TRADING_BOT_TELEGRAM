@@ -212,7 +212,9 @@ enrichment_processor = SignalEnrichmentProcessor(
     on_pass=new_enriched_event.set,
 )
 
-# In _build_execution_runtime: passa wake_event=new_fill_event a BybitWsFillWatcher
+# In _build_execution_runtime: wake_event viene passato al costruttore BybitWsFillWatcher.
+# La firma di _build_execution_runtime riceve wake_event: asyncio.Event | None = None
+# e lo propaga solo se adapter_cfg.type == "ccxt_bybit" and websocket.enabled.
 
 lifecycle_task = asyncio.create_task(
     _run_lifecycle_workers(

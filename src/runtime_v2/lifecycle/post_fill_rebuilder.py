@@ -8,6 +8,16 @@ from src.runtime_v2.lifecycle.models import ExecutionCommand, TradeChain
 class PostFillProtectionRebuilder:
     """Generates intermediate TP commands after an entry fill for multi-TP plans."""
 
+    @staticmethod
+    def _resolve_position_context(chain: TradeChain) -> tuple[bool, int]:
+        try:
+            risk_snapshot = json.loads(chain.risk_snapshot_json or "{}")
+            hedge_mode = bool(risk_snapshot.get("hedge_mode", False))
+        except Exception:
+            hedge_mode = False
+        position_idx = 0 if not hedge_mode else (1 if chain.side == "LONG" else 2)
+        return hedge_mode, position_idx
+
     def build_after_fill(
         self,
         chain: TradeChain,
@@ -28,6 +38,7 @@ class PostFillProtectionRebuilder:
 
         n_total_tps = len(intermediate_tps) + 1
         chain_id = chain.trade_chain_id
+        hedge_mode, position_idx = self._resolve_position_context(chain)
         commands: list[ExecutionCommand] = []
 
         for i, tp_price in enumerate(intermediate_tps):
@@ -36,6 +47,8 @@ class PostFillProtectionRebuilder:
             payload = {
                 "symbol": chain.symbol,
                 "side": chain.side,
+                "hedge_mode": hedge_mode,
+                "position_idx": position_idx,
                 "tp_sequence": i + 1,
                 "take_profit": tp_price,
                 "tp_size": tp_qty,

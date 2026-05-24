@@ -29,6 +29,7 @@ CommandStatus = Literal[
     "FAILED",            # errore terminale
     "REVIEW_REQUIRED",   # richiede intervento manuale
     "CANCELLED",         # annullato da lifecycle o sostituito
+    "SUPERSEDED",        # sostituito da un comando successivo equivalente
 ]
 
 LifecycleEventType = Literal[

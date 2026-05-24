@@ -65,6 +65,7 @@ def test_command_status_includes_prd05_states():
     args = typing.get_args(CommandStatus)
     assert "WAITING_POSITION" in args
     assert "REVIEW_REQUIRED" in args
+    assert "SUPERSEDED" in args
 
 
 def test_trade_chain_has_qty_runtime_fields():

@@ -82,6 +82,19 @@ def test_multi_tp_tp_size_based_on_filled_qty():
     assert p["tp_size"] == pytest.approx(0.05)
 
 
+def test_multi_tp_carries_hedge_mode_and_position_idx_from_chain():
+    chain = _make_chain(
+        side="SHORT",
+        plan_state_json=_plan_multi_tp([51000.0]),
+        risk_snap={"hedge_mode": True},
+    )
+    cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.10, exchange_event_id=11)
+    assert len(cmds) == 1
+    p = json.loads(cmds[0].payload_json)
+    assert p["hedge_mode"] is True
+    assert p["position_idx"] == 2
+
+
 def test_missing_plan_state_json_emits_nothing():
     chain = _make_chain(plan_state_json="{}")
     cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.01, exchange_event_id=10)

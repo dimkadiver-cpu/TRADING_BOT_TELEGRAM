@@ -204,14 +204,20 @@ class ExecutionGateway:
             else:  # CLOSE_FULL
                 payload["qty"] = open_qty
 
-        # Cancel previous SET_POSITION_TPSL_PARTIAL commands for this chain when superseded
-        if (
+        supersedes_previous = (
             cmd.command_type == "SET_POSITION_TPSL_PARTIAL"
             and payload.get("supersedes_previous")
             and cmd.command_id is not None
+        )
+
+        # Supersede pre-send PENDING commands so they never reach the exchange.
+        if (
+            supersedes_previous
         ):
-            self._repo.cancel_tp_partial_commands(
-                cmd.trade_chain_id, exclude_command_id=cmd.command_id
+            self._repo.supersede_tp_partial_commands(
+                cmd.trade_chain_id,
+                exclude_command_id=cmd.command_id,
+                statuses=("PENDING",),
             )
             payload = {k: v for k, v in payload.items() if k != "supersedes_previous"}
 
@@ -291,6 +297,12 @@ class ExecutionGateway:
                 event_payload = self._build_confirmed_event_payload(cmd, event_type, payload)
                 self._emit_confirmed_event(cmd, event_type, event_payload)
             self._repo.mark_done(cmd.command_id)
+            if supersedes_previous:
+                self._repo.supersede_tp_partial_commands(
+                    cmd.trade_chain_id,
+                    exclude_command_id=cmd.command_id,
+                    statuses=("SENT", "ACK", "DONE"),
+                )
 
     def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, error_str: str) -> None:
         retry_cfg = adapter_cfg.retry

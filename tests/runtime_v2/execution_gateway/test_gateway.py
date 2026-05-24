@@ -501,7 +501,7 @@ def test_deferred_market_no_mark_price_marks_review_required(ops_db):
 
 def test_supersedes_previous_cancels_old_tp_partial_commands(ops_db):
     """supersedes_previous=True: i vecchi SET_POSITION_TPSL_PARTIAL PENDING per la chain
-    vengono marcati CANCELLED prima dell'invio del nuovo comando."""
+    vengono marcati SUPERSEDED prima dell'invio del nuovo comando."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
@@ -542,9 +542,101 @@ def test_supersedes_previous_cancels_old_tp_partial_commands(ops_db):
         ).fetchall()
     }
     conn.close()
-    assert statuses[3001] == "CANCELLED"
-    assert statuses[3002] == "CANCELLED"
+    assert statuses[3001] == "SUPERSEDED"
+    assert statuses[3002] == "SUPERSEDED"
     assert statuses[3003] in ("SENT", "ACK", "DONE")
+
+
+def test_supersedes_previous_marks_done_tp_partial_as_superseded(ops_db):
+    """Dopo un nuovo trading_stop riuscito, i vecchi TP partial DONE diventano SUPERSEDED."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_trade_chains SET lifecycle_state='OPEN' WHERE trade_chain_id=1"
+    )
+    conn.commit()
+    conn.close()
+
+    _insert_cmd(ops_db, 3101, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 70000.0,
+                         "tp_size": 0.007, "tp_order_type": "Limit",
+                         "tp_limit_price": 70000.0, "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True})
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_execution_commands SET status='DONE' WHERE command_id=3101"
+    )
+    conn.commit()
+    conn.close()
+    _insert_cmd(ops_db, 3102, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG",
+                         "take_profit": 70000.0, "tp_size": 0.01,
+                         "tp_order_type": "Limit", "tp_limit_price": 70000.0,
+                         "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True,
+                         "supersedes_previous": True})
+
+    repo = GatewayCommandRepository(ops_db)
+    cmd = repo.get_pending_batch()[-1]
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    statuses = {
+        r[0]: r[1] for r in conn.execute(
+            "SELECT command_id, status FROM ops_execution_commands "
+            "WHERE command_id IN (3101, 3102)"
+        ).fetchall()
+    }
+    conn.close()
+    assert statuses[3101] == "SUPERSEDED"
+    assert statuses[3102] == "DONE"
+
+
+def test_superseded_tp_partials_are_not_active_for_runtime_reads(ops_db):
+    """I reader runtime devono ignorare i TP partial SUPERSEDED."""
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_trade_chains SET lifecycle_state='OPEN' WHERE trade_chain_id=1"
+    )
+    conn.commit()
+    conn.close()
+
+    _insert_cmd(ops_db, 3201, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 70000.0,
+                         "tp_size": 0.007, "tp_sequence": 1, "tp_order_type": "Limit",
+                         "tp_limit_price": 70000.0, "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True})
+    _insert_cmd(ops_db, 3202, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
+                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 71000.0,
+                         "tp_size": 0.003, "tp_sequence": 2, "tp_order_type": "Limit",
+                         "tp_limit_price": 71000.0, "tp_trigger_by": "MarkPrice",
+                         "preserve_sl": True})
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_execution_commands SET status='SUPERSEDED' WHERE command_id=3201"
+    )
+    conn.execute(
+        "UPDATE ops_execution_commands SET status='DONE' WHERE command_id=3202"
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(ops_db)
+    assert repo.count_active_tps(1) == 1
+    active = repo.get_active_tp_commands(1)
+    assert len(active) == 1
+    assert active[0]["take_profit"] == 71000.0
 
 
 # ── Fire-and-forget lifecycle events ─────────────────────────────────────────

@@ -10,9 +10,9 @@ account_mode: single
 # per_trader_subaccount: ogni config/traders/<id>.yaml definisce il proprio blocco account:
 account:
   id: "main"
-  capital_base_usdt: 1000.0
+  capital_base_usdt: 10000.0
   max_leverage: 5
-  max_capital_at_risk_pct: 10.0
+  max_capital_at_risk_pct: 100.0
   hard_max_per_signal_risk_pct: 2.0
 
 registered_traders:
@@ -29,7 +29,7 @@ symbol_blacklist:
 defaults:
   enabled: true
   gate_mode: block
-  hedge_mode: false
+  hedge_mode: true
 
   signal_policy:
     accepted_entry_structures:
@@ -117,8 +117,8 @@ defaults:
     risk_usdt_fixed: 10.0
     capital_base_mode: static_config
     capital_base_usdt: 1000.0
-    leverage: 1
+    leverage: 5
     use_trader_risk_hint: false
     max_capital_at_risk_per_trader_pct: 5.0
     max_concurrent_trades: 5
-    max_concurrent_same_symbol: 1
+    max_concurrent_same_symbol: 2

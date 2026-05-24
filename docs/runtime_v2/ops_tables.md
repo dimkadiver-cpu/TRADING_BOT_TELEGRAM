@@ -115,7 +115,7 @@ Campi principali:
 - `command_id`: chiave primaria.
 - `trade_chain_id`: chain di appartenenza.
 - `command_type`: comando operativo, per esempio `PLACE_ENTRY`, `PLACE_ENTRY_WITH_ATTACHED_TPSL`, `PLACE_PROTECTIVE_STOP`, `PLACE_TAKE_PROFIT`, `MOVE_STOP_TO_BREAKEVEN`, `MOVE_STOP`, `CANCEL_PENDING_ENTRY`, `CLOSE_PARTIAL`, `CLOSE_FULL`, `SYNC_PROTECTIVE_ORDERS`.
-- `status`: stato corrente, per esempio `PENDING`, `SENT`, `ACK`, `WAITING_POSITION`, `DONE`, `FAILED`, `REVIEW_REQUIRED`, `CANCELLED`.
+- `status`: stato corrente, per esempio `PENDING`, `SENT`, `ACK`, `WAITING_POSITION`, `DONE`, `FAILED`, `REVIEW_REQUIRED`, `CANCELLED`, `SUPERSEDED`.
 - `payload_json`: payload del comando.
 - `idempotency_key`: chiave unica per evitare duplicazioni.
 - `adapter`, `execution_account_id`: routing verso adapter/account.
