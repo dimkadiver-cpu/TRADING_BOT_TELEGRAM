@@ -284,6 +284,19 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def get_chain_open_position_qty(self, trade_chain_id: int) -> float | None:
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT open_position_qty FROM ops_trade_chains WHERE trade_chain_id=?",
+                (trade_chain_id,),
+            ).fetchone()
+            if not row or row[0] is None:
+                return None
+            return float(row[0])
+        finally:
+            conn.close()
+
     def cancel_tp_partial_commands(self, trade_chain_id: int, exclude_command_id: int) -> None:
         """Marks CANCELLED all active SET_POSITION_TPSL_PARTIAL for the chain except the current one."""
         now = _now()
@@ -296,6 +309,21 @@ class GatewayCommandRepository:
                 (now, trade_chain_id, exclude_command_id),
             )
             conn.commit()
+        finally:
+            conn.close()
+
+    def count_active_tps(self, trade_chain_id: int) -> int:
+        """Counts active SET_POSITION_TPSL_* commands (SENT/DONE status) for the chain."""
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT COUNT(*) FROM ops_execution_commands "
+                "WHERE trade_chain_id=? "
+                "AND command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL') "
+                "AND status IN ('SENT', 'DONE')",
+                (trade_chain_id,),
+            ).fetchone()
+            return int(row[0]) if row else 0
         finally:
             conn.close()
 
