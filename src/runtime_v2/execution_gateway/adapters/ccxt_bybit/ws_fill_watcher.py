@@ -178,6 +178,11 @@ class BybitWsFillWatcher:
             logger.debug("ignoring websocket fill for unsupported role '%s'", coid.role)
             return
 
+        if event_type == "TP_FILLED":
+            idempotency_key = f"TP_FILLED:{coid.trade_chain_id}:level:{coid.sequence}"
+        else:
+            idempotency_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
+
         conn = sqlite3.connect(self._ops_db_path)
         try:
             conn.execute(
@@ -189,7 +194,7 @@ class BybitWsFillWatcher:
                     event_type,
                     json.dumps(payload),
                     "NEW",
-                    f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}",
+                    idempotency_key,
                     _now(),
                 ),
             )

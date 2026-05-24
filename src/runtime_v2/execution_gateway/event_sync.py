@@ -126,26 +126,27 @@ class ExchangeEventSyncWorker:
         return processed
 
     def _get_sent_tp_commands(self) -> list[tuple[int, int, float, int, str, str]]:
-        """Get all SENT TP commands: (command_id, trade_chain_id, tp_size, tp_level, symbol, side)."""
+        """Get all placed TP commands for open chains.
+
+        SET_POSITION_TPSL_PARTIAL/FULL are fire-and-forget (DONE immediately after
+        being sent to the exchange).  We therefore query DONE commands here — not SENT
+        — and restrict to chains that are still actively open so we don't re-check
+        commands belonging to already-closed or terminal chains.
+        """
         conn = sqlite3.connect(self._ops_db)
         try:
             rows = conn.execute(
-                "SELECT command_id, trade_chain_id, payload_json "
-                "FROM ops_execution_commands "
-                "WHERE status = 'SENT' AND command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL')"
+                "SELECT c.command_id, c.trade_chain_id, c.payload_json, t.symbol, t.side "
+                "FROM ops_execution_commands c "
+                "JOIN ops_trade_chains t ON c.trade_chain_id = t.trade_chain_id "
+                "WHERE c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL') "
+                "AND c.status IN ('SENT', 'DONE') "
+                "AND t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
             ).fetchall()
             result = []
-            for cmd_id, chain_id, payload_json in rows:
+            for cmd_id, chain_id, payload_json, symbol, side in rows:
                 try:
                     payload = json.loads(payload_json)
-                    # Get symbol and side from trade_chain
-                    tc_row = conn.execute(
-                        "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id = ?",
-                        (chain_id,)
-                    ).fetchone()
-                    if not tc_row:
-                        continue
-                    symbol, side = tc_row
                     tp_size = float(payload.get("tp_size", 0))
                     tp_level = int(payload.get("tp_sequence", 1))
                     result.append((cmd_id, chain_id, tp_size, tp_level, symbol, side))
@@ -189,7 +190,7 @@ class ExchangeEventSyncWorker:
 
     def _save_tp_fill(self, trade_chain_id: int, tp_level: int, command_id: int, current_qty: float) -> bool:
         """Save TP_FILLED exchange event."""
-        idempotency_key = f"TP_FILLED:reconciliation:{trade_chain_id}:{tp_level}"
+        idempotency_key = f"TP_FILLED:{trade_chain_id}:level:{tp_level}"
         payload = json.dumps({
             "tp_level": tp_level,
             "is_final": current_qty == 0.0,
@@ -335,16 +336,14 @@ class ExchangeEventSyncWorker:
                 "filled_qty": raw.filled_qty,
                 "command_id": coid.command_id,
             }
-        elif coid.role == "sync":
-            event_type = "PROTECTIVE_ORDERS_SYNCED"
-            payload = {
-                "command_id": coid.command_id,
-            }
         else:
             logger.warning("unknown role '%s' in %s — skipping mark_done", coid.role, client_order_id)
             return False
 
-        idempotency_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
+        if coid.role == "tp":
+            idempotency_key = f"TP_FILLED:{coid.trade_chain_id}:level:{coid.sequence}"
+        else:
+            idempotency_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
         now = _now()
         conn = sqlite3.connect(self._ops_db)
         try:

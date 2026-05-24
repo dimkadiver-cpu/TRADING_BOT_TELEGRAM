@@ -390,3 +390,68 @@ def test_run_reconciliation_continues_after_single_order_error(ops_db):
     conn.close()
     assert rows == [(4003, "SENT"), (4004, "DONE")]
     assert events == [("ENTRY_FILLED", 8)]
+
+
+def _insert_open_chain_with_tp(db_path, chain_id, symbol="BTC/USDT:USDT", side="LONG"):
+    """Inserisce chain OPEN con un SET_POSITION_TPSL_PARTIAL DONE."""
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
+         symbol, side, "OPEN", "ONE_SHOT", "{}", 0.01, 0.01, now, now),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+        (chain_id * 100, chain_id, "SET_POSITION_TPSL_PARTIAL", "DONE",
+         '{"take_profit": 70000.0, "tp_size": 0.005, "tp_sequence": 1, "symbol": "BTC/USDT:USDT", "side": "LONG"}',
+         f"idem_tp:{chain_id}", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_tp_filled_ws_and_polling_unified_key_no_duplicate(ops_db):
+    """WS inserisce TP_FILLED con chiave level:N; poi run_tp_reconciliation()
+    trova INSERT OR IGNORE → esattamente 1 riga."""
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp(ops_db, chain_id=30)
+
+    # Simula: WS ha già inserito TP_FILLED con la nuova chiave unified
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (?,?,?,?,?,datetime('now'))",
+        (30, "TP_FILLED",
+         '{"tp_level": 1, "is_final": false, "fill_price": 70000.0, "filled_qty": 0.005, "source": "watch_my_trades"}',
+         "NEW", "TP_FILLED:30:level:1"),
+    )
+    conn.commit()
+    conn.close()
+
+    # Polling tenta di inserire lo stesso evento
+    adapter = FakeAdapter(positions={"BTC/USDT:USDT:LONG": 0.005})
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter,
+        repo=repo, execution_account_id="acc",
+    )
+    worker.run_tp_reconciliation()
+
+    conn = sqlite3.connect(ops_db)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=30 AND event_type='TP_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1, f"Expected 1 TP_FILLED event, got {count}"
