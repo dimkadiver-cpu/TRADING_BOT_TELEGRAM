@@ -38,13 +38,29 @@ _ROLE_MAP: dict[str, str] = {
 
 # Commands that execute synchronously and create no pollable exchange order.
 # Marked DONE immediately after mark_sent — the sync worker has nothing to poll.
+#
+# SET_POSITION_TPSL_PARTIAL / SET_POSITION_TPSL_FULL: use Bybit trading_stop API which
+# sets a position-level TP — not a standalone order with a queryable orderLinkId.
+# The command's job is to SET the TP (done); detecting when it FIRES is handled
+# separately by ExchangeEventSyncWorker.run_tp_reconciliation().
 _FIRE_AND_FORGET: frozenset[str] = frozenset({
     "CANCEL_PENDING_ENTRY",
     "SYNC_PROTECTIVE_ORDERS",
     "MOVE_STOP_TO_BREAKEVEN",
     "MOVE_STOP",
     "MOVE_POSITION_STOP",
+    "SET_POSITION_TPSL_PARTIAL",
+    "SET_POSITION_TPSL_FULL",
 })
+
+# Mappa comando fire-and-forget → evento lifecycle da emettere dopo retCode=0.
+# SET_POSITION_TPSL_* esclusi: il loro hit viene rilevato da watchMyTrades/polling.
+# CANCEL_PENDING_ENTRY escluso: conferma arriva via PENDING_ENTRY_CANCELLED_CONFIRMED.
+_FIRE_AND_FORGET_EVENTS: dict[str, str] = {
+    "MOVE_STOP_TO_BREAKEVEN": "STOP_MOVED_CONFIRMED",
+    "MOVE_STOP":               "STOP_MOVED_CONFIRMED",
+    "SYNC_PROTECTIVE_ORDERS":  "PROTECTIVE_ORDERS_SYNCED",
+}
 
 
 def _base36(value: int) -> str:
@@ -77,6 +93,31 @@ class ExecutionGateway:
         self._adapters = adapter_registry
         self._repo = repo
         self._leverage_set: set[str] = set()
+
+    def _build_confirmed_event_payload(
+        self, cmd: ExecutionCommand, event_type: str, payload: dict
+    ) -> dict:
+        """Costruisce il payload dell'evento lifecycle per operazioni fire-and-forget sincrone."""
+        if event_type == "STOP_MOVED_CONFIRMED":
+            return {
+                "new_stop_price": payload.get("new_stop_price"),
+                "is_breakeven": cmd.command_type == "MOVE_STOP_TO_BREAKEVEN",
+                "command_id": cmd.command_id,
+            }
+        # PROTECTIVE_ORDERS_SYNCED (e future estensioni)
+        return {"command_id": cmd.command_id}
+
+    def _emit_confirmed_event(
+        self, cmd: ExecutionCommand, event_type: str, payload: dict
+    ) -> None:
+        """INSERT OR IGNORE in ops_exchange_events. Chiave: {event_type}:{chain_id}:{command_id}."""
+        idempotency_key = f"{event_type}:{cmd.trade_chain_id}:{cmd.command_id}"
+        self._repo.insert_exchange_event(
+            trade_chain_id=cmd.trade_chain_id,
+            event_type=event_type,
+            payload_json=json.dumps(payload),
+            idempotency_key=idempotency_key,
+        )
 
     def process(self, cmd: ExecutionCommand, *, account_id: str) -> None:
         routing, adapter_cfg = self._config.resolve_routing(account_id)
@@ -146,6 +187,21 @@ class ExecutionGateway:
                 if k not in ("tp_qty_mode", "close_pct")
             }
             payload["tp_size"] = round(filled_entry_qty * close_pct / 100.0, 8)
+
+        # ── Resolve qty for CLOSE_FULL / CLOSE_PARTIAL ───────────────────────
+        if cmd.command_type in {"CLOSE_FULL", "CLOSE_PARTIAL"} and "qty" not in payload:
+            open_qty = self._repo.get_chain_open_position_qty(cmd.trade_chain_id)
+            if open_qty is None or open_qty <= 0.0:
+                self._repo.mark_review_required(
+                    cmd.command_id, reason="open_position_qty_unavailable_for_close"
+                )
+                return
+            if cmd.command_type == "CLOSE_PARTIAL":
+                fraction = float(payload.get("fraction", 0.5))
+                payload = {k: v for k, v in payload.items() if k != "fraction"}
+                payload["qty"] = round(open_qty * fraction, 8)
+            else:  # CLOSE_FULL
+                payload["qty"] = open_qty
 
         # Cancel previous SET_POSITION_TPSL_PARTIAL commands for this chain when superseded
         if (
@@ -229,6 +285,10 @@ class ExecutionGateway:
             exchange_order_id=result.exchange_order_id,
         )
         if cmd.command_type in _FIRE_AND_FORGET:
+            event_type = _FIRE_AND_FORGET_EVENTS.get(cmd.command_type)
+            if event_type:
+                event_payload = self._build_confirmed_event_payload(cmd, event_type, payload)
+                self._emit_confirmed_event(cmd, event_type, event_payload)
             self._repo.mark_done(cmd.command_id)
 
     def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, error_str: str) -> None:

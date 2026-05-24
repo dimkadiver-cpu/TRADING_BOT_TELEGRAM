@@ -158,6 +158,111 @@ def test_sync_protective_orders_uses_sync_role():
     assert _ROLE_MAP["SYNC_PROTECTIVE_ORDERS"] == "sync"
 
 
+# ── CLOSE_FULL / CLOSE_PARTIAL deferred qty resolution ────────────────────
+
+def _set_open_position_qty(db_path: str, chain_id: int, qty: float) -> None:
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "UPDATE ops_trade_chains SET open_position_qty=? WHERE trade_chain_id=?",
+        (qty, chain_id),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_close_full_resolves_qty_from_open_position(ops_db):
+    """CLOSE_FULL without qty in payload resolves qty from open_position_qty."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _set_open_position_qty(ops_db, chain_id=1, qty=122.3)
+    _insert_cmd(ops_db, 2001, cmd_type="CLOSE_FULL", payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2001"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "SENT"
+
+
+def test_close_partial_resolves_qty_from_fraction(ops_db):
+    """CLOSE_PARTIAL with fraction but no qty resolves qty = open_position_qty * fraction."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _set_open_position_qty(ops_db, chain_id=1, qty=100.0)
+    _insert_cmd(ops_db, 2002, cmd_type="CLOSE_PARTIAL", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "fraction": 0.5,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    fake = FakeAdapter()
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": fake},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2002"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "SENT"
+    # Verify fraction was stripped and qty was computed correctly
+    place_calls = [c for c in fake.calls if c["action"] == "place_order"]
+    assert place_calls, "Expected at least one place_order call"
+    last_payload = place_calls[-1]["payload"]
+    assert "fraction" not in last_payload
+    assert abs(last_payload["qty"] - 50.0) < 1e-6
+
+
+def test_close_full_review_required_when_no_open_position(ops_db):
+    """CLOSE_FULL when open_position_qty=0 → REVIEW_REQUIRED (no qty to close)."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _set_open_position_qty(ops_db, chain_id=1, qty=0.0)
+    _insert_cmd(ops_db, 2003, cmd_type="CLOSE_FULL", payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status, result_payload_json FROM ops_execution_commands WHERE command_id=2003"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "REVIEW_REQUIRED"
+    result = json.loads(row[1])
+    assert result["reason"] == "open_position_qty_unavailable_for_close"
+
+
 def test_idempotency_recovery_stores_client_order_id(ops_db):
     """BUG: when idempotency check finds existing order, client_order_id must be stored
     so ExchangeEventSyncWorker can reconcile the fill (it filters client_order_id IS NOT NULL)."""
@@ -440,3 +545,170 @@ def test_supersedes_previous_cancels_old_tp_partial_commands(ops_db):
     assert statuses[3001] == "CANCELLED"
     assert statuses[3002] == "CANCELLED"
     assert statuses[3003] in ("SENT", "ACK", "DONE")
+
+
+# ── Fire-and-forget lifecycle events ─────────────────────────────────────────
+
+def _get_exchange_events(db_path: str, chain_id: int) -> list[tuple[str, dict]]:
+    conn = sqlite3.connect(db_path)
+    rows = conn.execute(
+        "SELECT event_type, payload_json FROM ops_exchange_events WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchall()
+    conn.close()
+    return [(r[0], json.loads(r[1])) for r in rows]
+
+
+def test_move_stop_to_be_emits_stop_moved_confirmed(ops_db):
+    """MOVE_STOP_TO_BREAKEVEN con retCode=0 → STOP_MOVED_CONFIRMED con is_breakeven=True."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 5001, cmd_type="MOVE_STOP_TO_BREAKEVEN", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "new_stop_price": 50000.0,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert len(events) == 1
+    assert events[0][0] == "STOP_MOVED_CONFIRMED"
+    assert events[0][1]["is_breakeven"] is True
+    assert events[0][1]["new_stop_price"] == 50000.0
+    assert events[0][1]["command_id"] == 5001
+
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=5001"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "DONE"
+
+
+def test_move_stop_emits_stop_moved_confirmed_not_breakeven(ops_db):
+    """MOVE_STOP con retCode=0 → STOP_MOVED_CONFIRMED con is_breakeven=False."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 5002, cmd_type="MOVE_STOP", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "new_stop_price": 48000.0,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert len(events) == 1
+    assert events[0][0] == "STOP_MOVED_CONFIRMED"
+    assert events[0][1]["is_breakeven"] is False
+    assert events[0][1]["new_stop_price"] == 48000.0
+
+
+def test_sync_protective_orders_emits_protective_orders_synced(ops_db):
+    """SYNC_PROTECTIVE_ORDERS con retCode=0 → PROTECTIVE_ORDERS_SYNCED."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 5003, cmd_type="SYNC_PROTECTIVE_ORDERS", payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert len(events) == 1
+    assert events[0][0] == "PROTECTIVE_ORDERS_SYNCED"
+    assert events[0][1]["command_id"] == 5003
+
+
+def test_fire_and_forget_failed_does_not_emit_event(ops_db):
+    """Se place_order() fallisce, nessun evento lifecycle viene inserito."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 5004, cmd_type="MOVE_STOP_TO_BREAKEVEN", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "new_stop_price": 50000.0,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter(fail_on={"MOVE_STOP_TO_BREAKEVEN"})},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert events == [], f"Expected no events on failure, got {events}"
+
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=5004"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "FAILED"
+
+
+def test_set_tpsl_does_not_emit_direct_event(ops_db):
+    """SET_POSITION_TPSL_PARTIAL non emette eventi lifecycle diretti.
+    Il suo hit è rilevato separatamente da watchMyTrades/polling."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute("UPDATE ops_trade_chains SET filled_entry_qty=0.01 WHERE trade_chain_id=1")
+    conn.commit()
+    conn.close()
+
+    _insert_cmd(ops_db, 5005, cmd_type="SET_POSITION_TPSL_PARTIAL", payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "take_profit": 70000.0, "tp_size": 0.005,
+        "tp_sequence": 1, "tp_order_type": "Limit",
+        "tp_limit_price": 70000.0, "tp_trigger_by": "MarkPrice",
+        "preserve_sl": True,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert events == [], f"SET_POSITION_TPSL_PARTIAL non deve emettere eventi diretti, got {events}"
+
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=5005"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "DONE"
