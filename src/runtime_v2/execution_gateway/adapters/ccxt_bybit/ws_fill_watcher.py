@@ -46,7 +46,8 @@ class BybitWsFillWatcher:
         self._loop_ready = threading.Event()
         self._thread: threading.Thread | None = None
         self._loop: asyncio.AbstractEventLoop | None = None
-        self._watch_task: asyncio.Task | None = None
+        self._watch_orders_task: asyncio.Task | None = None
+        self._watch_trades_task: asyncio.Task | None = None
 
     def start(self) -> None:
         if self._thread is not None and self._thread.is_alive():
@@ -73,10 +74,17 @@ class BybitWsFillWatcher:
         loop = asyncio.new_event_loop()
         self._loop = loop
         asyncio.set_event_loop(loop)
+        self._watch_orders_task = loop.create_task(self._watch_orders_forever())
+        self._watch_trades_task = loop.create_task(self._watch_trades_forever())
         self._loop_ready.set()
-        self._watch_task = loop.create_task(self._watch_orders_forever())
         try:
-            loop.run_until_complete(self._watch_task)
+            loop.run_until_complete(
+                asyncio.gather(
+                    self._watch_orders_task,
+                    self._watch_trades_task,
+                    return_exceptions=True,
+                )
+            )
         except asyncio.CancelledError:
             pass
         finally:
@@ -85,13 +93,15 @@ class BybitWsFillWatcher:
                 task.cancel()
             if pending:
                 loop.run_until_complete(asyncio.gather(*pending, return_exceptions=True))
-            self._watch_task = None
+            self._watch_orders_task = None
+            self._watch_trades_task = None
             self._loop = None
             loop.close()
 
     def _cancel_watch_task(self) -> None:
-        if self._watch_task is not None and not self._watch_task.done():
-            self._watch_task.cancel()
+        for task in (self._watch_orders_task, self._watch_trades_task):
+            if task is not None and not task.done():
+                task.cancel()
 
     async def _watch_orders_forever(self) -> None:
         exchange = self._build_exchange()
@@ -111,6 +121,34 @@ class BybitWsFillWatcher:
                 self._process_order_batch(orders)
         finally:
             await exchange.close()
+
+    async def _watch_trades_forever(self) -> None:
+        """Ascolta watchMyTrades per rilevare fill TP position-level (Mode C).
+
+        I TP impostati via SET_POSITION_TPSL_* non hanno clientOrderId e non
+        sono visibili in watchOrders. watchMyTrades riceve tutti i fill inclusi
+        quelli position-level.
+        """
+        exchange = self._build_exchange()
+        try:
+            while not self._stop_event.is_set():
+                try:
+                    trades = await exchange.watch_my_trades()
+                except asyncio.CancelledError:
+                    raise
+                except Exception:
+                    if self._stop_event.is_set():
+                        break
+                    logger.exception("bybit watch_my_trades failed")
+                    await asyncio.sleep(5)
+                    continue
+                self._process_trade_batch(trades)
+        finally:
+            await exchange.close()
+
+    def _process_trade_batch(self, trades: list[dict] | None) -> None:
+        """Stub: implementazione completa in Task 7."""
+        pass
 
     def _build_exchange(self):
         if ccxtpro is None:

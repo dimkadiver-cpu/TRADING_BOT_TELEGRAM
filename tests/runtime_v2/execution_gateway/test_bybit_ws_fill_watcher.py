@@ -155,6 +155,9 @@ def test_watcher_persists_fill_for_active_order_and_sets_testnet_sandbox(ops_db)
             return result
 
         mock_exchange.watch_orders = mock_watch_orders
+        # _watch_trades_forever also calls watch_my_trades — make it an AsyncMock
+        # that raises CancelledError so the trades task exits cleanly alongside orders.
+        mock_exchange.watch_my_trades = AsyncMock(side_effect=asyncio.CancelledError())
         mock_ccxtpro.bybit.return_value = mock_exchange
 
         watcher = BybitWsFillWatcher(
@@ -184,8 +187,10 @@ def test_watcher_persists_fill_for_active_order_and_sets_testnet_sandbox(ops_db)
     assert payload["fill_price"] == 50000.0
     assert payload["filled_qty"] == 0.01
     assert payload["command_id"] == 1
-    mock_exchange.set_sandbox_mode.assert_called_once_with(True)
-    mock_exchange.close.assert_awaited_once()
+    # Two exchange instances are built (one per parallel task), so set_sandbox_mode
+    # is called once per instance — assert it was called with True at least once.
+    mock_exchange.set_sandbox_mode.assert_called_with(True)
+    assert mock_exchange.close.await_count >= 1
 
 
 def test_watcher_discards_unknown_order(ops_db):
@@ -218,6 +223,9 @@ def test_watcher_discards_unknown_order(ops_db):
             return result
 
         mock_exchange.watch_orders = mock_watch_orders
+        # _watch_trades_forever also calls watch_my_trades — make it an AsyncMock
+        # that raises CancelledError so the trades task exits cleanly alongside orders.
+        mock_exchange.watch_my_trades = AsyncMock(side_effect=asyncio.CancelledError())
         mock_ccxtpro.bybit.return_value = mock_exchange
 
         watcher = BybitWsFillWatcher(
