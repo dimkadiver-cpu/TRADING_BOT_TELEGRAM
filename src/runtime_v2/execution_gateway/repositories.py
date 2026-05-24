@@ -297,16 +297,23 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def cancel_tp_partial_commands(self, trade_chain_id: int, exclude_command_id: int) -> None:
-        """Marks CANCELLED all active SET_POSITION_TPSL_PARTIAL for the chain except the current one."""
+    def supersede_tp_partial_commands(
+        self,
+        trade_chain_id: int,
+        exclude_command_id: int,
+        *,
+        statuses: tuple[str, ...],
+    ) -> None:
+        """Marks SUPERSEDED matching SET_POSITION_TPSL_PARTIAL commands except the current one."""
         now = _now()
+        placeholders = ",".join("?" for _ in statuses)
         conn = sqlite3.connect(self._db)
         try:
             conn.execute(
-                "UPDATE ops_execution_commands SET status='CANCELLED', updated_at=? "
+                "UPDATE ops_execution_commands SET status='SUPERSEDED', updated_at=? "
                 "WHERE trade_chain_id=? AND command_type='SET_POSITION_TPSL_PARTIAL' "
-                "AND status IN ('PENDING','SENT','ACK') AND command_id != ?",
-                (now, trade_chain_id, exclude_command_id),
+                f"AND status IN ({placeholders}) AND command_id != ?",
+                (now, trade_chain_id, *statuses, exclude_command_id),
             )
             conn.commit()
         finally:
@@ -333,18 +340,19 @@ class GatewayCommandRepository:
         event_type: str,
         payload_json: str,
         idempotency_key: str,
-    ) -> None:
-        """INSERT OR IGNORE in ops_exchange_events. Idempotente."""
+    ) -> bool:
+        """INSERT OR IGNORE in ops_exchange_events. Idempotente. Ritorna True se la riga è stata inserita."""
         now = _now()
         conn = sqlite3.connect(self._db)
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT OR IGNORE INTO ops_exchange_events "
                 "(trade_chain_id, event_type, payload_json, processing_status, "
                 "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
                 (trade_chain_id, event_type, payload_json, "NEW", idempotency_key, now),
             )
             conn.commit()
+            return cursor.rowcount > 0
         finally:
             conn.close()
 

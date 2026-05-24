@@ -168,12 +168,12 @@ class BybitWsFillWatcher:
             "source": "watch_my_trades",
             "exchange_trade_id": exchange_trade_id,
         })
-        self._repo.insert_exchange_event(chain_id, "TP_FILLED", payload, idempotency_key)
+        inserted = self._repo.insert_exchange_event(chain_id, "TP_FILLED", payload, idempotency_key)
         logger.debug(
             "TP_FILLED inserted from watch_my_trades: chain=%d level=%d price=%.4f trade_id=%s",
             chain_id, tp_level, fill_price, exchange_trade_id,
         )
-        if self._wake_callback:
+        if inserted and self._wake_callback:
             self._wake_callback()
 
     def _process_trade_batch(self, trades: list[dict] | None) -> None:
@@ -344,8 +344,9 @@ class BybitWsFillWatcher:
             idempotency_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
 
         conn = sqlite3.connect(self._ops_db_path)
+        inserted = False
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT OR IGNORE INTO ops_exchange_events "
                 "(trade_chain_id, event_type, payload_json, processing_status, "
                 "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
@@ -359,10 +360,11 @@ class BybitWsFillWatcher:
                 ),
             )
             conn.commit()
+            inserted = cursor.rowcount > 0
         finally:
             conn.close()
 
-        if self._wake_callback:
+        if inserted and self._wake_callback:
             self._wake_callback()
 
     @staticmethod

@@ -406,3 +406,32 @@ def test_wake_callback_none_does_not_raise(ops_db):
         filled_qty=0.001,
     )
     watcher._save_fill("tsb:3:3:entry:1", raw)  # non deve sollevare
+
+
+def test_wake_callback_not_called_on_duplicate_fill(ops_db):
+    """wake_callback NON viene chiamato se il fill è già stato inserito (INSERT OR IGNORE no-op)."""
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+
+    called = []
+    watcher = _make_watcher_with_callback(ops_db, wake_callback=lambda: called.append(1))
+
+    _insert_chain_open(ops_db, chain_id=10)
+    _insert_command(ops_db, command_id=10, trade_chain_id=10,
+                    command_type="PLACE_ENTRY", status="SENT",
+                    client_order_id="tsb:10:10:entry:1")
+
+    raw = RawAdapterOrder(
+        exchange_order_id="ex-010",
+        client_order_id="tsb:10:10:entry:1",
+        status="closed",
+        is_filled=True,
+        average_price=60000.0,
+        filled_qty=0.001,
+    )
+    # Prima chiamata — inserisce la riga
+    watcher._save_fill("tsb:10:10:entry:1", raw)
+    assert called == [1]
+
+    # Seconda chiamata — INSERT OR IGNORE no-op, callback non deve scattare
+    watcher._save_fill("tsb:10:10:entry:1", raw)
+    assert called == [1]  # ancora 1, non 2
