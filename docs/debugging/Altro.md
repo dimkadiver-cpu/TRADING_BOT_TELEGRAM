@@ -2,9 +2,7 @@
 
 - Aggiornare file Readme, CLAUDE.md
 
-- pulizia finale da vecchi file/non in uso ecc.
-
-- verifica bene C:\TeleSignalBot\docs\debugging\market_entry_qty_deferred.md prima di implementare!
+- pulizia finale da vecchi file/non in uso ecc. (fatta in parte)
 
 - ottimizare il worker di esecuizione dei comandi su cicle life
 
@@ -15,6 +13,8 @@ Domande aperte da verificare:
 - Velocizare i passaggi? sync, ecc
 
 - manpulazioni manuale su exchange, vengono rivelati e  rigestrati su DB?
+
+- Regolazione di BE (punti extra come vengano fatte? modalita Fee, per co da agiungere?)
 
 ---
 
