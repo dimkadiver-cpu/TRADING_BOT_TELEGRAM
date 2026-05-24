@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 
 from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
+from src.runtime_v2.lifecycle.be_move_resolver import resolve_be_stop_price
 from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
 from src.runtime_v2.lifecycle.models import (
     BeProtectionStatus, ControlMode, ExecutionCommand,
@@ -728,15 +729,27 @@ class LifecycleEntryGate:
             mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
         except Exception:
             mp = ManagementPlanConfig()
+        extra = _be_move_extra(chain)
+        new_stop_price = resolve_be_stop_price(
+            chain,
+            mp,
+            protection_style=extra["protection_style"],
+        )
+        if new_stop_price is None:
+            return self._review_chain(
+                enriched,
+                chain,
+                "missing_entry_avg_price_for_be",
+            )
 
         cmd = ExecutionCommand(
             trade_chain_id=chain_id,
             command_type="MOVE_STOP_TO_BREAKEVEN",
             payload_json=json.dumps({
                 "symbol": chain.symbol, "side": chain.side,
-                "target_price": chain.entry_avg_price,
-                "be_buffer_pct": mp.be_buffer_pct,
-                **_be_move_extra(chain),
+                "new_stop_price": new_stop_price,
+                "is_breakeven": True,
+                **extra,
             }),
             idempotency_key=f"move_be:{chain_id}:{cmid}",
         )
@@ -902,12 +915,18 @@ class LifecycleEntryGate:
             return False
         try:
             mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
-            buffer = mp.be_buffer_pct
         except Exception:
-            buffer = 0.0
+            mp = ManagementPlanConfig()
+        target_price = resolve_be_stop_price(
+            chain,
+            mp,
+            protection_style=_be_move_extra(chain)["protection_style"],
+        )
+        if target_price is None:
+            return False
         if chain.side == "LONG":
-            return chain.current_stop_price >= chain.entry_avg_price * (1 + buffer)
-        return chain.current_stop_price <= chain.entry_avg_price * (1 - buffer)
+            return chain.current_stop_price >= target_price
+        return chain.current_stop_price <= target_price
 
     def _review_chain(
         self, enriched: EnrichedCanonicalMessage, chain: TradeChain, reason: str

@@ -31,14 +31,19 @@ class BybitOrderBuilder:
         hedge_mode: bool = False,
     ) -> BybitOrderParams:
         params = self._dispatch(command_type, payload, client_order_id)
-        if hedge_mode and params.action == "create_order":
-            params.extra_params["positionIdx"] = (
-                1 if payload.get("side") == "LONG" else 2
-            )
+        if hedge_mode and params.action in {"create_order", "trading_stop_move_sl"}:
+            if int(params.extra_params.get("positionIdx", 0)) == 0:
+                params.extra_params["positionIdx"] = self._position_idx_for_side(
+                    payload.get("side")
+                )
             # Bybit hedge mode uses positionIdx to identify the position side; reduceOnly
             # conflicts with positionIdx on the V5 API and must be removed for all order types.
             params.extra_params.pop("reduceOnly", None)
         return params
+
+    @staticmethod
+    def _position_idx_for_side(side: str | None) -> int:
+        return 1 if side == "LONG" else 2
 
     def _dispatch(
         self, command_type: str, payload: dict, client_order_id: str
@@ -104,15 +109,8 @@ class BybitOrderBuilder:
         )
 
     def _move_stop(self, command_type: str, payload: dict) -> BybitOrderParams:
-        if command_type == "MOVE_STOP_TO_BREAKEVEN":
-            target_price = float(payload["target_price"])
-            buffer_pct = float(payload.get("be_buffer_pct") or 0.0)
-            if payload["side"] == "LONG":
-                new_trigger_price = target_price * (1 + buffer_pct)
-            else:
-                new_trigger_price = target_price * (1 - buffer_pct)
-        else:
-            new_trigger_price = float(payload["new_stop_price"])
+        _ = command_type
+        new_trigger_price = float(payload["new_stop_price"])
 
         protection_style = payload.get("protection_style", "standalone_order")
         if protection_style == "attached_full":

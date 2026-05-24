@@ -11,7 +11,8 @@ update_admission:
 
 management_plan:
   be_trigger: tp2
-  be_buffer_pct: 0.05
+  be_fee_correction_enabled: true
+  be_fee_fallback_profile: bybit_linear
 
 risk:
   risk_pct_of_capital: 0.5

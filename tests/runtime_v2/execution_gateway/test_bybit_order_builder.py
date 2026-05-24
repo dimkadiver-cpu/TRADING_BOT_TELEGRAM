@@ -158,27 +158,20 @@ def test_cancel_pending_entry_keeps_cancel_by_link_contract() -> None:
 
 
 @pytest.mark.parametrize(
-    ("side", "target_price", "be_buffer_pct", "expected_trigger"),
-    [
-        ("LONG", 50000.0, 0.0, 50000.0),
-        ("LONG", 50000.0, 0.01, 50500.0),
-        ("SHORT", 50000.0, 0.0, 50000.0),
-        ("SHORT", 50000.0, 0.01, 49500.0),
-    ],
+    "side",
+    ["LONG", "SHORT"],
 )
-def test_move_stop_to_breakeven_uses_target_price_and_buffer(
+def test_move_stop_to_breakeven_uses_new_stop_price(
     side: str,
-    target_price: float,
-    be_buffer_pct: float,
-    expected_trigger: float,
 ) -> None:
     params = _builder().build(
         "MOVE_STOP_TO_BREAKEVEN",
         {
             "symbol": "BTC/USDT:USDT",
             "side": side,
-            "target_price": target_price,
-            "be_buffer_pct": be_buffer_pct,
+            "target_price": 50000.0,
+            "be_buffer_pct": 0.01,
+            "new_stop_price": 50123.0,
         },
         "tsb:10:5:be:1",
     )
@@ -186,7 +179,7 @@ def test_move_stop_to_breakeven_uses_target_price_and_buffer(
     assert params.action == "edit_sl"
     assert params.symbol == "BTC/USDT:USDT"
     assert params.position_side == side
-    assert params.new_trigger_price == expected_trigger
+    assert params.new_trigger_price == 50123.0
 
 
 def test_move_stop_uses_new_stop_price() -> None:
@@ -320,6 +313,7 @@ def test_move_stop_be_attached_flow_routes_to_trading_stop_move_sl() -> None:
             "side": "LONG",
             "target_price": 50000.0,
             "be_buffer_pct": 0.0,
+            "new_stop_price": 50123.0,
             "protection_style": "attached_full",
             "position_idx": 0,
         },
@@ -329,12 +323,11 @@ def test_move_stop_be_attached_flow_routes_to_trading_stop_move_sl() -> None:
     assert params.action == "trading_stop_move_sl"
     assert params.symbol == "BTC/USDT:USDT"
     assert params.position_side == "LONG"
-    assert params.extra_params["stopLoss"] == "50000.0"
+    assert params.extra_params["stopLoss"] == "50123.0"
     assert params.extra_params["positionIdx"] == 0
 
 
-def test_move_stop_be_attached_flow_long_applies_buffer() -> None:
-    """Buffer is still applied before routing to trading_stop_move_sl."""
+def test_move_stop_be_attached_flow_uses_new_stop_price() -> None:
     params = _builder().build(
         "MOVE_STOP_TO_BREAKEVEN",
         {
@@ -342,6 +335,7 @@ def test_move_stop_be_attached_flow_long_applies_buffer() -> None:
             "side": "LONG",
             "target_price": 3000.0,
             "be_buffer_pct": 0.002,
+            "new_stop_price": 2999.5,
             "protection_style": "attached_full",
             "position_idx": 1,
         },
@@ -349,8 +343,44 @@ def test_move_stop_be_attached_flow_long_applies_buffer() -> None:
     )
 
     assert params.action == "trading_stop_move_sl"
-    assert params.extra_params["stopLoss"] == "3006.0"
+    assert params.extra_params["stopLoss"] == "2999.5"
     assert params.extra_params["positionIdx"] == 1
+
+
+def test_move_stop_be_attached_hedge_mode_infers_position_idx_from_side() -> None:
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "ETH/USDT:USDT",
+            "side": "SHORT",
+            "new_stop_price": 2999.5,
+            "protection_style": "attached_full",
+        },
+        "tsb:10:5:sl:1",
+        hedge_mode=True,
+    )
+
+    assert params.action == "trading_stop_move_sl"
+    assert params.extra_params["positionIdx"] == 2
+    assert params.extra_params["stopLoss"] == "2999.5"
+
+
+def test_move_stop_be_attached_hedge_mode_infers_long_position_idx_from_side() -> None:
+    params = _builder().build(
+        "MOVE_STOP_TO_BREAKEVEN",
+        {
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "new_stop_price": 50010.0,
+            "protection_style": "attached_full",
+        },
+        "tsb:10:5:sl:1",
+        hedge_mode=True,
+    )
+
+    assert params.action == "trading_stop_move_sl"
+    assert params.extra_params["positionIdx"] == 1
+    assert params.extra_params["stopLoss"] == "50010.0"
 
 
 def test_move_stop_be_standalone_flow_still_uses_edit_sl() -> None:
@@ -362,13 +392,14 @@ def test_move_stop_be_standalone_flow_still_uses_edit_sl() -> None:
             "side": "LONG",
             "target_price": 50000.0,
             "be_buffer_pct": 0.0,
+            "new_stop_price": 50011.0,
             "protection_style": "standalone_order",
         },
         "tsb:10:5:sl:1",
     )
 
     assert params.action == "edit_sl"
-    assert params.new_trigger_price == 50000.0
+    assert params.new_trigger_price == 50011.0
 
 
 def test_move_stop_be_no_protection_style_defaults_to_edit_sl() -> None:
@@ -379,9 +410,10 @@ def test_move_stop_be_no_protection_style_defaults_to_edit_sl() -> None:
             "symbol": "BTC/USDT:USDT",
             "side": "LONG",
             "target_price": 50000.0,
+            "new_stop_price": 50021.0,
         },
         "tsb:10:5:sl:1",
     )
 
     assert params.action == "edit_sl"
-    assert params.new_trigger_price == 50000.0
+    assert params.new_trigger_price == 50021.0

@@ -69,8 +69,15 @@ class OperationConfigLoader:
             .get(trader_id, [])
         )
 
-    def get_policy_version(self) -> str:
-        content = json.dumps(self._global_raw, sort_keys=True, default=str)
+    def get_policy_version(self, trader_id: str | None = None) -> str:
+        if trader_id is None:
+            payload: dict | str = self._global_raw
+        else:
+            effective = self.get_effective_config(trader_id)
+            if effective is None:
+                raise ConfigLoadError(f"Unknown trader for policy version: {trader_id}")
+            payload = effective.model_dump(mode="json")
+        content = json.dumps(payload, sort_keys=True, default=str)
         return "sha256:" + hashlib.sha256(content.encode()).hexdigest()[:16]
 
     def reload_if_changed(self) -> bool:
@@ -99,16 +106,9 @@ class OperationConfigLoader:
         self._mtimes["operation_config"] = op_path.stat().st_mtime
 
     def _validate_global(self, raw: dict) -> None:
-        market_split = (
+        self._validate_market_entry_split(
             raw.get("defaults", {})
-            .get("signal_policy", {})
-            .get("entry_split", {})
-            .get("MARKET", {})
         )
-        if "range" in market_split:
-            raise ConfigLoadError(
-                "entry_split.MARKET.range is invalid: RANGE structure requires LIMIT legs only"
-            )
 
     def _load_trader_raw(self, trader_id: str) -> dict:
         trader_path = self._config_dir / "traders" / f"{trader_id}.yaml"
@@ -117,20 +117,49 @@ class OperationConfigLoader:
         with trader_path.open(encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
 
+    @staticmethod
+    def _validate_market_entry_split(config_raw: dict) -> None:
+        market_split = (
+            config_raw.get("signal_policy", {})
+            .get("entry_split", {})
+            .get("MARKET", {})
+        )
+        if "range" in market_split:
+            raise ConfigLoadError(
+                "entry_split.MARKET.range is invalid: RANGE structure requires LIMIT legs only"
+            )
+
+    @staticmethod
+    def _build_account_config(account_raw: dict) -> AccountConfig | None:
+        if not account_raw:
+            return None
+        try:
+            return AccountConfig(
+                id=account_raw.get("id", "main"),
+                capital_base_usdt=float(account_raw.get("capital_base_usdt", 1000.0)),
+                max_leverage=int(account_raw.get("max_leverage", 10)),
+                max_capital_at_risk_pct=float(account_raw.get("max_capital_at_risk_pct", 10.0)),
+                hard_max_per_signal_risk_pct=float(account_raw.get("hard_max_per_signal_risk_pct", 2.0)),
+            )
+        except (TypeError, ValueError) as exc:
+            raise ConfigLoadError(f"Invalid account config: {exc}") from exc
+
     def _merge(self, trader_id: str, global_raw: dict, trader_raw: dict) -> EffectiveEnrichmentConfig:
         account_mode = global_raw.get("account_mode", "single")
         global_account = global_raw.get("account", {})
 
         if account_mode == "single":
-            account_id = global_account.get("id", "main")
+            effective_account_raw = global_account
         else:
-            trader_account = trader_raw.get("account", global_account)
-            account_id = trader_account.get("id", global_account.get("id", "main"))
+            effective_account_raw = trader_raw.get("account", global_account)
+
+        account_id = effective_account_raw.get("id", global_account.get("id", "main"))
 
         defaults = global_raw.get("defaults", {})
         # trader_raw keys that are NOT account: override defaults
         trader_overrides = {k: v for k, v in trader_raw.items() if k != "account"}
         merged = _deep_merge(defaults, trader_overrides)
+        self._validate_market_entry_split(merged)
 
         signal_policy_raw = merged.get("signal_policy", {})
         entry_split_raw = signal_policy_raw.get("entry_split", {})
@@ -162,7 +191,8 @@ class OperationConfigLoader:
         dist_raw = mgmt_raw.get("close_distribution", {})
         management_plan = ManagementPlanConfig(
             be_trigger=mgmt_raw.get("be_trigger"),
-            be_buffer_pct=mgmt_raw.get("be_buffer_pct", 0.0),
+            be_fee_correction_enabled=mgmt_raw.get("be_fee_correction_enabled", False),
+            be_fee_fallback_profile=mgmt_raw.get("be_fee_fallback_profile"),
             close_distribution=CloseDistributionConfig(
                 mode=dist_raw.get("mode", "table"),
                 table={int(k): v for k, v in dist_raw.get("table", {}).items()},
@@ -176,20 +206,7 @@ class OperationConfigLoader:
             protective_sl_mode=mgmt_raw.get("protective_sl_mode", "exchange_native_first"),
         )
 
-        # Populate AccountConfig from global account block
-        account_raw = global_raw.get("account", {})
-        account = None
-        if account_raw:
-            try:
-                account = AccountConfig(
-                    id=account_raw.get("id", "main"),
-                    capital_base_usdt=float(account_raw.get("capital_base_usdt", 1000.0)),
-                    max_leverage=int(account_raw.get("max_leverage", 10)),
-                    max_capital_at_risk_pct=float(account_raw.get("max_capital_at_risk_pct", 10.0)),
-                    hard_max_per_signal_risk_pct=float(account_raw.get("hard_max_per_signal_risk_pct", 2.0)),
-                )
-            except Exception:
-                pass
+        account = self._build_account_config(effective_account_raw)
 
         return EffectiveEnrichmentConfig(
             trader_id=trader_id,

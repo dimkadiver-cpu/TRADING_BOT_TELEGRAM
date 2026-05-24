@@ -92,7 +92,8 @@ defaults:
 
   management_plan:
     be_trigger: null
-    be_buffer_pct: 0.0
+    be_fee_correction_enabled: false
+    be_fee_fallback_profile: null
     close_distribution:
       mode: table
       table:

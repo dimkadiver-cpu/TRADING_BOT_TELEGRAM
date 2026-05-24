@@ -286,7 +286,13 @@ def test_move_stop_to_breakeven_edits_sl_order():
 
     result = adapter.place_order(
         command_type="MOVE_STOP_TO_BREAKEVEN",
-        payload={"symbol": "BTC/USDT:USDT", "side": "LONG", "entry_price": 50000.0},
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "target_price": 50000.0,
+            "be_buffer_pct": 0.0,
+            "new_stop_price": 50010.0,
+        },
         client_order_id="tsb:10:5:sl:1",
         execution_account_id="bybit_main",
         connector="bybit",
@@ -296,7 +302,54 @@ def test_move_stop_to_breakeven_edits_sl_order():
     exchange.edit_order.assert_called_once()
     edit_args, edit_kwargs = exchange.edit_order.call_args
     assert edit_args[0] == "sl_ord_1"
+    assert edit_kwargs["params"]["triggerPrice"] == 50010.0
+
+
+def test_move_stop_to_breakeven_legacy_entry_price_bridge_still_works():
+    exchange = MagicMock()
+    sl_order = {
+        "id": "sl_ord_1", "side": "sell",
+        "type": "stop", "amount": 0.01,
+        "reduceOnly": True, "stopPrice": 49000.0,
+    }
+    exchange.fetch_open_orders.return_value = [sl_order]
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG", "entry_price": 50000.0},
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.edit_order.assert_called_once()
+    _, edit_kwargs = exchange.edit_order.call_args
     assert edit_kwargs["params"]["triggerPrice"] == 50000.0
+
+
+def test_move_stop_to_breakeven_rejects_null_new_stop_price_payload():
+    exchange = MagicMock()
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "entry_price": 50000.0,
+            "new_stop_price": None,
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is False
+    assert result.reason == "invalid_payload"
+    assert result.error == "new_stop_price is required"
+    exchange.edit_order.assert_not_called()
 
 
 def test_move_stop_sl_not_found_returns_failed():
@@ -331,6 +384,7 @@ def test_move_stop_be_attached_calls_trading_stop_api():
             "side": "LONG",
             "target_price": 50000.0,
             "be_buffer_pct": 0.0,
+            "new_stop_price": 50010.0,
             "protection_style": "attached_full",
             "position_idx": 0,
         },
@@ -345,8 +399,8 @@ def test_move_stop_be_attached_calls_trading_stop_api():
     exchange.private_post_v5_position_trading_stop.assert_called_once()
     call_body = exchange.private_post_v5_position_trading_stop.call_args[0][0]
     assert call_body["category"] == "linear"
-    assert call_body["symbol"] == "BTC/USDT:USDT"
-    assert call_body["stopLoss"] == "50000.0"
+    assert call_body["symbol"] == "BTCUSDT"
+    assert call_body["stopLoss"] == "50010.0"
     assert call_body["positionIdx"] == 0
 
 
@@ -365,6 +419,7 @@ def test_move_stop_be_attached_hedge_mode_long_position_idx_1():
             "side": "LONG",
             "target_price": 0.5,
             "be_buffer_pct": 0.0,
+            "new_stop_price": 0.5003,
             "protection_style": "attached_full",
             "position_idx": 1,
         },
@@ -376,6 +431,61 @@ def test_move_stop_be_attached_hedge_mode_long_position_idx_1():
     assert result.success is True
     call_body = exchange.private_post_v5_position_trading_stop.call_args[0][0]
     assert call_body["positionIdx"] == 1
+    assert call_body["symbol"] == "XRPUSDT"
+
+
+def test_move_stop_be_attached_hedge_mode_infers_position_idx_when_missing():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        return_value={"retCode": 0}
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "ETH/USDT:USDT",
+            "side": "SHORT",
+            "new_stop_price": 2999.5,
+            "protection_style": "attached_full",
+            "hedge_mode": True,
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    call_body = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_body["positionIdx"] == 2
+    assert call_body["symbol"] == "ETHUSDT"
+
+
+def test_move_stop_be_attached_hedge_mode_infers_long_position_idx_when_missing():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        return_value={"retCode": 0}
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "new_stop_price": 50010.0,
+            "protection_style": "attached_full",
+            "hedge_mode": True,
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    call_body = exchange.private_post_v5_position_trading_stop.call_args[0][0]
+    assert call_body["positionIdx"] == 1
+    assert call_body["symbol"] == "BTCUSDT"
 
 
 def test_move_stop_be_standalone_still_calls_edit_order():
@@ -394,6 +504,7 @@ def test_move_stop_be_standalone_still_calls_edit_order():
             "symbol": "BTC/USDT:USDT",
             "side": "LONG",
             "target_price": 50000.0,
+            "new_stop_price": 50020.0,
             "protection_style": "standalone_order",
         },
         client_order_id="tsb:10:5:sl:1",
@@ -403,7 +514,61 @@ def test_move_stop_be_standalone_still_calls_edit_order():
 
     assert result.success is True
     exchange.edit_order.assert_called_once()
+    _, edit_kwargs = exchange.edit_order.call_args
+    assert edit_kwargs["params"]["triggerPrice"] == 50020.0
     exchange.private_post_v5_position_trading_stop.assert_not_called()
+
+
+def test_sync_protective_orders_mode_c_surfaces_trading_stop_retcode_failure():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "side": "long",
+            "contracts": 0.7,
+            "info": {"symbol": "BTCUSDT", "stopLoss": "45000.0"},
+        }
+    ]
+    exchange.fetch_open_orders.return_value = []
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        return_value={"retCode": 110001, "retMsg": "bad stop"}
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="SYNC_PROTECTIVE_ORDERS",
+        payload={"symbol": "BTC/USDT:USDT", "side": "LONG"},
+        client_order_id="tsb:1:1:sync:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is False
+    assert result.error == "retCode=110001: bad stop"
+
+
+def test_move_stop_be_attached_surfaces_trading_stop_retcode_failure():
+    exchange = MagicMock()
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        return_value={"retCode": 110001, "retMsg": "bad stop"}
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="MOVE_STOP_TO_BREAKEVEN",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "new_stop_price": 50010.0,
+            "protection_style": "attached_full",
+            "position_idx": 0,
+        },
+        client_order_id="tsb:10:5:sl:1",
+        execution_account_id="bybit_main",
+        connector="bybit",
+    )
+
+    assert result.success is False
+    assert result.error == "retCode=110001: bad stop"
 
 
 # --- place_order: error handling ---

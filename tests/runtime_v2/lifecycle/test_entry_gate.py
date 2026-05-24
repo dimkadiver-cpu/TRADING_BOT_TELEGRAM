@@ -318,6 +318,23 @@ def test_update_move_to_be_duplicate_command_noop():
     assert cr.lifecycle_events[0].event_type == "NOOP_DUPLICATE_COMMAND"
 
 
+def test_update_move_to_be_without_entry_avg_requires_review():
+    gate = _make_gate()
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    chain = _make_open_chain(
+        state="WAITING_ENTRY",
+        entry_avg_price=None,
+        current_stop_price=None,
+    )
+    result = gate.process_update(enriched, [chain], {})
+    cr = result.chain_results[0]
+    assert cr.execution_commands == []
+    assert cr.new_lifecycle_state is None
+    assert cr.new_be_protection_status is None
+    assert cr.lifecycle_events[0].event_type == "REVIEW_REQUIRED"
+    assert json.loads(cr.lifecycle_events[0].payload_json)["reason"] == "missing_entry_avg_price_for_be"
+
+
 def test_update_close_full_active_chain():
     gate = _make_gate()
     enriched = _make_update_enriched(
@@ -442,7 +459,7 @@ def _make_chain_simple(state="OPEN"):
         raw_message_id=3, trader_id="t1", account_id="acc1",
         symbol="BTC/USDT", side="LONG", lifecycle_state=state,
         entry_mode="ONE_SHOT",
-        management_plan_json='{"be_trigger": null, "be_buffer_pct": 0.0}',
+        management_plan_json='{"be_trigger": null}',
         entry_avg_price=50000.0,
     )
 
@@ -557,19 +574,20 @@ def _make_gate_with_mode(execution_mode: str | None = None):
     return gate
 
 
-def test_update_move_to_be_payload_uses_target_price_and_buffer_pct():
+def test_update_move_to_be_payload_uses_new_stop_price_without_legacy_fields():
     gate = _make_gate()
     enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
     chain = _make_open_chain(entry_avg_price=50000.0, current_stop_price=49000.0)
-    chain = chain.model_copy(update={"management_plan_json": '{"be_trigger": null, "be_buffer_pct": 0.01}'})
 
     result = gate.process_update(enriched, [chain], {})
 
     cr = result.chain_results[0]
     command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
     payload = json.loads(command.payload_json)
-    assert payload["target_price"] == 50000.0
-    assert payload["be_buffer_pct"] == 0.01
+    assert payload["new_stop_price"] == 50000.0
+    assert payload["is_breakeven"] is True
+    assert "target_price" not in payload
+    assert "be_buffer_pct" not in payload
 
 
 def test_update_move_to_be_payload_contains_protection_style_standalone_for_sequential():
@@ -628,6 +646,29 @@ def test_update_move_to_be_payload_position_idx_zero_for_one_way_mode():
     assert payload["position_idx"] == 0
 
 
+def test_is_already_be_uses_fee_aware_target_when_correction_enabled():
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+
+    chain = _make_open_chain(
+        entry_avg_price=100.0,
+        current_stop_price=100.05,
+    )
+    chain = chain.model_copy(update={
+        "management_plan_json": json.dumps({
+            "be_trigger": None,
+            "be_fee_correction_enabled": True,
+            "be_fee_fallback_profile": "bybit_linear",
+        }),
+        "open_position_qty": 2.0,
+        "risk_snapshot_json": json.dumps({
+            "open_fee_residual": 0.2,
+            "fee_profile": {"standalone_order": 0.0004},
+        }),
+    })
+
+    assert LifecycleEntryGate._is_already_be(chain) is False
+
+
 def test_process_signal_writes_execution_mode_to_chain():
     gate = _make_gate_with_mode()
     enriched = _make_enriched_signal_for_mode()
@@ -655,7 +696,7 @@ def _make_chain(state="OPEN"):
         raw_message_id=3, trader_id="t1", account_id="acc1",
         symbol="BTC/USDT", side="LONG", lifecycle_state=state,
         entry_mode="ONE_SHOT",
-        management_plan_json='{"be_trigger": null, "be_buffer_pct": 0.0}',
+        management_plan_json='{"be_trigger": null}',
         entry_avg_price=50000.0,
     )
 
@@ -1299,7 +1340,7 @@ def test_lifecycle_gate_worker_rehydrates_entry_avg_price_from_exchange_history(
             management_plan_json, risk_snapshot_json, be_protection_status,
             execution_mode, created_at, updated_at
         ) VALUES (1, 1, 1, 1, 'trader_a', 'acc', 'BTC/USDT', 'LONG', 'OPEN',
-                  'ONE_SHOT', '{"be_buffer_pct":0.01}', '{"hedge_mode":false}',
+                  'ONE_SHOT', '{}', '{"hedge_mode":false}',
                   'NOT_PROTECTED', 'UNIFIED_PLAN', ?, ?)
         """,
         (now, now),
@@ -1359,7 +1400,9 @@ def test_lifecycle_gate_worker_rehydrates_entry_avg_price_from_exchange_history(
     conn.close()
 
     payload = _json.loads(payload_json)
-    assert payload["target_price"] == 50000.0
+    assert payload["new_stop_price"] == 50000.0
+    assert payload["is_breakeven"] is True
+    assert "target_price" not in payload
     assert chain_row == (50000.0, 0.01, 0.01)
 
 
@@ -1427,7 +1470,7 @@ def test_lifecycle_gate_worker_rehydrates_weighted_entry_avg_from_multiple_fills
             management_plan_json, risk_snapshot_json, be_protection_status,
             execution_mode, created_at, updated_at
         ) VALUES (1, 1, 1, 1, 'trader_a', 'acc', 'BTC/USDT', 'LONG', 'OPEN',
-                  'ONE_SHOT', '{"be_buffer_pct":0.01}', '{"hedge_mode":false}',
+                  'ONE_SHOT', '{}', '{"hedge_mode":false}',
                   'NOT_PROTECTED', 'UNIFIED_PLAN', ?, ?)
         """,
         (now, now),
@@ -1499,7 +1542,9 @@ def test_lifecycle_gate_worker_rehydrates_weighted_entry_avg_from_multiple_fills
     conn.close()
 
     payload = _json.loads(payload_json)
-    assert payload["target_price"] == pytest.approx((50000.0 * 0.01 + 49000.0 * 0.02) / 0.03)
+    assert payload["new_stop_price"] == pytest.approx((50000.0 * 0.01 + 49000.0 * 0.02) / 0.03)
+    assert payload["is_breakeven"] is True
+    assert "target_price" not in payload
     assert chain_row[0] == pytest.approx((50000.0 * 0.01 + 49000.0 * 0.02) / 0.03)
     assert chain_row[1:] == (0.03, 0.03)
 

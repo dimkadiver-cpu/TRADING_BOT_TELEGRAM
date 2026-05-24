@@ -19,6 +19,19 @@ logger = logging.getLogger(__name__)
 
 
 class CcxtBybitAdapter(ExecutionAdapter):
+    @staticmethod
+    def _normalize_bybit_symbol(symbol: str) -> str:
+        return symbol.replace("/", "").replace(":USDT", "")
+
+    @staticmethod
+    def _parse_trading_stop_retcode(resp: dict | None) -> tuple[int, str]:
+        raw_ret_code = (resp or {}).get("retCode", 0)
+        try:
+            ret_code = int(raw_ret_code)
+        except (TypeError, ValueError):
+            ret_code = -1
+        return ret_code, str((resp or {}).get("retMsg", ""))
+
     def __init__(
         self,
         api_key: str,
@@ -129,10 +142,24 @@ class CcxtBybitAdapter(ExecutionAdapter):
         execution_account_id: str,
         connector: str,
     ) -> AdapterResult:
-        # Normalize payload: allow callers to pass entry_price as alias for target_price
-        # in MOVE_STOP_TO_BREAKEVEN commands (builder expects target_price).
-        if command_type == "MOVE_STOP_TO_BREAKEVEN" and "entry_price" in payload and "target_price" not in payload:
-            payload = {**payload, "target_price": payload["entry_price"]}
+        # Legacy compatibility: older callers may still send entry_price for breakeven moves.
+        # Normal flow should provide lifecycle-computed new_stop_price directly.
+        if (
+            command_type == "MOVE_STOP_TO_BREAKEVEN"
+            and "new_stop_price" not in payload
+            and "entry_price" in payload
+        ):
+            payload = {**payload, "new_stop_price": payload["entry_price"]}
+        if (
+            command_type in {"MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP"}
+            and "new_stop_price" in payload
+            and payload["new_stop_price"] in (None, "")
+        ):
+            return AdapterResult(
+                success=False,
+                reason="invalid_payload",
+                error="new_stop_price is required",
+            )
 
         hedge_mode = bool(payload.get("hedge_mode", False))
 
@@ -193,16 +220,11 @@ class CcxtBybitAdapter(ExecutionAdapter):
             if params.action in {"trading_stop_full", "trading_stop_partial", "trading_stop_move_sl"}:
                 resp = self._exchange.private_post_v5_position_trading_stop({
                     "category": "linear",
-                    "symbol": params.symbol,
+                    "symbol": self._normalize_bybit_symbol(params.symbol),
                     **params.extra_params,
                 })
-                raw_ret_code = (resp or {}).get("retCode", 0)
-                try:
-                    ret_code = int(raw_ret_code)
-                except (TypeError, ValueError):
-                    ret_code = -1
+                ret_code, ret_msg = self._parse_trading_stop_retcode(resp)
                 if ret_code != 0:
-                    ret_msg = (resp or {}).get("retMsg", "")
                     logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)
                     return AdapterResult(success=False, error=f"retCode={ret_code}: {ret_msg}")
                 return AdapterResult(success=True)
@@ -342,9 +364,9 @@ class CcxtBybitAdapter(ExecutionAdapter):
 
         attached_sl = pos_info.get("stopLoss", "0")
         if attached_sl and float(attached_sl) > 0:
-            bybit_symbol = pos_info.get("symbol") or symbol.replace("/", "").replace(":USDT", "")
+            bybit_symbol = pos_info.get("symbol") or self._normalize_bybit_symbol(symbol)
             try:
-                self._exchange.private_post_v5_position_trading_stop(
+                resp = self._exchange.private_post_v5_position_trading_stop(
                     {
                         "category": "linear",
                         "symbol": bybit_symbol,
@@ -355,6 +377,10 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 )
             except Exception as exc:
                 return AdapterResult(success=False, error=f"trading_stop failed: {exc}")
+            ret_code, ret_msg = self._parse_trading_stop_retcode(resp)
+            if ret_code != 0:
+                logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)
+                return AdapterResult(success=False, error=f"retCode={ret_code}: {ret_msg}")
             return AdapterResult(success=True)
 
         return AdapterResult(success=True)

@@ -99,6 +99,38 @@ def test_tp_filled_be_trigger_creates_be_command():
     result = proc.process(event, chain, [])
     assert any(c.command_type == "MOVE_STOP_TO_BREAKEVEN" for c in result.execution_commands)
     assert result.new_be_protection_status == "BE_MOVE_PENDING"
+    command = next(c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["new_stop_price"] == 50000.0
+    assert payload["is_breakeven"] is True
+    assert "be_buffer_pct" not in payload
+
+
+def test_tp_filled_be_trigger_fee_correction_disabled_keeps_pure_entry_breakeven():
+    proc = _make_processor()
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={"tp_level": 1, "is_final": False},
+    )
+    chain = _make_chain(state="OPEN", be_trigger="tp1")
+    chain = chain.model_copy(update={
+        "management_plan_json": json.dumps({
+            "be_trigger": "tp1",
+            "be_fee_correction_enabled": False,
+            "be_fee_fallback_profile": "bybit_linear",
+        }),
+        "open_position_qty": 0.01,
+        "risk_snapshot_json": json.dumps({
+            "open_fee_residual": 4.0,
+            "fee_profile": {"standalone_order": 0.0004},
+        }),
+    })
+
+    result = proc.process(event, chain, [])
+
+    command = next(c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN")
+    payload = json.loads(command.payload_json)
+    assert payload["new_stop_price"] == 50000.0
 
 
 def test_tp_filled_be_trigger_payload_contains_protection_style_standalone_for_sequential():
@@ -190,7 +222,7 @@ def test_tp_filled_with_be_trigger_does_not_set_lifecycle_state_to_be():
         raw_message_id=3, trader_id="t1", account_id="acc1",
         symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
         entry_mode="ONE_SHOT",
-        management_plan_json='{"be_trigger": "tp1", "be_buffer_pct": 0.0, "close_distribution": {"mode": "table", "table": {}}}',
+        management_plan_json='{"be_trigger": "tp1", "close_distribution": {"mode": "table", "table": {}}}',
         entry_avg_price=50000.0,
         open_position_qty=0.01,
         filled_entry_qty=0.01,
@@ -285,7 +317,7 @@ def _make_chain_open_filled() -> "TradeChain":
         raw_message_id=3, trader_id="t1", account_id="acc1",
         symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
         entry_mode="ONE_SHOT",
-        management_plan_json='{"be_trigger": "tp1", "be_buffer_pct": 0.0, "close_distribution": {"mode": "table", "table": {}}}',
+        management_plan_json='{"be_trigger": "tp1", "close_distribution": {"mode": "table", "table": {}}}',
         entry_avg_price=50000.0,
         open_position_qty=0.01,
         filled_entry_qty=0.01,

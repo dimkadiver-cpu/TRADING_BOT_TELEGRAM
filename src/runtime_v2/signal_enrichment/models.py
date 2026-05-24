@@ -81,7 +81,8 @@ class CloseDistributionConfig(BaseModel):
 
 class ManagementPlanConfig(BaseModel):
     be_trigger: Literal["tp1", "tp2", "tp3"] | None = None
-    be_buffer_pct: float = 0.0
+    be_fee_correction_enabled: bool = False
+    be_fee_fallback_profile: str | None = None
     close_distribution: CloseDistributionConfig = Field(default_factory=CloseDistributionConfig)
     cancel_pending_by_engine: bool = True
     cancel_pending_on_timeout: bool = True

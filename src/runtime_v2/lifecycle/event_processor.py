@@ -5,6 +5,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 
+from src.runtime_v2.lifecycle.be_move_resolver import resolve_be_stop_price
 from src.runtime_v2.lifecycle.models import (
     BeProtectionStatus, ExecutionCommand, ExchangeEvent,
     LifecycleEvent, LifecycleState, TradeChain,
@@ -311,26 +312,39 @@ class LifecycleEventProcessor:
                             idempotency_key=f"noop_dup_be_tp:{chain_id}:{eid}",
                         ))
                     else:
-                        cmd_payload = {
-                            "symbol": chain.symbol, "side": chain.side,
-                            "target_price": chain.entry_avg_price,
-                            "be_buffer_pct": mp.be_buffer_pct,
-                            **_be_move_extra(chain),
-                        }
-                        commands.append(ExecutionCommand(
-                            trade_chain_id=chain_id,
-                            command_type="MOVE_STOP_TO_BREAKEVEN",
-                            payload_json=json.dumps(cmd_payload),
-                            idempotency_key=f"move_be_tp:{chain_id}:{eid}",
-                        ))
-                        events.append(LifecycleEvent(
-                            trade_chain_id=chain_id,
-                            event_type="BE_MOVE_REQUESTED",
-                            source_type="exchange_event",
-                            source_id=str(eid),
-                            idempotency_key=f"be_req_tp:{chain_id}:{eid}",
-                        ))
-                        new_be = "BE_MOVE_PENDING"
+                        extra = _be_move_extra(chain)
+                        new_stop_price = resolve_be_stop_price(
+                            chain,
+                            mp,
+                            protection_style=extra["protection_style"],
+                        )
+                        if new_stop_price is None:
+                            logger.warning(
+                                "skipping automatic be move without entry_avg_price: chain_id=%s event_id=%s",
+                                chain_id,
+                                eid,
+                            )
+                        else:
+                            cmd_payload = {
+                                "symbol": chain.symbol, "side": chain.side,
+                                "new_stop_price": new_stop_price,
+                                "is_breakeven": True,
+                                **extra,
+                            }
+                            commands.append(ExecutionCommand(
+                                trade_chain_id=chain_id,
+                                command_type="MOVE_STOP_TO_BREAKEVEN",
+                                payload_json=json.dumps(cmd_payload),
+                                idempotency_key=f"move_be_tp:{chain_id}:{eid}",
+                            ))
+                            events.append(LifecycleEvent(
+                                trade_chain_id=chain_id,
+                                event_type="BE_MOVE_REQUESTED",
+                                source_type="exchange_event",
+                                source_id=str(eid),
+                                idempotency_key=f"be_req_tp:{chain_id}:{eid}",
+                            ))
+                            new_be = "BE_MOVE_PENDING"
 
             # Non-final TP: emit SYNC_PROTECTIVE_ORDERS so exchange orders reflect new qty
             commands.append(ExecutionCommand(

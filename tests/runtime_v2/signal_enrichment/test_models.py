@@ -13,11 +13,24 @@ def test_management_plan_config_defaults():
     from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig, CloseDistributionConfig
     plan = ManagementPlanConfig(close_distribution=CloseDistributionConfig())
     assert plan.be_trigger is None
-    assert plan.be_buffer_pct == 0.0
+    assert plan.be_fee_correction_enabled is False
+    assert plan.be_fee_fallback_profile is None
     assert plan.cancel_pending_by_engine is True
     assert plan.pending_timeout_hours == 24
     assert plan.risk_freed_by_be is True
     assert plan.protective_sl_mode == "exchange_native_first"
+
+
+def test_management_plan_config_ignores_legacy_be_buffer_field_in_json():
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+
+    plan = ManagementPlanConfig.model_validate_json(
+        '{"be_trigger":"tp1","be_buffer_pct":0.05}'
+    )
+
+    assert plan.be_trigger == "tp1"
+    assert plan.be_fee_correction_enabled is False
+    assert plan.be_fee_fallback_profile is None
 
 
 def test_effective_enrichment_config_fields():

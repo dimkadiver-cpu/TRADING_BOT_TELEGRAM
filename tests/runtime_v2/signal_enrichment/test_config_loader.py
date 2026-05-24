@@ -62,7 +62,8 @@ def _minimal_global_config(overrides: dict | None = None) -> dict:
             },
             "management_plan": {
                 "be_trigger": None,
-                "be_buffer_pct": 0.0,
+                "be_fee_correction_enabled": False,
+                "be_fee_fallback_profile": None,
                 "close_distribution": {"mode": "table", "table": {1: [100], 2: [50, 50]}},
                 "cancel_pending_by_engine": True,
                 "cancel_pending_on_timeout": True,
@@ -130,6 +131,26 @@ def test_trader_override_merges_tp_count(config_dir):
     assert cfg_b.signal_policy.tp.use_tp_count is None
 
 
+def test_management_plan_reads_fee_aware_be_flags(config_dir):
+    trader_yaml = config_dir / "traders" / "trader_a.yaml"
+    _write_yaml(
+        trader_yaml,
+        {
+            "management_plan": {
+                "be_trigger": "tp2",
+                "be_fee_correction_enabled": True,
+                "be_fee_fallback_profile": "bybit_linear",
+            }
+        },
+    )
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    loader = OperationConfigLoader(str(config_dir))
+    cfg = loader.get_effective_config("trader_a")
+    assert cfg.management_plan.be_trigger == "tp2"
+    assert cfg.management_plan.be_fee_correction_enabled is True
+    assert cfg.management_plan.be_fee_fallback_profile == "bybit_linear"
+
+
 def test_trader_override_update_admission(config_dir):
     trader_yaml = config_dir / "traders" / "trader_a.yaml"
     _write_yaml(trader_yaml, {"update_admission": {"MOVE_STOP_TO_BE": True}})
@@ -170,6 +191,65 @@ def test_market_range_in_entry_split_raises_config_error(config_dir):
         OperationConfigLoader(str(config_dir))
 
 
+def test_trader_override_market_range_in_entry_split_raises_config_error(config_dir):
+    trader_yaml = config_dir / "traders" / "trader_a.yaml"
+    _write_yaml(
+        trader_yaml,
+        {
+            "signal_policy": {
+                "entry_split": {
+                    "MARKET": {
+                        "range": {"weights": {"E1": 0.5, "E2": 0.5}}
+                    }
+                }
+            }
+        },
+    )
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader, ConfigLoadError
+    loader = OperationConfigLoader(str(config_dir))
+    with pytest.raises(ConfigLoadError, match="MARKET.range"):
+        loader.get_effective_config("trader_a")
+
+
+def test_per_trader_subaccount_uses_effective_account_source(config_dir):
+    global_cfg = _minimal_global_config()
+    global_cfg["account_mode"] = "per_trader_subaccount"
+    _write_yaml(config_dir / "operation_config.yaml", global_cfg)
+    trader_yaml = config_dir / "traders" / "trader_a.yaml"
+    _write_yaml(
+        trader_yaml,
+        {
+            "account": {
+                "id": "sub_a",
+                "capital_base_usdt": 2500.0,
+                "max_leverage": 7,
+                "max_capital_at_risk_pct": 12.5,
+                "hard_max_per_signal_risk_pct": 1.5,
+            }
+        },
+    )
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    loader = OperationConfigLoader(str(config_dir))
+    cfg = loader.get_effective_config("trader_a")
+    assert cfg.account_id == "sub_a"
+    assert cfg.account is not None
+    assert cfg.account.id == "sub_a"
+    assert cfg.account.capital_base_usdt == 2500.0
+    assert cfg.account.max_leverage == 7
+    assert cfg.account.max_capital_at_risk_pct == 12.5
+    assert cfg.account.hard_max_per_signal_risk_pct == 1.5
+
+
+def test_invalid_account_values_raise_config_load_error(config_dir):
+    global_cfg = _minimal_global_config()
+    global_cfg["account"]["max_leverage"] = "not-an-int"
+    _write_yaml(config_dir / "operation_config.yaml", global_cfg)
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader, ConfigLoadError
+    loader = OperationConfigLoader(str(config_dir))
+    with pytest.raises(ConfigLoadError, match="account"):
+        loader.get_effective_config("trader_a")
+
+
 def test_invalid_yaml_does_not_crash_reload(config_dir):
     from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
     loader = OperationConfigLoader(str(config_dir))
@@ -187,7 +267,24 @@ def test_invalid_yaml_does_not_crash_reload(config_dir):
 def test_policy_version_is_stable(config_dir):
     from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
     loader = OperationConfigLoader(str(config_dir))
-    v1 = loader.get_policy_version()
-    v2 = loader.get_policy_version()
+    v1 = loader.get_policy_version("trader_a")
+    v2 = loader.get_policy_version("trader_a")
     assert v1 == v2
     assert v1.startswith("sha256:")
+
+
+def test_policy_version_changes_with_trader_override(config_dir):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+
+    loader = OperationConfigLoader(str(config_dir))
+    base_version = loader.get_policy_version("trader_a")
+
+    trader_yaml = config_dir / "traders" / "trader_a.yaml"
+    _write_yaml(trader_yaml, {"signal_policy": {"tp": {"use_tp_count": 2}}})
+
+    loader_with_override = OperationConfigLoader(str(config_dir))
+    override_version = loader_with_override.get_policy_version("trader_a")
+    other_trader_version = loader_with_override.get_policy_version("trader_b")
+
+    assert override_version != base_version
+    assert other_trader_version != override_version
