@@ -165,17 +165,11 @@ class BybitWsFillWatcher:
             "source": "watch_my_trades",
             "exchange_trade_id": exchange_trade_id,
         })
-        conn = sqlite3.connect(self._ops_db_path)
-        try:
-            conn.execute(
-                "INSERT OR IGNORE INTO ops_exchange_events "
-                "(trade_chain_id, event_type, payload_json, processing_status, "
-                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
-                (chain_id, "TP_FILLED", payload, "NEW", idempotency_key, _now()),
-            )
-            conn.commit()
-        finally:
-            conn.close()
+        self._repo.insert_exchange_event(chain_id, "TP_FILLED", payload, idempotency_key)
+        logger.debug(
+            "TP_FILLED inserted from watch_my_trades: chain=%d level=%d price=%.4f trade_id=%s",
+            chain_id, tp_level, fill_price, exchange_trade_id,
+        )
 
     def _process_trade_batch(self, trades: list[dict] | None) -> None:
         """Elabora batch di trade da watchMyTrades. Inserisce TP_FILLED per fill position-level.
@@ -196,7 +190,14 @@ class BybitWsFillWatcher:
                 logger.exception("error processing trade %s", trade.get("id"))
 
     def _match_and_save_tp_fill(self, trade: dict) -> None:
-        """Matching singolo trade → chain + tp_level. Inserisce TP_FILLED se match univoco."""
+        """Matching singolo trade → chain + tp_level. Inserisce TP_FILLED se match univoco.
+
+        Known limitation: Stop-loss fills on Bybit are also tagged reduceOnly=True.
+        The ±1% price tolerance provides de-facto filtering (SL price typically differs
+        from TP price by >1%), but in extreme market conditions a spurious TP_FILLED
+        could be emitted for an SL hit. The downstream lifecycle handler is idempotent
+        and the reconciliation poller provides a safety net.
+        """
         # Solo fill che chiudono posizione (TP chiude, entry/SL apre o aggiusta)
         if not trade.get("reduceOnly", False):
             return

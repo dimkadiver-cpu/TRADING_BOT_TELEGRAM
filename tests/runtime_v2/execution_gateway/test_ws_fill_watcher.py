@@ -293,3 +293,39 @@ def test_process_trade_batch_ambiguous_skipped(ops_db):
     count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
     conn.close()
     assert count == 0, "Match ambiguo: nessun evento deve essere inserito"
+
+
+def test_process_trade_batch_none_is_noop(ops_db):
+    """_process_trade_batch(None) silently no-ops — no crash, no events."""
+    watcher = _make_watcher(ops_db)
+    watcher._process_trade_batch(None)  # must not raise
+
+    conn = sqlite3.connect(ops_db)
+    count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert count == 0
+
+
+def test_process_trade_batch_is_final_false_on_unparseable_pos_qty(ops_db):
+    """`posQty` with non-numeric value → is_final=False (fallback branch)."""
+    _insert_open_chain(ops_db, 14, symbol="BTC/USDT:USDT", side="LONG")
+    _insert_tp_command(ops_db, 14, 1401, tp_price=70000.0, tp_level=1)
+
+    watcher = _make_watcher(ops_db)
+    trades = [{
+        "symbol": "BTC/USDT:USDT",
+        "side": "sell",
+        "price": 70050.0,
+        "amount": 0.005,
+        "reduceOnly": True,
+        "id": "t-bad-posqty",
+        "info": {"posQty": "N/A"},  # unparseable
+    }]
+    watcher._process_trade_batch(trades)
+
+    conn = sqlite3.connect(ops_db)
+    p = json.loads(conn.execute(
+        "SELECT payload_json FROM ops_exchange_events WHERE trade_chain_id=14"
+    ).fetchone()[0])
+    conn.close()
+    assert p["is_final"] is False
