@@ -327,5 +327,26 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def insert_exchange_event(
+        self,
+        trade_chain_id: int,
+        event_type: str,
+        payload_json: str,
+        idempotency_key: str,
+    ) -> None:
+        """INSERT OR IGNORE in ops_exchange_events. Idempotente."""
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO ops_exchange_events "
+                "(trade_chain_id, event_type, payload_json, processing_status, "
+                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
+                (trade_chain_id, event_type, payload_json, "NEW", idempotency_key, now),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
 
 __all__ = ["GatewayCommandRepository"]
