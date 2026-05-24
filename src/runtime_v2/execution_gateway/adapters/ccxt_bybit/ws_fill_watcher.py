@@ -146,9 +146,125 @@ class BybitWsFillWatcher:
         finally:
             await exchange.close()
 
+    def _save_tp_fill_from_trade(
+        self,
+        chain_id: int,
+        tp_level: int,
+        fill_price: float,
+        filled_qty: float,
+        is_final: bool,
+        exchange_trade_id: str,
+    ) -> None:
+        """INSERT OR IGNORE di TP_FILLED con dati reali da watchMyTrades."""
+        idempotency_key = f"TP_FILLED:{chain_id}:level:{tp_level}"
+        payload = json.dumps({
+            "tp_level": tp_level,
+            "is_final": is_final,
+            "fill_price": fill_price,
+            "filled_qty": filled_qty,
+            "source": "watch_my_trades",
+            "exchange_trade_id": exchange_trade_id,
+        })
+        conn = sqlite3.connect(self._ops_db_path)
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO ops_exchange_events "
+                "(trade_chain_id, event_type, payload_json, processing_status, "
+                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
+                (chain_id, "TP_FILLED", payload, "NEW", idempotency_key, _now()),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def _process_trade_batch(self, trades: list[dict] | None) -> None:
-        """Stub: implementazione completa in Task 7."""
-        pass
+        """Elabora batch di trade da watchMyTrades. Inserisce TP_FILLED per fill position-level.
+
+        Logica:
+        1. Filtra su reduceOnly=True (solo chiusure di posizione, non entry/SL)
+        2. Determina il lato della posizione (fill sell → posizione LONG)
+        3. Cerca chain aperte con stesso symbol+side
+        4. Confronta fill price con TP attivi (tolerance ±1%)
+        5. Match univoco → INSERT TP_FILLED. Match ambiguo → skip.
+        """
+        if not trades:
+            return
+        for trade in trades:
+            try:
+                self._match_and_save_tp_fill(trade)
+            except Exception:
+                logger.exception("error processing trade %s", trade.get("id"))
+
+    def _match_and_save_tp_fill(self, trade: dict) -> None:
+        """Matching singolo trade → chain + tp_level. Inserisce TP_FILLED se match univoco."""
+        # Solo fill che chiudono posizione (TP chiude, entry/SL apre o aggiusta)
+        if not trade.get("reduceOnly", False):
+            return
+
+        symbol = trade.get("symbol", "")
+        side = trade.get("side", "")  # "sell" per close LONG, "buy" per close SHORT
+        fill_price_raw = trade.get("price")
+        filled_qty_raw = trade.get("amount")
+        if not symbol or not side or fill_price_raw is None:
+            return
+
+        fill_price = float(fill_price_raw)
+        filled_qty = float(filled_qty_raw or 0.0)
+        if fill_price <= 0.0:
+            return
+
+        # Lato della posizione (opposto al lato del fill di chiusura)
+        chain_side = "LONG" if side.lower() == "sell" else "SHORT"
+
+        # Trova chain aperte con stesso symbol+side
+        open_chain_ids = self._repo.get_open_chains_for_symbol(symbol, chain_side)
+        if not open_chain_ids:
+            return
+
+        # Confronta fill price con TP attivi di ogni chain (tolerance ±1%)
+        matches: list[tuple[int, int]] = []  # (chain_id, tp_level)
+        for chain_id in open_chain_ids:
+            tp_commands = self._repo.get_active_tp_commands(chain_id)
+            for cmd_payload in tp_commands:
+                tp_price_raw = cmd_payload.get("take_profit")
+                if tp_price_raw is None:
+                    continue
+                tp_price = float(tp_price_raw)
+                if tp_price <= 0.0:
+                    continue
+                if abs(fill_price - tp_price) / tp_price <= 0.01:  # ±1% tolerance
+                    tp_level = int(cmd_payload.get("tp_sequence", 1))
+                    matches.append((chain_id, tp_level))
+
+        if len(matches) != 1:
+            if len(matches) > 1:
+                logger.warning(
+                    "ambiguous TP fill match: symbol=%s price=%.4f matches=%s — skipping",
+                    symbol, fill_price, matches,
+                )
+            return
+
+        chain_id, tp_level = matches[0]
+
+        # is_final da posQty Bybit se disponibile, fallback False (conservativo)
+        pos_qty_raw = trade.get("info", {}).get("posQty")
+        if pos_qty_raw is not None:
+            try:
+                is_final = float(pos_qty_raw) == 0.0
+            except (ValueError, TypeError):
+                is_final = False
+        else:
+            is_final = False
+
+        exchange_trade_id = str(trade.get("id") or "")
+        self._save_tp_fill_from_trade(
+            chain_id=chain_id,
+            tp_level=tp_level,
+            fill_price=fill_price,
+            filled_qty=filled_qty,
+            is_final=is_final,
+            exchange_trade_id=exchange_trade_id,
+        )
 
     def _build_exchange(self):
         if ccxtpro is None:
