@@ -347,6 +347,21 @@ def test_update_close_full_active_chain():
     assert any(c.command_type == "CLOSE_FULL" for c in cr.execution_commands)
 
 
+def test_update_close_full_also_cancels_pending_entries():
+    """CLOSE_FULL deve emettere CLOSE_FULL + CANCEL_PENDING_ENTRY per cancellare entry pendenti."""
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"],
+        action_type="CLOSE", close_scope="FULL",
+    )
+    chain = _make_open_chain()
+    result = gate.process_update(enriched, [chain], {})
+    cr = result.chain_results[0]
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert "CLOSE_FULL" in cmd_types, "deve esserci CLOSE_FULL"
+    assert "CANCEL_PENDING_ENTRY" in cmd_types, "deve cancellare gli ordini entry pendenti"
+
+
 def test_update_close_full_already_closed_noop():
     gate = _make_gate()
     enriched = _make_update_enriched(

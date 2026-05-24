@@ -798,6 +798,17 @@ class LifecycleEntryGate:
             payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
             idempotency_key=f"close_full:{chain_id}:{cmid}",
         )
+        # Cancella anche eventuali ordini di entry pendenti associati alla chain.
+        # _expand_cancel_pending_commands li espanderà one-per-client_order_id al momento del commit.
+        # Se non ci sono entry pendenti, l'espansione restituisce il comando generico che
+        # sull'exchange non trova nulla e termina come no-op (reduceOnly=True sul close
+        # non è sufficiente a cancellarli).
+        cancel_pending_cmd = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="CANCEL_PENDING_ENTRY",
+            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+            idempotency_key=f"cancel_pending_for_close:{chain_id}:{cmid}",
+        )
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
@@ -811,7 +822,7 @@ class LifecycleEntryGate:
             new_lifecycle_state=None,
             new_be_protection_status=None,
             lifecycle_events=[event],
-            execution_commands=[cmd],
+            execution_commands=[cmd, cancel_pending_cmd],
         )
 
     def _apply_close_partial(

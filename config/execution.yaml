@@ -31,7 +31,7 @@ execution:
         multi_tp_mode: PARTIAL
 
       websocket:
-        enabled: false
+        enabled: true
         poll_fallback_enabled: true
         poll_fallback_period_seconds: 60
 

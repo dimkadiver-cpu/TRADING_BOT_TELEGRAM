@@ -1,8 +1,8 @@
 # AUDIT - Stato migrazione CCXT / eliminazione Hummingbot
 
-**Data:** 2026-05-19  
+**Data:** 2026-05-19 — aggiornato 2026-05-24  
 **Riferimento PRD:** `PRD_runtime_v2_passaggio_hummingbot_a_ccxt_lifecycle_rev2.md`  
-**Branch verificato:** `main`
+**Branch verificato:** `main` / `feat/unified-execution-plan`
 
 ---
 
@@ -10,7 +10,7 @@
 
 La migrazione da Hummingbot a CCXT e' operativamente completata per le Fasi 0-4 e per il wiring runtime della Fase 5.
 
-Verifica eseguita oggi:
+Verifica eseguita 2026-05-19:
 
 - `main.py` non usa piu' `hb_adapter`
 - il bootstrap runtime centralizza adapter, worker, watcher WS e cleanup in `ExecutionRuntime`
@@ -23,6 +23,60 @@ Restano aperti:
 - validazione end-to-end reale su Bybit Demo
 - rafforzamento del recovery con cross-check posizione lifecycle-side
 - pulizia finale dei documenti storici Hummingbot
+
+---
+
+## Aggiornamento 2026-05-24 — fix CLOSE_FULL / CLOSE_PARTIAL
+
+### Bug rilevato e corretto
+
+Durante sessione di live demo su Bybit Demo, `CLOSE_FULL` e `CLOSE_PARTIAL` fallivano
+con `KeyError: 'qty'` nel `BybitOrderBuilder._close_market()`.
+
+**Root cause:** `entry_gate.py` genera payload senza campo `qty` per questi comandi
+(la quantita' e' nota solo a runtime tramite `open_position_qty`).
+Il gateway non la risolveva prima di passare il payload all'adapter.
+
+**Fix applicato (branch `feat/unified-execution-plan`):**
+
+- `src/runtime_v2/execution_gateway/repositories.py`
+  - aggiunto `get_chain_open_position_qty(trade_chain_id)` (analogo a `get_chain_filled_entry_qty`)
+
+- `src/runtime_v2/execution_gateway/gateway.py`
+  - aggiunto blocco di risoluzione deferred qty per `CLOSE_FULL` / `CLOSE_PARTIAL`
+    (pattern gia' presente per `deferred_market` e `tp_qty_mode`)
+  - `CLOSE_FULL`: riempie `payload["qty"]` con `open_position_qty`
+  - `CLOSE_PARTIAL`: calcola `round(open_qty * fraction, 8)`, rimuove `fraction` dal payload
+  - se `open_position_qty` non disponibile o <= 0: `mark_review_required`
+
+- `tests/runtime_v2/execution_gateway/test_gateway.py`
+  - aggiunti 3 test: `test_close_full_resolves_qty_from_open_position`,
+    `test_close_partial_resolves_qty_from_fraction`,
+    `test_close_full_review_required_when_no_open_position`
+
+### Fix collaterale — SET_POSITION_TPSL_PARTIAL/FULL bloccati SENT
+
+`SET_POSITION_TPSL_PARTIAL` e `SET_POSITION_TPSL_FULL` erano stati rimossi da `_FIRE_AND_FORGET`
+in un commit precedente, causando accumulo di comandi SENT non risolvibili
+(Bybit `trading_stop` non crea un ordine con `orderLinkId` pollabile).
+
+**Fix:** riaggiunti a `_FIRE_AND_FORGET`. Rilevamento del hit TP rimane a carico
+di `ExchangeEventSyncWorker.run_tp_reconciliation()` (gia' schedulato periodicamente in `main.py`).
+
+### Fix collaterale — _get_sent_tp_commands N+1 query
+
+La query in `event_sync._get_sent_tp_commands()` filtrava solo `status='SENT'`
+(non trovava comandi DONE dopo il fix _FIRE_AND_FORGET) e recuperava `symbol`/`side`
+con una SELECT aggiuntiva per ogni riga (N+1).
+
+**Fix:** query refattorizzata con JOIN su `ops_trade_chains`, filtro `status IN ('SENT','DONE')`,
+restrizione a chain `lifecycle_state IN ('OPEN','PARTIALLY_CLOSED')`.
+
+### Pre-existing test fix
+
+`test_waiting_position_on_open_chain_becomes_pending` era gia' rosso prima di questa sessione
+(dipendeva da `SET_POSITION_TPSL_PARTIAL` in `_FIRE_AND_FORGET`).
+Ora verde come effetto collaterale del fix sopra.
 
 ---
 
@@ -158,7 +212,7 @@ Gli `skipped` residui sono test gated `bybit_testnet` che richiedono credenziali
 | Fill entry aggiorna qty e stato | Si |
 | TP fill riduce size e sincronizza protezioni | Si |
 | SL fill chiude o riduce correttamente | Si |
-| `CLOSE_PARTIAL` / `CLOSE_FULL` hanno eventi dedicati | Si |
+| `CLOSE_PARTIAL` / `CLOSE_FULL` hanno eventi dedicati | Si — fix 2026-05-24: erano bloccati da `KeyError: 'qty'` |
 | `MOVE_STOP_TO_BREAKEVEN` conferma protezione senza sporcare lifecycle state | Si |
 | `CANCEL_PENDING_ENTRY` funziona anche su chain OPEN | Si |
 | `client_order_id` resta chiave di correlazione | Si |
@@ -180,8 +234,11 @@ Gli `skipped` residui sono test gated `bybit_testnet` che richiedono credenziali
 
 | Item | Priorita' |
 |---|---|
-| Validazione live Bybit Demo non eseguita in questa sessione | Alta |
+| Validazione live Bybit Demo (ciclo completo entry→TP/SL→close) | Alta |
 | Cross-check posizione recovery/lifecycle non ancora esplicito | Media |
+| TP detection via `run_tp_reconciliation()` (heuristica position-qty) — non arriva fill price/qty reale | Media |
+| WS (`watchMyTrades`) come fonte primaria fill — attualmente disabilitato, polling usato | Media |
+| PRD §22 cita `PLACE_TAKE_PROFIT` — non esiste nel runtime (Mode C usa `SET_POSITION_TPSL_*`) | Bassa (solo docs) |
 | Documenti storici Hummingbot da riallineare | Bassa |
 | Variabili/env obsolete nei docs operativi | Bassa |
 
