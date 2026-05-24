@@ -302,3 +302,90 @@ def test_trader_override_tp_count_via_yaml(tmp_path):
     enriched = proc.process(result)
     assert enriched.enrichment_decision == "PASS"
     assert len(enriched.enriched_signal.take_profits) == 2
+
+
+# ── on_pass callback tests ────────────────────────────────────────────────────
+# Questi test usano mock puri per isolare la logica del callback dal pipeline
+# completo di enrichment. Il repository viene mockato per controllare il valore
+# di lifecycle_processed restituito da save().
+
+def _make_processor_mock(on_pass=None):
+    """Costruisce SignalEnrichmentProcessor con repo e config interamente mockati."""
+    from unittest.mock import MagicMock
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+    mock_config = MagicMock()
+    mock_config.reload_if_changed.return_value = None
+    mock_config.get_effective_config.return_value = None  # BLOCK path: config=None
+    mock_repo = MagicMock()
+    mock_repo.get_by_canonical_message_id.return_value = None
+    return SignalEnrichmentProcessor(
+        config_loader=mock_config,
+        repository=mock_repo,
+        on_pass=on_pass,
+    ), mock_repo
+
+
+def _fake_result(canonical_message_id: int = 1):
+    from unittest.mock import MagicMock
+    r = MagicMock()
+    r.canonical_message_id = canonical_message_id
+    r.parser_profile = "trader_a"
+    r.raw_message_id = 100 + canonical_message_id
+    r.primary_class = "SIGNAL"
+    return r
+
+
+def test_on_pass_called_when_saved_lifecycle_processed_false():
+    """on_pass viene chiamato quando repo.save() restituisce lifecycle_processed=False."""
+    from unittest.mock import MagicMock
+    called = []
+    processor, mock_repo = _make_processor_mock(on_pass=lambda: called.append(1))
+
+    saved = MagicMock()
+    saved.lifecycle_processed = False  # simula SIGNAL PASS / UPDATE PASS
+    mock_repo.save.return_value = saved
+
+    processor.process(_fake_result(1))
+    assert called == [1]
+
+
+def test_on_pass_not_called_when_saved_lifecycle_processed_true():
+    """on_pass NON viene chiamato quando repo.save() restituisce lifecycle_processed=True."""
+    from unittest.mock import MagicMock
+    called = []
+    processor, mock_repo = _make_processor_mock(on_pass=lambda: called.append(1))
+
+    saved = MagicMock()
+    saved.lifecycle_processed = True  # simula BLOCK / REVIEW / REPORT
+    mock_repo.save.return_value = saved
+
+    processor.process(_fake_result(2))
+    assert called == []
+
+
+def test_on_pass_called_multiple_times_for_multiple_passes():
+    """on_pass viene chiamato una volta per ogni PASS distinto."""
+    from unittest.mock import MagicMock
+    called = []
+    processor, mock_repo = _make_processor_mock(on_pass=lambda: called.append(1))
+
+    saved = MagicMock()
+    saved.lifecycle_processed = False
+    mock_repo.save.return_value = saved
+    mock_repo.get_by_canonical_message_id.return_value = None  # sempre fresh
+
+    processor.process(_fake_result(10))
+    processor.process(_fake_result(11))
+    assert called == [1, 1]
+
+
+def test_on_pass_none_default_does_not_raise():
+    """on_pass=None (default) non causa errori anche se lifecycle_processed=False."""
+    from unittest.mock import MagicMock
+    processor, mock_repo = _make_processor_mock(on_pass=None)
+
+    saved = MagicMock()
+    saved.lifecycle_processed = False
+    mock_repo.save.return_value = saved
+
+    processor.process(_fake_result(99))  # deve completare senza eccezioni

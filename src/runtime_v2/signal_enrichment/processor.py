@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
 from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
@@ -22,9 +23,11 @@ class SignalEnrichmentProcessor:
         self,
         config_loader: OperationConfigLoader,
         repository: EnrichedCanonicalMessageRepository,
+        on_pass: Callable[[], None] | None = None,
     ) -> None:
         self._config = config_loader
         self._repo = repository
+        self._on_pass = on_pass
 
     def process(self, result: CanonicalParseResult) -> EnrichedCanonicalMessage:
         existing = self._repo.get_by_canonical_message_id(result.canonical_message_id)
@@ -46,7 +49,10 @@ class SignalEnrichmentProcessor:
             policy_version = self._config.get_policy_version()
             enriched = self._route(result, config, policy_snapshot, policy_version)
 
-        return self._repo.save(enriched)
+        saved = self._repo.save(enriched)
+        if not saved.lifecycle_processed and self._on_pass:
+            self._on_pass()
+        return saved
 
     # ── Routing ───────────────────────────────────────────────────────────────
 
