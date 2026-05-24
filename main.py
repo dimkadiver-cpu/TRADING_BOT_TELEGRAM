@@ -9,6 +9,7 @@ import argparse
 import asyncio
 import os
 import sqlite3
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -63,6 +64,17 @@ class ExecutionRuntime:
     reconciliation_interval_seconds: int | None
 
 
+async def _wait_any(*events: asyncio.Event) -> None:
+    """Ritorna appena uno qualsiasi degli eventi viene settato."""
+    tasks = [asyncio.ensure_future(e.wait()) for e in events]
+    try:
+        await asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED)
+    finally:
+        for t in tasks:
+            t.cancel()
+        await asyncio.gather(*tasks, return_exceptions=True)
+
+
 def _required_env(name: str) -> str:
     value = os.getenv(name)
     if not value:
@@ -86,6 +98,7 @@ def _build_execution_runtime(
     root_dir: Path,
     ops_db_path: str,
     logger,
+    wake_callback: Callable[[], None] | None = None,
 ) -> ExecutionRuntime | None:
     execution_config_path = str(root_dir / "config" / "execution.yaml")
     exec_config = ExecutionConfigLoader(execution_config_path).load()
@@ -124,6 +137,7 @@ def _build_execution_runtime(
             repo=gateway_repo,
             reconciliation_callback=sync_worker.run_reconciliation,
             mode=adapter_cfg.mode,
+            wake_callback=wake_callback,
         )
         ws_watcher.start()
         if adapter_cfg.websocket.poll_fallback_enabled:
@@ -198,6 +212,52 @@ async def _run_position_reconciliation_periodically(
             logger.exception("periodic position/tp reconciliation error")
 
 
+async def _run_lifecycle_workers(
+    *,
+    new_enriched_event: asyncio.Event,
+    new_fill_event: asyncio.Event,
+    gate_worker: LifecycleGateWorker,
+    timeout_worker: TimeoutWorker,
+    lifecycle_event_worker: LifecycleEventWorker,
+    execution_runtime: ExecutionRuntime | None,
+    logger,
+) -> None:
+    while True:
+        try:
+            await asyncio.wait_for(
+                _wait_any(new_enriched_event, new_fill_event),
+                timeout=10.0,
+            )
+        except asyncio.TimeoutError:
+            pass  # fallback: gestisce timeout entry scaduti e retry
+
+        new_enriched_event.clear()
+        new_fill_event.clear()
+
+        try:
+            gate_worker.run_once()
+            timeout_worker.run_once()
+            lifecycle_event_worker.run_once()
+            if execution_runtime is not None:
+                execution_runtime.execution_worker.run_once()
+        except Exception:
+            logger.exception("lifecycle worker error")
+
+
+async def _run_sync_worker(
+    *,
+    sync_worker: ExchangeEventSyncWorker,
+    interval_seconds: int = 8,
+    logger,
+) -> None:
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            sync_worker.run_once()
+        except Exception:
+            logger.exception("sync worker error")
+
+
 async def _async_main(
     *,
     parser_db_path: str,
@@ -249,10 +309,18 @@ async def _async_main(
         live_run_id=live_run_id,
     )
 
+    new_enriched_event = asyncio.Event()
+    new_fill_event = asyncio.Event()
+    _main_loop = asyncio.get_running_loop()
+
+    def _fill_wake_callback() -> None:
+        _main_loop.call_soon_threadsafe(new_fill_event.set)
+
     config_dir = str(root_dir / "config")
     enrichment_processor = SignalEnrichmentProcessor(
         config_loader=OperationConfigLoader(config_dir),
         repository=EnrichedCanonicalMessageRepository(parser_db_path),
+        on_pass=new_enriched_event.set,
     )
 
     listener = TelegramListener(
@@ -311,22 +379,10 @@ async def _async_main(
             root_dir=root_dir,
             ops_db_path=ops_db_path,
             logger=logger,
+            wake_callback=_fill_wake_callback,
         )
     except Exception:
         logger.exception("execution gateway init failed — gateway disabled")
-
-    async def _run_lifecycle_workers() -> None:
-        while True:
-            try:
-                gate_worker.run_once()
-                timeout_worker.run_once()
-                lifecycle_event_worker.run_once()
-                if execution_runtime is not None:
-                    execution_runtime.execution_worker.run_once()
-                    execution_runtime.sync_worker.run_once()
-            except Exception:
-                logger.exception("lifecycle worker error")
-            await asyncio.sleep(10)
 
     watcher = ChannelConfigWatcher(
         path=channels_yaml_path,
@@ -342,7 +398,28 @@ async def _async_main(
         logger.info("telegram listener started | parser_db=%s | ops_db=%s", parser_db_path, ops_db_path)
         await listener.run_recovery(client)
         worker_task = asyncio.create_task(listener.run_worker())
-        lifecycle_task = asyncio.create_task(_run_lifecycle_workers())
+
+        lifecycle_task = asyncio.create_task(
+            _run_lifecycle_workers(
+                new_enriched_event=new_enriched_event,
+                new_fill_event=new_fill_event,
+                gate_worker=gate_worker,
+                timeout_worker=timeout_worker,
+                lifecycle_event_worker=lifecycle_event_worker,
+                execution_runtime=execution_runtime,
+                logger=logger,
+            )
+        )
+
+        sync_task = None
+        if execution_runtime is not None:
+            sync_task = asyncio.create_task(
+                _run_sync_worker(
+                    sync_worker=execution_runtime.sync_worker,
+                    logger=logger,
+                )
+            )
+
         reconciliation_task = None
         position_reconciliation_task = None
         if (
@@ -369,6 +446,8 @@ async def _async_main(
         finally:
             worker_task.cancel()
             lifecycle_task.cancel()
+            if sync_task is not None:
+                sync_task.cancel()
             if reconciliation_task is not None:
                 reconciliation_task.cancel()
             if position_reconciliation_task is not None:
