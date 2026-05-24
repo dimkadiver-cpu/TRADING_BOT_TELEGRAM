@@ -64,9 +64,9 @@ Verifica principale del flusso.
 - [x] Verificare `PLACE_PROTECTIVE_STOP` e `PLACE_TAKE_PROFIT` se previsti dalla strategia
 - [x] Verificare apertura ordine su exchange demo
 - [x] Verificare `CANCEL_PENDING_ENTRY` quando cancelli l'entry pendente
-- [ ] Verificare chiusura parziale con `CLOSE_PARTIAL`
+- [X] Verificare chiusura parziale con `CLOSE_PARTIAL` + parziali aperti?
 - [ ] Verificare chiusura totale con `CLOSE_FULL`
-- [ ] Verificare `MOVE_STOP_TO_BREAKEVEN`
+- [X] Verificare `MOVE_STOP_TO_BREAKEVEN`
 - [ ] Verificare `MOVE_STOP` (non implimitato)
 - [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` in unico messaggio
 - [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` dopo `TP_HIT`
@@ -83,10 +83,10 @@ Verifica multi-leg e gestione ordini non fillati.
 
 - [X] Inviare segnale con due entry limit
 - [X] Verificare che entrambe le entry siano create
-- [ ] Verificare cancellazione del primo ordine non fillato
+- [ ] Verificare cancellazione del primo ordine non fillato (non crealta la logica)
 - [X] Verificare cancellazione del secondo ordine non fillato
 - [ ] Verificare modifica del primo ordine al market, se prevista dal flusso
-- [ ] Verificare apertura del secondo ordine
+- [X] Verificare apertura del secondo ordine
 - [ ] Verificare chiusura totale
 - [ ] Verificare chiusura parziale
 - [ ] Verificare `MOVE_STOP_TO_BREAKEVEN`
@@ -102,10 +102,10 @@ Atteso:
 
 Verifica del path market.
 
-- [ ] Inviare segnale `MARKET`
-- [ ] Verificare `PLACE_ENTRY`
-- [ ] Verificare piazzamento corretto di SL e TP
-- [ ] Verificare apertura immediata dell'ordine
+- [X] Inviare segnale `MARKET`
+- [X] Verificare `PLACE_ENTRY`
+- [X] Verificare piazzamento corretto di SL e TP
+- [X] Verificare apertura immediata dell'ordine
 - [ ] Verificare chiusura totale
 - [ ] Verificare chiusura parziale
 - [ ] Verificare `MOVE_STOP_TO_BREAKEVEN`
@@ -123,7 +123,7 @@ Verifica mista market + limit.
 - [ ] Inviare setup misto
 - [ ] Verificare cancellazione ordini non fillati
 - [ ] Verificare cancellazione del secondo ordine non fillato
-- [ ] Verificare eventuale modifica del primo ordine al market
+- [X] Verificare eventuale modifica del primo ordine al market + chiusura ordine limite
 - [ ] Verificare apertura del secondo ordine
 - [ ] Verificare chiusura totale
 - [ ] Verificare chiusura parziale
