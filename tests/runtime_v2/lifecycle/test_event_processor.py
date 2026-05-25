@@ -1038,3 +1038,47 @@ def test_race_guard_allows_cancelled_when_no_entries_in_flight():
     result = proc.process(event, chain, [])
 
     assert result.new_lifecycle_state == "CANCELLED"
+
+
+def test_race_guard_noop_when_fewer_in_flight_than_cancellations():
+    """1 in-flight entry with 2 cancel confirmations — must NOT go to CANCELLED.
+
+    Old condition: len(entry_in_flight) >= len(cancelled_order_ids)
+      → 1 >= 2 → False → CANCELLED (wrong, fill still possible)
+    New condition: len(entry_in_flight) > 0
+      → 1 > 0 → True → NOOP (correct)
+    """
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        state="WAITING_ENTRY",
+        open_position_qty=0.0,
+        plan_legs=[
+            {"leg_id": "leg_1", "sequence": 1, "status": "PENDING", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_leg2"},
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING", "client_order_id": "cid_leg3"},
+        ],
+    )
+
+    # Only 1 PLACE_ENTRY still in SENT — it could still fill
+    active_cmds = [
+        ExecutionCommand(
+            trade_chain_id=1,
+            command_type="PLACE_ENTRY",
+            status="SENT",
+            payload_json="{}",
+            idempotency_key="place_entry:1:leg1",
+        ),
+    ]
+
+    # 2 legs confirmed cancelled — more cancellations than in-flight entries
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={"cancelled_order_ids": ["cid_leg2", "cid_leg3"]},
+    )
+
+    result = proc.process(event, chain, active_cmds)
+
+    assert result.new_lifecycle_state is None  # must NOT go to CANCELLED
+    assert any(e.event_type == "NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED" for e in result.lifecycle_events)

@@ -672,7 +672,7 @@ class LifecycleEventProcessor:
                 if c.command_type in ("PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL")
                 and c.status in ("SENT", "ACK")
             ]
-            if len(entry_in_flight) >= len(cancelled_order_ids) and len(entry_in_flight) > 0:
+            if len(entry_in_flight) > 0:
                 # Altre entry ancora in attesa di fill o conferma — non finalizzare
                 events.append(LifecycleEvent(
                     trade_chain_id=chain_id,
