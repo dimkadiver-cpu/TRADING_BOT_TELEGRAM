@@ -1,6 +1,6 @@
 # Stato runtime_v2 — lifecycle & execution gateway
 
-Documento aggiornato: 2026-05-23
+Documento aggiornato: 2026-05-25
 
 ---
 
@@ -80,14 +80,14 @@ dopo `mark_sent`.
 | `be_buffer_pct` | Con `be_trigger` | Aggiunge buffer % al prezzo BE |
 | `close_distribution` | Ogni TP | Calcola % di chiusura per TP successivo |
 | `cancel_pending_on_timeout` + `pending_timeout_hours` | Worker periodico | Cancella entry pending scaduta → chain `EXPIRED` |
+| `cancel_averaging_pending_after` (tp1/tp2) | TP N colpito | Cancella leg averaging (sequence > 1) ancora PENDING → BE deferred se be_trigger coincide |
+| `cancel_pending_by_engine` | Gate globale | Se `false`, disabilita tutti i cancel automatici da engine (cancel manuale Telegram sempre attivo) |
 
 ### Definiti ma NON ancora implementati
 
 | Campo | Semantica | Note |
 |---|---|---|
-| `cancel_averaging_pending_after` | Cancella leg averaging dopo tp1/tp2 | Solo nel modello |
-| `cancel_unfilled_pending_after` | Cancella entry non fillata dopo tp1/tp2 | Solo nel modello |
-| `cancel_pending_by_engine` | On/off del cancel automatico da engine | Solo nel modello |
+| `cancel_unfilled_pending_after` | Cancella entry non fillata se prezzo ha raggiunto livello TP | **Bloccato**: richiede price-watcher non presente nell'architettura. Lasciato nel modello come placeholder. |
 | `risk_freed_by_be` | Libera rischio allocato quando BE scatta | Solo nel modello |
 | `protective_sl_mode` | `exchange_native_first` vs `bot_managed` | Solo nel modello |
 
@@ -97,8 +97,9 @@ dopo `mark_sent`.
 
 ### Funzionalità mancanti nel lifecycle
 
-- [ ] `cancel_averaging_pending_after` — implementare logica in `event_processor._process_tp_filled`
-- [ ] `cancel_unfilled_pending_after` — idem
+- [x] `cancel_averaging_pending_after` — implementato in `event_processor._process_tp_filled`
+- [ ] `cancel_unfilled_pending_after` — **BLOCCATO**: richiede price-watcher
+- [x] `cancel_pending_by_engine` — implementato come gate globale in `event_processor`
 - [ ] `risk_freed_by_be` — aggiornare `risk_remaining` della chain quando BE scatta
 - [ ] `SET_STOP` su prezzo esplicito (non solo ENTRY) — ora va in REVIEW
 
