@@ -5,10 +5,12 @@ import json
 import sqlite3
 from pathlib import Path
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent.parent.parent
+
 
 def _apply_migrations(db_path: str) -> None:
     conn = sqlite3.connect(db_path)
-    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+    for f in sorted((_REPO_ROOT / "db" / "ops_migrations").glob("*.sql")):
         conn.executescript(f.read_text(encoding="utf-8"))
     conn.commit()
     conn.close()
@@ -128,3 +130,35 @@ def test_load_pending_entry_client_order_ids_returns_tsb_ids(tmp_path):
     conn.close()
 
     assert ids == ["tsb:5:10:entry:1", "tsb:5:11:entry:2"]
+
+
+def test_expand_cancel_with_existing_entry_client_order_id_returns_original(tmp_path):
+    """Se il payload ha già entry_client_order_id, non deve essere ri-espanso."""
+    from src.runtime_v2.lifecycle.cancel_expander import expand_cancel_pending_commands
+    db = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db)
+    conn = sqlite3.connect(db)
+    # Inserire PLACE_ENTRY attivi — non devono influenzare il risultato
+    _insert_place_entry_cmd(conn, 1, 10, "tsb:10:1:entry:1", status="SENT")
+    _insert_place_entry_cmd(conn, 2, 10, "tsb:10:2:entry:2", status="SENT")
+    conn.commit()
+
+    # Comando già concreto con entry_client_order_id nel payload
+    concrete_payload = json.dumps({
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_client_order_id": "tsb:10:1:entry:1",
+    })
+    results = expand_cancel_pending_commands(
+        conn,
+        trade_chain_id=10,
+        command_type="CANCEL_PENDING_ENTRY",
+        payload_json=concrete_payload,
+        idempotency_key="auto_cancel:10:5:leg_1",
+    )
+    conn.close()
+
+    # Deve tornare il comando originale invariato, NON espanderlo in 2
+    assert len(results) == 1
+    assert results[0][0] == concrete_payload
+    assert results[0][1] == "auto_cancel:10:5:leg_1"

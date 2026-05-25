@@ -29,11 +29,15 @@ def expand_cancel_pending_commands(
     if command_type != "CANCEL_PENDING_ENTRY":
         return [(payload_json, idempotency_key)]
 
+    payload = json.loads(payload_json or "{}")
+    # Se il comando è già concreto (ha entry_client_order_id), non ri-espandere
+    if payload.get("entry_client_order_id"):
+        return [(payload_json, idempotency_key)]
+
     entry_client_order_ids = load_pending_entry_client_order_ids(conn, trade_chain_id)
     if not entry_client_order_ids:
         return [(payload_json, idempotency_key)]
 
-    payload = json.loads(payload_json or "{}")
     expanded: list[tuple[str, str]] = []
     for entry_client_order_id in entry_client_order_ids:
         item = dict(payload)

@@ -1298,18 +1298,25 @@ class LifecycleGateWorker:
                     )
 
                 for cmd in result.execution_commands:
-                    conn.execute(
-                        """
-                        INSERT OR IGNORE INTO ops_execution_commands (
-                            trade_chain_id, command_type, status, payload_json,
-                            idempotency_key, created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?)
-                        """,
-                        (
-                            chain_id, cmd.command_type, cmd.status, cmd.payload_json,
-                            cmd.idempotency_key, now, now,
-                        ),
-                    )
+                    for payload_json_c, idempotency_key_c in _expand_cancel_pending_commands(
+                        conn,
+                        trade_chain_id=chain_id,
+                        command_type=cmd.command_type,
+                        payload_json=cmd.payload_json,
+                        idempotency_key=cmd.idempotency_key,
+                    ):
+                        conn.execute(
+                            """
+                            INSERT OR IGNORE INTO ops_execution_commands (
+                                trade_chain_id, command_type, status, payload_json,
+                                idempotency_key, created_at, updated_at
+                            ) VALUES (?,?,?,?,?,?,?)
+                            """,
+                            (
+                                chain_id, cmd.command_type, cmd.status, payload_json_c,
+                                idempotency_key_c, now, now,
+                            ),
+                        )
 
                 if result.account_snapshot:
                     s = result.account_snapshot
