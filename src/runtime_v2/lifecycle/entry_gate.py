@@ -15,6 +15,10 @@ from src.runtime_v2.lifecycle.models import (
 from src.runtime_v2.lifecycle.ports import (
     AccountStateSnapshot, ExchangeDataPort, SymbolMarketSnapshot,
 )
+from src.runtime_v2.lifecycle.cancel_expander import (
+    expand_cancel_pending_commands as _expand_cancel_pending_commands,
+    load_pending_entry_client_order_ids as _load_pending_entry_client_order_ids,
+)
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.signal_enrichment.models import (
     EnrichedCanonicalMessage, ManagementPlanConfig,
@@ -1426,54 +1430,6 @@ class LifecycleGateWorker:
             conn.commit()
         finally:
             conn.close()
-
-
-def _expand_cancel_pending_commands(
-    conn: _sqlite3.Connection,
-    *,
-    trade_chain_id: int,
-    command_type: str,
-    payload_json: str,
-    idempotency_key: str,
-) -> list[tuple[str, str]]:
-    if command_type != "CANCEL_PENDING_ENTRY":
-        return [(payload_json, idempotency_key)]
-
-    entry_client_order_ids = _load_pending_entry_client_order_ids(conn, trade_chain_id)
-    if not entry_client_order_ids:
-        return [(payload_json, idempotency_key)]
-
-    payload = json.loads(payload_json or "{}")
-    expanded: list[tuple[str, str]] = []
-    for entry_client_order_id in entry_client_order_ids:
-        item = dict(payload)
-        item["entry_client_order_id"] = entry_client_order_id
-        expanded.append(
-            (
-                json.dumps(item),
-                f"{idempotency_key}:{entry_client_order_id}",
-            )
-        )
-    return expanded
-
-
-def _load_pending_entry_client_order_ids(
-    conn: _sqlite3.Connection,
-    trade_chain_id: int,
-) -> list[str]:
-    rows = conn.execute(
-        """
-        SELECT client_order_id
-        FROM ops_execution_commands
-        WHERE trade_chain_id = ?
-          AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL')
-          AND status IN ('PENDING','SENT','ACK')
-          AND client_order_id IS NOT NULL
-        ORDER BY command_id
-        """,
-        (trade_chain_id,),
-    ).fetchall()
-    return [str(row[0]) for row in rows if row and row[0]]
 
 
 __all__ = [

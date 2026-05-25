@@ -294,6 +294,98 @@ def test_timeout_worker_expires_waiting_entry(dbs):
     assert any(e[0] == "TIMEOUT_REACHED" for e in events)
 
 
+def test_persist_result_expands_cancel_pending_entry_to_per_order_commands(tmp_path):
+    """_persist_result deve espandere CANCEL_PENDING_ENTRY con ID exchange reali."""
+    import json as _json
+    import sqlite3 as _sqlite3
+    from datetime import datetime, timezone
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    # Setup DB
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now_str = datetime.now(timezone.utc).isoformat()
+    chain_id = 42
+
+    # Insert una trade chain
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "be_protection_status, management_plan_json, plan_state_json, "
+        "created_at, updated_at) "
+        "VALUES (?,1,1,1,'t1','acc1','BTC/USDT','LONG','OPEN','ONE_SHOT','NOT_PROTECTED','{}','{}',?,?)",
+        (chain_id, now_str, now_str),
+    )
+
+    # Inserire 2 PLACE_ENTRY commands attivi con client_order_id reali
+    for cmd_id, seq in [(100, 2), (101, 3)]:
+        coid = f"tsb:{chain_id}:{cmd_id}:entry:{seq}"
+        conn.execute(
+            "INSERT INTO ops_execution_commands "
+            "(command_id, trade_chain_id, command_type, status, payload_json, "
+            "idempotency_key, client_order_id, created_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            (cmd_id, chain_id, "PLACE_ENTRY", "SENT", "{}",
+             f"place_entry:{chain_id}:leg{seq}", coid, now_str, now_str),
+        )
+    conn.commit()
+    conn.close()
+
+    # Costruire un result con un CANCEL_PENDING_ENTRY (come emesso da auto-cancel averaging)
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+
+    cancel_cmd = ExecutionCommand(
+        trade_chain_id=chain_id,
+        command_type="CANCEL_PENDING_ENTRY",
+        status="PENDING",
+        payload_json=_json.dumps({"symbol": "BTC/USDT", "side": "LONG"}),
+        idempotency_key=f"auto_cancel:{chain_id}:5:legX",
+    )
+    result = EventProcessorResult(
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[],
+        execution_commands=[cancel_cmd],
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    # Verificare che siano stati inseriti 2 comandi espansi
+    conn2 = _sqlite3.connect(db)
+    rows = conn2.execute(
+        "SELECT payload_json, idempotency_key FROM ops_execution_commands "
+        "WHERE command_type='CANCEL_PENDING_ENTRY' ORDER BY command_id"
+    ).fetchall()
+    conn2.close()
+
+    assert len(rows) == 2, f"Attesi 2 comandi espansi, trovati {len(rows)}"
+    coids_in_payload = [_json.loads(r[0]).get("entry_client_order_id") for r in rows]
+    assert f"tsb:{chain_id}:100:entry:2" in coids_in_payload
+    assert f"tsb:{chain_id}:101:entry:3" in coids_in_payload
+
+
 def test_timeout_worker_ignores_future_timeout(dbs):
     from datetime import datetime, timedelta, timezone
     _, ops_db = dbs

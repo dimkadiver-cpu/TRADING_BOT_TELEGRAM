@@ -6,6 +6,10 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 
+from src.runtime_v2.lifecycle.cancel_expander import (
+    expand_cancel_pending_commands,
+    load_pending_entry_client_order_ids,
+)
 from src.runtime_v2.lifecycle.event_processor import EventProcessorResult, LifecycleEventProcessor
 from src.runtime_v2.lifecycle.models import (
     TERMINAL_STATES, LEGACY_BE_STATES, ExchangeEvent, ExecutionCommand, LifecycleEvent,
@@ -20,22 +24,6 @@ logger = logging.getLogger(__name__)
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
-
-
-def _load_pending_entry_client_order_ids(conn: sqlite3.Connection, chain_id: int) -> list[str]:
-    rows = conn.execute(
-        """
-        SELECT client_order_id
-        FROM ops_execution_commands
-        WHERE trade_chain_id = ?
-          AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL')
-          AND status IN ('PENDING','SENT','ACK')
-          AND client_order_id IS NOT NULL
-        ORDER BY command_id
-        """,
-        (chain_id,),
-    ).fetchall()
-    return [str(row[0]) for row in rows if row and row[0]]
 
 
 def _load_entry_command_for_command(
@@ -140,7 +128,7 @@ class TimeoutWorker:
                     (chain_id, "TIMEOUT_REACHED", "timeout_worker",
                      "WAITING_ENTRY", "EXPIRED", "{}", f"timeout:{chain_id}", now),
                 )
-                entry_client_order_ids = _load_pending_entry_client_order_ids(conn, chain_id)
+                entry_client_order_ids = load_pending_entry_client_order_ids(conn, chain_id)
                 if not entry_client_order_ids:
                     entry_client_order_ids = [""]
                 for entry_client_order_id in entry_client_order_ids:
@@ -290,16 +278,23 @@ class LifecycleEventWorker:
                     )
 
                 for cmd in result.execution_commands:
-                    conn.execute(
-                        """
-                        INSERT OR IGNORE INTO ops_execution_commands (
-                            trade_chain_id, command_type, status, payload_json,
-                            idempotency_key, created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?)
-                        """,
-                        (chain_id, cmd.command_type, cmd.status, cmd.payload_json,
-                         cmd.idempotency_key, now, now),
-                    )
+                    for payload_json_exp, idempotency_key_exp in expand_cancel_pending_commands(
+                        conn,
+                        trade_chain_id=chain_id,
+                        command_type=cmd.command_type,
+                        payload_json=cmd.payload_json,
+                        idempotency_key=cmd.idempotency_key,
+                    ):
+                        conn.execute(
+                            """
+                            INSERT OR IGNORE INTO ops_execution_commands (
+                                trade_chain_id, command_type, status, payload_json,
+                                idempotency_key, created_at, updated_at
+                            ) VALUES (?,?,?,?,?,?,?)
+                            """,
+                            (chain_id, cmd.command_type, cmd.status, payload_json_exp,
+                             idempotency_key_exp, now, now),
+                        )
         finally:
             conn.close()
 
