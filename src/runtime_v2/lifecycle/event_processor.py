@@ -107,7 +107,7 @@ class LifecycleEventProcessor:
         if etype == "STOP_MOVED_CONFIRMED":
             return self._process_stop_moved_confirmed(exchange_event, chain)
         if etype == "PENDING_ENTRY_CANCELLED_CONFIRMED":
-            return self._process_pending_entry_cancelled_confirmed(exchange_event, chain)
+            return self._process_pending_entry_cancelled_confirmed(exchange_event, chain, active_commands)
         logger.warning("unhandled exchange event type: %s", etype)
         return EventProcessorResult(
             new_lifecycle_state=None,
@@ -612,20 +612,52 @@ class LifecycleEventProcessor:
         )
 
     def _process_pending_entry_cancelled_confirmed(
-        self, exchange_event: ExchangeEvent, chain: TradeChain
+        self,
+        exchange_event: ExchangeEvent,
+        chain: TradeChain,
+        active_commands: list[ExecutionCommand],
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
-        # payload["position_already_open"] reflects only whether the cancelled order itself
-        # had fills — wrong for multi-leg entries where leg 1 opened the position.
-        # Use chain state directly instead.
         position_already_open = (chain.open_position_qty or 0.0) > 0.0
         cancelled_order_ids = [str(v) for v in payload.get("cancelled_order_ids", []) if v]
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         commands: list[ExecutionCommand] = []
+        events: list[LifecycleEvent] = []
         new_state: str | None = None
+
+        # ── Marca leg come CANCELLED nel piano ────────────────────────────────
+        new_plan_state_json = self._mark_entry_leg_status(
+            chain.plan_state_json,
+            client_order_ids=cancelled_order_ids,
+            command_payload=None,
+            new_status="CANCELLED",
+        )
+        effective_plan_json = new_plan_state_json or chain.plan_state_json or "{}"
+
+        # ── Deferred BE: emetti BE se tutte le averaging leg sono confermate ──
+        deferred = _get_be_deferred_flag(effective_plan_json)
+        if deferred:
+            try:
+                mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
+            except Exception:
+                mp = ManagementPlanConfig()
+
+            from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+            remaining_averaging = ExecutionPlanBuilder.get_pending_averaging_legs(effective_plan_json)
+            if not remaining_averaging:
+                # Ultima leg confermata: emetti BE con avg price corrente
+                be_result = self._build_be_move_command_and_event(chain, eid or 0, mp)
+                if be_result is not None:
+                    be_cmd, be_event = be_result
+                    commands.append(be_cmd)
+                    events.append(be_event)
+                # Rimuovi il flag dal piano
+                effective_plan_json = _clear_be_deferred_flag(effective_plan_json)
+                new_plan_state_json = effective_plan_json
+
+        # ── Stato finale chain ─────────────────────────────────────────────────
         if position_already_open:
-            # Attached-SL modes use a position-level SL — no qty sync needed.
             if chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
                 commands.append(ExecutionCommand(
                     trade_chain_id=chain_id,
@@ -634,28 +666,41 @@ class LifecycleEventProcessor:
                     idempotency_key=f"sync_after_cancel:{chain_id}:{eid}",
                 ))
         else:
-            new_state = "CANCELLED"
-        new_plan_state_json = self._mark_entry_leg_status(
-            chain.plan_state_json,
-            client_order_ids=cancelled_order_ids,
-            command_payload=None,
-            new_status="CANCELLED",
-        )
+            # Race guard: non finalizzare se ci sono entry commands ancora in volo
+            entry_in_flight = [
+                c for c in active_commands
+                if c.command_type in ("PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL")
+                and c.status in ("SENT", "ACK")
+            ]
+            if len(entry_in_flight) >= len(cancelled_order_ids) and len(entry_in_flight) > 0:
+                # Altre entry ancora in attesa di fill o conferma — non finalizzare
+                events.append(LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED",
+                    source_type="exchange_event",
+                    source_id=str(eid),
+                    idempotency_key=f"noop_cancel_unresolved:{chain_id}:{eid}",
+                ))
+            else:
+                new_state = "CANCELLED"
+
+        events.insert(0, LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="PENDING_ENTRY_CANCELLED",
+            source_type="exchange_event",
+            source_id=str(eid),
+            previous_state=chain.lifecycle_state,
+            next_state=new_state,
+            payload_json=exchange_event.payload_json,
+            idempotency_key=f"pending_cancelled:{chain_id}:{eid}",
+        ))
+
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,
             entry_avg_price=None,
             current_stop_price=None,
-            lifecycle_events=[LifecycleEvent(
-                trade_chain_id=chain_id,
-                event_type="PENDING_ENTRY_CANCELLED",
-                source_type="exchange_event",
-                source_id=str(eid),
-                previous_state=chain.lifecycle_state,
-                next_state=new_state,
-                payload_json=exchange_event.payload_json,
-                idempotency_key=f"pending_cancelled:{chain_id}:{eid}",
-            )],
+            lifecycle_events=events,
             execution_commands=commands,
             new_plan_state_json=new_plan_state_json,
         )

@@ -910,3 +910,131 @@ def test_cancel_averaging_with_be_trigger_defers_be():
     assert "_be_deferred_by_auto_cancel" in plan
     assert plan["_be_deferred_by_auto_cancel"]["tp_level"] == 1
     assert plan["_be_deferred_by_auto_cancel"]["averaging_legs_pending"] == 2
+
+
+# --- Task 5: Deferred BE + race guard ---
+
+def test_deferred_be_emitted_after_last_cancel_confirmed():
+    """Deferred BE viene emesso quando l'ultima averaging leg viene confermata cancelled."""
+    proc = _make_processor()
+
+    plan_with_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "CANCELLED", "client_order_id": "cid_leg2"},
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING", "client_order_id": "cid_leg3"},
+        ],
+        "_be_deferred_by_auto_cancel": {"tp_level": 1, "averaging_legs_pending": 1},
+    }
+    chain = _make_chain_with_plan(
+        be_trigger="tp1",
+        cancel_averaging_pending_after="tp1",
+        plan_legs=[],
+        entry_avg_price=50000.0,
+        open_position_qty=1.0,
+    )
+    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={"cancelled_order_ids": ["cid_leg3"]},
+    )
+
+    result = proc.process(event, chain, [])
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 1
+    be_payload = json.loads(be_cmds[0].payload_json)
+    assert be_payload["new_stop_price"] == 50000.0  # entry_avg_price (no fee correction in default config)
+    assert be_payload["is_breakeven"] is True
+
+    assert result.new_plan_state_json is not None
+    final_plan = json.loads(result.new_plan_state_json)
+    assert "_be_deferred_by_auto_cancel" not in final_plan  # flag rimosso
+
+
+def test_deferred_be_not_emitted_until_all_legs_confirmed():
+    """Deferred BE NON viene emesso se ci sono ancora averaging leg pending."""
+    proc = _make_processor()
+
+    plan_with_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_leg2"},  # ancora pending
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING", "client_order_id": "cid_leg3"},
+        ],
+        "_be_deferred_by_auto_cancel": {"tp_level": 1, "averaging_legs_pending": 2},
+    }
+    chain = _make_chain_with_plan(plan_legs=[], entry_avg_price=50000.0)
+    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={"cancelled_order_ids": ["cid_leg3"]},
+    )
+
+    result = proc.process(event, chain, [])
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 0  # leg 2 ancora pending → no BE
+
+
+def test_race_guard_cancel_confirmed_before_entry_filled():
+    """PENDING_ENTRY_CANCELLED_CONFIRMED arriva prima di ENTRY_FILLED: chain NON va a CANCELLED."""
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        state="WAITING_ENTRY",
+        open_position_qty=0.0,
+        plan_legs=[
+            {"leg_id": "leg_1", "sequence": 1, "status": "PENDING", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_leg2"},
+        ],
+    )
+
+    # Leg 1 è stata inviata all'exchange (SENT) ma il fill non è ancora arrivato
+    active_cmds = [
+        ExecutionCommand(
+            trade_chain_id=1,
+            command_type="PLACE_ENTRY_WITH_ATTACHED_TPSL",
+            status="SENT",
+            payload_json="{}",
+            idempotency_key="place_entry:1:leg1",
+        ),
+    ]
+
+    # Leg 2 viene confermata cancelled (ma leg 1 potrebbe ancora fillarsi)
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={"cancelled_order_ids": ["cid_leg2"]},
+    )
+
+    result = proc.process(event, chain, active_cmds)
+
+    assert result.new_lifecycle_state is None  # NON va a CANCELLED
+    assert any(e.event_type == "NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED" for e in result.lifecycle_events)
+
+
+def test_race_guard_allows_cancelled_when_no_entries_in_flight():
+    """PENDING_ENTRY_CANCELLED_CONFIRMED con nessun PLACE_ENTRY SENT/ACK → CANCELLED corretto."""
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        state="WAITING_ENTRY",
+        open_position_qty=0.0,
+        plan_legs=[
+            {"leg_id": "leg_1", "sequence": 1, "status": "PENDING", "client_order_id": "cid_leg1"},
+        ],
+    )
+
+    # Nessun comando PLACE_ENTRY in SENT/ACK
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={"cancelled_order_ids": ["cid_leg1"]},
+    )
+
+    result = proc.process(event, chain, [])
+
+    assert result.new_lifecycle_state == "CANCELLED"
