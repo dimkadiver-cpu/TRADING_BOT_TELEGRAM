@@ -1108,7 +1108,10 @@ def test_deferred_be_emitted_on_race_entry_fill():
         be_trigger="tp1",
         cancel_averaging_pending_after="tp1",
     )
-    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+    chain = chain.model_copy(update={
+        "plan_state_json": json.dumps(plan_with_deferred),
+        "filled_entry_qty": 1.0,
+    })
 
     # Leg 2 si filla invece di cancellarsi (race)
     event = _make_exchange_event(
@@ -1124,6 +1127,56 @@ def test_deferred_be_emitted_on_race_entry_fill():
 
     be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
     assert len(be_cmds) == 1
+    be_payload = json.loads(be_cmds[0].payload_json)
+    assert be_payload["is_breakeven"] is True
+    assert be_payload["new_stop_price"] == pytest.approx(49833.33, rel=1e-3)
     assert result.new_plan_state_json is not None
     final_plan = json.loads(result.new_plan_state_json)
     assert "_be_deferred_by_auto_cancel" not in final_plan
+
+
+def test_deferred_be_not_cleared_on_partial_race_fill():
+    """If two averaging legs are pending and only one fills (race), flag stays and no BE is emitted."""
+    import json
+
+    proc = _make_processor()
+
+    plan_with_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_leg2"},
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING", "client_order_id": "cid_leg3"},
+        ],
+        "_be_deferred_by_auto_cancel": {"tp_level": 1, "averaging_legs_pending": 2},
+    }
+    chain = _make_chain_with_plan(
+        state="OPEN",
+        plan_legs=[],
+        entry_avg_price=50000.0,
+        open_position_qty=1.0,
+        be_trigger="tp1",
+        cancel_averaging_pending_after="tp1",
+    )
+    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+
+    # Only leg_2 fills (race); leg_3 is still pending
+    event = _make_exchange_event(
+        event_type="ENTRY_FILLED",
+        payload={
+            "fill_price": 49500.0,
+            "filled_qty": 0.5,
+            "entry_client_order_id": "cid_leg2",
+        },
+    )
+
+    result = proc.process(event, chain, [])
+
+    # No BE yet — leg_3 still pending
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 0
+
+    # Flag still present in plan_state_json
+    assert result.new_plan_state_json is not None
+    final_plan = json.loads(result.new_plan_state_json)
+    assert "_be_deferred_by_auto_cancel" in final_plan

@@ -206,7 +206,6 @@ class LifecycleEventProcessor:
                 mp_fill = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
             except Exception:
                 mp_fill = ManagementPlanConfig()
-            from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
             remaining_averaging = ExecutionPlanBuilder.get_pending_averaging_legs(effective_plan)
             if not remaining_averaging:
                 # Crea una chain temporanea con entry_avg_price aggiornato per calcolare BE corretto
