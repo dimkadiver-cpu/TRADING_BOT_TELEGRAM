@@ -277,6 +277,35 @@ class LifecycleEventProcessor:
             )
         return updated
 
+    def _mark_entry_leg_status_by_sequence(
+        self,
+        plan_state_json: str,
+        *,
+        sequence: int,
+        new_status: str,
+    ) -> str | None:
+        """Fallback: cerca le leg con leg["sequence"] == sequence e status PENDING.
+        Usato quando il match per client_order_id fallisce (piano ha placeholder ID)."""
+        try:
+            plan = json.loads(plan_state_json or "{}")
+        except Exception:
+            return None
+        legs = plan.get("legs", [])
+        target_legs = [
+            leg for leg in legs
+            if leg.get("sequence") == sequence and leg.get("status") == "PENDING"
+        ]
+        if not target_legs:
+            return None
+        updated = plan_state_json
+        for leg in target_legs:
+            updated = ExecutionPlanBuilder.update_leg_status(
+                updated,
+                str(leg.get("leg_id")),
+                new_status,
+            )
+        return updated
+
     def _match_pending_legs_by_command_payload(
         self,
         legs: list[dict],
@@ -653,6 +682,17 @@ class LifecycleEventProcessor:
             command_payload=None,
             new_status="CANCELLED",
         )
+
+        # Fallback: match per sequence (piano ha placeholder ID, ID exchange non corrisponde)
+        if new_plan_state_json is None:
+            sequence = payload.get("sequence")
+            if sequence is not None:
+                new_plan_state_json = self._mark_entry_leg_status_by_sequence(
+                    chain.plan_state_json,
+                    sequence=int(sequence),
+                    new_status="CANCELLED",
+                )
+
         effective_plan_json = new_plan_state_json or chain.plan_state_json or "{}"
 
         # ── Deferred BE: emetti BE se tutte le averaging leg sono confermate ──

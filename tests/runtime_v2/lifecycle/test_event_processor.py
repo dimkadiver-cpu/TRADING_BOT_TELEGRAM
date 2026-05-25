@@ -1237,6 +1237,183 @@ def test_cancel_averaging_different_tp_levels_independent():
     assert len(be_cmds) == 1  # BE emesso normalmente su TP1
 
 
+# ── BUG-2: fallback match per sequence ─────────────────────────────────────
+
+def test_deferred_be_emitted_with_production_payload_and_placeholder_plan():
+    """Riproduce il comportamento production: piano ha placeholder ID, payload ha ID exchange reale.
+    Il fallback per sequence deve marcare la leg e scattare il deferred BE."""
+    import json
+    proc = _make_processor()
+
+    plan_with_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED",
+             "client_order_id": "place_entry_attached:99:leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "CANCELLED",
+             "client_order_id": "place_entry:99:leg2"},
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING",
+             "client_order_id": "place_entry:99:leg3"},  # placeholder
+        ],
+        "_be_deferred_by_auto_cancel": {"tp_level": 1, "averaging_legs_pending": 1},
+    }
+    chain = _make_chain_with_plan(
+        be_trigger="tp1",
+        cancel_averaging_pending_after="tp1",
+        plan_legs=[],
+        entry_avg_price=50000.0,
+        open_position_qty=1.0,
+    )
+    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+
+    # Payload reale da _handle_cancelled_order: ID exchange NON nel piano
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={
+            "cancelled_order_ids": ["tsb:1:7001:entry:3"],  # NON corrisponde al placeholder
+            "sequence": 3,
+            "position_already_open": False,
+        },
+    )
+
+    result = proc.process(event, chain, [])
+
+    # Il fallback per sequence deve aver trovato leg_3 e marcato come CANCELLED
+    assert result.new_plan_state_json is not None, "Piano deve essere aggiornato via fallback sequence"
+    final_plan = json.loads(result.new_plan_state_json)
+    leg_3 = next(l for l in final_plan["legs"] if l["sequence"] == 3)
+    assert leg_3["status"] == "CANCELLED", "Leg 3 deve essere CANCELLED dopo fallback"
+
+    # Il deferred BE deve essere emesso (leg_3 era l'ultima pending)
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 1, "Il deferred BE deve essere emesso"
+    be_payload = json.loads(be_cmds[0].payload_json)
+    assert be_payload["is_breakeven"] is True
+    assert "_be_deferred_by_auto_cancel" not in final_plan, "Flag deve essere rimosso"
+
+
+def test_deferred_be_not_emitted_with_production_payload_when_other_legs_still_pending():
+    """Con payload production: se ci sono ancora altre leg pending, il BE non viene emesso."""
+    import json
+    proc = _make_processor()
+
+    plan_with_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED",
+             "client_order_id": "place_entry_attached:99:leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING",
+             "client_order_id": "place_entry:99:leg2"},  # ancora pending
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING",
+             "client_order_id": "place_entry:99:leg3"},
+        ],
+        "_be_deferred_by_auto_cancel": {"tp_level": 1, "averaging_legs_pending": 2},
+    }
+    chain = _make_chain_with_plan(plan_legs=[], entry_avg_price=50000.0)
+    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={
+            "cancelled_order_ids": ["tsb:1:7001:entry:3"],
+            "sequence": 3,
+            "position_already_open": False,
+        },
+    )
+
+    result = proc.process(event, chain, [])
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 0, "Leg 2 ancora pending → no BE"
+
+
+def test_cancel_confirmed_without_deferred_be_config():
+    """Path non-configurato: cancel senza deferred BE.
+    La leg viene marcata via fallback sequence, nessun BE emesso."""
+    import json
+    proc = _make_processor()
+
+    plan_no_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED",
+             "client_order_id": "place_entry_attached:99:leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING",
+             "client_order_id": "place_entry:99:leg2"},
+        ],
+        # Nessun _be_deferred_by_auto_cancel
+    }
+    chain = _make_chain_with_plan(
+        plan_legs=[],
+        open_position_qty=0.5,
+        entry_avg_price=50000.0,
+    )
+    chain = chain.model_copy(update={
+        "plan_state_json": json.dumps(plan_no_deferred),
+        "lifecycle_state": "OPEN",
+    })
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={
+            "cancelled_order_ids": ["tsb:1:8001:entry:2"],
+            "sequence": 2,
+            "position_already_open": True,
+        },
+    )
+
+    result = proc.process(event, chain, [])
+
+    # La leg deve essere marcata CANCELLED via fallback
+    assert result.new_plan_state_json is not None
+    final_plan = json.loads(result.new_plan_state_json)
+    leg_2 = next(l for l in final_plan["legs"] if l["sequence"] == 2)
+    assert leg_2["status"] == "CANCELLED"
+
+    # Nessun BE emesso (non configurato)
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 0
+
+    # Nessun cambio lifecycle state (posizione aperta, nessun deferred)
+    assert result.new_lifecycle_state is None
+
+
+def test_fallback_sequence_not_triggered_if_primary_match_succeeds():
+    """Se il match primario per client_order_id funziona, il fallback per sequence non viene usato."""
+    import json
+    proc = _make_processor()
+
+    # Piano con ID reali (scenario dove il piano è stato aggiornato con ID exchange)
+    plan = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING",
+             "client_order_id": "tsb:1:7001:entry:2"},  # ID reale nel piano
+        ],
+    }
+    chain = _make_chain_with_plan(plan_legs=[], open_position_qty=0.5, entry_avg_price=50000.0)
+    chain = chain.model_copy(update={
+        "plan_state_json": json.dumps(plan),
+        "lifecycle_state": "OPEN",
+    })
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={
+            "cancelled_order_ids": ["tsb:1:7001:entry:2"],  # ID reale = match primario
+            "sequence": 2,
+            "position_already_open": True,
+        },
+    )
+
+    result = proc.process(event, chain, [])
+
+    assert result.new_plan_state_json is not None
+    final_plan = json.loads(result.new_plan_state_json)
+    leg_2 = next(l for l in final_plan["legs"] if l["sequence"] == 2)
+    assert leg_2["status"] == "CANCELLED"
+
+
 def test_expand_cancel_does_not_include_done_commands_via_plan_state():
     """get_pending_averaging_legs non include leg CANCELLED o FILLED dal plan_state_json."""
     import json
