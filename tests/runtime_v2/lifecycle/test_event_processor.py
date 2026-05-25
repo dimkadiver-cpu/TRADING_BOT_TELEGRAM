@@ -828,7 +828,7 @@ def _averaging_legs_fixture():
 
 
 def test_cancel_averaging_after_tp1_emits_cancel_commands():
-    """Quando TP1 scatta e cancel_averaging_pending_after=tp1, emette CANCEL_PENDING_ENTRY per leg 2 e 3."""
+    """Quando TP1 scatta e cancel_averaging_pending_after=tp1, emette un singolo CANCEL_PENDING_ENTRY generico."""
     proc = _make_processor()
     chain = _make_chain_with_plan(
         cancel_averaging_pending_after="tp1",
@@ -839,10 +839,10 @@ def test_cancel_averaging_after_tp1_emits_cancel_commands():
     result = proc.process(event, chain, [])
 
     cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
-    assert len(cancel_cmds) == 2
-    payloads = [json.loads(c.payload_json) for c in cancel_cmds]
-    cids = {p["entry_client_order_id"] for p in payloads}
-    assert cids == {"cid_leg2", "cid_leg3"}
+    assert len(cancel_cmds) == 1
+    payload = json.loads(cancel_cmds[0].payload_json)
+    assert "entry_client_order_id" not in payload
+    assert payload.get("cancel_reason") == "auto_cancel_averaging"
 
     assert any(e.event_type == "AUTO_CANCEL_AVERAGING_REQUESTED" for e in result.lifecycle_events)
 
@@ -903,7 +903,10 @@ def test_cancel_averaging_with_be_trigger_defers_be():
     assert len(be_cmds) == 0  # BE non emesso ora
 
     cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
-    assert len(cancel_cmds) == 2  # cancel emessi
+    assert len(cancel_cmds) == 1  # singolo comando generico — l'expander risolve i reali IDs
+    payload = json.loads(cancel_cmds[0].payload_json)
+    assert "entry_client_order_id" not in payload
+    assert payload.get("cancel_reason") == "auto_cancel_averaging"
 
     assert result.new_plan_state_json is not None
     plan = json.loads(result.new_plan_state_json)
@@ -1235,6 +1238,56 @@ def test_cancel_averaging_different_tp_levels_independent():
 
     be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
     assert len(be_cmds) == 1  # BE emesso normalmente su TP1
+
+
+def test_auto_cancel_averaging_emits_generic_cancel_without_placeholder_id():
+    """Auto-cancel averaging emette un comando generico senza entry_client_order_id.
+
+    Verifica che il comando emesso NON contenga entry_client_order_id (placeholder o reale),
+    in modo che il cancel_expander in workers._persist_result possa risolvere i reali
+    exchange IDs da ops_execution_commands. Se il comando contenesse un placeholder
+    come 'place_entry:{eid}:legN', il gateway proverebbe a cancellare un ordine
+    inesistente sull'exchange.
+    """
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        cancel_averaging_pending_after="tp1",
+        plan_legs=[
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "place_entry:42:leg2"},
+            {"leg_id": "leg_3", "sequence": 3, "status": "PENDING", "client_order_id": "place_entry:42:leg3"},
+        ],
+    )
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={"tp_level": 1, "is_final": False, "filled_qty": 0.5},
+    )
+
+    result = proc.process(event, chain, [])
+
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+
+    # Esattamente 1 comando generico — l'expander risolve i reali IDs
+    assert len(cancel_cmds) == 1, (
+        f"Atteso 1 CANCEL_PENDING_ENTRY generico, trovati {len(cancel_cmds)}"
+    )
+
+    payload = json.loads(cancel_cmds[0].payload_json)
+
+    # Il payload NON deve contenere entry_client_order_id (né placeholder né reale)
+    assert "entry_client_order_id" not in payload, (
+        f"entry_client_order_id non deve essere presente nel payload generico: {payload}"
+    )
+
+    # Il payload deve indicare il motivo del cancel
+    assert payload.get("cancel_reason") == "auto_cancel_averaging"
+
+    # symbol e side devono essere presenti per il routing
+    assert payload.get("symbol") == "BTCUSDT"
+    assert payload.get("side") == "LONG"
+
+    # L'evento di lifecycle deve essere emesso
+    assert any(e.event_type == "AUTO_CANCEL_AVERAGING_REQUESTED" for e in result.lifecycle_events)
 
 
 # ── BUG-2: fallback match per sequence ─────────────────────────────────────

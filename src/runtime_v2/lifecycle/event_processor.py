@@ -425,17 +425,16 @@ class LifecycleEventProcessor:
                     auto_cancel_active = True
                     # Pre-calcola se il BE sarà differito (evita mutazione lista eventi)
                     deferred_be = be_would_fire_now and chain.be_protection_status not in ("PROTECTED", "BE_MOVE_PENDING")
-                    for leg in averaging_legs:
-                        commands.append(ExecutionCommand(
-                            trade_chain_id=chain_id,
-                            command_type="CANCEL_PENDING_ENTRY",
-                            payload_json=json.dumps({
-                                "symbol": chain.symbol,
-                                "side": chain.side,
-                                "entry_client_order_id": leg["client_order_id"],
-                            }),
-                            idempotency_key=f"auto_cancel_avg:{chain_id}:{eid}:{leg['leg_id']}",
-                        ))
+                    commands.append(ExecutionCommand(
+                        trade_chain_id=chain_id,
+                        command_type="CANCEL_PENDING_ENTRY",
+                        payload_json=json.dumps({
+                            "symbol": chain.symbol,
+                            "side": chain.side,
+                            "cancel_reason": "auto_cancel_averaging",
+                        }),
+                        idempotency_key=f"auto_cancel_avg:{chain_id}:{eid}",
+                    ))
                     events.append(LifecycleEvent(
                         trade_chain_id=chain_id,
                         event_type="AUTO_CANCEL_AVERAGING_REQUESTED",

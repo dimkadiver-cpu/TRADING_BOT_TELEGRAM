@@ -17,7 +17,6 @@ from src.runtime_v2.lifecycle.ports import (
 )
 from src.runtime_v2.lifecycle.cancel_expander import (
     expand_cancel_pending_commands as _expand_cancel_pending_commands,
-    load_pending_entry_client_order_ids as _load_pending_entry_client_order_ids,
 )
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.signal_enrichment.models import (
