@@ -344,7 +344,7 @@ class LifecycleEventProcessor:
         active_commands: list[ExecutionCommand],
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
-        tp_level = int(payload.get("tp_level", 1))  # cast to int to avoid "tp1.0" mismatch
+        tp_level = int(payload.get("tp_level", 1))
         is_final = bool(payload.get("is_final", False))
         fill_qty = float(payload.get("filled_qty") or 0.0)
         eid = exchange_event.exchange_event_id
@@ -356,15 +356,60 @@ class LifecycleEventProcessor:
         events: list[LifecycleEvent] = []
         commands: list[ExecutionCommand] = []
         new_be: BeProtectionStatus | None = None
+        new_plan_state_json: str | None = None
 
         if not is_final:
             try:
                 mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
             except Exception:
                 mp = ManagementPlanConfig()
+
+            # ── Auto-cancel averaging legs ─────────────────────────────────────
             be_trigger = mp.be_trigger
-            if be_trigger and be_trigger == f"tp{tp_level}":
-                if chain.be_protection_status == "PROTECTED":
+            be_would_fire_now = be_trigger == f"tp{tp_level}"
+            auto_cancel_active = False
+
+            if mp.cancel_pending_by_engine and mp.cancel_averaging_pending_after == f"tp{tp_level}":
+                averaging_legs = ExecutionPlanBuilder.get_pending_averaging_legs(chain.plan_state_json)
+                if averaging_legs:
+                    auto_cancel_active = True
+                    # Pre-calcola se il BE sarà differito (evita mutazione lista eventi)
+                    deferred_be = be_would_fire_now and chain.be_protection_status not in ("PROTECTED", "BE_MOVE_PENDING")
+                    for leg in averaging_legs:
+                        commands.append(ExecutionCommand(
+                            trade_chain_id=chain_id,
+                            command_type="CANCEL_PENDING_ENTRY",
+                            payload_json=json.dumps({
+                                "symbol": chain.symbol,
+                                "side": chain.side,
+                                "entry_client_order_id": leg["client_order_id"],
+                            }),
+                            idempotency_key=f"auto_cancel_avg:{chain_id}:{eid}:{leg['leg_id']}",
+                        ))
+                    events.append(LifecycleEvent(
+                        trade_chain_id=chain_id,
+                        event_type="AUTO_CANCEL_AVERAGING_REQUESTED",
+                        source_type="engine",
+                        source_id=str(eid),
+                        payload_json=json.dumps({
+                            "tp_level": tp_level,
+                            "legs_cancelled": len(averaging_legs),
+                            "deferred_be": deferred_be,
+                        }),
+                        idempotency_key=f"auto_cancel_avg_req:{chain_id}:{eid}",
+                    ))
+                    if deferred_be:
+                        new_plan_state_json = _set_be_deferred_flag(
+                            chain.plan_state_json,
+                            tp_level=tp_level,
+                            averaging_legs_pending=len(averaging_legs),
+                        )
+
+            # ── Breakeven trigger ──────────────────────────────────────────────
+            if be_would_fire_now:
+                if auto_cancel_active:
+                    pass  # BE differito — verrà emesso da _process_pending_entry_cancelled_confirmed
+                elif chain.be_protection_status == "PROTECTED":
                     events.append(LifecycleEvent(
                         trade_chain_id=chain_id,
                         event_type="NOOP_ALREADY_PROTECTED_BE",
@@ -388,16 +433,11 @@ class LifecycleEventProcessor:
                         ))
                     else:
                         extra = _be_move_extra(chain)
-                        new_stop_price = resolve_be_stop_price(
-                            chain,
-                            mp,
-                            protection_style=extra["protection_style"],
-                        )
+                        new_stop_price = resolve_be_stop_price(chain, mp, protection_style=extra["protection_style"])
                         if new_stop_price is None:
                             logger.warning(
                                 "skipping automatic be move without entry_avg_price: chain_id=%s event_id=%s",
-                                chain_id,
-                                eid,
+                                chain_id, eid,
                             )
                         else:
                             cmd_payload = {
@@ -429,7 +469,6 @@ class LifecycleEventProcessor:
                 idempotency_key=f"sync_after_tp:{chain_id}:{eid}",
             ))
 
-        # Build the main TP event AFTER final new_state is determined
         tp_event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TP_FILLED",
@@ -440,7 +479,7 @@ class LifecycleEventProcessor:
             payload_json=json.dumps({"tp_level": tp_level, "is_final": is_final}),
             idempotency_key=f"tp_filled:{chain_id}:{eid}",
         )
-        events.insert(0, tp_event)  # TP event first, then NOOP/BE events
+        events.insert(0, tp_event)
 
         return EventProcessorResult(
             new_lifecycle_state=new_state,
@@ -451,6 +490,7 @@ class LifecycleEventProcessor:
             execution_commands=commands,
             new_open_position_qty=new_open,
             new_closed_position_qty=new_closed,
+            new_plan_state_json=new_plan_state_json,
         )
 
     def _process_sl_filled(

@@ -773,3 +773,140 @@ def test_non_multi_entry_multi_tp_entry_fill_emits_no_tp_commands():
     )
     result = proc.process(event, chain, [])
     assert result.execution_commands == []
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# Helpers estesi per cancel averaging
+# ──────────────────────────────────────────────────────────────────────────────
+
+def _make_chain_with_plan(
+    *,
+    trade_chain_id: int = 1,
+    state: str = "OPEN",
+    side: str = "LONG",
+    entry_avg_price: float = 50000.0,
+    be_trigger: str | None = None,
+    cancel_averaging_pending_after: str | None = None,
+    cancel_pending_by_engine: bool = True,
+    be_status: str = "NOT_PROTECTED",
+    plan_legs: list[dict] | None = None,
+    open_position_qty: float = 1.0,
+):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    mp = ManagementPlanConfig(
+        be_trigger=be_trigger,
+        cancel_averaging_pending_after=cancel_averaging_pending_after,
+        cancel_pending_by_engine=cancel_pending_by_engine,
+    )
+    legs = plan_legs or []
+    plan_state = json.dumps({"plan_version": 1, "legs": legs})
+    return TradeChain(
+        trade_chain_id=trade_chain_id,
+        source_enrichment_id=trade_chain_id,
+        canonical_message_id=trade_chain_id * 10,
+        raw_message_id=trade_chain_id * 100,
+        trader_id="trader_a", account_id="acc_1",
+        symbol="BTCUSDT", side=side,
+        lifecycle_state=state,
+        entry_mode="LADDER",
+        management_plan_json=mp.model_dump_json(),
+        entry_avg_price=entry_avg_price,
+        open_position_qty=open_position_qty,
+        be_protection_status=be_status,
+        plan_state_json=plan_state,
+    )
+
+
+def _averaging_legs_fixture():
+    """Ritorna una lista di leg con leg 1 FILLED e leg 2/3 PENDING."""
+    return [
+        {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+        {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_leg2"},
+        {"leg_id": "leg_3", "sequence": 3, "status": "PENDING", "client_order_id": "cid_leg3"},
+    ]
+
+
+def test_cancel_averaging_after_tp1_emits_cancel_commands():
+    """Quando TP1 scatta e cancel_averaging_pending_after=tp1, emette CANCEL_PENDING_ENTRY per leg 2 e 3."""
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        cancel_averaging_pending_after="tp1",
+        plan_legs=_averaging_legs_fixture(),
+    )
+    event = _make_exchange_event(event_type="TP_FILLED", payload={"tp_level": 1, "is_final": False, "filled_qty": 0.5})
+
+    result = proc.process(event, chain, [])
+
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+    assert len(cancel_cmds) == 2
+    payloads = [json.loads(c.payload_json) for c in cancel_cmds]
+    cids = {p["entry_client_order_id"] for p in payloads}
+    assert cids == {"cid_leg2", "cid_leg3"}
+
+    assert any(e.event_type == "AUTO_CANCEL_AVERAGING_REQUESTED" for e in result.lifecycle_events)
+
+
+def test_cancel_averaging_by_engine_false_skips_auto_cancel():
+    """Quando cancel_pending_by_engine=False, nessun cancel automatico viene emesso."""
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        cancel_averaging_pending_after="tp1",
+        cancel_pending_by_engine=False,
+        plan_legs=_averaging_legs_fixture(),
+    )
+    event = _make_exchange_event(event_type="TP_FILLED", payload={"tp_level": 1, "is_final": False, "filled_qty": 0.5})
+
+    result = proc.process(event, chain, [])
+
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+    assert len(cancel_cmds) == 0
+    assert not any(e.event_type == "AUTO_CANCEL_AVERAGING_REQUESTED" for e in result.lifecycle_events)
+
+
+def test_cancel_averaging_no_pending_legs_be_emitted_immediately():
+    """Quando non ci sono averaging leg pendenti, il BE viene emesso subito."""
+    proc = _make_processor()
+    all_filled_legs = [
+        {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+        {"leg_id": "leg_2", "sequence": 2, "status": "FILLED", "client_order_id": "cid_leg2"},
+    ]
+    chain = _make_chain_with_plan(
+        be_trigger="tp1",
+        cancel_averaging_pending_after="tp1",
+        plan_legs=all_filled_legs,
+    )
+    event = _make_exchange_event(event_type="TP_FILLED", payload={"tp_level": 1, "is_final": False, "filled_qty": 0.5})
+
+    result = proc.process(event, chain, [])
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 1  # BE emesso subito
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+    assert len(cancel_cmds) == 0
+    assert not any(e.event_type == "AUTO_CANCEL_AVERAGING_REQUESTED" for e in result.lifecycle_events)
+
+
+def test_cancel_averaging_with_be_trigger_defers_be():
+    """Quando be_trigger e cancel_averaging coincidono su tp1, il BE viene differito (no MOVE_STOP_TO_BREAKEVEN)."""
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        be_trigger="tp1",
+        cancel_averaging_pending_after="tp1",
+        plan_legs=_averaging_legs_fixture(),
+    )
+    event = _make_exchange_event(event_type="TP_FILLED", payload={"tp_level": 1, "is_final": False, "filled_qty": 0.5})
+
+    result = proc.process(event, chain, [])
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 0  # BE non emesso ora
+
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+    assert len(cancel_cmds) == 2  # cancel emessi
+
+    assert result.new_plan_state_json is not None
+    plan = json.loads(result.new_plan_state_json)
+    assert "_be_deferred_by_auto_cancel" in plan
+    assert plan["_be_deferred_by_auto_cancel"]["tp_level"] == 1
+    assert plan["_be_deferred_by_auto_cancel"]["averaging_legs_pending"] == 2
