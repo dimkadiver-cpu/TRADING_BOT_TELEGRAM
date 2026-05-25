@@ -37,6 +37,38 @@ def _be_move_extra(chain: TradeChain) -> dict:
     return {"protection_style": protection_style, "position_idx": position_idx}
 
 
+def _set_be_deferred_flag(plan_state_json: str, *, tp_level: int, averaging_legs_pending: int) -> str:
+    """Aggiunge il flag _be_deferred_by_auto_cancel al plan_state_json."""
+    try:
+        plan = json.loads(plan_state_json or "{}")
+    except Exception:
+        plan = {}
+    plan["_be_deferred_by_auto_cancel"] = {
+        "tp_level": tp_level,
+        "averaging_legs_pending": averaging_legs_pending,
+    }
+    return json.dumps(plan)
+
+
+def _clear_be_deferred_flag(plan_state_json: str) -> str:
+    """Rimuove il flag _be_deferred_by_auto_cancel dal plan_state_json."""
+    try:
+        plan = json.loads(plan_state_json or "{}")
+    except Exception:
+        return plan_state_json or "{}"
+    plan.pop("_be_deferred_by_auto_cancel", None)
+    return json.dumps(plan)
+
+
+def _get_be_deferred_flag(plan_state_json: str) -> dict | None:
+    """Ritorna il flag _be_deferred_by_auto_cancel se presente, altrimenti None."""
+    try:
+        plan = json.loads(plan_state_json or "{}")
+        return plan.get("_be_deferred_by_auto_cancel") or None
+    except Exception:
+        return None
+
+
 @dataclass
 class EventProcessorResult:
     new_lifecycle_state: LifecycleState | None
@@ -261,6 +293,49 @@ class LifecycleEventProcessor:
             and _same_number(leg.get("qty"), qty)
         ]
         return matches if len(matches) == 1 else []
+
+    def _build_be_move_command_and_event(
+        self,
+        chain: TradeChain,
+        eid: int,
+        management_plan: ManagementPlanConfig,
+    ) -> tuple[ExecutionCommand, LifecycleEvent] | None:
+        """
+        Calcola il prezzo BE e ritorna (command, event) se possibile.
+        Ritorna None se BE non può essere calcolato (entry_avg_price assente)
+        o se è già protetto.
+        """
+        if chain.be_protection_status in ("PROTECTED", "BE_MOVE_PENDING"):
+            return None
+        chain_id = chain.trade_chain_id
+        extra = _be_move_extra(chain)
+        new_stop_price = resolve_be_stop_price(chain, management_plan, protection_style=extra["protection_style"])
+        if new_stop_price is None:
+            logger.warning(
+                "skipping deferred be move without entry_avg_price: chain_id=%s event_id=%s",
+                chain_id, eid,
+            )
+            return None
+        cmd_payload = {
+            "symbol": chain.symbol, "side": chain.side,
+            "new_stop_price": new_stop_price,
+            "is_breakeven": True,
+            **extra,
+        }
+        command = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="MOVE_STOP_TO_BREAKEVEN",
+            payload_json=json.dumps(cmd_payload),
+            idempotency_key=f"deferred_be:{chain_id}:{eid}",
+        )
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="BE_MOVE_REQUESTED",
+            source_type="exchange_event",
+            source_id=str(eid),
+            idempotency_key=f"deferred_be_req:{chain_id}:{eid}",
+        )
+        return command, event
 
     def _process_tp_filled(
         self,
