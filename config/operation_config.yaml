@@ -1,19 +1,39 @@
 # config/operation_config.yaml
+#
+# Didascalia campi principali:
+# - global_safety.allow_unprotected_positions: false = blocca segnali senza SL protettivo.
+# - account_mode: come viene risolto l'account operativo. Valori supportati: single, per_trader_subaccount.
+# - account: account globale usato in mode=single; in per_trader_subaccount puo' essere overrideato in config/traders/<id>.yaml.
+# - registered_traders: solo i trader registrati ricevono config effettiva dal loader.
+# - symbol_blacklist.global / per_trader: simboli bloccati globalmente o per singolo trader.
+# - defaults.enabled: abilita/disabilita il profilo operativo di default.
+# - defaults.gate_mode: severita' del gate enrichment. Valori supportati: block, warn.
+# - defaults.hedge_mode: true = consente direzioni opposte sullo stesso simbolo; false = comportamento one-direction.
+# - signal_policy.accepted_entry_structures: strutture accettate. Valori runtime: ONE_SHOT, TWO_STEP, RANGE, LADDER.
+# - signal_policy.market_execution.mode: regola di accettazione MARKET. Valori supportati: tolerance, free.
+# - entry_split.LIMIT.range.split_mode: come derivare le leg RANGE. Valori supportati: endpoints, firstpoint, lastpoint, midpoint.
+# - tp.use_tp_count: null = usa i TP parsati; intero = forza il numero TP atteso.
+# - update_admission.*: true/false abilita o blocca i singoli update Telegram.
+# - management_plan.be_trigger: quando attivare il move to breakeven. Valori supportati: null, tp1, tp2, tp3.
+# - management_plan.close_distribution.mode: distribuzione close parziali. Valori supportati: table, equal.
+# - management_plan.cancel_averaging_pending_after / cancel_unfilled_pending_after: trigger di cancellazione pending. Valori supportati: null, tp1, tp2.
+# - management_plan.protective_sl_mode: gestione SL protettivo. Valori supportati: exchange_native_first, bot_managed.
+# - risk.mode: modello di sizing. Valori supportati: risk_pct_of_capital, risk_usdt_fixed.
+# - risk.capital_base_mode: fonte capitale per il sizing. Valori supportati: static_config, live_equity.
 
 global_safety:
-  allow_unprotected_positions: false
+  allow_unprotected_positions: false  # false = richiede protezione SL; true = ammette posizioni senza SL.
 
-account_mode: single
+account_mode: single  # Valori supportati: single | per_trader_subaccount.
 
-# single: unico account condiviso — max_capital_at_risk_pct e hard_max_per_signal_risk_pct
-#         sono hard cap non overridabili.
-# per_trader_subaccount: ogni config/traders/<id>.yaml definisce il proprio blocco account:
+# single: unico account condiviso; i limiti account restano hard cap globali.
+# per_trader_subaccount: ogni config/traders/<id>.yaml puo' definire il proprio blocco account.
 account:
-  id: "main"
-  capital_base_usdt: 10000.0
-  max_leverage: 5
-  max_capital_at_risk_pct: 100.0
-  hard_max_per_signal_risk_pct: 2.0
+  id: "main"  # Account logico usato dal runtime enrichment/lifecycle.
+  capital_base_usdt: 10000.0  # Capitale statico di riferimento.
+  max_leverage: 5  # Hard cap locale di leva ammessa per l'account.
+  max_capital_at_risk_pct: 100.0  # Cap massimo di rischio capitale totale allocabile sull'account.
+  hard_max_per_signal_risk_pct: 2.0  # Tetto massimo non overridabile per singolo segnale.
 
 registered_traders:
   - trader_3
@@ -23,13 +43,13 @@ registered_traders:
   - trader_d
 
 symbol_blacklist:
-  global: []
-  per_trader: {}
+  global: []  # Simboli bloccati per tutti i trader.
+  per_trader: {}  # Mappa trader_id -> lista simboli bloccati.
 
 defaults:
-  enabled: true
-  gate_mode: block
-  hedge_mode: true
+  enabled: true  # Profilo default attivo.
+  gate_mode: block  # Valori supportati: block | warn.
+  hedge_mode: true  # true = puo' coesistere LONG/SHORT sullo stesso simbolo.
 
   signal_policy:
     accepted_entry_structures:
@@ -39,63 +59,63 @@ defaults:
       - LADDER
 
     market_execution:
-      mode: tolerance
-      tolerance_pct: 0.5
-      range_tolerance_pct: 0.2
+      mode: tolerance  # Valori supportati: tolerance | free.
+      tolerance_pct: 0.5  # Scostamento massimo ammesso per MARKET standard.
+      range_tolerance_pct: 0.2  # Scostamento massimo ammesso per segnali RANGE.
 
-    # MARKET.range non esiste: RANGE richiede leg LIMIT — errore esplicito del loader.
+    # MARKET.range non esiste: RANGE richiede leg LIMIT e il loader lo valida esplicitamente.
     entry_split:
       LIMIT:
         single:
-          weights: {E1: 1.0}
+          weights: {E1: 1.0}  # Pesi allocazione per entry LIMIT singola.
         range:
-          split_mode: endpoints
-          weights: {E1: 0.50, E2: 0.50}
+          split_mode: endpoints  # Valori supportati: endpoints | firstpoint | lastpoint | midpoint.
+          weights: {E1: 0.50, E2: 0.50}  # Pesi delle due leg RANGE.
         averaging:
-          weights: {E1: 0.70, E2: 0.30}
+          weights: {E1: 0.70, E2: 0.30}  # Pesi averaging LIMIT.
         ladder:
-          weights: {E1: 0.50, E2: 0.30, E3: 0.20}
+          weights: {E1: 0.50, E2: 0.30, E3: 0.20}  # Pesi ladder LIMIT.
       MARKET:
         single:
-          weights: {E1: 1.0}
+          weights: {E1: 1.0}  # Pesi entry MARKET singola.
         averaging:
-          weights: {E1: 0.70, E2: 0.30}
+          weights: {E1: 0.70, E2: 0.30}  # Pesi averaging MARKET.
 
     tp:
-      use_tp_count: null
+      use_tp_count: null  # null = usa i TP parsati; intero = forza il numero TP effettivi.
 
     sl:
-      use_original_sl: true
-      require_sl: true
+      use_original_sl: true  # true = preserva SL del segnale originale.
+      require_sl: true  # true = blocca/review segnali senza SL.
 
     price_corrections:
-      enabled: false
-      round_to_tick: false
-      clamp_to_exchange_precision: false
+      enabled: false  # Correzioni prezzo automatiche.
+      round_to_tick: false  # Arrotonda i prezzi al tick size.
+      clamp_to_exchange_precision: false  # Adatta i prezzi alla precisione exchange.
 
     price_sanity:
-      enabled: false
-      symbol_ranges: {}
+      enabled: false  # Abilita range sanity check per simbolo.
+      symbol_ranges: {}  # Mappa simbolo -> [min_price, max_price].
 
   # Ammissione update Telegram (source_intent da parser_v2, senza prefisso U_)
   update_admission:
-    MOVE_STOP: true
-    MOVE_STOP_TO_BE: false
-    CLOSE_FULL: true
-    CLOSE_PARTIAL: true
-    CANCEL_PENDING: true
-    ADD_ENTRY: false
-    REENTER: false
-    MODIFY_ENTRY: true
-    MODIFY_TARGETS: false
-    INVALIDATE_SETUP: true
+    MOVE_STOP: true  # Consente update di spostamento SL numerico.
+    MOVE_STOP_TO_BE: false  # Consente update move-to-breakeven.
+    CLOSE_FULL: true  # Consente chiusura totale.
+    CLOSE_PARTIAL: true  # Consente chiusura parziale.
+    CANCEL_PENDING: true  # Consente cancellazione ordini pending.
+    ADD_ENTRY: false  # Consente aggiunta nuove entry.
+    REENTER: false  # Consente rientro dopo chiusura.
+    MODIFY_ENTRY: true  # Consente modifica livelli entry.
+    MODIFY_TARGETS: false  # Consente modifica take profit.
+    INVALIDATE_SETUP: true  # Consente invalidazione setup/chain.
 
   management_plan:
-    be_trigger: null
-    be_fee_correction_enabled: false
-    be_fee_fallback_profile: null
+    be_trigger: null  # Valori supportati: null | tp1 | tp2 | tp3.
+    be_fee_correction_enabled: false  # true = breakeven fee-aware.
+    be_fee_fallback_profile: null  # Profilo fee fallback se i dati exchange non bastano.
     close_distribution:
-      mode: table
+      mode: table  # Valori supportati: table | equal.
       table:
         1: [100]
         2: [50, 50]
@@ -103,22 +123,22 @@ defaults:
         4: [25, 25, 25, 25]
         5: [20, 20, 20, 20, 20]
         6: [20, 20, 20, 20, 10, 10]
-    cancel_pending_by_engine: true
-    cancel_pending_on_timeout: true
-    pending_timeout_hours: 24    
-    cancel_averaging_pending_after: null
-    cancel_unfilled_pending_after: null        # non implimentato per mancaza de whatcher del prezzo di entrata, ma lasciamo la config per future implementazioni
-    risk_freed_by_be: true
-    protective_sl_mode: exchange_native_first
+    cancel_pending_by_engine: true  # true = il motore genera cancel automatici.
+    cancel_pending_on_timeout: true  # true = cancella pending dopo timeout.
+    pending_timeout_hours: 24  # Timeout pending in ore.
+    cancel_averaging_pending_after: null  # Valori supportati: null | tp1 | tp2.
+    cancel_unfilled_pending_after: null  # Valori supportati: null | tp1 | tp2.
+    risk_freed_by_be: true  # true = il BE libera capacita' rischio residua.
+    protective_sl_mode: exchange_native_first  # Valori supportati: exchange_native_first | bot_managed.
 
   risk:
-    mode: risk_pct_of_capital
-    risk_pct_of_capital: 2.0
-    risk_usdt_fixed: 10.0
-    capital_base_mode: static_config
-    capital_base_usdt: 10000.0
-    leverage: 5
-    use_trader_risk_hint: false
-    max_capital_at_risk_per_trader_pct: 5.0
-    max_concurrent_trades: 5
-    max_concurrent_same_symbol: 2
+    mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
+    risk_pct_of_capital: 2.0  # Usato quando mode=risk_pct_of_capital.
+    risk_usdt_fixed: 10.0  # Usato quando mode=risk_usdt_fixed.
+    capital_base_mode: static_config  # Valori supportati: static_config | live_equity.
+    capital_base_usdt: 10000.0  # Base capitale locale se non si usa equity live.
+    leverage: 5  # Leva operativa da usare per aprire la posizione.
+    use_trader_risk_hint: false  # true = usa eventuale hint rischio dal segnale/trader.
+    max_capital_at_risk_per_trader_pct: 5.0  # Cap di rischio totale per trader.
+    max_concurrent_trades: 5  # Numero massimo chain aperte contemporanee per trader.
+    max_concurrent_same_symbol: 2  # Numero massimo trade contemporanei sullo stesso simbolo.

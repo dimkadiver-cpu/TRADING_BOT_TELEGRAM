@@ -3,6 +3,21 @@
 #   BYBIT_API_KEY_BYBIT_DEMO=<key>
 #   BYBIT_API_SECRET_BYBIT_DEMO=<secret>
 #   TSB_ALLOW_LIVE_TRADING=YES_I_UNDERSTAND  (solo per mode: live)
+#
+# Didascalia campi principali:
+# - default_adapter: adapter usato dal bootstrap runtime se non ci sono override di routing.
+# - account_routing.*.adapter: quale adapter usare per quell'account logico.
+# - account_routing.*.execution_account_id: nome account passato all'adapter/gateway.
+# - adapters.<nome>.type: funzione dell'adapter. Valore usato qui: ccxt_bybit.
+# - adapters.<nome>.mode: stato ambiente exchange. Valori operativi attesi: demo, paper, live.
+# - strategy.simple_attached_enabled: true = usa attached TP/SL semplice quando possibile; false = forza flusso position TPSL.
+# - strategy.trigger_by: prezzo trigger per TP/SL. Valori possibili: MarkPrice, LastPrice, IndexPrice.
+# - strategy.one_tp_mode: modalita' per 1 TP. Valore supportato: FULL.
+# - strategy.multi_tp_mode: modalita' per TP multipli. Valore supportato: PARTIAL.
+# - websocket.enabled: abilita watcher WS fill/order.
+# - websocket.poll_fallback_enabled: mantiene polling di fallback se WS non basta o non parte.
+# - retry.max_attempts / backoff_seconds: numero tentativi e attese progressive prima del retry.
+# - live_safety.allow_live_trading: gate locale; per mode=live serve anche env TSB_ALLOW_LIVE_TRADING.
 
 execution:
   default_adapter: bybit_demo
@@ -10,13 +25,13 @@ execution:
   account_routing:
     default:
       adapter: bybit_demo
-      execution_account_id: main
+      execution_account_id: main  # Account logico instradato verso l'adapter selezionato.
 
   adapters:
     bybit_demo:
-      type: ccxt_bybit
-      mode: demo
-      connector: bybit
+      type: ccxt_bybit  # Adapter CCXT per Bybit.
+      mode: demo  # Stati attesi: demo | paper | live.
+      connector: bybit  # Exchange/connector target usato dall'adapter.
 
       api_key_env: BYBIT_API_KEY_BYBIT_DEMO
       api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO
@@ -25,40 +40,40 @@ execution:
       time_sync_on_startup: true
 
       strategy:
-        simple_attached_enabled: true
-        trigger_by: MarkPrice
-        one_tp_mode: FULL
-        multi_tp_mode: PARTIAL
+        simple_attached_enabled: true  # Abilita percorso attached TP/SL quando il caso lo consente.
+        trigger_by: MarkPrice  # Valori possibili: MarkPrice | LastPrice | IndexPrice.
+        one_tp_mode: FULL  # Unico valore supportato oggi per 1 TP.
+        multi_tp_mode: PARTIAL  # Unico valore supportato oggi per TP multipli.
 
       websocket:
-        enabled: true
-        poll_fallback_enabled: true
-        poll_fallback_period_seconds: 60
+        enabled: true  # Avvia watcher websocket Bybit.
+        poll_fallback_enabled: true  # Mantiene reconciliation polling come fallback.
+        poll_fallback_period_seconds: 60  # Intervallo fallback in secondi.
 
       retry:
-        max_attempts: 3
-        backoff_seconds: [30, 90, 300]
+        max_attempts: 3  # Numero massimo di tentativi per errori retryable.
+        backoff_seconds: [30, 90, 300]  # Attese progressive tra i retry.
 
       live_safety:
-        allow_live_trading: false
+        allow_live_trading: false  # Per live deve essere true e va settata anche la env di sblocco.
 
     bybit_paper:
-      type: ccxt_bybit
-      mode: paper
-      connector: bybit
+      type: ccxt_bybit  # Adapter CCXT per Bybit.
+      mode: paper  # Stati attesi: demo | paper | live.
+      connector: bybit  # Exchange/connector target usato dall'adapter.
       adjust_for_time_difference: true
       recv_window_ms: 10000
       time_sync_on_startup: true
 
       strategy:
-        simple_attached_enabled: true
-        trigger_by: MarkPrice
-        one_tp_mode: FULL
-        multi_tp_mode: PARTIAL
+        simple_attached_enabled: true  # Abilita percorso attached TP/SL quando il caso lo consente.
+        trigger_by: MarkPrice  # Valori possibili: MarkPrice | LastPrice | IndexPrice.
+        one_tp_mode: FULL  # Unico valore supportato oggi per 1 TP.
+        multi_tp_mode: PARTIAL  # Unico valore supportato oggi per TP multipli.
 
       retry:
-        max_attempts: 3
-        backoff_seconds: [30, 90, 300]
+        max_attempts: 3  # Numero massimo di tentativi per errori retryable.
+        backoff_seconds: [30, 90, 300]  # Attese progressive tra i retry.
 
       live_safety:
-        allow_live_trading: false
+        allow_live_trading: false  # In paper resta normalmente false; il gate live non serve.
