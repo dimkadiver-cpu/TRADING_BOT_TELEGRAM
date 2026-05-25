@@ -60,19 +60,26 @@ class UpdateGateResult:
 _ATTACHED_PROTECTION_MODES = frozenset({"UNIFIED_PLAN", "D_POSITION_TPSL"})
 
 
-def _be_move_extra(chain: "TradeChain") -> dict:
+def _position_context(chain: "TradeChain") -> dict:
     try:
         rs = json.loads(chain.risk_snapshot_json or "{}")
         hedge_mode = bool(rs.get("hedge_mode", False))
     except Exception:
         hedge_mode = False
-    position_idx = LifecycleEntryGate.resolve_position_idx(chain.side, hedge_mode)
+    return {
+        "hedge_mode": hedge_mode,
+        "position_idx": LifecycleEntryGate.resolve_position_idx(chain.side, hedge_mode),
+    }
+
+
+def _be_move_extra(chain: "TradeChain") -> dict:
+    context = _position_context(chain)
     protection_style = (
         "attached_full"
         if chain.execution_mode in _ATTACHED_PROTECTION_MODES
         else "standalone_order"
     )
-    return {"protection_style": protection_style, "position_idx": position_idx}
+    return {"protection_style": protection_style, **context}
 
 
 class LifecycleEntryGate:
@@ -792,10 +799,15 @@ class LifecycleEntryGate:
                 execution_commands=[],
             )
 
+        position_context = _position_context(chain)
         cmd = ExecutionCommand(
             trade_chain_id=chain_id,
             command_type="CLOSE_FULL",
-            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+            payload_json=json.dumps({
+                "symbol": chain.symbol,
+                "side": chain.side,
+                **position_context,
+            }),
             idempotency_key=f"close_full:{chain_id}:{cmid}",
         )
         # Cancella anche eventuali ordini di entry pendenti associati alla chain.
@@ -831,10 +843,16 @@ class LifecycleEntryGate:
         chain_id = chain.trade_chain_id
         cmid = enriched.canonical_message_id
         fraction = op.fraction or 0.5
+        position_context = _position_context(chain)
         cmd = ExecutionCommand(
             trade_chain_id=chain_id,
             command_type="CLOSE_PARTIAL",
-            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side, "fraction": fraction}),
+            payload_json=json.dumps({
+                "symbol": chain.symbol,
+                "side": chain.side,
+                "fraction": fraction,
+                **position_context,
+            }),
             idempotency_key=f"close_partial:{chain_id}:{cmid}",
         )
         event = LifecycleEvent(

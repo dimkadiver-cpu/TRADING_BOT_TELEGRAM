@@ -105,18 +105,18 @@ defaults:
         6: [20, 20, 20, 20, 10, 10]
     cancel_pending_by_engine: true
     cancel_pending_on_timeout: true
-    pending_timeout_hours: 24
+    pending_timeout_hours: 24    
     cancel_averaging_pending_after: null
-    cancel_unfilled_pending_after: null
+    cancel_unfilled_pending_after: null        # non implimentato per mancaza de whatcher del prezzo di entrata, ma lasciamo la config per future implementazioni
     risk_freed_by_be: true
     protective_sl_mode: exchange_native_first
 
   risk:
     mode: risk_pct_of_capital
-    risk_pct_of_capital: 1.0
+    risk_pct_of_capital: 2.0
     risk_usdt_fixed: 10.0
     capital_base_mode: static_config
-    capital_base_usdt: 1000.0
+    capital_base_usdt: 10000.0
     leverage: 5
     use_trader_risk_hint: false
     max_capital_at_risk_per_trader_pct: 5.0

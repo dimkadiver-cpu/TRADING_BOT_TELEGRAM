@@ -27,3 +27,5 @@ Domande risolte (2026-05-23):
      dal sync worker quando trova il fill/cancel sull'exchange.
 
 → Vedi stato completo: docs/debugging/stato_runtime_v2.md
+
+

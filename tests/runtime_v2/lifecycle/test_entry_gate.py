@@ -374,6 +374,46 @@ def test_update_close_full_already_closed_noop():
     assert cr.lifecycle_events[0].event_type == "NOOP_ALREADY_CLOSED"
 
 
+def test_update_close_full_payload_contains_hedge_context():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"],
+        action_type="CLOSE", close_scope="FULL",
+    )
+    chain = _make_open_chain(side="SHORT")
+    chain = chain.model_copy(update={
+        "risk_snapshot_json": '{"hedge_mode": true}',
+        "execution_mode": "UNIFIED_PLAN",
+    })
+
+    result = gate.process_update(enriched, [chain], {})
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "CLOSE_FULL")
+    payload = json.loads(command.payload_json)
+    assert payload["hedge_mode"] is True
+    assert payload["position_idx"] == 2
+
+
+def test_update_close_partial_payload_contains_hedge_context():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"],
+        action_type="CLOSE", close_scope="PARTIAL", fraction=0.25,
+    )
+    chain = _make_open_chain(side="SHORT")
+    chain = chain.model_copy(update={
+        "risk_snapshot_json": '{"hedge_mode": true}',
+        "execution_mode": "UNIFIED_PLAN",
+    })
+
+    result = gate.process_update(enriched, [chain], {})
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "CLOSE_PARTIAL")
+    payload = json.loads(command.payload_json)
+    assert payload["hedge_mode"] is True
+    assert payload["position_idx"] == 2
+
+
 def test_update_all_short_targets_only_short_chains_of_trader():
     gate = _make_gate()
     enriched = _make_update_enriched(

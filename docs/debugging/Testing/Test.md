@@ -64,7 +64,7 @@ Verifica principale del flusso.
 - [x] Verificare `PLACE_PROTECTIVE_STOP` e `PLACE_TAKE_PROFIT` se previsti dalla strategia
 - [x] Verificare apertura ordine su exchange demo
 - [x] Verificare `CANCEL_PENDING_ENTRY` quando cancelli l'entry pendente
-- [X] Verificare chiusura parziale con `CLOSE_PARTIAL` + parziali aperti?
+- [ ] Verificare chiusura parziale con `CLOSE_PARTIAL` + parziali aperti?
 - [ ] Verificare chiusura totale con `CLOSE_FULL`
 - [X] Verificare `MOVE_STOP_TO_BREAKEVEN`
 - [ ] Verificare `MOVE_STOP` (non implimitato)
