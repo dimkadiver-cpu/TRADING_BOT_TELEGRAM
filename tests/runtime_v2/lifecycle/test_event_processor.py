@@ -1180,3 +1180,74 @@ def test_deferred_be_not_cleared_on_partial_race_fill():
     assert result.new_plan_state_json is not None
     final_plan = json.loads(result.new_plan_state_json)
     assert "_be_deferred_by_auto_cancel" in final_plan
+
+
+# --- Task 7: Edge cases auto-cancel averaging ---
+
+def test_deferred_be_skipped_if_already_protected():
+    """Deferred BE non viene emesso se be_protection_status è già PROTECTED."""
+    import json
+
+    proc = _make_processor()
+    plan_with_deferred = {
+        "plan_version": 1,
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_leg1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_leg2"},
+        ],
+        "_be_deferred_by_auto_cancel": {"tp_level": 1, "averaging_legs_pending": 1},
+    }
+    chain = _make_chain_with_plan(
+        plan_legs=[],
+        open_position_qty=1.0,
+        be_status="PROTECTED",  # già protetto manualmente
+    )
+    chain = chain.model_copy(update={"plan_state_json": json.dumps(plan_with_deferred)})
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={"cancelled_order_ids": ["cid_leg2"]},
+    )
+
+    result = proc.process(event, chain, [])
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 0  # già protetto, no BE
+
+
+def test_cancel_averaging_different_tp_levels_independent():
+    """cancel_averaging_pending_after=tp2 e be_trigger=tp1 sono indipendenti: TP1 emette solo BE."""
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        be_trigger="tp1",
+        cancel_averaging_pending_after="tp2",  # cancel solo su TP2
+        plan_legs=_averaging_legs_fixture(),
+    )
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={"tp_level": 1, "is_final": False, "filled_qty": 0.5},
+    )
+
+    result = proc.process(event, chain, [])
+
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+    assert len(cancel_cmds) == 0  # TP1 non triggera cancel (cancel è su tp2)
+
+    be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_cmds) == 1  # BE emesso normalmente su TP1
+
+
+def test_expand_cancel_does_not_include_done_commands_via_plan_state():
+    """get_pending_averaging_legs non include leg CANCELLED o FILLED dal plan_state_json."""
+    import json
+    from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+
+    plan = json.dumps({
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "FILLED"},    # già fillata
+            {"leg_id": "leg_3", "sequence": 3, "status": "CANCELLED"}, # già cancellata
+        ]
+    })
+    result = ExecutionPlanBuilder.get_pending_averaging_legs(plan)
+    assert result == []  # nessuna leg averaging pending
