@@ -271,9 +271,11 @@ class ExchangeEventSyncWorker:
             )
         idempotency_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
         payload = json.dumps({
-            "command_id": coid.command_id,
+            "command_id":            coid.command_id,
             "position_already_open": position_already_open,
-            "cancel_reason": raw.cancel_reason,
+            "cancel_reason":         raw.cancel_reason,
+            "cancelled_order_ids":   [client_order_id],
+            "sequence":              coid.sequence,
         })
         now = _now()
         conn = sqlite3.connect(self._ops_db)

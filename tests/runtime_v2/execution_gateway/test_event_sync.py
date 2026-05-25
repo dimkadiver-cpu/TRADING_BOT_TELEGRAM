@@ -226,6 +226,45 @@ def test_cancelled_entry_partial_fill_sets_position_already_open(ops_db):
     assert payload["position_already_open"] is True
 
 
+def test_cancelled_entry_payload_includes_cancelled_order_ids_and_sequence(ops_db):
+    """_handle_cancelled_order deve includere cancelled_order_ids e sequence nel payload."""
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    client_order_id = "tsb:10:5010:entry:2"
+    _insert_sent_cmd(ops_db, 5010, 10, "PLACE_ENTRY", client_order_id)
+
+    adapter = MagicMock()
+    adapter.get_order_status.return_value = RawAdapterOrder(
+        client_order_id=client_order_id,
+        exchange_order_id="bybit-ex-0001",
+        status="CANCELLED",
+        filled_qty=0.0,
+        average_price=None,
+        cancel_reason="user_cancel",
+    )
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter,
+        repo=repo, execution_account_id="main",
+    )
+    worker.run_reconciliation()
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=10 AND event_type='PENDING_ENTRY_CANCELLED_CONFIRMED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None, "Evento non trovato"
+    payload = json.loads(row[0])
+    assert "cancelled_order_ids" in payload, "cancelled_order_ids assente dal payload"
+    assert payload["cancelled_order_ids"] == [client_order_id]
+    assert "sequence" in payload, "sequence assente dal payload"
+    assert payload["sequence"] == 2  # seq estratto da tsb:10:5010:entry:2
+
+
 def test_cancelled_non_entry_marks_done_no_event(ops_db):
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.models import RawAdapterOrder
