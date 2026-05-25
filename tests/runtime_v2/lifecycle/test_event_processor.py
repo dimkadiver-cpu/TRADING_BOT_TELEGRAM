@@ -1326,6 +1326,12 @@ def test_deferred_be_not_emitted_with_production_payload_when_other_legs_still_p
     be_cmds = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
     assert len(be_cmds) == 0, "Leg 2 ancora pending → no BE"
 
+    # Assert plan state: leg_3 should be CANCELLED, other averaging leg still PENDING
+    import json as _json
+    plan = _json.loads(result.new_plan_state_json or chain.plan_state_json)
+    leg3 = next(l for l in plan["legs"] if l["leg_id"] == "leg_3")
+    assert leg3["status"] == "CANCELLED"
+
 
 def test_cancel_confirmed_without_deferred_be_config():
     """Path non-configurato: cancel senza deferred BE.

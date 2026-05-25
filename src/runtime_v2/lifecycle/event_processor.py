@@ -295,7 +295,8 @@ class LifecycleEventProcessor:
             leg for leg in legs
             if leg.get("sequence") == sequence and leg.get("status") == "PENDING"
         ]
-        if not target_legs:
+        if len(target_legs) != 1:
+            # 0 = not found; >1 = ambiguous (should not happen in well-formed plan)
             return None
         updated = plan_state_json
         for leg in target_legs:
@@ -687,16 +688,26 @@ class LifecycleEventProcessor:
         if new_plan_state_json is None:
             sequence = payload.get("sequence")
             if sequence is not None:
-                new_plan_state_json = self._mark_entry_leg_status_by_sequence(
-                    chain.plan_state_json,
-                    sequence=int(sequence),
-                    new_status="CANCELLED",
-                )
+                try:
+                    seq_int = int(sequence)
+                except (TypeError, ValueError):
+                    logger.warning(
+                        "PENDING_ENTRY_CANCELLED_CONFIRMED: invalid sequence value %r chain_id=%s",
+                        sequence, chain_id,
+                    )
+                    seq_int = None
+                if seq_int is not None:
+                    new_plan_state_json = self._mark_entry_leg_status_by_sequence(
+                        chain.plan_state_json,
+                        sequence=seq_int,
+                        new_status="CANCELLED",
+                    )
 
         effective_plan_json = new_plan_state_json or chain.plan_state_json or "{}"
 
         # ── Deferred BE: emetti BE se tutte le averaging leg sono confermate ──
-        deferred = _get_be_deferred_flag(effective_plan_json)
+        # Solo se abbiamo effettivamente aggiornato il piano (evita flag stale su mismatch)
+        deferred = _get_be_deferred_flag(effective_plan_json) if new_plan_state_json is not None else False
         if deferred:
             try:
                 mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
