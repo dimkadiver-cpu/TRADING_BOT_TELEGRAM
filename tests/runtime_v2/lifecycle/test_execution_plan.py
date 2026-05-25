@@ -140,3 +140,38 @@ def test_entry_gate_populates_plan_state_json():
     assert plan["plan_version"] == 1
     assert plan["rebuild_policy"] == "NONE"
     assert plan["legs"][0]["client_order_id"] == "place_entry_attached:10:leg1"
+
+
+def test_get_pending_averaging_legs_returns_sequence_gt_1():
+    from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+
+    plan = {
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED", "client_order_id": "cid_1"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "PENDING", "client_order_id": "cid_2"},
+            {"leg_id": "leg_3", "sequence": 3, "status": "CANCELLED", "client_order_id": "cid_3"},
+        ]
+    }
+    result = ExecutionPlanBuilder.get_pending_averaging_legs(json.dumps(plan))
+    assert len(result) == 1
+    assert result[0]["leg_id"] == "leg_2"
+    assert result[0]["client_order_id"] == "cid_2"
+
+
+def test_get_pending_averaging_legs_empty_when_all_filled():
+    from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+
+    plan = {
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "status": "FILLED"},
+            {"leg_id": "leg_2", "sequence": 2, "status": "FILLED"},
+        ]
+    }
+    result = ExecutionPlanBuilder.get_pending_averaging_legs(json.dumps(plan))
+    assert result == []
+
+
+def test_get_pending_averaging_legs_returns_empty_on_bad_json():
+    from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+    result = ExecutionPlanBuilder.get_pending_averaging_legs("not-json")
+    assert result == []

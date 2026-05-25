@@ -121,5 +121,17 @@ class ExecutionPlanBuilder:
         except Exception:
             return []
 
+    @staticmethod
+    def get_pending_averaging_legs(plan_state_json: str) -> list[dict]:
+        """Return legs with sequence > 1 whose status is PENDING (averaging legs not yet filled)."""
+        try:
+            plan = json.loads(plan_state_json or "{}")
+            return [
+                leg for leg in plan.get("legs", [])
+                if leg.get("sequence", 1) > 1 and leg.get("status") == "PENDING"
+            ]
+        except Exception:
+            return []
+
 
 __all__ = ["ExecutionPlanBuilder", "RebuildPolicy", "ProtectionPolicy", "LegStatus"]
