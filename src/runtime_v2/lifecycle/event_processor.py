@@ -663,7 +663,6 @@ class LifecycleEventProcessor:
             except Exception:
                 mp = ManagementPlanConfig()
 
-            from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
             remaining_averaging = ExecutionPlanBuilder.get_pending_averaging_legs(effective_plan_json)
             if not remaining_averaging:
                 # Ultima leg confermata: emetti BE con avg price corrente
