@@ -198,6 +198,27 @@ class LifecycleEventProcessor:
             fallback_first_pending=True,
         )
 
+        # ── Deferred BE: controlla se questa fill completa le averaging leg ───
+        effective_plan = new_plan_state_json or chain.plan_state_json or "{}"
+        deferred = _get_be_deferred_flag(effective_plan)
+        if deferred:
+            try:
+                mp_fill = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
+            except Exception:
+                mp_fill = ManagementPlanConfig()
+            from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
+            remaining_averaging = ExecutionPlanBuilder.get_pending_averaging_legs(effective_plan)
+            if not remaining_averaging:
+                # Crea una chain temporanea con entry_avg_price aggiornato per calcolare BE corretto
+                chain_for_be = chain.model_copy(update={"entry_avg_price": new_avg})
+                be_result = self._build_be_move_command_and_event(chain_for_be, eid or 0, mp_fill)
+                if be_result is not None:
+                    be_cmd, be_event = be_result
+                    commands.append(be_cmd)
+                    events.append(be_event)
+                effective_plan = _clear_be_deferred_flag(effective_plan)
+                new_plan_state_json = effective_plan
+
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,
