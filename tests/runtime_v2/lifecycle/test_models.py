@@ -193,3 +193,25 @@ def test_new_command_types_valid():
             idempotency_key=f"test:{ct}",
         )
         assert cmd.command_type == ct
+
+
+def test_new_lifecycle_event_types_are_valid():
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    import json
+
+    e1 = LifecycleEvent(
+        trade_chain_id=1,
+        event_type="AUTO_CANCEL_AVERAGING_REQUESTED",
+        source_type="engine",
+        idempotency_key="test:1",
+        payload_json=json.dumps({"tp_level": 1, "legs_cancelled": 2, "deferred_be": True}),
+    )
+    assert e1.event_type == "AUTO_CANCEL_AVERAGING_REQUESTED"
+
+    e2 = LifecycleEvent(
+        trade_chain_id=1,
+        event_type="NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED",
+        source_type="engine",
+        idempotency_key="test:2",
+    )
+    assert e2.event_type == "NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED"
