@@ -19,7 +19,7 @@ def _apply_migrations(db_path: str) -> None:
 def _insert_open_chain(
     db_path: str,
     chain_id: int,
-    symbol: str = "BTC/USDT:USDT",
+    symbol: str = "BTCUSDT",
     side: str = "LONG",
     open_qty: float = 0.01,
 ) -> None:
@@ -50,7 +50,7 @@ def _insert_tp_command(
     import datetime as dt
     now = dt.datetime.now(dt.timezone.utc).isoformat()
     payload = json.dumps({
-        "symbol": "BTC/USDT:USDT",
+        "symbol": "BTCUSDT",
         "side": "LONG",
         "take_profit": tp_price,
         "tp_size": tp_size,
@@ -163,7 +163,7 @@ def test_save_fill_tp_uses_unified_key(ops_db):
 
 def test_process_trade_batch_matched_tp_inserts_event(ops_db):
     """Trade reduceOnly con price che matcha TP attivo → TP_FILLED inserito."""
-    _insert_open_chain(ops_db, 10, symbol="BTC/USDT:USDT", side="LONG")
+    _insert_open_chain(ops_db, 10, symbol="BTCUSDT", side="LONG")
     _insert_tp_command(ops_db, 10, 1001, tp_price=67000.0, tp_level=1)
 
     watcher = _make_watcher(ops_db)
@@ -196,7 +196,7 @@ def test_process_trade_batch_matched_tp_inserts_event(ops_db):
 
 def test_process_trade_batch_is_final_true_when_pos_qty_zero(ops_db):
     """`posQty=0` nel trade → is_final=True."""
-    _insert_open_chain(ops_db, 11, symbol="ETH/USDT:USDT", side="LONG")
+    _insert_open_chain(ops_db, 11, symbol="ETHUSDT", side="LONG")
     _insert_tp_command(ops_db, 11, 1101, tp_price=3200.0, tp_level=1)
 
     watcher = _make_watcher(ops_db)
@@ -221,7 +221,7 @@ def test_process_trade_batch_is_final_true_when_pos_qty_zero(ops_db):
 
 def test_process_trade_batch_is_final_false_fallback_when_no_pos_qty(ops_db):
     """`posQty` assente → is_final=False (conservativo)."""
-    _insert_open_chain(ops_db, 12, symbol="SOL/USDT:USDT", side="LONG")
+    _insert_open_chain(ops_db, 12, symbol="SOLUSDT", side="LONG")
     _insert_tp_command(ops_db, 12, 1201, tp_price=160.0, tp_level=1)
 
     watcher = _make_watcher(ops_db)
@@ -270,10 +270,10 @@ def test_process_trade_batch_ignores_non_reduce_only(ops_db):
 def test_process_trade_batch_ambiguous_skipped(ops_db):
     """2 chain con TP a prezzi simili (entro ±1%) → skip silenzioso, nessun INSERT."""
     # Chain 20 con TP a 70000
-    _insert_open_chain(ops_db, 20, symbol="BTC/USDT:USDT", side="LONG")
+    _insert_open_chain(ops_db, 20, symbol="BTCUSDT", side="LONG")
     _insert_tp_command(ops_db, 20, 2001, tp_price=70000.0, tp_level=1)
     # Chain 21 con TP a 70050 (entro 1% da 70100)
-    _insert_open_chain(ops_db, 21, symbol="BTC/USDT:USDT", side="LONG")
+    _insert_open_chain(ops_db, 21, symbol="BTCUSDT", side="LONG")
     _insert_tp_command(ops_db, 21, 2101, tp_price=70050.0, tp_level=1)
 
     watcher = _make_watcher(ops_db)
@@ -308,7 +308,7 @@ def test_process_trade_batch_none_is_noop(ops_db):
 
 def test_process_trade_batch_is_final_false_on_unparseable_pos_qty(ops_db):
     """`posQty` with non-numeric value → is_final=False (fallback branch)."""
-    _insert_open_chain(ops_db, 14, symbol="BTC/USDT:USDT", side="LONG")
+    _insert_open_chain(ops_db, 14, symbol="BTCUSDT", side="LONG")
     _insert_tp_command(ops_db, 14, 1401, tp_price=70000.0, tp_level=1)
 
     watcher = _make_watcher(ops_db)
@@ -329,3 +329,36 @@ def test_process_trade_batch_is_final_false_on_unparseable_pos_qty(ops_db):
     ).fetchone()[0])
     conn.close()
     assert p["is_final"] is False
+
+
+def test_process_trade_batch_symbol_mismatch_raw_db_ccxt_trade(ops_db):
+    """Production scenario: DB stores raw 'PHAUSDT', trade arrives as 'PHA/USDT:USDT'.
+    Without normalization get_open_chains_for_symbol returns [] → miss.
+    With normalization → TP_FILLED inserted correctly."""
+    # Insert chain with RAW symbol (as production does)
+    _insert_open_chain(ops_db, 99, symbol="PHAUSDT", side="SHORT", open_qty=7743.0)
+    _insert_tp_command(ops_db, 99, 9901,
+                       tp_price=0.05754, tp_level=1, tp_size=3871.5)
+
+    watcher = _make_watcher(ops_db)
+    # Trade arrives with CCXT unified format (as Bybit WS delivers)
+    trades = [{
+        "symbol": "PHA/USDT:USDT",
+        "side": "buy",           # buy = close SHORT
+        "price": 0.05757,        # within ±1% of 0.05754
+        "amount": 3871.5,
+        "reduceOnly": True,
+        "id": "trade-pha-001",
+        "info": {"posQty": "3871.5"},
+    }]
+    watcher._process_trade_batch(trades)
+
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT event_type, payload_json FROM ops_exchange_events WHERE trade_chain_id=99"
+    ).fetchall()
+    conn.close()
+    assert len(rows) == 1, f"Expected 1 TP_FILLED, got {len(rows)}"
+    assert rows[0][0] == "TP_FILLED"
+    p = json.loads(rows[0][1])
+    assert p["fill_price"] == 0.05757

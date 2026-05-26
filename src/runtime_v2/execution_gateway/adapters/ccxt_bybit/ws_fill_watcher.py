@@ -21,6 +21,21 @@ from src.runtime_v2.execution_gateway.repositories import GatewayCommandReposito
 logger = logging.getLogger(__name__)
 
 
+def _ccxt_symbol_to_raw(symbol: str) -> str:
+    """Convert ccxt unified format to Bybit raw format.
+
+    Examples:
+        "PHA/USDT:USDT"  →  "PHAUSDT"
+        "BTC/USDT:USDT"  →  "BTCUSDT"
+        "PHAUSDT"        →  "PHAUSDT"   (pass-through, already raw)
+    """
+    if "/" not in symbol:
+        return symbol
+    base, rest = symbol.split("/", 1)
+    quote = rest.split(":")[0]
+    return base + quote
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -207,7 +222,7 @@ class BybitWsFillWatcher:
         if not trade.get("reduceOnly", False):
             return
 
-        symbol = trade.get("symbol", "")
+        symbol = _ccxt_symbol_to_raw(trade.get("symbol", ""))
         side = trade.get("side", "")  # "sell" per close LONG, "buy" per close SHORT
         fill_price_raw = trade.get("price")
         filled_qty_raw = trade.get("amount")
