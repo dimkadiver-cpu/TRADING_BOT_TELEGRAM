@@ -42,7 +42,7 @@ _ROLE_MAP: dict[str, str] = {
 # SET_POSITION_TPSL_PARTIAL / SET_POSITION_TPSL_FULL: use Bybit trading_stop API which
 # sets a position-level TP — not a standalone order with a queryable orderLinkId.
 # The command's job is to SET the TP (done); detecting when it FIRES is handled
-# separately by ExchangeEventSyncWorker.run_tp_reconciliation().
+# separately by ExchangeEventSyncWorker.run_trade_based_reconciliation().
 _FIRE_AND_FORGET: frozenset[str] = frozenset({
     "CANCEL_PENDING_ENTRY",
     "SYNC_PROTECTIVE_ORDERS",

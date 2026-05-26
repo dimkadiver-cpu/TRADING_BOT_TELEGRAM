@@ -207,7 +207,8 @@ async def _run_position_reconciliation_periodically(
         await asyncio.sleep(interval_seconds)
         try:
             sync_worker.run_position_reconciliation()
-            sync_worker.run_tp_reconciliation()
+            sync_worker.run_trade_based_reconciliation()
+            sync_worker.run_protective_orders_reconciliation()
         except Exception:
             logger.exception("periodic position/tp reconciliation error")
 
