@@ -1175,3 +1175,113 @@ def test_fetch_mark_price_returns_none_on_error():
     adapter = _make_adapter(exchange)
     result = adapter.fetch_mark_price("BTC/USDT", "acc1")
     assert result is None
+
+
+def test_fetch_recent_reduce_trades_returns_reduce_only_fills():
+    """fetch_recent_reduce_trades filters to reduceOnly trades, normalizes symbol to raw."""
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_my_trades.return_value = [
+        {
+            "id": "trade-001",
+            "symbol": "PHA/USDT:USDT",
+            "side": "buy",
+            "price": 0.05754,
+            "amount": 3871.5,
+            "info": {"reduceOnly": True},
+        },
+        {
+            "id": "trade-002",
+            "symbol": "PHA/USDT:USDT",
+            "side": "sell",
+            "price": 0.06000,
+            "amount": 7743.0,
+            "info": {"reduceOnly": False},  # entry fill -> excluded
+        },
+    ]
+    adapter = CcxtBybitAdapter(
+        api_key="k", api_secret="s", connector="c", _exchange=exchange
+    )
+    trades = adapter.fetch_recent_reduce_trades(
+        symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
+    )
+    assert len(trades) == 1
+    assert trades[0].trade_id == "trade-001"
+    assert trades[0].symbol == "PHAUSDT"   # raw format
+    assert trades[0].price == 0.05754
+    assert trades[0].amount == 3871.5
+    assert trades[0].reduce_only is True
+
+
+def test_fetch_recent_reduce_trades_returns_empty_on_exception():
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_my_trades.side_effect = RuntimeError("network error")
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+    trades = adapter.fetch_recent_reduce_trades(
+        symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
+    )
+    assert trades == []
+
+
+def test_fetch_position_details_returns_tp_sl_from_info():
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "symbol": "PHA/USDT:USDT",
+            "side": "short",
+            "contracts": 3871.5,
+            "info": {
+                "symbol": "PHAUSDT",
+                "side": "Sell",
+                "takeProfit": "0.05373",
+                "stopLoss": "0.06908",
+            },
+        }
+    ]
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+    pos = adapter.fetch_position_details(
+        symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
+    )
+    assert pos is not None
+    assert pos.symbol == "PHAUSDT"
+    assert pos.qty == 3871.5
+    assert pos.take_profit == 0.05373
+    assert pos.stop_loss == 0.06908
+
+
+def test_fetch_position_details_tp_zero_when_empty_string():
+    """Bybit sets takeProfit='' when not configured; should map to 0.0."""
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "symbol": "PHA/USDT:USDT",
+            "side": "short",
+            "contracts": 7743.0,
+            "info": {"takeProfit": "", "stopLoss": "0.06908"},
+        }
+    ]
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+    pos = adapter.fetch_position_details(
+        symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
+    )
+    assert pos is not None
+    assert pos.take_profit == 0.0   # empty string -> 0.0
+
+
+def test_fetch_position_details_returns_none_when_not_found():
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = []
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+    pos = adapter.fetch_position_details(
+        symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
+    )
+    assert pos is None

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import time
 from typing import TYPE_CHECKING
 
 import ccxt
@@ -8,7 +9,10 @@ import ccxt
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.order_builder import BybitOrderBuilder
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper
-from src.runtime_v2.execution_gateway.models import AdapterCapabilities, AdapterResult, RawAdapterOrder
+from src.runtime_v2.execution_gateway.models import (
+    AdapterCapabilities, AdapterResult, RawAdapterOrder,
+    RawAdapterTrade, RawPositionDetails,
+)
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 
@@ -308,6 +312,91 @@ class CcxtBybitAdapter(ExecutionAdapter):
         except Exception as exc:
             logger.warning("fetch_mark_price failed for %s: %s", symbol, exc)
             return None
+
+    def fetch_recent_reduce_trades(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        execution_account_id: str,
+        limit: int = 50,
+    ) -> list[RawAdapterTrade]:
+        """Return recent position-closing fills (reduceOnly=True) for symbol+side.
+
+        Uses REST fetch_my_trades() — catches fills missed by WS or during bot downtime.
+        symbol: Bybit raw format (e.g. PHAUSDT). ccxt accepts raw format for linear futures.
+        """
+        since_ms = int((time.time() - 86400) * 1000)  # last 24h
+        try:
+            raw_trades = self._exchange.fetch_my_trades(symbol, since=since_ms, limit=limit)
+        except Exception as exc:
+            logger.warning("fetch_my_trades failed for %s: %s", symbol, exc)
+            return []
+
+        result: list[RawAdapterTrade] = []
+        for t in raw_trades:
+            info = t.get("info") or {}
+            reduce_only = bool(info.get("reduceOnly", False))
+            if not reduce_only:
+                continue
+            trade_symbol = self._normalize_bybit_symbol(t.get("symbol") or symbol)
+            try:
+                result.append(RawAdapterTrade(
+                    trade_id=str(t["id"]),
+                    symbol=trade_symbol,
+                    price=float(t["price"]),
+                    amount=float(t["amount"]),
+                    reduce_only=True,
+                ))
+            except Exception:
+                logger.debug("skipping malformed trade %s", t.get("id"))
+        return result
+
+    def fetch_position_details(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        execution_account_id: str,
+    ) -> RawPositionDetails | None:
+        """Return TP/SL levels currently set on the exchange for symbol+side.
+
+        Uses fetch_positions() — detects if protective orders were externally cancelled.
+        Returns None if position not found or on error.
+        """
+        try:
+            positions = self._exchange.fetch_positions([symbol])
+        except Exception as exc:
+            logger.warning("fetch_position_details failed for %s %s: %s", symbol, side, exc)
+            return None
+
+        for pos in positions:
+            if str(pos.get("side") or "").lower() != side.lower():
+                continue
+            info = pos.get("info") or {}
+            raw_symbol = info.get("symbol") or self._normalize_bybit_symbol(
+                pos.get("symbol") or symbol
+            )
+
+            def _parse_price(val: object) -> float | None:
+                if val is None:
+                    return None
+                s = str(val).strip()
+                if s == "":
+                    return 0.0
+                try:
+                    return float(s)
+                except ValueError:
+                    return None
+
+            return RawPositionDetails(
+                symbol=raw_symbol,
+                side=side.upper(),
+                qty=float(pos.get("contracts") or 0.0),
+                take_profit=_parse_price(info.get("takeProfit")),
+                stop_loss=_parse_price(info.get("stopLoss")),
+            )
+        return None
 
     def _handle_amend_sl_qty(self, symbol: str, side: str) -> AdapterResult:
         close_side = "sell" if side == "LONG" else "buy"
