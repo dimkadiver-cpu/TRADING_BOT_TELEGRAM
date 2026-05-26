@@ -108,9 +108,29 @@ class AdapterResult(BaseModel):
     warnings: list[str] = Field(default_factory=list)
 
 
+class RawAdapterTrade(BaseModel):
+    """A single reduceOnly fill returned by fetch_recent_reduce_trades()."""
+    model_config = ConfigDict(extra="ignore")
+    trade_id: str
+    symbol: str          # Bybit raw format: PHAUSDT
+    price: float
+    amount: float
+    reduce_only: bool = True
+
+
+class RawPositionDetails(BaseModel):
+    """Position snapshot from fetch_position_details()."""
+    model_config = ConfigDict(extra="ignore")
+    symbol: str          # Bybit raw format
+    side: str            # LONG | SHORT
+    qty: float
+    take_profit: float | None = None   # None = field unavailable; 0.0 = not set on exchange
+    stop_loss: float | None = None
+
+
 __all__ = [
     "RetryConfig", "LiveSafetyConfig", "WebsocketConfig",
     "ExecutionStrategyConfig",
     "AdapterConfig", "AccountRoutingEntry", "ExecutionConfig",
-    "RawAdapterOrder", "AdapterResult",
+    "RawAdapterOrder", "RawAdapterTrade", "RawPositionDetails", "AdapterResult",
 ]

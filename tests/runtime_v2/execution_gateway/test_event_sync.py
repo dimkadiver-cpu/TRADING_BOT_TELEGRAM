@@ -457,6 +457,14 @@ def _insert_open_chain_with_tp(db_path, chain_id, symbol="BTC/USDT:USDT", side="
     conn.close()
 
 
+def test_raw_adapter_trade_model():
+    from src.runtime_v2.execution_gateway.models import RawAdapterTrade, RawPositionDetails
+    t = RawAdapterTrade(trade_id="t1", symbol="PHAUSDT", price=0.05754, amount=3871.5)
+    assert t.reduce_only is True  # default
+    pos = RawPositionDetails(symbol="PHAUSDT", side="SHORT", qty=3871.5, take_profit=0.05373)
+    assert pos.stop_loss is None
+
+
 def test_tp_filled_ws_and_polling_unified_key_no_duplicate(ops_db):
     """WS inserisce TP_FILLED con chiave level:N; poi run_tp_reconciliation()
     trova INSERT OR IGNORE → esattamente 1 riga."""
