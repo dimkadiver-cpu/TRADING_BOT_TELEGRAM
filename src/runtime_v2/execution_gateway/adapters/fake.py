@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
-from src.runtime_v2.execution_gateway.models import AdapterCapabilities, AdapterResult, RawAdapterOrder
+from src.runtime_v2.execution_gateway.models import (
+    AdapterCapabilities, AdapterResult, RawAdapterOrder,
+    RawAdapterTrade, RawPositionDetails,
+)
 
 
 class FakeAdapter(ExecutionAdapter):
@@ -35,6 +38,8 @@ class FakeAdapter(ExecutionAdapter):
         self._orders: dict[str, RawAdapterOrder] = {}
         self.calls: list[dict] = []
         self._last_place_qty: float | None = None
+        self._reduce_trades: dict[str, list[RawAdapterTrade]] = {}
+        self._position_details: dict[str, RawPositionDetails] = {}
 
     def get_capabilities(self) -> AdapterCapabilities:
         return self._capabilities
@@ -117,6 +122,49 @@ class FakeAdapter(ExecutionAdapter):
 
     def set_mark_price(self, symbol: str, price: float) -> None:
         self._mark_prices[symbol] = price
+
+    def simulate_reduce_trade(
+        self,
+        symbol: str,
+        side: str,
+        price: float,
+        amount: float,
+        trade_id: str,
+    ) -> None:
+        """Register a reduceOnly fill for fetch_recent_reduce_trades() to return."""
+        key = f"{symbol}:{side}"
+        self._reduce_trades.setdefault(key, []).append(
+            RawAdapterTrade(trade_id=trade_id, symbol=symbol, price=price, amount=amount)
+        )
+
+    def fetch_recent_reduce_trades(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        execution_account_id: str,
+        limit: int = 50,
+    ) -> list[RawAdapterTrade]:
+        key = f"{symbol}:{side}"
+        return list(self._reduce_trades.get(key, []))[:limit]
+
+    def set_position_details(
+        self,
+        symbol: str,
+        side: str,
+        details: RawPositionDetails,
+    ) -> None:
+        """Preset what fetch_position_details() returns for symbol+side."""
+        self._position_details[f"{symbol}:{side}"] = details
+
+    def fetch_position_details(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        execution_account_id: str,
+    ) -> RawPositionDetails | None:
+        return self._position_details.get(f"{symbol}:{side}")
 
 
 __all__ = ["FakeAdapter"]
