@@ -465,40 +465,171 @@ def test_raw_adapter_trade_model():
     assert pos.stop_loss is None
 
 
-def test_tp_filled_ws_and_polling_unified_key_no_duplicate(ops_db):
-    """WS inserisce TP_FILLED con chiave level:N; poi run_tp_reconciliation()
-    trova INSERT OR IGNORE → esattamente 1 riga."""
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+# ── helpers for trade-based reconciliation tests ─────────────────────────────
+
+def _insert_open_chain_with_tp_v2(
+    db_path: str,
+    chain_id: int,
+    symbol: str = "PHAUSDT",
+    side: str = "SHORT",
+    tp_price: float = 0.05754,
+    tp_size: float = 3871.5,
+    tp_level: int = 1,
+    open_qty: float = 7743.0,
+) -> None:
+    """Chain OPEN (raw symbol) + active SET_POSITION_TPSL_PARTIAL command."""
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
+         symbol, side, "OPEN", "TWO_STEP", "{}", open_qty, open_qty, now, now),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+        (chain_id * 100, chain_id, "SET_POSITION_TPSL_PARTIAL", "DONE",
+         json.dumps({
+             "symbol": symbol, "side": side,
+             "take_profit": tp_price, "tp_size": tp_size, "tp_sequence": tp_level,
+         }),
+         f"idem_tp:{chain_id}", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_trade_based_reconciliation_inserts_tp_filled_on_matching_trade(ops_db):
+    """run_trade_based_reconciliation() detects TP fill via fetch_recent_reduce_trades()."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
-    _insert_open_chain_with_tp(ops_db, chain_id=30)
+    _insert_open_chain_with_tp_v2(ops_db, 50, symbol="PHAUSDT", side="SHORT",
+                                  tp_price=0.05754, tp_size=3871.5, open_qty=7743.0)
+    adapter = FakeAdapter()
+    # Simulate the intermediate TP fill
+    adapter.simulate_reduce_trade(
+        symbol="PHAUSDT", side="SHORT",
+        price=0.05754, amount=3871.5, trade_id="exch-trade-001",
+    )
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc"
+    )
+    count = worker.run_trade_based_reconciliation()
 
-    # Simula: WS ha già inserito TP_FILLED con la nuova chiave unified
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT event_type, payload_json, idempotency_key FROM ops_exchange_events WHERE trade_chain_id=50"
+    ).fetchall()
+    conn.close()
+    assert len(rows) == 1
+    assert rows[0][0] == "TP_FILLED"
+    assert rows[0][2] == "TP_FILLED:50:level:1"
+    p = json.loads(rows[0][1])
+    assert p["fill_price"] == 0.05754
+    assert p["filled_qty"] == 3871.5
+    assert p["exchange_trade_id"] == "exch-trade-001"
+    assert p["source"] == "trade_based_reconciliation"
+
+
+def test_trade_based_reconciliation_idempotent(ops_db):
+    """Calling run_trade_based_reconciliation() twice → exactly 1 TP_FILLED event."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 51, tp_price=0.05754)
+    adapter = FakeAdapter()
+    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.05754, 3871.5, "t-idem")
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+
+    worker.run_trade_based_reconciliation()
+    worker.run_trade_based_reconciliation()
+
+    conn = sqlite3.connect(ops_db)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=51 AND event_type='TP_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_trade_based_reconciliation_skips_non_matching_price(ops_db):
+    """Trade price >1% away from TP → no event inserted."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 52, tp_price=0.05754)
+    adapter = FakeAdapter()
+    # Price 2% away from TP
+    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.0560, 3871.5, "t-miss")
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+
+    count = worker.run_trade_based_reconciliation()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    n = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert n == 0
+
+
+def test_trade_based_reconciliation_deduplicates_with_ws_insertion(ops_db):
+    """If WS already inserted TP_FILLED with same idempotency key, REST poll is no-op."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 53, tp_price=0.05754)
+    # Simulate WS already inserted
     conn = sqlite3.connect(ops_db)
     conn.execute(
         "INSERT INTO ops_exchange_events "
         "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
         "VALUES (?,?,?,?,?,datetime('now'))",
-        (30, "TP_FILLED",
-         '{"tp_level": 1, "is_final": false, "fill_price": 70000.0, "filled_qty": 0.005, "source": "watch_my_trades"}',
-         "NEW", "TP_FILLED:30:level:1"),
+        (53, "TP_FILLED",
+         '{"tp_level":1,"is_final":false,"fill_price":0.05754,"source":"watch_my_trades"}',
+         "NEW", "TP_FILLED:53:level:1"),
     )
     conn.commit()
     conn.close()
 
-    # Polling tenta di inserire lo stesso evento
-    adapter = FakeAdapter(positions={"BTC/USDT:USDT:LONG": 0.005})
+    adapter = FakeAdapter()
+    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.05754, 3871.5, "t-ws-dup")
     repo = GatewayCommandRepository(ops_db)
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db, adapter=adapter,
-        repo=repo, execution_account_id="acc",
-    )
-    worker.run_tp_reconciliation()
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+    worker.run_trade_based_reconciliation()
 
     conn = sqlite3.connect(ops_db)
     count = conn.execute(
-        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=30 AND event_type='TP_FILLED'"
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=53"
     ).fetchone()[0]
     conn.close()
-    assert count == 1, f"Expected 1 TP_FILLED event, got {count}"
+    assert count == 1  # still just the one WS-inserted event
+
+
+def test_trade_based_reconciliation_noop_when_adapter_has_no_method(ops_db):
+    """If adapter lacks fetch_recent_reduce_trades → returns 0, no crash."""
+    from unittest.mock import MagicMock
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 54)
+    adapter = MagicMock(spec=[])  # spec=[] → hasattr always False
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+
+    count = worker.run_trade_based_reconciliation()
+    assert count == 0

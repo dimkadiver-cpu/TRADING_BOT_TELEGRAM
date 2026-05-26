@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
+from src.runtime_v2.execution_gateway.models import RawAdapterTrade
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
 logger = logging.getLogger(__name__)
@@ -85,54 +86,62 @@ class ExchangeEventSyncWorker:
                 logger.exception("position reconciliation error for chain %s", chain_id)
         return processed
 
-    def run_tp_reconciliation(self) -> int:
-        """Detect TP partial closes by checking if position has decreased."""
-        sent_tp_cmds = self._get_sent_tp_commands()
-        processed = 0
-        for cmd_id, trade_chain_id, tp_size, tp_level, symbol, side in sent_tp_cmds:
-            try:
-                # Check if TP event already exists
-                if self._tp_fill_event_exists(trade_chain_id, tp_level):
-                    # Already recorded, nothing to do
-                    continue
+    def run_trade_based_reconciliation(self) -> int:
+        """Poll recent reduceOnly fills via REST and match against active TP commands.
 
-                # Get current position qty
-                qty = self._adapter.get_position_qty(
+        Replaces run_tp_reconciliation(). Uses real fill prices (not qty comparison).
+        Shares the same idempotency key format as watchMyTrades so INSERT OR IGNORE
+        prevents duplicates when both paths run.
+
+        Returns count of new TP_FILLED events inserted.
+        """
+        if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
+            return 0
+
+        entries = self._get_tp_reconciliation_entries()
+        if not entries:
+            return 0
+
+        # Group by (symbol, side) to minimise API calls
+        from collections import defaultdict
+        by_key: dict[tuple[str, str], list[dict]] = defaultdict(list)
+        for e in entries:
+            by_key[(e["symbol"], e["side"])].append(e)
+
+        processed = 0
+        for (symbol, side), group in by_key.items():
+            try:
+                trades = self._adapter.fetch_recent_reduce_trades(
                     symbol=symbol,
                     side=side,
                     execution_account_id=self._execution_account_id,
+                    limit=50,
                 )
-                if qty is None:
-                    continue
-
-                # Get filled entry qty at time of TP command (approximation: current filled_entry_qty)
-                filled_qty = self._get_filled_entry_qty(trade_chain_id)
-                if filled_qty is None:
-                    continue
-
-                # If position has decreased by at least tp_size, TP was likely hit
-                # Check with some tolerance for slippage
-                expected_after_tp = filled_qty - tp_size
-                if qty < expected_after_tp * 0.95:  # 5% tolerance for slippage
-                    saved = self._save_tp_fill(trade_chain_id, tp_level, cmd_id, qty)
-                    if saved:
-                        logger.info(
-                            "TP partial fill detected: chain=%s level=%s qty_closed=%s",
-                            trade_chain_id, tp_level, tp_size,
-                        )
-                        processed += 1
             except Exception:
-                logger.exception("TP reconciliation error for command %s", cmd_id)
+                logger.exception("fetch_recent_reduce_trades error for %s %s", symbol, side)
+                continue
+
+            for entry in group:
+                chain_id = entry["chain_id"]
+                tp_level = entry["tp_level"]
+                tp_price = entry["tp_price"]
+
+                if self._tp_fill_event_exists(chain_id, tp_level):
+                    continue  # already recorded (e.g. by WS)
+
+                if tp_price <= 0:
+                    continue  # no valid TP price in command payload
+
+                for trade in trades:
+                    if abs(trade.price - tp_price) / tp_price <= 0.01:  # ±1% tolerance
+                        if self._save_tp_fill_from_trade(chain_id, tp_level, trade):
+                            processed += 1
+                        break  # one trade per TP level
+
         return processed
 
-    def _get_sent_tp_commands(self) -> list[tuple[int, int, float, int, str, str]]:
-        """Get all placed TP commands for open chains.
-
-        SET_POSITION_TPSL_PARTIAL/FULL are fire-and-forget (DONE immediately after
-        being sent to the exchange).  We therefore query DONE commands here — not SENT
-        — and restrict to chains that are still actively open so we don't re-check
-        commands belonging to already-closed or terminal chains.
-        """
+    def _get_tp_reconciliation_entries(self) -> list[dict]:
+        """Return active TP commands for open chains with price, level, and symbol."""
         conn = sqlite3.connect(self._ops_db)
         try:
             rows = conn.execute(
@@ -143,13 +152,19 @@ class ExchangeEventSyncWorker:
                 "AND c.status IN ('SENT', 'DONE') "
                 "AND t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
             ).fetchall()
-            result = []
+            result: list[dict] = []
             for cmd_id, chain_id, payload_json, symbol, side in rows:
                 try:
                     payload = json.loads(payload_json)
-                    tp_size = float(payload.get("tp_size", 0))
-                    tp_level = int(payload.get("tp_sequence", 1))
-                    result.append((cmd_id, chain_id, tp_size, tp_level, symbol, side))
+                    result.append({
+                        "cmd_id":   cmd_id,
+                        "chain_id": chain_id,
+                        "tp_level": int(payload.get("tp_sequence", 1)),
+                        "tp_price": float(payload.get("take_profit", 0)),
+                        "tp_size":  float(payload.get("tp_size", 0)),
+                        "symbol":   symbol,
+                        "side":     side,
+                    })
                 except Exception:
                     pass
             return result
@@ -176,39 +191,33 @@ class ExchangeEventSyncWorker:
         finally:
             conn.close()
 
-    def _get_filled_entry_qty(self, trade_chain_id: int) -> float | None:
-        """Get current filled entry qty for a trade chain."""
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            row = conn.execute(
-                "SELECT filled_entry_qty FROM ops_trade_chains WHERE trade_chain_id = ?",
-                (trade_chain_id,)
-            ).fetchone()
-            return float(row[0]) if row else None
-        finally:
-            conn.close()
-
-    def _save_tp_fill(self, trade_chain_id: int, tp_level: int, command_id: int, current_qty: float) -> bool:
-        """Save TP_FILLED exchange event."""
+    def _save_tp_fill_from_trade(
+        self,
+        trade_chain_id: int,
+        tp_level: int,
+        trade: RawAdapterTrade,
+    ) -> bool:
+        """INSERT OR IGNORE TP_FILLED event with real fill price from trade REST data."""
         idempotency_key = f"TP_FILLED:{trade_chain_id}:level:{tp_level}"
         payload = json.dumps({
-            "tp_level": tp_level,
-            "is_final": current_qty == 0.0,
-            "fill_price": None,  # Unknown without trade details
-            "filled_qty": None,  # Unknown without trade details
-            "command_id": command_id,
+            "tp_level":          tp_level,
+            "is_final":          False,   # conservative; lifecycle uses position qty to decide
+            "fill_price":        trade.price,
+            "filled_qty":        trade.amount,
+            "source":            "trade_based_reconciliation",
+            "exchange_trade_id": trade.trade_id,
         })
         now = _now()
         conn = sqlite3.connect(self._ops_db)
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT OR IGNORE INTO ops_exchange_events "
                 "(trade_chain_id, event_type, payload_json, processing_status, "
                 "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
                 (trade_chain_id, "TP_FILLED", payload, "NEW", idempotency_key, now),
             )
             conn.commit()
-            return True
+            return cursor.rowcount > 0
         finally:
             conn.close()
 
