@@ -221,6 +221,107 @@ class ExchangeEventSyncWorker:
         finally:
             conn.close()
 
+    def run_protective_orders_reconciliation(self) -> int:
+        """Detect when a position-level TP was externally cancelled (no fill occurred).
+
+        Logic:
+          1. For each open chain with an active SET_POSITION_TPSL_* command:
+             - Fetch the live position from the exchange
+             - If exchange takeProfit == 0.0 (cleared) but we expected a TP:
+                 - And no TP_FILLED event is recorded (= it didn't trigger, it was cancelled)
+                 - → Insert PROTECTIVE_ORDERS_MISSING event
+
+        The lifecycle event processor currently logs a warning for unhandled event types.
+        A full automated response (re-placing the TP) is a future enhancement.
+
+        Returns count of new PROTECTIVE_ORDERS_MISSING events inserted.
+        """
+        if not hasattr(self._adapter, "fetch_position_details"):
+            return 0
+
+        entries = self._get_tp_reconciliation_entries()
+        if not entries:
+            return 0
+
+        # Use the most recent TP command per chain (highest cmd_id)
+        latest_per_chain: dict[int, dict] = {}
+        for e in entries:
+            chain_id = e["chain_id"]
+            if chain_id not in latest_per_chain or e["cmd_id"] > latest_per_chain[chain_id]["cmd_id"]:
+                latest_per_chain[chain_id] = e
+
+        processed = 0
+        for chain_id, entry in latest_per_chain.items():
+            expected_tp = entry["tp_price"]
+            tp_level    = entry["tp_level"]
+            symbol      = entry["symbol"]
+            side        = entry["side"]
+
+            if expected_tp <= 0:
+                continue
+
+            if self._tp_fill_event_exists(chain_id, tp_level):
+                continue  # TP triggered normally — not a cancellation
+
+            try:
+                pos = self._adapter.fetch_position_details(
+                    symbol=symbol,
+                    side=side,
+                    execution_account_id=self._execution_account_id,
+                )
+            except Exception:
+                logger.exception("fetch_position_details error for chain %s", chain_id)
+                continue
+
+            if pos is None:
+                continue  # position not found — can't determine state
+
+            if pos.take_profit is None:
+                continue  # exchange doesn't expose TP field for this adapter
+
+            if pos.take_profit != 0.0:
+                continue  # TP still active on exchange
+
+            # TP is 0.0 on exchange, no TP_FILLED recorded → externally cancelled
+            idempotency_key = f"PROTECTIVE_ORDERS_MISSING:{chain_id}:tp:{tp_level}"
+            self._save_protective_orders_missing(
+                chain_id=chain_id,
+                idempotency_key=idempotency_key,
+                payload={
+                    "expected_tp": expected_tp,
+                    "tp_level":    tp_level,
+                    "reason":      "tp_removed_externally",
+                },
+            )
+            logger.warning(
+                "protective orders missing: chain=%s tp_level=%s expected_tp=%s — "
+                "TP was removed externally without a fill",
+                chain_id, tp_level, expected_tp,
+            )
+            processed += 1
+
+        return processed
+
+    def _save_protective_orders_missing(
+        self,
+        chain_id: int,
+        idempotency_key: str,
+        payload: dict,
+    ) -> None:
+        now = _now()
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "INSERT OR IGNORE INTO ops_exchange_events "
+                "(trade_chain_id, event_type, payload_json, processing_status, "
+                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
+                (chain_id, "PROTECTIVE_ORDERS_MISSING",
+                 json.dumps(payload), "NEW", idempotency_key, now),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
         conn = sqlite3.connect(self._ops_db)
         try:

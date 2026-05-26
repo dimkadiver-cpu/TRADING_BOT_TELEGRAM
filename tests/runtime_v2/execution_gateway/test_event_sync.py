@@ -633,3 +633,131 @@ def test_trade_based_reconciliation_noop_when_adapter_has_no_method(ops_db):
 
     count = worker.run_trade_based_reconciliation()
     assert count == 0
+
+
+# ── protective orders reconciliation tests ────────────────────────────────────
+
+def test_protective_orders_reconciliation_emits_event_when_tp_removed(ops_db):
+    """Exchange TP is 0.0 but bot set 0.05754 and no TP_FILLED exists → PROTECTIVE_ORDERS_MISSING."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import RawPositionDetails
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 60, tp_price=0.05754)
+    adapter = FakeAdapter()
+    adapter.set_position_details("PHAUSDT", "SHORT", RawPositionDetails(
+        symbol="PHAUSDT", side="SHORT", qty=7743.0,
+        take_profit=0.0,  # cleared on exchange (manually cancelled)
+        stop_loss=0.06908,
+    ))
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc"
+    )
+    count = worker.run_protective_orders_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT event_type, payload_json FROM ops_exchange_events WHERE trade_chain_id=60"
+    ).fetchall()
+    conn.close()
+    assert len(rows) == 1
+    assert rows[0][0] == "PROTECTIVE_ORDERS_MISSING"
+    p = json.loads(rows[0][1])
+    assert p["expected_tp"] == 0.05754
+    assert p["tp_level"] == 1
+    assert p["reason"] == "tp_removed_externally"
+
+
+def test_protective_orders_reconciliation_skips_when_tp_fill_exists(ops_db):
+    """If TP_FILLED already recorded → TP triggered normally → skip detection."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import RawPositionDetails
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 61, tp_price=0.05754)
+    # Existing TP_FILLED event → means it triggered, not cancelled
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (?,?,?,?,?,datetime('now'))",
+        (61, "TP_FILLED", '{"tp_level":1}', "DONE", "TP_FILLED:61:level:1"),
+    )
+    conn.commit()
+    conn.close()
+
+    adapter = FakeAdapter()
+    adapter.set_position_details("PHAUSDT", "SHORT", RawPositionDetails(
+        symbol="PHAUSDT", side="SHORT", qty=3871.5, take_profit=0.0
+    ))
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+    count = worker.run_protective_orders_reconciliation()
+
+    assert count == 0
+
+
+def test_protective_orders_reconciliation_skips_when_tp_still_active(ops_db):
+    """Exchange still has TP at expected level → no event."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import RawPositionDetails
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 62, tp_price=0.05754)
+    adapter = FakeAdapter()
+    adapter.set_position_details("PHAUSDT", "SHORT", RawPositionDetails(
+        symbol="PHAUSDT", side="SHORT", qty=7743.0,
+        take_profit=0.05754,  # still there
+    ))
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+    count = worker.run_protective_orders_reconciliation()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    n = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert n == 0
+
+
+def test_protective_orders_reconciliation_idempotent(ops_db):
+    """Two calls → exactly 1 PROTECTIVE_ORDERS_MISSING event."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import RawPositionDetails
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 63, tp_price=0.05754)
+    adapter = FakeAdapter()
+    adapter.set_position_details("PHAUSDT", "SHORT", RawPositionDetails(
+        symbol="PHAUSDT", side="SHORT", qty=7743.0, take_profit=0.0
+    ))
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+    worker.run_protective_orders_reconciliation()
+    worker.run_protective_orders_reconciliation()
+
+    conn = sqlite3.connect(ops_db)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='PROTECTIVE_ORDERS_MISSING'"
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_protective_orders_reconciliation_noop_when_adapter_lacks_method(ops_db):
+    from unittest.mock import MagicMock
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 64)
+    adapter = MagicMock(spec=[])  # no methods
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
+    count = worker.run_protective_orders_reconciliation()
+    assert count == 0
