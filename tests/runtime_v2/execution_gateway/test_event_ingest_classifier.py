@@ -234,6 +234,24 @@ class TestWatchPositionsStream:
         assert result.is_actionable is True
 
 
+class TestPriority2UnknownRole:
+
+    def test_classify_unknown_role_in_known_order_link_ids(self):
+        """Unknown role in known_order_link_ids → UNKNOWN, exchange_auto, not actionable."""
+        known = {"tsb:10:5001:weird:1": (10, "weird_role", 1)}
+        clf = EventClassifier(known_order_link_ids=known)
+        raw = _raw(
+            order_link_id="tsb:10:5001:weird:1",
+            create_type="CreateByUser",
+            closed_size=0.0,
+            pos_qty=50.0,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "UNKNOWN"
+        assert result.source == "exchange_auto"
+        assert result.is_actionable is False
+
+
 class TestFallback:
 
     def test_classify_unknown_fallback(self):

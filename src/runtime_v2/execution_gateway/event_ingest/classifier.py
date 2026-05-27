@@ -87,7 +87,7 @@ class EventClassifier:
                     source=source,
                     trade_chain_id=chain_id,
                     tp_level=tp_level,
-                    is_actionable=True,
+                    is_actionable=(event_type != "UNKNOWN"),
                 )
 
         # Priority 3 — structural inference (CreateByUser, no orderLinkId)
@@ -151,6 +151,8 @@ class EventClassifier:
         """Handle watch_positions stream."""
         tp = raw.position_take_profit
         sl = raw.position_stop_loss
+        # Bybit sends "0" (→ 0.0) when a protective is cleared; None means the field was
+        # absent in this delta update (unchanged) or was never set — not a cancellation signal.
         if tp == 0.0 or sl == 0.0:
             return ClassifiedEvent(
                 raw=raw,
@@ -230,7 +232,7 @@ class EventClassifier:
         if role == "sl":
             return "SL_FILLED", "bot_command", None
 
-        return "UNKNOWN", "bot_command", None
+        return "UNKNOWN", "exchange_auto", None
 
     @staticmethod
     def _unknown(raw: ExchangeRawEvent) -> ClassifiedEvent:
