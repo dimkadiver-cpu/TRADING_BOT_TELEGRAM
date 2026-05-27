@@ -20,11 +20,17 @@ class ExchangeEventSyncWorker:
         adapter: ExecutionAdapter,
         repo: GatewayCommandRepository,
         execution_account_id: str,
+        wake_callback=None,
     ) -> None:
         self._ops_db = ops_db_path
         self._adapter = adapter
         self._repo = repo
         self._execution_account_id = execution_account_id
+        self._wake_callback = wake_callback
+
+    def _wake(self) -> None:
+        if self._wake_callback is not None:
+            self._wake_callback()
 
     def run_once(self) -> int:
         return self.run_reconciliation()
@@ -44,10 +50,12 @@ class ExchangeEventSyncWorker:
                 if raw and raw.is_filled:
                     if self._save_fill_event(client_order_id, raw):
                         self._repo.mark_done(cmd.command_id)
+                        self._wake()
                         processed += 1
                 elif raw and raw.status == "CANCELLED":
                     if self._save_cancelled_event(client_order_id, raw):
                         self._repo.mark_done(cmd.command_id)
+                        self._wake()
                         processed += 1
             except Exception:
                 logger.exception("reconciliation error for %s", client_order_id)
@@ -82,6 +90,7 @@ class ExchangeEventSyncWorker:
                             "externally closed position detected: chain=%s %s %s qty=%s",
                             chain_id, symbol, side, open_qty,
                         )
+                        self._wake()
                         processed += 1
             except Exception:
                 logger.exception("position reconciliation error for chain %s", chain_id)
@@ -154,6 +163,7 @@ class ExchangeEventSyncWorker:
                     "TP_FILLED from trade-based reconciliation: chain=%s %s %s",
                     chain_id, symbol, side,
                 )
+                self._wake()
                 processed += 1
 
         return processed
@@ -204,6 +214,7 @@ class ExchangeEventSyncWorker:
                     "PROTECTIVE_ORDER_CANCELLED detected: chain=%s %s %s",
                     chain_id, symbol, side,
                 )
+                self._wake()
                 processed += 1
 
         return processed

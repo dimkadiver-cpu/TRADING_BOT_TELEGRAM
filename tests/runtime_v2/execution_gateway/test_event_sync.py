@@ -838,3 +838,82 @@ def test_protective_orders_reconciliation_noop_when_adapter_lacks_method(ops_db)
     worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
     count = worker.run_protective_orders_reconciliation()
     assert count == 0
+
+
+def test_run_reconciliation_calls_wake_callback_on_fill(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_sent_cmd(ops_db, 9001, 42, "PLACE_ENTRY", "tsb:42:9001:entry:1")
+    adapter = FakeAdapter()
+    adapter.place_order(
+        command_type="PLACE_ENTRY",
+        payload={}, client_order_id="tsb:42:9001:entry:1",
+        execution_account_id="acc", connector="c",
+    )
+    adapter.simulate_fill("tsb:42:9001:entry:1", price=100.0, qty=1.0)
+
+    wake_calls = []
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+        wake_callback=lambda: wake_calls.append(1),
+    )
+    worker.run_reconciliation()
+
+    assert len(wake_calls) == 1
+
+
+def test_run_reconciliation_no_wake_callback_when_no_fill(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    # No sent commands → nothing to reconcile
+    adapter = FakeAdapter()
+    wake_calls = []
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+        wake_callback=lambda: wake_calls.append(1),
+    )
+    worker.run_reconciliation()
+
+    assert len(wake_calls) == 0
+
+
+def test_run_reconciliation_no_wake_callback_on_duplicate(ops_db):
+    """Second run_reconciliation for same fill must NOT call wake_callback again (idempotency)."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_sent_cmd(ops_db, 9002, 42, "PLACE_ENTRY", "tsb:42:9002:entry:1")
+    adapter = FakeAdapter()
+    adapter.place_order(
+        command_type="PLACE_ENTRY",
+        payload={}, client_order_id="tsb:42:9002:entry:1",
+        execution_account_id="acc", connector="c",
+    )
+    adapter.simulate_fill("tsb:42:9002:entry:1", price=100.0, qty=1.0)
+
+    wake_calls = []
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+        wake_callback=lambda: wake_calls.append(1),
+    )
+    worker.run_reconciliation()  # first: inserts event → wake
+    worker.run_reconciliation()  # second: cmd is DONE, nothing to poll
+
+    assert len(wake_calls) == 1
