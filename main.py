@@ -42,6 +42,8 @@ from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWork
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
 from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
 from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+from src.runtime_v2.execution_gateway.event_ingest.classifier import EventClassifier
+from src.runtime_v2.execution_gateway.event_ingest.normalizer import EventNormalizer
 from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
 from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
@@ -129,12 +131,16 @@ def _build_execution_runtime(
         api_key = os.environ.get(adapter_cfg.api_key_env or "") if adapter_cfg.api_key_env else ""
         api_secret = os.environ.get(adapter_cfg.api_secret_env or "") if adapter_cfg.api_secret_env else ""
         testnet = bool(getattr(adapter_cfg, "testnet", False) or adapter_cfg.mode == "testnet")
+        normalizer = EventNormalizer()
+        classifier = EventClassifier(known_order_link_ids={})
         ws_watcher = BybitWsFillWatcher(
             api_key=api_key,
             api_secret=api_secret,
             testnet=testnet,
             ops_db_path=ops_db_path,
             repo=gateway_repo,
+            normalizer=normalizer,
+            classifier=classifier,
             reconciliation_callback=sync_worker.run_reconciliation,
             mode=adapter_cfg.mode,
             wake_callback=wake_callback,
