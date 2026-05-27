@@ -41,11 +41,11 @@ CREATE INDEX IF NOT EXISTS idx_ere_chain_type
     ON exchange_raw_events (trade_chain_id, classified_event_type);
 
 CREATE INDEX IF NOT EXISTS idx_ere_symbol_side
-    ON exchange_raw_events (symbol, side, received_at DESC);
+    ON exchange_raw_events (symbol, side, received_at);
 
 CREATE INDEX IF NOT EXISTS idx_ere_not_forwarded
     ON exchange_raw_events (forwarded_to_lifecycle)
     WHERE forwarded_to_lifecycle = 0;
 
 CREATE INDEX IF NOT EXISTS idx_ere_stream
-    ON exchange_raw_events (source_stream, received_at DESC);
+    ON exchange_raw_events (source_stream, received_at);
