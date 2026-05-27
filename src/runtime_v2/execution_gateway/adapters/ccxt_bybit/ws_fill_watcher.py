@@ -41,7 +41,7 @@ class BybitWsFillWatcher:
         self._ops_db_path = ops_db_path
         self._repo = repo
         self._normalizer = normalizer
-        self._classifier = classifier
+        self._classifier = classifier  # reserved: batch processing re-creates EventClassifier with fresh data
         self._reconciliation_callback = reconciliation_callback
         self._wake_callback = wake_callback
         self._stop_event = threading.Event()
@@ -140,6 +140,7 @@ class BybitWsFillWatcher:
                     if self._stop_event.is_set():
                         break
                     logger.exception("bybit watch_my_trades failed")
+                    await self._run_reconciliation_callback()
                     await asyncio.sleep(5)
                     continue
                 self._process_batch(trades, self._normalizer.from_trade)
@@ -158,6 +159,7 @@ class BybitWsFillWatcher:
                     if self._stop_event.is_set():
                         break
                     logger.exception("bybit watch_positions failed")
+                    await self._run_reconciliation_callback()
                     await asyncio.sleep(5)
                     continue
                 self._process_batch(positions, self._normalizer.from_position)
@@ -186,7 +188,8 @@ class BybitWsFillWatcher:
                 if inserted and classified.should_forward_to_lifecycle and self._wake_callback:
                     self._wake_callback()
             except Exception:
-                logger.exception("error processing item %s", item.get("id", item))
+                item_id = item.get("id", repr(item)) if isinstance(item, dict) else repr(item)
+                logger.exception("error processing item %s", item_id)
 
     def _build_exchange(self):
         if ccxtpro is None:
