@@ -488,8 +488,8 @@ class GatewayCommandRepository:
             ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
 
         payload = {
-            "exec_price": raw.exec_price,
-            "exec_qty": raw.exec_qty,
+            "fill_price": raw.exec_price,
+            "filled_qty": raw.exec_qty,
             "closed_size": raw.closed_size,
             "pos_qty": raw.pos_qty,
             "symbol": raw.symbol,

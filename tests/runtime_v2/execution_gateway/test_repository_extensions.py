@@ -314,3 +314,32 @@ def test_tp_fill_exists_and_protective_cancelled_exists(tmp_path):
 
     assert repo.protective_cancelled_exists(1) is True
     assert repo.protective_cancelled_exists(99) is False
+
+
+# ---------------------------------------------------------------------------
+# Test 7: insert_raw_and_classified — payload uses fill_price/filled_qty keys
+# ---------------------------------------------------------------------------
+
+def test_insert_raw_and_classified_payload_uses_fill_price_filled_qty(tmp_path):
+    """Payload written to ops_exchange_events must use fill_price/filled_qty keys
+    so event_processor._process_entry_filled / _process_tp_filled can read them."""
+    import json as _json
+    db_path = make_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+
+    raw = _make_raw_event()  # exec_price=50000.0, exec_qty=0.01
+    classified = _make_classified(raw=raw, event_type="ENTRY_FILLED")
+
+    repo.insert_raw_and_classified(classified)
+
+    conn = sqlite3.connect(db_path)
+    row = conn.execute("SELECT payload_json FROM ops_exchange_events").fetchone()
+    conn.close()
+
+    payload = _json.loads(row[0])
+    assert "fill_price" in payload, f"expected fill_price, got keys: {list(payload)}"
+    assert "filled_qty" in payload, f"expected filled_qty, got keys: {list(payload)}"
+    assert "exec_price" not in payload, "exec_price should not be in payload"
+    assert "exec_qty" not in payload, "exec_qty should not be in payload"
+    assert payload["fill_price"] == 50000.0
+    assert payload["filled_qty"] == 0.01
