@@ -1,0 +1,316 @@
+# tests/runtime_v2/execution_gateway/test_repository_extensions.py
+from __future__ import annotations
+
+import sqlite3
+
+import pytest
+
+from src.runtime_v2.execution_gateway.event_ingest.models import (
+    ClassifiedEvent,
+    ExchangeRawEvent,
+)
+from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+
+def make_db(tmp_path):
+    """Create test DB with required schema."""
+    db_path = str(tmp_path / "test.db")
+    conn = sqlite3.connect(db_path)
+    conn.executescript("""
+        CREATE TABLE ops_execution_commands (
+            command_id INTEGER PRIMARY KEY,
+            trade_chain_id INTEGER,
+            command_type TEXT,
+            status TEXT,
+            payload_json TEXT DEFAULT '{}',
+            idempotency_key TEXT,
+            client_order_id TEXT,
+            created_at TEXT,
+            updated_at TEXT
+        );
+        CREATE TABLE ops_trade_chains (
+            trade_chain_id INTEGER PRIMARY KEY,
+            symbol TEXT,
+            side TEXT,
+            lifecycle_state TEXT
+        );
+        CREATE TABLE exchange_raw_events (
+            raw_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            exchange_event_id TEXT NOT NULL,
+            source_stream TEXT NOT NULL,
+            symbol TEXT NOT NULL,
+            side TEXT NOT NULL,
+            create_type TEXT,
+            stop_order_type TEXT,
+            exec_type TEXT,
+            order_status TEXT,
+            order_link_id TEXT,
+            order_id TEXT,
+            seq INTEGER,
+            exec_price REAL,
+            exec_qty REAL,
+            closed_size REAL,
+            leaves_qty REAL,
+            pos_qty REAL,
+            exec_value REAL,
+            exec_fee REAL,
+            fee_rate REAL,
+            cum_exec_qty REAL,
+            position_take_profit REAL,
+            position_stop_loss REAL,
+            classified_event_type TEXT,
+            classified_source TEXT,
+            trade_chain_id INTEGER,
+            tp_level INTEGER,
+            forwarded_to_lifecycle INTEGER DEFAULT 0,
+            forwarded_at TEXT,
+            raw_info_json TEXT NOT NULL DEFAULT '{}',
+            exchange_time TEXT,
+            received_at TEXT NOT NULL,
+            idempotency_key TEXT UNIQUE NOT NULL
+        );
+        CREATE TABLE ops_exchange_events (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_chain_id INTEGER,
+            event_type TEXT,
+            payload_json TEXT,
+            processing_status TEXT DEFAULT 'NEW',
+            idempotency_key TEXT UNIQUE,
+            received_at TEXT
+        );
+    """)
+    conn.commit()
+    conn.close()
+    return db_path
+
+
+def _make_raw_event(idempotency_key: str = "test-key-001") -> ExchangeRawEvent:
+    return ExchangeRawEvent(
+        source_stream="watch_my_trades",
+        exchange_event_id="exchange-evt-001",
+        idempotency_key=idempotency_key,
+        symbol="BTCUSDT",
+        side="Buy",
+        create_type=None,
+        stop_order_type=None,
+        exec_type="Trade",
+        order_status="Filled",
+        order_link_id="tsb:1:tp:1",
+        order_id="order-001",
+        seq=1001,
+        exec_price=50000.0,
+        exec_qty=0.01,
+        closed_size=0.01,
+        leaves_qty=0.0,
+        pos_qty=0.0,
+        exec_value=500.0,
+        exec_fee=0.2,
+        fee_rate=0.0004,
+        cum_exec_qty=0.01,
+        position_take_profit=None,
+        position_stop_loss=None,
+        exchange_time="2026-05-27T10:00:00Z",
+        received_at="2026-05-27T10:00:01Z",
+        raw_info={"extra": "data"},
+    )
+
+
+def _make_classified(
+    raw: ExchangeRawEvent | None = None,
+    trade_chain_id: int | None = 1,
+    tp_level: int | None = 1,
+    event_type: str = "TP_FILLED",
+) -> ClassifiedEvent:
+    if raw is None:
+        raw = _make_raw_event()
+    return ClassifiedEvent(
+        raw=raw,
+        event_type=event_type,  # type: ignore[arg-type]
+        source="bot_command",
+        trade_chain_id=trade_chain_id,
+        tp_level=tp_level,
+        is_actionable=True,
+    )
+
+
+# ---------------------------------------------------------------------------
+# Test 1: insert_raw_and_classified — happy path
+# ---------------------------------------------------------------------------
+
+def test_insert_raw_and_classified_returns_true_on_new(tmp_path):
+    db_path = make_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+    classified = _make_classified()
+
+    result = repo.insert_raw_and_classified(classified)
+
+    assert result is True
+
+    conn = sqlite3.connect(db_path)
+    raw_count = conn.execute("SELECT COUNT(*) FROM exchange_raw_events").fetchone()[0]
+    ops_count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+
+    assert raw_count == 1
+    assert ops_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Test 2: insert_raw_and_classified — idempotent (second call returns False)
+# ---------------------------------------------------------------------------
+
+def test_insert_raw_and_classified_idempotent(tmp_path):
+    db_path = make_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+    classified = _make_classified()
+
+    first = repo.insert_raw_and_classified(classified)
+    second = repo.insert_raw_and_classified(classified)
+
+    assert first is True
+    assert second is False
+
+    conn = sqlite3.connect(db_path)
+    raw_count = conn.execute("SELECT COUNT(*) FROM exchange_raw_events").fetchone()[0]
+    conn.close()
+
+    assert raw_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Test 3: not forwarded when trade_chain_id is None
+# ---------------------------------------------------------------------------
+
+def test_insert_raw_and_classified_not_forwarded_when_no_chain_id(tmp_path):
+    db_path = make_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+    classified = _make_classified(trade_chain_id=None, tp_level=None)
+
+    assert classified.should_forward_to_lifecycle is False
+
+    repo.insert_raw_and_classified(classified)
+
+    conn = sqlite3.connect(db_path)
+    raw_count = conn.execute("SELECT COUNT(*) FROM exchange_raw_events").fetchone()[0]
+    ops_count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+
+    assert raw_count == 1
+    assert ops_count == 0
+
+
+# ---------------------------------------------------------------------------
+# Test 4: get_known_order_link_ids
+# ---------------------------------------------------------------------------
+
+def test_get_known_order_link_ids(tmp_path):
+    db_path = make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, client_order_id) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (1, 10, "PLACE_ENTRY", "SENT", "tsb:1:entry:1"),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, client_order_id) "
+        "VALUES (?, ?, ?, ?, ?)",
+        (2, 10, "SET_POSITION_TPSL_PARTIAL", "SENT", "tsb:1:tp:1"),
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(db_path)
+    mapping = repo.get_known_order_link_ids()
+
+    assert "tsb:1:entry:1" in mapping
+    assert "tsb:1:tp:1" in mapping
+
+    chain_id_entry, role_entry, seq_entry = mapping["tsb:1:entry:1"]
+    assert chain_id_entry == 10
+    assert role_entry == "entry"
+    assert seq_entry == 1  # command_id
+
+    chain_id_tp, role_tp, seq_tp = mapping["tsb:1:tp:1"]
+    assert chain_id_tp == 10
+    assert role_tp == "tp_1"
+    assert seq_tp == 2  # command_id
+
+
+# ---------------------------------------------------------------------------
+# Test 5: get_open_chains_with_tps
+# ---------------------------------------------------------------------------
+
+def test_get_open_chains_with_tps(tmp_path):
+    db_path = make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    # Open chain with TP command
+    conn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (?, ?, ?, ?)",
+        (1, "BTCUSDT", "LONG", "OPEN"),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status) VALUES (?,?,?,?)",
+        (1, 1, "SET_POSITION_TPSL_PARTIAL", "SENT"),
+    )
+    # Closed chain — should not appear
+    conn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (?, ?, ?, ?)",
+        (2, "ETHUSDT", "SHORT", "CLOSED"),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status) VALUES (?,?,?,?)",
+        (2, 2, "SET_POSITION_TPSL_PARTIAL", "SENT"),
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(db_path)
+    chains = repo.get_open_chains_with_tps()
+
+    assert len(chains) == 1
+    assert chains[0]["trade_chain_id"] == 1
+    assert chains[0]["symbol"] == "BTCUSDT"
+    assert chains[0]["side"] == "LONG"
+
+
+# ---------------------------------------------------------------------------
+# Test 6: tp_fill_exists and protective_cancelled_exists
+# ---------------------------------------------------------------------------
+
+def test_tp_fill_exists_and_protective_cancelled_exists(tmp_path):
+    db_path = make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    # Insert TP_FILLED for chain=1 level=1
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (?,?,?,?,?,?)",
+        (1, "TP_FILLED", "{}", "NEW", "TP_FILLED:1:level:1", "2026-05-27T10:00:00Z"),
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(db_path)
+
+    assert repo.tp_fill_exists(1, 1) is True
+    assert repo.tp_fill_exists(1, 2) is False
+
+    # Insert PROTECTIVE_ORDER_CANCELLED for chain=1
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (?,?,?,?,?,?)",
+        (1, "PROTECTIVE_ORDER_CANCELLED", "{}", "NEW", "PROTECTIVE_ORDER_CANCELLED:1:unique", "2026-05-27T10:00:00Z"),
+    )
+    conn.commit()
+    conn.close()
+
+    assert repo.protective_cancelled_exists(1) is True
+    assert repo.protective_cancelled_exists(99) is False

@@ -4,8 +4,12 @@ from __future__ import annotations
 import json
 import sqlite3
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+if TYPE_CHECKING:
+    from src.runtime_v2.execution_gateway.event_ingest.models import ClassifiedEvent
 
 
 def _now() -> str:
@@ -340,18 +344,53 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    @staticmethod
+    def _expand_active_tp_payload(command_type: str, payload: dict) -> list[dict]:
+        if command_type == "REBUILD_PARTIAL_TPS":
+            tp_items = payload.get("tps")
+            if not isinstance(tp_items, list):
+                return []
+            expanded: list[dict] = []
+            for tp_item in tp_items:
+                if not isinstance(tp_item, dict):
+                    continue
+                try:
+                    expanded.append({
+                        "tp_sequence": int(tp_item["sequence"]),
+                        "take_profit": float(tp_item["price"]),
+                        "tp_size": float(tp_item["qty"]),
+                        "tp_order_type": tp_item.get("order_type", "Limit"),
+                        "tp_limit_price": tp_item.get("limit_price"),
+                        "tp_trigger_by": tp_item.get("trigger_by", "MarkPrice"),
+                    })
+                except (KeyError, TypeError, ValueError):
+                    continue
+            return expanded
+
+        if command_type in {"SET_POSITION_TPSL_PARTIAL", "SET_POSITION_TPSL_FULL"}:
+            return [payload]
+
+        return []
+
     def count_active_tps(self, trade_chain_id: int) -> int:
-        """Counts active SET_POSITION_TPSL_* commands (SENT/DONE status) for the chain."""
+        """Counts active TP levels (not just rows) for the chain."""
         conn = sqlite3.connect(self._db)
         try:
-            row = conn.execute(
-                "SELECT COUNT(*) FROM ops_execution_commands "
+            rows = conn.execute(
+                "SELECT command_type, payload_json FROM ops_execution_commands "
                 "WHERE trade_chain_id=? "
-                "AND command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL') "
+                "AND command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
                 "AND status IN ('SENT', 'DONE')",
                 (trade_chain_id,),
-            ).fetchone()
-            return int(row[0]) if row else 0
+            ).fetchall()
+            total = 0
+            for command_type, payload_json in rows:
+                try:
+                    payload = json.loads(payload_json or "{}")
+                except Exception:
+                    continue
+                total += len(self._expand_active_tp_payload(command_type, payload))
+            return total
         finally:
             conn.close()
 
@@ -378,28 +417,29 @@ class GatewayCommandRepository:
             conn.close()
 
     def get_active_tp_commands(self, trade_chain_id: int) -> list[dict]:
-        """Payload dei SET_POSITION_TPSL_* SENT/DONE per chain OPEN/PARTIALLY_CLOSED.
+        """TP attivi SENT/DONE per chain OPEN/PARTIALLY_CLOSED.
 
         Usato da watchMyTrades per confrontare il fill price con i TP attivi.
         """
         conn = sqlite3.connect(self._db)
         try:
             rows = conn.execute(
-                "SELECT c.payload_json "
+                "SELECT c.command_type, c.payload_json "
                 "FROM ops_execution_commands c "
                 "JOIN ops_trade_chains t ON c.trade_chain_id = t.trade_chain_id "
                 "WHERE c.trade_chain_id = ? "
-                "AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL') "
+                "AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
                 "AND c.status IN ('SENT', 'DONE') "
                 "AND t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
                 (trade_chain_id,),
             ).fetchall()
             result = []
-            for (payload_json,) in rows:
+            for command_type, payload_json in rows:
                 try:
-                    result.append(json.loads(payload_json))
+                    payload = json.loads(payload_json or "{}")
                 except Exception:
-                    pass
+                    continue
+                result.extend(self._expand_active_tp_payload(command_type, payload))
             return result
         finally:
             conn.close()
@@ -419,6 +459,172 @@ class GatewayCommandRepository:
                 (symbol, side),
             ).fetchall()
             return [int(r[0]) for r in rows]
+        finally:
+            conn.close()
+
+    # ------------------------------------------------------------------
+    # New methods: exchange-centric event ingest
+    # ------------------------------------------------------------------
+
+    def insert_raw_and_classified(self, classified: "ClassifiedEvent") -> bool:
+        """Insert into exchange_raw_events (audit) and ops_exchange_events (lifecycle).
+
+        Returns True if the exchange_raw_events row was actually inserted (not a duplicate).
+        Both inserts are done inside a single transaction using INSERT OR IGNORE for idempotency.
+        ops_exchange_events is only written when classified.should_forward_to_lifecycle is True.
+        """
+        from src.runtime_v2.execution_gateway.event_ingest.models import ClassifiedEvent as _CE  # noqa: F401
+
+        raw = classified.raw
+        now = _now()
+
+        # Build ops_exchange_events idempotency key
+        if classified.event_type == "TP_FILLED":
+            if classified.tp_level is not None:
+                ops_idem_key = f"TP_FILLED:{classified.trade_chain_id}:level:{classified.tp_level}"
+            else:
+                ops_idem_key = f"TP_FILLED:{classified.trade_chain_id}"
+        elif classified.event_type == "ENTRY_FILLED":
+            ops_idem_key = f"ENTRY_FILLED:{classified.trade_chain_id}"
+        else:
+            ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
+
+        payload = {
+            "exec_price": raw.exec_price,
+            "exec_qty": raw.exec_qty,
+            "closed_size": raw.closed_size,
+            "pos_qty": raw.pos_qty,
+            "symbol": raw.symbol,
+            "side": raw.side,
+            "source": classified.source,
+            "tp_level": classified.tp_level,
+            "exchange_event_id": raw.exchange_event_id,
+        }
+
+        conn = sqlite3.connect(self._db)
+        try:
+            cursor = conn.execute(
+                """INSERT OR IGNORE INTO exchange_raw_events (
+                    exchange_event_id, source_stream, symbol, side,
+                    create_type, stop_order_type, exec_type, order_status,
+                    order_link_id, order_id, seq, exec_price, exec_qty,
+                    closed_size, leaves_qty, pos_qty, exec_value, exec_fee,
+                    fee_rate, cum_exec_qty, position_take_profit, position_stop_loss,
+                    classified_event_type, classified_source, trade_chain_id, tp_level,
+                    forwarded_to_lifecycle, raw_info_json, exchange_time, received_at,
+                    idempotency_key
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (
+                    raw.exchange_event_id, raw.source_stream, raw.symbol, raw.side,
+                    raw.create_type, raw.stop_order_type, raw.exec_type, raw.order_status,
+                    raw.order_link_id, raw.order_id, raw.seq, raw.exec_price, raw.exec_qty,
+                    raw.closed_size, raw.leaves_qty, raw.pos_qty, raw.exec_value, raw.exec_fee,
+                    raw.fee_rate, raw.cum_exec_qty, raw.position_take_profit, raw.position_stop_loss,
+                    classified.event_type, classified.source, classified.trade_chain_id, classified.tp_level,
+                    1 if classified.should_forward_to_lifecycle else 0,
+                    json.dumps(raw.raw_info),
+                    raw.exchange_time,
+                    raw.received_at or now,
+                    raw.idempotency_key,
+                ),
+            )
+            inserted = cursor.rowcount > 0
+
+            if classified.should_forward_to_lifecycle:
+                conn.execute(
+                    "INSERT OR IGNORE INTO ops_exchange_events "
+                    "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+                    "VALUES (?,?,?,?,?,?)",
+                    (
+                        classified.trade_chain_id,
+                        classified.event_type,
+                        json.dumps(payload),
+                        "NEW",
+                        ops_idem_key,
+                        raw.received_at or now,
+                    ),
+                )
+
+            conn.commit()
+            return inserted
+        finally:
+            conn.close()
+
+    def get_known_order_link_ids(self) -> dict[str, tuple[int, str, int]]:
+        """Returns mapping orderLinkId → (trade_chain_id, role, sequence) for the classifier."""
+        _role_map: dict[str, str] = {
+            "PLACE_ENTRY": "entry",
+            "PLACE_ENTRY_WITH_ATTACHED_TPSL": "entry",
+            "SET_POSITION_TPSL_PARTIAL": "tp_1",
+            "SET_POSITION_TPSL_FULL": "tp_1",
+            "REBUILD_PARTIAL_TPS": "tp_multi",
+            "SET_STOP_LOSS": "sl",
+        }
+        conn = sqlite3.connect(self._db)
+        try:
+            rows = conn.execute(
+                "SELECT client_order_id, trade_chain_id, command_type, command_id "
+                "FROM ops_execution_commands "
+                "WHERE status IN ('SENT', 'ACK', 'DONE') "
+                "  AND client_order_id IS NOT NULL "
+                "  AND client_order_id != ''"
+            ).fetchall()
+            result: dict[str, tuple[int, str, int]] = {}
+            for client_order_id, trade_chain_id, command_type, command_id in rows:
+                role = _role_map.get(command_type, "unknown")
+                result[client_order_id] = (int(trade_chain_id), role, int(command_id))
+            return result
+        finally:
+            conn.close()
+
+    def get_open_chains_with_tps(self) -> list[dict]:
+        """Returns open chains that have active TP commands. Used by run_trade_based_reconciliation."""
+        conn = sqlite3.connect(self._db)
+        try:
+            rows = conn.execute(
+                "SELECT DISTINCT t.trade_chain_id, t.symbol, t.side "
+                "FROM ops_trade_chains t "
+                "JOIN ops_execution_commands c ON c.trade_chain_id = t.trade_chain_id "
+                "WHERE t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
+                "  AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
+                "  AND c.status IN ('SENT', 'DONE')"
+            ).fetchall()
+            return [{"trade_chain_id": int(r[0]), "symbol": r[1], "side": r[2]} for r in rows]
+        finally:
+            conn.close()
+
+    def tp_fill_exists(self, trade_chain_id: int, tp_level: int | None) -> bool:
+        """Checks if a TP_FILLED event already exists for this chain/level. Idempotency check."""
+        if tp_level is not None:
+            idem_key = f"TP_FILLED:{trade_chain_id}:level:{tp_level}"
+        else:
+            idem_key = f"TP_FILLED:{trade_chain_id}"
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM ops_exchange_events "
+                "WHERE trade_chain_id = ? "
+                "  AND event_type = 'TP_FILLED' "
+                "  AND idempotency_key = ? "
+                "LIMIT 1",
+                (trade_chain_id, idem_key),
+            ).fetchone()
+            return row is not None
+        finally:
+            conn.close()
+
+    def protective_cancelled_exists(self, trade_chain_id: int) -> bool:
+        """Checks if a PROTECTIVE_ORDER_CANCELLED event already exists for this chain."""
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM ops_exchange_events "
+                "WHERE trade_chain_id = ? "
+                "  AND event_type = 'PROTECTIVE_ORDER_CANCELLED' "
+                "LIMIT 1",
+                (trade_chain_id,),
+            ).fetchone()
+            return row is not None
         finally:
             conn.close()
 
