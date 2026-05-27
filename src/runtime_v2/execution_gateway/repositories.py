@@ -473,8 +473,6 @@ class GatewayCommandRepository:
         Both inserts are done inside a single transaction using INSERT OR IGNORE for idempotency.
         ops_exchange_events is only written when classified.should_forward_to_lifecycle is True.
         """
-        from src.runtime_v2.execution_gateway.event_ingest.models import ClassifiedEvent as _CE  # noqa: F401
-
         raw = classified.raw
         now = _now()
 
@@ -528,7 +526,7 @@ class GatewayCommandRepository:
                     raw.idempotency_key,
                 ),
             )
-            inserted = cursor.rowcount > 0
+            rowcount = cursor.rowcount
 
             if classified.should_forward_to_lifecycle:
                 conn.execute(
@@ -546,7 +544,7 @@ class GatewayCommandRepository:
                 )
 
             conn.commit()
-            return inserted
+            return rowcount > 0
         finally:
             conn.close()
 
@@ -567,7 +565,8 @@ class GatewayCommandRepository:
                 "FROM ops_execution_commands "
                 "WHERE status IN ('SENT', 'ACK', 'DONE') "
                 "  AND client_order_id IS NOT NULL "
-                "  AND client_order_id != ''"
+                "  AND client_order_id != '' "
+                "ORDER BY command_id ASC"
             ).fetchall()
             result: dict[str, tuple[int, str, int]] = {}
             for client_order_id, trade_chain_id, command_type, command_id in rows:
