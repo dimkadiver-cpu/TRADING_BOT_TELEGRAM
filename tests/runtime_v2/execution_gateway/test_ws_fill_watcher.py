@@ -1,364 +1,196 @@
 # tests/runtime_v2/execution_gateway/test_ws_fill_watcher.py
 from __future__ import annotations
 
-import json
-import sqlite3
-from pathlib import Path
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-
-def _apply_migrations(db_path: str) -> None:
-    conn = sqlite3.connect(db_path)
-    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
-        conn.executescript(f.read_text(encoding="utf-8"))
-    conn.commit()
-    conn.close()
+from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
+from src.runtime_v2.execution_gateway.event_ingest.models import ClassifiedEvent, ExchangeRawEvent
 
 
-def _insert_open_chain(
-    db_path: str,
-    chain_id: int,
-    symbol: str = "BTCUSDT",
-    side: str = "LONG",
-    open_qty: float = 0.01,
-) -> None:
-    import datetime as dt
-    now = dt.datetime.now(dt.timezone.utc).isoformat()
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "INSERT INTO ops_trade_chains "
-        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
-        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
-        "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
-        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
-         symbol, side, "OPEN", "ONE_SHOT", "{}", open_qty, open_qty, now, now),
-    )
-    conn.commit()
-    conn.close()
-
-
-def _insert_tp_command(
-    db_path: str,
-    chain_id: int,
-    cmd_id: int,
-    tp_price: float,
-    tp_level: int = 1,
-    tp_size: float = 0.005,
-) -> None:
-    import datetime as dt
-    now = dt.datetime.now(dt.timezone.utc).isoformat()
-    payload = json.dumps({
-        "symbol": "BTCUSDT",
-        "side": "LONG",
-        "take_profit": tp_price,
-        "tp_size": tp_size,
-        "tp_sequence": tp_level,
-        "tp_order_type": "Limit",
-        "tp_limit_price": tp_price,
-        "tp_trigger_by": "MarkPrice",
-        "preserve_sl": True,
-    })
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "INSERT INTO ops_execution_commands "
-        "(command_id, trade_chain_id, command_type, status, payload_json, "
-        "idempotency_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
-        (cmd_id, chain_id, "SET_POSITION_TPSL_PARTIAL", "DONE",
-         payload, f"idem_tp:{cmd_id}", now, now),
-    )
-    conn.commit()
-    conn.close()
-
-
-@pytest.fixture
-def ops_db(tmp_path):
-    db = str(tmp_path / "ops.sqlite3")
-    _apply_migrations(db)
-    return db
-
-
-def _make_watcher(ops_db: str):
-    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-    repo = GatewayCommandRepository(ops_db)
+def _make_watcher(mock_repo=None):
+    if mock_repo is None:
+        mock_repo = MagicMock()
+        mock_repo.get_known_order_link_ids.return_value = {}
     return BybitWsFillWatcher(
+        api_key="k",
+        api_secret="s",
+        testnet=False,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+
+
+# ── _process_batch ────────────────────────────────────────────────────────────
+
+def test_process_batch_normalizes_and_classifies_and_inserts():
+    """_process_batch calls normalize_fn, classifies, and calls insert_raw_and_classified."""
+    mock_repo = MagicMock()
+    mock_normalizer = MagicMock()
+    mock_classifier = MagicMock()
+
+    watcher = BybitWsFillWatcher(
         api_key="k", api_secret="s", testnet=False,
-        ops_db_path=ops_db, repo=repo,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=mock_normalizer,
+        classifier=mock_classifier,
     )
 
+    # Setup: normalize_fn returns a raw event; classify returns a classified event with chain
+    mock_raw = MagicMock(spec=ExchangeRawEvent)
+    mock_classified = MagicMock(spec=ClassifiedEvent)
+    mock_classified.should_forward_to_lifecycle = True
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
 
-# ── _save_tp_fill_from_trade ──────────────────────────────────────────────────
+    normalize_fn = MagicMock(return_value=mock_raw)
 
-def test_save_tp_fill_from_trade_inserts_event(ops_db):
-    """_save_tp_fill_from_trade() inserisce TP_FILLED con dati reali e chiave level:N."""
-    watcher = _make_watcher(ops_db)
-    watcher._save_tp_fill_from_trade(
-        chain_id=1, tp_level=1,
-        fill_price=67350.5, filled_qty=0.01,
-        is_final=True, exchange_trade_id="trade-xyz",
+    # Patch EventClassifier to return mock_classified
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = mock_classified
+        watcher._process_batch([{"id": "trade-1"}], normalize_fn)
+
+    normalize_fn.assert_called_once_with({"id": "trade-1"})
+    mock_repo.insert_raw_and_classified.assert_called_once_with(mock_classified)
+
+
+def test_process_batch_skips_none_from_normalizer():
+    """_process_batch skips items where normalize_fn returns None."""
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:", repo=mock_repo,
+        normalizer=MagicMock(), classifier=MagicMock(),
+    )
+    normalize_fn = MagicMock(return_value=None)
+
+    with patch("src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"):
+        watcher._process_batch([{"id": "x"}], normalize_fn)
+
+    mock_repo.insert_raw_and_classified.assert_not_called()
+
+
+def test_process_batch_empty_input():
+    """_process_batch with None or empty list does nothing."""
+    mock_repo = MagicMock()
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:", repo=mock_repo,
+        normalizer=MagicMock(), classifier=MagicMock(),
+    )
+    watcher._process_batch(None, MagicMock())
+    watcher._process_batch([], MagicMock())
+    mock_repo.get_known_order_link_ids.assert_not_called()
+
+
+def test_process_batch_triggers_wake_callback_on_insert():
+    """_process_batch calls wake_callback when insert_raw_and_classified returns True and should_forward."""
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
+
+    wake = MagicMock()
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:", repo=mock_repo,
+        normalizer=MagicMock(), classifier=MagicMock(),
+        wake_callback=wake,
     )
 
-    conn = sqlite3.connect(ops_db)
-    rows = conn.execute(
-        "SELECT event_type, payload_json, idempotency_key FROM ops_exchange_events"
-    ).fetchall()
-    conn.close()
-    assert len(rows) == 1
-    event_type, payload_json, ikey = rows[0]
-    assert event_type == "TP_FILLED"
-    assert ikey == "TP_FILLED:1:level:1"
-    p = json.loads(payload_json)
-    assert p["fill_price"] == 67350.5
-    assert p["filled_qty"] == 0.01
-    assert p["is_final"] is True
-    assert p["tp_level"] == 1
-    assert p["source"] == "watch_my_trades"
-    assert p["exchange_trade_id"] == "trade-xyz"
+    mock_classified = MagicMock(spec=ClassifiedEvent)
+    mock_classified.should_forward_to_lifecycle = True
+
+    normalize_fn = MagicMock(return_value=MagicMock(spec=ExchangeRawEvent))
+
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = mock_classified
+        watcher._process_batch([{"id": "t1"}], normalize_fn)
+
+    wake.assert_called_once()
 
 
-def test_save_tp_fill_from_trade_idempotent(ops_db):
-    """Due chiamate con stesso chain+level → esattamente 1 riga (INSERT OR IGNORE)."""
-    watcher = _make_watcher(ops_db)
-    watcher._save_tp_fill_from_trade(1, 1, 67350.5, 0.01, True, "t1")
-    watcher._save_tp_fill_from_trade(1, 1, 67360.0, 0.01, True, "t2")  # stesso livello
+def test_process_batch_no_wake_when_not_forwarded():
+    """_process_batch does NOT call wake_callback when should_forward_to_lifecycle is False."""
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
 
-    conn = sqlite3.connect(ops_db)
-    count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
-    conn.close()
-    assert count == 1
+    wake = MagicMock()
 
-
-# ── _save_fill() idempotency key per TP standalone ───────────────────────────
-
-def test_save_fill_tp_uses_unified_key(ops_db):
-    """_save_fill() per role=tp usa 'TP_FILLED:{chain}:level:{seq}' non exchange_order_id."""
-    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
-    watcher = _make_watcher(ops_db)
-
-    raw = RawAdapterOrder(
-        client_order_id="tsb:42:999:tp:2",
-        exchange_order_id="exch-order-123",
-        status="FILLED",
-        filled_qty=0.005,
-        average_price=70000.0,
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:", repo=mock_repo,
+        normalizer=MagicMock(), classifier=MagicMock(),
+        wake_callback=wake,
     )
-    # Necessario per count_active_tps — aggiunge chain e TP DONE
-    _insert_open_chain(ops_db, 42)
-    _insert_tp_command(ops_db, 42, 9990, tp_price=70000.0, tp_level=2)
 
-    watcher._save_fill("tsb:42:999:tp:2", raw)
+    mock_classified = MagicMock(spec=ClassifiedEvent)
+    mock_classified.should_forward_to_lifecycle = False
 
-    conn = sqlite3.connect(ops_db)
-    rows = conn.execute(
-        "SELECT idempotency_key FROM ops_exchange_events WHERE trade_chain_id=42"
-    ).fetchall()
-    conn.close()
-    assert len(rows) == 1
-    assert rows[0][0] == "TP_FILLED:42:level:2"
+    normalize_fn = MagicMock(return_value=MagicMock(spec=ExchangeRawEvent))
 
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = mock_classified
+        watcher._process_batch([{"id": "t1"}], normalize_fn)
 
-# ── _process_trade_batch matching ────────────────────────────────────────────
-
-def test_process_trade_batch_matched_tp_inserts_event(ops_db):
-    """Trade reduceOnly con price che matcha TP attivo → TP_FILLED inserito."""
-    _insert_open_chain(ops_db, 10, symbol="BTCUSDT", side="LONG")
-    _insert_tp_command(ops_db, 10, 1001, tp_price=67000.0, tp_level=1)
-
-    watcher = _make_watcher(ops_db)
-    # Fill sell (close LONG): price 67005.0 è entro ±1% di 67000.0
-    trades = [{
-        "symbol": "BTC/USDT:USDT",
-        "side": "sell",
-        "price": 67005.0,
-        "amount": 0.005,
-        "reduceOnly": True,
-        "id": "trade-001",
-        "info": {"posQty": "0.005"},  # posizione residua non zero
-    }]
-    watcher._process_trade_batch(trades)
-
-    conn = sqlite3.connect(ops_db)
-    rows = conn.execute(
-        "SELECT event_type, payload_json, idempotency_key FROM ops_exchange_events WHERE trade_chain_id=10"
-    ).fetchall()
-    conn.close()
-    assert len(rows) == 1
-    assert rows[0][0] == "TP_FILLED"
-    assert rows[0][2] == "TP_FILLED:10:level:1"
-    p = json.loads(rows[0][1])
-    assert p["fill_price"] == 67005.0
-    assert p["filled_qty"] == 0.005
-    assert p["is_final"] is False  # posQty=0.005 > 0
-    assert p["source"] == "watch_my_trades"
+    wake.assert_not_called()
 
 
-def test_process_trade_batch_is_final_true_when_pos_qty_zero(ops_db):
-    """`posQty=0` nel trade → is_final=True."""
-    _insert_open_chain(ops_db, 11, symbol="ETHUSDT", side="LONG")
-    _insert_tp_command(ops_db, 11, 1101, tp_price=3200.0, tp_level=1)
+def test_process_batch_exception_in_item_is_swallowed():
+    """_process_batch logs but does not raise when normalize_fn throws."""
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
 
-    watcher = _make_watcher(ops_db)
-    trades = [{
-        "symbol": "ETH/USDT:USDT",
-        "side": "sell",
-        "price": 3201.0,
-        "amount": 0.1,
-        "reduceOnly": True,
-        "id": "t-eth-001",
-        "info": {"posQty": "0"},  # posizione azzerata
-    }]
-    watcher._process_trade_batch(trades)
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:", repo=mock_repo,
+        normalizer=MagicMock(), classifier=MagicMock(),
+    )
 
-    conn = sqlite3.connect(ops_db)
-    p = json.loads(conn.execute(
-        "SELECT payload_json FROM ops_exchange_events WHERE trade_chain_id=11"
-    ).fetchone()[0])
-    conn.close()
-    assert p["is_final"] is True
+    normalize_fn = MagicMock(side_effect=RuntimeError("boom"))
+
+    with patch("src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"):
+        # Must not raise
+        watcher._process_batch([{"id": "bad"}], normalize_fn)
+
+    mock_repo.insert_raw_and_classified.assert_not_called()
 
 
-def test_process_trade_batch_is_final_false_fallback_when_no_pos_qty(ops_db):
-    """`posQty` assente → is_final=False (conservativo)."""
-    _insert_open_chain(ops_db, 12, symbol="SOLUSDT", side="LONG")
-    _insert_tp_command(ops_db, 12, 1201, tp_price=160.0, tp_level=1)
+# ── Constructor / attribute checks ───────────────────────────────────────────
 
-    watcher = _make_watcher(ops_db)
-    trades = [{
-        "symbol": "SOL/USDT:USDT",
-        "side": "sell",
-        "price": 160.5,
-        "amount": 5.0,
-        "reduceOnly": True,
-        "id": "t-sol-001",
-        "info": {},  # posQty non presente
-    }]
-    watcher._process_trade_batch(trades)
+def test_constructor_stores_normalizer_and_classifier():
+    """Constructor stores normalizer and classifier as instance attributes."""
+    mock_normalizer = MagicMock()
+    mock_classifier = MagicMock()
+    mock_repo = MagicMock()
 
-    conn = sqlite3.connect(ops_db)
-    p = json.loads(conn.execute(
-        "SELECT payload_json FROM ops_exchange_events WHERE trade_chain_id=12"
-    ).fetchone()[0])
-    conn.close()
-    assert p["is_final"] is False
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:", repo=mock_repo,
+        normalizer=mock_normalizer, classifier=mock_classifier,
+    )
+
+    assert watcher._normalizer is mock_normalizer
+    assert watcher._classifier is mock_classifier
+    assert watcher._watch_positions_task is None
 
 
-def test_process_trade_batch_ignores_non_reduce_only(ops_db):
-    """Fill NON reduceOnly (entry, SL) → ignorato, nessun evento inserito."""
-    _insert_open_chain(ops_db, 13)
-    _insert_tp_command(ops_db, 13, 1301, tp_price=70000.0)
-
-    watcher = _make_watcher(ops_db)
-    trades = [{
-        "symbol": "BTC/USDT:USDT",
-        "side": "buy",
-        "price": 70000.0,
-        "amount": 0.01,
-        "reduceOnly": False,  # ← entry fill, non TP
-        "id": "t-entry",
-        "info": {},
-    }]
-    watcher._process_trade_batch(trades)
-
-    conn = sqlite3.connect(ops_db)
-    count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
-    conn.close()
-    assert count == 0
-
-
-def test_process_trade_batch_ambiguous_skipped(ops_db):
-    """2 chain con TP a prezzi simili (entro ±1%) → skip silenzioso, nessun INSERT."""
-    # Chain 20 con TP a 70000
-    _insert_open_chain(ops_db, 20, symbol="BTCUSDT", side="LONG")
-    _insert_tp_command(ops_db, 20, 2001, tp_price=70000.0, tp_level=1)
-    # Chain 21 con TP a 70050 (entro 1% da 70100)
-    _insert_open_chain(ops_db, 21, symbol="BTCUSDT", side="LONG")
-    _insert_tp_command(ops_db, 21, 2101, tp_price=70050.0, tp_level=1)
-
-    watcher = _make_watcher(ops_db)
-    # fill a 70100: entro 1% sia da 70000 (0.14%) che da 70050 (0.07%) → ambiguo
-    trades = [{
-        "symbol": "BTC/USDT:USDT",
-        "side": "sell",
-        "price": 70100.0,
-        "amount": 0.005,
-        "reduceOnly": True,
-        "id": "t-ambig",
-        "info": {"posQty": "0.005"},
-    }]
-    watcher._process_trade_batch(trades)
-
-    conn = sqlite3.connect(ops_db)
-    count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
-    conn.close()
-    assert count == 0, "Match ambiguo: nessun evento deve essere inserito"
-
-
-def test_process_trade_batch_none_is_noop(ops_db):
-    """_process_trade_batch(None) silently no-ops — no crash, no events."""
-    watcher = _make_watcher(ops_db)
-    watcher._process_trade_batch(None)  # must not raise
-
-    conn = sqlite3.connect(ops_db)
-    count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
-    conn.close()
-    assert count == 0
-
-
-def test_process_trade_batch_is_final_false_on_unparseable_pos_qty(ops_db):
-    """`posQty` with non-numeric value → is_final=False (fallback branch)."""
-    _insert_open_chain(ops_db, 14, symbol="BTCUSDT", side="LONG")
-    _insert_tp_command(ops_db, 14, 1401, tp_price=70000.0, tp_level=1)
-
-    watcher = _make_watcher(ops_db)
-    trades = [{
-        "symbol": "BTC/USDT:USDT",
-        "side": "sell",
-        "price": 70050.0,
-        "amount": 0.005,
-        "reduceOnly": True,
-        "id": "t-bad-posqty",
-        "info": {"posQty": "N/A"},  # unparseable
-    }]
-    watcher._process_trade_batch(trades)
-
-    conn = sqlite3.connect(ops_db)
-    p = json.loads(conn.execute(
-        "SELECT payload_json FROM ops_exchange_events WHERE trade_chain_id=14"
-    ).fetchone()[0])
-    conn.close()
-    assert p["is_final"] is False
-
-
-def test_process_trade_batch_symbol_mismatch_raw_db_ccxt_trade(ops_db):
-    """Production scenario: DB stores raw 'PHAUSDT', trade arrives as 'PHA/USDT:USDT'.
-    Without normalization get_open_chains_for_symbol returns [] → miss.
-    With normalization → TP_FILLED inserted correctly."""
-    # Insert chain with RAW symbol (as production does)
-    _insert_open_chain(ops_db, 99, symbol="PHAUSDT", side="SHORT", open_qty=7743.0)
-    _insert_tp_command(ops_db, 99, 9901,
-                       tp_price=0.05754, tp_level=1, tp_size=3871.5)
-
-    watcher = _make_watcher(ops_db)
-    # Trade arrives with CCXT unified format (as Bybit WS delivers)
-    trades = [{
-        "symbol": "PHA/USDT:USDT",
-        "side": "buy",           # buy = close SHORT
-        "price": 0.05757,        # within ±1% of 0.05754
-        "amount": 3871.5,
-        "reduceOnly": True,
-        "id": "trade-pha-001",
-        "info": {"posQty": "3871.5"},
-    }]
-    watcher._process_trade_batch(trades)
-
-    conn = sqlite3.connect(ops_db)
-    rows = conn.execute(
-        "SELECT event_type, payload_json FROM ops_exchange_events WHERE trade_chain_id=99"
-    ).fetchall()
-    conn.close()
-    assert len(rows) == 1, f"Expected 1 TP_FILLED, got {len(rows)}"
-    assert rows[0][0] == "TP_FILLED"
-    p = json.loads(rows[0][1])
-    assert p["fill_price"] == 0.05757
+def test_watcher_has_three_task_attributes():
+    """Watcher exposes _watch_orders_task, _watch_trades_task, _watch_positions_task."""
+    watcher = _make_watcher()
+    assert hasattr(watcher, "_watch_orders_task")
+    assert hasattr(watcher, "_watch_trades_task")
+    assert hasattr(watcher, "_watch_positions_task")
