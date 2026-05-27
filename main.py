@@ -123,6 +123,7 @@ def _build_execution_runtime(
         adapter=adapter,
         repo=gateway_repo,
         execution_account_id=routing.execution_account_id,
+        wake_callback=wake_callback,
     )
 
     ws_watcher = None
