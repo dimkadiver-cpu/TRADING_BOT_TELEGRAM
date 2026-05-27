@@ -66,7 +66,7 @@ Verifica principale del flusso.
 - [x] Verificare `CANCEL_PENDING_ENTRY` quando cancelli l'entry pendente
 - [ ] Verificare chiusura parziale con `CLOSE_PARTIAL` + parziali aperti?
 - [ ] Verificare chiusura totale con `CLOSE_FULL`
-- [X] Verificare `MOVE_STOP_TO_BREAKEVEN`
+- [ ] Verificare `MOVE_STOP_TO_BREAKEVEN`
 - [ ] Verificare `MOVE_STOP` (non implimitato)
 - [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` in unico messaggio
 - [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` dopo `TP_HIT`

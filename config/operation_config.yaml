@@ -129,7 +129,7 @@ defaults:
     cancel_averaging_pending_after: null  # Valori supportati: null | tp1 | tp2.
     cancel_unfilled_pending_after: null  # Valori supportati: null | tp1 | tp2.
     risk_freed_by_be: true  # true = il BE libera capacita' rischio residua.
-    protective_sl_mode: exchange_native_first  # Valori supportati: exchange_native_first | bot_managed.
+    protective_sl_mode: exchange_native_first  # Valori supportati: exchange_native_first | bot_managed. (NON USATO)
 
   risk:
     mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
