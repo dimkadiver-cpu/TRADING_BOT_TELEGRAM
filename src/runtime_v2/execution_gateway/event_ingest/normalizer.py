@@ -28,6 +28,16 @@ def _s(val: object) -> str | None:
     return str(val) if val is not None else None
 
 
+def _ms_to_iso(val: object) -> str | None:
+    """Timestamp in milliseconds → UTC ISO string, or None on error."""
+    if val is None:
+        return None
+    try:
+        return datetime.fromtimestamp(int(val) / 1000, tz=timezone.utc).isoformat()
+    except (TypeError, ValueError):
+        return None
+
+
 def _ccxt_symbol_to_raw(symbol: str) -> str:
     """'PHA/USDT:USDT' → 'PHAUSDT'"""
     if "/" not in symbol:
@@ -50,11 +60,7 @@ class EventNormalizer:
         if not symbol or not side:
             return None
 
-        exec_time_ms = info.get("execTime")
-        exchange_time = (
-            datetime.fromtimestamp(int(exec_time_ms) / 1000, tz=timezone.utc).isoformat()
-            if exec_time_ms else None
-        )
+        exchange_time = _ms_to_iso(info.get("execTime"))
 
         return ExchangeRawEvent(
             source_stream     = "watch_my_trades",
@@ -100,11 +106,7 @@ class EventNormalizer:
         if not symbol or not side:
             return None
 
-        updated_time_ms = info.get("updatedTime")
-        exchange_time = (
-            datetime.fromtimestamp(int(updated_time_ms) / 1000, tz=timezone.utc).isoformat()
-            if updated_time_ms else None
-        )
+        exchange_time = _ms_to_iso(info.get("updatedTime"))
 
         return ExchangeRawEvent(
             source_stream     = "watch_orders",
@@ -116,7 +118,7 @@ class EventNormalizer:
             stop_order_type   = _s(info.get("stopOrderType")),
             exec_type         = None,
             order_status      = order_status,
-            order_link_id     = _s(info.get("orderLinkId") or order.get("clientOrderId")),
+            order_link_id     = _s(info["orderLinkId"] if "orderLinkId" in info else order.get("clientOrderId")),
             order_id          = order_id,
             seq               = None,
             exec_price        = _f(order.get("average") or info.get("avgPrice")),
@@ -145,10 +147,7 @@ class EventNormalizer:
 
         seq = _i(info.get("seq"))
         updated_time_ms = info.get("updatedTime")
-        exchange_time = (
-            datetime.fromtimestamp(int(updated_time_ms) / 1000, tz=timezone.utc).isoformat()
-            if updated_time_ms else None
-        )
+        exchange_time = _ms_to_iso(updated_time_ms)
         seq_key = seq if seq is not None else (updated_time_ms or _now())
 
         return ExchangeRawEvent(
