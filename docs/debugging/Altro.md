@@ -1,5 +1,7 @@
 - Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?
 
+- Verificare coma mai quando piazzo ordine il TP parzial e veloce, alre volte a ritardo.
+
 - Aggiornare file Readme, CLAUDE.md
 
 - pulizia finale da vecchi file/non in uso ecc. (fatta in parte)

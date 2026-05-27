@@ -172,7 +172,9 @@
       "PowerShell(New-Item *)",
       "Bash(Select-Object FullName, LastWriteTime, Length)",
       "Bash(sqlite3 db/ops.sqlite3 \".schema\")",
-      "Bash(xargs grep -l \"BybitWsFillWatcher\")"
+      "Bash(xargs grep -l \"BybitWsFillWatcher\")",
+      "WebFetch(domain:bybit-exchange.github.io)",
+      "WebFetch(domain:docs.ccxt.com)"
     ]
   }
 }
