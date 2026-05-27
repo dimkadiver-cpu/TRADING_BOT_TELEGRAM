@@ -203,6 +203,36 @@ def test_unknown_command_raises_value_error() -> None:
         _builder().build("DO_SOMETHING_ELSE", {}, "tsb:10:5:unknown:1")
 
 
+def test_rebuild_partial_tps_builds_rebuild_params() -> None:
+    payload = {
+        "symbol": "BTC/USDT:USDT",
+        "side": "LONG",
+        "position_idx": "1",
+        "preserve_sl": False,
+        "preserve_full_tp": False,
+        "tps": [
+            {"price": 51000.0, "qty": 0.003},
+            {"price": 52000.0, "qty": 0.004},
+        ],
+    }
+
+    params = _builder().build(
+        "REBUILD_PARTIAL_TPS",
+        payload,
+        "tsb:10:5:rebuild:1",
+    )
+
+    assert params.action == "rebuild_partial_tps"
+    assert params.symbol == "BTC/USDT:USDT"
+    assert params.position_side == "LONG"
+    assert params.extra_params == {
+        "position_idx": 1,
+        "preserve_sl": False,
+        "preserve_full_tp": False,
+        "tps": payload["tps"],
+    }
+
+
 @pytest.mark.parametrize(
     ("command_type", "payload", "expected_position_idx"),
     [

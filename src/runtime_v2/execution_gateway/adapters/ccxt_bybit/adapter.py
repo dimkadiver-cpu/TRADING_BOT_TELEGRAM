@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import logging
 import time
 from typing import TYPE_CHECKING
@@ -220,6 +221,13 @@ class CcxtBybitAdapter(ExecutionAdapter):
 
             if params.action == "amend_sl_qty":
                 return self._handle_amend_sl_qty(params.symbol, params.position_side)
+
+            if params.action == "rebuild_partial_tps":
+                return self._handle_rebuild_partial_tps(
+                    params.symbol,
+                    params.position_side,
+                    params.extra_params,
+                )
 
             if params.action in {"trading_stop_full", "trading_stop_partial", "trading_stop_move_sl"}:
                 resp = self._exchange.private_post_v5_position_trading_stop({
@@ -471,6 +479,102 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)
                 return AdapterResult(success=False, error=f"retCode={ret_code}: {ret_msg}")
             return AdapterResult(success=True)
+
+        return AdapterResult(success=True)
+
+    def _handle_rebuild_partial_tps(
+        self,
+        symbol: str,
+        side: str,
+        extra_params: dict,
+    ) -> AdapterResult:
+        def _safe_float(value: object) -> float | None:
+            if value is None:
+                return None
+            text = str(value).strip()
+            if text == "":
+                return None
+            try:
+                return float(text)
+            except (TypeError, ValueError):
+                return None
+
+        close_side = "sell" if side == "LONG" else "buy"
+        position_idx = int(extra_params.get("position_idx", 0))
+        tps = list(extra_params.get("tps") or [])
+        preserve_sl = bool(extra_params.get("preserve_sl", True))
+        preserve_full_tp = bool(extra_params.get("preserve_full_tp", True))
+
+        try:
+            positions = self._exchange.fetch_positions([symbol])
+        except Exception as exc:
+            return AdapterResult(success=False, error=f"fetch_positions failed: {exc}")
+
+        full_qty = 0.0
+        active_stop_loss: float | None = None
+        for pos in positions:
+            if str(pos.get("side") or "").lower() != side.lower():
+                continue
+            full_qty = float(pos.get("contracts") or 0.0)
+            pos_info = pos.get("info") or {}
+            active_stop_loss = _safe_float(pos_info.get("stopLoss"))
+            break
+
+        try:
+            open_orders = self._exchange.fetch_open_orders(symbol)
+        except Exception as exc:
+            return AdapterResult(success=False, error=f"fetch_open_orders failed: {exc}")
+
+        candidate_orders = [
+            order
+            for order in open_orders
+            if order.get("reduceOnly")
+            and order.get("stopPrice")
+            and order.get("side") == close_side
+        ]
+        for order in candidate_orders:
+            order_amount = float(order.get("amount") or 0.0)
+            order_stop_price = _safe_float(order.get("stopPrice"))
+            if (
+                preserve_sl
+                and active_stop_loss is not None
+                and order_stop_price is not None
+                and order_stop_price == active_stop_loss
+            ):
+                continue
+            if preserve_full_tp and math.isclose(order_amount, full_qty, rel_tol=1e-9, abs_tol=1e-9):
+                continue
+            try:
+                self._exchange.cancel_order(order["id"], symbol)
+            except Exception as exc:
+                logger.warning("cancel partial tp order failed: %s", exc)
+
+        for tp in sorted(tps, key=lambda item: int(item.get("sequence", 0))):
+            sequence = int(tp.get("sequence", 0))
+            tp_order_type = str(tp.get("order_type", "Limit"))
+            body = {
+                "category": "linear",
+                "symbol": self._normalize_bybit_symbol(symbol),
+                "positionIdx": position_idx,
+                "tpslMode": "Partial",
+                "takeProfit": str(float(tp["price"])),
+                "tpSize": str(float(tp["qty"])),
+                "tpOrderType": tp_order_type,
+                "tpTriggerBy": tp.get("trigger_by", "MarkPrice"),
+            }
+            if tp_order_type == "Limit" and tp.get("limit_price") is not None:
+                body["tpLimitPrice"] = str(float(tp["limit_price"]))
+            try:
+                resp = self._exchange.private_post_v5_position_trading_stop(body)
+            except Exception as exc:
+                return AdapterResult(success=False, error=f"tp{sequence}: {exc}")
+            ret_code, ret_msg = self._parse_trading_stop_retcode(resp)
+            if ret_code != 0:
+                logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)
+                return AdapterResult(
+                    success=False,
+                    error=f"tp{sequence}: retCode={ret_code}: {ret_msg}",
+                )
 
         return AdapterResult(success=True)
 

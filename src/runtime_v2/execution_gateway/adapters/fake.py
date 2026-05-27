@@ -44,8 +44,22 @@ class FakeAdapter(ExecutionAdapter):
     def get_capabilities(self) -> AdapterCapabilities:
         return self._capabilities
 
-    def set_leverage(self, symbol: str, leverage: int, execution_account_id: str) -> None:
-        self.calls.append({"action": "set_leverage", "symbol": symbol, "leverage": leverage})
+    def set_leverage(
+        self,
+        symbol: str,
+        leverage: int,
+        execution_account_id: str,
+        *,
+        position_idx: int = 0,
+    ) -> None:
+        self.calls.append(
+            {
+                "action": "set_leverage",
+                "symbol": symbol,
+                "leverage": leverage,
+                "position_idx": position_idx,
+            }
+        )
 
     def place_order(
         self,

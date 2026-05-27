@@ -63,26 +63,54 @@ def test_single_tp_rebuild_policy_none_emits_no_commands():
     assert cmds == []
 
 
-def test_multi_tp_emits_intermediate_tp_commands():
+def test_multi_tp_emits_single_rebuild_partial_tps_command():
     chain = _make_chain(plan_state_json=_plan_multi_tp([51000.0, 52000.0]))
     cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.02, exchange_event_id=7)
-    assert len(cmds) == 2
-    for cmd in cmds:
-        assert cmd.command_type == "SET_POSITION_TPSL_PARTIAL"
-    p0 = json.loads(cmds[0].payload_json)
-    assert p0["take_profit"] == 51000.0
-    assert p0["supersedes_previous"] is True
+    assert len(cmds) == 1
+    assert cmds[0].command_type == "REBUILD_PARTIAL_TPS"
+    payload = json.loads(cmds[0].payload_json)
+    assert payload["symbol"] == "BTC/USDT"
+    assert payload["side"] == "LONG"
+    assert payload["tps"] == [
+        {
+            "sequence": 1,
+            "price": 51000.0,
+            "qty": pytest.approx(0.00666667),
+            "order_type": "Limit",
+            "limit_price": 51000.0,
+            "trigger_by": "MarkPrice",
+        },
+        {
+            "sequence": 2,
+            "price": 52000.0,
+            "qty": pytest.approx(0.00666667),
+            "order_type": "Limit",
+            "limit_price": 52000.0,
+            "trigger_by": "MarkPrice",
+        },
+    ]
 
 
-def test_multi_tp_tp_size_based_on_filled_qty():
-    chain = _make_chain(plan_state_json=_plan_multi_tp([51000.0]))
+def test_multi_tp_qty_derived_from_filled_qty_and_total_tps():
+    chain = _make_chain(plan_state_json=_plan_multi_tp([51000.0, 52000.0, 53000.0]))
     cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.10, exchange_event_id=9)
     assert len(cmds) == 1
-    p = json.loads(cmds[0].payload_json)
-    assert p["tp_size"] == pytest.approx(0.05)
+    payload = json.loads(cmds[0].payload_json)
+    assert payload["tps"][0]["qty"] == pytest.approx(0.025)
+    assert payload["tps"][1]["qty"] == pytest.approx(0.025)
+    assert payload["tps"][2]["qty"] == pytest.approx(0.025)
 
 
-def test_multi_tp_carries_hedge_mode_and_position_idx_from_chain():
+def test_multi_tp_two_level_equal_qty_case():
+    chain = _make_chain(plan_state_json=_plan_multi_tp([51000.0, 52000.0]))
+    cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.06, exchange_event_id=10)
+    assert len(cmds) == 1
+    payload = json.loads(cmds[0].payload_json)
+    assert payload["tps"][0]["qty"] == pytest.approx(0.02)
+    assert payload["tps"][1]["qty"] == pytest.approx(0.02)
+
+
+def test_multi_tp_carries_hedge_mode_and_position_idx_in_rebuild_command():
     chain = _make_chain(
         side="SHORT",
         plan_state_json=_plan_multi_tp([51000.0]),
@@ -90,12 +118,59 @@ def test_multi_tp_carries_hedge_mode_and_position_idx_from_chain():
     )
     cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.10, exchange_event_id=11)
     assert len(cmds) == 1
-    p = json.loads(cmds[0].payload_json)
-    assert p["hedge_mode"] is True
-    assert p["position_idx"] == 2
+    payload = json.loads(cmds[0].payload_json)
+    assert payload["hedge_mode"] is True
+    assert payload["position_idx"] == 2
+
+
+def test_multi_tp_idempotency_uses_exchange_event_id():
+    chain = _make_chain(plan_state_json=_plan_multi_tp([51000.0]))
+    cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.10, exchange_event_id=42)
+    assert len(cmds) == 1
+    assert cmds[0].idempotency_key == "rebuild_partial_tps:1:42"
+
+
+def test_multi_tp_preserves_sl_and_full_tp():
+    chain = _make_chain(plan_state_json=_plan_multi_tp([51000.0]))
+    cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.10, exchange_event_id=12)
+    assert len(cmds) == 1
+    payload = json.loads(cmds[0].payload_json)
+    assert payload["preserve_sl"] is True
+    assert payload["preserve_full_tp"] is True
+
+
+def test_empty_intermediate_tps_emit_no_command():
+    empty_multi_tp_plan = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "ON_EACH_ENTRY_FILL",
+        "intermediate_tps": [],
+        "final_tp": 51000.0,
+    })
+    chain = _make_chain(plan_state_json=empty_multi_tp_plan)
+    cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.01, exchange_event_id=13)
+    assert cmds == []
+
+
+def test_malformed_plan_state_json_emits_nothing():
+    chain = _make_chain(plan_state_json="{not-json")
+    cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.01, exchange_event_id=14)
+    assert cmds == []
 
 
 def test_missing_plan_state_json_emits_nothing():
     chain = _make_chain(plan_state_json="{}")
     cmds = _rebuilder().build_after_fill(chain, filled_entry_qty=0.01, exchange_event_id=10)
     assert cmds == []
+
+
+def test_execution_command_accepts_rebuild_partial_tps_command_type():
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+    cmd = ExecutionCommand(
+        trade_chain_id=1,
+        command_type="REBUILD_PARTIAL_TPS",
+        payload_json="{}",
+        idempotency_key="rebuild_partial_tps:1:1",
+    )
+
+    assert cmd.command_type == "REBUILD_PARTIAL_TPS"

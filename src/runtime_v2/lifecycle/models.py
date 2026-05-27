@@ -19,6 +19,7 @@ CommandType = Literal[
     "MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP", "MOVE_POSITION_STOP",
     "CANCEL_PENDING_ENTRY", "CANCEL_POSITION_TPSL",
     "CLOSE_PARTIAL", "CLOSE_FULL", "SYNC_PROTECTIVE_ORDERS",
+    "REBUILD_PARTIAL_TPS",
 ]
 CommandStatus = Literal[
     "PENDING",           # creato da PRD-04, non ancora inviato

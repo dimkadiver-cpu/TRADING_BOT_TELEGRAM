@@ -387,6 +387,28 @@ def test_position_reconciliation_idempotent(ops_db):
     assert count == 1
 
 
+def test_position_reconciliation_second_run_reports_zero_new_items(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain(ops_db, 23, "XRP/USDT:USDT", "long", 100.0)
+    adapter = FakeAdapter(positions={"XRP/USDT:USDT:long": 0.0})
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    first = worker.run_position_reconciliation()
+    second = worker.run_position_reconciliation()
+
+    assert first == 1
+    assert second == 0
+
+
 def test_run_reconciliation_continues_after_single_order_error(ops_db):
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.models import RawAdapterOrder
@@ -505,6 +527,180 @@ def _insert_open_chain_with_tp_v2(
     conn.close()
 
 
+def _insert_open_chain_with_tp_command(
+    db_path: str,
+    chain_id: int,
+    *,
+    command_type: str,
+    status: str = "DONE",
+    payload: dict,
+    symbol: str = "PHAUSDT",
+    side: str = "SHORT",
+    lifecycle_state: str = "OPEN",
+    open_qty: float = 7743.0,
+) -> None:
+    import datetime as dt
+
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
+         symbol, side, lifecycle_state, "TWO_STEP", "{}", open_qty, open_qty, now, now),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+        (
+            chain_id * 100,
+            chain_id,
+            command_type,
+            status,
+            json.dumps(payload),
+            f"idem_tp:{chain_id}:{command_type}",
+            now,
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+
+def test_get_tp_reconciliation_entries_expands_rebuild_partial_tps(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_command(
+        ops_db,
+        70,
+        command_type="REBUILD_PARTIAL_TPS",
+        status="DONE",
+        symbol="BTCUSDT",
+        side="LONG",
+        lifecycle_state="PARTIALLY_CLOSED",
+        payload={
+            "tps": [
+                {"sequence": 1, "price": 70100.0, "qty": 0.003},
+                {"sequence": 2, "price": 70200.0, "qty": 0.004},
+            ]
+        },
+    )
+
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=MagicMock(),
+        repo=GatewayCommandRepository(ops_db),
+        execution_account_id="acc",
+    )
+
+    entries = worker._get_tp_reconciliation_entries()
+
+    assert entries == [
+        {
+            "cmd_id": 7000,
+            "chain_id": 70,
+            "tp_level": 1,
+            "tp_price": 70100.0,
+            "tp_size": 0.003,
+            "symbol": "BTCUSDT",
+            "side": "LONG",
+        },
+        {
+            "cmd_id": 7000,
+            "chain_id": 70,
+            "tp_level": 2,
+            "tp_price": 70200.0,
+            "tp_size": 0.004,
+            "symbol": "BTCUSDT",
+            "side": "LONG",
+        },
+    ]
+
+
+def test_get_tp_reconciliation_entries_keeps_legacy_partial_tp_command(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_command(
+        ops_db,
+        71,
+        command_type="SET_POSITION_TPSL_PARTIAL",
+        payload={
+            "take_profit": 0.05754,
+            "tp_size": 3871.5,
+            "tp_sequence": 1,
+        },
+    )
+
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=MagicMock(),
+        repo=GatewayCommandRepository(ops_db),
+        execution_account_id="acc",
+    )
+
+    entries = worker._get_tp_reconciliation_entries()
+
+    assert entries == [
+        {
+            "cmd_id": 7100,
+            "chain_id": 71,
+            "tp_level": 1,
+            "tp_price": 0.05754,
+            "tp_size": 3871.5,
+            "symbol": "PHAUSDT",
+            "side": "SHORT",
+        }
+    ]
+
+
+def test_get_tp_reconciliation_entries_skips_malformed_rebuild_tp_items(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_command(
+        ops_db,
+        72,
+        command_type="REBUILD_PARTIAL_TPS",
+        status="SENT",
+        payload={
+            "tps": [
+                {"sequence": 1, "price": 70100.0, "qty": 0.003},
+                {"sequence": "bad", "price": 70200.0, "qty": 0.004},
+                {"sequence": 3, "price": None, "qty": 0.002},
+                "not-a-dict",
+                {"sequence": 4, "price": 70400.0},
+            ]
+        },
+    )
+
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=MagicMock(),
+        repo=GatewayCommandRepository(ops_db),
+        execution_account_id="acc",
+    )
+
+    entries = worker._get_tp_reconciliation_entries()
+
+    assert entries == [
+        {
+            "cmd_id": 7200,
+            "chain_id": 72,
+            "tp_level": 1,
+            "tp_price": 70100.0,
+            "tp_size": 0.003,
+            "symbol": "PHAUSDT",
+            "side": "SHORT",
+        }
+    ]
+
+
 def test_trade_based_reconciliation_inserts_tp_filled_on_matching_trade(ops_db):
     """run_trade_based_reconciliation() detects TP fill via fetch_recent_reduce_trades()."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
@@ -562,6 +758,79 @@ def test_trade_based_reconciliation_idempotent(ops_db):
     ).fetchone()[0]
     conn.close()
     assert count == 1
+
+
+def test_trade_based_reconciliation_marks_final_tp_when_last_level_fills(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_command(
+        ops_db,
+        55,
+        command_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "tps": [
+                {"sequence": 1, "price": 0.05754, "qty": 1000.0},
+                {"sequence": 2, "price": 0.05600, "qty": 1000.0},
+            ]
+        },
+        symbol="PHAUSDT",
+        side="SHORT",
+    )
+    adapter = FakeAdapter()
+    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.05600, 1000.0, "t-final")
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    count = worker.run_trade_based_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    payload = json.loads(conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=55 AND event_type='TP_FILLED'"
+    ).fetchone()[0])
+    conn.close()
+    assert payload["tp_level"] == 2
+    assert payload["is_final"] is True
+
+
+def test_trade_based_reconciliation_does_not_reuse_one_trade_across_chains(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 56, symbol="PHAUSDT", side="SHORT", tp_price=0.05754)
+    _insert_open_chain_with_tp_v2(ops_db, 57, symbol="PHAUSDT", side="SHORT", tp_price=0.05754)
+    adapter = FakeAdapter()
+    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.05754, 3871.5, "t-shared")
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    count = worker.run_trade_based_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT trade_chain_id, payload_json FROM ops_exchange_events "
+        "WHERE event_type='TP_FILLED' ORDER BY trade_chain_id"
+    ).fetchall()
+    conn.close()
+    assert len(rows) == 1
+    assert rows[0][0] in (56, 57)
+    payload = json.loads(rows[0][1])
+    assert payload["exchange_trade_id"] == "t-shared"
 
 
 def test_trade_based_reconciliation_skips_non_matching_price(ops_db):
@@ -748,6 +1017,32 @@ def test_protective_orders_reconciliation_idempotent(ops_db):
     ).fetchone()[0]
     conn.close()
     assert count == 1
+
+
+def test_protective_orders_reconciliation_second_run_reports_zero_new_items(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import RawPositionDetails
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain_with_tp_v2(ops_db, 65, tp_price=0.05754)
+    adapter = FakeAdapter()
+    adapter.set_position_details("PHAUSDT", "SHORT", RawPositionDetails(
+        symbol="PHAUSDT", side="SHORT", qty=7743.0, take_profit=0.0
+    ))
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    first = worker.run_protective_orders_reconciliation()
+    second = worker.run_protective_orders_reconciliation()
+
+    assert first == 1
+    assert second == 0
 
 
 def test_protective_orders_reconciliation_noop_when_adapter_lacks_method(ops_db):

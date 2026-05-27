@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from pathlib import Path
 
 import pytest
 import ccxt
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 
 def _make_adapter(exchange, hedge_mode=False):
@@ -1130,6 +1131,306 @@ def test_move_position_stop_calls_trading_stop_only_sl():
     call_args = exchange.private_post_v5_position_trading_stop.call_args[0][0]
     assert "stopLoss" in call_args
     assert "takeProfit" not in call_args
+
+
+def test_rebuild_partial_tps_cancels_only_non_full_qty_orders_and_recreates_each_level():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.01, "info": {"symbol": "BTCUSDT"}}
+    ]
+    exchange.fetch_open_orders.return_value = [
+        {
+            "id": "tp-partial-1",
+            "side": "sell",
+            "amount": 0.003,
+            "reduceOnly": True,
+            "stopPrice": "51000",
+        },
+        {
+            "id": "tp-full",
+            "side": "sell",
+            "amount": 0.01,
+            "reduceOnly": True,
+            "stopPrice": "53000",
+        },
+        {
+            "id": "entry-like",
+            "side": "buy",
+            "amount": 0.01,
+            "reduceOnly": True,
+            "stopPrice": "50000",
+        },
+    ]
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        side_effect=[{"retCode": 0}, {"retCode": 0}]
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "position_idx": 1,
+            "preserve_full_tp": True,
+            "tps": [
+                {
+                    "sequence": 1,
+                    "price": 51000.0,
+                    "qty": 0.003,
+                    "order_type": "Limit",
+                    "limit_price": 51000.0,
+                    "trigger_by": "MarkPrice",
+                },
+                {
+                    "sequence": 2,
+                    "price": 52000.0,
+                    "qty": 0.004,
+                    "order_type": "Market",
+                    "trigger_by": "LastPrice",
+                },
+            ],
+        },
+        client_order_id="tsb:1:1:rebuild:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.cancel_order.assert_called_once_with("tp-partial-1", "BTC/USDT:USDT")
+    assert exchange.private_post_v5_position_trading_stop.call_count == 2
+    assert exchange.private_post_v5_position_trading_stop.call_args_list == [
+        call(
+            {
+                "category": "linear",
+                "symbol": "BTCUSDT",
+                "positionIdx": 1,
+                "tpslMode": "Partial",
+                "takeProfit": "51000.0",
+                "tpSize": "0.003",
+                "tpOrderType": "Limit",
+                "tpTriggerBy": "MarkPrice",
+                "tpLimitPrice": "51000.0",
+            }
+        ),
+        call(
+            {
+                "category": "linear",
+                "symbol": "BTCUSDT",
+                "positionIdx": 1,
+                "tpslMode": "Partial",
+                "takeProfit": "52000.0",
+                "tpSize": "0.004",
+                "tpOrderType": "Market",
+                "tpTriggerBy": "LastPrice",
+            }
+        ),
+    ]
+
+
+def test_rebuild_partial_tps_surfaces_retcode_failure_with_level():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.01, "info": {"symbol": "BTCUSDT"}}
+    ]
+    exchange.fetch_open_orders.return_value = []
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        side_effect=[{"retCode": 0}, {"retCode": 110001, "retMsg": "bad tp"}]
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "position_idx": 1,
+            "tps": [
+                {"sequence": 1, "price": 51000.0, "qty": 0.003},
+                {"sequence": 2, "price": 52000.0, "qty": 0.004},
+            ],
+        },
+        client_order_id="tsb:1:1:rebuild:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is False
+    assert result.error == "tp2: retCode=110001: bad tp"
+
+
+def test_rebuild_partial_tps_survives_cancel_order_exception(caplog):
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.01, "info": {"symbol": "BTCUSDT"}}
+    ]
+    exchange.fetch_open_orders.return_value = [
+        {
+            "id": "tp-partial-1",
+            "side": "sell",
+            "amount": 0.003,
+            "reduceOnly": True,
+            "stopPrice": "51000",
+        }
+    ]
+    exchange.cancel_order.side_effect = RuntimeError("cancel exploded")
+    exchange.private_post_v5_position_trading_stop = MagicMock(return_value={"retCode": 0})
+    adapter = _make_adapter(exchange)
+
+    with caplog.at_level(logging.WARNING):
+        result = adapter.place_order(
+            command_type="REBUILD_PARTIAL_TPS",
+            payload={
+                "symbol": "BTC/USDT:USDT",
+                "side": "LONG",
+                "position_idx": 1,
+                "tps": [
+                    {"sequence": 1, "price": 51000.0, "qty": 0.003},
+                ],
+            },
+            client_order_id="tsb:1:1:rebuild:1",
+            execution_account_id="main",
+            connector="bybit",
+        )
+
+    assert result.success is True
+    assert "cancel exploded" in caplog.text
+    exchange.private_post_v5_position_trading_stop.assert_called_once()
+
+
+def test_rebuild_partial_tps_preserve_sl_keeps_matching_stop_loss_order():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {
+            "side": "long",
+            "contracts": 0.01,
+            "info": {"symbol": "BTCUSDT", "stopLoss": "49500.0"},
+        }
+    ]
+    exchange.fetch_open_orders.return_value = [
+        {
+            "id": "sl-order",
+            "side": "sell",
+            "amount": 0.009,
+            "reduceOnly": True,
+            "stopPrice": "49500.000",
+        },
+        {
+            "id": "tp-partial-1",
+            "side": "sell",
+            "amount": 0.003,
+            "reduceOnly": True,
+            "stopPrice": "51000",
+        },
+        {
+            "id": "tp-full",
+            "side": "sell",
+            "amount": 0.01,
+            "reduceOnly": True,
+            "stopPrice": "53000",
+        },
+    ]
+    exchange.private_post_v5_position_trading_stop = MagicMock(return_value={"retCode": 0})
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "position_idx": 1,
+            "preserve_sl": True,
+            "preserve_full_tp": True,
+            "tps": [
+                {"sequence": 1, "price": 51000.0, "qty": 0.003},
+            ],
+        },
+        client_order_id="tsb:1:1:rebuild:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.cancel_order.assert_called_once_with("tp-partial-1", "BTC/USDT:USDT")
+    cancelled_ids = [args[0] for args, _ in exchange.cancel_order.call_args_list]
+    assert "sl-order" not in cancelled_ids
+    assert "tp-full" not in cancelled_ids
+
+
+def test_rebuild_partial_tps_preserve_full_tp_uses_tolerant_amount_match():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.01, "info": {"symbol": "BTCUSDT"}}
+    ]
+    exchange.fetch_open_orders.return_value = [
+        {
+            "id": "tp-full-fuzzy",
+            "side": "sell",
+            "amount": 0.0100000001,
+            "reduceOnly": True,
+            "stopPrice": "53000",
+        },
+        {
+            "id": "tp-partial-1",
+            "side": "sell",
+            "amount": 0.003,
+            "reduceOnly": True,
+            "stopPrice": "51000",
+        },
+    ]
+    exchange.private_post_v5_position_trading_stop = MagicMock(return_value={"retCode": 0})
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "position_idx": 1,
+            "preserve_full_tp": True,
+            "tps": [
+                {"sequence": 1, "price": 51000.0, "qty": 0.003},
+            ],
+        },
+        client_order_id="tsb:1:1:rebuild:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is True
+    exchange.cancel_order.assert_called_once_with("tp-partial-1", "BTC/USDT:USDT")
+    cancelled_ids = [args[0] for args, _ in exchange.cancel_order.call_args_list]
+    assert "tp-full-fuzzy" not in cancelled_ids
+
+
+def test_rebuild_partial_tps_surfaces_api_exception_with_level():
+    exchange = MagicMock()
+    exchange.fetch_positions.return_value = [
+        {"side": "long", "contracts": 0.01, "info": {"symbol": "BTCUSDT"}}
+    ]
+    exchange.fetch_open_orders.return_value = []
+    exchange.private_post_v5_position_trading_stop = MagicMock(
+        side_effect=ccxt.BaseError("boom")
+    )
+    adapter = _make_adapter(exchange)
+
+    result = adapter.place_order(
+        command_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "symbol": "BTC/USDT:USDT",
+            "side": "LONG",
+            "position_idx": 1,
+            "tps": [
+                {"sequence": 3, "price": 53000.0, "qty": 0.01},
+            ],
+        },
+        client_order_id="tsb:1:1:rebuild:1",
+        execution_account_id="main",
+        connector="bybit",
+    )
+
+    assert result.success is False
+    assert result.error == "tp3: boom"
 
 
 # --- get_capabilities ---

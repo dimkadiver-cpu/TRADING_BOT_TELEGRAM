@@ -401,7 +401,7 @@ def test_entry_filled_emits_position_size_updated_event():
     assert "ENTRY_AVG_PRICE_UPDATED" in event_types
 
 
-def test_entry_filled_with_multi_tp_plan_emits_intermediate_tp_commands():
+def test_entry_filled_with_multi_tp_plan_emits_rebuild_partial_tps_command():
     plan_state = json.dumps({
         "plan_version": 1,
         "rebuild_policy": "ON_EACH_ENTRY_FILL",
@@ -420,11 +420,22 @@ def test_entry_filled_with_multi_tp_plan_emits_intermediate_tp_commands():
     result = _make_processor().process(event, chain, [])
     tp_cmds = [
         c for c in result.execution_commands
-        if c.command_type == "SET_POSITION_TPSL_PARTIAL"
+        if c.command_type == "REBUILD_PARTIAL_TPS"
     ]
     assert len(tp_cmds) == 1
     payload = json.loads(tp_cmds[0].payload_json)
-    assert payload["take_profit"] == 51000.0
+    assert payload["preserve_sl"] is True
+    assert payload["preserve_full_tp"] is True
+    assert payload["tps"] == [
+        {
+            "sequence": 1,
+            "price": 51000.0,
+            "qty": pytest.approx(0.005),
+            "order_type": "Limit",
+            "limit_price": 51000.0,
+            "trigger_by": "MarkPrice",
+        }
+    ]
 
 
 def test_entry_filled_with_single_tp_plan_emits_no_intermediate_cmds():
@@ -446,7 +457,7 @@ def test_entry_filled_with_single_tp_plan_emits_no_intermediate_cmds():
     result = _make_processor().process(event, chain, [])
     tp_cmds = [
         c for c in result.execution_commands
-        if c.command_type == "SET_POSITION_TPSL_PARTIAL"
+        if c.command_type == "REBUILD_PARTIAL_TPS"
     ]
     assert tp_cmds == []
 
@@ -711,8 +722,8 @@ def _make_chain_multi_tp(
     )
 
 
-def test_d_multi_entry_multi_tp_first_fill_emits_tp_partial_commands():
-    """Primo fill: emette SET_POSITION_TPSL_PARTIAL solo per i TP intermedi (non l'ultimo)."""
+def test_d_multi_entry_multi_tp_first_fill_emits_rebuild_partial_tps():
+    """Primo fill: emette 1 REBUILD_PARTIAL_TPS per i TP intermedi (non l'ultimo)."""
     proc = _make_processor()
     chain = _make_chain_multi_tp(state="WAITING_ENTRY")
     event = _make_exchange_event(
@@ -720,16 +731,23 @@ def test_d_multi_entry_multi_tp_first_fill_emits_tp_partial_commands():
         payload={"fill_price": 0.50, "filled_qty": 0.7},
     )
     result = proc.process(event, chain, [])
-    tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    # 2 levels in tp_rebuild, last is attached at entry → only 1 intermediate emitted
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "REBUILD_PARTIAL_TPS"]
     assert len(tp_cmds) == 1
-    p = _json.loads(tp_cmds[0].payload_json)
-    assert abs(float(p["tp_size"]) - 0.35) < 1e-6   # 0.7 * 50%
-    assert p["take_profit"] == 0.52                   # TP1 price (intermediate)
+    payload = _json.loads(tp_cmds[0].payload_json)
+    assert payload["tps"] == [
+        {
+            "sequence": 1,
+            "price": 0.52,
+            "qty": pytest.approx(0.35),   # 0.7 * 50%
+            "order_type": "Limit",
+            "limit_price": 0.52,
+            "trigger_by": "MarkPrice",
+        }
+    ]
 
 
-def test_d_multi_entry_multi_tp_second_fill_emits_supersedes_previous():
-    """Secondo fill: il TP intermedio aggiornato ha supersedes_previous=True e qty ricalcolata."""
+def test_d_multi_entry_multi_tp_second_fill_rebuilds_tp_qty():
+    """Secondo fill: il TP intermedio viene ricostruito con qty ricalcolata sul totale fillato."""
     proc = _make_processor()
     chain = _make_chain_multi_tp(
         state="OPEN",
@@ -741,16 +759,15 @@ def test_d_multi_entry_multi_tp_second_fill_emits_supersedes_previous():
         payload={"fill_price": 0.48, "filled_qty": 0.3},
     )
     result = proc.process(event, chain, [])
-    tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    # Only 1 intermediate TP, last is attached
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "REBUILD_PARTIAL_TPS"]
     assert len(tp_cmds) == 1
-    p = _json.loads(tp_cmds[0].payload_json)
-    assert p.get("supersedes_previous") is True
-    assert abs(float(p["tp_size"]) - 0.5) < 1e-6   # 1.0 * 50%
+    payload = _json.loads(tp_cmds[0].payload_json)
+    assert payload["tps"][0]["sequence"] == 1
+    assert abs(float(payload["tps"][0]["qty"]) - 0.5) < 1e-6   # 1.0 * 50%
 
 
 def test_d_multi_entry_multi_tp_tp_prices_match_tp_rebuild_levels():
-    """Solo il prezzo del TP intermedio (TP1=0.52) viene emesso; TP2 (0.55) e' attached e non viene rebuild."""
+    """Solo il prezzo del TP intermedio (TP1=0.52) viene incluso nel rebuild; TP2 resta attached."""
     proc = _make_processor()
     chain = _make_chain_multi_tp(state="WAITING_ENTRY")
     event = _make_exchange_event(
@@ -758,8 +775,12 @@ def test_d_multi_entry_multi_tp_tp_prices_match_tp_rebuild_levels():
         payload={"fill_price": 0.50, "filled_qty": 1.0},
     )
     result = proc.process(event, chain, [])
-    tp_cmds = [c for c in result.execution_commands if c.command_type == "SET_POSITION_TPSL_PARTIAL"]
-    prices = {_json.loads(c.payload_json)["take_profit"] for c in tp_cmds}
+    tp_cmds = [c for c in result.execution_commands if c.command_type == "REBUILD_PARTIAL_TPS"]
+    prices = {
+        tp["price"]
+        for c in tp_cmds
+        for tp in _json.loads(c.payload_json).get("tps", [])
+    }
     assert prices == {0.52}      # TP1 only; TP2 (0.55) stays attached
 
 

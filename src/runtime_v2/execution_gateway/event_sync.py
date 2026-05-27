@@ -1,4 +1,3 @@
-# src/runtime_v2/execution_gateway/event_sync.py
 from __future__ import annotations
 
 import json
@@ -102,21 +101,27 @@ class ExchangeEventSyncWorker:
         if not entries:
             return 0
 
-        # Group by (symbol, side) to minimise API calls
         from collections import defaultdict
+
         by_key: dict[tuple[str, str], list[dict]] = defaultdict(list)
-        for e in entries:
-            by_key[(e["symbol"], e["side"])].append(e)
+        final_tp_level_by_chain: dict[int, int] = {}
+        for entry in entries:
+            by_key[(entry["symbol"], entry["side"])].append(entry)
+            chain_id = entry["chain_id"]
+            tp_level = entry["tp_level"]
+            current = final_tp_level_by_chain.get(chain_id)
+            if current is None or tp_level > current:
+                final_tp_level_by_chain[chain_id] = tp_level
 
         processed = 0
         for (symbol, side), group in by_key.items():
             try:
-                trades = self._adapter.fetch_recent_reduce_trades(
+                trades = list(self._adapter.fetch_recent_reduce_trades(
                     symbol=symbol,
                     side=side,
                     execution_account_id=self._execution_account_id,
                     limit=50,
-                )
+                ))
             except Exception:
                 logger.exception("fetch_recent_reduce_trades error for %s %s", symbol, side)
                 continue
@@ -125,6 +130,7 @@ class ExchangeEventSyncWorker:
                 chain_id = entry["chain_id"]
                 tp_level = entry["tp_level"]
                 tp_price = entry["tp_price"]
+                is_final = final_tp_level_by_chain.get(chain_id) == tp_level
 
                 if self._tp_fill_event_exists(chain_id, tp_level):
                     continue  # already recorded (e.g. by WS)
@@ -132,11 +138,17 @@ class ExchangeEventSyncWorker:
                 if tp_price <= 0:
                     continue  # no valid TP price in command payload
 
-                for trade in trades:
-                    if abs(trade.price - tp_price) / tp_price <= 0.01:  # ±1% tolerance
-                        if self._save_tp_fill_from_trade(chain_id, tp_level, trade):
+                for index, trade in enumerate(trades):
+                    if abs(trade.price - tp_price) / tp_price <= 0.01:
+                        if self._save_tp_fill_from_trade(
+                            chain_id,
+                            tp_level,
+                            trade,
+                            is_final=is_final,
+                        ):
                             processed += 1
-                        break  # one trade per TP level
+                            trades.pop(index)
+                        break
 
         return processed
 
@@ -145,28 +157,54 @@ class ExchangeEventSyncWorker:
         conn = sqlite3.connect(self._ops_db)
         try:
             rows = conn.execute(
-                "SELECT c.command_id, c.trade_chain_id, c.payload_json, t.symbol, t.side "
+                "SELECT c.command_id, c.trade_chain_id, c.command_type, c.payload_json, t.symbol, t.side "
                 "FROM ops_execution_commands c "
                 "JOIN ops_trade_chains t ON c.trade_chain_id = t.trade_chain_id "
-                "WHERE c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL') "
+                "WHERE c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'REBUILD_PARTIAL_TPS') "
                 "AND c.status IN ('SENT', 'DONE') "
                 "AND t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
             ).fetchall()
             result: list[dict] = []
-            for cmd_id, chain_id, payload_json, symbol, side in rows:
+            for cmd_id, chain_id, command_type, payload_json, symbol, side in rows:
                 try:
                     payload = json.loads(payload_json)
+                except Exception:
+                    continue
+
+                if command_type == "REBUILD_PARTIAL_TPS":
+                    tp_items = payload.get("tps")
+                    if not isinstance(tp_items, list):
+                        continue
+
+                    for tp_item in tp_items:
+                        if not isinstance(tp_item, dict):
+                            continue
+                        try:
+                            result.append({
+                                "cmd_id": cmd_id,
+                                "chain_id": chain_id,
+                                "tp_level": int(tp_item["sequence"]),
+                                "tp_price": float(tp_item["price"]),
+                                "tp_size": float(tp_item["qty"]),
+                                "symbol": symbol,
+                                "side": side,
+                            })
+                        except (KeyError, TypeError, ValueError):
+                            continue
+                    continue
+
+                try:
                     result.append({
-                        "cmd_id":   cmd_id,
+                        "cmd_id": cmd_id,
                         "chain_id": chain_id,
                         "tp_level": int(payload.get("tp_sequence", 1)),
                         "tp_price": float(payload.get("take_profit", 0)),
-                        "tp_size":  float(payload.get("tp_size", 0)),
-                        "symbol":   symbol,
-                        "side":     side,
+                        "tp_size": float(payload.get("tp_size", 0)),
+                        "symbol": symbol,
+                        "side": side,
                     })
-                except Exception:
-                    pass
+                except (TypeError, ValueError):
+                    continue
             return result
         finally:
             conn.close()
@@ -196,15 +234,17 @@ class ExchangeEventSyncWorker:
         trade_chain_id: int,
         tp_level: int,
         trade: RawAdapterTrade,
+        *,
+        is_final: bool,
     ) -> bool:
         """INSERT OR IGNORE TP_FILLED event with real fill price from trade REST data."""
         idempotency_key = f"TP_FILLED:{trade_chain_id}:level:{tp_level}"
         payload = json.dumps({
-            "tp_level":          tp_level,
-            "is_final":          False,   # conservative; lifecycle uses position qty to decide
-            "fill_price":        trade.price,
-            "filled_qty":        trade.amount,
-            "source":            "trade_based_reconciliation",
+            "tp_level": tp_level,
+            "is_final": is_final,
+            "fill_price": trade.price,
+            "filled_qty": trade.amount,
+            "source": "trade_based_reconciliation",
             "exchange_trade_id": trade.trade_id,
         })
         now = _now()
@@ -222,20 +262,7 @@ class ExchangeEventSyncWorker:
             conn.close()
 
     def run_protective_orders_reconciliation(self) -> int:
-        """Detect when a position-level TP was externally cancelled (no fill occurred).
-
-        Logic:
-          1. For each open chain with an active SET_POSITION_TPSL_* command:
-             - Fetch the live position from the exchange
-             - If exchange takeProfit == 0.0 (cleared) but we expected a TP:
-                 - And no TP_FILLED event is recorded (= it didn't trigger, it was cancelled)
-                 - → Insert PROTECTIVE_ORDERS_MISSING event
-
-        The lifecycle event processor currently logs a warning for unhandled event types.
-        A full automated response (re-placing the TP) is a future enhancement.
-
-        Returns count of new PROTECTIVE_ORDERS_MISSING events inserted.
-        """
+        """Detect when a position-level TP was externally cancelled (no fill occurred)."""
         if not hasattr(self._adapter, "fetch_position_details"):
             return 0
 
@@ -243,25 +270,24 @@ class ExchangeEventSyncWorker:
         if not entries:
             return 0
 
-        # Use the most recent TP command per chain (highest cmd_id)
         latest_per_chain: dict[int, dict] = {}
-        for e in entries:
-            chain_id = e["chain_id"]
-            if chain_id not in latest_per_chain or e["cmd_id"] > latest_per_chain[chain_id]["cmd_id"]:
-                latest_per_chain[chain_id] = e
+        for entry in entries:
+            chain_id = entry["chain_id"]
+            if chain_id not in latest_per_chain or entry["cmd_id"] > latest_per_chain[chain_id]["cmd_id"]:
+                latest_per_chain[chain_id] = entry
 
         processed = 0
         for chain_id, entry in latest_per_chain.items():
             expected_tp = entry["tp_price"]
-            tp_level    = entry["tp_level"]
-            symbol      = entry["symbol"]
-            side        = entry["side"]
+            tp_level = entry["tp_level"]
+            symbol = entry["symbol"]
+            side = entry["side"]
 
             if expected_tp <= 0:
                 continue
 
             if self._tp_fill_event_exists(chain_id, tp_level):
-                continue  # TP triggered normally — not a cancellation
+                continue
 
             try:
                 pos = self._adapter.fetch_position_details(
@@ -274,31 +300,31 @@ class ExchangeEventSyncWorker:
                 continue
 
             if pos is None:
-                continue  # position not found — can't determine state
+                continue
 
             if pos.take_profit is None:
-                continue  # exchange doesn't expose TP field for this adapter
+                continue
 
             if pos.take_profit != 0.0:
-                continue  # TP still active on exchange
+                continue
 
-            # TP is 0.0 on exchange, no TP_FILLED recorded → externally cancelled
             idempotency_key = f"PROTECTIVE_ORDERS_MISSING:{chain_id}:tp:{tp_level}"
-            self._save_protective_orders_missing(
+            saved = self._save_protective_orders_missing(
                 chain_id=chain_id,
                 idempotency_key=idempotency_key,
                 payload={
                     "expected_tp": expected_tp,
-                    "tp_level":    tp_level,
-                    "reason":      "tp_removed_externally",
+                    "tp_level": tp_level,
+                    "reason": "tp_removed_externally",
                 },
             )
-            logger.warning(
-                "protective orders missing: chain=%s tp_level=%s expected_tp=%s — "
-                "TP was removed externally without a fill",
-                chain_id, tp_level, expected_tp,
-            )
-            processed += 1
+            if saved:
+                logger.warning(
+                    "protective orders missing: chain=%s tp_level=%s expected_tp=%s - "
+                    "TP was removed externally without a fill",
+                    chain_id, tp_level, expected_tp,
+                )
+                processed += 1
 
         return processed
 
@@ -307,11 +333,11 @@ class ExchangeEventSyncWorker:
         chain_id: int,
         idempotency_key: str,
         payload: dict,
-    ) -> None:
+    ) -> bool:
         now = _now()
         conn = sqlite3.connect(self._ops_db)
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT OR IGNORE INTO ops_exchange_events "
                 "(trade_chain_id, event_type, payload_json, processing_status, "
                 "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
@@ -319,6 +345,7 @@ class ExchangeEventSyncWorker:
                  json.dumps(payload), "NEW", idempotency_key, now),
             )
             conn.commit()
+            return cursor.rowcount > 0
         finally:
             conn.close()
 
@@ -342,14 +369,14 @@ class ExchangeEventSyncWorker:
         now = _now()
         conn = sqlite3.connect(self._ops_db)
         try:
-            conn.execute(
+            cursor = conn.execute(
                 "INSERT OR IGNORE INTO ops_exchange_events "
                 "(trade_chain_id, event_type, payload_json, processing_status, "
                 "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
                 (chain_id, "CLOSE_FULL_FILLED", payload, "NEW", idempotency_key, now),
             )
             conn.commit()
-            return True
+            return cursor.rowcount > 0
         finally:
             conn.close()
 
@@ -368,8 +395,7 @@ class ExchangeEventSyncWorker:
             return self._normalize_and_save(client_order_id, raw)
 
         if coid.role != "entry":
-            # Non-entry orders cancelled externally: stop polling, no lifecycle event needed.
-            logger.warning("cancelled non-entry order detected: %s — marking done", client_order_id)
+            logger.warning("cancelled non-entry order detected: %s - marking done", client_order_id)
             return True
 
         exchange_order_id = raw.exchange_order_id or client_order_id
@@ -381,11 +407,11 @@ class ExchangeEventSyncWorker:
             )
         idempotency_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
         payload = json.dumps({
-            "command_id":            coid.command_id,
+            "command_id": coid.command_id,
             "position_already_open": position_already_open,
-            "cancel_reason":         raw.cancel_reason,
-            "cancelled_order_ids":   [client_order_id],
-            "sequence":              coid.sequence,
+            "cancel_reason": raw.cancel_reason,
+            "cancelled_order_ids": [client_order_id],
+            "sequence": coid.sequence,
         })
         now = _now()
         conn = sqlite3.connect(self._ops_db)
@@ -449,7 +475,7 @@ class ExchangeEventSyncWorker:
                 "command_id": coid.command_id,
             }
         else:
-            logger.warning("unknown role '%s' in %s — skipping mark_done", coid.role, client_order_id)
+            logger.warning("unknown role '%s' in %s - skipping mark_done", coid.role, client_order_id)
             return False
 
         if coid.role == "tp":

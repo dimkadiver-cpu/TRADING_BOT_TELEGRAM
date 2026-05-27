@@ -70,6 +70,8 @@ class BybitOrderBuilder:
             return self._set_position_tpsl_partial(payload)
         if command_type == "MOVE_POSITION_STOP":
             return self._move_position_stop(payload)
+        if command_type == "REBUILD_PARTIAL_TPS":
+            return self._rebuild_partial_tps(payload)
         raise ValueError(f"Unknown command_type: {command_type!r}")
 
     def _place_entry(self, payload: dict, client_order_id: str) -> BybitOrderParams:
@@ -225,6 +227,19 @@ class BybitOrderBuilder:
             extra_params={
                 "positionIdx": int(payload.get("position_idx", 0)),
                 "stopLoss": str(float(payload["new_stop_loss"])),
+            },
+        )
+
+    def _rebuild_partial_tps(self, payload: dict) -> BybitOrderParams:
+        return BybitOrderParams(
+            action="rebuild_partial_tps",
+            symbol=payload["symbol"],
+            position_side=payload["side"],
+            extra_params={
+                "position_idx": int(payload.get("position_idx", 0)),
+                "preserve_sl": bool(payload.get("preserve_sl", True)),
+                "preserve_full_tp": bool(payload.get("preserve_full_tp", True)),
+                "tps": payload["tps"],
             },
         )
 

@@ -47,6 +47,54 @@ def _insert_cmd(db_path: str, cmd_id: int, chain_id: int = 1,
     conn.close()
 
 
+def _insert_cmd_with_status(
+    db_path: str,
+    cmd_id: int,
+    *,
+    status: str,
+    chain_id: int = 1,
+    cmd_type: str = "PLACE_ENTRY",
+    payload: dict | None = None,
+) -> None:
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+        (cmd_id, chain_id, cmd_type, status,
+         json.dumps(payload or {}), f"idem:{cmd_id}", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def _rebuild_partial_tps_payload() -> dict:
+    return {
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "targets": [
+            {
+                "take_profit": 70000.0,
+                "tp_size": 0.007,
+                "tp_order_type": "Limit",
+                "tp_limit_price": 70000.0,
+                "tp_trigger_by": "MarkPrice",
+                "preserve_sl": True,
+            },
+            {
+                "take_profit": 75000.0,
+                "tp_size": 0.003,
+                "tp_order_type": "Limit",
+                "tp_limit_price": 75000.0,
+                "tp_trigger_by": "MarkPrice",
+                "preserve_sl": True,
+            },
+        ],
+    }
+
+
 @pytest.fixture
 def ops_db(tmp_path):
     db = str(tmp_path / "ops.sqlite3")
@@ -156,6 +204,11 @@ def test_close_full_uses_exit_full_role():
 def test_sync_protective_orders_uses_sync_role():
     from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
     assert _ROLE_MAP["SYNC_PROTECTIVE_ORDERS"] == "sync"
+
+
+def test_move_position_stop_uses_sl_role():
+    from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
+    assert _ROLE_MAP["MOVE_POSITION_STOP"] == "sl"
 
 
 # ── CLOSE_FULL / CLOSE_PARTIAL deferred qty resolution ────────────────────
@@ -307,6 +360,51 @@ def test_idempotency_recovery_stores_client_order_id(ops_db):
     assert coid == expected_coid, f"client_order_id must be stored for reconciliation, got: {coid}"
 
 
+def test_idempotency_recovery_fire_and_forget_reaches_done_and_emits_event(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.adapters.base import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.client_order_id import build
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway, _command_nonce
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 1012, cmd_type="MOVE_STOP", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "new_stop_price": 49000.0,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    cmd = repo.get_pending_batch()[0]
+    expected_coid = build(1, 1012, "sl", 1, nonce=_command_nonce(cmd))
+    adapter = FakeAdapter()
+    adapter._orders[expected_coid] = RawAdapterOrder(
+        client_order_id=expected_coid,
+        exchange_order_id="exch_move_stop",
+        adapter_order_id="hb_move_stop",
+        status="OPEN",
+    )
+
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    status, coid = conn.execute(
+        "SELECT status, client_order_id FROM ops_execution_commands WHERE command_id=1012"
+    ).fetchone()
+    conn.close()
+    assert status == "DONE"
+    assert coid == expected_coid
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert len(events) == 1
+    assert events[0][0] == "STOP_MOVED_CONFIRMED"
+    assert events[0][1]["command_id"] == 1012
+    assert events[0][1]["new_stop_price"] == 49000.0
+    assert events[0][1]["is_breakeven"] is False
+
+
 def test_new_command_id_includes_nonce_so_db_reset_does_not_hit_stale_order(ops_db):
     """A local DB reset can reuse ids while the exchange still has old orderLinkIds.
     The current command must use a fresh id, not recover stale terminal exchange state.
@@ -385,6 +483,35 @@ def test_live_trading_blocked(ops_db):
     assert status == "REVIEW_REQUIRED"
 
 
+def test_move_position_stop_capability_missing_produces_review_required(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.models import AdapterCapabilities
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 1005, cmd_type="MOVE_POSITION_STOP", payload={
+        "symbol": "BTC/USDT", "side": "LONG", "new_stop_price": 47000.0,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter(
+            capabilities=AdapterCapabilities(move_stop=False)
+        )},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=1005"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "REVIEW_REQUIRED"
+
+
 def test_deferred_market_resolves_qty_from_mark_price(ops_db):
     """Gateway con payload deferred_market: fetcha mark_price e calcola qty prima del place_order."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
@@ -414,6 +541,42 @@ def test_deferred_market_resolves_qty_from_mark_price(ops_db):
     assert len(place_calls) == 1
     # qty = risk_amount / abs(mark_price - sl_price) = 10.0 / abs(150.0 - 140.0) = 1.0
     assert abs(adapter._last_place_qty - 1.0) < 0.001
+
+
+def test_leverage_greater_than_one_calls_set_leverage(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 2004, payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02,
+        "sequence": 1, "leverage": 5, "position_idx": 2,
+    })
+    repo = GatewayCommandRepository(ops_db)
+
+    adapter = FakeAdapter()
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    set_leverage_calls = [c for c in adapter.calls if c["action"] == "set_leverage"]
+    assert len(set_leverage_calls) == 1
+    assert set_leverage_calls[0]["symbol"] == "BTC/USDT"
+    assert set_leverage_calls[0]["leverage"] == 5
+    assert set_leverage_calls[0]["position_idx"] == 2
+
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2004"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "SENT"
 
 
 def test_waiting_partial_tp_resolves_size_from_filled_entry_qty(ops_db):
@@ -499,31 +662,36 @@ def test_deferred_market_no_mark_price_marks_review_required(ops_db):
     assert "deferred_market_no_mark_price" in (row[1] or "")
 
 
-def test_supersedes_previous_cancels_old_tp_partial_commands(ops_db):
-    """supersedes_previous=True: i vecchi SET_POSITION_TPSL_PARTIAL PENDING per la chain
-    vengono marcati SUPERSEDED prima dell'invio del nuovo comando."""
+def test_rebuild_partial_tps_supersedes_older_pending_rebuilds_before_send(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
-    _insert_cmd(ops_db, 3001, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
-                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 70000.0,
-                         "tp_size": 0.007, "tp_order_type": "Limit",
-                         "tp_limit_price": 70000.0, "tp_trigger_by": "MarkPrice",
-                         "preserve_sl": True})
-    _insert_cmd(ops_db, 3002, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
-                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 75000.0,
-                         "tp_size": 0.003, "tp_order_type": "Limit",
-                         "tp_limit_price": 75000.0, "tp_trigger_by": "MarkPrice",
-                         "preserve_sl": True})
-    _insert_cmd(ops_db, 3003, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
-                payload={"symbol": "BTC/USDT", "side": "LONG",
-                         "take_profit": 70000.0, "tp_size": 0.01,
-                         "tp_order_type": "Limit", "tp_limit_price": 70000.0,
-                         "tp_trigger_by": "MarkPrice",
-                         "preserve_sl": True,
-                         "supersedes_previous": True})
+    _insert_cmd_with_status(
+        ops_db,
+        3001,
+        chain_id=1,
+        status="PENDING",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+    _insert_cmd_with_status(
+        ops_db,
+        3002,
+        chain_id=1,
+        status="PENDING",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+    _insert_cmd_with_status(
+        ops_db,
+        3003,
+        chain_id=1,
+        status="PENDING",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
 
     repo = GatewayCommandRepository(ops_db)
     cmd = repo.get_pending_batch()[-1]  # command 3003 (most recent)
@@ -544,41 +712,41 @@ def test_supersedes_previous_cancels_old_tp_partial_commands(ops_db):
     conn.close()
     assert statuses[3001] == "SUPERSEDED"
     assert statuses[3002] == "SUPERSEDED"
-    assert statuses[3003] in ("SENT", "ACK", "DONE")
+    assert statuses[3003] == "DONE"
 
 
-def test_supersedes_previous_marks_done_tp_partial_as_superseded(ops_db):
-    """Dopo un nuovo trading_stop riuscito, i vecchi TP partial DONE diventano SUPERSEDED."""
+def test_rebuild_partial_tps_does_not_supersede_set_position_tpsl_partial(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
-    conn = sqlite3.connect(ops_db)
-    conn.execute(
-        "UPDATE ops_trade_chains SET lifecycle_state='OPEN' WHERE trade_chain_id=1"
+    _insert_cmd_with_status(
+        ops_db,
+        3101,
+        chain_id=1,
+        status="PENDING",
+        cmd_type="SET_POSITION_TPSL_PARTIAL",
+        payload={
+            "symbol": "BTC/USDT",
+            "side": "LONG",
+            "take_profit": 70000.0,
+            "tp_size": 0.007,
+            "tp_order_type": "Limit",
+            "tp_limit_price": 70000.0,
+            "tp_trigger_by": "MarkPrice",
+            "preserve_sl": True,
+            "supersedes_previous": True,
+        },
     )
-    conn.commit()
-    conn.close()
-
-    _insert_cmd(ops_db, 3101, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
-                payload={"symbol": "BTC/USDT", "side": "LONG", "take_profit": 70000.0,
-                         "tp_size": 0.007, "tp_order_type": "Limit",
-                         "tp_limit_price": 70000.0, "tp_trigger_by": "MarkPrice",
-                         "preserve_sl": True})
-    conn = sqlite3.connect(ops_db)
-    conn.execute(
-        "UPDATE ops_execution_commands SET status='DONE' WHERE command_id=3101"
+    _insert_cmd_with_status(
+        ops_db,
+        3102,
+        chain_id=1,
+        status="PENDING",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
     )
-    conn.commit()
-    conn.close()
-    _insert_cmd(ops_db, 3102, chain_id=1, cmd_type="SET_POSITION_TPSL_PARTIAL",
-                payload={"symbol": "BTC/USDT", "side": "LONG",
-                         "take_profit": 70000.0, "tp_size": 0.01,
-                         "tp_order_type": "Limit", "tp_limit_price": 70000.0,
-                         "tp_trigger_by": "MarkPrice",
-                         "preserve_sl": True,
-                         "supersedes_previous": True})
 
     repo = GatewayCommandRepository(ops_db)
     cmd = repo.get_pending_batch()[-1]
@@ -597,8 +765,70 @@ def test_supersedes_previous_marks_done_tp_partial_as_superseded(ops_db):
         ).fetchall()
     }
     conn.close()
-    assert statuses[3101] == "SUPERSEDED"
+    assert statuses[3101] == "PENDING"
     assert statuses[3102] == "DONE"
+
+
+def test_rebuild_partial_tps_supersedes_older_sent_ack_done_rebuilds_after_success(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd_with_status(
+        ops_db,
+        3111,
+        chain_id=1,
+        status="DONE",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+    _insert_cmd_with_status(
+        ops_db,
+        3112,
+        chain_id=1,
+        status="SENT",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+    _insert_cmd_with_status(
+        ops_db,
+        3113,
+        chain_id=1,
+        status="ACK",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+    _insert_cmd_with_status(
+        ops_db,
+        3114,
+        chain_id=1,
+        status="PENDING",
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+
+    repo = GatewayCommandRepository(ops_db)
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 3114)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    statuses = {
+        r[0]: r[1] for r in conn.execute(
+            "SELECT command_id, status FROM ops_execution_commands "
+            "WHERE command_id IN (3111, 3112, 3113, 3114)"
+        ).fetchall()
+    }
+    conn.close()
+    assert statuses[3111] == "SUPERSEDED"
+    assert statuses[3112] == "SUPERSEDED"
+    assert statuses[3113] == "SUPERSEDED"
+    assert statuses[3114] == "DONE"
 
 
 def test_superseded_tp_partials_are_not_active_for_runtime_reads(ops_db):
@@ -637,6 +867,64 @@ def test_superseded_tp_partials_are_not_active_for_runtime_reads(ops_db):
     active = repo.get_active_tp_commands(1)
     assert len(active) == 1
     assert active[0]["take_profit"] == 71000.0
+
+
+def test_supersede_rebuild_commands_marks_pending_as_superseded(ops_db):
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd_with_status(
+        ops_db, 3301, status="PENDING", cmd_type="REBUILD_PARTIAL_TPS"
+    )
+    _insert_cmd_with_status(
+        ops_db, 3302, status="PENDING", cmd_type="REBUILD_PARTIAL_TPS"
+    )
+    _insert_cmd_with_status(
+        ops_db, 3303, status="DONE", cmd_type="REBUILD_PARTIAL_TPS"
+    )
+
+    repo = GatewayCommandRepository(ops_db)
+    repo.supersede_rebuild_commands(1, 3302, statuses=("PENDING",))
+
+    conn = sqlite3.connect(ops_db)
+    statuses = {
+        row[0]: row[1]
+        for row in conn.execute(
+            "SELECT command_id, status FROM ops_execution_commands "
+            "WHERE command_id IN (3301, 3302, 3303)"
+        ).fetchall()
+    }
+    conn.close()
+
+    assert statuses[3301] == "SUPERSEDED"
+    assert statuses[3302] == "PENDING"
+    assert statuses[3303] == "DONE"
+
+
+def test_supersede_rebuild_commands_does_not_touch_other_command_types(ops_db):
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd_with_status(
+        ops_db, 3311, status="PENDING", cmd_type="REBUILD_PARTIAL_TPS"
+    )
+    _insert_cmd_with_status(
+        ops_db, 3312, status="PENDING", cmd_type="SET_POSITION_TPSL_PARTIAL"
+    )
+
+    repo = GatewayCommandRepository(ops_db)
+    repo.supersede_rebuild_commands(1, 3311, statuses=("PENDING",))
+
+    conn = sqlite3.connect(ops_db)
+    statuses = {
+        row[0]: row[1]
+        for row in conn.execute(
+            "SELECT command_id, status FROM ops_execution_commands "
+            "WHERE command_id IN (3311, 3312)"
+        ).fetchall()
+    }
+    conn.close()
+
+    assert statuses[3311] == "PENDING"
+    assert statuses[3312] == "PENDING"
 
 
 # ── Fire-and-forget lifecycle events ─────────────────────────────────────────
@@ -827,6 +1115,39 @@ def test_set_tpsl_does_not_emit_direct_event(ops_db):
     conn = sqlite3.connect(ops_db)
     status = conn.execute(
         "SELECT status FROM ops_execution_commands WHERE command_id=5005"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "DONE"
+
+
+def test_rebuild_partial_tps_does_not_emit_direct_event(ops_db):
+    """REBUILD_PARTIAL_TPS è fire-and-forget ma non emette eventi lifecycle diretti."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(
+        ops_db,
+        5007,
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload=_rebuild_partial_tps_payload(),
+    )
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    assert events == [], f"REBUILD_PARTIAL_TPS non deve emettere eventi diretti, got {events}"
+
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=5007"
     ).fetchone()[0]
     conn.close()
     assert status == "DONE"

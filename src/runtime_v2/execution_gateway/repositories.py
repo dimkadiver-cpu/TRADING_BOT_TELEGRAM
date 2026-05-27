@@ -319,6 +319,27 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def supersede_rebuild_commands(
+        self,
+        trade_chain_id: int,
+        exclude_command_id: int,
+        *,
+        statuses: tuple[str, ...],
+    ) -> None:
+        now = _now()
+        placeholders = ",".join("?" for _ in statuses)
+        conn = sqlite3.connect(self._db)
+        try:
+            conn.execute(
+                "UPDATE ops_execution_commands SET status='SUPERSEDED', updated_at=? "
+                "WHERE trade_chain_id=? AND command_type='REBUILD_PARTIAL_TPS' "
+                f"AND status IN ({placeholders}) AND command_id != ?",
+                (now, trade_chain_id, *statuses, exclude_command_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def count_active_tps(self, trade_chain_id: int) -> int:
         """Counts active SET_POSITION_TPSL_* commands (SENT/DONE status) for the chain."""
         conn = sqlite3.connect(self._db)

@@ -18,6 +18,7 @@ _CAPABILITY_MAP: dict[str, str] = {
     "PLACE_ENTRY": "place_entry",
     "MOVE_STOP_TO_BREAKEVEN": "move_stop",
     "MOVE_STOP": "move_stop",
+    "MOVE_POSITION_STOP": "move_stop",
     "CANCEL_PENDING_ENTRY": "place_entry",
     "CLOSE_PARTIAL": "close_partial",
     "CLOSE_FULL": "close_full",
@@ -28,10 +29,12 @@ _ROLE_MAP: dict[str, str] = {
     "PLACE_ENTRY": "entry",
     "MOVE_STOP_TO_BREAKEVEN": "sl",
     "MOVE_STOP": "sl",
+    "MOVE_POSITION_STOP": "sl",
     "CANCEL_PENDING_ENTRY": "entry",
     "CLOSE_PARTIAL": "exit_partial",
     "CLOSE_FULL": "exit_full",
     "SYNC_PROTECTIVE_ORDERS": "sync",
+    "REBUILD_PARTIAL_TPS": "tp",
     "SET_POSITION_TPSL_PARTIAL": "tp",
     "SET_POSITION_TPSL_FULL": "tp",
 }
@@ -49,6 +52,7 @@ _FIRE_AND_FORGET: frozenset[str] = frozenset({
     "MOVE_STOP_TO_BREAKEVEN",
     "MOVE_STOP",
     "MOVE_POSITION_STOP",
+    "REBUILD_PARTIAL_TPS",
     "SET_POSITION_TPSL_PARTIAL",
     "SET_POSITION_TPSL_FULL",
 })
@@ -204,22 +208,15 @@ class ExecutionGateway:
             else:  # CLOSE_FULL
                 payload["qty"] = open_qty
 
-        supersedes_previous = (
-            cmd.command_type == "SET_POSITION_TPSL_PARTIAL"
-            and payload.get("supersedes_previous")
-            and cmd.command_id is not None
-        )
-
-        # Supersede pre-send PENDING commands so they never reach the exchange.
         if (
-            supersedes_previous
+            cmd.command_type == "REBUILD_PARTIAL_TPS"
+            and cmd.command_id is not None
         ):
-            self._repo.supersede_tp_partial_commands(
+            self._repo.supersede_rebuild_commands(
                 cmd.trade_chain_id,
                 exclude_command_id=cmd.command_id,
                 statuses=("PENDING",),
             )
-            payload = {k: v for k, v in payload.items() if k != "supersedes_previous"}
 
         # Set leverage once per account+symbol — leverage comes from payload (set by LifecycleEntryGate)
         leverage = int(payload.get("leverage", 1))
@@ -261,7 +258,23 @@ class ExecutionGateway:
                 adapter_order_id=existing.adapter_order_id,
                 exchange_order_id=existing.exchange_order_id,
             )
-            self._repo.mark_ack(cmd.command_id)
+            if cmd.command_type in _FIRE_AND_FORGET:
+                event_type = _FIRE_AND_FORGET_EVENTS.get(cmd.command_type)
+                if event_type:
+                    event_payload = self._build_confirmed_event_payload(cmd, event_type, payload)
+                    self._emit_confirmed_event(cmd, event_type, event_payload)
+                self._repo.mark_done(cmd.command_id)
+                if (
+                    cmd.command_type == "REBUILD_PARTIAL_TPS"
+                    and cmd.command_id is not None
+                ):
+                    self._repo.supersede_rebuild_commands(
+                        cmd.trade_chain_id,
+                        exclude_command_id=cmd.command_id,
+                        statuses=("SENT", "ACK", "DONE"),
+                    )
+            else:
+                self._repo.mark_ack(cmd.command_id)
             return
 
         # Send to adapter
@@ -297,8 +310,11 @@ class ExecutionGateway:
                 event_payload = self._build_confirmed_event_payload(cmd, event_type, payload)
                 self._emit_confirmed_event(cmd, event_type, event_payload)
             self._repo.mark_done(cmd.command_id)
-            if supersedes_previous:
-                self._repo.supersede_tp_partial_commands(
+            if (
+                cmd.command_type == "REBUILD_PARTIAL_TPS"
+                and cmd.command_id is not None
+            ):
+                self._repo.supersede_rebuild_commands(
                     cmd.trade_chain_id,
                     exclude_command_id=cmd.command_id,
                     statuses=("SENT", "ACK", "DONE"),

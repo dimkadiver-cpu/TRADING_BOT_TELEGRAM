@@ -39,33 +39,32 @@ class PostFillProtectionRebuilder:
         n_total_tps = len(intermediate_tps) + 1
         chain_id = chain.trade_chain_id
         hedge_mode, position_idx = self._resolve_position_context(chain)
-        commands: list[ExecutionCommand] = []
-
-        for i, tp_price in enumerate(intermediate_tps):
-            close_pct = 100.0 / n_total_tps
-            tp_qty = round(filled_entry_qty * close_pct / 100.0, 8)
-            payload = {
-                "symbol": chain.symbol,
-                "side": chain.side,
-                "hedge_mode": hedge_mode,
-                "position_idx": position_idx,
-                "tp_sequence": i + 1,
-                "take_profit": tp_price,
-                "tp_size": tp_qty,
-                "tp_order_type": "Limit",
-                "tp_limit_price": tp_price,
-                "tp_trigger_by": "MarkPrice",
-                "preserve_sl": True,
-                "supersedes_previous": True,
-            }
-            commands.append(ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type="SET_POSITION_TPSL_PARTIAL",
-                payload_json=json.dumps(payload),
-                idempotency_key=f"tp_partial_fill:{chain_id}:{exchange_event_id}:tp{i + 1}",
-            ))
-
-        return commands
+        tp_qty = round(filled_entry_qty * (100.0 / n_total_tps) / 100.0, 8)
+        payload = {
+            "symbol": chain.symbol,
+            "side": chain.side,
+            "hedge_mode": hedge_mode,
+            "position_idx": position_idx,
+            "preserve_sl": True,
+            "preserve_full_tp": True,
+            "tps": [
+                {
+                    "sequence": i + 1,
+                    "price": tp_price,
+                    "qty": tp_qty,
+                    "order_type": "Limit",
+                    "limit_price": tp_price,
+                    "trigger_by": "MarkPrice",
+                }
+                for i, tp_price in enumerate(intermediate_tps)
+            ],
+        }
+        return [ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="REBUILD_PARTIAL_TPS",
+            payload_json=json.dumps(payload),
+            idempotency_key=f"rebuild_partial_tps:{chain_id}:{exchange_event_id}",
+        )]
 
 
 __all__ = ["PostFillProtectionRebuilder"]
