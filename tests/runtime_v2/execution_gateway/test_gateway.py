@@ -869,6 +869,60 @@ def test_superseded_tp_partials_are_not_active_for_runtime_reads(ops_db):
     assert active[0]["take_profit"] == 71000.0
 
 
+def test_rebuild_partial_tps_are_active_for_runtime_reads(ops_db):
+    """I reader runtime devono espandere REBUILD_PARTIAL_TPS in livelli TP attivi."""
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_trade_chains SET lifecycle_state='OPEN' WHERE trade_chain_id=1"
+    )
+    conn.commit()
+    conn.close()
+
+    _insert_cmd(
+        ops_db,
+        3210,
+        chain_id=1,
+        cmd_type="REBUILD_PARTIAL_TPS",
+        payload={
+            "symbol": "BTC/USDT",
+            "side": "LONG",
+            "tps": [
+                {
+                    "sequence": 1,
+                    "price": 70000.0,
+                    "qty": 0.007,
+                    "order_type": "Limit",
+                    "limit_price": 70000.0,
+                    "trigger_by": "MarkPrice",
+                },
+                {
+                    "sequence": 2,
+                    "price": 71000.0,
+                    "qty": 0.003,
+                    "order_type": "Limit",
+                    "limit_price": 71000.0,
+                    "trigger_by": "MarkPrice",
+                },
+            ],
+        },
+    )
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_execution_commands SET status='DONE' WHERE command_id=3210"
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(ops_db)
+    assert repo.count_active_tps(1) == 2
+    active = sorted(repo.get_active_tp_commands(1), key=lambda item: item["tp_sequence"])
+    assert len(active) == 2
+    assert active[0]["take_profit"] == 70000.0
+    assert active[1]["take_profit"] == 71000.0
+
+
 def test_supersede_rebuild_commands_marks_pending_as_superseded(ops_db):
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
@@ -1151,3 +1205,76 @@ def test_rebuild_partial_tps_does_not_emit_direct_event(ops_db):
     ).fetchone()[0]
     conn.close()
     assert status == "DONE"
+
+
+def test_run_trade_based_reconciliation_no_price_matching(ops_db):
+    """trade-based reconciliation uses symbol+side correlation, not price matching.
+
+    A fill price very far from any expected TP price (would fail ±1% check) must
+    still produce a TP_FILLED event because price matching has been removed.
+    """
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    # Set chain to OPEN state with a filled entry so it qualifies for TP commands.
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_trade_chains SET lifecycle_state='OPEN', filled_entry_qty=0.01 "
+        "WHERE trade_chain_id=1"
+    )
+    conn.commit()
+    conn.close()
+
+    # Insert a SET_POSITION_TPSL_PARTIAL command (SENT) for chain 1.
+    tp_payload = {
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "take_profit": 70000.0,  # expected TP price
+        "tp_size": 0.005,
+        "tp_sequence": 1,
+        "tp_order_type": "Limit",
+        "tp_limit_price": 70000.0,
+        "tp_trigger_by": "MarkPrice",
+        "preserve_sl": True,
+    }
+    _insert_cmd_with_status(
+        ops_db, 6001,
+        status="SENT",
+        chain_id=1,
+        cmd_type="SET_POSITION_TPSL_PARTIAL",
+        payload=tp_payload,
+    )
+
+    repo = GatewayCommandRepository(ops_db)
+    adapter = FakeAdapter()
+
+    # Register a fill at a VERY different price (50% away — would fail ±1% check).
+    # With price matching removed this must still be attributed to the chain.
+    adapter.simulate_reduce_trade(
+        symbol="BTC/USDT",
+        side="LONG",
+        price=35000.0,  # 50% below 70000 — intentionally extreme
+        amount=0.005,
+        trade_id="trade_abc",
+    )
+
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc_1",
+    )
+    count = worker.run_trade_based_reconciliation()
+
+    assert count == 1, f"Expected 1 TP_FILLED inserted, got {count}"
+
+    events = _get_exchange_events(ops_db, chain_id=1)
+    tp_events = [e for e in events if e[0] == "TP_FILLED"]
+    assert len(tp_events) == 1, f"Expected 1 TP_FILLED event, got {tp_events}"
+    assert tp_events[0][1]["fill_price"] == 35000.0
+    assert tp_events[0][1]["source"] == "trade_based_reconciliation"
+
+    # Second call must be idempotent (no duplicate insert).
+    count2 = worker.run_trade_based_reconciliation()
+    assert count2 == 0, "Second run must be idempotent — 0 new events expected"

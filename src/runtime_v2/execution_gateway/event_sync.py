@@ -3,18 +3,14 @@ from __future__ import annotations
 import json
 import logging
 import sqlite3
+from collections import defaultdict
 from datetime import datetime, timezone
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
-from src.runtime_v2.execution_gateway.models import RawAdapterTrade
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
 logger = logging.getLogger(__name__)
-
-
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
 
 
 class ExchangeEventSyncWorker:
@@ -46,13 +42,11 @@ class ExchangeEventSyncWorker:
                     execution_account_id=self._execution_account_id,
                 )
                 if raw and raw.is_filled:
-                    saved = self._normalize_and_save(client_order_id, raw)
-                    if saved:
+                    if self._save_fill_event(client_order_id, raw):
                         self._repo.mark_done(cmd.command_id)
                         processed += 1
                 elif raw and raw.status == "CANCELLED":
-                    saved = self._handle_cancelled_order(client_order_id, raw)
-                    if saved:
+                    if self._save_cancelled_event(client_order_id, raw):
                         self._repo.mark_done(cmd.command_id)
                         processed += 1
             except Exception:
@@ -74,8 +68,16 @@ class ExchangeEventSyncWorker:
                 if qty is None:
                     continue
                 if qty == 0.0 and open_qty > 0.0:
-                    saved = self._save_externally_closed(chain_id, symbol, side, open_qty)
-                    if saved:
+                    idem_key = f"CLOSE_FULL_FILLED:ext:{chain_id}"
+                    payload = json.dumps({
+                        "filled_qty": open_qty,
+                        "fill_price": None,
+                        "source": "position_reconciliation",
+                    })
+                    inserted = self._repo.insert_exchange_event(
+                        chain_id, "CLOSE_FULL_FILLED", payload, idem_key
+                    )
+                    if inserted:
                         logger.info(
                             "externally closed position detected: chain=%s %s %s qty=%s",
                             chain_id, symbol, side, open_qty,
@@ -86,208 +88,95 @@ class ExchangeEventSyncWorker:
         return processed
 
     def run_trade_based_reconciliation(self) -> int:
-        """Poll recent reduceOnly fills via REST and match against active TP commands.
+        """Poll recent fills via REST — safety net for TP fills lost during WS downtime.
 
-        Replaces run_tp_reconciliation(). Uses real fill prices (not qty comparison).
-        Shares the same idempotency key format as watchMyTrades so INSERT OR IGNORE
-        prevents duplicates when both paths run.
-
-        Returns count of new TP_FILLED events inserted.
+        Uses symbol+side correlation (no price matching). For each chain with an active TP:
+        - If a recent reduce trade exists for the chain's symbol+side → INSERT TP_FILLED
+        - Multiple chains for same symbol+side → attribute to most recent (highest id)
         """
         if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
             return 0
 
-        entries = self._get_tp_reconciliation_entries()
-        if not entries:
+        open_chains = self._repo.get_open_chains_with_tps()
+        if not open_chains:
             return 0
 
-        from collections import defaultdict
-
-        by_key: dict[tuple[str, str], list[dict]] = defaultdict(list)
-        final_tp_level_by_chain: dict[int, int] = {}
-        for entry in entries:
-            by_key[(entry["symbol"], entry["side"])].append(entry)
-            chain_id = entry["chain_id"]
-            tp_level = entry["tp_level"]
-            current = final_tp_level_by_chain.get(chain_id)
-            if current is None or tp_level > current:
-                final_tp_level_by_chain[chain_id] = tp_level
-
         processed = 0
-        for (symbol, side), group in by_key.items():
+        by_symbol_side: dict[tuple[str, str], list[dict]] = defaultdict(list)
+        for chain in open_chains:
+            key = (chain["symbol"], chain["side"])
+            by_symbol_side[key].append(chain)
+
+        for (symbol, side), chains in by_symbol_side.items():
             try:
-                trades = list(self._adapter.fetch_recent_reduce_trades(
+                trades = self._adapter.fetch_recent_reduce_trades(
                     symbol=symbol,
                     side=side,
                     execution_account_id=self._execution_account_id,
                     limit=50,
-                ))
+                )
             except Exception:
                 logger.exception("fetch_recent_reduce_trades error for %s %s", symbol, side)
                 continue
+            if not trades:
+                continue
 
-            for entry in group:
-                chain_id = entry["chain_id"]
-                tp_level = entry["tp_level"]
-                tp_price = entry["tp_price"]
-                is_final = final_tp_level_by_chain.get(chain_id) == tp_level
+            if len(chains) == 1:
+                chain_id = chains[0]["trade_chain_id"]
+            else:
+                chain_id = max(c["trade_chain_id"] for c in chains)
+                logger.warning(
+                    "multiple open chains for %s %s — attributing to most recent chain %s",
+                    symbol, side, chain_id,
+                )
 
-                if self._tp_fill_event_exists(chain_id, tp_level):
-                    continue  # already recorded (e.g. by WS)
+            # tp_level=None for position-level TPs (no standalone orderLinkId)
+            tp_level: int | None = None
+            if self._repo.tp_fill_exists(chain_id, tp_level):
+                continue  # already recorded (by WS or previous REST run)
 
-                if tp_price <= 0:
-                    continue  # no valid TP price in command payload
-
-                for index, trade in enumerate(trades):
-                    if abs(trade.price - tp_price) / tp_price <= 0.01:
-                        if self._save_tp_fill_from_trade(
-                            chain_id,
-                            tp_level,
-                            trade,
-                            is_final=is_final,
-                        ):
-                            processed += 1
-                            trades.pop(index)
-                        break
+            trade = trades[0]
+            idem_key = (
+                f"TP_FILLED:{chain_id}:level:{tp_level}"
+                if tp_level is not None
+                else f"TP_FILLED:{chain_id}"
+            )
+            payload = json.dumps({
+                "tp_level": tp_level,
+                "fill_price": trade.price,
+                "filled_qty": trade.amount,
+                "source": "trade_based_reconciliation",
+                "exchange_trade_id": trade.trade_id,
+            })
+            inserted = self._repo.insert_exchange_event(chain_id, "TP_FILLED", payload, idem_key)
+            if inserted:
+                logger.info(
+                    "TP_FILLED from trade-based reconciliation: chain=%s %s %s",
+                    chain_id, symbol, side,
+                )
+                processed += 1
 
         return processed
-
-    def _get_tp_reconciliation_entries(self) -> list[dict]:
-        """Return active TP commands for open chains with price, level, and symbol."""
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            rows = conn.execute(
-                "SELECT c.command_id, c.trade_chain_id, c.command_type, c.payload_json, t.symbol, t.side "
-                "FROM ops_execution_commands c "
-                "JOIN ops_trade_chains t ON c.trade_chain_id = t.trade_chain_id "
-                "WHERE c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'REBUILD_PARTIAL_TPS') "
-                "AND c.status IN ('SENT', 'DONE') "
-                "AND t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
-            ).fetchall()
-            result: list[dict] = []
-            for cmd_id, chain_id, command_type, payload_json, symbol, side in rows:
-                try:
-                    payload = json.loads(payload_json)
-                except Exception:
-                    continue
-
-                if command_type == "REBUILD_PARTIAL_TPS":
-                    tp_items = payload.get("tps")
-                    if not isinstance(tp_items, list):
-                        continue
-
-                    for tp_item in tp_items:
-                        if not isinstance(tp_item, dict):
-                            continue
-                        try:
-                            result.append({
-                                "cmd_id": cmd_id,
-                                "chain_id": chain_id,
-                                "tp_level": int(tp_item["sequence"]),
-                                "tp_price": float(tp_item["price"]),
-                                "tp_size": float(tp_item["qty"]),
-                                "symbol": symbol,
-                                "side": side,
-                            })
-                        except (KeyError, TypeError, ValueError):
-                            continue
-                    continue
-
-                try:
-                    result.append({
-                        "cmd_id": cmd_id,
-                        "chain_id": chain_id,
-                        "tp_level": int(payload.get("tp_sequence", 1)),
-                        "tp_price": float(payload.get("take_profit", 0)),
-                        "tp_size": float(payload.get("tp_size", 0)),
-                        "symbol": symbol,
-                        "side": side,
-                    })
-                except (TypeError, ValueError):
-                    continue
-            return result
-        finally:
-            conn.close()
-
-    def _tp_fill_event_exists(self, trade_chain_id: int, tp_level: int) -> bool:
-        """Check if TP_FILLED event already exists for this TP level."""
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            rows = conn.execute(
-                "SELECT payload_json FROM ops_exchange_events "
-                "WHERE trade_chain_id = ? AND event_type = 'TP_FILLED'",
-                (trade_chain_id,)
-            ).fetchall()
-            for row in rows:
-                try:
-                    payload = json.loads(row[0])
-                    if payload.get("tp_level") == tp_level:
-                        return True
-                except Exception:
-                    pass
-            return False
-        finally:
-            conn.close()
-
-    def _save_tp_fill_from_trade(
-        self,
-        trade_chain_id: int,
-        tp_level: int,
-        trade: RawAdapterTrade,
-        *,
-        is_final: bool,
-    ) -> bool:
-        """INSERT OR IGNORE TP_FILLED event with real fill price from trade REST data."""
-        idempotency_key = f"TP_FILLED:{trade_chain_id}:level:{tp_level}"
-        payload = json.dumps({
-            "tp_level": tp_level,
-            "is_final": is_final,
-            "fill_price": trade.price,
-            "filled_qty": trade.amount,
-            "source": "trade_based_reconciliation",
-            "exchange_trade_id": trade.trade_id,
-        })
-        now = _now()
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            cursor = conn.execute(
-                "INSERT OR IGNORE INTO ops_exchange_events "
-                "(trade_chain_id, event_type, payload_json, processing_status, "
-                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
-                (trade_chain_id, "TP_FILLED", payload, "NEW", idempotency_key, now),
-            )
-            conn.commit()
-            return cursor.rowcount > 0
-        finally:
-            conn.close()
 
     def run_protective_orders_reconciliation(self) -> int:
         """Detect when a position-level TP was externally cancelled (no fill occurred)."""
         if not hasattr(self._adapter, "fetch_position_details"):
             return 0
 
-        entries = self._get_tp_reconciliation_entries()
-        if not entries:
+        open_chains = self._repo.get_open_chains_with_tps()
+        if not open_chains:
             return 0
 
-        latest_per_chain: dict[int, dict] = {}
-        for entry in entries:
-            chain_id = entry["chain_id"]
-            if chain_id not in latest_per_chain or entry["cmd_id"] > latest_per_chain[chain_id]["cmd_id"]:
-                latest_per_chain[chain_id] = entry
-
         processed = 0
-        for chain_id, entry in latest_per_chain.items():
-            expected_tp = entry["tp_price"]
-            tp_level = entry["tp_level"]
-            symbol = entry["symbol"]
-            side = entry["side"]
+        for chain in open_chains:
+            chain_id = chain["trade_chain_id"]
+            symbol = chain["symbol"]
+            side = chain["side"]
 
-            if expected_tp <= 0:
+            if self._repo.protective_cancelled_exists(chain_id):
                 continue
-
-            if self._tp_fill_event_exists(chain_id, tp_level):
-                continue
+            if self._repo.tp_fill_exists(chain_id, None):
+                continue  # TP was filled, not cancelled
 
             try:
                 pos = self._adapter.fetch_position_details(
@@ -299,88 +188,72 @@ class ExchangeEventSyncWorker:
                 logger.exception("fetch_position_details error for chain %s", chain_id)
                 continue
 
-            if pos is None:
+            if pos is None or pos.take_profit is None or pos.take_profit != 0.0:
                 continue
 
-            if pos.take_profit is None:
-                continue
-
-            if pos.take_profit != 0.0:
-                continue
-
-            idempotency_key = f"PROTECTIVE_ORDERS_MISSING:{chain_id}:tp:{tp_level}"
-            saved = self._save_protective_orders_missing(
-                chain_id=chain_id,
-                idempotency_key=idempotency_key,
-                payload={
-                    "expected_tp": expected_tp,
-                    "tp_level": tp_level,
-                    "reason": "tp_removed_externally",
-                },
+            idem_key = f"PROTECTIVE_ORDER_CANCELLED:{chain_id}"
+            payload = json.dumps({
+                "reason": "tp_removed_externally",
+                "source": "protective_orders_reconciliation",
+            })
+            inserted = self._repo.insert_exchange_event(
+                chain_id, "PROTECTIVE_ORDER_CANCELLED", payload, idem_key
             )
-            if saved:
+            if inserted:
                 logger.warning(
-                    "protective orders missing: chain=%s tp_level=%s expected_tp=%s - "
-                    "TP was removed externally without a fill",
-                    chain_id, tp_level, expected_tp,
+                    "PROTECTIVE_ORDER_CANCELLED detected: chain=%s %s %s",
+                    chain_id, symbol, side,
                 )
                 processed += 1
 
         return processed
 
-    def _save_protective_orders_missing(
-        self,
-        chain_id: int,
-        idempotency_key: str,
-        payload: dict,
-    ) -> bool:
-        now = _now()
-        conn = sqlite3.connect(self._ops_db)
+    # ------------------------------------------------------------------
+    # Private helpers
+    # ------------------------------------------------------------------
+
+    def _save_fill_event(self, client_order_id: str, raw) -> bool:
+        """Build fill event and delegate to repo.insert_exchange_event() — no inline SQLite."""
         try:
-            cursor = conn.execute(
-                "INSERT OR IGNORE INTO ops_exchange_events "
-                "(trade_chain_id, event_type, payload_json, processing_status, "
-                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
-                (chain_id, "PROTECTIVE_ORDERS_MISSING",
-                 json.dumps(payload), "NEW", idempotency_key, now),
+            coid = coid_mod.parse(client_order_id)
+        except ValueError:
+            logger.warning("cannot parse client_order_id: %s", client_order_id)
+            return False
+
+        exchange_order_id = raw.exchange_order_id or client_order_id
+
+        role_to_event: dict[str, str] = {
+            "entry": "ENTRY_FILLED",
+            "sl": "SL_FILLED",
+            "exit_partial": "CLOSE_PARTIAL_FILLED",
+            "exit_full": "CLOSE_FULL_FILLED",
+            "tp": "TP_FILLED",
+        }
+        event_type = role_to_event.get(coid.role)
+        if event_type is None:
+            logger.warning(
+                "unknown role '%s' in %s — skipping", coid.role, client_order_id
             )
-            conn.commit()
-            return cursor.rowcount > 0
-        finally:
-            conn.close()
+            return False
 
-    def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            rows = conn.execute(
-                "SELECT trade_chain_id, symbol, side, open_position_qty "
-                "FROM ops_trade_chains "
-                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
-            ).fetchall()
-            return [(int(r[0]), str(r[1]), str(r[2]), float(r[3] or 0.0)) for r in rows]
-        finally:
-            conn.close()
+        payload: dict = {
+            "fill_price": raw.average_price,
+            "filled_qty": raw.filled_qty,
+            "command_id": coid.command_id,
+        }
+        if coid.role == "tp":
+            payload["tp_level"] = coid.sequence
+            payload["is_final"] = self._repo.count_active_tps(coid.trade_chain_id) <= 1
+            idem_key = f"TP_FILLED:{coid.trade_chain_id}:level:{coid.sequence}"
+        else:
+            idem_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
 
-    def _save_externally_closed(
-        self, chain_id: int, symbol: str, side: str, open_qty: float
-    ) -> bool:
-        idempotency_key = f"CLOSE_FULL_FILLED:ext:{chain_id}"
-        payload = json.dumps({"filled_qty": open_qty, "fill_price": None, "source": "position_reconciliation"})
-        now = _now()
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            cursor = conn.execute(
-                "INSERT OR IGNORE INTO ops_exchange_events "
-                "(trade_chain_id, event_type, payload_json, processing_status, "
-                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
-                (chain_id, "CLOSE_FULL_FILLED", payload, "NEW", idempotency_key, now),
-            )
-            conn.commit()
-            return cursor.rowcount > 0
-        finally:
-            conn.close()
+        return self._repo.insert_exchange_event(
+            coid.trade_chain_id, event_type, json.dumps(payload), idem_key
+        )
 
-    def _handle_cancelled_order(self, client_order_id: str, raw) -> bool:
+    def _save_cancelled_event(self, client_order_id: str, raw) -> bool:
+        """Handle cancelled orders — delegates to repo.insert_exchange_event()."""
         try:
             coid = coid_mod.parse(client_order_id)
         except ValueError:
@@ -392,108 +265,42 @@ class ExchangeEventSyncWorker:
                 "cancelled non-entry order has fill: coid=%s status=%s filled_qty=%s reason=%s",
                 client_order_id, raw.status, raw.filled_qty, raw.cancel_reason,
             )
-            return self._normalize_and_save(client_order_id, raw)
+            return self._save_fill_event(client_order_id, raw)
 
         if coid.role != "entry":
-            logger.warning("cancelled non-entry order detected: %s - marking done", client_order_id)
+            logger.warning(
+                "cancelled non-entry order detected: %s - marking done", client_order_id
+            )
             return True
 
         exchange_order_id = raw.exchange_order_id or client_order_id
-        position_already_open = raw.filled_qty > 0.0
         if raw.cancel_reason:
             logger.warning(
                 "entry order cancelled by exchange: coid=%s reason=%s",
                 client_order_id, raw.cancel_reason,
             )
-        idempotency_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
+        idem_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
         payload = json.dumps({
             "command_id": coid.command_id,
-            "position_already_open": position_already_open,
+            "position_already_open": raw.filled_qty > 0.0,
             "cancel_reason": raw.cancel_reason,
             "cancelled_order_ids": [client_order_id],
             "sequence": coid.sequence,
         })
-        now = _now()
+        return self._repo.insert_exchange_event(
+            coid.trade_chain_id, "PENDING_ENTRY_CANCELLED_CONFIRMED", payload, idem_key
+        )
+
+    def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
+        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains."""
         conn = sqlite3.connect(self._ops_db)
         try:
-            conn.execute(
-                "INSERT OR IGNORE INTO ops_exchange_events "
-                "(trade_chain_id, event_type, payload_json, processing_status, "
-                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
-                (coid.trade_chain_id, "PENDING_ENTRY_CANCELLED_CONFIRMED", payload,
-                 "NEW", idempotency_key, now),
-            )
-            conn.commit()
-            return True
-        finally:
-            conn.close()
-
-    def _normalize_and_save(self, client_order_id: str, raw) -> bool:
-        try:
-            coid = coid_mod.parse(client_order_id)
-        except ValueError:
-            logger.warning("cannot parse client_order_id: %s", client_order_id)
-            return False
-
-        exchange_order_id = raw.exchange_order_id or client_order_id
-
-        if coid.role == "entry":
-            event_type = "ENTRY_FILLED"
-            payload = {
-                "fill_price": raw.average_price,
-                "filled_qty": raw.filled_qty,
-                "command_id": coid.command_id,
-            }
-        elif coid.role == "sl":
-            event_type = "SL_FILLED"
-            payload = {
-                "fill_price": raw.average_price,
-                "filled_qty": raw.filled_qty,
-                "command_id": coid.command_id,
-            }
-        elif coid.role == "exit_partial":
-            event_type = "CLOSE_PARTIAL_FILLED"
-            payload = {
-                "fill_price": raw.average_price,
-                "filled_qty": raw.filled_qty,
-                "command_id": coid.command_id,
-            }
-        elif coid.role == "exit_full":
-            event_type = "CLOSE_FULL_FILLED"
-            payload = {
-                "fill_price": raw.average_price,
-                "filled_qty": raw.filled_qty,
-                "command_id": coid.command_id,
-            }
-        elif coid.role == "tp":
-            event_type = "TP_FILLED"
-            payload = {
-                "tp_level": coid.sequence,
-                "is_final": self._repo.count_active_tps(coid.trade_chain_id) <= 1,
-                "fill_price": raw.average_price,
-                "filled_qty": raw.filled_qty,
-                "command_id": coid.command_id,
-            }
-        else:
-            logger.warning("unknown role '%s' in %s - skipping mark_done", coid.role, client_order_id)
-            return False
-
-        if coid.role == "tp":
-            idempotency_key = f"TP_FILLED:{coid.trade_chain_id}:level:{coid.sequence}"
-        else:
-            idempotency_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
-        now = _now()
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            conn.execute(
-                "INSERT OR IGNORE INTO ops_exchange_events "
-                "(trade_chain_id, event_type, payload_json, processing_status, "
-                "idempotency_key, received_at) VALUES (?,?,?,?,?,?)",
-                (coid.trade_chain_id, event_type, json.dumps(payload),
-                 "NEW", idempotency_key, now),
-            )
-            conn.commit()
-            return True
+            rows = conn.execute(
+                "SELECT trade_chain_id, symbol, side, open_position_qty "
+                "FROM ops_trade_chains "
+                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
+            ).fetchall()
+            return [(int(r[0]), str(r[1]), str(r[2]), float(r[3] or 0.0)) for r in rows]
         finally:
             conn.close()
 
