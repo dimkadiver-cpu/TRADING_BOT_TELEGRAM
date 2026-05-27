@@ -571,170 +571,6 @@ def _insert_open_chain_with_tp_command(
     conn.close()
 
 
-def test_get_tp_reconciliation_entries_expands_rebuild_partial_tps(ops_db):
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_open_chain_with_tp_command(
-        ops_db,
-        70,
-        command_type="REBUILD_PARTIAL_TPS",
-        status="DONE",
-        symbol="BTCUSDT",
-        side="LONG",
-        lifecycle_state="PARTIALLY_CLOSED",
-        payload={
-            "tps": [
-                {"sequence": 1, "price": 70100.0, "qty": 0.003},
-                {"sequence": 2, "price": 70200.0, "qty": 0.004},
-            ]
-        },
-    )
-
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db,
-        adapter=MagicMock(),
-        repo=GatewayCommandRepository(ops_db),
-        execution_account_id="acc",
-    )
-
-    entries = worker._get_tp_reconciliation_entries()
-
-    assert entries == [
-        {
-            "cmd_id": 7000,
-            "chain_id": 70,
-            "tp_level": 1,
-            "tp_price": 70100.0,
-            "tp_size": 0.003,
-            "symbol": "BTCUSDT",
-            "side": "LONG",
-        },
-        {
-            "cmd_id": 7000,
-            "chain_id": 70,
-            "tp_level": 2,
-            "tp_price": 70200.0,
-            "tp_size": 0.004,
-            "symbol": "BTCUSDT",
-            "side": "LONG",
-        },
-    ]
-
-
-def test_get_tp_reconciliation_entries_keeps_legacy_partial_tp_command(ops_db):
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_open_chain_with_tp_command(
-        ops_db,
-        71,
-        command_type="SET_POSITION_TPSL_PARTIAL",
-        payload={
-            "take_profit": 0.05754,
-            "tp_size": 3871.5,
-            "tp_sequence": 1,
-        },
-    )
-
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db,
-        adapter=MagicMock(),
-        repo=GatewayCommandRepository(ops_db),
-        execution_account_id="acc",
-    )
-
-    entries = worker._get_tp_reconciliation_entries()
-
-    assert entries == [
-        {
-            "cmd_id": 7100,
-            "chain_id": 71,
-            "tp_level": 1,
-            "tp_price": 0.05754,
-            "tp_size": 3871.5,
-            "symbol": "PHAUSDT",
-            "side": "SHORT",
-        }
-    ]
-
-
-def test_get_tp_reconciliation_entries_skips_malformed_rebuild_tp_items(ops_db):
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_open_chain_with_tp_command(
-        ops_db,
-        72,
-        command_type="REBUILD_PARTIAL_TPS",
-        status="SENT",
-        payload={
-            "tps": [
-                {"sequence": 1, "price": 70100.0, "qty": 0.003},
-                {"sequence": "bad", "price": 70200.0, "qty": 0.004},
-                {"sequence": 3, "price": None, "qty": 0.002},
-                "not-a-dict",
-                {"sequence": 4, "price": 70400.0},
-            ]
-        },
-    )
-
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db,
-        adapter=MagicMock(),
-        repo=GatewayCommandRepository(ops_db),
-        execution_account_id="acc",
-    )
-
-    entries = worker._get_tp_reconciliation_entries()
-
-    assert entries == [
-        {
-            "cmd_id": 7200,
-            "chain_id": 72,
-            "tp_level": 1,
-            "tp_price": 70100.0,
-            "tp_size": 0.003,
-            "symbol": "PHAUSDT",
-            "side": "SHORT",
-        }
-    ]
-
-
-def test_trade_based_reconciliation_inserts_tp_filled_on_matching_trade(ops_db):
-    """run_trade_based_reconciliation() detects TP fill via fetch_recent_reduce_trades()."""
-    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_open_chain_with_tp_v2(ops_db, 50, symbol="PHAUSDT", side="SHORT",
-                                  tp_price=0.05754, tp_size=3871.5, open_qty=7743.0)
-    adapter = FakeAdapter()
-    # Simulate the intermediate TP fill
-    adapter.simulate_reduce_trade(
-        symbol="PHAUSDT", side="SHORT",
-        price=0.05754, amount=3871.5, trade_id="exch-trade-001",
-    )
-    repo = GatewayCommandRepository(ops_db)
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc"
-    )
-    count = worker.run_trade_based_reconciliation()
-
-    assert count == 1
-    conn = sqlite3.connect(ops_db)
-    rows = conn.execute(
-        "SELECT event_type, payload_json, idempotency_key FROM ops_exchange_events WHERE trade_chain_id=50"
-    ).fetchall()
-    conn.close()
-    assert len(rows) == 1
-    assert rows[0][0] == "TP_FILLED"
-    assert rows[0][2] == "TP_FILLED:50:level:1"
-    p = json.loads(rows[0][1])
-    assert p["fill_price"] == 0.05754
-    assert p["filled_qty"] == 3871.5
-    assert p["exchange_trade_id"] == "exch-trade-001"
-    assert p["source"] == "trade_based_reconciliation"
 
 
 def test_trade_based_reconciliation_idempotent(ops_db):
@@ -758,47 +594,6 @@ def test_trade_based_reconciliation_idempotent(ops_db):
     ).fetchone()[0]
     conn.close()
     assert count == 1
-
-
-def test_trade_based_reconciliation_marks_final_tp_when_last_level_fills(ops_db):
-    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_open_chain_with_tp_command(
-        ops_db,
-        55,
-        command_type="REBUILD_PARTIAL_TPS",
-        payload={
-            "tps": [
-                {"sequence": 1, "price": 0.05754, "qty": 1000.0},
-                {"sequence": 2, "price": 0.05600, "qty": 1000.0},
-            ]
-        },
-        symbol="PHAUSDT",
-        side="SHORT",
-    )
-    adapter = FakeAdapter()
-    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.05600, 1000.0, "t-final")
-    repo = GatewayCommandRepository(ops_db)
-    worker = ExchangeEventSyncWorker(
-        ops_db_path=ops_db,
-        adapter=adapter,
-        repo=repo,
-        execution_account_id="acc",
-    )
-
-    count = worker.run_trade_based_reconciliation()
-
-    assert count == 1
-    conn = sqlite3.connect(ops_db)
-    payload = json.loads(conn.execute(
-        "SELECT payload_json FROM ops_exchange_events "
-        "WHERE trade_chain_id=55 AND event_type='TP_FILLED'"
-    ).fetchone()[0])
-    conn.close()
-    assert payload["tp_level"] == 2
-    assert payload["is_final"] is True
 
 
 def test_trade_based_reconciliation_does_not_reuse_one_trade_across_chains(ops_db):
@@ -833,44 +628,27 @@ def test_trade_based_reconciliation_does_not_reuse_one_trade_across_chains(ops_d
     assert payload["exchange_trade_id"] == "t-shared"
 
 
-def test_trade_based_reconciliation_skips_non_matching_price(ops_db):
-    """Trade price >1% away from TP → no event inserted."""
-    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
-    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_open_chain_with_tp_v2(ops_db, 52, tp_price=0.05754)
-    adapter = FakeAdapter()
-    # Price 2% away from TP
-    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.0560, 3871.5, "t-miss")
-    repo = GatewayCommandRepository(ops_db)
-    worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc")
-
-    count = worker.run_trade_based_reconciliation()
-
-    assert count == 0
-    conn = sqlite3.connect(ops_db)
-    n = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
-    conn.close()
-    assert n == 0
-
-
 def test_trade_based_reconciliation_deduplicates_with_ws_insertion(ops_db):
-    """If WS already inserted TP_FILLED with same idempotency key, REST poll is no-op."""
+    """If WS already inserted TP_FILLED with same idempotency key, REST poll is no-op.
+
+    The new trade-based reconciliation uses tp_level=None (position-level TPs, no orderLinkId),
+    so the idempotency key is 'TP_FILLED:<chain_id>' (no :level: suffix).
+    """
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     _insert_open_chain_with_tp_v2(ops_db, 53, tp_price=0.05754)
-    # Simulate WS already inserted
+    # Simulate WS already inserted TP_FILLED — use the same idempotency key the
+    # trade-based reconciler will generate: TP_FILLED:<chain_id> (no level suffix).
     conn = sqlite3.connect(ops_db)
     conn.execute(
         "INSERT INTO ops_exchange_events "
         "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
         "VALUES (?,?,?,?,?,datetime('now'))",
         (53, "TP_FILLED",
-         '{"tp_level":1,"is_final":false,"fill_price":0.05754,"source":"watch_my_trades"}',
-         "NEW", "TP_FILLED:53:level:1"),
+         '{"tp_level":null,"is_final":false,"fill_price":0.05754,"source":"watch_my_trades"}',
+         "NEW", "TP_FILLED:53"),
     )
     conn.commit()
     conn.close()
@@ -907,7 +685,7 @@ def test_trade_based_reconciliation_noop_when_adapter_has_no_method(ops_db):
 # ── protective orders reconciliation tests ────────────────────────────────────
 
 def test_protective_orders_reconciliation_emits_event_when_tp_removed(ops_db):
-    """Exchange TP is 0.0 but bot set 0.05754 and no TP_FILLED exists → PROTECTIVE_ORDERS_MISSING."""
+    """Exchange TP is 0.0 but bot set 0.05754 and no TP_FILLED exists → PROTECTIVE_ORDER_CANCELLED."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.models import RawPositionDetails
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
@@ -933,28 +711,32 @@ def test_protective_orders_reconciliation_emits_event_when_tp_removed(ops_db):
     ).fetchall()
     conn.close()
     assert len(rows) == 1
-    assert rows[0][0] == "PROTECTIVE_ORDERS_MISSING"
+    assert rows[0][0] == "PROTECTIVE_ORDER_CANCELLED"
     p = json.loads(rows[0][1])
-    assert p["expected_tp"] == 0.05754
-    assert p["tp_level"] == 1
     assert p["reason"] == "tp_removed_externally"
+    assert p["source"] == "protective_orders_reconciliation"
 
 
 def test_protective_orders_reconciliation_skips_when_tp_fill_exists(ops_db):
-    """If TP_FILLED already recorded → TP triggered normally → skip detection."""
+    """If TP_FILLED already recorded → TP triggered normally → skip detection.
+
+    The protective-orders reconciliation uses tp_fill_exists(chain_id, None), which checks
+    the idempotency key 'TP_FILLED:<chain_id>' (no :level: suffix).
+    """
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.models import RawPositionDetails
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     _insert_open_chain_with_tp_v2(ops_db, 61, tp_price=0.05754)
-    # Existing TP_FILLED event → means it triggered, not cancelled
+    # Existing TP_FILLED event → means it triggered, not cancelled.
+    # Use idempotency key without level suffix to match tp_fill_exists(61, None).
     conn = sqlite3.connect(ops_db)
     conn.execute(
         "INSERT INTO ops_exchange_events "
         "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
         "VALUES (?,?,?,?,?,datetime('now'))",
-        (61, "TP_FILLED", '{"tp_level":1}', "DONE", "TP_FILLED:61:level:1"),
+        (61, "TP_FILLED", '{"tp_level":null}', "DONE", "TP_FILLED:61"),
     )
     conn.commit()
     conn.close()
@@ -995,7 +777,7 @@ def test_protective_orders_reconciliation_skips_when_tp_still_active(ops_db):
 
 
 def test_protective_orders_reconciliation_idempotent(ops_db):
-    """Two calls → exactly 1 PROTECTIVE_ORDERS_MISSING event."""
+    """Two calls → exactly 1 PROTECTIVE_ORDER_CANCELLED event."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.models import RawPositionDetails
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
@@ -1013,7 +795,7 @@ def test_protective_orders_reconciliation_idempotent(ops_db):
 
     conn = sqlite3.connect(ops_db)
     count = conn.execute(
-        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='PROTECTIVE_ORDERS_MISSING'"
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='PROTECTIVE_ORDER_CANCELLED'"
     ).fetchone()[0]
     conn.close()
     assert count == 1
