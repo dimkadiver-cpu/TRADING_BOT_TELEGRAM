@@ -18,6 +18,16 @@ _STOP_TYPE_TP   = frozenset({"TakeProfit", "PartialTakeProfit"})
 _STOP_TYPE_SL   = frozenset({"StopLoss", "PartialStopLoss"})
 
 
+def _tp_level_from_role(role: str) -> int | None:
+    """Extract TP level from role string like 'tp_1', 'tp_2'. Returns None on parse error."""
+    if not role.startswith("tp_"):
+        return None
+    try:
+        return int(role.split("_")[1])
+    except (IndexError, ValueError):
+        return None
+
+
 class EventClassifier:
     """
     Converts an ExchangeRawEvent into a ClassifiedEvent using deterministic
@@ -153,7 +163,7 @@ class EventClassifier:
         sl = raw.position_stop_loss
         # Bybit sends "0" (→ 0.0) when a protective is cleared; None means the field was
         # absent in this delta update (unchanged) or was never set — not a cancellation signal.
-        if tp == 0.0 or sl == 0.0:
+        if (tp is not None and tp == 0.0) or (sl is not None and sl == 0.0):
             return ClassifiedEvent(
                 raw=raw,
                 event_type="PROTECTIVE_ORDER_CANCELLED",
@@ -178,10 +188,14 @@ class EventClassifier:
         """
         ct = raw.create_type
         sot = raw.stop_order_type
-
-        if (ct in _CREATE_TYPE_TP) or (sot in _STOP_TYPE_TP):
+        is_tp = (ct in _CREATE_TYPE_TP) or (sot in _STOP_TYPE_TP)
+        is_sl = (ct in _CREATE_TYPE_SL) or (sot in _STOP_TYPE_SL)
+        if is_tp and is_sl:
+            # Conflicting signals — fall through to lower-priority classification
+            return None
+        if is_tp:
             return "TP_FILLED"
-        if (ct in _CREATE_TYPE_SL) or (sot in _STOP_TYPE_SL):
+        if is_sl:
             return "SL_FILLED"
         if ct == "CreateByLiq":
             return "LIQUIDATION_FILLED"
@@ -199,13 +213,7 @@ class EventClassifier:
         if entry is None:
             return None, None
         chain_id, role, _seq = entry
-        tp_level: int | None = None
-        if role.startswith("tp_"):
-            try:
-                tp_level = int(role.split("_")[1])
-            except (IndexError, ValueError):
-                pass
-        return chain_id, tp_level
+        return chain_id, _tp_level_from_role(role)
 
     def _event_from_role(
         self,
@@ -214,11 +222,7 @@ class EventClassifier:
     ) -> tuple[ExchangeEventType, EventSource, int | None]:
         """Determine event_type + source + tp_level from a known role."""
         if role.startswith("tp_"):
-            try:
-                tp_level = int(role.split("_")[1])
-            except (IndexError, ValueError):
-                tp_level = None
-            return "TP_FILLED", "bot_command", tp_level
+            return "TP_FILLED", "bot_command", _tp_level_from_role(role)
 
         if role == "entry":
             closed = raw.closed_size or 0.0
