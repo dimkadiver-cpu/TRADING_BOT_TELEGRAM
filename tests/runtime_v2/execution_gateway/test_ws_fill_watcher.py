@@ -43,6 +43,8 @@ def test_process_batch_normalizes_and_classifies_and_inserts():
     # Setup: normalize_fn returns a raw event; classify returns a classified event with chain
     mock_raw = MagicMock(spec=ExchangeRawEvent)
     mock_classified = MagicMock(spec=ClassifiedEvent)
+    mock_classified.event_type = "ENTRY_FILLED"
+    mock_classified.trade_chain_id = 1
     mock_classified.should_forward_to_lifecycle = True
     mock_repo.get_known_order_link_ids.return_value = {}
     mock_repo.insert_raw_and_classified.return_value = True
@@ -107,6 +109,8 @@ def test_process_batch_triggers_wake_callback_on_insert():
     )
 
     mock_classified = MagicMock(spec=ClassifiedEvent)
+    mock_classified.event_type = "ENTRY_FILLED"
+    mock_classified.trade_chain_id = 1
     mock_classified.should_forward_to_lifecycle = True
 
     normalize_fn = MagicMock(return_value=MagicMock(spec=ExchangeRawEvent))

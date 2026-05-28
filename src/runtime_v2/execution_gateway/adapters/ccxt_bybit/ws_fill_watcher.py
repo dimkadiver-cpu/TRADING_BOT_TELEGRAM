@@ -190,8 +190,8 @@ class BybitWsFillWatcher:
                 # does not tag with orderLinkId (position-level attached orders).
                 # "Sell" fill closes a LONG; "Buy" fill closes a SHORT.
                 if (
-                    getattr(classified, "event_type", None) in ("TP_FILLED", "SL_FILLED")
-                    and getattr(classified, "trade_chain_id", None) is None
+                    classified.event_type in ("TP_FILLED", "SL_FILLED")
+                    and classified.trade_chain_id is None
                 ):
                     fill_side = (raw.side or "").strip()
                     position_side = "LONG" if fill_side.lower() == "sell" else "SHORT"
