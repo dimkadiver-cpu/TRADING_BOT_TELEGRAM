@@ -221,10 +221,11 @@ class TestWatchOrdersStream:
 class TestWatchPositionsStream:
 
     def test_classify_protective_order_cancelled_via_position(self):
-        """watch_positions, position_take_profit=0.0 → PROTECTIVE_ORDER_CANCELLED, exchange_auto, is_actionable=True."""
+        """watch_positions, posizione aperta con position_take_profit=0.0 → PROTECTIVE_ORDER_CANCELLED."""
         clf = EventClassifier(known_order_link_ids={})
         raw = _raw(
             source_stream="watch_positions",
+            pos_qty=0.127,           # posizione reale aperta
             position_take_profit=0.0,
             position_stop_loss=10000.0,
         )
@@ -232,6 +233,32 @@ class TestWatchPositionsStream:
         assert result.event_type == "PROTECTIVE_ORDER_CANCELLED"
         assert result.source == "exchange_auto"
         assert result.is_actionable is True
+
+    def test_empty_position_slot_is_unknown(self):
+        """watch_positions, pos_qty=0 → UNKNOWN anche se tp/sl sono 0.0 (hedge mode slot vuoto)."""
+        clf = EventClassifier(known_order_link_ids={})
+        raw = _raw(
+            source_stream="watch_positions",
+            pos_qty=0.0,
+            position_take_profit=0.0,
+            position_stop_loss=0.0,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "UNKNOWN"
+        assert result.is_actionable is False
+
+    def test_empty_position_slot_pos_qty_none_is_unknown(self):
+        """watch_positions, pos_qty=None → UNKNOWN (campo assente nel delta WS)."""
+        clf = EventClassifier(known_order_link_ids={})
+        raw = _raw(
+            source_stream="watch_positions",
+            pos_qty=None,
+            position_take_profit=0.0,
+            position_stop_loss=0.0,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "UNKNOWN"
+        assert result.is_actionable is False
 
 
 class TestPriority2UnknownRole:

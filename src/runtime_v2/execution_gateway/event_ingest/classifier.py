@@ -159,6 +159,10 @@ class EventClassifier:
 
     def _classify_watch_positions(self, raw: ExchangeRawEvent) -> ClassifiedEvent:
         """Handle watch_positions stream."""
+        # Empty position slot (hedge mode sends zero-size slots on connect/reconnect).
+        # TP/SL are naturally 0.0 when pos_qty=0 — not a cancellation signal.
+        if (raw.pos_qty or 0.0) == 0.0:
+            return self._unknown(raw)
         tp = raw.position_take_profit
         sl = raw.position_stop_loss
         # Bybit sends "0" (→ 0.0) when a protective is cleared; None means the field was

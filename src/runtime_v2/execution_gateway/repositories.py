@@ -495,7 +495,12 @@ class GatewayCommandRepository:
             else:
                 ops_idem_key = f"TP_FILLED:{classified.trade_chain_id}"
         elif classified.event_type == "ENTRY_FILLED":
-            ops_idem_key = f"ENTRY_FILLED:{classified.trade_chain_id}"
+            # Include order_id so the key matches the REST reconciliation path
+            # (event_sync._save_fill_event uses "{event_type}:{chain_id}:{exchange_order_id}").
+            # raw.order_id is the exchange orderId from watch_my_trades — same UUID used by REST.
+            # Fallback to exchange_event_id (execId) if order_id is absent.
+            _order_anchor = raw.order_id or raw.exchange_event_id
+            ops_idem_key = f"ENTRY_FILLED:{classified.trade_chain_id}:{_order_anchor}"
         else:
             ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
 

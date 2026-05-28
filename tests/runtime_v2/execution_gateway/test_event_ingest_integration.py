@@ -317,6 +317,66 @@ def test_ws_entry_fill_with_known_order_link_id(tmp_path):
 
 
 # ---------------------------------------------------------------------------
+# Test 3b: WS + REST ENTRY_FILLED idempotency — same fill → only 1 event
+# ---------------------------------------------------------------------------
+
+def test_ws_and_rest_entry_fill_idempotent(tmp_path):
+    """WS entry fill followed by REST reconciliation for the same order → only 1 row."""
+    db_path = make_db(tmp_path)
+    _insert_chain(db_path, chain_id=1)
+    _insert_sent_entry_cmd(db_path, cmd_id=1, chain_id=1, client_order_id="tsb:1:1:entry:1")
+
+    repo = GatewayCommandRepository(db_path)
+    known_ids = repo.get_known_order_link_ids()
+
+    exchange_order_id = "ord-exec-entry-fill"
+
+    trade = _trade_dict(
+        exec_id="exec-entry-fill",
+        side="Buy",
+        create_type="CreateByUser",
+        stop_order_type="",
+        order_link_id="tsb:1:1:entry:1",
+        closed_size="0",
+        pos_qty="0.01",
+        exec_price="44500",
+    )
+
+    raw = EventNormalizer().from_trade(trade)
+    assert raw is not None
+    assert raw.order_id == exchange_order_id
+
+    classified = EventClassifier(known_ids).classify(raw)
+    assert classified.event_type == "ENTRY_FILLED"
+    assert classified.trade_chain_id == 1
+
+    # WS path inserts first
+    ws_inserted = repo.insert_raw_and_classified(classified)
+    assert ws_inserted is True
+
+    conn = sqlite3.connect(db_path)
+    ops_count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert ops_count == 1
+
+    # REST reconciliation path uses the same exchange_order_id → same idempotency key
+    rest_key = f"ENTRY_FILLED:1:{exchange_order_id}"
+    rest_inserted = repo.insert_exchange_event(
+        trade_chain_id=1,
+        event_type="ENTRY_FILLED",
+        payload_json=json.dumps({"fill_price": 44500.0, "filled_qty": 0.01, "command_id": 1}),
+        idempotency_key=rest_key,
+    )
+    # Must be blocked — same key
+    assert rest_inserted is False
+
+    conn = sqlite3.connect(db_path)
+    final_count = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert final_count == 1, "double ENTRY_FILL: REST path bypassed WS idempotency"
+
+
+# ---------------------------------------------------------------------------
 # Test 3: Full pipeline — TP position-level (no chain attribution until REST)
 # ---------------------------------------------------------------------------
 
