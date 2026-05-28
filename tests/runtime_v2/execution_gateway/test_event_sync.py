@@ -917,3 +917,68 @@ def test_run_reconciliation_no_wake_callback_on_duplicate(ops_db):
     worker.run_reconciliation()  # second: cmd is DONE, nothing to poll
 
     assert len(wake_calls) == 1
+
+
+def test_position_reconciliation_records_fill_price_from_rest(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain(ops_db, 99, "BTCUSDT", "LONG", 0.131)
+
+    adapter = FakeAdapter()
+    adapter._positions["BTCUSDT:LONG"] = 0.0
+    adapter.simulate_reduce_trade("BTCUSDT", "LONG", price=73345.8, amount=0.131, trade_id="t1")
+
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+    n = worker.run_position_reconciliation()
+    assert n == 1
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=99 AND event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload["fill_price"] == pytest.approx(73345.8)
+    assert payload["source"] == "position_reconciliation"
+
+
+def test_position_reconciliation_falls_back_to_none_when_no_reduce_trades(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain(ops_db, 100, "ETHUSDT", "LONG", 1.0)
+
+    adapter = FakeAdapter()
+    adapter._positions["ETHUSDT:LONG"] = 0.0
+
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+    n = worker.run_position_reconciliation()
+    assert n == 1
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=100 AND event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()
+    conn.close()
+
+    payload = json.loads(row[0])
+    assert payload["fill_price"] is None

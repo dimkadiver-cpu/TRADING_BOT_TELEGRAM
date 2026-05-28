@@ -13,6 +13,14 @@ from src.runtime_v2.execution_gateway.repositories import GatewayCommandReposito
 logger = logging.getLogger(__name__)
 
 
+def _weighted_avg_price(trades: list) -> float | None:
+    """Weighted average price across a list of RawAdapterTrade objects."""
+    total_qty = sum(t.amount for t in trades)
+    if total_qty <= 0:
+        return None
+    return sum(t.price * t.amount for t in trades) / total_qty
+
+
 class ExchangeEventSyncWorker:
     def __init__(
         self,
@@ -63,7 +71,7 @@ class ExchangeEventSyncWorker:
         return processed
 
     def run_position_reconciliation(self) -> int:
-        """Detect positions closed externally on the exchange (manual close)."""
+        """Detect positions closed externally on the exchange (manual close or missed TP/SL)."""
         chains = self._get_open_chains()
         processed = 0
         for chain_id, symbol, side, open_qty in chains:
@@ -76,10 +84,27 @@ class ExchangeEventSyncWorker:
                 if qty is None:
                     continue
                 if qty == 0.0 and open_qty > 0.0:
+                    # Attempt to recover fill price from recent reduce trades (REST safety net)
+                    fill_price: float | None = None
+                    if hasattr(self._adapter, "fetch_recent_reduce_trades"):
+                        try:
+                            trades = self._adapter.fetch_recent_reduce_trades(
+                                symbol=symbol,
+                                side=side,
+                                execution_account_id=self._execution_account_id,
+                                limit=50,
+                            )
+                            fill_price = _weighted_avg_price(trades)
+                        except Exception:
+                            logger.warning(
+                                "could not fetch fill price for reconciliation close: chain=%s",
+                                chain_id,
+                            )
+
                     idem_key = f"CLOSE_FULL_FILLED:ext:{chain_id}"
                     payload = json.dumps({
                         "filled_qty": open_qty,
-                        "fill_price": None,
+                        "fill_price": fill_price,
                         "source": "position_reconciliation",
                     })
                     inserted = self._repo.insert_exchange_event(
@@ -87,8 +112,8 @@ class ExchangeEventSyncWorker:
                     )
                     if inserted:
                         logger.info(
-                            "externally closed position detected: chain=%s %s %s qty=%s",
-                            chain_id, symbol, side, open_qty,
+                            "externally closed position detected: chain=%s %s %s qty=%s fill_price=%s",
+                            chain_id, symbol, side, open_qty, fill_price,
                         )
                         self._wake()
                         processed += 1
