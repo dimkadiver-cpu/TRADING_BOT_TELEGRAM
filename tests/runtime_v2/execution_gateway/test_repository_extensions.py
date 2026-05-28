@@ -343,3 +343,72 @@ def test_insert_raw_and_classified_payload_uses_fill_price_filled_qty(tmp_path):
     assert "exec_qty" not in payload, "exec_qty should not be in payload"
     assert payload["fill_price"] == 50000.0
     assert payload["filled_qty"] == 0.01
+
+
+# ── resolve_chain_for_fill ────────────────────────────────────────────────────
+
+def test_resolve_chain_for_fill_returns_chain_id_when_exactly_one(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    conn = sqlite3.connect(db_path)
+    conn.executescript("""
+        CREATE TABLE ops_trade_chains (
+            trade_chain_id INTEGER PRIMARY KEY,
+            symbol TEXT,
+            side TEXT,
+            lifecycle_state TEXT
+        );
+    """)
+    conn.execute(
+        "INSERT INTO ops_trade_chains VALUES (7, 'BTCUSDT', 'LONG', 'OPEN')"
+    )
+    conn.commit()
+    conn.close()
+
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+    repo = GatewayCommandRepository(db_path)
+    assert repo.resolve_chain_for_fill("BTCUSDT", "LONG") == 7
+
+
+def test_resolve_chain_for_fill_returns_none_when_no_open_chain(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    conn = sqlite3.connect(db_path)
+    conn.executescript("""
+        CREATE TABLE ops_trade_chains (
+            trade_chain_id INTEGER PRIMARY KEY,
+            symbol TEXT,
+            side TEXT,
+            lifecycle_state TEXT
+        );
+    """)
+    conn.execute(
+        "INSERT INTO ops_trade_chains VALUES (7, 'BTCUSDT', 'LONG', 'CLOSED')"
+    )
+    conn.commit()
+    conn.close()
+
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+    repo = GatewayCommandRepository(db_path)
+    assert repo.resolve_chain_for_fill("BTCUSDT", "LONG") is None
+
+
+def test_resolve_chain_for_fill_returns_none_when_multiple_open_chains(tmp_path):
+    db_path = str(tmp_path / "test.db")
+    conn = sqlite3.connect(db_path)
+    conn.executescript("""
+        CREATE TABLE ops_trade_chains (
+            trade_chain_id INTEGER PRIMARY KEY,
+            symbol TEXT,
+            side TEXT,
+            lifecycle_state TEXT
+        );
+    """)
+    conn.executemany(
+        "INSERT INTO ops_trade_chains VALUES (?,?,?,?)",
+        [(7, "BTCUSDT", "LONG", "OPEN"), (8, "BTCUSDT", "LONG", "OPEN")],
+    )
+    conn.commit()
+    conn.close()
+
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+    repo = GatewayCommandRepository(db_path)
+    assert repo.resolve_chain_for_fill("BTCUSDT", "LONG") is None

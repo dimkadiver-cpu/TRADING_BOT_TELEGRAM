@@ -462,6 +462,18 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def resolve_chain_for_fill(self, symbol: str, side: str) -> int | None:
+        """Return the unique open chain_id for symbol+side, or None if 0 or >1.
+
+        Used to attribute TP/SL fills that lack an orderLinkId (Bybit position-level
+        orders never carry orderLinkId). Returns None when attribution is ambiguous
+        (multiple open chains on the same symbol) to avoid mis-routing.
+
+        `side` must be the position side: 'LONG' or 'SHORT'.
+        """
+        chains = self.get_open_chains_for_symbol(symbol, side)
+        return chains[0] if len(chains) == 1 else None
+
     # ------------------------------------------------------------------
     # New methods: exchange-centric event ingest
     # ------------------------------------------------------------------
