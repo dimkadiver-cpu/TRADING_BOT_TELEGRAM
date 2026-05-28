@@ -603,20 +603,46 @@ def test_close_full_filled_closes_chain():
     assert result.new_open_position_qty == 0.0
 
 
+def _make_close_partial_event(chain_id: int, fill_qty: float) -> "ExchangeEvent":
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    return ExchangeEvent(
+        exchange_event_id=9, trade_chain_id=chain_id,
+        event_type="CLOSE_PARTIAL_FILLED",
+        payload_json=json.dumps({"fill_price": 51000.0, "filled_qty": fill_qty}),
+        idempotency_key=f"close_partial_filled:{chain_id}:9",
+    )
+
+
 def test_close_partial_filled_partially_closes_chain():
     from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
-    from src.runtime_v2.lifecycle.models import ExchangeEvent
     proc = LifecycleEventProcessor()
-    chain = _make_chain_open_filled()
-    ev = ExchangeEvent(
-        exchange_event_id=9, trade_chain_id=chain.trade_chain_id,
-        event_type="CLOSE_PARTIAL_FILLED",
-        payload_json=json.dumps({"fill_price": 51000.0, "filled_qty": 0.005}),
-        idempotency_key="close_partial_filled:10:9",
-    )
+    chain = _make_chain_open_filled()  # D_POSITION_TPSL default
+    ev = _make_close_partial_event(chain.trade_chain_id, fill_qty=0.005)
     result = proc.process(ev, chain, [])
     assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
     assert result.new_open_position_qty == 0.005
+
+
+def test_close_partial_filled_attached_mode_no_sync_protective_orders():
+    # D_POSITION_TPSL and UNIFIED_PLAN use position-level SL — no amend needed.
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    for mode in ("D_POSITION_TPSL", "UNIFIED_PLAN"):
+        chain = _make_chain_open_filled().model_copy(update={"execution_mode": mode})
+        ev = _make_close_partial_event(chain.trade_chain_id, fill_qty=0.005)
+        result = proc.process(ev, chain, [])
+        sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+        assert len(sync_cmds) == 0, f"expected no SYNC for mode={mode}"
+
+
+def test_close_partial_filled_standalone_mode_generates_sync_protective_orders():
+    # A standalone-SL mode needs SYNC after partial close to adjust SL qty.
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled().model_copy(update={"execution_mode": "STANDALONE_ORDERS"})
+    ev = _make_close_partial_event(chain.trade_chain_id, fill_qty=0.005)
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
     sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
     assert len(sync_cmds) == 1
 

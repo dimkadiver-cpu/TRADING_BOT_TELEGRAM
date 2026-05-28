@@ -620,7 +620,7 @@ class LifecycleEventProcessor:
         new_closed = chain.closed_position_qty + fill_qty
         new_state: LifecycleState = "CLOSED" if new_open <= 0 else "PARTIALLY_CLOSED"
         commands: list[ExecutionCommand] = []
-        if new_state == "PARTIALLY_CLOSED":
+        if new_state == "PARTIALLY_CLOSED" and chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
             commands.append(ExecutionCommand(
                 trade_chain_id=chain_id,
                 command_type="SYNC_PROTECTIVE_ORDERS",
