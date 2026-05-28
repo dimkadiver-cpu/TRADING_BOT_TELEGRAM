@@ -526,10 +526,34 @@ def test_tp_filled_final_closes_chain():
     assert result.new_open_position_qty == 0.0
 
 
-def test_tp_filled_non_final_generates_sync_protective_orders():
+def test_tp_filled_non_final_attached_mode_no_sync_protective_orders():
+    # D_POSITION_TPSL (default) is in _ATTACHED_PROTECTION_MODES —
+    # position-level SL auto-adjusts on Bybit, no amend needed.
     from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
     proc = LifecycleEventProcessor()
-    chain = _make_chain_open_filled()
+    chain = _make_chain_open_filled()  # execution_mode defaults to D_POSITION_TPSL
+    ev = _make_tp_event(chain.trade_chain_id, tp_level=1, is_final=False, fill_qty=0.005)
+    result = proc.process(ev, chain, [])
+    sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+    assert len(sync_cmds) == 0
+
+
+def test_tp_filled_non_final_unified_plan_no_sync_protective_orders():
+    # UNIFIED_PLAN is also in _ATTACHED_PROTECTION_MODES — same reasoning.
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled().model_copy(update={"execution_mode": "UNIFIED_PLAN"})
+    ev = _make_tp_event(chain.trade_chain_id, tp_level=1, is_final=False, fill_qty=0.005)
+    result = proc.process(ev, chain, [])
+    sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]
+    assert len(sync_cmds) == 0
+
+
+def test_tp_filled_non_final_standalone_mode_generates_sync_protective_orders():
+    # A hypothetical future mode with standalone SL orders DOES need SYNC after partial TP.
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled().model_copy(update={"execution_mode": "STANDALONE_ORDERS"})
     ev = _make_tp_event(chain.trade_chain_id, tp_level=1, is_final=False, fill_qty=0.005)
     result = proc.process(ev, chain, [])
     sync_cmds = [c for c in result.execution_commands if c.command_type == "SYNC_PROTECTIVE_ORDERS"]

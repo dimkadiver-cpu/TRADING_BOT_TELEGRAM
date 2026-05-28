@@ -510,13 +510,17 @@ class LifecycleEventProcessor:
                             ))
                             new_be = "BE_MOVE_PENDING"
 
-            # Non-final TP: emit SYNC_PROTECTIVE_ORDERS so exchange orders reflect new qty
-            commands.append(ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type="SYNC_PROTECTIVE_ORDERS",
-                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                idempotency_key=f"sync_after_tp:{chain_id}:{eid}",
-            ))
+            # Non-final TP: emit SYNC_PROTECTIVE_ORDERS so exchange orders reflect new qty.
+            # Only needed for standalone-order modes (e.g. legacy D_POSITION_TPSL without
+            # attached SL). Attached-protection modes (UNIFIED_PLAN, D_POSITION_TPSL) use
+            # a position-level SL that Bybit adjusts automatically — no amend needed.
+            if chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
+                commands.append(ExecutionCommand(
+                    trade_chain_id=chain_id,
+                    command_type="SYNC_PROTECTIVE_ORDERS",
+                    payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+                    idempotency_key=f"sync_after_tp:{chain_id}:{eid}",
+                ))
 
         tp_event = LifecycleEvent(
             trade_chain_id=chain_id,
