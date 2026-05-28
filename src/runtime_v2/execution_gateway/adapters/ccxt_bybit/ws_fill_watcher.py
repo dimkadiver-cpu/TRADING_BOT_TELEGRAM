@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import dataclasses
 import logging
 import threading
 from collections.abc import Callable
@@ -171,7 +172,7 @@ class BybitWsFillWatcher:
         items: list[dict] | None,
         normalize_fn,  # callable: dict → ExchangeRawEvent | None
     ) -> None:
-        """Generic batch processor: normalize → classify → persist."""
+        """Generic batch processor: normalize → classify → enrich → persist."""
         if not items:
             return
         # Refresh known_order_link_ids once per batch for efficiency
@@ -184,6 +185,20 @@ class BybitWsFillWatcher:
                 if raw is None:
                     continue
                 classified = classifier.classify(raw)
+
+                # Post-classification enrichment: attribute TP/SL fills that Bybit
+                # does not tag with orderLinkId (position-level attached orders).
+                # "Sell" fill closes a LONG; "Buy" fill closes a SHORT.
+                if (
+                    getattr(classified, "event_type", None) in ("TP_FILLED", "SL_FILLED")
+                    and getattr(classified, "trade_chain_id", None) is None
+                ):
+                    fill_side = (raw.side or "").strip()
+                    position_side = "LONG" if fill_side.lower() == "sell" else "SHORT"
+                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
+                    if chain_id is not None:
+                        classified = dataclasses.replace(classified, trade_chain_id=chain_id)
+
                 inserted = self._repo.insert_raw_and_classified(classified)
                 if inserted and classified.should_forward_to_lifecycle and self._wake_callback:
                     self._wake_callback()

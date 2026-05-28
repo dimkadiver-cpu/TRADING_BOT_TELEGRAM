@@ -194,3 +194,98 @@ def test_watcher_has_three_task_attributes():
     assert hasattr(watcher, "_watch_orders_task")
     assert hasattr(watcher, "_watch_trades_task")
     assert hasattr(watcher, "_watch_positions_task")
+
+
+import dataclasses
+
+
+def test_process_batch_enriches_tp_fill_with_chain_id_when_no_link_id():
+    """TP_FILLED with trade_chain_id=None gets enriched via resolve_chain_for_fill."""
+    from src.runtime_v2.execution_gateway.event_ingest.models import (
+        ClassifiedEvent, ExchangeRawEvent,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
+    mock_repo.resolve_chain_for_fill.return_value = 42  # one open chain found
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+
+    mock_raw = MagicMock(spec=ExchangeRawEvent)
+    mock_raw.side = "Sell"
+    mock_raw.symbol = "BTCUSDT"
+    mock_raw.order_link_id = ""
+
+    unlinked = ClassifiedEvent(
+        raw=mock_raw,
+        event_type="TP_FILLED",
+        source="exchange_auto",
+        trade_chain_id=None,
+        tp_level=None,
+        is_actionable=True,
+    )
+
+    normalize_fn = MagicMock(return_value=mock_raw)
+
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = unlinked
+        watcher._process_batch([{"id": "tp-trade-1"}], normalize_fn)
+
+    mock_repo.resolve_chain_for_fill.assert_called_once_with("BTCUSDT", "LONG")
+    inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
+    assert inserted_event.trade_chain_id == 42
+    assert inserted_event.event_type == "TP_FILLED"
+
+
+def test_process_batch_does_not_enrich_tp_fill_when_multiple_chains():
+    """TP_FILLED stays unlinked when resolve_chain_for_fill returns None (ambiguous)."""
+    from src.runtime_v2.execution_gateway.event_ingest.models import (
+        ClassifiedEvent, ExchangeRawEvent,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
+    mock_repo.resolve_chain_for_fill.return_value = None  # ambiguous
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+
+    mock_raw = MagicMock(spec=ExchangeRawEvent)
+    mock_raw.side = "Sell"
+    mock_raw.symbol = "BTCUSDT"
+    mock_raw.order_link_id = ""
+
+    unlinked = ClassifiedEvent(
+        raw=mock_raw,
+        event_type="TP_FILLED",
+        source="exchange_auto",
+        trade_chain_id=None,
+        tp_level=None,
+        is_actionable=True,
+    )
+
+    normalize_fn = MagicMock(return_value=mock_raw)
+
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = unlinked
+        watcher._process_batch([{"id": "tp-trade-2"}], normalize_fn)
+
+    inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
+    assert inserted_event.trade_chain_id is None
