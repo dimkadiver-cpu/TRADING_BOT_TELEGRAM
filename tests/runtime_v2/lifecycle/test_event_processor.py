@@ -1508,3 +1508,29 @@ def test_expand_cancel_does_not_include_done_commands_via_plan_state():
     })
     result = ExecutionPlanBuilder.get_pending_averaging_legs(plan)
     assert result == []  # nessuna leg averaging pending
+
+
+def test_close_full_filled_emits_cancel_pending_entry_command():
+    """CLOSE_FULL_FILLED must include a CANCEL_PENDING_ENTRY command to clean up averaging legs."""
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+
+    processor = LifecycleEventProcessor()
+    chain = _make_chain(state="OPEN", side="LONG")
+    chain = chain.model_copy(update={"symbol": "BTCUSDT", "open_position_qty": 0.262})
+
+    event = _make_exchange_event(
+        event_type="CLOSE_FULL_FILLED",
+        payload={"filled_qty": 0.262, "fill_price": 73345.8, "source": "position_reconciliation"},
+    )
+
+    result = processor.process(event, chain, active_commands=[])
+
+    assert result.new_lifecycle_state == "CLOSED"
+    assert result.new_open_position_qty == 0.0
+
+    cancel_cmds = [c for c in result.execution_commands if c.command_type == "CANCEL_PENDING_ENTRY"]
+    assert len(cancel_cmds) == 1
+    payload = json.loads(cancel_cmds[0].payload_json)
+    assert payload["symbol"] == "BTCUSDT"
+    assert payload["cancel_reason"] == "position_closed"
+    assert cancel_cmds[0].idempotency_key == f"cancel_on_close:{chain.trade_chain_id}"

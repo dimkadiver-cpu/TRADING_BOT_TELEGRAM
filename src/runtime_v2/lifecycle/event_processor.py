@@ -591,7 +591,16 @@ class LifecycleEventProcessor:
                 payload_json=exchange_event.payload_json,
                 idempotency_key=f"close_full_filled:{chain_id}:{eid}",
             )],
-            execution_commands=[],
+            execution_commands=[ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type="CANCEL_PENDING_ENTRY",
+                payload_json=json.dumps({
+                    "symbol": chain.symbol,
+                    "side": chain.side,
+                    "cancel_reason": "position_closed",
+                }),
+                idempotency_key=f"cancel_on_close:{chain_id}",
+            )],
             new_open_position_qty=0.0,
             new_closed_position_qty=chain.closed_position_qty + fill_qty,
         )
