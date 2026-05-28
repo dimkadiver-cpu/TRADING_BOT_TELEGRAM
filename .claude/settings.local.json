@@ -174,7 +174,17 @@
       "Bash(sqlite3 db/ops.sqlite3 \".schema\")",
       "Bash(xargs grep -l \"BybitWsFillWatcher\")",
       "WebFetch(domain:bybit-exchange.github.io)",
-      "WebFetch(domain:docs.ccxt.com)"
+      "WebFetch(domain:docs.ccxt.com)",
+      "Bash(sqlite3 *)",
+      "PowerShell(python --version; python -c \"import sqlite3; print\\('sqlite3 ok'\\)\")",
+      "PowerShell(python C:\\\\TeleSignalBot\\\\scripts\\\\inspect_ops_db.py 2>&1)",
+      "PowerShell(python C:\\\\TeleSignalBot\\\\scripts\\\\inspect_ops_detail.py 2>&1)",
+      "PowerShell(python C:\\\\TeleSignalBot\\\\scripts\\\\inspect_ops_detail2.py 2>&1)",
+      "PowerShell(python -m pytest tests/runtime_v2/execution_gateway/test_event_ingest_integration.py -v 2>&1)",
+      "PowerShell(python -m pytest tests/ -x -q 2>&1)",
+      "PowerShell(python C:\\\\TeleSignalBot\\\\scripts\\\\audit_watch_positions.py 2>&1)",
+      "PowerShell(python -m pytest tests/runtime_v2/execution_gateway/test_event_ingest_classifier.py -v 2>&1)",
+      "PowerShell(python -m pytest tests/ -x -q --timeout=120 2>&1)"
     ]
   }
 }

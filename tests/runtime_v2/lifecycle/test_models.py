@@ -110,14 +110,6 @@ from src.runtime_v2.lifecycle.models import (
     ExecutionCommand, LifecycleEvent,
 )
 
-def test_sync_protective_orders_in_command_type():
-    cmd = ExecutionCommand(
-        trade_chain_id=1,
-        command_type="SYNC_PROTECTIVE_ORDERS",
-        idempotency_key="k1",
-    )
-    assert cmd.command_type == "SYNC_PROTECTIVE_ORDERS"
-
 def test_new_lifecycle_event_types_exist():
     ev = LifecycleEvent(
         event_type="POSITION_SIZE_UPDATED",
@@ -133,7 +125,7 @@ def test_exchange_event_type_literals():
         "ENTRY_FILLED", "TP_FILLED", "SL_FILLED",
         "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED",
         "STOP_MOVED_CONFIRMED", "PENDING_ENTRY_CANCELLED_CONFIRMED",
-        "PROTECTIVE_ORDERS_SYNCED", "ORDER_REJECTED", "ORDER_CANCELLED",
+        "ORDER_REJECTED", "ORDER_CANCELLED",
     }
     assert required.issubset(set(args))
 

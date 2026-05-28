@@ -22,7 +22,6 @@ _CAPABILITY_MAP: dict[str, str] = {
     "CANCEL_PENDING_ENTRY": "place_entry",
     "CLOSE_PARTIAL": "close_partial",
     "CLOSE_FULL": "close_full",
-    "SYNC_PROTECTIVE_ORDERS": "sync_protective_orders",
 }
 
 _ROLE_MAP: dict[str, str] = {
@@ -33,7 +32,6 @@ _ROLE_MAP: dict[str, str] = {
     "CANCEL_PENDING_ENTRY": "entry",
     "CLOSE_PARTIAL": "exit_partial",
     "CLOSE_FULL": "exit_full",
-    "SYNC_PROTECTIVE_ORDERS": "sync",
     "REBUILD_PARTIAL_TPS": "tp",
     "SET_POSITION_TPSL_PARTIAL": "tp",
     "SET_POSITION_TPSL_FULL": "tp",
@@ -48,7 +46,6 @@ _ROLE_MAP: dict[str, str] = {
 # separately by ExchangeEventSyncWorker.run_trade_based_reconciliation().
 _FIRE_AND_FORGET: frozenset[str] = frozenset({
     "CANCEL_PENDING_ENTRY",
-    "SYNC_PROTECTIVE_ORDERS",
     "MOVE_STOP_TO_BREAKEVEN",
     "MOVE_STOP",
     "MOVE_POSITION_STOP",
@@ -64,7 +61,6 @@ _FIRE_AND_FORGET_EVENTS: dict[str, str] = {
     "MOVE_STOP_TO_BREAKEVEN": "STOP_MOVED_CONFIRMED",
     "MOVE_STOP":               "STOP_MOVED_CONFIRMED",
     "MOVE_POSITION_STOP":      "STOP_MOVED_CONFIRMED",
-    "SYNC_PROTECTIVE_ORDERS":  "PROTECTIVE_ORDERS_SYNCED",
 }
 
 
@@ -109,7 +105,6 @@ class ExecutionGateway:
                 "is_breakeven": cmd.command_type == "MOVE_STOP_TO_BREAKEVEN",
                 "command_id": cmd.command_id,
             }
-        # PROTECTIVE_ORDERS_SYNCED (e future estensioni)
         return {"command_id": cmd.command_id}
 
     def _emit_confirmed_event(

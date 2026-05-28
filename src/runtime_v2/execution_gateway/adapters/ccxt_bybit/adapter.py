@@ -219,9 +219,6 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 )
                 return AdapterResult(success=True)
 
-            if params.action == "amend_sl_qty":
-                return self._handle_amend_sl_qty(params.symbol, params.position_side)
-
             if params.action == "rebuild_partial_tps":
                 return self._handle_rebuild_partial_tps(
                     params.symbol,
@@ -405,82 +402,6 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 stop_loss=_parse_price(info.get("stopLoss")),
             )
         return None
-
-    def _handle_amend_sl_qty(self, symbol: str, side: str) -> AdapterResult:
-        close_side = "sell" if side == "LONG" else "buy"
-        position_idx = 1 if side == "LONG" else 2
-
-        try:
-            positions = self._exchange.fetch_positions([symbol])
-        except Exception as exc:
-            return AdapterResult(success=False, error=f"fetch_positions failed: {exc}")
-
-        current_qty = 0.0
-        pos_info: dict = {}
-        for pos in positions:
-            if str(pos.get("side") or "").lower() == side.lower():
-                current_qty = float(pos.get("contracts") or 0.0)
-                pos_info = pos.get("info") or {}
-                break
-
-        try:
-            open_orders = self._exchange.fetch_open_orders(symbol)
-        except Exception:
-            open_orders = []
-
-        if current_qty == 0.0:
-            for order in open_orders:
-                if order.get("reduceOnly") and order.get("side") == close_side:
-                    try:
-                        self._exchange.cancel_order(order["id"], symbol)
-                    except Exception as exc:
-                        logger.warning("cancel residual reduceOnly order failed: %s", exc)
-            return AdapterResult(success=True)
-
-        sl_orders = [
-            order
-            for order in open_orders
-            if order.get("reduceOnly") and order.get("stopPrice") and order.get("side") == close_side
-        ]
-        if sl_orders:
-            sl_order = sl_orders[-1]
-            try:
-                self._exchange.edit_order(
-                    sl_order["id"],
-                    symbol,
-                    sl_order["type"],
-                    sl_order["side"],
-                    current_qty,
-                    params={"triggerPrice": float(sl_order["stopPrice"])},
-                )
-                return AdapterResult(success=True)
-            except Exception as exc:
-                # Attached position-level SLs (set via trading_stop) appear in fetch_open_orders
-                # but cannot be amended via edit_order on Bybit V5 — fall through to trading_stop.
-                logger.debug("edit_order sl failed (%s), falling through to trading_stop", exc)
-
-        attached_sl = pos_info.get("stopLoss", "0")
-        if attached_sl and float(attached_sl) > 0:
-            bybit_symbol = pos_info.get("symbol") or self._normalize_bybit_symbol(symbol)
-            try:
-                resp = self._exchange.private_post_v5_position_trading_stop(
-                    {
-                        "category": "linear",
-                        "symbol": bybit_symbol,
-                        "positionIdx": position_idx,
-                        "stopLoss": str(attached_sl),
-                        "slSize": str(current_qty),
-                    }
-                )
-            except Exception as exc:
-                return AdapterResult(success=False, error=f"trading_stop failed: {exc}")
-            ret_code, ret_msg = self._parse_trading_stop_retcode(resp)
-            if ret_code != 0:
-                logger.warning("trading_stop retCode=%s msg=%s", ret_code, ret_msg)
-                return AdapterResult(success=False, error=f"retCode={ret_code}: {ret_msg}")
-            return AdapterResult(success=True)
-
-        return AdapterResult(success=True)
 
     def _handle_rebuild_partial_tps(
         self,

@@ -783,7 +783,6 @@ def test_cancel_pending_on_waiting_entry_does_not_immediately_cancel():
     assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
     assert "CANCEL_PENDING_ENTRY" in cmd_types
-    assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
 
 
 def test_cancel_pending_on_open_emits_cancel_not_cancelled():
@@ -797,8 +796,6 @@ def test_cancel_pending_on_open_emits_cancel_not_cancelled():
     assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
     assert "CANCEL_PENDING_ENTRY" in cmd_types
-    # D_POSITION_TPSL uses position-level SL — no qty sync needed on cancel_pending
-    assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
 
 
 def test_cancel_pending_on_partially_closed_emits_cancel_entry():
@@ -811,8 +808,6 @@ def test_cancel_pending_on_partially_closed_emits_cancel_entry():
     assert cr.new_lifecycle_state is None
     cmd_types = [c.command_type for c in cr.execution_commands]
     assert "CANCEL_PENDING_ENTRY" in cmd_types
-    # D_POSITION_TPSL uses position-level SL — no qty sync needed on cancel_pending
-    assert "SYNC_PROTECTIVE_ORDERS" not in cmd_types
 
 
 # ── Telegram message ID resolution tests ──────────────────────────────────────

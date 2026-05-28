@@ -56,12 +56,6 @@ class BybitOrderBuilder:
             return self._cancel_pending_entry(payload, client_order_id)
         if command_type in {"MOVE_STOP_TO_BREAKEVEN", "MOVE_STOP"}:
             return self._move_stop(command_type, payload)
-        if command_type == "SYNC_PROTECTIVE_ORDERS":
-            return BybitOrderParams(
-                action="amend_sl_qty",
-                symbol=payload["symbol"],
-                position_side=payload.get("side", ""),
-            )
         if command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL":
             return self._place_entry_with_attached_tpsl(payload, client_order_id)
         if command_type == "SET_POSITION_TPSL_FULL":

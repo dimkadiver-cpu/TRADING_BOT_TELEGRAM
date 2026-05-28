@@ -510,17 +510,6 @@ class LifecycleEventProcessor:
                             ))
                             new_be = "BE_MOVE_PENDING"
 
-            # Non-final TP: emit SYNC_PROTECTIVE_ORDERS so exchange orders reflect new qty.
-            # Only needed for standalone-order modes (e.g. legacy D_POSITION_TPSL without
-            # attached SL). Attached-protection modes (UNIFIED_PLAN, D_POSITION_TPSL) use
-            # a position-level SL that Bybit adjusts automatically — no amend needed.
-            if chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
-                commands.append(ExecutionCommand(
-                    trade_chain_id=chain_id,
-                    command_type="SYNC_PROTECTIVE_ORDERS",
-                    payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                    idempotency_key=f"sync_after_tp:{chain_id}:{eid}",
-                ))
 
         tp_event = LifecycleEvent(
             trade_chain_id=chain_id,
@@ -620,13 +609,6 @@ class LifecycleEventProcessor:
         new_closed = chain.closed_position_qty + fill_qty
         new_state: LifecycleState = "CLOSED" if new_open <= 0 else "PARTIALLY_CLOSED"
         commands: list[ExecutionCommand] = []
-        if new_state == "PARTIALLY_CLOSED" and chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
-            commands.append(ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type="SYNC_PROTECTIVE_ORDERS",
-                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                idempotency_key=f"sync_after_close_partial:{chain_id}:{eid}",
-            ))
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,
@@ -739,15 +721,7 @@ class LifecycleEventProcessor:
                 new_plan_state_json = effective_plan_json
 
         # ── Stato finale chain ─────────────────────────────────────────────────
-        if position_already_open:
-            if chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
-                commands.append(ExecutionCommand(
-                    trade_chain_id=chain_id,
-                    command_type="SYNC_PROTECTIVE_ORDERS",
-                    payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                    idempotency_key=f"sync_after_cancel:{chain_id}:{eid}",
-                ))
-        else:
+        if not position_already_open:
             # Race guard: non finalizzare se ci sono entry commands ancora in volo
             entry_in_flight = [
                 c for c in active_commands

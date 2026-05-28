@@ -38,12 +38,12 @@ def test_expand_non_cancel_command_returns_original(tmp_path):
     results = expand_cancel_pending_commands(
         conn,
         trade_chain_id=1,
-        command_type="SYNC_PROTECTIVE_ORDERS",
+        command_type="REBUILD_PARTIAL_TPS",
         payload_json='{"symbol": "BTC/USDT"}',
-        idempotency_key="sync:1:42",
+        idempotency_key="rebuild:1:42",
     )
     conn.close()
-    assert results == [('{"symbol": "BTC/USDT"}', "sync:1:42")]
+    assert results == [('{"symbol": "BTC/USDT"}', "rebuild:1:42")]
 
 
 def test_expand_cancel_with_no_pending_entry_commands_returns_original(tmp_path):

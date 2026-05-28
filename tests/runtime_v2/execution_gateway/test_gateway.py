@@ -201,11 +201,6 @@ def test_close_full_uses_exit_full_role():
     assert _ROLE_MAP["CLOSE_FULL"] == "exit_full"
 
 
-def test_sync_protective_orders_uses_sync_role():
-    from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
-    assert _ROLE_MAP["SYNC_PROTECTIVE_ORDERS"] == "sync"
-
-
 def test_move_position_stop_uses_sl_role():
     from src.runtime_v2.execution_gateway.gateway import _ROLE_MAP
     assert _ROLE_MAP["MOVE_POSITION_STOP"] == "sl"
@@ -1077,31 +1072,6 @@ def test_move_position_stop_emits_stop_moved_confirmed(ops_db):
     assert events[0][0] == "STOP_MOVED_CONFIRMED"
     assert events[0][1]["is_breakeven"] is False
     assert events[0][1]["new_stop_price"] == 47000.0
-
-
-def test_sync_protective_orders_emits_protective_orders_synced(ops_db):
-    """SYNC_PROTECTIVE_ORDERS con retCode=0 → PROTECTIVE_ORDERS_SYNCED."""
-    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
-    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
-    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
-    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-
-    _insert_cmd(ops_db, 5003, cmd_type="SYNC_PROTECTIVE_ORDERS", payload={
-        "symbol": "BTC/USDT", "side": "LONG",
-    })
-    repo = GatewayCommandRepository(ops_db)
-    gw = ExecutionGateway(
-        config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"bybit_demo": FakeAdapter()},
-        repo=repo,
-    )
-    cmd = repo.get_pending_batch()[0]
-    gw.process(cmd, account_id="acc_1")
-
-    events = _get_exchange_events(ops_db, chain_id=1)
-    assert len(events) == 1
-    assert events[0][0] == "PROTECTIVE_ORDERS_SYNCED"
-    assert events[0][1]["command_id"] == 5003
 
 
 def test_fire_and_forget_failed_does_not_emit_event(ops_db):

@@ -133,18 +133,6 @@ def test_close_commands_build_market_reduce_only_orders(
     assert params.extra_params == {"reduceOnly": True}
 
 
-def test_sync_protective_orders_returns_amend_sl_qty() -> None:
-    params = _builder().build(
-        "SYNC_PROTECTIVE_ORDERS",
-        {"symbol": "BTC/USDT:USDT", "side": "LONG"},
-        "tsb:10:5:sync:1",
-    )
-
-    assert params.action == "amend_sl_qty"
-    assert params.symbol == "BTC/USDT:USDT"
-    assert params.position_side == "LONG"
-
-
 def test_cancel_pending_entry_keeps_cancel_by_link_contract() -> None:
     params = _builder().build(
         "CANCEL_PENDING_ENTRY",
@@ -321,17 +309,6 @@ def test_hedge_mode_false_no_position_idx() -> None:
     )
 
     assert "positionIdx" not in params.extra_params
-
-
-def test_hedge_mode_sync_protective_orders_returns_amend_sl_qty() -> None:
-    params = BybitOrderBuilder().build(
-        "SYNC_PROTECTIVE_ORDERS",
-        {"symbol": "BTC/USDT:USDT", "side": "LONG"},
-        "tsb:1:1:sync:1",
-        hedge_mode=True,
-    )
-
-    assert params.action == "amend_sl_qty"
 
 
 def test_move_stop_be_attached_flow_routes_to_trading_stop_move_sl() -> None:

@@ -921,16 +921,8 @@ class LifecycleEntryGate:
                 execution_commands=commands,
             )
 
-        # OPEN or PARTIALLY_CLOSED — position exists; cancel pending orders but keep chain alive
-        # Attached-SL modes use a position-level SL that covers the full position automatically;
-        # no qty sync is needed regardless of whether the pending leg was partially filled.
-        if chain.execution_mode not in _ATTACHED_PROTECTION_MODES:
-            commands.append(ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type="SYNC_PROTECTIVE_ORDERS",
-                payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
-                idempotency_key=f"sync_after_cancel_pending:{chain_id}:{cmid}",
-            ))
+        # OPEN or PARTIALLY_CLOSED — position exists; cancel pending orders but keep chain alive.
+        # Position-level SL covers the full position automatically — no qty sync needed.
         return UpdateChainResult(
             trade_chain_id=chain_id,
             new_lifecycle_state=None,

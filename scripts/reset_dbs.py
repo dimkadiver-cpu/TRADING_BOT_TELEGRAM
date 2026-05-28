@@ -25,6 +25,7 @@ PARSER_TABLES = [
 ]
 
 OPS_TABLES = [
+    "exchange_raw_events",
     "ops_exchange_events",
     "ops_execution_commands",
     "ops_lifecycle_events",

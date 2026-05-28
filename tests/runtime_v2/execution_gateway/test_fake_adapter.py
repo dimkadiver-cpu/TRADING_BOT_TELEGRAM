@@ -3,24 +3,6 @@ from __future__ import annotations
 from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
 
 
-def test_sync_protective_orders_is_immediately_filled():
-    adapter = FakeAdapter()
-    result = adapter.place_order(
-        command_type="SYNC_PROTECTIVE_ORDERS",
-        payload={"symbol": "BTC/USDT", "side": "LONG"},
-        client_order_id="tsb:10:7:sync:1",
-        execution_account_id="acc1",
-        connector="fake",
-    )
-    assert result.success is True
-    order = adapter.get_order_status(
-        client_order_id="tsb:10:7:sync:1",
-        execution_account_id="acc1",
-    )
-    assert order is not None
-    assert order.is_filled is True
-
-
 def test_normal_order_is_not_immediately_filled():
     adapter = FakeAdapter()
     result = adapter.place_order(
