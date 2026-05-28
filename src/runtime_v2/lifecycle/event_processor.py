@@ -394,7 +394,7 @@ class LifecycleEventProcessor:
         active_commands: list[ExecutionCommand],
     ) -> EventProcessorResult:
         payload = json.loads(exchange_event.payload_json)
-        tp_level = int(payload.get("tp_level", 1))
+        tp_level = int(payload.get("tp_level") or 1)
         is_final = bool(payload.get("is_final", False))
         fill_qty = float(payload.get("filled_qty") or 0.0)
         eid = exchange_event.exchange_event_id

@@ -126,8 +126,8 @@ defaults:
     cancel_pending_by_engine: true  # true = il motore genera cancel automatici.
     cancel_pending_on_timeout: true  # true = cancella pending dopo timeout.
     pending_timeout_hours: 24  # Timeout pending in ore.
-    cancel_averaging_pending_after: null  # Valori supportati: null | tp1 | tp2.
-    cancel_unfilled_pending_after: null  # Valori supportati: null | tp1 | tp2.
+    cancel_averaging_pending_after: tp1  # Valori supportati: null | tp1 | tp2.
+    cancel_unfilled_pending_after: null  # Valori supportati: null | tp1 | tp2. //da implimentare 
     risk_freed_by_be: true  # true = il BE libera capacita' rischio residua.
     protective_sl_mode: exchange_native_first  # Valori supportati: exchange_native_first | bot_managed. (NON USATO)
 
