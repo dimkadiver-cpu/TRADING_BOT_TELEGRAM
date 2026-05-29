@@ -521,6 +521,8 @@ class LifecycleEntryGate:
 
         if action_type == "MODIFY_ENTRIES":
             op = action.modify_entries
+            if op and op.kind == "MARKET_NOW" and not op.entries:
+                return self._apply_market_entry_now(enriched, chain, active_commands)
             if op and op.kind in {"MARKET_NOW", "UPDATE_PRICE", "REPLACE_ENTRY"}:
                 return self._apply_modify_entries(enriched, chain, action, active_commands)
             return self._review_chain(enriched, chain, "unsupported_modify_entries_kind")
@@ -611,6 +613,168 @@ class LifecycleEntryGate:
             new_be_protection_status=None,
             lifecycle_events=[event],
             execution_commands=commands,
+        )
+
+    def _apply_market_entry_now(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        chain: TradeChain,
+        active_commands: list[ExecutionCommand],
+    ) -> UpdateChainResult:
+        from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
+        from src.runtime_v2.signal_enrichment.models import EnrichedEntryLeg, ManagementPlanConfig
+        from src.parser_v2.contracts.entities import Price as _Price, TakeProfit as _TakeProfit
+
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+
+        try:
+            plan = json.loads(chain.plan_state_json or "{}")
+            risk_snap = json.loads(chain.risk_snapshot_json or "{}")
+        except Exception:
+            return self._review_chain(enriched, chain, "market_entry_now_invalid_json")
+
+        pending_legs = [l for l in plan.get("legs", []) if l.get("status") == "PENDING"]
+        if not pending_legs:
+            return self._review_chain(enriched, chain, "no_pending_legs_for_market_convert")
+
+        try:
+            mp = ManagementPlanConfig.model_validate_json(chain.management_plan_json)
+        except Exception:
+            mp = ManagementPlanConfig()
+        mode = mp.market_convert_mode
+
+        leg1 = min(pending_legs, key=lambda l: l["sequence"])
+        others = [l for l in pending_legs if l["sequence"] != leg1["sequence"]]
+
+        sl_price_raw = risk_snap.get("sl_price", chain.expected_stop_price)
+        if sl_price_raw is None:
+            return self._review_chain(enriched, chain, "market_entry_now_missing_sl_price")
+        sl_price = float(sl_price_raw)
+
+        risk_total = float(risk_snap.get("risk_amount", 0.0) or 0.0)
+        risk_remaining = (
+            chain.risk_remaining
+            if chain.risk_remaining > 0
+            else max(0.0, risk_total - chain.risk_already_realized)
+        )
+
+        if mode == "cancel_subsequent":
+            risk_amount = risk_remaining
+        else:
+            leg1_snap = next(
+                (s for s in risk_snap.get("legs", []) if s.get("sequence") == leg1["sequence"]),
+                {},
+            )
+            risk_amount = float(leg1_snap.get("risk_amount") or risk_remaining)
+
+        commands: list[ExecutionCommand] = []
+
+        # Cancel existing leg1 LIMIT on exchange
+        commands.append(ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="CANCEL_PENDING_ENTRY",
+            payload_json=json.dumps({
+                "symbol": chain.symbol,
+                "side": chain.side,
+                "entry_client_order_id": leg1.get("client_order_id"),
+            }),
+            idempotency_key=f"cancel_entry:{chain_id}:{cmid}:seq{leg1['sequence']}",
+        ))
+
+        # Build replacement MARKET command via EntryCommandFactory
+        hedge_mode = bool(risk_snap.get("hedge_mode", False))
+        leverage = int(risk_snap.get("leverage", 1) or 1)
+        position_idx = self.resolve_position_idx(chain.side, hedge_mode)
+        is_leg1_attached = leg1["sequence"] == 1
+
+        final_tp_val = plan.get("final_tp")
+        tp_list: list[_TakeProfit] = []
+        if final_tp_val is not None and is_leg1_attached:
+            tp_price = _Price(raw=str(final_tp_val), value=float(final_tp_val))
+            tp_list = [_TakeProfit(sequence=1, price=tp_price)]
+
+        replacement_leg = EnrichedEntryLeg(
+            sequence=leg1["sequence"],
+            entry_type="MARKET",
+            price=None,
+            weight=float(leg1.get("weight") or 1.0),
+        )
+        replacement_snap = {
+            "sequence": leg1["sequence"],
+            "qty": None,
+            "qty_mode": "deferred_market",
+            "risk_amount": risk_amount,
+            "weight": float(leg1.get("weight") or 1.0),
+        }
+        market_commands = EntryCommandFactory().build_entry_commands(
+            enrichment_id=cmid,
+            symbol=chain.symbol,
+            side=chain.side,
+            entries=[replacement_leg],
+            take_profits=tp_list,
+            sl_price=sl_price,
+            leverage=leverage,
+            hedge_mode=hedge_mode,
+            position_idx=position_idx,
+            risk_snapshot={"legs": [replacement_snap]},
+        )
+        commands.extend(market_commands)
+
+        # Cancel subsequent legs (cancel mode only)
+        if mode == "cancel_subsequent":
+            for leg in others:
+                commands.append(ExecutionCommand(
+                    trade_chain_id=chain_id,
+                    command_type="CANCEL_PENDING_ENTRY",
+                    payload_json=json.dumps({
+                        "symbol": chain.symbol,
+                        "side": chain.side,
+                        "entry_client_order_id": leg.get("client_order_id"),
+                    }),
+                    idempotency_key=f"cancel_entry:{chain_id}:{cmid}:seq{leg['sequence']}",
+                ))
+
+        # Build updated plan_state_json
+        if is_leg1_attached:
+            new_leg1_coid = f"place_entry_attached:{cmid}:leg{leg1['sequence']}"
+        else:
+            new_leg1_coid = f"place_entry:{cmid}:leg{leg1['sequence']}"
+
+        other_seqs_to_cancel = {l["sequence"] for l in others} if mode == "cancel_subsequent" else set()
+        updated_legs = []
+        for leg in plan.get("legs", []):
+            if leg["sequence"] == leg1["sequence"]:
+                updated_legs.append({
+                    **leg,
+                    "entry_type": "MARKET",
+                    "price": None,
+                    "qty": None,
+                    "qty_mode": "deferred_market",
+                    "status": "PENDING",
+                    "client_order_id": new_leg1_coid,
+                })
+            elif leg["sequence"] in other_seqs_to_cancel:
+                updated_legs.append({**leg, "status": "CANCELLED"})
+            else:
+                updated_legs.append(leg)
+        new_plan_state_json = json.dumps({**plan, "legs": updated_legs})
+
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="TELEGRAM_UPDATE_ACCEPTED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            payload_json=json.dumps({"action": "MARKET_ENTRY_NOW", "mode": mode}),
+            idempotency_key=f"update_market_entry_now:{chain_id}:{cmid}",
+        )
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state=None,
+            new_be_protection_status=None,
+            lifecycle_events=[event],
+            execution_commands=commands,
+            new_plan_state_json=new_plan_state_json,
         )
 
     def _build_target_plan_from_modify_entries(self, chain: TradeChain, action) -> str:

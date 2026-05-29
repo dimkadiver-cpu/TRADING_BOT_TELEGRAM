@@ -2029,3 +2029,158 @@ def test_update_chain_result_new_plan_state_json_defaults_to_none():
         execution_commands=[],
     )
     assert cr.new_plan_state_json is None
+
+
+# ── _apply_market_entry_now helpers ──────────────────────────────────────────
+
+def _make_gate_attached():
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+    return LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(),
+        simple_attached_enabled=True,
+    )
+
+
+def _make_two_step_chain_for_market(
+    market_convert_mode: str = "cancel_subsequent",
+    risk_remaining: float = 0.0,
+):
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    plan = json.dumps({
+        "plan_version": 1,
+        "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "rebuild_policy": "NONE",
+        "risk_policy": "REBALANCE_REMAINING_RISK_ON_REPLAN",
+        "stop_loss": 800.0,
+        "final_tp": 1200.0,
+        "intermediate_tps": [],
+        "legs": [
+            {
+                "leg_id": "leg_1", "sequence": 1, "entry_type": "LIMIT", "price": 1000.0,
+                "risk_budget": 70.0, "qty": 0.35, "qty_mode": "fixed", "weight": 0.7,
+                "status": "PENDING", "client_order_id": "place_entry_attached:5:leg1",
+            },
+            {
+                "leg_id": "leg_2", "sequence": 2, "entry_type": "LIMIT", "price": 900.0,
+                "risk_budget": 30.0, "qty": 0.15, "qty_mode": "fixed", "weight": 0.3,
+                "status": "PENDING", "client_order_id": "place_entry:5:leg2",
+            },
+        ],
+    })
+    risk_snap = json.dumps({
+        "risk_amount": 100.0,
+        "sl_price": 800.0,
+        "entry_price": 1000.0,
+        "leverage": 1,
+        "hedge_mode": False,
+        "legs": [
+            {"sequence": 1, "risk_amount": 70.0, "qty": 0.35, "qty_mode": "fixed", "weight": 0.7},
+            {"sequence": 2, "risk_amount": 30.0, "qty": 0.15, "qty_mode": "fixed", "weight": 0.3},
+        ],
+    })
+    mp = ManagementPlanConfig(market_convert_mode=market_convert_mode)
+    return TradeChain(
+        trade_chain_id=1,
+        source_enrichment_id=5, canonical_message_id=50, raw_message_id=500,
+        trader_id="t1", account_id="acc_1",
+        symbol="TOKEN/USDT:USDT", side="LONG",
+        lifecycle_state="WAITING_ENTRY", entry_mode="TWO_STEP",
+        expected_stop_price=800.0,
+        management_plan_json=mp.model_dump_json(),
+        risk_snapshot_json=risk_snap,
+        plan_state_json=plan,
+        risk_remaining=risk_remaining,
+    )
+
+
+def _make_market_now_update_enriched(canonical_message_id: int = 200):
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, ModifyEntriesOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+    from src.runtime_v2.signal_enrichment.models import (
+        ManagementPlanConfig, EnrichedCanonicalMessage,
+    )
+    action = ActionItem(
+        action_type="MODIFY_ENTRIES",
+        modify_entries=ModifyEntriesOperation(kind="MARKET_NOW", entries=[]),
+        source_intent="MODIFY_ENTRY",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(scope_hint="SINGLE_SIGNAL"),
+        actions=[action],
+    )
+    return EnrichedCanonicalMessage(
+        enrichment_id=20, canonical_message_id=canonical_message_id,
+        raw_message_id=200, trader_id="t1", account_id="acc_1",
+        primary_class="UPDATE", enrichment_decision="PASS",
+        enriched_signal=None, enriched_actions=[tag],
+        management_plan=ManagementPlanConfig(), policy_snapshot={},
+    )
+
+
+# ── cancel-mode tests ─────────────────────────────────────────────────────────
+
+def test_market_entry_now_cancel_mode_produces_two_cancels_and_one_market_entry():
+    import json
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("cancel_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    assert len(result.chain_results) == 1
+    cr = result.chain_results[0]
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert cmd_types.count("CANCEL_PENDING_ENTRY") == 2
+    assert cmd_types.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
+
+
+def test_market_entry_now_cancel_mode_market_command_uses_full_risk_deferred():
+    import json
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("cancel_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    market_cmd = next(
+        c for c in cr.execution_commands
+        if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
+    )
+    p = json.loads(market_cmd.payload_json)
+    assert p["entry_type"] == "MARKET"
+    assert p.get("qty_mode") == "deferred_market"
+    assert p.get("risk_amount") == pytest.approx(100.0)
+
+
+def test_market_entry_now_cancel_mode_plan_marks_leg1_market_leg2_cancelled():
+    import json
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("cancel_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    assert cr.new_plan_state_json is not None
+    plan = json.loads(cr.new_plan_state_json)
+    by_seq = {l["sequence"]: l for l in plan["legs"]}
+    assert by_seq[1]["entry_type"] == "MARKET"
+    assert by_seq[1]["status"] == "PENDING"
+    assert by_seq[1]["qty_mode"] == "deferred_market"
+    assert by_seq[2]["status"] == "CANCELLED"
+
+
+def test_market_entry_now_cancel_mode_emits_telegram_update_accepted_event():
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("cancel_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    event_types = [e.event_type for e in cr.lifecycle_events]
+    assert "TELEGRAM_UPDATE_ACCEPTED" in event_types
