@@ -664,9 +664,27 @@ class LifecycleEntryGate:
         else:
             leg1_snap = next(
                 (s for s in risk_snap.get("legs", []) if s.get("sequence") == leg1["sequence"]),
-                {},
+                None,
             )
-            risk_amount = float(leg1_snap.get("risk_amount") or risk_remaining)
+            if leg1_snap is None or leg1_snap.get("risk_amount") is None:
+                return self._review_chain(
+                    enriched, chain,
+                    f"market_entry_now_missing_leg1_risk_snap:seq{leg1['sequence']}",
+                )
+            risk_amount = float(leg1_snap["risk_amount"])
+
+        # Guard: if leg1's entry command is already settled, abort to avoid double fill
+        leg1_idem = leg1.get("client_order_id")
+        if leg1_idem:
+            settled = [
+                c for c in active_commands
+                if c.idempotency_key == leg1_idem and c.status in ("DONE", "CANCELLED")
+            ]
+            if settled:
+                return self._review_chain(
+                    enriched, chain,
+                    f"market_entry_now_leg1_already_settled:seq{leg1['sequence']}",
+                )
 
         commands: list[ExecutionCommand] = []
 
@@ -707,18 +725,21 @@ class LifecycleEntryGate:
             "risk_amount": risk_amount,
             "weight": float(leg1.get("weight") or 1.0),
         }
-        market_commands = EntryCommandFactory().build_entry_commands(
-            enrichment_id=cmid,
-            symbol=chain.symbol,
-            side=chain.side,
-            entries=[replacement_leg],
-            take_profits=tp_list,
-            sl_price=sl_price,
-            leverage=leverage,
-            hedge_mode=hedge_mode,
-            position_idx=position_idx,
-            risk_snapshot={"legs": [replacement_snap]},
-        )
+        try:
+            market_commands = EntryCommandFactory().build_entry_commands(
+                enrichment_id=cmid,
+                symbol=chain.symbol,
+                side=chain.side,
+                entries=[replacement_leg],
+                take_profits=tp_list,
+                sl_price=sl_price,
+                leverage=leverage,
+                hedge_mode=hedge_mode,
+                position_idx=position_idx,
+                risk_snapshot={"legs": [replacement_snap]},
+            )
+        except Exception as exc:
+            return self._review_chain(enriched, chain, f"market_entry_now_factory_error:{exc}")
         commands.extend(market_commands)
 
         # Cancel subsequent legs (cancel mode only)
