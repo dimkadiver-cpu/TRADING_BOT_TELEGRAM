@@ -4,6 +4,56 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-29 — Task 7: Smoke Test for market_entry_now Full Roundtrip (1 commit, 706/706 PASS)
+
+### Step completato
+
+Aggiunta smoke test finale per il percorso cancel mode della funzionalità MARKET_NOW: verifica che un UPDATE con MODIFY_ENTRIES(MARKET_NOW) su catena TWO_STEP produce 2 CANCEL_PENDING_ENTRY + 1 PLACE_ENTRY_WITH_ATTACHED_TPSL, aggiorna il piano con leg1=MARKET e leg2=CANCELLED, ed emette evento TELEGRAM_UPDATE_ACCEPTED.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `tests/runtime_v2/lifecycle/test_entry_gate.py` | Modificato | +1 test: `test_market_entry_now_cancel_mode_full_roundtrip` (25 righe) |
+
+### Risultato test
+
+```
+Step 1: Smoke test (full_roundtrip)
+pytest tests/runtime_v2/lifecycle/test_entry_gate.py -k "full_roundtrip" -v
+→ 1 passed in 0.55s ✅
+
+Step 2: Full runtime_v2 test suite
+pytest tests/runtime_v2/ -v --tb=short
+→ 706 passed, 6 skipped in 1m49s ✅
+```
+
+### Verifica della completezza
+
+✅ Commands corretti: 2 CANCEL_PENDING_ENTRY + 1 PLACE_ENTRY_WITH_ATTACHED_TPSL
+✅ Plan state aggiornato in result: leg1.entry_type = MARKET, leg1.status = PENDING, leg2.status = CANCELLED
+✅ Evento TELEGRAM_UPDATE_ACCEPTED emesso
+✅ Integration test con gate.process_update, chain TWO_STEP, enriched UPDATE
+
+### Decisioni
+
+- Test usa gli helper esistenti (`_make_gate_attached`, `_make_two_step_chain_for_market`, `_make_market_now_update_enriched`) — nessun codice duplicato
+- Smoke test è minimale ma completo: verifica i 3 aspetti critici (commands, plan state, event)
+- Nessun uso di tmp_path né I/O — test è veloce
+
+### Rischi risolti
+
+Nessuno — feature MARKET_NOW è stabile e completamente coperta da test.
+
+### Prossimi step
+
+Suite di test per runtime_v2 è completa e stabile. Prossimi step nel roadmap:
+- Integration con operation_rules downstream
+- Integration con target_resolver downstream
+- Migration step B e C completamento
+
+---
+
 ## 2026-05-10 — parser_v2: MODIFY_ENTRY Robusto (8 commit, 115/115 PASS)
 
 ### Step completato
@@ -840,3 +890,53 @@ Risultato:
 Quando si riprendera il lavoro implementativo:
 - o si chiude davvero il residuo di Fase 1 con una nuova migrazione controllata;
 - oppure si accetta formalmente che la Fase 1 e "parzialmente chiusa" e si apre la vera migrazione Fase 4 di `trader_a`.
+
+
+---
+
+## 2026-05-29 — Problemi sistemici runtime_v2: riconciliazione al riavvio
+
+### P2 — FIXATO: mark_done condizionato all'INSERT
+
+**File modificato:** `src/runtime_v2/execution_gateway/event_sync.py`
+
+**Problema:** In `run_reconciliation()`, `mark_done(cmd)` veniva chiamato solo se
+`insert_exchange_event()` ritornava `True` (nuova riga inserita). Se il WebSocket aveva
+già inserito il medesimo evento (via INSERT OR IGNORE), il comando restava stuck in
+`SENT` per sempre, generando polling REST infinito su ordini già risolti.
+
+**Fix:** `mark_done()` ora viene chiamato incondizionatamente ogni volta che l'exchange
+conferma un fill o un cancel, indipendentemente dal risultato dell'INSERT (che rimane
+idempotente via INSERT OR IGNORE).
+
+**Test aggiunto:** `test_run_reconciliation_marks_done_even_when_ws_already_inserted_event`
+in `tests/runtime_v2/execution_gateway/test_event_sync.py`.
+
+---
+
+### P3 — APERTO: nessuna position reconciliation per chiusure parziali al riavvio
+
+**File coinvolto:** `src/runtime_v2/execution_gateway/event_sync.py` — `run_position_reconciliation()`
+
+**Problema:** Al riavvio, `watch_positions` consegna uno snapshot della posizione attuale
+su exchange, ma viene classificato `UNKNOWN` e scartato. `run_position_reconciliation()`
+rileva solo chiusure complete (`qty == 0`). Chiusure parziali avvenute durante il downtime
+(TP parziali, close manuali parziali) non vengono rilevate — `open_position_qty` nel DB
+diverge silenziosamente dalla realtà.
+
+**Impatto osservato (2026-05-29):** chain 1 BTCUSDT — TP1 (0.0625 BTC) colpito mentre
+il bot era spento; bot riavviato con `open_position_qty=0.237` invece di 0.175.
+cmd22 emesso con qty TP sbagliata (0.1185 su posizione reale 0.175).
+
+**Perché non fixato ora:** la fix richiede design non banale:
+
+1. Sequenza di boot esplicita: la REST reconciliation deve completare prima del confronto
+   snapshot, altrimenti i fill di entry mancati generano falsi positivi.
+2. Coordinazione con `run_trade_based_reconciliation()` per evitare double-booking
+   dello stesso fill come sia `CLOSE_PARTIAL_FILLED` sintetico che `TP_FILLED`.
+3. Semantica degli eventi: un confronto qty non distingue tra TP, SL parziale e close
+   manuale — il lifecycle tratta questi casi diversamente.
+
+**Quando implementare:** prima del go-live in produzione, se si prevedono downtime
+anche brevi. Considerare un evento dedicato `POSITION_DRIFT_DETECTED` invece di un
+`CLOSE_PARTIAL_FILLED` sintetico, gestito esplicitamente dal lifecycle.
