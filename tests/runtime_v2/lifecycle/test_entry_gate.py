@@ -2238,3 +2238,79 @@ def test_market_entry_now_keep_mode_plan_leg1_market_leg2_pending_unchanged():
     assert by_seq[2]["status"] == "PENDING"
     assert by_seq[2]["entry_type"] == "LIMIT"
     assert by_seq[2]["price"] == pytest.approx(900.0)
+
+
+def test_market_entry_now_no_pending_legs_returns_review():
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    # All legs already FILLED
+    plan = json.dumps({"legs": [
+        {"leg_id": "leg_1", "sequence": 1, "entry_type": "LIMIT", "price": 1000.0,
+         "risk_budget": 100.0, "qty": 0.5, "qty_mode": "fixed", "weight": 1.0,
+         "status": "FILLED", "client_order_id": "place_entry_attached:5:leg1"},
+    ]})
+    risk_snap = json.dumps({"risk_amount": 100.0, "sl_price": 800.0, "entry_price": 1000.0,
+                             "leverage": 1, "hedge_mode": False, "legs": []})
+    chain = TradeChain(
+        trade_chain_id=1,
+        source_enrichment_id=5, canonical_message_id=50, raw_message_id=500,
+        trader_id="t1", account_id="acc_1", symbol="TOKEN/USDT:USDT", side="LONG",
+        lifecycle_state="OPEN", entry_mode="ONE_SHOT",
+        management_plan_json=ManagementPlanConfig().model_dump_json(),
+        risk_snapshot_json=risk_snap, plan_state_json=plan,
+    )
+    gate = _make_gate_attached()
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+    cr = result.chain_results[0]
+    assert any(e.event_type == "REVIEW_REQUIRED" for e in cr.lifecycle_events)
+    assert cr.new_plan_state_json is None
+    assert cr.execution_commands == []
+
+
+def test_market_entry_now_single_pending_leg_produces_one_cancel_one_market():
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    plan = json.dumps({
+        "plan_version": 1, "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "rebuild_policy": "NONE", "risk_policy": "REBALANCE_REMAINING_RISK_ON_REPLAN",
+        "stop_loss": 800.0, "final_tp": 1200.0, "intermediate_tps": [],
+        "legs": [
+            {"leg_id": "leg_1", "sequence": 1, "entry_type": "LIMIT", "price": 1000.0,
+             "risk_budget": 100.0, "qty": 0.5, "qty_mode": "fixed", "weight": 1.0,
+             "status": "PENDING", "client_order_id": "place_entry_attached:5:leg1"},
+        ],
+    })
+    risk_snap = json.dumps({
+        "risk_amount": 100.0, "sl_price": 800.0, "entry_price": 1000.0,
+        "leverage": 1, "hedge_mode": False,
+        "legs": [{"sequence": 1, "risk_amount": 100.0, "qty": 0.5, "qty_mode": "fixed", "weight": 1.0}],
+    })
+    # Test with cancel mode
+    chain_cancel = TradeChain(
+        trade_chain_id=1,
+        source_enrichment_id=5, canonical_message_id=50, raw_message_id=500,
+        trader_id="t1", account_id="acc_1", symbol="TOKEN/USDT:USDT", side="LONG",
+        lifecycle_state="WAITING_ENTRY", entry_mode="ONE_SHOT",
+        management_plan_json=ManagementPlanConfig(market_convert_mode="cancel_subsequent").model_dump_json(),
+        risk_snapshot_json=risk_snap, plan_state_json=plan,
+    )
+    gate = _make_gate_attached()
+    enriched = _make_market_now_update_enriched()
+    result_cancel = gate.process_update(enriched, [chain_cancel], {1: []})
+    cr_cancel = result_cancel.chain_results[0]
+    cmd_types = [c.command_type for c in cr_cancel.execution_commands]
+    assert cmd_types.count("CANCEL_PENDING_ENTRY") == 1
+    assert cmd_types.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
+
+    # Test with keep mode — same result (no "others" to keep)
+    chain_keep = chain_cancel.model_copy(update={
+        "management_plan_json": ManagementPlanConfig(market_convert_mode="keep_subsequent").model_dump_json()
+    })
+    result_keep = gate.process_update(enriched, [chain_keep], {1: []})
+    cr_keep = result_keep.chain_results[0]
+    cmd_types_keep = [c.command_type for c in cr_keep.execution_commands]
+    assert cmd_types_keep.count("CANCEL_PENDING_ENTRY") == 1
+    assert cmd_types_keep.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
