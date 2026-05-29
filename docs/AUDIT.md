@@ -4,6 +4,61 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-29 — Control Plane Part 1: Foundation completata
+
+### Step completato
+
+Implementata la foundation del Control Plane Telegram: migration `007` per le nuove tabelle ops, package `src/runtime_v2/control_plane/` con modelli Pydantic, loader YAML con sostituzione `${ENV}` e validazione typed, validator auth stateless per topic COMMANDS.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `db/ops_migrations/007_ops_control_plane.sql` | Creato | 4 tabelle control-plane + indici; vincolo `scope_type/scope_value` coerente con spec Part 1 |
+| `config/telegram_control.yaml` | Creato | Template operatore con `token_env` e placeholder `${ENV}` |
+| `src/runtime_v2/control_plane/__init__.py` | Creato | Package marker |
+| `src/runtime_v2/control_plane/models.py` | Creato | Contratti typed condivisi per config/outbox/commands/overrides/snapshot |
+| `src/runtime_v2/control_plane/config.py` | Creato | Loader YAML + env substitution + `ControlPlaneConfigError` |
+| `src/runtime_v2/control_plane/auth.py` | Creato | `AuthValidator` stateless per chat/topic/user |
+| `tests/runtime_v2/control_plane/__init__.py` | Creato | Test package marker |
+| `tests/runtime_v2/control_plane/test_migration_007.py` | Creato | Verifica tabelle/colonne/unique outbox |
+| `tests/runtime_v2/control_plane/test_models.py` | Creato | Default config + validation + roundtrip outbox |
+| `tests/runtime_v2/control_plane/test_config.py` | Creato | 6 test: env substitution, error handling, top-level YAML shape |
+| `tests/runtime_v2/control_plane/test_auth.py` | Creato | 5 test auth su chat/topic/user |
+
+### Risultato test
+
+```
+Step 1: Local migrate
+C:\TeleSignalBot\.venv\Scripts\python.exe main.py --migrate
+→ Parser migrations applied: 0 | Ops migrations applied: 1 ✅
+
+Step 2: Full Part 1 suite
+C:\TeleSignalBot\.venv\Scripts\python.exe -m pytest tests\runtime_v2\control_plane\ -v
+→ 17 passed, 1 warning in 2.03s ✅
+
+Warning pre-esistente:
+PytestConfigWarning: Unknown config option: collect_ignore_glob
+```
+
+### Decisioni
+
+- `ops_config_overrides.scope_type` resta `GLOBAL | PER_TRADER` come da spec Part 1.
+- Il loader config ora rifiuta esplicitamente YAML top-level non mapping con `ControlPlaneConfigError`, evitando eccezioni sbagliate fuori dal layer proprietario.
+- `AuthValidator` ignora silenziosamente chat/topic errati e rifiuta utenti non autorizzati senza side effect.
+
+### Rischi aperti
+
+- Discrepanza di naming ancora aperta tra la foundation del Control Plane (`PER_TRADER`) e `src/runtime_v2/lifecycle/repositories.py`, dove `ControlStateRepository.get_effective_mode` oggi confronta `scope_type == "TRADER"`. Da risolvere in Part 4 prima dell'integrazione completa degli override di controllo.
+- La suite Part 1 non verifica ancora indici e tutti i `CHECK` della migration 007; copertura sufficiente per foundation, non esaustiva sullo schema.
+
+### Prossimi step
+
+- Part 2: producer/outbox e notifiche Telegram sui topic TECH_LOG/CLEAN_LOG.
+- Part 4: allineare la semantica `scope_type` tra Control Plane e lifecycle runtime.
+
+---
+
 ## 2026-05-29 — Task 7: Smoke Test for market_entry_now Full Roundtrip (1 commit, 706/706 PASS)
 
 ### Step completato

@@ -1,0 +1,37 @@
+from __future__ import annotations
+
+from dataclasses import dataclass
+from typing import Literal
+
+from src.runtime_v2.control_plane.models import ControlPlaneConfig
+
+AuthDecision = Literal["OK", "IGNORE", "REJECT_UNAUTHORIZED"]
+
+
+@dataclass(frozen=True)
+class AuthResult:
+    decision: AuthDecision
+    reason: str | None = None
+
+
+class AuthValidator:
+    """Stateless per-update authorization."""
+
+    def __init__(self, config: ControlPlaneConfig) -> None:
+        self._chat_id = config.chat_id
+        self._commands_thread_id = config.topics.commands.thread_id
+        self._authorized_users = frozenset(config.authorized_users)
+
+    def validate(
+        self, chat_id: int, thread_id: int | None, user_id: int
+    ) -> AuthResult:
+        if chat_id != self._chat_id:
+            return AuthResult("IGNORE", "wrong_chat")
+        if thread_id != self._commands_thread_id:
+            return AuthResult("IGNORE", "wrong_topic")
+        if user_id not in self._authorized_users:
+            return AuthResult("REJECT_UNAUTHORIZED", "unauthorized_user")
+        return AuthResult("OK")
+
+
+__all__ = ["AuthDecision", "AuthResult", "AuthValidator"]

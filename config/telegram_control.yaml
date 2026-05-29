@@ -1,0 +1,56 @@
+# config/telegram_control.yaml
+# Secrets are read from environment variables via ${ENV} placeholders.
+enabled: true
+
+token_env: 8713797227:AAHxXrjkS8PGsBqZRSBhMd6D0DryT5ZPMBo
+
+chat_id: "${-3897279123}"
+
+topics:
+  commands:
+    thread_id: 13
+  tech_log:
+    thread_id: 18
+    enabled: true
+    min_level: WARNING
+    operational_events: false
+    batch_seconds: 10
+    max_messages_per_minute: 20
+    dedupe_window_seconds: 60
+    max_repeated_before_summary: 5
+    debug_max_duration_minutes: 60
+  clean_log:
+    thread_id: 17
+    debounce_seconds: 20
+    aggregate_fills_seconds: 30
+    aggregate_updates_seconds: 20
+    max_messages_per_chain_per_minute: 4
+    min_partial_fill_notify_pct: 10
+
+authorized_users:
+  - "${526179818}"
+
+startup:
+  mode: auto
+  restore_max_age_seconds: 300
+
+keyboard:
+  - ["/status", "/health", "/control"]
+  - ["/trades", "/reviews", "/logs"]
+  - ["/pause", "/resume"]
+  - ["/block", "/debug_on"]
+
+notifications:
+  startup: "on"
+  shutdown: "on"
+  control_change: "on"
+  review_required: "on"
+  entry_order_placed: "silent"
+  entry_filled: "on"
+  tp_filled: "on"
+  sl_filled: "on"
+  close_full_filled: "on"
+  close_partial_filled: "on"
+  order_rejected: "on"
+  reconciliation_warning: "on"
+  technical_error: "on"
