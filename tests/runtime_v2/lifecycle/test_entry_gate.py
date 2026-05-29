@@ -2004,3 +2004,28 @@ def test_entry_changing_update_leg2_replacement_stays_plain_place_entry():
     assert payload["entry_type"] == "LIMIT"
     assert payload["price"] == 47000.0
     assert "attached_tpsl" not in payload
+
+
+def test_update_chain_result_has_new_plan_state_json_field():
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult
+    cr = UpdateChainResult(
+        trade_chain_id=1,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[],
+        execution_commands=[],
+        new_plan_state_json='{"legs": []}',
+    )
+    assert cr.new_plan_state_json == '{"legs": []}'
+
+
+def test_update_chain_result_new_plan_state_json_defaults_to_none():
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult
+    cr = UpdateChainResult(
+        trade_chain_id=1,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[],
+        execution_commands=[],
+    )
+    assert cr.new_plan_state_json is None

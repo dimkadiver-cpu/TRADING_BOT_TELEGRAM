@@ -52,6 +52,7 @@ class UpdateChainResult:
     new_be_protection_status: BeProtectionStatus | None
     lifecycle_events: list[LifecycleEvent]
     execution_commands: list[ExecutionCommand]
+    new_plan_state_json: str | None = None
 
 
 @dataclass
