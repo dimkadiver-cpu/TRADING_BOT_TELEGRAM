@@ -2098,17 +2098,28 @@ def _make_two_step_chain_for_market(
     )
 
 
-def _make_market_now_update_enriched(canonical_message_id: int = 200):
+def _make_market_now_update_enriched(
+    canonical_message_id: int = 200,
+    *,
+    entries=None,
+):
     from src.parser_v2.contracts.canonical_message import (
         ActionItem, ModifyEntriesOperation, TargetActionGroup,
     )
     from src.parser_v2.contracts.context import TargetHints
+    from src.parser_v2.contracts.entities import EntryLeg
     from src.runtime_v2.signal_enrichment.models import (
         ManagementPlanConfig, EnrichedCanonicalMessage,
     )
+    if entries is None:
+        entries = []
+    typed_entries = [
+        item if isinstance(item, EntryLeg) else EntryLeg(**item)
+        for item in entries
+    ]
     action = ActionItem(
         action_type="MODIFY_ENTRIES",
-        modify_entries=ModifyEntriesOperation(kind="MARKET_NOW", entries=[]),
+        modify_entries=ModifyEntriesOperation(kind="MARKET_NOW", entries=typed_entries),
         source_intent="MODIFY_ENTRY",
     )
     tag = TargetActionGroup(
@@ -2173,6 +2184,21 @@ def test_market_entry_now_cancel_mode_plan_marks_leg1_market_leg2_cancelled():
     assert by_seq[1]["status"] == "PENDING"
     assert by_seq[1]["qty_mode"] == "deferred_market"
     assert by_seq[2]["status"] == "CANCELLED"
+
+
+def test_market_entry_now_with_primary_market_entry_payload_still_cancels_subsequent_legs():
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("cancel_subsequent")
+    enriched = _make_market_now_update_enriched(
+        entries=[{"sequence": 1, "entry_type": "MARKET"}],
+    )
+
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert cmd_types.count("CANCEL_PENDING_ENTRY") == 2
+    assert cmd_types.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
 
 
 def test_market_entry_now_cancel_mode_emits_telegram_update_accepted_event():

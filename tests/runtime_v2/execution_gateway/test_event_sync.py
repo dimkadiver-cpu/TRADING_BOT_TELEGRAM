@@ -919,6 +919,67 @@ def test_run_reconciliation_no_wake_callback_on_duplicate(ops_db):
     assert len(wake_calls) == 1
 
 
+def test_run_reconciliation_marks_done_even_when_ws_already_inserted_event(ops_db):
+    """If WS pre-inserted the ENTRY_FILLED event, REST reconciliation must still mark command DONE.
+
+    Regression test for P2: mark_done was gated on insert_exchange_event() returning True,
+    so when WS inserted first (INSERT OR IGNORE returned False), the command stayed SENT forever.
+    """
+    import datetime as dt
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_sent_cmd(ops_db, 9100, 77, "PLACE_ENTRY", "tsb:77:9100:entry:1")
+
+    # Simulate WS already inserted the fill event with the same idempotency key
+    # that _save_fill_event would generate: ENTRY_FILLED:<chain_id>:<exchange_order_id>
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (?,?,?,?,?,?)",
+        (77, "ENTRY_FILLED", '{"fill_price":100.0,"filled_qty":1.0,"command_id":9100}',
+         "DONE", "ENTRY_FILLED:77:ex-ws-123", now),
+    )
+    conn.commit()
+    conn.close()
+
+    adapter = MagicMock()
+    adapter.get_order_status.return_value = RawAdapterOrder(
+        client_order_id="tsb:77:9100:entry:1",
+        exchange_order_id="ex-ws-123",
+        status="FILLED",
+        filled_qty=1.0,
+        average_price=100.0,
+    )
+
+    wake_calls = []
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="main",
+        wake_callback=lambda: wake_calls.append(1),
+    )
+    count = worker.run_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=9100"
+    ).fetchone()[0]
+    event_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=77"
+    ).fetchone()[0]
+    conn.close()
+    assert status == "DONE"         # command marked done despite WS pre-insert
+    assert event_count == 1         # no duplicate event inserted
+    assert len(wake_calls) == 1
+
+
 def test_position_reconciliation_records_fill_price_from_rest(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker

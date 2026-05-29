@@ -286,8 +286,10 @@ class ExecutionGateway:
             return
 
         if not result.success:
-            self._repo.mark_failed(
-                cmd.command_id, reason=result.reason or result.error or "unknown"
+            reason = result.reason or result.error or "unknown"
+            self._repo.mark_failed(cmd.command_id, reason=reason)
+            self._repo.cancel_chain_if_all_entries_failed(
+                cmd.trade_chain_id, cmd.command_type, reason=reason
             )
             return
 
@@ -321,6 +323,9 @@ class ExecutionGateway:
 
         if current_retry >= retry_cfg.max_attempts:
             self._repo.mark_failed(cmd.command_id, reason=error_str)
+            self._repo.cancel_chain_if_all_entries_failed(
+                cmd.trade_chain_id, cmd.command_type, reason=error_str
+            )
             return
 
         backoff = retry_cfg.backoff_seconds[

@@ -173,6 +173,65 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def cancel_chain_if_all_entries_failed(
+        self, trade_chain_id: int, command_type: str, *, reason: str
+    ) -> bool:
+        """After an entry command is marked FAILED, cancel the chain if all entry commands are now failed.
+
+        Only acts on PLACE_ENTRY / PLACE_ENTRY_WITH_ATTACHED_TPSL command types.
+        Checks atomically: if no entry command remains in an active state, transitions
+        the chain from WAITING_ENTRY/CREATED to CANCELLED and writes a lifecycle event.
+        Returns True if the chain was cancelled.
+        """
+        _ENTRY_TYPES = ("PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL")
+        if command_type not in _ENTRY_TYPES:
+            return False
+
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                chain_row = conn.execute(
+                    "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=?",
+                    (trade_chain_id,),
+                ).fetchone()
+                if not chain_row or chain_row[0] not in ("WAITING_ENTRY", "CREATED"):
+                    return False
+
+                active_row = conn.execute(
+                    "SELECT COUNT(*) FROM ops_execution_commands "
+                    "WHERE trade_chain_id=? "
+                    "  AND command_type IN ('PLACE_ENTRY','PLACE_ENTRY_WITH_ATTACHED_TPSL') "
+                    "  AND status NOT IN ('FAILED','CANCELLED','SUPERSEDED','REVIEW_REQUIRED')",
+                    (trade_chain_id,),
+                ).fetchone()
+                if active_row and active_row[0] > 0:
+                    return False
+
+                conn.execute(
+                    "UPDATE ops_trade_chains SET lifecycle_state='CANCELLED', updated_at=? "
+                    "WHERE trade_chain_id=?",
+                    (now, trade_chain_id),
+                )
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO ops_lifecycle_events (
+                        trade_chain_id, event_type, source_type,
+                        previous_state, next_state, payload_json, idempotency_key, created_at
+                    ) VALUES (?,?,?,?,?,?,?,?)
+                    """,
+                    (
+                        trade_chain_id, "PENDING_ENTRY_CANCELLED", "entry_failure_handler",
+                        chain_row[0], "CANCELLED",
+                        json.dumps({"reason": reason}),
+                        f"entry_all_failed:{trade_chain_id}",
+                        now,
+                    ),
+                )
+            return True
+        finally:
+            conn.close()
+
     def mark_review_required(self, command_id: int, *, reason: str) -> None:
         now = _now()
         result = {"error": None, "reason": reason}

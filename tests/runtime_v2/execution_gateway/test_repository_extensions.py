@@ -32,7 +32,8 @@ def make_db(tmp_path):
             trade_chain_id INTEGER PRIMARY KEY,
             symbol TEXT,
             side TEXT,
-            lifecycle_state TEXT
+            lifecycle_state TEXT,
+            updated_at TEXT
         );
         CREATE TABLE exchange_raw_events (
             raw_event_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -77,6 +78,18 @@ def make_db(tmp_path):
             processing_status TEXT DEFAULT 'NEW',
             idempotency_key TEXT UNIQUE,
             received_at TEXT
+        );
+        CREATE TABLE ops_lifecycle_events (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_chain_id INTEGER,
+            event_type TEXT NOT NULL,
+            source_type TEXT NOT NULL,
+            source_id TEXT,
+            previous_state TEXT,
+            next_state TEXT,
+            payload_json TEXT NOT NULL DEFAULT '{}',
+            idempotency_key TEXT NOT NULL UNIQUE,
+            created_at TEXT NOT NULL
         );
     """)
     conn.commit()
@@ -355,11 +368,13 @@ def test_resolve_chain_for_fill_returns_chain_id_when_exactly_one(tmp_path):
             trade_chain_id INTEGER PRIMARY KEY,
             symbol TEXT,
             side TEXT,
-            lifecycle_state TEXT
+            lifecycle_state TEXT,
+            updated_at TEXT
         );
     """)
     conn.execute(
-        "INSERT INTO ops_trade_chains VALUES (7, 'BTCUSDT', 'LONG', 'OPEN')"
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (7, 'BTCUSDT', 'LONG', 'OPEN')"
     )
     conn.commit()
     conn.close()
@@ -377,11 +392,13 @@ def test_resolve_chain_for_fill_returns_none_when_no_open_chain(tmp_path):
             trade_chain_id INTEGER PRIMARY KEY,
             symbol TEXT,
             side TEXT,
-            lifecycle_state TEXT
+            lifecycle_state TEXT,
+            updated_at TEXT
         );
     """)
     conn.execute(
-        "INSERT INTO ops_trade_chains VALUES (7, 'BTCUSDT', 'LONG', 'CLOSED')"
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (7, 'BTCUSDT', 'LONG', 'CLOSED')"
     )
     conn.commit()
     conn.close()
@@ -389,6 +406,152 @@ def test_resolve_chain_for_fill_returns_none_when_no_open_chain(tmp_path):
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
     repo = GatewayCommandRepository(db_path)
     assert repo.resolve_chain_for_fill("BTCUSDT", "LONG") is None
+
+
+# ---------------------------------------------------------------------------
+# Tests: cancel_chain_if_all_entries_failed
+# ---------------------------------------------------------------------------
+
+def _setup_chain_with_commands(db_path: str, chain_state: str, cmd_statuses: list[str]) -> None:
+    """Insert a chain and one PLACE_ENTRY command per status into the DB."""
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT OR IGNORE INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (1, 'FOLKUSDT', 'SHORT', ?)",
+        (chain_state,),
+    )
+    for i, status in enumerate(cmd_statuses, start=1):
+        conn.execute(
+            "INSERT INTO ops_execution_commands "
+            "(command_id, trade_chain_id, command_type, status, payload_json, idempotency_key, created_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (i, 1, "PLACE_ENTRY", status, "{}", f"idem:{i}", "2026-01-01T00:00:00Z", "2026-01-01T00:00:00Z"),
+        )
+    conn.commit()
+    conn.close()
+
+
+def test_cancel_chain_if_all_entries_failed_cancels_when_all_failed(tmp_path):
+    db_path = make_db(tmp_path)
+    _setup_chain_with_commands(db_path, "WAITING_ENTRY", ["FAILED", "FAILED"])
+
+    repo = GatewayCommandRepository(db_path)
+    result = repo.cancel_chain_if_all_entries_failed(1, "PLACE_ENTRY", reason="symbol_not_found")
+
+    assert result is True
+
+    conn = sqlite3.connect(db_path)
+    state = conn.execute("SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1").fetchone()[0]
+    event = conn.execute(
+        "SELECT event_type, previous_state, next_state, payload_json "
+        "FROM ops_lifecycle_events WHERE idempotency_key='entry_all_failed:1'"
+    ).fetchone()
+    conn.close()
+
+    assert state == "CANCELLED"
+    assert event is not None
+    assert event[0] == "PENDING_ENTRY_CANCELLED"
+    assert event[1] == "WAITING_ENTRY"
+    assert event[2] == "CANCELLED"
+    import json
+    assert json.loads(event[3])["reason"] == "symbol_not_found"
+
+
+def test_cancel_chain_if_all_entries_failed_noop_when_one_still_active(tmp_path):
+    db_path = make_db(tmp_path)
+    _setup_chain_with_commands(db_path, "WAITING_ENTRY", ["FAILED", "SENT"])
+
+    repo = GatewayCommandRepository(db_path)
+    result = repo.cancel_chain_if_all_entries_failed(1, "PLACE_ENTRY", reason="err")
+
+    assert result is False
+
+    conn = sqlite3.connect(db_path)
+    state = conn.execute("SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1").fetchone()[0]
+    conn.close()
+
+    assert state == "WAITING_ENTRY"
+
+
+def test_cancel_chain_if_all_entries_failed_noop_for_non_entry_command_type(tmp_path):
+    db_path = make_db(tmp_path)
+    _setup_chain_with_commands(db_path, "WAITING_ENTRY", ["FAILED"])
+
+    repo = GatewayCommandRepository(db_path)
+    result = repo.cancel_chain_if_all_entries_failed(1, "MOVE_STOP", reason="err")
+
+    assert result is False
+
+    conn = sqlite3.connect(db_path)
+    state = conn.execute("SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1").fetchone()[0]
+    conn.close()
+
+    assert state == "WAITING_ENTRY"
+
+
+def test_cancel_chain_if_all_entries_failed_noop_when_chain_not_waiting(tmp_path):
+    db_path = make_db(tmp_path)
+    _setup_chain_with_commands(db_path, "OPEN", ["FAILED"])
+
+    repo = GatewayCommandRepository(db_path)
+    result = repo.cancel_chain_if_all_entries_failed(1, "PLACE_ENTRY", reason="err")
+
+    assert result is False
+
+    conn = sqlite3.connect(db_path)
+    state = conn.execute("SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1").fetchone()[0]
+    conn.close()
+
+    assert state == "OPEN"
+
+
+def test_cancel_chain_if_all_entries_failed_idempotent(tmp_path):
+    db_path = make_db(tmp_path)
+    _setup_chain_with_commands(db_path, "WAITING_ENTRY", ["FAILED"])
+
+    repo = GatewayCommandRepository(db_path)
+    first = repo.cancel_chain_if_all_entries_failed(1, "PLACE_ENTRY", reason="err")
+    second = repo.cancel_chain_if_all_entries_failed(1, "PLACE_ENTRY", reason="err")
+
+    assert first is True
+    assert second is False  # chain is now CANCELLED, not WAITING_ENTRY
+
+    conn = sqlite3.connect(db_path)
+    event_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_lifecycle_events WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert event_count == 1
+
+
+def test_cancel_chain_if_all_entries_failed_with_attached_tpsl_type(tmp_path):
+    db_path = make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (1, 'BTCUSDT', 'LONG', 'WAITING_ENTRY')"
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, idempotency_key, created_at, updated_at) "
+        "VALUES (1, 1, 'PLACE_ENTRY_WITH_ATTACHED_TPSL', 'FAILED', '{}', 'idem:1', '2026-01-01T00:00:00Z', '2026-01-01T00:00:00Z')"
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(db_path)
+    result = repo.cancel_chain_if_all_entries_failed(
+        1, "PLACE_ENTRY_WITH_ATTACHED_TPSL", reason="adapter_error"
+    )
+
+    assert result is True
+
+    conn = sqlite3.connect(db_path)
+    state = conn.execute("SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1").fetchone()[0]
+    conn.close()
+
+    assert state == "CANCELLED"
 
 
 def test_resolve_chain_for_fill_returns_none_when_multiple_open_chains(tmp_path):
@@ -399,11 +562,12 @@ def test_resolve_chain_for_fill_returns_none_when_multiple_open_chains(tmp_path)
             trade_chain_id INTEGER PRIMARY KEY,
             symbol TEXT,
             side TEXT,
-            lifecycle_state TEXT
+            lifecycle_state TEXT,
+            updated_at TEXT
         );
     """)
     conn.executemany(
-        "INSERT INTO ops_trade_chains VALUES (?,?,?,?)",
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) VALUES (?,?,?,?)",
         [(7, "BTCUSDT", "LONG", "OPEN"), (8, "BTCUSDT", "LONG", "OPEN")],
     )
     conn.commit()

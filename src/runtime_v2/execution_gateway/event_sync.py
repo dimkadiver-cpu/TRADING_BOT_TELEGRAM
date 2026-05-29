@@ -56,15 +56,15 @@ class ExchangeEventSyncWorker:
                     execution_account_id=self._execution_account_id,
                 )
                 if raw and raw.is_filled:
-                    if self._save_fill_event(client_order_id, raw):
-                        self._repo.mark_done(cmd.command_id)
-                        self._wake()
-                        processed += 1
+                    self._save_fill_event(client_order_id, raw)
+                    self._repo.mark_done(cmd.command_id)
+                    self._wake()
+                    processed += 1
                 elif raw and raw.status == "CANCELLED":
-                    if self._save_cancelled_event(client_order_id, raw):
-                        self._repo.mark_done(cmd.command_id)
-                        self._wake()
-                        processed += 1
+                    self._save_cancelled_event(client_order_id, raw)
+                    self._repo.mark_done(cmd.command_id)
+                    self._wake()
+                    processed += 1
             except Exception:
                 logger.exception("reconciliation error for %s", client_order_id)
 

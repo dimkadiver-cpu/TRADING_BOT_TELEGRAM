@@ -521,7 +521,7 @@ class LifecycleEntryGate:
 
         if action_type == "MODIFY_ENTRIES":
             op = action.modify_entries
-            if op and op.kind == "MARKET_NOW" and not op.entries:
+            if op and self._is_market_entry_now_convert(op):
                 return self._apply_market_entry_now(enriched, chain, active_commands)
             if op and op.kind in {"MARKET_NOW", "UPDATE_PRICE", "REPLACE_ENTRY"}:
                 return self._apply_modify_entries(enriched, chain, action, active_commands)
@@ -796,6 +796,21 @@ class LifecycleEntryGate:
             lifecycle_events=[event],
             execution_commands=commands,
             new_plan_state_json=new_plan_state_json,
+        )
+
+    @staticmethod
+    def _is_market_entry_now_convert(op) -> bool:
+        if op.kind != "MARKET_NOW":
+            return False
+        if not op.entries:
+            return True
+        if len(op.entries) != 1:
+            return False
+        leg = op.entries[0]
+        return (
+            leg.sequence == 1
+            and leg.entry_type == "MARKET"
+            and leg.price is None
         )
 
     def _build_target_plan_from_modify_entries(self, chain: TradeChain, action) -> str:
