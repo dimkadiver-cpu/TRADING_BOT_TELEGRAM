@@ -1517,7 +1517,7 @@ class LifecycleGateWorker:
         try:
             with conn:
                 for cr in result.chain_results:
-                    if cr.new_lifecycle_state or cr.new_be_protection_status:
+                    if cr.new_lifecycle_state or cr.new_be_protection_status or cr.new_plan_state_json is not None:
                         fields = ["updated_at=?"]
                         vals: list = [now]
                         if cr.new_lifecycle_state:
@@ -1526,6 +1526,9 @@ class LifecycleGateWorker:
                         if cr.new_be_protection_status:
                             fields.append("be_protection_status=?")
                             vals.append(cr.new_be_protection_status)
+                        if cr.new_plan_state_json is not None:
+                            fields.append("plan_state_json=?")
+                            vals.append(cr.new_plan_state_json)
                         vals.append(cr.trade_chain_id)
                         conn.execute(
                             f"UPDATE ops_trade_chains SET {', '.join(fields)} WHERE trade_chain_id=?",

@@ -2314,3 +2314,73 @@ def test_market_entry_now_single_pending_leg_produces_one_cancel_one_market():
     cmd_types_keep = [c.command_type for c in cr_keep.execution_commands]
     assert cmd_types_keep.count("CANCEL_PENDING_ENTRY") == 1
     assert cmd_types_keep.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
+
+
+def test_persist_update_saves_new_plan_state_json_to_db(tmp_path):
+    import json
+    import sqlite3
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate, UpdateGateResult, UpdateChainResult
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig, EnrichedCanonicalMessage
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    # Bootstrap parser DB (needs enriched_canonical_messages)
+    parser_db = str(tmp_path / "parser.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+
+    # Bootstrap ops DB
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(ops_db, "db/ops_migrations")
+    conn = sqlite3.connect(ops_db)
+    # Insert a minimal chain
+    original_plan = json.dumps({"legs": [{"sequence": 1, "status": "PENDING"}]})
+    conn.execute(
+        """INSERT INTO ops_trade_chains (
+            source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, plan_state_json, created_at, updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))""",
+        (1, 1, 1, "t1", "acc_1", "SYM", "LONG", "WAITING_ENTRY", "ONE_SHOT", "{}", original_plan),
+    )
+    conn.commit()
+    chain_id = conn.execute("SELECT trade_chain_id FROM ops_trade_chains LIMIT 1").fetchone()[0]
+    conn.close()
+
+    new_plan = json.dumps({"legs": [{"sequence": 1, "status": "FILLED"}]})
+    cr = UpdateChainResult(
+        trade_chain_id=chain_id,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id, event_type="TELEGRAM_UPDATE_ACCEPTED",
+            source_type="test", idempotency_key="test:persist:1",
+        )],
+        execution_commands=[],
+        new_plan_state_json=new_plan,
+    )
+
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=99, canonical_message_id=99, raw_message_id=99,
+        trader_id="t1", account_id="acc_1", primary_class="UPDATE",
+        enrichment_decision="PASS", policy_snapshot={},
+    )
+
+    gate = _make_gate_attached()
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db, ops_db_path=ops_db,
+        gate=gate, chain_repo=None, event_repo=None,
+        command_repo=None, snapshot_repo=None, control_repo=None,
+    )
+    worker._persist_update(enriched, UpdateGateResult(chain_results=[cr], review_events=[]))
+
+    # Verify plan was saved
+    conn2 = sqlite3.connect(ops_db)
+    row = conn2.execute(
+        "SELECT plan_state_json FROM ops_trade_chains WHERE trade_chain_id=?", (chain_id,)
+    ).fetchone()
+    conn2.close()
+    saved_plan = json.loads(row[0])
+    assert saved_plan["legs"][0]["status"] == "FILLED"
