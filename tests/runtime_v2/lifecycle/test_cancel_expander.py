@@ -162,3 +162,33 @@ def test_expand_cancel_with_existing_entry_client_order_id_returns_original(tmp_
     assert len(results) == 1
     assert results[0][0] == concrete_payload
     assert results[0][1] == "auto_cancel:10:5:leg_1"
+
+
+def test_expand_cancel_resolves_plan_placeholder_to_real_client_order_id(tmp_path):
+    """Placeholder plan-level `place_entry...` deve diventare il reale `tsb:...`."""
+    from src.runtime_v2.lifecycle.cancel_expander import expand_cancel_pending_commands
+
+    db = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db)
+    conn = sqlite3.connect(db)
+    _insert_place_entry_cmd(conn, 1, 10, "tsb:10:1:entry:1", status="SENT")
+    conn.commit()
+
+    placeholder_payload = json.dumps({
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_client_order_id": "place_entry:10:leg1",
+    })
+    results = expand_cancel_pending_commands(
+        conn,
+        trade_chain_id=10,
+        command_type="CANCEL_PENDING_ENTRY",
+        payload_json=placeholder_payload,
+        idempotency_key="cancel_entry:10:99:seq1",
+    )
+    conn.close()
+
+    assert len(results) == 1
+    payload = json.loads(results[0][0])
+    assert payload["entry_client_order_id"] == "tsb:10:1:entry:1"
+    assert results[0][1] == "cancel_entry:10:99:seq1"
