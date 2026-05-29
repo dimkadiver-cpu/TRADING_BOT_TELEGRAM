@@ -69,7 +69,7 @@ Verifica principale del flusso.
 - [X] Verificare `MOVE_STOP_TO_BREAKEVEN`
 - [ ] Verificare `MOVE_STOP` (non implimitato)
 - [X] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` in unico messaggio
-- [ ] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` dopo `TP_HIT`
+- [X] Verificare `CANCEL_PENDING_ENTRY` + `MOVE_STOP_TO_BREAKEVEN` dopo `TP_HIT`
 
 Atteso:
 
@@ -120,14 +120,14 @@ Atteso:
 
 Verifica mista market + limit.
 
-- [ ] Inviare setup misto
+- [X] Inviare setup misto
 - [ ] Verificare cancellazione ordini non fillati
 - [ ] Verificare cancellazione del secondo ordine non fillato
 - [X] Verificare eventuale modifica del primo ordine al market + chiusura ordine limite
 - [ ] Verificare apertura del secondo ordine
 - [ ] Verificare chiusura totale
 - [ ] Verificare chiusura parziale
-- [ ] Verificare `MOVE_STOP_TO_BREAKEVEN`
+- [X] Verificare `MOVE_STOP_TO_BREAKEVEN`
 - [ ] Verificare `MOVE_STOP`
 
 Atteso:
