@@ -91,6 +91,7 @@ class ManagementPlanConfig(BaseModel):
     cancel_unfilled_pending_after: Literal["tp1", "tp2"] | None = None
     risk_freed_by_be: bool = True
     protective_sl_mode: Literal["exchange_native_first", "bot_managed"] = "exchange_native_first"
+    market_convert_mode: Literal["cancel_subsequent", "keep_subsequent"] = "cancel_subsequent"
 
 
 class RiskConfig(BaseModel):

@@ -92,3 +92,23 @@ def test_enriched_canonical_message_defaults():
     assert msg.enriched_signal is None
     assert msg.lifecycle_processed is False
     assert msg.enrichment_log == []
+
+
+def test_management_plan_config_market_convert_mode_default():
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    mp = ManagementPlanConfig()
+    assert mp.market_convert_mode == "cancel_subsequent"
+
+
+def test_management_plan_config_market_convert_mode_keep():
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    mp = ManagementPlanConfig(market_convert_mode="keep_subsequent")
+    assert mp.market_convert_mode == "keep_subsequent"
+
+
+def test_management_plan_config_market_convert_mode_invalid():
+    import pytest
+    from pydantic import ValidationError
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+    with pytest.raises(ValidationError):
+        ManagementPlanConfig(market_convert_mode="invalid_value")
