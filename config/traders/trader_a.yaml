@@ -13,6 +13,7 @@ management_plan:
   be_trigger: tp1
   be_fee_correction_enabled: true
   be_fee_fallback_profile: bybit_linear
+  market_convert_mode: cancel_subsequent
 
 risk:
   risk_pct_of_capital: 1
