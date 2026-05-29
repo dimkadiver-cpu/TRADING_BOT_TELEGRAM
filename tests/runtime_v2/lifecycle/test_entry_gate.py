@@ -2184,3 +2184,57 @@ def test_market_entry_now_cancel_mode_emits_telegram_update_accepted_event():
     cr = result.chain_results[0]
     event_types = [e.event_type for e in cr.lifecycle_events]
     assert "TELEGRAM_UPDATE_ACCEPTED" in event_types
+
+
+# ── keep-mode tests ──────────────────────────────────────────────────────────
+
+def test_market_entry_now_keep_mode_produces_one_cancel_and_one_market_entry():
+    import json
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("keep_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    assert len(result.chain_results) == 1
+    cr = result.chain_results[0]
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert cmd_types.count("CANCEL_PENDING_ENTRY") == 1  # leg1 only
+    assert cmd_types.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
+
+
+def test_market_entry_now_keep_mode_uses_leg1_risk_only():
+    import json
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("keep_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    market_cmd = next(
+        c for c in cr.execution_commands
+        if c.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
+    )
+    p = json.loads(market_cmd.payload_json)
+    assert p["entry_type"] == "MARKET"
+    assert p.get("qty_mode") == "deferred_market"
+    assert p.get("risk_amount") == pytest.approx(70.0)  # leg1 risk_amount only
+
+
+def test_market_entry_now_keep_mode_plan_leg1_market_leg2_pending_unchanged():
+    import json
+    gate = _make_gate_attached()
+    chain = _make_two_step_chain_for_market("keep_subsequent")
+    enriched = _make_market_now_update_enriched()
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    assert cr.new_plan_state_json is not None
+    plan = json.loads(cr.new_plan_state_json)
+    by_seq = {l["sequence"]: l for l in plan["legs"]}
+    assert by_seq[1]["entry_type"] == "MARKET"
+    assert by_seq[1]["status"] == "PENDING"
+    assert by_seq[1]["qty_mode"] == "deferred_market"
+    # leg2 completely untouched
+    assert by_seq[2]["status"] == "PENDING"
+    assert by_seq[2]["entry_type"] == "LIMIT"
+    assert by_seq[2]["price"] == pytest.approx(900.0)
