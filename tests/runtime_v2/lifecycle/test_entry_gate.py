@@ -2384,3 +2384,28 @@ def test_persist_update_saves_new_plan_state_json_to_db(tmp_path):
     conn2.close()
     saved_plan = json.loads(row[0])
     assert saved_plan["legs"][0]["status"] == "FILLED"
+
+
+def test_market_entry_now_cancel_mode_full_roundtrip(tmp_path):
+    """cancel mode: market order placed + leg2 cancelled + plan updated in result."""
+    import json
+    import sqlite3
+    from pathlib import Path
+
+    chain = _make_two_step_chain_for_market("cancel_subsequent")
+    gate = _make_gate_attached()
+    enriched = _make_market_now_update_enriched(canonical_message_id=300)
+    result = gate.process_update(enriched, [chain], {1: []})
+
+    cr = result.chain_results[0]
+    # Commands: 2 cancels + 1 MARKET entry
+    cmd_types = [c.command_type for c in cr.execution_commands]
+    assert cmd_types.count("CANCEL_PENDING_ENTRY") == 2
+    assert cmd_types.count("PLACE_ENTRY_WITH_ATTACHED_TPSL") == 1
+    # Plan in result
+    plan = json.loads(cr.new_plan_state_json)
+    by_seq = {l["sequence"]: l for l in plan["legs"]}
+    assert by_seq[1]["entry_type"] == "MARKET"
+    assert by_seq[2]["status"] == "CANCELLED"
+    # Event
+    assert any(e.event_type == "TELEGRAM_UPDATE_ACCEPTED" for e in cr.lifecycle_events)
