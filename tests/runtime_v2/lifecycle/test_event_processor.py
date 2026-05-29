@@ -1031,6 +1031,48 @@ def test_race_guard_cancel_confirmed_before_entry_filled():
     assert any(e.event_type == "NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED" for e in result.lifecycle_events)
 
 
+def test_race_guard_cancel_confirmed_old_limit_does_not_cancel_replacement_market_leg():
+    """Il cancel del vecchio LIMIT non deve cancellare la replacement MARKET sulla stessa sequence."""
+    proc = _make_processor()
+    chain = _make_chain_with_plan(
+        state="WAITING_ENTRY",
+        open_position_qty=0.0,
+        plan_legs=[
+            {
+                "leg_id": "leg_1",
+                "sequence": 1,
+                "entry_type": "MARKET",
+                "status": "PENDING",
+                "client_order_id": "cid_replacement_leg1",
+            },
+            {
+                "leg_id": "leg_2",
+                "sequence": 2,
+                "entry_type": "LIMIT",
+                "status": "CANCELLED",
+                "client_order_id": "cid_leg2",
+            },
+        ],
+    )
+
+    event = _make_exchange_event(
+        event_type="PENDING_ENTRY_CANCELLED_CONFIRMED",
+        payload={
+            "cancelled_order_ids": ["cid_old_leg1"],
+            "sequence": 1,
+        },
+    )
+
+    result = proc.process(event, chain, [])
+
+    assert result.new_lifecycle_state is None
+    assert any(e.event_type == "NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED" for e in result.lifecycle_events)
+    plan = json.loads(result.new_plan_state_json or chain.plan_state_json)
+    leg_1 = next(leg for leg in plan["legs"] if leg["sequence"] == 1)
+    assert leg_1["status"] == "PENDING"
+    assert leg_1["client_order_id"] == "cid_replacement_leg1"
+
+
 def test_race_guard_allows_cancelled_when_no_entries_in_flight():
     """PENDING_ENTRY_CANCELLED_CONFIRMED con nessun PLACE_ENTRY SENT/ACK → CANCELLED corretto."""
     proc = _make_processor()

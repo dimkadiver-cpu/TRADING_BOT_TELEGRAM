@@ -307,6 +307,35 @@ class LifecycleEventProcessor:
             )
         return updated
 
+    def _should_fallback_cancel_by_sequence(
+        self,
+        plan_state_json: str,
+        *,
+        sequence: int,
+        cancelled_order_ids: list[str],
+    ) -> bool:
+        """Do not cancel a replacement leg that reused the same sequence."""
+        try:
+            plan = json.loads(plan_state_json or "{}")
+        except Exception:
+            return True
+        pending_matches = [
+            leg for leg in plan.get("legs", [])
+            if leg.get("sequence") == sequence and leg.get("status") == "PENDING"
+        ]
+        if len(pending_matches) != 1:
+            return True
+        pending_leg = pending_matches[0]
+        current_client_order_id = pending_leg.get("client_order_id")
+        if not current_client_order_id:
+            return True
+        if str(current_client_order_id) in cancelled_order_ids:
+            return True
+        return not (
+            pending_leg.get("entry_type") == "MARKET"
+            and pending_leg.get("price") is None
+        )
+
     def _match_pending_legs_by_command_payload(
         self,
         legs: list[dict],
@@ -690,7 +719,11 @@ class LifecycleEventProcessor:
                         sequence, chain_id,
                     )
                     seq_int = None
-                if seq_int is not None:
+                if seq_int is not None and self._should_fallback_cancel_by_sequence(
+                    chain.plan_state_json,
+                    sequence=seq_int,
+                    cancelled_order_ids=cancelled_order_ids,
+                ):
                     new_plan_state_json = self._mark_entry_leg_status_by_sequence(
                         chain.plan_state_json,
                         sequence=seq_int,
@@ -722,13 +755,14 @@ class LifecycleEventProcessor:
 
         # ── Stato finale chain ─────────────────────────────────────────────────
         if not position_already_open:
+            pending_legs_remaining = ExecutionPlanBuilder.get_pending_legs(effective_plan_json)
             # Race guard: non finalizzare se ci sono entry commands ancora in volo
             entry_in_flight = [
                 c for c in active_commands
                 if c.command_type in ("PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL")
                 and c.status in ("SENT", "ACK")
             ]
-            if len(entry_in_flight) > 0:
+            if pending_legs_remaining or len(entry_in_flight) > 0:
                 # Altre entry ancora in attesa di fill o conferma — non finalizzare
                 events.append(LifecycleEvent(
                     trade_chain_id=chain_id,
