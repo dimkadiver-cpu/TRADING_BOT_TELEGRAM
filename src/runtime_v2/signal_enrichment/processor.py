@@ -192,7 +192,43 @@ class SignalEnrichmentProcessor:
                 role=leg.role,
                 weight=weights_map.get(key, 0.0),
             ))
+
+        if structure == "RANGE" and entry_type_key == "LIMIT":
+            result = self._apply_range_split(result, split.LIMIT.range.split_mode)
+
         return result
+
+    @staticmethod
+    def _apply_range_split(legs: list[EnrichedEntryLeg], split_mode: str) -> list[EnrichedEntryLeg]:
+        from src.parser_v2.contracts.entities import Price
+
+        if split_mode == "endpoints" or len(legs) < 2:
+            return legs
+
+        valid_prices = [leg.price.value for leg in legs if leg.price is not None]
+        if not valid_prices:
+            return legs
+
+        min_price = min(valid_prices)
+        max_price = max(valid_prices)
+
+        if split_mode == "firstpoint":
+            target = min_price
+        elif split_mode == "lastpoint":
+            target = max_price
+        elif split_mode == "midpoint":
+            target = round((min_price + max_price) / 2, 8)
+        else:
+            return legs
+
+        updated = []
+        for leg in legs:
+            if leg.price is not None:
+                new_price = Price(raw=str(target), value=target)
+                updated.append(leg.model_copy(update={"price": new_price}))
+            else:
+                updated.append(leg)
+        return updated
 
     # ── UPDATE gate (Task 7) ──────────────────────────────────────────────────
 
