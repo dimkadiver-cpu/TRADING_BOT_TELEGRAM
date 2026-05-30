@@ -125,3 +125,53 @@ def test_projection_is_idempotent(ops_db):
     count = conn.execute("SELECT COUNT(*) FROM ops_notification_outbox").fetchone()[0]
     conn.close()
     assert count == 1
+
+
+def test_projection_maps_entry_updated(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 400)
+        _seed_event(conn, 400, "ENTRY_UPDATED", "entry_updated:400:1",
+                    {"fill_price": 64500.0, "fill_qty": 0.002, "new_avg_entry": 64750.0})
+        project_clean_log_for_chain(conn, 400)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "ENTRY_UPDATED"
+    p = json.loads(row[1])
+    assert p["fill_price"] == 64500.0
+    assert p["new_avg_entry"] == 64750.0
+
+
+def test_projection_maps_update_done(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 500)
+        _seed_event(conn, 500, "UPDATE_DONE", "update_done:500:1",
+                    {"applied_actions": ["U_MOVE_STOP"], "changed_fields": ["current_stop_price"]})
+        project_clean_log_for_chain(conn, 500)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "UPDATE_DONE"
+    p = json.loads(row[1])
+    assert p["applied_actions"] == ["U_MOVE_STOP"]
+    assert p["changed_fields"] == ["current_stop_price"]
+
+
+def test_projection_maps_pending_timeout_to_pending_entry_expired(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 600)
+        _seed_event(conn, 600, "PENDING_TIMEOUT", "pending_timeout:600:1", {})
+        project_clean_log_for_chain(conn, 600)
+    row = conn.execute(
+        "SELECT notification_type FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "PENDING_ENTRY_EXPIRED"

@@ -202,6 +202,104 @@ def _position_closed(p: dict) -> str:
     return "\n".join(lines)
 
 
+def _entry_updated(p: dict) -> str:
+    lines = _header("✏️", p.get("chain_id"), "ENTRY UPDATED", p.get("symbol"), p.get("side"))
+    if p.get("fill_price") is not None:
+        lines.append(f"Fill price: {_num(p['fill_price'])}")
+    if p.get("filled_qty") is not None:
+        lines.append(f"Filled qty: {_num(p['filled_qty'])}")
+    if p.get("new_avg_entry") is not None:
+        lines.append(f"New avg entry: {_num(p['new_avg_entry'])}")
+    lines.append("")
+    lines += _footer(p.get("source", "exchange"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _update_done(p: dict) -> str:
+    lines = _header("✅", p.get("chain_id"), "UPDATE DONE", p.get("symbol"), p.get("side"))
+    applied = p.get("applied_actions") or []
+    if applied:
+        lines.append("Applied:")
+        for action in applied:
+            lines.append(f"  • {action}")
+    changed = p.get("changed_fields") or []
+    if changed:
+        lines.append("Changed fields:")
+        for field in changed:
+            lines.append(f"  • {field}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _update_partial(p: dict) -> str:
+    lines = _header("⚠️", p.get("chain_id"), "UPDATE PARTIAL", p.get("symbol"), p.get("side"))
+    applied = p.get("applied_actions") or []
+    if applied:
+        lines.append("Applied:")
+        for action in applied:
+            lines.append(f"  • {action}")
+    rejected = p.get("rejected_actions") or []
+    if rejected:
+        lines.append("Rejected:")
+        for action in rejected:
+            lines.append(f"  • {action}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _update_rejected(p: dict) -> str:
+    lines = _header("❌", p.get("chain_id"), "UPDATE REJECTED", p.get("symbol"), p.get("side"))
+    if p.get("reason") is not None:
+        lines.append(f"Reason: {p['reason']}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _pending_timeout(p: dict) -> str:
+    lines = _header("⏰", p.get("chain_id"), "PENDING ENTRY EXPIRED",
+                    p.get("symbol"), p.get("side"))
+    lines.append("Timeout: order expired before fill")
+    lines.append("")
+    lines += _footer(p.get("source", "worker"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _reconciliation_warning(p: dict) -> str:
+    lines = _header("⚠️", p.get("chain_id"), "RECONCILIATION WARNING",
+                    p.get("symbol"), p.get("side"))
+    if p.get("issue") is not None:
+        lines.append(f"Issue: {p['issue']}")
+    if p.get("risk") is not None:
+        lines.append(f"Risk: {p['risk']}")
+    if p.get("action") is not None:
+        lines.append(f"Action: {p['action']}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _reconciliation_fixed(p: dict) -> str:
+    lines = _header("✅", p.get("chain_id"), "RECONCILIATION FIXED",
+                    p.get("symbol"), p.get("side"))
+    if p.get("issue") is not None:
+        lines.append(f"Issue resolved: {p['issue']}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _reentry_accepted(p: dict) -> str:
+    lines = _header("🔄", p.get("chain_id"), "REENTRY ACCEPTED", p.get("symbol"), p.get("side"))
+    if p.get("previous_chain_id") is not None:
+        lines.append(f"Previous chain: #{p['previous_chain_id']}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
 def _fallback(notification_type: str, p: dict) -> str:
     lines = _header("📊", p.get("chain_id"), notification_type, p.get("symbol"), p.get("side"))
     lines += _footer(p.get("source", "runtime"))
@@ -225,6 +323,22 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _sl_filled(payload)
     if notification_type == "POSITION_CLOSED":
         return _position_closed(payload)
+    if notification_type == "ENTRY_UPDATED":
+        return _entry_updated(payload)
+    if notification_type == "UPDATE_DONE":
+        return _update_done(payload)
+    if notification_type == "UPDATE_PARTIAL":
+        return _update_partial(payload)
+    if notification_type == "UPDATE_REJECTED":
+        return _update_rejected(payload)
+    if notification_type == "PENDING_ENTRY_EXPIRED":
+        return _pending_timeout(payload)
+    if notification_type == "RECONCILIATION_WARNING":
+        return _reconciliation_warning(payload)
+    if notification_type == "RECONCILIATION_FIXED":
+        return _reconciliation_fixed(payload)
+    if notification_type == "REENTRY_ACCEPTED":
+        return _reentry_accepted(payload)
     return _fallback(notification_type, payload)
 
 

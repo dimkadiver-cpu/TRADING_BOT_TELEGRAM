@@ -15,6 +15,14 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "TP_FILLED": "TP_FILLED",
     "SL_FILLED": "SL_FILLED",
     "CLOSE_FULL_FILLED": "POSITION_CLOSED",
+    "ENTRY_UPDATED": "ENTRY_UPDATED",
+    "UPDATE_DONE": "UPDATE_DONE",
+    "UPDATE_PARTIAL": "UPDATE_PARTIAL",
+    "UPDATE_REJECTED": "UPDATE_REJECTED",
+    "PENDING_TIMEOUT": "PENDING_ENTRY_EXPIRED",
+    "RECONCILIATION_WARNING": "RECONCILIATION_WARNING",
+    "RECONCILIATION_FIXED": "RECONCILIATION_FIXED",
+    "REENTRY_ACCEPTED": "REENTRY_ACCEPTED",
 }
 
 _PRIORITY_BY_TYPE: dict[str, str] = {
@@ -197,6 +205,75 @@ def _build_payload(
             ],
             "sl": plan.get("stop_loss"),
             "source": ev.get("source", "runtime"),
+        }
+
+    if notification_type == "ENTRY_UPDATED":
+        return {
+            **base,
+            "fill_price": ev.get("fill_price"),
+            "filled_qty": ev.get("fill_qty") or ev.get("filled_qty"),
+            "new_avg_entry": ev.get("new_avg_entry"),
+            "source": ev.get("source", "exchange"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "UPDATE_DONE":
+        return {
+            **base,
+            "applied_actions": ev.get("applied_actions", []),
+            "changed_fields": ev.get("changed_fields", []),
+            "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "UPDATE_PARTIAL":
+        return {
+            **base,
+            "applied_actions": ev.get("applied_actions", []),
+            "rejected_actions": ev.get("rejected_actions", []),
+            "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "UPDATE_REJECTED":
+        return {
+            **base,
+            "reason": ev.get("reason"),
+            "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "PENDING_ENTRY_EXPIRED":
+        return {
+            **base,
+            "source": ev.get("source", "worker"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "RECONCILIATION_WARNING":
+        return {
+            **base,
+            "issue": ev.get("issue"),
+            "risk": ev.get("risk"),
+            "action": ev.get("action"),
+            "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "RECONCILIATION_FIXED":
+        return {
+            **base,
+            "issue": ev.get("issue"),
+            "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "REENTRY_ACCEPTED":
+        return {
+            **base,
+            "previous_chain_id": ev.get("previous_chain_id"),
+            "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
         }
 
     # fallback: merge base with event payload
