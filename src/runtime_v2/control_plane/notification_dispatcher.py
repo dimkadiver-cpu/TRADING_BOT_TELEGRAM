@@ -143,11 +143,15 @@ class TelegramNotificationDispatcher:
         level = str(payload.get("level", "INFO")).upper()
         if level == "DEBUG" and not self._debug_status():
             return False
+        # operational_events is a secondary veto: INFO is always suppressed unless explicitly enabled,
+        # even if min_level would allow it.
         if level == "INFO" and not cfg.operational_events:
             return False
         order = {"DEBUG": 10, "INFO": 20, "WARNING": 30, "WARN": 30, "ERROR": 40, "CRITICAL": 50}
         min_level = order.get(cfg.min_level.upper(), 30)
-        current = order.get(level, 20)
+        current = order.get(level, 0)
+        if current == 0:
+            logger.debug("_should_send_tech_log: unknown level %r — suppressing", level)
         return current >= min_level
 
     def _check_tech_log_rate(self) -> bool:
@@ -163,6 +167,8 @@ class TelegramNotificationDispatcher:
 
         max_per_min = self._config.topics.tech_log.max_messages_per_minute
         if self._tech_log_sent_this_minute < max_per_min:
+            # Optimistic: count the slot before sending. A send failure does not
+            # reclaim the slot — callers are expected to be rare failures.
             self._tech_log_sent_this_minute += 1
             return True
 

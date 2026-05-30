@@ -19,7 +19,7 @@ def format_tech_log(payload: dict, *, delivery_mode: str = "supergroup_topics") 
     if context and isinstance(context, dict):
         lines.extend(["", "Context:"])
         for key, value in context.items():
-            lines.append(f"{key}: {value}")
+            lines.append(f"{key}: {value if value is not None else '—'}")
     if action:
         lines.extend(["", f"Action: {action}"])
     if source:
