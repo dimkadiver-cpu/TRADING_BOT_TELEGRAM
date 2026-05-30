@@ -19,6 +19,10 @@ def format_trade_detail(detail: TradeDetail | None) -> str:
         f"{detail.symbol} — {_side_emoji(detail.side)} {detail.side}",
         f"Trader: {detail.trader_id}",
         f"Exchange Account: {detail.account_id}",
+    ]
+    if detail.original_message_link:
+        lines.append(f"Source link: {detail.original_message_link}")
+    lines += [
         "",
         "Position:",
         f"Avg entry: {detail.entry_avg_price if detail.entry_avg_price is not None else 'n/a'}",

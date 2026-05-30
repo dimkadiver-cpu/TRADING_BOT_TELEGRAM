@@ -23,6 +23,13 @@ def _apply_migrations(db_path: str) -> None:
     conn.close()
 
 
+def _apply_raw_messages_migration(db_path: str) -> None:
+    conn = sqlite3.connect(db_path)
+    conn.executescript(Path("db/migrations/006_raw_messages.sql").read_text(encoding="utf-8"))
+    conn.commit()
+    conn.close()
+
+
 @pytest.fixture
 def ops_db(tmp_path):
     db_path = str(tmp_path / "ops.sqlite3")
@@ -124,6 +131,9 @@ def test_help_lists_commands(ops_db):
     )
     assert "/status" in res.reply_text
     assert "/trades" in res.reply_text
+    assert "/pnl" in res.reply_text
+    assert "/debug_on [5m|30m|1h]" in res.reply_text
+    assert "/debug_off" in res.reply_text
 
 
 def test_trade_with_id_arg(ops_db):
@@ -147,6 +157,36 @@ def test_trade_with_id_arg(ops_db):
         chat_id=-100999, thread_id=101, user_id=42, username="op",
     )
     assert "TRADE #77" in res.reply_text
+
+
+def test_trade_reply_includes_original_message_link_when_available(ops_db):
+    _apply_raw_messages_migration(ops_db)
+    conn = sqlite3.connect(ops_db)
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_trade_chains "
+            "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+            " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+            " management_plan_json, risk_snapshot_json, plan_state_json, created_at, updated_at) "
+            "VALUES (78,78,78,7800,'trader_a','main','BTC/USDT','LONG','OPEN','ONE_SHOT','{}','{}','{}',?,?)",
+            (now, now),
+        )
+        conn.execute(
+            "INSERT INTO raw_messages "
+            "(raw_message_id, source_chat_id, telegram_message_id, message_ts, acquired_at) "
+            "VALUES (7800, '-1001234567890', 456, ?, ?)",
+            (now, now),
+        )
+    conn.close()
+
+    router = _router(ops_db)
+    res = router.route(
+        command_text="/trade 78", message_id=79,
+        chat_id=-100999, thread_id=101, user_id=42, username="op",
+    )
+    assert "Source link: https://t.me/c/1234567890/456" in res.reply_text
 
 
 def test_trade_with_invalid_id_is_rejected_and_returns_usage(ops_db):
@@ -354,11 +394,12 @@ def test_logs_command_returns_log_content_or_not_found(ops_db):
 def test_debug_on_responds_not_available(ops_db):
     router = _router(ops_db)
     res = router.route(
-        command_text="/debug_on", message_id=21,
+        command_text="/debug_on 5m", message_id=21,
         chat_id=-100999, thread_id=101, user_id=42, username="op",
     )
     assert res.reply_text is not None
-    assert res.decision in ("EXECUTED", "REJECTED")  # accetta qualsiasi risposta sensata
+    assert res.decision == "EXECUTED"
+    assert "DEBUG MODE ATTIVATO" in res.reply_text
 
 
 def test_debug_off_responds(ops_db):
@@ -368,3 +409,5 @@ def test_debug_off_responds(ops_db):
         chat_id=-100999, thread_id=101, user_id=42, username="op",
     )
     assert res.reply_text is not None
+    assert res.decision == "EXECUTED"
+    assert "DEBUG MODE DISATTIVATO" in res.reply_text

@@ -5,12 +5,18 @@ from dataclasses import dataclass
 
 from src.runtime_v2.control_plane.audit_store import CommandAuditStore
 from src.runtime_v2.control_plane.auth import AuthValidator
+from src.runtime_v2.control_plane.debug_controller import (
+    is_valid_duration_arg,
+    parse_duration,
+)
 from src.runtime_v2.control_plane.formatters.block import format_block, format_unblock
 from src.runtime_v2.control_plane.formatters.control import format_control
+from src.runtime_v2.control_plane.formatters.debug import format_debug_off, format_debug_on
 from src.runtime_v2.control_plane.formatters.health import format_health
 from src.runtime_v2.control_plane.formatters.pause import (
     format_pause, format_resume, format_start,
 )
+from src.runtime_v2.control_plane.formatters.pnl import format_pnl
 from src.runtime_v2.control_plane.formatters.reviews import format_reviews
 from src.runtime_v2.control_plane.formatters.status import format_status
 from src.runtime_v2.control_plane.formatters.trade_detail import format_trade_detail
@@ -29,7 +35,10 @@ Informativi:
 /health    - stato workers
 /control   - blocchi operativi
 /reviews   - casi da controllare
+/pnl       - ultimo snapshot account persistito
 /logs [n]  - ultime N righe log (default: 20)
+/debug_on [5m|30m|1h]
+/debug_off
 /version   - versione runtime
 /help      - questo messaggio
 
@@ -60,7 +69,8 @@ _READONLY_COMMANDS = frozenset(
     {"help", "status", "trades", "trade", "health", "control", "reviews", "version"}
 )
 _CONTROL_COMMANDS = frozenset({"pause", "resume", "start", "block", "unblock"})
-_ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | frozenset({"logs", "debug_on", "debug_off"})
+_ADVANCED_COMMANDS = frozenset({"pnl", "logs", "debug_on", "debug_off"})
+_ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | _ADVANCED_COMMANDS
 
 
 def _parse(command_text: str) -> tuple[str | None, list[str]]:
@@ -92,6 +102,7 @@ class CommandRouter:
         self._auth = auth
         self._audit = audit
         self._service = service
+        self._debug_max_seconds = config.topics.tech_log.debug_max_duration_minutes * 60
 
     def route(
         self,
@@ -208,6 +219,8 @@ class CommandRouter:
             return _DispatchResult(format_control(self._service.get_control()))
         if command_name == "reviews":
             return _DispatchResult(format_reviews(self._service.get_reviews()))
+        if command_name == "pnl":
+            return _DispatchResult(format_pnl(self._service.get_pnl()))
         if command_name == "version":
             v = self._service.get_version()
             # Format uptime as "Xh Ym" or "Ym Xs" or just "Xs"
@@ -293,20 +306,24 @@ class CommandRouter:
             return _DispatchResult(f"📋 LOGS — last {n}\n────────────────\n{body}")
 
         if command_name == "debug_on":
+            if len(args) > 1 or (args and not is_valid_duration_arg(args[0])):
+                return _DispatchResult(
+                    "Usage: /debug_on [5m|30m|1h]",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
+            seconds = parse_duration(
+                args[0] if args else None,
+                max_seconds=self._debug_max_seconds,
+            )
+            expires_at = self._service.enable_debug(duration_seconds=seconds)
             return _DispatchResult(
-                "🔍 DEBUG MODE\n────────────────\n"
-                "Non ancora disponibile in questa versione.\n\n"
-                "Per diagnostica usa:\n"
-                "/health — stato workers\n"
-                "/logs 50 — ultime righe log\n"
-                "/status — salute runtime"
+                format_debug_on(duration_seconds=seconds, expires_at=expires_at)
             )
 
         if command_name == "debug_off":
-            return _DispatchResult(
-                "✅ DEBUG MODE\n────────────────\n"
-                "Debug non attivo in questa versione."
-            )
+            self._service.disable_debug()
+            return _DispatchResult(format_debug_off())
 
         return _DispatchResult("Comando non riconosciuto.", decision="REJECTED")
 

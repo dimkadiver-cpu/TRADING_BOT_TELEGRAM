@@ -6,11 +6,13 @@ import subprocess
 import time
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from pathlib import Path
 
+from src.runtime_v2.control_plane.debug_controller import DebugModeController
 from src.runtime_v2.control_plane.override_store import OverrideStore
 from src.runtime_v2.control_plane.status_queries import (
     ControlView, HealthView, ReviewsView, StatusView, StatusQueries,
-    TradeDetail, TradesView,
+    PnlView, TradeDetail, TradesView,
 )
 
 @dataclass
@@ -72,11 +74,19 @@ class RuntimeControlService:
     Part 3 implements read methods; Part 4 adds pause/resume/block/unblock/start.
     """
 
-    def __init__(self, *, ops_db_path: str) -> None:
+    def __init__(
+        self,
+        *,
+        ops_db_path: str,
+        log_path: str | None = None,
+        debug_controller: DebugModeController | None = None,
+    ) -> None:
         self._ops_db = ops_db_path
         self._queries = StatusQueries(ops_db_path)
         self._overrides = OverrideStore(ops_db_path)
         self._start_time = time.time()
+        self._log_path = log_path
+        self._debug_controller = debug_controller
 
     # ── reads ───────────────────────────────────────────────────────────────
     def get_status(self) -> StatusView:
@@ -97,10 +107,12 @@ class RuntimeControlService:
     def get_reviews(self) -> ReviewsView:
         return self._queries.get_reviews()
 
+    def get_pnl(self) -> PnlView:
+        return self._queries.get_pnl()
+
     def get_logs(self, n: int = 20) -> list[str]:
         import os
-        from pathlib import Path
-        log_path = os.getenv("LOG_PATH", "logs/bot.log")
+        log_path = self._log_path or os.getenv("LOG_PATH", "logs/bot.log")
         try:
             p = Path(log_path)
             if not p.exists():
@@ -109,6 +121,23 @@ class RuntimeControlService:
             return lines[-n:] if len(lines) > n else lines
         except Exception as exc:
             return [f"Cannot read log: {exc}"]
+
+    def enable_debug(self, *, duration_seconds: int) -> datetime:
+        controller = self._debug_controller
+        if controller is None:
+            controller = DebugModeController(max_seconds=max(3600, duration_seconds, 1))
+            self._debug_controller = controller
+        return controller.enable(duration_seconds=duration_seconds)
+
+    def disable_debug(self) -> None:
+        if self._debug_controller is None:
+            return
+        self._debug_controller.disable()
+
+    def debug_status(self) -> bool:
+        if self._debug_controller is None:
+            return False
+        return self._debug_controller.is_active()
 
     def get_version(self) -> VersionInfo:
         return VersionInfo(

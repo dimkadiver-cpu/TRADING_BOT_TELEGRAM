@@ -51,6 +51,7 @@ class TradeDetail:
     state: str
     entry_avg_price: float | None
     current_stop_price: float | None
+    original_message_link: str | None = None
     last_events: list[str] = field(default_factory=list)
 
 
@@ -92,6 +93,21 @@ class ReviewsView:
     items: list[ReviewItem] = field(default_factory=list)
 
 
+@dataclass
+class PnlView:
+    updated_at: str
+    account_id: str | None
+    captured_at: str | None
+    source: str | None
+    equity_usdt: float | None
+    available_balance_usdt: float | None
+    total_open_risk_usdt: float | None
+    total_margin_used_usdt: float | None
+    open_count: int
+    partial_count: int
+    waiting_entry_count: int
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%H:%M:%S")
 
@@ -106,6 +122,25 @@ def _age_seconds(ts: str | None) -> float | None:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=timezone.utc)
     return (datetime.now(timezone.utc) - dt).total_seconds()
+
+
+def _table_exists(conn: sqlite3.Connection, table_name: str) -> bool:
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?",
+        (table_name,),
+    ).fetchone()
+    return row is not None
+
+
+def _build_telegram_message_link(
+    source_chat_id: str | None,
+    telegram_message_id: int | None,
+) -> str | None:
+    if not source_chat_id or telegram_message_id is None:
+        return None
+    if source_chat_id.startswith("-100"):
+        return f"https://t.me/c/{source_chat_id[4:]}/{telegram_message_id}"
+    return None
 
 
 class StatusQueries:
@@ -147,8 +182,11 @@ class StatusQueries:
 
         control = self.get_control()
         control_mode = "NONE"
-        if control.active_blocks:
-            if any(block.mode == "FULL_STOP" for block in control.active_blocks):
+        global_blocks = [
+            block for block in control.active_blocks if block.scope_type == "GLOBAL"
+        ]
+        if global_blocks:
+            if any(block.mode == "FULL_STOP" for block in global_blocks):
                 control_mode = "FULL_STOP"
             else:
                 control_mode = "BLOCK_NEW_ENTRIES"
@@ -191,7 +229,7 @@ class StatusQueries:
         try:
             row = conn.execute(
                 "SELECT trade_chain_id, symbol, side, trader_id, account_id, "
-                "lifecycle_state, entry_avg_price, current_stop_price "
+                "lifecycle_state, entry_avg_price, current_stop_price, raw_message_id "
                 "FROM ops_trade_chains WHERE trade_chain_id=?",
                 (chain_id,),
             ).fetchone()
@@ -202,6 +240,18 @@ class StatusQueries:
                 "WHERE trade_chain_id=? ORDER BY event_id DESC LIMIT 3",
                 (chain_id,),
             ).fetchall()
+            original_message_link = None
+            if _table_exists(conn, "raw_messages"):
+                raw_row = conn.execute(
+                    "SELECT source_chat_id, telegram_message_id "
+                    "FROM raw_messages WHERE raw_message_id=?",
+                    (row[8],),
+                ).fetchone()
+                if raw_row is not None:
+                    original_message_link = _build_telegram_message_link(
+                        raw_row[0],
+                        raw_row[1],
+                    )
         finally:
             conn.close()
         last_events = []
@@ -211,7 +261,8 @@ class StatusQueries:
         return TradeDetail(
             chain_id=row[0], symbol=row[1], side=row[2], trader_id=row[3],
             account_id=row[4], state=row[5], entry_avg_price=row[6],
-            current_stop_price=row[7], last_events=last_events,
+            current_stop_price=row[7], original_message_link=original_message_link,
+            last_events=last_events,
         )
 
     def get_health(self) -> HealthView:
@@ -263,7 +314,7 @@ class StatusQueries:
             BlockInfo(scope_type=r[0], scope_value=r[1], mode=r[2], created_at=r[3])
             for r in block_rows
         ]
-        new_entries_enabled = len(blocks) == 0
+        new_entries_enabled = not any(block.scope_type == "GLOBAL" for block in blocks)
 
         blacklist_global: list[str] = []
         blacklist_per_trader: dict[str, list[str]] = {}
@@ -310,8 +361,53 @@ class StatusQueries:
             items.append(ReviewItem(chain_id=cid, symbol=symbol, reason=reason))
         return ReviewsView(updated_at=_now_iso(), items=items)
 
+    def get_pnl(self) -> PnlView:
+        conn = self._connect()
+        try:
+            snapshot = conn.execute(
+                "SELECT account_id, equity_usdt, available_balance_usdt, "
+                "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
+                "FROM ops_account_snapshots "
+                "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
+                "LIMIT 1"
+            ).fetchone()
+            account_id = snapshot[0] if snapshot else None
+
+            def _count(state: str) -> int:
+                if account_id is not None:
+                    return conn.execute(
+                        "SELECT COUNT(*) FROM ops_trade_chains "
+                        "WHERE lifecycle_state=? AND account_id=?",
+                        (state, account_id),
+                    ).fetchone()[0]
+                return conn.execute(
+                    "SELECT COUNT(*) FROM ops_trade_chains WHERE lifecycle_state=?",
+                    (state,),
+                ).fetchone()[0]
+
+            open_count = _count("OPEN")
+            partial_count = _count("PARTIALLY_CLOSED")
+            waiting_count = _count("WAITING_ENTRY")
+        finally:
+            conn.close()
+
+        return PnlView(
+            updated_at=_now_iso(),
+            account_id=snapshot[0] if snapshot else None,
+            captured_at=snapshot[6] if snapshot else None,
+            source=snapshot[5] if snapshot else None,
+            equity_usdt=snapshot[1] if snapshot else None,
+            available_balance_usdt=snapshot[2] if snapshot else None,
+            total_open_risk_usdt=snapshot[3] if snapshot else None,
+            total_margin_used_usdt=snapshot[4] if snapshot else None,
+            open_count=open_count,
+            partial_count=partial_count,
+            waiting_entry_count=waiting_count,
+        )
+
 
 __all__ = [
     "StatusQueries", "StatusView", "TradesView", "TradeRow", "TradeDetail",
     "HealthView", "ControlView", "BlockInfo", "ReviewsView", "ReviewItem",
+    "PnlView",
 ]
