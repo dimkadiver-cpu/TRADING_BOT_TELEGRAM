@@ -187,7 +187,10 @@
       "PowerShell(python -m pytest tests/ -x -q --timeout=120 2>&1)",
       "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" main.py 2>&1 | Select-Object -First 60)",
       "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" main.py 2>&1 | Select-Object -First 30)",
-      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"from src.runtime_v2.lifecycle.models import TradeChain; from src.runtime_v2.lifecycle.repositories import TradeChainRepository; from src.runtime_v2.control_plane.status_queries import StatusQueries; print\\('import ok'\\)\")"
+      "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"from src.runtime_v2.lifecycle.models import TradeChain; from src.runtime_v2.lifecycle.repositories import TradeChainRepository; from src.runtime_v2.control_plane.status_queries import StatusQueries; print\\('import ok'\\)\")",
+      "Bash(Get-Process python*)",
+      "Bash(Select-Object Id, ProcessName, StartTime)",
+      "Bash(Format-Table)"
     ]
   }
 }
