@@ -16,12 +16,12 @@ class TopicRouter:
             "COMMANDS_REPLY": config.topics.commands.thread_id,
         }
 
-    def route(self, destination: Destination) -> tuple[int, int | None]:
+    def route(self, destination: str) -> tuple[int, int | None]:
         """Return (chat_id, thread_id). thread_id is None in private_bot mode."""
-        if self._delivery_mode == "private_bot":
-            return (self._chat_id, None)
         if destination not in self._thread_map:
             raise ValueError(f"Unknown notification destination: {destination}")
+        if self._delivery_mode == "private_bot":
+            return (self._chat_id, None)
         return (self._chat_id, self._thread_map[destination])
 
 

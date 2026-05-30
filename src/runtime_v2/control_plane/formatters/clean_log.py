@@ -17,9 +17,19 @@ def _num(value) -> str:
         f = float(value)
     except (TypeError, ValueError):
         return str(value)
-    if f == int(f):
+    if f == int(f) and abs(f) < 1e15:
         return f"{int(f):,}"
-    return f"{f:,.2f}"
+    # Use up to 8 significant digits, strip trailing zeros.
+    formatted = f"{f:.8g}"
+    # Add thousands separator to integer part if large enough.
+    if "e" not in formatted and "." in formatted:
+        int_part, dec_part = formatted.split(".")
+        try:
+            int_part = f"{int(int_part):,}"
+        except ValueError:
+            pass
+        return f"{int_part}.{dec_part}"
+    return formatted
 
 
 def _header(emoji: str, chain_id, event_label: str, symbol, side) -> list[str]:
@@ -75,7 +85,8 @@ def _tp_filled(p: dict, final: bool) -> str:
         label += " — POSITION CLOSED"
     lines = _header("📊", p.get("chain_id"), label, p.get("symbol"), p.get("side"))
     if p.get("tp_price") is not None:
-        lines.append(f"TP_{level}: {_num(p['tp_price'])}")
+        tp_label = f"TP_{level}" if level is not None else "TP"
+        lines.append(f"{tp_label}: {_num(p['tp_price'])}")
     if p.get("pnl") is not None:
         lines.append(f"PnL: {p['pnl']} USDT")
     lines.append("")

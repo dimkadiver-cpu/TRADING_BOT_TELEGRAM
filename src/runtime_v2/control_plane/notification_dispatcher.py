@@ -77,8 +77,27 @@ class TelegramNotificationDispatcher:
                 """,
                 (self._batch,),
             ).fetchall()
+            if rows:
+                ids = [r[0] for r in rows]
+                conn.execute(
+                    f"UPDATE ops_notification_outbox SET status='SENDING' "
+                    f"WHERE notification_id IN ({','.join('?' * len(ids))})",
+                    ids,
+                )
             conn.execute("COMMIT")
             return rows
+        finally:
+            conn.close()
+
+    def reset_stale_sending(self) -> int:
+        """Reset SENDING rows to PENDING on startup (crash recovery)."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "UPDATE ops_notification_outbox SET status='PENDING' WHERE status='SENDING'"
+            )
+            conn.commit()
+            return conn.total_changes
         finally:
             conn.close()
 
