@@ -10,9 +10,6 @@ from src.runtime_v2.control_plane.status_queries import (
     TradeDetail, TradesView,
 )
 
-_START_TIME = time.time()
-
-
 @dataclass
 class VersionInfo:
     runtime: str
@@ -40,6 +37,7 @@ class RuntimeControlService:
     def __init__(self, *, ops_db_path: str) -> None:
         self._ops_db = ops_db_path
         self._queries = StatusQueries(ops_db_path)
+        self._start_time = time.time()
 
     # ── reads ───────────────────────────────────────────────────────────────
     def get_status(self) -> StatusView:
@@ -65,7 +63,7 @@ class RuntimeControlService:
             runtime="v2",
             commit=_git(["rev-parse", "--short", "HEAD"]),
             branch=_git(["rev-parse", "--abbrev-ref", "HEAD"]),
-            uptime_seconds=int(time.time() - _START_TIME),
+            uptime_seconds=int(time.time() - self._start_time),
         )
 
 

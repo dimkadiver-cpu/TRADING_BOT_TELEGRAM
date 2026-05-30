@@ -139,12 +139,22 @@ class CommandRouter:
             )
         return "Comando non riconosciuto."
 
-    def _record(self, request_id, chat_id, thread_id, user_id, username,
-                command_text, command_name, status, reject_reason=None) -> None:
+    def _record(
+        self,
+        request_id: str,
+        chat_id: int,
+        thread_id: int | None,
+        user_id: int,
+        username: str | None,
+        command_text: str,
+        command_name: str | None,
+        status: str,
+        reject_reason: str | None = None,
+    ) -> None:
         self._audit.record(
             command_request_id=request_id,
             chat_id=str(chat_id),
-            message_thread_id=str(thread_id),
+            message_thread_id=str(thread_id) if thread_id is not None else None,
             telegram_user_id=str(user_id),
             telegram_username=username,
             command_text=command_text,

@@ -227,7 +227,7 @@ class StatusQueries:
             ("Parser pipeline", "OK", ""),
             ("Lifecycle gate", "OK", ""),
             ("Execution worker", "OK", ""),
-            ("Exchange sync", sync_status, f"last event {int(age)}s ago" if age else "no events"),
+            ("Exchange sync", sync_status, f"last event {int(age)}s ago" if age is not None else "no events"),
             ("Notification disp.", "OK", ""),
         ]
         return HealthView(
