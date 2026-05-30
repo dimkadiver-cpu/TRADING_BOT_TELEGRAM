@@ -157,3 +157,79 @@ def test_version(ops_db):
     )
     assert "VERSION" in res.reply_text
     assert "v2" in res.reply_text
+
+
+# ── Gap 1: wrong-topic audit / wrong-chat no-audit ────────────────────────────
+
+def test_wrong_topic_audited_as_ignored(ops_db):
+    router = _router(ops_db)
+    router.route(
+        command_text="/status", message_id=10,
+        chat_id=-100999, thread_id=999, user_id=42, username="op",
+    )
+    row = _last_status(ops_db, "-100999:10")
+    assert row is not None
+    assert row[0] == "IGNORED"
+
+
+def test_wrong_chat_produces_no_audit(ops_db):
+    router = _router(ops_db)
+    router.route(
+        command_text="/status", message_id=11,
+        chat_id=-1, thread_id=101, user_id=42, username="op",
+    )
+    assert _last_status(ops_db, "-1:11") is None
+
+
+# ── Gap 2: _send_reply_keyboard behavior ─────────────────────────────────────
+
+import asyncio
+from unittest.mock import AsyncMock, MagicMock
+
+from src.runtime_v2.control_plane.telegram_bot import TelegramControlBot
+
+
+def _make_bot(ops_db, delivery_mode="private_bot", keyboard=None):
+    cfg = ControlPlaneConfig(
+        token="t", chat_id=-100999,
+        delivery_mode=delivery_mode,
+        topics=TopicsConfig(
+            commands=TopicConfig(thread_id=None if delivery_mode == "private_bot" else 101),
+            tech_log=TechLogConfig(thread_id=None if delivery_mode == "private_bot" else 102),
+            clean_log=CleanLogConfig(thread_id=None if delivery_mode == "private_bot" else 103),
+        ),
+        authorized_users=[42],
+        keyboard=keyboard or [],
+    )
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=RuntimeControlService(ops_db_path=ops_db),
+    )
+    return TelegramControlBot(config=cfg, router=router)
+
+
+def test_send_reply_keyboard_noop_in_supergroup_topics(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="supergroup_topics", keyboard=[["/status", "/trades"]])
+    update = MagicMock()
+    asyncio.run(bot._send_reply_keyboard(update))
+    update.message.reply_text.assert_not_called()
+
+
+def test_send_reply_keyboard_noop_when_keyboard_empty(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[])
+    update = MagicMock()
+    asyncio.run(bot._send_reply_keyboard(update))
+    update.message.reply_text.assert_not_called()
+
+
+def test_send_reply_keyboard_sends_in_private_bot(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
+    update = MagicMock()
+    update.message.reply_text = AsyncMock()
+    asyncio.run(bot._send_reply_keyboard(update))
+    update.message.reply_text.assert_called_once()
+    call_kwargs = update.message.reply_text.call_args
+    from telegram import ReplyKeyboardMarkup
+    assert isinstance(call_kwargs.kwargs.get("reply_markup"), ReplyKeyboardMarkup)

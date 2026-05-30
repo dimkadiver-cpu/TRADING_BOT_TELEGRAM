@@ -179,7 +179,7 @@ class TelegramControlBot:
         markup = ReplyKeyboardMarkup(
             self._config.keyboard,
             resize_keyboard=True,
-            persistent=True,
+            is_persistent=True,
         )
         await update.message.reply_text(".", reply_markup=markup)
 
