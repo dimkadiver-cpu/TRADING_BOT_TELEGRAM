@@ -16,14 +16,15 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "SL_FILLED": "SL_FILLED",
     "CLOSE_FULL_FILLED": "POSITION_CLOSED",
     "ENTRY_UPDATED": "ENTRY_UPDATED",
-    "UPDATE_DONE": "UPDATE_DONE",
-    "UPDATE_PARTIAL": "UPDATE_PARTIAL",
-    "UPDATE_REJECTED": "UPDATE_REJECTED",
     "PENDING_TIMEOUT": "PENDING_ENTRY_EXPIRED",
     "RECONCILIATION_WARNING": "RECONCILIATION_WARNING",
     "RECONCILIATION_FIXED": "RECONCILIATION_FIXED",
     "REENTRY_ACCEPTED": "REENTRY_ACCEPTED",
 }
+
+_SIGNAL_NOTIFICATION_TYPES: frozenset[str] = frozenset({
+    "SIGNAL_ACCEPTED", "SIGNAL_REJECTED", "REVIEW_REQUIRED",
+})
 
 _PRIORITY_BY_TYPE: dict[str, str] = {
     "SL_FILLED": "HIGH",
@@ -129,6 +130,7 @@ def _build_payload(
             "tps": tps,
             "risk_pct": risk_pct,
             "source": ev.get("source", "original_message"),
+            "link": ev.get("source_message_link"),
         }
 
     if notification_type == "ENTRY_OPENED":
@@ -192,6 +194,7 @@ def _build_payload(
             ],
             "sl": plan.get("stop_loss"),
             "source": ev.get("source", "original_message"),
+            "link": ev.get("source_message_link"),
         }
 
     if notification_type == "REVIEW_REQUIRED":
@@ -208,6 +211,7 @@ def _build_payload(
             ],
             "sl": plan.get("stop_loss"),
             "source": ev.get("source", "runtime"),
+            "link": ev.get("source_message_link"),
         }
 
     if notification_type == "ENTRY_UPDATED":
@@ -295,7 +299,8 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     chain_row = conn.execute(
         "SELECT symbol, side, entry_mode, trader_id, "
         "plan_state_json, risk_snapshot_json, "
-        "entry_avg_price, current_stop_price "
+        "entry_avg_price, current_stop_price, "
+        "source_chat_id, telegram_message_id "
         "FROM ops_trade_chains WHERE trade_chain_id=?",
         (chain_id,),
     ).fetchone()
@@ -310,6 +315,12 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     risk = json.loads(chain_row[5] or "{}")
     entry_avg_price = chain_row[6]
     current_stop_price = chain_row[7]
+    source_chat_id = chain_row[8]
+    telegram_message_id = chain_row[9]
+    chain_source_link: str | None = (
+        f"https://t.me/c/{str(source_chat_id).removeprefix('-100')}/{telegram_message_id}"
+        if source_chat_id and telegram_message_id else None
+    )
 
     events = conn.execute(
         "SELECT event_type, payload_json, idempotency_key "
@@ -327,6 +338,10 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
             ev = json.loads(payload_json or "{}")
         except Exception:
             ev = {}
+
+        if notification_type in _SIGNAL_NOTIFICATION_TYPES and chain_source_link:
+            if "source_message_link" not in ev:
+                ev = {**ev, "source_message_link": chain_source_link}
 
         # Promote terminal TP to TP_FILLED_FINAL.
         if notification_type == "TP_FILLED" and ev.get("is_final"):

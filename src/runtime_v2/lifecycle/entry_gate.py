@@ -22,7 +22,10 @@ from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.signal_enrichment.models import (
     EnrichedCanonicalMessage, ManagementPlanConfig,
 )
-from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+from src.runtime_v2.control_plane.outbox_writer import (
+    project_clean_log_for_chain,
+    write_clean_log_event,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +88,72 @@ def _be_move_extra(chain: "TradeChain") -> dict:
         else "standalone_order"
     )
     return {"protection_style": protection_style, **context}
+
+
+_SOURCE_TYPE_TO_CLEAN_LOG_SOURCE: dict[str, str] = {
+    "telegram_update": "trader_update",
+    "operation_rules": "operation_rules",
+    "manual_command": "manual_command",
+}
+
+
+def _write_update_clean_log(
+    conn,
+    cr: "UpdateChainResult",
+    canonical_message_id: int,
+    link: str | None,
+) -> None:
+    """Synthesize one UPDATE_DONE/PARTIAL/REJECTED CLEAN_LOG row from UpdateChainResult events."""
+    accepted = [e for e in cr.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"]
+    noops = [e for e in cr.lifecycle_events if e.event_type.startswith("NOOP_")]
+    if not accepted and not noops:
+        return
+
+    if accepted and not noops:
+        notif_type = "UPDATE_DONE"
+    elif accepted and noops:
+        notif_type = "UPDATE_PARTIAL"
+    else:
+        notif_type = "UPDATE_REJECTED"
+
+    applied_actions: list[str] = []
+    for e in accepted:
+        try:
+            action = json.loads(e.payload_json or "{}").get("action")
+            if action:
+                applied_actions.append(action)
+        except Exception:
+            pass
+
+    rejected_actions = [e.event_type for e in noops]
+
+    first = (accepted or noops)[0]
+    source = _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE.get(first.source_type, "runtime")
+
+    chain_row = conn.execute(
+        "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+        (cr.trade_chain_id,),
+    ).fetchone()
+    symbol = chain_row[0] if chain_row else None
+    side = chain_row[1] if chain_row else None
+
+    payload = {
+        "chain_id": cr.trade_chain_id,
+        "symbol": symbol,
+        "side": side,
+        "applied_actions": applied_actions,
+        "rejected_actions": rejected_actions,
+        "changed_fields": [],
+        "source": source,
+        "link": link,
+    }
+    write_clean_log_event(
+        conn,
+        notification_type=notif_type,
+        chain_id=cr.trade_chain_id,
+        payload=payload,
+        dedupe_key=f"clean:update:{canonical_message_id}:{cr.trade_chain_id}",
+    )
 
 
 class LifecycleEntryGate:
@@ -1431,6 +1500,23 @@ class LifecycleGateWorker:
 
     def _persist_signal(self, enriched: EnrichedCanonicalMessage, result: SignalGateResult) -> None:
         now = datetime.now(timezone.utc).isoformat()
+        # Lookup source_chat_id and telegram_message_id from parser DB.
+        src_chat_id: str | None = None
+        tg_msg_id: int | None = None
+        try:
+            pconn = _sqlite3.connect(self._parser_db)
+            try:
+                rm_row = pconn.execute(
+                    "SELECT source_chat_id, telegram_message_id FROM raw_messages WHERE raw_message_id=?",
+                    (enriched.raw_message_id,),
+                ).fetchone()
+                if rm_row:
+                    src_chat_id, tg_msg_id = rm_row[0], rm_row[1]
+            finally:
+                pconn.close()
+        except Exception:
+            pass  # non-fatal: link will be absent
+
         conn = _sqlite3.connect(self._ops_db)
         try:
             with conn:
@@ -1447,8 +1533,9 @@ class LifecycleGateWorker:
                             risk_snapshot_json, planned_entry_qty, filled_entry_qty,
                             open_position_qty, closed_position_qty, last_position_sync_at,
                             execution_mode, risk_already_realized, risk_remaining,
-                            plan_state_json, created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                            plan_state_json, source_chat_id, telegram_message_id,
+                            created_at, updated_at
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                         """,
                         (
                             c.source_enrichment_id, c.canonical_message_id, c.raw_message_id,
@@ -1462,7 +1549,7 @@ class LifecycleGateWorker:
                             c.open_position_qty, c.closed_position_qty,
                             c.last_position_sync_at.isoformat() if c.last_position_sync_at else None,
                             c.execution_mode, c.risk_already_realized, c.risk_remaining,
-                            c.plan_state_json,
+                            c.plan_state_json, src_chat_id, tg_msg_id,
                             now, now,
                         ),
                     )
@@ -1555,6 +1642,21 @@ class LifecycleGateWorker:
 
     def _persist_update(self, enriched: EnrichedCanonicalMessage, result: UpdateGateResult) -> None:
         now = datetime.now(timezone.utc).isoformat()
+        update_source_link: str | None = None
+        try:
+            pconn = _sqlite3.connect(self._parser_db)
+            try:
+                rm_row = pconn.execute(
+                    "SELECT source_chat_id, telegram_message_id FROM raw_messages WHERE raw_message_id=?",
+                    (enriched.raw_message_id,),
+                ).fetchone()
+                if rm_row and rm_row[0] and rm_row[1]:
+                    chat_id = str(rm_row[0]).removeprefix("-100")
+                    update_source_link = f"https://t.me/c/{chat_id}/{rm_row[1]}"
+            finally:
+                pconn.close()
+        except Exception:
+            pass  # non-fatal: link will be absent
         conn = _sqlite3.connect(self._ops_db)
         try:
             with conn:
@@ -1630,6 +1732,14 @@ class LifecycleGateWorker:
                         except Exception:
                             logger.exception(
                                 "clean_log projection failed for chain %s", cr.trade_chain_id
+                            )
+                        try:
+                            _write_update_clean_log(
+                                conn, cr, enriched.canonical_message_id, update_source_link,
+                            )
+                        except Exception:
+                            logger.exception(
+                                "update clean_log synthesis failed for chain %s", cr.trade_chain_id
                             )
         finally:
             conn.close()

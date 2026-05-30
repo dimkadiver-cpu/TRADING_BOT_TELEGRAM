@@ -364,15 +364,8 @@ class TelegramControlBot:
 
     def _build_app(self):
         from telegram.ext import Application, MessageHandler, filters
-        from telegram.request import HTTPXRequest
 
-        request = HTTPXRequest(httpx_kwargs={"verify": False})
-        app = (
-            Application.builder()
-            .token(self._config.token)
-            .request(request)
-            .build()
-        )
+        app = Application.builder().token(self._config.token).build()
         app.add_handler(MessageHandler(filters.COMMAND, self._on_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._on_text_message))
         return app
@@ -449,7 +442,20 @@ class TelegramControlBot:
         self._app = self._build_app()
         await self._app.initialize()
         await self._app.start()
-        await self._app.updater.start_polling()
+        await self._app.updater.start_polling(drop_pending_updates=True)
+        # Block here so callers know when polling actually stops.
+        # PTB stores the polling coroutine as an internal task; we wait on it
+        # so that any crash surfaces immediately rather than being swallowed.
+        updater = self._app.updater
+        polling_task = getattr(updater, "_polling_task", None) or getattr(
+            updater, "__polling_task", None
+        )
+        if polling_task is not None:
+            await polling_task
+        else:
+            # Fallback: busy-wait on the running flag
+            while updater.running:
+                await asyncio.sleep(1)
 
     async def shutdown(self) -> None:
         if self._app is None:

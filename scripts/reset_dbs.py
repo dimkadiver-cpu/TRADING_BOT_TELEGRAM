@@ -37,6 +37,7 @@ OPS_TABLES = [
     "ops_trade_chains",
     "ops_notification_outbox",
     "ops_telegram_control_commands",
+    "ops_clean_log_tracking",
 ]
 
 

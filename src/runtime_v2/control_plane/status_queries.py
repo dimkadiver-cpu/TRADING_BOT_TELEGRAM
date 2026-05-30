@@ -229,7 +229,8 @@ class StatusQueries:
         try:
             row = conn.execute(
                 "SELECT trade_chain_id, symbol, side, trader_id, account_id, "
-                "lifecycle_state, entry_avg_price, current_stop_price, raw_message_id "
+                "lifecycle_state, entry_avg_price, current_stop_price, "
+                "source_chat_id, telegram_message_id "
                 "FROM ops_trade_chains WHERE trade_chain_id=?",
                 (chain_id,),
             ).fetchone()
@@ -240,18 +241,7 @@ class StatusQueries:
                 "WHERE trade_chain_id=? ORDER BY event_id DESC LIMIT 3",
                 (chain_id,),
             ).fetchall()
-            original_message_link = None
-            if _table_exists(conn, "raw_messages"):
-                raw_row = conn.execute(
-                    "SELECT source_chat_id, telegram_message_id "
-                    "FROM raw_messages WHERE raw_message_id=?",
-                    (row[8],),
-                ).fetchone()
-                if raw_row is not None:
-                    original_message_link = _build_telegram_message_link(
-                        raw_row[0],
-                        raw_row[1],
-                    )
+            original_message_link = _build_telegram_message_link(row[8], row[9])
         finally:
             conn.close()
         last_events = []

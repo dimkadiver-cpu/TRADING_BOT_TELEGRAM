@@ -271,6 +271,23 @@ async def _run_sync_worker(
 
 
 
+async def _start_control_bot(bot, logger) -> None:
+    first = True
+    while True:
+        try:
+            if first:
+                logger.info("control plane: bot polling starting")
+                first = False
+            await bot.run()
+            # run() returned normally — polling stopped without an exception
+            logger.warning("control plane: polling stopped unexpectedly — restarting in 10s")
+        except asyncio.CancelledError:
+            raise
+        except Exception:
+            logger.exception("control plane: polling error — restarting in 10s")
+        await asyncio.sleep(10)
+
+
 async def _async_main(
     *,
     parser_db_path: str,
@@ -444,13 +461,14 @@ async def _async_main(
             )
         )
 
-        if control_bot is not None:
-            await control_bot.run()
-            logger.info("control plane: bot polling started")
         cp_dispatcher_task = None
         if cp_dispatcher is not None:
             cp_dispatcher_task = asyncio.create_task(cp_dispatcher.run())
             logger.info("control plane: notification dispatcher started")
+
+        control_bot_task = None
+        if control_bot is not None:
+            control_bot_task = asyncio.create_task(_start_control_bot(control_bot, logger))
 
         if cp_service is not None:
             try:
@@ -501,6 +519,8 @@ async def _async_main(
                 position_reconciliation_task.cancel()
             if cp_dispatcher_task is not None:
                 cp_dispatcher_task.cancel()
+            if control_bot_task is not None:
+                control_bot_task.cancel()
             if control_bot is not None:
                 await control_bot.shutdown()
             if cp_service is not None:

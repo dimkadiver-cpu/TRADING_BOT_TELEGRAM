@@ -88,6 +88,8 @@ class TradeChain(BaseModel):
     risk_already_realized: float = 0.0
     risk_remaining: float = 0.0
     plan_state_json: str = "{}"
+    source_chat_id: str | None = None
+    telegram_message_id: int | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 

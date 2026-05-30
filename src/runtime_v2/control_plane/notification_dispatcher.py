@@ -244,6 +244,18 @@ class TelegramNotificationDispatcher:
             return tracking["last"]
         return tracking.get("root")
 
+    def _clear_clean_log_tracking(self, chain_id: int) -> None:
+        """Remove stale tracking row so next send starts a fresh root."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "DELETE FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                (chain_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def _update_clean_log_tracking(
         self,
         chain_id: int | None,
@@ -343,13 +355,31 @@ class TelegramNotificationDispatcher:
                     reply_to = self._resolve_clean_log_reply_target(
                         chain_id, notification_type, payload
                     )
-                    message_id = await self._sender.send(
-                        chat_id=chat_id,
-                        thread_id=thread_id,
-                        text=text,
-                        silent=silent,
-                        reply_to_message_id=reply_to,
-                    )
+                    try:
+                        message_id = await self._sender.send(
+                            chat_id=chat_id,
+                            thread_id=thread_id,
+                            text=text,
+                            silent=silent,
+                            reply_to_message_id=reply_to,
+                        )
+                    except Exception as reply_exc:
+                        if reply_to is not None and "replied not found" in str(reply_exc).lower():
+                            logger.warning(
+                                "clean_log chain=%s: reply target %s not found — clearing tracking and retrying",
+                                chain_id,
+                                reply_to,
+                            )
+                            if chain_id is not None:
+                                self._clear_clean_log_tracking(chain_id)
+                            message_id = await self._sender.send(
+                                chat_id=chat_id,
+                                thread_id=thread_id,
+                                text=text,
+                                silent=silent,
+                            )
+                        else:
+                            raise
                     self._update_clean_log_tracking(
                         chain_id, notification_type, chat_id, thread_id, message_id
                     )

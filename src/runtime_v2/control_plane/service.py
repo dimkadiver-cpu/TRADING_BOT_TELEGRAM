@@ -258,7 +258,7 @@ class RuntimeControlService:
                     conn,
                     notification_type="RUNTIME_STARTUP",
                     payload={
-                        "level": "INFO",
+                        "level": "WARNING",
                         "category": "Runtime",
                         "description": "Runtime avviato",
                         "source": "runtime_main",
@@ -290,7 +290,7 @@ class RuntimeControlService:
                     conn,
                     notification_type="RUNTIME_SHUTDOWN",
                     payload={
-                        "level": "INFO",
+                        "level": "WARNING",
                         "category": "Runtime",
                         "description": f"Runtime shutdown — {reason}",
                         "source": "runtime_main",
