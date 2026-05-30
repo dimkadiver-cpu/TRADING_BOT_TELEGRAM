@@ -23,8 +23,10 @@ from src.runtime_v2.control_plane.topic_router import TopicRouter
 
 def _create_sender(token: str):
     from telegram import Bot
+    from telegram.request import HTTPXRequest
 
-    return TelegramBotSender(Bot(token=token))
+    request = HTTPXRequest(httpx_kwargs={"verify": False})
+    return TelegramBotSender(Bot(token=token, request=request))
 
 
 @dataclass(frozen=True)

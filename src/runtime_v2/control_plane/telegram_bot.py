@@ -364,8 +364,15 @@ class TelegramControlBot:
 
     def _build_app(self):
         from telegram.ext import Application, MessageHandler, filters
+        from telegram.request import HTTPXRequest
 
-        app = Application.builder().token(self._config.token).build()
+        request = HTTPXRequest(httpx_kwargs={"verify": False})
+        app = (
+            Application.builder()
+            .token(self._config.token)
+            .request(request)
+            .build()
+        )
         app.add_handler(MessageHandler(filters.COMMAND, self._on_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._on_text_message))
         return app
