@@ -1176,8 +1176,61 @@ C:\TeleSignalBot\.venv\Scripts\python.exe -m pytest tests\runtime_v2\control_pla
 
 ### Prossimi step
 
-- Task 5 (CLEAN_LOG event coverage) — estendere `_CLEAN_LOG_EVENT_MAP` e formatter per i tipi mancanti
-- Task 6 (CLEAN_LOG root/reply tracking) — migration 008, `NotificationSender` ritorna `str | None`, persistenza root/last message id
+- ✅ Task 5 (CLEAN_LOG event coverage) — completato in commit 6f7830c
+- ✅ Task 6 (CLEAN_LOG root/reply tracking) — completato in commit 6c3afc8
+
+---
+
+## 2026-05-30 — Spec Gap Closure Task 5 + Task 6: CLEAN_LOG coverage e tracking
+
+### Step completato
+
+Task 5 ha espanso la copertura eventi CLEAN_LOG con 8 nuovi event type (ENTRY_UPDATED, UPDATE_DONE, UPDATE_PARTIAL, UPDATE_REJECTED, PENDING_ENTRY_EXPIRED, RECONCILIATION_WARNING, RECONCILIATION_FIXED, REENTRY_ACCEPTED). Task 6 ha aggiunto il tracking root/last message id e aggregazione minima per la reply-threading in Telegram.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/outbox_writer.py` | Modificato | `_CLEAN_LOG_EVENT_MAP` esteso da 7 a 15 event type; aggiunti branch dedicati in `_build_payload()` per ENTRY_UPDATED, UPDATE_DONE, UPDATE_PARTIAL, UPDATE_REJECTED, PENDING_ENTRY_EXPIRED, RECONCILIATION_WARNING, RECONCILIATION_FIXED, REENTRY_ACCEPTED |
+| `src/runtime_v2/control_plane/formatters/clean_log.py` | Modificato | Aggiunti 8 formatter dedicati per i nuovi event type con emoji e message payload strutturato (✏️ ENTRY_UPDATED, ✅ UPDATE_DONE, ⚠️ UPDATE_PARTIAL, ❌ UPDATE_REJECTED, ⏰ PENDING_ENTRY_EXPIRED, ⚠️ RECONCILIATION_WARNING, ✅ RECONCILIATION_FIXED, 🔄 REENTRY_ACCEPTED) |
+| `src/runtime_v2/control_plane/models.py` | Modificato | Aggiunto Pydantic model `CleanLogTracking` con campi `root_message_id`, `last_message_id`, `update_group_id`, timestamps |
+| `src/runtime_v2/control_plane/notification_dispatcher.py` | Modificato | `NotificationSender` protocol ritorna `str | None` (message ID reale da Telegram); `TelegramBotSender` ritorna `str(msg.message_id)`; `drain_once()` risolve target reply e persiste tracking per ogni CLEAN_LOG send; logica aggregazione minima: stesso chain + stesso `update_group_id` → reply a `last_message_id`, altrimenti → reply a `root_message_id` |
+| `db/ops_migrations/008_ops_clean_log_tracking.sql` | Creato | Migration tabella `ops_clean_log_tracking` con `trade_chain_id PK`, `root_message_id TEXT`, `last_message_id TEXT`, `update_group_id TEXT`, chat/thread metadata, timestamps |
+| `tests/runtime_v2/control_plane/test_clean_log_formatter_full.py` | Creato | 17 test per i 8 nuovi formatter event type (2 test per type + 1 test fallback) |
+| `tests/runtime_v2/control_plane/test_outbox_writer.py` | Modificato | +3 test di proiezione per gli 8 nuovi event type |
+| `tests/runtime_v2/control_plane/test_migration_008.py` | Creato | 4 test: verifica tabella creata, colonne attese, vincoli PK, nullable corretti |
+| `tests/runtime_v2/control_plane/test_clean_log_tracking.py` | Creato | 17 test: root/last message id tracking, aggregazione update_group_id, backward compat con NULL, transazioni atomiche |
+
+### Risultato test
+
+```
+C:\TeleSignalBot\.venv\Scripts\python.exe -m pytest tests\runtime_v2\control_plane -q
+→ 211 passed, 1 warning ✅
+```
+
+### Decisioni e design notes
+
+- **Aggregation rule minimale**: stesso chain + stesso `update_group_id` → reply al `last_message_id`; altrimenti → reply al `root_message_id` (o non-reply se root assente). Debounce/batching completo è deferito a post-go-live.
+- **Sender protocol aggiornato**: `NotificationSender` ritorna `str | None` (message ID reale da Telegram API); i test mock la signature con sender fake che ritorna `"123"`.
+- **Payload `chain_id` garantito**: `write_clean_log_event` inietta `chain_id` nel payload JSON se assente, così `drain_once()` può sempre estrarlo per la lookup tracking.
+- **TECH_LOG e COMMANDS_REPLY invariati**: il nuovo tracking CLEAN_LOG è gating solo nel branch `destination == "CLEAN_LOG"` di `drain_once()`.
+- **Transazioni atomiche**: ogni send + tracking save è atomico dentro una transazione, evitando orphaned outbox rows.
+
+### Deferred (CLEAN_LOG_SPEC §6–§8, §15)
+
+- Debounce/batching completo (`debounce_seconds`, `aggregate_fills_seconds`) — config caricata ma non applicata.
+- `max_messages_per_chain_per_minute` — non enforced.
+- `original_message_link` nel tracking — non ancora popolato dal message metadata.
+
+### Rischi aperti
+
+- `update_group_id` non è ancora emesso da nessun worker lifecycle → la regola di aggregazione per update group rimane inerte in produzione finché i worker non producono quel campo.
+- Connection churning in `drain_once()` (pattern pre-esistente): ogni CLEAN_LOG send apre 2 connessioni SQLite aggiuntive (tracking read + tracking write) oltre alle connessioni già pre-esistenti per `_mark_sent`. Non è un bug ma è inefficiente; da ottimizzare in un passaggio separato se il volume diventa rilevante.
+
+### Prossimi step
+
+- Task 7 (ultimo del piano) — aggiornare `docs/AUDIT.md` per allineare il record della closure spec gap (questa sezione).
+- Verificare lo stato dei "Rischi aperti" globali nella fine di AUDIT.md per riallineamento finale.
 
 ---
 
