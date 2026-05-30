@@ -1,18 +1,20 @@
+- Quando piazzo un ordine con due leg una a Mercato altro limit
+
+
 - Cosa succede se un ordine non parte per un errore? poi metto un ordine con stesso symbolo?
 
-- Verificare coma mai quando piazzo ordine il TP parzial e veloce, alre volte a ritardo.
+- 
 
-- Aggiornare file Readme, CLAUDE.md
 
-- pulizia finale da vecchi file/non in uso ecc. (fatta in parte)
 
-- ottimizare il worker di esecuizione dei comandi su cicle life
+
+
+
+
 
 Domande aperte da verificare:
 
-- Verificare come vengono gestiti i ordini su exchange: tre modalita
 
-- Velocizare i passaggi? sync, ecc
 
 - manpulazioni manuale su exchange, vengono rivelati e  rigestrati su DB?
 
