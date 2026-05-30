@@ -1,0 +1,127 @@
+# tests/runtime_v2/control_plane/test_outbox_writer.py
+from __future__ import annotations
+
+import json
+import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
+
+import pytest
+
+from src.runtime_v2.control_plane.outbox_writer import (
+    project_clean_log_for_chain,
+    write_clean_log_event,
+)
+
+
+def _apply_migrations(db_path: str) -> None:
+    conn = sqlite3.connect(db_path)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+    conn.close()
+
+
+@pytest.fixture
+def ops_db(tmp_path):
+    db_path = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db_path)
+    return db_path
+
+
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
+def _seed_chain(conn, chain_id, symbol="BTC/USDT", side="LONG"):
+    now = _now()
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        " management_plan_json, risk_snapshot_json, plan_state_json, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, chain_id, chain_id, chain_id, "trader_a", "main", symbol, side,
+         "WAITING_ENTRY", "ONE_SHOT", "{}", "{}", "{}", now, now),
+    )
+
+
+def _seed_event(conn, chain_id, event_type, idem, payload=None):
+    conn.execute(
+        "INSERT OR IGNORE INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (?,?,?,?,?,?)",
+        (chain_id, event_type, "test", json.dumps(payload or {}), idem, _now()),
+    )
+
+
+def test_write_clean_log_event_inserts_row(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="SIGNAL_ACCEPTED",
+            chain_id=145,
+            payload={"symbol": "BTC/USDT", "side": "LONG"},
+        )
+    row = conn.execute(
+        "SELECT destination, notification_type, status FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row == ("CLEAN_LOG", "SIGNAL_ACCEPTED", "PENDING")
+
+
+def test_write_clean_log_event_dedupes(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(conn, notification_type="SIGNAL_ACCEPTED",
+                              chain_id=145, payload={}, dedupe_key="k")
+        write_clean_log_event(conn, notification_type="SIGNAL_ACCEPTED",
+                              chain_id=145, payload={}, dedupe_key="k")
+    count = conn.execute("SELECT COUNT(*) FROM ops_notification_outbox").fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_projection_maps_signal_accepted(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 145)
+        _seed_event(conn, 145, "SIGNAL_ACCEPTED", "sig_accepted:145")
+        _seed_event(conn, 145, "TRADE_CHAIN_CREATED", "chain_created:145")
+        project_clean_log_for_chain(conn, 145)
+    rows = conn.execute(
+        "SELECT notification_type FROM ops_notification_outbox ORDER BY notification_id"
+    ).fetchall()
+    conn.close()
+    # SIGNAL_ACCEPTED projected; TRADE_CHAIN_CREATED is policy=off
+    assert [r[0] for r in rows] == ["SIGNAL_ACCEPTED"]
+
+
+def test_projection_maps_fills(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 200)
+        _seed_event(conn, 200, "ENTRY_FILLED", "entry_filled:200:1",
+                    {"fill_price": 65020.0, "filled_qty": 0.004})
+        _seed_event(conn, 200, "TP_FILLED", "tp_filled:200:2",
+                    {"tp_level": 1, "is_final": False})
+        _seed_event(conn, 200, "SL_FILLED", "sl_filled:200:3", {})
+        project_clean_log_for_chain(conn, 200)
+    types = {r[0] for r in conn.execute(
+        "SELECT notification_type FROM ops_notification_outbox"
+    ).fetchall()}
+    conn.close()
+    assert types == {"ENTRY_OPENED", "TP_FILLED", "SL_FILLED"}
+
+
+def test_projection_is_idempotent(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 300)
+        _seed_event(conn, 300, "SIGNAL_ACCEPTED", "sig_accepted:300")
+        project_clean_log_for_chain(conn, 300)
+        project_clean_log_for_chain(conn, 300)
+    count = conn.execute("SELECT COUNT(*) FROM ops_notification_outbox").fetchone()[0]
+    conn.close()
+    assert count == 1
