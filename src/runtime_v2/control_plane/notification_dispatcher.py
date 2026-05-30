@@ -22,8 +22,14 @@ _MAX_ATTEMPTS = 3
 
 class NotificationSender(Protocol):
     async def send(
-        self, *, chat_id: int, thread_id: int | None, text: str, silent: bool = False
-    ) -> None: ...
+        self,
+        *,
+        chat_id: int,
+        thread_id: int | None,
+        text: str,
+        silent: bool = False,
+        reply_to_message_id: str | None = None,
+    ) -> str | None: ...
 
 
 class TelegramBotSender:
@@ -32,7 +38,15 @@ class TelegramBotSender:
     def __init__(self, bot) -> None:
         self._bot = bot
 
-    async def send(self, *, chat_id: int, thread_id: int | None, text: str, silent: bool = False) -> None:
+    async def send(
+        self,
+        *,
+        chat_id: int,
+        thread_id: int | None,
+        text: str,
+        silent: bool = False,
+        reply_to_message_id: str | None = None,
+    ) -> str | None:
         kwargs: dict = {
             "chat_id": chat_id,
             "text": text,
@@ -40,7 +54,10 @@ class TelegramBotSender:
         }
         if thread_id is not None:
             kwargs["message_thread_id"] = thread_id
-        await self._bot.send_message(**kwargs)
+        if reply_to_message_id is not None:
+            kwargs["reply_to_message_id"] = int(reply_to_message_id)
+        msg = await self._bot.send_message(**kwargs)
+        return str(msg.message_id)
 
 
 def _now() -> str:
@@ -193,6 +210,88 @@ class TelegramNotificationDispatcher:
         except Exception as exc:  # noqa: BLE001
             logger.warning("rate limit warning send failed: %s", exc)
 
+    def _get_clean_log_tracking(self, chain_id: int) -> dict | None:
+        """Return tracking row for chain_id, or None if not exists."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            row = conn.execute(
+                "SELECT clean_log_root_message_id, clean_log_last_message_id "
+                "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                (chain_id,),
+            ).fetchone()
+            if row:
+                return {"root": row[0], "last": row[1]}
+            return None
+        finally:
+            conn.close()
+
+    def _resolve_clean_log_reply_target(
+        self, chain_id: int | None, notification_type: str, payload: dict
+    ) -> str | None:
+        """Determine reply_to_message_id for a CLEAN_LOG send.
+
+        Rule:
+        - same chain + same update_group_id => reply to last message
+        - otherwise => reply to root if root exists, else None (this becomes the root)
+        """
+        if chain_id is None:
+            return None
+        tracking = self._get_clean_log_tracking(chain_id)
+        if tracking is None:
+            return None  # First message — no root yet
+        update_group_id = payload.get("update_group_id")
+        if update_group_id and tracking.get("last"):
+            return tracking["last"]
+        return tracking.get("root")
+
+    def _update_clean_log_tracking(
+        self,
+        chain_id: int | None,
+        notification_type: str,
+        chat_id: int,
+        thread_id: int | None,
+        sent_message_id: str | None,
+    ) -> None:
+        """Persist root/last tracking after a CLEAN_LOG send."""
+        if chain_id is None or sent_message_id is None:
+            return
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            now = _now()
+            existing = conn.execute(
+                "SELECT clean_log_root_message_id FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                (chain_id,),
+            ).fetchone()
+            if existing is None:
+                conn.execute(
+                    """INSERT INTO ops_clean_log_tracking
+                       (trade_chain_id, clean_log_root_message_id, clean_log_last_message_id,
+                        telegram_chat_id, telegram_thread_id, last_clean_log_event_type,
+                        last_clean_log_sent_at, updated_at)
+                       VALUES (?,?,?,?,?,?,?,?)""",
+                    (
+                        chain_id,
+                        sent_message_id,
+                        sent_message_id,
+                        str(chat_id),
+                        str(thread_id) if thread_id is not None else None,
+                        notification_type,
+                        now,
+                        now,
+                    ),
+                )
+            else:
+                conn.execute(
+                    """UPDATE ops_clean_log_tracking
+                       SET clean_log_last_message_id=?, last_clean_log_event_type=?,
+                           last_clean_log_sent_at=?, updated_at=?
+                       WHERE trade_chain_id=?""",
+                    (sent_message_id, notification_type, now, now, chain_id),
+                )
+            conn.commit()
+        finally:
+            conn.close()
+
     def _render(self, destination: str, notification_type: str, payload: dict) -> str:
         if destination == "CLEAN_LOG":
             return format_clean_log(notification_type, payload)
@@ -239,9 +338,25 @@ class TelegramNotificationDispatcher:
                 chat_id, thread_id = self._router.route(destination)
                 text = self._render(destination, notification_type, payload)
                 silent = self._is_silent(notification_type)
-                await self._sender.send(
-                    chat_id=chat_id, thread_id=thread_id, text=text, silent=silent
-                )
+                if destination == "CLEAN_LOG":
+                    chain_id = payload.get("chain_id")
+                    reply_to = self._resolve_clean_log_reply_target(
+                        chain_id, notification_type, payload
+                    )
+                    message_id = await self._sender.send(
+                        chat_id=chat_id,
+                        thread_id=thread_id,
+                        text=text,
+                        silent=silent,
+                        reply_to_message_id=reply_to,
+                    )
+                    self._update_clean_log_tracking(
+                        chain_id, notification_type, chat_id, thread_id, message_id
+                    )
+                else:
+                    await self._sender.send(
+                        chat_id=chat_id, thread_id=thread_id, text=text, silent=silent
+                    )
                 self._mark_sent(notification_id)
                 sent += 1
             except Exception as exc:  # noqa: BLE001

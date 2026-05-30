@@ -39,8 +39,9 @@ class FakeSender:
     def __init__(self):
         self.sent: list[dict] = []
 
-    async def send(self, *, chat_id, thread_id, text, silent=False):
+    async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
         self.sent.append({"chat_id": chat_id, "thread_id": thread_id, "text": text})
+        return "123"
 
 
 def _make_config(**tech_log_kwargs) -> ControlPlaneConfig:

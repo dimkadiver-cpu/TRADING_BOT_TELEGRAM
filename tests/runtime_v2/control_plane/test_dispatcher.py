@@ -65,11 +65,12 @@ class FakeSender:
         self._fail_times = fail_times
         self.calls = 0
 
-    async def send(self, *, chat_id, thread_id, text, silent=False):
+    async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
         self.calls += 1
         if self.calls <= self._fail_times:
             raise RuntimeError("telegram down")
         self.sent.append({"chat_id": chat_id, "thread_id": thread_id, "text": text})
+        return "123"
 
 
 def _dispatcher(ops_db, sender):
@@ -207,8 +208,9 @@ async def test_tech_log_rate_limit_suppresses_excess(ops_db):
     sent_texts: list[str] = []
 
     class CaptureSender:
-        async def send(self, *, chat_id, thread_id, text, silent=False):
+        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
             sent_texts.append(text)
+            return "123"
 
     # Insert 25 TECH_LOG notifications
     conn = sqlite3.connect(ops_db)
@@ -246,8 +248,9 @@ async def test_tech_log_rate_limit_sends_only_one_warning(ops_db):
     sent_texts: list[str] = []
 
     class CaptureSender:
-        async def send(self, *, chat_id, thread_id, text, silent=False):
+        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
             sent_texts.append(text)
+            return "123"
 
     conn = sqlite3.connect(ops_db)
     now = datetime.now(timezone.utc).isoformat()
@@ -279,8 +282,9 @@ async def test_clean_log_not_rate_limited(ops_db):
     sent_texts: list[str] = []
 
     class CaptureSender:
-        async def send(self, *, chat_id, thread_id, text, silent=False):
+        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
             sent_texts.append(text)
+            return "123"
 
     conn = sqlite3.connect(ops_db)
     now = datetime.now(timezone.utc).isoformat()

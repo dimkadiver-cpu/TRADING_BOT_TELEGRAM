@@ -214,8 +214,8 @@ def test_build_control_plane_resets_sending_and_derives_restore_fallback(
         )
 
     class FakeSender:
-        async def send(self, *, chat_id, thread_id, text, silent=False):
-            return None
+        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
+            return "123"
 
     monkeypatch.setattr(
         "src.runtime_v2.control_plane.bootstrap._create_sender",

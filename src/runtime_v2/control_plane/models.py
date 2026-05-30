@@ -144,9 +144,24 @@ class RuntimeSnapshot(BaseModel):
     created_at: datetime | None = None
 
 
+class CleanLogTracking(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    trade_chain_id: int
+    clean_log_root_message_id: str | None = None
+    clean_log_last_message_id: str | None = None
+    telegram_chat_id: str
+    telegram_thread_id: str | None = None
+    original_message_link: str | None = None
+    last_clean_log_event_type: str | None = None
+    last_clean_log_sent_at: str | None = None
+    updated_at: str
+
+
 __all__ = [
-    "CommandStatus",
     "CleanLogConfig",
+    "CleanLogTracking",
+    "CommandStatus",
     "ConfigOverride",
     "ControlCommand",
     "ControlPlaneConfig",

@@ -70,6 +70,9 @@ def write_clean_log_event(
     """Insert a CLEAN_LOG outbox row inside the caller's transaction."""
     key = dedupe_key or f"clean:{notification_type}:{chain_id}"
     pri = priority or _PRIORITY_BY_TYPE.get(notification_type, "MEDIUM")
+    # Ensure chain_id is embedded in the payload for downstream tracking.
+    if chain_id is not None and "chain_id" not in payload:
+        payload = {**payload, "chain_id": chain_id}
     _record(conn, notification_type=notification_type, destination="CLEAN_LOG",
             payload=payload, priority=pri, dedupe_key=key)
 
