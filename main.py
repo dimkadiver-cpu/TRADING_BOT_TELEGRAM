@@ -47,15 +47,10 @@ from src.runtime_v2.execution_gateway.event_ingest.normalizer import EventNormal
 from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
 from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
-from src.runtime_v2.control_plane.config import load_control_plane_config, ControlPlaneConfigError
-from src.runtime_v2.control_plane.auth import AuthValidator
-from src.runtime_v2.control_plane.audit_store import CommandAuditStore
-from src.runtime_v2.control_plane.notification_dispatcher import (
-    TelegramNotificationDispatcher, TelegramBotSender,
-)
+from src.runtime_v2.control_plane.bootstrap import build_control_plane
+from src.runtime_v2.control_plane.notification_dispatcher import TelegramNotificationDispatcher
 from src.runtime_v2.control_plane.service import RuntimeControlService
-from src.runtime_v2.control_plane.telegram_bot import CommandRouter, TelegramControlBot
-from src.runtime_v2.control_plane.topic_router import TopicRouter
+from src.runtime_v2.control_plane.telegram_bot import TelegramControlBot
 from src.storage.parser_results_v2 import ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
@@ -275,45 +270,6 @@ async def _run_sync_worker(
             logger.exception("sync worker error")
 
 
-def _build_control_plane(
-    *,
-    root_dir: Path,
-    ops_db_path: str,
-    logger,
-) -> tuple[TelegramControlBot, TelegramNotificationDispatcher, RuntimeControlService] | tuple[None, None, None]:
-    cp_config_path = str(root_dir / "config" / "telegram_control.yaml")
-    try:
-        cp_config = load_control_plane_config(cp_config_path)
-    except ControlPlaneConfigError as exc:
-        logger.warning("control plane config error — bot disabled: %s", exc)
-        return None, None, None
-
-    if not cp_config.enabled:
-        logger.info("control plane disabled in config")
-        return None, None, None
-
-    from telegram import Bot as _TGBot
-
-    service = RuntimeControlService(ops_db_path=ops_db_path)
-    router = CommandRouter(
-        config=cp_config,
-        auth=AuthValidator(cp_config),
-        audit=CommandAuditStore(ops_db_path),
-        service=service,
-    )
-    control_bot = TelegramControlBot(config=cp_config, router=router)
-
-    tg_bot = _TGBot(token=cp_config.token)
-    dispatcher = TelegramNotificationDispatcher(
-        config=cp_config,
-        ops_db_path=ops_db_path,
-        topic_router=TopicRouter(cp_config),
-        sender=TelegramBotSender(tg_bot),
-    )
-    dispatcher.reset_stale_sending()
-    logger.info("control plane: initialized (delivery_mode=%s)", cp_config.delivery_mode)
-    return control_bot, dispatcher, service
-
 
 async def _async_main(
     *,
@@ -441,9 +397,23 @@ async def _async_main(
     except Exception:
         logger.exception("execution gateway init failed — gateway disabled")
 
-    control_bot, cp_dispatcher, cp_service = _build_control_plane(
-        root_dir=root_dir, ops_db_path=ops_db_path, logger=logger,
+    _cp = build_control_plane(
+        config_path=str(root_dir / "config" / "telegram_control.yaml"),
+        ops_db_path=ops_db_path,
+        log_path=log_path,
     )
+    control_bot = _cp.bot if _cp is not None else None
+    cp_dispatcher = _cp.dispatcher if _cp is not None else None
+    cp_service = _cp.service if _cp is not None else None
+
+    if _cp is not None and _cp.startup_plan.apply_global_block:
+        cp_service.pause(scope_value=None, created_by="startup")
+        logger.info("control plane: startup mode '%s' — global block applied", _cp.startup_plan.mode)
+    elif _cp is not None and _cp.startup_plan.fell_back:
+        logger.warning(
+            "control plane: startup mode 'restore' fell back to 'auto': %s",
+            _cp.startup_plan.message,
+        )
 
     watcher = ChannelConfigWatcher(
         path=channels_yaml_path,
@@ -536,6 +506,24 @@ async def _async_main(
                     cp_service.send_shutdown_notification()
                 except Exception:
                     logger.warning("shutdown notification failed (non-critical)")
+            if _cp is not None:
+                try:
+                    status = cp_service.get_status()
+                    control = cp_service.get_control()
+                    _cp.snapshot_store.save(
+                        control_mode=status.control_mode,
+                        active_blocks=[
+                            f"{b.scope_type}:{b.scope_value or 'GLOBAL'}"
+                            for b in control.active_blocks
+                        ],
+                        open_chain_count=(
+                            status.open_count + status.partial_count + status.waiting_entry_count
+                        ),
+                        pending_command_count=status.pending_commands,
+                        shutdown_reason="SIGTERM",
+                    )
+                except Exception:
+                    logger.warning("snapshot save failed (non-critical)")
     finally:
         await client.disconnect()
         watcher.stop()
