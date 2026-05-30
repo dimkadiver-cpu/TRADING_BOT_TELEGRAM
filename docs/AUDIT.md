@@ -1079,7 +1079,7 @@ Implementata la Part 4 del Control Plane Telegram: il bot ora supporta i comandi
 | `src/runtime_v2/control_plane/service.py` | Modificato | Aggiunti `PauseResult`, `ResumeResult`, `BlockResult`, `UnblockResult`; metodi `pause`, `resume`, `start`, `block_symbol`, `unblock_symbol` |
 | `src/runtime_v2/control_plane/telegram_bot.py` | Modificato | Router esteso ai comandi write-side; validazione arità per `/pause` e `/resume`; keyboard privata solo su `/start` e primo testo autorizzato |
 | `src/runtime_v2/control_plane/audit_store.py` | Modificato | In `private_bot`, `message_thread_id` vuoto (`""`) invece di `NULL`, coerente col vincolo `NOT NULL` della migration 007 |
-| `src/runtime_v2/control_plane/status_queries.py` | Modificato | `/status` e `/control` riflettono anche i blocchi trader-scoped, non solo il blocco globale |
+| `src/runtime_v2/control_plane/status_queries.py` | Modificato | `/status` espone solo il blocco globale come stato runtime; `/control` continua a mostrare anche i blocchi trader-scoped |
 | `src/runtime_v2/control_plane/formatters/pause.py` | Creato | Reply formatter per `/pause`, `/resume`, `/start` |
 | `src/runtime_v2/control_plane/formatters/block.py` | Creato | Reply formatter per `/block`, `/unblock` |
 | `tests/runtime_v2/control_plane/test_override_store.py` | Creato | 5 test: add/remove/idempotenza/global/per-trader |
@@ -1088,7 +1088,7 @@ Implementata la Part 4 del Control Plane Telegram: il bot ora supporta i comandi
 | `tests/runtime_v2/control_plane/test_command_router_writes.py` | Creato | 8 test: dispatch write-side, audit, usage |
 | `tests/runtime_v2/control_plane/test_command_router.py` | Modificato | Copertura `private_bot`: `/start`, first-contact keyboard, no keyboard su comandi non-`/start`, audit senza thread |
 | `tests/runtime_v2/control_plane/test_dispatcher.py` | Modificato | Copertura dispatch `private_bot` senza `thread_id` |
-| `tests/runtime_v2/control_plane/test_status_queries.py` | Modificato | Copertura blocchi trader-scoped visibili in `/status` |
+| `tests/runtime_v2/control_plane/test_status_queries.py` | Modificato | Copertura separata per blocchi globali vs trader-scoped in `/status` e `/control` |
 
 ### Risultato test
 
@@ -1108,7 +1108,8 @@ PytestConfigWarning: Unknown config option: collect_ignore_glob
 - **Per-trader pause usa `scope_type="TRADER"`**: scelta intenzionale per allinearsi a `src/runtime_v2/lifecycle/repositories.py`, dove `ControlStateRepository.get_effective_mode()` legge `TRADER` e non `PER_TRADER`. Questo chiude la discrepanza aperta in Part 1.
 - **Blacklist write-side separata dai control blocks**: `/block` e `/unblock` persistono in `ops_config_overrides` con scope `GLOBAL | PER_TRADER`, mentre `/pause` e `/resume` agiscono su `ops_control_state`. Le due superfici restano distinte per design.
 - **Race fix nel blacklist store**: la prima implementazione read-modify-write è stata corretta durante review. Le mutazioni ora serializzano per scope dentro una singola transazione IMMEDIATE, evitando overwrite concorrenti.
-- **Visibilità operativa corretta**: `/status` non mostra più `New entries: ENABLED` quando esistono blocchi trader-scoped. `control_mode` è derivato dagli `active_blocks`, non solo dal blocco globale.
+- **Visibilità operativa corretta**: `/status` tratta `new_entries_enabled` e `control_mode` come segnale globale del runtime. Un blocco `TRADER` resta visibile in `/control`, ma non degrada il runtime a `BLOCKED` per tutti.
+- **Audit comandi coerente**: i comandi con arità/sintassi invalida (`/trade nope`, `/pause a b`, `/block` senza simbolo) restituiscono ancora il testo di usage, ma vengono registrati come `REJECTED` con `reject_reason="invalid_arguments"` invece che come `EXECUTED`.
 - **Delta `private_bot` corretto al layer proprietario**:
   - audit dei comandi compatibile con `message_thread_id NOT NULL`;
   - `ReplyKeyboardMarkup` inviato su `/start` e primo messaggio testuale autorizzato;
@@ -1130,6 +1131,53 @@ PytestConfigWarning: Unknown config option: collect_ignore_glob
 - Part 5: `formatters/tech_log.py` con prefisso `⚠️ --SYSTEM--` in `private_bot`; `/pnl`, `/logs`, `/debug_on`, `/debug_off`.
 - Wiring finale in `main.py`: startup modes `auto | standby | restore`, snapshot runtime, bootstrap completo bot+dispatcher.
 - Follow-up separato: merged-read degli override blacklist nel gate/enrichment per enforcement a monte del signal flow.
+
+---
+
+## 2026-05-30 — Spec Gap Closure Task 3 + Task 4: TECH_LOG policy reali e bootstrap/startup/shutdown
+
+### Step completato
+
+Task 3 — `TECH_LOG` governato da policy runtime reali. Task 4 — `main.py` ora usa `build_control_plane()` dal bootstrap centralizzato, applica startup mode e salva snapshot runtime a shutdown.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/notification_dispatcher.py` | Modificato | `debug_status: Callable[[], bool]` iniettato nel costruttore; `_should_send_tech_log()` con gating su `enabled`, `DEBUG`, `INFO/operational_events`, `min_level`; chiamato prima del rate-limit in `drain_once()` |
+| `src/runtime_v2/control_plane/bootstrap.py` | Modificato | `debug_status=service.debug_status` passato al dispatcher |
+| `src/runtime_v2/control_plane/formatters/tech_log.py` | Modificato | Output strutturato con `title`, `context` (dict → `key: value`), `action`; `None` in context → `—`; `⚠️ --SYSTEM--` solo per `private_bot`; `details` ignorato silenziosamente |
+| `tests/runtime_v2/control_plane/test_tech_log_policy.py` | Creato | 6 test policy: disabled suppression, min_level blocking, debug inactive, operational_events gate, operational_events allowed, private_bot prefix |
+| `tests/runtime_v2/control_plane/test_dispatcher.py` | Modificato | `_seed_tech_log` usa `level: "WARNING"` per passare il default `min_level=WARNING`; test di routing/formatting invariati |
+| `main.py` | Modificato | Rimossa `_build_control_plane()` locale; import e uso di `build_control_plane()` da bootstrap; applicazione startup mode (`apply_global_block` → `pause()`); log restore fallback e restore success; snapshot save su shutdown con `active_blocks` serializzati correttamente (`GLOBAL` non duplicato) |
+| `tests/runtime_v2/control_plane/test_main_control_plane.py` | Creato | 3 test: disabled config restituisce None, standby mode produce `apply_global_block=True` e pausa, snapshot save + shutdown notification scrivono DB correttamente |
+
+### Risultato test
+
+```
+C:\TeleSignalBot\.venv\Scripts\python.exe -m pytest tests\runtime_v2\control_plane -q
+→ 177 passed, 1 warning ✅
+```
+
+### Decisioni e design notes
+
+- **Gating order**: `_should_send_tech_log()` prima di `_check_tech_log_rate()` — una notifica soppressa per policy non consuma slot rate-limit.
+- **operational_events è un veto secondario**: INFO è sempre soppresso se `operational_events=False`, anche se `min_level="INFO"` — il flag è più specifico del livello numerico. Commentato nel codice.
+- **Level sconosciuto → current=0**: livelli non riconosciuti sono sempre soppressi, mai promossi silenziosamente.
+- **Rate counter ottimistico**: lo slot è contato prima del send; send failure non rimuove il slot (documentato con commento).
+- **active_blocks snapshot**: `scope_value or 'GLOBAL'` era ambiguo per scope GLOBAL (produceva `GLOBAL:GLOBAL`); ora `scope_type:scope_value if scope_value else scope_type`.
+- **Patch test isolato correttamente**: `telegram.Bot` è importato inline dentro `_create_sender()`, quindi `patch("telegram.Bot")` è il target corretto.
+
+### Rischi aperti
+
+- **Worker list in `get_health()` ancora hardcoded**: stati nominali fissi — nessun heartbeat runtime reale. Da risolvere prima del go-live.
+- **`await control_bot.run()` pre-task-creation**: se la bot startup lancia eccezione, i task lifecycle creati prima non vengono cancellati nella inner finally. Pre-esistente, non introdotto in questi task.
+- **Enforcement blacklist nel gate segnali**: `/block` persiste nel control plane ma non influenza ancora il gate upstream. Follow-up architetturale separato.
+
+### Prossimi step
+
+- Task 5 (CLEAN_LOG event coverage) — estendere `_CLEAN_LOG_EVENT_MAP` e formatter per i tipi mancanti
+- Task 6 (CLEAN_LOG root/reply tracking) — migration 008, `NotificationSender` ritorna `str | None`, persistenza root/last message id
 
 ---
 
