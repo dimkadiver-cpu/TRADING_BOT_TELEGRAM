@@ -21,6 +21,8 @@ from src.runtime_v2.lifecycle.repositories import (
 
 logger = logging.getLogger(__name__)
 
+from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -295,6 +297,11 @@ class LifecycleEventWorker:
                             (chain_id, cmd.command_type, cmd.status, payload_json_exp,
                              idempotency_key_exp, now, now),
                         )
+
+                try:
+                    project_clean_log_for_chain(conn, chain_id)
+                except Exception:
+                    logger.exception("clean_log projection failed for chain %s", chain_id)
         finally:
             conn.close()
 

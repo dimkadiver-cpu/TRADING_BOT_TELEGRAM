@@ -22,6 +22,7 @@ from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.signal_enrichment.models import (
     EnrichedCanonicalMessage, ManagementPlanConfig,
 )
+from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
 
 logger = logging.getLogger(__name__)
 
@@ -1542,6 +1543,11 @@ class LifecycleGateWorker:
                             s.source, s.captured_at.isoformat(), "{}",
                         ),
                     )
+                if chain_id is not None:
+                    try:
+                        project_clean_log_for_chain(conn, chain_id)
+                    except Exception:
+                        logger.exception("clean_log projection failed for chain %s", chain_id)
         finally:
             conn.close()
 
@@ -1617,6 +1623,14 @@ class LifecycleGateWorker:
                             event.payload_json, event.idempotency_key, now,
                         ),
                     )
+                for cr in result.chain_results:
+                    if cr.trade_chain_id:
+                        try:
+                            project_clean_log_for_chain(conn, cr.trade_chain_id)
+                        except Exception:
+                            logger.exception(
+                                "clean_log projection failed for chain %s", cr.trade_chain_id
+                            )
         finally:
             conn.close()
 
