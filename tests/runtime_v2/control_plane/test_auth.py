@@ -89,3 +89,4 @@ def test_private_bot_unauthorized_user():
     v = AuthValidator(_config_private_bot())
     res = v.validate(chat_id=-100999, thread_id=None, user_id=99)
     assert res.decision == "REJECT_UNAUTHORIZED"
+    assert res.reason == "unauthorized_user"

@@ -28,6 +28,7 @@ class AuthValidator:
     ) -> AuthResult:
         if chat_id != self._chat_id:
             return AuthResult("IGNORE", "wrong_chat")
+        # In private_bot mode thread_id is not sent by Telegram and is ignored here.
         if self._delivery_mode == "supergroup_topics":
             if thread_id != self._commands_thread_id:
                 return AuthResult("IGNORE", "wrong_topic")
