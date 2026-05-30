@@ -280,17 +280,17 @@ def _build_control_plane(
     root_dir: Path,
     ops_db_path: str,
     logger,
-) -> tuple[TelegramControlBot, TelegramNotificationDispatcher] | tuple[None, None]:
+) -> tuple[TelegramControlBot, TelegramNotificationDispatcher, RuntimeControlService] | tuple[None, None, None]:
     cp_config_path = str(root_dir / "config" / "telegram_control.yaml")
     try:
         cp_config = load_control_plane_config(cp_config_path)
     except ControlPlaneConfigError as exc:
         logger.warning("control plane config error — bot disabled: %s", exc)
-        return None, None
+        return None, None, None
 
     if not cp_config.enabled:
         logger.info("control plane disabled in config")
-        return None, None
+        return None, None, None
 
     from telegram import Bot as _TGBot
 
@@ -312,7 +312,7 @@ def _build_control_plane(
     )
     dispatcher.reset_stale_sending()
     logger.info("control plane: initialized (delivery_mode=%s)", cp_config.delivery_mode)
-    return control_bot, dispatcher
+    return control_bot, dispatcher, service
 
 
 async def _async_main(
@@ -441,7 +441,7 @@ async def _async_main(
     except Exception:
         logger.exception("execution gateway init failed — gateway disabled")
 
-    control_bot, cp_dispatcher = _build_control_plane(
+    control_bot, cp_dispatcher, cp_service = _build_control_plane(
         root_dir=root_dir, ops_db_path=ops_db_path, logger=logger,
     )
 
@@ -479,6 +479,12 @@ async def _async_main(
         if cp_dispatcher is not None:
             cp_dispatcher_task = asyncio.create_task(cp_dispatcher.run())
             logger.info("control plane: notification dispatcher started")
+
+        if cp_service is not None:
+            try:
+                cp_service.send_startup_notification()
+            except Exception:
+                logger.warning("startup notification failed (non-critical)")
 
         sync_task = None
         if execution_runtime is not None:
@@ -525,6 +531,11 @@ async def _async_main(
                 cp_dispatcher_task.cancel()
             if control_bot is not None:
                 await control_bot.shutdown()
+            if cp_service is not None:
+                try:
+                    cp_service.send_shutdown_notification()
+                except Exception:
+                    logger.warning("shutdown notification failed (non-critical)")
     finally:
         await client.disconnect()
         watcher.stop()

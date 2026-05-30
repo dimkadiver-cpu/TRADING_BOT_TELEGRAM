@@ -218,6 +218,65 @@ class RuntimeControlService:
             blacklist=blacklist,
         )
 
+    def send_startup_notification(self) -> None:
+        """Write TECH_LOG startup notification to outbox."""
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            with conn:
+                write_tech_log_event(
+                    conn,
+                    notification_type="RUNTIME_STARTUP",
+                    payload={
+                        "level": "INFO",
+                        "category": "Runtime",
+                        "description": "Runtime avviato",
+                        "source": "runtime_main",
+                        "details": {
+                            "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                        },
+                    },
+                    dedupe_key=f"startup:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}",
+                    priority="MEDIUM",
+                )
+        finally:
+            conn.close()
+
+    def send_shutdown_notification(self, *, reason: str = "SIGTERM") -> None:
+        """Write TECH_LOG shutdown notification to outbox."""
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            with conn:
+                open_chains = conn.execute(
+                    "SELECT COUNT(*) FROM ops_trade_chains "
+                    "WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED','WAITING_ENTRY')"
+                ).fetchone()[0]
+                pending_cmds = conn.execute(
+                    "SELECT COUNT(*) FROM ops_execution_commands WHERE status='PENDING'"
+                ).fetchone()[0]
+                write_tech_log_event(
+                    conn,
+                    notification_type="RUNTIME_SHUTDOWN",
+                    payload={
+                        "level": "INFO",
+                        "category": "Runtime",
+                        "description": f"Runtime shutdown — {reason}",
+                        "source": "runtime_main",
+                        "details": {
+                            "reason": reason,
+                            "open_chains": open_chains,
+                            "pending_commands": pending_cmds,
+                        },
+                    },
+                    dedupe_key=f"shutdown:{_now()}",
+                    priority="HIGH",
+                )
+        finally:
+            conn.close()
+
 
 __all__ = [
     "BlockResult",
