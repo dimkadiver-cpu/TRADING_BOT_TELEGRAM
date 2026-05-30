@@ -12,7 +12,10 @@ from src.runtime_v2.control_plane.models import (
 from src.runtime_v2.control_plane.notification_dispatcher import (
     TelegramNotificationDispatcher,
 )
-from src.runtime_v2.control_plane.outbox_writer import write_clean_log_event
+from src.runtime_v2.control_plane.outbox_writer import (
+    write_clean_log_event,
+    write_tech_log_event,
+)
 from src.runtime_v2.control_plane.topic_router import TopicRouter
 
 
@@ -98,6 +101,23 @@ def _seed(ops_db, dedupe_key="clean:k1"):
     conn.close()
 
 
+def _seed_tech_log(ops_db, dedupe_key="tech:k1"):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_tech_log_event(
+            conn,
+            notification_type="RUNTIME_SHUTDOWN",
+            payload={
+                "level": "INFO",
+                "category": "Runtime",
+                "description": "Runtime shutdown. Snapshot saved.",
+                "source": "runtime_main",
+            },
+            dedupe_key=dedupe_key,
+        )
+    conn.close()
+
+
 async def test_drain_sends_and_marks_sent(ops_db):
     _seed(ops_db)
     sender = FakeSender()
@@ -159,3 +179,23 @@ async def test_private_bot_dispatches_without_thread_id(ops_db):
     assert n == 1
     assert sender.sent[0]["chat_id"] == 42
     assert sender.sent[0]["thread_id"] is None
+
+
+async def test_private_bot_tech_log_uses_system_prefix(ops_db):
+    _seed_tech_log(ops_db)
+    sender = FakeSender()
+    disp = _private_dispatcher(ops_db, sender)
+    n = await disp.drain_once()
+    assert n == 1
+    assert sender.sent[0]["thread_id"] is None
+    assert sender.sent[0]["text"].startswith("⚠️ --SYSTEM--\n")
+
+
+async def test_supergroup_tech_log_keeps_thread_and_no_system_prefix(ops_db):
+    _seed_tech_log(ops_db)
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    n = await disp.drain_once()
+    assert n == 1
+    assert sender.sent[0]["thread_id"] == 102
+    assert not sender.sent[0]["text"].startswith("⚠️ --SYSTEM--\n")

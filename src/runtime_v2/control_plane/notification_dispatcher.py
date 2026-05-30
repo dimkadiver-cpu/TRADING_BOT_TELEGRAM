@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from typing import Protocol
 
 from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
+from src.runtime_v2.control_plane.formatters.tech_log import format_tech_log
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
 from src.runtime_v2.control_plane.topic_router import TopicRouter
 
@@ -129,7 +130,9 @@ class TelegramNotificationDispatcher:
     def _render(self, destination: str, notification_type: str, payload: dict) -> str:
         if destination == "CLEAN_LOG":
             return format_clean_log(notification_type, payload)
-        # TECH_LOG / COMMANDS_REPLY formatters arrive in later parts; safe fallback.
+        if destination == "TECH_LOG":
+            return format_tech_log(payload, delivery_mode=self._config.delivery_mode)
+        # COMMANDS_REPLY formatter arrives in a later part; safe fallback.
         return payload.get("text") or f"{notification_type}"
 
     def _is_silent(self, notification_type: str) -> bool:
