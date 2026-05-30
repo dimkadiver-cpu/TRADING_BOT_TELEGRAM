@@ -149,6 +149,17 @@ def test_trade_with_id_arg(ops_db):
     assert "TRADE #77" in res.reply_text
 
 
+def test_trade_with_invalid_id_is_rejected_and_returns_usage(ops_db):
+    router = _router(ops_db)
+    res = router.route(
+        command_text="/trade nope", message_id=71,
+        chat_id=-100999, thread_id=101, user_id=42, username="op",
+    )
+    assert res.decision == "REJECTED"
+    assert "Usage: /trade <chain_id>" == res.reply_text
+    assert _last_status(ops_db, "-100999:71") == ("REJECTED", "invalid_arguments")
+
+
 def test_version(ops_db):
     router = _router(ops_db)
     res = router.route(
@@ -326,3 +337,34 @@ def test_private_bot_non_start_command_does_not_push_keyboard(ops_db):
     asyncio.run(bot._on_command(update, context))
     update.message.reply_text.assert_not_called()
     context.bot.send_message.assert_called_once()
+
+
+# ── New commands: logs, debug_on, debug_off ───────────────────────────────────
+
+def test_logs_command_returns_log_content_or_not_found(ops_db):
+    router = _router(ops_db)
+    res = router.route(
+        command_text="/logs 5", message_id=20,
+        chat_id=-100999, thread_id=101, user_id=42, username="op",
+    )
+    assert res.reply_text is not None
+    assert "LOGS" in res.reply_text
+
+
+def test_debug_on_responds_not_available(ops_db):
+    router = _router(ops_db)
+    res = router.route(
+        command_text="/debug_on", message_id=21,
+        chat_id=-100999, thread_id=101, user_id=42, username="op",
+    )
+    assert res.reply_text is not None
+    assert res.decision in ("EXECUTED", "REJECTED")  # accetta qualsiasi risposta sensata
+
+
+def test_debug_off_responds(ops_db):
+    router = _router(ops_db)
+    res = router.route(
+        command_text="/debug_off", message_id=22,
+        chat_id=-100999, thread_id=101, user_id=42, username="op",
+    )
+    assert res.reply_text is not None

@@ -97,6 +97,19 @@ class RuntimeControlService:
     def get_reviews(self) -> ReviewsView:
         return self._queries.get_reviews()
 
+    def get_logs(self, n: int = 20) -> list[str]:
+        import os
+        from pathlib import Path
+        log_path = os.getenv("LOG_PATH", "logs/bot.log")
+        try:
+            p = Path(log_path)
+            if not p.exists():
+                return [f"Log file not found: {log_path}"]
+            lines = p.read_text(encoding="utf-8", errors="replace").splitlines()
+            return lines[-n:] if len(lines) > n else lines
+        except Exception as exc:
+            return [f"Cannot read log: {exc}"]
+
     def get_version(self) -> VersionInfo:
         return VersionInfo(
             runtime="v2",

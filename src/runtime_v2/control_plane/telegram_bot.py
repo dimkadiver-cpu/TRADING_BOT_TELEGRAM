@@ -21,7 +21,7 @@ from src.runtime_v2.control_plane.service import RuntimeControlService
 logger = logging.getLogger(__name__)
 
 _HELP_TEXT = """COMANDI DISPONIBILI
-----------------
+────────────────
 Informativi:
 /status    - salute bot e conteggi
 /trades    - trade aperti
@@ -29,6 +29,7 @@ Informativi:
 /health    - stato workers
 /control   - blocchi operativi
 /reviews   - casi da controllare
+/logs [n]  - ultime N righe log (default: 20)
 /version   - versione runtime
 /help      - questo messaggio
 
@@ -48,11 +49,18 @@ class RouteResult:
     reply_text: str | None
 
 
+@dataclass(frozen=True)
+class _DispatchResult:
+    reply_text: str
+    decision: str = "EXECUTED"
+    reject_reason: str | None = None
+
+
 _READONLY_COMMANDS = frozenset(
     {"help", "status", "trades", "trade", "health", "control", "reviews", "version"}
 )
 _CONTROL_COMMANDS = frozenset({"pause", "resume", "start", "block", "unblock"})
-_ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS
+_ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | frozenset({"logs", "debug_on", "debug_off"})
 
 
 def _parse(command_text: str) -> tuple[str | None, list[str]]:
@@ -157,9 +165,13 @@ class CommandRouter:
             status="ACCEPTED",
         )
         try:
-            reply = self._dispatch(command_name, args, created_by=str(user_id))
-            self._audit.update_status(request_id, status="EXECUTED")
-            return RouteResult("EXECUTED", reply)
+            dispatch_result = self._dispatch(command_name, args, created_by=str(user_id))
+            self._audit.update_status(
+                request_id,
+                status=dispatch_result.decision,
+                reject_reason=dispatch_result.reject_reason,
+            )
+            return RouteResult(dispatch_result.decision, dispatch_result.reply_text)
         except Exception:
             logger.exception("command handler failed: %s", command_text)
             self._audit.update_status(request_id, status="FAILED")
@@ -168,27 +180,37 @@ class CommandRouter:
     def _allowed_commands(self) -> frozenset[str]:
         return _ALLOWED_COMMANDS
 
-    def _dispatch(self, command_name: str, args: list[str], *, created_by: str) -> str:
+    def _dispatch(
+        self,
+        command_name: str,
+        args: list[str],
+        *,
+        created_by: str,
+    ) -> _DispatchResult:
         if command_name == "help":
-            return _HELP_TEXT
+            return _DispatchResult(_HELP_TEXT)
         if command_name == "status":
-            return format_status(self._service.get_status())
+            return _DispatchResult(format_status(self._service.get_status()))
         if command_name == "trades":
-            return format_trades(self._service.get_open_trades())
+            return _DispatchResult(format_trades(self._service.get_open_trades()))
         if command_name == "trade":
             if not args or not args[0].lstrip("#").isdigit():
-                return "Usage: /trade <chain_id>"
+                return _DispatchResult(
+                    "Usage: /trade <chain_id>",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
             chain_id = int(args[0].lstrip("#"))
-            return format_trade_detail(self._service.get_trade(chain_id))
+            return _DispatchResult(format_trade_detail(self._service.get_trade(chain_id)))
         if command_name == "health":
-            return format_health(self._service.get_health())
+            return _DispatchResult(format_health(self._service.get_health()))
         if command_name == "control":
-            return format_control(self._service.get_control())
+            return _DispatchResult(format_control(self._service.get_control()))
         if command_name == "reviews":
-            return format_reviews(self._service.get_reviews())
+            return _DispatchResult(format_reviews(self._service.get_reviews()))
         if command_name == "version":
             version = self._service.get_version()
-            return (
+            return _DispatchResult(
                 "VERSION\n----------------\n"
                 f"Runtime: {version.runtime}\n"
                 f"Commit: {version.commit}\n"
@@ -197,38 +219,86 @@ class CommandRouter:
             )
         if command_name == "pause":
             if len(args) > 1:
-                return "Usage: /pause  oppure  /pause <trader>"
+                return _DispatchResult(
+                    "Usage: /pause  oppure  /pause <trader>",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
             scope = args[0] if args else None
-            return format_pause(self._service.pause(scope_value=scope, created_by=created_by))
+            return _DispatchResult(
+                format_pause(self._service.pause(scope_value=scope, created_by=created_by))
+            )
         if command_name == "resume":
             if len(args) > 1:
-                return "Usage: /resume  oppure  /resume <trader>"
+                return _DispatchResult(
+                    "Usage: /resume  oppure  /resume <trader>",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
             scope = args[0] if args else None
-            return format_resume(self._service.resume(scope_value=scope))
+            return _DispatchResult(format_resume(self._service.resume(scope_value=scope)))
         if command_name == "start":
-            return format_start(self._service.start())
+            return _DispatchResult(format_start(self._service.start()))
         if command_name == "block":
             scope, symbol = _parse_scope_symbol(args)
             if symbol is None:
-                return "Usage: /block <symbol>  oppure  /block <trader> <symbol>"
-            return format_block(
-                self._service.block_symbol(
-                    scope_value=scope,
-                    symbol=symbol,
-                    created_by=created_by,
+                return _DispatchResult(
+                    "Usage: /block <symbol>  oppure  /block <trader> <symbol>",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
+            return _DispatchResult(
+                format_block(
+                    self._service.block_symbol(
+                        scope_value=scope,
+                        symbol=symbol,
+                        created_by=created_by,
+                    )
                 )
             )
         if command_name == "unblock":
             scope, symbol = _parse_scope_symbol(args)
             if symbol is None:
-                return "Usage: /unblock <symbol>  oppure  /unblock <trader> <symbol>"
-            return format_unblock(
-                self._service.unblock_symbol(
-                    scope_value=scope,
-                    symbol=symbol,
+                return _DispatchResult(
+                    "Usage: /unblock <symbol>  oppure  /unblock <trader> <symbol>",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
+            return _DispatchResult(
+                format_unblock(
+                    self._service.unblock_symbol(
+                        scope_value=scope,
+                        symbol=symbol,
+                    )
                 )
             )
-        return "Comando non riconosciuto."
+        if command_name == "logs":
+            try:
+                n = int(args[0]) if args else 20
+                n = max(1, min(n, 100))
+            except ValueError:
+                n = 20
+            lines = self._service.get_logs(n)
+            body = "\n".join(lines) if lines else "(log vuoto)"
+            return _DispatchResult(f"📋 LOGS — last {n}\n────────────────\n{body}")
+
+        if command_name == "debug_on":
+            return _DispatchResult(
+                "🔍 DEBUG MODE\n────────────────\n"
+                "Non ancora disponibile in questa versione.\n\n"
+                "Per diagnostica usa:\n"
+                "/health — stato workers\n"
+                "/logs 50 — ultime righe log\n"
+                "/status — salute runtime"
+            )
+
+        if command_name == "debug_off":
+            return _DispatchResult(
+                "✅ DEBUG MODE\n────────────────\n"
+                "Debug non attivo in questa versione."
+            )
+
+        return _DispatchResult("Comando non riconosciuto.", decision="REJECTED")
 
     def _record(
         self,
