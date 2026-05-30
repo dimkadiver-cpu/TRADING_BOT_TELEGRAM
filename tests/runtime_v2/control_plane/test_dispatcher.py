@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -199,3 +200,109 @@ async def test_supergroup_tech_log_keeps_thread_and_no_system_prefix(ops_db):
     assert n == 1
     assert sender.sent[0]["thread_id"] == 102
     assert not sender.sent[0]["text"].startswith("⚠️ --SYSTEM--\n")
+
+
+async def test_tech_log_rate_limit_suppresses_excess(ops_db):
+    """Messages beyond max_messages_per_minute are suppressed with one warning."""
+    sent_texts: list[str] = []
+
+    class CaptureSender:
+        async def send(self, *, chat_id, thread_id, text, silent=False):
+            sent_texts.append(text)
+
+    # Insert 25 TECH_LOG notifications
+    conn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        for i in range(25):
+            conn.execute(
+                "INSERT INTO ops_notification_outbox "
+                "(notification_type, destination, payload_json, priority, status, dedupe_key, attempts, created_at) "
+                "VALUES ('TECH_ERROR','TECH_LOG','{\"level\":\"ERROR\",\"category\":\"Test\",\"description\":\"err\",\"source\":\"test\"}','MEDIUM','PENDING',?,0,?)",
+                (f"key:{i}", now),
+            )
+    conn.close()
+
+    cfg = _config()
+    dispatcher = TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=CaptureSender(),
+    )
+    await dispatcher.drain_once()
+
+    max_msgs = cfg.topics.tech_log.max_messages_per_minute
+    # Should have sent at most max_msgs + 1 (the rate limit warning)
+    assert len(sent_texts) <= max_msgs + 1
+    # Exactly max_msgs normal messages + 1 warning
+    assert len(sent_texts) == max_msgs + 1
+    # One of the messages should be the rate limit warning
+    assert any("Rate limit" in t or "rate limit" in t.lower() for t in sent_texts)
+
+
+async def test_tech_log_rate_limit_sends_only_one_warning(ops_db):
+    """Only one warning is sent even when many messages exceed the limit."""
+    sent_texts: list[str] = []
+
+    class CaptureSender:
+        async def send(self, *, chat_id, thread_id, text, silent=False):
+            sent_texts.append(text)
+
+    conn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        for i in range(30):
+            conn.execute(
+                "INSERT INTO ops_notification_outbox "
+                "(notification_type, destination, payload_json, priority, status, dedupe_key, attempts, created_at) "
+                "VALUES ('TECH_ERROR','TECH_LOG','{\"level\":\"ERROR\",\"category\":\"Test\",\"description\":\"err\",\"source\":\"test\"}','MEDIUM','PENDING',?,0,?)",
+                (f"warn_key:{i}", now),
+            )
+    conn.close()
+
+    cfg = _config()
+    dispatcher = TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=CaptureSender(),
+    )
+    await dispatcher.drain_once()
+
+    warning_count = sum(1 for t in sent_texts if "Rate limit" in t or "rate limit" in t.lower())
+    assert warning_count == 1
+
+
+async def test_clean_log_not_rate_limited(ops_db):
+    """CLEAN_LOG messages are not subject to TECH_LOG rate limiting."""
+    sent_texts: list[str] = []
+
+    class CaptureSender:
+        async def send(self, *, chat_id, thread_id, text, silent=False):
+            sent_texts.append(text)
+
+    conn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        for i in range(25):
+            conn.execute(
+                "INSERT INTO ops_notification_outbox "
+                "(notification_type, destination, payload_json, priority, status, dedupe_key, attempts, created_at) "
+                "VALUES ('SIGNAL_ACCEPTED','CLEAN_LOG','{\"symbol\":\"BTC/USDT\",\"side\":\"LONG\"}','MEDIUM','PENDING',?,0,?)",
+                (f"clean_key:{i}", now),
+            )
+    conn.close()
+
+    cfg = _config()
+    dispatcher = TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=CaptureSender(),
+    )
+    n = await dispatcher.drain_once()
+
+    # All 25 CLEAN_LOG messages should be sent without suppression
+    assert n == 25
+    assert len(sent_texts) == 25

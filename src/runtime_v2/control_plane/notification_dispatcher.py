@@ -5,6 +5,7 @@ import asyncio
 import json
 import logging
 import sqlite3
+import time
 from datetime import datetime, timezone
 from typing import Protocol
 
@@ -62,6 +63,10 @@ class TelegramNotificationDispatcher:
         self._sender = sender
         self._poll = poll_interval_seconds
         self._batch = batch_size
+        # TECH_LOG rate limiting state
+        self._tech_log_sent_this_minute: int = 0
+        self._tech_log_minute_start: float = time.time()
+        self._tech_log_rate_limit_warned: bool = False
 
     def _claim_pending(self) -> list[tuple]:
         conn = sqlite3.connect(self._ops_db, isolation_level=None)
@@ -127,6 +132,43 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
+    def _check_tech_log_rate(self) -> bool:
+        """Return True if message can be sent, False if rate limit exceeded.
+
+        Resets counter each minute. Sends a single warning when limit is first hit.
+        """
+        now = time.time()
+        if now - self._tech_log_minute_start >= 60:
+            self._tech_log_sent_this_minute = 0
+            self._tech_log_minute_start = now
+            self._tech_log_rate_limit_warned = False
+
+        max_per_min = self._config.topics.tech_log.max_messages_per_minute
+        if self._tech_log_sent_this_minute < max_per_min:
+            self._tech_log_sent_this_minute += 1
+            return True
+
+        return False
+
+    async def _send_rate_limit_warning(self) -> None:
+        warning_text = (
+            "[WARN] TECH_LOG: Rate limit raggiunto\n"
+            "────────────────\n"
+            "Troppi messaggi in TECH_LOG (>20/min).\n"
+            "Alcuni messaggi soppressi temporaneamente.\n\n"
+            "Controlla il log file per il dettaglio completo.\n"
+            "────────────────\n"
+            "Source: notification_dispatcher"
+        )
+        try:
+            chat_id, thread_id = self._router.route("TECH_LOG")
+            await self._sender.send(
+                chat_id=chat_id, thread_id=thread_id,
+                text=warning_text, silent=False,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("rate limit warning send failed: %s", exc)
+
     def _render(self, destination: str, notification_type: str, payload: dict) -> str:
         if destination == "CLEAN_LOG":
             return format_clean_log(notification_type, payload)
@@ -154,6 +196,15 @@ class TelegramNotificationDispatcher:
                 payload = json.loads(payload_json or "{}")
             except Exception:
                 payload = {}
+
+            # Rate limit check — only TECH_LOG is subject to limiting
+            if destination == "TECH_LOG" and not self._check_tech_log_rate():
+                if not self._tech_log_rate_limit_warned:
+                    self._tech_log_rate_limit_warned = True
+                    await self._send_rate_limit_warning()
+                self._mark_sent(notification_id)
+                continue
+
             try:
                 chat_id, thread_id = self._router.route(destination)
                 text = self._render(destination, notification_type, payload)
