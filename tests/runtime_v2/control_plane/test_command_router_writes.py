@@ -63,7 +63,7 @@ def _route(router, text, mid):
 def test_pause_command_blocks(ops_db):
     router = _router(ops_db)
     res = _route(router, "/pause", 1)
-    assert "BLOCKED" in res.reply_text
+    assert "BLOCCATE" in res.reply_text
     assert ControlStateRepository(ops_db).get_effective_mode(
         "main",
         "trader_a",
@@ -78,7 +78,7 @@ def test_pause_trader_then_resume(ops_db):
     repo = ControlStateRepository(ops_db)
     assert repo.get_effective_mode("main", "trader_a", "X", "LONG") == "BLOCK_NEW_ENTRIES"
     res = _route(router, "/resume trader_a", 3)
-    assert "RE-ENABLED" in res.reply_text
+    assert "RIABILITATE" in res.reply_text
     assert repo.get_effective_mode("main", "trader_a", "X", "LONG") == "NONE"
 
 
@@ -110,16 +110,40 @@ def test_pause_is_audited_executed(ops_db):
 def test_block_missing_arg_usage(ops_db):
     router = _router(ops_db)
     res = _route(router, "/block", 8)
+    assert res.decision == "REJECTED"
     assert "Usage" in res.reply_text
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status, reject_reason FROM ops_telegram_control_commands "
+        "WHERE command_request_id='-100999:8'"
+    ).fetchone()
+    conn.close()
+    assert row == ("REJECTED", "invalid_arguments")
 
 
 def test_pause_with_too_many_args_returns_usage(ops_db):
     router = _router(ops_db)
     res = _route(router, "/pause trader_a extra", 9)
+    assert res.decision == "REJECTED"
     assert "Usage" in res.reply_text
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status, reject_reason FROM ops_telegram_control_commands "
+        "WHERE command_request_id='-100999:9'"
+    ).fetchone()
+    conn.close()
+    assert row == ("REJECTED", "invalid_arguments")
 
 
 def test_resume_with_too_many_args_returns_usage(ops_db):
     router = _router(ops_db)
     res = _route(router, "/resume trader_a extra", 10)
+    assert res.decision == "REJECTED"
     assert "Usage" in res.reply_text
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status, reject_reason FROM ops_telegram_control_commands "
+        "WHERE command_request_id='-100999:10'"
+    ).fetchone()
+    conn.close()
+    assert row == ("REJECTED", "invalid_arguments")

@@ -11,7 +11,7 @@ from src.runtime_v2.control_plane.service import (
 
 def test_pause_global():
     text = format_pause(PauseResult("GLOBAL", None, "BLOCK_NEW_ENTRIES", False))
-    assert "BLOCKED" in text
+    assert "BLOCCATE" in text
     assert "GLOBAL" in text
     assert "/resume" in text
 
@@ -29,12 +29,12 @@ def test_pause_already_active_mentions_existing():
 
 def test_resume_with_block():
     text = format_resume(ResumeResult("GLOBAL", None, True))
-    assert "RE-ENABLED" in text
+    assert "RIABILITATE" in text
 
 
 def test_resume_no_block():
     text = format_resume(ResumeResult("GLOBAL", None, False))
-    assert "NO ACTIVE BLOCK" in text
+    assert "NESSUN BLOCCO" in text
 
 
 def test_resume_per_trader():
@@ -44,7 +44,7 @@ def test_resume_per_trader():
 
 def test_start():
     text = format_start(ResumeResult("GLOBAL", None, True))
-    assert "ACTIVATED" in text
+    assert "ATTIVATO" in text
 
 
 def test_block_global():
@@ -62,5 +62,5 @@ def test_block_per_trader():
 
 def test_unblock_global():
     text = format_unblock(UnblockResult("GLOBAL", None, "BTCUSDT", ["ETHUSDT"]))
-    assert "UNBLOCKED" in text
+    assert "SBLOCCATO" in text
     assert "ETHUSDT" in text

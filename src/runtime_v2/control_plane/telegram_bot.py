@@ -209,13 +209,23 @@ class CommandRouter:
         if command_name == "reviews":
             return _DispatchResult(format_reviews(self._service.get_reviews()))
         if command_name == "version":
-            version = self._service.get_version()
+            v = self._service.get_version()
+            # Format uptime as "Xh Ym" or "Ym Xs" or just "Xs"
+            secs = v.uptime_seconds
+            h, rem = divmod(secs, 3600)
+            m, s = divmod(rem, 60)
+            if h > 0:
+                uptime_str = f"{h}h {m}m"
+            elif m > 0:
+                uptime_str = f"{m}m {s}s"
+            else:
+                uptime_str = f"{s}s"
             return _DispatchResult(
-                "VERSION\n----------------\n"
-                f"Runtime: {version.runtime}\n"
-                f"Commit: {version.commit}\n"
-                f"Branch: {version.branch}\n"
-                f"Uptime: {version.uptime_seconds}s"
+                "📦 VERSION\n────────────────\n"
+                f"Runtime: {v.runtime}\n"
+                f"Commit: {v.commit}\n"
+                f"Branch: {v.branch}\n"
+                f"Uptime: {uptime_str}"
             )
         if command_name == "pause":
             if len(args) > 1:

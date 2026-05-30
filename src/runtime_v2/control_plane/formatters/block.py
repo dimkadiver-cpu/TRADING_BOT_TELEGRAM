@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from src.runtime_v2.control_plane.service import BlockResult, UnblockResult
 
-_SEP = "----------------"
+_SEP = "────────────────"
 
 
 def _scope_label(scope_value: str | None) -> str:
@@ -12,9 +12,9 @@ def _scope_label(scope_value: str | None) -> str:
 def format_block(result: BlockResult) -> str:
     scope = _scope_label(result.scope_value)
     title = (
-        f"{result.symbol} BLOCKED"
+        f"🚫 {result.symbol} BLOCCATO"
         if result.scope_value is None
-        else f"{result.scope_value} / {result.symbol} BLOCKED"
+        else f"🚫 {result.scope_value} / {result.symbol} BLOCCATO"
     )
     command = (
         f"/unblock {result.symbol}"
@@ -38,9 +38,9 @@ def format_block(result: BlockResult) -> str:
 def format_unblock(result: UnblockResult) -> str:
     scope = _scope_label(result.scope_value)
     title = (
-        f"{result.symbol} UNBLOCKED"
+        f"✅ {result.symbol} SBLOCCATO"
         if result.scope_value is None
-        else f"{result.scope_value} / {result.symbol} UNBLOCKED"
+        else f"✅ {result.scope_value} / {result.symbol} SBLOCCATO"
     )
     return "\n".join(
         [

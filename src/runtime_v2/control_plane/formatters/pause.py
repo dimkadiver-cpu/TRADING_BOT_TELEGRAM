@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from src.runtime_v2.control_plane.service import PauseResult, ResumeResult
 
-_SEP = "----------------"
+_SEP = "────────────────"
 
 
 def format_pause(result: PauseResult) -> str:
     if result.scope_value is None:
         lines = [
-            "NEW ENTRIES BLOCKED",
+            "⏸️ NUOVE ENTRY BLOCCATE",
             _SEP,
             "Scope: GLOBAL",
             f"Mode: {result.mode}",
@@ -27,7 +27,7 @@ def format_pause(result: PauseResult) -> str:
         return "\n".join(lines)
 
     lines = [
-        f"{result.scope_value} - NEW ENTRIES BLOCKED",
+        f"⏸️ {result.scope_value} — NUOVE ENTRY BLOCCATE",
         _SEP,
         f"Scope: {result.scope_value}",
         f"Mode: {result.mode}",
@@ -50,7 +50,7 @@ def format_resume(result: ResumeResult) -> str:
     if not result.had_block:
         return "\n".join(
             [
-                "NO ACTIVE BLOCK",
+                "ℹ️ NESSUN BLOCCO ATTIVO",
                 _SEP,
                 "No pause block exists for this scope.",
                 "",
@@ -61,7 +61,7 @@ def format_resume(result: ResumeResult) -> str:
     if result.scope_value is None:
         return "\n".join(
             [
-                "NEW ENTRIES RE-ENABLED",
+                "▶️ NUOVE ENTRY RIABILITATE",
                 _SEP,
                 "Global block removed.",
                 "",
@@ -72,7 +72,7 @@ def format_resume(result: ResumeResult) -> str:
         )
     return "\n".join(
         [
-            f"{result.scope_value} - NEW ENTRIES RE-ENABLED",
+            f"▶️ {result.scope_value} — NUOVE ENTRY RIABILITATE",
             _SEP,
             f"Block removed for {result.scope_value}.",
             "",
@@ -89,7 +89,7 @@ def format_start(result: ResumeResult) -> str:
         details = "Runtime was already accepting new entries."
     return "\n".join(
         [
-            "RUNTIME ACTIVATED",
+            "▶️ RUNTIME ATTIVATO",
             _SEP,
             details,
             "",

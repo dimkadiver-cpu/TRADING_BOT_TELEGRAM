@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-_SEP = "----------------"
+_SEP = "────────────────"
 
 
 def _stringify_details(details) -> str:
