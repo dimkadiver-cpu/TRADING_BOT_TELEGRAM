@@ -47,6 +47,15 @@ from src.runtime_v2.execution_gateway.event_ingest.normalizer import EventNormal
 from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
 from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+from src.runtime_v2.control_plane.config import load_control_plane_config, ControlPlaneConfigError
+from src.runtime_v2.control_plane.auth import AuthValidator
+from src.runtime_v2.control_plane.audit_store import CommandAuditStore
+from src.runtime_v2.control_plane.notification_dispatcher import (
+    TelegramNotificationDispatcher, TelegramBotSender,
+)
+from src.runtime_v2.control_plane.service import RuntimeControlService
+from src.runtime_v2.control_plane.telegram_bot import CommandRouter, TelegramControlBot
+from src.runtime_v2.control_plane.topic_router import TopicRouter
 from src.storage.parser_results_v2 import ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
@@ -266,6 +275,46 @@ async def _run_sync_worker(
             logger.exception("sync worker error")
 
 
+def _build_control_plane(
+    *,
+    root_dir: Path,
+    ops_db_path: str,
+    logger,
+) -> tuple[TelegramControlBot, TelegramNotificationDispatcher] | tuple[None, None]:
+    cp_config_path = str(root_dir / "config" / "telegram_control.yaml")
+    try:
+        cp_config = load_control_plane_config(cp_config_path)
+    except ControlPlaneConfigError as exc:
+        logger.warning("control plane config error — bot disabled: %s", exc)
+        return None, None
+
+    if not cp_config.enabled:
+        logger.info("control plane disabled in config")
+        return None, None
+
+    from telegram import Bot as _TGBot
+
+    service = RuntimeControlService(ops_db_path=ops_db_path)
+    router = CommandRouter(
+        config=cp_config,
+        auth=AuthValidator(cp_config),
+        audit=CommandAuditStore(ops_db_path),
+        service=service,
+    )
+    control_bot = TelegramControlBot(config=cp_config, router=router)
+
+    tg_bot = _TGBot(token=cp_config.token)
+    dispatcher = TelegramNotificationDispatcher(
+        config=cp_config,
+        ops_db_path=ops_db_path,
+        topic_router=TopicRouter(cp_config),
+        sender=TelegramBotSender(tg_bot),
+    )
+    dispatcher.reset_stale_sending()
+    logger.info("control plane: initialized (delivery_mode=%s)", cp_config.delivery_mode)
+    return control_bot, dispatcher
+
+
 async def _async_main(
     *,
     parser_db_path: str,
@@ -392,6 +441,10 @@ async def _async_main(
     except Exception:
         logger.exception("execution gateway init failed — gateway disabled")
 
+    control_bot, cp_dispatcher = _build_control_plane(
+        root_dir=root_dir, ops_db_path=ops_db_path, logger=logger,
+    )
+
     watcher = ChannelConfigWatcher(
         path=channels_yaml_path,
         on_reload=listener.update_config,
@@ -418,6 +471,14 @@ async def _async_main(
                 logger=logger,
             )
         )
+
+        if control_bot is not None:
+            await control_bot.run()
+            logger.info("control plane: bot polling started")
+        cp_dispatcher_task = None
+        if cp_dispatcher is not None:
+            cp_dispatcher_task = asyncio.create_task(cp_dispatcher.run())
+            logger.info("control plane: notification dispatcher started")
 
         sync_task = None
         if execution_runtime is not None:
@@ -460,6 +521,10 @@ async def _async_main(
                 reconciliation_task.cancel()
             if position_reconciliation_task is not None:
                 position_reconciliation_task.cancel()
+            if cp_dispatcher_task is not None:
+                cp_dispatcher_task.cancel()
+            if control_bot is not None:
+                await control_bot.shutdown()
     finally:
         await client.disconnect()
         watcher.stop()
