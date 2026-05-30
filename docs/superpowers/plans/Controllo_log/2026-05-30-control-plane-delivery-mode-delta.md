@@ -17,21 +17,21 @@
 
 ### Step 1: Aggiorna `models.py` — thread_id opzionale + delivery_mode
 
-- [ ] In `TopicConfig`: cambia `thread_id: int` → `thread_id: int | None = None`
-- [ ] In `TechLogConfig`: stesso cambio (eredita da TopicConfig, verificare se ridefinisce thread_id)
-- [ ] In `CleanLogConfig`: stesso cambio
-- [ ] In `ControlPlaneConfig`: aggiungi campo
+- [x] In `TopicConfig`: cambia `thread_id: int` → `thread_id: int | None = None`
+- [x] In `TechLogConfig`: stesso cambio (eredita da TopicConfig, verificare se ridefinisce thread_id)
+- [x] In `CleanLogConfig`: stesso cambio
+- [x] In `ControlPlaneConfig`: aggiungi campo
 
 ```python
 delivery_mode: Literal["supergroup_topics", "private_bot"] = "supergroup_topics"
 ```
 
-- [ ] Aggiorna `__all__` se necessario
-- [ ] Esegui: `python -m pytest tests/runtime_v2/control_plane/test_models.py -v` — deve passare (nessuna regressione)
+- [x] Aggiorna `__all__` se necessario
+- [x] Esegui: `python -m pytest tests/runtime_v2/control_plane/test_models.py -v` — deve passare (nessuna regressione)
 
 ### Step 2: Aggiorna `config.py` — topics opzionale in private_bot
 
-- [ ] Nel metodo `load_control_plane_config`, dopo `_substitute_env(raw)` e prima di `ControlPlaneConfig.model_validate(raw)`, aggiungi:
+- [x] Nel metodo `load_control_plane_config`, dopo `_substitute_env(raw)` e prima di `ControlPlaneConfig.model_validate(raw)`, aggiungi:
 
 ```python
 if raw.get("delivery_mode") == "private_bot" and "topics" not in raw:
@@ -42,12 +42,12 @@ if raw.get("delivery_mode") == "private_bot" and "topics" not in raw:
     }
 ```
 
-- [ ] Esegui: `python -m pytest tests/runtime_v2/control_plane/test_config.py -v` — deve passare
+- [x] Esegui: `python -m pytest tests/runtime_v2/control_plane/test_config.py -v` — deve passare
 
 ### Step 3: Aggiorna `auth.py` — branch private_bot
 
-- [ ] In `AuthValidator.__init__`: aggiungi `self._delivery_mode = config.delivery_mode`
-- [ ] In `validate()`: sostituisci il check thread_id con:
+- [x] In `AuthValidator.__init__`: aggiungi `self._delivery_mode = config.delivery_mode`
+- [x] In `validate()`: sostituisci il check thread_id con:
 
 ```python
 if self._delivery_mode == "supergroup_topics":
@@ -55,11 +55,11 @@ if self._delivery_mode == "supergroup_topics":
         return AuthResult("IGNORE", "wrong_topic")
 ```
 
-- [ ] Esegui: `python -m pytest tests/runtime_v2/control_plane/test_auth.py -v` — deve passare
+- [x] Esegui: `python -m pytest tests/runtime_v2/control_plane/test_auth.py -v` — deve passare
 
 ### Step 4: Aggiungi nuovi test
 
-- [ ] In `tests/runtime_v2/control_plane/test_auth.py`, aggiungi:
+- [x] In `tests/runtime_v2/control_plane/test_auth.py`, aggiungi:
 
 ```python
 def _config_private_bot() -> ControlPlaneConfig:
@@ -95,7 +95,7 @@ def test_private_bot_unauthorized_user():
     assert res.decision == "REJECT_UNAUTHORIZED"
 ```
 
-- [ ] In `tests/runtime_v2/control_plane/test_config.py`, aggiungi:
+- [x] In `tests/runtime_v2/control_plane/test_config.py`, aggiungi:
 
 ```python
 _PRIVATE_BOT_YAML = """
@@ -135,7 +135,7 @@ authorized_users:
 
 ### Step 5: Run suite completa Parte 1
 
-- [ ] Esegui: `python -m pytest tests/runtime_v2/control_plane/ -v` — tutti verdi
+- [x] Esegui: `python -m pytest tests/runtime_v2/control_plane/ -v` — tutti verdi
 
 ### Step 6: Commit
 

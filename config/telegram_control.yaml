@@ -2,15 +2,15 @@
 # Secrets are read from environment variables via ${ENV} placeholders.
 enabled: true
 
-token_env: 8713797227:AAHxXrjkS8PGsBqZRSBhMd6D0DryT5ZPMBo
+token_env: CONTROL_TELEGRAM_BOT_TOKEN
 
-chat_id: "${-3897279123}"
+chat_id: "${CONTROL_TELEGRAM_CHAT_ID}"
 
 topics:
   commands:
     thread_id: 13
   tech_log:
-    thread_id: 18
+    thread_id: 3
     enabled: true
     min_level: WARNING
     operational_events: false
@@ -20,7 +20,7 @@ topics:
     max_repeated_before_summary: 5
     debug_max_duration_minutes: 60
   clean_log:
-    thread_id: 17
+    thread_id: 11
     debounce_seconds: 20
     aggregate_fills_seconds: 30
     aggregate_updates_seconds: 20
@@ -28,7 +28,7 @@ topics:
     min_partial_fill_notify_pct: 10
 
 authorized_users:
-  - "${526179818}"
+  - "${CONTROL_TELEGRAM_USER_ID}"
 
 startup:
   mode: auto
