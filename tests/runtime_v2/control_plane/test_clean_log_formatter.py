@@ -4,6 +4,10 @@ from __future__ import annotations
 from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
 
 
+# ---------------------------------------------------------------------------
+# Existing formatter tests (preserved + assertions updated for richer output)
+# ---------------------------------------------------------------------------
+
 def test_signal_accepted():
     text = format_clean_log("SIGNAL_ACCEPTED", {
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
@@ -62,3 +66,245 @@ def test_unknown_type_has_safe_fallback():
     text = format_clean_log("WAT", {"chain_id": 1, "symbol": "X/Y", "side": "LONG"})
     assert "#1" in text
     assert "WAT" in text
+
+
+# ---------------------------------------------------------------------------
+# New formatter tests — enriched payloads
+# ---------------------------------------------------------------------------
+
+def test_signal_accepted_full():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "trader_id": "trader_a",
+        "entries": [
+            {"sequence": 1, "entry_type": "MARKET", "price": None},
+            {"sequence": 2, "entry_type": "LIMIT", "price": 64000.0},
+        ],
+        "sl": 62000.0,
+        "tps": [68000.0, 71000.0],
+        "risk_pct": 0.5,
+        "source": "original_message",
+    })
+    assert "Entry_1: Market" in text
+    assert "Entry_2: 64,000 Limit" in text
+    assert "SL: 62,000" in text
+    assert "TP_1: 68,000" in text
+    assert "TP_2: 71,000" in text
+    assert "Risk: 0.5%" in text
+    assert "Trader: trader_a" in text
+
+
+def test_signal_accepted_market_with_price():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 1, "symbol": "ETH/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "MARKET", "price": 3000.0}],
+        "sl": None, "tps": [], "risk_pct": None, "source": "original_message",
+    })
+    assert "Entry_1: Market ~3,000" in text
+
+
+def test_entry_opened_with_avg_and_pending():
+    text = format_clean_log("ENTRY_OPENED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 65020.0, "filled_qty": 0.004,
+        "avg_entry": 65020.0,
+        "pending_entries": [{"sequence": 2, "entry_type": "LIMIT", "price": 64000.0}],
+        "source": "exchange",
+    })
+    assert "ENTRY OPENED" in text
+    assert "Avg entry: 65,020" in text
+    assert "Entry_2" in text
+    assert "64,000" in text
+
+
+def test_entry_opened_no_pending():
+    text = format_clean_log("ENTRY_OPENED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 65020.0, "filled_qty": 0.004,
+        "avg_entry": 65020.0,
+        "pending_entries": [],
+        "source": "exchange",
+    })
+    assert "Pending: none" in text
+
+
+def test_tp_filled_shows_price_and_sl():
+    text = format_clean_log("TP_FILLED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "tp_level": 1, "tp_price": 68000.0,
+        "is_final": False, "sl_current": 62000.0,
+        "source": "exchange",
+    })
+    assert "TP1 FILLED" in text
+    assert "TP_1: 68,000" in text
+    assert "SL: 62,000" in text
+    assert "POSITION CLOSED" not in text
+
+
+def test_tp_filled_final():
+    text = format_clean_log("TP_FILLED_FINAL", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "tp_level": 2, "tp_price": 71000.0,
+        "is_final": True, "sl_current": None,
+        "source": "exchange",
+    })
+    assert "TP2 FILLED — POSITION CLOSED" in text
+    assert "TAKE_PROFIT" in text
+
+
+def test_tp_filled_no_sl_shown_when_final():
+    text = format_clean_log("TP_FILLED_FINAL", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "tp_level": 2, "tp_price": 71000.0,
+        "is_final": True, "sl_current": 62000.0,
+        "source": "exchange",
+    })
+    # sl_current should NOT appear on final TP (position is closed)
+    assert "Remaining:" not in text
+
+
+def test_sl_filled_shows_fill_price():
+    text = format_clean_log("SL_FILLED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 62000.0, "source": "exchange",
+    })
+    assert "SL FILLED — POSITION CLOSED" in text
+    assert "62,000" in text
+    assert "STOP_LOSS" in text
+
+
+def test_sl_filled_side_always_correct():
+    """side must come from chain (LONG/SHORT), not from the exchange event (which may say 'Sell')."""
+    text = format_clean_log("SL_FILLED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 62000.0, "source": "exchange",
+    })
+    assert "LONG" in text
+    assert "Sell" not in text
+
+
+def test_position_closed_shows_fill_price():
+    text = format_clean_log("POSITION_CLOSED", {
+        "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 65500.0, "source": "exchange",
+    })
+    assert "POSITION CLOSED" in text
+    assert "65,500" in text
+    assert "MANUAL_CLOSE" in text
+
+
+# ---------------------------------------------------------------------------
+# Integration test — outbox_writer enriches payload from ops_trade_chains
+# ---------------------------------------------------------------------------
+
+def test_outbox_writer_signal_accepted_enriches_from_chain(tmp_path):
+    """project_clean_log_for_chain reads plan/risk from ops_trade_chains."""
+    import sqlite3
+    import json
+    from pathlib import Path
+    from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+
+    db_path = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db_path)
+    migrations_dir = Path("db/ops_migrations")
+    for f in sorted(migrations_dir.glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now = "2026-05-30T12:00:00+00:00"
+    plan = json.dumps({
+        "stop_loss": 62000.0,
+        "final_tp": 71000.0,
+        "intermediate_tps": [68000.0],
+        "legs": [
+            {
+                "sequence": 1, "entry_type": "LIMIT",
+                "price": 65000.0, "status": "PENDING", "weight": 1.0,
+            }
+        ],
+    })
+    risk = json.dumps({"capital": 10000.0, "risk_amount": 50.0})
+
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_trade_chains "
+            "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+            " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+            " management_plan_json, plan_state_json, risk_snapshot_json, "
+            " created_at, updated_at) "
+            "VALUES (10, 10, 10, 10, 'trader_a', 'main', 'BTC/USDT', 'LONG', "
+            "        'WAITING_ENTRY', 'ONE_SHOT', '{}', ?, ?, ?, ?)",
+            (plan, risk, now, now),
+        )
+        conn.execute(
+            "INSERT INTO ops_lifecycle_events "
+            "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+            "VALUES (10, 'SIGNAL_ACCEPTED', 'enrichment', '{}', 'sa:10', ?)",
+            (now,),
+        )
+
+    project_clean_log_for_chain(conn, 10)
+
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox "
+        "WHERE notification_type='SIGNAL_ACCEPTED'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    p = json.loads(row[0])
+    assert p["sl"] == 62000.0
+    assert len(p["tps"]) == 2          # intermediate (68000) + final (71000)
+    assert p["tps"][0] == 68000.0
+    assert p["tps"][1] == 71000.0
+    assert p["risk_pct"] == 0.5        # 50/10000*100
+    assert p["trader_id"] == "trader_a"
+    assert p["side"] == "LONG"
+
+
+def test_outbox_writer_sl_filled_side_from_chain(tmp_path):
+    """Side in SL_FILLED payload must come from ops_trade_chains (LONG), not event (Sell)."""
+    import sqlite3
+    import json
+    from pathlib import Path
+    from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+
+    db_path = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db_path)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now = "2026-05-30T12:00:00+00:00"
+    sl_ev_payload = json.dumps({"fill_price": 62000.0, "fill_qty": 5333.4, "side": "Sell"})
+
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_trade_chains "
+            "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+            " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+            " management_plan_json, plan_state_json, risk_snapshot_json, "
+            " created_at, updated_at) "
+            "VALUES (20, 20, 20, 20, 'trader_a', 'main', 'ETH/USDT', 'LONG', "
+            "        'CLOSED', 'ONE_SHOT', '{}', '{}', '{}', ?, ?)",
+            (now, now),
+        )
+        conn.execute(
+            "INSERT INTO ops_lifecycle_events "
+            "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+            "VALUES (20, 'SL_FILLED', 'exchange', ?, 'sl:20', ?)",
+            (sl_ev_payload, now),
+        )
+
+    project_clean_log_for_chain(conn, 20)
+
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox "
+        "WHERE notification_type='SL_FILLED'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    p = json.loads(row[0])
+    assert p["side"] == "LONG"          # from chain, not "Sell" from event
+    assert p["fill_price"] == 62000.0

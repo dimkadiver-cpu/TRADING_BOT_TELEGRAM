@@ -50,10 +50,39 @@ def _footer(source: str, link: str | None = None) -> list[str]:
 
 def _signal_accepted(p: dict) -> str:
     lines = _header("✅", p.get("chain_id"), "SIGNAL ACCEPTED", p.get("symbol"), p.get("side"))
-    if p.get("trader_id"):
-        lines.append(f"Trader: {p['trader_id']}")
+
+    # Entries
+    for e in p.get("entries") or []:
+        seq = e.get("sequence", 1)
+        etype = e.get("entry_type", "LIMIT")
+        price = e.get("price")
+        if etype == "MARKET":
+            price_str = f"Market ~{_num(price)}" if price is not None else "Market"
+        else:
+            price_str = f"{_num(price)} Limit" if price is not None else "Limit"
+        lines.append(f"Entry_{seq}: {price_str}")
+
+    # SL
+    if p.get("sl") is not None:
+        lines.append(f"SL: {_num(p['sl'])}")
+
+    # TPs
+    for i, tp in enumerate(p.get("tps") or [], start=1):
+        lines.append(f"TP_{i}: {_num(tp)}")
+
+    # Risk
+    if p.get("risk_pct") is not None:
+        lines.append(f"Risk: {p['risk_pct']}%")
+
     lines.append("")
-    lines += _footer(p.get("source", "original_message"), p.get("link"))
+
+    footer_lines = [_SEP]
+    if p.get("trader_id"):
+        footer_lines.append(f"Trader: {p['trader_id']}")
+    footer_lines.append(f"Source: {p.get('source', 'original_message')}")
+    if p.get("link"):
+        footer_lines.append(p["link"])
+    lines += footer_lines
     return "\n".join(lines)
 
 
@@ -68,12 +97,29 @@ def _review_required(p: dict) -> str:
 
 def _entry_opened(p: dict) -> str:
     lines = _header("📊", p.get("chain_id"), "ENTRY OPENED", p.get("symbol"), p.get("side"))
+
     if p.get("fill_price") is not None:
         lines.append("Filled:")
-        lines.append(f"Entry: {_num(p['fill_price'])}")
+        lines.append(f"Price: {_num(p['fill_price'])}")
         if p.get("filled_qty") is not None:
-            lines.append(f"Qty: {p['filled_qty']}")
+            lines.append(f"Qty: {_num(p['filled_qty'])}")
         lines.append("")
+
+    if p.get("avg_entry") is not None:
+        lines.append("Position:")
+        lines.append(f"Avg entry: {_num(p['avg_entry'])}")
+        pending = p.get("pending_entries") or []
+        if pending:
+            for pe in pending:
+                seq = pe.get("sequence", "?")
+                price = pe.get("price")
+                etype = pe.get("entry_type", "LIMIT")
+                price_str = _num(price) if price is not None else "?"
+                lines.append(f"Pending: Entry_{seq} {price_str} {etype.capitalize()}")
+        else:
+            lines.append("Pending: none")
+        lines.append("")
+
     lines += _footer(p.get("source", "exchange"))
     return "\n".join(lines)
 
@@ -84,12 +130,25 @@ def _tp_filled(p: dict, final: bool) -> str:
     if final:
         label += " — POSITION CLOSED"
     lines = _header("📊", p.get("chain_id"), label, p.get("symbol"), p.get("side"))
-    if p.get("tp_price") is not None:
-        tp_label = f"TP_{level}" if level is not None else "TP"
-        lines.append(f"{tp_label}: {_num(p['tp_price'])}")
-    if p.get("pnl") is not None:
-        lines.append(f"PnL: {p['pnl']} USDT")
+
+    if level is not None:
+        tp_label = f"TP_{level}"
+        if p.get("tp_price") is not None:
+            lines.append(f"{tp_label}: {_num(p['tp_price'])}")
+        else:
+            lines.append(f"{tp_label}: —")
+
     lines.append("")
+
+    if not final and p.get("sl_current") is not None:
+        lines.append("Remaining:")
+        lines.append(f"SL: {_num(p['sl_current'])}")
+        lines.append("")
+
+    if final:
+        lines.append("Close reason: TAKE_PROFIT")
+        lines.append("")
+
     lines += _footer(p.get("source", "exchange"))
     return "\n".join(lines)
 
@@ -97,8 +156,9 @@ def _tp_filled(p: dict, final: bool) -> str:
 def _sl_filled(p: dict) -> str:
     lines = _header("🛑", p.get("chain_id"), "SL FILLED — POSITION CLOSED",
                     p.get("symbol"), p.get("side"))
-    if p.get("pnl") is not None:
-        lines.append(f"PnL: {p['pnl']} USDT")
+    if p.get("fill_price") is not None:
+        lines.append(f"Fill: {_num(p['fill_price'])}")
+        lines.append("")
     lines.append("Close reason: STOP_LOSS")
     lines.append("")
     lines += _footer(p.get("source", "exchange"))
@@ -107,8 +167,9 @@ def _sl_filled(p: dict) -> str:
 
 def _position_closed(p: dict) -> str:
     lines = _header("📊", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"))
-    if p.get("pnl") is not None:
-        lines.append(f"PnL: {p['pnl']} USDT")
+    if p.get("fill_price") is not None:
+        lines.append(f"Fill: {_num(p['fill_price'])}")
+        lines.append("")
     lines.append("Close reason: MANUAL_CLOSE")
     lines.append("")
     lines += _footer(p.get("source", "exchange"))
