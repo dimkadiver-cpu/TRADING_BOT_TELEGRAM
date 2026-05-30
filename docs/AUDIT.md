@@ -59,6 +59,63 @@ PytestConfigWarning: Unknown config option: collect_ignore_glob
 
 ---
 
+## 2026-05-30 — Control Plane Part 2: CLEAN_LOG Notifications completata
+
+### Step completato
+
+Implementato il layer di notifiche CLEAN_LOG via outbox pattern. Workers lifecycle proiettano eventi nel outbox; un dispatcher asincrono drena le righe, le formatta e le invia via Telegram con retry e stato SENDING per sicurezza at-least-once.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/outbox_writer.py` | Creato | `write_clean_log_event`, `write_tech_log_event`, `project_clean_log_for_chain` — idempotente via dedupe_key + INSERT OR IGNORE |
+| `src/runtime_v2/control_plane/topic_router.py` | Creato | `TopicRouter.route()` → `(chat_id, thread_id | None)` con branching `delivery_mode` (supergroup_topics / private_bot) |
+| `src/runtime_v2/control_plane/notification_dispatcher.py` | Creato | `TelegramNotificationDispatcher`: drain loop, SENDING claim state, retry/FAILED, `NotificationSender` protocol, `TelegramBotSender` |
+| `src/runtime_v2/control_plane/formatters/__init__.py` | Creato | Package marker |
+| `src/runtime_v2/control_plane/formatters/clean_log.py` | Creato | `format_clean_log()` — 7 event types con emoji, footer Source, precision numerica 8 s.f. |
+| `src/runtime_v2/lifecycle/workers.py` | Modificato | `_persist_result` chiama `project_clean_log_for_chain` inside `with conn:`, guarded try/except |
+| `src/runtime_v2/lifecycle/entry_gate.py` | Modificato | `_persist_signal` e `_persist_update` chiamano `project_clean_log_for_chain` inside `with conn:`, guarded try/except |
+| `tests/runtime_v2/control_plane/conftest.py` | Creato | Async test hook con signature filtering per compatibilità pytest-asyncio STRICT mode |
+| `tests/runtime_v2/control_plane/test_outbox_writer.py` | Creato | 5 test: insert, dedupe, projection mapping, fills, idempotenza |
+| `tests/runtime_v2/control_plane/test_topic_router.py` | Creato | 3 test: supergroup routes, private_bot routes, unknown destination raises |
+| `tests/runtime_v2/control_plane/test_clean_log_formatter.py` | Creato | 7 test per event types + fallback |
+| `tests/runtime_v2/control_plane/test_dispatcher.py` | Creato | 4 test: drain→SENT, retry→FAILED, no-resend FAILED, recovery transient |
+| `tests/runtime_v2/control_plane/test_worker_clean_log_integration.py` | Creato | Integration test: worker persist → outbox row |
+
+### Risultato test
+
+```
+python -m pytest tests/runtime_v2/control_plane/ tests/runtime_v2/lifecycle/ -q
+→ 336 passed, 1 warning in 52.80s ✅
+```
+
+### Decisioni e design notes
+
+- **delivery_mode delta integrato**: `TopicRouter.route()` (non `resolve()`) gestisce `private_bot` (thread_id=None) e `supergroup_topics` direttamente. `TelegramBotSender` omette `message_thread_id` quando `None`.
+- **SENDING state**: il dispatcher ora sposta le righe a `SENDING` dentro la stessa transazione `BEGIN IMMEDIATE` prima di inviare. `reset_stale_sending()` disponibile per crash recovery al boot.
+- **Price precision**: `_num()` usa `:.8g` per preservare cifre significative — corretto per prezzi crypto piccoli (es. `0.00001234`).
+- **Destination validation**: `TopicRouter.route()` valida la destination prima del branch `delivery_mode`, quindi alza `ValueError` in entrambe le modalità.
+
+### Deferred (CLEAN_LOG_SPEC §6–§8, §15)
+
+- Aggregazione/debounce non enforced: ogni evento lifecycle genera una notifica distinta. I campi di config `debounce_seconds`, `aggregate_fills_seconds`, `max_messages_per_chain_per_minute` sono caricati ma non applicati.
+- `ENTRY_UPDATED` / batching TP / multi-chain summary / reconciliation messages: out of scope Part 2.
+- `REVIEW_REQUIRED` non proiettato via chain projection (`review_events` ha `trade_chain_id=None`); proiezione richiede un entry point separato.
+
+### Rischi aperti
+
+- `TelegramBotSender` non ancora integrato con un `Bot` reale: la dipendenza `python-telegram-bot>=21.0` è installata ma `TelegramBotSender` è testato solo con `FakeSender`. Il wiring nel bootstrap del runtime è Part 3.
+- Workers wiring (entry_gate._persist_signal) non ha integration test per SIGNAL_ACCEPTED perché il segnale gate usa un DB separato per il parser; il smoke test copre solo `LifecycleEventWorker._persist_result`.
+
+### Prossimi step
+
+- Part 3: `telegram_bot.py` — polling/webhook handler, command routing, `TelegramBotSender` wiring reale.
+- Part 4: integration override `scope_type` semantics (`PER_TRADER` vs `TRADER`).
+- Part 5: `formatters/tech_log.py` + prefisso `⚠️ --SYSTEM--` per `private_bot`.
+
+---
+
 ## 2026-05-29 — Task 7: Smoke Test for market_entry_now Full Roundtrip (1 commit, 706/706 PASS)
 
 ### Step completato
