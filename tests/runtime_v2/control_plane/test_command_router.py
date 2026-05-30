@@ -228,8 +228,101 @@ def test_send_reply_keyboard_sends_in_private_bot(ops_db):
     bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
     update = MagicMock()
     update.message.reply_text = AsyncMock()
-    asyncio.run(bot._send_reply_keyboard(update))
+    asyncio.run(bot._send_reply_keyboard(update, user_id=42))
     update.message.reply_text.assert_called_once()
     call_kwargs = update.message.reply_text.call_args
     from telegram import ReplyKeyboardMarkup
     assert isinstance(call_kwargs.kwargs.get("reply_markup"), ReplyKeyboardMarkup)
+    assert call_kwargs.args[0] == "Control Plane attivo."
+
+
+def test_send_reply_keyboard_skips_repeat_for_same_user(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
+    update = MagicMock()
+    update.message.reply_text = AsyncMock()
+    asyncio.run(bot._send_reply_keyboard(update, user_id=42))
+    asyncio.run(bot._send_reply_keyboard(update, user_id=42))
+    update.message.reply_text.assert_called_once()
+
+
+def test_private_bot_status_audits_without_thread_id(ops_db):
+    cfg = ControlPlaneConfig(
+        token="t",
+        chat_id=42,
+        delivery_mode="private_bot",
+        topics=TopicsConfig(
+            commands=TopicConfig(thread_id=None),
+            tech_log=TechLogConfig(thread_id=None),
+            clean_log=CleanLogConfig(thread_id=None),
+        ),
+        authorized_users=[42],
+        keyboard=[["/status"]],
+    )
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=RuntimeControlService(ops_db_path=ops_db),
+    )
+    res = router.route(
+        command_text="/status",
+        message_id=12,
+        chat_id=42,
+        thread_id=None,
+        user_id=42,
+        username="op",
+    )
+    assert res.decision == "EXECUTED"
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status, message_thread_id FROM ops_telegram_control_commands "
+        "WHERE command_request_id='42:12'"
+    ).fetchone()
+    conn.close()
+    assert row == ("EXECUTED", "")
+
+
+def test_private_bot_first_text_message_sends_keyboard(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
+    update = MagicMock()
+    update.effective_message = MagicMock(chat_id=-100999, message_thread_id=None)
+    update.effective_user = MagicMock(id=42)
+    update.message.reply_text = AsyncMock()
+    asyncio.run(bot._on_text_message(update, MagicMock()))
+    update.message.reply_text.assert_called_once()
+
+
+def test_private_bot_start_command_sends_keyboard_once_and_reply(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
+    update = MagicMock()
+    update.effective_message = MagicMock(
+        text="/start",
+        message_id=20,
+        chat_id=-100999,
+        message_thread_id=None,
+    )
+    update.effective_user = MagicMock(id=42, username="op")
+    update.message.reply_text = AsyncMock()
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+    asyncio.run(bot._on_command(update, context))
+    update.message.reply_text.assert_called_once()
+    context.bot.send_message.assert_called_once()
+
+
+def test_private_bot_non_start_command_does_not_push_keyboard(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
+    update = MagicMock()
+    update.effective_message = MagicMock(
+        text="/status",
+        message_id=21,
+        chat_id=-100999,
+        message_thread_id=None,
+    )
+    update.effective_user = MagicMock(id=42, username="op")
+    update.message.reply_text = AsyncMock()
+    context = MagicMock()
+    context.bot.send_message = AsyncMock()
+    asyncio.run(bot._on_command(update, context))
+    update.message.reply_text.assert_not_called()
+    context.bot.send_message.assert_called_once()

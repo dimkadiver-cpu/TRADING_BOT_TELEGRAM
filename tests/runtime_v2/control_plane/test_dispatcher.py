@@ -42,6 +42,19 @@ def _config():
     )
 
 
+def _private_bot_config():
+    return ControlPlaneConfig(
+        token="t",
+        chat_id=42,
+        delivery_mode="private_bot",
+        topics=TopicsConfig(
+            commands=TopicConfig(thread_id=None),
+            tech_log=TechLogConfig(thread_id=None),
+            clean_log=CleanLogConfig(thread_id=None),
+        ),
+    )
+
+
 class FakeSender:
     def __init__(self, fail_times: int = 0):
         self.sent: list[dict] = []
@@ -57,6 +70,16 @@ class FakeSender:
 
 def _dispatcher(ops_db, sender):
     cfg = _config()
+    return TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=sender,
+    )
+
+
+def _private_dispatcher(ops_db, sender):
+    cfg = _private_bot_config()
     return TelegramNotificationDispatcher(
         config=cfg,
         ops_db_path=ops_db,
@@ -126,3 +149,13 @@ async def test_recovers_after_transient_failure(ops_db):
     status = conn.execute("SELECT status FROM ops_notification_outbox").fetchone()[0]
     conn.close()
     assert status == "SENT"
+
+
+async def test_private_bot_dispatches_without_thread_id(ops_db):
+    _seed(ops_db)
+    sender = FakeSender()
+    disp = _private_dispatcher(ops_db, sender)
+    n = await disp.drain_once()
+    assert n == 1
+    assert sender.sent[0]["chat_id"] == 42
+    assert sender.sent[0]["thread_id"] is None

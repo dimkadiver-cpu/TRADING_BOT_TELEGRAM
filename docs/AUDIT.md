@@ -1006,6 +1006,133 @@ Quando si riprendera il lavoro implementativo:
 
 ---
 
+## 2026-05-30 — Control Plane Part 3 + Delivery Mode Delta: Read-Only Bot completata
+
+### Step completato
+
+Implementata la Part 3 del Control Plane Telegram (bot read-only) e integrato il delta `delivery_mode` (Task 5 — Reply Keyboard). Il bot risponde ai comandi `/help`, `/status`, `/trades`, `/trade <id>`, `/health`, `/control`, `/reviews`, `/version` con autorizzazione, audit, e formattazione testuale. Ogni ricevuto viene auditato in `ops_telegram_control_commands`.
+
+### File creati
+
+| File | Responsabilità |
+|---|---|
+| `src/runtime_v2/control_plane/status_queries.py` | `StatusQueries` + 9 view dataclasses — query read-only su `ops.sqlite3` |
+| `src/runtime_v2/control_plane/service.py` | `RuntimeControlService` (read API, Part 4 aggiungerà write); `VersionInfo` via `git` subprocess |
+| `src/runtime_v2/control_plane/audit_store.py` | `CommandAuditStore.record()` + `update_status()` — idempotente su `command_request_id` |
+| `src/runtime_v2/control_plane/telegram_bot.py` | `CommandRouter` (auth→audit→dispatch→format) + `TelegramControlBot` (PTB wrapper) + `_send_reply_keyboard` (Delta Task 5) |
+| `src/runtime_v2/control_plane/formatters/status.py` | `format_status`, `status_level` (🟢/🟡/🔴) |
+| `src/runtime_v2/control_plane/formatters/trades.py` | `format_trades` — lista compatta trade attivi |
+| `src/runtime_v2/control_plane/formatters/trade_detail.py` | `format_trade_detail` — dettaglio chain |
+| `src/runtime_v2/control_plane/formatters/health.py` | `format_health` — worker status e DB |
+| `src/runtime_v2/control_plane/formatters/control.py` | `format_control` — blocchi e blacklist |
+| `src/runtime_v2/control_plane/formatters/reviews.py` | `format_reviews` — chains in REVIEW_REQUIRED |
+| `tests/runtime_v2/control_plane/test_status_queries.py` | 4 test: counts, control/blacklist, reviews, trade detail |
+| `tests/runtime_v2/control_plane/test_readonly_formatters.py` | 13 test: semaforo, formatter output, edge cases |
+| `tests/runtime_v2/control_plane/test_audit_store.py` | 3 test: record, reject, idempotency |
+| `tests/runtime_v2/control_plane/test_command_router.py` | 13 test: auth/reject/dispatch/audit + wrong-topic audit + keyboard guards |
+
+### Risultato test
+
+```
+python -m pytest tests/runtime_v2/control_plane/ -v
+→ 75 passed, 0 failed ✅
+```
+
+### Decisioni e design notes
+
+- **`audit_store.py` in Part 3 (non Part 4 come da spec)**: il path REJECT_UNAUTHORIZED deve auditare dal primo messaggio; Part 4 riusa senza modifiche.
+- **PnL/ROI omessi**: `/status`, `/trades`, `/trade` omettono unrealized PnL perché il mark-price non è persistito nello schema attuale. `/pnl` è Part 5.
+- **`CommandRouter._allowed_commands()` override-friendly**: `frozenset` in metodo separato per estensione in Part 4/5 senza riscrivere routing/auth.
+- **Delta Task 5 — Reply Keyboard**: `_send_reply_keyboard` è no-op in `supergroup_topics`; invia `ReplyKeyboardMarkup` (con `is_persistent=True` per PTB v22) su `/start` in `private_bot`. Bug PTB `persistent` → `is_persistent` fixato durante review.
+- **`str(None)` → `None`**: `_record` ora scrive `NULL` in `message_thread_id` invece di `"None"` quando `thread_id is None` (private_bot mode).
+- **`_start_time` in `__init__`**: uptime misura dall'istanziazione del servizio, non dall'import del modulo.
+
+### Scope note documentata
+
+PnL/ROI/mark-price fields nei mock-up di COMMANDS_SPEC richiedono dati di mercato non persistiti nel DB corrente. I campi omessi sono: unrealized PnL per trade, ROI %, mark price. `/pnl` è Part 5.
+
+### Rischi aperti
+
+- Worker list in `get_health()` è hardcoded con stato `"OK"` — la funzione non interroga heartbeat reali. Questo dà una falsa rassicurazione. Part 5 dovrà aggiungere un meccanismo di heartbeat per i worker o rimuovere le righe faked-OK.
+- `TelegramControlBot._on_command` invia sempre a `self._config.chat_id` (config), non a `msg.chat_id`. In `private_bot` mode questo potrebbe divergere se il bot riceve messaggi da chat private diverse da quella configurata. Design intenzionale per ora.
+- Delta Tasks 2-3 già implementati in Part 2 (topic_router, notification_dispatcher). Delta Task 4 (formatters/tech_log.py) è Part 5.
+
+### Prossimi step
+
+- Part 4: write commands (`/pause`, `/resume`, `/block`, `/unblock`, `/start`) — estende `CommandRouter` e `RuntimeControlService`.
+- Part 5: `formatters/tech_log.py` con prefisso `⚠️ --SYSTEM--` per `private_bot`; `/pnl`, `/logs`, `/debug`.
+- Fix P3 (posizione reconciliation al riavvio) — prima del go-live in produzione.
+
+---
+
+## 2026-05-30 — Control Plane Part 4 + Delivery Mode Delta: Control Commands completata
+
+### Step completato
+
+Implementata la Part 4 del Control Plane Telegram: il bot ora supporta i comandi write-side `/pause`, `/resume`, `/start`, `/block`, `/unblock`, con scritture auditabili e idempotenti su `ops_control_state` e `ops_config_overrides`. Nello stesso ciclo sono stati chiusi i punti di integrazione del delta `delivery_mode` che impattavano il path reale dei comandi: audit senza thread in `private_bot`, keyboard su `/start` e primo contatto autorizzato, e dispatch notifiche senza `message_thread_id`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/override_store.py` | Creato | Persistenza blacklist symbol-level in `ops_config_overrides`; update atomico via transazione `BEGIN IMMEDIATE` |
+| `src/runtime_v2/control_plane/service.py` | Modificato | Aggiunti `PauseResult`, `ResumeResult`, `BlockResult`, `UnblockResult`; metodi `pause`, `resume`, `start`, `block_symbol`, `unblock_symbol` |
+| `src/runtime_v2/control_plane/telegram_bot.py` | Modificato | Router esteso ai comandi write-side; validazione arità per `/pause` e `/resume`; keyboard privata solo su `/start` e primo testo autorizzato |
+| `src/runtime_v2/control_plane/audit_store.py` | Modificato | In `private_bot`, `message_thread_id` vuoto (`""`) invece di `NULL`, coerente col vincolo `NOT NULL` della migration 007 |
+| `src/runtime_v2/control_plane/status_queries.py` | Modificato | `/status` e `/control` riflettono anche i blocchi trader-scoped, non solo il blocco globale |
+| `src/runtime_v2/control_plane/formatters/pause.py` | Creato | Reply formatter per `/pause`, `/resume`, `/start` |
+| `src/runtime_v2/control_plane/formatters/block.py` | Creato | Reply formatter per `/block`, `/unblock` |
+| `tests/runtime_v2/control_plane/test_override_store.py` | Creato | 5 test: add/remove/idempotenza/global/per-trader |
+| `tests/runtime_v2/control_plane/test_service_writes.py` | Creato | 9 test: pause/resume/start + visibilità blacklist |
+| `tests/runtime_v2/control_plane/test_control_formatters.py` | Creato | 10 test per formatter write-side |
+| `tests/runtime_v2/control_plane/test_command_router_writes.py` | Creato | 8 test: dispatch write-side, audit, usage |
+| `tests/runtime_v2/control_plane/test_command_router.py` | Modificato | Copertura `private_bot`: `/start`, first-contact keyboard, no keyboard su comandi non-`/start`, audit senza thread |
+| `tests/runtime_v2/control_plane/test_dispatcher.py` | Modificato | Copertura dispatch `private_bot` senza `thread_id` |
+| `tests/runtime_v2/control_plane/test_status_queries.py` | Modificato | Copertura blocchi trader-scoped visibili in `/status` |
+
+### Risultato test
+
+```text
+C:\TeleSignalBot\.venv\Scripts\python.exe -m pytest tests\runtime_v2\control_plane -q
+→ 114 passed, 1 warning ✅
+
+C:\TeleSignalBot\.venv\Scripts\python.exe -m pytest tests\runtime_v2\lifecycle -q
+→ 294 passed, 1 warning ✅
+
+Warning pre-esistente:
+PytestConfigWarning: Unknown config option: collect_ignore_glob
+```
+
+### Decisioni e design notes
+
+- **Per-trader pause usa `scope_type="TRADER"`**: scelta intenzionale per allinearsi a `src/runtime_v2/lifecycle/repositories.py`, dove `ControlStateRepository.get_effective_mode()` legge `TRADER` e non `PER_TRADER`. Questo chiude la discrepanza aperta in Part 1.
+- **Blacklist write-side separata dai control blocks**: `/block` e `/unblock` persistono in `ops_config_overrides` con scope `GLOBAL | PER_TRADER`, mentre `/pause` e `/resume` agiscono su `ops_control_state`. Le due superfici restano distinte per design.
+- **Race fix nel blacklist store**: la prima implementazione read-modify-write è stata corretta durante review. Le mutazioni ora serializzano per scope dentro una singola transazione IMMEDIATE, evitando overwrite concorrenti.
+- **Visibilità operativa corretta**: `/status` non mostra più `New entries: ENABLED` quando esistono blocchi trader-scoped. `control_mode` è derivato dagli `active_blocks`, non solo dal blocco globale.
+- **Delta `private_bot` corretto al layer proprietario**:
+  - audit dei comandi compatibile con `message_thread_id NOT NULL`;
+  - `ReplyKeyboardMarkup` inviato su `/start` e primo messaggio testuale autorizzato;
+  - nessuna push della keyboard su ogni comando eseguito;
+  - dispatcher già coerente con `thread_id=None`.
+
+### Scope note documentata
+
+- **Blacklist enforcement nel gate segnali**: questa parte persiste e mostra la blacklist nel control plane, ma non modifica ancora il merged-read dell’enrichment/gate che oggi legge il blacklist da YAML/operation config. Quindi `/block` è completo lato control-plane, non ancora lato enforcement operativo upstream.
+
+### Rischi aperti
+
+- `get_health()` continua a usare una lista worker hardcoded con stati nominali; il control plane non ha ancora heartbeat runtime reali.
+- `TelegramControlBot` continua a rispondere sempre alla `chat_id` configurata, non alla chat sorgente del messaggio. In `private_bot` è intenzionale, ma richiede che il bot sia usato solo nella chat autorizzata prevista.
+- La enforcement della blacklist nel gate segnali resta follow-up architetturale e non va considerata completata solo perché `/control` la visualizza.
+
+### Prossimi step
+
+- Part 5: `formatters/tech_log.py` con prefisso `⚠️ --SYSTEM--` in `private_bot`; `/pnl`, `/logs`, `/debug_on`, `/debug_off`.
+- Wiring finale in `main.py`: startup modes `auto | standby | restore`, snapshot runtime, bootstrap completo bot+dispatcher.
+- Follow-up separato: merged-read degli override blacklist nel gate/enrichment per enforcement a monte del signal flow.
+
+---
+
 ## 2026-05-29 — Problemi sistemici runtime_v2: riconciliazione al riavvio
 
 ### P2 — FIXATO: mark_done condizionato all'INSERT

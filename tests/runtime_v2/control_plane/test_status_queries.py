@@ -98,6 +98,23 @@ def test_control_view_blocks_and_blacklist(ops_db):
     assert "BTCUSDT" in view.blacklist_global
 
 
+def test_status_reflects_scoped_blocks(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_control_state "
+            "(scope_type, scope_value, execution_pause_mode, active, created_at, updated_at) "
+            "VALUES ('TRADER', 'trader_a', 'BLOCK_NEW_ENTRIES', 1, ?, ?)",
+            (_now(), _now()),
+        )
+    conn.close()
+
+    q = StatusQueries(ops_db)
+    view = q.get_status()
+    assert view.new_entries_enabled is False
+    assert view.control_mode == "BLOCK_NEW_ENTRIES"
+
+
 def test_reviews(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:

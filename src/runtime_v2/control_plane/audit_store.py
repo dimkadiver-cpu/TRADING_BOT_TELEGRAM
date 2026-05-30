@@ -20,7 +20,7 @@ class CommandAuditStore:
         *,
         command_request_id: str,
         chat_id: str,
-        message_thread_id: str,
+        message_thread_id: str | None,
         telegram_user_id: str,
         telegram_username: str | None,
         command_text: str,
@@ -43,7 +43,7 @@ class CommandAuditStore:
                 VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 ON CONFLICT(command_request_id) DO NOTHING
                 """,
-                (command_request_id, chat_id, message_thread_id, telegram_user_id,
+                (command_request_id, chat_id, message_thread_id or "", telegram_user_id,
                  telegram_username, command_text, command_name, payload_json,
                  now, status, reject_reason, idempotency_key, now, now),
             )

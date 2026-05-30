@@ -146,9 +146,15 @@ class StatusQueries:
             conn.close()
 
         control = self.get_control()
+        control_mode = "NONE"
+        if control.active_blocks:
+            if any(block.mode == "FULL_STOP" for block in control.active_blocks):
+                control_mode = "FULL_STOP"
+            else:
+                control_mode = "BLOCK_NEW_ENTRIES"
         return StatusView(
             updated_at=_now_iso(),
-            control_mode="BLOCK_NEW_ENTRIES" if not control.new_entries_enabled else "NONE",
+            control_mode=control_mode,
             new_entries_enabled=control.new_entries_enabled,
             sync_age_seconds=_age_seconds(last_event_ts),
             open_count=open_count,
@@ -257,7 +263,7 @@ class StatusQueries:
             BlockInfo(scope_type=r[0], scope_value=r[1], mode=r[2], created_at=r[3])
             for r in block_rows
         ]
-        new_entries_enabled = not any(b.scope_type == "GLOBAL" for b in blocks)
+        new_entries_enabled = len(blocks) == 0
 
         blacklist_global: list[str] = []
         blacklist_per_trader: dict[str, list[str]] = {}
