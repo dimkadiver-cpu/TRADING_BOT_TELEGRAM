@@ -109,7 +109,7 @@ def _seed_tech_log(ops_db, dedupe_key="tech:k1"):
             conn,
             notification_type="RUNTIME_SHUTDOWN",
             payload={
-                "level": "INFO",
+                "level": "WARNING",
                 "category": "Runtime",
                 "description": "Runtime shutdown. Snapshot saved.",
                 "source": "runtime_main",

@@ -69,6 +69,7 @@ def build_control_plane(
         ops_db_path=ops_db_path,
         topic_router=topic_router,
         sender=_create_sender(config.token),
+        debug_status=service.debug_status,
     )
     dispatcher.reset_stale_sending()
 

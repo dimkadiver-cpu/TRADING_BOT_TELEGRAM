@@ -6,6 +6,7 @@ import json
 import logging
 import sqlite3
 import time
+from collections.abc import Callable
 from datetime import datetime, timezone
 from typing import Protocol
 
@@ -56,6 +57,7 @@ class TelegramNotificationDispatcher:
         sender: NotificationSender,
         poll_interval_seconds: float = 2.0,
         batch_size: int = 50,
+        debug_status: Callable[[], bool] | None = None,
     ) -> None:
         self._config = config
         self._ops_db = ops_db_path
@@ -63,6 +65,7 @@ class TelegramNotificationDispatcher:
         self._sender = sender
         self._poll = poll_interval_seconds
         self._batch = batch_size
+        self._debug_status = debug_status or (lambda: False)
         # TECH_LOG rate limiting state
         self._tech_log_sent_this_minute: int = 0
         self._tech_log_minute_start: float = time.time()
@@ -132,6 +135,21 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
+    def _should_send_tech_log(self, payload: dict) -> bool:
+        """Apply policy gating for TECH_LOG: enabled, min_level, debug, operational_events."""
+        cfg = self._config.topics.tech_log
+        if not cfg.enabled:
+            return False
+        level = str(payload.get("level", "INFO")).upper()
+        if level == "DEBUG" and not self._debug_status():
+            return False
+        if level == "INFO" and not cfg.operational_events:
+            return False
+        order = {"DEBUG": 10, "INFO": 20, "WARNING": 30, "WARN": 30, "ERROR": 40, "CRITICAL": 50}
+        min_level = order.get(cfg.min_level.upper(), 30)
+        current = order.get(level, 20)
+        return current >= min_level
+
     def _check_tech_log_rate(self) -> bool:
         """Return True if message can be sent, False if rate limit exceeded.
 
@@ -196,6 +214,12 @@ class TelegramNotificationDispatcher:
                 payload = json.loads(payload_json or "{}")
             except Exception:
                 payload = {}
+
+            # Policy gating — TECH_LOG only
+            if destination == "TECH_LOG":
+                if not self._should_send_tech_log(payload):
+                    self._mark_sent(notification_id)
+                    continue
 
             # Rate limit check — only TECH_LOG is subject to limiting
             if destination == "TECH_LOG" and not self._check_tech_log_rate():
