@@ -414,6 +414,8 @@ async def _async_main(
             "control plane: startup mode 'restore' fell back to 'auto': %s",
             _cp.startup_plan.message,
         )
+    elif _cp is not None and _cp.startup_plan.mode == "restore" and not _cp.startup_plan.fell_back:
+        logger.info("control plane: startup mode 'restore' — snapshot applied")
 
     watcher = ChannelConfigWatcher(
         path=channels_yaml_path,
@@ -513,7 +515,7 @@ async def _async_main(
                     _cp.snapshot_store.save(
                         control_mode=status.control_mode,
                         active_blocks=[
-                            f"{b.scope_type}:{b.scope_value or 'GLOBAL'}"
+                            f"{b.scope_type}:{b.scope_value}" if b.scope_value else b.scope_type
                             for b in control.active_blocks
                         ],
                         open_chain_count=(
