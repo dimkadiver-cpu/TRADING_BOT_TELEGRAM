@@ -22,13 +22,13 @@ CommandStatus = Literal[
 class TopicConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    thread_id: int
+    thread_id: int | None = None
 
 
 class TechLogConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    thread_id: int
+    thread_id: int | None = None
     enabled: bool = True
     min_level: Literal["WARNING", "INFO", "DEBUG"] = "WARNING"
     operational_events: bool = False
@@ -42,7 +42,7 @@ class TechLogConfig(BaseModel):
 class CleanLogConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    thread_id: int
+    thread_id: int | None = None
     debounce_seconds: int = 20
     aggregate_fills_seconds: int = 30
     aggregate_updates_seconds: int = 20
@@ -71,6 +71,7 @@ class ControlPlaneConfig(BaseModel):
     enabled: bool = True
     token: str
     chat_id: int
+    delivery_mode: Literal["supergroup_topics", "private_bot"] = "supergroup_topics"
     topics: TopicsConfig
     authorized_users: list[int] = Field(default_factory=list)
     startup: StartupConfig = Field(default_factory=StartupConfig)

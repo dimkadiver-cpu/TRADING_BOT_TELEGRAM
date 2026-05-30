@@ -99,3 +99,38 @@ def test_top_level_yaml_list_raises(tmp_path):
 def test_missing_file_raises(tmp_path):
     with pytest.raises(ControlPlaneConfigError):
         load_control_plane_config(str(tmp_path / "nope.yaml"))
+
+
+_PRIVATE_BOT_YAML = """
+delivery_mode: private_bot
+token_env: CP_TOKEN
+chat_id: "${CP_CHAT}"
+authorized_users:
+  - "${CP_USER}"
+"""
+
+
+def test_private_bot_config_without_topics(tmp_path, monkeypatch):
+    monkeypatch.setenv("CP_TOKEN", "999:XYZ")
+    monkeypatch.setenv("CP_CHAT", "-1009999")
+    monkeypatch.setenv("CP_USER", "42")
+    cfg = load_control_plane_config(_write(tmp_path, _PRIVATE_BOT_YAML))
+    assert cfg.delivery_mode == "private_bot"
+    assert cfg.topics.commands.thread_id is None
+    assert cfg.topics.tech_log.thread_id is None
+    assert cfg.topics.clean_log.thread_id is None
+
+
+def test_supergroup_without_topics_raises(tmp_path, monkeypatch):
+    monkeypatch.setenv("CP_TOKEN", "999:XYZ")
+    monkeypatch.setenv("CP_CHAT", "-1009999")
+    monkeypatch.setenv("CP_USER", "42")
+    bad = """
+delivery_mode: supergroup_topics
+token_env: CP_TOKEN
+chat_id: "${CP_CHAT}"
+authorized_users:
+  - "${CP_USER}"
+"""
+    with pytest.raises(ControlPlaneConfigError):
+        load_control_plane_config(_write(tmp_path, bad))

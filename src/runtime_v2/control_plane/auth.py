@@ -21,14 +21,16 @@ class AuthValidator:
         self._chat_id = config.chat_id
         self._commands_thread_id = config.topics.commands.thread_id
         self._authorized_users = frozenset(config.authorized_users)
+        self._delivery_mode = config.delivery_mode
 
     def validate(
         self, chat_id: int, thread_id: int | None, user_id: int
     ) -> AuthResult:
         if chat_id != self._chat_id:
             return AuthResult("IGNORE", "wrong_chat")
-        if thread_id != self._commands_thread_id:
-            return AuthResult("IGNORE", "wrong_topic")
+        if self._delivery_mode == "supergroup_topics":
+            if thread_id != self._commands_thread_id:
+                return AuthResult("IGNORE", "wrong_topic")
         if user_id not in self._authorized_users:
             return AuthResult("REJECT_UNAUTHORIZED", "unauthorized_user")
         return AuthResult("OK")

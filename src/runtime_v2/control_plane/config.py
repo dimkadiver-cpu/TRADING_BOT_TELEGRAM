@@ -65,6 +65,13 @@ def load_control_plane_config(path: str) -> ControlPlaneConfig:
             )
     raw["token"] = token
 
+    if raw.get("delivery_mode") == "private_bot" and "topics" not in raw:
+        raw["topics"] = {
+            "commands": {"thread_id": None},
+            "tech_log":  {"thread_id": None},
+            "clean_log": {"thread_id": None},
+        }
+
     try:
         return ControlPlaneConfig.model_validate(raw)
     except ValidationError as exc:

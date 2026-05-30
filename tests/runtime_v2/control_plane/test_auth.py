@@ -56,3 +56,36 @@ def test_missing_thread_id_treated_as_wrong_topic():
     res = v.validate(chat_id=-100999, thread_id=None, user_id=42)
     assert res.decision == "IGNORE"
     assert res.reason == "wrong_topic"
+
+
+def _config_private_bot() -> ControlPlaneConfig:
+    return ControlPlaneConfig(
+        token="t",
+        chat_id=-100999,
+        delivery_mode="private_bot",
+        topics=TopicsConfig(
+            commands=TopicConfig(thread_id=None),
+            tech_log=TechLogConfig(thread_id=None),
+            clean_log=CleanLogConfig(thread_id=None),
+        ),
+        authorized_users=[42, 43],
+    )
+
+
+def test_private_bot_authorized_no_thread():
+    v = AuthValidator(_config_private_bot())
+    res = v.validate(chat_id=-100999, thread_id=None, user_id=42)
+    assert res.decision == "OK"
+
+
+def test_private_bot_wrong_chat():
+    v = AuthValidator(_config_private_bot())
+    res = v.validate(chat_id=-1, thread_id=None, user_id=42)
+    assert res.decision == "IGNORE"
+    assert res.reason == "wrong_chat"
+
+
+def test_private_bot_unauthorized_user():
+    v = AuthValidator(_config_private_bot())
+    res = v.validate(chat_id=-100999, thread_id=None, user_id=99)
+    assert res.decision == "REJECT_UNAUTHORIZED"
