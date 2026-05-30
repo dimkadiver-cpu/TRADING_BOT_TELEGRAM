@@ -183,6 +183,34 @@ def test_sl_filled_side_always_correct():
     assert "Sell" not in text
 
 
+def test_signal_rejected():
+    text = format_clean_log("SIGNAL_REJECTED", {
+        "chain_id": 146, "symbol": "BTC/USDT", "side": "LONG",
+        "trader_id": "trader_b",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "reason": "invalid_risk_profile",
+        "source": "original_message",
+    })
+    assert "❌" in text
+    assert "SIGNAL REJECTED" in text
+    assert "#146" in text
+    assert "Entry_1: 65,000 Limit" in text
+    assert "SL: 62,000" in text
+    assert "Rejected: invalid_risk_profile" in text
+    assert "Trader: trader_b" in text
+
+
+def test_signal_rejected_minimal():
+    """Works even with empty payload (no chain yet)."""
+    text = format_clean_log("SIGNAL_REJECTED", {
+        "chain_id": None, "symbol": "ETH/USDT", "side": "SHORT",
+        "reason": "risk_capacity_exceeded",
+    })
+    assert "SIGNAL REJECTED" in text
+    assert "Rejected: risk_capacity_exceeded" in text
+
+
 def test_position_closed_shows_fill_price():
     text = format_clean_log("POSITION_CLOSED", {
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",

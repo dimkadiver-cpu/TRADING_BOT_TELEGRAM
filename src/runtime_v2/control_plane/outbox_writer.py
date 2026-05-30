@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 # Events absent from this map have policy "off" (CLEAN_LOG_SPEC §2).
 _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "SIGNAL_ACCEPTED": "SIGNAL_ACCEPTED",
+    "SIGNAL_REJECTED": "SIGNAL_REJECTED",
     "REVIEW_REQUIRED": "REVIEW_REQUIRED",
     "ENTRY_FILLED": "ENTRY_OPENED",
     "TP_FILLED": "TP_FILLED",
@@ -20,6 +21,7 @@ _PRIORITY_BY_TYPE: dict[str, str] = {
     "SL_FILLED": "HIGH",
     "POSITION_CLOSED": "HIGH",
     "REVIEW_REQUIRED": "HIGH",
+    "SIGNAL_REJECTED": "HIGH",
 }
 
 
@@ -162,6 +164,23 @@ def _build_payload(
             **base,
             "fill_price": ev.get("fill_price"),
             "source": ev.get("source", "exchange"),
+        }
+
+    if notification_type == "SIGNAL_REJECTED":
+        return {
+            **base,
+            "trader_id": trader_id,
+            "reason": ev.get("reason", "unknown"),
+            "entries": [
+                {
+                    "sequence": l["sequence"],
+                    "entry_type": l["entry_type"],
+                    "price": l.get("price"),
+                }
+                for l in legs
+            ],
+            "sl": plan.get("stop_loss"),
+            "source": ev.get("source", "original_message"),
         }
 
     if notification_type == "REVIEW_REQUIRED":

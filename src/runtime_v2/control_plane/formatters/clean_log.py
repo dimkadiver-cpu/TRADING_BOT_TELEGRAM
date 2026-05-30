@@ -86,6 +86,32 @@ def _signal_accepted(p: dict) -> str:
     return "\n".join(lines)
 
 
+def _signal_rejected(p: dict) -> str:
+    lines = _header("❌", p.get("chain_id"), "SIGNAL REJECTED", p.get("symbol"), p.get("side"))
+    for e in p.get("entries") or []:
+        seq = e.get("sequence", 1)
+        etype = e.get("entry_type", "LIMIT")
+        price = e.get("price")
+        if etype == "MARKET":
+            price_str = f"Market ~{_num(price)}" if price is not None else "Market"
+        else:
+            price_str = f"{_num(price)} Limit" if price is not None else "Limit"
+        lines.append(f"Entry_{seq}: {price_str}")
+    if p.get("sl") is not None:
+        lines.append(f"SL: {_num(p['sl'])}")
+    lines.append("")
+    footer_lines = [_SEP]
+    if p.get("trader_id"):
+        footer_lines.append(f"Trader: {p['trader_id']}")
+    if p.get("reason"):
+        footer_lines.append(f"Rejected: {p['reason']}")
+    footer_lines.append(f"Source: {p.get('source', 'original_message')}")
+    if p.get("link"):
+        footer_lines.append(p["link"])
+    lines += footer_lines
+    return "\n".join(lines)
+
+
 def _review_required(p: dict) -> str:
     lines = _header("⚠️", p.get("chain_id"), "REVIEW REQUIRED", p.get("symbol"), p.get("side"))
     lines.append(f"Reason: {p.get('reason', 'unknown')}")
@@ -185,6 +211,8 @@ def _fallback(notification_type: str, p: dict) -> str:
 def format_clean_log(notification_type: str, payload: dict) -> str:
     if notification_type == "SIGNAL_ACCEPTED":
         return _signal_accepted(payload)
+    if notification_type == "SIGNAL_REJECTED":
+        return _signal_rejected(payload)
     if notification_type == "REVIEW_REQUIRED":
         return _review_required(payload)
     if notification_type == "ENTRY_OPENED":
