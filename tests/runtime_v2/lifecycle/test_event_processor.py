@@ -1541,6 +1541,60 @@ def test_expand_cancel_does_not_include_done_commands_via_plan_state():
     assert result == []  # nessuna leg averaging pending
 
 
+def test_tp_filled_lifecycle_event_preserves_fill_price_qty_and_fee():
+    chain = _make_chain(entry_avg_price=65000.0)
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={
+            "tp_level": 1,
+            "is_final": False,
+            "fill_price": 68000.0,
+            "filled_qty": 0.002,
+            "exec_fee": 1.10,
+            "closed_size": 0.002,
+        },
+    )
+    result = _make_processor().process(event, chain, [])
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["tp_level"] == 1
+    assert payload["is_final"] is False
+    assert payload["fill_price"] == 68000.0
+    assert payload["filled_qty"] == 0.002
+    assert payload["exec_fee"] == 1.10
+    assert payload["closed_size"] == 0.002
+
+
+def test_entry_filled_lifecycle_event_preserves_exec_fee():
+    chain = _make_chain(state="WAITING_ENTRY", entry_avg_price=0.0)
+    event = _make_exchange_event(
+        event_type="ENTRY_FILLED",
+        payload={"fill_price": 65000.0, "filled_qty": 0.004, "exec_fee": 0.90},
+    )
+    result = _make_processor().process(event, chain, [])
+    entry_event = next(e for e in result.lifecycle_events if e.event_type == "ENTRY_FILLED")
+    payload = json.loads(entry_event.payload_json)
+    assert payload["fill_price"] == 65000.0
+    assert payload["filled_qty"] == 0.004
+    assert payload["exec_fee"] == 0.90
+
+
+@pytest.mark.parametrize("event_type", ["SL_FILLED", "CLOSE_FULL_FILLED", "CLOSE_PARTIAL_FILLED"])
+def test_close_lifecycle_payload_is_normalized(event_type):
+    chain = _make_chain(entry_avg_price=65000.0)
+    event = _make_exchange_event(
+        event_type=event_type,
+        payload={"fill_price": 64000.0, "filled_qty": 0.01, "exec_fee": 1.70},
+    )
+    result = _make_processor().process(event, chain, [])
+    close_event = next(e for e in result.lifecycle_events if e.event_type == event_type)
+    payload = json.loads(close_event.payload_json)
+    assert payload["fill_price"] == 64000.0
+    assert payload["filled_qty"] == 0.01
+    assert payload["exec_fee"] == 1.70
+    assert payload["closed_size"] == 0.01  # derived from filled_qty when not in input
+
+
 def test_close_full_filled_emits_cancel_pending_entry_command():
     """CLOSE_FULL_FILLED must include a CANCEL_PENDING_ENTRY command to clean up averaging legs."""
     from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor

@@ -69,6 +69,23 @@ def _get_be_deferred_flag(plan_state_json: str) -> dict | None:
         return None
 
 
+def _normalized_fill_payload(payload: dict, *, default_qty: float = 0.0) -> dict:
+    filled_qty = payload.get("filled_qty")
+    if filled_qty is None:
+        filled_qty = payload.get("fill_qty")
+    if filled_qty is None:
+        filled_qty = payload.get("closed_size")
+    if filled_qty is None:
+        filled_qty = default_qty
+    filled_qty_float = float(filled_qty or 0.0)
+    return {
+        "fill_price": payload.get("fill_price"),
+        "filled_qty": filled_qty_float,
+        "exec_fee": payload.get("exec_fee"),
+        "closed_size": payload.get("closed_size", filled_qty_float),
+    }
+
+
 @dataclass
 class EventProcessorResult:
     new_lifecycle_state: LifecycleState | None
@@ -168,7 +185,11 @@ class LifecycleEventProcessor:
                 source_id=str(eid),
                 previous_state=chain.lifecycle_state,
                 next_state=new_state or chain.lifecycle_state,
-                payload_json=json.dumps({"fill_price": fill_price, "filled_qty": fill_qty}),
+                payload_json=json.dumps({
+                    "fill_price": fill_price,
+                    "filled_qty": fill_qty,
+                    "exec_fee": payload.get("exec_fee"),
+                }),
                 idempotency_key=f"entry_filled:{chain_id}:{eid}",
             ),
             LifecycleEvent(
@@ -540,6 +561,7 @@ class LifecycleEventProcessor:
                             new_be = "BE_MOVE_PENDING"
 
 
+        fill_payload = _normalized_fill_payload(payload, default_qty=fill_qty)
         tp_event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TP_FILLED",
@@ -547,7 +569,7 @@ class LifecycleEventProcessor:
             source_id=str(eid),
             previous_state=chain.lifecycle_state,
             next_state=new_state,
-            payload_json=json.dumps({"tp_level": tp_level, "is_final": is_final}),
+            payload_json=json.dumps({"tp_level": tp_level, "is_final": is_final, **fill_payload}),
             idempotency_key=f"tp_filled:{chain_id}:{eid}",
         )
         events.insert(0, tp_event)
@@ -571,6 +593,7 @@ class LifecycleEventProcessor:
         fill_qty = float(payload.get("filled_qty") or chain.open_position_qty)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
+        fill_payload = _normalized_fill_payload(payload, default_qty=fill_qty)
         return EventProcessorResult(
             new_lifecycle_state="CLOSED",
             new_be_protection_status=None,
@@ -583,7 +606,7 @@ class LifecycleEventProcessor:
                 source_id=str(eid),
                 previous_state=chain.lifecycle_state,
                 next_state="CLOSED",
-                payload_json=exchange_event.payload_json,
+                payload_json=json.dumps(fill_payload),
                 idempotency_key=f"sl_filled:{chain_id}:{eid}",
             )],
             execution_commands=[],
@@ -598,6 +621,7 @@ class LifecycleEventProcessor:
         fill_qty = float(payload.get("filled_qty") or chain.open_position_qty)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
+        fill_payload = _normalized_fill_payload(payload, default_qty=fill_qty)
         return EventProcessorResult(
             new_lifecycle_state="CLOSED",
             new_be_protection_status=None,
@@ -610,7 +634,7 @@ class LifecycleEventProcessor:
                 source_id=str(eid),
                 previous_state=chain.lifecycle_state,
                 next_state="CLOSED",
-                payload_json=exchange_event.payload_json,
+                payload_json=json.dumps(fill_payload),
                 idempotency_key=f"close_full_filled:{chain_id}:{eid}",
             )],
             execution_commands=[ExecutionCommand(
@@ -638,6 +662,7 @@ class LifecycleEventProcessor:
         new_closed = chain.closed_position_qty + fill_qty
         new_state: LifecycleState = "CLOSED" if new_open <= 0 else "PARTIALLY_CLOSED"
         commands: list[ExecutionCommand] = []
+        fill_payload = _normalized_fill_payload(payload, default_qty=fill_qty)
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,
@@ -650,7 +675,7 @@ class LifecycleEventProcessor:
                 source_id=str(eid),
                 previous_state=chain.lifecycle_state,
                 next_state=new_state,
-                payload_json=exchange_event.payload_json,
+                payload_json=json.dumps(fill_payload),
                 idempotency_key=f"close_partial_filled:{chain_id}:{eid}",
             )],
             execution_commands=commands,
