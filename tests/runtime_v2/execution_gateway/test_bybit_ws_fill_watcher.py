@@ -166,3 +166,76 @@ def _insert_chain_open(db_path: str, chain_id: int = 1) -> None:
     conn.close()
 
 
+def test_ws_fill_payload_preserves_exec_fee(ops_db):
+    """insert_raw_and_classified payload must include exec_fee from ExchangeRawEvent."""
+    from src.runtime_v2.execution_gateway.event_ingest.classifier import EventClassifier
+    from src.runtime_v2.execution_gateway.event_ingest.models import ExchangeRawEvent
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    # Seed an open chain so classification can find a chain to attribute the fill to
+    conn = sqlite3.connect(ops_db)
+    now = "2026-05-31T00:00:00+00:00"
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "management_plan_json, risk_snapshot_json, plan_state_json, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (10, 1, 1, 1, "t", "main", "BTC/USDT", "LONG", "OPEN", "ONE_SHOT", "{}", "{}", "{}", now, now),
+    )
+    # Seed the order_link_id so classifier can attribute it
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, client_order_id, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (77, 10, "SET_POSITION_TPSL_PARTIAL", "SENT", "{}", "idem-77", "tsb:main:10:tp:1:77", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(ops_db)
+
+    # Build a raw event that should match the order_link_id for classification
+    raw = ExchangeRawEvent(
+        source_stream="watch_my_trades",
+        exchange_event_id="exec-001",
+        idempotency_key="idem-001",
+        symbol="BTC/USDT",
+        side="Sell",
+        create_type=None,
+        stop_order_type=None,
+        exec_type="Trade",
+        order_status="Filled",
+        order_link_id="tsb:main:10:tp:1:77",
+        order_id="oid-001",
+        seq=None,
+        exec_price=68000.0,
+        exec_qty=0.002,
+        closed_size=0.002,
+        leaves_qty=0.0,
+        pos_qty=0.008,
+        exec_value=136.0,
+        exec_fee=1.10,
+        fee_rate=0.0001,
+        cum_exec_qty=0.002,
+    )
+
+    classifier = EventClassifier(known_order_link_ids=repo.get_known_order_link_ids())
+    classified = classifier.classify(raw)
+
+    repo.insert_raw_and_classified(classified)
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events WHERE trade_chain_id=10"
+    ).fetchone()
+    conn.close()
+    assert row is not None, "No event inserted"
+    payload = json.loads(row[0])
+    assert payload["exec_fee"] == 1.10
+    assert payload["fill_price"] == 68000.0
+    assert payload["filled_qty"] == 0.002
+    assert payload["closed_size"] == 0.002
+
+

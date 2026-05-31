@@ -567,6 +567,7 @@ class GatewayCommandRepository:
             "fill_price": raw.exec_price,
             "filled_qty": raw.exec_qty,
             "closed_size": raw.closed_size,
+            "exec_fee": raw.exec_fee,
             "pos_qty": raw.pos_qty,
             "symbol": raw.symbol,
             "side": raw.side,

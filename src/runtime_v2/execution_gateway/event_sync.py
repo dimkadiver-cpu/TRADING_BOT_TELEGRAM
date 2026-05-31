@@ -272,9 +272,12 @@ class ExchangeEventSyncWorker:
             )
             return False
 
+        _CLOSE_FILL_TYPES = {"TP_FILLED", "SL_FILLED", "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED"}
         payload: dict = {
             "fill_price": raw.average_price,
             "filled_qty": raw.filled_qty,
+            "exec_fee": getattr(raw, "fee", None),
+            "closed_size": raw.filled_qty if event_type in _CLOSE_FILL_TYPES else None,
             "command_id": coid.command_id,
         }
         if coid.role == "tp":

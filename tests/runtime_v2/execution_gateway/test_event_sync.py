@@ -1043,3 +1043,51 @@ def test_position_reconciliation_falls_back_to_none_when_no_reduce_trades(ops_db
 
     payload = json.loads(row[0])
     assert payload["fill_price"] is None
+
+
+def test_save_fill_event_includes_exec_fee_and_closed_size_for_tp(ops_db):
+    """_save_fill_event must include exec_fee and closed_size in payload for TP fills."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    # Insert a SENT TP command — format is tsb:chain:cmd:role:seq
+    coid = "tsb:10:77:tp:1"
+    _insert_sent_cmd(ops_db, 77, 10, "PLACE_TP", coid)
+
+    adapter = FakeAdapter()
+    adapter.place_order(
+        command_type="PLACE_TP",
+        payload={},
+        client_order_id=coid,
+        execution_account_id="main",
+        connector="c",
+    )
+    adapter.simulate_fill(coid, price=68000.0, qty=0.002)
+
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="main",
+    )
+    # Call _save_fill_event directly so we can check what it persists
+    raw = adapter.get_order_status(
+        client_order_id=coid,
+        execution_account_id="main",
+    )
+    result = worker._save_fill_event(coid, raw)
+    assert result is True
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events WHERE event_type='TP_FILLED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None, "No TP_FILLED event inserted"
+    payload = json.loads(row[0])
+    assert payload["fill_price"] == 68000.0
+    assert payload["filled_qty"] == 0.002
+    assert "closed_size" in payload
+    assert payload["closed_size"] == 0.002
