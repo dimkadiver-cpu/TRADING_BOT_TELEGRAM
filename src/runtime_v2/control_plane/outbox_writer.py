@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 # Map internal lifecycle event_type -> CLEAN_LOG notification_type.
 # Events absent from this map have policy "off" (CLEAN_LOG_SPEC §2).
@@ -86,6 +86,28 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _iso_after(seconds: int) -> str:
+    return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat()
+
+
+def _send_after_for(notification_type: str) -> str:
+    if notification_type in {"UPDATE_DONE", "UPDATE_PARTIAL", "UPDATE_REJECTED"}:
+        return _iso_after(20)
+    if notification_type in {"TP_FILLED", "TP_FILLED_FINAL"}:
+        return _iso_after(30)
+    return _now()
+
+
+def _agg_group(notification_type: str, chain_id: int | None, payload: dict) -> str | None:
+    if chain_id is None:
+        return None
+    if notification_type in {"TP_FILLED", "TP_FILLED_FINAL"}:
+        return f"{chain_id}:tp_batch"
+    if notification_type in {"UPDATE_DONE", "UPDATE_PARTIAL", "UPDATE_REJECTED"}:
+        return f"{chain_id}:{payload.get('source_message_id') or 'update_batch'}"
+    return None
+
+
 def _record(
     conn: sqlite3.Connection,
     *,
@@ -94,16 +116,19 @@ def _record(
     payload: dict,
     priority: str,
     dedupe_key: str,
+    send_after: str | None = None,
+    aggregation_group: str | None = None,
+    source_message_id: str | None = None,
 ) -> None:
     conn.execute(
         """
         INSERT OR IGNORE INTO ops_notification_outbox
             (notification_type, destination, payload_json, priority, status,
-             dedupe_key, attempts, created_at)
-        VALUES (?,?,?,?, 'PENDING', ?, 0, ?)
+             dedupe_key, attempts, created_at, send_after, aggregation_group, source_message_id)
+        VALUES (?,?,?,?, 'PENDING', ?, 0, ?, ?, ?, ?)
         """,
         (notification_type, destination, json.dumps(payload), priority,
-         dedupe_key, _now()),
+         dedupe_key, _now(), send_after, aggregation_group, source_message_id),
     )
 
 
@@ -119,11 +144,19 @@ def write_clean_log_event(
     """Insert a CLEAN_LOG outbox row inside the caller's transaction."""
     key = dedupe_key or f"clean:{notification_type}:{chain_id}"
     pri = priority or _PRIORITY_BY_TYPE.get(notification_type, "MEDIUM")
-    # Ensure chain_id is embedded in the payload for downstream tracking.
     if chain_id is not None and "chain_id" not in payload:
         payload = {**payload, "chain_id": chain_id}
-    _record(conn, notification_type=notification_type, destination="CLEAN_LOG",
-            payload=payload, priority=pri, dedupe_key=key)
+    _record(
+        conn,
+        notification_type=notification_type,
+        destination="CLEAN_LOG",
+        payload=payload,
+        priority=pri,
+        dedupe_key=key,
+        send_after=_send_after_for(notification_type),
+        aggregation_group=_agg_group(notification_type, chain_id, payload),
+        source_message_id=payload.get("source_message_id"),
+    )
 
 
 def write_tech_log_event(

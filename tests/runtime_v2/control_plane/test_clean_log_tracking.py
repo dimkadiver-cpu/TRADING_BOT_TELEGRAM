@@ -379,6 +379,13 @@ async def test_same_update_group_reuses_last_message(ops_db):
         )
     conn.close()
 
+    # Clear send_after so all rows are immediately eligible (this test focuses on
+    # reply-thread tracking, not on debounce timing).
+    conn = sqlite3.connect(ops_db)
+    conn.execute("UPDATE ops_notification_outbox SET send_after=NULL")
+    conn.commit()
+    conn.close()
+
     # Drain all three in sequence
     await disp.drain_once()
     await disp.drain_once()

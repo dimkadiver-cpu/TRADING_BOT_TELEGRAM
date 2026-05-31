@@ -97,11 +97,12 @@ class TelegramNotificationDispatcher:
                 SELECT notification_id, notification_type, destination, payload_json, attempts
                 FROM ops_notification_outbox
                 WHERE status='PENDING'
+                  AND (send_after IS NULL OR send_after <= ?)
                 ORDER BY CASE priority WHEN 'HIGH' THEN 0 WHEN 'MEDIUM' THEN 1 ELSE 2 END,
                          created_at, notification_id
                 LIMIT ?
                 """,
-                (self._batch,),
+                (_now(), self._batch),
             ).fetchall()
             if rows:
                 ids = [r[0] for r in rows]

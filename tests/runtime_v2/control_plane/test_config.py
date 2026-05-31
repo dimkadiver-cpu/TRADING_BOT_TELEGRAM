@@ -121,6 +121,26 @@ def test_private_bot_config_without_topics(tmp_path, monkeypatch):
     assert cfg.topics.clean_log.thread_id is None
 
 
+def test_clean_log_debounce_and_aggregation_config_defaults():
+    from src.runtime_v2.control_plane.models import (
+        CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+    )
+    cfg = ControlPlaneConfig(
+        token="t",
+        chat_id=-1001,
+        topics=TopicsConfig(
+            commands=TopicConfig(thread_id=1),
+            tech_log=TechLogConfig(thread_id=2),
+            clean_log=CleanLogConfig(thread_id=3),
+        ),
+    )
+    assert cfg.topics.clean_log.debounce_check_interval_seconds == 5
+    assert cfg.topics.clean_log.aggregate_fills_seconds == 30
+    assert cfg.topics.clean_log.aggregate_updates_seconds == 20
+    assert cfg.topics.clean_log.multi_chain_summary_threshold == 3
+    assert cfg.topics.clean_log.max_messages_per_chain_per_minute == 4
+
+
 def test_supergroup_without_topics_raises(tmp_path, monkeypatch):
     monkeypatch.setenv("CP_TOKEN", "999:XYZ")
     monkeypatch.setenv("CP_CHAT", "-1009999")

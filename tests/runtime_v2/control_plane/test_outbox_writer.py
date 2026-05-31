@@ -243,6 +243,39 @@ def test_pending_entry_cancelled_position_closed_is_filtered(ops_db):
     assert count == 0
 
 
+def test_tp_filled_outbox_has_aggregation_delay_and_group(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="TP_FILLED",
+            chain_id=145,
+            payload={"chain_id": 145},
+            dedupe_key="clean:tp:145:1",
+        )
+    row = conn.execute(
+        "SELECT send_after, aggregation_group FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row[0] is not None, "send_after must be set for TP_FILLED"
+    assert row[1] == "145:tp_batch"
+
+
+def test_high_priority_clean_log_has_send_after_set(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="SL_FILLED",
+            chain_id=145,
+            payload={"chain_id": 145},
+            dedupe_key="clean:sl:145:1",
+        )
+    row = conn.execute("SELECT send_after FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row[0] is not None, "send_after must be set"
+
+
 def test_close_full_filled_on_protected_chain_projects_be_exit(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:

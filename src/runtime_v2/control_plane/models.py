@@ -7,7 +7,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 Destination = Literal["TECH_LOG", "CLEAN_LOG", "COMMANDS_REPLY"]
 Priority = Literal["HIGH", "MEDIUM", "LOW"]
-OutboxStatus = Literal["PENDING", "SENT", "FAILED"]
+OutboxStatus = Literal["PENDING", "SENDING", "SENT", "FAILED", "SUPPRESSED"]
 StartupMode = Literal["auto", "standby", "restore"]
 CommandStatus = Literal[
     "RECEIVED",
@@ -48,6 +48,8 @@ class CleanLogConfig(BaseModel):
     aggregate_updates_seconds: int = 20
     max_messages_per_chain_per_minute: int = 4
     min_partial_fill_notify_pct: float = 10.0
+    debounce_check_interval_seconds: int = 5
+    multi_chain_summary_threshold: int = 3
 
 
 class TopicsConfig(BaseModel):

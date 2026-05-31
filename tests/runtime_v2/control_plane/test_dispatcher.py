@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import pytest
@@ -310,3 +310,50 @@ async def test_clean_log_not_rate_limited(ops_db):
     # All 25 CLEAN_LOG messages should be sent without suppression
     assert n == 25
     assert len(sent_texts) == 25
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_skips_future_send_after(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="TP_FILLED",
+            chain_id=1,
+            payload={"chain_id": 1, "symbol": "BTC/USDT", "side": "LONG"},
+        )
+    # Set send_after to 5 minutes in the future
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_notification_outbox SET send_after=?",
+        ((datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat(),),
+    )
+    conn.commit()
+    conn.close()
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    result = await disp.drain_once()
+    assert result == 0
+    assert sender.sent == []
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_ignores_suppressed_rows(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="SL_FILLED",
+            chain_id=1,
+            payload={"chain_id": 1, "symbol": "BTC/USDT", "side": "LONG"},
+        )
+    conn = sqlite3.connect(ops_db)
+    conn.execute("UPDATE ops_notification_outbox SET status='SUPPRESSED'")
+    conn.commit()
+    conn.close()
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    result = await disp.drain_once()
+    assert result == 0
