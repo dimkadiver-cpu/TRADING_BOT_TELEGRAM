@@ -20,6 +20,9 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "RECONCILIATION_WARNING": "RECONCILIATION_WARNING",
     "RECONCILIATION_FIXED": "RECONCILIATION_FIXED",
     "REENTRY_ACCEPTED": "REENTRY_ACCEPTED",
+    "UPDATE_DONE": "UPDATE_DONE",
+    "UPDATE_PARTIAL": "UPDATE_PARTIAL",
+    "UPDATE_REJECTED": "UPDATE_REJECTED",
 }
 
 _SIGNAL_NOTIFICATION_TYPES: frozenset[str] = frozenset({
@@ -32,6 +35,50 @@ _PRIORITY_BY_TYPE: dict[str, str] = {
     "REVIEW_REQUIRED": "HIGH",
     "SIGNAL_REJECTED": "HIGH",
 }
+
+
+def _side_pnl(side: str | None, entry_avg_price: float | None, fill_price, qty) -> float | None:
+    if entry_avg_price is None or fill_price is None or qty is None:
+        return None
+    sign = 1.0 if str(side or "").upper() == "LONG" else -1.0
+    return round(float(qty) * (float(fill_price) - float(entry_avg_price)) * sign, 8)
+
+
+def _closed_pct(qty, filled_entry_qty: float | None) -> float | None:
+    if qty is None or not filled_entry_qty:
+        return None
+    return round(float(qty) / float(filled_entry_qty) * 100.0, 2)
+
+
+def _remaining_pct(open_position_qty: float | None, filled_entry_qty: float | None) -> float | None:
+    if open_position_qty is None or not filled_entry_qty:
+        return None
+    return round(float(open_position_qty) / float(filled_entry_qty) * 100.0, 2)
+
+
+def _final_result(
+    *,
+    gross_pnl: float | None,
+    fees: float | None,
+    funding: float | None,
+    allocated_margin: float | None,
+    close_reason: str,
+) -> dict:
+    gross = float(gross_pnl or 0.0)
+    fee_total = float(fees or 0.0)
+    funding_total = float(funding or 0.0)
+    net = gross - fee_total + funding_total
+    roi = None
+    if allocated_margin and float(allocated_margin) > 0.0:
+        roi = round(net / float(allocated_margin) * 100.0, 4)
+    return {
+        "roi_net_pct": roi,
+        "total_pnl_net": round(net, 8),
+        "gross_pnl": round(gross, 8),
+        "fees": round(-fee_total, 8),
+        "funding": round(funding_total, 8),
+        "close_reason": close_reason,
+    }
 
 
 def _now() -> str:
@@ -102,6 +149,14 @@ def _build_payload(
     entry_avg_price: float | None,
     current_stop_price: float | None,
     ev: dict,
+    *,
+    cumulative_gross_pnl: float | None = None,
+    cumulative_fees: float | None = None,
+    cumulative_funding: float | None = None,
+    allocated_margin: float | None = None,
+    filled_entry_qty: float | None = None,
+    open_position_qty: float | None = None,
+    be_protection_status: str | None = None,
 ) -> dict:
     """Build the enriched notification payload for a given notification_type."""
     base: dict = {"chain_id": chain_id, "symbol": symbol, "side": side}
@@ -155,27 +210,69 @@ def _build_payload(
     if notification_type in ("TP_FILLED", "TP_FILLED_FINAL"):
         tp_level = ev.get("tp_level")
         tp_price = tps[tp_level - 1] if tp_level and 1 <= tp_level <= len(tps) else None
+        closed_qty = ev.get("closed_size", ev.get("filled_qty"))
+        fill_price = ev.get("fill_price")
+        final_result_data = None
+        if notification_type == "TP_FILLED_FINAL":
+            final_result_data = _final_result(
+                gross_pnl=cumulative_gross_pnl,
+                fees=cumulative_fees,
+                funding=cumulative_funding,
+                allocated_margin=allocated_margin,
+                close_reason="TAKE_PROFIT",
+            )
         return {
             **base,
             "tp_level": tp_level,
             "tp_price": tp_price,
-            "is_final": ev.get("is_final", False),
+            "fill_price": fill_price,
+            "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
+            "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
+            "fee": ev.get("exec_fee"),
+            "remaining_pct": _remaining_pct(open_position_qty, filled_entry_qty),
             "sl_current": current_stop_price,
+            "be_protection_status": be_protection_status,
+            "final_result": final_result_data,
             "source": ev.get("source", "exchange"),
         }
 
     if notification_type == "SL_FILLED":
+        closed_qty = ev.get("closed_size", ev.get("filled_qty"))
+        fill_price = ev.get("fill_price")
         return {
             **base,
-            "fill_price": ev.get("fill_price"),
-            "filled_qty": ev.get("fill_qty") or ev.get("filled_qty"),
+            "fill_price": fill_price,
+            "sl_price": fill_price,
+            "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
+            "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
+            "fee": ev.get("exec_fee"),
+            "final_result": _final_result(
+                gross_pnl=cumulative_gross_pnl,
+                fees=cumulative_fees,
+                funding=cumulative_funding,
+                allocated_margin=allocated_margin,
+                close_reason="STOP_LOSS",
+            ),
             "source": ev.get("source", "exchange"),
         }
 
     if notification_type == "POSITION_CLOSED":
+        closed_qty = ev.get("closed_size", ev.get("filled_qty"))
+        fill_price = ev.get("fill_price")
         return {
             **base,
-            "fill_price": ev.get("fill_price"),
+            "fill_price": fill_price,
+            "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
+            "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
+            "fee": ev.get("exec_fee"),
+            "close_reason": ev.get("close_reason", "MANUAL"),
+            "final_result": _final_result(
+                gross_pnl=cumulative_gross_pnl,
+                fees=cumulative_fees,
+                funding=cumulative_funding,
+                allocated_margin=allocated_margin,
+                close_reason=ev.get("close_reason", "MANUAL"),
+            ),
             "source": ev.get("source", "exchange"),
         }
 
@@ -300,7 +397,9 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         "SELECT symbol, side, entry_mode, trader_id, "
         "plan_state_json, risk_snapshot_json, "
         "entry_avg_price, current_stop_price, "
-        "source_chat_id, telegram_message_id "
+        "source_chat_id, telegram_message_id, "
+        "cumulative_gross_pnl, cumulative_fees, cumulative_funding, allocated_margin, "
+        "filled_entry_qty, open_position_qty, be_protection_status "
         "FROM ops_trade_chains WHERE trade_chain_id=?",
         (chain_id,),
     ).fetchone()
@@ -317,6 +416,13 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     current_stop_price = chain_row[7]
     source_chat_id = chain_row[8]
     telegram_message_id = chain_row[9]
+    cumulative_gross_pnl = chain_row[10]
+    cumulative_fees = chain_row[11]
+    cumulative_funding = chain_row[12]
+    allocated_margin = chain_row[13]
+    filled_entry_qty = chain_row[14]
+    open_position_qty = chain_row[15]
+    be_protection_status = chain_row[16]
     chain_source_link: str | None = (
         f"https://t.me/c/{str(source_chat_id).removeprefix('-100')}/{telegram_message_id}"
         if source_chat_id and telegram_message_id else None
@@ -350,6 +456,13 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         payload = _build_payload(
             notification_type, chain_id, symbol, side, trader_id,
             plan, risk, entry_avg_price, current_stop_price, ev,
+            cumulative_gross_pnl=cumulative_gross_pnl,
+            cumulative_fees=cumulative_fees,
+            cumulative_funding=cumulative_funding,
+            allocated_margin=allocated_margin,
+            filled_entry_qty=filled_entry_qty,
+            open_position_qty=open_position_qty,
+            be_protection_status=be_protection_status,
         )
         write_clean_log_event(
             conn,

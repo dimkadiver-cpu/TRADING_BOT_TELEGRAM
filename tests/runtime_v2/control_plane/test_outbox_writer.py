@@ -163,6 +163,41 @@ def test_projection_maps_update_done(ops_db):
     assert p["changed_fields"] == ["current_stop_price"]
 
 
+def test_tp_final_payload_includes_final_result_and_pnl_fields(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 700)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, open_position_qty=?, filled_entry_qty=?, "
+            "cumulative_gross_pnl=?, cumulative_fees=?, cumulative_funding=?, allocated_margin=? "
+            "WHERE trade_chain_id=?",
+            (65000.0, 0.002, 0.01, 350.0, 5.75, 0.0, 1000.0, 700),
+        )
+        _seed_event(conn, 700, "TP_FILLED", "tp_final:700:1", {
+            "tp_level": 3,
+            "is_final": True,
+            "fill_price": 71000.0,
+            "filled_qty": 0.002,
+            "exec_fee": 1.65,
+            "closed_size": 0.002,
+        })
+        project_clean_log_for_chain(conn, 700)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    payload = json.loads(row[1])
+    assert row[0] == "TP_FILLED_FINAL"
+    assert payload["fill_price"] == 71000.0
+    assert payload["fee"] == 1.65
+    # LONG pnl: (71000 - 65000) * 0.002 = 12.0
+    assert abs(payload["pnl"] - 12.0) < 0.001
+    assert payload["final_result"] is not None
+    assert payload["final_result"]["close_reason"] == "TAKE_PROFIT"
+    assert payload["final_result"]["gross_pnl"] == 350.0
+
+
 def test_projection_maps_pending_timeout_to_pending_entry_expired(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:
