@@ -100,6 +100,34 @@ def test_chain_repo_update_state(ops_db):
     assert updated.entry_avg_price == 49500.0
 
 
+def test_chain_repo_save_populates_allocated_margin_from_risk_amount(ops_db):
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+    repo = TradeChainRepository(ops_db)
+    chain = TradeChain(
+        source_enrichment_id=99,
+        canonical_message_id=990,
+        raw_message_id=9900,
+        trader_id="trader_a",
+        account_id="main",
+        symbol="BTC/USDT",
+        side="LONG",
+        lifecycle_state="WAITING_ENTRY",
+        entry_mode="ONE_SHOT",
+        management_plan_json="{}",
+        risk_snapshot_json=json.dumps({"risk_amount": 100.0}),
+    )
+    saved = repo.save(chain)
+    conn = sqlite3.connect(ops_db)
+    margin = conn.execute(
+        "SELECT allocated_margin FROM ops_trade_chains WHERE trade_chain_id=?",
+        (saved.trade_chain_id,),
+    ).fetchone()[0]
+    conn.close()
+    assert margin == 100.0
+
+
 # --- LifecycleEventRepository ---
 
 def test_event_repo_save_idempotent(ops_db):

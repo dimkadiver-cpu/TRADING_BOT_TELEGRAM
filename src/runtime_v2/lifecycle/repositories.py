@@ -1,6 +1,7 @@
 # src/runtime_v2/lifecycle/repositories.py
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
 
@@ -18,7 +19,8 @@ _CHAIN_COLS = (
     "entry_timeout_at, management_plan_json, risk_snapshot_json, "
     "planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty, "
     "last_position_sync_at, execution_mode, risk_already_realized, risk_remaining, "
-    "plan_state_json, source_chat_id, telegram_message_id, created_at, updated_at"
+    "plan_state_json, source_chat_id, telegram_message_id, cumulative_gross_pnl, "
+    "cumulative_fees, cumulative_funding, allocated_margin, created_at, updated_at"
 )
 
 
@@ -33,7 +35,8 @@ def _chain_from_row(row: tuple) -> TradeChain:
      entry_timeout_at, management_plan_json, risk_snapshot_json,
      planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty,
      last_position_sync_at, execution_mode, risk_already_realized, risk_remaining,
-     plan_state_json, source_chat_id, telegram_message_id, created_at, updated_at) = row
+     plan_state_json, source_chat_id, telegram_message_id, cumulative_gross_pnl,
+     cumulative_fees, cumulative_funding, allocated_margin, created_at, updated_at) = row
     return TradeChain(
         trade_chain_id=trade_chain_id,
         source_enrichment_id=source_enrichment_id,
@@ -77,6 +80,18 @@ class TradeChainRepository:
 
     def save(self, chain: TradeChain) -> TradeChain:
         now = _now()
+
+        # Extract allocated_margin from risk_snapshot_json
+        allocated_margin = None
+        if chain.risk_snapshot_json:
+            try:
+                risk_snapshot = json.loads(chain.risk_snapshot_json)
+                raw_margin = risk_snapshot.get("risk_amount")
+                if raw_margin is not None:
+                    allocated_margin = float(raw_margin)
+            except (TypeError, ValueError, Exception):
+                allocated_margin = None
+
         conn = sqlite3.connect(self._db_path)
         try:
             cursor = conn.execute(
@@ -89,9 +104,10 @@ class TradeChainRepository:
                     risk_snapshot_json, planned_entry_qty, filled_entry_qty,
                     open_position_qty, closed_position_qty, last_position_sync_at,
                     execution_mode, risk_already_realized, risk_remaining,
-                    plan_state_json, source_chat_id, telegram_message_id,
+                    plan_state_json, source_chat_id, telegram_message_id, allocated_margin,
+                    cumulative_gross_pnl, cumulative_fees, cumulative_funding,
                     created_at, updated_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     chain.source_enrichment_id, chain.canonical_message_id, chain.raw_message_id,
@@ -106,6 +122,7 @@ class TradeChainRepository:
                     chain.last_position_sync_at.isoformat() if chain.last_position_sync_at else None,
                     chain.execution_mode, chain.risk_already_realized, chain.risk_remaining,
                     chain.plan_state_json, chain.source_chat_id, chain.telegram_message_id,
+                    allocated_margin, 0.0, 0.0, 0.0,
                     now, now,
                 ),
             )
