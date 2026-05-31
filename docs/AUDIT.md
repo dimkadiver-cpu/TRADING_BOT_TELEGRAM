@@ -4,6 +4,51 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-05-31 — CLEAN_LOG Task 15: Pause/Resume Formatter Spec Alignment (1 commit, 12/12 PASS)
+
+### Step completato
+
+Aggiornati `format_pause()` e `format_resume()` in `src/runtime_v2/control_plane/formatters/pause.py` per accettare sia oggetti `PauseResult`/`ResumeResult` (backward compatibility) che keyword-only arguments (scope, mode, source, command) per output spec-compliant in inglese.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/formatters/pause.py` | Modificato | Dual-path: keyword args → spec English (⏸️ EXECUTION PAUSED/▶️ EXECUTION RESUMED); fallback oggetti legacy |
+| `tests/runtime_v2/control_plane/test_control_formatters.py` | Modificato | +2 test: `test_format_pause_spec_english`, `test_format_resume_spec_english` |
+
+### Risultato test
+
+```
+Step 1: Formatter tests
+pytest tests/runtime_v2/control_plane/test_control_formatters.py -q --tb=short
+→ 12 passed (10 legacy + 2 new spec) in 0.11s ✅
+
+Step 2: Scope verification
+- All legacy tests still pass (PauseResult/ResumeResult objects)
+- New spec tests pass (keyword args: scope, mode, source, command)
+- Backward compatibility confirmed
+```
+
+### Decisioni
+
+- **Dual-path design**: Keyword arguments checked first (`if scope is not None`). Se assenti, fallback a oggetto legacy. Nessun breaking change.
+- **Spec-compliant output**: Nuovo path emette messaggi senza emoji italiani/comandi inline — allineato a CLEAN_LOG_SPEC per controlli programmatici.
+- **Message structure**: 
+  - Pause: "⏸️ EXECUTION PAUSED" + Scope/Mode/Effect/Source/Command
+  - Resume: "▶️ EXECUTION RESUMED" + Scope/Mode/Effect/Source/Command
+
+### Rischi risolti
+
+Nessuno — backward compatibility garantita, test coverage completa.
+
+### Prossimi step
+
+- Part 3: Integration con `telegram_bot.py` per routing comandi /pause /resume
+- Part 4: Allineamento `scope_type` semantics (GLOBAL vs PER_TRADER)
+
+---
+
 ## 2026-05-29 — Control Plane Part 1: Foundation completata
 
 ### Step completato
