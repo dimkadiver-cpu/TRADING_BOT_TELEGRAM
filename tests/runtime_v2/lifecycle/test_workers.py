@@ -1334,3 +1334,165 @@ def test_lifecycle_event_worker_market_convert_single_limit_old_cancel_then_fill
     assert state == "OPEN"
     assert leg1["status"] == "FILLED"
     assert rebuild_count == 0
+
+
+def test_worker_accumulates_long_tp_pnl_and_fee(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now_str = "2026-05-31T00:00:00+00:00"
+    chain_id = 145
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, filled_entry_qty, "
+        "be_protection_status, management_plan_json, plan_state_json, "
+        "created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','OPEN','ONE_SHOT',"
+        "65000.0,0.01,0.01,'NOT_PROTECTED','{}','{}',?,?)",
+        (chain_id, now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="PARTIALLY_CLOSED",
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="TP_FILLED",
+                source_type="exchange_event",
+                payload_json=_json.dumps({
+                    "tp_level": 1,
+                    "is_final": False,
+                    "fill_price": 68000.0,
+                    "filled_qty": 0.002,
+                    "exec_fee": 1.10,
+                    "closed_size": 0.002,
+                }),
+                idempotency_key=f"tp:{chain_id}:1",
+            )
+        ],
+        execution_commands=[],
+        new_open_position_qty=0.008,
+        new_closed_position_qty=0.002,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    row = conn2.execute(
+        "SELECT cumulative_gross_pnl, cumulative_fees FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    conn2.close()
+    # LONG: (68000 - 65000) * 0.002 = 6.0
+    assert row[0] == pytest.approx(6.0)
+    assert row[1] == pytest.approx(1.10)
+
+
+def test_worker_accumulates_short_sl_pnl_negative(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now_str = "2026-05-31T00:00:00+00:00"
+    chain_id = 146
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, filled_entry_qty, "
+        "be_protection_status, management_plan_json, plan_state_json, "
+        "created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','ETH/USDT','SHORT','OPEN','ONE_SHOT',"
+        "3000.0,0.5,0.5,'NOT_PROTECTED','{}','{}',?,?)",
+        (chain_id, now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="CLOSED",
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="SL_FILLED",
+                source_type="exchange_event",
+                payload_json=_json.dumps({
+                    "fill_price": 3050.0,
+                    "filled_qty": 0.5,
+                    "exec_fee": 2.0,
+                    "closed_size": 0.5,
+                }),
+                idempotency_key=f"sl:{chain_id}:1",
+            )
+        ],
+        execution_commands=[],
+        new_open_position_qty=0.0,
+        new_closed_position_qty=0.5,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    row = conn2.execute(
+        "SELECT cumulative_gross_pnl, cumulative_fees FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    conn2.close()
+    # SHORT: (3000 - 3050) * 0.5 = -25.0
+    assert row[0] == pytest.approx(-25.0)
+    assert row[1] == pytest.approx(2.0)

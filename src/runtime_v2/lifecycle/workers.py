@@ -28,6 +28,58 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+_PNL_EVENT_TYPES = {
+    "TP_FILLED",
+    "SL_FILLED",
+    "CLOSE_FULL_FILLED",
+    "CLOSE_PARTIAL_FILLED",
+}
+
+
+def _accumulate_pnl_for_events(
+    conn: sqlite3.Connection,
+    *,
+    chain_id: int,
+    events: list,
+) -> None:
+    row = conn.execute(
+        "SELECT side, entry_avg_price FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    if row is None:
+        return
+    side = str(row[0] or "").upper()
+    entry_avg_price = row[1]
+    if entry_avg_price is None:
+        return
+    side_sign = 1.0 if side == "LONG" else -1.0
+    gross_total = 0.0
+    fee_total = 0.0
+    for event in events:
+        if event.event_type not in _PNL_EVENT_TYPES:
+            continue
+        try:
+            payload = json.loads(event.payload_json or "{}")
+        except json.JSONDecodeError:
+            continue
+        fill_price = payload.get("fill_price")
+        closed_qty = payload.get("closed_size", payload.get("filled_qty"))
+        if fill_price is None or closed_qty is None:
+            continue
+        gross_total += float(closed_qty) * (float(fill_price) - float(entry_avg_price)) * side_sign
+        fee_total += float(payload.get("exec_fee") or 0.0)
+    if gross_total != 0.0 or fee_total != 0.0:
+        conn.execute(
+            """
+            UPDATE ops_trade_chains
+            SET cumulative_gross_pnl = COALESCE(cumulative_gross_pnl, 0.0) + ?,
+                cumulative_fees = COALESCE(cumulative_fees, 0.0) + ?
+            WHERE trade_chain_id=?
+            """,
+            (gross_total, fee_total, chain_id),
+        )
+
+
 def _load_entry_command_for_command(
     conn: sqlite3.Connection,
     chain_id: int,
@@ -278,6 +330,8 @@ class LifecycleEventWorker:
                             event.idempotency_key, now,
                         ),
                     )
+
+                _accumulate_pnl_for_events(conn, chain_id=chain_id, events=result.lifecycle_events)
 
                 for cmd in result.execution_commands:
                     for payload_json_exp, idempotency_key_exp in expand_cancel_pending_commands(
