@@ -253,3 +253,44 @@ def test_be_exit_formatter_renders_exit_and_final_result():
     assert "Exit: 65,020 BE" in text
     assert "Close reason: BREAKEVEN_AFTER_TP" in text
     assert "Final Result:" in text
+
+
+# ---------------------------------------------------------------------------
+# TP_BATCH_FILLED
+# ---------------------------------------------------------------------------
+
+def test_tp_batch_filled_formatter():
+    text = format_clean_log("TP_BATCH_FILLED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "targets": [
+            {"tp_level": 1, "tp_price": 68000, "closed_pct": 30, "pnl": 70.2, "fee": 1.1},
+            {"tp_level": 2, "tp_price": 71000, "closed_pct": 40, "pnl": 165.4, "fee": 1.65},
+        ],
+        "total_pnl": 235.6,
+        "total_fees": 2.75,
+        "source": "exchange",
+    })
+    assert "TP1 + TP2 FILLED" in text
+    assert "Filled targets:" in text
+    assert "Total:" in text
+
+
+# ---------------------------------------------------------------------------
+# MULTI_CHAIN_UPDATE
+# ---------------------------------------------------------------------------
+
+def test_multi_chain_update_formatter():
+    text = format_clean_log("MULTI_CHAIN_UPDATE", {
+        "operations": ["Move SL to BE"],
+        "chains": [
+            {"chain_id": 160, "symbol": "BTC/USDT", "side": "SHORT", "status": "DONE"},
+            {"chain_id": 161, "symbol": "ETH/USDT", "side": "SHORT", "status": "DONE"},
+            {"chain_id": 163, "symbol": "XRP/USDT", "side": "SHORT", "status": "DONE"},
+        ],
+        "summary": {"done": 3, "rejected": 0},
+        "source": "trader_update",
+    })
+    assert "UPDATE APPLIED - MULTI CHAIN" in text
+    assert "#160 BTC/USDT SHORT - DONE" in text

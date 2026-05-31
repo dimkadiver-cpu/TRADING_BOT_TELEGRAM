@@ -429,6 +429,60 @@ def _be_exit(p: dict) -> str:
     return "\n".join(lines)
 
 
+def _tp_batch_filled(p: dict) -> str:
+    targets = p.get("targets") or []
+    level_labels = [f"TP{t.get('tp_level', '?')}" for t in targets if t.get("tp_level")]
+    label = " + ".join(level_labels) + " FILLED" if level_labels else "TP BATCH FILLED"
+    lines = _header("📊", p.get("chain_id"), label, p.get("symbol"), p.get("side"))
+    if targets:
+        lines.append("Filled targets:")
+        for t in targets:
+            level = t.get("tp_level", "?")
+            price = t.get("tp_price")
+            pnl = t.get("pnl")
+            parts = [f"TP{level}"]
+            if price is not None:
+                parts.append(f"{_num(price)}")
+            if pnl is not None:
+                parts.append(f"PnL: {_fmt_money(pnl, signed=True)}")
+            lines.append("  " + "  ".join(parts))
+    lines.append("")
+    if p.get("total_pnl") is not None:
+        lines.append(f"Total: {_fmt_money(p['total_pnl'], signed=True)}")
+    if p.get("total_fees") is not None:
+        lines.append(f"Fees: {_fmt_money(p['total_fees'])}")
+    lines.append("")
+    lines += _footer(p.get("source", "exchange"))
+    return "\n".join(lines)
+
+
+def _multi_chain_update(p: dict) -> str:
+    lines = _header("✅", None, "UPDATE APPLIED - MULTI CHAIN", None, None)
+    operations = p.get("operations") or []
+    if operations:
+        lines.append("Operation:")
+        for op in operations:
+            lines.append(f"{_BULLET} {op}")
+    chains = p.get("chains") or []
+    if chains:
+        lines.append("")
+        for chain in chains:
+            cid = chain.get("chain_id", "?")
+            sym = chain.get("symbol", "?")
+            s = chain.get("side", "")
+            status = chain.get("status", "DONE")
+            lines.append(f"#{cid} {sym} {s} - {status}")
+    summary = p.get("summary") or {}
+    if summary:
+        lines.append("")
+        done = summary.get("done", 0)
+        rejected = summary.get("rejected", 0)
+        lines.append(f"Done: {done}  Rejected: {rejected}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"))
+    return "\n".join(lines)
+
+
 def _fallback(notification_type: str, p: dict) -> str:
     lines = _header("📊", p.get("chain_id"), notification_type, p.get("symbol"), p.get("side"))
     lines += _footer(p.get("source", "runtime"))
@@ -472,6 +526,10 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _entry_cancelled(payload)
     if notification_type == "BE_EXIT":
         return _be_exit(payload)
+    if notification_type == "TP_BATCH_FILLED":
+        return _tp_batch_filled(payload)
+    if notification_type in ("MULTI_CHAIN_UPDATE", "MULTI_CHAIN_CLOSED"):
+        return _multi_chain_update(payload)
     return _fallback(notification_type, payload)
 
 

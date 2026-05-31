@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from src.runtime_v2.control_plane.aggregation_worker import AggregationWorker
 from src.runtime_v2.control_plane.audit_store import CommandAuditStore
 from src.runtime_v2.control_plane.auth import AuthValidator
 from src.runtime_v2.control_plane.config import (
@@ -35,6 +36,7 @@ class ControlPlane:
     dispatcher: TelegramNotificationDispatcher
     snapshot_store: SnapshotStore
     startup_plan: StartupPlan
+    aggregation_worker: AggregationWorker
 
 
 def build_control_plane(
@@ -80,6 +82,8 @@ def build_control_plane(
         latest_snapshot=snapshot_store.get_latest(),
     )
 
+    aggregation_worker = AggregationWorker(ops_db_path)
+
     return ControlPlane(
         config=config,
         service=service,
@@ -87,6 +91,7 @@ def build_control_plane(
         dispatcher=dispatcher,
         snapshot_store=snapshot_store,
         startup_plan=startup_plan,
+        aggregation_worker=aggregation_worker,
     )
 
 
