@@ -18,6 +18,7 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "ENTRY_UPDATED": "ENTRY_UPDATED",
     "PENDING_TIMEOUT": "PENDING_ENTRY_EXPIRED",
     "PENDING_ENTRY_CANCELLED": "ENTRY_CANCELLED",
+    "ENTRY_CANCEL_FAILED": "CANCEL_FAILED",
     "RECONCILIATION_WARNING": "RECONCILIATION_WARNING",
     "RECONCILIATION_FIXED": "RECONCILIATION_FIXED",
     "REENTRY_ACCEPTED": "REENTRY_ACCEPTED",
@@ -455,6 +456,15 @@ def _build_payload(
                 close_reason="BREAKEVEN_AFTER_TP",
             ),
             "source": ev.get("source", "exchange"),
+        }
+
+    if notification_type == "CANCEL_FAILED":
+        return {
+            **base,
+            "entry_ref": ev.get("entry_ref"),
+            "entry_price": ev.get("entry_price"),
+            "attempts": ev.get("attempts", 3),
+            "source": ev.get("source", "timeout_worker"),
         }
 
     # fallback: merge base with event payload

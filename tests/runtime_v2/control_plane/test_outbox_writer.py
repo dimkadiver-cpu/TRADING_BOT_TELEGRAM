@@ -300,3 +300,20 @@ def test_close_full_filled_on_protected_chain_projects_be_exit(ops_db):
     payload = json.loads(row[1])
     assert payload["close_reason"] == "BREAKEVEN_AFTER_TP"
     assert payload["exit_price"] == 65020.0
+
+
+def test_entry_cancel_failed_projects_cancel_failed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 950)
+        _seed_event(conn, 950, "ENTRY_CANCEL_FAILED", "entry_cancel_failed:950:1", {
+            "entry_ref": "Entry_2",
+            "entry_price": 64000.0,
+            "attempts": 3,
+            "source": "timeout_worker",
+        })
+        project_clean_log_for_chain(conn, 950)
+    row = conn.execute("SELECT notification_type FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "CANCEL_FAILED"

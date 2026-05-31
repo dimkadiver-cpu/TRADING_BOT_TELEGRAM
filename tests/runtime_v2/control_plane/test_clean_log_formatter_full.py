@@ -294,3 +294,24 @@ def test_multi_chain_update_formatter():
     })
     assert "UPDATE APPLIED - MULTI CHAIN" in text
     assert "#160 BTC/USDT SHORT - DONE" in text
+
+
+# ---------------------------------------------------------------------------
+# CANCEL_FAILED
+# ---------------------------------------------------------------------------
+
+def test_cancel_failed_formatter():
+    text = format_clean_log("CANCEL_FAILED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_ref": "Entry_2",
+        "entry_price": 64000.0,
+        "attempts": 3,
+        "source": "timeout_worker",
+    })
+    assert "CANCEL FAILED" in text
+    assert "Cancellation of Entry_2 failed after 3 attempts." in text
+    assert "manual review required" in text.lower()
+    assert "#145" in text
+    assert "64,000" in text or "64000" in text

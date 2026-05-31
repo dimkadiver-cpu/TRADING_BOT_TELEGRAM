@@ -429,6 +429,19 @@ def _be_exit(p: dict) -> str:
     return "\n".join(lines)
 
 
+def _cancel_failed(p: dict) -> str:
+    lines = _header("🚨", p.get("chain_id"), "CANCEL FAILED", p.get("symbol"), p.get("side"))
+    entry_ref = p.get("entry_ref", "entry")
+    attempts = p.get("attempts", 3)
+    lines.append(f"Cancellation of {entry_ref} failed after {attempts} attempts.")
+    lines.append("Requires manual review required to resolve the position.")
+    if p.get("entry_price") is not None:
+        lines.append(f"Entry price: {_num(p['entry_price'])}")
+    lines.append("")
+    lines += _footer(p.get("source", "timeout_worker"))
+    return "\n".join(lines)
+
+
 def _tp_batch_filled(p: dict) -> str:
     targets = p.get("targets") or []
     level_labels = [f"TP{t.get('tp_level', '?')}" for t in targets if t.get("tp_level")]
@@ -526,6 +539,8 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _entry_cancelled(payload)
     if notification_type == "BE_EXIT":
         return _be_exit(payload)
+    if notification_type == "CANCEL_FAILED":
+        return _cancel_failed(payload)
     if notification_type == "TP_BATCH_FILLED":
         return _tp_batch_filled(payload)
     if notification_type in ("MULTI_CHAIN_UPDATE", "MULTI_CHAIN_CLOSED"):
