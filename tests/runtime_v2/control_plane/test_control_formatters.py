@@ -64,3 +64,23 @@ def test_unblock_global():
     text = format_unblock(UnblockResult("GLOBAL", None, "BTCUSDT", ["ETHUSDT"]))
     assert "SBLOCCATO" in text
     assert "ETHUSDT" in text
+
+
+def test_format_pause_spec_english():
+    text = format_pause(scope="GLOBAL", mode="BLOCK_NEW_ENTRIES", source="operator", command="/pause")
+    assert "EXECUTION PAUSED" in text
+    assert "Scope: GLOBAL" in text
+    assert "Mode: BLOCK_NEW_ENTRIES" in text
+    assert "Effect:" in text
+    assert "Source: operator" in text
+    assert "Command: /pause" in text
+
+
+def test_format_resume_spec_english():
+    text = format_resume(scope="GLOBAL", mode="LIVE", source="operator", command="/resume")
+    assert "EXECUTION RESUMED" in text
+    assert "Scope: GLOBAL" in text
+    assert "Mode: LIVE" in text
+    assert "Effect:" in text
+    assert "Source: operator" in text
+    assert "Command: /resume" in text

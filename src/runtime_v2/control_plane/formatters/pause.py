@@ -5,7 +5,30 @@ from src.runtime_v2.control_plane.service import PauseResult, ResumeResult
 _SEP = "────────────────"
 
 
-def format_pause(result: PauseResult) -> str:
+def format_pause(
+    result: PauseResult | None = None,
+    *,
+    scope: str | None = None,
+    mode: str | None = None,
+    source: str | None = None,
+    command: str | None = None,
+) -> str:
+    # New spec-compliant path: keyword args provided
+    if scope is not None:
+        return "\n".join([
+            "⏸️ EXECUTION PAUSED",
+            _SEP,
+            f"Scope: {scope}",
+            f"Mode: {mode}",
+            "Effect: new entries are blocked while existing positions remain managed",
+            f"Source: {source}",
+            f"Command: {command}",
+        ])
+
+    # Legacy path: PauseResult object
+    if result is None:
+        return ""
+
     if result.scope_value is None:
         lines = [
             "⏸️ NUOVE ENTRY BLOCCATE",
@@ -46,7 +69,30 @@ def format_pause(result: PauseResult) -> str:
     return "\n".join(lines)
 
 
-def format_resume(result: ResumeResult) -> str:
+def format_resume(
+    result: ResumeResult | None = None,
+    *,
+    scope: str | None = None,
+    mode: str | None = None,
+    source: str | None = None,
+    command: str | None = None,
+) -> str:
+    # New spec-compliant path: keyword args provided
+    if scope is not None:
+        return "\n".join([
+            "▶️ EXECUTION RESUMED",
+            _SEP,
+            f"Scope: {scope}",
+            f"Mode: {mode}",
+            "Effect: new entries may be accepted again according to rules",
+            f"Source: {source}",
+            f"Command: {command}",
+        ])
+
+    # Legacy path: ResumeResult object
+    if result is None:
+        return ""
+
     if not result.had_block:
         return "\n".join(
             [
