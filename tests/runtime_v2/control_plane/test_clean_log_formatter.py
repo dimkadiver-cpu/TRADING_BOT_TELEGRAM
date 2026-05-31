@@ -290,6 +290,86 @@ def test_outbox_writer_signal_accepted_enriches_from_chain(tmp_path):
     assert p["side"] == "LONG"
 
 
+def test_footer_adds_separator_before_link():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "source": "original_message",
+        "link": "https://t.me/c/1/2",
+    })
+    # The link should appear after a separator
+    assert "https://t.me/c/1/2" in text
+    # Source line should appear before link
+    source_pos = text.find("Source: original_message")
+    link_pos = text.find("https://t.me/c/1/2")
+    assert source_pos < link_pos, "Source must appear before link"
+
+
+def test_update_done_uses_operation_label_and_square_bullet():
+    text = format_clean_log("UPDATE_DONE", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "operations": ["Move SL to BE"],
+        "changed": [{"field": "SL", "old": 64000, "new": 65020, "note": "Changed by rule after TP_1"}],
+        "source": "trader_update",
+    })
+    assert "Operation:" in text
+    assert f"▪️ Move SL to BE" in text
+    assert "SL: 64,000 -> 65,020 *" in text
+    assert "* Changed by rule after TP_1" in text
+
+
+def test_tp_filled_renders_closed_pnl_fee_remaining_and_be_label():
+    text = format_clean_log("TP_FILLED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "tp_level": 1,
+        "tp_price": 68000.0,
+        "fill_price": 68000.0,
+        "closed_pct": 30.0,
+        "pnl": 70.20,
+        "fee": 1.10,
+        "remaining_pct": 70.0,
+        "sl_current": 65020.0,
+        "be_protection_status": "PROTECTED",
+        "source": "exchange",
+    })
+    assert "TP_1: 68,000" in text
+    assert "Closed: 30%" in text
+    assert "PnL: +70.20 USDT" in text
+    assert "Fee: 1.10 USDT" in text
+    assert "Position: 70%" in text
+    assert "SL: 65,020 BE" in text
+
+
+def test_sl_filled_renders_sl_label_and_final_result():
+    text = format_clean_log("SL_FILLED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "sl_price": 64000.0,
+        "closed_pct": 100.0,
+        "pnl": -50.0,
+        "fee": 1.70,
+        "final_result": {
+            "roi_net_pct": -5.17,
+            "total_pnl_net": -51.70,
+            "gross_pnl": -50.0,
+            "fees": -1.70,
+            "funding": 0.0,
+            "close_reason": "STOP_LOSS",
+        },
+        "source": "exchange",
+    })
+    assert "SL: 64,000" in text
+    assert "Closed: 100%" in text
+    assert "Final Result:" in text
+    assert "PnL: -50.00 USDT" in text
+
+
 def test_outbox_writer_sl_filled_side_from_chain(tmp_path):
     """Side in SL_FILLED payload must come from ops_trade_chains (LONG), not event (Sell)."""
     import sqlite3

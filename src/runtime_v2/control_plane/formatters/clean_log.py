@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 _SEP = "────────────────"
+_BULLET = "▪️"
 
 
 def _side_emoji(side: str | None) -> str:
@@ -41,10 +42,43 @@ def _header(emoji: str, chain_id, event_label: str, symbol, side) -> list[str]:
     ]
 
 
-def _footer(source: str, link: str | None = None) -> list[str]:
-    lines = [_SEP, f"Source: {source}"]
+def _footer(source: str, link: str | None = None, trader_id: str | None = None) -> list[str]:
+    lines = [_SEP]
+    if trader_id:
+        lines.append(f"Trader: {trader_id}")
+    lines.append(f"Source: {source}")
     if link:
-        lines.append(link)
+        lines.extend([_SEP, link])
+    return lines
+
+
+def _fmt_money(value, *, signed: bool = False) -> str:
+    if value is None:
+        return "n/a"
+    number = float(value)
+    prefix = "+" if signed and number >= 0 else ""
+    return f"{prefix}{number:.2f} USDT"
+
+
+def _fmt_pct(value, *, signed: bool = False) -> str:
+    if value is None:
+        return "n/a"
+    number = float(value)
+    prefix = "+" if signed and number >= 0 else ""
+    formatted = f"{prefix}{number:.2f}%"
+    return formatted.replace(".00%", "%")
+
+
+def _final_result_lines(final_result: dict | None) -> list[str]:
+    if not final_result:
+        return []
+    lines = [_SEP, "Final Result:"]
+    if final_result.get("roi_net_pct") is not None:
+        lines.append(f"ROI net: {_fmt_pct(final_result['roi_net_pct'], signed=True)}")
+    lines.append(f"Total PnL net: {_fmt_money(final_result.get('total_pnl_net'), signed=True)}")
+    lines.append(f"Gross PnL: {_fmt_money(final_result.get('gross_pnl'), signed=True)}")
+    lines.append(f"Fees: {_fmt_money(final_result.get('fees'), signed=True)}")
+    lines.append(f"Funding: {_fmt_money(final_result.get('funding'), signed=True)}")
     return lines
 
 
@@ -76,13 +110,7 @@ def _signal_accepted(p: dict) -> str:
 
     lines.append("")
 
-    footer_lines = [_SEP]
-    if p.get("trader_id"):
-        footer_lines.append(f"Trader: {p['trader_id']}")
-    footer_lines.append(f"Source: {p.get('source', 'original_message')}")
-    if p.get("link"):
-        footer_lines.append(p["link"])
-    lines += footer_lines
+    lines += _footer(p.get("source", "original_message"), p.get("link"), trader_id=p.get("trader_id"))
     return "\n".join(lines)
 
 
@@ -107,7 +135,7 @@ def _signal_rejected(p: dict) -> str:
         footer_lines.append(f"Rejected: {p['reason']}")
     footer_lines.append(f"Source: {p.get('source', 'original_message')}")
     if p.get("link"):
-        footer_lines.append(p["link"])
+        footer_lines.extend([_SEP, p["link"]])
     lines += footer_lines
     return "\n".join(lines)
 
@@ -159,20 +187,38 @@ def _tp_filled(p: dict, final: bool) -> str:
 
     if level is not None:
         tp_label = f"TP_{level}"
-        if p.get("tp_price") is not None:
-            lines.append(f"{tp_label}: {_num(p['tp_price'])}")
+        tp_price = p.get("tp_price")
+        fill_price = p.get("fill_price")
+        display_price = fill_price if fill_price is not None else tp_price
+        if display_price is not None:
+            lines.append(f"{tp_label}: {_num(display_price)}")
         else:
             lines.append(f"{tp_label}: —")
 
+    if p.get("closed_pct") is not None:
+        lines.append(f"Closed: {_fmt_pct(p['closed_pct'])}")
+    if p.get("pnl") is not None:
+        lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
+    if p.get("fee") is not None:
+        lines.append(f"Fee: {_fmt_money(p['fee'])}")
+
     lines.append("")
 
-    if not final and p.get("sl_current") is not None:
-        lines.append("Remaining:")
-        lines.append(f"SL: {_num(p['sl_current'])}")
+    if not final:
+        sl_label = _num(p['sl_current']) if p.get("sl_current") is not None else None
+        if sl_label:
+            be_suffix = " BE" if p.get("be_protection_status") == "PROTECTED" else ""
+            lines.append(f"SL: {sl_label}{be_suffix}")
+        if p.get("remaining_pct") is not None:
+            lines.append(f"Position: {_fmt_pct(p['remaining_pct'])}")
         lines.append("")
 
     if final:
         lines.append("Close reason: TAKE_PROFIT")
+        lines.append("")
+
+    lines += _final_result_lines(p.get("final_result"))
+    if p.get("final_result"):
         lines.append("")
 
     lines += _footer(p.get("source", "exchange"))
@@ -182,11 +228,21 @@ def _tp_filled(p: dict, final: bool) -> str:
 def _sl_filled(p: dict) -> str:
     lines = _header("🛑", p.get("chain_id"), "SL FILLED — POSITION CLOSED",
                     p.get("symbol"), p.get("side"))
-    if p.get("fill_price") is not None:
-        lines.append(f"Fill: {_num(p['fill_price'])}")
-        lines.append("")
+    sl_price = p.get("sl_price", p.get("fill_price"))
+    if sl_price is not None:
+        lines.append(f"SL: {_num(sl_price)}")
+    if p.get("closed_pct") is not None:
+        lines.append(f"Closed: {_fmt_pct(p['closed_pct'])}")
+    if p.get("pnl") is not None:
+        lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
+    if p.get("fee") is not None:
+        lines.append(f"Fee: {_fmt_money(p['fee'])}")
+    lines.append("")
     lines.append("Close reason: STOP_LOSS")
     lines.append("")
+    lines += _final_result_lines(p.get("final_result"))
+    if p.get("final_result"):
+        lines.append("")
     lines += _footer(p.get("source", "exchange"))
     return "\n".join(lines)
 
@@ -194,10 +250,17 @@ def _sl_filled(p: dict) -> str:
 def _position_closed(p: dict) -> str:
     lines = _header("📊", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"))
     if p.get("fill_price") is not None:
-        lines.append(f"Fill: {_num(p['fill_price'])}")
-        lines.append("")
-    lines.append("Close reason: MANUAL_CLOSE")
+        lines.append(f"Price: {_num(p['fill_price'])}")
+    close_reason = p.get("close_reason", "MANUAL_CLOSE")
+    lines.append(f"Close reason: {close_reason}")
+    if p.get("pnl") is not None:
+        lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
+    if p.get("fee") is not None:
+        lines.append(f"Fee: {_fmt_money(p['fee'])}")
     lines.append("")
+    lines += _final_result_lines(p.get("final_result"))
+    if p.get("final_result"):
+        lines.append("")
     lines += _footer(p.get("source", "exchange"))
     return "\n".join(lines)
 
@@ -217,15 +280,34 @@ def _entry_updated(p: dict) -> str:
 
 def _update_done(p: dict) -> str:
     lines = _header("✅", p.get("chain_id"), "UPDATE DONE", p.get("symbol"), p.get("side"))
-    applied = p.get("applied_actions") or []
-    if applied:
-        lines.append("Applied:")
-        for action in applied:
-            lines.append(f"  • {action}")
-    changed = p.get("changed_fields") or []
+    # Support both new field names (operations/changed) and legacy (applied_actions/changed_fields)
+    operations = p.get("operations") or p.get("applied_actions") or []
+    if operations:
+        lines.append("Operation:")
+        for op in operations:
+            lines.append(f"{_BULLET} {op}")
+    changed = p.get("changed") or []
     if changed:
+        lines.append("Applied:")
+        for item in changed:
+            if isinstance(item, dict):
+                field = item.get("field", "?")
+                old_val = item.get("old")
+                new_val = item.get("new")
+                note = item.get("note")
+                val_str = f"{_num(old_val)} -> {_num(new_val)}"
+                if note:
+                    lines.append(f"{field}: {val_str} *")
+                    lines.append(f"* {note}")
+                else:
+                    lines.append(f"{field}: {val_str}")
+            else:
+                lines.append(f"{_BULLET} {item}")
+    # Legacy changed_fields support
+    changed_fields = p.get("changed_fields") or []
+    if changed_fields and not changed:
         lines.append("Changed fields:")
-        for field in changed:
+        for field in changed_fields:
             lines.append(f"  • {field}")
     lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
