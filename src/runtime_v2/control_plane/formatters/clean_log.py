@@ -382,6 +382,53 @@ def _reentry_accepted(p: dict) -> str:
     return "\n".join(lines)
 
 
+def _entry_cancelled(p: dict) -> str:
+    lines = _header("⚠️", p.get("chain_id"), "ENTRY CANCELLED", p.get("symbol"), p.get("side"))
+    cancelled = p.get("cancelled_entry") or {}
+    seq = cancelled.get("sequence", "?")
+    price = cancelled.get("price")
+    etype = cancelled.get("entry_type", "LIMIT").capitalize()
+    if price is not None:
+        lines.append(f"Entry_{seq}: {_num(price)} {etype}")
+    else:
+        lines.append(f"Entry_{seq}: {etype}")
+    if p.get("partial_fill_pct") is not None:
+        pct = p["partial_fill_pct"]
+        qty = p.get("partial_fill_qty")
+        symbol = p.get("symbol", "")
+        base_asset = symbol.split("/")[0] if "/" in symbol else symbol
+        qty_str = f" ({_num(qty)} {base_asset} kept)" if qty is not None else ""
+        lines.append(f"Partial fill: {_fmt_pct(pct)}{qty_str}")
+    if p.get("avg_entry") is not None:
+        lines.append(f"Avg entry: {_num(p['avg_entry'])}")
+    if p.get("total_filled_qty") is not None:
+        symbol = p.get("symbol", "")
+        base_asset = symbol.split("/")[0] if "/" in symbol else symbol
+        lines.append(f"Total filled: {_num(p['total_filled_qty'])} {base_asset}")
+    lines.append("")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    return "\n".join(lines)
+
+
+def _be_exit(p: dict) -> str:
+    lines = _header("⚡", p.get("chain_id"), "BE EXIT", p.get("symbol"), p.get("side"))
+    exit_price = p.get("exit_price")
+    if exit_price is not None:
+        lines.append(f"Exit: {_num(exit_price)} BE")
+    close_reason = p.get("close_reason", "BREAKEVEN_AFTER_TP")
+    lines.append(f"Close reason: {close_reason}")
+    if p.get("pnl") is not None:
+        lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
+    if p.get("fee") is not None:
+        lines.append(f"Fee: {_fmt_money(p['fee'])}")
+    lines.append("")
+    lines += _final_result_lines(p.get("final_result"))
+    if p.get("final_result"):
+        lines.append("")
+    lines += _footer(p.get("source", "exchange"))
+    return "\n".join(lines)
+
+
 def _fallback(notification_type: str, p: dict) -> str:
     lines = _header("📊", p.get("chain_id"), notification_type, p.get("symbol"), p.get("side"))
     lines += _footer(p.get("source", "runtime"))
@@ -421,6 +468,10 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _reconciliation_fixed(payload)
     if notification_type == "REENTRY_ACCEPTED":
         return _reentry_accepted(payload)
+    if notification_type == "ENTRY_CANCELLED":
+        return _entry_cancelled(payload)
+    if notification_type == "BE_EXIT":
+        return _be_exit(payload)
     return _fallback(notification_type, payload)
 
 

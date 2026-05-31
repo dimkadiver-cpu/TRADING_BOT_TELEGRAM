@@ -203,3 +203,53 @@ def test_reentry_accepted_without_previous_chain():
     })
     assert "REENTRY ACCEPTED" in text
     assert "Source: runtime" in text
+
+
+# ---------------------------------------------------------------------------
+# ENTRY_CANCELLED
+# ---------------------------------------------------------------------------
+
+def test_entry_cancelled_formatter_renders_type_and_source():
+    text = format_clean_log("ENTRY_CANCELLED", {
+        "chain_id": 150,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "cancelled_entry": {"sequence": 2, "price": 64000.0, "entry_type": "LIMIT"},
+        "partial_fill_pct": None,
+        "avg_entry": 64820.0,
+        "total_filled_qty": 0.006,
+        "source": "trader_update",
+    })
+    assert "ENTRY CANCELLED" in text
+    assert "Entry_2: 64,000 Limit" in text
+    assert "Avg entry: 64,820" in text
+    assert "0.006 BTC" in text
+
+
+# ---------------------------------------------------------------------------
+# BE_EXIT
+# ---------------------------------------------------------------------------
+
+def test_be_exit_formatter_renders_exit_and_final_result():
+    text = format_clean_log("BE_EXIT", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "exit_price": 65020.0,
+        "close_reason": "BREAKEVEN_AFTER_TP",
+        "pnl": 0.20,
+        "fee": 1.70,
+        "final_result": {
+            "roi_net_pct": 1.15,
+            "total_pnl_net": 112.30,
+            "gross_pnl": 118.0,
+            "fees": -5.70,
+            "funding": 0.0,
+            "close_reason": "BREAKEVEN_AFTER_TP",
+        },
+        "source": "exchange",
+    })
+    assert "BE EXIT" in text
+    assert "Exit: 65,020 BE" in text
+    assert "Close reason: BREAKEVEN_AFTER_TP" in text
+    assert "Final Result:" in text

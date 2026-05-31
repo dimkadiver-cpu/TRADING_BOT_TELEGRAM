@@ -17,6 +17,7 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "CLOSE_FULL_FILLED": "POSITION_CLOSED",
     "ENTRY_UPDATED": "ENTRY_UPDATED",
     "PENDING_TIMEOUT": "PENDING_ENTRY_EXPIRED",
+    "PENDING_ENTRY_CANCELLED": "ENTRY_CANCELLED",
     "RECONCILIATION_WARNING": "RECONCILIATION_WARNING",
     "RECONCILIATION_FIXED": "RECONCILIATION_FIXED",
     "REENTRY_ACCEPTED": "REENTRY_ACCEPTED",
@@ -380,6 +381,49 @@ def _build_payload(
             "link": ev.get("source_message_link"),
         }
 
+    if notification_type == "ENTRY_CANCELLED":
+        sequence = ev.get("sequence")
+        cancelled_entry = {
+            "sequence": sequence,
+            "price": ev.get("price"),
+            "entry_type": ev.get("entry_type", "LIMIT"),
+        }
+        planned_qty = ev.get("planned_entry_qty")
+        partial_qty = ev.get("partial_fill_qty", ev.get("filled_qty"))
+        partial_pct = None
+        if planned_qty and partial_qty is not None:
+            partial_pct = round(float(partial_qty) / float(planned_qty) * 100.0, 2)
+        return {
+            **base,
+            "cancelled_entry": cancelled_entry,
+            "partial_fill_pct": partial_pct,
+            "partial_fill_qty": partial_qty,
+            "avg_entry": entry_avg_price,
+            "total_filled_qty": filled_entry_qty,
+            "source": ev.get("source", ev.get("cancel_reason", "runtime")),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "BE_EXIT":
+        closed_qty = ev.get("closed_size", ev.get("filled_qty"))
+        fill_price = ev.get("fill_price")
+        return {
+            **base,
+            "exit_price": fill_price,
+            "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
+            "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
+            "fee": ev.get("exec_fee"),
+            "close_reason": "BREAKEVEN_AFTER_TP",
+            "final_result": _final_result(
+                gross_pnl=cumulative_gross_pnl,
+                fees=cumulative_fees,
+                funding=cumulative_funding,
+                allocated_margin=allocated_margin,
+                close_reason="BREAKEVEN_AFTER_TP",
+            ),
+            "source": ev.get("source", "exchange"),
+        }
+
     # fallback: merge base with event payload
     return {**base, **ev}
 
@@ -452,6 +496,14 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         # Promote terminal TP to TP_FILLED_FINAL.
         if notification_type == "TP_FILLED" and ev.get("is_final"):
             notification_type = "TP_FILLED_FINAL"
+
+        # Filter: ENTRY_CANCELLED caused by position close should not be shown
+        if notification_type == "ENTRY_CANCELLED" and ev.get("cancel_reason") == "position_closed":
+            continue
+
+        # Promote CLOSE_FULL_FILLED on PROTECTED chain → BE_EXIT
+        if event_type == "CLOSE_FULL_FILLED" and be_protection_status == "PROTECTED":
+            notification_type = "BE_EXIT"
 
         payload = _build_payload(
             notification_type, chain_id, symbol, side, trader_id,

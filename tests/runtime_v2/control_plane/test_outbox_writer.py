@@ -210,3 +210,60 @@ def test_projection_maps_pending_timeout_to_pending_entry_expired(ops_db):
     conn.close()
     assert row is not None
     assert row[0] == "PENDING_ENTRY_EXPIRED"
+
+
+def test_pending_entry_cancelled_projects_entry_cancelled(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 800)
+        _seed_event(conn, 800, "PENDING_ENTRY_CANCELLED", "pending_cancelled:800:1", {
+            "sequence": 2,
+            "price": 64000.0,
+            "entry_type": "LIMIT",
+            "cancel_reason": "trader_update",
+        })
+        project_clean_log_for_chain(conn, 800)
+    row = conn.execute("SELECT notification_type FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "ENTRY_CANCELLED"
+
+
+def test_pending_entry_cancelled_position_closed_is_filtered(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 801)
+        _seed_event(conn, 801, "PENDING_ENTRY_CANCELLED", "pending_cancelled:801:1", {
+            "sequence": 2,
+            "cancel_reason": "position_closed",
+        })
+        project_clean_log_for_chain(conn, 801)
+    count = conn.execute("SELECT COUNT(*) FROM ops_notification_outbox").fetchone()[0]
+    conn.close()
+    assert count == 0
+
+
+def test_close_full_filled_on_protected_chain_projects_be_exit(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 900)
+        conn.execute(
+            "UPDATE ops_trade_chains SET be_protection_status='PROTECTED', "
+            "entry_avg_price=65000.0, cumulative_gross_pnl=118.0, "
+            "cumulative_fees=5.70, allocated_margin=10000.0 WHERE trade_chain_id=?",
+            (900,),
+        )
+        _seed_event(conn, 900, "CLOSE_FULL_FILLED", "close_full:900:1", {
+            "fill_price": 65020.0,
+            "filled_qty": 0.01,
+            "exec_fee": 1.70,
+            "closed_size": 0.01,
+        })
+        project_clean_log_for_chain(conn, 900)
+    row = conn.execute("SELECT notification_type, payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "BE_EXIT"
+    payload = json.loads(row[1])
+    assert payload["close_reason"] == "BREAKEVEN_AFTER_TP"
+    assert payload["exit_price"] == 65020.0
