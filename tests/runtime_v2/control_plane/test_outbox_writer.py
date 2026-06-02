@@ -150,7 +150,7 @@ def test_projection_maps_update_done(ops_db):
     with conn:
         _seed_chain(conn, 500)
         _seed_event(conn, 500, "UPDATE_DONE", "update_done:500:1",
-                    {"applied_actions": ["U_MOVE_STOP"], "changed_fields": ["current_stop_price"]})
+                    {"applied_actions": ["U_MOVE_STOP"], "changed": [{"field": "SL", "old": 100.0, "new": 110.0}]})
         project_clean_log_for_chain(conn, 500)
     row = conn.execute(
         "SELECT notification_type, payload_json FROM ops_notification_outbox"
@@ -160,7 +160,7 @@ def test_projection_maps_update_done(ops_db):
     assert row[0] == "UPDATE_DONE"
     p = json.loads(row[1])
     assert p["applied_actions"] == ["U_MOVE_STOP"]
-    assert p["changed_fields"] == ["current_stop_price"]
+    assert p["changed"] == [{"field": "SL", "old": 100.0, "new": 110.0}]
 
 
 def test_tp_final_payload_includes_final_result_and_pnl_fields(ops_db):
@@ -339,6 +339,15 @@ def test_update_done_has_no_send_after_delay():
     result = _send_after_for("UPDATE_DONE")
     now = datetime.now(timezone.utc).isoformat()
     assert result <= now or result[:19] == now[:19]
+
+
+def test_multi_chain_summary_has_3s_send_after_delay():
+    from src.runtime_v2.control_plane.outbox_writer import _send_after_for
+    from datetime import datetime, timezone, timedelta
+    result = _send_after_for("MULTI_CHAIN_SUMMARY")
+    in_2s = (datetime.now(timezone.utc) + timedelta(seconds=2)).isoformat()
+    in_5s = (datetime.now(timezone.utc) + timedelta(seconds=5)).isoformat()
+    assert in_2s <= result <= in_5s, f"MULTI_CHAIN_SUMMARY deve avere ~3s delay, got: {result}"
 
 
 def test_update_clean_log_includes_changed_field_for_be_move(ops_db):

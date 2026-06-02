@@ -152,6 +152,8 @@ def _write_update_clean_log(
                     "new": f"closed {close_pct}%",
                 })
         elif action == "MODIFY_ENTRIES":
+            # changed_entries key populated by a future enrichment of _apply_modify_entries;
+            # silently no-ops until then.
             for ce in p.get("changed_entries", []):
                 changed.append({
                     "field": f"Entry_{ce.get('sequence', '?')}",

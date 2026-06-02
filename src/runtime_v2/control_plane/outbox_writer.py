@@ -38,12 +38,6 @@ _PRIORITY_BY_TYPE: dict[str, str] = {
     "SIGNAL_REJECTED": "HIGH",
 }
 
-# Terminal events that close a chain — flush any pending UPDATE_* delays so they
-# arrive before the terminal notification rather than 20 seconds after it.
-_TERMINAL_NOTIFICATION_TYPES: frozenset[str] = frozenset({
-    "SL_FILLED", "POSITION_CLOSED", "TP_FILLED_FINAL", "BE_EXIT",
-})
-
 
 def _side_pnl(side: str | None, entry_avg_price: float | None, fill_price, qty) -> float | None:
     if entry_avg_price is None or fill_price is None or qty is None:
@@ -131,23 +125,6 @@ def _record(
     )
 
 
-def _flush_pending_updates_for_chain(conn: sqlite3.Connection, chain_id: int) -> None:
-    """Clear send_after for pending UPDATE_* notifications on this chain.
-
-    Called when a terminal event is written so UPDATE_DONE (created earlier, lower
-    notification_id) is dispatched before the terminal notification, not 20s after it.
-    """
-    conn.execute(
-        """
-        UPDATE ops_notification_outbox
-        SET send_after = NULL
-        WHERE status = 'PENDING'
-          AND aggregation_group LIKE ?
-          AND notification_type IN ('UPDATE_DONE', 'UPDATE_PARTIAL', 'UPDATE_REJECTED')
-        """,
-        (f"{chain_id}:%",),
-    )
-
 
 def write_clean_log_event(
     conn: sqlite3.Connection,
@@ -163,8 +140,6 @@ def write_clean_log_event(
     pri = priority or _PRIORITY_BY_TYPE.get(notification_type, "MEDIUM")
     if chain_id is not None and "chain_id" not in payload:
         payload = {**payload, "chain_id": chain_id}
-    if notification_type in _TERMINAL_NOTIFICATION_TYPES and chain_id is not None:
-        _flush_pending_updates_for_chain(conn, chain_id)
     _record(
         conn,
         notification_type=notification_type,
@@ -408,7 +383,7 @@ def _build_payload(
         return {
             **base,
             "applied_actions": ev.get("applied_actions", []),
-            "changed_fields": ev.get("changed_fields", []),
+            "changed": ev.get("changed", []),
             "source": ev.get("source", "runtime"),
             "link": ev.get("source_message_link"),
         }
