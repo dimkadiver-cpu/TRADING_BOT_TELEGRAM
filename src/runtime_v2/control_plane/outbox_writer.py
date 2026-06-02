@@ -517,15 +517,22 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         if source_chat_id and telegram_message_id else None
     )
 
-    events = conn.execute(
-        "SELECT event_type, payload_json, idempotency_key "
-        "FROM ops_lifecycle_events "
-        "WHERE trade_chain_id=? ORDER BY event_id",
+    last_id = (conn.execute(
+        "SELECT last_projected_event_id FROM ops_trade_chains WHERE trade_chain_id=?",
         (chain_id,),
+    ).fetchone() or (0,))[0] or 0
+
+    events = conn.execute(
+        "SELECT event_id, event_type, payload_json, idempotency_key "
+        "FROM ops_lifecycle_events "
+        "WHERE trade_chain_id=? AND event_id > ? ORDER BY event_id",
+        (chain_id, last_id),
     ).fetchall()
 
     written = 0
-    for event_type, payload_json, idem in events:
+    max_event_id = last_id
+    for row_event_id, event_type, payload_json, idem in events:
+        max_event_id = max(max_event_id, row_event_id)
         notification_type = _CLEAN_LOG_EVENT_MAP.get(event_type)
         if notification_type is None:
             continue
@@ -569,6 +576,11 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
             dedupe_key=f"clean:{idem}",
         )
         written += 1
+    if events:
+        conn.execute(
+            "UPDATE ops_trade_chains SET last_projected_event_id=? WHERE trade_chain_id=?",
+            (max_event_id, chain_id),
+        )
     return written
 
 
