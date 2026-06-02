@@ -25,6 +25,7 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
             enabled=True,
             poll_fallback_enabled=True,
             poll_fallback_period_seconds=45,
+            position_reconciliation_interval_seconds=600,
         ),
     )
     routing = SimpleNamespace(execution_account_id="master_account")
@@ -164,3 +165,31 @@ def test_run_reconciliation_periodically_uses_configured_interval():
 
     assert sleeps == [45]
     sync_worker.run_reconciliation.assert_not_called()
+
+
+def test_execution_runtime_has_position_reconciliation_interval():
+    from main import ExecutionRuntime
+    from unittest.mock import MagicMock
+    rt = ExecutionRuntime(
+        adapter=MagicMock(),
+        execution_worker=MagicMock(),
+        sync_worker=MagicMock(),
+        ws_watcher=None,
+        reconciliation_interval_seconds=None,
+        position_reconciliation_interval_seconds=120,
+        poll_fallback_enabled=False,
+    )
+    assert rt.position_reconciliation_interval_seconds == 120
+    assert rt.poll_fallback_enabled is False
+
+
+def test_websocket_config_exposes_position_reconciliation_interval():
+    from src.runtime_v2.execution_gateway.models import WebsocketConfig
+    cfg = WebsocketConfig(position_reconciliation_interval_seconds=120)
+    assert cfg.position_reconciliation_interval_seconds == 120
+
+
+def test_websocket_config_default_position_reconciliation_interval():
+    from src.runtime_v2.execution_gateway.models import WebsocketConfig
+    cfg = WebsocketConfig()
+    assert cfg.position_reconciliation_interval_seconds == 600

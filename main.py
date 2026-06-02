@@ -7,8 +7,10 @@ truststore.inject_into_ssl()
 
 import argparse
 import asyncio
+import ctypes
 import os
 import sqlite3
+import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
@@ -68,6 +70,8 @@ class ExecutionRuntime:
     sync_worker: ExchangeEventSyncWorker
     ws_watcher: BybitWsFillWatcher | None
     reconciliation_interval_seconds: int | None
+    position_reconciliation_interval_seconds: int = 600
+    poll_fallback_enabled: bool = True
 
 
 async def _wait_any(*events: asyncio.Event) -> None:
@@ -164,6 +168,8 @@ def _build_execution_runtime(
         sync_worker=sync_worker,
         ws_watcher=ws_watcher,
         reconciliation_interval_seconds=reconciliation_interval_seconds,
+        position_reconciliation_interval_seconds=adapter_cfg.websocket.position_reconciliation_interval_seconds,
+        poll_fallback_enabled=adapter_cfg.websocket.poll_fallback_enabled,
     )
 
 
@@ -476,8 +482,15 @@ async def _async_main(
             except Exception:
                 logger.warning("startup notification failed (non-critical)")
 
-        sync_task = None
         if execution_runtime is not None:
+            try:
+                execution_runtime.sync_worker.run_reconciliation()
+                execution_runtime.sync_worker.run_position_reconciliation()
+            except Exception:
+                logger.warning("startup reconciliation failed (non-critical)")
+
+        sync_task = None
+        if execution_runtime is not None and execution_runtime.poll_fallback_enabled:
             sync_task = asyncio.create_task(
                 _run_sync_worker(
                     sync_worker=execution_runtime.sync_worker,
@@ -502,7 +515,7 @@ async def _async_main(
             position_reconciliation_task = asyncio.create_task(
                 _run_position_reconciliation_periodically(
                     sync_worker=execution_runtime.sync_worker,
-                    interval_seconds=60,
+                    interval_seconds=execution_runtime.position_reconciliation_interval_seconds,
                     logger=logger,
                 )
             )
@@ -552,6 +565,23 @@ async def _async_main(
         _close_execution_runtime(execution_runtime)
 
 
+_instance_mutex = None
+_MUTEX_NAME = "Global\\TeleSignalBot_SingleInstance"
+
+
+def _acquire_instance_lock() -> None:
+    global _instance_mutex
+    kernel32 = ctypes.windll.kernel32
+    _instance_mutex = kernel32.CreateMutexW(None, True, _MUTEX_NAME)
+    if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+        print(
+            "ERRORE: un'altra istanza di main.py è già in esecuzione.\n"
+            "Termina il processo precedente prima di avviarne uno nuovo.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--migrate", action="store_true", help="Apply DB migrations and exit.")
@@ -559,6 +589,7 @@ def main() -> None:
 
     load_dotenv()
     root_dir = Path(__file__).resolve().parent
+    _acquire_instance_lock()
     parser_db_path = os.getenv("PARSER_DB_PATH", str(root_dir / "db" / "parser.sqlite3"))
     migrations_dir = str(root_dir / "db" / "migrations")
     ops_db_path = os.getenv("OPS_DB_PATH", str(root_dir / "db" / "ops.sqlite3"))
