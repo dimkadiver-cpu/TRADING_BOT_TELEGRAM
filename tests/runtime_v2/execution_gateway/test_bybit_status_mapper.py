@@ -136,3 +136,10 @@ def test_status_mapper_none_when_info_missing():
     assert raw.exchange_time is None
     assert raw.leaves_qty is None
     assert raw.cum_exec_qty is None
+
+
+def test_status_mapper_zero_leaves_qty_integer():
+    """Integer zero must not be suppressed by the truthiness guard."""
+    order = _order_with_info("closed", 0.01, 50000.0, {"leavesQty": 0})
+    raw = StatusMapper.map(order, client_order_id="tsb:1:2:entry:1")
+    assert raw.leaves_qty == 0.0

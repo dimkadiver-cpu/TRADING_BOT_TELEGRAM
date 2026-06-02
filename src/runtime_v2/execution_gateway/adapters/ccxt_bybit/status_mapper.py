@@ -37,9 +37,9 @@ class StatusMapper:
 
         cancel_reason: str | None = None
         if mapped_status == "CANCELLED":
-            info = ccxt_order.get("info") or {}
-            cancel_type = str(info.get("cancelType") or "").strip()
-            reject_reason = str(info.get("rejectReason") or "").strip()
+            cancel_info = ccxt_order.get("info") or {}
+            cancel_type = str(cancel_info.get("cancelType") or "").strip()
+            reject_reason = str(cancel_info.get("rejectReason") or "").strip()
             parts = [p for p in (cancel_type, reject_reason) if p and p != "UNKNOWN"]
             cancel_reason = "|".join(parts) if parts else None
             logger.warning(
@@ -57,11 +57,11 @@ class StatusMapper:
             filled_qty=float(ccxt_order.get("filled") or 0.0),
             average_price=float(avg) if avg else None,
             cancel_reason=cancel_reason,
-            exec_fee=float(info["cumExecFee"]) if info.get("cumExecFee") else None,
-            exec_value=float(info["cumExecValue"]) if info.get("cumExecValue") else None,
+            exec_fee=float(info["cumExecFee"]) if info.get("cumExecFee") is not None else None,
+            exec_value=float(info["cumExecValue"]) if info.get("cumExecValue") is not None else None,
             exchange_time=_ms_to_iso(info.get("updatedTime")),
-            leaves_qty=float(info["leavesQty"]) if info.get("leavesQty") else None,
-            cum_exec_qty=float(info["cumExecQty"]) if info.get("cumExecQty") else None,
+            leaves_qty=float(info["leavesQty"]) if info.get("leavesQty") is not None else None,
+            cum_exec_qty=float(info["cumExecQty"]) if info.get("cumExecQty") is not None else None,
         )
 
 
