@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+from src.runtime_v2.execution_gateway.event_ingest.payload import ExchangeEventPayload
 from src.runtime_v2.lifecycle.models import ExecutionCommand
 
 if TYPE_CHECKING:
@@ -563,18 +564,24 @@ class GatewayCommandRepository:
         else:
             ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
 
-        payload = {
-            "fill_price": raw.exec_price,
-            "filled_qty": raw.exec_qty,
-            "closed_size": raw.closed_size,
-            "exec_fee": raw.exec_fee,
-            "pos_qty": raw.pos_qty,
-            "symbol": raw.symbol,
-            "side": raw.side,
-            "source": classified.source,
-            "tp_level": classified.tp_level,
-            "exchange_event_id": raw.exchange_event_id,
-        }
+        ep = ExchangeEventPayload(
+            fill_price=raw.exec_price,
+            filled_qty=raw.exec_qty,
+            closed_size=raw.closed_size,
+            exec_fee=raw.exec_fee,
+            fee_rate=raw.fee_rate,
+            exec_value=raw.exec_value,
+            pos_qty=raw.pos_qty,
+            leaves_qty=raw.leaves_qty,
+            cum_exec_qty=raw.cum_exec_qty,
+            exchange_event_id=raw.exchange_event_id,
+            order_id=raw.order_id,
+            order_link_id=raw.order_link_id,
+            exchange_time=raw.exchange_time,
+            tp_level=classified.tp_level,
+            source=classified.source,
+        )
+        payload_json_str = ep.model_dump_json()
 
         conn = sqlite3.connect(self._db)
         try:
@@ -613,7 +620,7 @@ class GatewayCommandRepository:
                     (
                         classified.trade_chain_id,
                         classified.event_type,
-                        json.dumps(payload),
+                        payload_json_str,
                         "NEW",
                         ops_idem_key,
                         raw.received_at or now,
