@@ -21,6 +21,7 @@ class WebsocketConfig(BaseModel):
     enabled: bool = False
     poll_fallback_enabled: bool = True
     poll_fallback_period_seconds: int = 60
+    position_reconciliation_interval_seconds: int = 600
 
 
 class ExecutionStrategyConfig(BaseModel):
@@ -92,6 +93,11 @@ class RawAdapterOrder(BaseModel):
     filled_qty: float = 0.0
     average_price: float | None = None
     cancel_reason: str | None = None
+    exec_fee: float | None = None
+    exec_value: float | None = None
+    exchange_time: str | None = None
+    leaves_qty: float | None = None
+    cum_exec_qty: float | None = None
 
     @property
     def is_filled(self) -> bool:
