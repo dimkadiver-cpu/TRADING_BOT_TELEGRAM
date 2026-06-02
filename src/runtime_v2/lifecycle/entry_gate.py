@@ -117,15 +117,47 @@ def _write_update_clean_log(
         notif_type = "UPDATE_REJECTED"
 
     applied_actions: list[str] = []
+    rejected_actions: list[str] = [e.event_type for e in noops]
+    changed: list[dict] = []
+
     for e in accepted:
         try:
-            action = json.loads(e.payload_json or "{}").get("action")
-            if action:
-                applied_actions.append(action)
+            p = json.loads(e.payload_json or "{}")
         except Exception:
-            pass
+            p = {}
+        action = p.get("action", "")
+        if action:
+            applied_actions.append(action)
 
-    rejected_actions = [e.event_type for e in noops]
+        if p.get("is_breakeven"):
+            changed.append({
+                "field": "SL",
+                "old": p.get("old_sl_price"),
+                "new": p.get("new_sl_price"),
+                "note": "BE",
+            })
+        elif action == "CANCEL_PENDING":
+            for entry in p.get("cancelled_entries", []):
+                changed.append({
+                    "field": f"Entry_{entry.get('sequence', '?')}",
+                    "old": entry.get("price"),
+                    "new": "cancelled",
+                })
+        elif action == "CLOSE_PARTIAL":
+            close_pct = p.get("close_pct")
+            if close_pct is not None:
+                changed.append({
+                    "field": "Position",
+                    "old": "open",
+                    "new": f"closed {close_pct}%",
+                })
+        elif action == "MODIFY_ENTRIES":
+            for ce in p.get("changed_entries", []):
+                changed.append({
+                    "field": f"Entry_{ce.get('sequence', '?')}",
+                    "old": ce.get("old_price"),
+                    "new": ce.get("new_price"),
+                })
 
     first = (accepted or noops)[0]
     source = _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE.get(first.source_type, "runtime")
@@ -143,7 +175,7 @@ def _write_update_clean_log(
         "side": side,
         "applied_actions": applied_actions,
         "rejected_actions": rejected_actions,
-        "changed_fields": [],
+        "changed": changed,
         "source": source,
         "link": link,
     }

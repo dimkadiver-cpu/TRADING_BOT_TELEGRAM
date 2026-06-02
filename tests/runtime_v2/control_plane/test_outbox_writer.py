@@ -332,3 +332,59 @@ def test_tp_filled_final_has_no_send_after_delay():
     result = _send_after_for("TP_FILLED_FINAL")
     now = datetime.now(timezone.utc).isoformat()
     assert result <= now or result[:19] == now[:19]
+
+
+def test_update_done_has_no_send_after_delay():
+    from src.runtime_v2.control_plane.outbox_writer import _send_after_for
+    result = _send_after_for("UPDATE_DONE")
+    now = datetime.now(timezone.utc).isoformat()
+    assert result <= now or result[:19] == now[:19]
+
+
+def test_update_clean_log_includes_changed_field_for_be_move(ops_db):
+    """_write_update_clean_log deve produrre UPDATE_DONE con campo changed
+    popolato quando l'evento contiene is_breakeven=True."""
+    import json, sqlite3
+    from src.runtime_v2.lifecycle.entry_gate import _write_update_clean_log
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    conn = sqlite3.connect(ops_db)
+    _seed_chain(conn, chain_id=77, symbol="ETH/USDT", side="LONG")
+    conn.commit()
+
+    event = LifecycleEvent(
+        trade_chain_id=77,
+        event_type="TELEGRAM_UPDATE_ACCEPTED",
+        source_type="telegram_update",
+        source_id="1",
+        payload_json=json.dumps({
+            "action": "MOVE_SL_TO_BE",
+            "old_sl_price": 3100.0,
+            "new_sl_price": 3340.0,
+            "is_breakeven": True,
+        }),
+        idempotency_key="be_test:77:1",
+    )
+    cr = UpdateChainResult(
+        trade_chain_id=77,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[event],
+        execution_commands=[],
+    )
+
+    with conn:
+        _write_update_clean_log(conn, cr, canonical_message_id=1, link=None)
+
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='UPDATE_DONE'"
+    ).fetchone()
+    conn.close()
+    assert row is not None, "UPDATE_DONE row not found in outbox"
+    p = json.loads(row[0])
+    changed = p.get("changed", [])
+    assert any(
+        c.get("field") == "SL" and c.get("note") == "BE"
+        for c in changed
+    ), f"Expected SL BE in changed, got: {changed}"

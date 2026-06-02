@@ -98,16 +98,12 @@ def _iso_after(seconds: int) -> str:
 
 
 def _send_after_for(notification_type: str) -> str:
-    if notification_type in {"UPDATE_DONE", "UPDATE_PARTIAL", "UPDATE_REJECTED"}:
-        return _iso_after(20)
+    if notification_type == "MULTI_CHAIN_SUMMARY":
+        return _iso_after(3)
     return _now()
 
 
 def _agg_group(notification_type: str, chain_id: int | None, payload: dict) -> str | None:
-    if chain_id is None:
-        return None
-    if notification_type in {"UPDATE_DONE", "UPDATE_PARTIAL", "UPDATE_REJECTED"}:
-        return f"{chain_id}:{payload.get('source_message_id') or 'update_batch'}"
     return None
 
 
