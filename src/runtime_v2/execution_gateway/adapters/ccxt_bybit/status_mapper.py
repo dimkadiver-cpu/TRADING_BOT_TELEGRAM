@@ -1,10 +1,21 @@
 from __future__ import annotations
 
 import logging
+from datetime import datetime, timezone
 
 from src.runtime_v2.execution_gateway.models import RawAdapterOrder
 
 logger = logging.getLogger(__name__)
+
+
+def _ms_to_iso(ms_str) -> str | None:
+    if not ms_str:
+        return None
+    try:
+        ts = int(ms_str) / 1000
+        return datetime.fromtimestamp(ts, tz=timezone.utc).isoformat()
+    except (ValueError, TypeError):
+        return None
 
 
 class StatusMapper:
@@ -38,6 +49,7 @@ class StatusMapper:
                 reject_reason or None,
             )
 
+        info = ccxt_order.get("info") or {}
         return RawAdapterOrder(
             client_order_id=client_order_id or str(ccxt_order.get("clientOrderId") or ""),
             exchange_order_id=str(ccxt_order.get("id") or ""),
@@ -45,6 +57,11 @@ class StatusMapper:
             filled_qty=float(ccxt_order.get("filled") or 0.0),
             average_price=float(avg) if avg else None,
             cancel_reason=cancel_reason,
+            exec_fee=float(info["cumExecFee"]) if info.get("cumExecFee") else None,
+            exec_value=float(info["cumExecValue"]) if info.get("cumExecValue") else None,
+            exchange_time=_ms_to_iso(info.get("updatedTime")),
+            leaves_qty=float(info["leavesQty"]) if info.get("leavesQty") else None,
+            cum_exec_qty=float(info["cumExecQty"]) if info.get("cumExecQty") else None,
         )
 
 

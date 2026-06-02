@@ -92,3 +92,47 @@ def test_status_mapper_missing_id_maps_empty_exchange_order_id():
 def test_status_mapper_converts_string_filled_to_float():
     raw = StatusMapper.map(_order("closed", filled="0.05"), client_order_id="tsb:1:2:entry:1")
     assert raw.filled_qty == 0.05
+
+
+def _order_with_info(status: str, filled: float, average, info: dict) -> dict:
+    return {"id": "ord789", "status": status, "filled": filled, "average": average, "info": info}
+
+
+def test_status_mapper_captures_exec_fee():
+    order = _order_with_info("closed", 0.01, 50000.0, {"cumExecFee": "0.275"})
+    raw = StatusMapper.map(order, client_order_id="tsb:1:2:entry:1")
+    assert raw.exec_fee == 0.275
+
+
+def test_status_mapper_captures_exec_value():
+    order = _order_with_info("closed", 0.01, 50000.0, {"cumExecValue": "500.0"})
+    raw = StatusMapper.map(order, client_order_id="tsb:1:2:entry:1")
+    assert raw.exec_value == 500.0
+
+
+def test_status_mapper_captures_exchange_time():
+    order = _order_with_info("closed", 0.01, 50000.0, {"updatedTime": "1748764800000"})
+    raw = StatusMapper.map(order, client_order_id="tsb:1:2:entry:1")
+    assert raw.exchange_time is not None
+    assert "2025" in raw.exchange_time or "2026" in raw.exchange_time
+
+
+def test_status_mapper_captures_leaves_qty():
+    order = _order_with_info("closed", 0.01, 50000.0, {"leavesQty": "0.0"})
+    raw = StatusMapper.map(order, client_order_id="tsb:1:2:entry:1")
+    assert raw.leaves_qty == 0.0
+
+
+def test_status_mapper_captures_cum_exec_qty():
+    order = _order_with_info("closed", 0.01, 50000.0, {"cumExecQty": "0.01"})
+    raw = StatusMapper.map(order, client_order_id="tsb:1:2:entry:1")
+    assert raw.cum_exec_qty == 0.01
+
+
+def test_status_mapper_none_when_info_missing():
+    raw = StatusMapper.map({"id": "x", "status": "closed", "filled": 0.01}, client_order_id="coid")
+    assert raw.exec_fee is None
+    assert raw.exec_value is None
+    assert raw.exchange_time is None
+    assert raw.leaves_qty is None
+    assert raw.cum_exec_qty is None
