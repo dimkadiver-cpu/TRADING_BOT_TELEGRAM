@@ -571,8 +571,10 @@ def test_apply_move_to_be_emits_telegram_update_accepted_with_prices():
     assert p.get("is_breakeven") is True
     assert p.get("old_sl_price") is not None, "old_sl_price must be present"
     assert p.get("new_sl_price") is not None, "new_sl_price must be present"
-    # new_sl_price should be >= entry_avg_price for LONG (BE at avg price)
-    assert float(p["new_sl_price"]) >= 49000.0
+    # new_sl_price should be at or near entry_avg_price (50000) — within fee adjustment tolerance
+    assert abs(float(p["new_sl_price"]) - 50000.0) < 500, (
+        f"new_sl_price {p['new_sl_price']} should be near entry_avg_price 50000"
+    )
 
 
 def _make_chain_simple(state="OPEN"):

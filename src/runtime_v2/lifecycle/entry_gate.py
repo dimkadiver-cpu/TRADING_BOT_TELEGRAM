@@ -1035,6 +1035,7 @@ class LifecycleEntryGate:
             idempotency_key=f"move_be:{chain_id}:{cmid}",
         )
         old_sl_price = chain.current_stop_price
+        # Fallback covers chains created before current_stop_price was populated (schema migration)
         if old_sl_price is None:
             try:
                 old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
@@ -1193,7 +1194,7 @@ class LifecycleEntryGate:
             plan_data = json.loads(chain.plan_state_json or "{}")
             cancelled_entries = [
                 {
-                    "sequence": leg["sequence"],
+                    "sequence": leg.get("sequence"),
                     "price": leg.get("price"),
                     "entry_type": leg.get("entry_type", "LIMIT"),
                 }
