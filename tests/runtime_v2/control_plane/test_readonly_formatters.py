@@ -64,12 +64,15 @@ def test_format_trade_detail():
     detail = TradeDetail(
         chain_id=145, symbol="BTC/USDT", side="LONG", trader_id="trader_a",
         account_id="main", state="OPEN", entry_avg_price=65020.0,
-        current_stop_price=62000.0, last_events=["14:10 ENTRY_FILLED"],
+        current_stop_price=62000.0, original_message_link="https://t.me/c/1/2",
+        last_events=["14:10 ENTRY_FILLED"],
     )
     text = format_trade_detail(detail)
     assert "TRADE #145" in text
     assert "trader_a" in text
     assert "14:10 ENTRY_FILLED" in text
+    assert "Use:" in text
+    assert "https://t.me/c/1/2" in text
 
 
 def test_format_trade_detail_none():

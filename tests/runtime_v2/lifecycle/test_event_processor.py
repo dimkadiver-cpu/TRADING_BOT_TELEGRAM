@@ -342,6 +342,7 @@ def test_entry_filled_subsequent_fill_keeps_open():
     ev = _make_entry_event(chain.trade_chain_id, fill_price=50000.0, filled_qty=0.005)
     result = proc.process(ev, chain, [])
     assert result.new_lifecycle_state is None
+    assert any(event.event_type == "ENTRY_UPDATED" for event in result.lifecycle_events)
 
 
 def test_entry_filled_updates_qty():

@@ -143,6 +143,25 @@ def _build_telegram_message_link(
     return None
 
 
+def _extract_stop_price(*json_blobs: str | None) -> float | None:
+    for blob in json_blobs:
+        if not blob:
+            continue
+        try:
+            data = json.loads(blob)
+        except Exception:
+            continue
+        for key in ("current_stop_price", "sl_price", "stop_loss"):
+            value = data.get(key)
+            if value is None:
+                continue
+            try:
+                return float(value)
+            except (TypeError, ValueError):
+                continue
+    return None
+
+
 class StatusQueries:
     def __init__(self, ops_db_path: str) -> None:
         self._db = ops_db_path
@@ -231,6 +250,7 @@ class StatusQueries:
                 row = conn.execute(
                     "SELECT t.trade_chain_id, t.symbol, t.side, t.trader_id, t.account_id, "
                     "t.lifecycle_state, t.entry_avg_price, t.current_stop_price, "
+                    "t.management_plan_json, t.risk_snapshot_json, t.plan_state_json, "
                     "COALESCE(t.source_chat_id, rm.source_chat_id), "
                     "COALESCE(t.telegram_message_id, rm.telegram_message_id) "
                     "FROM ops_trade_chains t "
@@ -242,6 +262,7 @@ class StatusQueries:
                 row = conn.execute(
                     "SELECT trade_chain_id, symbol, side, trader_id, account_id, "
                     "lifecycle_state, entry_avg_price, current_stop_price, "
+                    "management_plan_json, risk_snapshot_json, plan_state_json, "
                     "source_chat_id, telegram_message_id "
                     "FROM ops_trade_chains WHERE trade_chain_id=?",
                     (chain_id,),
@@ -253,7 +274,10 @@ class StatusQueries:
                 "WHERE trade_chain_id=? ORDER BY event_id DESC LIMIT 3",
                 (chain_id,),
             ).fetchall()
-            original_message_link = _build_telegram_message_link(row[8], row[9])
+            original_message_link = _build_telegram_message_link(row[11], row[12])
+            current_stop_price = row[7]
+            if current_stop_price is None:
+                current_stop_price = _extract_stop_price(row[10], row[9], row[8])
         finally:
             conn.close()
         last_events = []
@@ -263,7 +287,7 @@ class StatusQueries:
         return TradeDetail(
             chain_id=row[0], symbol=row[1], side=row[2], trader_id=row[3],
             account_id=row[4], state=row[5], entry_avg_price=row[6],
-            current_stop_price=row[7], original_message_link=original_message_link,
+            current_stop_price=current_stop_price, original_message_link=original_message_link,
             last_events=last_events,
         )
 

@@ -1,0 +1,7 @@
+- 1. No reply a meggagio precedente, ma mettere usa sezione sotto con link, come nel caso di new signal, update
+- 2. separatore di zone in messaggio: no  "──" continua fissa, ma "- - - -" di lungezza che corisponde  alla linia piu lunga nel messaggio opucata dal testo
+- 3. verosicare perche SL è none, quando faccio "trade #n."  e duante 
+- 4. Verificare il comportamento di log:
+             - la logica di entry opened e entry updade ( ho visto che qundo passa secondo leg si ha sempre entry openede e non update)
+
+

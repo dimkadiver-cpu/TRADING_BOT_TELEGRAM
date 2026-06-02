@@ -198,6 +198,22 @@ def test_get_trade_detail_exposes_original_message_link_when_available(ops_db):
     assert detail.original_message_link == "https://t.me/c/1234567890/987"
 
 
+def test_get_trade_detail_falls_back_to_planned_stop_when_current_stop_is_null(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 22, "WAITING_ENTRY", sl=None)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET management_plan_json='{\"stop_loss\": 62000.0}' "
+            "WHERE trade_chain_id=22"
+        )
+    conn.close()
+
+    detail = StatusQueries(ops_db).get_trade(22)
+    assert detail is not None
+    assert detail.current_stop_price == 62000.0
+
+
 def test_get_pnl_uses_latest_account_snapshot(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:

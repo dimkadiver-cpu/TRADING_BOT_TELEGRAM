@@ -178,20 +178,25 @@ class LifecycleEventProcessor:
         is_first_fill = chain.lifecycle_state == "WAITING_ENTRY"
         new_state: LifecycleState | None = "OPEN" if is_first_fill else None
 
+        entry_event_type = "ENTRY_FILLED" if is_first_fill else "ENTRY_UPDATED"
+        entry_payload = {
+            "fill_price": fill_price,
+            "filled_qty": fill_qty,
+            "exec_fee": ep.exec_fee,
+        }
+        if not is_first_fill:
+            entry_payload["new_avg_entry"] = new_avg
+
         events: list[LifecycleEvent] = [
             LifecycleEvent(
                 trade_chain_id=chain_id,
-                event_type="ENTRY_FILLED",
+                event_type=entry_event_type,
                 source_type="exchange_event",
                 source_id=str(eid),
                 previous_state=chain.lifecycle_state,
                 next_state=new_state or chain.lifecycle_state,
-                payload_json=json.dumps({
-                    "fill_price": fill_price,
-                    "filled_qty": fill_qty,
-                    "exec_fee": ep.exec_fee,
-                }),
-                idempotency_key=f"entry_filled:{chain_id}:{eid}",
+                payload_json=json.dumps(entry_payload),
+                idempotency_key=f"{entry_event_type.lower()}:{chain_id}:{eid}",
             ),
             LifecycleEvent(
                 trade_chain_id=chain_id,
