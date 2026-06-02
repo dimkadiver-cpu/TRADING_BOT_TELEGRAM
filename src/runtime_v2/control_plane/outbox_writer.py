@@ -100,16 +100,12 @@ def _iso_after(seconds: int) -> str:
 def _send_after_for(notification_type: str) -> str:
     if notification_type in {"UPDATE_DONE", "UPDATE_PARTIAL", "UPDATE_REJECTED"}:
         return _iso_after(20)
-    if notification_type in {"TP_FILLED", "TP_FILLED_FINAL"}:
-        return _iso_after(30)
     return _now()
 
 
 def _agg_group(notification_type: str, chain_id: int | None, payload: dict) -> str | None:
     if chain_id is None:
         return None
-    if notification_type in {"TP_FILLED", "TP_FILLED_FINAL"}:
-        return f"{chain_id}:tp_batch"
     if notification_type in {"UPDATE_DONE", "UPDATE_PARTIAL", "UPDATE_REJECTED"}:
         return f"{chain_id}:{payload.get('source_message_id') or 'update_batch'}"
     return None
@@ -259,14 +255,21 @@ def _build_payload(
             for l in legs
             if l.get("status") == "PENDING"
         ]
-        return {
+        payload: dict = {
             **base,
             "fill_price": ev.get("fill_price"),
             "filled_qty": ev.get("fill_qty") or ev.get("filled_qty"),
+            "fee": ev.get("exec_fee"),
+            "filled_leg_sequence": ev.get("filled_leg_sequence"),
             "avg_entry": entry_avg_price,
             "pending_entries": pending,
             "source": ev.get("source", "exchange"),
         }
+        if ev.get("fee_rate") is not None:
+            payload["fee_rate"] = ev["fee_rate"]
+        if ev.get("exec_value") is not None:
+            payload["exec_value"] = ev["exec_value"]
+        return payload
 
     if notification_type in ("TP_FILLED", "TP_FILLED_FINAL"):
         tp_level = ev.get("tp_level")
@@ -282,7 +285,7 @@ def _build_payload(
                 allocated_margin=allocated_margin,
                 close_reason="TAKE_PROFIT",
             )
-        return {
+        payload: dict = {
             **base,
             "tp_level": tp_level,
             "tp_price": tp_price,
@@ -290,14 +293,17 @@ def _build_payload(
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
-            "fee_rate": ev.get("fee_rate"),
-            "exec_value": ev.get("exec_value"),
             "remaining_pct": _remaining_pct(open_position_qty, filled_entry_qty),
             "sl_current": current_stop_price,
             "be_protection_status": be_protection_status,
             "final_result": final_result_data,
             "source": ev.get("source", "exchange"),
         }
+        if ev.get("fee_rate") is not None:
+            payload["fee_rate"] = ev["fee_rate"]
+        if ev.get("exec_value") is not None:
+            payload["exec_value"] = ev["exec_value"]
+        return payload
 
     if notification_type == "SL_FILLED":
         closed_qty = ev.get("closed_size", ev.get("filled_qty"))
@@ -384,16 +390,23 @@ def _build_payload(
             for l in legs
             if l.get("status") == "PENDING"
         ]
-        return {
+        payload = {
             **base,
             "fill_price": ev.get("fill_price"),
             "filled_qty": ev.get("fill_qty") or ev.get("filled_qty"),
+            "fee": ev.get("exec_fee"),
+            "filled_leg_sequence": ev.get("filled_leg_sequence"),
             "new_avg_entry": ev.get("new_avg_entry"),
             "avg_entry": ev.get("new_avg_entry", entry_avg_price),
             "pending_entries": pending,
             "source": ev.get("source", "exchange"),
             "link": ev.get("source_message_link"),
         }
+        if ev.get("fee_rate") is not None:
+            payload["fee_rate"] = ev["fee_rate"]
+        if ev.get("exec_value") is not None:
+            payload["exec_value"] = ev["exec_value"]
+        return payload
 
     if notification_type == "UPDATE_DONE":
         return {

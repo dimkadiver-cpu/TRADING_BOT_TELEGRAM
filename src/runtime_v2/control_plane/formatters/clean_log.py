@@ -58,7 +58,7 @@ def _footer(source: str, link: str | None = None, trader_id: str | None = None) 
         lines.append(f"Trader: {trader_id}")
     lines.append(f"Source: {source}")
     if link:
-        lines.extend(["", "Use:", link])
+        lines.extend([_SEP, link])
     return lines
 
 
@@ -133,7 +133,7 @@ def _signal_rejected(p: dict) -> str:
         footer.append(f"Rejected: {p['reason']}")
     footer.append(f"Source: {p.get('source', 'original_message')}")
     if p.get("link"):
-        footer.extend(["", "Use:", p["link"]])
+        footer.extend([_SEP, p["link"]])
     lines += footer
     return _finalize(lines)
 
@@ -149,11 +149,19 @@ def _review_required(p: dict) -> str:
 def _entry_opened(p: dict) -> str:
     lines = _header("\U0001f4ca", p.get("chain_id"), "ENTRY OPENED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("fill_price") is not None or p.get("filled_qty") is not None:
-        lines.append("Filled:")
+        seq = p.get("filled_leg_sequence")
+        lines.append(f"Entry_{seq} - Filled" if seq is not None else "Filled:")
         if p.get("fill_price") is not None:
             lines.append(f"Price: {_num(p['fill_price'])}")
         if p.get("filled_qty") is not None:
             lines.append(f"Qty: {_num(p['filled_qty'])}")
+        if p.get("fee") is not None:
+            lines.append(f"Fee: {_fmt_money(p['fee'])}")
+        if "fee_rate" in p:
+            fee_rate = p.get("fee_rate")
+            lines.append(f"Fee rate: {float(fee_rate) * 100:.3f}%" if fee_rate is not None else "Fee rate: n/a")
+        if "exec_value" in p:
+            lines.append(f"Value: {_fmt_money(p.get('exec_value'))}")
         lines.append("")
     if p.get("avg_entry") is not None:
         lines.append("Position:")
@@ -174,10 +182,13 @@ def _entry_opened(p: dict) -> str:
 
 def _tp_filled(p: dict, final: bool) -> str:
     level = p.get("tp_level")
-    label = f"TP{level} FILLED" if level is not None else "TP FILLED"
     if final:
-        label += " \u2014 POSITION CLOSED"
-    lines = _header("\U0001f4ca", p.get("chain_id"), label, p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
+        label = "POSITION CLOSED"
+        emoji = "\u2705"
+    else:
+        label = f"TP{level} FILLED" if level is not None else "TP FILLED"
+        emoji = "\U0001f4ca"
+    lines = _header(emoji, p.get("chain_id"), label, p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if level is not None:
         tp_label = f"TP_{level}"
         display_price = p.get("fill_price") if p.get("fill_price") is not None else p.get("tp_price")
@@ -201,14 +212,14 @@ def _tp_filled(p: dict, final: bool) -> str:
         if p.get("remaining_pct") is not None:
             lines.append(f"Position: {_fmt_pct(p['remaining_pct'])}")
     if final:
-        lines.append("Close reason: TAKE_PROFIT")
+        lines.append("Close reason: FINAL TP FILLED")
     lines += _final_result_lines(p.get("final_result"))
     lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
 def _sl_filled(p: dict) -> str:
-    lines = _header("\U0001f6d1", p.get("chain_id"), "SL FILLED \u2014 POSITION CLOSED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
+    lines = _header("\U0001f6d1", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     sl_price = p.get("sl_price", p.get("fill_price"))
     if sl_price is not None:
         lines.append(f"SL: {_num(sl_price)}")
@@ -226,14 +237,15 @@ def _sl_filled(p: dict) -> str:
 
 
 def _position_closed(p: dict) -> str:
-    lines = _header("\U0001f4ca", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
+    lines = _header("✋", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("fill_price") is not None:
         lines.append(f"Price: {_num(p['fill_price'])}")
-    lines.append(f"Close reason: {p.get('close_reason', 'MANUAL_CLOSE')}")
     if p.get("pnl") is not None:
         lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
     if p.get("fee") is not None:
         lines.append(f"Fee: {_fmt_money(p['fee'])}")
+    lines.append("")
+    lines.append(f"Close reason: {p.get('close_reason', 'MANUAL_CLOSE')}")
     lines += _final_result_lines(p.get("final_result"))
     lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
@@ -242,11 +254,19 @@ def _position_closed(p: dict) -> str:
 def _entry_updated(p: dict) -> str:
     lines = _header("\u270f\ufe0f", p.get("chain_id"), "ENTRY UPDATED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("fill_price") is not None or p.get("filled_qty") is not None:
-        lines.append("Filled:")
+        seq = p.get("filled_leg_sequence")
+        lines.append(f"Entry_{seq} - Filled" if seq is not None else "Filled:")
         if p.get("fill_price") is not None:
             lines.append(f"Price: {_num(p['fill_price'])}")
         if p.get("filled_qty") is not None:
             lines.append(f"Qty: {_num(p['filled_qty'])}")
+        if p.get("fee") is not None:
+            lines.append(f"Fee: {_fmt_money(p['fee'])}")
+        if "fee_rate" in p:
+            fee_rate = p.get("fee_rate")
+            lines.append(f"Fee rate: {float(fee_rate) * 100:.3f}%" if fee_rate is not None else "Fee rate: n/a")
+        if "exec_value" in p:
+            lines.append(f"Value: {_fmt_money(p.get('exec_value'))}")
         lines.append("")
     avg_entry = p.get("new_avg_entry", p.get("avg_entry"))
     pending = p.get("pending_entries") or []
@@ -383,11 +403,12 @@ def _be_exit(p: dict) -> str:
     lines = _header("\u26a1", p.get("chain_id"), "BE EXIT", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("exit_price") is not None:
         lines.append(f"Exit: {_num(p['exit_price'])} BE")
-    lines.append(f"Close reason: {p.get('close_reason', 'BREAKEVEN_AFTER_TP')}")
     if p.get("pnl") is not None:
         lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
     if p.get("fee") is not None:
         lines.append(f"Fee: {_fmt_money(p['fee'])}")
+    lines.append("")
+    lines.append(f"Close reason: {p.get('close_reason', 'BREAKEVEN_AFTER_TP')}")
     lines.append("")
     lines += _final_result_lines(p.get("final_result"))
     if p.get("final_result"):
@@ -404,30 +425,6 @@ def _cancel_failed(p: dict) -> str:
     if p.get("entry_price") is not None:
         lines.append(f"Entry price: {_num(p['entry_price'])}")
     lines += _footer(p.get("source", "timeout_worker"))
-    return _finalize(lines)
-
-
-def _tp_batch_filled(p: dict) -> str:
-    targets = p.get("targets") or []
-    labels = [f"TP{target.get('tp_level', '?')}" for target in targets if target.get("tp_level")]
-    title = " + ".join(labels) + " FILLED" if labels else "TP BATCH FILLED"
-    lines = _header("\U0001f4ca", p.get("chain_id"), title, p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
-    if targets:
-        lines.append("Filled targets:")
-        for target in targets:
-            level = target.get("tp_level", "?")
-            parts = [f"TP{level}"]
-            if target.get("tp_price") is not None:
-                parts.append(_num(target["tp_price"]))
-            if target.get("pnl") is not None:
-                parts.append(f"PnL: {_fmt_money(target['pnl'], signed=True)}")
-            lines.append("  " + "  ".join(parts))
-    lines.append("")
-    if p.get("total_pnl") is not None:
-        lines.append(f"Total: {_fmt_money(p['total_pnl'], signed=True)}")
-    if p.get("total_fees") is not None:
-        lines.append(f"Fees: {_fmt_money(p['total_fees'])}")
-    lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
@@ -498,8 +495,6 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _be_exit(payload)
     if notification_type == "CANCEL_FAILED":
         return _cancel_failed(payload)
-    if notification_type == "TP_BATCH_FILLED":
-        return _tp_batch_filled(payload)
     if notification_type in ("MULTI_CHAIN_UPDATE", "MULTI_CHAIN_CLOSED"):
         return _multi_chain_update(payload)
     return _fallback(notification_type, payload)

@@ -243,7 +243,7 @@ def test_pending_entry_cancelled_position_closed_is_filtered(ops_db):
     assert count == 0
 
 
-def test_tp_filled_outbox_has_aggregation_delay_and_group(ops_db):
+def test_tp_filled_outbox_has_no_delay_and_no_group(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:
         write_clean_log_event(
@@ -257,8 +257,9 @@ def test_tp_filled_outbox_has_aggregation_delay_and_group(ops_db):
         "SELECT send_after, aggregation_group FROM ops_notification_outbox"
     ).fetchone()
     conn.close()
-    assert row[0] is not None, "send_after must be set for TP_FILLED"
-    assert row[1] == "145:tp_batch"
+    now = datetime.now(timezone.utc).isoformat()
+    assert row[0] is None or row[0] <= now or row[0][:19] == now[:19], "TP_FILLED must not have future send_after"
+    assert row[1] is None, "TP_FILLED must not have aggregation_group"
 
 
 def test_high_priority_clean_log_has_send_after_set(ops_db):
@@ -317,3 +318,17 @@ def test_entry_cancel_failed_projects_cancel_failed(ops_db):
     conn.close()
     assert row is not None
     assert row[0] == "CANCEL_FAILED"
+
+
+def test_tp_filled_has_no_send_after_delay():
+    from src.runtime_v2.control_plane.outbox_writer import _send_after_for
+    result = _send_after_for("TP_FILLED")
+    now = datetime.now(timezone.utc).isoformat()
+    assert result <= now or result[:19] == now[:19]
+
+
+def test_tp_filled_final_has_no_send_after_delay():
+    from src.runtime_v2.control_plane.outbox_writer import _send_after_for
+    result = _send_after_for("TP_FILLED_FINAL")
+    now = datetime.now(timezone.utc).isoformat()
+    assert result <= now or result[:19] == now[:19]
