@@ -27,6 +27,7 @@ class ExchangeEventPayload(BaseModel):
 
     # Routing / classification
     tp_level: int | None = None
+    is_final: bool | None = None
     command_id: int | None = None
     source: str | None = None
 

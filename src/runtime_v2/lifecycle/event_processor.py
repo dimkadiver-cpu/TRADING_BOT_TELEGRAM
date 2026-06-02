@@ -451,7 +451,10 @@ class LifecycleEventProcessor:
         chain_id = chain.trade_chain_id
 
         new_open = max(chain.open_position_qty - fill_qty, 0.0)
-        is_final = new_open <= 0.0
+        if fill_qty == 0.0 and ep.is_final is not None:
+            is_final = ep.is_final
+        else:
+            is_final = new_open <= 0.0
         new_state: LifecycleState = "CLOSED" if is_final else "PARTIALLY_CLOSED"
         new_closed = chain.closed_position_qty + fill_qty
         events: list[LifecycleEvent] = []
