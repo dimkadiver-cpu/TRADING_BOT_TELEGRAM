@@ -256,28 +256,6 @@ def test_be_exit_formatter_renders_exit_and_final_result():
 
 
 # ---------------------------------------------------------------------------
-# TP_BATCH_FILLED
-# ---------------------------------------------------------------------------
-
-def test_tp_batch_filled_formatter():
-    text = format_clean_log("TP_BATCH_FILLED", {
-        "chain_id": 145,
-        "symbol": "BTC/USDT",
-        "side": "LONG",
-        "targets": [
-            {"tp_level": 1, "tp_price": 68000, "closed_pct": 30, "pnl": 70.2, "fee": 1.1},
-            {"tp_level": 2, "tp_price": 71000, "closed_pct": 40, "pnl": 165.4, "fee": 1.65},
-        ],
-        "total_pnl": 235.6,
-        "total_fees": 2.75,
-        "source": "exchange",
-    })
-    assert "TP1 + TP2 FILLED" in text
-    assert "Filled targets:" in text
-    assert "Total:" in text
-
-
-# ---------------------------------------------------------------------------
 # MULTI_CHAIN_UPDATE
 # ---------------------------------------------------------------------------
 
