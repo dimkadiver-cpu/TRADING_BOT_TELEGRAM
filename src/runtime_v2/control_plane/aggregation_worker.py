@@ -140,7 +140,7 @@ class AggregationWorker:
         """
         rows = conn.execute(
             """
-            SELECT notification_id, notification_type, payload_json, aggregation_group
+            SELECT notification_id, notification_type, payload_json, aggregation_group, created_at
             FROM ops_notification_outbox
             WHERE status='PENDING'
               AND notification_type IN ('UPDATE_DONE', 'UPDATE_PARTIAL', 'UPDATE_REJECTED')
@@ -175,8 +175,10 @@ class AggregationWorker:
             symbol = None
             side = None
             all_ops: list = []
+            # Use earliest created_at so the merged row sorts before POSITION_CLOSED
+            earliest_created_at = min(r[4] for r in group_rows if r[4])
 
-            for nid, ntype, payload_json, agroup in group_rows:
+            for nid, ntype, payload_json, agroup, created_at in group_rows:
                 try:
                     p = json.loads(payload_json or "{}")
                 except Exception:
@@ -207,7 +209,7 @@ class AggregationWorker:
                      dedupe_key, attempts, created_at)
                 VALUES (?, 'CLEAN_LOG', ?, 'MEDIUM', 'PENDING', ?, 0, ?)
                 """,
-                (merged_type, json.dumps(batch_payload), dedupe_key, _now()),
+                (merged_type, json.dumps(batch_payload), dedupe_key, earliest_created_at),
             )
             created += 1
 

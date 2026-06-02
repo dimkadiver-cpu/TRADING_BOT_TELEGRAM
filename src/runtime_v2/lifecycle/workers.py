@@ -6,6 +6,7 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 
+from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 from src.runtime_v2.lifecycle.cancel_expander import (
     expand_cancel_pending_commands,
     load_pending_entry_client_order_ids,
@@ -35,6 +36,11 @@ _PNL_EVENT_TYPES = {
     "CLOSE_PARTIAL_FILLED",
 }
 
+_ENTRY_FEE_EVENT_TYPES = {
+    "ENTRY_FILLED",
+    "ENTRY_UPDATED",
+}
+
 
 def _accumulate_pnl_for_events(
     conn: sqlite3.Connection,
@@ -56,18 +62,19 @@ def _accumulate_pnl_for_events(
     gross_total = 0.0
     fee_total = 0.0
     for event in events:
-        if event.event_type not in _PNL_EVENT_TYPES:
-            continue
         try:
             payload = json.loads(event.payload_json or "{}")
         except json.JSONDecodeError:
             continue
-        fill_price = payload.get("fill_price")
-        closed_qty = payload.get("closed_size", payload.get("filled_qty"))
-        if fill_price is None or closed_qty is None:
-            continue
-        gross_total += float(closed_qty) * (float(fill_price) - float(entry_avg_price)) * side_sign
-        fee_total += float(payload.get("exec_fee") or 0.0)
+        if event.event_type in _PNL_EVENT_TYPES:
+            fill_price = payload.get("fill_price")
+            closed_qty = payload.get("closed_size", payload.get("filled_qty"))
+            if fill_price is None or closed_qty is None:
+                continue
+            gross_total += float(closed_qty) * (float(fill_price) - float(entry_avg_price)) * side_sign
+            fee_total += float(payload.get("exec_fee") or 0.0)
+        elif event.event_type in _ENTRY_FEE_EVENT_TYPES:
+            fee_total += float(payload.get("exec_fee") or 0.0)
     if gross_total != 0.0 or fee_total != 0.0:
         conn.execute(
             """
@@ -119,20 +126,37 @@ def _with_entry_client_order_id_from_command(
     except Exception:
         return exchange_event
 
-    if payload.get("entry_client_order_id") or payload.get("command_id") is None:
-        return exchange_event
+    if payload.get("entry_client_order_id") or payload.get("entry_command_payload"):
+        return exchange_event  # already enriched
 
-    try:
-        command_id = int(payload["command_id"])
-    except (TypeError, ValueError):
+    chain_id = int(exchange_event.trade_chain_id)
+    command_id: int | None = None
+
+    # Path 1: REST reconciliation — command_id explicitly set in payload
+    if payload.get("command_id") is not None:
+        try:
+            command_id = int(payload["command_id"])
+        except (TypeError, ValueError):
+            pass
+
+    # Path 2: WS fills — parse command_id from order_link_id (format: tsb:{chain}:{cmd}:entry:{seq})
+    if command_id is None:
+        order_link_id = payload.get("order_link_id")
+        if order_link_id:
+            try:
+                parsed = coid_mod.parse(order_link_id)
+                if parsed.role == "entry":
+                    command_id = parsed.command_id
+            except (ValueError, Exception):
+                pass
+
+    if command_id is None:
         return exchange_event
 
     conn = sqlite3.connect(ops_db_path)
     try:
         client_order_id, command_payload = _load_entry_command_for_command(
-            conn,
-            int(exchange_event.trade_chain_id),
-            command_id,
+            conn, chain_id, command_id,
         )
     finally:
         conn.close()
@@ -229,6 +253,12 @@ class LifecycleEventWorker:
         processed = 0
         for exchange_event in events:
             try:
+                if exchange_event.event_type == "FUNDING_SETTLED":
+                    self._handle_funding_settled(exchange_event)
+                    self._exchange_event_repo.mark_processed(exchange_event.exchange_event_id)
+                    processed += 1
+                    continue
+
                 if exchange_event.trade_chain_id is None:
                     self._exchange_event_repo.mark_processed(exchange_event.exchange_event_id)
                     processed += 1
@@ -252,6 +282,30 @@ class LifecycleEventWorker:
             except Exception:
                 logger.exception("error processing exchange_event %s", exchange_event.exchange_event_id)
         return processed
+
+    def _handle_funding_settled(self, exchange_event) -> None:
+        if exchange_event.trade_chain_id is None:
+            return
+        try:
+            payload = json.loads(exchange_event.payload_json or "{}")
+        except Exception:
+            return
+        funding_amount = float(payload.get("exec_fee") or 0.0)
+        if funding_amount == 0.0:
+            return
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            with conn:
+                conn.execute(
+                    """
+                    UPDATE ops_trade_chains
+                    SET cumulative_funding = COALESCE(cumulative_funding, 0.0) + ?
+                    WHERE trade_chain_id=?
+                    """,
+                    (funding_amount, exchange_event.trade_chain_id),
+                )
+        finally:
+            conn.close()
 
     def _persist_result(self, chain_id: int, result: EventProcessorResult) -> None:
         now = _now()

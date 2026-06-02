@@ -199,6 +199,18 @@ class BybitWsFillWatcher:
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
 
+                # Funding events: resolve chain by symbol + side (Bybit side is position side,
+                # not fill direction — "Buy" = LONG position, "Sell" = SHORT position).
+                if (
+                    classified.event_type == "FUNDING_SETTLED"
+                    and classified.trade_chain_id is None
+                ):
+                    funding_side = (raw.side or "").strip()
+                    position_side = "LONG" if funding_side.lower() in ("buy", "long") else "SHORT"
+                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
+                    if chain_id is not None:
+                        classified = dataclasses.replace(classified, trade_chain_id=chain_id)
+
                 inserted = self._repo.insert_raw_and_classified(classified)
                 if inserted and classified.should_forward_to_lifecycle and self._wake_callback:
                     self._wake_callback()

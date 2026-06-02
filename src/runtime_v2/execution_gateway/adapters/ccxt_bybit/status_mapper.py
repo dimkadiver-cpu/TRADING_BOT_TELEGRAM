@@ -8,6 +8,16 @@ from src.runtime_v2.execution_gateway.models import RawAdapterOrder
 logger = logging.getLogger(__name__)
 
 
+def _f(val) -> float | None:
+    """Convert to float; returns None for None, empty string, or unparseable values."""
+    if val is None or val == "":
+        return None
+    try:
+        return float(val)
+    except (TypeError, ValueError):
+        return None
+
+
 def _ms_to_iso(ms_str) -> str | None:
     if not ms_str:
         return None
@@ -57,11 +67,11 @@ class StatusMapper:
             filled_qty=float(ccxt_order.get("filled") or 0.0),
             average_price=float(avg) if avg else None,
             cancel_reason=cancel_reason,
-            exec_fee=float(info["cumExecFee"]) if info.get("cumExecFee") is not None else None,
-            exec_value=float(info["cumExecValue"]) if info.get("cumExecValue") is not None else None,
+            exec_fee=_f(info.get("cumExecFee")),
+            exec_value=_f(info.get("cumExecValue")),
             exchange_time=_ms_to_iso(info.get("updatedTime")),
-            leaves_qty=float(info["leavesQty"]) if info.get("leavesQty") is not None else None,
-            cum_exec_qty=float(info["cumExecQty"]) if info.get("cumExecQty") is not None else None,
+            leaves_qty=_f(info.get("leavesQty")),
+            cum_exec_qty=_f(info.get("cumExecQty")),
         )
 
 

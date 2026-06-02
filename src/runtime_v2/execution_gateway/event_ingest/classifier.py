@@ -70,6 +70,16 @@ class EventClassifier:
     def _classify_execution(self, raw: ExchangeRawEvent) -> ClassifiedEvent:
         """Handle execution-stream events (watch_my_trades, fetch_my_trades, etc.)."""
 
+        # Priority 0 — funding fee events (execType == "Funding")
+        if raw.exec_type == "Funding":
+            return ClassifiedEvent(
+                raw=raw,
+                event_type="FUNDING_SETTLED",
+                source="exchange_auto",
+                trade_chain_id=None,  # resolved by ws_fill_watcher via symbol+side
+                is_actionable=True,
+            )
+
         # Priority 1 — deterministic createType / stopOrderType
         p1_type = self._p1_event_type(raw)
         if p1_type is not None:
