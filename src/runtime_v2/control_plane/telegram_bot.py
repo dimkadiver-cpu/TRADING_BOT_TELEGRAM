@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import asyncio
+import contextlib
 import logging
 from dataclasses import dataclass
 
@@ -443,19 +445,25 @@ class TelegramControlBot:
         await self._app.initialize()
         await self._app.start()
         await self._app.updater.start_polling(drop_pending_updates=True)
-        # Block here so callers know when polling actually stops.
-        # PTB stores the polling coroutine as an internal task; we wait on it
-        # so that any crash surfaces immediately rather than being swallowed.
+        # PTB 20+ name-mangles __polling_task → _Updater__polling_task.
+        # Awaiting it means we block until PTB's network_retry_loop exits,
+        # which only happens when updater.stop() is called.
         updater = self._app.updater
-        polling_task = getattr(updater, "_polling_task", None) or getattr(
-            updater, "__polling_task", None
-        )
-        if polling_task is not None:
-            await polling_task
-        else:
-            # Fallback: busy-wait on the running flag
-            while updater.running:
-                await asyncio.sleep(1)
+        polling_task = getattr(updater, "_Updater__polling_task", None)
+        try:
+            if polling_task is not None:
+                await polling_task
+            else:
+                while updater.running:
+                    await asyncio.sleep(1)
+        finally:
+            with contextlib.suppress(Exception):
+                await updater.stop()
+            with contextlib.suppress(Exception):
+                await self._app.stop()
+            with contextlib.suppress(Exception):
+                await self._app.shutdown()
+            self._app = None
 
     async def shutdown(self) -> None:
         if self._app is None:

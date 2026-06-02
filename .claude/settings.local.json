@@ -190,7 +190,16 @@
       "PowerShell(& \".venv\\\\Scripts\\\\python.exe\" -c \"from src.runtime_v2.lifecycle.models import TradeChain; from src.runtime_v2.lifecycle.repositories import TradeChainRepository; from src.runtime_v2.control_plane.status_queries import StatusQueries; print\\('import ok'\\)\")",
       "Bash(Get-Process python*)",
       "Bash(Select-Object Id, ProcessName, StartTime)",
-      "Bash(Format-Table)"
+      "Bash(Format-Table)",
+      "PowerShell(Get-Process *)",
+      "PowerShell(Get-WmiObject *)",
+      "PowerShell(python -c \"import truststore; import inspect; print\\(inspect.getfile\\(truststore\\)\\)\" 2>&1)",
+      "PowerShell(python -c \"import truststore._truststore_win32 as t; import inspect; src = inspect.getsource\\(t\\); print\\(src[:3000]\\)\" 2>&1 | Select-Object -First 60)",
+      "PowerShell(python -c \"import telegram; print\\(telegram.__version__\\)\")",
+      "Bash(echo GIT_DIR=__TRACKED_VAR__)",
+      "Bash(echo GIT_COMMON=__TRACKED_VAR__)",
+      "Bash(true)",
+      "Bash(C:/TeleSignalBot/.venv/Scripts/python.exe -m pytest tests/runtime_v2/control_plane tests/runtime_v2/lifecycle tests/runtime_v2/execution_gateway -q --tb=no)"
     ]
   }
 }

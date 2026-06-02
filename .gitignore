@@ -1,3 +1,6 @@
+# Runtime lock file
+.bot.lock
+
 # Python
 __pycache__/
 *.pyc

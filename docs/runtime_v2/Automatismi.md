@@ -1,187 +1,418 @@
-  Automatismi del sistema — mappa completa
+# Automatismi del runtime v2
 
-  1. All'arrivo di un SIGNAL (nuovo segnale Telegram)
+Questo documento descrive solo gli automatismi effettivamente implementati oggi in `src/runtime_v2/`.
+La fonte di verita e il codice nei moduli `lifecycle/`, `execution_gateway/` e `control_plane/`.
 
-  Trigger: enriched_canonical_messages con primary_class=SIGNAL e enrichment_decision=PASS
+## Ambito
 
-  ┌────────────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────┬─────────────────────┐
-  │          Automatismo           │                                       Cosa succede                                        │        Dove         │
-  ├────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────┤
-  │ Risk check                     │ Valida capitale, leverage, leva residua; se fallisce → REVIEW_REQUIRED                    │ RiskCapacityEngine  │
-  ├────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────┤
-  │ PLACE_ENTRY_WITH_ATTACHED_TPSL │ Piazza ordine di entrata (MARKET/LIMIT) con TP e SL attached in un'unica chiamata         │ EntryCommandFactory │
-  ├────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────┤
-  │ Timeout scheduling             │ Se cancel_pending_on_timeout=True, imposta entry_timeout_at = now + pending_timeout_hours │ LifecycleEntryGate  │
-  ├────────────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────┼─────────────────────┤
-  │ Control mode check             │ Se BLOCK_NEW_ENTRIES o FULL_STOP → REVIEW_REQUIRED, nessun ordine                         │ LifecycleEntryGate  │
-  └────────────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────┴─────────────────────┘
+Gli automatismi reali si concentrano in questi punti:
 
-  ---
-  2. All'ENTRY_FILL (conferma fill sull'exchange)
+- `src/runtime_v2/lifecycle/entry_gate.py`
+- `src/runtime_v2/lifecycle/event_processor.py`
+- `src/runtime_v2/lifecycle/workers.py`
+- `src/runtime_v2/lifecycle/post_fill_rebuilder.py`
+- `src/runtime_v2/lifecycle/cancel_expander.py`
+- `src/runtime_v2/execution_gateway/gateway.py`
+- `src/runtime_v2/control_plane/outbox_writer.py`
 
-  Trigger: evento ENTRY_FILLED da WS fill watcher
+## Stati e primitive usate dal runtime
 
-  ┌────────────────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────┐
-  │                  Automatismo                   │                                            Cosa succede                                             │                      Dove                  │
-  ├────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-  │ Aggiorna entry_avg_price                       │ Ricalcola la media ponderata delle fill                                                             │ event_processor._process_entry_filled          │
-  ├────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-  │ Aggiorna qty (filled_entry_qty,                │ Traccia le quantità eseguite                                                                        │ idem                  │
-  │ open_position_qty)                             │                                                                                                     │                  │
-  ├────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-  │ Ricalcola risk (risk_already_realized,         │ Ogni fill consuma rischio proporzionalmente                                                         │ idem                  │
-  │ risk_remaining)                                │                                                                                                     │                  │
-  ├────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-  │ WAITING_POSITION → PENDING                     │ Sblocca i comandi TP/SL in attesa di posizione aperta                                               │ workers._persist_result →                  │
-  │                                                │                                                                                                     │ release_waiting_position                  │
-  ├────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-  │ REBUILD_PARTIAL_TPS                            │ Se rebuild_policy=ON_EACH_ENTRY_FILL e ci sono intermediate_tps, piazza i TP parziali               │ PostFillProtectionRebuilder                  │
-  ├────────────────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
-  │ Deferred BE trigger                            │ Se il flag _be_deferred_by_auto_cancel è presente e non ci sono più averaging legs pendenti, emette │ event_processor._process_entry_filled          │
-  │                                                │  MOVE_STOP_TO_BREAKEVEN                                                                             │                  │
-  └────────────────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────┘
+### Stati chain
 
-  ---
-  3. Al TP parziale (non-final TP)
+Le chain runtime usano questi stati:
 
-  Trigger: evento TP_FILLED con is_final=False
+- `CREATED`
+- `WAITING_ENTRY`
+- `OPEN`
+- `PARTIALLY_CLOSED`
+- `BE_MOVE_PENDING`
+- `PROTECTED_BE`
+- `CLOSED`
+- `CANCELLED`
+- `EXPIRED`
+- `REVIEW_REQUIRED`
+- `ERROR`
 
-  ┌────────────────────────┬───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────┐
-  │      Automatismo       │                                                               Cosa succede                                                                │Dove                │
-  ├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────┤
-  │ SYNC_PROTECTIVE_ORDERS │ Riallinea SL/TP sull'exchange alla nuova quantità residua                                                                                 │ event_processor._process_tp_filled │
-  ├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────┤
-  │ MOVE_STOP_TO_BREAKEVEN │ Se be_trigger = "tp{N}" e questo è il TP N → sposta lo stop a breakeven                                                                   │ idem                    │
-  ├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────┤
-  │ Auto-cancel averaging  │ Se cancel_averaging_pending_after = "tp{N}" e ci sono averaging legs pendenti → emette CANCEL_PENDING_ENTRY con                           │ idem                    │
-  │                        │ cancel_reason=auto_cancel_averaging                                                                                                       │                    │
-  ├────────────────────────┼───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────┤
-  │ Deferred BE            │ Se il BE doveva scattare su questo TP ma c'erano averaging legs attive → setta flag _be_deferred_by_auto_cancel, BE rimandato a quando le │ idem                    │
-  │                        │  cancel sono confermate                                                                                                                   │                    │
-  └────────────────────────┴───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────┘
+Gli stati terminali sono:
 
-  ---
-  4. Al TP finale / SL hit
+- `CLOSED`
+- `CANCELLED`
+- `EXPIRED`
 
-  Trigger: TP_FILLED con is_final=True oppure SL_FILLED
+### Tipi di comando che il sistema puo emettere
 
-  ┌─────────────────┬──────────────────────────────────────────────────────────────────────────────────────────────┬─────────────────┐
-  │   Automatismo   │                                         Cosa succede                                         │      Dove       │
-  ├─────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────┤
-  │ Chiude la chain │ lifecycle_state → CLOSED, open_position_qty → 0.0                                            │ event_processor │
-  ├─────────────────┼──────────────────────────────────────────────────────────────────────────────────────────────┼─────────────────┤
-  │ Nessun comando  │ Il fill finale conclude tutto; SL e TP attached vengono cancellati dall'exchange nativamente │ idem            │
-  └─────────────────┴──────────────────────────────────────────────────────────────────────────────────────────────┴─────────────────┘
+- `PLACE_ENTRY`
+- `PLACE_ENTRY_WITH_ATTACHED_TPSL`
+- `SET_POSITION_TPSL_FULL`
+- `SET_POSITION_TPSL_PARTIAL`
+- `MOVE_STOP_TO_BREAKEVEN`
+- `MOVE_STOP`
+- `MOVE_POSITION_STOP`
+- `CANCEL_PENDING_ENTRY`
+- `CANCEL_POSITION_TPSL`
+- `CLOSE_PARTIAL`
+- `CLOSE_FULL`
+- `REBUILD_PARTIAL_TPS`
 
-  ---
-  5. Al CLOSE_FULL manuale (da Telegram update)
+Nota importante: non tutti i command type definiti nel modello vengono generati oggi dagli automatismi. Quelli effettivamente emessi dal flusso automatico corrente sono documentati nelle sezioni sotto.
 
-  Trigger: update Telegram con action CLOSE_FULL
+## 1. Arrivo di un nuovo SIGNAL
 
-  ┌──────────────────────────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────────────────────────────────────┐
-  │             Automatismo              │                                        Cosa succede                                         │                               Dove                  │
-  ├──────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-  │ CLOSE_FULL                           │ Emette comando di chiusura dell'intera posizione a mercato                                  │ entry_gate._apply_close_full                  │
-  ├──────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-  │ CANCEL_PENDING_ENTRY (1° —           │ Cancella eventuali ordini limit di entry ancora aperti, emesso contestualmente al           │ idem, cancel_pending_for_close:{chain_id}:{cmid}                 │
-  │ preventivo)                          │ CLOSE_FULL                                                                                  │                  │
-  ├──────────────────────────────────────┼─────────────────────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────────────────────────────────────┤
-  │ CANCEL_PENDING_ENTRY (2° —           │ Dopo che CLOSE_FULL_FILLED è confermato, emette un secondo cancel per pulire eventuali      │ event_processor._process_close_full_filled,                  │
-  │ post-conferma)                       │ ordini sfuggiti al primo                                                                    │ cancel_on_close:{chain_id}                  │
-  └──────────────────────────────────────┴─────────────────────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────────────────────────────────────┘
+Trigger: `LifecycleGateWorker` processa una riga `enriched_canonical_messages` con `primary_class="SIGNAL"`.
 
-  ▎ Questo è il meccanismo che hai visto su chain 4 (cmd_id=12 + cmd_id=13).
+### Automatismi applicati
 
-  ---
-  6. Al CLOSE_PARTIAL manuale
+1. `control_mode` gate
+   - Se il control plane e in `BLOCK_NEW_ENTRIES` o `FULL_STOP`, il segnale non genera ordini.
+   - Il runtime produce `REVIEW_REQUIRED`.
 
-  Trigger: update con action CLOSE_PARTIAL
+2. Validazione minima del segnale
+   - Mancanza di `symbol`, `side` o legs di entry -> `REVIEW_REQUIRED`.
 
-  ┌────────────────────────┬───────────────────────────────────────────────────────────┬───────────────────────────────────────────────┐
-  │      Automatismo       │                       Cosa succede                        │                     Dove                      │
-  ├────────────────────────┼───────────────────────────────────────────────────────────┼───────────────────────────────────────────────┤
-  │ CLOSE_PARTIAL          │ Chiude una frazione della posizione                       │ entry_gate._apply_close_partial               │
-  ├────────────────────────┼───────────────────────────────────────────────────────────┼───────────────────────────────────────────────┤
-  │ SYNC_PROTECTIVE_ORDERS │ Riallinea TP/SL alla nuova quantità dopo il fill parziale │ event_processor._process_close_partial_filled │
-  └────────────────────────┴───────────────────────────────────────────────────────────┴───────────────────────────────────────────────┘
+3. Snapshot runtime
+   - Il gate legge stato account e snapshot mercato dall`ExchangeDataPort`.
 
-  ---
-  7. Al CANCEL_PENDING (da Telegram update)
+4. Risk capacity check
+   - `RiskCapacityEngine.validate(...)` decide se la chain puo partire.
+   - Se la decisione fallisce, il segnale viene fermato con `REVIEW_REQUIRED`.
 
-  Trigger: update con action CANCEL_PENDING
+5. Creazione chain
+   - Se il check passa, nasce una `TradeChain` in stato `WAITING_ENTRY`.
+   - Vengono emessi gli eventi:
+     - `SIGNAL_ACCEPTED`
+     - `TRADE_CHAIN_CREATED`
 
-  ┌────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────────────────┐
-  │      Automatismo       │                                                Cosa succede                                                │                            Dove             │
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
-  │ CANCEL_PENDING_ENTRY   │ Cancella sull'exchange tutti gli ordini limit di entry pendenti                                            │ entry_gate._apply_cancel_pending             │
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
-  │ SYNC_PROTECTIVE_ORDERS │ Solo se la posizione è già aperta e la modalità non è UNIFIED_PLAN → riallinea la protezione               │ idem             │
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
-  │ Conferma BE differito  │ Se era in attesa di deferred BE, lo emette dopo che le cancel sono confermate                              │ event_processor._process_pending_entry_cancelled_confirmed │
-  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────────────────┤
-  │ → CANCELLED            │ Se la posizione non era mai stata aperta e non ci sono entry in volo → chiude la chain con stato CANCELLED │ idem             │
-  └────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────────────────┘
+6. Scheduling timeout pending
+   - Se `management_plan.cancel_pending_on_timeout` e `true`, il gate valorizza `entry_timeout_at = now + pending_timeout_hours`.
 
-  ---
-  8. Al MOVE_STOP (breakeven da Telegram update)
+7. Scelta execution mode
+   - Se SL esiste e `simple_attached_enabled=true`, la chain entra in `UNIFIED_PLAN`.
+   - Altrimenti usa `D_POSITION_TPSL`.
 
-  Trigger: update con action SET_STOP target ENTRY
+### Comandi generati automaticamente
 
-  ┌──────────────────────────┬──────────────────────────────────────────────────────────────────┬──────────────────────────────┐
-  │       Automatismo        │                           Cosa succede                           │             Dove             │
-  ├──────────────────────────┼──────────────────────────────────────────────────────────────────┼──────────────────────────────┤
-  │ MOVE_STOP_TO_BREAKEVEN   │ Calcola il prezzo BE (avg_price + fee correction) e sposta lo SL │ entry_gate._apply_move_to_be │
-  ├──────────────────────────┼──────────────────────────────────────────────────────────────────┼──────────────────────────────┤
-  │ Guard: già protetto      │ Se be_protection_status=PROTECTED → NOOP, nessun comando         │ idem                         │
-  ├──────────────────────────┼──────────────────────────────────────────────────────────────────┼──────────────────────────────┤
-  │ Guard: comando duplicato │ Se c'è già un MOVE_STOP_TO_BREAKEVEN in volo → NOOP              │ idem                         │
-  └──────────────────────────┴──────────────────────────────────────────────────────────────────┴──────────────────────────────┘
+#### Modalita `UNIFIED_PLAN`
 
-  ---
-  9. Timeout automatico (pending non fillato)
+- prima leg: `PLACE_ENTRY_WITH_ATTACHED_TPSL`
+  - include SL attached
+  - include il TP finale, se disponibile
+- leg successive: `PLACE_ENTRY`
+- i TP intermedi non vengono piazzati qui
+  - saranno ricostruiti dopo il fill con `REBUILD_PARTIAL_TPS`
 
-  Trigger: TimeoutWorker — polling su chain con entry_timeout_at < now in stato WAITING_ENTRY
+#### Modalita `D_POSITION_TPSL`
 
-  ┌──────────────────────┬──────────────────────────────────────────────────────────────────┬───────────────────────┐
-  │     Automatismo      │                           Cosa succede                           │         Dove          │
-  ├──────────────────────┼──────────────────────────────────────────────────────────────────┼───────────────────────┤
-  │ → EXPIRED            │ La chain passa in stato EXPIRED                                  │ workers.TimeoutWorker │
-  ├──────────────────────┼──────────────────────────────────────────────────────────────────┼───────────────────────┤
-  │ CANCEL_PENDING_ENTRY │ Cancella tutti gli ordini di entry pendenti associati alla chain │ idem                  │
-  └──────────────────────┴──────────────────────────────────────────────────────────────────┴───────────────────────┘
+- per ogni leg di entrata: `PLACE_ENTRY`
+- se esiste un solo TP:
+  - `SET_POSITION_TPSL_FULL` in stato `WAITING_POSITION`
+- se esistono piu TP:
+  - una serie di `SET_POSITION_TPSL_PARTIAL` in stato `WAITING_POSITION`
 
-  ---
-  10. Modifica entries (da Telegram update)
+### Effetto pratico
 
-  Trigger: update con action MODIFY_ENTRIES
-  │ CANCEL_PENDING_ENTRY │ Cancella tutti gli ordini di entry pendenti associati alla chain │ idem                  │
-  └──────────────────────┴──────────────────────────────────────────────────────────────────┴───────────────────────┘
+Il runtime non apre direttamente la posizione nel modello dati: crea la chain, pianifica i comandi di entry e lascia al gateway e agli eventi exchange il passaggio a `OPEN`.
 
-  ---
-  10. Modifica entries (da Telegram update)
+## 2. Primo `ENTRY_FILLED` o fill successivi
 
-  Trigger: update con action MODIFY_ENTRIES
+Trigger: `LifecycleEventWorker` consuma un `ops_exchange_events.event_type="ENTRY_FILLED"` e lo passa a `LifecycleEventProcessor`.
 
-  ┌────────────────────────────────┬──────────────────────────────────────────────────────────────────────────────┬──────────────────────────────────┐
-  │          Automatismo           │                                 Cosa succede                                 │               Dove               │
-  ├────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────┤
-  │ Diff engine                    │ Confronta il piano corrente con il piano target richiesto                    │ ExecutionPlanDiffEngine          │
-  ├────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────┤
-  │ CANCEL_PENDING_ENTRY           │ Per ogni leg da cancellare → cancella l'ordine specifico per client_order_id │ entry_gate._apply_modify_entries │
-  ├────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────┼──────────────────────────────────┤
-  │ PLACE_ENTRY_WITH_ATTACHED_TPSL │ Per ogni leg da sostituire → piazza il nuovo ordine con nuovi parametri      │ idem                             │
-  └────────────────────────────────┴──────────────────────────────────────────────────────────────────────────────┴──────────────────────────────────┘
+### Automatismi applicati
 
-  ---
-  Riepilogo comandi che il sistema può emettere automaticamente
+1. Aggiornamento quantita e prezzo medio
+   - aggiorna `filled_entry_qty`
+   - aggiorna `open_position_qty`
+   - ricalcola `entry_avg_price` come media pesata delle fill
 
-  PLACE_ENTRY_WITH_ATTACHED_TPSL   — apertura posizione
-  PLACE_ENTRY                       — leg aggiuntiva (D_POSITION_TPSL mode)
-  CANCEL_PENDING_ENTRY              — cancel ordini pending (5 trigger diversi)
-  CLOSE_FULL                        — chiusura completa manuale
-  CLOSE_PARTIAL                     — chiusura parziale manuale
-  MOVE_STOP_TO_BREAKEVEN            — sposta SL a breakeven
-  SYNC_PROTECTIVE_ORDERS            — riallinea TP/SL alla qty residua
-  REBUILD_PARTIAL_TPS               — ricostruisce TP parziali dopo fill
-  SET_POSITION_TPSL_FULL            — (D_POSITION mode) imposta TP+SL full
-  SET_POSITION_TPSL_PARTIAL         — (D_POSITION mode) imposta TP+SL parziale
+2. Aggiornamento rischio consumato
+   - se lo `sl_price` e disponibile nel `risk_snapshot_json`, aggiorna:
+     - `risk_already_realized`
+     - `risk_remaining`
+
+3. Cambio stato iniziale
+   - se la chain era `WAITING_ENTRY`, passa a `OPEN`
+   - se la chain era gia aperta, il fill aggiorna quantita e media senza cambiare stato
+
+4. Release dei comandi `WAITING_POSITION`
+   - al primo fill, `workers.py` converte tutti i comandi `WAITING_POSITION` della chain in `PENDING`
+   - questo sblocca i `SET_POSITION_TPSL_*`
+
+5. Aggiornamento execution plan
+   - il leg relativo viene marcato `FILLED` in `plan_state_json`
+   - il matching usa prima `entry_client_order_id`
+   - se serve, usa fallback sul `sequence`
+
+### Comandi generati automaticamente
+
+6. Ricostruzione TP intermedi
+   - se il piano ha `rebuild_policy="ON_EACH_ENTRY_FILL"` e contiene `intermediate_tps`, viene emesso:
+     - `REBUILD_PARTIAL_TPS`
+   - il comando preserva SL e full TP gia presenti
+
+7. Breakeven differito su race condition
+   - se in precedenza un TP ha richiesto auto-cancel delle averaging legs e il fill arriva prima della conferma di cancel, il sistema puo emettere:
+     - `MOVE_STOP_TO_BREAKEVEN`
+   - questo accade quando l'ultima averaging leg rimasta viene fillata e il flag `_be_deferred_by_auto_cancel` viene consumato
+
+## 3. `TP_FILLED`
+
+Trigger: `ops_exchange_events.event_type="TP_FILLED"`.
+
+### Automatismi applicati
+
+1. Aggiornamento stato posizione
+   - TP non finale -> `PARTIALLY_CLOSED`
+   - TP finale -> `CLOSED`
+
+2. Aggiornamento quantita
+   - riduce `open_position_qty`
+   - incrementa `closed_position_qty`
+
+3. Auto-cancel averaging legs
+   - se `management_plan.cancel_pending_by_engine=true`
+   - e `cancel_averaging_pending_after` coincide con il TP colpito
+   - e ci sono averaging legs ancora `PENDING`
+   - allora il sistema emette:
+     - `CANCEL_PENDING_ENTRY`
+   - inoltre registra l'evento:
+     - `AUTO_CANCEL_AVERAGING_REQUESTED`
+
+4. Trigger BE automatico
+   - se `management_plan.be_trigger` coincide con il TP colpito:
+     - se la protezione e gia attiva -> `NOOP_ALREADY_PROTECTED_BE`
+     - se esiste gia un comando BE in volo -> `NOOP_DUPLICATE_COMMAND`
+     - altrimenti emette `MOVE_STOP_TO_BREAKEVEN` e mette `be_protection_status="BE_MOVE_PENDING"`
+
+5. Interazione tra BE e auto-cancel
+   - se lo stesso TP deve sia spostare il BE sia cancellare le averaging legs, il BE non parte subito
+   - il runtime salva un flag `_be_deferred_by_auto_cancel` nel piano
+   - il vero `MOVE_STOP_TO_BREAKEVEN` partira dopo la conferma dei cancel, oppure dopo una fill racing dell'ultima leg residua
+
+## 4. `STOP_MOVED_CONFIRMED`
+
+Trigger: evento exchange generato dal gateway per i comandi fire-and-forget di move stop.
+
+### Automatismi applicati
+
+- aggiorna `current_stop_price`
+- se il comando era di tipo BE, porta `be_protection_status` a `PROTECTED`
+- scrive l'evento lifecycle `STOP_MOVE_CONFIRMED`
+
+Nota: il gateway emette subito questo evento per:
+
+- `MOVE_STOP_TO_BREAKEVEN`
+- `MOVE_STOP`
+- `MOVE_POSITION_STOP`
+
+## 5. `PENDING_ENTRY_CANCELLED_CONFIRMED`
+
+Trigger: conferma exchange che un ordine pending di entry e stato cancellato.
+
+### Automatismi applicati
+
+1. Aggiornamento piano
+   - il leg corrispondente viene marcato `CANCELLED` in `plan_state_json`
+   - se il piano contiene placeholder anziche il vero `client_order_id`, il runtime usa il fallback su `sequence`
+
+2. Emissione BE differito
+   - se il piano porta il flag `_be_deferred_by_auto_cancel`
+   - e dopo questa conferma non restano averaging legs `PENDING`
+   - allora il runtime emette `MOVE_STOP_TO_BREAKEVEN`
+   - poi rimuove il flag dal piano
+
+3. Eventuale chiusura della chain senza posizione aperta
+   - se `open_position_qty == 0`
+   - e non restano leg pending
+   - e non ci sono entry commands ancora in `SENT/ACK`
+   - la chain passa a `CANCELLED`
+
+4. Race guard
+   - se ci sono ancora leg pending o entry commands in volo, il runtime non finalizza la chain
+   - registra `NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED`
+
+## 6. `SL_FILLED`, `CLOSE_PARTIAL_FILLED`, `CLOSE_FULL_FILLED`
+
+### `SL_FILLED`
+
+- porta la chain a `CLOSED`
+- azzera `open_position_qty`
+- incrementa `closed_position_qty`
+
+### `CLOSE_PARTIAL_FILLED`
+
+- riduce `open_position_qty`
+- incrementa `closed_position_qty`
+- stato finale:
+  - `PARTIALLY_CLOSED` se resta posizione
+  - `CLOSED` se la quantita residua arriva a zero
+
+### `CLOSE_FULL_FILLED`
+
+- porta la chain a `CLOSED`
+- azzera `open_position_qty`
+- incrementa `closed_position_qty`
+- emette anche:
+  - `CANCEL_PENDING_ENTRY`
+  - scopo: pulire eventuali averaging entries ancora pendenti
+
+## 7. Timeout automatico dei pending
+
+Trigger: `TimeoutWorker.run_once()`.
+
+### Condizione
+
+La worker cerca chain:
+
+- in stato `WAITING_ENTRY`
+- con `entry_timeout_at <= now`
+
+### Automatismi applicati
+
+1. Stato chain -> `EXPIRED`
+2. Scrittura evento lifecycle:
+   - `TIMEOUT_REACHED`
+3. Accodamento cancel delle entry ancora pendenti:
+   - uno o piu `CANCEL_PENDING_ENTRY`
+   - se il runtime conosce i `client_order_id` reali, li emette in forma concreta
+   - altrimenti parte da un cancel generico che verra espanso in seguito
+
+## 8. Update Telegram supportati oggi
+
+Gli update vengono gestiti da `LifecycleEntryGate.process_update(...)`.
+Il supporto reale oggi e questo:
+
+- `MOVE_STOP`
+  - instradato al path di breakeven
+  - puo emettere `MOVE_STOP_TO_BREAKEVEN`
+  - protegge da duplicate request e da chain gia protette
+
+- `CLOSE`
+  - `FULL` -> `CLOSE_FULL` + `CANCEL_PENDING_ENTRY`
+  - `PARTIAL` -> `CLOSE_PARTIAL`
+
+- `CANCEL_PENDING`
+  - emette `CANCEL_PENDING_ENTRY`
+  - su chain non pending produce `NOOP_NOT_PENDING`
+
+- `MODIFY_ENTRIES`
+  - supporta i kind:
+    - `MARKET_NOW`
+    - `UPDATE_PRICE`
+    - `REPLACE_ENTRY`
+  - usa `ExecutionPlanDiffEngine` per confrontare il piano corrente con quello target
+  - per i leg da rimuovere emette `CANCEL_PENDING_ENTRY`
+  - per i leg da sostituire/emettere crea nuovi comandi entry
+  - il caso `MARKET_NOW` puo anche convertire un leg in market e cancellare i successivi secondo la policy
+
+### Eventi lifecycle prodotti dagli update accettati
+
+- `TELEGRAM_UPDATE_ACCEPTED`
+- eventuali `NOOP_*` quando l'azione non e applicabile
+
+### Casi che non aprono ordini
+
+Il gate manda in review se:
+
+- il target dell'update e ambiguo
+- non esiste alcuna chain compatibile
+- manca lo stop loss richiesto per `MODIFY_ENTRIES`
+- il piano/risk snapshot non sono coerenti
+- il tipo di update non e supportato
+
+## 9. Espansione automatica dei cancel
+
+`cancel_expander.py` e un automatismo infrastrutturale importante.
+
+Quando un comando `CANCEL_PENDING_ENTRY` entra nel DB:
+
+- se contiene gia un `entry_client_order_id` reale, viene usato quello
+- se contiene un placeholder tipo `place_entry:...`, il runtime prova a risolverlo verso il `tsb:...` reale
+- se il cancel e generico, viene espanso in un comando concreto per ogni entry attiva `PENDING/SENT/ACK`
+
+Effetto pratico:
+
+- gli auto-cancel del lifecycle e i cancel manuali arrivano al gateway con gli identificativi reali dell'exchange
+
+## 10. Comandi fire-and-forget nel gateway
+
+Nel gateway alcuni comandi vengono marcati `DONE` subito dopo `mark_sent`, senza attesa di polling exchange:
+
+- `CANCEL_PENDING_ENTRY`
+- `MOVE_STOP_TO_BREAKEVEN`
+- `MOVE_STOP`
+- `MOVE_POSITION_STOP`
+- `REBUILD_PARTIAL_TPS`
+- `SET_POSITION_TPSL_PARTIAL`
+- `SET_POSITION_TPSL_FULL`
+
+Effetti da ricordare:
+
+- `MOVE_STOP_*` genera subito un evento `STOP_MOVED_CONFIRMED`
+- `CANCEL_PENDING_ENTRY` non genera conferma diretta: la conferma vera arriva come `PENDING_ENTRY_CANCELLED_CONFIRMED`
+- `REBUILD_PARTIAL_TPS` non emette eventi lifecycle diretti
+
+## 11. Proiezione automatica nel control plane
+
+`outbox_writer.py` proietta eventi lifecycle in notifiche user-facing.
+
+### Mapping attivo rilevante per gli automatismi
+
+- `ENTRY_FILLED` -> `ENTRY_OPENED`
+- `TP_FILLED` -> `TP_FILLED`
+- `SL_FILLED` -> `SL_FILLED`
+- `CLOSE_FULL_FILLED` -> `POSITION_CLOSED`
+- `PENDING_ENTRY_CANCELLED` -> `ENTRY_CANCELLED`
+
+### Promozioni e filtri automatici
+
+- `TP_FILLED` con `is_final=true` viene promosso a `TP_FILLED_FINAL`
+- `CLOSE_FULL_FILLED` su chain con `be_protection_status="PROTECTED"` viene promosso a `BE_EXIT`
+- `ENTRY_CANCELLED` con `cancel_reason="position_closed"` viene filtrato e non mostrato all'utente
+
+### Ritardi intenzionali nel dispatch
+
+- `UPDATE_DONE`, `UPDATE_PARTIAL`, `UPDATE_REJECTED`: invio ritardato di 20 secondi
+- `TP_FILLED` e `TP_FILLED_FINAL`: invio ritardato di 30 secondi per favorire aggregazione
+
+## 12. Automatismi configurabili presenti nel modello ma non ancora usati qui
+
+Nel `ManagementPlanConfig` esistono campi che non risultano attualmente agganciati a un automatismo runtime esplicito in questi moduli:
+
+- `cancel_unfilled_pending_after`
+- `risk_freed_by_be`
+- parte della semantica di `protective_sl_mode`
+
+Questo significa che:
+
+- sono configurazioni ammesse dal modello
+- ma non vanno documentate come comportamento attivo finche non compaiono davvero nel flusso lifecycle/gateway
+
+## 13. Catalogo sintetico degli automatismi realmente attivi
+
+| Trigger | Effetto automatico principale | Comandi/eventi emessi |
+|---|---|---|
+| `SIGNAL` valido | crea chain e pianifica entry | `SIGNAL_ACCEPTED`, `TRADE_CHAIN_CREATED`, `PLACE_ENTRY*`, `SET_POSITION_TPSL_*` |
+| primo `ENTRY_FILLED` | chain `OPEN`, qty/media aggiornate, sblocco protezioni | `ENTRY_FILLED`, `POSITION_SIZE_UPDATED`, `ENTRY_AVG_PRICE_UPDATED`, eventuale `REBUILD_PARTIAL_TPS` |
+| `TP_FILLED` non finale | partial close, possibile auto-cancel e BE | `TP_FILLED`, eventuale `CANCEL_PENDING_ENTRY`, eventuale `MOVE_STOP_TO_BREAKEVEN` |
+| `TP_FILLED` finale | chain `CLOSED` | `TP_FILLED_FINAL` lato control plane |
+| `STOP_MOVED_CONFIRMED` | stop attuale aggiornato, BE protetto | `STOP_MOVE_CONFIRMED` |
+| `PENDING_ENTRY_CANCELLED_CONFIRMED` | leg marcato cancellato, eventuale chain `CANCELLED`, eventuale BE differito | `PENDING_ENTRY_CANCELLED`, eventuale `MOVE_STOP_TO_BREAKEVEN` |
+| `SL_FILLED` | chiusura totale | `SL_FILLED` |
+| `CLOSE_FULL_FILLED` | chiusura totale e cleanup pending | `CLOSE_FULL_FILLED`, `CANCEL_PENDING_ENTRY` |
+| timeout pending | chain `EXPIRED` + cancel | `TIMEOUT_REACHED`, `CANCEL_PENDING_ENTRY` |
+| update Telegram | modifica ordini/stop/close | `TELEGRAM_UPDATE_ACCEPTED`, eventuali `NOOP_*`, eventuali nuovi comandi |
+
+## 14. Limite di questo documento
+
+Questo file non descrive:
+
+- design futuri non ancora cablati nel codice
+- vecchie ipotesi del PRD non riscontrabili in `src/runtime_v2/`
+- comportamenti derivati solo da nomenclatura del modello ma non usati dai worker
+
+Se il codice cambia, questo documento va riallineato partendo da:
+
+- `entry_gate.py`
+- `event_processor.py`
+- `workers.py`
+- `gateway.py`
+- `outbox_writer.py`

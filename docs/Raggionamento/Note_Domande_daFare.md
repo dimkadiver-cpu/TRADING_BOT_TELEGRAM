@@ -1,3 +1,0 @@
-Controlla Telegram:
-
-	- 

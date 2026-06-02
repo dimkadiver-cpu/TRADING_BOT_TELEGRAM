@@ -227,13 +227,25 @@ class StatusQueries:
     def get_trade(self, chain_id: int) -> TradeDetail | None:
         conn = self._connect()
         try:
-            row = conn.execute(
-                "SELECT trade_chain_id, symbol, side, trader_id, account_id, "
-                "lifecycle_state, entry_avg_price, current_stop_price, "
-                "source_chat_id, telegram_message_id "
-                "FROM ops_trade_chains WHERE trade_chain_id=?",
-                (chain_id,),
-            ).fetchone()
+            if _table_exists(conn, "raw_messages"):
+                row = conn.execute(
+                    "SELECT t.trade_chain_id, t.symbol, t.side, t.trader_id, t.account_id, "
+                    "t.lifecycle_state, t.entry_avg_price, t.current_stop_price, "
+                    "COALESCE(t.source_chat_id, rm.source_chat_id), "
+                    "COALESCE(t.telegram_message_id, rm.telegram_message_id) "
+                    "FROM ops_trade_chains t "
+                    "LEFT JOIN raw_messages rm ON t.raw_message_id = rm.raw_message_id "
+                    "WHERE t.trade_chain_id=?",
+                    (chain_id,),
+                ).fetchone()
+            else:
+                row = conn.execute(
+                    "SELECT trade_chain_id, symbol, side, trader_id, account_id, "
+                    "lifecycle_state, entry_avg_price, current_stop_price, "
+                    "source_chat_id, telegram_message_id "
+                    "FROM ops_trade_chains WHERE trade_chain_id=?",
+                    (chain_id,),
+                ).fetchone()
             if row is None:
                 return None
             events = conn.execute(
