@@ -507,6 +507,74 @@ def test_update_batch_idempotency_keys_per_chain():
     assert len(all_keys) == len(set(all_keys))
 
 
+def test_apply_move_to_be_emits_telegram_update_accepted_with_prices():
+    """_apply_move_to_be deve emettere TELEGRAM_UPDATE_ACCEPTED con old_sl_price,
+    new_sl_price e is_breakeven=True invece di BE_MOVE_REQUESTED."""
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.ports import ExchangeDataPort
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from unittest.mock import MagicMock
+
+    # Build a minimal TradeChain in OPEN state with entry_avg_price and current_stop_price
+    risk_json = json.dumps({"sl_price": 49000.0, "fee_profile": None})
+    chain = TradeChain(
+        trade_chain_id=99,
+        source_enrichment_id=99,
+        canonical_message_id=99,
+        raw_message_id=99,
+        trader_id="trader_a",
+        account_id="acc_1",
+        symbol="BTC/USDT",
+        side="LONG",
+        lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT",
+        management_plan_json='{"be_fee_correction_enabled": false}',
+        risk_snapshot_json=risk_json,
+        plan_state_json="{}",
+        entry_avg_price=50000.0,
+        current_stop_price=49000.0,
+        open_position_qty=0.01,
+        execution_mode="UNIFIED_PLAN",
+    )
+
+    # Build a minimal enriched message (we only need canonical_message_id)
+    from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=1,
+        canonical_message_id=1,
+        raw_message_id=99,
+        trader_id="trader_a",
+        account_id="acc_1",
+        primary_class="UPDATE",
+        enrichment_decision="PASS",
+        policy_snapshot={},
+        policy_version="",
+    )
+
+    gate = LifecycleEntryGate(
+        risk_engine=MagicMock(spec=RiskCapacityEngine),
+        exchange_port=MagicMock(spec=ExchangeDataPort),
+    )
+
+    result = gate._apply_move_to_be(enriched, chain, active_commands=[])
+
+    accepted = [e for e in result.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"]
+    be_requested = [e for e in result.lifecycle_events if e.event_type == "BE_MOVE_REQUESTED"]
+
+    assert len(accepted) == 1, f"expected 1 TELEGRAM_UPDATE_ACCEPTED, got {len(accepted)}; events: {[e.event_type for e in result.lifecycle_events]}"
+    assert len(be_requested) == 0, "BE_MOVE_REQUESTED should no longer be emitted by _apply_move_to_be"
+
+    p = json.loads(accepted[0].payload_json)
+    assert p.get("action") == "MOVE_SL_TO_BE"
+    assert p.get("is_breakeven") is True
+    assert p.get("old_sl_price") is not None, "old_sl_price must be present"
+    assert p.get("new_sl_price") is not None, "new_sl_price must be present"
+    # new_sl_price should be >= entry_avg_price for LONG (BE at avg price)
+    assert float(p["new_sl_price"]) >= 49000.0
+
+
 def _make_chain_simple(state="OPEN"):
     from src.runtime_v2.lifecycle.models import TradeChain
     return TradeChain(
@@ -2435,3 +2503,96 @@ def test_market_entry_now_cancel_mode_full_roundtrip(tmp_path):
     assert by_seq[2]["status"] == "CANCELLED"
     # Event
     assert any(e.event_type == "TELEGRAM_UPDATE_ACCEPTED" for e in cr.lifecycle_events)
+
+
+def test_apply_cancel_pending_includes_cancelled_entries():
+    """_apply_cancel_pending deve includere cancelled_entries nel payload."""
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.ports import ExchangeDataPort
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
+    from unittest.mock import MagicMock
+
+    plan = json.dumps({"legs": [
+        {"leg_id": "1", "sequence": 2, "status": "PENDING", "entry_type": "LIMIT", "price": 92500.0},
+        {"leg_id": "2", "sequence": 3, "status": "PENDING", "entry_type": "LIMIT", "price": 91000.0},
+        {"leg_id": "3", "sequence": 1, "status": "FILLED",  "entry_type": "LIMIT", "price": 93000.0},
+    ]})
+    chain = TradeChain(
+        trade_chain_id=88, source_enrichment_id=88, canonical_message_id=88,
+        raw_message_id=88, trader_id="t", account_id="a",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="TWO_STEP",
+        management_plan_json="{}", risk_snapshot_json="{}",
+        plan_state_json=plan,
+        entry_avg_price=93000.0, open_position_qty=0.01,
+    )
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=2, canonical_message_id=2, raw_message_id=88,
+        trader_id="t", account_id="a", primary_class="UPDATE",
+        enrichment_decision="PASS", policy_snapshot={}, policy_version="",
+    )
+    gate = LifecycleEntryGate(
+        risk_engine=MagicMock(spec=RiskCapacityEngine),
+        exchange_port=MagicMock(spec=ExchangeDataPort),
+    )
+
+    result = gate._apply_cancel_pending(enriched, chain)
+
+    accepted = [e for e in result.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"]
+    assert len(accepted) == 1
+    p = json.loads(accepted[0].payload_json)
+    assert p["action"] == "CANCEL_PENDING"
+    entries = p.get("cancelled_entries", [])
+    assert len(entries) == 2, f"Expected 2 pending entries, got {len(entries)}: {entries}"
+    sequences = {e["sequence"] for e in entries}
+    assert sequences == {2, 3}
+
+
+def test_apply_close_partial_includes_close_pct():
+    """_apply_close_partial deve includere close_pct nel payload."""
+    import json
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.ports import ExchangeDataPort
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
+    from unittest.mock import MagicMock
+
+    chain = TradeChain(
+        trade_chain_id=77, source_enrichment_id=77, canonical_message_id=77,
+        raw_message_id=77, trader_id="t", account_id="a",
+        symbol="ETH/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT",
+        management_plan_json="{}", risk_snapshot_json="{}",
+        plan_state_json="{}",
+        entry_avg_price=3000.0, open_position_qty=1.0,
+    )
+    enriched = EnrichedCanonicalMessage(
+        enrichment_id=3, canonical_message_id=3, raw_message_id=77,
+        trader_id="t", account_id="a", primary_class="UPDATE",
+        enrichment_decision="PASS", policy_snapshot={}, policy_version="",
+    )
+
+    # Build a minimal close op
+    from dataclasses import dataclass
+    @dataclass
+    class FakeCloseOp:
+        close_scope: str = "PARTIAL"
+        fraction: float = 0.5
+
+    gate = LifecycleEntryGate(
+        risk_engine=MagicMock(spec=RiskCapacityEngine),
+        exchange_port=MagicMock(spec=ExchangeDataPort),
+    )
+
+    result = gate._apply_close_partial(enriched, chain, op=FakeCloseOp(fraction=0.5))
+
+    accepted = [e for e in result.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"]
+    assert len(accepted) == 1
+    p = json.loads(accepted[0].payload_json)
+    assert p["action"] == "CLOSE_PARTIAL"
+    assert p.get("close_pct") == 50.0, f"Expected 50.0, got {p.get('close_pct')}"
+    assert p.get("fraction") == 0.5

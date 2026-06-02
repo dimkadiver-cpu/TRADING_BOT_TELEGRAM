@@ -1034,14 +1034,24 @@ class LifecycleEntryGate:
             }),
             idempotency_key=f"move_be:{chain_id}:{cmid}",
         )
+        old_sl_price = chain.current_stop_price
+        if old_sl_price is None:
+            try:
+                old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
+            except Exception:
+                pass
         event = LifecycleEvent(
             trade_chain_id=chain_id,
-            event_type="BE_MOVE_REQUESTED",
+            event_type="TELEGRAM_UPDATE_ACCEPTED",
             source_type="telegram_update",
             source_id=str(cmid),
-            previous_state=chain.lifecycle_state,
-            next_state=None,
-            idempotency_key=f"be_requested:{chain_id}:{cmid}",
+            payload_json=json.dumps({
+                "action": "MOVE_SL_TO_BE",
+                "old_sl_price": old_sl_price,
+                "new_sl_price": new_stop_price,
+                "is_breakeven": True,
+            }),
+            idempotency_key=f"update_be:{chain_id}:{cmid}",
         )
         return UpdateChainResult(
             trade_chain_id=chain_id,
@@ -1134,7 +1144,11 @@ class LifecycleEntryGate:
             event_type="TELEGRAM_UPDATE_ACCEPTED",
             source_type="telegram_update",
             source_id=str(cmid),
-            payload_json=json.dumps({"action": "CLOSE_PARTIAL", "fraction": fraction}),
+            payload_json=json.dumps({
+                "action": "CLOSE_PARTIAL",
+                "fraction": fraction,
+                "close_pct": round(fraction * 100, 2),
+            }),
             idempotency_key=f"update_close_partial:{chain_id}:{cmid}",
         )
         return UpdateChainResult(
@@ -1174,12 +1188,30 @@ class LifecycleEntryGate:
             idempotency_key=f"cancel_pending:{chain_id}:{cmid}",
         )]
 
+        cancelled_entries: list[dict] = []
+        try:
+            plan_data = json.loads(chain.plan_state_json or "{}")
+            cancelled_entries = [
+                {
+                    "sequence": leg["sequence"],
+                    "price": leg.get("price"),
+                    "entry_type": leg.get("entry_type", "LIMIT"),
+                }
+                for leg in plan_data.get("legs", [])
+                if leg.get("status") == "PENDING"
+            ]
+        except Exception:
+            pass
+
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
             source_type="telegram_update",
             source_id=str(cmid),
-            payload_json=json.dumps({"action": "CANCEL_PENDING"}),
+            payload_json=json.dumps({
+                "action": "CANCEL_PENDING",
+                "cancelled_entries": cancelled_entries,
+            }),
             idempotency_key=f"update_cancel:{chain_id}:{cmid}",
         )
 
@@ -1257,6 +1289,65 @@ class LifecycleEntryGate:
 
 
 import sqlite3 as _sqlite3
+
+_NO_CHAIN_LOGGABLE_EVENTS = frozenset({"REVIEW_REQUIRED", "SIGNAL_REJECTED"})
+
+
+def _write_no_chain_signal_clean_log(
+    conn: _sqlite3.Connection,
+    enriched: "EnrichedCanonicalMessage",
+    lifecycle_events: "list[LifecycleEvent]",
+    *,
+    src_chat_id: str | None,
+    tg_msg_id: int | None,
+) -> None:
+    """Scrive CLEAN_LOG per segnali che non hanno creato una chain (review/rejected).
+
+    project_clean_log_for_chain richiede un chain_id valido; qui chain_id è None
+    quindi la proiezione deve avvenire direttamente.
+    """
+    signal = enriched.enriched_signal
+    link = (
+        f"https://t.me/c/{str(src_chat_id).removeprefix('-100')}/{tg_msg_id}"
+        if src_chat_id and tg_msg_id else None
+    )
+    entries_payload = [
+        {
+            "sequence": leg.sequence,
+            "entry_type": str(leg.entry_type),
+            "price": leg.price.value if leg.price else None,
+        }
+        for leg in (signal.entries or [])
+    ] if signal else []
+    sl_payload = (
+        signal.stop_loss.price.value
+        if signal and signal.stop_loss and signal.stop_loss.price else None
+    )
+    for event in lifecycle_events:
+        if event.event_type not in _NO_CHAIN_LOGGABLE_EVENTS:
+            continue
+        try:
+            ev_data = json.loads(event.payload_json or "{}")
+        except Exception:
+            ev_data = {}
+        payload = {
+            "chain_id": None,
+            "symbol": signal.symbol if signal else None,
+            "side": str(signal.side) if signal and signal.side else None,
+            "trader_id": enriched.trader_id,
+            "reason": ev_data.get("reason", "unknown"),
+            "entries": entries_payload,
+            "sl": sl_payload,
+            "source": ev_data.get("source", "runtime"),
+            "link": link,
+        }
+        write_clean_log_event(
+            conn,
+            notification_type=event.event_type,
+            chain_id=None,
+            payload=payload,
+            dedupe_key=f"clean:{event.idempotency_key}",
+        )
 
 
 _ENTRY_HISTORY_EVENT_TYPES = frozenset({"ENTRY_FILLED"})
@@ -1635,6 +1726,17 @@ class LifecycleGateWorker:
                         project_clean_log_for_chain(conn, chain_id)
                     except Exception:
                         logger.exception("clean_log projection failed for chain %s", chain_id)
+                else:
+                    try:
+                        _write_no_chain_signal_clean_log(
+                            conn, enriched, result.lifecycle_events,
+                            src_chat_id=src_chat_id, tg_msg_id=tg_msg_id,
+                        )
+                    except Exception:
+                        logger.exception(
+                            "no-chain clean_log failed for enrichment_id=%s",
+                            enriched.enrichment_id,
+                        )
         finally:
             conn.close()
 
