@@ -75,8 +75,8 @@ def test_entry_filled_transitions_to_open():
 def test_tp_filled_not_final_transitions_to_partially_closed():
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
-    chain = _make_chain(state="OPEN")
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
+    chain = _make_chain(state="OPEN").model_copy(update={"open_position_qty": 0.01})
     result = proc.process(event, chain, [])
     assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
     assert any(e.event_type == "TP_FILLED" for e in result.lifecycle_events)
@@ -85,8 +85,8 @@ def test_tp_filled_not_final_transitions_to_partially_closed():
 def test_tp_filled_final_transitions_to_closed():
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 3, "is_final": True})
-    chain = _make_chain(state="PARTIALLY_CLOSED")
+                                  payload={"tp_level": 3, "is_final": True, "filled_qty": 0.01})
+    chain = _make_chain(state="PARTIALLY_CLOSED").model_copy(update={"open_position_qty": 0.01})
     result = proc.process(event, chain, [])
     assert result.new_lifecycle_state == "CLOSED"
 
@@ -94,8 +94,8 @@ def test_tp_filled_final_transitions_to_closed():
 def test_tp_filled_be_trigger_creates_be_command():
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
-    chain = _make_chain(state="OPEN", be_trigger="tp1")
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
+    chain = _make_chain(state="OPEN", be_trigger="tp1").model_copy(update={"open_position_qty": 0.01})
     result = proc.process(event, chain, [])
     assert any(c.command_type == "MOVE_STOP_TO_BREAKEVEN" for c in result.execution_commands)
     assert result.new_be_protection_status == "BE_MOVE_PENDING"
@@ -110,7 +110,7 @@ def test_tp_filled_be_trigger_fee_correction_disabled_keeps_pure_entry_breakeven
     proc = _make_processor()
     event = _make_exchange_event(
         event_type="TP_FILLED",
-        payload={"tp_level": 1, "is_final": False},
+        payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005},
     )
     chain = _make_chain(state="OPEN", be_trigger="tp1")
     chain = chain.model_copy(update={
@@ -137,10 +137,11 @@ def test_tp_filled_be_trigger_payload_contains_protection_style_standalone_for_s
     """Automatic BE trigger on a_sequential chain → protection_style='standalone_order'."""
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
     chain = _make_chain(state="OPEN", be_trigger="tp1")
     chain = chain.model_copy(update={
         "execution_mode": "a_sequential",
+        "open_position_qty": 0.01,
         "risk_snapshot_json": '{"hedge_mode": false}',
     })
     result = proc.process(event, chain, [])
@@ -154,10 +155,11 @@ def test_tp_filled_be_trigger_payload_contains_protection_style_attached_for_uni
     """Automatic BE trigger on UNIFIED_PLAN chain -> protection_style='attached_full'."""
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
     chain = _make_chain(state="OPEN", be_trigger="tp1")
     chain = chain.model_copy(update={
         "execution_mode": "UNIFIED_PLAN",
+        "open_position_qty": 0.01,
         "risk_snapshot_json": '{"hedge_mode": false}',
     })
     result = proc.process(event, chain, [])
@@ -170,8 +172,8 @@ def test_tp_filled_be_trigger_payload_contains_protection_style_attached_for_uni
 def test_tp_filled_be_trigger_already_protected_noop():
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
-    chain = _make_chain(state="OPEN", be_trigger="tp1", be_status="PROTECTED")
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
+    chain = _make_chain(state="OPEN", be_trigger="tp1", be_status="PROTECTED").model_copy(update={"open_position_qty": 0.01})
     result = proc.process(event, chain, [])
     assert not any(c.command_type == "MOVE_STOP_TO_BREAKEVEN" for c in result.execution_commands)
     assert any(e.event_type == "NOOP_ALREADY_PROTECTED_BE" for e in result.lifecycle_events)
@@ -181,8 +183,8 @@ def test_tp_filled_be_trigger_duplicate_command_noop():
     from src.runtime_v2.lifecycle.models import ExecutionCommand
     proc = _make_processor()
     event = _make_exchange_event(event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
-    chain = _make_chain(state="OPEN", be_trigger="tp1")
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
+    chain = _make_chain(state="OPEN", be_trigger="tp1").model_copy(update={"open_position_qty": 0.01})
     existing = ExecutionCommand(
         trade_chain_id=1, command_type="MOVE_STOP_TO_BREAKEVEN",
         payload_json="{}", idempotency_key="move_be:1:old", status="PENDING",
@@ -195,8 +197,8 @@ def test_tp_filled_be_trigger_duplicate_command_noop():
 def test_double_tp_filled_same_event_idempotency():
     proc = _make_processor()
     event = _make_exchange_event(event_id=5, event_type="TP_FILLED",
-                                  payload={"tp_level": 1, "is_final": False})
-    chain = _make_chain(state="OPEN", be_trigger="tp1")
+                                  payload={"tp_level": 1, "is_final": False, "filled_qty": 0.005})
+    chain = _make_chain(state="OPEN", be_trigger="tp1").model_copy(update={"open_position_qty": 0.01})
     result1 = proc.process(event, chain, [])
     result2 = proc.process(event, chain, [])
     keys1 = {e.idempotency_key for e in result1.lifecycle_events}
@@ -1542,7 +1544,7 @@ def test_expand_cancel_does_not_include_done_commands_via_plan_state():
 
 
 def test_tp_filled_lifecycle_event_preserves_fill_price_qty_and_fee():
-    chain = _make_chain(entry_avg_price=65000.0)
+    chain = _make_chain(entry_avg_price=65000.0).model_copy(update={"open_position_qty": 0.004})
     event = _make_exchange_event(
         event_type="TP_FILLED",
         payload={
@@ -1563,6 +1565,83 @@ def test_tp_filled_lifecycle_event_preserves_fill_price_qty_and_fee():
     assert payload["filled_qty"] == 0.002
     assert payload["exec_fee"] == 1.10
     assert payload["closed_size"] == 0.002
+
+
+def test_tp_filled_without_is_final_closes_when_fill_consumes_open_position():
+    chain = _make_chain(entry_avg_price=65000.0)
+    chain = chain.model_copy(update={
+        "open_position_qty": 0.002,
+        "closed_position_qty": 0.0,
+        "lifecycle_state": "OPEN",
+    })
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={
+            "tp_level": 2,
+            "fill_price": 68000.0,
+            "filled_qty": 0.002,
+            "exec_fee": 1.10,
+        },
+    )
+
+    result = _make_processor().process(event, chain, [])
+
+    assert result.new_lifecycle_state == "CLOSED"
+    assert result.new_open_position_qty == 0.0
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["is_final"] is True
+
+
+def test_tp_filled_overrides_false_is_final_hint_when_position_is_actually_closed():
+    chain = _make_chain(entry_avg_price=65000.0)
+    chain = chain.model_copy(update={
+        "open_position_qty": 0.002,
+        "closed_position_qty": 0.0,
+        "lifecycle_state": "PARTIALLY_CLOSED",
+    })
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={
+            "tp_level": 2,
+            "is_final": False,
+            "fill_price": 68000.0,
+            "filled_qty": 0.002,
+        },
+    )
+
+    result = _make_processor().process(event, chain, [])
+
+    assert result.new_lifecycle_state == "CLOSED"
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["is_final"] is True
+
+
+def test_tp_filled_remains_partial_when_open_position_stays_positive():
+    chain = _make_chain(entry_avg_price=65000.0)
+    chain = chain.model_copy(update={
+        "open_position_qty": 0.010,
+        "closed_position_qty": 0.0,
+        "lifecycle_state": "OPEN",
+    })
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={
+            "tp_level": 1,
+            "is_final": True,
+            "fill_price": 68000.0,
+            "filled_qty": 0.002,
+        },
+    )
+
+    result = _make_processor().process(event, chain, [])
+
+    assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
+    assert result.new_open_position_qty == pytest.approx(0.008)
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["is_final"] is False
 
 
 def test_entry_filled_lifecycle_event_preserves_exec_fee():
@@ -1619,3 +1698,32 @@ def test_close_full_filled_emits_cancel_pending_entry_command():
     assert payload["symbol"] == "BTCUSDT"
     assert payload["cancel_reason"] == "position_closed"
     assert cancel_cmds[0].idempotency_key == f"cancel_on_close:{chain.trade_chain_id}"
+
+
+def test_processor_with_full_ws_payload():
+    """Processor processes a TP_FILLED event with full ExchangeEventPayload (WS shape)."""
+    import json
+    from src.runtime_v2.execution_gateway.event_ingest.payload import ExchangeEventPayload
+
+    ep = ExchangeEventPayload(
+        fill_price=55000.0,
+        filled_qty=0.01,
+        closed_size=0.01,
+        exec_fee=0.275,
+        fee_rate=0.00055,
+        exec_value=550.0,
+        pos_qty=0.0,
+        tp_level=1,
+        source="watch_my_trades",
+    )
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload=json.loads(ep.model_dump_json()),
+    )
+    chain = _make_chain(state="OPEN")
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    processor = LifecycleEventProcessor()
+    result = processor.process(event, chain, active_commands=[])
+    assert result.new_lifecycle_state == "CLOSED"
+    lc_payload = json.loads(result.lifecycle_events[0].payload_json)
+    assert lc_payload["exec_fee"] == 0.275
