@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
+from src.runtime_v2.execution_gateway.event_ingest.payload import ExchangeEventPayload
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
 logger = logging.getLogger(__name__)
@@ -273,22 +274,31 @@ class ExchangeEventSyncWorker:
             return False
 
         _CLOSE_FILL_TYPES = {"TP_FILLED", "SL_FILLED", "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED"}
-        payload: dict = {
-            "fill_price": raw.average_price,
-            "filled_qty": raw.filled_qty,
-            "exec_fee": getattr(raw, "fee", None),
-            "closed_size": raw.filled_qty if event_type in _CLOSE_FILL_TYPES else None,
-            "command_id": coid.command_id,
-        }
         if coid.role == "tp":
-            payload["tp_level"] = coid.sequence
-            payload["is_final"] = self._repo.count_active_tps(coid.trade_chain_id) <= 1
+            tp_level: int | None = coid.sequence
             idem_key = f"TP_FILLED:{coid.trade_chain_id}:level:{coid.sequence}"
         else:
+            tp_level = None
             idem_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
 
+        ep = ExchangeEventPayload(
+            fill_price=raw.average_price,
+            filled_qty=raw.filled_qty,
+            closed_size=raw.filled_qty if event_type in _CLOSE_FILL_TYPES else None,
+            exec_fee=raw.exec_fee,
+            exec_value=raw.exec_value,
+            exchange_time=raw.exchange_time,
+            leaves_qty=raw.leaves_qty,
+            cum_exec_qty=raw.cum_exec_qty,
+            order_id=raw.exchange_order_id,
+            order_link_id=raw.client_order_id,
+            tp_level=tp_level,
+            command_id=coid.command_id,
+            source="rest_reconciliation",
+        )
+
         return self._repo.insert_exchange_event(
-            coid.trade_chain_id, event_type, json.dumps(payload), idem_key
+            coid.trade_chain_id, event_type, ep.model_dump_json(), idem_key
         )
 
     def _save_cancelled_event(self, client_order_id: str, raw) -> bool:
