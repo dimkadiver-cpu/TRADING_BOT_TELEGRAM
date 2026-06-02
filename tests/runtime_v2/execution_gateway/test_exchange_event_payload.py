@@ -1,5 +1,4 @@
 from __future__ import annotations
-import json
 from src.runtime_v2.execution_gateway.event_ingest.payload import ExchangeEventPayload
 
 
@@ -51,6 +50,7 @@ def test_extra_fields_allowed():
     raw = {"fill_price": 100.0, "filled_qty": 1.0, "legacy_field": "x"}
     payload = ExchangeEventPayload.model_validate(raw)
     assert payload.fill_price == 100.0
+    assert payload.model_extra == {"legacy_field": "x"}
 
 
 def test_roundtrip_json():
@@ -62,5 +62,4 @@ def test_roundtrip_json():
     )
     json_str = payload.model_dump_json()
     restored = ExchangeEventPayload.model_validate_json(json_str)
-    assert restored.fill_price == 100.0
-    assert restored.source == "watch_my_trades"
+    assert restored.model_dump() == payload.model_dump()
