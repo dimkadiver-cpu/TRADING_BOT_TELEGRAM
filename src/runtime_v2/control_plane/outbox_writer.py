@@ -264,6 +264,8 @@ def _build_payload(
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
+            "fee_rate": ev.get("fee_rate"),
+            "exec_value": ev.get("exec_value"),
             "remaining_pct": _remaining_pct(open_position_qty, filled_entry_qty),
             "sl_current": current_stop_price,
             "be_protection_status": be_protection_status,

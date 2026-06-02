@@ -201,6 +201,14 @@ def _tp_filled(p: dict, final: bool) -> str:
         lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
     if p.get("fee") is not None:
         lines.append(f"Fee: {_fmt_money(p['fee'])}")
+    if "fee_rate" in p:
+        fr = p.get("fee_rate")
+        if fr is not None:
+            lines.append(f"Fee rate: {float(fr) * 100:.3f}%")
+        else:
+            lines.append("Fee rate: n/a")
+    if "exec_value" in p:
+        lines.append(f"Value: {_fmt_money(p.get('exec_value'))}")
 
     lines.append("")
 
