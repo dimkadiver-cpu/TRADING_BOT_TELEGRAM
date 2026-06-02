@@ -1,0 +1,99 @@
+{
+  "language": "en",
+  "field_markers": {
+    "coin": {
+      "strong": ["coin:"],
+      "weak": []
+    },
+    "entry": {
+      "strong": ["entry:"],
+      "weak": []
+    },
+    "stop_loss": {
+      "strong": ["stop loss:"],
+      "weak": []
+    },
+    "take_profit": {
+      "strong": ["targets:"],
+      "weak": []
+    }
+  },
+  "side_markers": {
+    "LONG": {
+      "strong": ["direction: long"],
+      "weak": []
+    },
+    "SHORT": {
+      "strong": ["direction: short"],
+      "weak": []
+    }
+  },
+  "intent_markers": {
+    "CLOSE_FULL": {
+      "strong": [
+        "closed manually"
+      ],
+      "weak": []
+    },
+    "TP_HIT": {
+      "strong": [
+        "target 1:",
+        "target 2:",
+        "target 3:",
+        "target 4:",
+        "target 5:",
+        "target 6:",
+        "target 7:",
+        "target 8:",
+        "target 9:",
+        "target 10:"
+      ],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong": [
+        "closed at sl",
+        "stop loss:",
+        "stopped out"
+      ],
+      "weak": []
+    },
+    "REPORT_RESULT": {
+      "strong": [
+        "profit (",
+        "loss ("
+      ],
+      "weak": []
+    }
+  },
+  "info_markers": {
+    "MARKET_COMMENT": {
+      "strong": [
+        "vip market update",
+        "market remains highly volatile"
+      ],
+      "weak": []
+    },
+    "STATUS_HOLD": {
+      "strong": [
+        "no targets have been hit so far",
+        "signal is still in play",
+        "under close watch",
+        "idea remains intact",
+        "setup remains valid"
+      ],
+      "weak": []
+    }
+  },
+  "target_hint_markers": {
+    "explicit_id": {
+      "strong": ["signal id: #0"],
+      "weak": []
+    },
+    "symbol": {
+      "strong": ["usdt", "usdc", "usd"],
+      "weak": []
+    }
+  },
+  "ignore_markers": []
+}

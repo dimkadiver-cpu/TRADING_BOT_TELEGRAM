@@ -321,6 +321,7 @@ class LifecycleEventWorker:
                     or result.new_risk_already_realized is not None
                     or result.new_risk_remaining is not None
                     or result.new_plan_state_json is not None
+                    or result.new_risk_snapshot_json is not None
                 )
                 if has_chain_update:
                     fields = ["updated_at=?"]
@@ -355,6 +356,9 @@ class LifecycleEventWorker:
                     if result.new_plan_state_json is not None:
                         fields.append("plan_state_json=?")
                         vals.append(result.new_plan_state_json)
+                    if result.new_risk_snapshot_json is not None:
+                        fields.append("risk_snapshot_json=?")
+                        vals.append(result.new_risk_snapshot_json)
                     vals.append(chain_id)
                     conn.execute(
                         f"UPDATE ops_trade_chains SET {', '.join(fields)} WHERE trade_chain_id=?",

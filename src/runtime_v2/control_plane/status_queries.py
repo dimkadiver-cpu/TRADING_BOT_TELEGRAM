@@ -227,7 +227,8 @@ class StatusQueries:
         conn = self._connect()
         try:
             rows = conn.execute(
-                "SELECT trade_chain_id, symbol, side, lifecycle_state, current_stop_price "
+                "SELECT trade_chain_id, symbol, side, lifecycle_state, "
+                "COALESCE(current_stop_price, expected_stop_price) "
                 "FROM ops_trade_chains "
                 "WHERE lifecycle_state IN ({}) "
                 "ORDER BY trade_chain_id".format(

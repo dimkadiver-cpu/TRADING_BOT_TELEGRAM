@@ -2,7 +2,7 @@
 # Il listener rilegge questo file senza restart (hot reload via watchdog).
 
 recovery:
-  max_hours: 4  # finestra temporale messaggi recuperati al restart
+  max_hours: 0  # finestra temporale messaggi recuperati al restart
 
 blacklist_global:  # Frasi che, se presenti nel testo, scartano il messaggio
   - "#admin"
@@ -48,7 +48,7 @@ channels:
   - chat_id: -1003722628653
     topic_id: 8
     label: "PifSignal_3"  # canale reale attivo concordato
-    active: false  # disattivato per test, da attivare quando serve
+    active: true  # disattivato per test, da attivare quando serve
     trader_id: trader_3   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
     parser_profile: trader_3       # Opzionale — override del profilo parser
     blacklist: []     # estendere qui solo per rumore specifico del canale

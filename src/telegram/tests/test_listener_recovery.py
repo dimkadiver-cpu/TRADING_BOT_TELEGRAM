@@ -33,6 +33,7 @@ def _make_listener(config: ChannelsConfig) -> TelegramListener:
         raw_repo=MagicMock(),
         channel_resolver=MagicMock(),
         parser_pipeline=MagicMock(),
+        enrichment_processor=MagicMock(),
         logger=MagicMock(),
         channels_config=config,
     )
@@ -151,6 +152,49 @@ async def test_catchup_uses_min_id_zero_when_no_checkpoint() -> None:
     assert lst._queue.qsize() == 0
 
 
+@pytest.mark.asyncio
+async def test_catchup_skipped_when_recovery_hours_zero() -> None:
+    """recovery_max_hours=0 disables Telegram catchup entirely."""
+    channel = ChannelEntry(chat_id=-100999, label="x", active=True, trader_id=None)
+    cfg = ChannelsConfig(recovery_max_hours=0, blacklist_global=[], channels=[channel])
+    lst = _make_listener(cfg)
+
+    client = MagicMock()
+    client.get_messages = AsyncMock(return_value=[])
+
+    await lst._catchup_from_telegram(client)
+
+    client.get_messages.assert_not_called()
+    assert lst._queue.qsize() == 0
+
+
+@pytest.mark.asyncio
+async def test_catchup_uses_min_id_zero_when_one_active_topic_has_no_checkpoint() -> None:
+    """A newly enabled topic in a multi-topic chat must not inherit another topic's checkpoint."""
+    channels = [
+        ChannelEntry(chat_id=-100999, topic_id=3, label="a", active=True, trader_id="trader_a"),
+        ChannelEntry(chat_id=-100999, topic_id=8, label="t3", active=True, trader_id="trader_3"),
+    ]
+    cfg = _make_config(channels=channels)
+    lst = _make_listener(cfg)
+
+    def _last_id(_chat_id: str, topic_id: int | None = None):
+        if topic_id == 3:
+            return 6230
+        if topic_id == 8:
+            return None
+        return None
+
+    lst._status_store.get_last_telegram_message_id.side_effect = _last_id
+
+    client = MagicMock()
+    client.get_messages = AsyncMock(return_value=[])
+
+    await lst._catchup_from_telegram(client)
+
+    client.get_messages.assert_called_once_with(-100999, min_id=0, limit=200)
+
+
 # ---------------------------------------------------------------------------
 # processing_status updates in worker
 # ---------------------------------------------------------------------------
@@ -187,6 +231,8 @@ async def test_worker_sets_done_on_success() -> None:
         pass
 
     lst._process_item.assert_called_once_with(item)
+    assert lst._status_store.update.call_args_list[0].args == (5, "processing")
+    assert lst._status_store.update.call_args_list[1].args == (5, "done")
 
 
 @pytest.mark.asyncio

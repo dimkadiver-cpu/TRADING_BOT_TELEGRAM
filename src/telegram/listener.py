@@ -143,6 +143,12 @@ class TelegramListener:
         active = self._config.active_channels
         if not active and not self._fallback_ids:
             return
+        if self._config.recovery_max_hours <= 0:
+            self._logger.info(
+                "recovery catchup skipped | recovery_max_hours=%s",
+                self._config.recovery_max_hours,
+            )
+            return
         cutoff = datetime.now(timezone.utc) - timedelta(hours=self._config.recovery_max_hours)
 
         if active:
@@ -157,7 +163,13 @@ class TelegramListener:
                     self._status_store.get_last_telegram_message_id(str(chat_id), e.topic_id)
                     for e in entries
                 ]
-                min_last_id = min((x for x in per_entry_last if x is not None), default=None)
+                # If any active topic has no checkpoint yet, recover from 0 for the whole chat
+                # and let topic filtering trim the set. Otherwise a previously active topic can
+                # hide messages for a newly enabled topic in the same forum chat.
+                if any(x is None for x in per_entry_last):
+                    min_last_id = None
+                else:
+                    min_last_id = min((x for x in per_entry_last if x is not None), default=None)
                 try:
                     messages = await client.get_messages(
                         chat_id, min_id=min_last_id or 0, limit=200
@@ -187,6 +199,12 @@ class TelegramListener:
                         known_topic_ids=_known_topic_ids(entries),
                     )
                     if not self._is_allowed_message(chat_id, topic_id):
+                        self._logger.info(
+                            "catchup skipped by topic scope | chat=%s topic=%s msg_id=%s",
+                            chat_id,
+                            topic_id,
+                            msg.id,
+                        )
                         continue
                     await self._ingest_and_enqueue(
                         message=msg,
@@ -239,7 +257,9 @@ class TelegramListener:
         while True:
             item = await self._queue.get()
             try:
+                self._status_store.update(item.raw_message_id, "processing")
                 self._process_item(item)
+                self._status_store.update(item.raw_message_id, "done")
             except Exception:
                 self._logger.exception(
                     "worker: unhandled error | raw_message_id=%s",
@@ -259,6 +279,13 @@ class TelegramListener:
         topic_id = self._extract_topic_id(chat_id_raw, message)
 
         if not self._is_allowed_message(chat_id_raw, topic_id):
+            if chat_id_raw is not None and self._config.entries_for_chat(chat_id_raw):
+                self._logger.info(
+                    "message skipped by topic scope | chat=%s topic=%s msg_id=%s",
+                    chat_id_raw,
+                    topic_id,
+                    message.id,
+                )
             return
 
         if _is_media_only(message):

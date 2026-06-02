@@ -221,14 +221,9 @@ class SignalEnrichmentProcessor:
         else:
             return legs
 
-        updated = []
-        for leg in legs:
-            if leg.price is not None:
-                new_price = Price(raw=str(target), value=target)
-                updated.append(leg.model_copy(update={"price": new_price}))
-            else:
-                updated.append(leg)
-        return updated
+        first_leg = min(legs, key=lambda l: l.sequence)
+        new_price = Price(raw=str(target), value=target)
+        return [first_leg.model_copy(update={"price": new_price, "weight": 1.0})]
 
     # ── UPDATE gate (Task 7) ──────────────────────────────────────────────────
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Parser V2 Profile Builder"
+  short_description: "Build parser_v2 profiles from raw DB messages"
+  default_prompt: "Use $build-parser-v2-profile-from-raw-db to build or update a parser_v2 trader profile from raw_messages data."

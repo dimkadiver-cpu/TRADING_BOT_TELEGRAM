@@ -103,9 +103,12 @@ class RiskCapacityEngine:
             risk_amount = capital * risk.risk_pct_of_capital / 100.0
 
         # ── max capital-at-risk guard ─────────────────────────────────────────
+        # Chain con SL a BE non hanno rischio residuo: il worst case è 0 (fee già pagate).
         max_risk = capital * risk.max_capital_at_risk_per_trader_pct / 100.0
         current_open_risk = 0.0
         for c in trader_chains:
+            if c.be_protection_status == "PROTECTED":
+                continue
             try:
                 snap = json.loads(c.risk_snapshot_json)
                 current_open_risk += float(snap.get("risk_amount", 0.0))

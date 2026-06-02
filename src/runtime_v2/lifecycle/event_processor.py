@@ -101,6 +101,7 @@ class EventProcessorResult:
     new_risk_already_realized: float | None = None
     new_risk_remaining: float | None = None
     new_plan_state_json: str | None = None
+    new_risk_snapshot_json: str | None = None
     release_waiting_position: bool = False
 
 
@@ -179,11 +180,22 @@ class LifecycleEventProcessor:
         new_state: LifecycleState | None = "OPEN" if is_first_fill else None
 
         entry_event_type = "ENTRY_FILLED" if is_first_fill else "ENTRY_UPDATED"
+        filled_leg_sequence = self._find_target_leg_sequence(
+            chain.plan_state_json,
+            client_order_ids=[filled_client_order_id] if filled_client_order_id else [],
+            command_payload=filled_command_payload,
+            fallback_first_pending=True,
+        )
         entry_payload = {
             "fill_price": fill_price,
             "filled_qty": fill_qty,
             "exec_fee": ep.exec_fee,
+            "filled_leg_sequence": filled_leg_sequence,
         }
+        if ep.fee_rate is not None:
+            entry_payload["fee_rate"] = ep.fee_rate
+        if ep.exec_value is not None:
+            entry_payload["exec_value"] = ep.exec_value
         if not is_first_fill:
             entry_payload["new_avg_entry"] = new_avg
 
@@ -225,6 +237,17 @@ class LifecycleEventProcessor:
             fallback_first_pending=True,
         )
 
+        # ── Accumula fee di apertura in risk_snapshot per BE fee-correction ───
+        new_risk_snapshot_json: str | None = None
+        exec_fee = float(ep.exec_fee or 0.0)
+        if exec_fee > 0:
+            try:
+                current_residual = float(risk_snapshot.get("open_fee_residual") or 0.0)
+                risk_snapshot["open_fee_residual"] = current_residual + exec_fee
+                new_risk_snapshot_json = json.dumps(risk_snapshot)
+            except Exception:
+                pass
+
         # ── Deferred BE: controlla se questa fill completa le averaging leg ───
         effective_plan = new_plan_state_json or chain.plan_state_json or "{}"
         deferred = _get_be_deferred_flag(effective_plan)
@@ -257,6 +280,7 @@ class LifecycleEventProcessor:
             new_risk_already_realized=new_risk_already_realized,
             new_risk_remaining=new_risk_remaining,
             new_plan_state_json=new_plan_state_json,
+            new_risk_snapshot_json=new_risk_snapshot_json,
             release_waiting_position=is_first_fill,
         )
 
@@ -333,6 +357,30 @@ class LifecycleEventProcessor:
                 new_status,
             )
         return updated
+
+    def _find_target_leg_sequence(
+        self,
+        plan_state_json: str,
+        *,
+        client_order_ids: list[str],
+        command_payload: dict | None = None,
+        fallback_first_pending: bool = False,
+    ) -> int | None:
+        try:
+            plan = json.loads(plan_state_json or "{}")
+        except Exception:
+            return None
+        legs = plan.get("legs", [])
+        target_legs = [
+            leg for leg in legs
+            if leg.get("client_order_id") in client_order_ids and leg.get("status") == "PENDING"
+        ]
+        if not target_legs and command_payload:
+            target_legs = self._match_pending_legs_by_command_payload(legs, command_payload)
+        if not target_legs and fallback_first_pending:
+            pending = [leg for leg in legs if leg.get("status") == "PENDING"]
+            target_legs = pending if len(pending) == 1 else []
+        return target_legs[0].get("sequence") if target_legs else None
 
     def _should_fallback_cancel_by_sequence(
         self,
