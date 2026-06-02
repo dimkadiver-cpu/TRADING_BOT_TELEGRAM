@@ -41,13 +41,15 @@ def _finalize(lines: list[str]) -> str:
     return "\n".join(sep if line == _SEP else line for line in lines)
 
 
-def _header(emoji: str, chain_id, event_label: str, symbol, side) -> list[str]:
-    return [
-        f"{emoji} #{chain_id} \u2014 {event_label}",
-        _SEP,
-        f"{symbol} \u2014 {_side_emoji(side)} {side}",
-        "",
-    ]
+def _header(
+    emoji: str, chain_id, event_label: str, symbol, side, *, signal_link: str | None = None
+) -> list[str]:
+    lines: list[str] = [f"{emoji} #{chain_id} \u2014 {event_label}", _SEP]
+    lines.append(f"{symbol} \u2014 {_side_emoji(side)} {side}")
+    if signal_link:
+        lines.append(signal_link)
+    lines.append(_SEP)
+    return lines
 
 
 def _footer(source: str, link: str | None = None, trader_id: str | None = None) -> list[str]:
@@ -106,7 +108,6 @@ def _signal_accepted(p: dict) -> str:
         lines.append(f"TP_{i}: {_num(tp)}")
     if p.get("risk_pct") is not None:
         lines.append(f"Risk: {p['risk_pct']}%")
-    lines.append("")
     lines += _footer(p.get("source", "original_message"), p.get("link"), trader_id=p.get("trader_id"))
     return _finalize(lines)
 
@@ -141,13 +142,12 @@ def _review_required(p: dict) -> str:
     lines = _header("\u26a0\ufe0f", p.get("chain_id"), "REVIEW REQUIRED", p.get("symbol"), p.get("side"))
     lines.append(f"Reason: {p.get('reason', 'unknown')}")
     lines.append("Action: no automatic execution")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _entry_opened(p: dict) -> str:
-    lines = _header("\U0001f4ca", p.get("chain_id"), "ENTRY OPENED", p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f4ca", p.get("chain_id"), "ENTRY OPENED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("fill_price") is not None or p.get("filled_qty") is not None:
         lines.append("Filled:")
         if p.get("fill_price") is not None:
@@ -168,8 +168,7 @@ def _entry_opened(p: dict) -> str:
                 lines.append(f"Pending: Entry_{seq} {price_str} {etype.capitalize()}")
         else:
             lines.append("Pending: none")
-        lines.append("")
-    lines += _footer(p.get("source", "exchange"))
+        lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
@@ -178,7 +177,7 @@ def _tp_filled(p: dict, final: bool) -> str:
     label = f"TP{level} FILLED" if level is not None else "TP FILLED"
     if final:
         label += " \u2014 POSITION CLOSED"
-    lines = _header("\U0001f4ca", p.get("chain_id"), label, p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f4ca", p.get("chain_id"), label, p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if level is not None:
         tp_label = f"TP_{level}"
         display_price = p.get("fill_price") if p.get("fill_price") is not None else p.get("tp_price")
@@ -201,19 +200,15 @@ def _tp_filled(p: dict, final: bool) -> str:
             lines.append(f"SL: {_num(p['sl_current'])}{be_suffix}")
         if p.get("remaining_pct") is not None:
             lines.append(f"Position: {_fmt_pct(p['remaining_pct'])}")
-        lines.append("")
     if final:
         lines.append("Close reason: TAKE_PROFIT")
-        lines.append("")
     lines += _final_result_lines(p.get("final_result"))
-    if p.get("final_result"):
-        lines.append("")
     lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
 def _sl_filled(p: dict) -> str:
-    lines = _header("\U0001f6d1", p.get("chain_id"), "SL FILLED \u2014 POSITION CLOSED", p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f6d1", p.get("chain_id"), "SL FILLED \u2014 POSITION CLOSED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     sl_price = p.get("sl_price", p.get("fill_price"))
     if sl_price is not None:
         lines.append(f"SL: {_num(sl_price)}")
@@ -225,16 +220,13 @@ def _sl_filled(p: dict) -> str:
         lines.append(f"Fee: {_fmt_money(p['fee'])}")
     lines.append("")
     lines.append("Close reason: STOP_LOSS")
-    lines.append("")
     lines += _final_result_lines(p.get("final_result"))
-    if p.get("final_result"):
-        lines.append("")
     lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
 def _position_closed(p: dict) -> str:
-    lines = _header("\U0001f4ca", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f4ca", p.get("chain_id"), "POSITION CLOSED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("fill_price") is not None:
         lines.append(f"Price: {_num(p['fill_price'])}")
     lines.append(f"Close reason: {p.get('close_reason', 'MANUAL_CLOSE')}")
@@ -242,16 +234,13 @@ def _position_closed(p: dict) -> str:
         lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
     if p.get("fee") is not None:
         lines.append(f"Fee: {_fmt_money(p['fee'])}")
-    lines.append("")
     lines += _final_result_lines(p.get("final_result"))
-    if p.get("final_result"):
-        lines.append("")
     lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
 def _entry_updated(p: dict) -> str:
-    lines = _header("\u270f\ufe0f", p.get("chain_id"), "ENTRY UPDATED", p.get("symbol"), p.get("side"))
+    lines = _header("\u270f\ufe0f", p.get("chain_id"), "ENTRY UPDATED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("fill_price") is not None or p.get("filled_qty") is not None:
         lines.append("Filled:")
         if p.get("fill_price") is not None:
@@ -273,13 +262,12 @@ def _entry_updated(p: dict) -> str:
             lines.append(f"Pending: Entry_{seq} {price_str} {etype.capitalize()}")
     else:
         lines.append("Pending: none")
-    lines.append("")
     lines += _footer(p.get("source", "exchange"), p.get("link"))
     return _finalize(lines)
 
 
 def _update_done(p: dict) -> str:
-    lines = _header("\u2705", p.get("chain_id"), "UPDATE DONE", p.get("symbol"), p.get("side"))
+    lines = _header("\u2705", p.get("chain_id"), "UPDATE DONE", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     operations = p.get("operations") or p.get("applied_actions") or []
     if operations:
         lines.append("Operation:")
@@ -305,13 +293,12 @@ def _update_done(p: dict) -> str:
         lines.append("Changed fields:")
         for field in changed_fields:
             lines.append(f"  \u2022 {field}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _update_partial(p: dict) -> str:
-    lines = _header("\u26a0\ufe0f", p.get("chain_id"), "UPDATE PARTIAL", p.get("symbol"), p.get("side"))
+    lines = _header("\u26a0\ufe0f", p.get("chain_id"), "UPDATE PARTIAL", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     applied = p.get("applied_actions") or []
     if applied:
         lines.append("Applied:")
@@ -322,61 +309,55 @@ def _update_partial(p: dict) -> str:
         lines.append("Rejected:")
         for action in rejected:
             lines.append(f"  \u2022 {action}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _update_rejected(p: dict) -> str:
-    lines = _header("\u274c", p.get("chain_id"), "UPDATE REJECTED", p.get("symbol"), p.get("side"))
+    lines = _header("\u274c", p.get("chain_id"), "UPDATE REJECTED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("reason") is not None:
         lines.append(f"Reason: {p['reason']}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _pending_timeout(p: dict) -> str:
-    lines = _header("\u23f0", p.get("chain_id"), "PENDING ENTRY EXPIRED", p.get("symbol"), p.get("side"))
+    lines = _header("\u23f0", p.get("chain_id"), "PENDING ENTRY EXPIRED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     lines.append("Timeout: order expired before fill")
-    lines.append("")
     lines += _footer(p.get("source", "worker"), p.get("link"))
     return _finalize(lines)
 
 
 def _reconciliation_warning(p: dict) -> str:
-    lines = _header("\u26a0\ufe0f", p.get("chain_id"), "RECONCILIATION WARNING", p.get("symbol"), p.get("side"))
+    lines = _header("\u26a0\ufe0f", p.get("chain_id"), "RECONCILIATION WARNING", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("issue") is not None:
         lines.append(f"Issue: {p['issue']}")
     if p.get("risk") is not None:
         lines.append(f"Risk: {p['risk']}")
     if p.get("action") is not None:
         lines.append(f"Action: {p['action']}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _reconciliation_fixed(p: dict) -> str:
-    lines = _header("\u2705", p.get("chain_id"), "RECONCILIATION FIXED", p.get("symbol"), p.get("side"))
+    lines = _header("\u2705", p.get("chain_id"), "RECONCILIATION FIXED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("issue") is not None:
         lines.append(f"Issue resolved: {p['issue']}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _reentry_accepted(p: dict) -> str:
-    lines = _header("\U0001f504", p.get("chain_id"), "REENTRY ACCEPTED", p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f504", p.get("chain_id"), "REENTRY ACCEPTED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("previous_chain_id") is not None:
         lines.append(f"Previous chain: #{p['previous_chain_id']}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _entry_cancelled(p: dict) -> str:
-    lines = _header("\u26a0\ufe0f", p.get("chain_id"), "ENTRY CANCELLED", p.get("symbol"), p.get("side"))
+    lines = _header("\u26a0\ufe0f", p.get("chain_id"), "ENTRY CANCELLED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     cancelled = p.get("cancelled_entry") or {}
     seq = cancelled.get("sequence", "?")
     price = cancelled.get("price")
@@ -394,13 +375,12 @@ def _entry_cancelled(p: dict) -> str:
         symbol = p.get("symbol", "")
         base_asset = symbol.split("/")[0] if "/" in symbol else symbol
         lines.append(f"Total filled: {_num(p['total_filled_qty'])} {base_asset}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
 def _be_exit(p: dict) -> str:
-    lines = _header("\u26a1", p.get("chain_id"), "BE EXIT", p.get("symbol"), p.get("side"))
+    lines = _header("\u26a1", p.get("chain_id"), "BE EXIT", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("exit_price") is not None:
         lines.append(f"Exit: {_num(p['exit_price'])} BE")
     lines.append(f"Close reason: {p.get('close_reason', 'BREAKEVEN_AFTER_TP')}")
@@ -411,20 +391,18 @@ def _be_exit(p: dict) -> str:
     lines.append("")
     lines += _final_result_lines(p.get("final_result"))
     if p.get("final_result"):
-        lines.append("")
-    lines += _footer(p.get("source", "exchange"))
+        lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
 
 def _cancel_failed(p: dict) -> str:
-    lines = _header("\U0001f6a8", p.get("chain_id"), "CANCEL FAILED", p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f6a8", p.get("chain_id"), "CANCEL FAILED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     entry_ref = p.get("entry_ref", "entry")
     attempts = p.get("attempts", 3)
     lines.append(f"Cancellation of {entry_ref} failed after {attempts} attempts.")
     lines.append("Requires manual review required to resolve the position.")
     if p.get("entry_price") is not None:
         lines.append(f"Entry price: {_num(p['entry_price'])}")
-    lines.append("")
     lines += _footer(p.get("source", "timeout_worker"))
     return _finalize(lines)
 
@@ -433,7 +411,7 @@ def _tp_batch_filled(p: dict) -> str:
     targets = p.get("targets") or []
     labels = [f"TP{target.get('tp_level', '?')}" for target in targets if target.get("tp_level")]
     title = " + ".join(labels) + " FILLED" if labels else "TP BATCH FILLED"
-    lines = _header("\U0001f4ca", p.get("chain_id"), title, p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f4ca", p.get("chain_id"), title, p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if targets:
         lines.append("Filled targets:")
         for target in targets:
@@ -449,7 +427,6 @@ def _tp_batch_filled(p: dict) -> str:
         lines.append(f"Total: {_fmt_money(p['total_pnl'], signed=True)}")
     if p.get("total_fees") is not None:
         lines.append(f"Fees: {_fmt_money(p['total_fees'])}")
-    lines.append("")
     lines += _footer(p.get("source", "exchange"))
     return _finalize(lines)
 
@@ -472,13 +449,12 @@ def _multi_chain_update(p: dict) -> str:
     if summary:
         lines.append("")
         lines.append(f"Done: {summary.get('done', 0)}  Rejected: {summary.get('rejected', 0)}")
-    lines.append("")
     lines += _footer(p.get("source", "runtime"))
     return _finalize(lines)
 
 
 def _fallback(notification_type: str, p: dict) -> str:
-    lines = _header("\U0001f4ca", p.get("chain_id"), notification_type, p.get("symbol"), p.get("side"))
+    lines = _header("\U0001f4ca", p.get("chain_id"), notification_type, p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     lines += _footer(p.get("source", "runtime"))
     return _finalize(lines)
 

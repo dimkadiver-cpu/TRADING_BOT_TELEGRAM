@@ -56,8 +56,6 @@ def _accumulate_pnl_for_events(
         return
     side = str(row[0] or "").upper()
     entry_avg_price = row[1]
-    if entry_avg_price is None:
-        return
     side_sign = 1.0 if side == "LONG" else -1.0
     gross_total = 0.0
     fee_total = 0.0
@@ -67,12 +65,12 @@ def _accumulate_pnl_for_events(
         except json.JSONDecodeError:
             continue
         if event.event_type in _PNL_EVENT_TYPES:
-            fill_price = payload.get("fill_price")
-            closed_qty = payload.get("closed_size", payload.get("filled_qty"))
-            if fill_price is None or closed_qty is None:
-                continue
-            gross_total += float(closed_qty) * (float(fill_price) - float(entry_avg_price)) * side_sign
             fee_total += float(payload.get("exec_fee") or 0.0)
+            if entry_avg_price is not None:
+                fill_price = payload.get("fill_price")
+                closed_qty = payload.get("closed_size", payload.get("filled_qty"))
+                if fill_price is not None and closed_qty is not None:
+                    gross_total += float(closed_qty) * (float(fill_price) - float(entry_avg_price)) * side_sign
         elif event.event_type in _ENTRY_FEE_EVENT_TYPES:
             fee_total += float(payload.get("exec_fee") or 0.0)
     if gross_total != 0.0 or fee_total != 0.0:

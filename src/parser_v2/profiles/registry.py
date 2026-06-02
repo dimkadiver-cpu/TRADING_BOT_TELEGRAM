@@ -4,11 +4,13 @@ from src.parser_v2.core.runtime import TraderParserProfile
 from src.parser_v2.profiles.trader_a.profile import TraderAProfile
 from src.parser_v2.profiles.trader_b.profile import TraderBProfile
 from src.parser_v2.profiles.trader_c.profile import TraderCProfile
+from src.parser_v2.profiles.trader_prova.profile import TraderProvaProfile
 
 _PROFILE_FACTORIES: dict[str, type] = {
     "trader_a": TraderAProfile,
     "trader_b": TraderBProfile,
     "trader_c": TraderCProfile,
+    "trader_prova": TraderProvaProfile,
 }
 
 _ALIASES: dict[str, str] = {
@@ -21,6 +23,7 @@ _ALIASES: dict[str, str] = {
     "tc": "trader_c",
     "c": "trader_c",
     "trader_c": "trader_c",
+    "trader_prova": "trader_prova",
 }
 
 

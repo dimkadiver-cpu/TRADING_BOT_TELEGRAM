@@ -41,6 +41,7 @@ registered_traders:
   - trader_b
   - trader_c
   - trader_d
+  - trader_prova
 
 symbol_blacklist:
   global: []  # Simboli bloccati per tutti i trader.

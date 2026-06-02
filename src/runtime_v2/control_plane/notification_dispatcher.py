@@ -211,49 +211,22 @@ class TelegramNotificationDispatcher:
         except Exception as exc:  # noqa: BLE001
             logger.warning("rate limit warning send failed: %s", exc)
 
-    def _get_clean_log_tracking(self, chain_id: int) -> dict | None:
-        """Return tracking row for chain_id, or None if not exists."""
+    # ── CLEAN_LOG tracking (root message ID per chain) ──────────────────────
+
+    _SIGNAL_TYPES: frozenset[str] = frozenset({"SIGNAL_ACCEPTED", "SIGNAL_REJECTED", "REVIEW_REQUIRED"})
+
+    def _get_clean_log_root(self, chain_id: int) -> tuple[str | None, str | None]:
+        """Return (root_message_id, telegram_chat_id) for chain_id, or (None, None)."""
         conn = sqlite3.connect(self._ops_db)
         try:
             row = conn.execute(
-                "SELECT clean_log_root_message_id, clean_log_last_message_id "
+                "SELECT clean_log_root_message_id, telegram_chat_id "
                 "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
                 (chain_id,),
             ).fetchone()
             if row:
-                return {"root": row[0], "last": row[1]}
-            return None
-        finally:
-            conn.close()
-
-    def _resolve_clean_log_reply_target(
-        self, chain_id: int | None, notification_type: str, payload: dict
-    ) -> str | None:
-        """Determine reply_to_message_id for a CLEAN_LOG send.
-
-        Rule:
-        - same chain + same update_group_id => reply to last message
-        - otherwise => reply to root if root exists, else None (this becomes the root)
-        """
-        if chain_id is None:
-            return None
-        tracking = self._get_clean_log_tracking(chain_id)
-        if tracking is None:
-            return None  # First message — no root yet
-        update_group_id = payload.get("update_group_id")
-        if update_group_id and tracking.get("last"):
-            return tracking["last"]
-        return tracking.get("root")
-
-    def _clear_clean_log_tracking(self, chain_id: int) -> None:
-        """Remove stale tracking row so next send starts a fresh root."""
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            conn.execute(
-                "DELETE FROM ops_clean_log_tracking WHERE trade_chain_id=?",
-                (chain_id,),
-            )
-            conn.commit()
+                return str(row[0]) if row[0] else None, str(row[1]) if row[1] else None
+            return None, None
         finally:
             conn.close()
 
@@ -265,7 +238,6 @@ class TelegramNotificationDispatcher:
         thread_id: int | None,
         sent_message_id: str | None,
     ) -> None:
-        """Persist root/last tracking after a CLEAN_LOG send."""
         if chain_id is None or sent_message_id is None:
             return
         conn = sqlite3.connect(self._ops_db)
@@ -283,14 +255,9 @@ class TelegramNotificationDispatcher:
                         last_clean_log_sent_at, updated_at)
                        VALUES (?,?,?,?,?,?,?,?)""",
                     (
-                        chain_id,
-                        sent_message_id,
-                        sent_message_id,
-                        str(chat_id),
-                        str(thread_id) if thread_id is not None else None,
-                        notification_type,
-                        now,
-                        now,
+                        chain_id, sent_message_id, sent_message_id,
+                        str(chat_id), str(thread_id) if thread_id is not None else None,
+                        notification_type, now, now,
                     ),
                 )
             else:
@@ -304,6 +271,13 @@ class TelegramNotificationDispatcher:
             conn.commit()
         finally:
             conn.close()
+
+    def _build_signal_link(self, root_message_id: str | None, tracking_chat_id: str | None) -> str | None:
+        """Build a t.me/c/ link to the SIGNAL_ACCEPTED clean log message."""
+        if not root_message_id or not tracking_chat_id:
+            return None
+        normalized = str(tracking_chat_id).removeprefix("-100")
+        return f"https://t.me/c/{normalized}/{root_message_id}"
 
     def _render(self, destination: str, notification_type: str, payload: dict) -> str:
         if destination == "CLEAN_LOG":
@@ -349,44 +323,21 @@ class TelegramNotificationDispatcher:
 
             try:
                 chat_id, thread_id = self._router.route(destination)
+                if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
+                    chain_id = payload.get("chain_id")
+                    if chain_id is not None:
+                        root_msg_id, tracking_chat_id = self._get_clean_log_root(chain_id)
+                        link = self._build_signal_link(root_msg_id, tracking_chat_id)
+                        if link:
+                            payload = {**payload, "signal_link": link}
                 text = self._render(destination, notification_type, payload)
                 silent = self._is_silent(notification_type)
+                sent_message_id = await self._sender.send(
+                    chat_id=chat_id, thread_id=thread_id, text=text, silent=silent
+                )
                 if destination == "CLEAN_LOG":
-                    chain_id = payload.get("chain_id")
-                    reply_to = self._resolve_clean_log_reply_target(
-                        chain_id, notification_type, payload
-                    )
-                    try:
-                        message_id = await self._sender.send(
-                            chat_id=chat_id,
-                            thread_id=thread_id,
-                            text=text,
-                            silent=silent,
-                            reply_to_message_id=reply_to,
-                        )
-                    except Exception as reply_exc:
-                        if reply_to is not None and "replied not found" in str(reply_exc).lower():
-                            logger.warning(
-                                "clean_log chain=%s: reply target %s not found — clearing tracking and retrying",
-                                chain_id,
-                                reply_to,
-                            )
-                            if chain_id is not None:
-                                self._clear_clean_log_tracking(chain_id)
-                            message_id = await self._sender.send(
-                                chat_id=chat_id,
-                                thread_id=thread_id,
-                                text=text,
-                                silent=silent,
-                            )
-                        else:
-                            raise
                     self._update_clean_log_tracking(
-                        chain_id, notification_type, chat_id, thread_id, message_id
-                    )
-                else:
-                    await self._sender.send(
-                        chat_id=chat_id, thread_id=thread_id, text=text, silent=silent
+                        payload.get("chain_id"), notification_type, chat_id, thread_id, sent_message_id
                     )
                 self._mark_sent(notification_id)
                 sent += 1
