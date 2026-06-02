@@ -1701,7 +1701,11 @@ def test_close_full_filled_emits_cancel_pending_entry_command():
 
 
 def test_processor_with_full_ws_payload():
-    """Processor processes a TP_FILLED event with full ExchangeEventPayload (WS shape)."""
+    """Processor processes a TP_FILLED event with full ExchangeEventPayload (WS shape).
+
+    Verifies that ExchangeEventPayload is correctly parsed (not trivially passing).
+    Chain starts with open_position_qty=0.01; fill_qty=0.01 → CLOSED.
+    """
     import json
     from src.runtime_v2.execution_gateway.event_ingest.payload import ExchangeEventPayload
 
@@ -1720,10 +1724,13 @@ def test_processor_with_full_ws_payload():
         event_type="TP_FILLED",
         payload=json.loads(ep.model_dump_json()),
     )
-    chain = _make_chain(state="OPEN")
+    # Chain has open_position_qty=0.01 — must match fill_qty to produce CLOSED
+    chain = _make_chain(state="OPEN").model_copy(update={"open_position_qty": 0.01})
     from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
     processor = LifecycleEventProcessor()
     result = processor.process(event, chain, active_commands=[])
+    # fill_qty=0.01 equals open_position_qty=0.01 → final fill → CLOSED
     assert result.new_lifecycle_state == "CLOSED"
+    # Verify exec_fee propagated from typed payload into lifecycle event
     lc_payload = json.loads(result.lifecycle_events[0].payload_json)
     assert lc_payload["exec_fee"] == 0.275
