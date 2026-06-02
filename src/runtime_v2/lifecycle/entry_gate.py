@@ -96,6 +96,15 @@ _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE: dict[str, str] = {
     "manual_command": "manual_command",
 }
 
+_ACTION_LABELS: dict[str, str] = {
+    "MOVE_SL_TO_BE": "Move SL to BE",
+    "CANCEL_PENDING": "Cancel pending",
+    "CLOSE_FULL": "Close full",
+    "CLOSE_PARTIAL": "Close partial",
+    "MODIFY_ENTRIES": "Modify entries",
+    "MARKET_ENTRY_NOW": "Market entry now",
+}
+
 
 def _write_update_clean_log(
     conn,
@@ -119,6 +128,17 @@ def _write_update_clean_log(
     applied_actions: list[str] = []
     rejected_actions: list[str] = [e.event_type for e in noops]
     changed: list[dict] = []
+    reason: str | None = None
+
+    for event in noops:
+        try:
+            noop_payload = json.loads(event.payload_json or "{}")
+        except Exception:
+            noop_payload = {}
+        noop_reason = noop_payload.get("reason")
+        if noop_reason:
+            reason = str(noop_reason)
+            break
 
     for e in accepted:
         try:
@@ -152,8 +172,6 @@ def _write_update_clean_log(
                     "new": f"closed {close_pct}%",
                 })
         elif action == "MODIFY_ENTRIES":
-            # changed_entries key populated by a future enrichment of _apply_modify_entries;
-            # silently no-ops until then.
             for ce in p.get("changed_entries", []):
                 changed.append({
                     "field": f"Entry_{ce.get('sequence', '?')}",
@@ -181,12 +199,77 @@ def _write_update_clean_log(
         "source": source,
         "link": link,
     }
+    if reason is not None:
+        payload["reason"] = reason
     write_clean_log_event(
         conn,
         notification_type=notif_type,
         chain_id=cr.trade_chain_id,
         payload=payload,
         dedupe_key=f"clean:update:{canonical_message_id}:{cr.trade_chain_id}",
+    )
+
+
+def _write_multi_chain_summary(
+    conn,
+    chain_results: list["UpdateChainResult"],
+    canonical_message_id: int,
+) -> None:
+    chains_payload: list[dict] = []
+    operations_seen: list[str] = []
+    seen_operations: set[str] = set()
+
+    for cr in chain_results:
+        if not cr.trade_chain_id:
+            continue
+
+        accepted = [e for e in cr.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"]
+        noops = [e for e in cr.lifecycle_events if e.event_type.startswith("NOOP_")]
+        reviews = [e for e in cr.lifecycle_events if e.event_type == "REVIEW_REQUIRED"]
+        if not accepted and not noops and not reviews:
+            continue
+
+        if accepted and not noops and not reviews:
+            status = "DONE"
+        elif accepted:
+            status = "PARTIAL"
+        else:
+            status = "SKIPPED"
+
+        for event in accepted:
+            try:
+                action = json.loads(event.payload_json or "{}").get("action", "")
+            except Exception:
+                action = ""
+            label = _ACTION_LABELS.get(action, action)
+            if label and label not in seen_operations:
+                seen_operations.add(label)
+                operations_seen.append(label)
+
+        row = conn.execute(
+            "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+            (cr.trade_chain_id,),
+        ).fetchone()
+        chains_payload.append({
+            "chain_id": cr.trade_chain_id,
+            "symbol": row[0] if row else None,
+            "side": row[1] if row else None,
+            "status": status,
+        })
+
+    if len(chains_payload) < 2:
+        return
+
+    write_clean_log_event(
+        conn,
+        notification_type="MULTI_CHAIN_SUMMARY",
+        chain_id=None,
+        payload={
+            "operations": operations_seen,
+            "chains": chains_payload,
+            "source": "trader_update",
+        },
+        dedupe_key=f"clean:multi_summary:{canonical_message_id}",
     )
 
 
@@ -644,6 +727,7 @@ class LifecycleEntryGate:
 
         chain_id = chain.trade_chain_id
         cmid = enriched.canonical_message_id
+        changed_entries: list[dict] = []
 
         try:
             risk_snap = json.loads(chain.risk_snapshot_json or "{}")
@@ -663,6 +747,12 @@ class LifecycleEntryGate:
         current_market_price = risk_snap.get("entry_price")
 
         try:
+            current_plan = json.loads(chain.plan_state_json or "{}")
+            current_legs_by_sequence = {
+                int(leg["sequence"]): leg
+                for leg in current_plan.get("legs", [])
+                if leg.get("sequence") is not None
+            }
             target_plan_json = self._build_target_plan_from_modify_entries(chain, action)
             diff_actions = ExecutionPlanDiffEngine().diff(
                 chain.plan_state_json,
@@ -702,13 +792,28 @@ class LifecycleEntryGate:
                     ))
                 except Exception:
                     return self._review_chain(enriched, chain, "modify_entries_cmd_build_failed")
+                # changed_entries is intentionally derived from the replace_entry_leg path:
+                # in the current diff engine contract, that opcode is the concrete signal
+                # that a pending entry price was actually changed and replaced.
+                current_leg = current_legs_by_sequence.get(diff_action["sequence"], {})
+                old_price = current_leg.get("price")
+                new_price = diff_action.get("new_price")
+                if old_price is not None and new_price is not None and old_price != new_price:
+                    changed_entries.append({
+                        "sequence": diff_action["sequence"],
+                        "old_price": old_price,
+                        "new_price": new_price,
+                    })
 
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
             source_type="telegram_update",
             source_id=str(cmid),
-            payload_json=json.dumps({"action": "MODIFY_ENTRIES"}),
+            payload_json=json.dumps({
+                "action": "MODIFY_ENTRIES",
+                "changed_entries": changed_entries,
+            }),
             idempotency_key=f"update_modify_entries:{chain_id}:{cmid}",
         )
         return UpdateChainResult(
@@ -1878,6 +1983,13 @@ class LifecycleGateWorker:
                             logger.exception(
                                 "update clean_log synthesis failed for chain %s", cr.trade_chain_id
                             )
+                try:
+                    _write_multi_chain_summary(conn, result.chain_results, enriched.canonical_message_id)
+                except Exception:
+                    logger.exception(
+                        "multi_chain_summary failed for canonical_message_id=%s",
+                        enriched.canonical_message_id,
+                    )
         finally:
             conn.close()
 

@@ -1,6 +1,7 @@
 # tests/runtime_v2/control_plane/test_dispatcher.py
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -357,3 +358,40 @@ async def test_dispatcher_ignores_suppressed_rows(ops_db):
     disp = _dispatcher(ops_db, sender)
     result = await disp.drain_once()
     assert result == 0
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_enriches_multi_chain_summary_with_links(ops_db):
+    conn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (42, "10", "55", "-10012345", None, "UPDATE_DONE", now, now),
+        )
+        conn.execute(
+            "INSERT INTO ops_notification_outbox "
+            "(notification_type, destination, payload_json, priority, status, dedupe_key, attempts, created_at) "
+            "VALUES ('MULTI_CHAIN_SUMMARY', 'CLEAN_LOG', ?, 'MEDIUM', 'PENDING', 'test:mcs:1', 0, ?)",
+            (
+                json.dumps({
+                    "operations": ["Move SL to BE"],
+                    "chains": [
+                        {"chain_id": 42, "symbol": "BTC/USDT", "side": "LONG", "status": "DONE"},
+                    ],
+                }),
+                now,
+            ),
+        )
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    n = await disp.drain_once()
+
+    assert n == 1
+    assert len(sender.sent) == 1
+    assert "t.me/c/12345/55" in sender.sent[0]["text"]

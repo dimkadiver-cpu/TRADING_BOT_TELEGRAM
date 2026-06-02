@@ -324,6 +324,21 @@ def _update_partial(p: dict) -> str:
         lines.append("Applied:")
         for action in applied:
             lines.append(f"  \u2022 {action}")
+    changed = p.get("changed") or []
+    if changed:
+        lines.append("Changed:")
+        for item in changed:
+            if isinstance(item, dict):
+                field = item.get("field", "?")
+                value = f"{_num(item.get('old'))} -> {_num(item.get('new'))}"
+                note = item.get("note")
+                if note:
+                    lines.append(f"{field}: {value} *")
+                    lines.append(f"* {note}")
+                else:
+                    lines.append(f"{field}: {value}")
+            else:
+                lines.append(f"{_BULLET} {item}")
     rejected = p.get("rejected_actions") or []
     if rejected:
         lines.append("Rejected:")
@@ -337,6 +352,11 @@ def _update_rejected(p: dict) -> str:
     lines = _header("\u274c", p.get("chain_id"), "UPDATE REJECTED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     if p.get("reason") is not None:
         lines.append(f"Reason: {p['reason']}")
+    rejected = p.get("rejected_actions") or []
+    if rejected:
+        lines.append("Rejected:")
+        for action in rejected:
+            lines.append(f"  \u2022 {action}")
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
@@ -428,24 +448,42 @@ def _cancel_failed(p: dict) -> str:
     return _finalize(lines)
 
 
-def _multi_chain_update(p: dict) -> str:
-    lines = _header("\u2705", None, "UPDATE APPLIED - MULTI CHAIN", None, None)
+def _multi_chain_summary(p: dict) -> str:
+    chains = p.get("chains") or []
+    statuses = {chain.get("status") for chain in chains}
+    has_issues = bool(statuses & {"PARTIAL", "SKIPPED"})
+    emoji = "⚠️" if has_issues else "✅"
+    lines = [f"{emoji} UPDATE APPLICATO - {len(chains)} chain", _SEP]
+
     operations = p.get("operations") or []
     if operations:
         lines.append("Operation:")
         for op in operations:
             lines.append(f"{_BULLET} {op}")
-    chains = p.get("chains") or []
+
+    lines.append(_SEP)
     if chains:
-        lines.append("")
         for chain in chains:
-            lines.append(
-                f"#{chain.get('chain_id', '?')} {chain.get('symbol', '?')} {chain.get('side', '')} - {chain.get('status', 'DONE')}"
+            side = chain.get("side")
+            link = chain.get("link")
+            line = (
+                f"#{chain.get('chain_id', '?')} {chain.get('symbol', '?')} "
+                f"{_side_emoji(side)} {side}  {chain.get('status', 'DONE')}"
             )
-    summary = p.get("summary") or {}
-    if summary:
-        lines.append("")
-        lines.append(f"Done: {summary.get('done', 0)}  Rejected: {summary.get('rejected', 0)}")
+            if link:
+                line += f"  -> {link}"
+            lines.append(line)
+
+    lines.append(_SEP)
+    done = sum(1 for chain in chains if chain.get("status") == "DONE")
+    partial = sum(1 for chain in chains if chain.get("status") == "PARTIAL")
+    skipped = sum(1 for chain in chains if chain.get("status") == "SKIPPED")
+    summary_parts = [f"Done: {done}"]
+    if partial:
+        summary_parts.append(f"Partial: {partial}")
+    if skipped:
+        summary_parts.append(f"Skipped: {skipped}")
+    lines.append("   ".join(summary_parts))
     lines += _footer(p.get("source", "runtime"))
     return _finalize(lines)
 
@@ -495,8 +533,10 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _be_exit(payload)
     if notification_type == "CANCEL_FAILED":
         return _cancel_failed(payload)
+    if notification_type == "MULTI_CHAIN_SUMMARY":
+        return _multi_chain_summary(payload)
     if notification_type in ("MULTI_CHAIN_UPDATE", "MULTI_CHAIN_CLOSED"):
-        return _multi_chain_update(payload)
+        return _multi_chain_summary(payload)
     return _fallback(notification_type, payload)
 
 

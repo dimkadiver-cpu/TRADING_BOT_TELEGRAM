@@ -230,6 +230,21 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
+    def _get_clean_log_last(self, chain_id: int) -> tuple[str | None, str | None]:
+        """Return (last_message_id, telegram_chat_id) for chain_id, or (None, None)."""
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            row = conn.execute(
+                "SELECT clean_log_last_message_id, telegram_chat_id "
+                "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                (chain_id,),
+            ).fetchone()
+            if row:
+                return str(row[0]) if row[0] else None, str(row[1]) if row[1] else None
+            return None, None
+        finally:
+            conn.close()
+
     def _update_clean_log_tracking(
         self,
         chain_id: int | None,
@@ -330,6 +345,18 @@ class TelegramNotificationDispatcher:
                         link = self._build_signal_link(root_msg_id, tracking_chat_id)
                         if link:
                             payload = {**payload, "signal_link": link}
+                if destination == "CLEAN_LOG" and notification_type == "MULTI_CHAIN_SUMMARY":
+                    chains = []
+                    for chain in payload.get("chains", []):
+                        enriched_chain = dict(chain)
+                        chain_id = enriched_chain.get("chain_id")
+                        if chain_id is not None:
+                            last_msg_id, tracking_chat_id = self._get_clean_log_last(chain_id)
+                            link = self._build_signal_link(last_msg_id, tracking_chat_id)
+                            if link:
+                                enriched_chain["link"] = link
+                        chains.append(enriched_chain)
+                    payload = {**payload, "chains": chains}
                 text = self._render(destination, notification_type, payload)
                 silent = self._is_silent(notification_type)
                 sent_message_id = await self._sender.send(

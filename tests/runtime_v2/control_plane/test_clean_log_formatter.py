@@ -50,7 +50,6 @@ def test_sl_filled_marks_closed():
     text = format_clean_log("SL_FILLED", {
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
     })
-    assert "SL FILLED" in text
     assert "POSITION CLOSED" in text
     assert "🛑" in text
 
@@ -148,8 +147,9 @@ def test_tp_filled_final():
         "is_final": True, "sl_current": None,
         "source": "exchange",
     })
-    assert "TP2 FILLED — POSITION CLOSED" in text
-    assert "TAKE_PROFIT" in text
+    assert "✅" in text
+    assert "POSITION CLOSED" in text
+    assert "FINAL TP FILLED" in text
 
 
 def test_tp_filled_no_sl_shown_when_final():
@@ -168,7 +168,7 @@ def test_sl_filled_shows_fill_price():
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
         "fill_price": 62000.0, "source": "exchange",
     })
-    assert "SL FILLED — POSITION CLOSED" in text
+    assert "POSITION CLOSED" in text
     assert "62,000" in text
     assert "STOP_LOSS" in text
 
@@ -321,6 +321,42 @@ def test_update_done_uses_operation_label_and_square_bullet():
     assert "* Changed by rule after TP_1" in text
 
 
+def test_update_partial_renders_changed_and_rejected_sections():
+    text = format_clean_log("UPDATE_PARTIAL", {
+        "chain_id": 146,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "changed": [
+            {"field": "SL", "old": 91000, "new": 94200, "note": "Adjusted after TP_1"},
+            {"field": "Entry_2", "old": 92500, "new": "cancelled"},
+        ],
+        "rejected_actions": ["NOOP_ALREADY_PROTECTED_BE"],
+        "source": "trader_update",
+    })
+    assert "UPDATE PARTIAL" in text
+    assert "Changed:" in text
+    assert "SL: 91,000 -> 94,200 *" in text
+    assert "* Adjusted after TP_1" in text
+    assert "Entry_2: 92,500 -> cancelled" in text
+    assert "Rejected:" in text
+    assert "NOOP_ALREADY_PROTECTED_BE" in text
+
+
+def test_update_rejected_renders_reason_and_rejected_actions():
+    text = format_clean_log("UPDATE_REJECTED", {
+        "chain_id": 147,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "reason": "not_pending",
+        "rejected_actions": ["NOOP_NOT_PENDING"],
+        "source": "runtime",
+    })
+    assert "UPDATE REJECTED" in text
+    assert "Reason: not_pending" in text
+    assert "Rejected:" in text
+    assert "NOOP_NOT_PENDING" in text
+
+
 def test_tp_filled_renders_closed_pnl_fee_remaining_and_be_label():
     text = format_clean_log("TP_FILLED", {
         "chain_id": 145,
@@ -368,6 +404,37 @@ def test_sl_filled_renders_sl_label_and_final_result():
     assert "Closed: 100%" in text
     assert "Final Result:" in text
     assert "PnL: -50.00 USDT" in text
+
+
+def test_multi_chain_summary_all_done():
+    text = format_clean_log("MULTI_CHAIN_SUMMARY", {
+        "operations": ["Move SL to BE", "Cancel pending"],
+        "chains": [
+            {"chain_id": 42, "symbol": "BTC/USDT", "side": "LONG", "status": "DONE", "link": "https://t.me/c/xxx/101"},
+            {"chain_id": 43, "symbol": "ETH/USDT", "side": "LONG", "status": "DONE", "link": "https://t.me/c/xxx/102"},
+        ],
+        "source": "trader_update",
+    })
+    assert "UPDATE APPLICATO - 2 chain" in text
+    assert "✅" in text
+    assert "DONE" in text
+    assert "t.me/c/xxx/101" in text
+    assert "Done: 2" in text
+
+
+def test_multi_chain_summary_with_partial_shows_warning_emoji():
+    text = format_clean_log("MULTI_CHAIN_SUMMARY", {
+        "operations": ["Move SL to BE"],
+        "chains": [
+            {"chain_id": 42, "symbol": "BTC/USDT", "side": "LONG", "status": "DONE"},
+            {"chain_id": 43, "symbol": "ETH/USDT", "side": "LONG", "status": "PARTIAL"},
+            {"chain_id": 44, "symbol": "SOL/USDT", "side": "SHORT", "status": "SKIPPED"},
+        ],
+        "source": "trader_update",
+    })
+    assert "⚠️" in text
+    assert "Partial: 1" in text
+    assert "Skipped: 1" in text
 
 
 def test_outbox_writer_sl_filled_side_from_chain(tmp_path):

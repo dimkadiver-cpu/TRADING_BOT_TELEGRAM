@@ -2076,6 +2076,130 @@ def test_entry_changing_update_leg2_replacement_stays_plain_place_entry():
     assert "attached_tpsl" not in payload
 
 
+def test_apply_modify_entries_emits_changed_entries_for_price_updates():
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, ModifyEntriesOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+    from src.parser_v2.contracts.entities import EntryLeg, Price
+    from src.runtime_v2.lifecycle.models import ExecutionCommand
+
+    plan_legs = [
+        {
+            "leg_id": "leg_1",
+            "sequence": 1,
+            "entry_type": "LIMIT",
+            "price": 50000.0,
+            "risk_budget": 50.0,
+            "qty": 0.005,
+            "qty_mode": "fixed",
+            "status": "FILLED",
+            "client_order_id": "place_entry_attached:1:leg1",
+        },
+        {
+            "leg_id": "leg_2",
+            "sequence": 2,
+            "entry_type": "LIMIT",
+            "price": 48000.0,
+            "risk_budget": 50.0,
+            "qty": 0.0167,
+            "qty_mode": "fixed",
+            "status": "PENDING",
+            "client_order_id": "place_entry:1:leg2",
+        },
+    ]
+    risk_legs = [
+        {
+            "sequence": 1,
+            "entry_type": "LIMIT",
+            "price": 50000.0,
+            "risk_amount": 50.0,
+            "qty": 0.005,
+            "qty_mode": "fixed",
+            "weight": 0.5,
+        },
+        {
+            "sequence": 2,
+            "entry_type": "LIMIT",
+            "price": 48000.0,
+            "risk_amount": 50.0,
+            "qty": 0.0167,
+            "qty_mode": "fixed",
+            "weight": 0.5,
+        },
+    ]
+    plan_state = json.dumps({
+        "plan_version": 1,
+        "rebuild_policy": "NONE",
+        "protection_policy": "TPSL_ATTACHED_FIRST_LEG",
+        "stop_loss": 49000.0,
+        "final_tp": 51000.0,
+        "intermediate_tps": [],
+        "legs": plan_legs,
+    })
+    chain = _make_open_chain(state="OPEN")
+    chain = chain.model_copy(update={
+        "execution_mode": "UNIFIED_PLAN",
+        "expected_stop_price": 49000.0,
+        "risk_snapshot_json": json.dumps({
+            "sl_price": 49000.0,
+            "risk_amount": 100.0,
+            "entry_price": 50000.0,
+            "leverage": 1,
+            "hedge_mode": False,
+            "legs": risk_legs,
+        }),
+        "plan_state_json": plan_state,
+        "risk_remaining": 50.0,
+    })
+    action = ActionItem(
+        action_type="MODIFY_ENTRIES",
+        modify_entries=ModifyEntriesOperation(
+            kind="UPDATE_PRICE",
+            entries=[
+                EntryLeg(
+                    sequence=2,
+                    entry_type="LIMIT",
+                    price=Price(raw="47000", value=47000.0),
+                )
+            ],
+        ),
+        source_intent="MODIFY_ENTRY",
+    )
+    tag = TargetActionGroup(
+        targeting=TargetHints(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"]),
+        actions=[action],
+    )
+    enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
+    enriched.enriched_actions = [tag]
+    active_cmds = [
+        ExecutionCommand(
+            trade_chain_id=chain.trade_chain_id,
+            command_type="PLACE_ENTRY",
+            payload_json="{}",
+            idempotency_key="place_entry:1:leg2",
+            status="PENDING",
+        )
+    ]
+
+    result = _make_gate()._apply_modify_entries(
+        enriched,
+        chain,
+        action,
+        active_cmds,
+    )
+    accepted = [
+        e for e in result.lifecycle_events
+        if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"
+    ]
+    assert len(accepted) == 1
+    payload = json.loads(accepted[0].payload_json)
+    assert payload["action"] == "MODIFY_ENTRIES"
+    assert payload["changed_entries"] == [
+        {"sequence": 2, "old_price": 48000.0, "new_price": 47000.0}
+    ]
+
+
 def test_update_chain_result_has_new_plan_state_json_field():
     from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult
     cr = UpdateChainResult(
@@ -2100,8 +2224,186 @@ def test_update_chain_result_new_plan_state_json_defaults_to_none():
     )
     assert cr.new_plan_state_json is None
 
+def test_write_update_clean_log_rejected_includes_reason_and_rejected_actions(tmp_path):
+    import json
+    import sqlite3
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult, _write_update_clean_log
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(ops_db, "db/ops_migrations")
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        """INSERT INTO ops_trade_chains (
+            source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, plan_state_json, created_at, updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))""",
+        (1, 1, 1, "trader_a", "acc_1", "BTC/USDT", "LONG", "OPEN", "ONE_SHOT", "{}", "{}"),
+    )
+    chain_id = conn.execute(
+        "SELECT trade_chain_id FROM ops_trade_chains WHERE source_enrichment_id=?",
+        (1,),
+    ).fetchone()[0]
+
+    cr = UpdateChainResult(
+        trade_chain_id=chain_id,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="NOOP_ALREADY_PROTECTED_BE",
+            source_type="telegram_update",
+            source_id="1",
+            payload_json=json.dumps({"reason": "already_protected"}),
+            idempotency_key="noop:1",
+        )],
+        execution_commands=[],
+    )
+
+    with conn:
+        _write_update_clean_log(conn, cr, canonical_message_id=1, link=None)
+
+    row_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_notification_outbox WHERE notification_type='UPDATE_REJECTED'"
+    ).fetchone()[0]
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox WHERE notification_type='UPDATE_REJECTED'"
+    ).fetchall()
+    conn.close()
+
+    assert row_count == 1
+    assert len(row) == 1
+    payload = json.loads(row[0][1])
+    assert payload["reason"] == "already_protected"
+    assert payload["rejected_actions"] == ["NOOP_ALREADY_PROTECTED_BE"]
+
+
+def test_write_update_clean_log_partial_keeps_changed_and_rejected_actions(tmp_path):
+    import json
+    import sqlite3
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult, _write_update_clean_log
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(ops_db, "db/ops_migrations")
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        """INSERT INTO ops_trade_chains (
+            source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, plan_state_json, created_at, updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))""",
+        (1, 1, 1, "trader_a", "acc_1", "BTC/USDT", "LONG", "OPEN", "ONE_SHOT", "{}", "{}"),
+    )
+    chain_id = conn.execute(
+        "SELECT trade_chain_id FROM ops_trade_chains WHERE source_enrichment_id=?",
+        (1,),
+    ).fetchone()[0]
+
+    cr = UpdateChainResult(
+        trade_chain_id=chain_id,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="TELEGRAM_UPDATE_ACCEPTED",
+                source_type="telegram_update",
+                source_id="1",
+                payload_json=json.dumps({
+                    "action": "MODIFY_ENTRIES",
+                    "changed_entries": [
+                        {"sequence": 2, "old_price": 48000.0, "new_price": 47000.0},
+                    ],
+                }),
+                idempotency_key="accepted:1",
+            ),
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="NOOP_ALREADY_PROTECTED_BE",
+                source_type="telegram_update",
+                source_id="1",
+                payload_json=json.dumps({"reason": "already_protected"}),
+                idempotency_key="noop:1",
+            ),
+        ],
+        execution_commands=[],
+    )
+
+    with conn:
+        _write_update_clean_log(conn, cr, canonical_message_id=1, link=None)
+
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox WHERE notification_type='UPDATE_PARTIAL'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row[0] == "UPDATE_PARTIAL"
+    payload = json.loads(row[1])
+    assert payload["reason"] == "already_protected"
+    assert payload["rejected_actions"] == ["NOOP_ALREADY_PROTECTED_BE"]
+    assert payload["changed"] == [
+        {"field": "Entry_2", "old": 48000.0, "new": 47000.0},
+    ]
+
+
+def test_write_update_clean_log_omits_reason_when_no_noop_payload_provides_it(tmp_path):
+    import json
+    import sqlite3
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult, _write_update_clean_log
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(ops_db, "db/ops_migrations")
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        """INSERT INTO ops_trade_chains (
+            source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, plan_state_json, created_at, updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))""",
+        (1, 1, 1, "trader_a", "acc_1", "BTC/USDT", "LONG", "OPEN", "ONE_SHOT", "{}", "{}"),
+    )
+    chain_id = conn.execute(
+        "SELECT trade_chain_id FROM ops_trade_chains WHERE source_enrichment_id=?",
+        (1,),
+    ).fetchone()[0]
+
+    cr = UpdateChainResult(
+        trade_chain_id=chain_id,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="NOOP_ALREADY_PROTECTED_BE",
+            source_type="telegram_update",
+            source_id="1",
+            payload_json=json.dumps({}),
+            idempotency_key="noop:1",
+        )],
+        execution_commands=[],
+    )
+
+    with conn:
+        _write_update_clean_log(conn, cr, canonical_message_id=1, link=None)
+
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='UPDATE_REJECTED'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    payload = json.loads(row[0])
+    assert "reason" not in payload
+
 
 # ── _apply_market_entry_now helpers ──────────────────────────────────────────
+
 
 def _make_gate_attached():
     from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
@@ -2480,6 +2782,92 @@ def test_persist_update_saves_new_plan_state_json_to_db(tmp_path):
     conn2.close()
     saved_plan = json.loads(row[0])
     assert saved_plan["legs"][0]["status"] == "FILLED"
+
+
+def test_persist_update_writes_multi_chain_summary_for_two_chains(tmp_path):
+    import json
+    import sqlite3
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker, UpdateChainResult, UpdateGateResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    parser_db = str(tmp_path / "parser.sqlite3")
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    _core_apply(ops_db, "db/ops_migrations")
+
+    pconn = sqlite3.connect(parser_db)
+    pconn.execute(
+        "INSERT INTO enriched_canonical_messages "
+        "(enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id, "
+        " primary_class, enrichment_decision, policy_snapshot_json, lifecycle_processed, created_at) "
+        "VALUES (?,?,?,?,?,?,?,?,0,datetime('now'))",
+        (5, 5, 5, "t1", "acc_1", "UPDATE", "PASS", "{}"),
+    )
+    pconn.commit()
+    pconn.close()
+
+    oconn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    for chain_id, symbol in ((10, "BTC/USDT"), (11, "ETH/USDT")):
+        oconn.execute(
+            "INSERT INTO ops_trade_chains "
+            "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+            " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+            " management_plan_json, risk_snapshot_json, plan_state_json, created_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (chain_id, chain_id, chain_id, chain_id, "t1", "acc_1", symbol, "LONG",
+             "OPEN", "ONE_SHOT", "{}", "{}", "{}", now, now),
+        )
+    oconn.commit()
+    oconn.close()
+
+    def _cr(chain_id: int) -> UpdateChainResult:
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state=None,
+            new_be_protection_status=None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="TELEGRAM_UPDATE_ACCEPTED",
+                source_type="telegram_update",
+                source_id="5",
+                payload_json=json.dumps({
+                    "action": "MOVE_SL_TO_BE",
+                    "is_breakeven": True,
+                    "old_sl_price": 49000.0,
+                    "new_sl_price": 50100.0,
+                }),
+                idempotency_key=f"be:{chain_id}:5",
+            )],
+            execution_commands=[],
+        )
+
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=_make_gate_attached(),
+        chain_repo=None,
+        event_repo=None,
+        command_repo=None,
+        snapshot_repo=None,
+        control_repo=None,
+    )
+    worker._persist_update(
+        _make_update_enriched(canonical_message_id=5),
+        UpdateGateResult(chain_results=[_cr(10), _cr(11)], review_events=[]),
+    )
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='MULTI_CHAIN_SUMMARY'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    payload = json.loads(row[0])
+    assert {chain["chain_id"] for chain in payload["chains"]} == {10, 11}
+    assert all(chain["status"] == "DONE" for chain in payload["chains"])
 
 
 def test_market_entry_now_cancel_mode_full_roundtrip(tmp_path):
