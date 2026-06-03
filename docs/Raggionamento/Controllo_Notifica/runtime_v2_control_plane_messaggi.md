@@ -427,20 +427,22 @@ BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 Operation:
-▪️ move_sl_to_be
-▪️ cancel_pending_entry
+▪️ MOVE_SL_TO_BE
+▪️ CANCEL_PENDING
 
 Changed:
 SL: 66,400 -> 68,500
 - - - - - - - - - - - - - - - -
-Source: runtime
+Source: trader_update
+- - - - - - - - - - - - - - - -
+https://t.me/c/123456/1005
 ```
 
-Variante con nota su un campo:
+Variante con nota su un campo (breakeven):
 ```
 Changed:
 SL: 66,400 -> 68,500 *
-* adjusted to entry avg price
+* BE
 ```
 
 Variante senza operation né changed (update vuoto applicato):
@@ -450,8 +452,16 @@ Variante senza operation né changed (update vuoto applicato):
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - -
-Source: runtime
+Source: trader_update
+- - - - - - -
+https://t.me/c/123456/1005
 ```
+
+Note:
+- `Source: trader_update` = triggered da messaggio Telegram del trader.
+- Il secondo link (dopo l'ultimo separatore) è il link al messaggio Telegram che ha originato l'update — costruito da `raw_messages` al momento del persist.
+- Operazioni: nomi raw dall'event payload (`MOVE_SL_TO_BE`, `CANCEL_PENDING`, `CLOSE_FULL`, `CLOSE_PARTIAL`, `MODIFY_ENTRIES`, `MARKET_ENTRY_NOW`).
+- `Changed:` mostra i campi effettivamente modificati: `SL`, `Entry_N`, `Position`.
 
 ---
 
@@ -466,19 +476,29 @@ BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 Applied:
-  • move_sl_to_be
+  • MOVE_SL_TO_BE
+
+Changed:
+SL: 66,400 -> 68,500
 
 Rejected:
-  • cancel_entry_2: exchange_order_not_found
+  • NOOP_NOT_PENDING
 - - - - - - - - - - - - - - - -
-Source: runtime
+Source: trader_update
+- - - - - - - - - - - - - - - -
+https://t.me/c/123456/1005
 ```
+
+Note:
+- `Applied:` = action strings raw (`MOVE_SL_TO_BE`, `CANCEL_PENDING`, ecc.).
+- `Changed:` = campi modificati dalle azioni applicate (stessa logica di UPDATE_DONE).
+- `Rejected:` = NOOP event type strings (`NOOP_NOT_PENDING`, `NOOP_ALREADY_PROTECTED_BE`, `NOOP_DUPLICATE_COMMAND`, `NOOP_ALREADY_CLOSED`).
 
 ---
 
 ### 3.16 UPDATE_REJECTED
 
-Emesso quando l'update viene rifiutato integralmente (catena non aperta, stato incompatibile).
+Emesso quando l'update viene rifiutato integralmente (nessuna azione accettata).
 
 ```
 ❌ #12 — UPDATE REJECTED
@@ -486,10 +506,18 @@ Emesso quando l'update viene rifiutato integralmente (catena non aperta, stato i
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
-Reason: chain_not_open
+Rejected:
+  • NOOP_ALREADY_CLOSED
 - - - - - - - - - - - - - - - -
-Source: runtime
+Source: trader_update
+- - - - - - - - - - - - - - - -
+https://t.me/c/123456/1005
 ```
+
+Note:
+- `Reason:` appare solo se il payload del NOOP event include un campo `reason` (raro — la maggior parte dei NOOP non lo include).
+- `Rejected:` = lista dei NOOP event type strings.
+- `Source:` e link al messaggio Telegram: stessa logica di UPDATE_DONE.
 
 ---
 
