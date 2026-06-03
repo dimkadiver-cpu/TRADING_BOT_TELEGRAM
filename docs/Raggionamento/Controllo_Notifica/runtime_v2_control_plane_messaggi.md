@@ -19,26 +19,51 @@ In `private_bot` tutto va nella stessa chat, i TECH_LOG vengono prefissati con `
 
 ## 2. CLEAN_LOG — mappa eventi
 
-| Evento lifecycle | Notification type |
+### 2a. Proiezione per-chain — `_CLEAN_LOG_EVENT_MAP` (`outbox_writer.py`)
+
+Letta da `project_clean_log_for_chain` iterando `ops_lifecycle_events`.
+
+| Evento lifecycle (`event_type`) | Notification type | Note |
+|---|---|---|
+| `SIGNAL_ACCEPTED` | `SIGNAL_ACCEPTED` | |
+| `SIGNAL_REJECTED` | `SIGNAL_REJECTED` | |
+| `REVIEW_REQUIRED` | `REVIEW_REQUIRED` | |
+| `ENTRY_FILLED` | `ENTRY_OPENED` | |
+| `TP_FILLED` | `TP_FILLED` / `TP_FILLED_FINAL` | promosso a `TP_FILLED_FINAL` se `is_final=True` |
+| `SL_FILLED` | `SL_FILLED` | |
+| `CLOSE_FULL_FILLED` | `POSITION_CLOSED` / `BE_EXIT` | `BE_EXIT` se catena in stato `PROTECTED` |
+| `ENTRY_UPDATED` | `ENTRY_UPDATED` | |
+| `PENDING_TIMEOUT` | `PENDING_ENTRY_EXPIRED` | |
+| `PENDING_ENTRY_CANCELLED` | `ENTRY_CANCELLED` | filtrato se `cancel_reason=position_closed` |
+| `ENTRY_CANCEL_FAILED` | `CANCEL_FAILED` | |
+| `RECONCILIATION_WARNING` | `RECONCILIATION_WARNING` | |
+| `RECONCILIATION_FIXED` | `RECONCILIATION_FIXED` | |
+| `REENTRY_ACCEPTED` | `REENTRY_ACCEPTED` | |
+
+### 2b. Notifiche sintetizzate — `_write_update_clean_log` (`entry_gate.py`)
+
+Non passano da `_CLEAN_LOG_EVENT_MAP`. Scritte direttamente dopo aver processato un update canonico.
+
+| Lifecycle events coinvolti | Notification type | Condizione |
+|---|---|---|
+| `TELEGRAM_UPDATE_ACCEPTED` (tutti, nessun NOOP) | `UPDATE_DONE` | tutte le azioni accettate |
+| `TELEGRAM_UPDATE_ACCEPTED` + `NOOP_*` (misti) | `UPDATE_PARTIAL` | almeno una accettata e una rifiutata |
+| solo `NOOP_*` (nessun ACCEPTED) | `UPDATE_REJECTED` | nessuna azione accettata |
+
+- `Source` in output: `trader_update` (da Telegram) · `operation_rules` · `manual_command` · `runtime` (fallback)
+- Il link al messaggio Telegram originale è risolto da `raw_messages` e appare in footer dopo `Source:`.
+
+### 2c. Notifiche multi-chain — `_write_multi_chain_summary` (`entry_gate.py`)
+
+Scritte direttamente quando un update canonico impatta ≥ 2 catene.
+
+| Notification type | Condizione |
 |---|---|
-| `SIGNAL_ACCEPTED` | `SIGNAL_ACCEPTED` |
-| `SIGNAL_REJECTED` | `SIGNAL_REJECTED` |
-| `REVIEW_REQUIRED` | `REVIEW_REQUIRED` |
-| `ENTRY_FILLED` | `ENTRY_OPENED` |
-| `TP_FILLED` | `TP_FILLED` / `TP_FILLED_FINAL` (se `is_final=True`) |
-| `SL_FILLED` | `SL_FILLED` |
-| `CLOSE_FULL_FILLED` | `POSITION_CLOSED` oppure `BE_EXIT` (se catena PROTECTED) |
-| `ENTRY_UPDATED` | `ENTRY_UPDATED` |
-| `PENDING_TIMEOUT` | `PENDING_ENTRY_EXPIRED` |
-| `PENDING_ENTRY_CANCELLED` | `ENTRY_CANCELLED` (filtrato se `cancel_reason=position_closed`) |
-| `ENTRY_CANCEL_FAILED` | `CANCEL_FAILED` |
-| `RECONCILIATION_WARNING` | `RECONCILIATION_WARNING` |
-| `RECONCILIATION_FIXED` | `RECONCILIATION_FIXED` |
-| `REENTRY_ACCEPTED` | `REENTRY_ACCEPTED` |
-| `UPDATE_DONE` | `UPDATE_DONE` |
-| `UPDATE_PARTIAL` | `UPDATE_PARTIAL` |
-| `UPDATE_REJECTED` | `UPDATE_REJECTED` |
-| `MULTI_CHAIN_SUMMARY` / `MULTI_CHAIN_UPDATE` / `MULTI_CHAIN_CLOSED` | `MULTI_CHAIN_SUMMARY` |
+| `MULTI_CHAIN_SUMMARY` | sempre (sostituisce i singoli UPDATE_DONE/PARTIAL/REJECTED per catena) |
+
+Il formatter gestisce anche `MULTI_CHAIN_UPDATE` e `MULTI_CHAIN_CLOSED` come alias dello stesso template, ma nell'implementazione attuale viene scritto solo `MULTI_CHAIN_SUMMARY`.
+
+---
 
 Nota: il separatore `- - -` si adatta alla larghezza del contenuto. Esempi qui sotto usano una lunghezza rappresentativa.
 
