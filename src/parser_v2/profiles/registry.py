@@ -5,6 +5,7 @@ from src.parser_v2.profiles.trader_3.profile import Trader3Profile
 from src.parser_v2.profiles.trader_a.profile import TraderAProfile
 from src.parser_v2.profiles.trader_b.profile import TraderBProfile
 from src.parser_v2.profiles.trader_c.profile import TraderCProfile
+from src.parser_v2.profiles.trader_d.profile import TraderDProfile
 from src.parser_v2.profiles.trader_prova.profile import TraderProvaProfile
 
 _PROFILE_FACTORIES: dict[str, type] = {
@@ -12,6 +13,7 @@ _PROFILE_FACTORIES: dict[str, type] = {
     "trader_a": TraderAProfile,
     "trader_b": TraderBProfile,
     "trader_c": TraderCProfile,
+    "trader_d": TraderDProfile,
     "trader_prova": TraderProvaProfile,
 }
 
@@ -27,6 +29,9 @@ _ALIASES: dict[str, str] = {
     "tc": "trader_c",
     "c": "trader_c",
     "trader_c": "trader_c",
+    "td": "trader_d",
+    "d": "trader_d",
+    "trader_d": "trader_d",
     "trader_prova": "trader_prova",
 }
 

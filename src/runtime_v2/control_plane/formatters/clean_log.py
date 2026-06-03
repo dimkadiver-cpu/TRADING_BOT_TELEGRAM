@@ -52,10 +52,20 @@ def _header(
     return lines
 
 
-def _footer(source: str, link: str | None = None, trader_id: str | None = None) -> list[str]:
+def _footer(
+    source: str,
+    link: str | None = None,
+    trader_id: str | None = None,
+    account_id: str | None = None,
+    reason: str | None = None,
+) -> list[str]:
     lines = [_SEP]
     if trader_id:
         lines.append(f"Trader: {trader_id}")
+    if account_id:
+        lines.append(f"Exchange Account: {account_id}")
+    if reason:
+        lines.append(f"Rejected: {reason}")
     lines.append(f"Source: {source}")
     if link:
         lines.extend([_SEP, link])
@@ -108,7 +118,7 @@ def _signal_accepted(p: dict) -> str:
         lines.append(f"TP_{i}: {_num(tp)}")
     if p.get("risk_pct") is not None:
         lines.append(f"Risk: {p['risk_pct']}%")
-    lines += _footer(p.get("source", "original_message"), p.get("link"), trader_id=p.get("trader_id"))
+    lines += _footer(p.get("source", "original_message"), p.get("link"), trader_id=p.get("trader_id"), account_id=p.get("account_id"))
     return _finalize(lines)
 
 
@@ -125,24 +135,40 @@ def _signal_rejected(p: dict) -> str:
         lines.append(f"Entry_{seq}: {price_str}")
     if p.get("sl") is not None:
         lines.append(f"SL: {_num(p['sl'])}")
-    lines.append("")
-    footer = [_SEP]
-    if p.get("trader_id"):
-        footer.append(f"Trader: {p['trader_id']}")
-    if p.get("reason"):
-        footer.append(f"Rejected: {p['reason']}")
-    footer.append(f"Source: {p.get('source', 'original_message')}")
-    if p.get("link"):
-        footer.extend([_SEP, p["link"]])
-    lines += footer
+    lines += _footer(
+        p.get("source", "original_message"),
+        p.get("link"),
+        trader_id=p.get("trader_id"),
+        account_id=p.get("account_id"),
+        reason=p.get("reason"),
+    )
     return _finalize(lines)
 
 
 def _review_required(p: dict) -> str:
     lines = _header("\u26a0\ufe0f", p.get("chain_id"), "REVIEW REQUIRED", p.get("symbol"), p.get("side"))
-    lines.append(f"Reason: {p.get('reason', 'unknown')}")
-    lines.append("Action: no automatic execution")
-    lines += _footer(p.get("source", "runtime"), p.get("link"))
+    for entry in p.get("entries") or []:
+        seq = entry.get("sequence", 1)
+        etype = entry.get("entry_type", "LIMIT")
+        price = entry.get("price")
+        if etype == "MARKET":
+            price_str = f"Market ~{_num(price)}" if price is not None else "Market"
+        else:
+            price_str = f"{_num(price)} Limit" if price is not None else "Limit"
+        lines.append(f"Entry_{seq}: {price_str}")
+    if p.get("sl") is not None:
+        lines.append(f"SL: {_num(p['sl'])}")
+    for i, tp in enumerate(p.get("tps") or [], start=1):
+        lines.append(f"TP_{i}: {_num(tp)}")
+    if p.get("risk_pct") is not None:
+        lines.append(f"Risk: {p['risk_pct']}%")
+    lines += _footer(
+        p.get("source", "runtime"),
+        p.get("link"),
+        trader_id=p.get("trader_id"),
+        account_id=p.get("account_id"),
+        reason=p.get("reason"),
+    )
     return _finalize(lines)
 
 
@@ -205,12 +231,6 @@ def _tp_filled(p: dict, final: bool) -> str:
     if "exec_value" in p:
         lines.append(f"Value: {_fmt_money(p.get('exec_value'))}")
     lines.append("")
-    if not final:
-        if p.get("sl_current") is not None:
-            be_suffix = " BE" if p.get("be_protection_status") == "PROTECTED" else ""
-            lines.append(f"SL: {_num(p['sl_current'])}{be_suffix}")
-        if p.get("remaining_pct") is not None:
-            lines.append(f"Position: {_fmt_pct(p['remaining_pct'])}")
     if final:
         lines.append("Close reason: FINAL TP FILLED")
     lines += _final_result_lines(p.get("final_result"))
@@ -463,16 +483,21 @@ def _multi_chain_summary(p: dict) -> str:
 
     lines.append(_SEP)
     if chains:
+        id_w = max((len(f"#{c.get('chain_id', '?')}") for c in chains), default=2)
+        sym_w = max((len(str(c.get("symbol", "?"))) for c in chains), default=6)
+        side_w = max((len(str(c.get("side", ""))) for c in chains), default=4)
+        state_w = max((len(str(c.get("status", "DONE"))) for c in chains), default=4)
+        lines.append(
+            f"{'ID'.ljust(id_w)} | {'Symbol'.ljust(sym_w)} | {'Side'.ljust(side_w)} | {'State'.ljust(state_w)} | link"
+        )
+        lines.append(_SEP)
         for chain in chains:
-            side = chain.get("side")
-            link = chain.get("link")
-            line = (
-                f"#{chain.get('chain_id', '?')} {chain.get('symbol', '?')} "
-                f"{_side_emoji(side)} {side}  {chain.get('status', 'DONE')}"
-            )
-            if link:
-                line += f"  -> {link}"
-            lines.append(line)
+            cid = f"#{chain.get('chain_id', '?')}".ljust(id_w)
+            sym = str(chain.get("symbol", "?")).ljust(sym_w)
+            side = str(chain.get("side", "")).ljust(side_w)
+            state = str(chain.get("status", "DONE")).ljust(state_w)
+            link = chain.get("link") or ""
+            lines.append(f"{cid} | {sym} | {side} | {state} | {link}")
 
     lines.append(_SEP)
     done = sum(1 for chain in chains if chain.get("status") == "DONE")

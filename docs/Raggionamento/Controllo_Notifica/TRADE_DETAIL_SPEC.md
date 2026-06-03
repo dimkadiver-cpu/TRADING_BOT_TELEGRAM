@@ -71,7 +71,9 @@ Un singolo campo generico `source` o `original_message_link` non basta piu.
 
 ### 2.3 Nessun impatto comportamentale su CLEAN_LOG
 
-Le modifiche previste qui sono additive-only:
+Le modifiche previste qui sono additive-only rispetto ai payload lifecycle e al modello del comando `/trade`.
+
+Sono ammessi:
 
 ```text
 - nuovi campi nel view model TradeDetail
@@ -83,9 +85,26 @@ Non vanno cambiati:
 
 ```text
 - event_type esistenti
+- source_type esistenti
 - naming dei notification_type CLEAN_LOG
 - chiavi payload gia lette dal clean_log
 - semantica attuale di SIGNAL_ACCEPTED / UPDATE_DONE / UPDATE_PARTIAL / UPDATE_REJECTED
+- distinzione attuale tra projection event-driven e summary update sintetico
+```
+
+Nota importante:
+
+```text
+oggi il sistema update CLEAN_LOG usa due percorsi distinti:
+
+1. project_clean_log_for_chain()
+   -> proietta notifiche CLEAN_LOG leggendo ops_lifecycle_events.payload_json
+
+2. _write_update_clean_log()
+   -> sintetizza una notifica UPDATE_DONE / UPDATE_PARTIAL / UPDATE_REJECTED
+      partendo dagli eventi di update e da un link calcolato esternamente
+
+La feature /trade non deve alterare la semantica di nessuno dei due percorsi.
 ```
 
 ---
@@ -678,7 +697,21 @@ timeline item link per update
 
 ### 10.2 Modifica richiesta
 
-Per ogni `LifecycleEvent` nato da update trader, aggiungere metadata Telegram nel `payload_json`.
+Per ogni lifecycle event trader-linked rilevante per update chain, i metadata Telegram devono essere persistiti direttamente nel `payload_json` dell'evento al momento della scrittura in `ops_lifecycle_events`.
+
+Owner layer:
+
+```text
+persistenza lifecycle update
+```
+
+Non sono accettate come fonte primaria:
+
+```text
+- euristiche ex post in status_queries.py
+- lookup tardivi nel formatter /trade
+- dipendenza esclusiva dal link sintetizzato per CLEAN_LOG summary
+```
 
 Formato minimo accettabile:
 
@@ -732,6 +765,8 @@ Le modifiche di questa spec non devono cambiare:
 - source_type esistenti
 - naming dei notification_type CLEAN_LOG
 - chiavi payload gia lette dal clean_log
+- link e source_message_link gia consumati dalla pipeline CLEAN_LOG
+- semantica del campo changed quando presente negli update
 ```
 
 Le modifiche consentite:
@@ -751,8 +786,10 @@ action
 reason
 applied_actions
 rejected_actions
+changed
 changed_fields
 source
+link
 source_message_link
 tp_level
 is_final
@@ -770,11 +807,44 @@ source_chat_id
 telegram_message_id
 ```
 
+Regola:
+
+```text
+le chiavi extra devono essere additive-only e non devono cambiare il significato
+delle chiavi gia consumate dal CLEAN_LOG formatter o dalla projection outbox.
+```
+
 Conclusione:
 
 ```text
 la feature /trade compact/full non deve intaccare il clean_log
 se la persistenza metadata resta additive-only
+```
+
+### 11.4 Nota su asimmetria update attuale
+
+Il sistema attuale non e perfettamente simmetrico tra:
+
+```text
+- payload lifecycle usati dalla projection CLEAN_LOG
+- payload summary sintetici di update
+```
+
+Questa spec non tenta di unificare quei due percorsi.
+
+Obiettivo della spec:
+
+```text
+- rendere /trade affidabile
+- mantenere CLEAN_LOG invariato
+- preparare metadati evento-per-evento robusti
+```
+
+Non obiettivo di questa spec:
+
+```text
+- redesign del pipeline update CLEAN_LOG
+- unificazione strutturale tra outbox projection e summary update synthesis
 ```
 
 ---
@@ -901,8 +971,10 @@ Da fare:
 
 ```text
 - nei lifecycle event trader-linked, aggiungere metadata Telegram al payload_json
+- farlo al momento della persistenza evento, non nel formatter /trade
 - non cambiare event_type
 - non cambiare chiavi payload usate dal clean_log
+- non sostituire il link sintetico summary CLEAN_LOG: questa feature aggiunge metadati evento-per-evento
 ```
 
 ### 14.5 Test
@@ -1031,7 +1103,11 @@ return TradeDetail(...)
 
 ```text
 - aggiungere raw_message_id/source_chat_id/telegram_message_id ai payload update non rompe CLEAN_LOG
-- UPDATE_DONE / UPDATE_PARTIAL / UPDATE_REJECTED continuano a renderizzare come prima
+- UPDATE_DONE continua a renderizzare come prima
+- UPDATE_PARTIAL continua a renderizzare come prima
+- UPDATE_REJECTED continua a renderizzare come prima
+- il summary update sintetico e la projection event-driven restano semanticamente compatibili
+- un lifecycle event trader-linked con metadata Telegram permette di derivare source_link senza lookup esterno
 ```
 
 ### 17.3 Argument parsing
@@ -1076,6 +1152,8 @@ Questa spec non include:
 10. Nessun formatter /trade contiene logica di dominio pesante o SQL.
 11. /trade <id> [full] mantiene audit e reject semantics attuali.
 12. Il sistema attuale di notification CLEAN_LOG continua a funzionare senza regressioni.
+13. I lifecycle event trader-linked persistono metadata Telegram sufficienti a derivare il link evento-per-evento.
+14. La feature /trade non introduce dipendenza dal solo link sintetizzato di `_write_update_clean_log()`.
 ```
 
 ---

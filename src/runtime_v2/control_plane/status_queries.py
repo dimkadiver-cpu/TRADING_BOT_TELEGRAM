@@ -32,6 +32,7 @@ class TradeRow:
     side: str
     state: str
     has_sl: bool
+    has_be: bool = False
 
 
 @dataclass
@@ -228,7 +229,8 @@ class StatusQueries:
         try:
             rows = conn.execute(
                 "SELECT trade_chain_id, symbol, side, lifecycle_state, "
-                "COALESCE(current_stop_price, expected_stop_price) "
+                "COALESCE(current_stop_price, expected_stop_price), "
+                "be_protection_status "
                 "FROM ops_trade_chains "
                 "WHERE lifecycle_state IN ({}) "
                 "ORDER BY trade_chain_id".format(
@@ -239,7 +241,10 @@ class StatusQueries:
         finally:
             conn.close()
         trade_rows = [
-            TradeRow(chain_id=r[0], symbol=r[1], side=r[2], state=r[3], has_sl=r[4] is not None)
+            TradeRow(
+                chain_id=r[0], symbol=r[1], side=r[2], state=r[3],
+                has_sl=r[4] is not None, has_be=r[5] == "PROTECTED",
+            )
             for r in rows
         ]
         return TradesView(updated_at=_now_iso(), total=len(trade_rows), rows=trade_rows)

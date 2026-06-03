@@ -270,8 +270,10 @@ def test_multi_chain_update_formatter():
         "summary": {"done": 3, "rejected": 0},
         "source": "trader_update",
     })
-    assert "UPDATE APPLIED - MULTI CHAIN" in text
-    assert "#160 BTC/USDT SHORT - DONE" in text
+    assert "UPDATE APPLICATO - 3 chain" in text
+    assert "#160" in text
+    assert "BTC/USDT" in text
+    assert "DONE" in text
 
 
 # ---------------------------------------------------------------------------

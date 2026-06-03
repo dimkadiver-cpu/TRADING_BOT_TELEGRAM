@@ -172,6 +172,7 @@ def _build_payload(
     symbol: str | None,
     side: str | None,
     trader_id: str | None,
+    account_id: str | None,
     plan: dict,
     risk: dict,
     entry_avg_price: float | None,
@@ -201,6 +202,7 @@ def _build_payload(
         return {
             **base,
             "trader_id": trader_id,
+            "account_id": account_id,
             "entries": [
                 {
                     "sequence": l["sequence"],
@@ -305,13 +307,13 @@ def _build_payload(
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
-            "close_reason": ev.get("close_reason", "MANUAL"),
+            "close_reason": ev.get("close_reason", "MANUAL_CLOSE"),
             "final_result": _final_result(
                 gross_pnl=cumulative_gross_pnl,
                 fees=cumulative_fees,
                 funding=cumulative_funding,
                 allocated_margin=allocated_margin,
-                close_reason=ev.get("close_reason", "MANUAL"),
+                close_reason=ev.get("close_reason", "MANUAL_CLOSE"),
             ),
             "source": ev.get("source", "exchange"),
         }
@@ -320,6 +322,7 @@ def _build_payload(
         return {
             **base,
             "trader_id": trader_id,
+            "account_id": account_id,
             "reason": ev.get("reason", "unknown"),
             "entries": [
                 {
@@ -335,8 +338,13 @@ def _build_payload(
         }
 
     if notification_type == "REVIEW_REQUIRED":
+        risk_pct = None
+        if risk.get("capital") and risk.get("risk_amount"):
+            risk_pct = round(risk["risk_amount"] / risk["capital"] * 100, 2)
         return {
             **base,
+            "trader_id": trader_id,
+            "account_id": account_id,
             "reason": ev.get("reason", "unknown"),
             "entries": [
                 {
@@ -347,6 +355,8 @@ def _build_payload(
                 for l in legs
             ],
             "sl": plan.get("stop_loss"),
+            "tps": tps,
+            "risk_pct": risk_pct,
             "source": ev.get("source", "runtime"),
             "link": ev.get("source_message_link"),
         }
@@ -504,7 +514,7 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     avoid the SL_FILLED "Sell" bug.
     """
     chain_row = conn.execute(
-        "SELECT symbol, side, entry_mode, trader_id, "
+        "SELECT symbol, side, entry_mode, trader_id, account_id, "
         "plan_state_json, risk_snapshot_json, "
         "entry_avg_price, current_stop_price, "
         "source_chat_id, telegram_message_id, "
@@ -520,19 +530,20 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     side = chain_row[1]
     # entry_mode = chain_row[2]  # available if needed
     trader_id = chain_row[3]
-    plan = json.loads(chain_row[4] or "{}")
-    risk = json.loads(chain_row[5] or "{}")
-    entry_avg_price = chain_row[6]
-    current_stop_price = chain_row[7]
-    source_chat_id = chain_row[8]
-    telegram_message_id = chain_row[9]
-    cumulative_gross_pnl = chain_row[10]
-    cumulative_fees = chain_row[11]
-    cumulative_funding = chain_row[12]
-    allocated_margin = chain_row[13]
-    filled_entry_qty = chain_row[14]
-    open_position_qty = chain_row[15]
-    be_protection_status = chain_row[16]
+    account_id = chain_row[4]
+    plan = json.loads(chain_row[5] or "{}")
+    risk = json.loads(chain_row[6] or "{}")
+    entry_avg_price = chain_row[7]
+    current_stop_price = chain_row[8]
+    source_chat_id = chain_row[9]
+    telegram_message_id = chain_row[10]
+    cumulative_gross_pnl = chain_row[11]
+    cumulative_fees = chain_row[12]
+    cumulative_funding = chain_row[13]
+    allocated_margin = chain_row[14]
+    filled_entry_qty = chain_row[15]
+    open_position_qty = chain_row[16]
+    be_protection_status = chain_row[17]
     chain_source_link: str | None = (
         f"https://t.me/c/{str(source_chat_id).removeprefix('-100')}/{telegram_message_id}"
         if source_chat_id and telegram_message_id else None
@@ -579,7 +590,7 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
             notification_type = "BE_EXIT"
 
         payload = _build_payload(
-            notification_type, chain_id, symbol, side, trader_id,
+            notification_type, chain_id, symbol, side, trader_id, account_id,
             plan, risk, entry_avg_price, current_stop_price, ev,
             cumulative_gross_pnl=cumulative_gross_pnl,
             cumulative_fees=cumulative_fees,

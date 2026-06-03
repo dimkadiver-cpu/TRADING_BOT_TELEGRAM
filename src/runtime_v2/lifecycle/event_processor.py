@@ -679,6 +679,10 @@ class LifecycleEventProcessor:
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         fill_payload = _normalized_fill_payload(ep.model_dump(), default_qty=fill_qty)
+        if ep.source:
+            fill_payload["source"] = ep.source
+        if ep.command_id is not None:
+            fill_payload["close_reason"] = "BOT_COMMAND"
         return EventProcessorResult(
             new_lifecycle_state="CLOSED",
             new_be_protection_status=None,

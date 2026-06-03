@@ -13,6 +13,7 @@ def _make_db() -> sqlite3.Connection:
         side TEXT DEFAULT 'LONG',
         entry_mode TEXT,
         trader_id TEXT,
+        account_id TEXT,
         plan_state_json TEXT DEFAULT '{}',
         risk_snapshot_json TEXT DEFAULT '{}',
         entry_avg_price REAL,

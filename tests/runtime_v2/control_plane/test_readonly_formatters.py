@@ -56,8 +56,9 @@ def test_format_trades_rows():
         TradeRow(chain_id=145, symbol="BTC/USDT", side="LONG", state="OPEN", has_sl=True),
     ])
     text = format_trades(view)
-    assert "#145" in text
+    assert "145" in text
     assert "BTC/USDT" in text
+    assert "SL: set" in text
 
 
 def test_format_trade_detail():

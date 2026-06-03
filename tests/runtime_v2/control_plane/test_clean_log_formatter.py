@@ -136,7 +136,8 @@ def test_tp_filled_shows_price_and_sl():
     })
     assert "TP1 FILLED" in text
     assert "TP_1: 68,000" in text
-    assert "SL: 62,000" in text
+    assert "SL:" not in text
+    assert "Position:" not in text
     assert "POSITION CLOSED" not in text
 
 
@@ -377,8 +378,8 @@ def test_tp_filled_renders_closed_pnl_fee_remaining_and_be_label():
     assert "Closed: 30%" in text
     assert "PnL: +70.20 USDT" in text
     assert "Fee: 1.10 USDT" in text
-    assert "Position: 70%" in text
-    assert "SL: 65,020 BE" in text
+    assert "Position:" not in text
+    assert "SL:" not in text
 
 
 def test_sl_filled_renders_sl_label_and_final_result():
