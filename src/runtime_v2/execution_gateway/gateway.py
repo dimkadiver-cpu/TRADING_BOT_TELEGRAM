@@ -282,7 +282,7 @@ class ExecutionGateway:
                 connector=adapter_cfg.connector,
             )
         except Exception as e:
-            self._handle_error(cmd, adapter_cfg, str(e))
+            self._handle_error(cmd, adapter_cfg, e)
             return
 
         if not result.success:
@@ -317,11 +317,24 @@ class ExecutionGateway:
                     statuses=("SENT", "ACK", "DONE"),
                 )
 
-    def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, error_str: str) -> None:
+    # Eccezioni che indicano un bug nel codice locale (accesso a chiave/attributo assente,
+    # tipo sbagliato, indice fuori range) — mai transitori, retry identico produce lo stesso
+    # crash. ValueError escluso: può provenire da parsing di risposte exchange malformate
+    # (float("nan"), campo vuoto) che sono errori transitori e devono essere ritentati.
+    _PERMANENT_EXC = (KeyError, TypeError, AttributeError, IndexError)
+
+    def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, exc: Exception) -> None:
+        error_str = str(exc)
         retry_cfg = adapter_cfg.retry
         current_retry = self._repo.get_retry_count(cmd.command_id)
 
-        if current_retry >= retry_cfg.max_attempts:
+        is_permanent = isinstance(exc, self._PERMANENT_EXC)
+        if is_permanent or current_retry >= retry_cfg.max_attempts:
+            if is_permanent:
+                logger.error(
+                    "permanent error for command %s (no retry): %s: %s",
+                    cmd.command_id, type(exc).__name__, error_str,
+                )
             self._repo.mark_failed(cmd.command_id, reason=error_str)
             self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=error_str

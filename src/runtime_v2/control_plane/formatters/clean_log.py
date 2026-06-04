@@ -118,6 +118,10 @@ def _signal_accepted(p: dict) -> str:
         lines.append(f"TP_{i}: {_num(tp)}")
     if p.get("risk_pct") is not None:
         lines.append(f"Risk: {p['risk_pct']}%")
+    if p.get("parse_status") == "PARTIAL":
+        warnings = p.get("parse_warnings") or []
+        warn_str = ", ".join(warnings) if warnings else "incomplete parse"
+        lines.append(f"⚠️ Parser: PARTIAL ({warn_str})")
     lines += _footer(p.get("source", "original_message"), p.get("link"), trader_id=p.get("trader_id"), account_id=p.get("account_id"))
     return _finalize(lines)
 
@@ -456,6 +460,25 @@ def _be_exit(p: dict) -> str:
     return _finalize(lines)
 
 
+def _partial_close_executed(p: dict) -> str:
+    lines = _header("✅", p.get("chain_id"), "UPDATE DONE", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
+    lines.append("Executed:")
+    lines.append(f"{_BULLET} CLOSE_PARTIAL")
+    lines.append(_SEP)
+    if p.get("fill_price") is not None:
+        lines.append(f"Price: {_num(p['fill_price'])}")
+    if p.get("closed_qty") is not None:
+        lines.append(f"Qty: {_num(p['closed_qty'])}")
+    if p.get("closed_pct") is not None:
+        lines.append(f"Closed: {_fmt_pct(p['closed_pct'])}")
+    if p.get("pnl") is not None:
+        lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
+    if p.get("fee") is not None:
+        lines.append(f"Fee: {_fmt_money(p['fee'])}")
+    lines += _footer(p.get("source", "bot_command"))
+    return _finalize(lines)
+
+
 def _cancel_failed(p: dict) -> str:
     lines = _header("\U0001f6a8", p.get("chain_id"), "CANCEL FAILED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     entry_ref = p.get("entry_ref", "entry")
@@ -556,6 +579,8 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
         return _entry_cancelled(payload)
     if notification_type == "BE_EXIT":
         return _be_exit(payload)
+    if notification_type == "PARTIAL_CLOSE_EXECUTED":
+        return _partial_close_executed(payload)
     if notification_type == "CANCEL_FAILED":
         return _cancel_failed(payload)
     if notification_type == "MULTI_CHAIN_SUMMARY":

@@ -34,6 +34,7 @@ Letta da `project_clean_log_for_chain` iterando `ops_lifecycle_events`.
 | `CLOSE_FULL_FILLED` | `POSITION_CLOSED` / `BE_EXIT` | `BE_EXIT` se catena in stato `PROTECTED` |
 | `ENTRY_UPDATED` | `ENTRY_UPDATED` | |
 | `PENDING_TIMEOUT` | `PENDING_ENTRY_EXPIRED` | |
+| `CLOSE_PARTIAL_FILLED` | `PARTIAL_CLOSE_EXECUTED` | filtrato se `source != bot_command` |
 | `PENDING_ENTRY_CANCELLED` | `ENTRY_CANCELLED` | filtrato se `cancel_reason=position_closed` |
 | `ENTRY_CANCEL_FAILED` | `CANCEL_FAILED` | |
 | `RECONCILIATION_WARNING` | `RECONCILIATION_WARNING` | |
@@ -543,6 +544,36 @@ Note:
 - `Reason:` appare solo se il payload del NOOP event include un campo `reason` (raro — la maggior parte dei NOOP non lo include).
 - `Rejected:` = lista dei NOOP event type strings.
 - `Source:` e link al messaggio Telegram: stessa logica di UPDATE_DONE.
+
+---
+
+### 3.16b PARTIAL_CLOSE_EXECUTED
+
+Emesso quando il fill di un `CLOSE_PARTIAL` da Telegram viene confermato dall'exchange.
+Fill esterni (chiusure manuali su exchange) vengono filtrati (`source != bot_command`).
+
+```
+✅ #12 — UPDATE DONE
+- - - - - - - - - - - - - - - -
+BTCUSDT — 📈 LONG
+https://t.me/c/123456/987
+- - - - - - - - - - - - - - - -
+Executed:
+▪️ CLOSE_PARTIAL
+- - - - - - - - - - - - - - - -
+Price: 68,500
+Qty: 0.015
+Closed: 50%
+PnL: +12.30 USDT
+Fee: 0.48 USDT
+- - - - - - - - - - - - - - - -
+Source: bot_command
+```
+
+Note:
+- `signal_link` nel header punta al messaggio SIGNAL_ACCEPTED della chain (standard per tutti i fill).
+- PnL calcolato con lo stesso principio di `TP_FILLED`: `qty × (fill_price − entry_avg_price) × sign(side)`.
+- PnL e Fee appaiono solo se disponibili nel payload exchange.
 
 ---
 

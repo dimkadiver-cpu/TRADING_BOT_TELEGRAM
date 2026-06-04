@@ -1734,6 +1734,8 @@ class LifecycleGateWorker:
         # Lookup source_chat_id and telegram_message_id from parser DB.
         src_chat_id: str | None = None
         tg_msg_id: int | None = None
+        parse_status: str | None = None
+        parse_warnings: list[str] = []
         try:
             pconn = _sqlite3.connect(self._parser_db)
             try:
@@ -1743,6 +1745,17 @@ class LifecycleGateWorker:
                 ).fetchone()
                 if rm_row:
                     src_chat_id, tg_msg_id = rm_row[0], rm_row[1]
+                cm_row = pconn.execute(
+                    "SELECT parse_status, warnings_json FROM canonical_messages WHERE canonical_message_id=?",
+                    (enriched.canonical_message_id,),
+                ).fetchone()
+                if cm_row:
+                    parse_status = cm_row[0]
+                    if parse_status == "PARTIAL":
+                        try:
+                            parse_warnings = _json.loads(cm_row[1] or "[]") or []
+                        except Exception:
+                            parse_warnings = []
             finally:
                 pconn.close()
         except Exception:
@@ -1794,6 +1807,15 @@ class LifecycleGateWorker:
                         chain_id = row[0] if row else None
 
                 for event in result.lifecycle_events:
+                    event_payload_json = event.payload_json
+                    if (
+                        event.event_type == "SIGNAL_ACCEPTED"
+                        and parse_status == "PARTIAL"
+                    ):
+                        partial_payload: dict = {"parse_status": parse_status}
+                        if parse_warnings:
+                            partial_payload["parse_warnings"] = parse_warnings
+                        event_payload_json = _json.dumps(partial_payload)
                     conn.execute(
                         """
                         INSERT OR IGNORE INTO ops_lifecycle_events (
@@ -1803,7 +1825,7 @@ class LifecycleGateWorker:
                         """,
                         (
                             chain_id, event.event_type, event.source_type, event.source_id,
-                            event.previous_state, event.next_state, event.payload_json,
+                            event.previous_state, event.next_state, event_payload_json,
                             event.idempotency_key, now,
                         ),
                     )

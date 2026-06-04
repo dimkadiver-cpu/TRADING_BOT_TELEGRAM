@@ -724,6 +724,8 @@ class LifecycleEventProcessor:
         new_state: LifecycleState = "CLOSED" if new_open <= 0 else "PARTIALLY_CLOSED"
         commands: list[ExecutionCommand] = []
         fill_payload = _normalized_fill_payload(ep.model_dump(), default_qty=fill_qty)
+        if ep.source:
+            fill_payload["source"] = ep.source
         return EventProcessorResult(
             new_lifecycle_state=new_state,
             new_be_protection_status=None,

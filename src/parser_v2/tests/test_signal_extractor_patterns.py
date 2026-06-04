@@ -199,6 +199,52 @@ def test_range_entry_english_format() -> None:
     assert signal.entries[1].price.value == 2100.0
 
 
+def test_trader_d_extracts_cyrillic_tp_lines() -> None:
+    from src.parser_v2.profiles.trader_d.signal_extractor import SignalExtractor as TraderDExtractor
+
+    extractor = TraderDExtractor()
+    text = (
+        "[trader #d] Signal ID: #d8\n\n"
+        "#WLFIUSDT \u0428\u043e\u0440\u0442\n\n"
+        "\u0412\u0445\u043e\u0434: 0.06203 \u0440\u044b\u043d\u043e\u043a\n\n"
+        "SL: 0.06331\n\n"
+        "\u0422\u041f1: 0.0592\n"
+        "\u0422\u041f2: 0.0492\n"
+        "\u0422\u041f3: 0.0392\n\n"
+        "\u0420\u0438\u0441\u043a \u043d\u0430 \u0441\u0434\u0435\u043b\u043a\u0443 1%\n"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+
+    signal = extractor.extract(normalized, market_hint=True)
+
+    assert signal is not None
+    assert signal.side == "SHORT"
+    assert [tp.price.value for tp in signal.take_profits] == [0.0592, 0.0492, 0.0392]
+    assert signal.risk_hint is not None
+    assert signal.risk_hint.value == 1.0
+
+
+def test_trader_d_profile_extracts_cyrillic_tp_lines() -> None:
+    from src.parser_v2.contracts.context import ParserContext
+    from src.parser_v2.core.runtime import UniversalParserRuntime
+    from src.parser_v2.profiles.trader_d.profile import TraderDProfile
+
+    text = (
+        "[trader #d] Signal ID: #d8\n\n"
+        "#WLFIUSDT \u0428\u043e\u0440\u0442\n\n"
+        "\u0412\u0445\u043e\u0434: 0.06203 \u0440\u044b\u043d\u043e\u043a\n\n"
+        "SL: 0.06331\n\n"
+        "\u0422\u041f1: 0.0592\n"
+        "\u0422\u041f2: 0.0492\n"
+        "\u0422\u041f3: 0.0392\n\n"
+        "\u0420\u0438\u0441\u043a \u043d\u0430 \u0441\u0434\u0435\u043b\u043a\u0443 1%\n"
+    )
+
+    result = UniversalParserRuntime().parse(text, ParserContext(), TraderDProfile())
+
+    assert [tp.price.value for tp in result.signal.take_profits] == [0.0592, 0.0492, 0.0392]
+
+
 def test_trader_b_range_entry_produces_range_structure() -> None:
     from src.parser_v2.profiles.trader_b.signal_extractor import SignalExtractor as TraderBExtractor
 

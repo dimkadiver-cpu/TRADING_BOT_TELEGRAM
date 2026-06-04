@@ -201,7 +201,7 @@ class TimeoutWorker:
                         previous_state, next_state, payload_json, idempotency_key, created_at
                     ) VALUES (?,?,?,?,?,?,?,?)
                     """,
-                    (chain_id, "TIMEOUT_REACHED", "timeout_worker",
+                    (chain_id, "PENDING_TIMEOUT", "timeout_worker",
                      "WAITING_ENTRY", "EXPIRED", "{}", f"timeout:{chain_id}", now),
                 )
                 entry_client_order_ids = load_pending_entry_client_order_ids(conn, chain_id)

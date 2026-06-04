@@ -95,7 +95,7 @@ class EntryCommandFactory:
             if is_attached:
                 # Build attached_tpsl block (sl_price already validated above)
                 attached: dict = {
-                    "mode": "FULL",
+                    "mode": "FULL" if final_tp_price is not None else "SL_ONLY",
                     "stop_loss": sl_price,
                     "sl_trigger_by": "MarkPrice",
                 }

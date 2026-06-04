@@ -4,18 +4,24 @@
 
 ## Struttura generale
 
-```
+``` 
 parser_v2/
 ├── contracts/          modelli Pydantic (input/output)
 ├── core/               pipeline di processing
 ├── translation/        traduzione → CanonicalMessage
 ├── profiles/           logica specifica per trader
-│   └── trader_a/
+│   ├── trader_3/
+│   ├── trader_a/
+│   ├── trader_b/
+│   ├── trader_c/
+│   ├── trader_d/
+│   ├── trader_prova/
+│   └── <trader_x>/
 │       ├── profile.py
 │       ├── signal_extractor.py
 │       ├── intent_entity_extractor.py
 │       ├── semantic_markers.json   ← pattern testuali
-│       └── rules.json              ← regole di disambiguazione
+│       └── rules.json              ← regole di parsing/disambiguazione
 └── tests/
 ```
 
@@ -54,6 +60,7 @@ ParsedMessageBuilder    costruisce ParsedMessage con confidence e diagnostics
     ▼
 CanonicalTranslator     produce CanonicalMessage (contratto finale)
 ```
+Percorso alternativo: se dopo `MarkerEvidenceResolver` restano marker `info`, il runtime chiude subito il parsing come messaggio `INFO` senza passare da signal extraction, disambiguazione e target binding.
   Il flusso è questo:
 
   1. MarkerMatcher trova i marker.
@@ -176,11 +183,13 @@ Sopprime marker weak quando il contesto circostante corrisponde a certe condizio
 ```json
 "weak_context_exclusions": [
   {
+    "name": "tp_after_n_tp_historical_context",
     "intent": "TP_HIT",
-    "marker": "tp1",
+    "markers": {"source": "intent_weak"},
     "scope": "same_sentence",
     "if_contains_any": ["после", "взял до"],
-    "unless_contains_any": ["тейк взят", "tp hit"]
+    "unless_contains_any": ["тейк взят", "tp hit"],
+    "reason": "historical_tp_reference_not_actionable"
   }
 ]
 ```
@@ -188,11 +197,14 @@ Sopprime marker weak quando il contesto circostante corrisponde a certe condizio
 | Campo | Tipo | Significato |
 |-------|------|-------------|
 | `intent` | string | Intent a cui appartiene il marker |
-| `marker` | string | Il marker weak da sopprimere |
+| `name` | string | Nome identificativo della regola |
+| `markers` | `list[str]` \| `{"source": "intent_weak"}` | Marker weak coperti dalla regola |
 | `scope` | enum | Dove cercare: `same_sentence`, `same_line`, `window`, `whole_message` |
+| `window_chars` | int \| null | Ampiezza finestra se `scope = "window"` |
 | `if_contains_any` | list[str] | Sopprimi SE il contesto contiene almeno uno di questi |
 | `if_regex_any` | list[str] | Sopprimi SE il contesto fa match con almeno una di queste regex |
 | `unless_contains_any` | list[str] | NON sopprimere SE il contesto contiene almeno uno di questi |
+| `reason` | string \| null | Label diagnostica opzionale |
 
 **Esempio pratico:** il testo `"dopo tp1 ho chiuso"` contiene `"tp1"` (weak di `TP_HIT`) e `"dopo"` (`if_contains_any`) → il marker viene soppresso → nessun TP_HIT rilevato.
 
@@ -253,28 +265,23 @@ Quando un intent **forte** è presente, sopprime intent più deboli che sarebber
 ```json
 "cross_intent_suppression": [
   {
-    "if_strong_intent": "MOVE_STOP_TO_BE",
-    "suppress_weak_intent": "EXIT_BE",
-    "condition": "any"
+    "if_strong": "MOVE_STOP_TO_BE",
+    "suppress_weak": ["EXIT_BE", "INFO_ONLY"],
+    "reason": "be_implies_exit_be_and_info_noise"
   },
   {
-    "if_strong_intent": "SL_HIT",
-    "suppress_weak_intent": "MOVE_STOP_TO_BE",
-    "condition": "any"
-  },
-  {
-    "if_strong_intent": "SL_HIT",
-    "suppress_weak_intent": "CLOSE_FULL",
-    "condition": "any"
+    "if_strong": "SL_HIT",
+    "suppress_weak": ["MOVE_STOP", "MOVE_STOP_TO_BE", "CLOSE_FULL"],
+    "reason": "sl_hit_dominates_weaker_update_signals"
   }
 ]
 ```
 
 | Campo | Significato |
 |-------|-------------|
-| `if_strong_intent` | Intent che deve essere presente con evidenza forte |
-| `suppress_weak_intent` | Intent da sopprimere se ha solo evidenza weak |
-| `condition` | `"any"` = sempre quando il forte è presente |
+| `if_strong` | Intent che deve essere presente con evidenza forte |
+| `suppress_weak` | Lista di intent da sopprimere se hanno solo evidenza weak |
+| `reason` | Label diagnostica opzionale |
 
 **Logica:** `MOVE_STOP_TO_BE` implica già breakeven → `EXIT_BE` weak sarebbe rumore, viene soppresso.
 
@@ -374,7 +381,7 @@ Questi non sono marker di rilevamento intent — sono pattern che guidano l'estr
 2. **`rules.json` → `marker_resolution.cross_intent_suppression`** — se il nuovo intent è incompatibile con altri, aggiungere regola di soppressione
 3. **`rules.json` → `disambiguation`** — se può coesistere con altri intent, definire la precedenza
 4. **`rules.json` → `primary_intent_precedence`** — inserire nella posizione corretta
-5. **`contracts/enums.py`** — aggiungere valore a `IntentType` e `IntentCategory`
+5. **`contracts/enums.py`** — aggiungere valore a `IntentType` e mappatura in `INTENT_CATEGORY_BY_TYPE`
 6. **`contracts/entities.py`** — aggiungere classe `XxxEntities(IntentEntities)`
 7. **`profiles/trader_X/intent_entity_extractor.py`** — aggiungere builder per le entità
 
@@ -393,9 +400,9 @@ Questi non sono marker di rilevamento intent — sono pattern che guidano l'estr
 ### rules.json — cross_intent_suppression
 ```json
 {
-  "if_strong_intent": "PARTIAL_CLOSE_ALL",
-  "suppress_weak_intent": "CLOSE_PARTIAL",
-  "condition": "any"
+  "if_strong": "PARTIAL_CLOSE_ALL",
+  "suppress_weak": ["CLOSE_PARTIAL"],
+  "reason": "all_partial_close_dominates_generic_partial_close"
 }
 ```
 
@@ -430,5 +437,6 @@ Questi non sono marker di rilevamento intent — sono pattern che guidano l'estr
 - Un intent è rilevato se ha almeno un marker (strong o weak) presente.
 - La confidence finale è combinazione di: peso marker + completezza segnale (se SIGNAL).
 - Modificare `semantic_markers.json` non richiede toccare il codice Python — solo i JSON.
+- `semantic_markers.json` supporta anche `ignore_markers`, usati per ripulire rumore testuale prima o durante il matching logico.
 - `rules.json` può essere testato con i test di integrazione in `tests/`.
 - **`scope_hint` e telegram link:** `TargetHintsExtractor` scansiona il testo completo autonomamente (pipeline separata dal `MarkerEvidenceResolver`). Se il messaggio contiene `telegram_message_ids` (link forti a signal specifici), qualsiasi `scope_hint` estratto dal testo (es. "по шортам" in un p.s.) viene azzerato a `UNKNOWN` — i link puntano già a target precisi e lo scope testuale sarebbe fuorviante.

@@ -35,7 +35,7 @@
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
-        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -44,7 +44,7 @@
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
-        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "if_contains_any": ["не переносим в бу","фактически в бу"],
         "reason": "false_positive_weak_markers_in_exit_be_context"
       },
 
@@ -164,7 +164,8 @@
       "name": "prefer_move_stop_to_be_over_move_stop",
       "when_all_detected": ["MOVE_STOP_TO_BE", "MOVE_STOP"],
       "prefer": "MOVE_STOP_TO_BE",
-      "over": ["MOVE_STOP"]
+      "over": ["MOVE_STOP"],
+      "scope": "same_line"
     },
     {
       "name": "cancel_pending_over_sl_hit",

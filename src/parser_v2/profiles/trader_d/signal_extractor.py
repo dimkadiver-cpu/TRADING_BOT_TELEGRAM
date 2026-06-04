@@ -76,8 +76,14 @@ _STOP_LOSS_RE = re.compile(
     rf"(?:\s*\([^)]*\))?\s*:?\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
     re.IGNORECASE,
 )
-_TAKE_PROFIT_RE = re.compile(rf"\btp(?P<index>\d+)?\b\s*:?\s*(?P<value>{_NUMBER_PATTERN})", re.IGNORECASE)
-_TAKE_PROFIT_HEADER_RE = re.compile(r"^[^\n]*(?:\btps?\b|тейк\w*)[^\n]*:\s*$", re.IGNORECASE | re.MULTILINE)
+_TAKE_PROFIT_RE = re.compile(
+    rf"\b(?:tp|\u0442\u043f)(?P<index>\d+)?\b\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
+    re.IGNORECASE,
+)
+_TAKE_PROFIT_HEADER_RE = re.compile(
+    r"^[^\n]*(?:\btps?\b|\u0442\u043fs?\b|тейк\w*)[^\n]*:\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
 _TAKE_PROFIT_BARE_LINE_RE = re.compile(
     rf"^\s*(?:[{_BULLET_CHARS}]\s*)?(?P<value>{_NUMBER_PATTERN})(?:\s|\(|$)",
     re.IGNORECASE,

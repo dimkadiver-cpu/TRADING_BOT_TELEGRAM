@@ -155,7 +155,7 @@ def test_debug_on_rejects_invalid_duration_argument(ops_db):
     )
 
     assert res.decision == "REJECTED"
-    assert res.reply_text == "Usage: /debug_on [5m|30m|1h]"
+    assert res.reply_text == "Usage: /debug_on [<duration>]"
 
 
 def test_debug_on_rejects_extra_arguments(ops_db):
@@ -171,7 +171,7 @@ def test_debug_on_rejects_extra_arguments(ops_db):
     )
 
     assert res.decision == "REJECTED"
-    assert res.reply_text == "Usage: /debug_on [5m|30m|1h]"
+    assert res.reply_text == "Usage: /debug_on [<duration>]"
 
 
 def test_service_debug_without_injected_controller_uses_default_cap(ops_db):

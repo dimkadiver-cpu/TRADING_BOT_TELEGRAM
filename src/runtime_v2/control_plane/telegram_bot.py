@@ -39,7 +39,7 @@ Informativi:
 /reviews   - casi da controllare
 /pnl       - ultimo snapshot account persistito
 /logs [n]  - ultime N righe log (default: 20)
-/debug_on [5m|30m|1h]
+/debug_on [<duration>]
 /debug_off
 /version   - versione runtime
 /help      - questo messaggio
@@ -310,7 +310,7 @@ class CommandRouter:
         if command_name == "debug_on":
             if len(args) > 1 or (args and not is_valid_duration_arg(args[0])):
                 return _DispatchResult(
-                    "Usage: /debug_on [5m|30m|1h]",
+                    "Usage: /debug_on [<duration>]",
                     decision="REJECTED",
                     reject_reason="invalid_arguments",
                 )

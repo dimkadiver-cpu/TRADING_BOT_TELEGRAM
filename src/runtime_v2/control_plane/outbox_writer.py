@@ -17,6 +17,7 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "CLOSE_FULL_FILLED": "POSITION_CLOSED",
     "ENTRY_UPDATED": "ENTRY_UPDATED",
     "PENDING_TIMEOUT": "PENDING_ENTRY_EXPIRED",
+    "CLOSE_PARTIAL_FILLED": "PARTIAL_CLOSE_EXECUTED",
     "PENDING_ENTRY_CANCELLED": "ENTRY_CANCELLED",
     "ENTRY_CANCEL_FAILED": "CANCEL_FAILED",
     "RECONCILIATION_WARNING": "RECONCILIATION_WARNING",
@@ -199,7 +200,7 @@ def _build_payload(
         risk_pct = None
         if risk.get("capital") and risk.get("risk_amount"):
             risk_pct = round(risk["risk_amount"] / risk["capital"] * 100, 2)
-        return {
+        payload = {
             **base,
             "trader_id": trader_id,
             "account_id": account_id,
@@ -217,6 +218,11 @@ def _build_payload(
             "source": ev.get("source", "original_message"),
             "link": ev.get("source_message_link"),
         }
+        if ev.get("parse_status") == "PARTIAL":
+            payload["parse_status"] = "PARTIAL"
+            if ev.get("parse_warnings"):
+                payload["parse_warnings"] = ev["parse_warnings"]
+        return payload
 
     if notification_type == "ENTRY_OPENED":
         pending = [
@@ -500,6 +506,19 @@ def _build_payload(
             "source": ev.get("source", "timeout_worker"),
         }
 
+    if notification_type == "PARTIAL_CLOSE_EXECUTED":
+        closed_qty = ev.get("closed_size", ev.get("filled_qty"))
+        fill_price = ev.get("fill_price")
+        return {
+            **base,
+            "fill_price": fill_price,
+            "closed_qty": closed_qty,
+            "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
+            "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
+            "fee": ev.get("exec_fee"),
+            "source": ev.get("source", "bot_command"),
+        }
+
     # fallback: merge base with event payload
     return {**base, **ev}
 
@@ -583,6 +602,10 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
 
         # Filter: ENTRY_CANCELLED caused by position close should not be shown
         if notification_type == "ENTRY_CANCELLED" and ev.get("cancel_reason") == "position_closed":
+            continue
+
+        # Filter: PARTIAL_CLOSE_EXECUTED only for bot-originated fills
+        if notification_type == "PARTIAL_CLOSE_EXECUTED" and ev.get("source") != "bot_command":
             continue
 
         # Promote CLOSE_FULL_FILLED on PROTECTED chain → BE_EXIT

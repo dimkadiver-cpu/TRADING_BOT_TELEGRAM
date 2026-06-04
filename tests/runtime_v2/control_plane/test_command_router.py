@@ -132,7 +132,7 @@ def test_help_lists_commands(ops_db):
     assert "/status" in res.reply_text
     assert "/trades" in res.reply_text
     assert "/pnl" in res.reply_text
-    assert "/debug_on [5m|30m|1h]" in res.reply_text
+    assert "/debug_on [<duration>]" in res.reply_text
     assert "/debug_off" in res.reply_text
 
 

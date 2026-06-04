@@ -35,7 +35,7 @@
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
-        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -44,7 +44,7 @@
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
-        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись"],
+        "if_contains_any": ["не переносим в бу","фактически в бу"],
         "reason": "false_positive_weak_markers_in_exit_be_context"
       },
 

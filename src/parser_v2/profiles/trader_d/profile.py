@@ -9,8 +9,8 @@ from src.parser_v2.contracts.rules import (
     ParserRules,
     SemanticMarkers,
 )
-from src.parser_v2.profiles.trader_c.intent_entity_extractor import IntentEntityExtractor
-from src.parser_v2.profiles.trader_c.signal_extractor import SignalExtractor
+from src.parser_v2.profiles.trader_d.intent_entity_extractor import IntentEntityExtractor
+from src.parser_v2.profiles.trader_d.signal_extractor import SignalExtractor
 
 _PROFILE_DIR = Path(__file__).parent
 
@@ -65,4 +65,4 @@ class TraderDProfile:
         return self._intent_entity_extractor.extract(text, evidence)
 
 
-__all__ = ["TraderCProfile"]
+__all__ = ["TraderDProfile"]
