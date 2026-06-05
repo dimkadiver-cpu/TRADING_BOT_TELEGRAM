@@ -129,6 +129,7 @@ def _write_update_clean_log(
     applied_actions: list[str] = []
     rejected_actions: list[str] = [e.event_type for e in noops]
     changed: list[dict] = []
+    display_lines: list[str] = []
     reason: str | None = None
 
     for event in noops:
@@ -201,6 +202,10 @@ def _write_update_clean_log(
                     "old": ce.get("old_price"),
                     "new": ce.get("new_price"),
                 })
+        elif action == "MOVE_STOP":
+            display_lines.append(f"SL: {p.get('old_sl_price')} -> {p.get('new_sl_price')}")
+            if p.get("reference") in {"Price", "TP_1", "TP_2", "TP_3"}:
+                display_lines.append(f"Reference: {p['reference']}")
 
     first = (accepted or noops)[0]
     source = _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE.get(first.source_type, "runtime")
@@ -219,6 +224,7 @@ def _write_update_clean_log(
         "applied_actions": applied_actions,
         "rejected_actions": rejected_actions,
         "changed": changed,
+        "display_lines": display_lines,
         "source": source,
         "link": link,
     }

@@ -604,3 +604,26 @@ def test_outbox_writer_sl_filled_side_from_chain(tmp_path):
     p = json.loads(row[0])
     assert p["side"] == "LONG"          # from chain, not "Sell" from event
     assert p["fill_price"] == 62000.0
+
+
+def test_update_done_move_stop_shows_reference_tp():
+    from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
+
+    text = format_clean_log("UPDATE_DONE", {
+        "chain_id": 8,
+        "symbol": "BTC",
+        "side": "LONG",
+        "applied_actions": ["MOVE_STOP"],
+        "changed": [
+            {"field": "SL", "old": "66,400", "new": "68,500"},
+        ],
+        "display_lines": [
+            "SL: 66,400 -> 68,500",
+            "Reference: TP_1",
+        ],
+        "source": "trader_update",
+        "link": "https://t.me/c/3897279123/470",
+    })
+
+    assert "SL: 66,400 -> 68,500" in text
+    assert "Reference: TP_1" in text

@@ -323,7 +323,11 @@ def _update_done(p: dict) -> str:
         for op in operations:
             lines.append(f"{_BULLET} {op}")
     changed = p.get("changed") or []
-    if changed:
+    display_lines = p.get("display_lines") or []
+    if display_lines:
+        for item in display_lines:
+            lines.append(item)
+    elif changed:
         lines.append("Changed:")
         for item in changed:
             if isinstance(item, dict):
@@ -338,7 +342,7 @@ def _update_done(p: dict) -> str:
             else:
                 lines.append(f"{_BULLET} {item}")
     changed_fields = p.get("changed_fields") or []
-    if changed_fields and not changed:
+    if changed_fields and not changed and not display_lines:
         lines.append("Changed fields:")
         for field in changed_fields:
             lines.append(f"  \u2022 {field}")
