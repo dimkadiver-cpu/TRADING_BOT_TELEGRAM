@@ -526,7 +526,10 @@ def test_multi_chain_summary_close_full_uses_compact_rows():
                 "side": "LONG",
                 "status": "DONE",
                 "link": "https://t.me/c/3897279123/468",
-                "display_lines": [],
+                "display_lines": [
+                    "Entry_2: 61,192.03 -> cancelled",
+                    "SL: 66,400 -> 68,500 BE",
+                ],
             },
             {
                 "chain_id": 7,
@@ -534,10 +537,12 @@ def test_multi_chain_summary_close_full_uses_compact_rows():
                 "side": "LONG",
                 "status": "DONE",
                 "link": "https://t.me/c/3897279123/469",
-                "display_lines": [],
+                "display_lines": [
+                    "Entry_2: SKIPPED - no pending averaging order",
+                ],
             },
         ],
-        "counts": {"done": 2, "partial": 0, "skipped": 0, "error": 0},
+        "counts": {"done": 2, "partial": 1, "review": 1, "skipped": 0, "error": 0},
         "source": "trader_update",
         "link": "https://t.me/c/3927267771/365",
     })
@@ -545,9 +550,12 @@ def test_multi_chain_summary_close_full_uses_compact_rows():
     assert "Operation requested:" in text
     assert "Close full" in text
     assert "https://t.me/c/3897279123/468" in text
+    assert "Entry_2: 61,192.03 -> cancelled" not in text
+    assert "SL: 66,400 -> 68,500 BE" not in text
+    assert "Entry_2: SKIPPED - no pending averaging order" not in text
     assert "Position: open" not in text
     assert "Close reason:" not in text
-    assert "Done: 2 | Skipped: 0 | Error: 0" in text
+    assert "Done: 2 | Partial: 1 | Review: 1 | Skipped: 0 | Error: 0" in text
 
 
 def test_outbox_writer_sl_filled_side_from_chain(tmp_path):

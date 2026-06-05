@@ -540,7 +540,14 @@ def _multi_chain_summary(p: dict) -> str:
     review = counts.get("review", 0)
     error = counts.get("error", 0)
     if is_close_full:
-        lines.append(f"Done: {done} | Skipped: {skipped} | Error: {error}")
+        summary_parts = [f"Done: {done}"]
+        if partial:
+            summary_parts.append(f"Partial: {partial}")
+        if review:
+            summary_parts.append(f"Review: {review}")
+        summary_parts.append(f"Skipped: {skipped}")
+        summary_parts.append(f"Error: {error}")
+        lines.append(" | ".join(summary_parts))
     else:
         summary_parts = [
             f"Done: {done}",
