@@ -281,6 +281,12 @@ class ExchangeEventSyncWorker:
             tp_level = None
             idem_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
 
+        if coid.command_id:
+            command_source = self._repo.get_command_source(coid.trade_chain_id, coid.command_id)
+            fill_source = command_source or "manual_command"
+        else:
+            fill_source = "rest_reconciliation"
+
         ep = ExchangeEventPayload(
             fill_price=raw.average_price,
             filled_qty=raw.filled_qty,
@@ -294,7 +300,7 @@ class ExchangeEventSyncWorker:
             order_link_id=raw.client_order_id,
             tp_level=tp_level,
             command_id=coid.command_id,
-            source="manual_command" if coid.command_id else "rest_reconciliation",
+            source=fill_source,
         )
 
         return self._repo.insert_exchange_event(

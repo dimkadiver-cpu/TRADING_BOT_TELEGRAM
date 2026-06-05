@@ -1,71 +1,117 @@
+Rivediami il sistam di gestione e vizalizazione (verifica anche come arrivano)
 
-### 3.8 TP_FILLED — parziale
+- casi posibili di update multipli osservati:
 
-Emesso ad ogni TP intermedio. Non mostra SL corrente né percentuale posizione residua.
+1) a riferimenti multipli specifici:
+	- Sl a BE/ SL a livello 
+	- Cancel pending
+	- Close full 
+	- Sl a BE + Cancel pending 
 
-```
-📊 #12 — TP1 FILLED
-- - - - - - - - - - - - - - - -
-BTCUSDT — 📈 LONG
-https://t.me/c/123456/987
-- - - - - - - - - - - - - - - -
-TP_1: 69,200
-Closed: 50%
-PnL: +17.50 USDT
-Fee: 0.42 USDT
-Fee rate: 0.055%
-Value: 760.00 USDT
-                                // eiminare spazio vuoto
-- - - - - - - - - - - - - - - -
-Source: exchange
-```
+1_1) a riferimenti multipli specifici con comado specifico a singolo riferimento
+	- Sl a BE o SL a livello/Prezzo
+	es:
+	https://t.me/c/3897279123/470  стоп на tp 1
+        https://t.me/c/3897279123/466  стоп в безубыток
 
-📊 #3 — ENTRY OPENED
-- - - - - - - - - - - - - - -
-TAOUSDT — 📈 LONG
-https://t.me/c/4240829081/120
-- - - - - - - - - - - - - - -
-Entry_1 - Filled
-Price: 199
-Qty: 10.526
-Fee: 0.42 USDT
-Fee rate: 0.020%
-Value: 2094.67 USDT
-                            // aggiungere  "- - -" (verificare: in gnlio log che produce un riga vuota sostituire con  "- - -")
-Position:
-Avg entry: 199
-Pending: none
-- - - - - - - - - - - - - - -
-Source: exchange
+2) a riferimenti multipli con scope globali:
+	- Sl a BE/ SL a livello 
+	- Cancel pending
+	- Close full 
+	- Sl a BE + Cancel pending 
 
-✅ #2 — UPDATE DONE
-- - - - - - - - - - - - - - - -
-BTCUSDT — 📈 LONG
-https://t.me/c/3897279123/396
-- - - - - - - - - - - - - - - -
-Operation:
-▪️ CANCEL_PENDING
-Changed:
-Entry_2: 61,192.03 -> cancelled
-- - - - - - - - - - - - - - - -
+
+
+
+
+Rivedrei summary:
+
+
+
+✅ UPDATE APPLICATO — 4/4 chain 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Operation requested:
+▪️ Close full 
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#6 | WLD | LONG — DONE
+↳ https://t.me/c/3897279123/468 // link a singolo report finale "POSITION CLOSED"
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#7 ICNT LONG — DONE
+↳ https://t.me/c/3897279123/469
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#8 BTC LONG — DONE
+↳ https://t.me/c/3897279123/470  
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#1 INCT LONG — DONE
+↳ https://t.me/c/3897279123/466
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Done: 4 | Skipped: 0 | Error: 0
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Source: trader_update
-- - - - - - - - - - - - - - - -
-https://t.me/c/3927267771/344
+https://t.me/c/3927267771/365
 
-✅ #2 — UPDATE DONE
-- - - - - - - - - - - - - - - -
-BTCUSDT — 📈 LONG
-https://t.me/c/123456/987
-- - - - - - - - - - - - - - - -
-Operation:
+
+
+
+✅ UPDATE APPLICATO — 3/4 full, 1 partial
+- - - - - - - - - - - - - - - - - - - - - - - -
+Operations requested:
 ▪️ CANCEL_PENDING
 ▪️ MOVE_SL_TO_BE
-
-Changed:
-SL: 66,400 -> 68,500
-Entry_2: 61,192.03 -> cancelled
-- - - - - - - - - - - - - - - -
+- - - - - - - - - - - - - - - - - - - - - - - - 
+#6 WLD LONG — DONE  
+https://t.me/c/3897279123/468
+Entry_2: 61,192.03 → cancelled
+Entry_3: 60,192.03 → cancelled
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - -
+#7 ICNT LONG — PARTIAL 
+https://t.me/c/3897279123/468
+Entry_2: SKIPPED — no pending averaging order
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - - 
+#8 BTC LONG — DONE
+https://t.me/c/3897279123/468
+Entry_2: 61,192.03 → cancelled
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - - 
+#1 INCT LONG — DONE
+https://t.me/c/3897279123/468
+Entry_2: 61,192.03 → cancelled
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - - 
+Done: 3 | Partial: 1 | Skipped: 1 | Error: 0
+- - - - - - - - - - - - - - - - - - - - - - - - 
 Source: trader_update
-- - - - - - - - - - - - - - - -
-https://t.me/c/123456/1005
-```
+https://t.me/c/3927267771/365
+
+ 
+
+✋ #6 — POSITION CLOSED **
+- - - - - - - - - - - - - - - - - - - - - - - - -
+WLDUSDT — 📈 LONG
+https://t.me/c/3897279123/453
+- - - - - - - - - - - - - - -
+Price: 0.5033
+Closed: 100%
+PnL: +45.20 USDT
+Fee: 1.03 USDT
+Fee rate: 0.055%
+- - - - - - - - - - - - - - - - - - - - - - - - -
+Close reason: 
+- - - - - - - - - - - - - - -
+Final Result:
+ROI net: +3.67%
+Total PnL net: +23.30 USDT
+Gross PnL: +26.25 USDT
+Fees: -2.95 USDT
+Funding: +-0.00 USDT
+- - - - - - - - - - - - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3927267771/365
+Source: manual_command
+
+
+** nota la stuttura deve essere completa come per POSITION CLOSED da TP finale o SL/BE
+dforser meglio verificare la truttura genera di position Cloded in tutti casi?
+

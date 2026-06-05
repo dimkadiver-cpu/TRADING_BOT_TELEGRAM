@@ -731,7 +731,10 @@ class LifecycleEventProcessor:
         if ep.source:
             fill_payload["source"] = ep.source
         if ep.command_id is not None:
-            fill_payload["close_reason"] = "BOT_COMMAND"
+            if ep.source == "trader_update":
+                fill_payload["close_reason"] = "TRADER_UPDATE"
+            else:
+                fill_payload["close_reason"] = "MANUAL_CLOSE"
         return EventProcessorResult(
             new_lifecycle_state="CLOSED",
             new_be_protection_status=None,

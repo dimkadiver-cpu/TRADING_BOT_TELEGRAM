@@ -483,6 +483,16 @@ def _build_payload(
         partial_pct = None
         if planned_qty and partial_qty is not None:
             partial_pct = round(float(partial_qty) / float(planned_qty) * 100.0, 2)
+        cancel_origin = ev.get("cancel_origin")
+        cancel_reason = ev.get("cancel_reason")
+        if ev.get("source"):
+            entry_cancel_source = ev["source"]
+        elif cancel_origin == "engine_rule" and cancel_reason == "auto_cancel_averaging":
+            entry_cancel_source = "operation_rules"
+        elif cancel_origin in ("engine_rule", "trader_update"):
+            entry_cancel_source = "trader_update"
+        else:
+            entry_cancel_source = "timeout_worker"
         return {
             **base,
             "cancelled_entry": cancelled_entry,
@@ -490,7 +500,7 @@ def _build_payload(
             "partial_fill_qty": partial_qty,
             "avg_entry": entry_avg_price,
             "total_filled_qty": filled_entry_qty,
-            "source": ev.get("source", "timeout_worker"),
+            "source": entry_cancel_source,
             "link": ev.get("source_message_link"),
         }
 

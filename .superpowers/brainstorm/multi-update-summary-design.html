@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Runtime V2 Multi-Update Summary</title>
+  <style>
+    :root {
+      --bg: #f3efe7;
+      --ink: #1c1c1c;
+      --muted: #6b645b;
+      --line: #d8cfbf;
+      --card: #fffdf8;
+      --ok: #1d6b3b;
+      --warn: #8f5a00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 32px;
+      font-family: Georgia, "Times New Roman", serif;
+      background: linear-gradient(180deg, #f7f3eb 0%, #efe7d8 100%);
+      color: var(--ink);
+    }
+    h1 { margin: 0 0 8px; font-size: 34px; }
+    h2 { margin: 0 0 12px; font-size: 24px; }
+    p { margin: 0 0 12px; line-height: 1.5; }
+    .subtitle {
+      color: var(--muted);
+      max-width: 980px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
+      margin-top: 24px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 22px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+    .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #ece3d1;
+      color: #544e46;
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: Consolas, "Courier New", monospace;
+      font-size: 14px;
+      line-height: 1.45;
+      background: #fbf7ef;
+      border: 1px solid #eadfcd;
+      border-radius: 14px;
+      padding: 18px;
+    }
+    .note {
+      margin-top: 18px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      display: grid;
+      gap: 8px;
+    }
+    .k { font-weight: 700; }
+    .ok { color: var(--ok); }
+    .warn { color: var(--warn); }
+  </style>
+</head>
+<body>
+  <h1>Multi-Update Summary Design</h1>
+  <p class="subtitle">
+    Confronto dei due casi approvati: update <strong>non-CLOSE_FULL</strong> con summary
+    autosufficiente e update <strong>CLOSE_FULL</strong> con link finale al report
+    <code>POSITION_CLOSED</code>.
+  </p>
+
+  <div class="grid">
+    <section class="card">
+      <div class="label">Caso 1 · Non-CLOSE_FULL</div>
+      <h2>Summary autosufficiente con link al SIGNAL_ACCEPTED</h2>
+      <pre>✅ UPDATE APPLICATO — 3/4 full, 1 partial
+- - - - - - - - - - - - - - - - - - - - - - - -
+Operations requested:
+▪️ CANCEL_PENDING
+▪️ MOVE_SL_TO_BE
+- - - - - - - - - - - - - - - - - - - - - - - -
+#6 WLD LONG — DONE
+https://t.me/c/3897279123/468
+Entry_2: 61,192.03 → cancelled
+Entry_3: 60,192.03 → cancelled
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - -
+#7 ICNT LONG — PARTIAL
+https://t.me/c/3897279123/469
+Entry_2: SKIPPED — no pending averaging order
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - -
+#8 BTC LONG — DONE
+https://t.me/c/3897279123/470
+Entry_2: 61,192.03 → cancelled
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - -
+#1 INCT LONG — DONE
+https://t.me/c/3897279123/466
+Entry_2: 61,192.03 → cancelled
+SL: 66,400 → 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - - -
+Done: 3 | Partial: 1 | Skipped: 1 | Error: 0
+- - - - - - - - - - - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3927267771/365</pre>
+      <div class="note">
+        <div><span class="k ok">Link per-chain:</span> root <code>SIGNAL_ACCEPTED</code>.</div>
+        <div><span class="k ok">Dettaglio:</span> i cambi reali sono inline nel summary.</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="label">Caso 2 · CLOSE_FULL</div>
+      <h2>Summary compatto con link finale al POSITION_CLOSED</h2>
+      <pre>✅ UPDATE APPLICATO — 4/4 chain
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Operation requested:
+▪️ Close full
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#6 WLD LONG — DONE
+https://t.me/c/3897279123/468
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#7 ICNT LONG — DONE
+https://t.me/c/3897279123/469
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#8 BTC LONG — DONE
+https://t.me/c/3897279123/470
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#1 INCT LONG — DONE
+https://t.me/c/3897279123/466
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Done: 4 | Skipped: 0 | Error: 0
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3927267771/365</pre>
+      <div class="note">
+        <div><span class="k warn">Link per-chain:</span> report finale <code>POSITION_CLOSED</code>.</div>
+        <div><span class="k warn">Regola:</span> il summary aspetta finché il link finale è risolvibile.</div>
+        <div><span class="k warn">Non ripetere:</span> niente blocco <code>Applied: Position open → closed 100%</code> nel summary.</div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

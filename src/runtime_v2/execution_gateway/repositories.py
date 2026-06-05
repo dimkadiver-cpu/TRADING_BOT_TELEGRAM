@@ -440,20 +440,56 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+        placeholder_fallback: tuple[int, dict] | None = None
         for command_id, payload_json in rows:
             try:
                 payload = json.loads(payload_json or "{}")
             except Exception:
                 continue
-            if payload.get("entry_client_order_id") != entry_client_order_id:
-                continue
-            result = {"cancel_command_id": int(command_id)}
+            stored_coid = payload.get("entry_client_order_id")
+            if stored_coid == entry_client_order_id:
+                result = {"cancel_command_id": int(command_id)}
+                if payload.get("cancel_origin") is not None:
+                    result["cancel_origin"] = payload.get("cancel_origin")
+                if payload.get("cancel_reason") is not None:
+                    result["cancel_reason"] = payload.get("cancel_reason")
+                return result
+            # Fallback candidate: command stored with unresolved plan placeholder.
+            # expand_cancel_pending_commands may have failed to resolve the real coid
+            # at persist time (PLACE_ENTRY not yet ACKed), so the cancel was stored with
+            # the plan placeholder.  We use it only if no exact match is found.
+            if placeholder_fallback is None and isinstance(stored_coid, str) and (
+                stored_coid.startswith("place_entry:") or stored_coid.startswith("place_entry_attached:")
+            ):
+                placeholder_fallback = (int(command_id), payload)
+
+        if placeholder_fallback is not None:
+            command_id, payload = placeholder_fallback
+            result: dict = {"cancel_command_id": command_id}
             if payload.get("cancel_origin") is not None:
                 result["cancel_origin"] = payload.get("cancel_origin")
             if payload.get("cancel_reason") is not None:
                 result["cancel_reason"] = payload.get("cancel_reason")
             return result
         return {}
+
+    def get_command_source(self, trade_chain_id: int, command_id: int) -> str | None:
+        """Return command_source from a CLOSE_FULL/CLOSE_PARTIAL command payload."""
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT payload_json FROM ops_execution_commands "
+                "WHERE trade_chain_id=? AND command_id=? LIMIT 1",
+                (trade_chain_id, command_id),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return None
+        try:
+            return json.loads(row[0] or "{}").get("command_source")
+        except Exception:
+            return None
 
     def get_chain_filled_entry_qty(self, trade_chain_id: int) -> float | None:
         conn = sqlite3.connect(self._db)
