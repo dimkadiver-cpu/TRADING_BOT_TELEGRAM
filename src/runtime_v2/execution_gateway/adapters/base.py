@@ -59,5 +59,14 @@ class ExecutionAdapter(ABC):
         execution_account_id: str,
     ) -> float | None: ...
 
+    def load_known_symbols(self) -> frozenset[str] | None:
+        """Return the set of symbols tradeable on this exchange, or None if unavailable.
+
+        Called once at startup to populate the symbol whitelist used by the entry gate.
+        Returns None when the exchange cannot be reached or the adapter doesn't support it —
+        the entry gate will then skip symbol validation (fail-open).
+        """
+        return None
+
 
 __all__ = ["ExecutionAdapter"]

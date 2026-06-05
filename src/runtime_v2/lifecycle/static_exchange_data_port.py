@@ -15,11 +15,13 @@ class StaticExchangeDataPort(ExchangeDataPort):
         market_snapshots: dict[str, SymbolMarketSnapshot] | None = None,
         orders: list[OrderSnapshot] | None = None,
         positions: list[PositionSnapshot] | None = None,
+        known_symbols: frozenset[str] | None = None,
     ) -> None:
         self._account = account_snapshot
         self._markets: dict[str, SymbolMarketSnapshot] = market_snapshots or {}
         self._orders: list[OrderSnapshot] = orders or []
         self._positions: list[PositionSnapshot] = positions or []
+        self._known_symbols = known_symbols
 
     def get_account_state(self, account_id: str) -> AccountStateSnapshot:
         if self._account is not None:
@@ -49,6 +51,11 @@ class StaticExchangeDataPort(ExchangeDataPort):
             if p.symbol == symbol and p.side == side:
                 return p
         return None
+
+    def symbol_exists(self, account_id: str, symbol: str) -> bool:
+        if self._known_symbols is None:
+            return True  # fail-open: no symbol list loaded → don't block signals
+        return symbol in self._known_symbols
 
 
 __all__ = ["StaticExchangeDataPort"]

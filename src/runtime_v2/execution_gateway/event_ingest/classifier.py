@@ -247,6 +247,12 @@ class EventClassifier:
                 return "CLOSE_FULL_FILLED", "manual_command", None
             return "CLOSE_PARTIAL_FILLED", "manual_command", None
 
+        if role == "exit_full":
+            return "CLOSE_FULL_FILLED", "manual_command", None
+
+        if role == "exit_partial":
+            return "CLOSE_PARTIAL_FILLED", "manual_command", None
+
         if role == "sl":
             return "SL_FILLED", "manual_command", None
 

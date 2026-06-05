@@ -84,4 +84,4 @@ def test_shutdown_reads_open_chains_count(ops_db):
     ).fetchone()[0]
     conn.close()
     p = json.loads(payload_json)
-    assert p["details"]["open_chains"] == 1
+    assert p["context"]["open_chains"] == 1

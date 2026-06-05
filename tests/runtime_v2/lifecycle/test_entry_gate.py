@@ -2986,3 +2986,78 @@ def test_apply_close_partial_includes_close_pct():
     assert p["action"] == "CLOSE_PARTIAL"
     assert p.get("close_pct") == 50.0, f"Expected 50.0, got {p.get('close_pct')}"
     assert p.get("fraction") == 0.5
+
+
+# ── Symbol existence check ────────────────────────────────────────────────────
+
+def test_unknown_symbol_rejects_signal_before_chain_creation():
+    """SIGNAL_REJECTED con reason=unknown_symbol quando il simbolo non è nella whitelist."""
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(known_symbols=frozenset({"BTC/USDT", "ETH/USDT"})),
+    )
+    enriched = _make_enriched_signal(symbol="INCTUSDT")
+    result = gate.process_signal(enriched, [], "NONE")
+
+    assert result.trade_chain is None
+    assert result.execution_commands == []
+    assert result.review_reason == "unknown_symbol"
+    event_types = [e.event_type for e in result.lifecycle_events]
+    assert "SIGNAL_REJECTED" in event_types
+    assert "SIGNAL_ACCEPTED" not in event_types
+    assert "TRADE_CHAIN_CREATED" not in event_types
+
+
+def test_unknown_symbol_check_is_universal_also_for_limit_orders():
+    """Il check simbolo si applica sia a MARKET che a LIMIT — universale."""
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(known_symbols=frozenset({"BTC/USDT"})),
+    )
+    enriched = _make_enriched_signal(symbol="FAKEUSDT", entry_type="LIMIT", entry_price=1.0)
+    result = gate.process_signal(enriched, [], "NONE")
+
+    assert result.trade_chain is None
+    assert result.review_reason == "unknown_symbol"
+
+
+def test_known_symbol_passes_check():
+    """Simbolo presente nella whitelist: segnale accettato normalmente."""
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(known_symbols=frozenset({"BTC/USDT"})),
+    )
+    enriched = _make_enriched_signal(symbol="BTC/USDT")
+    result = gate.process_signal(enriched, [], "NONE")
+
+    assert result.trade_chain is not None
+    assert result.trade_chain.symbol == "BTC/USDT"
+
+
+def test_no_known_symbols_list_is_fail_open():
+    """known_symbols=None (nessun dato dall'exchange) → non blocca i segnali."""
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(known_symbols=None),
+    )
+    enriched = _make_enriched_signal(symbol="QUALSIASI/USDT")
+    result = gate.process_signal(enriched, [], "NONE")
+
+    # Non viene rifiutato per unknown_symbol — potrebbe fallire per altri motivi (SL, ecc.)
+    assert result.review_reason != "unknown_symbol"

@@ -620,8 +620,8 @@ def test_waiting_partial_tp_resolves_size_from_filled_entry_qty(ops_db):
     assert "close_pct" not in sent_payload
 
 
-def test_deferred_market_no_mark_price_marks_review_required(ops_db):
-    """Gateway con deferred_market e nessun mark_price: REVIEW_REQUIRED, no place_order."""
+def test_deferred_market_no_mark_price_cancels_chain(ops_db):
+    """Gateway con deferred_market e nessun mark_price: REVIEW_REQUIRED + chain CANCELLED."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
@@ -649,12 +649,165 @@ def test_deferred_market_no_mark_price_marks_review_required(ops_db):
     assert len(place_calls) == 0
 
     conn = sqlite3.connect(ops_db)
-    row = conn.execute(
+    cmd_row = conn.execute(
         "SELECT status, result_payload_json FROM ops_execution_commands WHERE command_id=2002"
     ).fetchone()
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
     conn.close()
-    assert row[0] == "REVIEW_REQUIRED"
-    assert "deferred_market_no_mark_price" in (row[1] or "")
+
+    assert cmd_row[0] == "REVIEW_REQUIRED"
+    assert "deferred_market_no_mark_price" in (cmd_row[1] or "")
+    assert chain_state == "CANCELLED"
+
+
+def test_deferred_market_zero_risk_distance_cancels_chain(ops_db):
+    """Mark price == SL price → deferred_market_zero_risk_distance → chain CANCELLED."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    payload = {
+        "symbol": "SOL/USDT", "side": "LONG", "entry_type": "MARKET",
+        "qty_mode": "deferred_market", "risk_amount": 10.0, "sl_price": 150.0,
+        "leverage": 1, "hedge_mode": False, "position_idx": 0,
+        "execution_strategy": "D_POSITION_TPSL", "sequence": 1,
+    }
+    _insert_cmd(ops_db, 2010, payload=payload)
+    repo = GatewayCommandRepository(ops_db)
+
+    # mark_price == sl_price → risk_dist == 0
+    adapter = FakeAdapter(mark_prices={"SOL/USDT": 150.0})
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": adapter},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    cmd_status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2010"
+    ).fetchone()[0]
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert cmd_status == "REVIEW_REQUIRED"
+    assert chain_state == "CANCELLED"
+
+
+def test_adapter_not_found_cancels_entry_chain(ops_db):
+    """Adapter non trovato su un PLACE_ENTRY → chain CANCELLED."""
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 2011, payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={},  # adapter vuoto → adapter_not_found
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    cmd_status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2011"
+    ).fetchone()[0]
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert cmd_status == "REVIEW_REQUIRED"
+    assert chain_state == "CANCELLED"
+
+
+def test_capability_missing_on_entry_cancels_chain(ops_db):
+    """PLACE_ENTRY_WITH_ATTACHED_TPSL con capability mancante → chain CANCELLED."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.models import AdapterCapabilities
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 2012, cmd_type="PLACE_ENTRY", payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter(
+            capabilities=AdapterCapabilities(place_entry=False)
+        )},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    cmd_status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2012"
+    ).fetchone()[0]
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert cmd_status == "REVIEW_REQUIRED"
+    assert chain_state == "CANCELLED"
+
+
+def test_live_trading_gate_does_not_cancel_chain(ops_db):
+    """Safety gate live_trading_env_gate_not_set: chain resta WAITING_ENTRY (hold intenzionale)."""
+    import yaml
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.models import ExecutionConfig
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    raw = yaml.safe_load(open("config/execution.yaml").read())
+    # Route acc_1 → bybit_paper (mode=live) so the live safety gate is actually reached
+    raw["execution"]["account_routing"]["default"]["adapter"] = "bybit_paper"
+    raw["execution"]["adapters"]["bybit_paper"]["live_safety"]["allow_live_trading"] = True
+    raw["execution"]["adapters"]["bybit_paper"]["mode"] = "live"
+    config = ExecutionConfig.model_validate(raw["execution"])
+
+    _insert_cmd(ops_db, 2013, payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+        "entry_type": "LIMIT", "price": 50000.0, "qty": 0.02, "sequence": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=config,
+        adapter_registry={"bybit_paper": FakeAdapter()},
+        repo=repo,
+    )
+    cmd = repo.get_pending_batch()[0]
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    cmd_status = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2013"
+    ).fetchone()[0]
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert cmd_status == "REVIEW_REQUIRED"
+    assert chain_state == "WAITING_ENTRY"  # safety gate: chain in hold, non cancellata
 
 
 def test_rebuild_partial_tps_supersedes_older_pending_rebuilds_before_send(ops_db):

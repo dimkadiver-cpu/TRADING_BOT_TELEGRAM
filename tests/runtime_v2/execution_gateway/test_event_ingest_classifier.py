@@ -48,6 +48,8 @@ KNOWN_IDS: dict[str, tuple[int, str, int]] = {
     "bot-tp-1":     (10, "tp_1",  2),
     "bot-tp-2":     (10, "tp_2",  3),
     "bot-sl-1":     (10, "sl",    4),
+    "bot-exit-full-1": (10, "exit_full", 5),
+    "bot-exit-partial-1": (10, "exit_partial", 6),
 }
 
 
@@ -113,7 +115,7 @@ class TestPriority2OrderLinkIdCorrelation:
         )
         result = clf.classify(raw)
         assert result.event_type == "ENTRY_FILLED"
-        assert result.source == "bot_command"
+        assert result.source == "manual_command"
         assert result.trade_chain_id == 10
 
     def test_classify_tp_by_order_link_id(self):
@@ -127,7 +129,7 @@ class TestPriority2OrderLinkIdCorrelation:
         )
         result = clf.classify(raw)
         assert result.event_type == "TP_FILLED"
-        assert result.source == "bot_command"
+        assert result.source == "manual_command"
         assert result.tp_level == 2
         assert result.trade_chain_id == 10
 
@@ -142,7 +144,7 @@ class TestPriority2OrderLinkIdCorrelation:
         )
         result = clf.classify(raw)
         assert result.event_type == "CLOSE_FULL_FILLED"
-        assert result.source == "bot_command"
+        assert result.source == "manual_command"
         assert result.trade_chain_id == 10
 
     def test_classify_close_partial_by_order_link_id(self):
@@ -156,7 +158,35 @@ class TestPriority2OrderLinkIdCorrelation:
         )
         result = clf.classify(raw)
         assert result.event_type == "CLOSE_PARTIAL_FILLED"
-        assert result.source == "bot_command"
+        assert result.source == "manual_command"
+        assert result.trade_chain_id == 10
+
+    def test_classify_close_full_by_exit_full_role(self):
+        """orderLinkId=known_exit_full → CLOSE_FULL_FILLED, manual_command, chain 10."""
+        clf = EventClassifier(known_order_link_ids=KNOWN_IDS)
+        raw = _raw(
+            create_type="CreateByUser",
+            order_link_id="bot-exit-full-1",
+            closed_size=0.1,
+            pos_qty=None,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "CLOSE_FULL_FILLED"
+        assert result.source == "manual_command"
+        assert result.trade_chain_id == 10
+
+    def test_classify_close_partial_by_exit_partial_role(self):
+        """orderLinkId=known_exit_partial → CLOSE_PARTIAL_FILLED, manual_command, chain 10."""
+        clf = EventClassifier(known_order_link_ids=KNOWN_IDS)
+        raw = _raw(
+            create_type="CreateByUser",
+            order_link_id="bot-exit-partial-1",
+            closed_size=0.05,
+            pos_qty=None,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "CLOSE_PARTIAL_FILLED"
+        assert result.source == "manual_command"
         assert result.trade_chain_id == 10
 
 
@@ -201,7 +231,7 @@ class TestWatchOrdersStream:
         )
         result = clf.classify(raw)
         assert result.event_type == "PENDING_ENTRY_CANCELLED"
-        assert result.source == "bot_command"
+        assert result.source == "manual_command"
         assert result.trade_chain_id == 10
 
     def test_classify_standalone_protective_cancelled(self):
@@ -214,7 +244,7 @@ class TestWatchOrdersStream:
         )
         result = clf.classify(raw)
         assert result.event_type == "STANDALONE_PROTECTIVE_CANCELLED"
-        assert result.source == "bot_command"
+        assert result.source == "manual_command"
         assert result.trade_chain_id == 10
 
 

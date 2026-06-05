@@ -38,6 +38,8 @@ def _make_port():
             return []
         def get_open_position(self, account_id, symbol, side):
             return None
+        def symbol_exists(self, account_id, symbol):
+            return True
     return FakePort()
 
 
@@ -107,6 +109,8 @@ def _make_port_no_mark_price():
             return []
         def get_open_position(self, account_id, symbol, side):
             return None
+        def symbol_exists(self, account_id, symbol):
+            return True
     return FakePortNoMark()
 
 

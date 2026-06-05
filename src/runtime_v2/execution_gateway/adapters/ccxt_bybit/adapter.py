@@ -318,6 +318,14 @@ class CcxtBybitAdapter(ExecutionAdapter):
             logger.warning("fetch_mark_price failed for %s: %s", symbol, exc)
             return None
 
+    def load_known_symbols(self) -> frozenset[str] | None:
+        try:
+            markets = self._exchange.load_markets()
+            return frozenset(markets.keys())
+        except Exception as exc:
+            logger.warning("load_known_symbols failed: %s", exc)
+            return None
+
     def fetch_recent_reduce_trades(
         self,
         *,

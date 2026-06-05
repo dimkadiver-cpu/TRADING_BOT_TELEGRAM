@@ -91,6 +91,22 @@ def make_db(tmp_path):
             idempotency_key TEXT NOT NULL UNIQUE,
             created_at TEXT NOT NULL
         );
+        CREATE TABLE ops_notification_outbox (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_type TEXT NOT NULL,
+            destination TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            priority TEXT NOT NULL DEFAULT 'MEDIUM',
+            status TEXT NOT NULL DEFAULT 'PENDING',
+            dedupe_key TEXT NOT NULL UNIQUE,
+            attempts INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            created_at TEXT NOT NULL,
+            sent_at TEXT,
+            send_after TEXT,
+            aggregation_group TEXT,
+            source_message_id TEXT
+        );
     """)
     conn.commit()
     conn.close()
@@ -356,6 +372,89 @@ def test_insert_raw_and_classified_payload_uses_fill_price_filled_qty(tmp_path):
     assert "exec_qty" not in payload, "exec_qty should not be in payload"
     assert payload["fill_price"] == 50000.0
     assert payload["filled_qty"] == 0.01
+
+
+def test_insert_raw_and_classified_enriches_pending_cancel_with_trigger_metadata(tmp_path):
+    import json
+
+    db_path = make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, client_order_id) "
+        "VALUES (?,?,?,?,?,?)",
+        (11, 1, "PLACE_ENTRY", "DONE", "{}", "tsb:1:11:entry:1"),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (
+            12,
+            1,
+            "CANCEL_PENDING_ENTRY",
+            "DONE",
+            json.dumps({
+                "entry_client_order_id": "tsb:1:11:entry:1",
+                "cancel_origin": "timeout_worker",
+                "cancel_reason": "position_closed",
+            }),
+            "2026-06-05T13:01:00Z",
+            "2026-06-05T13:01:00Z",
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(db_path)
+    raw = ExchangeRawEvent(
+        source_stream="watch_orders",
+        exchange_event_id="exchange-cancel-001",
+        idempotency_key="watch-orders-cancel-001",
+        symbol="BTCUSDT",
+        side="Buy",
+        create_type=None,
+        stop_order_type=None,
+        exec_type=None,
+        order_status="Cancelled",
+        order_link_id="tsb:1:11:entry:1",
+        order_id="order-cancel-001",
+        seq=1002,
+        exec_price=None,
+        exec_qty=None,
+        closed_size=None,
+        leaves_qty=0.0,
+        pos_qty=0.0,
+        exec_value=None,
+        exec_fee=None,
+        fee_rate=None,
+        cum_exec_qty=0.0,
+        position_take_profit=None,
+        position_stop_loss=None,
+        exchange_time="2026-06-05T13:01:01Z",
+        received_at="2026-06-05T13:01:02Z",
+        raw_info={},
+    )
+    classified = ClassifiedEvent(
+        raw=raw,
+        event_type="PENDING_ENTRY_CANCELLED",
+        source="manual_command",
+        trade_chain_id=1,
+        tp_level=None,
+        is_actionable=True,
+    )
+
+    repo.insert_raw_and_classified(classified)
+
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events WHERE event_type='PENDING_ENTRY_CANCELLED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload["cancel_origin"] == "timeout_worker"
+    assert payload["cancel_reason"] == "position_closed"
 
 
 # ── resolve_chain_for_fill ────────────────────────────────────────────────────

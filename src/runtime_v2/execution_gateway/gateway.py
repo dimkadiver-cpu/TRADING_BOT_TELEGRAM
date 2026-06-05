@@ -119,12 +119,25 @@ class ExecutionGateway:
             idempotency_key=idempotency_key,
         )
 
+    def _review_and_cancel_chain(self, cmd: ExecutionCommand, *, reason: str) -> None:
+        """Mark command REVIEW_REQUIRED then cancel chain if no entry command remains active.
+
+        Used for permanent technical failures where retrying identically would produce
+        the same result (unknown symbol, missing adapter, capability gap). Distinct from
+        intentional safety gates (live_trading_*) where REVIEW_REQUIRED is a hold state
+        while the operator fixes config — those must NOT cancel the chain.
+        """
+        self._repo.mark_review_required(cmd.command_id, reason=reason)
+        self._repo.cancel_chain_if_all_entries_failed(
+            cmd.trade_chain_id, cmd.command_type, reason=reason
+        )
+
     def process(self, cmd: ExecutionCommand, *, account_id: str) -> None:
         routing, adapter_cfg = self._config.resolve_routing(account_id)
         adapter = self._adapters.get(routing.adapter)
         if adapter is None:
-            self._repo.mark_review_required(
-                cmd.command_id, reason=f"adapter_not_found:{routing.adapter}"
+            self._review_and_cancel_chain(
+                cmd, reason=f"adapter_not_found:{routing.adapter}"
             )
             return
 
@@ -143,9 +156,8 @@ class ExecutionGateway:
         # Capability check
         cap_field = _CAPABILITY_MAP.get(cmd.command_type)
         if cap_field and not getattr(adapter.get_capabilities(), cap_field, False):
-            self._repo.mark_review_required(
-                cmd.command_id,
-                reason=f"capability_missing:{cap_field}",
+            self._review_and_cancel_chain(
+                cmd, reason=f"capability_missing:{cap_field}"
             )
             return
 
@@ -156,16 +168,16 @@ class ExecutionGateway:
         if payload.get("qty_mode") == "deferred_market":
             mark_price = adapter.fetch_mark_price(symbol, routing.execution_account_id)
             if mark_price is None:
-                self._repo.mark_review_required(
-                    cmd.command_id, reason="deferred_market_no_mark_price"
+                self._review_and_cancel_chain(
+                    cmd, reason="deferred_market_no_mark_price"
                 )
                 return
             risk_amount_leg = float(payload["risk_amount"])
             sl_price_val = float(payload["sl_price"])
             risk_dist = abs(mark_price - sl_price_val)
             if risk_dist == 0.0:
-                self._repo.mark_review_required(
-                    cmd.command_id, reason="deferred_market_zero_risk_distance"
+                self._review_and_cancel_chain(
+                    cmd, reason="deferred_market_zero_risk_distance"
                 )
                 return
             computed_qty = risk_amount_leg / risk_dist

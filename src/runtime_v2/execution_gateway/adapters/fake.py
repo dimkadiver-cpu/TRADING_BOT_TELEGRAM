@@ -132,6 +132,13 @@ class FakeAdapter(ExecutionAdapter):
     def fetch_mark_price(self, symbol: str, execution_account_id: str) -> float | None:
         return self._mark_prices.get(symbol)
 
+    def load_known_symbols(self) -> frozenset[str] | None:
+        # Return None (no restriction) unless specific mark prices were configured —
+        # in that case the configured symbols are the "known" ones for that test.
+        if self._mark_prices:
+            return frozenset(self._mark_prices.keys())
+        return None
+
     def set_mark_price(self, symbol: str, price: float) -> None:
         self._mark_prices[symbol] = price
 

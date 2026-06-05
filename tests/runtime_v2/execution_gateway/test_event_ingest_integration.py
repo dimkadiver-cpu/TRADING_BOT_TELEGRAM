@@ -122,6 +122,26 @@ def _insert_sent_entry_cmd(
     conn.close()
 
 
+def _insert_sent_close_cmd(
+    db_path: str,
+    *,
+    cmd_id: int,
+    chain_id: int,
+    command_type: str,
+    client_order_id: str,
+) -> None:
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, idempotency_key, "
+        "client_order_id, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?,?)",
+        (cmd_id, chain_id, command_type, "SENT", "{}", f"idem:{cmd_id}", client_order_id, now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
 # ---------------------------------------------------------------------------
 # Minimal trade dict builder
 # ---------------------------------------------------------------------------
@@ -294,7 +314,7 @@ def test_ws_entry_fill_with_known_order_link_id(tmp_path):
 
     # 8. Assert classification
     assert classified.event_type == "ENTRY_FILLED"
-    assert classified.source == "bot_command"
+    assert classified.source == "manual_command"
     assert classified.trade_chain_id == 1
 
     # 9. Insert — should forward because chain_id is set and event is actionable
@@ -314,6 +334,31 @@ def test_ws_entry_fill_with_known_order_link_id(tmp_path):
     assert ops_rows[0][0] == "ENTRY_FILLED"
     assert ops_rows[0][1] == 1
     assert raw_rows == 1
+
+
+def test_known_order_link_ids_exposes_close_roles_for_ws_classifier(tmp_path):
+    db_path = make_db(tmp_path)
+    _insert_chain(db_path, chain_id=1)
+    _insert_sent_close_cmd(
+        db_path,
+        cmd_id=2,
+        chain_id=1,
+        command_type="CLOSE_FULL",
+        client_order_id="tsb:1:2:exit_full:1",
+    )
+    _insert_sent_close_cmd(
+        db_path,
+        cmd_id=3,
+        chain_id=1,
+        command_type="CLOSE_PARTIAL",
+        client_order_id="tsb:1:3:exit_partial:1",
+    )
+
+    repo = GatewayCommandRepository(db_path)
+    known_ids = repo.get_known_order_link_ids()
+
+    assert known_ids["tsb:1:2:exit_full:1"] == (1, "exit_full", 2)
+    assert known_ids["tsb:1:3:exit_partial:1"] == (1, "exit_partial", 3)
 
 
 # ---------------------------------------------------------------------------

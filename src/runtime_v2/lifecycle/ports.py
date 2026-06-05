@@ -66,6 +66,15 @@ class ExchangeDataPort(ABC):
     @abstractmethod
     def get_open_position(self, account_id: str, symbol: str, side: str) -> PositionSnapshot | None: ...
 
+    @abstractmethod
+    def symbol_exists(self, account_id: str, symbol: str) -> bool:
+        """Return False if the symbol is definitively unknown on this exchange.
+
+        When the known-symbol list is unavailable (e.g. no exchange connection at startup),
+        implementations must return True (fail-open) so signals are not incorrectly rejected.
+        """
+        ...
+
 
 __all__ = [
     "AccountStateSnapshot", "SymbolMarketSnapshot",

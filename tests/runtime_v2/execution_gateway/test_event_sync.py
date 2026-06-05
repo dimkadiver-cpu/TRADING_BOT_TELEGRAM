@@ -265,6 +265,71 @@ def test_cancelled_entry_payload_includes_cancelled_order_ids_and_sequence(ops_d
     assert payload["sequence"] == 2  # seq estratto da tsb:10:5010:entry:2
 
 
+def test_cancelled_entry_inherits_cancel_trigger_metadata(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.models import RawAdapterOrder
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+    import datetime as dt
+
+    client_order_id = "tsb:10:5011:entry:1"
+    _insert_sent_cmd(ops_db, 5011, 10, "PLACE_ENTRY", client_order_id)
+
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?)",
+        (
+            6011,
+            10,
+            "CANCEL_PENDING_ENTRY",
+            "DONE",
+            json.dumps({
+                "entry_client_order_id": client_order_id,
+                "cancel_origin": "trader_update",
+                "cancel_reason": "position_closed",
+            }),
+            "cancel:6011",
+            now,
+            now,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    adapter = MagicMock()
+    adapter.get_order_status.return_value = RawAdapterOrder(
+        client_order_id=client_order_id,
+        exchange_order_id="bybit-ex-0002",
+        status="CANCELLED",
+        filled_qty=0.0,
+        average_price=None,
+        cancel_reason="CancelByUser|EC_PerCancelRequest",
+    )
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="main",
+    )
+
+    worker.run_reconciliation()
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=10 AND event_type='PENDING_ENTRY_CANCELLED_CONFIRMED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload["cancel_origin"] == "trader_update"
+    assert payload["cancel_reason"] == "position_closed"
+
+
 def test_cancelled_non_entry_marks_done_no_event(ops_db):
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.models import RawAdapterOrder

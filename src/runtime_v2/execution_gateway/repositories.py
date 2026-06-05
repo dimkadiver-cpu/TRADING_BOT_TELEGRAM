@@ -415,6 +415,46 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def get_cancel_trigger_metadata(
+        self,
+        trade_chain_id: int | None,
+        entry_client_order_id: str | None,
+    ) -> dict:
+        """Resolve metadata from the CANCEL_PENDING_ENTRY command that targeted this entry order.
+
+        Exchange cancel confirmations refer to the cancelled order's orderLinkId, which belongs
+        to the original PLACE_ENTRY command. For notification and lifecycle semantics we also
+        need the trigger that caused the cancellation (trader_update, timeout_worker, etc.).
+        """
+        if trade_chain_id is None or not entry_client_order_id:
+            return {}
+
+        conn = sqlite3.connect(self._db)
+        try:
+            rows = conn.execute(
+                "SELECT command_id, payload_json FROM ops_execution_commands "
+                "WHERE trade_chain_id=? AND command_type='CANCEL_PENDING_ENTRY' "
+                "ORDER BY command_id DESC",
+                (trade_chain_id,),
+            ).fetchall()
+        finally:
+            conn.close()
+
+        for command_id, payload_json in rows:
+            try:
+                payload = json.loads(payload_json or "{}")
+            except Exception:
+                continue
+            if payload.get("entry_client_order_id") != entry_client_order_id:
+                continue
+            result = {"cancel_command_id": int(command_id)}
+            if payload.get("cancel_origin") is not None:
+                result["cancel_origin"] = payload.get("cancel_origin")
+            if payload.get("cancel_reason") is not None:
+                result["cancel_reason"] = payload.get("cancel_reason")
+            return result
+        return {}
+
     def get_chain_filled_entry_qty(self, trade_chain_id: int) -> float | None:
         conn = sqlite3.connect(self._db)
         try:
@@ -661,7 +701,15 @@ class GatewayCommandRepository:
             tp_level=classified.tp_level,
             source=classified.source,
         )
-        payload_json_str = ep.model_dump_json()
+        payload = ep.model_dump()
+        if classified.event_type == "PENDING_ENTRY_CANCELLED":
+            payload.update(
+                self.get_cancel_trigger_metadata(
+                    classified.trade_chain_id,
+                    raw.order_link_id,
+                )
+            )
+        payload_json_str = json.dumps(payload)
 
         conn = sqlite3.connect(self._db)
         try:
@@ -721,6 +769,8 @@ class GatewayCommandRepository:
             "SET_POSITION_TPSL_FULL": "tp_1",
             "REBUILD_PARTIAL_TPS": "tp_multi",
             "SET_STOP_LOSS": "sl",
+            "CLOSE_PARTIAL": "exit_partial",
+            "CLOSE_FULL": "exit_full",
         }
         conn = sqlite3.connect(self._db)
         try:

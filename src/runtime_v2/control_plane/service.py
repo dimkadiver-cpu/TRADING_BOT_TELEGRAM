@@ -262,11 +262,11 @@ class RuntimeControlService:
                         "category": "Runtime",
                         "description": "Runtime avviato",
                         "source": "runtime_main",
-                        "details": {
+                        "context": {
                             "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
                         },
                     },
-                    dedupe_key=f"startup:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M')}",
+                    dedupe_key=f"startup:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
                     priority="MEDIUM",
                 )
         finally:
@@ -294,7 +294,7 @@ class RuntimeControlService:
                         "category": "Runtime",
                         "description": f"Runtime shutdown — {reason}",
                         "source": "runtime_main",
-                        "details": {
+                        "context": {
                             "reason": reason,
                             "open_chains": open_chains,
                             "pending_commands": pending_cmds,

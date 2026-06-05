@@ -310,6 +310,7 @@ _SIGNAL_CONTENT_REJECT_REASONS: frozenset[str] = frozenset({
     "missing_stop_loss_for_risk_calc",
     "missing_limit_price",
     "zero_risk_distance",
+    "unknown_symbol",
 })
 
 
@@ -340,6 +341,9 @@ class LifecycleEntryGate:
         signal = enriched.enriched_signal
         if signal is None or not signal.symbol or not signal.side:
             return self._reject_signal(eid, "missing_symbol_or_side")
+
+        if not self._port.symbol_exists(enriched.account_id, signal.symbol):
+            return self._reject_signal(eid, "unknown_symbol")
 
         if not signal.entries:
             return self._reject_signal(eid, "no_entry_legs")

@@ -329,35 +329,24 @@ class ExchangeEventSyncWorker:
                 client_order_id, raw.cancel_reason,
             )
         idem_key = f"PENDING_ENTRY_CANCELLED_CONFIRMED:{coid.trade_chain_id}:{exchange_order_id}"
-        payload = json.dumps({
+        cancel_meta = self._repo.get_cancel_trigger_metadata(
+            coid.trade_chain_id,
+            client_order_id,
+        )
+        payload_dict = {
             "command_id": coid.command_id,
             "position_already_open": raw.filled_qty > 0.0,
-            "cancel_reason": raw.cancel_reason,
+            "cancel_reason": cancel_meta.get("cancel_reason", raw.cancel_reason),
             "cancelled_order_ids": [client_order_id],
             "sequence": coid.sequence,
-            "cancel_origin": self._get_command_cancel_origin(coid.command_id),
-        })
+            "cancel_origin": cancel_meta.get("cancel_origin"),
+        }
+        if cancel_meta.get("cancel_command_id") is not None:
+            payload_dict["cancel_command_id"] = cancel_meta["cancel_command_id"]
+        payload = json.dumps(payload_dict)
         return self._repo.insert_exchange_event(
             coid.trade_chain_id, "PENDING_ENTRY_CANCELLED_CONFIRMED", payload, idem_key
         )
-
-    def _get_command_cancel_origin(self, command_id: int | None) -> str | None:
-        if not command_id:
-            return None
-        conn = sqlite3.connect(self._ops_db)
-        try:
-            row = conn.execute(
-                "SELECT payload_json FROM ops_execution_commands WHERE command_id=?",
-                (command_id,),
-            ).fetchone()
-            if row:
-                try:
-                    return json.loads(row[0] or "{}").get("cancel_origin")
-                except Exception:
-                    return None
-            return None
-        finally:
-            conn.close()
 
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
         """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains."""

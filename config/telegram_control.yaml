@@ -26,7 +26,7 @@ topics:
     min_level: INFO
     # Se false, i messaggi TECH_LOG di livello INFO vengono soppressi
     # anche quando min_level=INFO.
-    operational_events: false
+    operational_events: true
     # Intervallo di poll/debounce del dispatcher per invii TECH_LOG batchati.
     batch_seconds: 10
     # Limite rigido di messaggi TECH_LOG inviabili su Telegram.
