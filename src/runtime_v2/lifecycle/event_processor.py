@@ -539,6 +539,7 @@ class LifecycleEventProcessor:
                             "symbol": chain.symbol,
                             "side": chain.side,
                             "cancel_reason": "auto_cancel_averaging",
+                            "cancel_origin": "engine_rule",
                         }),
                         idempotency_key=f"auto_cancel_avg:{chain_id}:{eid}",
                     ))
@@ -554,12 +555,47 @@ class LifecycleEventProcessor:
                         }),
                         idempotency_key=f"auto_cancel_avg_req:{chain_id}:{eid}",
                     ))
+                    # ENGINE_RULE_UPDATE_ACCEPTED — CANCEL_PENDING
+                    cancelled_entries = [
+                        {"sequence": leg.get("sequence"), "price": leg.get("price")}
+                        for leg in averaging_legs
+                    ]
+                    events.append(LifecycleEvent(
+                        trade_chain_id=chain_id,
+                        event_type="ENGINE_RULE_UPDATE_ACCEPTED",
+                        source_type="engine",
+                        source_id=str(eid),
+                        payload_json=json.dumps({
+                            "action": "CANCEL_PENDING",
+                            "cancelled_entries": cancelled_entries,
+                        }),
+                        idempotency_key=f"engine_rule_cancel:{chain_id}:{eid}",
+                    ))
                     if deferred_be:
                         new_plan_state_json = _set_be_deferred_flag(
                             chain.plan_state_json,
                             tp_level=tp_level,
                             averaging_legs_pending=len(averaging_legs),
                         )
+                        # ENGINE_RULE_UPDATE_ACCEPTED — MOVE_SL_TO_BE (pre-calcolato)
+                        try:
+                            extra_be = _be_move_extra(chain)
+                            pre_calc_be = resolve_be_stop_price(chain, mp, protection_style=extra_be["protection_style"])
+                        except Exception:
+                            pre_calc_be = None
+                        events.append(LifecycleEvent(
+                            trade_chain_id=chain_id,
+                            event_type="ENGINE_RULE_UPDATE_ACCEPTED",
+                            source_type="engine",
+                            source_id=str(eid),
+                            payload_json=json.dumps({
+                                "action": "MOVE_SL_TO_BE",
+                                "old_sl_price": chain.current_stop_price,
+                                "new_sl_price": pre_calc_be,
+                                "is_breakeven": True,
+                            }),
+                            idempotency_key=f"engine_rule_be:{chain_id}:{eid}",
+                        ))
 
             # ── Breakeven trigger ──────────────────────────────────────────────
             if be_would_fire_now:
@@ -614,6 +650,19 @@ class LifecycleEventProcessor:
                                 source_type="exchange_event",
                                 source_id=str(eid),
                                 idempotency_key=f"be_req_tp:{chain_id}:{eid}",
+                            ))
+                            events.append(LifecycleEvent(
+                                trade_chain_id=chain_id,
+                                event_type="ENGINE_RULE_UPDATE_ACCEPTED",
+                                source_type="engine",
+                                source_id=str(eid),
+                                payload_json=json.dumps({
+                                    "action": "MOVE_SL_TO_BE",
+                                    "old_sl_price": chain.current_stop_price,
+                                    "new_sl_price": new_stop_price,
+                                    "is_breakeven": True,
+                                }),
+                                idempotency_key=f"engine_rule_be:{chain_id}:{eid}",
                             ))
                             new_be = "BE_MOVE_PENDING"
 

@@ -667,8 +667,72 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     return written
 
 
+def write_engine_rule_update_clean_log(
+    conn,
+    chain_id: int,
+    events: list,
+) -> None:
+    """Write a single UPDATE_DONE CLEAN_LOG row from ENGINE_RULE_UPDATE_ACCEPTED events."""
+    if not events:
+        return
+
+    applied_actions: list[str] = []
+    changed: list[dict] = []
+
+    for e in events:
+        try:
+            p = json.loads(e.payload_json or "{}")
+        except Exception:
+            p = {}
+        action = p.get("action", "")
+        if action:
+            applied_actions.append(action)
+
+        if p.get("is_breakeven"):
+            changed.append({
+                "field": "SL",
+                "old": p.get("old_sl_price"),
+                "new": p.get("new_sl_price"),
+                "note": "BE",
+            })
+        elif action == "CANCEL_PENDING":
+            for entry in p.get("cancelled_entries", []):
+                changed.append({
+                    "field": f"Entry_{entry.get('sequence', '?')}",
+                    "old": entry.get("price"),
+                    "new": "cancelled",
+                })
+
+    chain_row = conn.execute(
+        "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    symbol = chain_row[0] if chain_row else None
+    side = chain_row[1] if chain_row else None
+
+    first = events[0]
+    payload = {
+        "chain_id": chain_id,
+        "symbol": symbol,
+        "side": side,
+        "applied_actions": applied_actions,
+        "rejected_actions": [],
+        "changed": changed,
+        "source": "operation_rules",
+        "link": None,
+    }
+    write_clean_log_event(
+        conn,
+        notification_type="UPDATE_DONE",
+        chain_id=chain_id,
+        payload=payload,
+        dedupe_key=f"engine_rule_update:{chain_id}:{first.idempotency_key}",
+    )
+
+
 __all__ = [
     "write_clean_log_event",
     "write_tech_log_event",
     "project_clean_log_for_chain",
+    "write_engine_rule_update_clean_log",
 ]

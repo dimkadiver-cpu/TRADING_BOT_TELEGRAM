@@ -22,7 +22,10 @@ from src.runtime_v2.lifecycle.repositories import (
 
 logger = logging.getLogger(__name__)
 
-from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+from src.runtime_v2.control_plane.outbox_writer import (
+    project_clean_log_for_chain,
+    write_engine_rule_update_clean_log,
+)
 
 
 def _now() -> str:
@@ -407,6 +410,16 @@ class LifecycleEventWorker:
                             (chain_id, cmd.command_type, cmd.status, payload_json_exp,
                              idempotency_key_exp, now, now),
                         )
+
+                engine_rule_events = [
+                    e for e in result.lifecycle_events
+                    if e.event_type == "ENGINE_RULE_UPDATE_ACCEPTED"
+                ]
+                if engine_rule_events:
+                    try:
+                        write_engine_rule_update_clean_log(conn, chain_id, engine_rule_events)
+                    except Exception:
+                        logger.exception("engine_rule update_clean_log failed for chain %s", chain_id)
 
                 try:
                     project_clean_log_for_chain(conn, chain_id)

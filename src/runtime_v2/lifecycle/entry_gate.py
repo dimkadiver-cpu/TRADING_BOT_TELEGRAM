@@ -1181,6 +1181,21 @@ class LifecycleEntryGate:
         chain_id = chain.trade_chain_id
         cmid = enriched.canonical_message_id
 
+        if chain.entry_avg_price is None:
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_NOT_PENDING",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_no_entry_for_be:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
         if self._is_already_be(chain):
             return UpdateChainResult(
                 trade_chain_id=chain_id,
@@ -1293,6 +1308,9 @@ class LifecycleEntryGate:
                 execution_commands=[],
             )
 
+        if state == "WAITING_ENTRY":
+            return self._apply_cancel_pending(enriched, chain)
+
         position_context = _position_context(chain)
         cmd = ExecutionCommand(
             trade_chain_id=chain_id,
@@ -1300,6 +1318,7 @@ class LifecycleEntryGate:
             payload_json=json.dumps({
                 "symbol": chain.symbol,
                 "side": chain.side,
+                "command_source": "trader_update",
                 **position_context,
             }),
             idempotency_key=f"close_full:{chain_id}:{cmid}",

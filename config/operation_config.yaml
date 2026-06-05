@@ -112,8 +112,8 @@ defaults:
     INVALIDATE_SETUP: true  # Consente invalidazione setup/chain.
 
   management_plan:
-    be_trigger: null  # Valori supportati: null | tp1 | tp2 | tp3.
-    be_fee_correction_enabled: false  # true = breakeven fee-aware.
+    be_trigger: true  # Valori supportati: null | tp1 | tp2 | tp3.
+    be_fee_correction_enabled: true  # true = breakeven fee-aware.
     be_fee_fallback_profile: null  # Profilo fee fallback se i dati exchange non bastano.
     close_distribution:
       mode: table  # Valori supportati: table | equal.
