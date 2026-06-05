@@ -1,6 +1,6 @@
 # Audit Notifiche Telegram — Gap Analysis
 
-Data: 2026-06-04  
+Data: 2026-06-04 — aggiornato 2026-06-05  
 Scope: `src/runtime_v2/` — tutti i percorsi che producono o NON producono notifiche Telegram.  
 Riferimento spec: `runtime_v2_control_plane_messaggi.md`
 
@@ -43,9 +43,9 @@ Nessuna altra modifica necessaria: la mappa, il payload builder e il formatter s
 
 ---
 
-### GAP-2 — CRITICO: Fallimenti esecuzione gateway mai notificati
+### GAP-2 — ~~CRITICO~~ **CHIUSO**: Fallimenti esecuzione gateway mai notificati
 
-**File**: `src/runtime_v2/execution_gateway/gateway.py` + `repositories.py:236`
+**File**: `src/runtime_v2/execution_gateway/gateway.py` + `repositories.py`
 
 `ExecutionGateway.process()` chiama `self._repo.mark_review_required()` in 7 casi distinti:
 
@@ -59,16 +59,27 @@ Nessuna altra modifica necessaria: la mappa, il payload builder e il formatter s
 | 167 | `deferred_market_zero_risk_distance` |
 | 195 | `open_position_qty_unavailable_for_close` |
 
-`GatewayCommandRepository.mark_review_required()` (`repositories.py:236`) aggiorna solo il DB (`status='REVIEW_REQUIRED'`) **senza scrivere nessuna riga in `ops_notification_outbox`**.
+**Fix applicato (2026-06-05)**: `GatewayCommandRepository.mark_review_required()` ora:
+- usa `with conn:` per transazione atomica
+- legge `trade_chain_id` e `command_type` dall'`ops_execution_commands` tramite `command_id`
+- scrive TECH_LOG `GATEWAY_REVIEW_REQUIRED` livello WARNING nella stessa transazione
 
-Ugualmente `mark_failed()` + `cancel_chain_if_all_entries_failed()` in caso di adapter failure non emettono notifiche.
+Notifica prodotta:
+```
+[WARNING] Gateway: command_blocked
+────────────────
+Comando bloccato in REVIEW_REQUIRED.
 
-**Effetto**: ordini bloccati, esecuzione ferma, utente ignaro. Visibile solo via `/status` (contatore `failed_commands`) o `/reviews`, non proattivamente.
+Context:
+command_id: {id}
+command_type: {type}
+chain_id: {chain_id}
+reason: {reason}
 
-**Fix**: `GatewayCommandRepository.mark_review_required()` deve scrivere un evento TECH_LOG nel outbox tramite `write_tech_log_event`.  
-Aggiungere connessione a `ops_db` e chiamata `write_tech_log_event` per i casi `adapter_not_found`, `capability_missing` e per tutti i casi che non sono transitori.
-
-Alternativa più leggera: in `command_worker.py`, dopo `self._gw.process(cmd, account_id=account_id)`, chiamare `project_clean_log_for_chain(conn, cmd.trade_chain_id)` e aggiungere un evento `RECONCILIATION_WARNING` lifecycle quando il comando transisce in `REVIEW_REQUIRED`.
+Action: intervento manuale richiesto
+────────────────
+Source: execution_gateway
+```
 
 ---
 
@@ -90,56 +101,65 @@ e in `_build_payload` gestire il caso `POSITION_CLOSED` proveniente da `CLOSE_PA
 
 ---
 
-### GAP-4 — MEDIO: `cancel_chain_if_all_entries_failed` scrive lifecycle ma non proietta su CLEAN_LOG
+### GAP-4 — ~~MEDIO~~ **CHIUSO**: `cancel_chain_if_all_entries_failed` — fallimenti interni gateway mai notificati
 
-**File**: `src/runtime_v2/execution_gateway/repositories.py:177-234`
+**File**: `src/runtime_v2/execution_gateway/repositories.py`
 
-Quando tutti i comandi di entry falliscono, `cancel_chain_if_all_entries_failed()` scrive direttamente un evento `"PENDING_ENTRY_CANCELLED"` in `ops_lifecycle_events`.  
-La catena viene portata in stato `CANCELLED` (terminale).
+**Chiarimento semantico emerso dall'analisi**: il GAP-4 non riguarda fallimenti sull'exchange (coperti dal percorso `PENDING_ENTRY_CANCELLED_CONFIRMED` → `event_processor` → `project_clean_log_for_chain` ✅), ma fallimenti **pre-exchange** interni al bot (adapter failure, exception dopo max retry). Notificare questi casi come `ENTRY_CANCELLED` CLEAN_LOG sarebbe semanticamente errato — sono errori operativi, non cancellazioni.
 
-**Problema**: `project_clean_log_for_chain` viene chiamato da:
-- `LifecycleEventWorker._persist_result()` — ma processa solo exchange events, e una catena `CANCELLED` viene skippata (linea 266)
-- `LifecycleGateWorker._persist_signal/update()` — non riprocesserà questa catena
+**Fix applicato (2026-06-05)**: `cancel_chain_if_all_entries_failed()` ora:
+- espande la query su `ops_trade_chains` per leggere anche `symbol` e `side`
+- scrive TECH_LOG `GATEWAY_ENTRY_ALL_FAILED` livello ERROR dentro il `with conn:` esistente, atomico con UPDATE chain + INSERT lifecycle event
 
-Nessuno dei due percorsi viene eseguito dopo la scrittura di `cancel_chain_if_all_entries_failed`. L'evento lifecycle `"PENDING_ENTRY_CANCELLED"` rimane non proiettato → nessuna notifica `ENTRY_CANCELLED`.
+Notifica prodotta:
+```
+[ERROR] Gateway: entry_all_failed
+────────────────
+Tutti i comandi PLACE_ENTRY falliti. Catena cancellata.
 
-**Fix**: in `command_worker.py`, dopo la chiamata a `self._gw.process(cmd, account_id=account_id)`, verificare se il comando è stato contrassegnato come `FAILED` e chiamare `project_clean_log_for_chain`:
+Context:
+chain_id: {chain_id}
+symbol: {symbol}
+side: {side}
+reason: {reason}
 
-```python
-# command_worker.py — dopo gw.process()
-# Se la chain è stata cancellata, proietta i nuovi eventi
-conn = sqlite3.connect(self._ops_db)
-try:
-    with conn:
-        project_clean_log_for_chain(conn, cmd.trade_chain_id)
-finally:
-    conn.close()
+Action: intervento manuale richiesto
+────────────────
+Source: execution_gateway
 ```
 
 ---
 
-### GAP-5 — BASSO: `ENTRY_CANCEL_FAILED` nella mappa è codice morto
+### GAP-5 — ~~BASSO~~ **CHIUSO**: `ENTRY_CANCEL_FAILED` nella mappa è codice morto
 
 **File**: `src/runtime_v2/control_plane/outbox_writer.py:21`
 
 La mappa contiene `"ENTRY_CANCEL_FAILED": "CANCEL_FAILED"`.  
-`"ENTRY_CANCEL_FAILED"` non viene emesso da nessun file nel codebase (grep completo confermato).
+`"ENTRY_CANCEL_FAILED"` non veniva emesso da nessun file nel codebase.
 
-Il formatter `_cancel_failed()` in `clean_log.py:463` e il payload builder `outbox_writer.py:499` sono irraggiungibili.
+Il formatter `_cancel_failed()` in `clean_log.py:463` e il payload builder `outbox_writer.py:499` erano irraggiungibili.
 
-**Scenario inteso (§3.7)**: cancellazione ordine fallita dopo 3 tentativi → notifica `CANCEL_FAILED`. Questo scenario esiste (cancellazione timeout fallisce su exchange) ma nessun percorso emette l'evento lifecycle.
+**Fix applicato (2026-06-05)**:
+- `GatewayCommandRepository.write_cancel_entry_failed_lifecycle()` aggiunto in `repositories.py`: scrive lifecycle event `ENTRY_CANCEL_FAILED` con payload `{entry_ref, attempts, source}` in transazione atomica.
+- `ExecutionGateway._handle_error()` in `gateway.py`: dopo `mark_failed()`, se `command_type == "CANCEL_PENDING_ENTRY"` chiama il nuovo metodo.
 
-**Fix** (da fare come task separato): il timeout worker o il gateway dovrebbe emettere `"ENTRY_CANCEL_FAILED"` quando un `CANCEL_PENDING_ENTRY` raggiunge `max_attempts` senza conferma. Al momento questo path non esiste nel codice.
+Notifica prodotta:
+```
+🚨 CANCEL FAILED
+────────────────
+Cancellation of <order_ref> failed after N attempts.
+Requires manual review required to resolve the position.
+────────────────
+Source: execution_gateway
+```
 
 ---
 
-### GAP-6 — NOTO (già in Osservazioni.md §2): Enrichment blocks non notificati
+### GAP-6 — APERTO (cambio design, fuori scope audit)
 
-Già documentato in `Osservazioni.md` come gap residuo. `SignalEnrichmentProcessor` porta `enrichment_decision='BLOCK'` o `'REVIEW'` a `lifecycle_processed=True` senza passare dal lifecycle gate → nessuna notifica generata.
+`SignalEnrichmentProcessor` porta `enrichment_decision='BLOCK'` o `'REVIEW'` a `lifecycle_processed=True` senza passare dal lifecycle gate → nessuna notifica generata.
 
-Soluzione necessaria: worker separato che scansiona `enriched_canonical_messages WHERE enrichment_decision IN ('BLOCK','REVIEW')` e scrive le notifiche appropriate.
-
-**Non incluso nel fix proposto qui** — è un task separato come già indicato.
+**Decisione (2026-06-05)**: lasciato aperto intenzionalmente. Non è un fix puntuale — richiede un cambio di design (worker separato o scrittura diretta in outbox dal processor senza una trade chain). Da affrontare come task autonomo in futuro.
 
 ---
 
@@ -148,11 +168,11 @@ Soluzione necessaria: worker separato che scansiona `enriched_canonical_messages
 | # | Severità | Evento perso | Causa | Fix |
 |---|---|---|---|---|
 | GAP-1 | ~~CRITICO~~ **CHIUSO** | `PENDING_ENTRY_EXPIRED` (timeout) | Rename `TIMEOUT_REACHED` → `PENDING_TIMEOUT` in `workers.py:204` | ✅ |
-| GAP-2 | CRITICO | Nessuna notifica per blocchi esecuzione | `mark_review_required` non scrive outbox | `write_tech_log_event` in repo o command_worker |
+| GAP-2 | ~~CRITICO~~ **CHIUSO** | Nessuna notifica per blocchi esecuzione | `mark_review_required` non scriveva outbox | TECH_LOG `GATEWAY_REVIEW_REQUIRED` in `repositories.py` | ✅ |
 | GAP-3 | ~~MEDIO~~ **CHIUSO** | Chiusure parziali da bot | `PARTIAL_CLOSE_EXECUTED` — filtro `source=bot_command`, fill data con PnL | ✅ |
-| GAP-4 | MEDIO | `ENTRY_CANCELLED` su all-entries-failed | `project_clean_log_for_chain` mai chiamato | Chiamare proiezione in `command_worker.py` |
-| GAP-5 | BASSO | `CANCEL_FAILED` (3.7) mai raggiungibile | `ENTRY_CANCEL_FAILED` mai emesso | Emettere evento nel gateway/timeout worker |
-| GAP-6 | NOTO | Enrichment BLOCK/REVIEW | Worker mancante | Task separato |
+| GAP-4 | ~~MEDIO~~ **CHIUSO** | Fallimenti interni gateway mai notificati | `cancel_chain_if_all_entries_failed` non scriveva outbox | TECH_LOG `GATEWAY_ENTRY_ALL_FAILED` in `repositories.py` | ✅ |
+| GAP-5 | ~~BASSO~~ **CHIUSO** | `CANCEL_FAILED` (3.7) mai raggiungibile | `ENTRY_CANCEL_FAILED` mai emesso | `write_cancel_entry_failed_lifecycle` in `repositories.py` + call in `gateway._handle_error` | ✅ |
+| GAP-6 | APERTO | Enrichment BLOCK/REVIEW | Cambio design (worker separato) | Fuori scope — task autonomo |
 
 ---
 
@@ -181,81 +201,17 @@ I seguenti percorsi sono stati verificati come **correttamente coperti**:
 
 ## Proposta chiusura gap — priorità e ordine
 
-### Fix immediati (1 sessione)
+### Fix applicati (2026-06-05) ✅
 
-**F1 — GAP-1** (1 linea):
-```python
-# src/runtime_v2/lifecycle/workers.py:204
-# Prima:
-(chain_id, "TIMEOUT_REACHED", "timeout_worker", "WAITING_ENTRY", "EXPIRED", ...)
-# Dopo:
-(chain_id, "PENDING_TIMEOUT", "timeout_worker", "WAITING_ENTRY", "EXPIRED", ...)
-```
-Zero rischi, zero side effects. La specifica (§2a, §3.17) è già completa.
+- **GAP-1**: rinomina `TIMEOUT_REACHED` → `PENDING_TIMEOUT` in `workers.py` — chiuso in sessione precedente
+- **GAP-2**: TECH_LOG `GATEWAY_REVIEW_REQUIRED` in `repositories.mark_review_required()` — chiuso in questa sessione
+- **GAP-3**: mappatura `CLOSE_PARTIAL_FILLED` → `PARTIAL_CLOSE_EXECUTED` — chiuso in sessione precedente
+- **GAP-4**: TECH_LOG `GATEWAY_ENTRY_ALL_FAILED` in `repositories.cancel_chain_if_all_entries_failed()` — chiuso in questa sessione
 
-**F2 — GAP-3** (3 file, ~15 righe):
+### Fix applicati (2026-06-05) — secondo round ✅
 
-`outbox_writer.py` — aggiungere alla mappa:
-```python
-"CLOSE_PARTIAL_FILLED": "POSITION_CLOSED",
-```
-
-`outbox_writer.py — _build_payload()` — gestire il caso aggiuntivo:  
-Il payload di `CLOSE_PARTIAL_FILLED` contiene `fill_price`, `filled_qty`, `closed_size`.  
-Riutilizzare il builder `POSITION_CLOSED` aggiungendo `close_reason="PARTIAL_CLOSE"` come valore di fallback quando non presente nel payload evento.
-
-`clean_log.py` — nessuna modifica: `_position_closed()` usa già `p.get('close_reason', 'MANUAL_CLOSE')`, che mostrerà `PARTIAL_CLOSE` correttamente.
-
-**F3 — GAP-4** (aggiunta in `command_worker.py`, ~8 righe):
-
-```python
-# src/runtime_v2/execution_gateway/command_worker.py
-# Dopo ogni self._gw.process(cmd, account_id=account_id)
-# aggiungere proiezione clean log
-
-from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
-import sqlite3
-
-# Nel blocco try dopo gw.process():
-try:
-    _conn = sqlite3.connect(self._ops_db)
-    try:
-        with _conn:
-            project_clean_log_for_chain(_conn, cmd.trade_chain_id)
-    finally:
-        _conn.close()
-except Exception:
-    logger.exception("clean_log projection failed after gateway for chain %s", cmd.trade_chain_id)
-```
-
-Alternativa più pulita: estrarre `_project_chain(chain_id)` come metodo privato in `ExecutionCommandWorker` e chiamarlo nei 3 punti di `run_once()`.
-
-### Fix nella prossima sessione
-
-**F4 — GAP-2**: aggiungere notifica TECH_LOG per `mark_review_required`.
-
-Approccio raccomandato: in `GatewayCommandRepository.mark_review_required()` accettare un parametro opzionale `ops_db_path` e scrivere un `TECH_LOG` outbox entry con `level=WARNING` se `ops_db_path` è fornito. Il command_worker passa `self._ops_db`.
-
-Il payload TECH_LOG segue il formato spec §4:
-```
-[WARNING] Gateway: command_blocked
-────────────────
-Comando bloccato in REVIEW_REQUIRED.
-
-Context:
-command_id: {id}
-command_type: {type}
-chain_id: {chain_id}
-reason: {reason}
-
-Action: intervento manuale richiesto
-────────────────
-Source: execution_gateway
-```
+- **GAP-5**: `write_cancel_entry_failed_lifecycle()` in `repositories.py` + call in `gateway._handle_error()` — chiuso in questa sessione
 
 ### Task separato (fuori scope immediato)
 
-**F5 — GAP-5**: emettere `ENTRY_CANCEL_FAILED` quando un `CANCEL_PENDING_ENTRY` esaurisce i tentativi.  
-Richiede un meccanismo di tracking tentativi cancel nel gateway + scrittura lifecycle event.
-
-**F6 — GAP-6**: worker enrichment blocks (già documentato in `Osservazioni.md`).
+**F6 — GAP-6**: enrichment BLOCK/REVIEW — cambio design, lasciato aperto intenzionalmente.

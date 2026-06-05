@@ -339,6 +339,10 @@ class ExecutionGateway:
             self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=error_str
             )
+            if cmd.command_type == "CANCEL_PENDING_ENTRY":
+                self._repo.write_cancel_entry_failed_lifecycle(
+                    cmd.command_id, cmd.trade_chain_id, attempts=current_retry + 1
+                )
             return
 
         backoff = retry_cfg.backoff_seconds[

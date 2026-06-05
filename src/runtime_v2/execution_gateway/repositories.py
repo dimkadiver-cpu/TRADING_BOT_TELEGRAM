@@ -174,6 +174,39 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def write_cancel_entry_failed_lifecycle(
+        self, command_id: int, trade_chain_id: int, *, attempts: int
+    ) -> None:
+        """Write ENTRY_CANCEL_FAILED lifecycle event after CANCEL_PENDING_ENTRY exhausts retries."""
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                cmd_row = conn.execute(
+                    "SELECT payload_json, retry_count FROM ops_execution_commands WHERE command_id=?",
+                    (command_id,),
+                ).fetchone()
+                payload = json.loads(cmd_row[0] or "{}") if cmd_row else {}
+                entry_ref = payload.get("entry_client_order_id")
+
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO ops_lifecycle_events (
+                        trade_chain_id, event_type, source_type,
+                        previous_state, next_state, payload_json, idempotency_key, created_at
+                    ) VALUES (?,?,?,?,?,?,?,?)
+                    """,
+                    (
+                        trade_chain_id, "ENTRY_CANCEL_FAILED", "execution_gateway",
+                        None, None,
+                        json.dumps({"entry_ref": entry_ref, "attempts": attempts, "source": "execution_gateway"}),
+                        f"cancel_entry_failed:{command_id}",
+                        now,
+                    ),
+                )
+        finally:
+            conn.close()
+
     def cancel_chain_if_all_entries_failed(
         self, trade_chain_id: int, command_type: str, *, reason: str
     ) -> bool:
@@ -193,7 +226,7 @@ class GatewayCommandRepository:
         try:
             with conn:
                 chain_row = conn.execute(
-                    "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=?",
+                    "SELECT lifecycle_state, symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
                     (trade_chain_id,),
                 ).fetchone()
                 if not chain_row or chain_row[0] not in ("WAITING_ENTRY", "CREATED"):
@@ -229,21 +262,68 @@ class GatewayCommandRepository:
                         now,
                     ),
                 )
+                from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+                write_tech_log_event(
+                    conn,
+                    notification_type="GATEWAY_ENTRY_ALL_FAILED",
+                    payload={
+                        "level": "ERROR",
+                        "category": "Gateway",
+                        "title": "entry_all_failed",
+                        "description": "Tutti i comandi PLACE_ENTRY falliti. Catena cancellata.",
+                        "context": {
+                            "chain_id": trade_chain_id,
+                            "symbol": chain_row[1],
+                            "side": chain_row[2],
+                            "reason": reason,
+                        },
+                        "action": "intervento manuale richiesto",
+                        "source": "execution_gateway",
+                    },
+                    dedupe_key=f"gw_all_failed:{trade_chain_id}",
+                    priority="HIGH",
+                )
             return True
         finally:
             conn.close()
 
     def mark_review_required(self, command_id: int, *, reason: str) -> None:
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
         now = _now()
         result = {"error": None, "reason": reason}
         conn = sqlite3.connect(self._db)
         try:
-            conn.execute(
-                "UPDATE ops_execution_commands SET status='REVIEW_REQUIRED', "
-                "result_payload_json=?, updated_at=? WHERE command_id=?",
-                (json.dumps(result), now, command_id),
-            )
-            conn.commit()
+            with conn:
+                conn.execute(
+                    "UPDATE ops_execution_commands SET status='REVIEW_REQUIRED', "
+                    "result_payload_json=?, updated_at=? WHERE command_id=?",
+                    (json.dumps(result), now, command_id),
+                )
+                cmd_row = conn.execute(
+                    "SELECT trade_chain_id, command_type FROM ops_execution_commands "
+                    "WHERE command_id=?",
+                    (command_id,),
+                ).fetchone()
+                write_tech_log_event(
+                    conn,
+                    notification_type="GATEWAY_REVIEW_REQUIRED",
+                    payload={
+                        "level": "WARNING",
+                        "category": "Gateway",
+                        "title": "command_blocked",
+                        "description": "Comando bloccato in REVIEW_REQUIRED.",
+                        "context": {
+                            "command_id": command_id,
+                            "command_type": cmd_row[1] if cmd_row else None,
+                            "chain_id": cmd_row[0] if cmd_row else None,
+                            "reason": reason,
+                        },
+                        "action": "intervento manuale richiesto",
+                        "source": "execution_gateway",
+                    },
+                    dedupe_key=f"gw_review:{command_id}",
+                    priority="HIGH",
+                )
         finally:
             conn.close()
 

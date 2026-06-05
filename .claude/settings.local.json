@@ -199,7 +199,8 @@
       "Bash(echo GIT_DIR=__TRACKED_VAR__)",
       "Bash(echo GIT_COMMON=__TRACKED_VAR__)",
       "Bash(true)",
-      "Bash(C:/TeleSignalBot/.venv/Scripts/python.exe -m pytest tests/runtime_v2/control_plane tests/runtime_v2/lifecycle tests/runtime_v2/execution_gateway -q --tb=no)"
+      "Bash(C:/TeleSignalBot/.venv/Scripts/python.exe -m pytest tests/runtime_v2/control_plane tests/runtime_v2/lifecycle tests/runtime_v2/execution_gateway -q --tb=no)",
+      "Bash(Format-Table -AutoSize)"
     ]
   }
 }
