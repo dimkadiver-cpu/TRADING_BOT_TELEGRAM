@@ -344,6 +344,13 @@ def _resolve_signal_root_link(conn, chain_id: int) -> str | None:
     return None
 
 
+def _is_close_full_action(payload_json: str | None) -> bool:
+    try:
+        return json.loads(payload_json or "{}").get("action") == "CLOSE_FULL"
+    except Exception:
+        return False
+
+
 def _write_pending_close_full_summary(
     conn,
     chains_payload: list[dict],
@@ -360,6 +367,10 @@ def _write_pending_close_full_summary(
             "status": c["status"],
             "link_mode": "final_close",
             "link": None,
+            # Pre-built display_lines are discarded here intentionally: final links and
+            # per-chain display lines are populated later when the pending summary is
+            # released (_try_release_close_full_summary), once all close-full exchange
+            # events have landed and the final-close Telegram message IDs are known.
             "display_lines": [],
         }
         for c in chains_payload
@@ -450,7 +461,7 @@ def _write_multi_chain_summary(
 
     contains_close_full = any(
         any(
-            json.loads(e.payload_json or "{}").get("action") == "CLOSE_FULL"
+            _is_close_full_action(e.payload_json)
             for e in cr.lifecycle_events
             if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"
         )
