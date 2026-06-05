@@ -236,6 +236,8 @@ def _write_update_clean_log(
 _STATUS_RANK: dict[str, int] = {"REVIEW": 3, "PARTIAL": 2, "SKIPPED": 1, "DONE": 0}
 
 _NOOP_REASON_TO_DISPLAY: dict[str, str] = {
+    # "Entry_2" is hardcoded here because averaging orders are always placed at sequence 2
+    # (business invariant: sequence 1 is the initial entry, sequence 2 is the averaging leg).
     "no pending averaging order": "Entry_2: SKIPPED - no pending averaging order",
 }
 
@@ -312,12 +314,13 @@ def _resolve_summary_status(
     noops: list["LifecycleEvent"],
     reviews: list["LifecycleEvent"],
 ) -> str:
-    if accepted and not noops and not reviews:
+    # REVIEW outranks all other statuses (consistent with _STATUS_RANK where REVIEW=3 > PARTIAL=2).
+    if reviews:
+        return "REVIEW"
+    elif accepted and not noops:
         return "DONE"
     elif accepted:
         return "PARTIAL"
-    elif reviews:
-        return "REVIEW"
     else:
         return "SKIPPED"
 
@@ -401,6 +404,9 @@ def _write_multi_chain_summary(
     done = sum(1 for c in chains_payload if c["status"] == "DONE")
     partial = sum(1 for c in chains_payload if c["status"] == "PARTIAL")
     skipped = sum(1 for c in chains_payload if c["status"] == "SKIPPED")
+    # "error" is currently always 0 because _resolve_summary_status never returns "ERROR".
+    # It is kept in the payload as a placeholder so downstream formatters (e.g. close-full footer)
+    # can reference it without a schema change when error-state detection is added in the future.
     error = sum(1 for c in chains_payload if c["status"] == "ERROR")
 
     write_clean_log_event(

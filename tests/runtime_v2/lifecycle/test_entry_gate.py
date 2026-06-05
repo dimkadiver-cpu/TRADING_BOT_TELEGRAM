@@ -2965,7 +2965,7 @@ def test_write_multi_chain_summary_builds_autosufficient_chain_payload(tmp_path)
     payload = json.loads(row[0])
     assert payload["summary_kind"] == "immediate"
     assert payload["requested_operations"] == ["Cancel pending", "Move stop"]
-    assert payload["chains"][0]["display_lines"]
+    assert "Entry_2: 61,192.03 -> cancelled" in payload["chains"][0]["display_lines"]
     assert payload["chains"][1]["display_lines"][0] == "Entry_2: SKIPPED - no pending averaging order"
     assert payload["link"] == "https://t.me/c/3927267771/365"
 
