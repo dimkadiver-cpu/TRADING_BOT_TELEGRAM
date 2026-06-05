@@ -324,6 +324,7 @@ def _update_done(p: dict) -> str:
             lines.append(f"{_BULLET} {op}")
     changed = p.get("changed") or []
     display_lines = p.get("display_lines") or []
+    # display_lines takes precedence; changed is silently skipped when display_lines is present
     if display_lines:
         for item in display_lines:
             lines.append(item)

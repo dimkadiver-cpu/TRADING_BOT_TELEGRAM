@@ -203,7 +203,8 @@ def _write_update_clean_log(
                     "new": ce.get("new_price"),
                 })
         elif action == "MOVE_STOP":
-            display_lines.append(f"SL: {p.get('old_sl_price')} -> {p.get('new_sl_price')}")
+            display_lines.append(f"SL: {p.get('old_sl_price', '?')} -> {p.get('new_sl_price', '?')}")
+            # reference field populated by event_processor when stop is moved relative to a TP level
             if p.get("reference") in {"Price", "TP_1", "TP_2", "TP_3"}:
                 display_lines.append(f"Reference: {p['reference']}")
 

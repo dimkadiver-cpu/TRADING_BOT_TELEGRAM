@@ -626,4 +626,5 @@ def test_update_done_move_stop_shows_reference_tp():
     })
 
     assert "SL: 66,400 -> 68,500" in text
+    assert text.count("SL: 66,400 -> 68,500") == 1
     assert "Reference: TP_1" in text
