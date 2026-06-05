@@ -452,6 +452,21 @@ def test_multi_chain_summary_with_partial_shows_warning_emoji():
     assert "Skipped: 1" in text
 
 
+def test_multi_chain_summary_legacy_review_count_is_preserved():
+    text = format_clean_log("MULTI_CHAIN_SUMMARY", {
+        "operations": ["Move SL to BE"],
+        "chains": [
+            {"chain_id": 42, "symbol": "BTC/USDT", "side": "LONG", "status": "DONE"},
+            {"chain_id": 43, "symbol": "ETH/USDT", "side": "LONG", "status": "REVIEW"},
+        ],
+        "source": "trader_update",
+    })
+    assert "Operations requested:" in text
+    assert "#43 ETH/USDT LONG — REVIEW" in text
+    assert "Review: 1" in text
+    assert "Error: 0" in text
+
+
 def test_multi_chain_summary_autosufficient_non_close_full():
     from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
 

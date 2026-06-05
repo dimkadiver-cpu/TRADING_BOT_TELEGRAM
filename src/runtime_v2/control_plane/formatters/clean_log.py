@@ -512,7 +512,11 @@ def _multi_chain_summary(p: dict) -> str:
         lines.append(f"{_BULLET} {op}")
     lines.append(_SEP)
     for chain in chains:
-        lines.append(f"#{chain['chain_id']} {chain['symbol']} {chain['side']} — {chain['status']}")
+        chain_id = chain.get("chain_id", "?")
+        symbol = chain.get("symbol", "?")
+        side = chain.get("side", "?")
+        status = chain.get("status", "DONE")
+        lines.append(f"#{chain_id} {symbol} {side} — {status}")
         if chain.get("link"):
             lines.append(chain["link"])
         for item in chain.get("display_lines") or []:
@@ -524,14 +528,24 @@ def _multi_chain_summary(p: dict) -> str:
             "done": sum(1 for chain in chains if chain.get("status") == "DONE"),
             "partial": sum(1 for chain in chains if chain.get("status") == "PARTIAL"),
             "skipped": sum(1 for chain in chains if chain.get("status") == "SKIPPED"),
+            "review": sum(1 for chain in chains if chain.get("status") == "REVIEW"),
             "error": sum(1 for chain in chains if chain.get("status") == "ERROR"),
         }
 
     done = counts.get("done", 0)
     partial = counts.get("partial", 0)
     skipped = counts.get("skipped", 0)
+    review = counts.get("review", 0)
     error = counts.get("error", 0)
-    lines.append(f"Done: {done} | Partial: {partial} | Skipped: {skipped} | Error: {error}")
+    summary_parts = [
+        f"Done: {done}",
+        f"Partial: {partial}",
+        f"Skipped: {skipped}",
+    ]
+    if review:
+        summary_parts.append(f"Review: {review}")
+    summary_parts.append(f"Error: {error}")
+    lines.append(" | ".join(summary_parts))
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
