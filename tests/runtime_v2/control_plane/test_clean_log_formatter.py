@@ -452,6 +452,52 @@ def test_multi_chain_summary_with_partial_shows_warning_emoji():
     assert "Skipped: 1" in text
 
 
+def test_multi_chain_summary_autosufficient_non_close_full():
+    from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
+
+    text = format_clean_log("MULTI_CHAIN_SUMMARY", {
+        "summary_kind": "immediate",
+        "requested_operations": ["CANCEL_PENDING", "MOVE_SL_TO_BE"],
+        "chains": [
+            {
+                "chain_id": 6,
+                "symbol": "WLD",
+                "side": "LONG",
+                "status": "DONE",
+                "link": "https://t.me/c/3897279123/468",
+                "display_lines": [
+                    "Entry_2: 61,192.03 -> cancelled",
+                    "Entry_3: 60,192.03 -> cancelled",
+                    "SL: 66,400 -> 68,500 BE",
+                ],
+            },
+            {
+                "chain_id": 7,
+                "symbol": "ICNT",
+                "side": "LONG",
+                "status": "PARTIAL",
+                "link": "https://t.me/c/3897279123/469",
+                "display_lines": [
+                    "Entry_2: SKIPPED - no pending averaging order",
+                    "SL: 66,400 -> 68,500 BE",
+                ],
+            },
+        ],
+        "counts": {"done": 1, "partial": 1, "skipped": 1, "error": 0},
+        "source": "trader_update",
+        "link": "https://t.me/c/3927267771/365",
+    })
+
+    assert "UPDATE APPLICATO" in text
+    assert "Operations requested:" in text
+    assert "#6 WLD LONG" in text
+    assert "https://t.me/c/3897279123/468" in text
+    assert "Entry_2: 61,192.03 -> cancelled" in text
+    assert "Entry_2: SKIPPED - no pending averaging order" in text
+    assert "Done: 1 | Partial: 1 | Skipped: 1 | Error: 0" in text
+    assert text.rstrip().endswith("https://t.me/c/3927267771/365")
+
+
 def test_outbox_writer_sl_filled_side_from_chain(tmp_path):
     """Side in SL_FILLED payload must come from ops_trade_chains (LONG), not event (Sell)."""
     import sqlite3

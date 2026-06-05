@@ -497,50 +497,42 @@ def _cancel_failed(p: dict) -> str:
 
 
 def _multi_chain_summary(p: dict) -> str:
+    requested = p.get("requested_operations") or p.get("operations") or []
     chains = p.get("chains") or []
-    statuses = {chain.get("status") for chain in chains}
-    has_issues = bool(statuses & {"PARTIAL", "SKIPPED", "REVIEW"})
+    counts = p.get("counts") or {}
+    summary_kind = p.get("summary_kind", "immediate")
+
+    has_issues = any(chain.get("status") in {"PARTIAL", "SKIPPED", "REVIEW", "ERROR"} for chain in chains)
     emoji = "⚠️" if has_issues else "✅"
-    lines = [f"{emoji} UPDATE APPLICATO - {len(chains)} chain", _SEP]
+    header_line = f"{emoji} UPDATE APPLICATO - {len(chains)} chain"
 
-    operations = p.get("operations") or []
-    if operations:
-        lines.append("Operation:")
-        for op in operations:
-            lines.append(f"{_BULLET} {op}")
-
+    lines = [header_line, _SEP]
+    lines.append("Operations requested:")
+    for op in requested:
+        lines.append(f"{_BULLET} {op}")
     lines.append(_SEP)
-    if chains:
-        id_w = max((len(f"#{c.get('chain_id', '?')}") for c in chains), default=2)
-        sym_w = max((len(str(c.get("symbol", "?"))) for c in chains), default=6)
-        side_w = max((len(str(c.get("side", ""))) for c in chains), default=4)
-        state_w = max((len(str(c.get("status", "DONE"))) for c in chains), default=4)
-        lines.append(
-            f"{'ID'.ljust(id_w)} | {'Symbol'.ljust(sym_w)} | {'Side'.ljust(side_w)} | {'State'.ljust(state_w)} | link"
-        )
+    for chain in chains:
+        lines.append(f"#{chain['chain_id']} {chain['symbol']} {chain['side']} — {chain['status']}")
+        if chain.get("link"):
+            lines.append(chain["link"])
+        for item in chain.get("display_lines") or []:
+            lines.append(item)
         lines.append(_SEP)
-        for chain in chains:
-            cid = f"#{chain.get('chain_id', '?')}".ljust(id_w)
-            sym = str(chain.get("symbol", "?")).ljust(sym_w)
-            side = str(chain.get("side", "")).ljust(side_w)
-            state = str(chain.get("status", "DONE")).ljust(state_w)
-            link = chain.get("link") or ""
-            lines.append(f"{cid} | {sym} | {side} | {state} | {link}")
 
-    lines.append(_SEP)
-    done = sum(1 for chain in chains if chain.get("status") == "DONE")
-    partial = sum(1 for chain in chains if chain.get("status") == "PARTIAL")
-    skipped = sum(1 for chain in chains if chain.get("status") == "SKIPPED")
-    review = sum(1 for chain in chains if chain.get("status") == "REVIEW")
-    summary_parts = [f"Done: {done}"]
-    if partial:
-        summary_parts.append(f"Partial: {partial}")
-    if skipped:
-        summary_parts.append(f"Skipped: {skipped}")
-    if review:
-        summary_parts.append(f"Review: {review}")
-    lines.append("   ".join(summary_parts))
-    lines += _footer(p.get("source", "runtime"))
+    if summary_kind and not counts:
+        counts = {
+            "done": sum(1 for chain in chains if chain.get("status") == "DONE"),
+            "partial": sum(1 for chain in chains if chain.get("status") == "PARTIAL"),
+            "skipped": sum(1 for chain in chains if chain.get("status") == "SKIPPED"),
+            "error": sum(1 for chain in chains if chain.get("status") == "ERROR"),
+        }
+
+    done = counts.get("done", 0)
+    partial = counts.get("partial", 0)
+    skipped = counts.get("skipped", 0)
+    error = counts.get("error", 0)
+    lines.append(f"Done: {done} | Partial: {partial} | Skipped: {skipped} | Error: {error}")
+    lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
 
