@@ -115,7 +115,11 @@ class RiskCapacityEngine:
             except (json.JSONDecodeError, ValueError, TypeError):
                 pass
         if current_open_risk + risk_amount > max_risk:
-            return RiskDecision(passed=False, reason="max_capital_at_risk_exceeded")
+            return RiskDecision(
+                passed=False,
+                reason="max_capital_at_risk_exceeded",
+                risk_snapshot={"capital": capital, "risk_amount": risk_amount},
+            )
 
         # ── max_leverage guard ────────────────────────────────────────────────
         if config.account is not None:

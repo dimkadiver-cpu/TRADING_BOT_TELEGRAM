@@ -1,6 +1,7 @@
 # Runtime V2 Control Plane — Messaggi Telegram (riferimento completo)
 
-Aggiornato al codice corrente in `src/runtime_v2/control_plane/`.
+Aggiornato al codice corrente in `src/runtime_v2/control_plane/`.  
+Ultima revisione: 2026-06-05 (sessione 3 — merge UPDATE_DONE, dedup multi-chain, cancel_origin filter).
 
 ---
 
@@ -53,7 +54,7 @@ Letta da `project_clean_log_for_chain` iterando `ops_lifecycle_events`.
 | `ENTRY_UPDATED` | `ENTRY_UPDATED` | |
 | `PENDING_TIMEOUT` | `PENDING_ENTRY_EXPIRED` | |
 | `CLOSE_PARTIAL_FILLED` | `PARTIAL_CLOSE_EXECUTED` | filtrato se `source != manual_command` |
-| `PENDING_ENTRY_CANCELLED` | `ENTRY_CANCELLED` | filtrato se `cancel_reason=position_closed` |
+| `PENDING_ENTRY_CANCELLED` | `ENTRY_CANCELLED` | vedere regole filtro §7.5 |
 | `ENTRY_CANCEL_FAILED` | `CANCEL_FAILED` | |
 | `RECONCILIATION_WARNING` | `RECONCILIATION_WARNING` | |
 | `RECONCILIATION_FIXED` | `RECONCILIATION_FIXED` | |
@@ -71,16 +72,19 @@ Non passano da `_CLEAN_LOG_EVENT_MAP`. Scritte direttamente dopo aver processato
 
 - `Source` in output: `trader_update` · `operation_rules` · `manual_command` · `runtime` (fallback)
 - Il link al messaggio Telegram originale è risolto da `raw_messages` e appare in footer dopo `Source:`.
+- **Merge operazioni**: se un singolo messaggio genera più azioni sulla stessa chain (es. `CANCEL_PENDING` + `MOVE_SL_TO_BE`), tutti i `TELEGRAM_UPDATE_ACCEPTED` vengono fusi in un unico `UPDATE_DONE` con la lista completa di `Operation:` e `Changed:`. Non vengono scritti messaggi separati per ogni operazione.
 
 ### 2c. Notifiche multi-chain — `_write_multi_chain_summary` (`entry_gate.py`)
 
-Scritte direttamente quando un update canonico impatta ≥ 2 catene.
+Scritte direttamente quando un update canonico impatta ≥ 2 chain **uniche** (distinte per `trade_chain_id`).
 
 | Notification type | Condizione |
 |---|---|
-| `MULTI_CHAIN_SUMMARY` | sempre (sostituisce i singoli UPDATE_DONE/PARTIAL/REJECTED per catena) |
+| `MULTI_CHAIN_SUMMARY` | ≥ 2 chain uniche colpite; per ogni chain viene mantenuto il worst-status tra le operazioni (PARTIAL > SKIPPED > DONE) |
 
-Il formatter gestisce anche `MULTI_CHAIN_UPDATE` e `MULTI_CHAIN_CLOSED` come alias dello stesso template, ma nell'implementazione attuale viene scritto solo `MULTI_CHAIN_SUMMARY`.
+- La lista `chains` è deduplicata per `trade_chain_id`: più operazioni sulla stessa chain non generano righe duplicate nel summary.
+- Se un messaggio ha N operazioni su 1 sola chain → nessun summary (il singolo UPDATE_DONE copre tutto).
+- Il formatter gestisce anche `MULTI_CHAIN_UPDATE` e `MULTI_CHAIN_CLOSED` come alias dello stesso template, ma nell'implementazione attuale viene scritto solo `MULTI_CHAIN_SUMMARY`.
 
 ---
 
@@ -226,8 +230,10 @@ Source: exchange
 
 ### 3.6 ENTRY_CANCELLED
 
-Emesso quando un ordine pending viene cancellato (timeout o comando).
-Non mostrato se `cancel_reason = position_closed`.
+Emesso quando un ordine pending viene cancellato **con fill parziale rilevante** o per ragione sconosciuta dall'exchange.  
+Vedere §7.5 per le regole di soppressione complete basate su `cancel_origin`.
+
+Caso tipico visibile: entry cancellata con fill parziale ≥ 1% (l'info del fill residuo è operativamente rilevante):
 
 ```
 ⚠️ #12 — ENTRY CANCELLED
@@ -247,6 +253,8 @@ Variante senza partial fill (cancellato a zero):
 ```
 Entry_2: 67,200 Limit
 ```
+
+Caso **non visibile** (soppresso — coperto da altro messaggio): entry cancellata a zero fill da trader_update, timeout_worker, o engine_rule. Vedere §7.5.
 
 ---
 
@@ -447,7 +455,32 @@ Source: exchange
 
 ### 3.14 UPDATE_DONE
 
-Emesso quando un update viene applicato con successo a una singola catena.
+Emesso quando un update viene applicato con successo a una singola catena.  
+**Più operazioni sullo stesso messaggio e chain vengono fuse in un unico messaggio.**
+
+Esempio con due operazioni (es. "убираем лимитки" + "передвинуть стоп в бу"):
+
+```
+✅ #12 — UPDATE DONE
+- - - - - - - - - - - - - - - -
+BTCUSDT — 📈 LONG
+https://t.me/c/123456/987
+- - - - - - - - - - - - - - - -
+Operation:
+▪️ CANCEL_PENDING
+▪️ MOVE_SL_TO_BE
+
+Changed:
+Entry_2: 61,192.03 -> cancelled
+SL: 66,400 -> 68,500 *
+* BE
+- - - - - - - - - - - - - - - -
+Source: trader_update
+- - - - - - - - - - - - - - - -
+https://t.me/c/123456/1005
+```
+
+Esempio con singola operazione:
 
 ```
 ✅ #12 — UPDATE DONE
@@ -457,21 +490,14 @@ https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 Operation:
 ▪️ MOVE_SL_TO_BE
-▪️ CANCEL_PENDING
 
 Changed:
-SL: 66,400 -> 68,500
+SL: 66,400 -> 68,500 *
+* BE
 - - - - - - - - - - - - - - - -
 Source: trader_update
 - - - - - - - - - - - - - - - -
 https://t.me/c/123456/1005
-```
-
-Variante con nota su un campo (breakeven):
-```
-Changed:
-SL: 66,400 -> 68,500 *
-* BE
 ```
 
 Variante senza operation né changed (update vuoto applicato):
@@ -491,6 +517,7 @@ Note:
 - Il secondo link (dopo l'ultimo separatore) è il link al messaggio Telegram che ha originato l'update — costruito da `raw_messages` al momento del persist.
 - Operazioni: nomi raw dall'event payload (`MOVE_SL_TO_BE`, `CANCEL_PENDING`, `CLOSE_FULL`, `CLOSE_PARTIAL`, `MODIFY_ENTRIES`, `MARKET_ENTRY_NOW`).
 - `Changed:` mostra i campi effettivamente modificati: `SL`, `Entry_N`, `Position`.
+- Quando un singolo messaggio ha N operazioni su 1 chain, viene scritto **1 solo UPDATE_DONE** aggregato (non N messaggi separati).
 
 ---
 
@@ -1304,9 +1331,27 @@ Nessuna risposta Telegram. Il comando viene registrato internamente come `REJECT
 
 Nessuna risposta Telegram. Il comando viene registrato come `IGNORED / wrong_topic`.
 
-### 7.5 ENTRY_CANCELLED filtrato
+### 7.5 ENTRY_CANCELLED — regole di soppressione
 
-Se `cancel_reason = position_closed` il messaggio non viene inviato. La cancellazione delle entry pending alla chiusura posizione è implicita.
+`ENTRY_CANCELLED` viene soppresso quando la cancellazione è già coperta da un altro messaggio.  
+La decisione si basa sul campo `cancel_origin` nel payload dell'evento `PENDING_ENTRY_CANCELLED`,  
+propagato dal payload del comando `CANCEL_PENDING_ENTRY` via `event_sync._get_command_cancel_origin()`.
+
+| `cancel_reason` | `cancel_origin` | `partial_fill_pct` | Risultato | Coperto da |
+|---|---|---|---|---|
+| `position_closed` | qualsiasi | qualsiasi | ❌ soppresso | chiusura posizione implicita |
+| qualsiasi | `timeout_worker` | qualsiasi | ❌ soppresso | `PENDING_ENTRY_EXPIRED` (§3.17) |
+| qualsiasi | `trader_update` | < 1% | ❌ soppresso | `UPDATE_DONE` (§3.14) |
+| qualsiasi | `trader_update` | ≥ 1% | ✅ visibile | fill parziale rilevante |
+| qualsiasi | `engine_rule` | < 1% | ❌ soppresso | `UPDATE_DONE` da `operation_rules` |
+| qualsiasi | `engine_rule` | ≥ 1% | ✅ visibile | fill parziale rilevante |
+| qualsiasi | assente / sconosciuto | qualsiasi | ✅ visibile | origine ignota = potenziale problema |
+
+**`cancel_origin` — chi lo imposta:**
+- `trader_update` → `entry_gate._apply_cancel_pending()` (CANCEL_PENDING da messaggio trader)
+- `timeout_worker` → `TimeoutWorker._process_timeout()` (scadenza pending_timeout_hours)
+- `engine_rule` → non ancora implementato (cancel_averaging_pending_after usa ancora il path base)
+- assente → cancellazioni pre-esistenti nel DB, path da `event_sync` senza lookup riuscito, o cancel exchange-side
 
 ---
 

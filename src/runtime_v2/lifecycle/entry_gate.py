@@ -163,6 +163,12 @@ def _write_update_clean_log(
                     "old": entry.get("price"),
                     "new": "cancelled",
                 })
+        elif action == "CLOSE_FULL":
+            changed.append({
+                "field": "Position",
+                "old": "open",
+                "new": "closed 100%",
+            })
         elif action == "CLOSE_PARTIAL":
             close_pct = p.get("close_pct")
             if close_pct is not None:
@@ -171,6 +177,22 @@ def _write_update_clean_log(
                     "old": "open",
                     "new": f"closed {close_pct}%",
                 })
+        elif action == "MARKET_ENTRY_NOW":
+            for ce in p.get("changed_entries", []):
+                seq = ce.get("sequence", "?")
+                if ce.get("cancelled"):
+                    changed.append({
+                        "field": f"Entry_{seq}",
+                        "old": ce.get("old_price"),
+                        "new": "cancelled",
+                    })
+                else:
+                    old_type = ce.get("old_type", "LIMIT")
+                    changed.append({
+                        "field": f"Entry_{seq}",
+                        "old": f"{ce.get('old_price')} {old_type}",
+                        "new": "Market",
+                    })
         elif action == "MODIFY_ENTRIES":
             for ce in p.get("changed_entries", []):
                 changed.append({
@@ -327,7 +349,7 @@ class LifecycleEntryGate:
 
         decision = self._risk.validate(enriched, open_chains, account_snapshot, market_snapshot)
         if not decision.passed:
-            return self._reject_signal(eid, decision.reason or "risk_check_failed")
+            return self._reject_signal(eid, decision.reason or "risk_check_failed", risk_snapshot=decision.risk_snapshot)
 
         management_plan = enriched.management_plan or ManagementPlanConfig()
         timeout_at = None
@@ -406,13 +428,17 @@ class LifecycleEntryGate:
             review_reason=None,
         )
 
-    def _reject_signal(self, eid: int | None, reason: str) -> SignalGateResult:
+    def _reject_signal(self, eid: int | None, reason: str, risk_snapshot: dict | None = None) -> SignalGateResult:
         source = "trader_signal" if reason in _SIGNAL_CONTENT_REJECT_REASONS else "runtime"
+        ev_payload: dict = {"reason": reason, "source": source}
+        if risk_snapshot:
+            ev_payload["capital"] = risk_snapshot.get("capital")
+            ev_payload["risk_amount"] = risk_snapshot.get("risk_amount")
         event = LifecycleEvent(
             event_type="SIGNAL_REJECTED",
             source_type="enrichment",
             source_id=str(eid),
-            payload_json=json.dumps({"reason": reason, "source": source}),
+            payload_json=json.dumps(ev_payload),
             idempotency_key=f"signal_rejected:{eid}",
         )
         return SignalGateResult(
@@ -924,6 +950,7 @@ class LifecycleEntryGate:
                 "symbol": chain.symbol,
                 "side": chain.side,
                 "entry_client_order_id": leg1.get("client_order_id"),
+                "cancel_origin": "engine_rule",
             }),
             idempotency_key=f"cancel_entry:{chain_id}:{cmid}:seq{leg1['sequence']}",
         ))
@@ -980,6 +1007,7 @@ class LifecycleEntryGate:
                         "symbol": chain.symbol,
                         "side": chain.side,
                         "entry_client_order_id": leg.get("client_order_id"),
+                        "cancel_origin": "engine_rule",
                     }),
                     idempotency_key=f"cancel_entry:{chain_id}:{cmid}:seq{leg['sequence']}",
                 ))
@@ -1009,12 +1037,31 @@ class LifecycleEntryGate:
                 updated_legs.append(leg)
         new_plan_state_json = json.dumps({**plan, "legs": updated_legs})
 
+        changed_entries = [
+            {
+                "sequence": leg1["sequence"],
+                "old_price": leg1.get("price"),
+                "old_type": leg1.get("entry_type", "LIMIT"),
+                "new_type": "MARKET",
+            }
+        ]
+        if mode == "cancel_subsequent":
+            for l in others:
+                changed_entries.append({
+                    "sequence": l["sequence"],
+                    "old_price": l.get("price"),
+                    "cancelled": True,
+                })
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
             source_type="telegram_update",
             source_id=str(cmid),
-            payload_json=json.dumps({"action": "MARKET_ENTRY_NOW", "mode": mode}),
+            payload_json=json.dumps({
+                "action": "MARKET_ENTRY_NOW",
+                "mode": mode,
+                "changed_entries": changed_entries,
+            }),
             idempotency_key=f"update_market_entry_now:{chain_id}:{cmid}",
         )
         return UpdateChainResult(
@@ -1498,6 +1545,9 @@ def _write_no_chain_signal_clean_log(
             ev_data = json.loads(event.payload_json or "{}")
         except Exception:
             ev_data = {}
+        risk_pct = None
+        if ev_data.get("capital") and ev_data.get("risk_amount"):
+            risk_pct = round(ev_data["risk_amount"] / ev_data["capital"] * 100, 2)
         payload = {
             "chain_id": None,
             "symbol": signal.symbol if signal else None,
@@ -1508,6 +1558,7 @@ def _write_no_chain_signal_clean_log(
             "entries": entries_payload,
             "sl": sl_payload,
             "tps": tps_payload,
+            "risk_pct": risk_pct,
             "source": ev_data.get("source", "runtime"),
             "link": link,
         }

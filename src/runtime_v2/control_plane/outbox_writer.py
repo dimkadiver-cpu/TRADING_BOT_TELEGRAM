@@ -467,10 +467,16 @@ def _build_payload(
 
     if notification_type == "ENTRY_CANCELLED":
         sequence = ev.get("sequence")
+        # Price and entry_type may come from the event payload or, as fallback,
+        # from plan_state_json (PENDING_ENTRY_CANCELLED_CONFIRMED never carries them).
+        plan_leg = next(
+            (l for l in plan.get("legs", []) if l.get("sequence") == sequence),
+            {},
+        ) if sequence is not None else {}
         cancelled_entry = {
             "sequence": sequence,
-            "price": ev.get("price"),
-            "entry_type": ev.get("entry_type", "LIMIT"),
+            "price": ev.get("price") or plan_leg.get("price"),
+            "entry_type": ev.get("entry_type") or plan_leg.get("entry_type", "LIMIT"),
         }
         planned_qty = ev.get("planned_entry_qty")
         partial_qty = ev.get("partial_fill_qty", ev.get("filled_qty"))

@@ -1,6 +1,6 @@
 # Audit Notifiche Telegram — Gap Analysis
 
-Data: 2026-06-04 — aggiornato 2026-06-05 — aggiornato 2026-06-05 (sessione 2)  
+Data: 2026-06-04 — aggiornato 2026-06-05 — aggiornato 2026-06-05 (sessione 2) — aggiornato 2026-06-05 (sessione 3)  
 Scope: `src/runtime_v2/` — tutti i percorsi che producono o NON producono notifiche Telegram.  
 Riferimento spec: `runtime_v2_control_plane_messaggi.md`
 
@@ -199,15 +199,19 @@ for event in result.review_events:
 
 ## Riepilogo
 
-| # | Severità | Evento perso | Causa | Fix |
+| # | Severità | Descrizione | Causa | Fix |
 |---|---|---|---|---|
-| GAP-1 | ~~CRITICO~~ **CHIUSO** | `PENDING_ENTRY_EXPIRED` (timeout) | Rename `TIMEOUT_REACHED` → `PENDING_TIMEOUT` in `workers.py:204` | ✅ |
-| GAP-2 | ~~CRITICO~~ **CHIUSO** | Nessuna notifica per blocchi esecuzione | `mark_review_required` non scriveva outbox | TECH_LOG `GATEWAY_REVIEW_REQUIRED` in `repositories.py` | ✅ |
-| GAP-3 | ~~MEDIO~~ **CHIUSO** | Chiusure parziali da bot | `PARTIAL_CLOSE_EXECUTED` — filtro `source=bot_command`, fill data con PnL | ✅ |
-| GAP-4 | ~~MEDIO~~ **CHIUSO** | Fallimenti interni gateway mai notificati | `cancel_chain_if_all_entries_failed` non scriveva outbox | TECH_LOG `GATEWAY_ENTRY_ALL_FAILED` in `repositories.py` | ✅ |
-| GAP-5 | ~~BASSO~~ **CHIUSO** | `CANCEL_FAILED` (3.7) mai raggiungibile | `ENTRY_CANCEL_FAILED` mai emesso | `write_cancel_entry_failed_lifecycle` in `repositories.py` + call in `gateway._handle_error` | ✅ |
-| GAP-6 | APERTO | Enrichment BLOCK/REVIEW | Cambio design (worker separato) | Fuori scope — task autonomo |
-| GAP-7 | APERTO | Update `no_update_target` / `ambiguous_update_target` silenzioso | `review_events` in `entry_gate.py` scritti con `trade_chain_id=NULL`, nessun path outbox | `_write_update_review_notification` in `entry_gate.py:1997` |
+| GAP-1 | ~~CRITICO~~ **CHIUSO** | `PENDING_ENTRY_EXPIRED` (timeout) mai emesso | `workers.py` usava `TIMEOUT_REACHED`, mappa usava `PENDING_TIMEOUT` | ✅ sessione 1+3 |
+| GAP-2 | ~~CRITICO~~ **CHIUSO** | Nessuna notifica per blocchi esecuzione gateway | `mark_review_required` non scriveva outbox | ✅ sessione 2 |
+| GAP-3 | ~~MEDIO~~ **CHIUSO** | Chiusure parziali da bot mai notificate | `PARTIAL_CLOSE_EXECUTED` mancante dalla mappa | ✅ sessione 2 |
+| GAP-4 | ~~MEDIO~~ **CHIUSO** | Fallimenti interni gateway mai notificati | `cancel_chain_if_all_entries_failed` non scriveva outbox | ✅ sessione 2 |
+| GAP-5 | ~~BASSO~~ **CHIUSO** | `CANCEL_FAILED` mai raggiungibile | `ENTRY_CANCEL_FAILED` mai emesso | ✅ sessione 2 |
+| BUG-1 | ~~MEDIO~~ **CHIUSO** | UPDATE_DONE mostra solo prima operazione (resto silenzioso) | dedupe_key collidente per N operazioni su stessa chain | ✅ sessione 3 |
+| BUG-2 | ~~MEDIO~~ **CHIUSO** | MULTI_CHAIN_SUMMARY duplica righe stessa chain | no dedup per `trade_chain_id` in `_write_multi_chain_summary` | ✅ sessione 3 |
+| BUG-3 | ~~BASSO~~ **CHIUSO** | `LifecycleEventType` e test usavano nome evento obsoleto | `TIMEOUT_REACHED` non aggiornato dopo fix GAP-1 | ✅ sessione 3 |
+| BUG-4 | ~~MEDIO~~ **CHIUSO** | ENTRY_CANCELLED ridondante dopo UPDATE_DONE / PENDING_ENTRY_EXPIRED | nessun `cancel_origin` → filtro outbox cieco | ✅ sessione 3 |
+| GAP-6 | APERTO | Enrichment BLOCK/REVIEW senza notifica | Cambio design (worker separato) | Fuori scope — task autonomo |
+| GAP-7 | APERTO | Update `no_update_target` / `ambiguous_update_target` silenzioso | `review_events` scritti con `trade_chain_id=NULL`, nessun path outbox | `_write_update_review_notification` in `entry_gate.py:1997` |
 
 ---
 
@@ -246,6 +250,24 @@ I seguenti percorsi sono stati verificati come **correttamente coperti**:
 ### Fix applicati (2026-06-05) — secondo round ✅
 
 - **GAP-5**: `write_cancel_entry_failed_lifecycle()` in `repositories.py` + call in `gateway._handle_error()` — chiuso in questa sessione
+
+### Fix applicati (2026-06-05) — sessione 3 ✅
+
+- **BUG-1 — UPDATE_DONE mostra solo prima operazione** (`entry_gate.py`):  
+  Quando un messaggio genera N operazioni sulla stessa chain, il call site raggruppava un `UpdateChainResult` per operazione. La `dedupe_key` collidente silenziosamente scartava le operazioni successive. Fix: `_update_log_by_chain` raggruppa i risultati per `trade_chain_id` e passa gli eventi fusi a `_write_update_clean_log`. Un singolo messaggio trader con CANCEL_PENDING + MOVE_SL_TO_BE ora produce un solo UPDATE_DONE con entrambe le operazioni e tutti i campi `Changed`.
+
+- **BUG-2 — MULTI_CHAIN_SUMMARY duplicava la stessa chain** (`entry_gate.py`):  
+  `_write_multi_chain_summary` iterava su `chain_results` (una per operazione) senza deduplicare per `trade_chain_id`. N operazioni su 1 chain producevano N righe identiche nel summary e il guard `< 2` scattava erroneamente. Fix: `chains_by_id: dict[int, dict]` deduplicato con worst-status promotion. Il summary viene ora emesso solo se ≥ 2 chain distinte sono colpite.
+
+- **BUG-3 — TIMEOUT_REACHED in models.py e test_workers.py non aggiornati** (`models.py`, `test_workers.py`):  
+  Il fix GAP-1 (sessione precedente) aveva rinominato l'event in `workers.py` ma non aveva aggiornato il tipo letterale in `LifecycleEventType` né l'assertion nel test. Fix: `TIMEOUT_REACHED` → `PENDING_TIMEOUT` in entrambi i file. Test `test_timeout_worker_expires_waiting_entry` ora passa.
+
+- **BUG-4 — ENTRY_CANCELLED ridondante dopo UPDATE_DONE e PENDING_ENTRY_EXPIRED** (`entry_gate.py`, `workers.py`, `event_sync.py`, `outbox_writer.py`):  
+  La conferma exchange di una cancellazione già notificata via UPDATE_DONE o PENDING_ENTRY_EXPIRED generava un secondo messaggio `ENTRY_CANCELLED` ridondante (con `Source: timeout_worker` fuorviante). Fix:  
+  - `cancel_origin: "trader_update"` aggiunto al payload comando in `_apply_cancel_pending`  
+  - `cancel_origin: "timeout_worker"` aggiunto al payload comando in `TimeoutWorker._process_timeout`  
+  - `event_sync._get_command_cancel_origin()` propaga il valore via lookup DB nell'exchange event `PENDING_ENTRY_CANCELLED_CONFIRMED`  
+  - `outbox_writer.project_clean_log_for_chain`: filtro esteso — sopprimi se `cancel_origin=timeout_worker` (coperto da PENDING_ENTRY_EXPIRED) o `cancel_origin in (trader_update, engine_rule)` con `partial_fill_pct < 1%` (coperto da UPDATE_DONE); mantieni se fill parziale ≥ 1% o origine sconosciuta.
 
 ### Task separato (fuori scope immediato)
 
