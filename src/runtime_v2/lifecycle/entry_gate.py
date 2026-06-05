@@ -103,6 +103,7 @@ _ACTION_LABELS: dict[str, str] = {
     "CLOSE_PARTIAL": "Close partial",
     "MODIFY_ENTRIES": "Modify entries",
     "MARKET_ENTRY_NOW": "Market entry now",
+    "MOVE_STOP": "Move stop",
 }
 
 
@@ -234,11 +235,110 @@ def _write_update_clean_log(
 
 _STATUS_RANK: dict[str, int] = {"REVIEW": 3, "PARTIAL": 2, "SKIPPED": 1, "DONE": 0}
 
+_NOOP_REASON_TO_DISPLAY: dict[str, str] = {
+    "no pending averaging order": "Entry_2: SKIPPED - no pending averaging order",
+}
+
+
+def _render_update_display_lines(
+    accepted: list["LifecycleEvent"],
+    noops: list["LifecycleEvent"],
+) -> list[str]:
+    """Render human-readable display lines for a single chain's update events.
+
+    Noop lines are emitted first (they describe skipped sub-operations),
+    followed by lines for accepted actions.
+    """
+    lines: list[str] = []
+
+    for event in noops:
+        try:
+            p = json.loads(event.payload_json or "{}")
+        except Exception:
+            p = {}
+        reason = p.get("reason", "")
+        if reason in _NOOP_REASON_TO_DISPLAY:
+            lines.append(_NOOP_REASON_TO_DISPLAY[reason])
+        elif reason:
+            lines.append(f"SKIPPED - {reason}")
+
+    for event in accepted:
+        try:
+            p = json.loads(event.payload_json or "{}")
+        except Exception:
+            p = {}
+        action = p.get("action", "")
+
+        if action == "CANCEL_PENDING":
+            for entry in p.get("cancelled_entries", []):
+                seq = entry.get("sequence", "?")
+                price = entry.get("price", "?")
+                lines.append(f"Entry_{seq}: {price} -> cancelled")
+        elif action == "MOVE_SL_TO_BE":
+            old_sl = p.get("old_sl_price", "?")
+            new_sl = p.get("new_sl_price", "?")
+            lines.append(f"SL: {old_sl} -> {new_sl} BE")
+        elif action == "MOVE_STOP":
+            old_sl = p.get("old_sl_price", "?")
+            new_sl = p.get("new_sl_price", "?")
+            lines.append(f"SL: {old_sl} -> {new_sl}")
+            ref = p.get("reference")
+            if ref in {"Price", "TP_1", "TP_2", "TP_3"}:
+                lines.append(f"Reference: {ref}")
+        elif action == "CLOSE_FULL":
+            lines.append("Position: open -> closed 100%")
+        elif action == "CLOSE_PARTIAL":
+            close_pct = p.get("close_pct")
+            if close_pct is not None:
+                lines.append(f"Position: open -> closed {close_pct}%")
+        elif action == "MARKET_ENTRY_NOW":
+            for ce in p.get("changed_entries", []):
+                seq = ce.get("sequence", "?")
+                if ce.get("cancelled"):
+                    lines.append(f"Entry_{seq}: {ce.get('old_price')} -> cancelled")
+                else:
+                    old_type = ce.get("old_type", "LIMIT")
+                    lines.append(f"Entry_{seq}: {ce.get('old_price')} {old_type} -> Market")
+        elif action == "MODIFY_ENTRIES":
+            for ce in p.get("changed_entries", []):
+                seq = ce.get("sequence", "?")
+                lines.append(f"Entry_{seq}: {ce.get('old_price')} -> {ce.get('new_price')}")
+
+    return lines
+
+
+def _resolve_summary_status(
+    accepted: list["LifecycleEvent"],
+    noops: list["LifecycleEvent"],
+    reviews: list["LifecycleEvent"],
+) -> str:
+    if accepted and not noops and not reviews:
+        return "DONE"
+    elif accepted:
+        return "PARTIAL"
+    elif reviews:
+        return "REVIEW"
+    else:
+        return "SKIPPED"
+
+
+def _resolve_signal_root_link(conn, chain_id: int) -> str | None:
+    tracking_row = conn.execute(
+        "SELECT clean_log_root_message_id, telegram_chat_id "
+        "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    if tracking_row and tracking_row[0] and tracking_row[1]:
+        normalized_chat = str(tracking_row[1]).removeprefix("-100")
+        return f"https://t.me/c/{normalized_chat}/{tracking_row[0]}"
+    return None
+
 
 def _write_multi_chain_summary(
     conn,
     chain_results: list["UpdateChainResult"],
     canonical_message_id: int,
+    update_source_link: str | None = None,
 ) -> None:
     chains_by_id: dict[int, dict] = {}
     operations_seen: list[str] = []
@@ -254,14 +354,7 @@ def _write_multi_chain_summary(
         if not accepted and not noops and not reviews:
             continue
 
-        if accepted and not noops and not reviews:
-            status = "DONE"
-        elif accepted:
-            status = "PARTIAL"
-        elif reviews:
-            status = "REVIEW"
-        else:
-            status = "SKIPPED"
+        status = _resolve_summary_status(accepted, noops, reviews)
 
         for event in accepted:
             try:
@@ -279,21 +372,16 @@ def _write_multi_chain_summary(
                 "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
                 (cid,),
             ).fetchone()
-            tracking_row = conn.execute(
-                "SELECT clean_log_root_message_id, telegram_chat_id "
-                "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
-                (cid,),
-            ).fetchone()
-            signal_link: str | None = None
-            if tracking_row and tracking_row[0] and tracking_row[1]:
-                normalized_chat = str(tracking_row[1]).removeprefix("-100")
-                signal_link = f"https://t.me/c/{normalized_chat}/{tracking_row[0]}"
+            signal_link = _resolve_signal_root_link(conn, cid)
+            display_lines = _render_update_display_lines(accepted, noops)
             chains_by_id[cid] = {
                 "chain_id": cid,
                 "symbol": row[0] if row else None,
                 "side": row[1] if row else None,
                 "status": status,
+                "link_mode": "signal_root",
                 "link": signal_link,
+                "display_lines": display_lines,
             }
         elif _STATUS_RANK.get(status, 0) > _STATUS_RANK.get(chains_by_id[cid]["status"], 0):
             chains_by_id[cid]["status"] = status
@@ -310,14 +398,22 @@ def _write_multi_chain_summary(
             )
             break
 
+    done = sum(1 for c in chains_payload if c["status"] == "DONE")
+    partial = sum(1 for c in chains_payload if c["status"] == "PARTIAL")
+    skipped = sum(1 for c in chains_payload if c["status"] == "SKIPPED")
+    error = sum(1 for c in chains_payload if c["status"] == "ERROR")
+
     write_clean_log_event(
         conn,
         notification_type="MULTI_CHAIN_SUMMARY",
         chain_id=None,
         payload={
-            "operations": operations_seen,
+            "summary_kind": "immediate",
+            "requested_operations": operations_seen,
             "chains": chains_payload,
+            "counts": {"done": done, "partial": partial, "skipped": skipped, "error": error},
             "source": source,
+            "link": update_source_link,
         },
         dedupe_key=f"clean:multi_summary:{canonical_message_id}",
     )
@@ -2150,7 +2246,7 @@ class LifecycleGateWorker:
                             "update clean_log synthesis failed for chain %s", _chain_id
                         )
                 try:
-                    _write_multi_chain_summary(conn, result.chain_results, enriched.canonical_message_id)
+                    _write_multi_chain_summary(conn, result.chain_results, enriched.canonical_message_id, update_source_link)
                 except Exception:
                     logger.exception(
                         "multi_chain_summary failed for canonical_message_id=%s",

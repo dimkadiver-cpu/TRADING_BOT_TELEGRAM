@@ -2870,6 +2870,106 @@ def test_persist_update_writes_multi_chain_summary_for_two_chains(tmp_path):
     assert all(chain["status"] == "DONE" for chain in payload["chains"])
 
 
+def test_write_multi_chain_summary_builds_autosufficient_chain_payload(tmp_path):
+    import json
+    import sqlite3
+    from src.runtime_v2.lifecycle.entry_gate import _write_multi_chain_summary, UpdateChainResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(
+        """
+        CREATE TABLE ops_trade_chains (
+            trade_chain_id INTEGER PRIMARY KEY,
+            symbol TEXT,
+            side TEXT
+        );
+        CREATE TABLE ops_clean_log_tracking (
+            trade_chain_id INTEGER PRIMARY KEY,
+            clean_log_root_message_id TEXT,
+            clean_log_last_message_id TEXT,
+            telegram_chat_id TEXT,
+            telegram_thread_id TEXT,
+            last_clean_log_event_type TEXT,
+            last_clean_log_sent_at TEXT,
+            updated_at TEXT
+        );
+        CREATE TABLE ops_notification_outbox (
+            notification_id INTEGER PRIMARY KEY,
+            notification_type TEXT,
+            destination TEXT,
+            payload_json TEXT,
+            priority TEXT,
+            status TEXT,
+            dedupe_key TEXT UNIQUE,
+            attempts INTEGER,
+            created_at TEXT,
+            send_after TEXT,
+            aggregation_group TEXT,
+            source_message_id TEXT
+        );
+        """
+    )
+    conn.execute("INSERT INTO ops_trade_chains VALUES (6, 'WLD', 'LONG')")
+    conn.execute("INSERT INTO ops_trade_chains VALUES (7, 'ICNT', 'LONG')")
+    conn.execute(
+        "INSERT INTO ops_clean_log_tracking VALUES (6, '468', '468', '-1003897279123', NULL, NULL, NULL, NULL)"
+    )
+    conn.execute(
+        "INSERT INTO ops_clean_log_tracking VALUES (7, '469', '469', '-1003897279123', NULL, NULL, NULL, NULL)"
+    )
+
+    accepted_done = LifecycleEvent(
+        event_type="TELEGRAM_UPDATE_ACCEPTED",
+        source_type="telegram_update",
+        source_id="365",
+        payload_json=json.dumps({
+            "action": "CANCEL_PENDING",
+            "cancelled_entries": [{"sequence": 2, "price": "61,192.03"}],
+        }),
+        idempotency_key="u:6:1",
+    )
+    accepted_partial = LifecycleEvent(
+        event_type="TELEGRAM_UPDATE_ACCEPTED",
+        source_type="telegram_update",
+        source_id="365",
+        payload_json=json.dumps({
+            "action": "MOVE_STOP",
+            "old_sl_price": "66,400",
+            "new_sl_price": "68,500",
+            "reference": "TP_1",
+        }),
+        idempotency_key="u:7:1",
+    )
+    noop_partial = LifecycleEvent(
+        event_type="NOOP_NOT_PENDING",
+        source_type="telegram_update",
+        source_id="365",
+        payload_json=json.dumps({"reason": "no pending averaging order"}),
+        idempotency_key="u:7:2",
+    )
+
+    _write_multi_chain_summary(
+        conn,
+        [
+            UpdateChainResult(6, None, None, [accepted_done], []),
+            UpdateChainResult(7, None, None, [accepted_partial, noop_partial], []),
+        ],
+        canonical_message_id=365,
+        update_source_link="https://t.me/c/3927267771/365",
+    )
+
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='MULTI_CHAIN_SUMMARY'"
+    ).fetchone()
+    payload = json.loads(row[0])
+    assert payload["summary_kind"] == "immediate"
+    assert payload["requested_operations"] == ["Cancel pending", "Move stop"]
+    assert payload["chains"][0]["display_lines"]
+    assert payload["chains"][1]["display_lines"][0] == "Entry_2: SKIPPED - no pending averaging order"
+    assert payload["link"] == "https://t.me/c/3927267771/365"
+
+
 def test_market_entry_now_cancel_mode_full_roundtrip(tmp_path):
     """cancel mode: market order placed + leg2 cancelled + plan updated in result."""
     import json
