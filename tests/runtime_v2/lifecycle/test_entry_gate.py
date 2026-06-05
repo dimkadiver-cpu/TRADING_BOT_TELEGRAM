@@ -3230,3 +3230,73 @@ def test_no_known_symbols_list_is_fail_open():
 
     # Non viene rifiutato per unknown_symbol — potrebbe fallire per altri motivi (SL, ecc.)
     assert result.review_reason != "unknown_symbol"
+
+
+def test_release_close_full_summary_uses_position_closed_links(tmp_path):
+    import json
+    import sqlite3
+    from src.runtime_v2.lifecycle.entry_gate import _try_release_close_full_summary
+
+    conn = sqlite3.connect(":memory:")
+    conn.executescript(
+        """
+        CREATE TABLE ops_pending_multi_chain_summaries (
+            pending_id INTEGER PRIMARY KEY,
+            canonical_message_id INTEGER,
+            payload_json TEXT
+        );
+        CREATE TABLE ops_clean_log_tracking (
+            trade_chain_id INTEGER PRIMARY KEY,
+            clean_log_root_message_id TEXT,
+            clean_log_last_message_id TEXT,
+            telegram_chat_id TEXT,
+            telegram_thread_id TEXT,
+            last_clean_log_event_type TEXT,
+            last_clean_log_sent_at TEXT,
+            updated_at TEXT
+        );
+        CREATE TABLE ops_notification_outbox (
+            notification_id INTEGER PRIMARY KEY,
+            notification_type TEXT,
+            destination TEXT,
+            payload_json TEXT,
+            priority TEXT,
+            status TEXT,
+            dedupe_key TEXT UNIQUE,
+            attempts INTEGER,
+            created_at TEXT,
+            send_after TEXT,
+            aggregation_group TEXT,
+            source_message_id TEXT
+        );
+        """
+    )
+    conn.execute(
+        "INSERT INTO ops_pending_multi_chain_summaries (canonical_message_id, payload_json) VALUES (?, ?)",
+        (
+            365,
+            json.dumps({
+                "summary_kind": "pending_final_close_links",
+                "requested_operations": ["Close full"],
+                "chains": [
+                    {"chain_id": 6, "symbol": "WLD", "side": "LONG", "status": "DONE", "link_mode": "final_close", "link": None, "display_lines": []},
+                    {"chain_id": 7, "symbol": "ICNT", "side": "LONG", "status": "DONE", "link_mode": "final_close", "link": None, "display_lines": []},
+                ],
+                "counts": {"done": 2, "partial": 0, "skipped": 0, "error": 0},
+                "source": "trader_update",
+                "link": "https://t.me/c/3927267771/365",
+            }),
+        ),
+    )
+    conn.execute("INSERT INTO ops_clean_log_tracking VALUES (6, '453', '468', '-1003897279123', NULL, 'POSITION_CLOSED', NULL, NULL)")
+    conn.execute("INSERT INTO ops_clean_log_tracking VALUES (7, '454', '469', '-1003897279123', NULL, 'POSITION_CLOSED', NULL, NULL)")
+
+    _try_release_close_full_summary(conn, 365)
+
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='MULTI_CHAIN_SUMMARY'"
+    ).fetchone()
+    payload = json.loads(row[0])
+    assert payload["summary_kind"] == "final_close"
+    assert payload["chains"][0]["link"] == "https://t.me/c/3897279123/468"
+    assert payload["chains"][1]["link"] == "https://t.me/c/3897279123/469"
