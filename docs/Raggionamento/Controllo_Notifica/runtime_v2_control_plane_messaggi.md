@@ -17,6 +17,24 @@ In `private_bot` tutto va nella stessa chat, i TECH_LOG vengono prefissati con `
 
 ---
 
+## 1b. Vocabolario `Source:`
+
+Ogni notifica riporta un campo `Source:` che indica chi ha originato l'evento.
+
+| Valore | Significato |
+|---|---|
+| `trader_signal` | nuovo segnale da messaggio Telegram del trader |
+| `trader_update` | modifica da messaggio Telegram del trader su chain esistente |
+| `operation_rules` | regola automatica del sistema |
+| `manual_command` | comando bot dell'utente (`/close`, `/pause`, ecc.) |
+| `exchange` | fill o evento arrivato dall'exchange |
+| `runtime` | logica interna (riconciliazione, reentry, decisioni lifecycle) |
+| `timeout_worker` | worker che gestisce la scadenza degli ordini pending |
+
+Per `SIGNAL_REJECTED`: `trader_signal` se il problema è nel contenuto del segnale (dati mancanti/inconsistenti), `runtime` se il problema è nello stato o configurazione del sistema.
+
+---
+
 ## 2. CLEAN_LOG — mappa eventi
 
 ### 2a. Proiezione per-chain — `_CLEAN_LOG_EVENT_MAP` (`outbox_writer.py`)
@@ -26,15 +44,15 @@ Letta da `project_clean_log_for_chain` iterando `ops_lifecycle_events`.
 | Evento lifecycle (`event_type`) | Notification type | Note |
 |---|---|---|
 | `SIGNAL_ACCEPTED` | `SIGNAL_ACCEPTED` | |
-| `SIGNAL_REJECTED` | `SIGNAL_REJECTED` | |
-| `REVIEW_REQUIRED` | `REVIEW_REQUIRED` | |
+| `SIGNAL_REJECTED` | `SIGNAL_REJECTED` | segnali non eseguiti per qualsiasi motivo |
+| `REVIEW_REQUIRED` | `REVIEW_REQUIRED` | solo per update su chain esistenti (non per nuovi segnali) |
 | `ENTRY_FILLED` | `ENTRY_OPENED` | |
 | `TP_FILLED` | `TP_FILLED` / `TP_FILLED_FINAL` | promosso a `TP_FILLED_FINAL` se `is_final=True` |
 | `SL_FILLED` | `SL_FILLED` | |
 | `CLOSE_FULL_FILLED` | `POSITION_CLOSED` / `BE_EXIT` | `BE_EXIT` se catena in stato `PROTECTED` |
 | `ENTRY_UPDATED` | `ENTRY_UPDATED` | |
 | `PENDING_TIMEOUT` | `PENDING_ENTRY_EXPIRED` | |
-| `CLOSE_PARTIAL_FILLED` | `PARTIAL_CLOSE_EXECUTED` | filtrato se `source != bot_command` |
+| `CLOSE_PARTIAL_FILLED` | `PARTIAL_CLOSE_EXECUTED` | filtrato se `source != manual_command` |
 | `PENDING_ENTRY_CANCELLED` | `ENTRY_CANCELLED` | filtrato se `cancel_reason=position_closed` |
 | `ENTRY_CANCEL_FAILED` | `CANCEL_FAILED` | |
 | `RECONCILIATION_WARNING` | `RECONCILIATION_WARNING` | |
@@ -51,7 +69,7 @@ Non passano da `_CLEAN_LOG_EVENT_MAP`. Scritte direttamente dopo aver processato
 | `TELEGRAM_UPDATE_ACCEPTED` + `NOOP_*` (misti) | `UPDATE_PARTIAL` | almeno una accettata e una rifiutata |
 | solo `NOOP_*` (nessun ACCEPTED) | `UPDATE_REJECTED` | nessuna azione accettata |
 
-- `Source` in output: `trader_update` (da Telegram) · `operation_rules` · `manual_command` · `runtime` (fallback)
+- `Source` in output: `trader_update` · `operation_rules` · `manual_command` · `runtime` (fallback)
 - Il link al messaggio Telegram originale è risolto da `raw_messages` e appare in footer dopo `Source:`.
 
 ### 2c. Notifiche multi-chain — `_write_multi_chain_summary` (`entry_gate.py`)
@@ -90,7 +108,7 @@ Risk: 0.5%
 - - - - - - - - - - - - -
 Trader: Pipsygnal
 Exchange Account: main
-Source: original_message
+Source: trader_signal
 - - - - - - - - - - - - -
 https://t.me/c/123456/987
 ```
@@ -109,58 +127,43 @@ Entry_1: Limit
 
 ### 3.2 SIGNAL_REJECTED
 
-Emesso quando il segnale non supera il gate (risk, blacklist, regole).
+Emesso quando il segnale non viene eseguito per qualsiasi motivo (risk, concorrenza, dati mancanti, etc.).
+Struttura identica a `SIGNAL_ACCEPTED`: entries, SL, TPs, Risk quando disponibili.
+
+`#id` non compare — nessuna chain viene creata per i segnali rigettati.
 
 ```
-❌ #13 — SIGNAL REJECTED
+❌ — SIGNAL REJECTED
 - - - - - - - - - - - - -
 ETHUSDT — 📉 SHORT
 - - - - - - - - - - - - -
 Entry_1: 3,820 Limit
 SL: 3,910
+TP_1: 4,100
+TP_2: 4,250
+Risk: 0.8%
 - - - - - - - - - - - - -
 Trader: TraderA
 Exchange Account: main
-Rejected: risk_exceeds_limit
-Source: original_message
-- - - - - - - - - - - - -
-https://t.me/c/123456/987
-```
-
-Note:
-- `Rejected:` mostra il `reason` dal payload dell'evento.
-- TPs e Risk non compaiono (non sempre presenti al momento del reject).
-
----
-
-### 3.3 REVIEW_REQUIRED
-
-Emesso quando il segnale viene messo in review manuale (pause attiva, anomalia, etc.).
-Struttura identica a SIGNAL_ACCEPTED/REJECTED con entries, SL, TPs, Risk.
-
-```
-⚠️ #14 — REVIEW REQUIRED
-- - - - - - - - - - - - -
-SOLUSDT — 📈 LONG
-- - - - - - - - - - - - -
-Entry_1: Market ~68,500
-Entry_2: 67,200 Limit
-SL: 66,400
-TP_1: 69,200
-TP_2: 70,500
-Risk: 0.5%
-- - - - - - - - - - - - -
-Trader: TraderA
-Exchange Account: main
-Rejected: pause_active
+Rejected: max_capital_at_risk_exceeded
 Source: runtime
 - - - - - - - - - - - - -
 https://t.me/c/123456/987
 ```
 
 Note:
-- `Rejected:` mostra il motivo della review (es. `pause_active`, `risk_exceeds_limit`).
-- Se TPs o Risk non sono nel piano, quelle righe non appaiono.
+- `Rejected:` mostra il `reason` dal payload dell'evento.
+- TPs e Risk sono omessi se non disponibili (es. il gate si ferma prima del calcolo del rischio).
+- Motivi possibili: `duplicate_position`, `max_concurrent_trades_reached`, `max_concurrent_same_symbol_reached`, `max_capital_at_risk_exceeded`, `risk_leverage_exceeds_account_max_leverage`, `missing_stop_loss_for_risk_calc`, `missing_limit_price`, `zero_risk_distance`, `missing_account_snapshot_for_live_equity`, `invalid_policy_snapshot`, `missing_symbol_or_side`, `no_entry_legs`, `control_mode:new_entries_paused`.
+
+---
+
+### 3.3 REVIEW_REQUIRED
+
+> **Nota:** `REVIEW_REQUIRED` non viene più emesso per nuovi segnali in ingresso.
+> Viene usato esclusivamente per **update su chain esistenti** che non possono essere applicati automaticamente.
+
+Struttura: stessa di UPDATE_DONE/PARTIAL/REJECTED con chain id, symbol, side e motivo.
 
 ---
 
@@ -376,7 +379,7 @@ Gross PnL: +8.30 USDT
 Fees: -0.48 USDT
 Funding: +0.00 USDT
 - - - - - - - - - - - - - - - -
-Source: bot_command
+Source: manual_command
 ```
 
 ---
@@ -409,7 +412,7 @@ Tabella distinzione chiusure:
 |---|---|---|
 | TP finale | `FINAL TP FILLED` | `exchange` |
 | Stop loss | `STOP_LOSS` | `exchange` |
-| Comando bot (`U_CLOSE_FULL`) | `BOT_COMMAND` | `bot_command` |
+| Comando bot (`U_CLOSE_FULL`) | `BOT_COMMAND` | `manual_command` |
 | Chiusura manuale/esterna | `MANUAL_CLOSE` | `position_reconciliation` |
 
 ---
@@ -550,7 +553,7 @@ Note:
 ### 3.16b PARTIAL_CLOSE_EXECUTED
 
 Emesso quando il fill di un `CLOSE_PARTIAL` da Telegram viene confermato dall'exchange.
-Fill esterni (chiusure manuali su exchange) vengono filtrati (`source != bot_command`).
+Fill esterni (chiusure manuali su exchange) vengono filtrati (`source != manual_command`).
 
 ```
 ✅ #12 — UPDATE DONE
@@ -567,7 +570,7 @@ Closed: 50%
 PnL: +12.30 USDT
 Fee: 0.48 USDT
 - - - - - - - - - - - - - - - -
-Source: bot_command
+Source: manual_command
 ```
 
 Note:
@@ -589,7 +592,7 @@ https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 Timeout: order expired before fill
 - - - - - - - - - - - - - - - -
-Source: worker
+Source: timeout_worker
 ```
 
 ---

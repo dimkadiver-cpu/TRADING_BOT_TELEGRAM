@@ -294,7 +294,7 @@ class ExchangeEventSyncWorker:
             order_link_id=raw.client_order_id,
             tp_level=tp_level,
             command_id=coid.command_id,
-            source="bot_command" if coid.command_id else "rest_reconciliation",
+            source="manual_command" if coid.command_id else "rest_reconciliation",
         )
 
         return self._repo.insert_exchange_event(

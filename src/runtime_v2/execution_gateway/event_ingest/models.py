@@ -14,7 +14,7 @@ SourceStream = Literal[
 ]
 
 EventSource = Literal[
-    "bot_command",
+    "manual_command",
     "exchange_auto",
     "exchange_manual",
     "reconciliation_inferred",

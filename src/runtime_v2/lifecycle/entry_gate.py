@@ -273,6 +273,16 @@ def _write_multi_chain_summary(
     )
 
 
+_SIGNAL_CONTENT_REJECT_REASONS: frozenset[str] = frozenset({
+    "missing_symbol_or_side",
+    "no_entry_legs",
+    "no_signal_payload",
+    "missing_stop_loss_for_risk_calc",
+    "missing_limit_price",
+    "zero_risk_distance",
+})
+
+
 class LifecycleEntryGate:
     def __init__(
         self,
@@ -389,11 +399,12 @@ class LifecycleEntryGate:
         )
 
     def _reject_signal(self, eid: int | None, reason: str) -> SignalGateResult:
+        source = "trader_signal" if reason in _SIGNAL_CONTENT_REJECT_REASONS else "runtime"
         event = LifecycleEvent(
             event_type="SIGNAL_REJECTED",
             source_type="enrichment",
             source_id=str(eid),
-            payload_json=json.dumps({"reason": reason}),
+            payload_json=json.dumps({"reason": reason, "source": source}),
             idempotency_key=f"signal_rejected:{eid}",
         )
         return SignalGateResult(

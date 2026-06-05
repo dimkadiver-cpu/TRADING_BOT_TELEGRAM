@@ -123,7 +123,7 @@ def _signal_accepted(p: dict) -> str:
         warnings = p.get("parse_warnings") or []
         warn_str = ", ".join(warnings) if warnings else "incomplete parse"
         lines.append(f"⚠️ Parser: PARTIAL ({warn_str})")
-    lines += _footer(p.get("source", "original_message"), p.get("link"), trader_id=p.get("trader_id"), account_id=p.get("account_id"))
+    lines += _footer(p.get("source", "trader_signal"), p.get("link"), trader_id=p.get("trader_id"), account_id=p.get("account_id"))
     return _finalize(lines)
 
 
@@ -145,7 +145,7 @@ def _signal_rejected(p: dict) -> str:
     if p.get("risk_pct") is not None:
         lines.append(f"Risk: {p['risk_pct']}%")
     lines += _footer(
-        p.get("source", "original_message"),
+        p.get("source", "trader_signal"),
         p.get("link"),
         trader_id=p.get("trader_id"),
         account_id=p.get("account_id"),
@@ -393,7 +393,7 @@ def _update_rejected(p: dict) -> str:
 def _pending_timeout(p: dict) -> str:
     lines = _header("\u23f0", p.get("chain_id"), "PENDING ENTRY EXPIRED", p.get("symbol"), p.get("side"), signal_link=p.get("signal_link"))
     lines.append("Timeout: order expired before fill")
-    lines += _footer(p.get("source", "worker"), p.get("link"))
+    lines += _footer(p.get("source", "timeout_worker"), p.get("link"))
     return _finalize(lines)
 
 
@@ -480,7 +480,7 @@ def _partial_close_executed(p: dict) -> str:
         lines.append(f"PnL: {_fmt_money(p['pnl'], signed=True)}")
     if p.get("fee") is not None:
         lines.append(f"Fee: {_fmt_money(p['fee'])}")
-    lines += _footer(p.get("source", "bot_command"))
+    lines += _footer(p.get("source", "manual_command"))
     return _finalize(lines)
 
 

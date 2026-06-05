@@ -215,7 +215,7 @@ def _build_payload(
             "sl": plan.get("stop_loss"),
             "tps": tps,
             "risk_pct": risk_pct,
-            "source": ev.get("source", "original_message"),
+            "source": ev.get("source", "trader_signal"),
             "link": ev.get("source_message_link"),
         }
         if ev.get("parse_status") == "PARTIAL":
@@ -344,7 +344,7 @@ def _build_payload(
             "sl": plan.get("stop_loss"),
             "tps": tps,
             "risk_pct": risk_pct,
-            "source": ev.get("source", "original_message"),
+            "source": ev.get("source", "trader_signal"),
             "link": ev.get("source_message_link"),
         }
 
@@ -429,7 +429,7 @@ def _build_payload(
     if notification_type == "PENDING_ENTRY_EXPIRED":
         return {
             **base,
-            "source": ev.get("source", "worker"),
+            "source": ev.get("source", "timeout_worker"),
             "link": ev.get("source_message_link"),
         }
 
@@ -478,7 +478,7 @@ def _build_payload(
             "partial_fill_qty": partial_qty,
             "avg_entry": entry_avg_price,
             "total_filled_qty": filled_entry_qty,
-            "source": ev.get("source", ev.get("cancel_reason", "runtime")),
+            "source": ev.get("source", "timeout_worker"),
             "link": ev.get("source_message_link"),
         }
 
@@ -521,7 +521,7 @@ def _build_payload(
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
-            "source": ev.get("source", "bot_command"),
+            "source": ev.get("source", "manual_command"),
         }
 
     # fallback: merge base with event payload
@@ -610,7 +610,7 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
             continue
 
         # Filter: PARTIAL_CLOSE_EXECUTED only for bot-originated fills
-        if notification_type == "PARTIAL_CLOSE_EXECUTED" and ev.get("source") != "bot_command":
+        if notification_type == "PARTIAL_CLOSE_EXECUTED" and ev.get("source") != "manual_command":
             continue
 
         # Promote CLOSE_FULL_FILLED on PROTECTED chain → BE_EXIT

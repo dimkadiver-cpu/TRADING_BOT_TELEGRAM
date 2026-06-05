@@ -145,7 +145,7 @@ class EventClassifier:
                         return ClassifiedEvent(
                             raw=raw,
                             event_type="PENDING_ENTRY_CANCELLED",
-                            source="bot_command",
+                            source="manual_command",
                             trade_chain_id=chain_id,
                             is_actionable=True,
                         )
@@ -153,7 +153,7 @@ class EventClassifier:
                         return ClassifiedEvent(
                             raw=raw,
                             event_type="STANDALONE_PROTECTIVE_CANCELLED",
-                            source="bot_command",
+                            source="manual_command",
                             trade_chain_id=chain_id,
                             is_actionable=True,
                         )
@@ -236,19 +236,19 @@ class EventClassifier:
     ) -> tuple[ExchangeEventType, EventSource, int | None]:
         """Determine event_type + source + tp_level from a known role."""
         if role.startswith("tp_"):
-            return "TP_FILLED", "bot_command", _tp_level_from_role(role)
+            return "TP_FILLED", "manual_command", _tp_level_from_role(role)
 
         if role == "entry":
             closed = raw.closed_size or 0.0
             if closed == 0.0:
-                return "ENTRY_FILLED", "bot_command", None
+                return "ENTRY_FILLED", "manual_command", None
             pos = raw.pos_qty or 0.0
             if pos == 0.0:
-                return "CLOSE_FULL_FILLED", "bot_command", None
-            return "CLOSE_PARTIAL_FILLED", "bot_command", None
+                return "CLOSE_FULL_FILLED", "manual_command", None
+            return "CLOSE_PARTIAL_FILLED", "manual_command", None
 
         if role == "sl":
-            return "SL_FILLED", "bot_command", None
+            return "SL_FILLED", "manual_command", None
 
         return "UNKNOWN", "exchange_auto", None
 
