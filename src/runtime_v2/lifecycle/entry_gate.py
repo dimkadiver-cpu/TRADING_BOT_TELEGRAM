@@ -295,21 +295,21 @@ class LifecycleEntryGate:
         eid = enriched.enrichment_id
 
         if control_mode in ("BLOCK_NEW_ENTRIES", "FULL_STOP"):
-            return self._review_signal(eid, "control_mode:new_entries_paused")
+            return self._reject_signal(eid, "control_mode:new_entries_paused")
 
         signal = enriched.enriched_signal
         if signal is None or not signal.symbol or not signal.side:
-            return self._review_signal(eid, "missing_symbol_or_side")
+            return self._reject_signal(eid, "missing_symbol_or_side")
 
         if not signal.entries:
-            return self._review_signal(eid, "no_entry_legs")
+            return self._reject_signal(eid, "no_entry_legs")
 
         account_snapshot = self._port.get_account_state(enriched.account_id)
         market_snapshot = self._port.get_symbol_market_state(enriched.account_id, signal.symbol)
 
         decision = self._risk.validate(enriched, open_chains, account_snapshot, market_snapshot)
         if not decision.passed:
-            return self._review_signal(eid, decision.reason or "risk_check_failed")
+            return self._reject_signal(eid, decision.reason or "risk_check_failed")
 
         management_plan = enriched.management_plan or ManagementPlanConfig()
         timeout_at = None
@@ -388,13 +388,13 @@ class LifecycleEntryGate:
             review_reason=None,
         )
 
-    def _review_signal(self, eid: int | None, reason: str) -> SignalGateResult:
+    def _reject_signal(self, eid: int | None, reason: str) -> SignalGateResult:
         event = LifecycleEvent(
-            event_type="REVIEW_REQUIRED",
+            event_type="SIGNAL_REJECTED",
             source_type="enrichment",
             source_id=str(eid),
             payload_json=json.dumps({"reason": reason}),
-            idempotency_key=f"review_signal:{eid}",
+            idempotency_key=f"signal_rejected:{eid}",
         )
         return SignalGateResult(
             trade_chain=None,
@@ -1430,7 +1430,7 @@ class LifecycleEntryGate:
 
 import sqlite3 as _sqlite3
 
-_NO_CHAIN_LOGGABLE_EVENTS = frozenset({"REVIEW_REQUIRED", "SIGNAL_REJECTED"})
+_NO_CHAIN_LOGGABLE_EVENTS = frozenset({"SIGNAL_REJECTED"})
 
 
 def _write_no_chain_signal_clean_log(
@@ -1463,6 +1463,11 @@ def _write_no_chain_signal_clean_log(
         signal.stop_loss.price.value
         if signal and signal.stop_loss and signal.stop_loss.price else None
     )
+    tps_payload = [
+        tp.price.value
+        for tp in (signal.take_profits or [])
+        if tp.price is not None
+    ] if signal else []
     for event in lifecycle_events:
         if event.event_type not in _NO_CHAIN_LOGGABLE_EVENTS:
             continue
@@ -1475,9 +1480,11 @@ def _write_no_chain_signal_clean_log(
             "symbol": signal.symbol if signal else None,
             "side": str(signal.side) if signal and signal.side else None,
             "trader_id": enriched.trader_id,
+            "account_id": enriched.account_id,
             "reason": ev_data.get("reason", "unknown"),
             "entries": entries_payload,
             "sl": sl_payload,
+            "tps": tps_payload,
             "source": ev_data.get("source", "runtime"),
             "link": link,
         }

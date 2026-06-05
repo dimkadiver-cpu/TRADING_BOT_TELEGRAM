@@ -325,6 +325,9 @@ def _build_payload(
         }
 
     if notification_type == "SIGNAL_REJECTED":
+        risk_pct = None
+        if risk.get("capital") and risk.get("risk_amount"):
+            risk_pct = round(risk["risk_amount"] / risk["capital"] * 100, 2)
         return {
             **base,
             "trader_id": trader_id,
@@ -339,6 +342,8 @@ def _build_payload(
                 for l in legs
             ],
             "sl": plan.get("stop_loss"),
+            "tps": tps,
+            "risk_pct": risk_pct,
             "source": ev.get("source", "original_message"),
             "link": ev.get("source_message_link"),
         }

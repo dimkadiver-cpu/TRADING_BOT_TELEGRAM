@@ -44,7 +44,8 @@ def _finalize(lines: list[str]) -> str:
 def _header(
     emoji: str, chain_id, event_label: str, symbol, side, *, signal_link: str | None = None
 ) -> list[str]:
-    lines: list[str] = [f"{emoji} #{chain_id} \u2014 {event_label}", _SEP]
+    id_part = f" #{chain_id}" if chain_id is not None else ""
+    lines: list[str] = [f"{emoji}{id_part} \u2014 {event_label}", _SEP]
     lines.append(f"{symbol} \u2014 {_side_emoji(side)} {side}")
     if signal_link:
         lines.append(signal_link)
@@ -139,6 +140,10 @@ def _signal_rejected(p: dict) -> str:
         lines.append(f"Entry_{seq}: {price_str}")
     if p.get("sl") is not None:
         lines.append(f"SL: {_num(p['sl'])}")
+    for i, tp in enumerate(p.get("tps") or [], start=1):
+        lines.append(f"TP_{i}: {_num(tp)}")
+    if p.get("risk_pct") is not None:
+        lines.append(f"Risk: {p['risk_pct']}%")
     lines += _footer(
         p.get("source", "original_message"),
         p.get("link"),
