@@ -513,6 +513,43 @@ def test_multi_chain_summary_autosufficient_non_close_full():
     assert text.rstrip().endswith("https://t.me/c/3927267771/365")
 
 
+def test_multi_chain_summary_close_full_uses_compact_rows():
+    from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
+
+    text = format_clean_log("MULTI_CHAIN_SUMMARY", {
+        "summary_kind": "final_close",
+        "requested_operations": ["Close full"],
+        "chains": [
+            {
+                "chain_id": 6,
+                "symbol": "WLD",
+                "side": "LONG",
+                "status": "DONE",
+                "link": "https://t.me/c/3897279123/468",
+                "display_lines": [],
+            },
+            {
+                "chain_id": 7,
+                "symbol": "ICNT",
+                "side": "LONG",
+                "status": "DONE",
+                "link": "https://t.me/c/3897279123/469",
+                "display_lines": [],
+            },
+        ],
+        "counts": {"done": 2, "partial": 0, "skipped": 0, "error": 0},
+        "source": "trader_update",
+        "link": "https://t.me/c/3927267771/365",
+    })
+
+    assert "Operation requested:" in text
+    assert "Close full" in text
+    assert "https://t.me/c/3897279123/468" in text
+    assert "Position: open" not in text
+    assert "Close reason:" not in text
+    assert "Done: 2 | Skipped: 0 | Error: 0" in text
+
+
 def test_outbox_writer_sl_filled_side_from_chain(tmp_path):
     """Side in SL_FILLED payload must come from ops_trade_chains (LONG), not event (Sell)."""
     import sqlite3

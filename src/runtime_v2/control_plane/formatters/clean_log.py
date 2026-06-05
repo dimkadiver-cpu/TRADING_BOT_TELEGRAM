@@ -501,13 +501,14 @@ def _multi_chain_summary(p: dict) -> str:
     chains = p.get("chains") or []
     counts = p.get("counts") or {}
     summary_kind = p.get("summary_kind", "immediate")
+    is_close_full = summary_kind == "final_close"
 
     has_issues = any(chain.get("status") in {"PARTIAL", "SKIPPED", "REVIEW", "ERROR"} for chain in chains)
     emoji = "⚠️" if has_issues else "✅"
     header_line = f"{emoji} UPDATE APPLICATO - {len(chains)} chain"
 
     lines = [header_line, _SEP]
-    lines.append("Operations requested:")
+    lines.append("Operation requested:" if is_close_full else "Operations requested:")
     for op in requested:
         lines.append(f"{_BULLET} {op}")
     lines.append(_SEP)
@@ -519,8 +520,9 @@ def _multi_chain_summary(p: dict) -> str:
         lines.append(f"#{chain_id} {symbol} {side} — {status}")
         if chain.get("link"):
             lines.append(chain["link"])
-        for item in chain.get("display_lines") or []:
-            lines.append(item)
+        if not is_close_full:
+            for item in chain.get("display_lines") or []:
+                lines.append(item)
         lines.append(_SEP)
 
     if summary_kind and not counts:
@@ -537,15 +539,18 @@ def _multi_chain_summary(p: dict) -> str:
     skipped = counts.get("skipped", 0)
     review = counts.get("review", 0)
     error = counts.get("error", 0)
-    summary_parts = [
-        f"Done: {done}",
-        f"Partial: {partial}",
-        f"Skipped: {skipped}",
-    ]
-    if review:
-        summary_parts.append(f"Review: {review}")
-    summary_parts.append(f"Error: {error}")
-    lines.append(" | ".join(summary_parts))
+    if is_close_full:
+        lines.append(f"Done: {done} | Skipped: {skipped} | Error: {error}")
+    else:
+        summary_parts = [
+            f"Done: {done}",
+            f"Partial: {partial}",
+            f"Skipped: {skipped}",
+        ]
+        if review:
+            summary_parts.append(f"Review: {review}")
+        summary_parts.append(f"Error: {error}")
+        lines.append(" | ".join(summary_parts))
     lines += _footer(p.get("source", "runtime"), p.get("link"))
     return _finalize(lines)
 
