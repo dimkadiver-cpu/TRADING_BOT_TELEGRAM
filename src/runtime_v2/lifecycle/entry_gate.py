@@ -277,11 +277,21 @@ def _write_multi_chain_summary(
                 "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
                 (cid,),
             ).fetchone()
+            tracking_row = conn.execute(
+                "SELECT clean_log_root_message_id, telegram_chat_id "
+                "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                (cid,),
+            ).fetchone()
+            signal_link: str | None = None
+            if tracking_row and tracking_row[0] and tracking_row[1]:
+                normalized_chat = str(tracking_row[1]).removeprefix("-100")
+                signal_link = f"https://t.me/c/{normalized_chat}/{tracking_row[0]}"
             chains_by_id[cid] = {
                 "chain_id": cid,
                 "symbol": row[0] if row else None,
                 "side": row[1] if row else None,
                 "status": status,
+                "link": signal_link,
             }
         elif _STATUS_RANK.get(status, 0) > _STATUS_RANK.get(chains_by_id[cid]["status"], 0):
             chains_by_id[cid]["status"] = status

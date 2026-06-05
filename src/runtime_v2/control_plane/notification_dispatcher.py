@@ -349,12 +349,15 @@ class TelegramNotificationDispatcher:
                     chains = []
                     for chain in payload.get("chains", []):
                         enriched_chain = dict(chain)
-                        chain_id = enriched_chain.get("chain_id")
-                        if chain_id is not None:
-                            last_msg_id, tracking_chat_id = self._get_clean_log_last(chain_id)
-                            link = self._build_signal_link(last_msg_id, tracking_chat_id)
-                            if link:
-                                enriched_chain["link"] = link
+                        # Use pre-resolved signal link from payload; fall back to live
+                        # tracking only when absent (e.g. chain created before tracking row exists).
+                        if not enriched_chain.get("link"):
+                            chain_id = enriched_chain.get("chain_id")
+                            if chain_id is not None:
+                                last_msg_id, tracking_chat_id = self._get_clean_log_last(chain_id)
+                                link = self._build_signal_link(last_msg_id, tracking_chat_id)
+                                if link:
+                                    enriched_chain["link"] = link
                         chains.append(enriched_chain)
                     payload = {**payload, "chains": chains}
                 text = self._render(destination, notification_type, payload)
