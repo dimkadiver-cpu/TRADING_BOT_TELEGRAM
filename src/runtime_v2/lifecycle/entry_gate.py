@@ -1023,6 +1023,13 @@ class LifecycleEntryGate:
             op = action.set_stop
             if op and op.target_type == "ENTRY":
                 return self._apply_move_to_be(enriched, chain, active_commands)
+            if op and op.target_type == "PRICE" and op.price is not None:
+                return self._apply_move_stop_price(enriched, chain, op.price.value, active_commands=active_commands)
+            if op and op.target_type == "TP_LEVEL" and op.tp_level is not None:
+                tp_price = self._resolve_tp_level_price(chain, op.tp_level)
+                if tp_price is None:
+                    return self._review_chain(enriched, chain, f"tp_level_price_not_found:{op.tp_level}")
+                return self._apply_move_stop_price(enriched, chain, tp_price, active_commands=active_commands, reference=f"TP_{op.tp_level}")
             return self._review_chain(enriched, chain, "unsupported_set_stop_target_type")
 
         if action_type == "CLOSE":
@@ -1563,6 +1570,114 @@ class LifecycleEntryGate:
             trade_chain_id=chain_id,
             new_lifecycle_state=None,
             new_be_protection_status="BE_MOVE_PENDING",
+            lifecycle_events=[event],
+            execution_commands=[cmd],
+        )
+
+    def _resolve_tp_level_price(self, chain: "TradeChain", tp_level: int) -> float | None:
+        try:
+            plan = json.loads(chain.plan_state_json or "{}")
+        except Exception:
+            return None
+        intermediate: list[float] = plan.get("intermediate_tps") or []
+        final_tp: float | None = plan.get("final_tp")
+        all_tps = intermediate + ([final_tp] if final_tp is not None else [])
+        idx = tp_level - 1
+        if 0 <= idx < len(all_tps):
+            return all_tps[idx]
+        return None
+
+    def _apply_move_stop_price(
+        self,
+        enriched: "EnrichedCanonicalMessage",
+        chain: "TradeChain",
+        new_price: float,
+        *,
+        active_commands: list[ExecutionCommand],
+        reference: str | None = None,
+    ) -> "UpdateChainResult":
+        chain_id = chain.trade_chain_id
+        cmid = enriched.canonical_message_id
+
+        if chain.lifecycle_state not in ("OPEN", "PARTIALLY_CLOSED"):
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_NOT_PENDING",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_ms_state:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
+        active_move = [
+            c for c in active_commands
+            if c.command_type == "MOVE_STOP" and c.status in ("PENDING", "SENT", "ACK")
+        ]
+        if active_move:
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_DUPLICATE_COMMAND",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    idempotency_key=f"noop_dup_ms:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
+        extra = _be_move_extra(chain)
+        payload: dict = {
+            "symbol": chain.symbol,
+            "side": chain.side,
+            "new_stop_price": new_price,
+            "is_breakeven": False,
+            **extra,
+        }
+        if reference is not None:
+            payload["reference"] = reference
+
+        cmd = ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="MOVE_STOP",
+            payload_json=json.dumps(payload),
+            idempotency_key=f"move_stop:{chain_id}:{cmid}",
+        )
+
+        old_sl_price = chain.current_stop_price
+        if old_sl_price is None:
+            try:
+                old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
+            except Exception:
+                pass
+
+        event_payload: dict = {
+            "action": "MOVE_STOP",
+            "old_sl_price": old_sl_price,
+            "new_sl_price": new_price,
+        }
+        if reference is not None:
+            event_payload["reference"] = reference
+
+        event = LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="TELEGRAM_UPDATE_ACCEPTED",
+            source_type="telegram_update",
+            source_id=str(cmid),
+            payload_json=json.dumps(event_payload),
+            idempotency_key=f"update_ms:{chain_id}:{cmid}",
+        )
+        return UpdateChainResult(
+            trade_chain_id=chain_id,
+            new_lifecycle_state=None,
+            new_be_protection_status=None,
             lifecycle_events=[event],
             execution_commands=[cmd],
         )
