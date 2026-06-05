@@ -232,7 +232,7 @@ def _write_update_clean_log(
     )
 
 
-_STATUS_RANK: dict[str, int] = {"PARTIAL": 2, "SKIPPED": 1, "DONE": 0}
+_STATUS_RANK: dict[str, int] = {"REVIEW": 3, "PARTIAL": 2, "SKIPPED": 1, "DONE": 0}
 
 
 def _write_multi_chain_summary(
@@ -258,6 +258,8 @@ def _write_multi_chain_summary(
             status = "DONE"
         elif accepted:
             status = "PARTIAL"
+        elif reviews:
+            status = "REVIEW"
         else:
             status = "SKIPPED"
 
@@ -300,6 +302,14 @@ def _write_multi_chain_summary(
     if len(chains_payload) < 2:
         return
 
+    source = "runtime"
+    for cr in chain_results:
+        if cr.lifecycle_events:
+            source = _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE.get(
+                cr.lifecycle_events[0].source_type, "runtime"
+            )
+            break
+
     write_clean_log_event(
         conn,
         notification_type="MULTI_CHAIN_SUMMARY",
@@ -307,7 +317,7 @@ def _write_multi_chain_summary(
         payload={
             "operations": operations_seen,
             "chains": chains_payload,
-            "source": "trader_update",
+            "source": source,
         },
         dedupe_key=f"clean:multi_summary:{canonical_message_id}",
     )

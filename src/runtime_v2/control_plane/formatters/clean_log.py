@@ -499,7 +499,7 @@ def _cancel_failed(p: dict) -> str:
 def _multi_chain_summary(p: dict) -> str:
     chains = p.get("chains") or []
     statuses = {chain.get("status") for chain in chains}
-    has_issues = bool(statuses & {"PARTIAL", "SKIPPED"})
+    has_issues = bool(statuses & {"PARTIAL", "SKIPPED", "REVIEW"})
     emoji = "⚠️" if has_issues else "✅"
     lines = [f"{emoji} UPDATE APPLICATO - {len(chains)} chain", _SEP]
 
@@ -531,11 +531,14 @@ def _multi_chain_summary(p: dict) -> str:
     done = sum(1 for chain in chains if chain.get("status") == "DONE")
     partial = sum(1 for chain in chains if chain.get("status") == "PARTIAL")
     skipped = sum(1 for chain in chains if chain.get("status") == "SKIPPED")
+    review = sum(1 for chain in chains if chain.get("status") == "REVIEW")
     summary_parts = [f"Done: {done}"]
     if partial:
         summary_parts.append(f"Partial: {partial}")
     if skipped:
         summary_parts.append(f"Skipped: {skipped}")
+    if review:
+        summary_parts.append(f"Review: {review}")
     lines.append("   ".join(summary_parts))
     lines += _footer(p.get("source", "runtime"))
     return _finalize(lines)

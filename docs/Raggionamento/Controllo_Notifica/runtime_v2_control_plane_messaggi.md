@@ -1,7 +1,7 @@
 # Runtime V2 Control Plane — Messaggi Telegram (riferimento completo)
 
 Aggiornato al codice corrente in `src/runtime_v2/control_plane/`.  
-Ultima revisione: 2026-06-05 (sessione 4 — fix WAITING_ENTRY in scope globali, link MULTI_CHAIN_SUMMARY stabilizzati su signal root).
+Ultima revisione: 2026-06-05 (sessione 5 — REVIEW status nel summary, source derivato, sequenze per tipo di azione documentate).
 
 ---
 
@@ -78,18 +78,61 @@ Non passano da `_CLEAN_LOG_EVENT_MAP`. Scritte direttamente dopo aver processato
 
 Scritte direttamente quando un update canonico impatta ≥ 2 chain **uniche** (distinte per `trade_chain_id`).
 
+Per ogni update su N ≥ 2 chain vengono sempre scritti **entrambi**:
+- N messaggi `UPDATE_DONE/PARTIAL/REJECTED` (uno per chain, con sezione `Changed:` dettagliata)
+- 1 messaggio `MULTI_CHAIN_SUMMARY` (aggregato, `send_after=+3s`)
+
 | Notification type | Condizione |
 |---|---|
-| `MULTI_CHAIN_SUMMARY` | ≥ 2 chain uniche colpite; per ogni chain viene mantenuto il worst-status tra le operazioni (PARTIAL > SKIPPED > DONE) |
+| `MULTI_CHAIN_SUMMARY` | ≥ 2 chain uniche colpite; per ogni chain viene mantenuto il worst-status tra le operazioni (`REVIEW > PARTIAL > SKIPPED > DONE`) |
+
+**Status per chain nel summary:**
+
+| Lifecycle events sulla chain | Status |
+|---|---|
+| solo `TELEGRAM_UPDATE_ACCEPTED` | `DONE` |
+| `TELEGRAM_UPDATE_ACCEPTED` + almeno un `NOOP_*` | `PARTIAL` |
+| solo `REVIEW_REQUIRED` (senza ACCEPTED né NOOP) | `REVIEW` |
+| solo `NOOP_*` (senza ACCEPTED né REVIEW) | `SKIPPED` |
 
 - La lista `chains` è deduplicata per `trade_chain_id`: più operazioni sulla stessa chain non generano righe duplicate nel summary.
 - Se un messaggio ha N operazioni su 1 sola chain → nessun summary (il singolo UPDATE_DONE copre tutto).
 - Il formatter gestisce anche `MULTI_CHAIN_UPDATE` e `MULTI_CHAIN_CLOSED` come alias dello stesso template, ma nell'implementazione attuale viene scritto solo `MULTI_CHAIN_SUMMARY`.
-- **Link per chain**: risolto a tempo di scrittura (`_write_multi_chain_summary`) leggendo `clean_log_root_message_id` da `ops_clean_log_tracking` — punta al messaggio `SIGNAL_ACCEPTED` della chain (stabile, non cambia). Il dispatcher usa il link già nel payload; fa il lookup live su `clean_log_last_message_id` solo come fallback per chain senza tracking row.
-- **Chain in `WAITING_ENTRY`**: incluse negli scope globali (`ALL_POSITIONS` ecc.). Comportamento per azione:
-  - `CANCEL_PENDING` → `DONE` (cancella gli ordini di entry pendenti — semanticamente corretto)
-  - `MOVE_SL_TO_BE` → `SKIPPED` via `NOOP_NOT_PENDING` (nessun fill, nessun avg price)
-  - `CLOSE_FULL` → rediretto a `_apply_cancel_pending` (no posizione aperta → solo cancella pending entries; appare come `CANCEL_PENDING` nell'UPDATE_DONE e nel summary)
+- **Link per chain**: risolto a tempo di scrittura leggendo `clean_log_root_message_id` da `ops_clean_log_tracking` — punta al `SIGNAL_ACCEPTED` della chain (stabile). Il dispatcher usa il link dal payload; fa lookup live solo come fallback per chain senza tracking row.
+- **Source**: derivato dal `source_type` del primo evento della prima chain colpita (`telegram_update` → `trader_update`, `operation_rules` → `operation_rules`, ecc.).
+
+**Comportamento per tipo di azione sulle chain `WAITING_ENTRY`** (incluse negli scope globali):
+
+| Azione | Risultato | Status nel summary |
+|---|---|---|
+| `CANCEL_PENDING` | cancella ordini di entry pendenti → `DONE` | `DONE` |
+| `MOVE_SL_TO_BE` | `NOOP_NOT_PENDING` (no fill, no avg price) | `SKIPPED` |
+| `CLOSE_FULL` | rediretto a `_apply_cancel_pending` → appare come `CANCEL_PENDING` nell'UPDATE_DONE | `DONE` |
+
+Nota: se un update CLOSE_FULL globale colpisce chain OPEN e chain WAITING_ENTRY, il summary mostra sia `Close full` che `Cancel pending` nella sezione Operation (operazioni reali per chain, non intenzione del messaggio). Le sezioni `Changed:` dei singoli UPDATE_DONE per-chain chiariscono cosa è successo su ognuna.
+
+**Sequenza visibile in Telegram per azione tipo CLOSE_FULL su N chain OPEN:**
+
+```
+t+0s   ✅ #12 — UPDATE DONE   [Operation: Close full / Changed: Position open→closed]
+       ✅ #13 — UPDATE DONE   [...]
+       ...
+t+3s   ✅ UPDATE APPLICATO - N chain   [MULTI_CHAIN_SUMMARY, send_after]
+t+5s   ✅ #12 — POSITION CLOSED        [exchange fill confermato]
+       ✅ #13 — POSITION CLOSED
+       ...
+```
+
+Per MOVE_SL_TO_BE, CANCEL_PENDING, e altre azioni senza fill exchange: la sequenza si ferma al MULTI_CHAIN_SUMMARY (nessun messaggio asincrono successivo).
+
+**Sequenza visibile per CLOSE_FULL su N chain (mix OPEN + WAITING_ENTRY):**
+
+```
+t+0s   ✅ #12 — UPDATE DONE   [Operation: Close full]     ← catena OPEN
+       ✅ #13 — UPDATE DONE   [Operation: Cancel pending]  ← catena WAITING_ENTRY
+t+3s   ✅ UPDATE APPLICATO - N chain   [Operation: Close full / Cancel pending]
+t+5s   ✅ #12 — POSITION CLOSED        ← solo le catene OPEN ottengono il fill
+```
 
 ---
 
@@ -683,28 +726,8 @@ Source: runtime
 
 ### 3.21 MULTI_CHAIN_SUMMARY / MULTI_CHAIN_UPDATE / MULTI_CHAIN_CLOSED
 
-Emesso quando un update impatta più catene contemporaneamente. Stesso formatter per tutti e tre i tipi.
-
-Variante con problemi (almeno un PARTIAL o SKIPPED → emoji ⚠️):
-
-```
-⚠️ UPDATE APPLICATO - 4 chain
-- - - - - - - - - - - - - - - - - - - - - - - - -
-Operation:
-▪️ move_sl_to_be
-▪️ cancel_pending_entries
-- - - - - - - - - - - - - - - - - - - - - - - - -
-ID  | Symbol  | Side  | State   | link
-- - - - - - - - - - - - - - - - - - - - - - - - -
-#12 | BTCUSDT | LONG  | DONE    | https://t.me/c/123456/1001
-#13 | ETHUSDT | SHORT | DONE    | https://t.me/c/123456/1002
-#14 | SOLUSDT | LONG  | PARTIAL | https://t.me/c/123456/1003
-#15 | XRPUSDT | LONG  | SKIPPED | https://t.me/c/123456/1004
-- - - - - - - - - - - - - - - - - - - - - - - - -
-Done: 2   Partial: 1   Skipped: 1
-- - - - - - - - - - - - - - - - - - - - - - - - -
-Source: runtime
-```
+Emesso quando un update impatta più catene contemporaneamente. Stesso formatter per tutti e tre i tipi.  
+Appare **sempre insieme** ai singoli `UPDATE_DONE` per-chain: i singoli danno il dettaglio `Changed:` per ognuna, il summary dà la vista aggregata.
 
 Variante tutto OK (tutti DONE → emoji ✅):
 
@@ -712,24 +735,54 @@ Variante tutto OK (tutti DONE → emoji ✅):
 ✅ UPDATE APPLICATO - 3 chain
 - - - - - - - - - - - - - - - - - - - - - - -
 Operation:
-▪️ move_sl_to_be
+▪️ Move SL to BE
 - - - - - - - - - - - - - - - - - - - - - - -
 ID  | Symbol  | Side  | State | link
 - - - - - - - - - - - - - - - - - - - - - - -
-#12 | BTCUSDT | LONG  | DONE  | https://t.me/c/123456/1001
-#13 | ETHUSDT | SHORT | DONE  | https://t.me/c/123456/1002
-#14 | SOLUSDT | LONG  | DONE  | https://t.me/c/123456/1003
+#12 | BTCUSDT | LONG  | DONE  | https://t.me/c/123456/987
+#13 | ETHUSDT | SHORT | DONE  | https://t.me/c/123456/988
+#14 | SOLUSDT | LONG  | DONE  | https://t.me/c/123456/989
 - - - - - - - - - - - - - - - - - - - - - - -
 Done: 3
 - - - - - - - - - - - - - - - - - - - - - - -
-Source: runtime
+Source: trader_update
 ```
+
+Variante con problemi misti (almeno un PARTIAL, SKIPPED o REVIEW → emoji ⚠️):
+
+```
+⚠️ UPDATE APPLICATO - 4 chain
+- - - - - - - - - - - - - - - - - - - - - - - - -
+Operation:
+▪️ Move SL to BE
+- - - - - - - - - - - - - - - - - - - - - - - - -
+ID  | Symbol  | Side  | State   | link
+- - - - - - - - - - - - - - - - - - - - - - - - -
+#12 | BTCUSDT | LONG  | DONE    | https://t.me/c/123456/987
+#13 | ETHUSDT | SHORT | DONE    | https://t.me/c/123456/988
+#14 | SOLUSDT | LONG  | SKIPPED | https://t.me/c/123456/989
+#15 | XRPUSDT | LONG  | REVIEW  | https://t.me/c/123456/990
+- - - - - - - - - - - - - - - - - - - - - - - - -
+Done: 2   Skipped: 1   Review: 1
+- - - - - - - - - - - - - - - - - - - - - - - - -
+Source: trader_update
+```
+
+Valori `State` possibili:
+
+| State | Significato |
+|---|---|
+| `DONE` | tutte le azioni accettate |
+| `PARTIAL` | almeno una accettata + almeno una NOOP |
+| `SKIPPED` | solo NOOP (es. `NOOP_NOT_PENDING`, `NOOP_ALREADY_PROTECTED_BE`) |
+| `REVIEW` | chain mandata in review (`REVIEW_REQUIRED`) senza nessuna azione accettata |
 
 Note:
 - Le colonne si adattano alla larghezza massima dei valori presenti.
-- `link` per ogni chain punta al messaggio `SIGNAL_ACCEPTED` della chain (`clean_log_root_message_id`), risolto a tempo di scrittura del summary. Assente se la chain non ha ancora una tracking row (chain creata nello stesso batch).
-- `Partial:` e `Skipped:` nel summary appaiono solo se > 0.
-- Il summary appare nel feed Telegram **dopo** i singoli `UPDATE_DONE` per-chain grazie al `send_after=+3s`. In caso di timeout/retry del messaggio Telegram, il link nel summary rimane stabile (punta al segnale originale, non all'ultimo messaggio inviato).
+- `link` per ogni chain punta al `SIGNAL_ACCEPTED` della chain (`clean_log_root_message_id`), risolto a tempo di scrittura. Assente se la chain non ha ancora una tracking row.
+- `Partial:`, `Skipped:`, `Review:` nel footer appaiono solo se > 0.
+- Il summary arriva `+3s` dopo i singoli UPDATE_DONE per-chain. In caso di timeout/retry Telegram, il link rimane stabile (punta al segnale originale).
+- `Source:` è derivato dal tipo di aggiornamento: `trader_update`, `operation_rules`, `manual_command`.
 
 ---
 
