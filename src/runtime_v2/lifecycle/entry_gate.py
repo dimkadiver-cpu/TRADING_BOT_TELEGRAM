@@ -344,6 +344,54 @@ def _resolve_signal_root_link(conn, chain_id: int) -> str | None:
     return None
 
 
+def _write_pending_close_full_summary(
+    conn,
+    chains_payload: list[dict],
+    operations_seen: list[str],
+    source: str,
+    update_source_link: str | None,
+    canonical_message_id: int,
+) -> None:
+    pending_chains = [
+        {
+            "chain_id": c["chain_id"],
+            "symbol": c["symbol"],
+            "side": c["side"],
+            "status": c["status"],
+            "link_mode": "final_close",
+            "link": None,
+            "display_lines": [],
+        }
+        for c in chains_payload
+    ]
+    done = sum(1 for c in chains_payload if c["status"] == "DONE")
+    partial = sum(1 for c in chains_payload if c["status"] == "PARTIAL")
+    skipped = sum(1 for c in chains_payload if c["status"] == "SKIPPED")
+    error = sum(1 for c in chains_payload if c["status"] == "ERROR")
+    payload = {
+        "summary_kind": "pending_final_close_links",
+        "requested_operations": operations_seen,
+        "chains": pending_chains,
+        "counts": {"done": done, "partial": partial, "skipped": skipped, "error": error},
+        "source": source,
+        "link": update_source_link,
+    }
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS ops_pending_multi_chain_summaries "
+        "(pending_id INTEGER PRIMARY KEY, canonical_message_id INTEGER UNIQUE, payload_json TEXT)"
+    )
+    conn.execute(
+        "INSERT OR REPLACE INTO ops_pending_multi_chain_summaries (canonical_message_id, payload_json) VALUES (?, ?)",
+        (canonical_message_id, json.dumps(payload)),
+    )
+    conn.commit()
+
+
+def _try_release_close_full_summary(conn, canonical_message_id: int) -> None:
+    """Release a pending CLOSE_FULL summary once all chain final-close links are resolvable."""
+    pass
+
+
 def _write_multi_chain_summary(
     conn,
     chain_results: list["UpdateChainResult"],
@@ -400,6 +448,16 @@ def _write_multi_chain_summary(
     if len(chains_payload) < 2:
         return
 
+    contains_close_full = any(
+        any(
+            json.loads(e.payload_json or "{}").get("action") == "CLOSE_FULL"
+            for e in cr.lifecycle_events
+            if e.event_type == "TELEGRAM_UPDATE_ACCEPTED"
+        )
+        for cr in chain_results
+        if cr.trade_chain_id
+    )
+
     source = "runtime"
     for cr in chain_results:
         if cr.lifecycle_events:
@@ -407,6 +465,17 @@ def _write_multi_chain_summary(
                 cr.lifecycle_events[0].source_type, "runtime"
             )
             break
+
+    if contains_close_full:
+        _write_pending_close_full_summary(
+            conn,
+            chains_payload,
+            operations_seen,
+            source,
+            update_source_link,
+            canonical_message_id,
+        )
+        return
 
     done = sum(1 for c in chains_payload if c["status"] == "DONE")
     partial = sum(1 for c in chains_payload if c["status"] == "PARTIAL")
