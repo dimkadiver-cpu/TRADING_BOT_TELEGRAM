@@ -26,64 +26,8 @@ Rivediami il sistam di gestione e vizalizazione (verifica anche come arrivano)
 
 Rivedrei summary:
 
-
-
-✅ UPDATE APPLICATO — 4/4 chain 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Operation requested:
-▪️ Close full 
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#6 | WLD | LONG — DONE
-↳ https://t.me/c/3897279123/468 // link a singolo report finale "POSITION CLOSED"
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#7 ICNT LONG — DONE
-↳ https://t.me/c/3897279123/469
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#8 BTC LONG — DONE
-↳ https://t.me/c/3897279123/470  
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#1 INCT LONG — DONE
-↳ https://t.me/c/3897279123/466
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Done: 4 | Skipped: 0 | Error: 0
-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-Source: trader_update
-https://t.me/c/3927267771/365
-
-
-
-
-✅ UPDATE APPLICATO — 3/4 full, 1 partial
-- - - - - - - - - - - - - - - - - - - - - - - -
-Operations requested:
-▪️ CANCEL_PENDING
-▪️ MOVE_SL_TO_BE
-- - - - - - - - - - - - - - - - - - - - - - - - 
-#6 WLD LONG — DONE  
-https://t.me/c/3897279123/468
-Entry_2: 61,192.03 → cancelled
-Entry_3: 60,192.03 → cancelled
-SL: 66,400 → 68,500 BE
-- - - - - - - - - - - - - - - - - - - - - - - -
-#7 ICNT LONG — PARTIAL 
-https://t.me/c/3897279123/468
-Entry_2: SKIPPED — no pending averaging order
-SL: 66,400 → 68,500 BE
-- - - - - - - - - - - - - - - - - - - - - - - - 
-#8 BTC LONG — DONE
-https://t.me/c/3897279123/468
-Entry_2: 61,192.03 → cancelled
-SL: 66,400 → 68,500 BE
-- - - - - - - - - - - - - - - - - - - - - - - - 
-#1 INCT LONG — DONE
-https://t.me/c/3897279123/468
-Entry_2: 61,192.03 → cancelled
-SL: 66,400 → 68,500 BE
-- - - - - - - - - - - - - - - - - - - - - - - - 
-Done: 3 | Partial: 1 | Skipped: 1 | Error: 0
-- - - - - - - - - - - - - - - - - - - - - - - - 
-Source: trader_update
-https://t.me/c/3927267771/365
+> I mockup provvisori di MULTI_CHAIN_SUMMARY qui sotto sono stati superseded.
+> Vedere `runtime_v2_control_plane_messaggi.md` §3.21 per il formato MULTI_CHAIN_SUMMARY finalizzato.
 
  
 

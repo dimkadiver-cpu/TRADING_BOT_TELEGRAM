@@ -628,3 +628,30 @@ def test_update_done_move_stop_shows_reference_tp():
     assert "SL: 66,400 -> 68,500" in text
     assert text.count("SL: 66,400 -> 68,500") == 1
     assert "Reference: TP_1" in text
+
+
+def test_multi_chain_summary_move_stop_price_reference():
+    from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
+
+    text = format_clean_log("MULTI_CHAIN_SUMMARY", {
+        "summary_kind": "immediate",
+        "requested_operations": ["Move stop"],
+        "chains": [
+            {
+                "chain_id": 8,
+                "symbol": "BTC",
+                "side": "LONG",
+                "status": "DONE",
+                "link": "https://t.me/c/3897279123/470",
+                "display_lines": [
+                    "SL: 66,400 -> 67,950",
+                    "Reference: Price",
+                ],
+            },
+        ],
+        "counts": {"done": 1, "partial": 0, "skipped": 0, "error": 0},
+        "source": "trader_update",
+        "link": "https://t.me/c/3927267771/365",
+    })
+
+    assert "Reference: Price" in text

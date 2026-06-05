@@ -724,49 +724,125 @@ Source: runtime
 
 ---
 
-### 3.21 MULTI_CHAIN_SUMMARY / MULTI_CHAIN_UPDATE / MULTI_CHAIN_CLOSED
+### 3.21 MULTI_CHAIN_SUMMARY
 
-Emesso quando un update impatta più catene contemporaneamente. Stesso formatter per tutti e tre i tipi.  
-Appare **sempre insieme** ai singoli `UPDATE_DONE` per-chain: i singoli danno il dettaglio `Changed:` per ognuna, il summary dà la vista aggregata.
+Emesso quando un update impatta ≥ 2 chain. Appare **sempre insieme** ai singoli `UPDATE_DONE` per-chain.  
+Due layout distinti in base al campo `summary_kind`.
 
-Variante tutto OK (tutti DONE → emoji ✅):
+---
+
+#### 3.21a Autosufficient summary — `summary_kind: "immediate"` (non-CLOSE_FULL)
+
+Usato per `CANCEL_PENDING`, `MOVE_SL_TO_BE`, `MOVE_STOP`, e qualsiasi operazione diversa da `CLOSE_FULL`.  
+Emesso a `t+3s` dopo i singoli `UPDATE_DONE`. Contiene i `display_lines` per-chain.
+
+Variante tutti DONE (emoji ✅):
 
 ```
-✅ UPDATE APPLICATO - 3 chain
+✅ UPDATE APPLICATO - 2 chain
 - - - - - - - - - - - - - - - - - - - - - - -
-Operation:
-▪️ Move SL to BE
+Operations requested:
+▪️ CANCEL_PENDING
+▪️ MOVE_SL_TO_BE
 - - - - - - - - - - - - - - - - - - - - - - -
-ID  | Symbol  | Side  | State | link
+#6 WLD LONG — DONE
+https://t.me/c/3897279123/468
+Entry_2: 61,192.03 -> cancelled
+Entry_3: 60,192.03 -> cancelled
+SL: 66,400 -> 68,500 BE
 - - - - - - - - - - - - - - - - - - - - - - -
-#12 | BTCUSDT | LONG  | DONE  | https://t.me/c/123456/987
-#13 | ETHUSDT | SHORT | DONE  | https://t.me/c/123456/988
-#14 | SOLUSDT | LONG  | DONE  | https://t.me/c/123456/989
+#7 ICNT LONG — DONE
+https://t.me/c/3897279123/469
+SL: 66,400 -> 68,500 BE
 - - - - - - - - - - - - - - - - - - - - - - -
-Done: 3
+Done: 2 | Partial: 0 | Skipped: 0 | Error: 0
 - - - - - - - - - - - - - - - - - - - - - - -
 Source: trader_update
+- - - - - - - - - - - - - - - - - - - - - - -
+https://t.me/c/3927267771/365
 ```
 
-Variante con problemi misti (almeno un PARTIAL, SKIPPED o REVIEW → emoji ⚠️):
+Variante con PARTIAL (emoji ⚠️):
 
 ```
-⚠️ UPDATE APPLICATO - 4 chain
-- - - - - - - - - - - - - - - - - - - - - - - - -
-Operation:
-▪️ Move SL to BE
-- - - - - - - - - - - - - - - - - - - - - - - - -
-ID  | Symbol  | Side  | State   | link
-- - - - - - - - - - - - - - - - - - - - - - - - -
-#12 | BTCUSDT | LONG  | DONE    | https://t.me/c/123456/987
-#13 | ETHUSDT | SHORT | DONE    | https://t.me/c/123456/988
-#14 | SOLUSDT | LONG  | SKIPPED | https://t.me/c/123456/989
-#15 | XRPUSDT | LONG  | REVIEW  | https://t.me/c/123456/990
-- - - - - - - - - - - - - - - - - - - - - - - - -
-Done: 2   Skipped: 1   Review: 1
-- - - - - - - - - - - - - - - - - - - - - - - - -
+⚠️ UPDATE APPLICATO - 2 chain
+- - - - - - - - - - - - - - - - - - - - - - -
+Operations requested:
+▪️ CANCEL_PENDING
+▪️ MOVE_SL_TO_BE
+- - - - - - - - - - - - - - - - - - - - - - -
+#6 WLD LONG — DONE
+https://t.me/c/3897279123/468
+Entry_2: 61,192.03 -> cancelled
+SL: 66,400 -> 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - -
+#7 ICNT LONG — PARTIAL
+https://t.me/c/3897279123/469
+Entry_2: SKIPPED - no pending averaging order
+SL: 66,400 -> 68,500 BE
+- - - - - - - - - - - - - - - - - - - - - - -
+Done: 1 | Partial: 1 | Skipped: 0 | Error: 0
+- - - - - - - - - - - - - - - - - - - - - - -
 Source: trader_update
+- - - - - - - - - - - - - - - - - - - - - - -
+https://t.me/c/3927267771/365
 ```
+
+Struttura footer count: `Done: N | Partial: N | Skipped: N | Error: N` (tutti i campi sempre presenti).  
+Il link sorgente update appare in fondo dopo l'ultimo separatore (ultima riga del messaggio).
+
+---
+
+#### 3.21b Compact summary — `summary_kind: "final_close"` (CLOSE_FULL)
+
+Emesso **in differita** quando tutti i `POSITION_CLOSED` per le chain coinvolte sono stati ricevuti.  
+Nessun `display_lines` — layout compatto. Il link per chain punta al `POSITION_CLOSED` finale.
+
+```
+✅ UPDATE APPLICATO - 2 chain
+- - - - - - - - - - - - - - - - - - - - - - -
+Operation requested:
+▪️ Close full
+- - - - - - - - - - - - - - - - - - - - - - -
+#6 WLD LONG — DONE
+https://t.me/c/3897279123/468
+- - - - - - - - - - - - - - - - - - - - - - -
+#7 ICNT LONG — DONE
+https://t.me/c/3897279123/469
+- - - - - - - - - - - - - - - - - - - - - - -
+Done: 2 | Partial: 0 | Review: 0 | Skipped: 0 | Error: 0
+- - - - - - - - - - - - - - - - - - - - - - -
+Source: trader_update
+- - - - - - - - - - - - - - - - - - - - - - -
+https://t.me/c/3927267771/365
+```
+
+Footer: include `Review:` (non compare nel layout `immediate`). Nessun `display_lines` renderizzato.
+
+---
+
+#### 3.21c Semantica dei link per-chain
+
+| `summary_kind` | `link_mode` | Origine link | Campo DB |
+|---|---|---|---|
+| `immediate` | `signal_root` | `SIGNAL_ACCEPTED` della chain | `clean_log_root_message_id` |
+| `final_close` | `final_close` | `POSITION_CLOSED` della chain | `clean_log_last_message_id` |
+
+Il dispatcher usa il link dal payload; fa lookup live solo come fallback per chain senza tracking row.
+
+---
+
+#### 3.21d Move-stop reference semantics
+
+Nelle `display_lines` per-chain (`summary_kind: "immediate"`):
+
+| Azione | display_lines |
+|---|---|
+| `MOVE_SL_TO_BE` / `MOVE_STOP_BE` | `SL: <old> -> <new> BE` |
+| `MOVE_STOP` con riferimento TP | `SL: <old> -> <new>` + `Reference: TP_N` |
+| `MOVE_STOP` con riferimento Price | `SL: <old> -> <new>` + `Reference: Price` |
+
+---
 
 Valori `State` possibili:
 
@@ -778,11 +854,9 @@ Valori `State` possibili:
 | `REVIEW` | chain mandata in review (`REVIEW_REQUIRED`) senza nessuna azione accettata |
 
 Note:
-- Le colonne si adattano alla larghezza massima dei valori presenti.
-- `link` per ogni chain punta al `SIGNAL_ACCEPTED` della chain (`clean_log_root_message_id`), risolto a tempo di scrittura. Assente se la chain non ha ancora una tracking row.
-- `Partial:`, `Skipped:`, `Review:` nel footer appaiono solo se > 0.
-- Il summary arriva `+3s` dopo i singoli UPDATE_DONE per-chain. In caso di timeout/retry Telegram, il link rimane stabile (punta al segnale originale).
+- Il summary arriva `+3s` dopo i singoli UPDATE_DONE per-chain (`immediate`), o in differita dopo i fill exchange (`final_close`).
 - `Source:` è derivato dal tipo di aggiornamento: `trader_update`, `operation_rules`, `manual_command`.
+- Il formatter gestisce anche `MULTI_CHAIN_UPDATE` e `MULTI_CHAIN_CLOSED` come alias dello stesso template.
 
 ---
 
