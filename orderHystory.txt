@@ -1,0 +1,24 @@
+orderHystory:
+
+Market	Order Type	Direction	Avg. Filled Price/Order Price	Filled/Order Quantity	Order Time	Order ID	Filled/Order Value	Order Status	Trading Fees
+ICNTUSDT	Market	Close Long	0.2539/Market	6,042/6,042 ICNT	2026-06-05 14:00:53	ab78caca	1,534.06/1,303.25 USDT	Filled	
+0.84373509 USDT
+ICNTUSDT	Market	Open Long	0.2532/Market	6,042/6,042 ICNT	2026-06-05 13:44:34	58df7909	1,529.83/1,757.61 USDT	Filled	
+0.84140892 USDT
+ICNTUSDT	Limit	Open Long	--/0.2340	0/4,255 ICNT	2026-06-05 13:42:51	3900fb43	--/995.67 USDT	Canceled	0 USDT
+ICNTUSDT	Limit	Open Long	--/0.2431	0/6,034 ICNT	2026-06-05 13:42:51	6d5d2b9a	--/1,466.86 USDT	Canceled	0 USDT
+
+Trade History:
+
+Market	Order Type	Direction	Filled Value	Filled Price	Filled Quantity	Filled Type	Trading Fees	Fee Rate	Transaction Time	Transaction ID
+ICNTUSDT	Market	Close Long	1534.0638 USDT	0.2539	6,042 ICNT	Trade	0.84373509 USDT	0.055%	2026-06-05 14:00:53	87b04a49
+ICNTUSDT	--	Open Long	1525.605 USDT	0.2525	6,042 ICNT	Funding	0.07628025 USDT	0.005%	2026-06-05 14:00:00	2f3226bf
+ICNTUSDT	Market	Open Long	1529.8344 USDT	0.2532	6,042 ICNT	Trade	0.84140892 USDT	0.055%	2026-06-05 13:44:34	49cf284f
+
+pnl:
+
+Market	Order Quantity	Entry Price	Traded Price	Realized P&L	Trade Type	Trade Time
+ICNTUSDT	6,042 ICNT	0.2532	0.2539	
+2.4679
+Trade	2026-06-05 14:00:53
+

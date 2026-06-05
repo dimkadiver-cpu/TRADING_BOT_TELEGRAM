@@ -23,7 +23,7 @@ topics:
     # WARNING = solo warning e livelli superiori
     # INFO = info + warning e superiori, ma INFO richiede anche operational_events: true
     # DEBUG = debug/info/warning, ma i messaggi DEBUG passano solo mentre /debug_on è attivo
-    min_level: WARNING
+    min_level: INFO
     # Se false, i messaggi TECH_LOG di livello INFO vengono soppressi
     # anche quando min_level=INFO.
     operational_events: false

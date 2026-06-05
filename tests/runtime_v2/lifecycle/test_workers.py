@@ -1496,3 +1496,78 @@ def test_worker_accumulates_short_sl_pnl_negative(tmp_path):
     # SHORT: (3000 - 3050) * 0.5 = -25.0
     assert row[0] == pytest.approx(-25.0)
     assert row[1] == pytest.approx(2.0)
+
+
+def test_lifecycle_worker_funding_settled_stores_positive_exchange_fee_as_positive_cost(tmp_path):
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now_str = "2026-06-05T12:00:00+00:00"
+    chain_id = 147
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, filled_entry_qty, cumulative_funding, "
+        "be_protection_status, management_plan_json, plan_state_json, "
+        "created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','ICNTUSDT','LONG','OPEN','ONE_SHOT',"
+        "0.2532,6042.0,6042.0,0.0,'NOT_PROTECTED','{}','{}',?,?)",
+        (chain_id, now_str, now_str),
+    )
+    conn.execute(
+        """
+        INSERT INTO ops_exchange_events (
+            trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at
+        ) VALUES (?,?,?,?,?,?)
+        """,
+        (
+            chain_id,
+            "FUNDING_SETTLED",
+            json.dumps({"exec_fee": 0.07628025, "source": "exchange_auto"}),
+            "NEW",
+            f"funding:{chain_id}:1",
+            now_str,
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=LifecycleEventProcessor(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=ExchangeEventRepository(db),
+    )
+    count = worker.run_once()
+    assert count == 1
+
+    conn2 = _sqlite3.connect(db)
+    funding_row = conn2.execute(
+        "SELECT cumulative_funding FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    status_row = conn2.execute(
+        "SELECT processing_status FROM ops_exchange_events WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    conn2.close()
+    assert funding_row[0] == pytest.approx(0.07628025)
+    assert status_row[0] == "DONE"

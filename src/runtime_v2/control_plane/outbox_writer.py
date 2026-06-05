@@ -70,7 +70,7 @@ def _final_result(
     gross = float(gross_pnl or 0.0)
     fee_total = float(fees or 0.0)
     funding_total = float(funding or 0.0)
-    net = gross - fee_total + funding_total
+    net = gross - fee_total - funding_total
     roi = None
     if allocated_margin and float(allocated_margin) > 0.0:
         roi = round(net / float(allocated_margin) * 100.0, 4)
@@ -79,7 +79,7 @@ def _final_result(
         "total_pnl_net": round(net, 8),
         "gross_pnl": round(gross, 8),
         "fees": round(-fee_total, 8),
-        "funding": round(funding_total, 8),
+        "funding": round(-funding_total, 8),
         "close_reason": close_reason,
     }
 
