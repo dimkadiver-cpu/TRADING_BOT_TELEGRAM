@@ -303,6 +303,64 @@ def test_close_full_filled_on_protected_chain_projects_be_exit(ops_db):
     assert payload["exit_price"] == 65020.0
 
 
+def test_sl_filled_on_unprotected_chain_projects_stop_loss(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 901)
+        conn.execute(
+            "UPDATE ops_trade_chains SET be_protection_status='NOT_PROTECTED', "
+            "entry_avg_price=65000.0, cumulative_gross_pnl=-12.0, "
+            "cumulative_fees=1.80 WHERE trade_chain_id=?",
+            (901,),
+        )
+        _seed_event(conn, 901, "SL_FILLED", "sl_filled:901:1", {
+            "fill_price": 64880.0,
+            "filled_qty": 0.01,
+            "exec_fee": 0.90,
+            "closed_size": 0.01,
+        })
+        project_clean_log_for_chain(conn, 901)
+    row = conn.execute(
+        "SELECT notification_type, payload_json "
+        "FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "SL_FILLED"
+    payload = json.loads(row[1])
+    assert payload["close_reason"] == "STOP_LOSS"
+    assert payload["sl_price"] == 64880.0
+
+
+def test_sl_filled_on_protected_chain_projects_be_close_reason(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 902)
+        conn.execute(
+            "UPDATE ops_trade_chains SET be_protection_status='PROTECTED', "
+            "entry_avg_price=65000.0, cumulative_gross_pnl=-0.20, "
+            "cumulative_fees=1.70 WHERE trade_chain_id=?",
+            (902,),
+        )
+        _seed_event(conn, 902, "SL_FILLED", "sl_filled:902:1", {
+            "fill_price": 65000.0,
+            "filled_qty": 0.01,
+            "exec_fee": 1.70,
+            "closed_size": 0.01,
+        })
+        project_clean_log_for_chain(conn, 902)
+    row = conn.execute(
+        "SELECT notification_type, payload_json "
+        "FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "SL_FILLED"
+    payload = json.loads(row[1])
+    assert payload["close_reason"] == "BREAKEVEN_AFTER_TP"
+    assert payload["sl_price"] == 65000.0
+
+
 def test_entry_cancel_failed_projects_cancel_failed(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:

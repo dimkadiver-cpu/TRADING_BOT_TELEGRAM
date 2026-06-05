@@ -184,6 +184,20 @@ def test_sl_filled_side_always_correct():
     assert "Sell" not in text
 
 
+def test_sl_filled_with_stop_loss_reason_renders_position_closed():
+    text = format_clean_log("SL_FILLED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "fill_price": 62000.0,
+        "close_reason": "STOP_LOSS",
+        "source": "exchange",
+    })
+    assert "POSITION CLOSED" in text
+    assert "STOP_LOSS" in text
+    assert "BE EXIT" not in text
+
+
 def test_signal_rejected():
     text = format_clean_log("SIGNAL_REJECTED", {
         "chain_id": 146, "symbol": "BTC/USDT", "side": "LONG",

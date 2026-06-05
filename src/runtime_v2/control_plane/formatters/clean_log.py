@@ -561,6 +561,12 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
     if notification_type == "TP_FILLED_FINAL":
         return _tp_filled(payload, final=True)
     if notification_type == "SL_FILLED":
+        if payload.get("close_reason") == "BREAKEVEN_AFTER_TP":
+            be_payload = {
+                **payload,
+                "exit_price": payload.get("sl_price", payload.get("fill_price")),
+            }
+            return _be_exit(be_payload)
         return _sl_filled(payload)
     if notification_type == "POSITION_CLOSED":
         return _position_closed(payload)

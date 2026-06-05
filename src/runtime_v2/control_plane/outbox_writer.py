@@ -287,6 +287,11 @@ def _build_payload(
     if notification_type == "SL_FILLED":
         closed_qty = ev.get("closed_size", ev.get("filled_qty"))
         fill_price = ev.get("fill_price")
+        close_reason = (
+            "BREAKEVEN_AFTER_TP"
+            if be_protection_status == "PROTECTED"
+            else "STOP_LOSS"
+        )
         return {
             **base,
             "fill_price": fill_price,
@@ -294,12 +299,13 @@ def _build_payload(
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
+            "close_reason": close_reason,
             "final_result": _final_result(
                 gross_pnl=cumulative_gross_pnl,
                 fees=cumulative_fees,
                 funding=cumulative_funding,
                 allocated_margin=allocated_margin,
-                close_reason="STOP_LOSS",
+                close_reason=close_reason,
             ),
             "source": ev.get("source", "exchange"),
         }

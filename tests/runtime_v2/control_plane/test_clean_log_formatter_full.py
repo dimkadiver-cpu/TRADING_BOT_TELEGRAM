@@ -255,6 +255,32 @@ def test_be_exit_formatter_renders_exit_and_final_result():
     assert "Final Result:" in text
 
 
+def test_sl_filled_with_be_close_reason_renders_be_exit():
+    text = format_clean_log("SL_FILLED", {
+        "chain_id": 146,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "fill_price": 65000.0,
+        "sl_price": 65000.0,
+        "close_reason": "BREAKEVEN_AFTER_TP",
+        "pnl": -0.20,
+        "fee": 1.70,
+        "final_result": {
+            "roi_net_pct": None,
+            "total_pnl_net": -1.90,
+            "gross_pnl": -0.20,
+            "fees": -1.70,
+            "funding": 0.0,
+            "close_reason": "BREAKEVEN_AFTER_TP",
+        },
+        "source": "exchange",
+    })
+    assert "BE EXIT" in text
+    assert "Exit: 65,000 BE" in text
+    assert "Close reason: BREAKEVEN_AFTER_TP" in text
+    assert "POSITION CLOSED" not in text
+
+
 # ---------------------------------------------------------------------------
 # MULTI_CHAIN_UPDATE
 # ---------------------------------------------------------------------------
