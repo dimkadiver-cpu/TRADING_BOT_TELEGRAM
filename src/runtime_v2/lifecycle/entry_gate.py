@@ -398,83 +398,6 @@ def _write_pending_close_full_summary(
     conn.commit()
 
 
-def _save_pending_close_full_summary(conn, canonical_message_id: int, payload: dict) -> None:
-    conn.execute(
-        "CREATE TABLE IF NOT EXISTS ops_pending_multi_chain_summaries "
-        "(pending_id INTEGER PRIMARY KEY, canonical_message_id INTEGER UNIQUE, payload_json TEXT)"
-    )
-    conn.execute(
-        "INSERT OR REPLACE INTO ops_pending_multi_chain_summaries (canonical_message_id, payload_json) VALUES (?, ?)",
-        (canonical_message_id, json.dumps(payload)),
-    )
-
-
-def _load_pending_close_full_summary(conn, canonical_message_id: int) -> dict | None:
-    try:
-        row = conn.execute(
-            "SELECT payload_json FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=?",
-            (canonical_message_id,),
-        ).fetchone()
-    except Exception:
-        return None
-    if row is None:
-        return None
-    try:
-        return json.loads(row[0])
-    except Exception:
-        return None
-
-
-def _delete_pending_close_full_summary(conn, canonical_message_id: int) -> None:
-    conn.execute(
-        "DELETE FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=?",
-        (canonical_message_id,),
-    )
-
-
-def _try_release_close_full_summary(conn, canonical_message_id: int) -> None:
-    """Release a pending CLOSE_FULL summary once all chain final-close links are resolvable."""
-    pending = _load_pending_close_full_summary(conn, canonical_message_id)
-    if pending is None:
-        return
-
-    # Try to resolve final-close links for each chain
-    resolved_chains = []
-    for chain in pending.get("chains", []):
-        chain_id = chain["chain_id"]
-        tracking_row = conn.execute(
-            "SELECT clean_log_last_message_id, telegram_chat_id, last_clean_log_event_type "
-            "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
-            (chain_id,),
-        ).fetchone()
-        if not tracking_row:
-            return  # can't resolve yet — abort
-        last_msg_id, chat_id, last_event_type = tracking_row
-        if last_event_type != "POSITION_CLOSED":
-            return  # not closed yet — abort
-        if not last_msg_id or not chat_id:
-            return  # missing link data — abort
-        normalized_chat = str(chat_id).removeprefix("-100")
-        final_link = f"https://t.me/c/{normalized_chat}/{last_msg_id}"
-        resolved_chains.append({**chain, "link": final_link})
-
-    # All chains resolved — emit final MULTI_CHAIN_SUMMARY
-    final_payload = {
-        **pending,
-        "summary_kind": "final_close",
-        "chains": resolved_chains,
-    }
-    write_clean_log_event(
-        conn,
-        notification_type="MULTI_CHAIN_SUMMARY",
-        chain_id=None,
-        payload=final_payload,
-        dedupe_key=f"clean:multi_summary_final:{canonical_message_id}",
-    )
-    _delete_pending_close_full_summary(conn, canonical_message_id)
-    conn.commit()
-
-
 def _write_multi_chain_summary(
     conn,
     chain_results: list["UpdateChainResult"],
@@ -2498,33 +2421,46 @@ class LifecycleGateWorker:
                                 "clean_log projection failed for chain %s", cr.trade_chain_id
                             )
 
-                _update_log_by_chain: dict[int, list[UpdateChainResult]] = {}
+                _active_chain_ids: set[int] = set()
                 for cr in result.chain_results:
-                    if cr.trade_chain_id:
-                        _update_log_by_chain.setdefault(cr.trade_chain_id, []).append(cr)
-                for _chain_id, _crs in _update_log_by_chain.items():
-                    if len(_crs) == 1:
-                        _merged = _crs[0]
-                    else:
-                        _merged = UpdateChainResult(
-                            trade_chain_id=_chain_id,
-                            new_lifecycle_state=next(
-                                (c.new_lifecycle_state for c in reversed(_crs) if c.new_lifecycle_state), None
-                            ),
-                            new_be_protection_status=next(
-                                (c.new_be_protection_status for c in reversed(_crs) if c.new_be_protection_status), None
-                            ),
-                            lifecycle_events=[ev for c in _crs for ev in c.lifecycle_events],
-                            execution_commands=[cmd for c in _crs for cmd in c.execution_commands],
-                        )
-                    try:
-                        _write_update_clean_log(
-                            conn, _merged, enriched.canonical_message_id, update_source_link,
-                        )
-                    except Exception:
-                        logger.exception(
-                            "update clean_log synthesis failed for chain %s", _chain_id
-                        )
+                    if not cr.trade_chain_id:
+                        continue
+                    if any(
+                        e.event_type in {"TELEGRAM_UPDATE_ACCEPTED", "REVIEW_REQUIRED"}
+                        or e.event_type.startswith("NOOP_")
+                        for e in cr.lifecycle_events
+                    ):
+                        _active_chain_ids.add(cr.trade_chain_id)
+                _is_multi_chain = len(_active_chain_ids) >= 2
+
+                if not _is_multi_chain:
+                    _update_log_by_chain: dict[int, list[UpdateChainResult]] = {}
+                    for cr in result.chain_results:
+                        if cr.trade_chain_id:
+                            _update_log_by_chain.setdefault(cr.trade_chain_id, []).append(cr)
+                    for _chain_id, _crs in _update_log_by_chain.items():
+                        if len(_crs) == 1:
+                            _merged = _crs[0]
+                        else:
+                            _merged = UpdateChainResult(
+                                trade_chain_id=_chain_id,
+                                new_lifecycle_state=next(
+                                    (c.new_lifecycle_state for c in reversed(_crs) if c.new_lifecycle_state), None
+                                ),
+                                new_be_protection_status=next(
+                                    (c.new_be_protection_status for c in reversed(_crs) if c.new_be_protection_status), None
+                                ),
+                                lifecycle_events=[ev for c in _crs for ev in c.lifecycle_events],
+                                execution_commands=[cmd for c in _crs for cmd in c.execution_commands],
+                            )
+                        try:
+                            _write_update_clean_log(
+                                conn, _merged, enriched.canonical_message_id, update_source_link,
+                            )
+                        except Exception:
+                            logger.exception(
+                                "update clean_log synthesis failed for chain %s", _chain_id
+                            )
                 try:
                     _write_multi_chain_summary(conn, result.chain_results, enriched.canonical_message_id, update_source_link)
                 except Exception:

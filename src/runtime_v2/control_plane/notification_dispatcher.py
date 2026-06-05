@@ -13,6 +13,7 @@ from typing import Protocol
 from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
 from src.runtime_v2.control_plane.formatters.tech_log import format_tech_log
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
+from src.runtime_v2.control_plane.outbox_writer import try_release_pending_close_full_summaries
 from src.runtime_v2.control_plane.topic_router import TopicRouter
 
 logger = logging.getLogger(__name__)
@@ -287,6 +288,15 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
+    def _try_release_pending_close_full_summaries(self) -> None:
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            try_release_pending_close_full_summaries(conn)
+        except Exception:
+            logger.exception("try_release_pending_close_full_summaries failed")
+        finally:
+            conn.close()
+
     def _build_signal_link(self, root_message_id: str | None, tracking_chat_id: str | None) -> str | None:
         """Build a t.me/c/ link to the SIGNAL_ACCEPTED clean log message."""
         if not root_message_id or not tracking_chat_id:
@@ -369,6 +379,8 @@ class TelegramNotificationDispatcher:
                     self._update_clean_log_tracking(
                         payload.get("chain_id"), notification_type, chat_id, thread_id, sent_message_id
                     )
+                    if notification_type == "POSITION_CLOSED":
+                        self._try_release_pending_close_full_summaries()
                 self._mark_sent(notification_id)
                 sent += 1
             except Exception as exc:  # noqa: BLE001

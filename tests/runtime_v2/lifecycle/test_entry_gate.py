@@ -3235,7 +3235,7 @@ def test_no_known_symbols_list_is_fail_open():
 def test_release_close_full_summary_uses_position_closed_links(tmp_path):
     import json
     import sqlite3
-    from src.runtime_v2.lifecycle.entry_gate import _try_release_close_full_summary
+    from src.runtime_v2.control_plane.outbox_writer import try_release_pending_close_full_summaries
 
     conn = sqlite3.connect(":memory:")
     conn.executescript(
@@ -3291,7 +3291,7 @@ def test_release_close_full_summary_uses_position_closed_links(tmp_path):
     conn.execute("INSERT INTO ops_clean_log_tracking VALUES (6, '453', '468', '-1003897279123', NULL, 'POSITION_CLOSED', NULL, NULL)")
     conn.execute("INSERT INTO ops_clean_log_tracking VALUES (7, '454', '469', '-1003897279123', NULL, 'POSITION_CLOSED', NULL, NULL)")
 
-    _try_release_close_full_summary(conn, 365)
+    try_release_pending_close_full_summaries(conn)
 
     row = conn.execute(
         "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='MULTI_CHAIN_SUMMARY'"

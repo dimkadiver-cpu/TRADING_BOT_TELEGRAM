@@ -740,9 +740,72 @@ def write_engine_rule_update_clean_log(
     )
 
 
+def try_release_pending_close_full_summaries(conn: sqlite3.Connection) -> int:
+    """Emit MULTI_CHAIN_SUMMARY for any pending CLOSE_FULL summary where all chain links are now resolvable.
+
+    Called by the dispatcher after each POSITION_CLOSED send. Scans all pending records and
+    releases those where every chain has a confirmed POSITION_CLOSED message ID in tracking.
+    Returns the number of summaries released.
+    """
+    try:
+        rows = conn.execute(
+            "SELECT canonical_message_id, payload_json FROM ops_pending_multi_chain_summaries"
+        ).fetchall()
+    except Exception:
+        return 0
+
+    released = 0
+    for canonical_message_id, payload_json in rows:
+        try:
+            pending = json.loads(payload_json)
+        except Exception:
+            continue
+
+        resolved_chains = []
+        all_resolved = True
+        for chain in pending.get("chains", []):
+            chain_id = chain.get("chain_id")
+            if chain_id is None:
+                all_resolved = False
+                break
+            tracking_row = conn.execute(
+                "SELECT clean_log_last_message_id, telegram_chat_id, last_clean_log_event_type "
+                "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                (chain_id,),
+            ).fetchone()
+            if not tracking_row:
+                all_resolved = False
+                break
+            last_msg_id, chat_id, last_event_type = tracking_row
+            if last_event_type != "POSITION_CLOSED" or not last_msg_id or not chat_id:
+                all_resolved = False
+                break
+            normalized_chat = str(chat_id).removeprefix("-100")
+            resolved_chains.append({**chain, "link": f"https://t.me/c/{normalized_chat}/{last_msg_id}"})
+
+        if not all_resolved:
+            continue
+
+        write_clean_log_event(
+            conn,
+            notification_type="MULTI_CHAIN_SUMMARY",
+            chain_id=None,
+            payload={**pending, "summary_kind": "final_close", "chains": resolved_chains},
+            dedupe_key=f"clean:multi_summary_final:{canonical_message_id}",
+        )
+        conn.execute(
+            "DELETE FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=?",
+            (canonical_message_id,),
+        )
+        conn.commit()
+        released += 1
+    return released
+
+
 __all__ = [
     "write_clean_log_event",
     "write_tech_log_event",
     "project_clean_log_for_chain",
     "write_engine_rule_update_clean_log",
+    "try_release_pending_close_full_summaries",
 ]

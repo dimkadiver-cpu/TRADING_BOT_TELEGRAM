@@ -1,4 +1,19 @@
-⚠️ #1 — REVIEW REQUIRED
+Rivedere il loging del update dell singola cjain sia fatta che fallita
+✅ #1 — UPDATE DONE
+- - - - - - - - - - - - - - -
+BTCUSDT — 📈 LONG
+https://t.me/c/3897279123/480
+- - - - - - - - - - - - - - -
+Operation:
+▪️ CLOSE_FULL
+Changed:
+▪️Position: open -> closed 100%
+- - - - - - - - - - - - - - -
+Source: trader_update
+- - - - - - - - - - - - - - -
+https://t.me/c/3927267771/376
+
+⚠️ #1 — REVIEW REQUIRED // attuale
 - - - - - - - - - - - - - - - - - - - - -
 BTCUSDT — 📈 LONG
 - - - - - - - - - - - - - - - - - - - - -
@@ -15,3 +30,62 @@ Rejected: unsupported_set_stop_target_type
 Source: runtime
 - - - - - - - - - - - - - - - - - - - - -
 https://t.me/c/3927267771/369
+
+
+
+⚠️ #2 — UPDATE FAILED // desiderata
+- - - - - - - - - - - - - - -
+ICNTUSDT — 📈 LONG
+https://t.me/c/3897279123/489
+- - - - - - - - - - - - - - -
+Operation:
+▪️ MOVE_SL_TO_BE
+Changed:
+▪️SL: 66,400 -> 68,500 *
+- - - - - - - - - - - - - - -
+Failed: unsupported_set_stop_target_type
+- - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3927267771/376
+
+
+
+🛑 #5 — POSITION CLOSED
+Close reason: STOP_LOSS
+- - - - - - - - - - - - - - -
+ICNTUSDT — 📈 LONG
+https://t.me/c/3897279123/499
+- - - - - - - - - - - - - - -
+SL: 0.2499
+Closed: 100%
+PnL: +3.99 USDT
+Fee: 0.69 USDT
+- - - - - - - - - - - - - - -
+Final Result:
+Total PnL net: +2.62 USDT
+Gross PnL: +3.99 USDT
+Fees: -1.37 USDT
+Funding: +-0.00 USDT
+- - - - - - - - - - - - - - -
+Source: exchange
+
+
+✋ #1 — POSITION CLOSED
+Close reason: MANUAL_CLOSE
+- - - - - - - - - - - - - - -
+BTCUSDT — 📈 LONG
+https://t.me/c/3897279123/480
+- - - - - - - - - - - - - - -
+Price: 60,982.7
+Closed: 100%
+PnL: +4.44 USDT
+Fee: 1.74 USDT
+- - - - - - - - - - - - - - -
+Final Result:
+Total PnL net: +0.96 USDT
+Gross PnL: +4.44 USDT
+Fees: -3.49 USDT
+Funding: +-0.00 USDT
+- - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3927267771/376
