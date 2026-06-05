@@ -410,10 +410,13 @@ def _save_pending_close_full_summary(conn, canonical_message_id: int, payload: d
 
 
 def _load_pending_close_full_summary(conn, canonical_message_id: int) -> dict | None:
-    row = conn.execute(
-        "SELECT payload_json FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=?",
-        (canonical_message_id,),
-    ).fetchone()
+    try:
+        row = conn.execute(
+            "SELECT payload_json FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=?",
+            (canonical_message_id,),
+        ).fetchone()
+    except Exception:
+        return None
     if row is None:
         return None
     try:
