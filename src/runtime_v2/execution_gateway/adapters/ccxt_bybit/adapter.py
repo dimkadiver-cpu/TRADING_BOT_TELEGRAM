@@ -321,7 +321,15 @@ class CcxtBybitAdapter(ExecutionAdapter):
     def load_known_symbols(self) -> frozenset[str] | None:
         try:
             markets = self._exchange.load_markets()
-            return frozenset(markets.keys())
+            # CCXT keys are "BTC/USDT:USDT" but the bot uses Bybit raw ids (e.g. "BTCUSDT").
+            # Collect both the ccxt key and the exchange-native market id so either format matches.
+            ids: set[str] = set()
+            for key, mkt in markets.items():
+                ids.add(key)
+                raw_id = mkt.get("id")
+                if raw_id:
+                    ids.add(raw_id)
+            return frozenset(ids)
         except Exception as exc:
             logger.warning("load_known_symbols failed: %s", exc)
             return None
