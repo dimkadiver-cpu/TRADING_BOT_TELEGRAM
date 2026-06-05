@@ -101,7 +101,7 @@ defaults:
   # Ammissione update Telegram (source_intent da parser_v2, senza prefisso U_)
   update_admission:
     MOVE_STOP: true  # Consente update di spostamento SL numerico.
-    MOVE_STOP_TO_BE: false  # Consente update move-to-breakeven.
+    MOVE_STOP_TO_BE: true  # Consente update move-to-breakeven.
     CLOSE_FULL: true  # Consente chiusura totale.
     CLOSE_PARTIAL: true  # Consente chiusura parziale.
     CANCEL_PENDING: true  # Consente cancellazione ordini pending.

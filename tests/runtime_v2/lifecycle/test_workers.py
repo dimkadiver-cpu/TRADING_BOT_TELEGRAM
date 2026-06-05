@@ -291,7 +291,7 @@ def test_timeout_worker_expires_waiting_entry(dbs):
 
     assert state == "EXPIRED"
     assert any(c[0] == "CANCEL_PENDING_ENTRY" for c in cmds)
-    assert any(e[0] == "TIMEOUT_REACHED" for e in events)
+    assert any(e[0] == "PENDING_TIMEOUT" for e in events)
 
 
 def test_persist_result_expands_cancel_pending_entry_to_per_order_commands(tmp_path):

@@ -356,7 +356,7 @@ Source: exchange
 
 ---
 
-### 3.11 POSITION_CLOSED — da comando bot (U_CLOSE_FULL)
+### 3.11 POSITION_CLOSED — da comando bot (CLOSE_FULL)
 
 Emesso quando la chiusura arriva come conferma di un ordine piazzato dal bot su comando esplicito.
 
@@ -370,7 +370,7 @@ Price: 68,920
 PnL: +8.30 USDT
 Fee: 0.48 USDT
 
-Close reason: BOT_COMMAND
+Close reason: MANUAL_CLOSE
 - - - - - - - - - - - - - - - -
 Final Result:
 ROI net: +0.61%
@@ -412,7 +412,7 @@ Tabella distinzione chiusure:
 |---|---|---|
 | TP finale | `FINAL TP FILLED` | `exchange` |
 | Stop loss | `STOP_LOSS` | `exchange` |
-| Comando bot (`U_CLOSE_FULL`) | `BOT_COMMAND` | `manual_command` |
+| Comando bot (`CLOSE_FULL`) | `MANUAL_CLOSE` | `manual_command` |
 | Chiusura manuale/esterna | `MANUAL_CLOSE` | `position_reconciliation` |
 
 ---

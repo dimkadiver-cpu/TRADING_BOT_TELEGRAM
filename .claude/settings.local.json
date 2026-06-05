@@ -200,7 +200,8 @@
       "Bash(echo GIT_COMMON=__TRACKED_VAR__)",
       "Bash(true)",
       "Bash(C:/TeleSignalBot/.venv/Scripts/python.exe -m pytest tests/runtime_v2/control_plane tests/runtime_v2/lifecycle tests/runtime_v2/execution_gateway -q --tb=no)",
-      "Bash(Format-Table -AutoSize)"
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(python -c \"import sqlite3; conn = sqlite3.connect\\('C:/TeleSignalBot/db/ops.sqlite3'\\); cur = conn.cursor\\(\\); cur.execute\\(\\\\\"SELECT name FROM sqlite_master WHERE type='table'\\\\\"\\); print\\(cur.fetchall\\(\\)\\)\")"
     ]
   }
 }

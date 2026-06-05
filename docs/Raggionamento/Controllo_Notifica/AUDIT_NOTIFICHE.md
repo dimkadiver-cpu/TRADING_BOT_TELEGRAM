@@ -1,6 +1,6 @@
 # Audit Notifiche Telegram — Gap Analysis
 
-Data: 2026-06-04 — aggiornato 2026-06-05  
+Data: 2026-06-04 — aggiornato 2026-06-05 — aggiornato 2026-06-05 (sessione 2)  
 Scope: `src/runtime_v2/` — tutti i percorsi che producono o NON producono notifiche Telegram.  
 Riferimento spec: `runtime_v2_control_plane_messaggi.md`
 
@@ -163,6 +163,40 @@ Source: execution_gateway
 
 ---
 
+### GAP-7 — MEDIO: Update fallito per `no_update_target` / `ambiguous_update_target` non genera notifica
+
+**Scoperto (2026-06-05)**: investigazione su ops.sqlite3 — enrichment #9 e #10 (tg_msg 340, 341) non eseguiti.
+
+**File**: `src/runtime_v2/lifecycle/entry_gate.py:1997-2009`
+
+**Comportamento attuale**: quando il resolver degli update non trova nessuna chain target (`len(matched) == 0`) oppure trova un match ambiguo (`matched is None`), `_gate_update()` ritorna un `UpdateGateResult` con `review_events` popolato e `chain_results=[]`. Il chiamante persiste correttamente i `review_events` in `ops_lifecycle_events` con `trade_chain_id=NULL`, ma non scrive nulla in `ops_notification_outbox`.
+
+```python
+# entry_gate.py — blocco review_events (riga 1997)
+for event in result.review_events:
+    conn.execute("INSERT OR IGNORE INTO ops_lifecycle_events ...", (None, ...))
+# ← nessuna chiamata outbox dopo questo blocco
+```
+
+**Perché `project_clean_log_for_chain` non intercetta il caso**: quella funzione interroga `ops_lifecycle_events WHERE trade_chain_id=?` — gli eventi con `trade_chain_id=NULL` non vengono mai letti.
+
+**Causa root**: il path di notifica per gli update (`_write_update_clean_log`, `_write_multi_chain_summary`) opera su `chain_results` non su `review_events`. Non esiste un writer equivalente per i casi di fallimento targeting.
+
+**Caso concreto osservato**: il trader ha risposto al messaggio 337 (ultimo duplicato rigettato con `duplicate_position`) invece che al messaggio 333 (il segnale che aveva creato la chain). La chain #2 (BTCUSDT OPEN) non ha `telegram_message_id=337` → `no_update_target`. L'update `CANCEL_PENDING + MOVE_STOP_TO_BE` è rimasto silenziosamente nel DB senza che l'utente fosse avvisato. Nota: un terzo tentativo precedente (enrichment #8, tg_msg 339) è stato bloccato già al layer di enrichment con `action_type_disabled:MOVE_STOP_TO_BE` — questo ricade nel GAP-6.
+
+**Effetto operativo**: l'utente non riceve alcun feedback quando un update non viene applicato per mancanza di target. Non può distinguere tra "update applicato" e "update ignorato".
+
+**Fix**: nel blocco `for event in result.review_events:` (entry_gate.py:1997), dopo l'INSERT in `ops_lifecycle_events`, aggiungere una scrittura in `ops_notification_outbox` di tipo `TECH_LOG` (livello WARNING) con payload minimo: `reason`, `source_link`, `enrichment_id`, `raw_message_id`. In alternativa, un `CLEAN_LOG` `UPDATE_REVIEW_REQUIRED` se si vuole che arrivi nel clean log utente.
+
+```python
+# Proposta
+for event in result.review_events:
+    conn.execute("INSERT OR IGNORE INTO ops_lifecycle_events ...", (None, ...))
+    _write_update_review_notification(conn, enriched, event)  # ← da aggiungere
+```
+
+---
+
 ## Riepilogo
 
 | # | Severità | Evento perso | Causa | Fix |
@@ -173,6 +207,7 @@ Source: execution_gateway
 | GAP-4 | ~~MEDIO~~ **CHIUSO** | Fallimenti interni gateway mai notificati | `cancel_chain_if_all_entries_failed` non scriveva outbox | TECH_LOG `GATEWAY_ENTRY_ALL_FAILED` in `repositories.py` | ✅ |
 | GAP-5 | ~~BASSO~~ **CHIUSO** | `CANCEL_FAILED` (3.7) mai raggiungibile | `ENTRY_CANCEL_FAILED` mai emesso | `write_cancel_entry_failed_lifecycle` in `repositories.py` + call in `gateway._handle_error` | ✅ |
 | GAP-6 | APERTO | Enrichment BLOCK/REVIEW | Cambio design (worker separato) | Fuori scope — task autonomo |
+| GAP-7 | APERTO | Update `no_update_target` / `ambiguous_update_target` silenzioso | `review_events` in `entry_gate.py` scritti con `trade_chain_id=NULL`, nessun path outbox | `_write_update_review_notification` in `entry_gate.py:1997` |
 
 ---
 
@@ -215,3 +250,5 @@ I seguenti percorsi sono stati verificati come **correttamente coperti**:
 ### Task separato (fuori scope immediato)
 
 **F6 — GAP-6**: enrichment BLOCK/REVIEW — cambio design, lasciato aperto intenzionalmente.
+
+**F7 — GAP-7**: `_write_update_review_notification` in `entry_gate.py` — fix puntuale, basso rischio. Da pianificare come task autonomo.

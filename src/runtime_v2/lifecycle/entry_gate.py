@@ -210,12 +210,15 @@ def _write_update_clean_log(
     )
 
 
+_STATUS_RANK: dict[str, int] = {"PARTIAL": 2, "SKIPPED": 1, "DONE": 0}
+
+
 def _write_multi_chain_summary(
     conn,
     chain_results: list["UpdateChainResult"],
     canonical_message_id: int,
 ) -> None:
-    chains_payload: list[dict] = []
+    chains_by_id: dict[int, dict] = {}
     operations_seen: list[str] = []
     seen_operations: set[str] = set()
 
@@ -246,17 +249,22 @@ def _write_multi_chain_summary(
                 seen_operations.add(label)
                 operations_seen.append(label)
 
-        row = conn.execute(
-            "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
-            (cr.trade_chain_id,),
-        ).fetchone()
-        chains_payload.append({
-            "chain_id": cr.trade_chain_id,
-            "symbol": row[0] if row else None,
-            "side": row[1] if row else None,
-            "status": status,
-        })
+        cid = cr.trade_chain_id
+        if cid not in chains_by_id:
+            row = conn.execute(
+                "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+                (cid,),
+            ).fetchone()
+            chains_by_id[cid] = {
+                "chain_id": cid,
+                "symbol": row[0] if row else None,
+                "side": row[1] if row else None,
+                "status": status,
+            }
+        elif _STATUS_RANK.get(status, 0) > _STATUS_RANK.get(chains_by_id[cid]["status"], 0):
+            chains_by_id[cid]["status"] = status
 
+    chains_payload = list(chains_by_id.values())
     if len(chains_payload) < 2:
         return
 
@@ -2015,14 +2023,34 @@ class LifecycleGateWorker:
                             logger.exception(
                                 "clean_log projection failed for chain %s", cr.trade_chain_id
                             )
-                        try:
-                            _write_update_clean_log(
-                                conn, cr, enriched.canonical_message_id, update_source_link,
-                            )
-                        except Exception:
-                            logger.exception(
-                                "update clean_log synthesis failed for chain %s", cr.trade_chain_id
-                            )
+
+                _update_log_by_chain: dict[int, list[UpdateChainResult]] = {}
+                for cr in result.chain_results:
+                    if cr.trade_chain_id:
+                        _update_log_by_chain.setdefault(cr.trade_chain_id, []).append(cr)
+                for _chain_id, _crs in _update_log_by_chain.items():
+                    if len(_crs) == 1:
+                        _merged = _crs[0]
+                    else:
+                        _merged = UpdateChainResult(
+                            trade_chain_id=_chain_id,
+                            new_lifecycle_state=next(
+                                (c.new_lifecycle_state for c in reversed(_crs) if c.new_lifecycle_state), None
+                            ),
+                            new_be_protection_status=next(
+                                (c.new_be_protection_status for c in reversed(_crs) if c.new_be_protection_status), None
+                            ),
+                            lifecycle_events=[ev for c in _crs for ev in c.lifecycle_events],
+                            execution_commands=[cmd for c in _crs for cmd in c.execution_commands],
+                        )
+                    try:
+                        _write_update_clean_log(
+                            conn, _merged, enriched.canonical_message_id, update_source_link,
+                        )
+                    except Exception:
+                        logger.exception(
+                            "update clean_log synthesis failed for chain %s", _chain_id
+                        )
                 try:
                     _write_multi_chain_summary(conn, result.chain_results, enriched.canonical_message_id)
                 except Exception:
