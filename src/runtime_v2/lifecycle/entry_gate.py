@@ -1343,7 +1343,11 @@ class LifecycleEntryGate:
         commands = [ExecutionCommand(
             trade_chain_id=chain_id,
             command_type="CANCEL_PENDING_ENTRY",
-            payload_json=json.dumps({"symbol": chain.symbol, "side": chain.side}),
+            payload_json=json.dumps({
+                "symbol": chain.symbol,
+                "side": chain.side,
+                "cancel_origin": "trader_update",
+            }),
             idempotency_key=f"cancel_pending:{chain_id}:{cmid}",
         )]
 

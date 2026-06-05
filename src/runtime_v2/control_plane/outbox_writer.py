@@ -611,9 +611,20 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         if notification_type == "TP_FILLED" and ev.get("is_final"):
             notification_type = "TP_FILLED_FINAL"
 
-        # Filter: ENTRY_CANCELLED caused by position close should not be shown
-        if notification_type == "ENTRY_CANCELLED" and ev.get("cancel_reason") == "position_closed":
-            continue
+        # Filter: ENTRY_CANCELLED suppression rules
+        # - position_closed: always suppress (chain already closed)
+        # - timeout_worker: covered by PENDING_ENTRY_EXPIRED
+        # - trader_update / engine_rule without partial fill: covered by UPDATE_DONE
+        if notification_type == "ENTRY_CANCELLED":
+            if ev.get("cancel_reason") == "position_closed":
+                continue
+            cancel_origin = ev.get("cancel_origin")
+            if cancel_origin == "timeout_worker":
+                continue
+            if cancel_origin in ("trader_update", "engine_rule"):
+                partial_pct = float(ev.get("partial_fill_pct") or 0.0)
+                if partial_pct < 1.0:
+                    continue
 
         # Filter: PARTIAL_CLOSE_EXECUTED only for bot-originated fills
         if notification_type == "PARTIAL_CLOSE_EXECUTED" and ev.get("source") != "manual_command":

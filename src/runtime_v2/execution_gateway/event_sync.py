@@ -335,10 +335,29 @@ class ExchangeEventSyncWorker:
             "cancel_reason": raw.cancel_reason,
             "cancelled_order_ids": [client_order_id],
             "sequence": coid.sequence,
+            "cancel_origin": self._get_command_cancel_origin(coid.command_id),
         })
         return self._repo.insert_exchange_event(
             coid.trade_chain_id, "PENDING_ENTRY_CANCELLED_CONFIRMED", payload, idem_key
         )
+
+    def _get_command_cancel_origin(self, command_id: int | None) -> str | None:
+        if not command_id:
+            return None
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            row = conn.execute(
+                "SELECT payload_json FROM ops_execution_commands WHERE command_id=?",
+                (command_id,),
+            ).fetchone()
+            if row:
+                try:
+                    return json.loads(row[0] or "{}").get("cancel_origin")
+                except Exception:
+                    return None
+            return None
+        finally:
+            conn.close()
 
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
         """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains."""

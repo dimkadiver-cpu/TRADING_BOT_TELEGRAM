@@ -208,7 +208,7 @@ class TimeoutWorker:
                 if not entry_client_order_ids:
                     entry_client_order_ids = [""]
                 for entry_client_order_id in entry_client_order_ids:
-                    payload = {"symbol": chain.symbol, "side": chain.side}
+                    payload = {"symbol": chain.symbol, "side": chain.side, "cancel_origin": "timeout_worker"}
                     idempotency_key = f"cancel_timeout:{chain_id}"
                     if entry_client_order_id:
                         payload["entry_client_order_id"] = entry_client_order_id

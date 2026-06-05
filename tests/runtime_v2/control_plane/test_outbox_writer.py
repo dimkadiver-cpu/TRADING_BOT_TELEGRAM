@@ -378,6 +378,102 @@ def test_entry_cancel_failed_projects_cancel_failed(ops_db):
     assert row[0] == "CANCEL_FAILED"
 
 
+# ── cancel_origin filter tests ────────────────────────────────────────────────
+#
+# Caso 1: trader manda "убираем лимитки" → UPDATE_DONE già mostra Entry_2 cancelled.
+#         La conferma exchange (PENDING_ENTRY_CANCELLED) deve essere soppressa.
+def test_entry_cancelled_trader_update_no_partial_fill_is_suppressed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1001)
+        _seed_event(conn, 1001, "PENDING_ENTRY_CANCELLED", "pec:1001:1", {
+            "sequence": 2,
+            "price": 61192.03,
+            "entry_type": "LIMIT",
+            "cancel_origin": "trader_update",
+        })
+        project_clean_log_for_chain(conn, 1001)
+    count = conn.execute("SELECT COUNT(*) FROM ops_notification_outbox").fetchone()[0]
+    conn.close()
+    assert count == 0, "trader_update cancel senza partial fill deve essere soppressa"
+
+
+# Caso 2: trader cancella Entry_2 che aveva già 35% di fill parziale.
+#         L'info del fill parziale è operativamente rilevante → ENTRY_CANCELLED visibile.
+def test_entry_cancelled_trader_update_with_partial_fill_is_shown(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1002)
+        _seed_event(conn, 1002, "PENDING_ENTRY_CANCELLED", "pec:1002:1", {
+            "sequence": 2,
+            "price": 61192.03,
+            "entry_type": "LIMIT",
+            "cancel_origin": "trader_update",
+            "partial_fill_pct": 35.0,
+            "partial_fill_qty": 0.002,
+        })
+        project_clean_log_for_chain(conn, 1002)
+    row = conn.execute("SELECT notification_type FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None and row[0] == "ENTRY_CANCELLED", (
+        "trader_update cancel con partial fill deve essere visibile"
+    )
+
+
+# Caso 3: timeout_worker scade Entry_2 dopo 24h (cancel_averaging_pending_after o pending_timeout_hours).
+#         PENDING_ENTRY_EXPIRED già notifica la scadenza — ENTRY_CANCELLED è rumore.
+def test_entry_cancelled_timeout_worker_is_suppressed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1003)
+        _seed_event(conn, 1003, "PENDING_TIMEOUT", "pt:1003:1", {})
+        _seed_event(conn, 1003, "PENDING_ENTRY_CANCELLED", "pec:1003:1", {
+            "sequence": 2,
+            "cancel_origin": "timeout_worker",
+        })
+        project_clean_log_for_chain(conn, 1003)
+    types = [r[0] for r in conn.execute(
+        "SELECT notification_type FROM ops_notification_outbox ORDER BY notification_id"
+    ).fetchall()]
+    conn.close()
+    assert "PENDING_ENTRY_EXPIRED" in types, "PENDING_ENTRY_EXPIRED deve essere visibile"
+    assert "ENTRY_CANCELLED" not in types, "ENTRY_CANCELLED da timeout deve essere soppressa"
+
+
+# Caso 4: engine_rule cancella Entry_2 dopo TP1 (cancel_averaging_pending_after: tp1).
+#         UPDATE_DONE da operation_rules già copre l'operazione → sopprimi.
+def test_entry_cancelled_engine_rule_no_partial_fill_is_suppressed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1004)
+        _seed_event(conn, 1004, "PENDING_ENTRY_CANCELLED", "pec:1004:1", {
+            "sequence": 2,
+            "cancel_origin": "engine_rule",
+        })
+        project_clean_log_for_chain(conn, 1004)
+    count = conn.execute("SELECT COUNT(*) FROM ops_notification_outbox").fetchone()[0]
+    conn.close()
+    assert count == 0, "engine_rule cancel senza partial fill deve essere soppressa"
+
+
+# Caso 5: exchange cancella Entry_2 per ragione propria (margine insufficiente, liquidazione).
+#         Nessun cancel_origin noto → mostrare per non perdere informazione operativa.
+def test_entry_cancelled_unknown_origin_is_shown(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1005)
+        _seed_event(conn, 1005, "PENDING_ENTRY_CANCELLED", "pec:1005:1", {
+            "sequence": 2,
+            "cancel_reason": "LIQUIDATED",
+        })
+        project_clean_log_for_chain(conn, 1005)
+    row = conn.execute("SELECT notification_type FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None and row[0] == "ENTRY_CANCELLED", (
+        "cancel senza cancel_origin deve essere visibile (origine sconosciuta = potenziale problema)"
+    )
+
+
 def test_tp_filled_has_no_send_after_delay():
     from src.runtime_v2.control_plane.outbox_writer import _send_after_for
     result = _send_after_for("TP_FILLED")
