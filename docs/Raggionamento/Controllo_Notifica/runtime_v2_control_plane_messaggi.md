@@ -1,7 +1,7 @@
 # Runtime V2 Control Plane — Messaggi Telegram (riferimento completo)
 
 Aggiornato al codice corrente in `src/runtime_v2/control_plane/`.  
-Ultima revisione: 2026-06-05 (sessione 3 — merge UPDATE_DONE, dedup multi-chain, cancel_origin filter).
+Ultima revisione: 2026-06-05 (sessione 4 — fix WAITING_ENTRY in scope globali, link MULTI_CHAIN_SUMMARY stabilizzati su signal root).
 
 ---
 
@@ -85,6 +85,11 @@ Scritte direttamente quando un update canonico impatta ≥ 2 chain **uniche** (d
 - La lista `chains` è deduplicata per `trade_chain_id`: più operazioni sulla stessa chain non generano righe duplicate nel summary.
 - Se un messaggio ha N operazioni su 1 sola chain → nessun summary (il singolo UPDATE_DONE copre tutto).
 - Il formatter gestisce anche `MULTI_CHAIN_UPDATE` e `MULTI_CHAIN_CLOSED` come alias dello stesso template, ma nell'implementazione attuale viene scritto solo `MULTI_CHAIN_SUMMARY`.
+- **Link per chain**: risolto a tempo di scrittura (`_write_multi_chain_summary`) leggendo `clean_log_root_message_id` da `ops_clean_log_tracking` — punta al messaggio `SIGNAL_ACCEPTED` della chain (stabile, non cambia). Il dispatcher usa il link già nel payload; fa il lookup live su `clean_log_last_message_id` solo come fallback per chain senza tracking row.
+- **Chain in `WAITING_ENTRY`**: incluse negli scope globali (`ALL_POSITIONS` ecc.). Comportamento per azione:
+  - `CANCEL_PENDING` → `DONE` (cancella gli ordini di entry pendenti — semanticamente corretto)
+  - `MOVE_SL_TO_BE` → `SKIPPED` via `NOOP_NOT_PENDING` (nessun fill, nessun avg price)
+  - `CLOSE_FULL` → rediretto a `_apply_cancel_pending` (no posizione aperta → solo cancella pending entries; appare come `CANCEL_PENDING` nell'UPDATE_DONE e nel summary)
 
 ---
 
@@ -722,8 +727,9 @@ Source: runtime
 
 Note:
 - Le colonne si adattano alla larghezza massima dei valori presenti.
-- `link` è assente se non ci sono messaggi precedenti tracciati in `ops_clean_log_tracking`.
+- `link` per ogni chain punta al messaggio `SIGNAL_ACCEPTED` della chain (`clean_log_root_message_id`), risolto a tempo di scrittura del summary. Assente se la chain non ha ancora una tracking row (chain creata nello stesso batch).
 - `Partial:` e `Skipped:` nel summary appaiono solo se > 0.
+- Il summary appare nel feed Telegram **dopo** i singoli `UPDATE_DONE` per-chain grazie al `send_after=+3s`. In caso di timeout/retry del messaggio Telegram, il link nel summary rimane stabile (punta al segnale originale, non all'ultimo messaggio inviato).
 
 ---
 
