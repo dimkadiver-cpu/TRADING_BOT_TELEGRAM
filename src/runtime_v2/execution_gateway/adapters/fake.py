@@ -19,6 +19,7 @@ class FakeAdapter(ExecutionAdapter):
         simulate_timeout: bool = False,
         positions: dict[str, float] | None = None,
         mark_prices: dict[str, float] | None = None,
+        max_order_qty: dict[str, float] | None = None,
     ) -> None:
         self._capabilities = capabilities or AdapterCapabilities(
             place_entry=True,
@@ -35,6 +36,7 @@ class FakeAdapter(ExecutionAdapter):
         self._simulate_timeout = simulate_timeout
         self._positions = positions or {}
         self._mark_prices: dict[str, float] = mark_prices or {}
+        self._max_order_qty: dict[str, float] = max_order_qty or {}
         self._orders: dict[str, RawAdapterOrder] = {}
         self.calls: list[dict] = []
         self._last_place_qty: float | None = None
@@ -131,6 +133,9 @@ class FakeAdapter(ExecutionAdapter):
 
     def fetch_mark_price(self, symbol: str, execution_account_id: str) -> float | None:
         return self._mark_prices.get(symbol)
+
+    def fetch_max_order_qty(self, symbol: str, execution_account_id: str) -> float | None:
+        return self._max_order_qty.get(symbol)
 
     def load_known_symbols(self) -> frozenset[str] | None:
         # Return None (no restriction) unless specific mark prices were configured —

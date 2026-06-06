@@ -1401,3 +1401,91 @@ def test_run_trade_based_reconciliation_no_price_matching(ops_db):
     # Second call must be idempotent (no duplicate insert).
     count2 = worker.run_trade_based_reconciliation()
     assert count2 == 0, "Second run must be idempotent — 0 new events expected"
+
+
+def test_deferred_market_qty_above_exchange_max_becomes_signal_rejected(ops_db):
+    """Computed deferred MARKET qty above exchange max suppresses ACCEPTED and emits SIGNAL_REJECTED."""
+    from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "UPDATE ops_trade_chains "
+        "SET plan_state_json=?, risk_snapshot_json=?, source_chat_id=?, telegram_message_id=? "
+        "WHERE trade_chain_id=1",
+        (
+            json.dumps({
+                "stop_loss": 140.0,
+                "final_tp": 170.0,
+                "intermediate_tps": [],
+                "legs": [
+                    {"sequence": 1, "entry_type": "MARKET", "price": 150.0, "status": "PENDING"},
+                ],
+            }),
+            json.dumps({"capital": 1000.0, "risk_amount": 10.0}),
+            "-1001234567890",
+            456,
+        ),
+    )
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (1, 'SIGNAL_ACCEPTED', 'enrichment', '{}', 'sigacc:1', datetime('now'))"
+    )
+    project_clean_log_for_chain(conn, 1)
+    conn.commit()
+    conn.close()
+
+    _insert_cmd(ops_db, 2010, cmd_type="PLACE_ENTRY_WITH_ATTACHED_TPSL", payload={
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_type": "MARKET",
+        "sequence": 1,
+        "qty_mode": "deferred_market",
+        "risk_amount": 10.0,
+        "sl_price": 140.0,
+        "attached_tpsl": {"mode": "FULL", "take_profit": 170.0, "stop_loss": 140.0},
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter(
+            mark_prices={"BTC/USDT": 150.0},
+            max_order_qty={"BTC/USDT": 0.5},
+        )},
+        repo=repo,
+    )
+
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 2010)
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    cmd_row = conn.execute(
+        "SELECT status, result_payload_json FROM ops_execution_commands WHERE command_id=2010"
+    ).fetchone()
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    event_types = [
+        row[0] for row in conn.execute(
+            "SELECT event_type FROM ops_lifecycle_events WHERE trade_chain_id=1 ORDER BY event_id"
+        ).fetchall()
+    ]
+    outbox_rows = conn.execute(
+        "SELECT notification_type, status, payload_json "
+        "FROM ops_notification_outbox ORDER BY notification_id"
+    ).fetchall()
+    conn.close()
+
+    assert cmd_row[0] == "FAILED"
+    assert "computed_qty_exceeds_exchange_max" in (cmd_row[1] or "")
+    assert chain_state == "CANCELLED"
+    assert event_types[-1] == "SIGNAL_REJECTED"
+    assert outbox_rows[0][0] == "SIGNAL_ACCEPTED"
+    assert outbox_rows[0][1] == "SUPPRESSED"
+    assert outbox_rows[1][0] == "SIGNAL_REJECTED"
+    reject_payload = json.loads(outbox_rows[1][2])
+    assert reject_payload["reason"] == "computed_qty_exceeds_exchange_max"

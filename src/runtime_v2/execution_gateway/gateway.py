@@ -181,6 +181,19 @@ class ExecutionGateway:
                 )
                 return
             computed_qty = risk_amount_leg / risk_dist
+            max_order_qty = adapter.fetch_max_order_qty(symbol, routing.execution_account_id)
+            if max_order_qty is not None and computed_qty > max_order_qty:
+                self._repo.reject_entry_as_signal(
+                    cmd.command_id,
+                    reason="computed_qty_exceeds_exchange_max",
+                    result_payload={
+                        "computed_qty": computed_qty,
+                        "max_qty": max_order_qty,
+                        "mark_price": mark_price,
+                        "sl_price": sl_price_val,
+                    },
+                )
+                return
             payload = {
                 k: v for k, v in payload.items()
                 if k not in ("qty_mode", "risk_amount", "sl_price")

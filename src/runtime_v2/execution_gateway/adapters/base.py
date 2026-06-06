@@ -68,5 +68,13 @@ class ExecutionAdapter(ABC):
         """
         return None
 
+    def fetch_max_order_qty(
+        self,
+        symbol: str,
+        execution_account_id: str,
+    ) -> float | None:
+        """Return the max entry quantity accepted by the exchange for this symbol, or None."""
+        return None
+
 
 __all__ = ["ExecutionAdapter"]

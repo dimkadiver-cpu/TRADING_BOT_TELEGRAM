@@ -174,6 +174,88 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def reject_entry_as_signal(
+        self,
+        command_id: int,
+        *,
+        reason: str,
+        result_payload: dict | None = None,
+    ) -> bool:
+        """Convert a pre-fill entry execution failure into a final SIGNAL_REJECTED outcome."""
+        from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                cmd_row = conn.execute(
+                    "SELECT trade_chain_id, command_type FROM ops_execution_commands WHERE command_id=?",
+                    (command_id,),
+                ).fetchone()
+                if not cmd_row:
+                    return False
+                trade_chain_id, command_type = int(cmd_row[0]), str(cmd_row[1])
+                if command_type not in ("PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL"):
+                    return False
+
+                result = {"error": reason, "reason": reason, **(result_payload or {})}
+                conn.execute(
+                    "UPDATE ops_execution_commands SET status='FAILED', "
+                    "result_payload_json=?, updated_at=? WHERE command_id=?",
+                    (json.dumps(result), now, command_id),
+                )
+
+                chain_row = conn.execute(
+                    "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=?",
+                    (trade_chain_id,),
+                ).fetchone()
+                previous_state = chain_row[0] if chain_row else None
+                conn.execute(
+                    "UPDATE ops_trade_chains SET lifecycle_state='CANCELLED', updated_at=? "
+                    "WHERE trade_chain_id=?",
+                    (now, trade_chain_id),
+                )
+
+                pending_signal_ids: list[int] = []
+                for notification_id, payload_json in conn.execute(
+                    "SELECT notification_id, payload_json FROM ops_notification_outbox "
+                    "WHERE notification_type='SIGNAL_ACCEPTED' AND status='PENDING'"
+                ).fetchall():
+                    try:
+                        payload = json.loads(payload_json or "{}")
+                    except Exception:
+                        continue
+                    if int(payload.get("chain_id") or -1) == trade_chain_id:
+                        pending_signal_ids.append(int(notification_id))
+                for notification_id in pending_signal_ids:
+                    conn.execute(
+                        "UPDATE ops_notification_outbox SET status='SUPPRESSED' WHERE notification_id=?",
+                        (notification_id,),
+                    )
+
+                conn.execute(
+                    """
+                    INSERT OR IGNORE INTO ops_lifecycle_events (
+                        trade_chain_id, event_type, source_type,
+                        previous_state, next_state, payload_json, idempotency_key, created_at
+                    ) VALUES (?,?,?,?,?,?,?,?)
+                    """,
+                    (
+                        trade_chain_id,
+                        "SIGNAL_REJECTED",
+                        "execution_gateway",
+                        previous_state,
+                        "CANCELLED",
+                        json.dumps({"reason": reason, "source": "runtime", **(result_payload or {})}),
+                        f"signal_rejected:{command_id}",
+                        now,
+                    ),
+                )
+                project_clean_log_for_chain(conn, trade_chain_id)
+            return True
+        finally:
+            conn.close()
+
     def write_cancel_entry_failed_lifecycle(
         self, command_id: int, trade_chain_id: int, *, attempts: int
     ) -> None:

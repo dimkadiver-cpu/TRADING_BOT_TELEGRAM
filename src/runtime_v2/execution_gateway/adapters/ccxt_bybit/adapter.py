@@ -318,6 +318,45 @@ class CcxtBybitAdapter(ExecutionAdapter):
             logger.warning("fetch_mark_price failed for %s: %s", symbol, exc)
             return None
 
+    def fetch_max_order_qty(self, symbol: str, execution_account_id: str) -> float | None:
+        del execution_account_id
+        try:
+            markets = self._exchange.load_markets()
+        except Exception as exc:
+            logger.warning("fetch_max_order_qty load_markets failed for %s: %s", symbol, exc)
+            return None
+
+        normalized = self._normalize_bybit_symbol(symbol)
+        market = markets.get(symbol)
+        if market is None:
+            for candidate in markets.values():
+                if candidate.get("id") == normalized:
+                    market = candidate
+                    break
+        if market is None:
+            return None
+
+        info = market.get("info") or {}
+        lot_filter = info.get("lotSizeFilter") or {}
+        preferred = (
+            lot_filter.get("maxMktOrderQty")
+            or lot_filter.get("maxOrderQty")
+        )
+        if preferred not in (None, ""):
+            try:
+                return float(preferred)
+            except (TypeError, ValueError):
+                pass
+
+        amount_limits = (market.get("limits") or {}).get("amount") or {}
+        max_amount = amount_limits.get("max")
+        if max_amount not in (None, ""):
+            try:
+                return float(max_amount)
+            except (TypeError, ValueError):
+                pass
+        return None
+
     def load_known_symbols(self) -> frozenset[str] | None:
         try:
             markets = self._exchange.load_markets()
