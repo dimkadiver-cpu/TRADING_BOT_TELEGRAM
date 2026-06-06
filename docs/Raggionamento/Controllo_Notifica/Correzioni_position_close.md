@@ -12,10 +12,11 @@ Regole:
 Template:
 
 <emoji> #<id> — POSITION CLOSED
-Close reason: <reason>
 - - -
 <symbol> — <side>
 <signal_link>
+- - -
+Close reason: <reason>
 - - -
 <exit_field>: <price | n/a>
 Qty: <qty | n/a>
@@ -36,10 +37,11 @@ Source: <source>
 Esempi:
 
 ✅ #12 — POSITION CLOSED
-Close reason: FINAL TP FILLED
 - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
+- - -
+Close reason: FINAL TP FILLED
 - - -
 TP_2: 70,500
 Qty: 0.015
@@ -57,10 +59,11 @@ Funding: +0.03 USDT
 Source: exchange
 
 🛑 #5 — POSITION CLOSED
-Close reason: STOP_LOSS
 - - -
 ICNTUSDT — 📈 LONG
 https://t.me/c/3897279123/499
+- - -
+Close reason: STOP_LOSS
 - - -
 SL: 0.2499
 Qty: 120
@@ -78,10 +81,11 @@ Funding: +0.00 USDT
 Source: exchange
 
 ⚡ #1 — POSITION CLOSED
-Close reason: BREAKEVEN_AFTER_TP
 - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/3897279123/480
+- - -
+Close reason: BREAKEVEN_AFTER_TP
 - - -
 Price: 60,982.7
 Qty: 0.01

@@ -158,15 +158,19 @@ def _close_metric_lines(p: dict, *, price_label: str, price_value) -> list[str]:
 
 def _closed_template(p: dict, *, emoji: str, price_label: str, price_value) -> str:
     lines = [f"{emoji} #{p.get('chain_id')} — POSITION CLOSED" if p.get("chain_id") is not None else f"{emoji} — POSITION CLOSED"]
-    lines.append(f"Close reason: {p.get('close_reason', 'n/a')}")
     lines.append(_SEP)
     lines.append(f"{display_symbol(p.get('symbol'))} — {_side_emoji(p.get('side'))} {p.get('side')}")
     if p.get("signal_link"):
         lines.append(p["signal_link"])
     lines.append(_SEP)
+    lines.append(f"Close reason: {p.get('close_reason', 'n/a')}")
+    lines.append(_SEP)
     lines += _close_metric_lines(p, price_label=price_label, price_value=price_value)
     lines += _final_result_lines(p.get("final_result"))
-    lines += _footer(p.get("source", "exchange"), p.get("link"))
+    lines.append(_SEP)
+    lines.append(f"Source: {p.get('source', 'exchange')}")
+    if p.get("link"):
+        lines.append(p["link"])
     return _finalize(lines)
 
 

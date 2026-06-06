@@ -83,6 +83,7 @@ def _normalized_fill_payload(payload: dict, *, default_qty: float = 0.0) -> dict
         "fill_price": payload.get("fill_price"),
         "filled_qty": filled_qty_float,
         "exec_fee": payload.get("exec_fee"),
+        "fee_rate": payload.get("fee_rate"),
         "closed_size": payload.get("closed_size") if payload.get("closed_size") is not None else filled_qty_float,
     }
 

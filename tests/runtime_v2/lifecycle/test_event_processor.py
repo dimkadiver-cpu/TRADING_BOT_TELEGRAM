@@ -1664,7 +1664,7 @@ def test_close_lifecycle_payload_is_normalized(event_type):
     chain = _make_chain(entry_avg_price=65000.0)
     event = _make_exchange_event(
         event_type=event_type,
-        payload={"fill_price": 64000.0, "filled_qty": 0.01, "exec_fee": 1.70},
+        payload={"fill_price": 64000.0, "filled_qty": 0.01, "exec_fee": 1.70, "fee_rate": 0.00055},
     )
     result = _make_processor().process(event, chain, [])
     close_event = next(e for e in result.lifecycle_events if e.event_type == event_type)
@@ -1672,6 +1672,7 @@ def test_close_lifecycle_payload_is_normalized(event_type):
     assert payload["fill_price"] == 64000.0
     assert payload["filled_qty"] == 0.01
     assert payload["exec_fee"] == 1.70
+    assert payload["fee_rate"] == 0.00055
     assert payload["closed_size"] == 0.01  # derived from filled_qty when not in input
 
 

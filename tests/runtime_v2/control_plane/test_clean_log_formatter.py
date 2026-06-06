@@ -180,6 +180,7 @@ def test_sl_filled_shows_fill_price():
     assert "Close reason:" in text
     assert "Qty: n/a" in text
     assert "Fee rate: n/a" in text
+    assert text.index("BTC/USDT") < text.index("Close reason:")
 
 
 def test_sl_filled_side_always_correct():
@@ -248,6 +249,41 @@ def test_position_closed_shows_fill_price():
     assert "MANUAL_CLOSE" in text
     assert "Qty: n/a" in text
     assert "Fee rate: n/a" in text
+
+
+def test_position_closed_source_and_origin_link_share_same_block():
+    text = format_clean_log("POSITION_CLOSED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "fill_price": 65500.0,
+        "source": "trader_update",
+        "link": "https://t.me/c/3927267771/376",
+    })
+    assert "Source: trader_update\nhttps://t.me/c/3927267771/376" in text
+
+
+def test_position_closed_final_result_shows_na_for_missing_values():
+    text = format_clean_log("POSITION_CLOSED", {
+        "chain_id": 145,
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "fill_price": 65500.0,
+        "source": "exchange",
+        "final_result": {
+            "roi_net_pct": None,
+            "total_pnl_net": None,
+            "gross_pnl": None,
+            "fees": None,
+            "funding": None,
+            "close_reason": "MANUAL_CLOSE",
+        },
+    })
+    assert "ROI net: n/a" in text
+    assert "Total PnL net: n/a" in text
+    assert "Gross PnL: n/a" in text
+    assert "Fees: n/a" in text
+    assert "Funding: n/a" in text
 
 
 # ---------------------------------------------------------------------------

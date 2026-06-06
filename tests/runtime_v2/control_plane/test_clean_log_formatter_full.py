@@ -254,6 +254,7 @@ def test_be_exit_formatter_renders_exit_and_final_result():
     assert "Close reason: BREAKEVEN_AFTER_TP" in text
     assert "Final Result:" in text
     assert "Qty: n/a" in text
+    assert text.index("BTC/USDT") < text.index("Close reason:")
 
 
 def test_sl_filled_with_be_close_reason_renders_be_exit():

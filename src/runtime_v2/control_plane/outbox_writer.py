@@ -67,19 +67,21 @@ def _final_result(
     allocated_margin: float | None,
     close_reason: str,
 ) -> dict:
-    gross = float(gross_pnl or 0.0)
-    fee_total = float(fees or 0.0)
-    funding_total = float(funding or 0.0)
-    net = gross - fee_total - funding_total
+    gross = float(gross_pnl) if gross_pnl is not None else None
+    fee_total = float(fees) if fees is not None else None
+    funding_total = float(funding) if funding is not None else None
+    net = None
+    if gross is not None and fee_total is not None and funding_total is not None:
+        net = gross - fee_total - funding_total
     roi = None
-    if allocated_margin and float(allocated_margin) > 0.0:
+    if net is not None and allocated_margin and float(allocated_margin) > 0.0:
         roi = round(net / float(allocated_margin) * 100.0, 4)
     return {
         "roi_net_pct": roi,
-        "total_pnl_net": round(net, 8),
-        "gross_pnl": round(gross, 8),
-        "fees": round(-fee_total, 8),
-        "funding": round(-funding_total, 8),
+        "total_pnl_net": round(net, 8) if net is not None else None,
+        "gross_pnl": round(gross, 8) if gross is not None else None,
+        "fees": round(-fee_total, 8) if fee_total is not None else None,
+        "funding": round(-funding_total, 8) if funding_total is not None else None,
         "close_reason": close_reason,
     }
 

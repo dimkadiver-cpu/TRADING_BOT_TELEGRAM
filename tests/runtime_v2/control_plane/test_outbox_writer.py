@@ -236,6 +236,37 @@ def test_position_closed_final_result_subtracts_positive_funding_cost(ops_db):
     assert payload["final_result"]["total_pnl_net"] == pytest.approx(2.46797574)
 
 
+def test_position_closed_final_result_preserves_missing_metrics_as_none(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 711)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, open_position_qty=?, filled_entry_qty=?, "
+            "cumulative_gross_pnl=?, cumulative_fees=?, cumulative_funding=?, allocated_margin=? "
+            "WHERE trade_chain_id=?",
+            (65000.0, 0.0, 0.01, None, None, None, None, 711),
+        )
+        _seed_event(conn, 711, "CLOSE_FULL_FILLED", "close_full:711:1", {
+            "fill_price": 65500.0,
+            "filled_qty": 0.01,
+            "exec_fee": 0.90,
+            "closed_size": 0.01,
+        })
+        project_clean_log_for_chain(conn, 711)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload["final_result"]["roi_net_pct"] is None
+    assert payload["final_result"]["total_pnl_net"] is None
+    assert payload["final_result"]["gross_pnl"] is None
+    assert payload["final_result"]["fees"] is None
+    assert payload["final_result"]["funding"] is None
+
+
 def test_projection_maps_pending_timeout_to_pending_entry_expired(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:
