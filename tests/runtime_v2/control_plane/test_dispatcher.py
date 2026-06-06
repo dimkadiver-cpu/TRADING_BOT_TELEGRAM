@@ -395,3 +395,82 @@ async def test_dispatcher_enriches_multi_chain_summary_with_links(ops_db):
     assert n == 1
     assert len(sender.sent) == 1
     assert "t.me/c/12345/55" in sender.sent[0]["text"]
+
+
+@pytest.mark.asyncio
+async def test_dispatcher_releases_resolvable_pending_close_full_summary_without_new_close(ops_db):
+    conn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS ops_pending_multi_chain_summaries "
+            "(pending_id INTEGER PRIMARY KEY, canonical_message_id INTEGER UNIQUE, payload_json TEXT)"
+        )
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (6, "453", "468", "-1003897279123", None, "POSITION_CLOSED", now, now),
+        )
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?)",
+            (7, "454", "469", "-1003897279123", None, "POSITION_CLOSED", now, now),
+        )
+        conn.execute(
+            "INSERT INTO ops_pending_multi_chain_summaries (canonical_message_id, payload_json) VALUES (?, ?)",
+            (
+                365,
+                json.dumps({
+                    "summary_kind": "pending_final_close_links",
+                    "requested_operations": ["Close full"],
+                    "chains": [
+                        {"chain_id": 6, "symbol": "WLD", "side": "LONG", "status": "DONE", "link_mode": "final_close", "link": None, "display_lines": []},
+                        {"chain_id": 7, "symbol": "ICNT", "side": "LONG", "status": "DONE", "link_mode": "final_close", "link": None, "display_lines": []},
+                    ],
+                    "counts": {"done": 2, "partial": 0, "skipped": 0, "error": 0},
+                    "source": "trader_update",
+                    "link": "https://t.me/c/3927267771/365",
+                }),
+            ),
+        )
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    first = await disp.drain_once()
+
+    assert first == 0
+    assert len(sender.sent) == 0
+
+    conn = sqlite3.connect(ops_db)
+    pending_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=365"
+    ).fetchone()[0]
+    status, payload_json = conn.execute(
+        "SELECT status, payload_json FROM ops_notification_outbox WHERE notification_type='MULTI_CHAIN_SUMMARY'"
+    ).fetchone()
+    payload = json.loads(payload_json)
+    conn.execute(
+        "UPDATE ops_notification_outbox SET send_after=? WHERE notification_type='MULTI_CHAIN_SUMMARY'",
+        (datetime.now(timezone.utc).isoformat(),),
+    )
+    conn.commit()
+    conn.close()
+    assert pending_count == 0
+    assert status == "PENDING"
+    assert payload["summary_kind"] == "final_close"
+    assert payload["chains"][0]["link"] == "https://t.me/c/3897279123/468"
+    assert payload["chains"][1]["link"] == "https://t.me/c/3897279123/469"
+
+    second = await disp.drain_once()
+
+    assert second == 1
+    assert len(sender.sent) == 1
+    assert "Close full" in sender.sent[0]["text"]
+    assert "https://t.me/c/3897279123/468" in sender.sent[0]["text"]
+    assert "https://t.me/c/3897279123/469" in sender.sent[0]["text"]

@@ -22,6 +22,20 @@ def _weighted_avg_price(trades: list) -> float | None:
     return sum(t.price * t.amount for t in trades) / total_qty
 
 
+def _reduce_trade_stats(trades: list) -> tuple[float | None, float | None, float | None]:
+    """Aggregate recent reduce trades into fill price, total fee, and effective fee rate."""
+    if not trades:
+        return None, None, None
+    fill_price = _weighted_avg_price(trades)
+    total_notional = sum(float(t.price) * float(t.amount) for t in trades)
+    fees = [float(t.fee) for t in trades if t.fee is not None]
+    total_fee = sum(fees) if fees else None
+    fee_rate = None
+    if total_fee is not None and total_notional > 0.0:
+        fee_rate = total_fee / total_notional
+    return fill_price, total_fee, fee_rate
+
+
 class ExchangeEventSyncWorker:
     def __init__(
         self,
@@ -87,6 +101,8 @@ class ExchangeEventSyncWorker:
                 if qty == 0.0 and open_qty > 0.0:
                     # Attempt to recover fill price from recent reduce trades (REST safety net)
                     fill_price: float | None = None
+                    exec_fee: float | None = None
+                    fee_rate: float | None = None
                     if hasattr(self._adapter, "fetch_recent_reduce_trades"):
                         try:
                             trades = self._adapter.fetch_recent_reduce_trades(
@@ -95,7 +111,7 @@ class ExchangeEventSyncWorker:
                                 execution_account_id=self._execution_account_id,
                                 limit=50,
                             )
-                            fill_price = _weighted_avg_price(trades)
+                            fill_price, exec_fee, fee_rate = _reduce_trade_stats(trades)
                         except Exception:
                             logger.warning(
                                 "could not fetch fill price for reconciliation close: chain=%s",
@@ -106,6 +122,8 @@ class ExchangeEventSyncWorker:
                     payload = json.dumps({
                         "filled_qty": open_qty,
                         "fill_price": fill_price,
+                        "exec_fee": exec_fee,
+                        "fee_rate": fee_rate,
                         "source": "position_reconciliation",
                     })
                     inserted = self._repo.insert_exchange_event(

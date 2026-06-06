@@ -324,6 +324,9 @@ class TelegramNotificationDispatcher:
         return pref == "silent"
 
     async def drain_once(self) -> int:
+        # Release any already-resolvable close-full summaries before claiming work,
+        # so stale pending summaries do not wait for an unrelated future POSITION_CLOSED.
+        self._try_release_pending_close_full_summaries()
         rows = self._claim_pending()
         sent = 0
         for notification_id, notification_type, destination, payload_json, attempts in rows:

@@ -1045,7 +1045,7 @@ def test_run_reconciliation_marks_done_even_when_ws_already_inserted_event(ops_d
     assert len(wake_calls) == 1
 
 
-def test_position_reconciliation_records_fill_price_from_rest(ops_db):
+def test_position_reconciliation_records_fill_price_and_fee_from_rest(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
@@ -1054,7 +1054,14 @@ def test_position_reconciliation_records_fill_price_from_rest(ops_db):
 
     adapter = FakeAdapter()
     adapter._positions["BTCUSDT:LONG"] = 0.0
-    adapter.simulate_reduce_trade("BTCUSDT", "LONG", price=73345.8, amount=0.131, trade_id="t1")
+    adapter.simulate_reduce_trade(
+        "BTCUSDT",
+        "LONG",
+        price=73345.8,
+        amount=0.131,
+        trade_id="t1",
+        fee=5.76,
+    )
 
     repo = GatewayCommandRepository(ops_db)
     worker = ExchangeEventSyncWorker(
@@ -1076,6 +1083,8 @@ def test_position_reconciliation_records_fill_price_from_rest(ops_db):
     assert row is not None
     payload = json.loads(row[0])
     assert payload["fill_price"] == pytest.approx(73345.8)
+    assert payload["exec_fee"] == pytest.approx(5.76)
+    assert payload["fee_rate"] == pytest.approx(5.76 / (73345.8 * 0.131))
     assert payload["source"] == "position_reconciliation"
 
 

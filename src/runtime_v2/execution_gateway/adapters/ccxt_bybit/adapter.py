@@ -401,12 +401,15 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 continue
             trade_symbol = self._normalize_bybit_symbol(t.get("symbol") or symbol)
             try:
+                fee = t.get("fee") or {}
                 result.append(RawAdapterTrade(
                     trade_id=str(t["id"]),
                     symbol=trade_symbol,
                     price=float(t["price"]),
                     amount=float(t["amount"]),
                     reduce_only=True,
+                    fee=_f(info.get("execFee") or fee.get("cost")),
+                    fee_rate=_f(info.get("feeRate") or fee.get("rate")),
                 ))
             except Exception:
                 logger.debug("skipping malformed trade %s", t.get("id"))

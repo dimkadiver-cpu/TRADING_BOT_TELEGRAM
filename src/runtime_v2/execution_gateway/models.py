@@ -122,6 +122,8 @@ class RawAdapterTrade(BaseModel):
     price: float
     amount: float
     reduce_only: bool = True
+    fee: float | None = None
+    fee_rate: float | None = None
 
 
 class RawPositionDetails(BaseModel):

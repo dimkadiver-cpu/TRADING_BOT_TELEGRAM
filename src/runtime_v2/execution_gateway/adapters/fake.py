@@ -154,11 +154,20 @@ class FakeAdapter(ExecutionAdapter):
         price: float,
         amount: float,
         trade_id: str,
+        fee: float | None = None,
+        fee_rate: float | None = None,
     ) -> None:
         """Register a reduceOnly fill for fetch_recent_reduce_trades() to return."""
         key = f"{symbol}:{side}"
         self._reduce_trades.setdefault(key, []).append(
-            RawAdapterTrade(trade_id=trade_id, symbol=symbol, price=price, amount=amount)
+            RawAdapterTrade(
+                trade_id=trade_id,
+                symbol=symbol,
+                price=price,
+                amount=amount,
+                fee=fee,
+                fee_rate=fee_rate,
+            )
         )
 
     def fetch_recent_reduce_trades(

@@ -1440,6 +1440,83 @@ def test_worker_accumulates_long_tp_pnl_and_fee(tmp_path):
     assert row[1] == pytest.approx(1.10)
 
 
+def test_worker_close_full_reconciliation_updates_cumulative_pnl_and_fees(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    now_str = "2026-06-06T00:00:00+00:00"
+    chain_id = 302
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, filled_entry_qty, "
+        "management_plan_json, plan_state_json, created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','OPEN','ONE_SHOT',"
+        "65000.0,0.01,0.01,'{}','{}',?,?)",
+        (chain_id, now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="CLOSED",
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="CLOSE_FULL_FILLED",
+                source_type="exchange_event",
+                payload_json=_json.dumps({
+                    "fill_price": 64000.0,
+                    "filled_qty": 0.01,
+                    "exec_fee": 1.70,
+                    "closed_size": 0.01,
+                    "source": "position_reconciliation",
+                }),
+                idempotency_key=f"close:{chain_id}:1",
+            )
+        ],
+        execution_commands=[],
+        new_open_position_qty=0.0,
+        new_closed_position_qty=0.01,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    row = conn2.execute(
+        "SELECT cumulative_gross_pnl, cumulative_fees FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()
+    conn2.close()
+    assert row[0] == pytest.approx(-10.0)
+    assert row[1] == pytest.approx(1.70)
+
+
 def test_worker_entry_fill_sets_peak_margin_used(tmp_path):
     import json as _json
     import sqlite3 as _sqlite3
