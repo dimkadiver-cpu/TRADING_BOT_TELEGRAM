@@ -507,7 +507,7 @@ _ENTRY_POSITION_SECTION: list[Block] = [
     FieldBlock("Avg entry", key="_avg_entry",          fmt=num),
     FieldBlock("Filled",    key="position_filled_pct", fmt=pct),
     ConditionalBlock(
-        condition=lambda p: bool(p.get("is_partial_leg")),
+        condition=lambda p: p.get("actual_risk_usdt") is not None,
         blocks=[
             DerivedBlock(text_fn=lambda p:
                 f"Risk: {money(p.get('actual_risk_usdt'))} "
