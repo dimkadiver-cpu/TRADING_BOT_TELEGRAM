@@ -1,305 +1,417 @@
-# Correzioni ENTRY OPENED / ENTRY UPDATED
+# ENTRY OPENED / ENTRY UPDATED — Esempi reali
+
+Formato prodotto dal template system (`_ENTRY_BLOCKS`).
+`────────────────` = SeparatorBlock dinamico (larghezza calcolata da `_finalize()`).
 
 ---
 
-## Principio
-
-- **ENTRY OPENED** — primo leg fillato → la posizione esiste per la prima volta
-- **ENTRY UPDATED** — leg successivo fillato → la posizione cambia (avg entry aggiornato)
-
-ONE_SHOT: solo ENTRY OPENED, mai ENTRY UPDATED.
-Multi-entry: ENTRY OPENED al primo fill, ENTRY UPDATED per ogni fill successivo.
-
----
-
-## Struttura comune
+## Struttura
 
 ```
-📊 #id — ENTRY OPENED | ENTRY UPDATED
-- - - -
-Symbol — side
-- - - - - - - - - - - - - - -
+{emoji} #{chain_id} — ENTRY OPENED | ENTRY UPDATED
+────────────────
+{symbol} — {side_emoji} {side}
+────────────────
 Filled:
-Entry_N: price type
-Qty: x.xxx
-Value: xxx.xx USDT
-Fee: x.xx USDT
-[Partial: xx%]          ← solo se fill parziale
-- - - - - - - - - - - - - - -
+Entry_N: {fill_price} {type}
+Qty: {filled_qty}                         ← full fill
+Qty: {filled_qty} (planned: {planned_qty}) ← partial fill
+Value: {exec_value} USDT
+Fee: {fee} USDT
+[Partial: {leg_fill_pct}%]                ← solo se parziale
+────────────────
 Position:
-Avg entry: price
-Filled: xx%             ← % della posizione totale pianificata
-[Risk: xx USDT (planned: xx USDT)]  ← solo se fill parziale
-Pending: Entry_N price Limit | none
-- - - - - - - - - - - - - - -
-[Changed:]              ← solo se qualcosa è cambiato rispetto al segnale
-[SL qty: x.xxx → x.xxx (adj.)]
-- - - - - - - - - - - - - - -
+Avg entry: {avg_entry}
+Filled: {position_filled_pct}%
+[Risk: {actual} USDT (planned: {planned} USDT)]  ← solo se parziale
+Pending: Entry_N {price} Limit            ← una riga per entry pending
+Pending: none                             ← se nessuno
+[────────────────]                        ← solo se sezione Changed segue
+[Changed:]
+[SL qty: {planned_qty} → {filled_qty} (adj. to fill)]
+────────────────
 Source: exchange
 ```
 
-Regole:
-- Qty senza simbolo base (non disponibile nel payload)
-- Value in USDT sempre presente (exec_value dal payload exchange)
-- Partial e Risk vs planned solo quando il fill è parziale
-- Changed solo quando SL/TP sono stati aggiustati rispetto al segnale originale
+**Regole:**
+- `Qty` senza simbolo base — non nel payload
+- `Value` (exec_value) sempre presente
+- `Partial`, `Risk`, `Changed` solo quando `is_partial_leg = True` (filled_qty < planned_qty per quel leg)
+- Ogni entry pending → riga `Pending:` separata (non indentate sotto un'unica label)
+- `Filled: xx%` = filled_entry_qty totale / total_planned_qty — sempre presente
+- avg_entry calcolato correttamente: Σ(price_i × qty_i) / Σ(qty_i)
 
 ---
 
 ## Caso 1 — ONE_SHOT MARKET, fill completo
 
-Segnale: Entry_1: Market ~65,000 — pianificato 0.010, rischio 260 USDT
+Segnale: Entry_1 Market ~65,000 — qty 0.010, rischio 260 USDT
 
 ```
 📊 #145 — ENTRY OPENED
 ────────────────
 BTC/USDT — 📈 LONG
-
+────────────────
 Filled:
 Entry_1: 65,020 Market
 Qty: 0.010
 Value: 650.20 USDT
 Fee: 1.30 USDT
-
+────────────────
 Position:
 Avg entry: 65,020
 Filled: 100%
 Pending: none
-
 ────────────────
 Source: exchange
 ```
 
 ---
 
-## Caso 2 — ONE_SHOT MARKET, fill parziale
+## Caso 2 — ONE_SHOT MARKET, fill parziale (70%)
 
-Segnale: Entry_1: Market ~65,000 — pianificato 0.010, rischio 260 USDT
-Exchange ha eseguito solo 0.007 (70% della qty pianificata).
-SL qty si adatta automaticamente alla qty effettiva.
+Segnale: Entry_1 Market ~65,000 — qty 0.010, rischio 260 USDT
+Exchange ha eseguito 0.007 (70%). Il residuo 30% è perso — MARKET non lascia coda.
 
 ```
 📊 #145 — ENTRY OPENED
-────────────────
+────────────────────────────────
 BTC/USDT — 📈 LONG
-
+────────────────────────────────
 Filled:
 Entry_1: 65,020 Market
 Qty: 0.007 (planned: 0.010)
 Value: 455.14 USDT
 Fee: 0.91 USDT
 Partial: 70%
-
+────────────────────────────────
 Position:
 Avg entry: 65,020
 Filled: 70%
 Risk: 182 USDT (planned: 260 USDT)
 Pending: none
-
+────────────────────────────────
 Changed:
 SL qty: 0.010 → 0.007 (adj. to fill)
-
-────────────────
+────────────────────────────────
 Source: exchange
 ```
 
-Nessun ENTRY UPDATED — il residuo 30% non è più pending (MARKET non lascia coda).
+> Nessun ENTRY UPDATED successivo — senza pending non ci sono fill futuri.
 
 ---
 
 ## Caso 3 — ONE_SHOT LIMIT, fill completo
 
-Segnale: Entry_1: 65,000 Limit
+Segnale: Entry_1 65,000 Limit — qty 0.010, rischio 260 USDT
 
 ```
 📊 #145 — ENTRY OPENED
 ────────────────
 BTC/USDT — 📈 LONG
-
+────────────────
 Filled:
 Entry_1: 65,000 Limit
 Qty: 0.010
 Value: 650.00 USDT
 Fee: 1.30 USDT
-
+────────────────
 Position:
 Avg entry: 65,000
 Filled: 100%
 Pending: none
-
 ────────────────
 Source: exchange
 ```
 
 ---
 
-## Caso 4 — ONE_SHOT LIMIT, fill parziale
+## Caso 4 — ONE_SHOT LIMIT, fill parziale (40%) + ENTRY UPDATED sul residuo
 
-Segnale: Entry_1: 65,000 Limit — pianificato 0.010, rischio 260 USDT
+Segnale: Entry_1 65,000 Limit — qty 0.010, rischio 260 USDT
 Exchange ha eseguito 0.004 (40%). Il residuo 0.006 rimane pending sullo stesso ordine.
+
+**→ ENTRY OPENED:**
 
 ```
 📊 #145 — ENTRY OPENED
-────────────────
+────────────────────────────────
 BTC/USDT — 📈 LONG
-
+────────────────────────────────
 Filled:
 Entry_1: 65,000 Limit
 Qty: 0.004 (planned: 0.010)
 Value: 260.00 USDT
 Fee: 0.52 USDT
 Partial: 40%
-
+────────────────────────────────
 Position:
 Avg entry: 65,000
 Filled: 40%
 Risk: 104 USDT (planned: 260 USDT)
-Pending: Entry_1 65,000 Limit (rem. 0.006)
-
+Pending: Entry_1 65,000 Limit
+────────────────────────────────
 Changed:
 SL qty: 0.010 → 0.004 (adj. to fill)
+────────────────────────────────
+Source: exchange
+```
 
+Quando il residuo 0.006 filla completamente → ENTRY UPDATED:
+
+**→ ENTRY UPDATED (residuo filla):**
+
+```
+✏️ #145 — ENTRY UPDATED
+────────────────
+BTC/USDT — 📈 LONG
+────────────────
+Filled:
+Entry_1: 65,000 Limit
+Qty: 0.006
+Value: 390.00 USDT
+Fee: 0.78 USDT
+────────────────
+Position:
+Avg entry: 65,000
+Filled: 100%
+Pending: none
 ────────────────
 Source: exchange
 ```
 
-Quando il residuo filla → ENTRY UPDATED (fill completo o ulteriore parziale).
+> `is_partial_leg = False` → niente Partial/Risk/Changed. Avg invariato (stesso prezzo).
 
 ---
 
-## Caso 5 — TWO_STEP (MARKET + LIMIT), fill normale
+## Caso 5 — TWO_STEP (MARKET + LIMIT), fill normali
 
-Segnale: Entry_1: Market ~65,000 / Entry_2: 64,000 Limit
-Pesi: 70% Entry_1, 30% Entry_2. Rischio totale pianificato: 260 USDT.
+Segnale: Entry_1 Market ~65,000 (70%) / Entry_2 64,000 Limit (30%)
+qty totale 0.010, rischio 260 USDT.
 
-Primo fill → ENTRY OPENED:
+**→ ENTRY OPENED (Entry_1, 70% della posizione):**
 
 ```
 📊 #145 — ENTRY OPENED
-────────────────
+────────────────────────────
 BTC/USDT — 📈 LONG
-
+────────────────────────────
 Filled:
 Entry_1: 65,020 Market
 Qty: 0.007
 Value: 455.14 USDT
 Fee: 0.91 USDT
-
+────────────────────────────
 Position:
 Avg entry: 65,020
 Filled: 70%
 Pending: Entry_2 64,000 Limit
-
-────────────────
+────────────────────────────
 Source: exchange
 ```
 
-Secondo fill → ENTRY UPDATED:
+**→ ENTRY UPDATED (Entry_2, posizione completa):**
+
+avg = (65,020 × 0.007 + 64,000 × 0.003) / 0.010 = (455.14 + 192.00) / 0.010 = **64,714**
 
 ```
-📊 #145 — ENTRY UPDATED
+✏️ #145 — ENTRY UPDATED
 ────────────────
 BTC/USDT — 📈 LONG
-
+────────────────
 Filled:
 Entry_2: 64,000 Limit
 Qty: 0.003
 Value: 192.00 USDT
 Fee: 0.38 USDT
-
+────────────────
 Position:
-Avg entry: 64,660
+Avg entry: 64,714
 Filled: 100%
 Pending: none
-
 ────────────────
 Source: exchange
 ```
 
 ---
 
-## Caso 6 — LADDER (3 leg), fill normali
+## Caso 6 — TWO_STEP, fill parziale su Entry_2
 
-Segnale: Entry_1: 65,000 (50%) / Entry_2: 64,000 (30%) / Entry_3: 63,000 (20%)
-Rischio totale pianificato: 260 USDT.
+Segnale: Entry_1 Market ~65,000 (70%) / Entry_2 64,000 Limit (30%)
+qty totale 0.010, rischio 260 USDT.
+Entry_1 eseguita normalmente (→ Caso 5, ENTRY OPENED identico).
+Entry_2 filla solo 0.002 dei 0.003 pianificati. Il residuo 0.001 rimane pending.
 
-Primo fill → ENTRY OPENED:
+**→ ENTRY UPDATED (Entry_2 parziale):**
+
+avg = (65,020 × 0.007 + 64,000 × 0.002) / 0.009 = (455.14 + 128.00) / 0.009 = **64,793**
+position_filled_pct = 0.009 / 0.010 = 90%
+actual_risk = 260 × 0.009 / 0.010 = **234 USDT**
+
+```
+✏️ #145 — ENTRY UPDATED
+────────────────────────────────────
+BTC/USDT — 📈 LONG
+────────────────────────────────────
+Filled:
+Entry_2: 64,000 Limit
+Qty: 0.002 (planned: 0.003)
+Value: 128.00 USDT
+Fee: 0.26 USDT
+Partial: 66.7%
+────────────────────────────────────
+Position:
+Avg entry: 64,793
+Filled: 90%
+Risk: 234 USDT (planned: 260 USDT)
+Pending: Entry_2 64,000 Limit
+────────────────────────────────────
+Changed:
+SL qty: 0.003 → 0.002 (adj. to fill)
+────────────────────────────────────
+Source: exchange
+```
+
+> `planned_qty` nella sezione Changed è la qty del singolo leg (0.003), non il totale posizione.
+
+**→ ENTRY UPDATED (residuo 0.001 filla):**
+
+avg = (455.14 + 128.00 + 64.00) / 0.010 = 647.14 / 0.010 = **64,714**
+
+```
+✏️ #145 — ENTRY UPDATED
+────────────────
+BTC/USDT — 📈 LONG
+────────────────
+Filled:
+Entry_2: 64,000 Limit
+Qty: 0.001
+Value: 64.00 USDT
+Fee: 0.13 USDT
+────────────────
+Position:
+Avg entry: 64,714
+Filled: 100%
+Pending: none
+────────────────
+Source: exchange
+```
+
+---
+
+## Caso 7 — LADDER (3 leg), fill normali
+
+Segnale: Entry_1 65,000 Limit (50%) / Entry_2 64,000 Limit (30%) / Entry_3 63,000 Limit (20%)
+qty totale 0.010, rischio 260 USDT.
+
+**→ ENTRY OPENED (Entry_1, 50%):**
 
 ```
 📊 #145 — ENTRY OPENED
-────────────────
+────────────────────────────────────
 BTC/USDT — 📈 LONG
-
+────────────────────────────────────
 Filled:
 Entry_1: 65,000 Limit
 Qty: 0.005
 Value: 325.00 USDT
 Fee: 0.65 USDT
-
+────────────────────────────────────
 Position:
 Avg entry: 65,000
 Filled: 50%
 Pending: Entry_2 64,000 Limit
-         Entry_3 63,000 Limit
-
-────────────────
+Pending: Entry_3 63,000 Limit
+────────────────────────────────────
 Source: exchange
 ```
 
-Secondo fill → ENTRY UPDATED:
+> Ogni entry pending è una riga `Pending:` separata — non indentate.
+
+**→ ENTRY UPDATED (Entry_2, 80% totale):**
+
+avg = (65,000 × 0.005 + 64,000 × 0.003) / 0.008 = (325.00 + 192.00) / 0.008 = **64,625**
 
 ```
-📊 #145 — ENTRY UPDATED
-────────────────
+✏️ #145 — ENTRY UPDATED
+────────────────────────────────────
 BTC/USDT — 📈 LONG
-
+────────────────────────────────────
 Filled:
 Entry_2: 64,000 Limit
 Qty: 0.003
 Value: 192.00 USDT
 Fee: 0.38 USDT
-
+────────────────────────────────────
 Position:
-Avg entry: 64,600
+Avg entry: 64,625
 Filled: 80%
 Pending: Entry_3 63,000 Limit
-
-────────────────
+────────────────────────────────────
 Source: exchange
 ```
 
-Terzo fill → ENTRY UPDATED:
+**→ ENTRY UPDATED (Entry_3, posizione completa):**
+
+avg = (325.00 + 192.00 + 126.00) / 0.010 = 643.00 / 0.010 = **64,300**
 
 ```
-📊 #145 — ENTRY UPDATED
+✏️ #145 — ENTRY UPDATED
 ────────────────
 BTC/USDT — 📈 LONG
-
+────────────────
 Filled:
 Entry_3: 63,000 Limit
 Qty: 0.002
 Value: 126.00 USDT
 Fee: 0.25 USDT
-
+────────────────
 Position:
-Avg entry: 64,260
+Avg entry: 64,300
 Filled: 100%
 Pending: none
-
 ────────────────
 Source: exchange
 ```
 
 ---
 
-## Domande aperte
+## Caso 8 — SHORT, ONE_SHOT LIMIT completo
 
-1. Filled xx% e Risk USDT — upstream li manda già, o vanno calcolati dal formatter?
-    non saprei da verificare in codice
-2. planned_qty / planned_risk — upstream li manda nel payload per i casi parziali?
-   non saprei da verificare in codice
-3. Pending multipli — una riga per entry (come sopra) ok?
-  si
-4. SL qty nella sezione Changed — upstream manda old_sl_qty e new_sl_qty?
-  non saprei da verificare in codice
-5.   usiamo " - - - -", come separatore
+Segnale: Entry_1 65,000 Limit SHORT — qty 0.010, rischio 260 USDT
+
+```
+📊 #146 — ENTRY OPENED
+────────────────
+BTC/USDT — 📉 SHORT
+────────────────
+Filled:
+Entry_1: 65,000 Limit
+Qty: 0.010
+Value: 650.00 USDT
+Fee: 1.30 USDT
+────────────────
+Position:
+Avg entry: 65,000
+Filled: 100%
+Pending: none
+────────────────
+Source: exchange
+```
+
+> Identico al Caso 3 tranne emoji lato: 📉 SHORT.
+
+---
+
+## Note implementative
+
+| Campo | Da dove viene | Nota |
+|-------|---------------|------|
+| `planned_qty` | `risk["legs"][seq]["qty"]` | Per il leg specifico, non totale |
+| `entry_type_for_leg` | `plan["legs"][seq]["entry_type"]` | "Market" / "Limit" capitalizzato |
+| `is_partial_leg` | `filled_qty < planned_qty` | False se planned_qty assente |
+| `_leg_fill_pct` | `filled_qty / planned_qty * 100` | Es. 70%, 40%, 66.7% |
+| `position_filled_pct` | `filled_entry_qty / total_planned_qty * 100` | Cumulativo dopo questo fill |
+| `actual_risk_usdt` | `initial_risk_amount × filled_entry_qty / total_planned_qty` | Proporzionale al fill |
+| `planned_risk_usdt` | `initial_risk_amount` | Dal risk snapshot |
+| avg_entry | Calcolato in event_processor, passato come `new_avg_entry` | Σ(p×q)/Σq |
