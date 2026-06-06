@@ -63,7 +63,9 @@ Tre controlli aggiuntivi eseguiti periodicamente:
 | Fee cumulate | `ops_trade_chains.cumulative_fees` | somma delle `exec_fee` di ogni fill |
 | Funding fee cumulate | `ops_trade_chains.cumulative_funding` | campo presente, **non ancora scritto** |
 | Stop loss corrente | `ops_trade_chains.current_stop_price` | aggiornato a ogni move stop confermato |
-| Margine allocato | `ops_trade_chains.allocated_margin` | da `risk_snapshot` al momento della creazione |
+| Margine allocato | `ops_trade_chains.allocated_margin` | da `risk_snapshot` al momento della creazione — campo legacy |
+| Margine di picco | `ops_trade_chains.peak_margin_used` | massimo margine reale impiegato — denominatore di `roi_net_pct` |
+| Rischio iniziale | `ops_trade_chains.initial_risk_amount` | rischio monetario iniziale — denominatore di `return_on_risk_pct` |
 
 ### Per ogni evento grezzo ricevuto dall'exchange
 
@@ -77,6 +79,20 @@ dopo l'inserimento — è audit puro.
 `ops_lifecycle_events` registra ogni decisione: entry aperta, TP colpito, SL colpito,
 stop spostato, averaging cancellata, chain chiusa. Ogni evento contiene `fill_price`,
 `filled_qty` e `exec_fee` nel suo payload JSON.
+
+### Metriche ROI nel messaggio `POSITION CLOSED`
+
+Il report finale `POSITION CLOSED` usa il massimo margine reale storicamente impiegato
+(`peak_margin_used`) come denominatore del ROI. Il rischio monetario iniziale
+(`initial_risk_amount`) resta disponibile come metrica distinta di `Return on Risk`.
+
+| Metrica | Formula | Denominatore |
+|---------|---------|--------------|
+| `roi_net_pct` | `total_pnl_net / peak_margin_used × 100` | massimo margine reale impiegato |
+| `return_on_risk_pct` | `total_pnl_net / initial_risk_amount × 100` | rischio monetario iniziale |
+
+Se il denominatore richiesto è assente o `NULL`, il campo resta `null` e il renderer mostra `n/a`.
+`allocated_margin` è un campo legacy conservato per compatibilità; non è più il denominatore del ROI.
 
 ---
 

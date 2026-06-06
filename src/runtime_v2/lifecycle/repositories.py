@@ -20,7 +20,8 @@ _CHAIN_COLS = (
     "planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty, "
     "last_position_sync_at, execution_mode, risk_already_realized, risk_remaining, "
     "plan_state_json, source_chat_id, telegram_message_id, cumulative_gross_pnl, "
-    "cumulative_fees, cumulative_funding, allocated_margin, created_at, updated_at"
+    "cumulative_fees, cumulative_funding, allocated_margin, initial_risk_amount, "
+    "peak_margin_used, created_at, updated_at"
 )
 
 
@@ -36,7 +37,8 @@ def _chain_from_row(row: tuple) -> TradeChain:
      planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty,
      last_position_sync_at, execution_mode, risk_already_realized, risk_remaining,
      plan_state_json, source_chat_id, telegram_message_id, cumulative_gross_pnl,
-     cumulative_fees, cumulative_funding, allocated_margin, created_at, updated_at) = row
+     cumulative_fees, cumulative_funding, allocated_margin, initial_risk_amount,
+     peak_margin_used, created_at, updated_at) = row
     return TradeChain(
         trade_chain_id=trade_chain_id,
         source_enrichment_id=source_enrichment_id,
@@ -69,6 +71,8 @@ def _chain_from_row(row: tuple) -> TradeChain:
         plan_state_json=plan_state_json or "{}",
         source_chat_id=source_chat_id,
         telegram_message_id=telegram_message_id,
+        initial_risk_amount=initial_risk_amount,
+        peak_margin_used=peak_margin_used,
         created_at=datetime.fromisoformat(created_at) if created_at else None,
         updated_at=datetime.fromisoformat(updated_at) if updated_at else None,
     )
@@ -81,14 +85,16 @@ class TradeChainRepository:
     def save(self, chain: TradeChain) -> TradeChain:
         now = _now()
 
-        # Extract allocated_margin from risk_snapshot_json
+        initial_risk_amount = chain.initial_risk_amount
         allocated_margin = None
         if chain.risk_snapshot_json:
             try:
                 risk_snapshot = json.loads(chain.risk_snapshot_json)
-                raw_margin = risk_snapshot.get("risk_amount")
-                if raw_margin is not None:
-                    allocated_margin = float(raw_margin)
+                raw_risk = risk_snapshot.get("risk_amount")
+                if raw_risk is not None and initial_risk_amount is None:
+                    initial_risk_amount = float(raw_risk)
+                if raw_risk is not None:
+                    allocated_margin = float(raw_risk)
             except (TypeError, ValueError, Exception):
                 allocated_margin = None
 
@@ -105,9 +111,10 @@ class TradeChainRepository:
                     open_position_qty, closed_position_qty, last_position_sync_at,
                     execution_mode, risk_already_realized, risk_remaining,
                     plan_state_json, source_chat_id, telegram_message_id, allocated_margin,
-                    cumulative_gross_pnl, cumulative_fees, cumulative_funding,
+                    initial_risk_amount, peak_margin_used, cumulative_gross_pnl,
+                    cumulative_fees, cumulative_funding,
                     created_at, updated_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     chain.source_enrichment_id, chain.canonical_message_id, chain.raw_message_id,
@@ -122,7 +129,8 @@ class TradeChainRepository:
                     chain.last_position_sync_at.isoformat() if chain.last_position_sync_at else None,
                     chain.execution_mode, chain.risk_already_realized, chain.risk_remaining,
                     chain.plan_state_json, chain.source_chat_id, chain.telegram_message_id,
-                    allocated_margin, 0.0, 0.0, 0.0,
+                    allocated_margin, initial_risk_amount, chain.peak_margin_used,
+                    0.0, 0.0, 0.0,
                     now, now,
                 ),
             )
@@ -189,6 +197,8 @@ class TradeChainRepository:
         entry_avg_price: float | None = None,
         current_stop_price: float | None = None,
         be_protection_status: str | None = None,
+        initial_risk_amount: float | None = None,
+        peak_margin_used: float | None = None,
     ) -> None:
         now = _now()
         fields = ["lifecycle_state=?", "updated_at=?"]
@@ -202,6 +212,12 @@ class TradeChainRepository:
         if be_protection_status is not None:
             fields.append("be_protection_status=?")
             values.append(be_protection_status)
+        if initial_risk_amount is not None:
+            fields.append("initial_risk_amount=?")
+            values.append(initial_risk_amount)
+        if peak_margin_used is not None:
+            fields.append("peak_margin_used=?")
+            values.append(peak_margin_used)
         values.append(trade_chain_id)
         conn = sqlite3.connect(self._db_path)
         try:

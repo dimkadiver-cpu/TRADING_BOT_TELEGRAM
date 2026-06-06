@@ -64,7 +64,8 @@ def _final_result(
     gross_pnl: float | None,
     fees: float | None,
     funding: float | None,
-    allocated_margin: float | None,
+    peak_margin_used: float | None,
+    initial_risk_amount: float | None,
     close_reason: str,
 ) -> dict:
     gross = float(gross_pnl) if gross_pnl is not None else None
@@ -74,10 +75,14 @@ def _final_result(
     if gross is not None and fee_total is not None and funding_total is not None:
         net = gross - fee_total - funding_total
     roi = None
-    if net is not None and allocated_margin and float(allocated_margin) > 0.0:
-        roi = round(net / float(allocated_margin) * 100.0, 4)
+    if net is not None and peak_margin_used is not None and float(peak_margin_used) > 0.0:
+        roi = round(net / float(peak_margin_used) * 100.0, 4)
+    return_on_risk = None
+    if net is not None and initial_risk_amount is not None and float(initial_risk_amount) > 0.0:
+        return_on_risk = round(net / float(initial_risk_amount) * 100.0, 4)
     return {
         "roi_net_pct": roi,
+        "return_on_risk_pct": return_on_risk,
         "total_pnl_net": round(net, 8) if net is not None else None,
         "gross_pnl": round(gross, 8) if gross is not None else None,
         "fees": round(-fee_total, 8) if fee_total is not None else None,
@@ -186,6 +191,8 @@ def _build_payload(
     cumulative_fees: float | None = None,
     cumulative_funding: float | None = None,
     allocated_margin: float | None = None,
+    initial_risk_amount: float | None = None,
+    peak_margin_used: float | None = None,
     filled_entry_qty: float | None = None,
     open_position_qty: float | None = None,
     be_protection_status: str | None = None,
@@ -264,7 +271,8 @@ def _build_payload(
                 gross_pnl=cumulative_gross_pnl,
                 fees=cumulative_fees,
                 funding=cumulative_funding,
-                allocated_margin=allocated_margin,
+                peak_margin_used=peak_margin_used,
+                initial_risk_amount=initial_risk_amount,
                 close_reason="TAKE_PROFIT",
             )
         payload: dict = {
@@ -310,7 +318,8 @@ def _build_payload(
                 gross_pnl=cumulative_gross_pnl,
                 fees=cumulative_fees,
                 funding=cumulative_funding,
-                allocated_margin=allocated_margin,
+                peak_margin_used=peak_margin_used,
+                initial_risk_amount=initial_risk_amount,
                 close_reason=close_reason,
             ),
             "source": ev.get("source", "exchange"),
@@ -335,7 +344,8 @@ def _build_payload(
                 gross_pnl=cumulative_gross_pnl,
                 fees=cumulative_fees,
                 funding=cumulative_funding,
-                allocated_margin=allocated_margin,
+                peak_margin_used=peak_margin_used,
+                initial_risk_amount=initial_risk_amount,
                 close_reason=ev.get("close_reason", "MANUAL_CLOSE"),
             ),
             "source": ev.get("source", "exchange"),
@@ -536,7 +546,8 @@ def _build_payload(
                 gross_pnl=cumulative_gross_pnl,
                 fees=cumulative_fees,
                 funding=cumulative_funding,
-                allocated_margin=allocated_margin,
+                peak_margin_used=peak_margin_used,
+                initial_risk_amount=initial_risk_amount,
                 close_reason="BREAKEVEN_AFTER_TP",
             ),
             "source": ev.get("source", "exchange"),
@@ -587,6 +598,7 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         "entry_avg_price, current_stop_price, "
         "source_chat_id, telegram_message_id, "
         "cumulative_gross_pnl, cumulative_fees, cumulative_funding, allocated_margin, "
+        "initial_risk_amount, peak_margin_used, "
         "filled_entry_qty, open_position_qty, be_protection_status "
         "FROM ops_trade_chains WHERE trade_chain_id=?",
         (chain_id,),
@@ -609,9 +621,11 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
     cumulative_fees = chain_row[12]
     cumulative_funding = chain_row[13]
     allocated_margin = chain_row[14]
-    filled_entry_qty = chain_row[15]
-    open_position_qty = chain_row[16]
-    be_protection_status = chain_row[17]
+    initial_risk_amount = chain_row[15]
+    peak_margin_used = chain_row[16]
+    filled_entry_qty = chain_row[17]
+    open_position_qty = chain_row[18]
+    be_protection_status = chain_row[19]
     chain_source_link: str | None = (
         f"https://t.me/c/{str(source_chat_id).removeprefix('-100')}/{telegram_message_id}"
         if source_chat_id and telegram_message_id else None
@@ -679,6 +693,8 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
             cumulative_fees=cumulative_fees,
             cumulative_funding=cumulative_funding,
             allocated_margin=allocated_margin,
+            initial_risk_amount=initial_risk_amount,
+            peak_margin_used=peak_margin_used,
             filled_entry_qty=filled_entry_qty,
             open_position_qty=open_position_qty,
             be_protection_status=be_protection_status,

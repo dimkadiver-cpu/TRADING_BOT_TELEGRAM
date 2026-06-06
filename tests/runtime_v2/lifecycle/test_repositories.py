@@ -55,6 +55,23 @@ def test_chain_repo_save_and_get(ops_db):
     assert fetched.execution_mode == "C_MULTI_TP"
 
 
+def test_chain_repo_save_and_get_preserves_explicit_roi_fields(ops_db):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+    repo = TradeChainRepository(ops_db)
+    chain = TradeChain(
+        source_enrichment_id=3, canonical_message_id=30, raw_message_id=300,
+        trader_id="trader_a", account_id="acc_1", symbol="SOL/USDT", side="LONG",
+        lifecycle_state="WAITING_ENTRY", entry_mode="ONE_SHOT", management_plan_json="{}",
+        initial_risk_amount=125.5, peak_margin_used=242.25,
+    )
+    saved = repo.save(chain)
+    fetched = repo.get_by_id(saved.trade_chain_id)
+    assert fetched is not None
+    assert fetched.initial_risk_amount == 125.5
+    assert fetched.peak_margin_used == 242.25
+
+
 def test_chain_repo_save_idempotent(ops_db):
     from src.runtime_v2.lifecycle.models import TradeChain
     from src.runtime_v2.lifecycle.repositories import TradeChainRepository
@@ -94,13 +111,21 @@ def test_chain_repo_update_state(ops_db):
         trader_id="trader_a", account_id="acc_1", symbol="BTC/USDT", side="LONG",
         lifecycle_state="WAITING_ENTRY", entry_mode="ONE_SHOT", management_plan_json="{}",
     ))
-    repo.update_state(chain.trade_chain_id, "OPEN", entry_avg_price=49500.0)
+    repo.update_state(
+        chain.trade_chain_id,
+        "OPEN",
+        entry_avg_price=49500.0,
+        initial_risk_amount=100.0,
+        peak_margin_used=150.0,
+    )
     updated = repo.get_by_id(chain.trade_chain_id)
     assert updated.lifecycle_state == "OPEN"
     assert updated.entry_avg_price == 49500.0
+    assert updated.initial_risk_amount == 100.0
+    assert updated.peak_margin_used == 150.0
 
 
-def test_chain_repo_save_populates_allocated_margin_from_risk_amount(ops_db):
+def test_chain_repo_save_populates_initial_risk_amount_from_risk_amount(ops_db):
     import json
     from src.runtime_v2.lifecycle.models import TradeChain
     from src.runtime_v2.lifecycle.repositories import TradeChainRepository
@@ -120,12 +145,12 @@ def test_chain_repo_save_populates_allocated_margin_from_risk_amount(ops_db):
     )
     saved = repo.save(chain)
     conn = sqlite3.connect(ops_db)
-    margin = conn.execute(
-        "SELECT allocated_margin FROM ops_trade_chains WHERE trade_chain_id=?",
+    row = conn.execute(
+        "SELECT allocated_margin, initial_risk_amount FROM ops_trade_chains WHERE trade_chain_id=?",
         (saved.trade_chain_id,),
-    ).fetchone()[0]
+    ).fetchone()
     conn.close()
-    assert margin == 100.0
+    assert row == (100.0, 100.0)
 
 
 # --- LifecycleEventRepository ---

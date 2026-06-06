@@ -236,6 +236,148 @@ def test_position_closed_final_result_subtracts_positive_funding_cost(ops_db):
     assert payload["final_result"]["total_pnl_net"] == pytest.approx(2.46797574)
 
 
+def test_position_closed_final_result_uses_peak_margin_and_return_on_risk(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 712)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET cumulative_gross_pnl=?, cumulative_fees=?, cumulative_funding=?, "
+            "peak_margin_used=?, initial_risk_amount=? "
+            "WHERE trade_chain_id=?",
+            (46.73088, 6.33921077, 0.0, 571.62, 200.0, 712),
+        )
+        _seed_event(conn, 712, "CLOSE_FULL_FILLED", "close_full:712:1", {
+            "fill_price": 0.2539,
+            "filled_qty": 6042.0,
+            "exec_fee": 0.84373509,
+            "closed_size": 6042.0,
+        })
+        project_clean_log_for_chain(conn, 712)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    payload = json.loads(row[0])
+    final_result = payload["final_result"]
+    assert final_result["total_pnl_net"] == pytest.approx(40.39166923)
+    assert final_result["roi_net_pct"] == pytest.approx(7.0667, rel=1e-3)
+    assert final_result["return_on_risk_pct"] == pytest.approx(20.1958, rel=1e-3)
+
+
+def test_position_closed_final_result_keeps_roi_none_when_peak_margin_missing(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 713)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET cumulative_gross_pnl=?, cumulative_fees=?, cumulative_funding=?, "
+            "peak_margin_used=?, initial_risk_amount=? "
+            "WHERE trade_chain_id=?",
+            (10.0, 1.0, 0.0, None, 50.0, 713),
+        )
+        _seed_event(conn, 713, "CLOSE_FULL_FILLED", "close_full:713:1", {"filled_qty": 1.0})
+        project_clean_log_for_chain(conn, 713)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    final_result = json.loads(row[0])["final_result"]
+    assert final_result["roi_net_pct"] is None
+    assert final_result["return_on_risk_pct"] == pytest.approx(18.0)
+
+
+def test_tp_filled_final_result_uses_peak_margin_and_return_on_risk(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 714)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET cumulative_gross_pnl=?, cumulative_fees=?, cumulative_funding=?, "
+            "peak_margin_used=?, initial_risk_amount=? "
+            "WHERE trade_chain_id=?",
+            (46.73088, 6.33921077, 0.0, 571.62, 200.0, 714),
+        )
+        _seed_event(conn, 714, "TP_FILLED", "tp_final:714:1", {
+            "tp_level": 1,
+            "is_final": True,
+            "fill_price": 0.2539,
+            "filled_qty": 6042.0,
+            "exec_fee": 0.84373509,
+            "closed_size": 6042.0,
+        })
+        project_clean_log_for_chain(conn, 714)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "TP_FILLED_FINAL"
+    final_result = json.loads(row[1])["final_result"]
+    assert final_result["close_reason"] == "TAKE_PROFIT"
+    assert final_result["total_pnl_net"] == pytest.approx(40.39166923)
+    assert final_result["roi_net_pct"] == pytest.approx(7.0667, rel=1e-3)
+    assert final_result["return_on_risk_pct"] == pytest.approx(20.1958, rel=1e-3)
+
+
+def test_sl_filled_final_result_uses_peak_margin_and_return_on_risk(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 715)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET be_protection_status='NOT_PROTECTED', cumulative_gross_pnl=?, "
+            "cumulative_fees=?, cumulative_funding=?, peak_margin_used=?, "
+            "initial_risk_amount=? WHERE trade_chain_id=?",
+            (46.73088, 6.33921077, 0.0, 571.62, 200.0, 715),
+        )
+        _seed_event(conn, 715, "SL_FILLED", "sl_filled:715:1", {
+            "fill_price": 0.2539,
+            "filled_qty": 6042.0,
+            "exec_fee": 0.84373509,
+            "closed_size": 6042.0,
+        })
+        project_clean_log_for_chain(conn, 715)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "SL_FILLED"
+    final_result = json.loads(row[1])["final_result"]
+    assert final_result["close_reason"] == "STOP_LOSS"
+    assert final_result["total_pnl_net"] == pytest.approx(40.39166923)
+    assert final_result["roi_net_pct"] == pytest.approx(7.0667, rel=1e-3)
+    assert final_result["return_on_risk_pct"] == pytest.approx(20.1958, rel=1e-3)
+
+
+def test_be_exit_final_result_uses_peak_margin_and_return_on_risk(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 716)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET be_protection_status='PROTECTED', cumulative_gross_pnl=?, "
+            "cumulative_fees=?, cumulative_funding=?, peak_margin_used=?, "
+            "initial_risk_amount=? WHERE trade_chain_id=?",
+            (46.73088, 6.33921077, 0.0, 571.62, 200.0, 716),
+        )
+        _seed_event(conn, 716, "CLOSE_FULL_FILLED", "close_full:716:1", {
+            "fill_price": 0.2539,
+            "filled_qty": 6042.0,
+            "exec_fee": 0.84373509,
+            "closed_size": 6042.0,
+        })
+        project_clean_log_for_chain(conn, 716)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "BE_EXIT"
+    final_result = json.loads(row[1])["final_result"]
+    assert final_result["close_reason"] == "BREAKEVEN_AFTER_TP"
+    assert final_result["total_pnl_net"] == pytest.approx(40.39166923)
+    assert final_result["roi_net_pct"] == pytest.approx(7.0667, rel=1e-3)
+    assert final_result["return_on_risk_pct"] == pytest.approx(20.1958, rel=1e-3)
+
+
 def test_position_closed_final_result_preserves_missing_metrics_as_none(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:

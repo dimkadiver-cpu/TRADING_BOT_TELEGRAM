@@ -45,6 +45,54 @@ _ENTRY_FEE_EVENT_TYPES = {
 }
 
 
+def _safe_float(value) -> float | None:
+    try:
+        if value is None:
+            return None
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _compute_peak_margin_update(
+    *,
+    chain_row: tuple,
+    result: EventProcessorResult,
+) -> float | None:
+    current_entry_avg, current_open_qty, risk_snapshot_json, existing_peak = chain_row
+    effective_entry_avg = (
+        result.entry_avg_price if result.entry_avg_price is not None else _safe_float(current_entry_avg)
+    )
+    effective_open_qty = (
+        result.new_open_position_qty if result.new_open_position_qty is not None else _safe_float(current_open_qty)
+    )
+    effective_risk_snapshot_json = (
+        result.new_risk_snapshot_json
+        if result.new_risk_snapshot_json is not None
+        else risk_snapshot_json
+    )
+    try:
+        risk_snapshot = json.loads(effective_risk_snapshot_json or "{}")
+    except Exception:
+        risk_snapshot = {}
+    leverage = _safe_float(risk_snapshot.get("leverage"))
+
+    existing_peak_value = _safe_float(existing_peak)
+    if (
+        effective_entry_avg is None
+        or effective_open_qty is None
+        or leverage is None
+        or leverage <= 0.0
+    ):
+        return existing_peak_value
+    if effective_open_qty <= 0.0:
+        return existing_peak_value
+
+    current_margin_used = effective_open_qty * effective_entry_avg / leverage
+    base_peak = existing_peak_value or 0.0
+    return max(base_peak, current_margin_used)
+
+
 def _accumulate_pnl_for_events(
     conn: sqlite3.Connection,
     *,
@@ -313,6 +361,16 @@ class LifecycleEventWorker:
         conn = sqlite3.connect(self._ops_db)
         try:
             with conn:
+                chain_row = conn.execute(
+                    "SELECT entry_avg_price, open_position_qty, risk_snapshot_json, peak_margin_used "
+                    "FROM ops_trade_chains WHERE trade_chain_id=?",
+                    (chain_id,),
+                ).fetchone()
+                new_peak_margin_used = (
+                    _compute_peak_margin_update(chain_row=chain_row, result=result)
+                    if chain_row is not None
+                    else None
+                )
                 has_chain_update = (
                     result.new_lifecycle_state is not None
                     or result.new_be_protection_status is not None
@@ -362,6 +420,9 @@ class LifecycleEventWorker:
                     if result.new_risk_snapshot_json is not None:
                         fields.append("risk_snapshot_json=?")
                         vals.append(result.new_risk_snapshot_json)
+                    if new_peak_margin_used is not None:
+                        fields.append("peak_margin_used=?")
+                        vals.append(new_peak_margin_used)
                     vals.append(chain_id)
                     conn.execute(
                         f"UPDATE ops_trade_chains SET {', '.join(fields)} WHERE trade_chain_id=?",

@@ -146,7 +146,9 @@ Aggiornato da `workers._persist_result()` dopo ogni `LifecycleEventProcessor.pro
 | `cumulative_gross_pnl` | fill events (vedi §4) | PnL lordo cumulato |
 | `cumulative_fees` | fill events (vedi §4) | fee cumulate |
 | `cumulative_funding` | **mai scritto** (vedi Gap §6) | — |
-| `allocated_margin` | creazione chain | `risk_snapshot.risk_amount` |
+| `allocated_margin` | creazione chain | `risk_snapshot.risk_amount` — campo legacy, non più denominatore ROI |
+| `peak_margin_used` | aggiornato a ogni fill di entry | massimo margine reale impiegato nel tempo; denominatore di `roi_net_pct` |
+| `initial_risk_amount` | creazione chain | rischio monetario iniziale; denominatore di `return_on_risk_pct` |
 | `plan_state_json` | `ENTRY_FILLED`, `PENDING_ENTRY_CANCELLED_CONFIRMED` | aggiorna status delle leg (PENDING→FILLED/CANCELLED) |
 
 ### `ops_lifecycle_events` — audit decisioni
@@ -184,6 +186,19 @@ lifecycle e prima della scrittura dei comandi.
 `entry_avg_price` usato nel calcolo è quello appena aggiornato (stesso tick se è un fill
 ENTRY_FILLED + TP_FILLED nella stessa transazione — ma in pratica non accade: ENTRY_FILLED
 e TP_FILLED sono eventi separati).
+
+### Metriche ROI nel report finale
+
+```
+total_pnl_net       = cumulative_gross_pnl - cumulative_fees + cumulative_funding
+roi_net_pct         = total_pnl_net / peak_margin_used * 100
+return_on_risk_pct  = total_pnl_net / initial_risk_amount * 100
+```
+
+- `roi_net_pct` usa il massimo margine reale storicamente impiegato (`peak_margin_used`).
+- `return_on_risk_pct` usa il rischio monetario iniziale (`initial_risk_amount`).
+- `allocated_margin` resta campo legacy compatibile, non più fonte di verità per il report finale.
+- Se il denominatore richiesto è `NULL`, il campo risultante è `null` e il renderer mostra `n/a`.
 
 ---
 

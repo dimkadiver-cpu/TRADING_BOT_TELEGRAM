@@ -1316,7 +1316,8 @@ Non inviare `CHAIN_COMPLETED` separato.
 Campi obbligatori:
 
 ```text
-ROI net (solo se allocated_margin disponibile)
+roi_net_pct
+return_on_risk_pct
 Total PnL net
 Gross PnL
 Fees
@@ -1327,9 +1328,15 @@ Close reason: TAKE_PROFIT | STOP_LOSS | BREAKEVEN_AFTER_TP | MANUAL_CLOSE | TIME
 Formula:
 
 ```text
-Total PnL net = Gross PnL - Fees + Funding
-ROI net = Total PnL net / allocated_margin
+Total PnL net      = Gross PnL - Fees + Funding
+roi_net_pct        = Total PnL net / peak_margin_used * 100
+return_on_risk_pct = Total PnL net / initial_risk_amount * 100
 ```
+
+- `roi_net_pct`: percentuale netta su `peak_margin_used`
+- `return_on_risk_pct`: percentuale netta su `initial_risk_amount`
+- se il denominatore richiesto manca o non è difendibile, il campo resta `null` e il renderer mostra `n/a`
+- `allocated_margin` resta campo legacy compatibile, non più fonte di verità per il report finale
 
 ---
 

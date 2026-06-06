@@ -2190,6 +2190,14 @@ class LifecycleGateWorker:
                 chain_id = None
                 if result.trade_chain is not None:
                     c = result.trade_chain
+                    initial_risk_amount = None
+                    try:
+                        risk_snapshot = json.loads(c.risk_snapshot_json or "{}")
+                        raw_risk = risk_snapshot.get("risk_amount")
+                        if raw_risk is not None:
+                            initial_risk_amount = float(raw_risk)
+                    except Exception:
+                        initial_risk_amount = None
                     cursor = conn.execute(
                         """
                         INSERT OR IGNORE INTO ops_trade_chains (
@@ -2201,8 +2209,9 @@ class LifecycleGateWorker:
                             open_position_qty, closed_position_qty, last_position_sync_at,
                             execution_mode, risk_already_realized, risk_remaining,
                             plan_state_json, source_chat_id, telegram_message_id,
+                            initial_risk_amount, peak_margin_used,
                             created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                         """,
                         (
                             c.source_enrichment_id, c.canonical_message_id, c.raw_message_id,
@@ -2217,6 +2226,7 @@ class LifecycleGateWorker:
                             c.last_position_sync_at.isoformat() if c.last_position_sync_at else None,
                             c.execution_mode, c.risk_already_realized, c.risk_remaining,
                             c.plan_state_json, src_chat_id, tg_msg_id,
+                            initial_risk_amount, None,
                             now, now,
                         ),
                     )

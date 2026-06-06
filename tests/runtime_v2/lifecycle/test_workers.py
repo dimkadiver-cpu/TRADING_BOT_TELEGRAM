@@ -179,6 +179,28 @@ def test_worker_processes_signal_creates_chain(dbs):
     assert any(c[0] == "PLACE_ENTRY_WITH_ATTACHED_TPSL" for c in commands)
 
 
+def test_worker_processes_signal_persists_initial_risk_amount(dbs):
+    parser_db, ops_db = dbs
+    enriched = _make_enriched_signal(
+        enrichment_id=11,
+        risk_pct=1.0,
+        capital_base_usdt=10000.0,
+    )
+    _insert_enriched(parser_db, 11, enriched)
+
+    worker = _make_worker(parser_db, ops_db)
+    count = worker.run_once()
+    assert count == 1
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT initial_risk_amount, peak_margin_used FROM ops_trade_chains"
+    ).fetchone()
+    conn.close()
+    assert row[0] == pytest.approx(100.0)
+    assert row[1] is None
+
+
 def test_worker_marks_lifecycle_processed(dbs):
     parser_db, ops_db = dbs
     enriched = _make_enriched_signal(enrichment_id=2)
@@ -1416,6 +1438,342 @@ def test_worker_accumulates_long_tp_pnl_and_fee(tmp_path):
     # LONG: (68000 - 65000) * 0.002 = 6.0
     assert row[0] == pytest.approx(6.0)
     assert row[1] == pytest.approx(1.10)
+
+
+def test_worker_entry_fill_sets_peak_margin_used(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    now_str = "2026-06-06T00:00:00+00:00"
+    chain_id = 301
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "risk_snapshot_json, created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','WAITING_ENTRY','ONE_SHOT',?,?,?)",
+        (chain_id, _json.dumps({"leverage": 5, "risk_amount": 100.0}), now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="OPEN",
+        new_be_protection_status=None,
+        entry_avg_price=65000.0,
+        current_stop_price=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="ENTRY_FILLED",
+            source_type="exchange_event",
+            payload_json=_json.dumps({"fill_price": 65000.0, "filled_qty": 0.01}),
+            idempotency_key=f"entry:{chain_id}:1",
+        )],
+        execution_commands=[],
+        new_filled_entry_qty=0.01,
+        new_open_position_qty=0.01,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    peak = conn2.execute(
+        "SELECT peak_margin_used FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()[0]
+    conn2.close()
+    assert peak == pytest.approx(130.0)
+
+
+def test_worker_partial_close_does_not_reduce_peak_margin_used(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    now_str = "2026-06-06T00:00:00+00:00"
+    chain_id = 302
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, peak_margin_used, risk_snapshot_json, created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','OPEN','ONE_SHOT',65000.0,0.02,260.0,?,?,?)",
+        (chain_id, _json.dumps({"leverage": 5, "risk_amount": 100.0}), now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="PARTIALLY_CLOSED",
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="CLOSE_PARTIAL_FILLED",
+            source_type="exchange_event",
+            payload_json=_json.dumps({"fill_price": 65000.0, "filled_qty": 0.01, "closed_size": 0.01}),
+            idempotency_key=f"partial_close:{chain_id}:1",
+        )],
+        execution_commands=[],
+        new_open_position_qty=0.01,
+        new_closed_position_qty=0.01,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    peak = conn2.execute(
+        "SELECT peak_margin_used FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()[0]
+    conn2.close()
+    assert peak == pytest.approx(260.0)
+
+
+def test_worker_scale_in_raises_peak_margin_used(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    now_str = "2026-06-06T00:00:00+00:00"
+    chain_id = 303
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, peak_margin_used, risk_snapshot_json, created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','OPEN','ONE_SHOT',65000.0,0.01,130.0,?,?,?)",
+        (chain_id, _json.dumps({"leverage": 5, "risk_amount": 100.0}), now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="OPEN",
+        new_be_protection_status=None,
+        entry_avg_price=65500.0,
+        current_stop_price=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="ENTRY_UPDATED",
+            source_type="exchange_event",
+            payload_json=_json.dumps({"fill_price": 65500.0, "filled_qty": 0.02}),
+            idempotency_key=f"scale_in:{chain_id}:1",
+        )],
+        execution_commands=[],
+        new_filled_entry_qty=0.03,
+        new_open_position_qty=0.03,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    peak = conn2.execute(
+        "SELECT peak_margin_used FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()[0]
+    conn2.close()
+    assert peak == pytest.approx(393.0)
+
+
+def test_worker_close_full_keeps_historical_peak_margin_used(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import ExecutionCommand, LifecycleEvent
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    now_str = "2026-06-06T00:00:00+00:00"
+    chain_id = 304
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "entry_avg_price, open_position_qty, peak_margin_used, risk_snapshot_json, created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','OPEN','ONE_SHOT',65000.0,0.02,260.0,?,?,?)",
+        (chain_id, _json.dumps({"leverage": 5, "risk_amount": 100.0}), now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="CLOSED",
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="CLOSE_FULL_FILLED",
+            source_type="exchange_event",
+            payload_json=_json.dumps({"fill_price": 65000.0, "filled_qty": 0.02, "closed_size": 0.02}),
+            idempotency_key=f"close_full:{chain_id}:1",
+        )],
+        execution_commands=[ExecutionCommand(
+            trade_chain_id=chain_id,
+            command_type="CANCEL_PENDING_ENTRY",
+            payload_json=_json.dumps({"symbol": "BTC/USDT", "side": "LONG"}),
+            idempotency_key=f"cancel_on_close:{chain_id}",
+        )],
+        new_open_position_qty=0.0,
+        new_closed_position_qty=0.02,
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    peak = conn2.execute(
+        "SELECT peak_margin_used FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()[0]
+    conn2.close()
+    assert peak == pytest.approx(260.0)
+
+
+def test_worker_peak_margin_uses_post_event_leverage_from_result(tmp_path):
+    import json as _json
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from unittest.mock import MagicMock
+
+    from src.runtime_v2.lifecycle.event_processor import EventProcessorResult
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    now_str = "2026-06-06T00:00:00+00:00"
+    chain_id = 305
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "risk_snapshot_json, created_at, updated_at) "
+        "VALUES (?,1,1,1,'t','main','BTC/USDT','LONG','WAITING_ENTRY','ONE_SHOT',?,?,?)",
+        (chain_id, _json.dumps({"leverage": 10, "risk_amount": 100.0}), now_str, now_str),
+    )
+    conn.commit()
+    conn.close()
+
+    result = EventProcessorResult(
+        new_lifecycle_state="OPEN",
+        new_be_protection_status=None,
+        entry_avg_price=65000.0,
+        current_stop_price=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain_id,
+            event_type="ENTRY_FILLED",
+            source_type="exchange_event",
+            payload_json=_json.dumps({"fill_price": 65000.0, "filled_qty": 0.01}),
+            idempotency_key=f"entry:{chain_id}:1",
+        )],
+        execution_commands=[],
+        new_filled_entry_qty=0.01,
+        new_open_position_qty=0.01,
+        new_risk_snapshot_json=_json.dumps({"leverage": 5, "risk_amount": 100.0}),
+    )
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=MagicMock(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=MagicMock(),
+    )
+    worker._persist_result(chain_id, result)
+
+    conn2 = _sqlite3.connect(db)
+    peak = conn2.execute(
+        "SELECT peak_margin_used FROM ops_trade_chains WHERE trade_chain_id=?",
+        (chain_id,),
+    ).fetchone()[0]
+    conn2.close()
+    assert peak == pytest.approx(130.0)
 
 
 def test_worker_accumulates_short_sl_pnl_negative(tmp_path):
