@@ -23,6 +23,9 @@ Fee: {fee} USDT
 - - - - - - - - - - -
 Position:
 Avg entry: {avg_entry}
+Total qty: {total_filled_qty}
+Total value: {total_value} USDT
+Total fees: {total_fees} USDT
 Filled: {position_filled_pct}%
 Risk: {actual_risk} USDT (planned: {planned_risk} USDT)   ← sempre
 [Pending: Entry_N {price} Limit]             ← una riga per entry pending
@@ -38,6 +41,7 @@ Source: exchange
 - `Fee rate` prima di `Fee` — ordine nel template: Value → Fee rate → Fee
 - `Risk` appare **sempre** (opzione B) — condizione: `actual_risk_usdt is not None`
 - `actual_risk = filled_entry_qty × |avg_entry − sl_price|` — usa prezzi reali, sensibile a slippage
+- `Total qty/value/fees` sempre presenti — ridondanti su fill singolo, espliciti su UPDATED multi-leg
 - `Partial`, `Changed: SL qty` solo quando `is_partial_leg = True` (filled_qty < planned_qty del leg)
 - `Pending:` una riga per entry — non indentate
 - `avg_entry` = Σ(fill_price_i × qty_i) / Σ(qty_i) — sempre prezzi di esecuzione reali
@@ -55,6 +59,7 @@ Fee rate: 0.200% per tutti i casi.
 ## Caso 1 — ONE_SHOT MARKET, fill completo
 
 Fill 65,020 (slippage +20). actual_risk = 0.010 × (65,020 − 39,000) = **260.20 USDT**
+Total qty 0.010 / Total value 650.20 / Total fees 1.30
 
 ```
 📊 #145 — ENTRY OPENED
@@ -70,6 +75,9 @@ Fee: 1.30 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,020
+Total qty: 0.010
+Total value: 650.20 USDT
+Total fees: 1.30 USDT
 Filled: 100%
 Risk: 260.20 USDT (planned: 260 USDT)
 Pending: none
@@ -83,6 +91,7 @@ Source: exchange
 
 Fill 65,020, qty 0.007 (70% dei 0.010 pianificati). Residuo perso — MARKET non lascia coda.
 actual_risk = 0.007 × (65,020 − 39,000) = **182.14 USDT**
+Total qty 0.007 / Total value 455.14 / Total fees 0.91
 
 ```
 📊 #145 — ENTRY OPENED
@@ -99,6 +108,9 @@ Partial: 70%
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,020
+Total qty: 0.007
+Total value: 455.14 USDT
+Total fees: 0.91 USDT
 Filled: 70%
 Risk: 182.14 USDT (planned: 260 USDT)
 Pending: none
@@ -116,6 +128,7 @@ Source: exchange
 ## Caso 3 — ONE_SHOT LIMIT, fill completo, nessun slippage
 
 Fill 65,000 (= limit price). actual_risk = 0.010 × (65,000 − 39,000) = **260 USDT** (identico a planned).
+Total qty 0.010 / Total value 650.00 / Total fees 1.30
 
 ```
 📊 #145 — ENTRY OPENED
@@ -131,6 +144,9 @@ Fee: 1.30 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,000
+Total qty: 0.010
+Total value: 650.00 USDT
+Total fees: 1.30 USDT
 Filled: 100%
 Risk: 260 USDT (planned: 260 USDT)
 Pending: none
@@ -147,6 +163,8 @@ actual_risk ENTRY OPENED = 0.004 × (65,000 − 39,000) = **104 USDT**
 
 **→ ENTRY OPENED:**
 
+Total qty 0.004 / Total value 260.00 / Total fees 0.52
+
 ```
 📊 #145 — ENTRY OPENED
 - - - - - - - - - - -- - - - - - - - - - -
@@ -162,6 +180,9 @@ Partial: 40%
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,000
+Total qty: 0.004
+Total value: 260.00 USDT
+Total fees: 0.52 USDT
 Filled: 40%
 Risk: 104 USDT (planned: 260 USDT)
 Pending: Entry_1 65,000 Limit
@@ -177,6 +198,8 @@ actual_risk ENTRY UPDATED = 0.010 × (65,000 − 39,000) = **260 USDT**
 
 **→ ENTRY UPDATED (residuo filla):**
 
+Total qty 0.010 / Total value 650.00 / Total fees 0.52 + 0.78 = 1.30
+
 ```
 ✏️ #145 — ENTRY UPDATED
 - - - - - - - - - - -- - - - - - - - - - -
@@ -191,12 +214,17 @@ Fee: 0.78 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,000
+Total qty: 0.010
+Total value: 650.00 USDT
+Total fees: 1.30 USDT
 Filled: 100%
 Risk: 260 USDT (planned: 260 USDT)
 Pending: none
 - - - - - - - - - - -- - - - - - - - - - -
 Source: exchange
 ```
+
+> Total value/fees aumentano nell'UPDATED: ora riflettono la posizione completa 0.010.
 
 ---
 
@@ -207,6 +235,7 @@ Entry_1 Market ~65,000 (70%) → filla a 65,020 / Entry_2 64,000 Limit (30%).
 **→ ENTRY OPENED (Entry_1):**
 
 actual_risk = 0.007 × (65,020 − 39,000) = **182.14 USDT**
+Total qty 0.007 / Total value 455.14 / Total fees 0.91
 
 ```
 📊 #145 — ENTRY OPENED
@@ -222,6 +251,9 @@ Fee: 0.91 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,020
+Total qty: 0.007
+Total value: 455.14 USDT
+Total fees: 0.91 USDT
 Filled: 70%
 Risk: 182.14 USDT (planned: 260 USDT)
 Pending: Entry_2 64,000 Limit
@@ -233,6 +265,7 @@ Source: exchange
 
 avg = (65,020 × 0.007 + 64,000 × 0.003) / 0.010 = **64,714**
 actual_risk = 0.010 × (64,714 − 39,000) = **257.14 USDT**
+Total qty 0.010 / Total value 0.010 × 64,714 = 647.14 / Total fees 0.91 + 0.38 = 1.29
 
 ```
 ✏️ #145 — ENTRY UPDATED
@@ -248,6 +281,9 @@ Fee: 0.38 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 64,714
+Total qty: 0.010
+Total value: 647.14 USDT
+Total fees: 1.29 USDT
 Filled: 100%
 Risk: 257.14 USDT (planned: 260 USDT)
 Pending: none
@@ -256,6 +292,7 @@ Source: exchange
 ```
 
 > avg_entry finale 64,714 (non 65,000): Entry_2 a prezzo inferiore ha abbassato l'avg → rischio migliore.
+> Total value cambia da 455.14 → 647.14 (aggiunge il valore del secondo leg).
 
 ---
 
@@ -267,6 +304,7 @@ Stessa apertura del Caso 5. Entry_2 filla 0.002 dei 0.003 pianificati.
 
 avg = (65,020 × 0.007 + 64,000 × 0.002) / 0.009 = **64,793**
 actual_risk = 0.009 × (64,793 − 39,000) = **232.13 USDT**
+Total qty 0.009 / Total value 0.009 × 64,793 = 583.14 / Total fees 0.91 + 0.26 = 1.17
 
 ```
 ✏️ #145 — ENTRY UPDATED
@@ -283,6 +321,9 @@ Partial: 66.7%
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 64,793
+Total qty: 0.009
+Total value: 583.14 USDT
+Total fees: 1.17 USDT
 Filled: 90%
 Risk: 232.13 USDT (planned: 260 USDT)
 Pending: Entry_2 64,000 Limit
@@ -299,6 +340,7 @@ Source: exchange
 
 avg = (455.14 + 128.00 + 64.00) / 0.010 = **64,714**
 actual_risk = 0.010 × (64,714 − 39,000) = **257.14 USDT**
+Total qty 0.010 / Total value 647.14 / Total fees 0.91 + 0.26 + 0.13 = 1.30
 
 ```
 ✏️ #145 — ENTRY UPDATED
@@ -314,6 +356,9 @@ Fee: 0.13 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 64,714
+Total qty: 0.010
+Total value: 647.14 USDT
+Total fees: 1.30 USDT
 Filled: 100%
 Risk: 257.14 USDT (planned: 260 USDT)
 Pending: none
@@ -330,6 +375,7 @@ Entry_1 65,000 (50%) / Entry_2 64,000 (30%) / Entry_3 63,000 (20%).
 **→ ENTRY OPENED (Entry_1, 50%):**
 
 actual_risk = 0.005 × (65,000 − 39,000) = **130 USDT**
+Total qty 0.005 / Total value 325.00 / Total fees 0.65
 
 ```
 📊 #145 — ENTRY OPENED
@@ -345,6 +391,9 @@ Fee: 0.65 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,000
+Total qty: 0.005
+Total value: 325.00 USDT
+Total fees: 0.65 USDT
 Filled: 50%
 Risk: 130 USDT (planned: 260 USDT)
 Pending: Entry_2 64,000 Limit
@@ -357,6 +406,7 @@ Source: exchange
 
 avg = (325.00 + 192.00) / 0.008 = **64,625**
 actual_risk = 0.008 × (64,625 − 39,000) = **205 USDT**
+Total qty 0.008 / Total value 0.008 × 64,625 = 517.00 / Total fees 0.65 + 0.38 = 1.03
 
 ```
 ✏️ #145 — ENTRY UPDATED
@@ -372,6 +422,9 @@ Fee: 0.38 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 64,625
+Total qty: 0.008
+Total value: 517.00 USDT
+Total fees: 1.03 USDT
 Filled: 80%
 Risk: 205 USDT (planned: 260 USDT)
 Pending: Entry_3 63,000 Limit
@@ -383,6 +436,7 @@ Source: exchange
 
 avg = (325.00 + 192.00 + 126.00) / 0.010 = **64,300**
 actual_risk = 0.010 × (64,300 − 39,000) = **253 USDT**
+Total qty 0.010 / Total value 0.010 × 64,300 = 643.00 / Total fees 0.65 + 0.38 + 0.25 = 1.28
 
 ```
 ✏️ #145 — ENTRY UPDATED
@@ -398,6 +452,9 @@ Fee: 0.25 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 64,300
+Total qty: 0.010
+Total value: 643.00 USDT
+Total fees: 1.28 USDT
 Filled: 100%
 Risk: 253 USDT (planned: 260 USDT)
 Pending: none
@@ -407,6 +464,7 @@ Source: exchange
 
 > LADDER con tutti i leg fillati: avg migliora progressivamente, rischio scende
 > perché i leg successivi hanno prezzo più favorevole (più vicini al SL → distanza minore).
+> Total value finale 643.00 < Total value Entry_1 × 2 — leg successivi costano meno.
 
 ---
 
@@ -414,6 +472,7 @@ Source: exchange
 
 Entry_1 65,000 Limit SHORT, SL 91,000 (sopra per SHORT), rischio 260 USDT.
 actual_risk = 0.010 × (91,000 − 65,000) = **260 USDT**
+Total qty 0.010 / Total value 650.00 / Total fees 1.30
 
 ```
 📊 #146 — ENTRY OPENED
@@ -429,6 +488,9 @@ Fee: 1.30 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,000
+Total qty: 0.010
+Total value: 650.00 USDT
+Total fees: 1.30 USDT
 Filled: 100%
 Risk: 260 USDT (planned: 260 USDT)
 Pending: none
@@ -442,6 +504,7 @@ Source: exchange
 
 SL 63,500 (tight), rischio pianificato 15 USDT. Fill a 65,800 (slippage +800).
 actual_risk = 0.010 × (65,800 − 63,500) = **23 USDT** (+53% vs planned).
+Total qty 0.010 / Total value 658.00 / Total fees 1.32
 
 ```
 📊 #147 — ENTRY OPENED
@@ -457,6 +520,9 @@ Fee: 1.32 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,800
+Total qty: 0.010
+Total value: 658.00 USDT
+Total fees: 1.32 USDT
 Filled: 100%
 Risk: 23 USDT (planned: 15 USDT)
 Pending: none
@@ -472,6 +538,7 @@ Source: exchange
 
 SL 63,500, rischio pianificato 15 USDT. Limit 64,000, filla a 63,800 (price improvement −200).
 actual_risk = 0.010 × (63,800 − 63,500) = **3 USDT** (−80% vs planned).
+Total qty 0.010 / Total value 638.00 / Total fees 1.28
 
 ```
 📊 #148 — ENTRY OPENED
@@ -487,6 +554,9 @@ Fee: 1.28 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 63,800
+Total qty: 0.010
+Total value: 638.00 USDT
+Total fees: 1.28 USDT
 Filled: 100%
 Risk: 3 USDT (planned: 15 USDT)
 Pending: none
@@ -507,6 +577,7 @@ Entry_1 Market ~65,000 → filla a 65,800 (+800). Entry_2 Limit 64,000 → filla
 **→ ENTRY OPENED (Entry_1, slippage):**
 
 actual_risk = 0.007 × (65,800 − 63,500) = **16.10 USDT**
+Total qty 0.007 / Total value 460.60 / Total fees 0.92
 
 ```
 📊 #149 — ENTRY OPENED
@@ -522,6 +593,9 @@ Fee: 0.92 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,800
+Total qty: 0.007
+Total value: 460.60 USDT
+Total fees: 0.92 USDT
 Filled: 70%
 Risk: 16.10 USDT (planned: 15 USDT)
 Pending: Entry_2 64,000 Limit
@@ -535,6 +609,7 @@ Source: exchange
 
 avg = (65,800 × 0.007 + 63,800 × 0.003) / 0.010 = (460.60 + 191.40) / 0.010 = **65,200**
 actual_risk = 0.010 × (65,200 − 63,500) = **17 USDT**
+Total qty 0.010 / Total value 0.010 × 65,200 = 652.00 / Total fees 0.92 + 0.38 = 1.30
 
 ```
 ✏️ #149 — ENTRY UPDATED
@@ -550,6 +625,9 @@ Fee: 0.38 USDT
 - - - - - - - - - - -- - - - - - - - - - -
 Position:
 Avg entry: 65,200
+Total qty: 0.010
+Total value: 652.00 USDT
+Total fees: 1.30 USDT
 Filled: 100%
 Risk: 17 USDT (planned: 15 USDT)
 Pending: none
@@ -559,6 +637,7 @@ Source: exchange
 
 > avg finale 65,200 vs proiezione segnale 64,700 (+500 netto di slippage).
 > Il price improvement su Entry_2 ha parzialmente compensato lo slippage su Entry_1.
+> Total value 652.00 ≠ Caso 7 finale 643.00: stesso totale qty ma avg più alto per slippage Entry_1.
 
 ---
 
@@ -571,10 +650,72 @@ Source: exchange
 | `is_partial_leg` | `filled_qty < planned_qty` | False se `planned_qty` non disponibile |
 | `_leg_fill_pct` | `filled_qty / planned_qty × 100` | Es. 70%, 40%, 66.7% |
 | `position_filled_pct` | `filled_entry_qty / total_planned_qty × 100` | Cumulativo dopo questo fill |
+| `total_filled_qty` | `filled_entry_qty` (chain_row) | Cumulativo — aumenta ad ogni fill |
+| `total_value` | `filled_entry_qty × avg_entry` | Valore totale posizione corrente |
+| `total_fees` | `risk["open_fee_residual"]` | Accumulato ad ogni fill di apertura |
 | `actual_risk_usdt` | `filled_entry_qty × \|avg_entry − current_stop_price\|` | Usa prezzi reali — sensibile a slippage |
 | `planned_risk_usdt` | `initial_risk_amount` | Dal risk snapshot — basato su prezzi segnale |
 | `avg_entry` | Calcolato in event_processor come Σ(p×q)/Σq | Nel payload come `new_avg_entry` per ENTRY_UPDATED |
 
 **`Risk` appare sempre** (condizione: `actual_risk_usdt is not None`) — opzione B scelta.
+**`Total qty/value/fees` sempre presenti** — anche su fill singolo ONE_SHOT dove sono ridondanti.
 **Ordine Fee:** Value → Fee rate → Fee (fee_rate opzionale — solo se nel payload).
 `Changed: SL qty` appare solo se `is_partial_leg = True`.
+
+---
+
+## ENTRY CANCELLED
+
+Ordine limit pending cancellato. La posizione rimane aperta con la qty fillata fino a quel momento.
+`avg_entry` e `total_filled_qty` riflettono lo stato **dopo** la cancellazione.
+
+### Caso 12 — Entry_2 cancellata, mai fillata
+
+TWO_STEP: Entry_1 fillata a 65,020 (0.007 BTC). Entry_2 64,000 Limit cancellata prima del fill.
+`avg_entry` = 65,020 (solo Entry_1). `total_filled` = 0.007 BTC.
+
+```
+⚠️ #12 — ENTRY CANCELLED
+- - - - - - - - - - - - - - -
+BTC/USDT — 📈 LONG
+- - - - - - - - - - - - - - -
+Entry_2: 64,000 Limit
+Avg entry: 65,020
+Total filled: 0.007 BTC
+- - - - - - - - - - - - - - -
+Source: runtime
+```
+
+### Caso 13 — Entry_2 parzialmente fillata poi cancellata
+
+TWO_STEP: Entry_1 fillata 65,020 (0.007). Entry_2 Limit 64,000: filla 0.001 dei 0.003 pianificati (33%) poi cancellata.
+`avg` = (65,020 × 0.007 + 64,000 × 0.001) / 0.008 = **64,886**
+`total_filled` = 0.008 BTC.
+
+```
+⚠️ #12 — ENTRY CANCELLED
+- - - - - - - - - - - - - - -
+BTC/USDT — 📈 LONG
+- - - - - - - - - - - - - - -
+Entry_2: 64,000 Limit
+Partial fill: 33% (0.001 BTC kept)
+Avg entry: 64,886
+Total filled: 0.008 BTC
+- - - - - - - - - - - - - - -
+Source: runtime
+```
+
+> `Partial fill:` appare solo quando `partial_fill_pct` è nel payload.
+> `(qty BTC kept)` da `partial_fill_qty` e `_base_asset` — entrambi opzionali.
+> `Avg entry` = media aggiornata che include il fill parziale di Entry_2.
+> La posizione rimane aperta — non è una chiusura.
+
+| Campo | Fonte | Nota |
+|-------|-------|------|
+| `_c_seq` | `cancelled_entry["sequence"]` | Numero del leg cancellato |
+| `_c_price` | `cancelled_entry["price"]` | `None` → riga solo con tipo (es. "Entry_2: Market") |
+| `_c_etype` | `cancelled_entry["entry_type"].capitalize()` | "Market" / "Limit" |
+| `partial_fill_pct` | payload | `None` → blocco Partial fill omesso |
+| `partial_fill_qty` | payload | opzionale — se assente omette "(qty BTC kept)" |
+| `avg_entry` | chain_row | Media aggiornata post-cancellazione |
+| `total_filled_qty` | `filled_entry_qty` | `None` → riga "Total filled" omessa |

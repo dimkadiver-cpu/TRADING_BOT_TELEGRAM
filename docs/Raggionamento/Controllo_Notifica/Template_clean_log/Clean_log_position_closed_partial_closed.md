@@ -21,8 +21,8 @@ Close reason: <reason>
 <exit_field>: <price | n/a>
 Qty: <qty | n/a>
 PnL: <pnl | n/a>
-Fee: <fee | n/a>
 Fee rate: <fee_rate | n/a>
+Fee: <fee | n/a>
 - - -
 Final Result:
 ROI net: <roi | n/a>
@@ -46,8 +46,8 @@ Close reason: FINAL TP FILLED
 TP_2: 70,500
 Qty: 0.015
 PnL: +45.20 USDT
-Fee: 1.03 USDT
 Fee rate: 0.055%
+Fee: 1.03 USDT
 - - -
 Final Result:
 ROI net: +3.67%
@@ -68,8 +68,8 @@ Close reason: STOP_LOSS
 SL: 0.2499
 Qty: 120
 PnL: +3.99 USDT
-Fee: 0.69 USDT
 Fee rate: 0.055%
+Fee: 0.69 USDT
 - - -
 Final Result:
 ROI net: +3.67%
@@ -86,12 +86,12 @@ BTCUSDT — 📈 LONG
 https://t.me/c/3897279123/480
 - - -
 Close reason: BREAKEVEN_AFTER_TP
-- - -
+- - - - - - - - - - - - - - - 
 Price: 60,982.7
 Qty: 0.01
 PnL: +4.44 USDT
-Fee: 1.74 USDT
 Fee rate: 0.055%
+Fee: 1.74 USDT
 - - -
 Final Result:
 ROI net: +3.67%
@@ -102,3 +102,9 @@ Funding: +0.00 USDT
 - - -
 Source: trader_update
 https://t.me/c/3927267771/376
+
+
+
+
+
+

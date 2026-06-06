@@ -127,9 +127,8 @@ def _write_update_clean_log(
         notif_type = "UPDATE_REJECTED"
 
     applied_actions: list[str] = []
-    rejected_actions: list[str] = [e.event_type for e in noops]
     changed: list[dict] = []
-    display_lines: list[str] = []
+    failed_actions: list[dict] = []
     reason: str | None = None
 
     for event in noops:
@@ -138,9 +137,15 @@ def _write_update_clean_log(
         except Exception:
             noop_payload = {}
         noop_reason = noop_payload.get("reason")
-        if noop_reason:
+        action_name = event.event_type.removeprefix("NOOP_")
+        failed_actions.append({
+            "action": action_name,
+            "reason": str(noop_reason) if noop_reason else "unknown",
+        })
+        if reason is None and noop_reason:
             reason = str(noop_reason)
-            break
+
+    rejected_actions: list[str] = [f["action"] for f in failed_actions]
 
     for e in accepted:
         try:
@@ -203,10 +208,13 @@ def _write_update_clean_log(
                     "new": ce.get("new_price"),
                 })
         elif action == "MOVE_STOP":
-            display_lines.append(f"SL: {p.get('old_sl_price', '?')} -> {p.get('new_sl_price', '?')}")
-            # reference field populated by event_processor when stop is moved relative to a TP level
-            if p.get("reference") in {"Price", "TP_1", "TP_2", "TP_3"}:
-                display_lines.append(f"Reference: {p['reference']}")
+            _VALID_REFS = {"Price", "TP_1", "TP_2", "TP_3"}
+            changed.append({
+                "field": "SL",
+                "old": p.get("old_sl_price"),
+                "new": p.get("new_sl_price"),
+                "note": p.get("reference") if p.get("reference") in _VALID_REFS else None,
+            })
 
     first = (accepted or noops)[0]
     source = _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE.get(first.source_type, "runtime")
@@ -224,8 +232,8 @@ def _write_update_clean_log(
         "side": side,
         "applied_actions": applied_actions,
         "rejected_actions": rejected_actions,
+        "failed_actions": failed_actions,
         "changed": changed,
-        "display_lines": display_lines,
         "source": source,
         "link": link,
     }

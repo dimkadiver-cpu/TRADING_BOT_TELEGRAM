@@ -246,7 +246,15 @@ def _render_entry_item(entry: dict, i: int, p: dict) -> list[str]:
         price_str = f"Market ~{num(price)}" if price is not None else "Market"
     else:
         price_str = f"{num(price)} Limit" if price is not None else "Limit"
-    return [f"Entry_{seq}: {price_str}"]
+    pcts = p.get("_entry_pcts") or []
+    pct_suffix = f" ({pcts[i - 1]}%)" if len(pcts) >= 2 and i <= len(pcts) else ""
+    return [f"Entry_{seq}: {price_str}{pct_suffix}"]
+
+
+def _render_tp_item(tp, i: int, p: dict) -> list[str]:
+    pcts = p.get("_tp_pcts") or []
+    pct_suffix = f" ({pcts[i - 1]}%)" if len(pcts) >= 2 and i <= len(pcts) else ""
+    return [f"TP_{i}: {num(tp)}{pct_suffix}"]
 
 
 def _render_pending_entry(entry: dict, i: int, p: dict) -> list[str]:
@@ -260,11 +268,11 @@ def _render_pending_entry(entry: dict, i: int, p: dict) -> list[str]:
 def _render_changed_item(item, i: int, p: dict) -> list[str]:
     if isinstance(item, dict):
         field = item.get("field", "?")
-        value = f"{num(item.get('old'))} -> {num(item.get('new'))}"
+        value = f"{num(item.get('old'))} → {num(item.get('new'))}"
         note = item.get("note")
         if note:
-            return [f"{field}: {value} *", f"* {note}"]
-        return [f"{field}: {value}"]
+            return [f"{_BULLET} {field}: {value} *"]
+        return [f"{_BULLET} {field}: {value}"]
     return [f"{_BULLET} {item}"]
 ```
 
@@ -280,8 +288,8 @@ CLOSE_METRICS: list[Block] = [
                fmt=num, optional=False, default="n/a"),
     FieldBlock("Qty",      key="closed_qty",  fmt=num),
     FieldBlock("PnL",      key="pnl",         fmt=money_signed),
-    FieldBlock("Fee",      key="fee",          fmt=money),
     FieldBlock("Fee rate", key="fee_rate",     fmt=fee_rate),
+    FieldBlock("Fee",      key="fee",          fmt=money),
 ]
 ```
 
@@ -350,7 +358,7 @@ Shared tra `SIGNAL_ACCEPTED`, `SIGNAL_REJECTED`, `REVIEW_REQUIRED`.
 _SIGNAL_BODY: list[Block] = [
     ListBlock(key="entries", item_renderer=_render_entry_item),
     FieldBlock("SL",   key="sl",       fmt=num),
-    ListBlock(key="tps", item_renderer=lambda tp, i, p: [f"TP_{i}: {num(tp)}"]),
+    ListBlock(key="tps", item_renderer=_render_tp_item),
     FieldBlock("Risk", key="risk_pct", fmt=lambda v: f"{v}%"),
 ]
 ```
@@ -428,9 +436,27 @@ _SIGNAL_BASE_BLOCKS: list[Block] = [
                 include_trader_id=True, include_account_id=True, include_rejected_reason=True),
 ]
 
-def _t_signal_accepted(p): return {**p, "_emoji": "✅", "_event_label": "SIGNAL ACCEPTED"}
-def _t_signal_rejected(p): return {**p, "_emoji": "❌", "_event_label": "SIGNAL REJECTED"}
+def _t_signal_accepted(p): return {**p, "_emoji": "✅", "_event_label": "SIGNAL ACCEPTED",
+                                   "_entry_pcts": p.get("_entry_pcts", []),
+                                   "_tp_pcts":    p.get("_tp_pcts",    [])}
+def _t_signal_rejected(p): return {**p, "_emoji": "❌", "_event_label": "SIGNAL REJECTED",
+                                   "_entry_pcts": p.get("_entry_pcts", []),
+                                   "_tp_pcts":    p.get("_tp_pcts",    [])}
 ```
+
+### Payload enrichment per signal types (`_build_payload`)
+
+`_entry_pcts` e `_tp_pcts` vengono calcolati in `_build_payload` a partire dal plan della chain,
+già disponibile nel contesto. Il formatter li usa solo se la lista ha 2+ elementi.
+
+| Campo aggiunto | Fonte | Uso nel template |
+|----------------|-------|-----------------|
+| `_entry_pcts` | `plan["legs"][i]["qty"] / total_qty * 100` arrotondato | `Entry_N: price (X%)` se multi-leg |
+| `_tp_pcts` | `plan["tps"][i]["close_pct"] * 100` arrotondato | `TP_N: price (X%)` se multi-tp |
+
+- Lista vuota o 1 elemento → % non mostrata (ONE_SHOT, TP singolo)
+- Arrotondamento intero (round) — `70%` non `70.0%`
+- Sum delle % = 100 garantito dal plan (eventuali differenze da rounding non visibili a questo livello)
 
 `REVIEW_REQUIRED` non ha leverage né il warning PARTIAL — usa block list separata:
 
@@ -445,33 +471,88 @@ _REVIEW_REQUIRED_BLOCKS: list[Block] = [
 
 ---
 
-## TP parziale
+## Chiusure parziali — `TP_FILLED` e `PARTIAL_CLOSE_EXECUTED`
+
+Stesso layout, transform diverso — stesso pattern di `_CLOSED_BLOCKS` per le chiusure finali.
+
+### Payload enrichment (`_build_payload`)
+
+Campi comuni a entrambi i tipi:
+
+| Campo aggiunto | Fonte | Uso nel template |
+|----------------|-------|-----------------|
+| `remaining_qty` | `filled_entry_qty - cumulative_closed_qty` | `Remaining: Qty` |
+| `remaining_risk` | `remaining_qty × \|avg_entry − current_stop_price\|` | `Remaining: Risk` |
+
+`avg_entry` è già nel payload (non cambia su chiusura parziale).
+
+Solo `TP_FILLED`:
+
+| Campo aggiunto | Fonte | Uso nel template |
+|----------------|-------|-----------------|
+| `tp_level` | dal payload | label `TP_{level}` + event label `TP{level} FILLED` |
+| `fill_price` | prezzo reale eseguito | prima riga corpo (fallback: `tp_price`) |
 
 ```python
-_TP_PARTIAL_BLOCKS: list[Block] = [
-    HeaderBlock(emoji="📊", event_label=lambda p: p["_event_label"]),
+_PARTIAL_RESULT_BLOCKS: list[Block] = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label=lambda p: p["_event_label"]),
     DerivedBlock(text_fn=lambda p:
-        f"{p['_tp_label']}: {num(p['_tp_price']) if p.get('_tp_price') is not None else '-'}"
+        f"{p['_price_label']}: {num(p['_price_value']) if p.get('_price_value') is not None else '-'}"
     ),
-    FieldBlock("Closed", key="closed_pct",  fmt=pct),
-    FieldBlock("PnL",    key="pnl",         fmt=money_signed),
-    FieldBlock("Fee",    key="fee",         fmt=money),
-    FieldBlock("Fee rate", key="fee_rate",  fmt=fee_rate),
-    FieldBlock("Value",  key="exec_value",  fmt=money),
-    StaticBlock(""),
+    FieldBlock("Closed",   key="closed_pct",  fmt=pct),
+    FieldBlock("Qty",      key="closed_qty",  fmt=num),
+    FieldBlock("PnL",      key="pnl",         fmt=money_signed),
+    FieldBlock("Fee rate", key="fee_rate",    fmt=fee_rate),
+    FieldBlock("Fee",      key="fee",         fmt=money),
+    ConditionalBlock(
+        condition=lambda p: p.get("_show_value"),
+        blocks=[FieldBlock("Value", key="exec_value", fmt=money)],
+    ),
+    SeparatorBlock(),
+    StaticBlock("Remaining:"),
+    FieldBlock("Qty",       key="remaining_qty",  fmt=num),
+    FieldBlock("Avg entry", key="avg_entry",      fmt=num),
+    FieldBlock("Risk",      key="remaining_risk", fmt=money),
     FooterBlock(default_source="exchange"),
 ]
+
 
 def _t_tp_partial(p):
     level = p.get("tp_level")
     display_price = p.get("fill_price") if p.get("fill_price") is not None else p.get("tp_price")
     return {
         **p,
+        "_emoji":       "📊",
         "_event_label": f"TP{level} FILLED" if level is not None else "TP FILLED",
-        "_tp_label":    f"TP_{level}" if level is not None else "TP",
-        "_tp_price":    display_price,
+        "_price_label": f"TP_{level}" if level is not None else "TP",
+        "_price_value": display_price,
+        "_show_value":  True,
+    }
+
+
+def _t_partial_close(p):
+    return {
+        **p,
+        "_emoji":       "✅",
+        "_event_label": "PARTIAL CLOSED",
+        "_price_label": "Price",
+        "_price_value": p.get("fill_price"),
+        "_show_value":  False,
     }
 ```
+
+Differenze tra i due transform:
+
+| Campo iniettato | `TP_FILLED` | `PARTIAL_CLOSE_EXECUTED` |
+|----------------|-------------|--------------------------|
+| `_emoji` | `"📊"` | `"✅"` |
+| `_event_label` | `"TP{N} FILLED"` | `"PARTIAL CLOSED"` |
+| `_price_label` | `"TP_{N}"` | `"Price"` |
+| `_price_value` | `fill_price` ∣ `tp_price` | `fill_price` |
+| `_show_value` | `True` (Value presente) | `False` (Value assente) |
+
+`source` nel payload determina il footer: `exchange` per TP, `trader_update` per PARTIAL_CLOSE.
+Il `default_source="exchange"` nel `FooterBlock` è solo fallback.
 
 ---
 
@@ -489,10 +570,14 @@ dai dati di chain già disponibili. Il formatter non calcola nulla — legge sol
 | `is_partial_leg` | `filled_qty < planned_qty` | condizionale sezioni Partial/Changed |
 | `_leg_fill_pct` | `filled_qty / planned_qty * 100` | `Partial: xx%` |
 | `position_filled_pct` | `filled_entry_qty / total_planned_qty * 100` | `Filled: xx%` in Position |
+| `total_filled_qty` | `filled_entry_qty` (chain_row) | `Total qty` in Position |
+| `total_value` | `filled_entry_qty × avg_entry` | `Total value` in Position |
+| `total_fees` | `risk["open_fee_residual"]` | `Total fees` in Position |
 | `actual_risk_usdt` | `filled_entry_qty * abs(avg_entry - current_stop_price)` | `Risk: actual USDT` |
 | `planned_risk_usdt` | `initial_risk_amount` | `Risk: planned USDT` |
 
 `entry_type_for_leg` è "MARKET" o "LIMIT". `is_partial_leg=False` se `planned_qty` non disponibile.
+`total_fees` accumula le fee di apertura in `risk_snapshot["open_fee_residual"]` ad ogni fill.
 
 ### _ENTRY_BLOCKS (unificato)
 
@@ -504,8 +589,11 @@ Sezioni: Filled (da `_FILL_SECTION` con trailing SEP) → Position → Changed (
 ```python
 _ENTRY_POSITION_SECTION: list[Block] = [
     StaticBlock("Position:"),
-    FieldBlock("Avg entry", key="_avg_entry",          fmt=num),
-    FieldBlock("Filled",    key="position_filled_pct", fmt=pct),
+    FieldBlock("Avg entry",   key="_avg_entry",          fmt=num),
+    FieldBlock("Total qty",   key="total_filled_qty",    fmt=num),
+    FieldBlock("Total value", key="total_value",         fmt=money),
+    FieldBlock("Total fees",  key="total_fees",          fmt=money),
+    FieldBlock("Filled",      key="position_filled_pct", fmt=pct),
     ConditionalBlock(
         condition=lambda p: p.get("actual_risk_usdt") is not None,
         blocks=[
@@ -605,14 +693,14 @@ def _t_entry_cancelled(p):
 ### _UPDATE_BLOCKS (unificato)
 
 UPDATE_DONE, UPDATE_PARTIAL e UPDATE_REJECTED condividono la stessa block list.
-Ogni transform inietta `_emoji`, `_event_label`, `_operations`, `_failed`.
+Ogni transform inietta `_emoji`, `_event_label`, `_operations`, `_failed_reason`, `_footnotes`.
 
-Struttura: Operation → Changed → Failed → Reason (opzionale) → Footer.
+Struttura: Operation → Changed → Footnotes (opzionale, con SEP) → Failed (opzionale, con SEP) → Footer.
 
-- `Operation:` = azioni applicate (DONE/PARTIAL) o tentate (REJECTED)
-- `Changed:` = delta su posizione, usa `_render_changed_item` (supporta `note` per riferimenti)
-- `Failed:` = azioni rifiutate (solo PARTIAL)
-- `Reason:` = motivo rifiuto (solo REJECTED, condizionale via `optional=True`)
+- `Operation:` = azioni applicate (DONE/PARTIAL) o tentate (REJECTED); in PARTIAL le azioni fallite appaiono con `*`
+- `Changed:` = delta su posizione; i campi con nota escono con `*` sulla riga (nota non inline)
+- `Footnotes:` = note dei `changed` items + azioni fallite PARTIAL — sempre dopo SEP, prefissate `*`
+- `Failed:` = motivo rifiuto unico (solo REJECTED), senza `*`
 
 > **Migrazione `entry_gate.py`**: L'attuale `display_lines` è usato solo per MOVE_STOP
 > (SL old→new + eventuale "Reference:"). Va eliminato: MOVE_STOP deve scrivere nel dict `changed`
@@ -626,7 +714,7 @@ _UPDATE_BLOCKS: list[Block] = [
         condition=lambda p: bool(p.get("_operations")),
         blocks=[
             StaticBlock("Operation:"),
-            ListBlock(key="_operations", item_renderer=lambda op, i, p: [f"  • {op}"]),
+            ListBlock(key="_operations", item_renderer=lambda op, i, p: [f"{_BULLET} {op}"]),
         ]
     ),
     ConditionalBlock(
@@ -637,56 +725,65 @@ _UPDATE_BLOCKS: list[Block] = [
         ]
     ),
     ConditionalBlock(
-        condition=lambda p: bool(p.get("_failed")),
+        condition=lambda p: bool(p.get("_footnotes")),
         blocks=[
-            StaticBlock("Failed:"),
-            ListBlock(key="_failed", item_renderer=lambda a, i, p: [f"  • {a}"]),
+            SeparatorBlock(),
+            ListBlock(key="_footnotes", item_renderer=lambda note, i, p: [f"* {note}"]),
         ]
     ),
-    FieldBlock("Reason", key="reason", fmt=text),   # optional=True → assente in DONE/PARTIAL
+    ConditionalBlock(
+        condition=lambda p: p.get("_failed_reason") is not None,
+        blocks=[
+            SeparatorBlock(),
+            DerivedBlock(text_fn=lambda p: f"Failed: {p['_failed_reason']}"),
+        ]
+    ),
     FooterBlock(default_source="runtime"),
 ]
 
 
 def _t_update_done(p):
     ops = p.get("applied_actions") or []
+    changed = p.get("changed") or []
+    footnotes = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
     return {**p, "_emoji": "✅", "_event_label": "UPDATE DONE",
-            "_operations": ops, "_failed": []}
+            "_operations": ops, "_failed_reason": None,
+            "_footnotes": footnotes or None}
 
 
 def _t_update_partial(p):
-    ops    = p.get("applied_actions") or []
-    failed = p.get("rejected_actions") or []
+    applied      = p.get("applied_actions") or []
+    failed_list  = p.get("failed_actions") or []   # [{"action": str, "reason": str}]
+    failed_set   = {f["action"] for f in failed_list}
+    # ordine: applied + failed rispecchia l'ordine di elaborazione in entry_gate
+    all_ops      = applied + [f["action"] for f in failed_list]
+    ops_display  = [f"{op} *" if op in failed_set else op for op in all_ops]
+    changed      = p.get("changed") or []
+    fn_changed   = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
+    fn_failed    = [f"Failed: {f['reason']}" for f in failed_list]   # action già marcata con * in ops_display
+    footnotes    = fn_changed + fn_failed
     return {**p, "_emoji": "⚠️", "_event_label": "UPDATE PARTIAL",
-            "_operations": ops, "_failed": failed}
+            "_operations": ops_display, "_failed_reason": None,
+            "_footnotes": footnotes or None}
 
 
 def _t_update_rejected(p):
-    ops = p.get("rejected_actions") or []
+    ops     = p.get("rejected_actions") or []
+    reason  = p.get("reason") or p.get("failed_reason")
+    changed = p.get("changed") or []
+    footnotes = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
     return {**p, "_emoji": "❌", "_event_label": "UPDATE REJECTED",
-            "_operations": ops, "_failed": []}
+            "_operations": ops, "_failed_reason": reason,
+            "_footnotes": footnotes or None}
 ```
 
 ---
 
-## Partial close
+## Partial close — nota architetturale
 
-`event_label="UPDATE DONE"` — parità con codice attuale (`_partial_close_executed` usa questo label).
-
-```python
-_PARTIAL_CLOSE_BLOCKS: list[Block] = [
-    HeaderBlock(emoji="✅", event_label="UPDATE DONE"),
-    StaticBlock("Executed:"),
-    StaticBlock(f"{_BULLET} CLOSE_PARTIAL"),
-    SeparatorBlock(),
-    FieldBlock("Price",  key="fill_price",  fmt=num),
-    FieldBlock("Qty",    key="closed_qty",  fmt=num),
-    FieldBlock("Closed", key="closed_pct",  fmt=pct),
-    FieldBlock("PnL",    key="pnl",         fmt=money_signed),
-    FieldBlock("Fee",    key="fee",         fmt=money),
-    FooterBlock(default_source="manual_command"),
-]
-```
+`PARTIAL_CLOSE_EXECUTED` è un evento exchange separato dall'ack runtime (`UPDATE_DONE` con
+`CLOSE_PARTIAL` nell'operation list). Usa `_PARTIAL_RESULT_BLOCKS` con `_t_partial_close` — vedi
+sezione "Chiusure parziali" sopra.
 
 ---
 
@@ -712,7 +809,7 @@ _CANCEL_FAILED_BLOCKS: list[Block] = [
     DerivedBlock(text_fn=lambda p:
         f"Cancellation of {p.get('entry_ref', 'entry')} failed after {p.get('attempts', 3)} attempts."
     ),
-    StaticBlock("Requires manual review required to resolve the position."),
+    StaticBlock("Requires manual review to resolve the position."),
     FieldBlock("Entry price", key="entry_price", fmt=num),
     FooterBlock(default_source="timeout_worker"),
 ]
@@ -739,11 +836,19 @@ _RECONCILIATION_FIXED_BLOCKS: list[Block] = [
 Il tipo più complesso. Usa `DerivedBlock` per la prima riga (struttura header diversa dagli altri —
 nessun `chain_id`, nessuna riga symbol/side). `_t_multi_chain` inietta `_has_issues` e `_counts`.
 
+I tre event type usano lo stesso template; la distinzione è nel payload e nel momento di emissione:
+
+| Evento | `summary_kind` | Emesso quando |
+|--------|---------------|--------------|
+| `MULTI_CHAIN_SUMMARY` | `"immediate"` | Update multi-target esplicito (reply/link), non CLOSE_FULL |
+| `MULTI_CHAIN_UPDATE` | `"immediate"` | Update scope globale (`ALL_POSITIONS`, `ALL_OPEN`), non CLOSE_FULL |
+| `MULTI_CHAIN_CLOSED` | `"final_close"` | Update con CLOSE_FULL — ritardato fino a link `POSITION_CLOSED` risolvibili |
+
 ```python
 _MULTI_CHAIN_BLOCKS: list[Block] = [
     DerivedBlock(text_fn=lambda p:
         ("⚠️" if p["_has_issues"] else "✅")
-        + f" UPDATE APPLICATO - {len(p.get('chains') or [])} chain"
+        + f" UPDATE APPLICATO — {len(p.get('chains') or [])} chain"
     ),
     SeparatorBlock(),
     BranchBlock(
@@ -842,11 +947,11 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "TP_FILLED_FINAL":        TemplateConfig(_CLOSED_BLOCKS,       _t_tp_final),
     "POSITION_CLOSED":        TemplateConfig(_CLOSED_BLOCKS,       _t_position_closed),
     "BE_EXIT":                TemplateConfig(_CLOSED_BLOCKS,       _t_be_exit),
-    "TP_FILLED":              TemplateConfig(_TP_PARTIAL_BLOCKS,   _t_tp_partial),
-    "UPDATE_DONE":            TemplateConfig(_UPDATE_BLOCKS,       _t_update_done),
-    "UPDATE_PARTIAL":         TemplateConfig(_UPDATE_BLOCKS,       _t_update_partial),
-    "UPDATE_REJECTED":        TemplateConfig(_UPDATE_BLOCKS,       _t_update_rejected),
-    "PARTIAL_CLOSE_EXECUTED": TemplateConfig(_PARTIAL_CLOSE_BLOCKS),
+    "TP_FILLED":              TemplateConfig(_PARTIAL_RESULT_BLOCKS, _t_tp_partial),
+    "UPDATE_DONE":            TemplateConfig(_UPDATE_BLOCKS,         _t_update_done),
+    "UPDATE_PARTIAL":         TemplateConfig(_UPDATE_BLOCKS,         _t_update_partial),
+    "UPDATE_REJECTED":        TemplateConfig(_UPDATE_BLOCKS,         _t_update_rejected),
+    "PARTIAL_CLOSE_EXECUTED": TemplateConfig(_PARTIAL_RESULT_BLOCKS, _t_partial_close),
     "PENDING_ENTRY_EXPIRED":  TemplateConfig(_PENDING_TIMEOUT_BLOCKS),
     "REENTRY_ACCEPTED":       TemplateConfig(_REENTRY_BLOCKS),
     "CANCEL_FAILED":          TemplateConfig(_CANCEL_FAILED_BLOCKS),
