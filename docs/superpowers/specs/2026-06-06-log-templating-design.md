@@ -330,8 +330,8 @@ _FILL_SECTION: list[Block] = [
         ]
     ),
     FieldBlock("Value",    key="exec_value", fmt=money),
-    FieldBlock("Fee",      key="fee",        fmt=money),
     FieldBlock("Fee rate", key="fee_rate",   fmt=fee_rate),
+    FieldBlock("Fee",      key="fee",        fmt=money),
     ConditionalBlock(
         condition=lambda p: bool(p.get("is_partial_leg")),
         blocks=[
