@@ -49,21 +49,23 @@ def test_start():
 
 def test_block_global():
     text = format_block(BlockResult("GLOBAL", None, "BTCUSDT", ["BTCUSDT", "ETHUSDT"]))
-    assert "BTCUSDT" in text
+    assert "BTC/USDT" in text
     assert "GLOBAL" in text
-    assert "ETHUSDT" in text
+    assert "ETH/USDT" in text
+    assert "/unblock BTCUSDT" in text
 
 
 def test_block_per_trader():
     text = format_block(BlockResult("PER_TRADER", "trader_a", "SOLUSDT", ["SOLUSDT"]))
     assert "trader_a" in text
-    assert "SOLUSDT" in text
+    assert "SOL/USDT" in text
 
 
 def test_unblock_global():
     text = format_unblock(UnblockResult("GLOBAL", None, "BTCUSDT", ["ETHUSDT"]))
     assert "SBLOCCATO" in text
-    assert "ETHUSDT" in text
+    assert "BTC/USDT" in text
+    assert "ETH/USDT" in text
 
 
 def test_format_pause_spec_english():

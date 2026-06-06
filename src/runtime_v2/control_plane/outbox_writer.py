@@ -215,6 +215,7 @@ def _build_payload(
             "sl": plan.get("stop_loss"),
             "tps": tps,
             "risk_pct": risk_pct,
+            "leverage": risk.get("leverage"),
             "source": ev.get("source", "trader_signal"),
             "link": ev.get("source_message_link"),
         }
@@ -269,6 +270,7 @@ def _build_payload(
             "tp_level": tp_level,
             "tp_price": tp_price,
             "fill_price": fill_price,
+            "closed_qty": closed_qty,
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
@@ -277,6 +279,7 @@ def _build_payload(
             "be_protection_status": be_protection_status,
             "final_result": final_result_data,
             "source": ev.get("source", "exchange"),
+            "link": ev.get("source_message_link"),
         }
         if ev.get("fee_rate") is not None:
             payload["fee_rate"] = ev["fee_rate"]
@@ -292,10 +295,11 @@ def _build_payload(
             if be_protection_status == "PROTECTED"
             else "STOP_LOSS"
         )
-        return {
+        payload = {
             **base,
             "fill_price": fill_price,
             "sl_price": fill_price,
+            "closed_qty": closed_qty,
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
@@ -308,14 +312,19 @@ def _build_payload(
                 close_reason=close_reason,
             ),
             "source": ev.get("source", "exchange"),
+            "link": ev.get("source_message_link"),
         }
+        if "fee_rate" in ev:
+            payload["fee_rate"] = ev.get("fee_rate")
+        return payload
 
     if notification_type == "POSITION_CLOSED":
         closed_qty = ev.get("closed_size", ev.get("filled_qty"))
         fill_price = ev.get("fill_price")
-        return {
+        payload = {
             **base,
             "fill_price": fill_price,
+            "closed_qty": closed_qty,
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
@@ -328,7 +337,11 @@ def _build_payload(
                 close_reason=ev.get("close_reason", "MANUAL_CLOSE"),
             ),
             "source": ev.get("source", "exchange"),
+            "link": ev.get("source_message_link"),
         }
+        if "fee_rate" in ev:
+            payload["fee_rate"] = ev.get("fee_rate")
+        return payload
 
     if notification_type == "SIGNAL_REJECTED":
         risk_pct = None
@@ -350,6 +363,7 @@ def _build_payload(
             "sl": plan.get("stop_loss"),
             "tps": tps,
             "risk_pct": risk_pct,
+            "leverage": risk.get("leverage"),
             "source": ev.get("source", "trader_signal"),
             "link": ev.get("source_message_link"),
         }
@@ -374,6 +388,7 @@ def _build_payload(
             "sl": plan.get("stop_loss"),
             "tps": tps,
             "risk_pct": risk_pct,
+            "leverage": risk.get("leverage"),
             "source": ev.get("source", "runtime"),
             "link": ev.get("source_message_link"),
         }
@@ -507,9 +522,10 @@ def _build_payload(
     if notification_type == "BE_EXIT":
         closed_qty = ev.get("closed_size", ev.get("filled_qty"))
         fill_price = ev.get("fill_price")
-        return {
+        payload = {
             **base,
             "exit_price": fill_price,
+            "closed_qty": closed_qty,
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
@@ -522,7 +538,11 @@ def _build_payload(
                 close_reason="BREAKEVEN_AFTER_TP",
             ),
             "source": ev.get("source", "exchange"),
+            "link": ev.get("source_message_link"),
         }
+        if "fee_rate" in ev:
+            payload["fee_rate"] = ev.get("fee_rate")
+        return payload
 
     if notification_type == "CANCEL_FAILED":
         return {

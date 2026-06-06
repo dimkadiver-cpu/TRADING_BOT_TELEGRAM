@@ -180,6 +180,7 @@ def test_tp_final_payload_includes_final_result_and_pnl_fields(ops_db):
             "fill_price": 71000.0,
             "filled_qty": 0.002,
             "exec_fee": 1.65,
+            "fee_rate": 0.00055,
             "closed_size": 0.002,
         })
         project_clean_log_for_chain(conn, 700)
@@ -190,7 +191,9 @@ def test_tp_final_payload_includes_final_result_and_pnl_fields(ops_db):
     payload = json.loads(row[1])
     assert row[0] == "TP_FILLED_FINAL"
     assert payload["fill_price"] == 71000.0
+    assert payload["closed_qty"] == 0.002
     assert payload["fee"] == 1.65
+    assert payload["fee_rate"] == 0.00055
     # LONG pnl: (71000 - 65000) * 0.002 = 12.0
     assert abs(payload["pnl"] - 12.0) < 0.001
     assert payload["final_result"] is not None
@@ -213,8 +216,10 @@ def test_position_closed_final_result_subtracts_positive_funding_cost(ops_db):
             "fill_price": 0.2539,
             "filled_qty": 6042.0,
             "exec_fee": 0.84373509,
+            "fee_rate": 0.00055,
             "closed_size": 6042.0,
             "close_reason": "BOT_COMMAND",
+            "source_message_link": "https://t.me/c/3927267771/376",
         })
         project_clean_log_for_chain(conn, 710)
     row = conn.execute(
@@ -224,6 +229,9 @@ def test_position_closed_final_result_subtracts_positive_funding_cost(ops_db):
     assert row is not None
     assert row[0] == "POSITION_CLOSED"
     payload = json.loads(row[1])
+    assert payload["closed_qty"] == 6042.0
+    assert payload["fee_rate"] == 0.00055
+    assert payload["link"] == "https://t.me/c/3927267771/376"
     assert payload["final_result"]["funding"] == -0.07628025
     assert payload["final_result"]["total_pnl_net"] == pytest.approx(2.46797574)
 
@@ -347,6 +355,7 @@ def test_sl_filled_on_unprotected_chain_projects_stop_loss(ops_db):
             "fill_price": 64880.0,
             "filled_qty": 0.01,
             "exec_fee": 0.90,
+            "fee_rate": 0.00055,
             "closed_size": 0.01,
         })
         project_clean_log_for_chain(conn, 901)
@@ -360,6 +369,8 @@ def test_sl_filled_on_unprotected_chain_projects_stop_loss(ops_db):
     payload = json.loads(row[1])
     assert payload["close_reason"] == "STOP_LOSS"
     assert payload["sl_price"] == 64880.0
+    assert payload["closed_qty"] == 0.01
+    assert payload["fee_rate"] == 0.00055
 
 
 def test_sl_filled_on_protected_chain_projects_be_close_reason(ops_db):

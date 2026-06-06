@@ -1,7 +1,7 @@
 # Runtime V2 Control Plane — Messaggi Telegram (riferimento completo)
 
 Aggiornato al codice corrente in `src/runtime_v2/control_plane/`.  
-Ultima revisione: 2026-06-05 (sessione 5 — REVIEW status nel summary, source derivato, sequenze per tipo di azione documentate).
+Ultima revisione: 2026-06-06 (layout unificato per tutte le chiusure finali, `Close reason` in testa, categorie sempre visibili con `n/a`).
 
 ---
 
@@ -352,22 +352,26 @@ Note: `Fee rate` e `Value` compaiono solo se presenti nel payload (path WS).
 
 ### 3.9 TP_FILLED_FINAL
 
-Emesso all'ultimo TP (chiusura completa via TP). Mostra Final Result.
+Emesso all'ultimo TP (chiusura completa via TP). Usa il layout unificato `POSITION CLOSED`.
+
+Regole comuni per tutte le chiusure finali (`TP_FILLED_FINAL`, `SL_FILLED`, `POSITION_CLOSED`, `BE_EXIT`):
+- `Close reason:` compare sempre subito sotto il titolo.
+- i separatori `- - -` dividono blocchi semantici distinti: intestazione, identità trade, dati esecuzione, risultato finale, source/link.
+- `Qty`, `PnL`, `Fee`, `Fee rate`, e tutte le righe di `Final Result` sono sempre visibili.
+- se un valore manca, il formatter stampa `n/a`.
 
 ```
 ✅ #12 — POSITION CLOSED
+Close reason: FINAL TP FILLED
 - - - - - - - - - - - - - - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 TP_2: 70,500
-Closed: 100%
+Qty: 0.015
 PnL: +45.20 USDT
 Fee: 1.03 USDT
 Fee rate: 0.055%
-Value: 1,234.50 USDT
-
-Close reason: FINAL TP FILLED
 - - - - - - - - - - - - - - - -
 Final Result:
 ROI net: +3.67%
@@ -379,26 +383,26 @@ Funding: +0.03 USDT
 Source: exchange
 ```
 
-Note: `ROI net` appare solo se `roi_net_pct` è nel payload.
+Note: `ROI net` ora resta visibile anche quando assente (`n/a`).
 
 ---
 
 ### 3.10 SL_FILLED
 
-Emesso quando lo stop loss viene colpito.
+Emesso quando lo stop loss viene colpito. Usa il layout unificato `POSITION CLOSED`.
 
 ```
 🛑 #12 — POSITION CLOSED
+Close reason: STOP_LOSS
 - - - - - - - - - - - - - - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 SL: 66,400
-Closed: 100%
+Qty: 0.015
 PnL: -32.40 USDT
 Fee: 0.91 USDT
-
-Close reason: STOP_LOSS
+Fee rate: n/a
 - - - - - - - - - - - - - - - -
 Final Result:
 ROI net: -2.81%
@@ -414,19 +418,20 @@ Source: exchange
 
 ### 3.11 POSITION_CLOSED — da comando bot (CLOSE_FULL)
 
-Emesso quando la chiusura arriva come conferma di un ordine piazzato dal bot su comando esplicito.
+Emesso quando la chiusura arriva come conferma di un ordine piazzato dal bot su comando esplicito. Usa il layout unificato `POSITION CLOSED`.
 
 ```
 ✋ #12 — POSITION CLOSED
+Close reason: MANUAL_CLOSE
 - - - - - - - - - - - - - - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
 Price: 68,920
+Qty: 0.015
 PnL: +8.30 USDT
 Fee: 0.48 USDT
-
-Close reason: MANUAL_CLOSE
+Fee rate: n/a
 - - - - - - - - - - - - - - - -
 Final Result:
 ROI net: +0.61%
@@ -442,22 +447,28 @@ Source: manual_command
 
 ### 3.12 POSITION_CLOSED — chiusura esterna rilevata da riconciliazione
 
-Emessa quando la riconciliazione rileva una posizione già chiusa sull'exchange (chiusura manuale o liquidazione fuori dal bot).
+Emessa quando la riconciliazione rileva una posizione già chiusa sull'exchange (chiusura manuale o liquidazione fuori dal bot).  
+Usa lo stesso layout unificato `POSITION CLOSED`.
 
 ```
 ✋ #12 — POSITION CLOSED
+Close reason: MANUAL_CLOSE
 - - - - - - - - - - - - - - - - - - - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - - - - - - -
 Price: 68,500
+Qty: n/a
 PnL: +3.20 USDT
 Fee: 0.38 USDT
-
-Close reason: MANUAL_CLOSE
+Fee rate: n/a
 - - - - - - - - - - - - - - - - - - - - -
 Final Result:
-...
+ROI net: n/a
+Total PnL net: n/a
+Gross PnL: n/a
+Fees: n/a
+Funding: n/a
 - - - - - - - - - - - - - - - - - - - - -
 Source: position_reconciliation
 ```
@@ -475,19 +486,21 @@ Tabella distinzione chiusure:
 
 ### 3.13 BE_EXIT
 
-Emesso al posto di POSITION_CLOSED quando la catena è in stato `PROTECTED` (breakeven attivo) e arriva un `CLOSE_FULL_FILLED`.
+`BE_EXIT` resta una semantica di chiusura, ma non ha più un layout dedicato.  
+Viene renderizzato con lo stesso template `POSITION CLOSED` e con `Close reason: BREAKEVEN_AFTER_TP`.
 
 ```
-⚡ #12 — BE EXIT
+⚡ #12 — POSITION CLOSED
+Close reason: BREAKEVEN_AFTER_TP
 - - - - - - - - - - - - - - - -
 BTCUSDT — 📈 LONG
 https://t.me/c/123456/987
 - - - - - - - - - - - - - - - -
-Exit: 68,500 BE
+Price: 68,500
+Qty: 0.015
 PnL: +0.20 USDT
 Fee: 0.39 USDT
-
-Close reason: BREAKEVEN_AFTER_TP
+Fee rate: n/a
 - - - - - - - - - - - - - - - -
 Final Result:
 ROI net: -0.02%

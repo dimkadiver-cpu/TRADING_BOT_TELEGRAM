@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from src.runtime_v2.control_plane.formatters.display import display_symbol
 from src.runtime_v2.control_plane.status_queries import TradeDetail
 
 _SEP = "__SEP__"
@@ -26,7 +27,7 @@ def format_trade_detail(detail: TradeDetail | None) -> str:
     lines = [
         f"\U0001f4cc TRADE #{detail.chain_id}",
         _SEP,
-        f"{detail.symbol} - {_side_emoji(detail.side)} {detail.side}",
+        f"{display_symbol(detail.symbol)} - {_side_emoji(detail.side)} {detail.side}",
         f"Trader: {detail.trader_id}",
         f"Exchange Account: {detail.account_id}",
         "",

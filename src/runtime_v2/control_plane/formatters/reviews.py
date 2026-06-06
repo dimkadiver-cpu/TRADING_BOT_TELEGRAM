@@ -1,6 +1,7 @@
 # src/runtime_v2/control_plane/formatters/reviews.py
 from __future__ import annotations
 
+from src.runtime_v2.control_plane.formatters.display import display_symbol
 from src.runtime_v2.control_plane.status_queries import ReviewsView
 
 _SEP = "────────────────"
@@ -18,7 +19,7 @@ def format_reviews(view: ReviewsView) -> str:
     else:
         for it in view.items:
             cid = f"#{it.chain_id}" if it.chain_id is not None else "#?"
-            sym = it.symbol or "?"
+            sym = display_symbol(it.symbol) or "?"
             lines.append(f"{cid} {sym} | {it.reason}")
     lines += ["", "Use:", "/trade #id for details", "/control for pause/resume"]
     return "\n".join(lines)

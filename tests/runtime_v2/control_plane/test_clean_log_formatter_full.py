@@ -249,10 +249,11 @@ def test_be_exit_formatter_renders_exit_and_final_result():
         },
         "source": "exchange",
     })
-    assert "BE EXIT" in text
-    assert "Exit: 65,020 BE" in text
+    assert "POSITION CLOSED" in text
+    assert "Price: 65,020" in text
     assert "Close reason: BREAKEVEN_AFTER_TP" in text
     assert "Final Result:" in text
+    assert "Qty: n/a" in text
 
 
 def test_sl_filled_with_be_close_reason_renders_be_exit():
@@ -275,10 +276,11 @@ def test_sl_filled_with_be_close_reason_renders_be_exit():
         },
         "source": "exchange",
     })
-    assert "BE EXIT" in text
-    assert "Exit: 65,000 BE" in text
+    assert "POSITION CLOSED" in text
+    assert "Price" not in text
+    assert "SL: 65,000" in text
     assert "Close reason: BREAKEVEN_AFTER_TP" in text
-    assert "POSITION CLOSED" not in text
+    assert "Qty: n/a" in text
 
 
 # ---------------------------------------------------------------------------

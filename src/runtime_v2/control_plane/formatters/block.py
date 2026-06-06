@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from src.runtime_v2.control_plane.formatters.display import display_symbol, display_symbol_list
 from src.runtime_v2.control_plane.service import BlockResult, UnblockResult
 
 _SEP = "────────────────"
@@ -11,10 +12,12 @@ def _scope_label(scope_value: str | None) -> str:
 
 def format_block(result: BlockResult) -> str:
     scope = _scope_label(result.scope_value)
+    symbol = display_symbol(result.symbol)
+    blacklist = display_symbol_list(result.blacklist)
     title = (
-        f"🚫 {result.symbol} BLOCCATO"
+        f"🚫 {symbol} BLOCCATO"
         if result.scope_value is None
-        else f"🚫 {result.scope_value} / {result.symbol} BLOCCATO"
+        else f"🚫 {result.scope_value} / {symbol} BLOCCATO"
     )
     command = (
         f"/unblock {result.symbol}"
@@ -26,7 +29,7 @@ def format_block(result: BlockResult) -> str:
             title,
             _SEP,
             f"Scope: {scope}",
-            f"Blacklist: {', '.join(result.blacklist) if result.blacklist else 'none'}",
+            f"Blacklist: {', '.join(blacklist) if blacklist else 'none'}",
             "",
             "Commands:",
             command,
@@ -37,17 +40,19 @@ def format_block(result: BlockResult) -> str:
 
 def format_unblock(result: UnblockResult) -> str:
     scope = _scope_label(result.scope_value)
+    symbol = display_symbol(result.symbol)
+    blacklist = display_symbol_list(result.blacklist)
     title = (
-        f"✅ {result.symbol} SBLOCCATO"
+        f"✅ {symbol} SBLOCCATO"
         if result.scope_value is None
-        else f"✅ {result.scope_value} / {result.symbol} SBLOCCATO"
+        else f"✅ {result.scope_value} / {symbol} SBLOCCATO"
     )
     return "\n".join(
         [
             title,
             _SEP,
             f"Scope: {scope}",
-            f"Blacklist: {', '.join(result.blacklist) if result.blacklist else 'none'}",
+            f"Blacklist: {', '.join(blacklist) if blacklist else 'none'}",
             "",
             "Commands:",
             "/control",

@@ -1,6 +1,7 @@
 # src/runtime_v2/control_plane/formatters/control.py
 from __future__ import annotations
 
+from src.runtime_v2.control_plane.formatters.display import display_symbol_list
 from src.runtime_v2.control_plane.status_queries import ControlView
 
 _SEP = "────────────────"
@@ -25,12 +26,12 @@ def format_control(view: ControlView) -> str:
         lines.append("Active blocks: none")
     lines += ["", "Symbol blacklist:"]
     lines.append(
-        "Global: " + (", ".join(view.blacklist_global) if view.blacklist_global else "none")
+        "Global: " + (", ".join(display_symbol_list(view.blacklist_global)) if view.blacklist_global else "none")
     )
     if view.blacklist_per_trader:
         lines.append("Per trader:")
         for trader, syms in view.blacklist_per_trader.items():
-            lines.append(f"  {trader}: {', '.join(syms)}")
+            lines.append(f"  {trader}: {', '.join(display_symbol_list(syms))}")
     else:
         lines.append("Per trader: none")
     return "\n".join(lines)

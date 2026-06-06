@@ -75,6 +75,7 @@ def test_signal_accepted_full():
     text = format_clean_log("SIGNAL_ACCEPTED", {
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
         "trader_id": "trader_a",
+        "account_id": "main",
         "entries": [
             {"sequence": 1, "entry_type": "MARKET", "price": None},
             {"sequence": 2, "entry_type": "LIMIT", "price": 64000.0},
@@ -82,6 +83,7 @@ def test_signal_accepted_full():
         "sl": 62000.0,
         "tps": [68000.0, 71000.0],
         "risk_pct": 0.5,
+        "leverage": 5,
         "source": "original_message",
     })
     assert "Entry_1: Market" in text
@@ -90,7 +92,10 @@ def test_signal_accepted_full():
     assert "TP_1: 68,000" in text
     assert "TP_2: 71,000" in text
     assert "Risk: 0.5%" in text
+    assert "Leverage: x5" in text
     assert "Trader: trader_a" in text
+    assert "Exchange Account: main" in text
+    assert "Trader: trader_a\n" in text
 
 
 def test_signal_accepted_market_with_price():
@@ -148,9 +153,10 @@ def test_tp_filled_final():
         "is_final": True, "sl_current": None,
         "source": "exchange",
     })
-    assert "✅" in text
     assert "POSITION CLOSED" in text
     assert "FINAL TP FILLED" in text
+    assert "Qty: n/a" in text
+    assert "Fee rate: n/a" in text
 
 
 def test_tp_filled_no_sl_shown_when_final():
@@ -171,7 +177,9 @@ def test_sl_filled_shows_fill_price():
     })
     assert "POSITION CLOSED" in text
     assert "62,000" in text
-    assert "STOP_LOSS" in text
+    assert "Close reason:" in text
+    assert "Qty: n/a" in text
+    assert "Fee rate: n/a" in text
 
 
 def test_sl_filled_side_always_correct():
@@ -195,15 +203,17 @@ def test_sl_filled_with_stop_loss_reason_renders_position_closed():
     })
     assert "POSITION CLOSED" in text
     assert "STOP_LOSS" in text
-    assert "BE EXIT" not in text
+    assert "Qty: n/a" in text
 
 
 def test_signal_rejected():
     text = format_clean_log("SIGNAL_REJECTED", {
         "chain_id": 146, "symbol": "BTC/USDT", "side": "LONG",
         "trader_id": "trader_b",
+        "account_id": "main",
         "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
         "sl": 62000.0,
+        "leverage": 5,
         "reason": "invalid_risk_profile",
         "source": "original_message",
     })
@@ -212,8 +222,10 @@ def test_signal_rejected():
     assert "#146" in text
     assert "Entry_1: 65,000 Limit" in text
     assert "SL: 62,000" in text
+    assert "Leverage: x5" in text
     assert "Rejected: invalid_risk_profile" in text
     assert "Trader: trader_b" in text
+    assert "Exchange Account: main" in text
 
 
 def test_signal_rejected_minimal():
@@ -234,6 +246,8 @@ def test_position_closed_shows_fill_price():
     assert "POSITION CLOSED" in text
     assert "65,500" in text
     assert "MANUAL_CLOSE" in text
+    assert "Qty: n/a" in text
+    assert "Fee rate: n/a" in text
 
 
 # ---------------------------------------------------------------------------
@@ -266,7 +280,7 @@ def test_outbox_writer_signal_accepted_enriches_from_chain(tmp_path):
             }
         ],
     })
-    risk = json.dumps({"capital": 10000.0, "risk_amount": 50.0})
+    risk = json.dumps({"capital": 10000.0, "risk_amount": 50.0, "leverage": 5})
 
     with conn:
         conn.execute(
@@ -301,6 +315,7 @@ def test_outbox_writer_signal_accepted_enriches_from_chain(tmp_path):
     assert p["tps"][0] == 68000.0
     assert p["tps"][1] == 71000.0
     assert p["risk_pct"] == 0.5        # 50/10000*100
+    assert p["leverage"] == 5
     assert p["trader_id"] == "trader_a"
     assert p["side"] == "LONG"
 
@@ -319,6 +334,8 @@ def test_footer_adds_separator_before_link():
     source_pos = text.find("Source: original_message")
     link_pos = text.find("https://t.me/c/1/2")
     assert source_pos < link_pos, "Source must appear before link"
+    assert "Source: original_message\n" in text
+    assert text[source_pos:].count("https://t.me/c/1/2") == 1
 
 
 def test_update_done_uses_operation_label_and_square_bullet():
@@ -416,9 +433,9 @@ def test_sl_filled_renders_sl_label_and_final_result():
         "source": "exchange",
     })
     assert "SL: 64,000" in text
-    assert "Closed: 100%" in text
     assert "Final Result:" in text
     assert "PnL: -50.00 USDT" in text
+    assert "Qty: n/a" in text
 
 
 def test_multi_chain_summary_all_done():
