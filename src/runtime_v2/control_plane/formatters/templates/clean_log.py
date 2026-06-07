@@ -463,3 +463,122 @@ def _t_update_rejected(p: dict) -> dict:
     return {**p, "_emoji": "❌", "_event_label": "UPDATE REJECTED",
             "_operations": ops, "_failed_reason": reason,
             "_footnotes": footnotes or None}
+
+
+# ---------------------------------------------------------------------------
+# Simple notifications
+# ---------------------------------------------------------------------------
+
+_PENDING_TIMEOUT_BLOCKS: list = [
+    HeaderBlock(emoji="⏰", event_label="PENDING ENTRY EXPIRED"),
+    StaticBlock("Timeout: order expired before fill"),
+    FooterBlock(default_source="timeout_worker"),
+]
+
+_REENTRY_BLOCKS: list = [
+    HeaderBlock(emoji="🔄", event_label="REENTRY ACCEPTED"),
+    FieldBlock("Previous chain",
+               value_fn=lambda p: f"#{p['previous_chain_id']}" if p.get("previous_chain_id") is not None else None,
+               fmt=text),
+    FooterBlock(default_source="runtime"),
+]
+
+_CANCEL_FAILED_BLOCKS: list = [
+    HeaderBlock(emoji="🚨", event_label="CANCEL FAILED"),
+    DerivedBlock(text_fn=lambda p:
+        f"Cancellation of {p.get('entry_ref', 'entry')} failed after {p.get('attempts', 3)} attempts."
+    ),
+    StaticBlock("Requires manual review to resolve the position."),
+    FieldBlock("Entry price", key="entry_price", fmt=num),
+    FooterBlock(default_source="timeout_worker"),
+]
+
+_RECONCILIATION_WARN_BLOCKS: list = [
+    HeaderBlock(emoji="⚠️", event_label="RECONCILIATION WARNING"),
+    FieldBlock("Issue",  key="issue",  fmt=text),
+    FieldBlock("Risk",   key="risk",   fmt=text),
+    FieldBlock("Action", key="action", fmt=text),
+    FooterBlock(default_source="runtime"),
+]
+
+_RECONCILIATION_FIXED_BLOCKS: list = [
+    HeaderBlock(emoji="✅", event_label="RECONCILIATION FIXED"),
+    FieldBlock("Issue resolved", key="issue", fmt=text),
+    FooterBlock(default_source="runtime"),
+]
+
+
+# ---------------------------------------------------------------------------
+# Multi-chain (MULTI_CHAIN_SUMMARY, MULTI_CHAIN_UPDATE, MULTI_CHAIN_CLOSED)
+# ---------------------------------------------------------------------------
+
+def _render_chain_item(chain: dict, i: int, p: dict) -> list[str]:
+    chain_id = chain.get("chain_id", "?")
+    symbol = display_symbol(chain.get("symbol", "?"))
+    side = chain.get("side", "?")
+    status = chain.get("status", "DONE")
+    lines = [f"#{chain_id} {symbol} {side} — {status}"]
+    if chain.get("link"):
+        lines.append(chain["link"])
+    if p.get("summary_kind") != "final_close":
+        for item in chain.get("display_lines") or []:
+            lines.append(item)
+    lines.append(_SEP)
+    return lines
+
+
+def _fmt_counts(p: dict) -> str:
+    counts = p.get("_counts", {})
+    summary_kind = p.get("summary_kind", "immediate")
+    done    = counts.get("done", 0)
+    partial = counts.get("partial", 0)
+    skipped = counts.get("skipped", 0)
+    review  = counts.get("review", 0)
+    error   = counts.get("error", 0)
+    if summary_kind == "final_close":
+        parts = [f"Done: {done}"]
+        if partial: parts.append(f"Partial: {partial}")
+        if review:  parts.append(f"Review: {review}")
+        parts.append(f"Skipped: {skipped}")
+        parts.append(f"Error: {error}")
+    else:
+        parts = [f"Done: {done}", f"Partial: {partial}", f"Skipped: {skipped}"]
+        if review: parts.append(f"Review: {review}")
+        parts.append(f"Error: {error}")
+    return " | ".join(parts)
+
+
+_MULTI_CHAIN_BLOCKS: list = [
+    DerivedBlock(text_fn=lambda p:
+        ("⚠️" if p["_has_issues"] else "✅")
+        + f" UPDATE APPLICATO — {len(p.get('chains') or [])} chain"
+    ),
+    SeparatorBlock(),
+    BranchBlock(
+        condition=lambda p: p.get("summary_kind") == "final_close",
+        then_blocks=[StaticBlock("Operation requested:")],
+        else_blocks=[StaticBlock("Operations requested:")],
+    ),
+    ListBlock(key="requested_operations", fallback_key="operations",
+              item_renderer=lambda item, i, p: [f"{_BULLET} {item}"]),
+    SeparatorBlock(),
+    ListBlock(key="chains", item_renderer=_render_chain_item),
+    DerivedBlock(text_fn=_fmt_counts),
+    FooterBlock(),
+]
+
+
+def _t_multi_chain(p: dict) -> dict:
+    chains = p.get("chains") or []
+    has_issues = any(
+        chain.get("status") in {"PARTIAL", "SKIPPED", "REVIEW", "ERROR"}
+        for chain in chains
+    )
+    counts = p.get("counts") or {
+        "done":    sum(1 for c in chains if c.get("status") == "DONE"),
+        "partial": sum(1 for c in chains if c.get("status") == "PARTIAL"),
+        "skipped": sum(1 for c in chains if c.get("status") == "SKIPPED"),
+        "review":  sum(1 for c in chains if c.get("status") == "REVIEW"),
+        "error":   sum(1 for c in chains if c.get("status") == "ERROR"),
+    }
+    return {**p, "_has_issues": has_issues, "_counts": counts}
