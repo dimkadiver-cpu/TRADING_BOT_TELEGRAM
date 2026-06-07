@@ -154,3 +154,110 @@ def _build_signal_notes(p: dict) -> list[str]:
     if p.get("risk_hint_applied"):
         notes.append("Risk - Reduced by trader")
     return notes
+
+
+# ---------------------------------------------------------------------------
+# Close templates (SL_FILLED, TP_FILLED_FINAL, POSITION_CLOSED, BE_EXIT)
+# ---------------------------------------------------------------------------
+
+_CLOSED_BLOCKS: list = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label="POSITION CLOSED"),
+    FieldBlock("Close reason", key="close_reason", optional=False, default="n/a"),
+    SeparatorBlock(),
+    *CLOSE_METRICS,
+    *FINAL_RESULT,
+    FooterBlock(default_source="exchange"),
+]
+
+
+def _t_sl_filled(p: dict) -> dict:
+    return {**p, "_emoji": "🛑", "exit_label": "SL",
+            "exit_price": p.get("sl_price", p.get("fill_price"))}
+
+
+def _t_tp_final(p: dict) -> dict:
+    level = p.get("tp_level")
+    display_price = p.get("fill_price") if p.get("fill_price") is not None else p.get("tp_price")
+    return {
+        **p,
+        "_emoji": "✅",
+        "exit_label": f"TP_{level}" if level is not None else "TP",
+        "exit_price": display_price,
+        "close_reason": p.get("close_reason") or "FINAL TP FILLED",
+    }
+
+
+def _t_position_closed(p: dict) -> dict:
+    return {
+        **p,
+        "_emoji": "✋",
+        "exit_label": "Price",
+        "exit_price": p.get("fill_price"),
+        "close_reason": p.get("close_reason") or "MANUAL_CLOSE",
+    }
+
+
+def _t_be_exit(p: dict) -> dict:
+    price_label = "SL" if p.get("sl_price") is not None else "Price"
+    price_value = p.get("sl_price") or p.get("exit_price") or p.get("fill_price")
+    return {**p, "_emoji": "⚡", "exit_label": price_label, "exit_price": price_value}
+
+
+# ---------------------------------------------------------------------------
+# Signal templates (SIGNAL_ACCEPTED, SIGNAL_REJECTED, REVIEW_REQUIRED)
+# ---------------------------------------------------------------------------
+
+_SIGNAL_NOTES_BLOCKS: list = [
+    SeparatorBlock(),
+    StaticBlock("Notes:"),
+    ListBlock(key="_signal_notes", item_renderer=lambda note, i, p: [note]),
+]
+
+_SIGNAL_BASE_BLOCKS: list = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label=lambda p: p["_event_label"]),
+    *_SIGNAL_BODY,
+    FieldBlock("Leverage", key="leverage", fmt=lambda v: f"x{v}"),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("_signal_notes")),
+        blocks=_SIGNAL_NOTES_BLOCKS,
+    ),
+    ConditionalBlock(
+        condition=lambda p: p.get("parse_status") == "PARTIAL",
+        blocks=[
+            DerivedBlock(text_fn=lambda p:
+                f"Parser: PARTIAL ({', '.join(p.get('parse_warnings') or []) or 'incomplete parse'})"
+            ),
+        ]
+    ),
+    FooterBlock(default_source="trader_signal",
+                include_trader_id=True, include_account_id=True, include_rejected_reason=True),
+]
+
+_REVIEW_REQUIRED_BLOCKS: list = [
+    HeaderBlock(emoji="⚠️", event_label="REVIEW REQUIRED"),
+    *_SIGNAL_BODY,
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("_signal_notes")),
+        blocks=_SIGNAL_NOTES_BLOCKS,
+    ),
+    FooterBlock(default_source="runtime",
+                include_trader_id=True, include_account_id=True, include_rejected_reason=True),
+]
+
+
+def _t_signal_accepted(p: dict) -> dict:
+    return {**p, "_emoji": "✅", "_event_label": "SIGNAL ACCEPTED",
+            "_entry_pcts": p.get("_entry_pcts", []),
+            "_tp_pcts":    p.get("_tp_pcts", []),
+            "_signal_notes": _build_signal_notes(p)}
+
+
+def _t_signal_rejected(p: dict) -> dict:
+    return {**p, "_emoji": "❌", "_event_label": "SIGNAL REJECTED",
+            "_entry_pcts": p.get("_entry_pcts", []),
+            "_tp_pcts":    p.get("_tp_pcts", []),
+            "_signal_notes": _build_signal_notes(p)}
+
+
+def _t_review_required(p: dict) -> dict:
+    return {**p, "_signal_notes": _build_signal_notes(p)}
