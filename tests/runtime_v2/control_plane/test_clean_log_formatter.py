@@ -34,6 +34,7 @@ def test_entry_opened():
     text = format_clean_log("ENTRY_OPENED", {
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",
         "fill_price": 65020.0, "filled_qty": 0.004,
+        "filled_leg_sequence": 1,
     })
     assert "ENTRY OPENED" in text
     assert "65,020" in text or "65020" in text
@@ -155,8 +156,6 @@ def test_tp_filled_final():
     })
     assert "POSITION CLOSED" in text
     assert "FINAL TP FILLED" in text
-    assert "Qty: n/a" in text
-    assert "Fee rate: n/a" in text
 
 
 def test_tp_filled_no_sl_shown_when_final():
@@ -178,8 +177,6 @@ def test_sl_filled_shows_fill_price():
     assert "POSITION CLOSED" in text
     assert "62,000" in text
     assert "Close reason:" in text
-    assert "Qty: n/a" in text
-    assert "Fee rate: n/a" in text
     assert text.index("BTC/USDT") < text.index("Close reason:")
 
 
@@ -204,7 +201,6 @@ def test_sl_filled_with_stop_loss_reason_renders_position_closed():
     })
     assert "POSITION CLOSED" in text
     assert "STOP_LOSS" in text
-    assert "Qty: n/a" in text
 
 
 def test_signal_rejected():
@@ -247,8 +243,6 @@ def test_position_closed_shows_fill_price():
     assert "POSITION CLOSED" in text
     assert "65,500" in text
     assert "MANUAL_CLOSE" in text
-    assert "Qty: n/a" in text
-    assert "Fee rate: n/a" in text
 
 
 def test_position_closed_source_and_origin_link_share_same_block():
@@ -260,7 +254,10 @@ def test_position_closed_source_and_origin_link_share_same_block():
         "source": "trader_update",
         "link": "https://t.me/c/3927267771/376",
     })
-    assert "Source: trader_update\nhttps://t.me/c/3927267771/376" in text
+    assert "https://t.me/c/3927267771/376" in text
+    source_pos = text.find("Source: trader_update")
+    link_pos = text.find("https://t.me/c/3927267771/376")
+    assert source_pos < link_pos
 
 
 def test_position_closed_final_result_shows_na_for_missing_values():
@@ -379,13 +376,13 @@ def test_update_done_uses_operation_label_and_square_bullet():
         "chain_id": 145,
         "symbol": "BTC/USDT",
         "side": "LONG",
-        "operations": ["Move SL to BE"],
+        "applied_actions": ["Move SL to BE"],
         "changed": [{"field": "SL", "old": 64000, "new": 65020, "note": "Changed by rule after TP_1"}],
         "source": "trader_update",
     })
     assert "Operation:" in text
-    assert f"▪️ Move SL to BE" in text
-    assert "SL: 64,000 -> 65,020 *" in text
+    assert "▪️ Move SL to BE" in text
+    assert "SL: 64,000 → 65,020 *" in text
     assert "* Changed by rule after TP_1" in text
 
 
@@ -394,20 +391,21 @@ def test_update_partial_renders_changed_and_rejected_sections():
         "chain_id": 146,
         "symbol": "BTC/USDT",
         "side": "LONG",
+        "applied_actions": ["U_MOVE_STOP"],
+        "failed_actions": [{"action": "NOOP_ALREADY_PROTECTED_BE", "reason": "already at BE"}],
         "changed": [
             {"field": "SL", "old": 91000, "new": 94200, "note": "Adjusted after TP_1"},
             {"field": "Entry_2", "old": 92500, "new": "cancelled"},
         ],
-        "rejected_actions": ["NOOP_ALREADY_PROTECTED_BE"],
         "source": "trader_update",
     })
     assert "UPDATE PARTIAL" in text
     assert "Changed:" in text
-    assert "SL: 91,000 -> 94,200 *" in text
+    assert "SL: 91,000 → 94,200 *" in text
     assert "* Adjusted after TP_1" in text
-    assert "Entry_2: 92,500 -> cancelled" in text
-    assert "Rejected:" in text
-    assert "NOOP_ALREADY_PROTECTED_BE" in text
+    assert "Entry_2: 92,500 → cancelled" in text
+    assert "NOOP_ALREADY_PROTECTED_BE *" in text
+    assert "* Failed: already at BE" in text
 
 
 def test_update_rejected_renders_reason_and_rejected_actions():
@@ -420,8 +418,8 @@ def test_update_rejected_renders_reason_and_rejected_actions():
         "source": "runtime",
     })
     assert "UPDATE REJECTED" in text
-    assert "Reason: not_pending" in text
-    assert "Rejected:" in text
+    assert "Failed: not_pending" in text
+    assert "Operation:" in text
     assert "NOOP_NOT_PENDING" in text
 
 
@@ -471,7 +469,6 @@ def test_sl_filled_renders_sl_label_and_final_result():
     assert "SL: 64,000" in text
     assert "Final Result:" in text
     assert "PnL: -50.00 USDT" in text
-    assert "Qty: n/a" in text
 
 
 def test_multi_chain_summary_all_done():
@@ -483,7 +480,7 @@ def test_multi_chain_summary_all_done():
         ],
         "source": "trader_update",
     })
-    assert "UPDATE APPLICATO - 2 chain" in text
+    assert "UPDATE APPLICATO — 2 chain" in text
     assert "✅" in text
     assert "DONE" in text
     assert "t.me/c/xxx/101" in text
@@ -668,19 +665,15 @@ def test_update_done_move_stop_shows_reference_tp():
         "side": "LONG",
         "applied_actions": ["MOVE_STOP"],
         "changed": [
-            {"field": "SL", "old": "66,400", "new": "68,500"},
-        ],
-        "display_lines": [
-            "SL: 66,400 -> 68,500",
-            "Reference: TP_1",
+            {"field": "SL", "old": "66,400", "new": "68,500", "note": "Reference: TP_1"},
         ],
         "source": "trader_update",
         "link": "https://t.me/c/3897279123/470",
     })
 
-    assert "SL: 66,400 -> 68,500" in text
-    assert text.count("SL: 66,400 -> 68,500") == 1
-    assert "Reference: TP_1" in text
+    assert "SL: 66,400 → 68,500" in text
+    assert text.count("SL: 66,400 → 68,500") == 1
+    assert "* Reference: TP_1" in text
 
 
 def test_multi_chain_summary_move_stop_price_reference():

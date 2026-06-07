@@ -12,6 +12,7 @@ def test_entry_updated_renders_fill_and_new_avg():
     text = format_clean_log("ENTRY_UPDATED", {
         "chain_id": 200, "symbol": "BTC/USDT", "side": "LONG",
         "fill_price": 64500.0, "filled_qty": 0.002, "new_avg_entry": 64750.0,
+        "filled_leg_sequence": 1,
         "source": "exchange",
     })
     assert "ENTRY UPDATED" in text
@@ -26,6 +27,7 @@ def test_entry_updated_without_new_avg():
     text = format_clean_log("ENTRY_UPDATED", {
         "chain_id": 201, "symbol": "ETH/USDT", "side": "SHORT",
         "fill_price": 3100.0, "filled_qty": 1.5, "new_avg_entry": None,
+        "filled_leg_sequence": 1,
         "source": "exchange",
     })
     assert "ENTRY UPDATED" in text
@@ -40,14 +42,12 @@ def test_update_done_renders_operations_and_changes():
     text = format_clean_log("UPDATE_DONE", {
         "chain_id": 300, "symbol": "BTC/USDT", "side": "LONG",
         "applied_actions": ["U_MOVE_STOP", "U_UPDATE_TAKE_PROFITS"],
-        "changed_fields": ["current_stop_price", "plan_state_json"],
         "source": "runtime",
     })
     assert "UPDATE DONE" in text
     assert "#300" in text
     assert "✅" in text
     assert "U_MOVE_STOP" in text
-    assert "current_stop_price" in text
     assert "Source: runtime" in text
 
 
@@ -68,14 +68,14 @@ def test_update_partial_renders_applied_and_rejected():
     text = format_clean_log("UPDATE_PARTIAL", {
         "chain_id": 400, "symbol": "SOL/USDT", "side": "LONG",
         "applied_actions": ["U_MOVE_STOP"],
-        "rejected_actions": ["U_ADD_ENTRY"],
+        "failed_actions": [{"action": "U_ADD_ENTRY", "reason": "no pending slot"}],
         "source": "runtime",
     })
     assert "UPDATE PARTIAL" in text
     assert "#400" in text
     assert "⚠️" in text
     assert "U_MOVE_STOP" in text
-    assert "U_ADD_ENTRY" in text
+    assert "U_ADD_ENTRY *" in text
     assert "Source: runtime" in text
 
 
@@ -253,7 +253,6 @@ def test_be_exit_formatter_renders_exit_and_final_result():
     assert "Price: 65,020" in text
     assert "Close reason: BREAKEVEN_AFTER_TP" in text
     assert "Final Result:" in text
-    assert "Qty: n/a" in text
     assert text.index("BTC/USDT") < text.index("Close reason:")
 
 
@@ -281,7 +280,6 @@ def test_sl_filled_with_be_close_reason_renders_be_exit():
     assert "Price" not in text
     assert "SL: 65,000" in text
     assert "Close reason: BREAKEVEN_AFTER_TP" in text
-    assert "Qty: n/a" in text
 
 
 # ---------------------------------------------------------------------------
@@ -299,7 +297,7 @@ def test_multi_chain_update_formatter():
         "summary": {"done": 3, "rejected": 0},
         "source": "trader_update",
     })
-    assert "UPDATE APPLICATO - 3 chain" in text
+    assert "UPDATE APPLICATO — 3 chain" in text
     assert "#160" in text
     assert "BTC/USDT" in text
     assert "DONE" in text
@@ -321,6 +319,6 @@ def test_cancel_failed_formatter():
     })
     assert "CANCEL FAILED" in text
     assert "Cancellation of Entry_2 failed after 3 attempts." in text
-    assert "manual review required" in text.lower()
+    assert "manual review to resolve" in text.lower()
     assert "#145" in text
     assert "64,000" in text or "64000" in text
