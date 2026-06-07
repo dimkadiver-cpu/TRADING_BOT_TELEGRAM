@@ -413,3 +413,70 @@ def test_on_pass_not_called_on_idempotency_short_circuit():
     mock_repo.get_by_canonical_message_id.return_value = saved  # simula già esistente
     processor.process(_fake_result(50))
     assert called == [1]  # ancora 1, non 2
+
+
+# ── risk_hint propagation tests ───────────────────────────────────────────────
+
+def _make_parse_result_with_risk_hint(
+    risk_hint_value: float,
+    *,
+    trader_id: str = "trader_a",
+    canonical_message_id: int = 42,
+    raw_message_id: int = 420,
+):
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage, SignalPayload
+    from src.parser_v2.contracts.entities import EntryLeg, Price, TakeProfit, StopLoss, RiskHint
+    from src.parser_v2.contracts.context import RawContext
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+    import datetime
+
+    entries = [EntryLeg(sequence=1, entry_type="LIMIT", price=Price(raw="50000", value=50000.0))]
+    take_profits = [TakeProfit(sequence=1, price=Price(raw="51000", value=51000.0))]
+    stop_loss = StopLoss(price=Price(raw="49000", value=49000.0))
+    risk_hint = RiskHint(raw=f"{risk_hint_value}%", value=risk_hint_value)
+
+    try:
+        signal = SignalPayload(
+            completeness="COMPLETE",
+            symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+            entries=entries, take_profits=take_profits, stop_loss=stop_loss,
+            risk_hint=risk_hint,
+        )
+    except Exception:
+        signal = SignalPayload(
+            symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+            entries=entries, take_profits=take_profits, stop_loss=stop_loss,
+            risk_hint=risk_hint,
+        )
+
+    canonical = CanonicalMessage(
+        parser_profile=trader_id, primary_class="SIGNAL",
+        parse_status="PARSED", confidence=1.0,
+        signal=signal, raw_context=RawContext(raw_text="test"),
+    )
+    return CanonicalParseResult(
+        raw_message_id=raw_message_id,
+        canonical_message_id=canonical_message_id,
+        parser_profile=trader_id,
+        primary_class="SIGNAL",
+        parse_status="PARSED",
+        canonical_message=canonical,
+        warnings=[],
+        parsed_at=datetime.datetime.now(datetime.timezone.utc),
+    )
+
+
+def test_processor_propagates_risk_hint_to_enriched_signal(processor):
+    result = _make_parse_result_with_risk_hint(risk_hint_value=1.5)
+    enriched = processor.process(result)
+    assert enriched.enriched_signal is not None
+    assert enriched.enriched_signal.risk_hint is not None
+    assert enriched.enriched_signal.risk_hint.value == 1.5
+    assert enriched.enriched_signal.risk_hint.raw == "1.5%"
+
+
+def test_processor_risk_hint_is_none_when_absent(processor):
+    result = _make_parse_result()
+    enriched = processor.process(result)
+    assert enriched.enriched_signal is not None
+    assert enriched.enriched_signal.risk_hint is None

@@ -6,7 +6,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from src.parser_v2.contracts.canonical_message import TargetActionGroup
-from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+from src.parser_v2.contracts.entities import Price, RiskHint, StopLoss, TakeProfit
 from src.parser_v2.contracts.enums import EntryRole, EntryStructure, EntryType, MessageClass, Side
 
 
@@ -154,6 +154,7 @@ class EnrichedSignalPayload(BaseModel):
     take_profits: list[TakeProfit]
     stop_loss: StopLoss | None
     range_derivation: RangeDerivation | None = None
+    risk_hint: RiskHint | None = None
 
 
 class EnrichmentLogEntry(BaseModel):

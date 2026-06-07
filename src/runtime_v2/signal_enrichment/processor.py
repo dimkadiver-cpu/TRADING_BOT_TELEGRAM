@@ -141,6 +141,7 @@ class SignalEnrichmentProcessor:
             take_profits=take_profits,
             stop_loss=signal.stop_loss,
             range_derivation=range_derivation,
+            risk_hint=signal.risk_hint,
         )
 
         return EnrichedCanonicalMessage(
