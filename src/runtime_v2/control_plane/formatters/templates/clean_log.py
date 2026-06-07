@@ -88,7 +88,7 @@ FINAL_RESULT: list = [
 _FILL_SECTION: list = [
     StaticBlock("Filled:"),
     DerivedBlock(text_fn=lambda p: (
-        f"Entry_{p['filled_leg_sequence']}: {num(p['fill_price'])} "
+        f"Entry_{p['filled_leg_sequence']}: {num(p.get('fill_price'))} "
         f"{p.get('entry_type_for_leg', 'Limit').capitalize()}"
         if p.get("filled_leg_sequence") is not None else ""
     )),
@@ -96,7 +96,7 @@ _FILL_SECTION: list = [
         condition=lambda p: bool(p.get("is_partial_leg")),
         then_blocks=[
             DerivedBlock(text_fn=lambda p:
-                f"Qty: {num(p['filled_qty'])} (planned: {num(p['planned_qty'])})"
+                f"Qty: {num(p.get('filled_qty', 0))} (planned: {num(p.get('planned_qty', 0))})"
             ),
         ],
         else_blocks=[FieldBlock("Qty", key="filled_qty", fmt=num)],
@@ -199,7 +199,8 @@ def _t_position_closed(p: dict) -> dict:
 
 def _t_be_exit(p: dict) -> dict:
     price_label = "SL" if p.get("sl_price") is not None else "Price"
-    price_value = p.get("sl_price") or p.get("exit_price") or p.get("fill_price")
+    sl = p.get("sl_price")
+    price_value = sl if sl is not None else (p.get("exit_price") if p.get("exit_price") is not None else p.get("fill_price"))
     return {**p, "_emoji": "⚡", "exit_label": price_label, "exit_price": price_value}
 
 
@@ -316,9 +317,9 @@ _ENTRY_CANCELLED_BLOCKS: list = [
     ConditionalBlock(
         condition=lambda p: p.get("total_filled_qty") is not None,
         blocks=[
-            DerivedBlock(text_fn=lambda p:
-                f"Total filled: {num(p['total_filled_qty'])} {p['_base_asset']}"
-            ),
+            DerivedBlock(text_fn=lambda p: (
+                f"Total filled: {num(p['total_filled_qty'])} {p['_base_asset']}".rstrip()
+            )),
         ]
     ),
     FooterBlock(default_source="runtime"),
@@ -350,11 +351,11 @@ _PARTIAL_RESULT_BLOCKS: list = [
     FieldBlock("Closed",   key="closed_pct",  fmt=pct),
     FieldBlock("Qty",      key="closed_qty",  fmt=num),
     FieldBlock("PnL",      key="pnl",         fmt=money_signed),
-    FieldBlock("Fee rate", key="fee_rate",    fmt=fee_rate),
+    FieldBlock("Fee rate", key="fee_rate",    fmt=fee_rate,  optional=False, default="n/a"),
     FieldBlock("Fee",      key="fee",         fmt=money),
     ConditionalBlock(
         condition=lambda p: p.get("_show_value"),
-        blocks=[FieldBlock("Value", key="exec_value", fmt=money)],
+        blocks=[FieldBlock("Value", key="exec_value", fmt=money, optional=False, default="n/a")],
     ),
     SeparatorBlock(),
     StaticBlock("Remaining:"),
@@ -443,12 +444,12 @@ def _t_update_done(p: dict) -> dict:
 def _t_update_partial(p: dict) -> dict:
     applied     = p.get("applied_actions") or []
     failed_list = p.get("failed_actions") or []   # [{"action": str, "reason": str}]
-    failed_set  = {f["action"] for f in failed_list}
-    all_ops     = applied + [f["action"] for f in failed_list]
+    failed_set  = {f.get("action", "") for f in failed_list}
+    all_ops     = applied + [f.get("action", "") for f in failed_list]
     ops_display = [f"{op} *" if op in failed_set else op for op in all_ops]
     changed     = p.get("changed") or []
     fn_changed  = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
-    fn_failed   = [f"Failed: {f['reason']}" for f in failed_list]
+    fn_failed   = [f"Failed: {f.get('reason', '')}" for f in failed_list]
     footnotes   = fn_changed + fn_failed
     return {**p, "_emoji": "⚠️", "_event_label": "UPDATE PARTIAL",
             "_operations": ops_display, "_failed_reason": None,

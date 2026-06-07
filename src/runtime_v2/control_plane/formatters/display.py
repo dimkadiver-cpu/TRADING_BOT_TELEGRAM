@@ -10,8 +10,10 @@ _KNOWN_QUOTES: tuple[str, ...] = (
 
 
 def display_symbol(symbol: str | None) -> str:
+    if symbol is None:
+        return ""
     if not symbol:
-        return str(symbol)
+        return symbol
     if "/" in symbol:
         return symbol
     upper = symbol.upper()

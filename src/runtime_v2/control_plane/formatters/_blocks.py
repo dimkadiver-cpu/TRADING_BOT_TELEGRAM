@@ -52,6 +52,10 @@ class FieldBlock:
     optional: bool = True
     default: str = "n/a"
 
+    def __post_init__(self) -> None:
+        if self.key is not None and self.value_fn is not None:
+            raise ValueError("FieldBlock: set key OR value_fn, not both")
+
 
 @dataclass
 class SectionBlock:
