@@ -53,3 +53,104 @@ def _render_changed_item(item: object, i: int, p: dict) -> list[str]:
             return [f"{_BULLET} {field_name}: {value} *"]
         return [f"{_BULLET} {field_name}: {value}"]
     return [f"{_BULLET} {item}"]
+
+
+# ---------------------------------------------------------------------------
+# Shared block lists
+# ---------------------------------------------------------------------------
+
+CLOSE_METRICS: list = [
+    FieldBlock(label=lambda p: p.get("exit_label", "Price"), key="exit_price",
+               fmt=num, optional=False, default="n/a"),
+    FieldBlock("Qty",      key="closed_qty",  fmt=num),
+    FieldBlock("PnL",      key="pnl",         fmt=money_signed),
+    FieldBlock("Fee rate", key="fee_rate",     fmt=fee_rate),
+    FieldBlock("Fee",      key="fee",          fmt=money),
+]
+
+FINAL_RESULT: list = [
+    SeparatorBlock(),
+    StaticBlock("Final Result:"),
+    FieldBlock("ROI net",       value_fn=lambda p: (p.get("final_result") or {}).get("roi_net_pct"),
+               fmt=pct_signed,   optional=False, default="n/a"),
+    FieldBlock("RoR",           value_fn=lambda p: (p.get("final_result") or {}).get("return_on_risk_pct"),
+               fmt=pct_signed,   optional=False, default="n/a"),
+    FieldBlock("Total PnL net", value_fn=lambda p: (p.get("final_result") or {}).get("total_pnl_net"),
+               fmt=money_signed, optional=False, default="n/a"),
+    FieldBlock("Gross PnL",     value_fn=lambda p: (p.get("final_result") or {}).get("gross_pnl"),
+               fmt=money_signed, optional=False, default="n/a"),
+    FieldBlock("Fees",          value_fn=lambda p: (p.get("final_result") or {}).get("fees"),
+               fmt=money_signed, optional=False, default="n/a"),
+    FieldBlock("Funding",       value_fn=lambda p: (p.get("final_result") or {}).get("funding"),
+               fmt=money_signed, optional=False, default="n/a"),
+]
+
+_FILL_SECTION: list = [
+    StaticBlock("Filled:"),
+    DerivedBlock(text_fn=lambda p: (
+        f"Entry_{p['filled_leg_sequence']}: {num(p['fill_price'])} "
+        f"{p.get('entry_type_for_leg', 'Limit').capitalize()}"
+        if p.get("filled_leg_sequence") is not None else ""
+    )),
+    BranchBlock(
+        condition=lambda p: bool(p.get("is_partial_leg")),
+        then_blocks=[
+            DerivedBlock(text_fn=lambda p:
+                f"Qty: {num(p['filled_qty'])} (planned: {num(p['planned_qty'])})"
+            ),
+        ],
+        else_blocks=[FieldBlock("Qty", key="filled_qty", fmt=num)],
+    ),
+    FieldBlock("Value",    key="exec_value", fmt=money),
+    FieldBlock("Fee rate", key="fee_rate",   fmt=fee_rate),
+    FieldBlock("Fee",      key="fee",        fmt=money),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("is_partial_leg")),
+        blocks=[FieldBlock("Partial", key="_leg_fill_pct", fmt=pct)],
+    ),
+    SeparatorBlock(),
+]
+
+_SIGNAL_BODY: list = [
+    ListBlock(key="entries", item_renderer=_render_entry_item),
+    FieldBlock("SL",   key="sl",       fmt=num),
+    ListBlock(key="tps", item_renderer=_render_tp_item),
+    FieldBlock("Risk", key="risk_pct", fmt=lambda v: f"{v}%"),
+]
+
+_ENTRY_POSITION_SECTION: list = [
+    StaticBlock("Position:"),
+    FieldBlock("Avg entry",   key="_avg_entry",          fmt=num),
+    FieldBlock("Total qty",   key="total_filled_qty",    fmt=num),
+    FieldBlock("Total value", key="total_value",         fmt=money),
+    FieldBlock("Total fees",  key="total_fees",          fmt=money),
+    FieldBlock("Filled",      key="position_filled_pct", fmt=pct),
+    ConditionalBlock(
+        condition=lambda p: p.get("actual_risk_usdt") is not None,
+        blocks=[
+            DerivedBlock(text_fn=lambda p:
+                f"Risk: {money(p.get('actual_risk_usdt'))} "
+                f"(planned: {money(p.get('planned_risk_usdt'))})"
+            ),
+        ]
+    ),
+    BranchBlock(
+        condition=lambda p: bool(p.get("pending_entries")),
+        then_blocks=[ListBlock(key="pending_entries", item_renderer=_render_pending_entry)],
+        else_blocks=[StaticBlock("Pending: none")],
+    ),
+]
+
+
+def _build_signal_notes(p: dict) -> list[str]:
+    notes: list[str] = []
+    rd = p.get("range_derivation") or {}
+    if rd.get("derived_from_range"):
+        mode = str(rd.get("split_mode") or "").capitalize()
+        min_p = rd.get("original_min_price")
+        max_p = rd.get("original_max_price")
+        if mode and min_p is not None and max_p is not None:
+            notes.append(f"Entry - {mode} [{num(min_p)}-{num(max_p)}]")
+    if p.get("risk_hint_applied"):
+        notes.append("Risk - Reduced by trader")
+    return notes
