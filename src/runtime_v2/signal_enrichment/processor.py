@@ -12,6 +12,7 @@ from src.runtime_v2.signal_enrichment.models import (
     EnrichedEntryLeg,
     EnrichedSignalPayload,
     EnrichmentLogEntry,
+    RangeDerivation,
 )
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
 
@@ -121,7 +122,8 @@ class SignalEnrichmentProcessor:
             ))
 
         # 6. Entry split weights
-        entries = self._apply_entry_weights(signal, config)
+        entries, normalized_structure, range_derivation, range_logs = self._apply_entry_weights(signal, config)
+        log.extend(range_logs)
 
         # 7. Price sanity (se abilitata)
         if config.signal_policy.price_sanity.enabled:
@@ -134,10 +136,11 @@ class SignalEnrichmentProcessor:
         enriched_signal = EnrichedSignalPayload(
             symbol=symbol or None,
             side=signal.side,
-            entry_structure=signal.entry_structure,
+            entry_structure=normalized_structure,
             entries=entries,
             take_profits=take_profits,
             stop_loss=signal.stop_loss,
+            range_derivation=range_derivation,
         )
 
         return EnrichedCanonicalMessage(
@@ -155,7 +158,11 @@ class SignalEnrichmentProcessor:
             lifecycle_processed=False,
         )
 
-    def _apply_entry_weights(self, signal, config: EffectiveEnrichmentConfig) -> list[EnrichedEntryLeg]:
+    def _apply_entry_weights(
+        self,
+        signal,
+        config: EffectiveEnrichmentConfig,
+    ) -> tuple[list[EnrichedEntryLeg], str | None, RangeDerivation | None, list[EnrichmentLogEntry]]:
         split = config.signal_policy.entry_split
         structure = signal.entry_structure
         first_leg = signal.entries[0] if signal.entries else None
@@ -194,36 +201,73 @@ class SignalEnrichmentProcessor:
             ))
 
         if structure == "RANGE" and entry_type_key == "LIMIT":
-            result = self._apply_range_split(result, split.LIMIT.range.split_mode)
+            return self._apply_range_split(result, split.LIMIT.range.split_mode)
 
-        return result
+        return result, structure, None, []
 
     @staticmethod
-    def _apply_range_split(legs: list[EnrichedEntryLeg], split_mode: str) -> list[EnrichedEntryLeg]:
+    def _apply_range_split(
+        legs: list[EnrichedEntryLeg],
+        split_mode: str,
+    ) -> tuple[list[EnrichedEntryLeg], str, RangeDerivation | None, list[EnrichmentLogEntry]]:
         from src.parser_v2.contracts.entities import Price
 
-        if split_mode == "endpoints" or len(legs) < 2:
-            return legs
+        if len(legs) < 2:
+            structure = "ONE_SHOT" if len(legs) == 1 else "RANGE"
+            return legs, structure, None, []
 
         valid_prices = [leg.price.value for leg in legs if leg.price is not None]
-        if not valid_prices:
-            return legs
+        if len(valid_prices) < 2:
+            return legs, "RANGE", None, []
 
         min_price = min(valid_prices)
         max_price = max(valid_prices)
+        first_authored_leg = min(legs, key=lambda l: l.sequence)
+        last_authored_leg = max(legs, key=lambda l: l.sequence)
+
+        if split_mode == "endpoints":
+            meta = RangeDerivation(
+                derived_from_range=True,
+                split_mode=split_mode,
+                original_min_price=min_price,
+                original_max_price=max_price,
+            )
+            log_entry = EnrichmentLogEntry(
+                check="range_endpoints_retained",
+                original=f"{min_price}-{max_price}",
+                result="two_step",
+                detail="endpoints",
+            )
+            return legs, "TWO_STEP", meta, [log_entry]
 
         if split_mode == "firstpoint":
-            target = min_price
+            if first_authored_leg.price is None:
+                return legs, "RANGE", None, []
+            target = first_authored_leg.price.value
         elif split_mode == "lastpoint":
-            target = max_price
+            if last_authored_leg.price is None:
+                return legs, "RANGE", None, []
+            target = last_authored_leg.price.value
         elif split_mode == "midpoint":
             target = round((min_price + max_price) / 2, 8)
         else:
-            return legs
+            return legs, "RANGE", None, []
 
+        meta = RangeDerivation(
+            derived_from_range=True,
+            split_mode=split_mode,
+            original_min_price=min_price,
+            original_max_price=max_price,
+        )
         first_leg = min(legs, key=lambda l: l.sequence)
         new_price = Price(raw=str(target), value=target)
-        return [first_leg.model_copy(update={"price": new_price, "weight": 1.0})]
+        log_entry = EnrichmentLogEntry(
+            check="range_price_derived",
+            original=f"{min_price}-{max_price}",
+            result=str(target),
+            detail=split_mode,
+        )
+        return [first_leg.model_copy(update={"price": new_price, "weight": 1.0})], "ONE_SHOT", meta, [log_entry]
 
     # ── UPDATE gate (Task 7) ──────────────────────────────────────────────────
 

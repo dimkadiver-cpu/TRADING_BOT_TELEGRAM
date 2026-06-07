@@ -138,6 +138,13 @@ class EnrichedEntryLeg(BaseModel):
     weight: float = 1.0
 
 
+class RangeDerivation(BaseModel):
+    derived_from_range: bool = False
+    split_mode: Literal["endpoints", "firstpoint", "lastpoint", "midpoint"]
+    original_min_price: float
+    original_max_price: float
+
+
 class EnrichedSignalPayload(BaseModel):
     symbol: str | None
     side: Side | None
@@ -145,6 +152,7 @@ class EnrichedSignalPayload(BaseModel):
     entries: list[EnrichedEntryLeg]
     take_profits: list[TakeProfit]
     stop_loss: StopLoss | None
+    range_derivation: RangeDerivation | None = None
 
 
 class EnrichmentLogEntry(BaseModel):
@@ -181,6 +189,6 @@ __all__ = [
     "TpConfig", "SlConfig", "PriceCorrectionsConfig", "PriceSanityConfig",
     "SignalPolicyConfig", "CloseDistributionConfig", "ManagementPlanConfig",
     "RiskConfig", "AccountConfig", "EffectiveEnrichmentConfig",
-    "EnrichedEntryLeg", "EnrichedSignalPayload",
+    "EnrichedEntryLeg", "RangeDerivation", "EnrichedSignalPayload",
     "EnrichmentLogEntry", "EnrichedCanonicalMessage",
 ]
