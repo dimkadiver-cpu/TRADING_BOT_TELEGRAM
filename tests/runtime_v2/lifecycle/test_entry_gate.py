@@ -38,6 +38,8 @@ def _make_enriched_signal(
     max_concurrent_trades: int = 5,
     max_concurrent_same_symbol: int = 1,
     be_trigger: str | None = None,
+    risk_hint=None,
+    use_trader_risk_hint: bool = False,
 ):
     from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
     from src.runtime_v2.signal_enrichment.models import (
@@ -88,6 +90,7 @@ def _make_enriched_signal(
             if range_derivation is not None
             else None
         ),
+        risk_hint=risk_hint,
     )
     weights = EntryWeightsConfig(weights={"E1": 1.0})
     policy = EffectiveEnrichmentConfig(
@@ -115,6 +118,7 @@ def _make_enriched_signal(
             leverage=1, max_capital_at_risk_per_trader_pct=50.0,
             max_concurrent_trades=max_concurrent_trades,
             max_concurrent_same_symbol=max_concurrent_same_symbol,
+            use_trader_risk_hint=use_trader_risk_hint,
         ),
     )
     return EnrichedCanonicalMessage(
@@ -3370,3 +3374,46 @@ def test_release_close_full_summary_uses_position_closed_links(tmp_path):
     assert payload["summary_kind"] == "final_close"
     assert payload["chains"][0]["link"] == "https://t.me/c/3897279123/468"
     assert payload["chains"][1]["link"] == "https://t.me/c/3897279123/469"
+
+
+def test_gate_signal_copies_risk_hint_applied_into_plan_state_json():
+    from src.parser_v2.contracts.entities import RiskHint
+    hint = RiskHint(raw="1%", value=1.0)
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        risk_pct=2.0,          # config risk 2%
+        use_trader_risk_hint=True,
+        risk_hint=hint,        # hint 1% < 2% → should apply
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert "risk_hint_applied" in plan
+    assert plan["risk_hint_applied"]["hint_raw"] == "1%"
+    assert plan["risk_hint_applied"]["hint_effective_pct"] == pytest.approx(1.0)
+    assert plan["risk_hint_applied"]["configured_risk_pct"] == pytest.approx(2.0)
+
+
+def test_gate_signal_no_risk_hint_applied_key_when_flag_false():
+    from src.parser_v2.contracts.entities import RiskHint
+    hint = RiskHint(raw="1%", value=1.0)
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        risk_pct=2.0,
+        use_trader_risk_hint=False,  # flag off
+        risk_hint=hint,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert "risk_hint_applied" not in plan
+
+
+def test_gate_signal_no_risk_hint_applied_key_when_hint_absent():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        risk_pct=2.0,
+        use_trader_risk_hint=True,
+        risk_hint=None,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert "risk_hint_applied" not in plan

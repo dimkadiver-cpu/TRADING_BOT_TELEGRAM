@@ -587,16 +587,19 @@ class LifecycleEntryGate:
         else:
             chain_execution_mode = "D_POSITION_TPSL"
 
+        extra_plan: dict = {}
+        if signal.range_derivation is not None:
+            extra_plan["range_derivation"] = signal.range_derivation.model_dump()
+        if decision.hint_applied is not None:
+            extra_plan["risk_hint_applied"] = decision.hint_applied
+
         plan_state = ExecutionPlanBuilder.build(
             eid,
             signal.entries,
             signal.take_profits,
             decision.risk_snapshot,
+            extra_plan_metadata=extra_plan or None,
         )
-        if signal.range_derivation is not None:
-            plan_data = json.loads(plan_state)
-            plan_data["range_derivation"] = signal.range_derivation.model_dump()
-            plan_state = json.dumps(plan_data)
 
         chain = TradeChain(
             source_enrichment_id=eid,
