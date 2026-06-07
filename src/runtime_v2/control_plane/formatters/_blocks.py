@@ -111,9 +111,121 @@ class TemplateConfig:
     payload_transform: Callable[[dict], dict] | None = None
 
 
-# Renderer will be added in Task 3 — leave render_template as a forward declaration
-def render_template(blocks: list, payload: dict, *, transform: Callable[[dict], dict] | None = None) -> str:
-    raise NotImplementedError("Renderer not yet implemented — Task 3 will define this")
+# ---------------------------------------------------------------------------
+# Renderer helpers
+# ---------------------------------------------------------------------------
+
+def _side_emoji(side: str | None) -> str:
+    if side == "LONG":
+        return "\U0001f4c8"
+    if side == "SHORT":
+        return "\U0001f4c9"
+    return "•"
+
+
+def _separator(width: int) -> str:
+    dash_count = max(4, (max(width, 1) + 1) // 2)
+    return " ".join("-" for _ in range(dash_count))
+
+
+def _finalize(lines: list[str]) -> str:
+    width = max((len(line) for line in lines if line and line != _SEP), default=8)
+    sep = _separator(width)
+    return "\n".join(sep if line == _SEP else line for line in lines)
+
+
+# ---------------------------------------------------------------------------
+# Block render dispatch
+# ---------------------------------------------------------------------------
+
+def render_template(
+    blocks: list,
+    payload: dict,
+    *,
+    transform: Callable[[dict], dict] | None = None,
+) -> str:
+    p = transform(payload) if transform else payload
+    lines: list[str] = []
+    _render_blocks(blocks, p, lines)
+    return _finalize(lines)
+
+
+def _render_blocks(blocks: list, p: dict, lines: list[str]) -> None:
+    for block in blocks:
+        match block:
+            case SeparatorBlock():
+                lines.append(_SEP)
+            case StaticBlock(text=t):
+                lines.append(t)
+            case DerivedBlock(text_fn=fn):
+                result = fn(p)
+                if result:
+                    lines.append(result)
+            case HeaderBlock():
+                _render_header(block, p, lines)
+            case FieldBlock():
+                _render_field(block, p, lines)
+            case SectionBlock(label=lbl, blocks=sub):
+                lines.append(lbl)
+                _render_blocks(sub, p, lines)
+            case ConditionalBlock(condition=cond, blocks=sub):
+                if cond(p):
+                    _render_blocks(sub, p, lines)
+            case BranchBlock(condition=cond, then_blocks=tb, else_blocks=eb):
+                _render_blocks(tb if cond(p) else eb, p, lines)
+            case ListBlock():
+                _render_list(block, p, lines)
+            case FooterBlock():
+                _render_footer(block, p, lines)
+
+
+def _render_header(block: HeaderBlock, p: dict, lines: list[str]) -> None:
+    emoji = block.emoji(p) if callable(block.emoji) else block.emoji
+    event_label = block.event_label(p) if callable(block.event_label) else block.event_label
+    chain_id = p.get("chain_id")
+    id_part = f" #{chain_id}" if chain_id is not None else ""
+    lines.append(f"{emoji}{id_part} — {event_label}")
+    lines.append(_SEP)
+    symbol = p.get("symbol")
+    side = p.get("side")
+    if symbol and side:
+        lines.append(f"{display_symbol(symbol)} — {_side_emoji(side)} {side}")
+    signal_link = p.get("signal_link")
+    if signal_link:
+        lines.append(signal_link)
+    lines.append(_SEP)
+
+
+def _render_field(block: FieldBlock, p: dict, lines: list[str]) -> None:
+    value = block.value_fn(p) if block.value_fn else p.get(block.key)
+    if value is None and block.optional:
+        return
+    label = block.label(p) if callable(block.label) else block.label
+    formatted = block.fmt(value) if value is not None else block.default
+    lines.append(f"{label}: {formatted}")
+
+
+def _render_list(block: ListBlock, p: dict, lines: list[str]) -> None:
+    items = p.get(block.key)
+    if not items and block.fallback_key:
+        items = p.get(block.fallback_key)
+    for i, item in enumerate(items or [], start=block.index_start):
+        lines.extend(block.item_renderer(item, i, p))
+
+
+def _render_footer(block: FooterBlock, p: dict, lines: list[str]) -> None:
+    lines.append(_SEP)
+    if block.include_trader_id and p.get("trader_id"):
+        lines.append(f"Trader: {p['trader_id']}")
+    if block.include_account_id and p.get("account_id"):
+        lines.append(f"Exchange Account: {p['account_id']}")
+    if block.include_rejected_reason and p.get("reason"):
+        lines.append(f"Rejected: {p['reason']}")
+    source = p.get(block.source_key) or block.default_source
+    lines.append(f"Source: {source}")
+    link = p.get(block.link_key)
+    if link:
+        lines.extend([_SEP, link])
 
 
 __all__ = [

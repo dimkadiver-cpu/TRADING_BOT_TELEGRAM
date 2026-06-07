@@ -63,3 +63,113 @@ def test_footer_block_defaults():
 def test_template_config():
     tc = TemplateConfig([StaticBlock("x")])
     assert tc.payload_transform is None
+
+
+# --- renderer tests ---
+from src.runtime_v2.control_plane.formatters._blocks import render_template
+
+
+def test_render_static():
+    result = render_template([StaticBlock("hello")], {})
+    assert "hello" in result
+
+
+def test_render_separator_dynamic_width():
+    blocks = [StaticBlock("short"), SeparatorBlock(), StaticBlock("longer line here")]
+    result = render_template(blocks, {})
+    lines = result.split("\n")
+    sep_line = lines[1]
+    assert "-" in sep_line
+    assert len(sep_line) >= 4
+
+
+def test_render_field_optional_missing():
+    blocks = [FieldBlock("Price", key="price")]
+    result = render_template(blocks, {})
+    assert "Price" not in result
+
+
+def test_render_field_optional_present():
+    blocks = [FieldBlock("Price", key="price")]
+    result = render_template(blocks, {"price": 100})
+    assert "Price: 100" in result
+
+
+def test_render_field_not_optional():
+    blocks = [FieldBlock("Price", key="price", optional=False)]
+    result = render_template(blocks, {})
+    assert "Price: n/a" in result
+
+
+def test_render_conditional_true():
+    blocks = [ConditionalBlock(condition=lambda p: p.get("show"), blocks=[StaticBlock("visible")])]
+    assert "visible" in render_template(blocks, {"show": True})
+
+
+def test_render_conditional_false():
+    blocks = [ConditionalBlock(condition=lambda p: p.get("show"), blocks=[StaticBlock("visible")])]
+    assert "visible" not in render_template(blocks, {"show": False})
+
+
+def test_render_branch():
+    blocks = [BranchBlock(
+        condition=lambda p: p.get("flag"),
+        then_blocks=[StaticBlock("yes")],
+        else_blocks=[StaticBlock("no")],
+    )]
+    assert "yes" in render_template(blocks, {"flag": True})
+    assert "no" in render_template(blocks, {"flag": False})
+
+
+def test_render_list():
+    blocks = [ListBlock(key="items", item_renderer=lambda x, i, p: [f"Item {i}: {x}"])]
+    result = render_template(blocks, {"items": ["a", "b"]})
+    assert "Item 1: a" in result
+    assert "Item 2: b" in result
+
+
+def test_render_header_with_chain_id():
+    blocks = [HeaderBlock("✅", "TEST EVENT")]
+    result = render_template(blocks, {"chain_id": 42, "symbol": "BTC/USDT", "side": "LONG"})
+    assert "#42" in result
+    assert "TEST EVENT" in result
+    assert "BTC/USDT" in result
+    assert "📈" in result
+
+
+def test_render_header_no_symbol_side_omits_line():
+    blocks = [HeaderBlock("✅", "TEST")]
+    result = render_template(blocks, {"chain_id": 1})
+    assert "None" not in result
+
+
+def test_render_footer_source():
+    blocks = [FooterBlock(default_source="exchange")]
+    result = render_template(blocks, {})
+    assert "Source: exchange" in result
+
+
+def test_render_footer_link():
+    blocks = [FooterBlock()]
+    result = render_template(blocks, {"link": "https://t.me/c/1/2"})
+    source_pos = result.find("Source:")
+    link_pos = result.find("https://t.me/c/1/2")
+    assert source_pos < link_pos
+
+
+def test_render_footer_trader_id_hidden_by_default():
+    blocks = [FooterBlock()]
+    result = render_template(blocks, {"trader_id": "trader_a"})
+    assert "Trader:" not in result
+
+
+def test_render_footer_trader_id_shown_when_enabled():
+    blocks = [FooterBlock(include_trader_id=True)]
+    result = render_template(blocks, {"trader_id": "trader_a"})
+    assert "Trader: trader_a" in result
+
+
+def test_render_transform():
+    blocks = [StaticBlock("x"), FieldBlock("V", key="_v")]
+    result = render_template(blocks, {"val": 5}, transform=lambda p: {**p, "_v": p["val"] * 2})
+    assert "V: 10" in result
