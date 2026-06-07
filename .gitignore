@@ -75,3 +75,8 @@ hummingbot_demo_conf/
 hummingbot_demo_logs/
 hummingbot_demo_data/
 .env.demo
+
+# Runtime databases
+*.db
+*.sqlite
+*.sqlite3
