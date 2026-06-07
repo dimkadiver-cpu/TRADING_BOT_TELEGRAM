@@ -336,3 +336,130 @@ def _t_entry_cancelled(p: dict) -> dict:
         "_c_etype":    cancelled.get("entry_type", "LIMIT").capitalize(),
         "_base_asset": base_asset,
     }
+
+
+# ---------------------------------------------------------------------------
+# Partial close (TP_FILLED, PARTIAL_CLOSE_EXECUTED)
+# ---------------------------------------------------------------------------
+
+_PARTIAL_RESULT_BLOCKS: list = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label=lambda p: p["_event_label"]),
+    DerivedBlock(text_fn=lambda p:
+        f"{p['_price_label']}: {num(p['_price_value']) if p.get('_price_value') is not None else '-'}"
+    ),
+    FieldBlock("Closed",   key="closed_pct",  fmt=pct),
+    FieldBlock("Qty",      key="closed_qty",  fmt=num),
+    FieldBlock("PnL",      key="pnl",         fmt=money_signed),
+    FieldBlock("Fee rate", key="fee_rate",    fmt=fee_rate),
+    FieldBlock("Fee",      key="fee",         fmt=money),
+    ConditionalBlock(
+        condition=lambda p: p.get("_show_value"),
+        blocks=[FieldBlock("Value", key="exec_value", fmt=money)],
+    ),
+    SeparatorBlock(),
+    StaticBlock("Remaining:"),
+    FieldBlock("Qty",       key="remaining_qty",  fmt=num),
+    FieldBlock("Avg entry", key="avg_entry",      fmt=num),
+    FieldBlock("Risk",      key="remaining_risk", fmt=money),
+    FooterBlock(default_source="exchange"),
+]
+
+
+def _t_tp_partial(p: dict) -> dict:
+    level = p.get("tp_level")
+    display_price = p.get("fill_price") if p.get("fill_price") is not None else p.get("tp_price")
+    return {
+        **p,
+        "_emoji":       "📊",
+        "_event_label": f"TP{level} FILLED" if level is not None else "TP FILLED",
+        "_price_label": f"TP_{level}" if level is not None else "TP",
+        "_price_value": display_price,
+        "_show_value":  True,
+    }
+
+
+def _t_partial_close(p: dict) -> dict:
+    return {
+        **p,
+        "_emoji":       "✅",
+        "_event_label": "PARTIAL CLOSED",
+        "_price_label": "Price",
+        "_price_value": p.get("fill_price"),
+        "_show_value":  False,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Update lifecycle (UPDATE_DONE, UPDATE_PARTIAL, UPDATE_REJECTED)
+# ---------------------------------------------------------------------------
+
+_UPDATE_BLOCKS: list = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label=lambda p: p["_event_label"]),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("_operations")),
+        blocks=[
+            StaticBlock("Operation:"),
+            ListBlock(key="_operations", item_renderer=lambda op, i, p: [f"{_BULLET} {op}"]),
+        ]
+    ),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("changed")),
+        blocks=[
+            StaticBlock("Changed:"),
+            ListBlock(key="changed", item_renderer=_render_changed_item),
+        ]
+    ),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("_footnotes")),
+        blocks=[
+            SeparatorBlock(),
+            ListBlock(key="_footnotes", item_renderer=lambda note, i, p: [f"* {note}"]),
+        ]
+    ),
+    ConditionalBlock(
+        condition=lambda p: p.get("_failed_reason") is not None,
+        blocks=[
+            SeparatorBlock(),
+            DerivedBlock(text_fn=lambda p: f"Failed: {p['_failed_reason']}"),
+        ]
+    ),
+    FooterBlock(default_source="runtime"),
+]
+
+
+def _t_update_done(p: dict) -> dict:
+    ops = p.get("applied_actions") or []
+    changed = p.get("changed") or []
+    # backward compat: display_lines converted to plain changed items (bullet-prefixed)
+    if not changed and p.get("display_lines"):
+        changed = list(p["display_lines"])
+    footnotes = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
+    return {**p, "_emoji": "✅", "_event_label": "UPDATE DONE",
+            "_operations": ops, "_failed_reason": None,
+            "_footnotes": footnotes or None,
+            "changed": changed}
+
+
+def _t_update_partial(p: dict) -> dict:
+    applied     = p.get("applied_actions") or []
+    failed_list = p.get("failed_actions") or []   # [{"action": str, "reason": str}]
+    failed_set  = {f["action"] for f in failed_list}
+    all_ops     = applied + [f["action"] for f in failed_list]
+    ops_display = [f"{op} *" if op in failed_set else op for op in all_ops]
+    changed     = p.get("changed") or []
+    fn_changed  = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
+    fn_failed   = [f"Failed: {f['reason']}" for f in failed_list]
+    footnotes   = fn_changed + fn_failed
+    return {**p, "_emoji": "⚠️", "_event_label": "UPDATE PARTIAL",
+            "_operations": ops_display, "_failed_reason": None,
+            "_footnotes": footnotes or None}
+
+
+def _t_update_rejected(p: dict) -> dict:
+    ops     = p.get("rejected_actions") or []
+    reason  = p.get("reason") or p.get("failed_reason")
+    changed = p.get("changed") or []
+    footnotes = [item["note"] for item in changed if isinstance(item, dict) and item.get("note")]
+    return {**p, "_emoji": "❌", "_event_label": "UPDATE REJECTED",
+            "_operations": ops, "_failed_reason": reason,
+            "_footnotes": footnotes or None}
