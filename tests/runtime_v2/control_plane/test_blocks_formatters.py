@@ -33,3 +33,33 @@ def test_pct_signed_neg():  assert pct_signed(-5.17) == "-5.17%"
 
 def test_fee_rate_none():   assert fee_rate(None) == "n/a"
 def test_fee_rate():        assert fee_rate(0.001) == "0.100%"
+
+
+# --- block dataclass tests ---
+from src.runtime_v2.control_plane.formatters._blocks import (
+    SeparatorBlock, StaticBlock, DerivedBlock, HeaderBlock, FieldBlock,
+    SectionBlock, ConditionalBlock, BranchBlock, ListBlock, FooterBlock,
+    TemplateConfig, _SEP, _BULLET,
+)
+
+
+def test_sep_constant():        assert _SEP == "__SEP__"
+def test_bullet_constant():     assert _BULLET == "▪️"
+
+def test_separator_block():     assert SeparatorBlock() is not None
+def test_static_block():        assert StaticBlock("hi").text == "hi"
+def test_header_block():        assert HeaderBlock("✅", "SIGNAL ACCEPTED").emoji == "✅"
+def test_field_block_defaults():
+    fb = FieldBlock("Label", key="k")
+    assert fb.optional is True
+    assert fb.default == "n/a"
+
+def test_footer_block_defaults():
+    fb = FooterBlock()
+    assert fb.source_key == "source"
+    assert fb.default_source == "runtime"
+    assert fb.include_trader_id is False
+
+def test_template_config():
+    tc = TemplateConfig([StaticBlock("x")])
+    assert tc.payload_transform is None
