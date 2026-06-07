@@ -582,3 +582,34 @@ def _t_multi_chain(p: dict) -> dict:
         "error":   sum(1 for c in chains if c.get("status") == "ERROR"),
     }
     return {**p, "_has_issues": has_issues, "_counts": counts}
+
+
+# ---------------------------------------------------------------------------
+# TEMPLATE_REGISTRY
+# ---------------------------------------------------------------------------
+
+TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
+    "SIGNAL_ACCEPTED":        TemplateConfig(_SIGNAL_BASE_BLOCKS,       _t_signal_accepted),
+    "SIGNAL_REJECTED":        TemplateConfig(_SIGNAL_BASE_BLOCKS,       _t_signal_rejected),
+    "REVIEW_REQUIRED":        TemplateConfig(_REVIEW_REQUIRED_BLOCKS,   _t_review_required),
+    "ENTRY_OPENED":           TemplateConfig(_ENTRY_BLOCKS,             _t_entry_opened),
+    "ENTRY_UPDATED":          TemplateConfig(_ENTRY_BLOCKS,             _t_entry_updated),
+    "ENTRY_CANCELLED":        TemplateConfig(_ENTRY_CANCELLED_BLOCKS,   _t_entry_cancelled),
+    "SL_FILLED":              TemplateConfig(_CLOSED_BLOCKS,            _t_sl_filled),
+    "TP_FILLED_FINAL":        TemplateConfig(_CLOSED_BLOCKS,            _t_tp_final),
+    "POSITION_CLOSED":        TemplateConfig(_CLOSED_BLOCKS,            _t_position_closed),
+    "BE_EXIT":                TemplateConfig(_CLOSED_BLOCKS,            _t_be_exit),
+    "TP_FILLED":              TemplateConfig(_PARTIAL_RESULT_BLOCKS,    _t_tp_partial),
+    "UPDATE_DONE":            TemplateConfig(_UPDATE_BLOCKS,            _t_update_done),
+    "UPDATE_PARTIAL":         TemplateConfig(_UPDATE_BLOCKS,            _t_update_partial),
+    "UPDATE_REJECTED":        TemplateConfig(_UPDATE_BLOCKS,            _t_update_rejected),
+    "PARTIAL_CLOSE_EXECUTED": TemplateConfig(_PARTIAL_RESULT_BLOCKS,   _t_partial_close),
+    "PENDING_ENTRY_EXPIRED":  TemplateConfig(_PENDING_TIMEOUT_BLOCKS),
+    "REENTRY_ACCEPTED":       TemplateConfig(_REENTRY_BLOCKS),
+    "CANCEL_FAILED":          TemplateConfig(_CANCEL_FAILED_BLOCKS),
+    "RECONCILIATION_WARNING": TemplateConfig(_RECONCILIATION_WARN_BLOCKS),
+    "RECONCILIATION_FIXED":   TemplateConfig(_RECONCILIATION_FIXED_BLOCKS),
+    "MULTI_CHAIN_SUMMARY":    TemplateConfig(_MULTI_CHAIN_BLOCKS,       _t_multi_chain),
+    "MULTI_CHAIN_UPDATE":     TemplateConfig(_MULTI_CHAIN_BLOCKS,       _t_multi_chain),
+    "MULTI_CHAIN_CLOSED":     TemplateConfig(_MULTI_CHAIN_BLOCKS,       _t_multi_chain),
+}
