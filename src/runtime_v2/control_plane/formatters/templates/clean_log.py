@@ -8,7 +8,7 @@ from src.runtime_v2.control_plane.formatters._blocks import (
     TemplateConfig,
 )
 from src.runtime_v2.control_plane.formatters._formatters import (
-    num, text, money, money_signed, pct, pct_signed, fee_rate,
+    num, text, money, money_signed, pct, pct_signed, fee_rate, price,
 )
 from src.runtime_v2.control_plane.formatters.display import display_symbol
 
@@ -38,9 +38,9 @@ def _render_tp_item(tp: object, i: int, p: dict) -> list[str]:
 
 def _render_pending_entry(entry: dict, i: int, p: dict) -> list[str]:
     seq = entry.get("sequence", "?")
-    price = entry.get("price")
+    px = entry.get("price")
     etype = entry.get("entry_type", "LIMIT").capitalize()
-    price_str = num(price) if price is not None else "?"
+    price_str = price(px) if px is not None else "?"
     return [f"Pending: Entry_{seq} {price_str} {etype}"]
 
 
@@ -88,7 +88,7 @@ FINAL_RESULT: list = [
 _FILL_SECTION: list = [
     StaticBlock("Filled:"),
     DerivedBlock(text_fn=lambda p: (
-        f"Entry_{p['filled_leg_sequence']}: {num(p.get('fill_price'))} "
+        f"Entry_{p['filled_leg_sequence']}: {price(p.get('fill_price'))} "
         f"{p.get('entry_type_for_leg', 'Limit').capitalize()}"
         if p.get("filled_leg_sequence") is not None else ""
     )),
@@ -120,7 +120,7 @@ _SIGNAL_BODY: list = [
 
 _ENTRY_POSITION_SECTION: list = [
     StaticBlock("Position:"),
-    FieldBlock("Avg entry",   key="_avg_entry",          fmt=num),
+    FieldBlock("Avg entry",   key="_avg_entry",          fmt=price),
     FieldBlock("Total qty",   key="total_filled_qty",    fmt=num),
     FieldBlock("Total value", key="total_value",         fmt=money),
     FieldBlock("Total fees",  key="total_fees",          fmt=money),

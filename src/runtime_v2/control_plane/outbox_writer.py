@@ -174,6 +174,66 @@ def write_tech_log_event(
             payload=payload, priority=priority, dedupe_key=dedupe_key)
 
 
+def _compute_entry_enrichment(
+    ev: dict,
+    legs: list,
+    risk: dict,
+    avg_for_calc: float | None,
+    current_stop_price: float | None,
+    filled_entry_qty: float | None,
+    initial_risk_amount: float | None,
+) -> dict:
+    """Compute Position-section fields shared by ENTRY_OPENED and ENTRY_UPDATED."""
+    filled_seq = ev.get("filled_leg_sequence")
+    ev_qty_raw = ev.get("fill_qty") or ev.get("filled_qty")
+    ev_qty = float(ev_qty_raw) if ev_qty_raw is not None else None
+
+    risk_legs: list = risk.get("legs", []) if isinstance(risk, dict) else []
+    plan_leg = next((l for l in legs if l.get("sequence") == filled_seq), {}) if filled_seq is not None else {}
+    risk_leg = next((l for l in risk_legs if l.get("sequence") == filled_seq), {}) if filled_seq is not None else {}
+
+    entry_type_for_leg: str = plan_leg.get("entry_type", "LIMIT")
+    planned_qty_raw = risk_leg.get("qty")
+    planned_qty = float(planned_qty_raw) if planned_qty_raw is not None else None
+
+    total_planned = sum(float(l["qty"]) for l in risk_legs if l.get("qty") is not None)
+
+    is_partial = False
+    if total_planned > 0 and filled_entry_qty is not None:
+        is_partial = float(filled_entry_qty) < total_planned - 1e-9
+    elif planned_qty is not None and ev_qty is not None:
+        is_partial = ev_qty < float(planned_qty) - 1e-9
+
+    leg_fill_pct = None
+    if is_partial and planned_qty is not None and ev_qty is not None and float(planned_qty) > 0:
+        leg_fill_pct = round(ev_qty / float(planned_qty) * 100.0, 1)
+
+    position_filled_pct = None
+    if total_planned > 0 and filled_entry_qty is not None:
+        position_filled_pct = round(float(filled_entry_qty) / total_planned * 100.0, 1)
+
+    total_value = None
+    if filled_entry_qty is not None and avg_for_calc is not None:
+        total_value = round(float(filled_entry_qty) * float(avg_for_calc), 8)
+
+    actual_risk = None
+    if filled_entry_qty is not None and avg_for_calc is not None and current_stop_price is not None:
+        actual_risk = round(float(filled_entry_qty) * abs(float(avg_for_calc) - float(current_stop_price)), 8)
+
+    return {
+        "entry_type_for_leg": entry_type_for_leg,
+        "planned_qty": planned_qty,
+        "is_partial_leg": is_partial,
+        "_leg_fill_pct": leg_fill_pct,
+        "total_filled_qty": filled_entry_qty,
+        "total_value": total_value,
+        "total_fees": risk.get("open_fee_residual") if isinstance(risk, dict) else None,
+        "position_filled_pct": position_filled_pct,
+        "actual_risk_usdt": actual_risk,
+        "planned_risk_usdt": initial_risk_amount,
+    }
+
+
 def _build_payload(
     notification_type: str,
     chain_id: int,
@@ -248,6 +308,15 @@ def _build_payload(
             for l in legs
             if l.get("status") == "PENDING"
         ]
+        enrichment = _compute_entry_enrichment(
+            ev=ev,
+            legs=legs,
+            risk=risk,
+            avg_for_calc=entry_avg_price,
+            current_stop_price=current_stop_price,
+            filled_entry_qty=filled_entry_qty,
+            initial_risk_amount=initial_risk_amount,
+        )
         payload: dict = {
             **base,
             "fill_price": ev.get("fill_price"),
@@ -257,6 +326,7 @@ def _build_payload(
             "avg_entry": entry_avg_price,
             "pending_entries": pending,
             "source": ev.get("source", "exchange"),
+            **enrichment,
         }
         if ev.get("fee_rate") is not None:
             payload["fee_rate"] = ev["fee_rate"]
@@ -419,6 +489,16 @@ def _build_payload(
             for l in legs
             if l.get("status") == "PENDING"
         ]
+        avg_for_updated = ev.get("new_avg_entry") if ev.get("new_avg_entry") is not None else entry_avg_price
+        enrichment = _compute_entry_enrichment(
+            ev=ev,
+            legs=legs,
+            risk=risk,
+            avg_for_calc=avg_for_updated,
+            current_stop_price=current_stop_price,
+            filled_entry_qty=filled_entry_qty,
+            initial_risk_amount=initial_risk_amount,
+        )
         payload = {
             **base,
             "fill_price": ev.get("fill_price"),
@@ -426,10 +506,11 @@ def _build_payload(
             "fee": ev.get("exec_fee"),
             "filled_leg_sequence": ev.get("filled_leg_sequence"),
             "new_avg_entry": ev.get("new_avg_entry"),
-            "avg_entry": ev.get("new_avg_entry", entry_avg_price),
+            "avg_entry": avg_for_updated,
             "pending_entries": pending,
             "source": ev.get("source", "exchange"),
             "link": ev.get("source_message_link"),
+            **enrichment,
         }
         if ev.get("fee_rate") is not None:
             payload["fee_rate"] = ev["fee_rate"]
