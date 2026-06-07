@@ -35,9 +35,9 @@ def _make_entries(specs: list[tuple[int, str, float | None, float]]):
     return result
 
 
-def _build(enrichment_id: int, entries, tps, risk_snap: dict) -> dict:
+def _build(enrichment_id: int, entries, tps, risk_snap: dict, extra: dict | None = None) -> dict:
     from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
-    plan_json = ExecutionPlanBuilder.build(enrichment_id, entries, tps, risk_snap)
+    plan_json = ExecutionPlanBuilder.build(enrichment_id, entries, tps, risk_snap, extra)
     return json.loads(plan_json)
 
 
@@ -175,3 +175,50 @@ def test_get_pending_averaging_legs_returns_empty_on_bad_json():
     from src.runtime_v2.lifecycle.execution_plan import ExecutionPlanBuilder
     result = ExecutionPlanBuilder.get_pending_averaging_legs("not-json")
     assert result == []
+
+
+def test_build_includes_extra_plan_metadata_keys():
+    entries = _make_entries([(1, "LIMIT", 50000.0, 1.0)])
+    tps = [_make_tp(1, 51000.0)]
+    risk_snap = _make_risk_snap()
+    extra = {
+        "risk_hint_applied": {
+            "hint_used": True,
+            "hint_raw": "1%",
+            "hint_effective_pct": 1.0,
+            "configured_risk_pct": 2.0,
+            "effective_risk_pct": 1.0,
+        }
+    }
+    plan = _build(1, entries, tps, risk_snap, extra)
+    assert "risk_hint_applied" in plan
+    assert plan["risk_hint_applied"]["hint_raw"] == "1%"
+    assert plan["risk_hint_applied"]["hint_effective_pct"] == 1.0
+
+
+def test_build_without_extra_metadata_has_no_hint_key():
+    entries = _make_entries([(1, "LIMIT", 50000.0, 1.0)])
+    tps = [_make_tp(1, 51000.0)]
+    risk_snap = _make_risk_snap()
+    plan = _build(1, entries, tps, risk_snap)
+    assert "risk_hint_applied" not in plan
+
+
+def test_build_with_none_extra_metadata_has_no_hint_key():
+    entries = _make_entries([(1, "LIMIT", 50000.0, 1.0)])
+    tps = [_make_tp(1, 51000.0)]
+    risk_snap = _make_risk_snap()
+    plan = _build(1, entries, tps, risk_snap, None)
+    assert "risk_hint_applied" not in plan
+
+
+def test_build_extra_metadata_does_not_overwrite_plan_version():
+    entries = _make_entries([(1, "LIMIT", 50000.0, 1.0)])
+    tps = [_make_tp(1, 51000.0)]
+    risk_snap = _make_risk_snap()
+    extra = {"range_derivation": {"derived_from_range": True, "split_mode": "midpoint",
+                                   "original_min_price": 63000.0, "original_max_price": 65000.0}}
+    plan = _build(1, entries, tps, risk_snap, extra)
+    assert plan["plan_version"] == 1
+    assert "range_derivation" in plan
+    assert plan["range_derivation"]["split_mode"] == "midpoint"

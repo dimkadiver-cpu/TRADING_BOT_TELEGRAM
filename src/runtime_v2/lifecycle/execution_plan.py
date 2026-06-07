@@ -21,6 +21,7 @@ class ExecutionPlanBuilder:
         entries: list[EnrichedEntryLeg],
         take_profits: list[TakeProfit],
         risk_snapshot: dict,
+        extra_plan_metadata: dict | None = None,
     ) -> str:
         """Return plan_state_json string."""
         tp_count = len(take_profits)
@@ -77,6 +78,8 @@ class ExecutionPlanBuilder:
             "intermediate_tps": intermediate_tps,
             "legs": legs_out,
         }
+        if extra_plan_metadata:
+            plan.update(extra_plan_metadata)
 
         return json.dumps(plan)
 
