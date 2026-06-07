@@ -65,18 +65,30 @@ db_schema.txt
 # Accidental files (pip install typos, etc.)
 =*
 
-# Hummingbot main stack runtime dirs
-hummingbot_config/
-hummingbot_conf/
-hummingbot_logs/
-
-# Hummingbot demo stack — runtime dirs and secrets
-hummingbot_demo_conf/
-hummingbot_demo_logs/
-hummingbot_demo_data/
-.env.demo
-
 # Runtime databases
 *.db
 *.sqlite
 *.sqlite3
+
+# Type checking / tooling cache
+.mypy_cache/
+
+# Local scratch / temporary work
+.scratch/
+.planning/
+.worktrees/
+.superpowers/
+
+# Claude / Codex local artifacts
+.claude/
+.codex_tmp/
+
+# Local temporary folders
+tmp/
+temp/
+debug/
+exports/
+artifacts/
+
+# Local order/debug files
+orderHystory.txt
