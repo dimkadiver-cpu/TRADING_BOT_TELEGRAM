@@ -4,6 +4,42 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-07 — Type Hints: Add missing parameter annotations to _formatters.py
+
+### Step completato
+
+Aggiunta type hint ai parametri di 7 funzioni formatter in `src/runtime_v2/control_plane/formatters/_formatters.py`. Tutti i parametri annotati con `object` (tipo accettato universalmente da questi formatter).
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/formatters/_formatters.py` | Modificato | Aggiunti type hint `value: object` a `num()`, `text()`, `money()`, `money_signed()`, `pct()`, `pct_signed()`, `fee_rate()` |
+
+### Risultato test
+
+```
+pytest tests/runtime_v2/control_plane/test_blocks_formatters.py -v
+→ 22 passed in 0.12s ✅
+```
+
+### Decisioni
+
+- **Type universale `object`**: i formatter accettano `None`, `int`, `float`, e `str`, quindi `object` è il tipo più generale appropriato.
+- **Return type già corretto**: tutte le funzioni avevano già `-> str`, solo i parametri erano annotati male.
+
+### Commit
+
+| SHA | Messaggio |
+|---|---|
+| `a198c73` | fix: add type hints to _formatters.py function signatures |
+
+### Rischi aperti
+
+Nessuno — fix è minimale e non cambia comportamento.
+
+---
+
 ## 2026-06-07 — Trader Risk Hint Integration (5 commit, 1012 PASS, 38 pre-existing FAIL)
 
 ### Step completato

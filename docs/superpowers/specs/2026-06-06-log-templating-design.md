@@ -7,14 +7,15 @@
 
 ## Obiettivo
 
-Introdurre un sistema di templating dichiarativo per tutti i tipi di log (clean_log e tech_log) che permetta di modificare il rendering — label, ordine campi, campi inclusi/esclusi, blocchi custom — senza toccare la logica di rendering in `clean_log.py`.
+Introdurre un sistema di templating dichiarativo per `clean_log` che permetta di modificare il rendering — label, ordine campi, campi inclusi/esclusi, blocchi custom — senza toccare la logica di rendering.
+
+`tech_log` è esplicitamente fuori scope per questa fase e verrà trattato con una spec dedicata.
 
 ---
 
 ## Contesto attuale
 
 - `src/runtime_v2/control_plane/formatters/clean_log.py` — 658 righe, tutta la logica hardcoded come funzioni Python per 23 notification type.
-- `src/runtime_v2/control_plane/formatters/tech_log.py` — 38 righe, formatter hardcoded.
 - Il separatore è **dinamico**: `_finalize()` calcola la larghezza dal testo più lungo e sostituisce i sentinel `_SEP`. Questo meccanismo rimane invariato.
 - La logica di business (cosa mettere nel payload, quale `summary_kind` usare) vive fuori dal formatter — questo non cambia.
 
@@ -29,9 +30,7 @@ src/runtime_v2/control_plane/formatters/
 ├── templates/
 │   ├── __init__.py
 │   ├── clean_log.py        ← tutte le TemplateConfig + TEMPLATE_REGISTRY + shared renderers
-│   └── tech_log.py         ← TemplateConfig per tech_log
-├── clean_log.py            ← dispatcher thin (~20 righe)
-├── tech_log.py             ← wrapper thin
+├── clean_log.py            ← dispatcher thin (~20 righe), unico entrypoint del sistema
 └── display.py              ← invariato
 ```
 
@@ -64,12 +63,14 @@ class DerivedBlock:
 class HeaderBlock:
     """Prima riga (emoji + chain_id + event_label) + SEP + symbol/side + signal_link + SEP.
     chain_id, symbol, side, signal_link vengono sempre da payload — non configurabili.
+    chain_id è opzionale. La riga symbol/side viene emessa solo se sono presenti sia symbol che side.
+    signal_link viene emesso solo se presente nel payload.
 
     Emette in ordine:
       1. f"{emoji}{id_part} — {event_label}"   dove id_part = f" #{chain_id}" se presente
       2. _SEP
-      3. f"{display_symbol(symbol)} — {side_emoji} {side}"
-      4. signal_link (solo se presente nel payload)
+      3. f"{display_symbol(symbol)} — {side_emoji} {side}"   solo se symbol e side presenti
+      4. signal_link                                           solo se presente nel payload
       5. _SEP  ← incluso nel block, NON aggiungere SeparatorBlock() dopo HeaderBlock
     """
     emoji: str | Callable[[dict], str]
@@ -176,7 +177,9 @@ def _render_blocks(blocks: list[Block], p: dict, lines: list[str]) -> None:
             case StaticBlock(text=t):
                 lines.append(t)
             case DerivedBlock(text_fn=fn):
-                lines.append(fn(p))
+                text = fn(p)
+                if text:
+                    lines.append(text)
             case HeaderBlock():
                 _render_header(block, p, lines)
             case FieldBlock():
@@ -319,6 +322,9 @@ FINAL_RESULT: list[Block] = [
 Shared tra `ENTRY_OPENED`, `ENTRY_UPDATED`. Formato: `Filled:` statico + `Entry_N: price type`
 + qty con/senza planned + Value/Fee + `Partial %` se fill parziale.
 Trailing `SeparatorBlock` incluso — non aggiungerne uno dopo in `_ENTRY_BLOCKS`.
+
+Invariant del renderer: nessun blocco deve poter produrre righe vuote. `DerivedBlock` con `""` o `None`
+viene scartato da `_render_blocks`.
 
 ```python
 _FILL_SECTION: list[Block] = [
@@ -1019,7 +1025,7 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
 }
 ```
 
-`clean_log.py` diventa un thin dispatcher di ~20 righe:
+`clean_log.py` diventa il solo entrypoint pubblico del formatter e contiene solo il dispatcher thin (~20 righe):
 
 ```python
 def format_clean_log(notification_type: str, payload: dict) -> str:
@@ -1039,7 +1045,7 @@ def format_clean_log(notification_type: str, payload: dict) -> str:
 | Aggiungere un nuovo notification type | Aggiungere funzione + if/elif | Definire block list (o riusare esistente) + entry nel registry |
 | Separatori dinamici | `_finalize` | `_finalize` invariato |
 | Logica business | Fuori dal formatter | Fuori dal formatter |
-| Test esistenti | Output attuale | Output identico — i test devono continuare a passare senza modifiche |
+| Test esistenti | Output legacy hardcoded | Validano il nuovo renderer/template e il vecchio sistema viene rimosso |
 
 ---
 
@@ -1055,5 +1061,14 @@ Nessuna. Zero pacchetti aggiuntivi.
 - File di config esterni (YAML/JSON) — non richiesto.
 - Modifica del meccanismo `_finalize` / `_SEP` — invariato.
 - Layer business (lifecycle, workers, outbox writer) — non toccati.
-- `tech_log.py` — non migrato in questa fase: usa separatore fisso e parametro `delivery_mode`
-  che non si mappa sul sistema template. Rimane hardcoded.
+- `tech_log.py` — fuori scope per questa fase; sarà trattato da una spec dedicata.
+
+---
+
+## Strategia di migrazione
+
+Questa è una migrazione completa, non una convivenza con il sistema legacy.
+
+- il nuovo dispatcher/template system sostituisce interamente il vecchio sistema hardcoded di `clean_log.py`
+- le funzioni legacy non restano come fallback permanente
+- i test vanno aggiornati per validare l'output target del nuovo sistema, non per preservare il codice legacy
