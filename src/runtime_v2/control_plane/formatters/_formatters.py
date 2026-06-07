@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 
-def num(value) -> str:
+def num(value: object) -> str:
     if value is None:
         return "n/a"
     try:
@@ -21,19 +21,19 @@ def num(value) -> str:
     return formatted
 
 
-def text(value) -> str:
+def text(value: object) -> str:
     if value is None:
         return "n/a"
     return str(value)
 
 
-def money(value) -> str:
+def money(value: object) -> str:
     if value is None:
         return "n/a"
     return f"{float(value):.2f} USDT"
 
 
-def money_signed(value) -> str:
+def money_signed(value: object) -> str:
     if value is None:
         return "n/a"
     number = float(value)
@@ -41,7 +41,7 @@ def money_signed(value) -> str:
     return f"{prefix}{number:.2f} USDT"
 
 
-def pct(value) -> str:
+def pct(value: object) -> str:
     if value is None:
         return "n/a"
     number = float(value)
@@ -49,7 +49,7 @@ def pct(value) -> str:
     return result.replace(".00%", "%")
 
 
-def pct_signed(value) -> str:
+def pct_signed(value: object) -> str:
     if value is None:
         return "n/a"
     number = float(value)
@@ -58,7 +58,7 @@ def pct_signed(value) -> str:
     return result.replace(".00%", "%")
 
 
-def fee_rate(value) -> str:
+def fee_rate(value: object) -> str:
     if value is None:
         return "n/a"
     return f"{float(value) * 100:.3f}%"
