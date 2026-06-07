@@ -26,10 +26,13 @@ def _make_enriched_signal(
     trader_id: str = "trader_a",
     symbol: str = "BTC/USDT",
     side: str = "LONG",
+    entry_structure: str = "ONE_SHOT",
     entry_type: str = "LIMIT",
     entry_price: float = 50000.0,
     sl_price: float = 49000.0,
     tp_prices: list[float] | None = None,
+    entries: list[dict] | None = None,
+    range_derivation: dict | None = None,
     capital_base_usdt: float = 1000.0,
     risk_pct: float = 1.0,
     max_concurrent_trades: int = 5,
@@ -43,22 +46,48 @@ def _make_enriched_signal(
         EntryWeightsConfig, EntryRangeConfig,
         LimitEntrySplitConfig, ManagementPlanConfig, MarketEntrySplitConfig,
         MarketExecutionConfig, PriceCorrectionsConfig, PriceSanityConfig,
+        RangeDerivation,
         RiskConfig, SignalPolicyConfig, SlConfig, TpConfig,
     )
 
-    entries = [EnrichedEntryLeg(
-        sequence=1, entry_type=entry_type,
-        price=Price(raw=str(entry_price), value=entry_price) if entry_type == "LIMIT" else None,
-        weight=1.0,
-    )]
+    entry_legs = [
+        EnrichedEntryLeg(
+            sequence=leg["sequence"],
+            entry_type=leg["entry_type"],
+            price=(
+                Price(raw=str(leg["price"]), value=leg["price"])
+                if leg.get("entry_type") == "LIMIT" and leg.get("price") is not None
+                else None
+            ),
+            weight=leg.get("weight", 1.0),
+        )
+        for leg in (
+            entries
+            or [{
+                "sequence": 1,
+                "entry_type": entry_type,
+                "price": entry_price,
+                "weight": 1.0,
+            }]
+        )
+    ]
     tps = [
         TakeProfit(sequence=i + 1, price=Price(raw=str(p), value=p))
         for i, p in enumerate(tp_prices or [51000.0])
     ]
     sl = StopLoss(price=Price(raw=str(sl_price), value=sl_price))
     signal = EnrichedSignalPayload(
-        symbol=symbol, side=side, entry_structure="ONE_SHOT",
-        entries=entries, take_profits=tps, stop_loss=sl,
+        symbol=symbol,
+        side=side,
+        entry_structure=entry_structure,
+        entries=entry_legs,
+        take_profits=tps,
+        stop_loss=sl,
+        range_derivation=(
+            RangeDerivation.model_validate(range_derivation)
+            if range_derivation is not None
+            else None
+        ),
     )
     weights = EntryWeightsConfig(weights={"E1": 1.0})
     policy = EffectiveEnrichmentConfig(
@@ -191,6 +220,47 @@ def test_gate_signal_entry_mode_matches_entry_structure():
     enriched = _make_enriched_signal()
     result = gate.process_signal(enriched, [], "NONE")
     assert result.trade_chain.entry_mode == "ONE_SHOT"
+
+
+def test_gate_signal_range_endpoints_persists_two_step_entry_mode():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        entry_structure="TWO_STEP",
+        entries=[
+            {"sequence": 1, "entry_type": "LIMIT", "price": 64000.0, "weight": 0.5},
+            {"sequence": 2, "entry_type": "LIMIT", "price": 65000.0, "weight": 0.5},
+        ],
+        range_derivation={
+            "derived_from_range": True,
+            "split_mode": "endpoints",
+            "original_min_price": 64000.0,
+            "original_max_price": 65000.0,
+        },
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    assert result.trade_chain.entry_mode == "TWO_STEP"
+
+
+def test_gate_signal_copies_range_derivation_into_plan_state_json():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        entry_structure="ONE_SHOT",
+        entries=[
+            {"sequence": 1, "entry_type": "LIMIT", "price": 64500.0, "weight": 1.0},
+        ],
+        range_derivation={
+            "derived_from_range": True,
+            "split_mode": "midpoint",
+            "original_min_price": 64000.0,
+            "original_max_price": 65000.0,
+        },
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert plan["range_derivation"]["derived_from_range"] is True
+    assert plan["range_derivation"]["split_mode"] == "midpoint"
+    assert plan["range_derivation"]["original_min_price"] == 64000.0
+    assert plan["range_derivation"]["original_max_price"] == 65000.0
 
 
 def test_gate_signal_review_event_has_no_chain():

@@ -4,7 +4,7 @@ from datetime import datetime
 
 import pytest
 
-from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+from src.parser_v2.contracts.entities import Price, RiskHint, StopLoss, TakeProfit
 from src.parser_v2.contracts.enums import EntryType
 from src.runtime_v2.lifecycle.models import TradeChain
 from src.runtime_v2.lifecycle.ports import AccountStateSnapshot, SymbolMarketSnapshot
@@ -44,6 +44,8 @@ def _make_policy_snapshot(
     capital_base_mode: str = "static_config",
     max_concurrent_trades: int = 5,
     max_concurrent_same_symbol: int = 1,
+    use_trader_risk_hint: bool = False,
+    risk_hint_range_mode: str = "min_value",
 ) -> dict:
     entry_weights = EntryWeightsConfig(weights={"1": 1.0})
     entry_range = EntryRangeConfig(weights={"1": 0.5, "2": 0.5})
@@ -83,6 +85,8 @@ def _make_policy_snapshot(
             leverage=1,
             max_concurrent_trades=max_concurrent_trades,
             max_concurrent_same_symbol=max_concurrent_same_symbol,
+            use_trader_risk_hint=use_trader_risk_hint,
+            risk_hint_range_mode=risk_hint_range_mode,
         ),
     )
     return config.model_dump()
@@ -103,6 +107,9 @@ def _make_enriched(
     capital_base_mode: str = "static_config",
     max_concurrent_trades: int = 5,
     max_concurrent_same_symbol: int = 1,
+    risk_hint: RiskHint | None = None,
+    use_trader_risk_hint: bool = False,
+    risk_hint_range_mode: str = "min_value",
 ) -> EnrichedCanonicalMessage:
     if tp_prices is None:
         tp_prices = [51000.0]
@@ -127,6 +134,7 @@ def _make_enriched(
         entries=[entry_leg],
         take_profits=take_profits,
         stop_loss=stop_loss,
+        risk_hint=risk_hint,
     )
 
     policy_snapshot = _make_policy_snapshot(
@@ -135,6 +143,8 @@ def _make_enriched(
         capital_base_mode=capital_base_mode,
         max_concurrent_trades=max_concurrent_trades,
         max_concurrent_same_symbol=max_concurrent_same_symbol,
+        use_trader_risk_hint=use_trader_risk_hint,
+        risk_hint_range_mode=risk_hint_range_mode,
     )
 
     return EnrichedCanonicalMessage(
@@ -379,3 +389,106 @@ def test_mixed_market_limit_per_leg_risk():
     assert limit_leg["qty"] is not None
     expected_qty = limit_leg["risk_amount"] / abs(0.48 - 0.45)
     assert abs(limit_leg["qty"] - expected_qty) < 0.01
+
+
+class TestRiskHintReduceOnly:
+    def setup_method(self) -> None:
+        self.engine = RiskCapacityEngine()
+
+    def test_hint_smaller_than_config_reduces_risk_amount(self) -> None:
+        # config: risk_pct=2%, capital=1000 → base risk_amount=20
+        # hint: 1% → hint_risk_amount=10 < 20 → applies
+        hint = RiskHint(raw="1%", value=1.0)
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            capital_base_usdt=1000.0,
+            use_trader_risk_hint=True,
+            risk_hint=hint,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.passed is True
+        assert decision.risk_snapshot["risk_amount"] == pytest.approx(10.0)
+        assert decision.hint_applied is not None
+        assert decision.hint_applied["hint_effective_pct"] == pytest.approx(1.0)
+        assert decision.hint_applied["configured_risk_pct"] == pytest.approx(2.0)
+        assert decision.hint_applied["effective_risk_pct"] == pytest.approx(1.0)
+        assert decision.hint_applied["hint_raw"] == "1%"
+        assert decision.hint_applied["hint_used"] is True
+
+    def test_hint_larger_than_config_does_not_increase_risk(self) -> None:
+        # hint=3% > config=2% → config value is kept, hint_applied is None
+        hint = RiskHint(raw="3%", value=3.0)
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            capital_base_usdt=1000.0,
+            use_trader_risk_hint=True,
+            risk_hint=hint,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.passed is True
+        assert decision.risk_snapshot["risk_amount"] == pytest.approx(20.0)
+        assert decision.hint_applied is None
+
+    def test_hint_ignored_when_flag_false(self) -> None:
+        # use_trader_risk_hint=False → hint is never read
+        hint = RiskHint(raw="0.1%", value=0.1)
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            capital_base_usdt=1000.0,
+            use_trader_risk_hint=False,
+            risk_hint=hint,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.risk_snapshot["risk_amount"] == pytest.approx(20.0)
+        assert decision.hint_applied is None
+
+    def test_hint_none_when_signal_has_no_risk_hint(self) -> None:
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            use_trader_risk_hint=True,
+            risk_hint=None,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.hint_applied is None
+
+    def test_range_hint_uses_min_value_in_min_value_mode(self) -> None:
+        # hint range: min=0.5%, max=2.0%, mode=min_value → use 0.5%
+        # config=2%, capital=1000 → hint_risk=5 < 20 → applies
+        hint = RiskHint(raw="0.5-2%", min_value=0.5, max_value=2.0)
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            capital_base_usdt=1000.0,
+            use_trader_risk_hint=True,
+            risk_hint_range_mode="min_value",
+            risk_hint=hint,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.risk_snapshot["risk_amount"] == pytest.approx(5.0)
+
+    def test_range_hint_uses_max_value_in_max_value_mode(self) -> None:
+        # hint range: min=0.5%, max=1.5%, mode=max_value → use 1.5%
+        # config=2%, capital=1000 → hint_risk=15 < 20 → applies
+        hint = RiskHint(raw="0.5-1.5%", min_value=0.5, max_value=1.5)
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            capital_base_usdt=1000.0,
+            use_trader_risk_hint=True,
+            risk_hint_range_mode="max_value",
+            risk_hint=hint,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.risk_snapshot["risk_amount"] == pytest.approx(15.0)
+
+    def test_range_hint_uses_midpoint_in_midpoint_mode(self) -> None:
+        # hint range: min=0.5%, max=1.5%, midpoint=1.0%
+        # config=2%, capital=1000 → hint_risk=10 < 20 → applies
+        hint = RiskHint(raw="0.5-1.5%", min_value=0.5, max_value=1.5)
+        enriched = _make_enriched(
+            risk_pct=2.0,
+            capital_base_usdt=1000.0,
+            use_trader_risk_hint=True,
+            risk_hint_range_mode="midpoint",
+            risk_hint=hint,
+        )
+        decision = self.engine.validate(enriched, [], None, None)
+        assert decision.risk_snapshot["risk_amount"] == pytest.approx(10.0)

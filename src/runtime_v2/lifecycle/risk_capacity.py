@@ -4,6 +4,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 
+from src.parser_v2.contracts.entities import RiskHint
 from src.runtime_v2.lifecycle.models import TradeChain
 from src.runtime_v2.lifecycle.ports import AccountStateSnapshot, SymbolMarketSnapshot
 from src.runtime_v2.signal_enrichment.models import (
@@ -14,6 +15,20 @@ from src.runtime_v2.signal_enrichment.models import (
 logger = logging.getLogger(__name__)
 
 
+def _resolve_risk_hint(hint: RiskHint, mode: str) -> float | None:
+    """Return resolved percent value from a RiskHint, or None if unresolvable."""
+    if hint.value is not None:
+        return hint.value
+    if hint.min_value is not None and hint.max_value is not None:
+        if mode == "min_value":
+            return hint.min_value
+        if mode == "max_value":
+            return hint.max_value
+        if mode == "midpoint":
+            return (hint.min_value + hint.max_value) / 2.0
+    return None
+
+
 @dataclass
 class RiskDecision:
     passed: bool
@@ -21,6 +36,7 @@ class RiskDecision:
     size_usdt: float | None = None
     leverage: int | None = None
     risk_snapshot: dict = field(default_factory=dict)
+    hint_applied: dict | None = None
 
 
 class RiskCapacityEngine:
@@ -101,6 +117,22 @@ class RiskCapacityEngine:
             risk_amount = risk.risk_usdt_fixed
         else:
             risk_amount = capital * risk.risk_pct_of_capital / 100.0
+
+        # ── trader risk hint (reduce-only, pct-based mode only) ───────────────
+        hint_applied: dict | None = None
+        if risk.mode == "risk_pct_of_capital" and risk.use_trader_risk_hint and signal.risk_hint is not None:
+            hint_value = _resolve_risk_hint(signal.risk_hint, risk.risk_hint_range_mode)
+            if hint_value is not None:
+                hint_risk_amount = capital * hint_value / 100.0
+                if hint_risk_amount < risk_amount:
+                    hint_applied = {
+                        "hint_used": True,
+                        "hint_raw": signal.risk_hint.raw,
+                        "hint_effective_pct": hint_value,
+                        "configured_risk_pct": risk.risk_pct_of_capital,
+                        "effective_risk_pct": hint_value,
+                    }
+                    risk_amount = hint_risk_amount
 
         # ── max capital-at-risk guard ─────────────────────────────────────────
         # Chain con SL a BE non hanno rischio residuo: il worst case è 0 (fee già pagate).
@@ -183,6 +215,7 @@ class RiskCapacityEngine:
             size_usdt=size_usdt,
             leverage=leverage,
             risk_snapshot=risk_snapshot,
+            hint_applied=hint_applied,
         )
 
 

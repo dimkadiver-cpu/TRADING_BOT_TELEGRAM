@@ -301,6 +301,8 @@ FINAL_RESULT: list[Block] = [
     StaticBlock("Final Result:"),
     FieldBlock("ROI net",       value_fn=lambda p: (p.get("final_result") or {}).get("roi_net_pct"),
                fmt=pct_signed,   optional=False, default="n/a"),
+    FieldBlock("RoR",           value_fn=lambda p: (p.get("final_result") or {}).get("return_on_risk_pct"),
+               fmt=pct_signed,   optional=False, default="n/a"),
     FieldBlock("Total PnL net", value_fn=lambda p: (p.get("final_result") or {}).get("total_pnl_net"),
                fmt=money_signed, optional=False, default="n/a"),
     FieldBlock("Gross PnL",     value_fn=lambda p: (p.get("final_result") or {}).get("gross_pnl"),

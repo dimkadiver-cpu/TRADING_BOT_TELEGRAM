@@ -26,6 +26,7 @@ Fee: <fee | n/a>
 - - -
 Final Result:
 ROI net: <roi | n/a>
+RoR: <ror | n/a>
 Total PnL net: <net | n/a>
 Gross PnL: <gross | n/a>
 Fees: <fees | n/a>
@@ -51,6 +52,7 @@ Fee: 1.03 USDT
 - - -
 Final Result:
 ROI net: +3.67%
+RoR: +9.12%
 Total PnL net: +44.17 USDT
 Gross PnL: +45.20 USDT
 Fees: -2.06 USDT
@@ -73,6 +75,7 @@ Fee: 0.69 USDT
 - - -
 Final Result:
 ROI net: +3.67%
+RoR: +5.24%
 Total PnL net: +2.62 USDT
 Gross PnL: +3.99 USDT
 Fees: -1.37 USDT
@@ -95,6 +98,7 @@ Fee: 1.74 USDT
 - - -
 Final Result:
 ROI net: +3.67%
+RoR: +1.92%
 Total PnL net: +0.96 USDT
 Gross PnL: +4.44 USDT
 Fees: -3.49 USDT
@@ -102,7 +106,6 @@ Funding: +0.00 USDT
 - - -
 Source: trader_update
 https://t.me/c/3927267771/376
-
 
 
 

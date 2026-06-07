@@ -593,6 +593,10 @@ class LifecycleEntryGate:
             signal.take_profits,
             decision.risk_snapshot,
         )
+        if signal.range_derivation is not None:
+            plan_data = json.loads(plan_state)
+            plan_data["range_derivation"] = signal.range_derivation.model_dump()
+            plan_state = json.dumps(plan_data)
 
         chain = TradeChain(
             source_enrichment_id=eid,
