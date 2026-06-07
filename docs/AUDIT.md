@@ -4,6 +4,68 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-07 — Trader Risk Hint Integration (5 commit, 1012 PASS, 38 pre-existing FAIL)
+
+### Step completato
+
+Implementato il wiring end-to-end di `use_trader_risk_hint` nel runtime v2: il `risk_hint` estratto dal parser ora riduce (reduce-only) il rischio configurato, e i metadati dell'applicazione vengono persistiti in `plan_state_json` su `ops_trade_chains`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/signal_enrichment/models.py` | Modificato | `RiskConfig`: nuovo campo `risk_hint_range_mode`; `EnrichedSignalPayload`: nuovo campo `risk_hint: RiskHint \| None` |
+| `src/runtime_v2/signal_enrichment/processor.py` | Modificato | `_process_signal()`: propaga `signal.risk_hint` in `EnrichedSignalPayload` |
+| `src/runtime_v2/lifecycle/risk_capacity.py` | Modificato | `RiskDecision.hint_applied: dict \| None`; `_resolve_risk_hint()` pura; logica reduce-only in `validate()` |
+| `src/runtime_v2/lifecycle/execution_plan.py` | Modificato | `build()`: parametro opzionale `extra_plan_metadata: dict \| None`; merge in plan prima di serializzazione |
+| `src/runtime_v2/lifecycle/entry_gate.py` | Modificato | Callsite chain-creation: sostituito inline range_derivation merge con approccio `extra_plan_metadata`; aggiunto `risk_hint_applied` |
+| `config/operation_config.yaml` | Modificato | Aggiunto `risk_hint_range_mode: min_value` nel blocco `risk` |
+| `config/traders/trader_3.yaml` | Modificato | Aggiunto `risk_hint_range_mode: min_value` nel blocco `risk` override |
+| `tests/runtime_v2/signal_enrichment/test_models.py` | Modificato | +3 test `risk_hint_range_mode` |
+| `tests/runtime_v2/signal_enrichment/test_processor_signal.py` | Modificato | +2 test propagazione `risk_hint` |
+| `tests/runtime_v2/lifecycle/test_risk_capacity.py` | Modificato | +7 test `TestRiskHintReduceOnly` |
+| `tests/runtime_v2/lifecycle/test_execution_plan.py` | Modificato | +4 test `extra_plan_metadata` |
+| `tests/runtime_v2/lifecycle/test_entry_gate.py` | Modificato | +3 test `risk_hint_applied` in `plan_state_json` |
+
+### Commit
+
+| SHA | Messaggio |
+|---|---|
+| `d239de6` | feat: add risk_hint_range_mode to RiskConfig |
+| `8c5ff0f` | feat: propagate risk_hint through EnrichedSignalPayload |
+| `eed8671` | ⚠️ "123" (contiene: feat: implement reduce-only risk hint in RiskCapacityEngine) |
+| `eb1fac5` | feat: add extra_plan_metadata to ExecutionPlanBuilder.build() |
+| `ff67dc3` | feat: wire risk_hint_applied and range_derivation into plan_state_json via extra_plan_metadata |
+
+> ⚠️ Il commit `eed8671` ha messaggio "123" per errore del subagent implementor. Il codice è corretto. Storia da pulire opzionalmente con `git rebase -i`.
+
+### Risultato test
+
+```
+pytest tests/runtime_v2/ -q
+→ 1012 passed, 38 failed (38 pre-existing, 0 nuovi), 6 skipped ✅
+```
+
+### Decisioni
+
+- **Reduce-only semantics**: hint può solo ridurre il rischio configurato, mai aumentarlo. `hint_applied` è `None` se il hint non riduce.
+- **`risk_usdt_fixed` skip**: logica hint completamente saltata in modalità fixed-USDT.
+- **Approccio B** per `extra_plan_metadata`: parametro builder invece di merge post-build inline (chiude gap `range_derivation` dallo spec range-entry-normalization).
+- **Clean-log display**: fuori scope — dati disponibili in `plan_state_json["risk_hint_applied"]` per sessione futura.
+
+### Rischi aperti
+
+- Commit `eed8671` ha messaggio "123" — nessun impatto funzionale, storia non pulita.
+- `plan_state_json["risk_hint_applied"]` non è ancora mostrato in clean-log (design separato, feature deliberatamente out of scope).
+
+### Prossimi step
+
+- Step B: Migrare `operation_rules` → usa `CanonicalMessage`
+- Step C: Migrare `target_resolver` → usa `CanonicalMessage`
+- (Opzionale) Clean-log display di `risk_hint_applied`
+
+---
+
 ## 2026-05-31 — CLEAN_LOG Task 15: Pause/Resume Formatter Spec Alignment (1 commit, 12/12 PASS)
 
 ### Step completato
