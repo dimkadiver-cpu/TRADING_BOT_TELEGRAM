@@ -219,17 +219,23 @@ def _render_list(block: ListBlock, p: dict, lines: list[str]) -> None:
 
 def _render_footer(block: FooterBlock, p: dict, lines: list[str]) -> None:
     lines.append(_SEP)
+    has_meta = False
     if block.include_trader_id and p.get("trader_id"):
         lines.append(f"Trader: {p['trader_id']}")
+        has_meta = True
     if block.include_account_id and p.get("account_id"):
         lines.append(f"Exchange Account: {p['account_id']}")
+        has_meta = True
     if block.include_rejected_reason and p.get("reason"):
         lines.append(f"Rejected: {p['reason']}")
+        has_meta = True
+    if has_meta:
+        lines.append(_SEP)
     source = p.get(block.source_key) or block.default_source
     lines.append(f"Source: {source}")
     link = p.get(block.link_key)
     if link:
-        lines.extend([_SEP, link])
+        lines.append(link)
 
 
 __all__ = [

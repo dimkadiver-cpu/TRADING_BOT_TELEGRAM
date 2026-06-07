@@ -2191,7 +2191,7 @@ class LifecycleGateWorker:
                     parse_status = cm_row[0]
                     if parse_status == "PARTIAL":
                         try:
-                            parse_warnings = _json.loads(cm_row[1] or "[]") or []
+                            parse_warnings = json.loads(cm_row[1] or "[]") or []
                         except Exception:
                             parse_warnings = []
             finally:
@@ -2263,7 +2263,7 @@ class LifecycleGateWorker:
                         partial_payload: dict = {"parse_status": parse_status}
                         if parse_warnings:
                             partial_payload["parse_warnings"] = parse_warnings
-                        event_payload_json = _json.dumps(partial_payload)
+                        event_payload_json = json.dumps(partial_payload)
                     conn.execute(
                         """
                         INSERT OR IGNORE INTO ops_lifecycle_events (
