@@ -133,6 +133,23 @@ def test_entry_opened_no_pending():
     assert "Pending: none" in text
 
 
+def test_entry_opened_market_without_fee_rate_shows_na():
+    text = format_clean_log("ENTRY_OPENED", {
+        "chain_id": 145,
+        "symbol": "BSB/USDT",
+        "side": "LONG",
+        "fill_price": 0.36620,
+        "filled_qty": 6730.0,
+        "filled_leg_sequence": 1,
+        "entry_type_for_leg": "MARKET",
+        "exec_value": 2464.53,
+        "fee": 2.71,
+        "source": "exchange",
+    })
+    assert "Entry_1: 0.36620 Market" in text
+    assert "Fee rate: n/a" in text
+
+
 def test_tp_filled_shows_price_and_sl():
     text = format_clean_log("TP_FILLED", {
         "chain_id": 145, "symbol": "BTC/USDT", "side": "LONG",

@@ -59,6 +59,16 @@ def _remaining_pct(open_position_qty: float | None, filled_entry_qty: float | No
     return round(float(open_position_qty) / float(filled_entry_qty) * 100.0, 2)
 
 
+def _remaining_risk(
+    open_position_qty: float | None,
+    entry_avg_price: float | None,
+    current_stop_price: float | None,
+) -> float | None:
+    if open_position_qty is None or entry_avg_price is None or current_stop_price is None:
+        return None
+    return round(float(open_position_qty) * abs(float(entry_avg_price) - float(current_stop_price)), 8)
+
+
 def _final_result(
     *,
     gross_pnl: float | None,
@@ -199,9 +209,7 @@ def _compute_entry_enrichment(
     total_planned = sum(float(l["qty"]) for l in risk_legs if l.get("qty") is not None)
 
     is_partial = False
-    if total_planned > 0 and filled_entry_qty is not None:
-        is_partial = float(filled_entry_qty) < total_planned - 1e-9
-    elif planned_qty is not None and ev_qty is not None:
+    if planned_qty is not None and ev_qty is not None:
         is_partial = ev_qty < float(planned_qty) - 1e-9
 
     leg_fill_pct = None
@@ -366,6 +374,9 @@ def _build_payload(
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
             "remaining_pct": _remaining_pct(open_position_qty, filled_entry_qty),
+            "remaining_qty": open_position_qty,
+            "avg_entry": entry_avg_price,
+            "remaining_risk": _remaining_risk(open_position_qty, entry_avg_price, current_stop_price),
             "sl_current": current_stop_price,
             "be_protection_status": be_protection_status,
             "final_result": final_result_data,
@@ -676,6 +687,9 @@ def _build_payload(
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
             "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
             "fee": ev.get("exec_fee"),
+            "remaining_qty": open_position_qty,
+            "avg_entry": entry_avg_price,
+            "remaining_risk": _remaining_risk(open_position_qty, entry_avg_price, current_stop_price),
             "source": ev.get("source", "manual_command"),
         }
 

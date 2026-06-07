@@ -145,6 +145,59 @@ def test_projection_maps_entry_updated(ops_db):
     assert p["new_avg_entry"] == 64750.0
 
 
+def test_entry_opened_first_full_leg_of_multi_entry_is_not_marked_partial(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 401)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_mode=?, plan_state_json=?, risk_snapshot_json=?, "
+            "entry_avg_price=?, current_stop_price=?, filled_entry_qty=?, initial_risk_amount=? "
+            "WHERE trade_chain_id=?",
+            (
+                "SCALED",
+                json.dumps({
+                    "legs": [
+                        {"sequence": 1, "entry_type": "MARKET", "price": 65020.0},
+                        {"sequence": 2, "entry_type": "LIMIT", "price": 64000.0},
+                    ],
+                }),
+                json.dumps({
+                    "legs": [
+                        {"sequence": 1, "qty": 0.007},
+                        {"sequence": 2, "qty": 0.003},
+                    ],
+                    "open_fee_residual": 0.91,
+                }),
+                65020.0,
+                62000.0,
+                0.007,
+                50.0,
+                401,
+            ),
+        )
+        _seed_event(conn, 401, "ENTRY_FILLED", "entry_filled:401:1", {
+            "fill_price": 65020.0,
+            "filled_qty": 0.007,
+            "fill_qty": 0.007,
+            "filled_leg_sequence": 1,
+            "exec_fee": 0.91,
+        })
+        project_clean_log_for_chain(conn, 401)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "ENTRY_OPENED"
+    payload = json.loads(row[1])
+    assert payload["entry_type_for_leg"] == "MARKET"
+    assert payload["is_partial_leg"] is False
+    assert payload["_leg_fill_pct"] is None
+    assert payload["actual_risk_usdt"] == pytest.approx(21.14)
+    assert payload["planned_risk_usdt"] == 50.0
+
+
 def test_projection_maps_update_done(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:
@@ -199,6 +252,38 @@ def test_tp_final_payload_includes_final_result_and_pnl_fields(ops_db):
     assert payload["final_result"] is not None
     assert payload["final_result"]["close_reason"] == "TAKE_PROFIT"
     assert payload["final_result"]["gross_pnl"] == 350.0
+
+
+def test_tp_filled_payload_includes_remaining_section_fields(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 701)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, current_stop_price=?, open_position_qty=?, filled_entry_qty=? "
+            "WHERE trade_chain_id=?",
+            (0.3662, 0.3662, 3365.0, 6730.0, 701),
+        )
+        _seed_event(conn, 701, "TP_FILLED", "tp_partial:701:1", {
+            "tp_level": 1,
+            "fill_price": 0.3841,
+            "filled_qty": 3365.0,
+            "closed_size": 3365.0,
+            "exec_fee": 1.42,
+            "fee_rate": 0.0011,
+            "source": "exchange",
+        })
+        project_clean_log_for_chain(conn, 701)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "TP_FILLED"
+    payload = json.loads(row[1])
+    assert payload["remaining_qty"] == 3365.0
+    assert payload["avg_entry"] == 0.3662
+    assert payload["remaining_risk"] == pytest.approx(0.0)
 
 
 def test_position_closed_final_result_subtracts_positive_funding_cost(ops_db):

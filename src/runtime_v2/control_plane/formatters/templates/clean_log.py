@@ -102,7 +102,7 @@ _FILL_SECTION: list = [
         else_blocks=[FieldBlock("Qty", key="filled_qty", fmt=num)],
     ),
     FieldBlock("Value",    key="exec_value", fmt=money),
-    FieldBlock("Fee rate", key="fee_rate",   fmt=fee_rate),
+    FieldBlock("Fee rate", key="fee_rate",   fmt=fee_rate, optional=False, default="n/a"),
     FieldBlock("Fee",      key="fee",        fmt=money),
     ConditionalBlock(
         condition=lambda p: bool(p.get("is_partial_leg")),

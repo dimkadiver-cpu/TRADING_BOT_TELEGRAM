@@ -50,3 +50,15 @@ def test_tp_filled_shows_na_exec_value_for_rest_path():
     p = _tp_payload(fee_rate=None, exec_value=None)
     text = format_clean_log("TP_FILLED", p)
     assert "Value: n/a" in text
+
+
+def test_tp_filled_renders_remaining_section_when_payload_has_values():
+    p = _tp_payload(fee_rate=0.00055, exec_value=550.0)
+    p["remaining_qty"] = 0.005
+    p["avg_entry"] = 50000.0
+    p["remaining_risk"] = 5.0
+    text = format_clean_log("TP_FILLED", p)
+    assert "Remaining:" in text
+    assert "Qty: 0.005" in text
+    assert "Avg entry: 50,000" in text
+    assert "Risk: 5.00 USDT" in text

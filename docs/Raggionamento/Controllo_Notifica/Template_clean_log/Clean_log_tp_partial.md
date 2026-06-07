@@ -27,7 +27,6 @@ Qty: <closed_qty>
 PnL: <pnl> USDT
 Fee rate: <fee_rate>%
 Fee: <fee> USDT
-Value: <exec_value> USDT
 - - -
 Remaining:
 Qty: <remaining_qty>
@@ -86,7 +85,6 @@ Qty: 0.005
 PnL: +20.00 USDT
 Fee rate: 0.055%
 Fee: 0.38 USDT
-Value: 345.00 USDT
 - - - - - - - - - - - - -
 Remaining:
 Qty: 0.005

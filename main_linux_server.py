@@ -378,7 +378,34 @@ async def _async_main(
     snapshot_repo = SnapshotRepository(ops_db_path)
     exchange_event_repo = ExchangeEventRepository(ops_db_path)
 
-    exchange_port = StaticExchangeDataPort()
+    # PRD-05 execution gateway layer — built first to extract known symbols for entry gate
+    execution_runtime: ExecutionRuntime | None = None
+
+    try:
+        execution_runtime = _build_execution_runtime(
+            root_dir=root_dir,
+            ops_db_path=ops_db_path,
+            logger=logger,
+            wake_callback=_fill_wake_callback,
+        )
+    except Exception:
+        logger.exception("execution gateway init failed — gateway disabled")
+
+    # Load known symbols from exchange adapter (fail-open: None = no restriction)
+    known_symbols: frozenset[str] | None = None
+    if execution_runtime is not None:
+        adapter = execution_runtime.adapter
+        if hasattr(adapter, "load_known_symbols"):
+            try:
+                known_symbols = adapter.load_known_symbols()
+                if known_symbols is not None:
+                    logger.info("symbol whitelist loaded: %d symbols", len(known_symbols))
+                else:
+                    logger.info("symbol whitelist unavailable — entry gate symbol check disabled")
+            except Exception:
+                logger.warning("load_known_symbols failed — entry gate symbol check disabled")
+
+    exchange_port = StaticExchangeDataPort(known_symbols=known_symbols)
     risk_engine = RiskCapacityEngine()
     entry_gate = _build_lifecycle_entry_gate(
         root_dir=root_dir,
@@ -405,19 +432,6 @@ async def _async_main(
         command_repo=command_repo,
         exchange_event_repo=exchange_event_repo,
     )
-
-    # PRD-05 execution gateway layer (CCXT/Bybit)
-    execution_runtime: ExecutionRuntime | None = None
-
-    try:
-        execution_runtime = _build_execution_runtime(
-            root_dir=root_dir,
-            ops_db_path=ops_db_path,
-            logger=logger,
-            wake_callback=_fill_wake_callback,
-        )
-    except Exception:
-        logger.exception("execution gateway init failed — gateway disabled")
 
     _cp = build_control_plane(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
