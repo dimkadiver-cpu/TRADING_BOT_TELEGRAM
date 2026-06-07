@@ -261,3 +261,78 @@ def _t_signal_rejected(p: dict) -> dict:
 
 def _t_review_required(p: dict) -> dict:
     return {**p, "_signal_notes": _build_signal_notes(p)}
+
+
+# ---------------------------------------------------------------------------
+# Entry lifecycle (ENTRY_OPENED, ENTRY_UPDATED, ENTRY_CANCELLED)
+# ---------------------------------------------------------------------------
+
+_ENTRY_BLOCKS: list = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label=lambda p: p["_event_label"]),
+    *_FILL_SECTION,
+    *_ENTRY_POSITION_SECTION,
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("is_partial_leg")),
+        blocks=[
+            SeparatorBlock(),
+            StaticBlock("Changed:"),
+            DerivedBlock(text_fn=lambda p:
+                f"SL qty: {num(p.get('planned_qty'))} → {num(p.get('filled_qty'))} (adj. to fill)"
+            ),
+        ]
+    ),
+    FooterBlock(default_source="exchange"),
+]
+
+
+def _t_entry_opened(p: dict) -> dict:
+    return {**p, "_emoji": "📊", "_event_label": "ENTRY OPENED",
+            "_avg_entry": p.get("avg_entry")}
+
+
+def _t_entry_updated(p: dict) -> dict:
+    avg = p["new_avg_entry"] if "new_avg_entry" in p else p.get("avg_entry")
+    return {**p, "_emoji": "✏️", "_event_label": "ENTRY UPDATED", "_avg_entry": avg}
+
+
+_ENTRY_CANCELLED_BLOCKS: list = [
+    HeaderBlock(emoji="⚠️", event_label="ENTRY CANCELLED"),
+    DerivedBlock(text_fn=lambda p:
+        f"Entry_{p['_c_seq']}: {num(p['_c_price'])} {p['_c_etype']}"
+        if p.get("_c_price") is not None
+        else f"Entry_{p['_c_seq']}: {p['_c_etype']}"
+    ),
+    ConditionalBlock(
+        condition=lambda p: p.get("partial_fill_pct") is not None,
+        blocks=[
+            DerivedBlock(text_fn=lambda p:
+                f"Partial fill: {pct(p['partial_fill_pct'])}"
+                + (f" ({num(p['partial_fill_qty'])} {p['_base_asset']} kept)"
+                   if p.get("partial_fill_qty") is not None else "")
+            ),
+        ]
+    ),
+    FieldBlock("Avg entry",    key="avg_entry",       fmt=num),
+    ConditionalBlock(
+        condition=lambda p: p.get("total_filled_qty") is not None,
+        blocks=[
+            DerivedBlock(text_fn=lambda p:
+                f"Total filled: {num(p['total_filled_qty'])} {p['_base_asset']}"
+            ),
+        ]
+    ),
+    FooterBlock(default_source="runtime"),
+]
+
+
+def _t_entry_cancelled(p: dict) -> dict:
+    cancelled = p.get("cancelled_entry") or {}
+    symbol = display_symbol(p.get("symbol", ""))
+    base_asset = symbol.split("/")[0] if "/" in symbol else symbol
+    return {
+        **p,
+        "_c_seq":      cancelled.get("sequence", "?"),
+        "_c_price":    cancelled.get("price"),
+        "_c_etype":    cancelled.get("entry_type", "LIMIT").capitalize(),
+        "_base_asset": base_asset,
+    }
