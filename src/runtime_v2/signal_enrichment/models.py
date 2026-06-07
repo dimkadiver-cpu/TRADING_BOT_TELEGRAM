@@ -102,6 +102,7 @@ class RiskConfig(BaseModel):
     capital_base_usdt: float = 1000.0
     leverage: int = 1
     use_trader_risk_hint: bool = False
+    risk_hint_range_mode: Literal["min_value", "max_value", "midpoint"] = "min_value"
     max_capital_at_risk_per_trader_pct: float = 5.0
     max_concurrent_trades: int = 5
     max_concurrent_same_symbol: int = 1

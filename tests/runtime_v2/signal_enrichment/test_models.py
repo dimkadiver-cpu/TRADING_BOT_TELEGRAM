@@ -112,3 +112,23 @@ def test_management_plan_config_market_convert_mode_invalid():
     from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
     with pytest.raises(ValidationError):
         ManagementPlanConfig(market_convert_mode="invalid_value")
+
+
+def test_risk_config_risk_hint_range_mode_defaults_to_min_value():
+    from src.runtime_v2.signal_enrichment.models import RiskConfig
+    config = RiskConfig()
+    assert config.risk_hint_range_mode == "min_value"
+
+
+def test_risk_config_risk_hint_range_mode_accepts_all_valid_values():
+    from src.runtime_v2.signal_enrichment.models import RiskConfig
+    for mode in ("min_value", "max_value", "midpoint"):
+        config = RiskConfig(risk_hint_range_mode=mode)
+        assert config.risk_hint_range_mode == mode
+
+
+def test_risk_config_risk_hint_range_mode_rejects_invalid():
+    from pydantic import ValidationError
+    from src.runtime_v2.signal_enrichment.models import RiskConfig
+    with pytest.raises(ValidationError):
+        RiskConfig(risk_hint_range_mode="invalid_mode")
