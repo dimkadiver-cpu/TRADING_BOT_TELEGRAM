@@ -70,7 +70,7 @@ defaults:
         single:
           weights: {E1: 1.0}  # Pesi allocazione per entry LIMIT singola.
         range:
-          split_mode: endpoints  # Valori supportati: endpoints | firstpoint | lastpoint | midpoint.
+          split_mode: midpoint  # Valori supportati: endpoints | firstpoint | lastpoint | midpoint.
           weights: {E1: 0.50, E2: 0.50}  # Pesi delle due leg RANGE.
         averaging:
           weights: {E1: 0.70, E2: 0.30}  # Pesi averaging LIMIT.

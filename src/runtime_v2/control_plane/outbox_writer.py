@@ -232,6 +232,10 @@ def _build_payload(
             payload["parse_status"] = "PARTIAL"
             if ev.get("parse_warnings"):
                 payload["parse_warnings"] = ev["parse_warnings"]
+        if plan.get("range_derivation"):
+            payload["range_derivation"] = plan["range_derivation"]
+        if plan.get("risk_hint_applied"):
+            payload["risk_hint_applied"] = plan["risk_hint_applied"]
         return payload
 
     if notification_type == "ENTRY_OPENED":
