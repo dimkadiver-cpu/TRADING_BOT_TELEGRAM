@@ -1468,6 +1468,145 @@ def test_lifecycle_gate_worker_expands_cancel_pending_for_each_active_entry_leg(
     assert len({row[1] for row in cancel_rows}) == 2
 
 
+def test_lifecycle_gate_worker_persists_raw_symbol_for_new_chain_from_slash_signal(tmp_path):
+    import datetime
+    from unittest.mock import MagicMock
+
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage, SignalPayload
+    from src.parser_v2.contracts.context import RawContext
+    from src.parser_v2.contracts.entities import EntryLeg, Price, StopLoss, TakeProfit
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ControlStateRepository, ExecutionCommandRepository,
+        LifecycleEventRepository, SnapshotRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+    from src.runtime_v2.signal_enrichment.models import (
+        EffectiveEnrichmentConfig, EntryRangeConfig, EntrySplitConfig,
+        EntryWeightsConfig, LimitEntrySplitConfig, ManagementPlanConfig,
+        MarketEntrySplitConfig, MarketExecutionConfig, PriceCorrectionsConfig,
+        PriceSanityConfig, RiskConfig, SignalPolicyConfig, SlConfig, TpConfig,
+    )
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+
+    parser_db = str(tmp_path / "parser.sqlite3")
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    _core_apply(ops_db, "db/ops_migrations")
+
+    signal = SignalPayload(
+        completeness="COMPLETE",
+        symbol="FIDA/USDT",
+        side="LONG",
+        entry_structure="ONE_SHOT",
+        entries=[
+            EntryLeg(
+                sequence=1,
+                entry_type="LIMIT",
+                price=Price(raw="0.2500", value=0.25),
+            )
+        ],
+        stop_loss=StopLoss(price=Price(raw="0.2400", value=0.24)),
+        take_profits=[TakeProfit(sequence=1, price=Price(raw="0.2600", value=0.26))],
+    )
+    canonical_message = CanonicalMessage(
+        parser_profile="trader_a",
+        primary_class="SIGNAL",
+        parse_status="PARSED",
+        confidence=1.0,
+        signal=signal,
+        raw_context=RawContext(raw_text="FIDA/USDT LONG"),
+    )
+    parse_result = CanonicalParseResult(
+        canonical_message_id=1,
+        raw_message_id=1,
+        parser_profile="trader_a",
+        primary_class="SIGNAL",
+        parse_status="PARSED",
+        canonical_message=canonical_message,
+        warnings=[],
+        parsed_at=datetime.datetime.now(datetime.timezone.utc),
+    )
+
+    weights = EntryWeightsConfig(weights={"E1": 1.0})
+    effective_config = EffectiveEnrichmentConfig(
+        trader_id="trader_a",
+        enabled=True,
+        gate_mode="block",
+        hedge_mode=False,
+        account_id="acc_1",
+        signal_policy=SignalPolicyConfig(
+            accepted_entry_structures=["ONE_SHOT", "TWO_STEP", "RANGE", "LADDER"],
+            market_execution=MarketExecutionConfig(),
+            entry_split=EntrySplitConfig(
+                LIMIT=LimitEntrySplitConfig(
+                    single=weights,
+                    range=EntryRangeConfig(weights={"E1": 0.5, "E2": 0.5}),
+                    averaging=weights,
+                    ladder=weights,
+                ),
+                MARKET=MarketEntrySplitConfig(single=weights, averaging=weights),
+            ),
+            tp=TpConfig(),
+            sl=SlConfig(),
+            price_corrections=PriceCorrectionsConfig(),
+            price_sanity=PriceSanityConfig(),
+        ),
+        update_admission={},
+        management_plan=ManagementPlanConfig(),
+        risk=RiskConfig(
+            mode="risk_pct_of_capital",
+            risk_pct_of_capital=1.0,
+            capital_base_mode="static_config",
+            capital_base_usdt=1000.0,
+            leverage=1,
+            max_capital_at_risk_per_trader_pct=50.0,
+            max_concurrent_trades=5,
+            max_concurrent_same_symbol=1,
+            use_trader_risk_hint=False,
+        ),
+    )
+
+    config_loader = MagicMock()
+    config_loader.reload_if_changed.return_value = False
+    config_loader.get_effective_config.return_value = effective_config
+    config_loader.get_symbol_blacklist_global.return_value = set()
+    config_loader.get_symbol_blacklist_for_trader.return_value = set()
+    config_loader.get_policy_version.return_value = "test-policy"
+
+    processor = SignalEnrichmentProcessor(
+        config_loader=config_loader,
+        repository=EnrichedCanonicalMessageRepository(parser_db),
+    )
+    processor.process(parse_result)
+
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=_make_gate_with_mode("b_entry_stop_then_tp"),
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        snapshot_repo=SnapshotRepository(ops_db),
+        control_repo=ControlStateRepository(ops_db),
+    )
+
+    processed = worker.run_once()
+
+    assert processed == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT symbol FROM ops_trade_chains WHERE source_enrichment_id=?",
+        (1,),
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row[0] == "FIDAUSDT"
+
+
 # ── UNIFIED_PLAN path tests ────────────────────────────────────────────────────
 
 def test_lifecycle_gate_worker_rehydrates_entry_avg_price_from_exchange_history(tmp_path):

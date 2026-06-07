@@ -68,3 +68,51 @@ def test_fill_event_projects_clean_log_outbox(ops_db):
     ).fetchall()
     conn.close()
     assert ("SL_FILLED", "CLEAN_LOG") in rows
+
+
+def test_clean_log_displays_slash_symbol_when_chain_symbol_is_raw(ops_db):
+    import json
+
+    from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
+
+    chain_repo = TradeChainRepository(ops_db)
+    chain = chain_repo.save(TradeChain(
+        source_enrichment_id=1, canonical_message_id=1, raw_message_id=1,
+        trader_id="trader_a", account_id="main", symbol="BTCUSDT", side="LONG",
+        lifecycle_state="OPEN", entry_mode="ONE_SHOT", management_plan_json="{}",
+    ))
+    worker = LifecycleEventWorker(
+        ops_db_path=ops_db,
+        processor=LifecycleEventProcessor(),
+        chain_repo=chain_repo,
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        exchange_event_repo=ExchangeEventRepository(ops_db),
+    )
+    result = EventProcessorResult(
+        new_lifecycle_state="CLOSED",
+        new_be_protection_status=None,
+        entry_avg_price=None,
+        current_stop_price=None,
+        lifecycle_events=[LifecycleEvent(
+            trade_chain_id=chain.trade_chain_id,
+            event_type="SL_FILLED",
+            source_type="exchange_event",
+            payload_json="{}",
+            idempotency_key=f"sl_filled:{chain.trade_chain_id}:1",
+        )],
+        execution_commands=[],
+    )
+    worker._persist_result(chain.trade_chain_id, result)
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox "
+        "WHERE notification_type='SL_FILLED' ORDER BY notification_id DESC LIMIT 1",
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    text = format_clean_log(row[0], json.loads(row[1]))
+    assert "BTC/USDT" in text
+    assert "BTCUSDT" not in text

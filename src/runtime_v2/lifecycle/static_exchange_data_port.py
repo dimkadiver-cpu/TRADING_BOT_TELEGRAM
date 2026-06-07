@@ -6,6 +6,7 @@ from src.runtime_v2.lifecycle.ports import (
     AccountStateSnapshot, ExchangeDataPort, OrderSnapshot,
     PositionSnapshot, SymbolMarketSnapshot,
 )
+from src.runtime_v2.symbols import to_raw_symbol
 
 
 class StaticExchangeDataPort(ExchangeDataPort):
@@ -18,10 +19,18 @@ class StaticExchangeDataPort(ExchangeDataPort):
         known_symbols: frozenset[str] | None = None,
     ) -> None:
         self._account = account_snapshot
-        self._markets: dict[str, SymbolMarketSnapshot] = market_snapshots or {}
+        self._markets: dict[str, SymbolMarketSnapshot] = {}
+        for key, snapshot in (market_snapshots or {}).items():
+            normalized_symbol = to_raw_symbol(key) or key
+            snapshot_symbol = to_raw_symbol(snapshot.symbol) or normalized_symbol
+            self._markets[normalized_symbol] = snapshot.model_copy(update={"symbol": snapshot_symbol})
         self._orders: list[OrderSnapshot] = orders or []
         self._positions: list[PositionSnapshot] = positions or []
-        self._known_symbols = known_symbols
+        self._known_symbols = (
+            frozenset((to_raw_symbol(symbol) or symbol) for symbol in known_symbols)
+            if known_symbols is not None
+            else None
+        )
 
     def get_account_state(self, account_id: str) -> AccountStateSnapshot:
         if self._account is not None:
@@ -33,10 +42,11 @@ class StaticExchangeDataPort(ExchangeDataPort):
         )
 
     def get_symbol_market_state(self, account_id: str, symbol: str) -> SymbolMarketSnapshot:
-        if symbol in self._markets:
-            return self._markets[symbol]
+        lookup_symbol = to_raw_symbol(symbol) or symbol
+        if lookup_symbol in self._markets:
+            return self._markets[lookup_symbol]
         return SymbolMarketSnapshot(
-            symbol=symbol,
+            symbol=lookup_symbol,
             captured_at=datetime.now(timezone.utc),
             source="static_default",
         )
@@ -54,8 +64,9 @@ class StaticExchangeDataPort(ExchangeDataPort):
 
     def symbol_exists(self, account_id: str, symbol: str) -> bool:
         if self._known_symbols is None:
-            return True  # fail-open: no symbol list loaded → don't block signals
-        return symbol in self._known_symbols
+            return True  # fail-open: no symbol list loaded -> don't block signals
+        lookup_symbol = to_raw_symbol(symbol) or symbol
+        return lookup_symbol in self._known_symbols
 
 
 __all__ = ["StaticExchangeDataPort"]

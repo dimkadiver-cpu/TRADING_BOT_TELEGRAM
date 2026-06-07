@@ -239,3 +239,61 @@ def test_ws_fill_payload_preserves_exec_fee(ops_db):
     assert payload["closed_size"] == 0.002
 
 
+def test_ws_funding_event_resolves_raw_symbol_chain_and_forwards_to_lifecycle(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
+    from src.runtime_v2.execution_gateway.event_ingest.models import ExchangeRawEvent
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_chain_open(ops_db, chain_id=21)
+    conn = sqlite3.connect(ops_db)
+    expected_chain_id = conn.execute(
+        "SELECT trade_chain_id FROM ops_trade_chains WHERE symbol='BTCUSDT' AND side='LONG'"
+    ).fetchone()[0]
+    conn.close()
+    repo = GatewayCommandRepository(ops_db)
+    watcher = BybitWsFillWatcher(
+        api_key="key",
+        api_secret="secret",
+        testnet=True,
+        ops_db_path=ops_db,
+        repo=repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+    raw = ExchangeRawEvent(
+        source_stream="watch_my_trades",
+        exchange_event_id="funding-001",
+        idempotency_key="funding-001",
+        symbol="BTCUSDT",
+        side="Buy",
+        create_type=None,
+        stop_order_type=None,
+        exec_type="Funding",
+        order_status=None,
+        order_link_id=None,
+        order_id=None,
+        seq=None,
+        exec_price=None,
+        exec_qty=None,
+        closed_size=None,
+        leaves_qty=None,
+        pos_qty=0.01,
+        exec_value=None,
+        exec_fee=0.07628025,
+        fee_rate=None,
+        cum_exec_qty=None,
+    )
+
+    watcher._process_batch([{"id": "funding-001"}], lambda _: raw)
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT trade_chain_id, event_type, payload_json "
+        "FROM ops_exchange_events WHERE event_type='FUNDING_SETTLED'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row[0] == expected_chain_id
+    assert row[1] == "FUNDING_SETTLED"
+    assert json.loads(row[2])["exec_fee"] == 0.07628025

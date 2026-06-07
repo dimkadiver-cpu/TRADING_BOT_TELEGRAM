@@ -172,6 +172,29 @@ def test_global_blacklisted_symbol_is_blocked(tmp_path):
     assert enriched.lifecycle_processed is True
 
 
+def test_global_blacklisted_raw_symbol_is_blocked(tmp_path):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    cfg["symbol_blacklist"]["global"] = ["SCAMUSDT"]
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+    result = _make_parse_result(symbol="SCAM/USDT")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "symbol_blacklisted_global"
+
+
 def test_per_trader_blacklisted_symbol_is_blocked(tmp_path):
     from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
     from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
@@ -193,6 +216,81 @@ def test_per_trader_blacklisted_symbol_is_blocked(tmp_path):
     enriched = proc.process(result)
     assert enriched.enrichment_decision == "BLOCK"
     assert enriched.reason_code == "symbol_blacklisted_trader"
+
+
+def test_per_trader_blacklisted_raw_symbol_is_blocked(tmp_path):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    cfg["symbol_blacklist"]["per_trader"] = {"trader_a": ["RUGUSDT"]}
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+    result = _make_parse_result(symbol="RUG/USDT")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "symbol_blacklisted_trader"
+
+
+def test_price_sanity_symbol_ranges_match_slash_style_config(tmp_path):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    cfg["defaults"]["signal_policy"]["price_sanity"] = {
+        "enabled": True,
+        "symbol_ranges": {"BTC/USDT": [0.0, 50500.0]},
+    }
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+    result = _make_parse_result(symbol="BTC/USDT")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "price_out_of_range"
+
+
+def test_price_sanity_symbol_ranges_match_raw_style_config(tmp_path):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    cfg["defaults"]["signal_policy"]["price_sanity"] = {
+        "enabled": True,
+        "symbol_ranges": {"BTCUSDT": [0.0, 50500.0]},
+    }
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+    result = _make_parse_result(symbol="BTC/USDT")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "price_out_of_range"
 
 
 def test_missing_sl_is_blocked(processor):

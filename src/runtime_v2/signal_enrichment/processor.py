@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
 from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
@@ -15,6 +15,7 @@ from src.runtime_v2.signal_enrichment.models import (
     RangeDerivation,
 )
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+from src.runtime_v2.symbols import to_raw_symbol
 
 logger = logging.getLogger(__name__)
 
@@ -83,7 +84,7 @@ class SignalEnrichmentProcessor:
         log: list[EnrichmentLogEntry] = []
         signal = result.canonical_message.signal
         trader_id = result.parser_profile
-        symbol = signal.symbol or ""
+        symbol = to_raw_symbol(signal.symbol) or ""
 
         def block(reason: str) -> EnrichedCanonicalMessage:
             return self._make_outcome(
@@ -93,11 +94,11 @@ class SignalEnrichmentProcessor:
             )
 
         # 1. Blacklist globale
-        if symbol in self._config.get_symbol_blacklist_global():
+        if self._symbol_in_policy_values(symbol, self._config.get_symbol_blacklist_global()):
             return block("symbol_blacklisted_global")
 
         # 2. Blacklist per-trader
-        if symbol in self._config.get_symbol_blacklist_for_trader(trader_id):
+        if self._symbol_in_policy_values(symbol, self._config.get_symbol_blacklist_for_trader(trader_id)):
             return block("symbol_blacklisted_trader")
 
         # 3. Entry structure accettata
@@ -127,7 +128,10 @@ class SignalEnrichmentProcessor:
 
         # 7. Price sanity (se abilitata)
         if config.signal_policy.price_sanity.enabled:
-            ranges = config.signal_policy.price_sanity.symbol_ranges.get(symbol)
+            ranges = self._symbol_policy_range(
+                symbol,
+                config.signal_policy.price_sanity.symbol_ranges,
+            )
             if ranges and len(ranges) == 2:
                 for tp in take_profits:
                     if not (ranges[0] <= tp.price.value <= ranges[1]):
@@ -158,6 +162,24 @@ class SignalEnrichmentProcessor:
             policy_version=policy_version,
             lifecycle_processed=False,
         )
+
+    @staticmethod
+    def _symbol_in_policy_values(symbol: str, configured_symbols: Iterable[str]) -> bool:
+        if not symbol:
+            return False
+        return any(to_raw_symbol(candidate) == symbol for candidate in configured_symbols)
+
+    @staticmethod
+    def _symbol_policy_range(
+        symbol: str,
+        symbol_ranges: dict[str, list[float]],
+    ) -> list[float] | None:
+        if not symbol:
+            return None
+        for configured_symbol, ranges in symbol_ranges.items():
+            if to_raw_symbol(configured_symbol) == symbol:
+                return ranges
+        return None
 
     def _apply_entry_weights(
         self,

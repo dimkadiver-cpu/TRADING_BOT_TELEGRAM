@@ -236,6 +236,38 @@ def test_position_closed_final_result_subtracts_positive_funding_cost(ops_db):
     assert payload["final_result"]["total_pnl_net"] == pytest.approx(2.46797574)
 
 
+def test_position_closed_final_result_subtracts_positive_funding_cost_for_raw_symbol_chain(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 719, symbol="FIDAUSDT")
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, open_position_qty=?, filled_entry_qty=?, "
+            "cumulative_gross_pnl=?, cumulative_fees=?, cumulative_funding=?, allocated_margin=? "
+            "WHERE trade_chain_id=?",
+            (0.2532, 0.0, 6042.0, 4.2294, 1.68514401, 0.07628025, 200.0, 719),
+        )
+        _seed_event(conn, 719, "CLOSE_FULL_FILLED", "close_full:719:1", {
+            "fill_price": 0.2539,
+            "filled_qty": 6042.0,
+            "exec_fee": 0.84373509,
+            "fee_rate": 0.00055,
+            "closed_size": 6042.0,
+            "close_reason": "BOT_COMMAND",
+        })
+        project_clean_log_for_chain(conn, 719)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "POSITION_CLOSED"
+    payload = json.loads(row[1])
+    assert payload["symbol"] == "FIDAUSDT"
+    assert payload["final_result"]["funding"] == -0.07628025
+    assert payload["final_result"]["total_pnl_net"] == pytest.approx(2.46797574)
+
+
 def test_position_closed_final_result_uses_peak_margin_and_return_on_risk(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:
