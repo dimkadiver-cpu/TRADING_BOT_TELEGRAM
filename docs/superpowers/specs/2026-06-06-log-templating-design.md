@@ -365,6 +365,39 @@ _SIGNAL_BODY: list[Block] = [
 ]
 ```
 
+### Signal notes
+
+I signal possono includere una mini-sezione opzionale `Notes:` tra il body operativo e il footer
+informativo. La sezione è riservata a metadati di contesto che aiutano a interpretare il segnale ma
+non fanno parte del setup operativo principale.
+
+Uso previsto:
+
+- derivazione `RANGE` normalizzata (`Entry - Midpoint [min-max]`, `Entry - Endpoints [min-max]`, ...)
+- riduzione rischio applicata da `risk_hint` (`Risk - Reduced by trader`)
+
+Regole:
+
+- `Notes:` compare solo se esiste almeno una nota
+- l'ordine resta: body operativo -> `Notes:` -> footer (`Trader`, `Exchange Account`, `Rejected`, `Source`)
+- nessun marker `*` / `**`
+- la sezione è permessa solo in `SIGNAL_ACCEPTED`, `SIGNAL_REJECTED`, `REVIEW_REQUIRED`
+
+```python
+def _build_signal_notes(p: dict) -> list[str]:
+    notes: list[str] = []
+    rd = p.get("range_derivation") or {}
+    if rd.get("derived_from_range"):
+        mode = str(rd.get("split_mode") or "").capitalize()
+        min_p = rd.get("original_min_price")
+        max_p = rd.get("original_max_price")
+        if mode and min_p is not None and max_p is not None:
+            notes.append(f"Entry - {mode} [{num(min_p)}-{num(max_p)}]")
+    if p.get("risk_hint_applied"):
+        notes.append("Risk - Reduced by trader")
+    return notes
+```
+
 ---
 
 ## Tipi close — stessi block, `payload_transform` diverso
@@ -427,6 +460,14 @@ _SIGNAL_BASE_BLOCKS: list[Block] = [
     *_SIGNAL_BODY,
     FieldBlock("Leverage", key="leverage", fmt=lambda v: f"x{v}"),
     ConditionalBlock(
+        condition=lambda p: bool(p.get("_signal_notes")),
+        blocks=[
+            SeparatorBlock(),
+            StaticBlock("Notes:"),
+            ListBlock(key="_signal_notes", item_renderer=lambda note, i, p: [note]),
+        ]
+    ),
+    ConditionalBlock(
         condition=lambda p: p.get("parse_status") == "PARTIAL",
         blocks=[
             DerivedBlock(text_fn=lambda p:
@@ -440,10 +481,13 @@ _SIGNAL_BASE_BLOCKS: list[Block] = [
 
 def _t_signal_accepted(p): return {**p, "_emoji": "✅", "_event_label": "SIGNAL ACCEPTED",
                                    "_entry_pcts": p.get("_entry_pcts", []),
-                                   "_tp_pcts":    p.get("_tp_pcts",    [])}
+                                   "_tp_pcts":    p.get("_tp_pcts",    []),
+                                   "_signal_notes": _build_signal_notes(p)}
 def _t_signal_rejected(p): return {**p, "_emoji": "❌", "_event_label": "SIGNAL REJECTED",
                                    "_entry_pcts": p.get("_entry_pcts", []),
-                                   "_tp_pcts":    p.get("_tp_pcts",    [])}
+                                   "_tp_pcts":    p.get("_tp_pcts",    []),
+                                   "_signal_notes": _build_signal_notes(p)}
+def _t_review_required(p): return {**p, "_signal_notes": _build_signal_notes(p)}
 ```
 
 ### Payload enrichment per signal types (`_build_payload`)
@@ -466,10 +510,20 @@ già disponibile nel contesto. Il formatter li usa solo se la lista ha 2+ elemen
 _REVIEW_REQUIRED_BLOCKS: list[Block] = [
     HeaderBlock(emoji="⚠️", event_label="REVIEW REQUIRED"),
     *_SIGNAL_BODY,
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("_signal_notes")),
+        blocks=[
+            SeparatorBlock(),
+            StaticBlock("Notes:"),
+            ListBlock(key="_signal_notes", item_renderer=lambda note, i, p: [note]),
+        ]
+    ),
     FooterBlock(default_source="runtime",
                 include_trader_id=True, include_account_id=True, include_rejected_reason=True),
 ]
 ```
+
+`REVIEW_REQUIRED` usa la stessa convenzione `Notes:` ma rimane senza `Leverage:`.
 
 ---
 
@@ -941,7 +995,7 @@ def _t_multi_chain(p: dict) -> dict:
 TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "SIGNAL_ACCEPTED":        TemplateConfig(_SIGNAL_BASE_BLOCKS,  _t_signal_accepted),
     "SIGNAL_REJECTED":        TemplateConfig(_SIGNAL_BASE_BLOCKS,  _t_signal_rejected),
-    "REVIEW_REQUIRED":        TemplateConfig(_REVIEW_REQUIRED_BLOCKS),
+    "REVIEW_REQUIRED":        TemplateConfig(_REVIEW_REQUIRED_BLOCKS, _t_review_required),
     "ENTRY_OPENED":           TemplateConfig(_ENTRY_BLOCKS,        _t_entry_opened),
     "ENTRY_UPDATED":          TemplateConfig(_ENTRY_BLOCKS,        _t_entry_updated),
     "ENTRY_CANCELLED":        TemplateConfig(_ENTRY_CANCELLED_BLOCKS, _t_entry_cancelled),

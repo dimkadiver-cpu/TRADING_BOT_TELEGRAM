@@ -132,16 +132,22 @@ Required outcome:
 Responsibilities:
 
 - read the provenance metadata from `plan_state_json`;
-- enrich only signal-phase notification payloads with a human-readable label.
+- enrich only signal-phase notification payloads with a human-readable label in a dedicated `Notes:` section.
 
 Suggested display behavior:
 
-- `Derived entry: midpoint from range 63000-65000`
-- `Derived entry: firstpoint from range 63000-65000`
-- `Derived entry: lastpoint from range 63000-65000`
-- `Derived entry: endpoints from range 63000-65000`
+- `Notes:`
+- `Entry - Midpoint [63000-65000]`
+- `Entry - Firstpoint [63000-65000]`
+- `Entry - Lastpoint [63000-65000]`
+- `Entry - Endpoints [63000-65000]`
 
-The exact copy can be adjusted later, but the information content should remain the same.
+Placement rule:
+
+- `Notes:` sits between the operational body (`Entry_*`, `SL`, `TP_*`, `Risk`, `Leverage`) and the
+  informational footer (`Trader`, `Exchange Account`, `Rejected`, `Source`)
+
+The exact copy can be adjusted later, but the information content and placement should remain the same.
 
 ## Logging Requirements
 

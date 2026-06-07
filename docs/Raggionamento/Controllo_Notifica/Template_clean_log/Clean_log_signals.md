@@ -8,12 +8,14 @@ Entry_2: 67,200 Limit (30%)
 SL: 66,400
 TP_1: 69,200 (50%)
 TP_2: 70,500 (50%)
-Risk: 0.5%*
+Risk: 0.5%
 Leverage: x5
+- - - - - - - - - - - - -
+Notes:
+Risk - Reduced by trader
 - - - - - - - - - - - - -
 Trader: Pipsygnal
 Exchange Account: main
-*Risk reduced by trader
 - - - - - - - - - - - - -
 Source: trader_signal
 https://t.me/c/123456/987
@@ -68,6 +70,33 @@ https://t.me/c/123456/987
 ```
 
 > ONE_SHOT + TP singolo — nessuna % (liste con 1 elemento).
+
+---
+
+```
+✅ #15 — SIGNAL ACCEPTED
+- - - - - - - - - - - - -
+BTC/USDT — 📈 LONG
+- - - - - - - - - - - - -
+Entry_1: 64,000 Limit
+SL: 62,000
+TP_1: 67,000 (50%)
+TP_2: 69,000 (50%)
+Risk: 0.8%
+Leverage: x5
+- - - - - - - - - - - - -
+Notes:
+Entry - Midpoint [63,000-65,000]
+Risk - Reduced by trader
+- - - - - - - - - - - - -
+Trader: Pipsygnal
+Exchange Account: main
+- - - - - - - - - - - - -
+Source: trader_signal
+https://t.me/c/123456/987
+```
+
+> RANGE collassato con `midpoint` — la derivazione range compare in `Notes:` e non altera il body operativo.
 
 ---
 
@@ -172,3 +201,22 @@ Source: runtime
 | Leverage | assente |
 | % entry/TP | assente (no transform, no plan) |
 | `Rejected:` in footer | sì, se `rejected_reason` nel payload |
+
+---
+
+## Notes
+
+`Notes:` compare solo se esiste almeno una nota di contesto sul segnale. Al momento le righe previste sono:
+
+- `Entry - Midpoint [min-max]`
+- `Entry - Firstpoint [min-max]`
+- `Entry - Lastpoint [min-max]`
+- `Entry - Endpoints [min-max]`
+- `Risk - Reduced by trader`
+
+Regole:
+
+- `Notes:` è mostrato solo per `SIGNAL_ACCEPTED`, `SIGNAL_REJECTED`, `REVIEW_REQUIRED`
+- la sezione sta tra body operativo e blocco `Trader / Exchange Account / Rejected`
+- nessun marker `*` / `**`
+- se non ci sono note, il template resta identico a oggi

@@ -174,9 +174,24 @@ When no hint is applied (flag false, hint absent, or hint did not reduce risk), 
 
 ## Non-Goals
 
-- Clean-log display of `risk_hint_applied` — separate session
+- Deriving the risk note text from anything other than `risk_hint_applied` persisted metadata
 - Changing the risk model for `risk_usdt_fixed` mode (hint is percent-based; fixed-USDT mode is unaffected)
 - Adding `risk_hint` gating at enrichment level (the risk engine is the decision point)
+
+## Clean-log display contract
+
+The clean-log signal templates may surface the applied hint only in signal-phase notifications
+(`SIGNAL_ACCEPTED`, `SIGNAL_REJECTED`, `REVIEW_REQUIRED`) and only inside the optional `Notes:`
+section.
+
+Expected copy:
+
+- `Risk - Reduced by trader`
+
+Placement rule:
+
+- `Notes:` appears after the operational body (`Entry_*`, `SL`, `TP_*`, `Risk`, `Leverage`) and
+  before the informational footer (`Trader`, `Exchange Account`, `Rejected`, `Source`)
 
 ## Acceptance Contract
 
