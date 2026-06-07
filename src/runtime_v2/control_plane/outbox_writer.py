@@ -288,6 +288,13 @@ def _build_payload(
             "source": ev.get("source", "trader_signal"),
             "link": ev.get("source_message_link"),
         }
+        if len(legs) >= 2:
+            payload["_entry_pcts"] = [
+                round(float(l.get("weight", 1.0 / len(legs))) * 100) for l in legs
+            ]
+        plan_close_pcts = plan.get("close_pcts") or []
+        if len(plan_close_pcts) >= 2:
+            payload["_tp_pcts"] = [round(p) for p in plan_close_pcts]
         if ev.get("parse_status") == "PARTIAL":
             payload["parse_status"] = "PARTIAL"
             if ev.get("parse_warnings"):
@@ -433,7 +440,7 @@ def _build_payload(
         risk_pct = None
         if risk.get("capital") and risk.get("risk_amount"):
             risk_pct = round(risk["risk_amount"] / risk["capital"] * 100, 2)
-        return {
+        rej_payload = {
             **base,
             "trader_id": trader_id,
             "account_id": account_id,
@@ -453,6 +460,14 @@ def _build_payload(
             "source": ev.get("source", "trader_signal"),
             "link": ev.get("source_message_link"),
         }
+        if len(legs) >= 2:
+            rej_payload["_entry_pcts"] = [
+                round(float(l.get("weight", 1.0 / len(legs))) * 100) for l in legs
+            ]
+        plan_close_pcts = plan.get("close_pcts") or []
+        if len(plan_close_pcts) >= 2:
+            rej_payload["_tp_pcts"] = [round(p) for p in plan_close_pcts]
+        return rej_payload
 
     if notification_type == "REVIEW_REQUIRED":
         risk_pct = None
