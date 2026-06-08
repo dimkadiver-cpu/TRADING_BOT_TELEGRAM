@@ -65,38 +65,38 @@ class CanonicalTranslator:
         intents = [intent.type for intent in parsed.intents]
         parse_status = parsed.parse_status
 
-if parsed.primary_class == "SIGNAL":
-    if parsed.signal is None:
-        raise ValueError("SIGNAL ParsedMessage requires signal")
+        if parsed.primary_class == "SIGNAL":
+            if parsed.signal is None:
+                raise ValueError("SIGNAL ParsedMessage requires signal")
 
-    signal_noise_intents = UPDATE_INTENTS | REPORT_EVENT_INTENTS
+            signal_noise_intents = UPDATE_INTENTS | REPORT_EVENT_INTENTS
 
-    if any(intent.type in signal_noise_intents for intent in parsed.intents):
-        warnings = _append_once(warnings, "non_signal_intents_dropped_in_signal_message")
-        intents = [
-            intent.type
-            for intent in parsed.intents
-            if intent.type not in signal_noise_intents
-        ]
+            if any(intent.type in signal_noise_intents for intent in parsed.intents):
+                warnings = _append_once(warnings, "non_signal_intents_dropped_in_signal_message")
+                intents = [
+                    intent.type
+                    for intent in parsed.intents
+                    if intent.type not in signal_noise_intents
+                ]
 
-    primary_intent = (
-        None
-        if parsed.primary_intent in signal_noise_intents
-        else parsed.primary_intent
-    )
+            primary_intent = (
+                None
+                if parsed.primary_intent in signal_noise_intents
+                else parsed.primary_intent
+            )
 
-    return CanonicalMessage(
-        parser_profile=parsed.parser_profile,
-        primary_class=parsed.primary_class,
-        parse_status=parse_status,
-        confidence=parsed.confidence,
-        primary_intent=primary_intent,
-        intents=intents,
-        signal=_signal_payload(parsed.signal),
-        warnings=warnings,
-        diagnostics=parsed.diagnostics,
-        raw_context=parsed.raw_context,
-    )
+            return CanonicalMessage(
+                parser_profile=parsed.parser_profile,
+                primary_class=parsed.primary_class,
+                parse_status=parse_status,
+                confidence=parsed.confidence,
+                primary_intent=primary_intent,
+                intents=intents,
+                signal=_signal_payload(parsed.signal),
+                warnings=warnings,
+                diagnostics=parsed.diagnostics,
+                raw_context=parsed.raw_context,
+            )
 
         if parsed.primary_class == "UPDATE":
             intent_op_pairs = [
