@@ -44,9 +44,12 @@ _SYMBOL_RE = re.compile(
 _BARE_HASHTAG_SYMBOL_RE = re.compile(r"#(?P<symbol>[A-Z0-9]{2,20})\b", re.IGNORECASE)
 
 _ENTRY_MARKET_RE = re.compile(
-    rf"(?:entry|enter|vhod|{_CYR_ENTRY})\s+"
+    rf"\b(?:entry|enter|vhod|{_CYR_ENTRY})\b"
+    rf"\s*:?\s*"
     rf"(?:market|at\s+market|now|[^\n]*{_CYR_CURRENT_ROOT}\w*|[^\n]*{_CYR_MARKET_ROOT}\w*)"
-    rf"\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
+    rf"[^\n]*?"
+    rf"[\(~≈\s]*"
+    rf"(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
     re.IGNORECASE,
 )
 _ENTRY_MARKET_PAREN_RE = re.compile(
