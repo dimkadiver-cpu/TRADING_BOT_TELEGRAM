@@ -787,16 +787,17 @@ class GatewayCommandRepository:
         now = _now()
 
         # Build ops_exchange_events idempotency key
-        if classified.event_type == "TP_FILLED":
-            if classified.tp_level is not None:
-                ops_idem_key = f"TP_FILLED:{classified.trade_chain_id}:level:{classified.tp_level}"
-            else:
-                ops_idem_key = f"TP_FILLED:{classified.trade_chain_id}"
+        # Fill events from execution streams are deduplicated by exchange identity (execId),
+        # not by semantic classification. This allows two TP fills for the same chain
+        # (e.g. TP1 partial + TP final, both tp_level=None) to coexist without collision.
+        _EXCHANGE_IDENTITY_TYPES = frozenset({
+            "TP_FILLED", "SL_FILLED", "MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL",
+            "LIQUIDATION_FILLED", "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED", "FUNDING_SETTLED",
+        })
+        if classified.event_type in _EXCHANGE_IDENTITY_TYPES and raw.exchange_event_id:
+            ops_idem_key = f"fill:{raw.exchange_event_id}"
         elif classified.event_type == "ENTRY_FILLED":
-            # Include order_id so the key matches the REST reconciliation path
-            # (event_sync._save_fill_event uses "{event_type}:{chain_id}:{exchange_order_id}").
-            # raw.order_id is the exchange orderId from watch_my_trades — same UUID used by REST.
-            # Fallback to exchange_event_id (execId) if order_id is absent.
+            # ENTRY_FILLED uses order_id for WS/REST convergence
             _order_anchor = raw.order_id or raw.exchange_event_id
             ops_idem_key = f"ENTRY_FILLED:{classified.trade_chain_id}:{_order_anchor}"
         else:
