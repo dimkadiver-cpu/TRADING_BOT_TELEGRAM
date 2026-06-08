@@ -315,20 +315,22 @@ def test_get_open_chains_with_tps(tmp_path):
 def test_tp_fill_exists_and_protective_cancelled_exists(tmp_path):
     db_path = make_db(tmp_path)
     conn = sqlite3.connect(db_path)
-    # Insert TP_FILLED for chain=1 level=1
+    # Insert TP_FILLED for chain=1 with identity-based key (new format)
     conn.execute(
         "INSERT INTO ops_exchange_events "
         "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
         "VALUES (?,?,?,?,?,?)",
-        (1, "TP_FILLED", "{}", "NEW", "TP_FILLED:1:level:1", "2026-05-27T10:00:00Z"),
+        (1, "TP_FILLED", "{}", "NEW", "fill:exec-abc-001", "2026-05-27T10:00:00Z"),
     )
     conn.commit()
     conn.close()
 
     repo = GatewayCommandRepository(db_path)
 
-    assert repo.tp_fill_exists(1, 1) is True
-    assert repo.tp_fill_exists(1, 2) is False
+    # tp_fill_exists checks by chain+event_type only — level distinction removed
+    assert repo.tp_fill_exists(1) is True
+    assert repo.tp_fill_exists(1, tp_level=2) is True   # tp_level ignored
+    assert repo.tp_fill_exists(99) is False              # wrong chain
 
     # Insert PROTECTIVE_ORDER_CANCELLED for chain=1
     conn = sqlite3.connect(db_path)

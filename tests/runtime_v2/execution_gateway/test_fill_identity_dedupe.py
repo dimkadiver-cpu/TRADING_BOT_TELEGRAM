@@ -149,3 +149,23 @@ def test_same_tp_fill_twice_is_idempotent(tmp_path):
     cnt = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
     conn.close()
     assert cnt == 1
+
+
+def test_tp_fill_exists_after_identity_insert(tmp_path):
+    """tp_fill_exists deve trovare un TP_FILLED inserito con chiave identity-based."""
+    db_path = _make_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+
+    tp = _make_tp_fill("exec-ddd-004", "exec:exec-ddd-004")
+    repo.insert_raw_and_classified(tp)
+
+    assert repo.tp_fill_exists(1) is True
+    assert repo.tp_fill_exists(99) is False  # wrong chain
+
+
+def test_tp_fill_exists_false_when_no_tp_in_chain(tmp_path):
+    """tp_fill_exists false se non ci sono TP_FILLED per quella chain."""
+    db_path = _make_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+
+    assert repo.tp_fill_exists(1) is False

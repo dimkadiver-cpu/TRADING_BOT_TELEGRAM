@@ -929,21 +929,18 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def tp_fill_exists(self, trade_chain_id: int, tp_level: int | None) -> bool:
-        """Checks if a TP_FILLED event already exists for this chain/level. Idempotency check."""
-        if tp_level is not None:
-            idem_key = f"TP_FILLED:{trade_chain_id}:level:{tp_level}"
-        else:
-            idem_key = f"TP_FILLED:{trade_chain_id}"
+    def tp_fill_exists(self, trade_chain_id: int, tp_level: int | None = None) -> bool:
+        """Checks if any TP_FILLED event exists for this chain.
+
+        tp_level is accepted but ignored: with identity-based dedupe keys, two fills
+        for the same chain have distinct keys regardless of tp_level.
+        """
         conn = sqlite3.connect(self._db)
         try:
             row = conn.execute(
                 "SELECT 1 FROM ops_exchange_events "
-                "WHERE trade_chain_id = ? "
-                "  AND event_type = 'TP_FILLED' "
-                "  AND idempotency_key = ? "
-                "LIMIT 1",
-                (trade_chain_id, idem_key),
+                "WHERE trade_chain_id = ? AND event_type = 'TP_FILLED' LIMIT 1",
+                (trade_chain_id,),
             ).fetchone()
             return row is not None
         finally:
