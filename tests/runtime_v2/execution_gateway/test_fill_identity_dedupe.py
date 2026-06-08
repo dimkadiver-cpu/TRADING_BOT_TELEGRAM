@@ -379,3 +379,109 @@ def test_position_reconciliation_inserts_when_no_real_fill(tmp_path):
     ).fetchone()[0]
     conn.close()
     assert synth == 1
+
+
+def _make_bybit_position_tp_fill(exec_id: str, exec_qty: float, pos_qty: float) -> ClassifiedEvent:
+    """Build a ClassifiedEvent simulating a Bybit position-level TP fill (no orderLinkId, no tp_level)."""
+    raw = ExchangeRawEvent(
+        source_stream="watch_my_trades",
+        exchange_event_id=exec_id,
+        idempotency_key=f"exec:{exec_id}",
+        symbol="ASTERUSDT",
+        side="Sell",
+        create_type="CreateByTakeProfit",
+        stop_order_type="TakeProfit",
+        exec_type="Trade",
+        order_status=None,
+        order_link_id=None,
+        order_id=None,
+        seq=1000,
+        exec_price=0.6358,
+        exec_qty=exec_qty,
+        closed_size=exec_qty,
+        leaves_qty=0.0,
+        pos_qty=pos_qty,
+        exec_value=exec_qty * 0.6358,
+        exec_fee=0.002,
+        fee_rate=0.00055,
+        cum_exec_qty=None,
+        position_take_profit=None,
+        position_stop_loss=None,
+        exchange_time="2026-06-07T22:14:18Z",
+        received_at="2026-06-07T22:14:20Z",
+        raw_info={},
+    )
+    return ClassifiedEvent(
+        raw=raw,
+        event_type="TP_FILLED",
+        source="exchange_auto",
+        trade_chain_id=1,
+        tp_level=None,
+        is_actionable=True,
+    )
+
+
+def test_bybit_position_level_tp_full_scenario(tmp_path):
+    """E2E: Bybit position-level TP without orderLinkId.
+
+    Scenario:
+    - WS delivers TP1 partial fill (no tp_level, exec_id=exec-111)
+    - WS delivers TP final fill (no tp_level, exec_id=exec-222)
+    - Both must land in ops_exchange_events as distinct TP_FILLED events
+    - position reconciliation must NOT insert a synthetic CLOSE_FULL_FILLED
+    """
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    db_path = _make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, symbol, side, lifecycle_state, open_position_qty) "
+        "VALUES (1, 'ASTERUSDT', 'LONG', 'OPEN', 10000.0)"
+    )
+    conn.commit()
+    conn.close()
+
+    repo = GatewayCommandRepository(db_path)
+
+    # WS: TP1 partial fill (no tp_level — Bybit position-level TP)
+    tp1 = _make_bybit_position_tp_fill("exec-111", exec_qty=5000.0, pos_qty=5000.0)
+    inserted1 = repo.insert_raw_and_classified(tp1)
+    assert inserted1 is True, "TP1 partial fill must be inserted"
+
+    # WS: TP final fill (no tp_level — same Bybit mechanism, different execId)
+    tp2 = _make_bybit_position_tp_fill("exec-222", exec_qty=5000.0, pos_qty=0.0)
+    inserted2 = repo.insert_raw_and_classified(tp2)
+    assert inserted2 is True, "TP final fill must be inserted (no collision with TP1)"
+
+    # Both fills are now in ops_exchange_events
+    conn = sqlite3.connect(db_path)
+    tp_fills = conn.execute(
+        "SELECT idempotency_key FROM ops_exchange_events "
+        "WHERE trade_chain_id=1 AND event_type='TP_FILLED' "
+        "ORDER BY exchange_event_id"
+    ).fetchall()
+    conn.close()
+    assert len(tp_fills) == 2, f"expected 2 TP_FILLED, got {len(tp_fills)}: {tp_fills}"
+    keys = {r[0] for r in tp_fills}
+    assert "fill:exec-111" in keys
+    assert "fill:exec-222" in keys
+
+    # Position reconciliation must NOT insert synthetic close — real fills exist
+    adapter = _FakePositionAdapter()
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=db_path,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="test_account",
+    )
+    synth_count = worker.run_position_reconciliation()
+    assert synth_count == 0, "position reconciliation must not insert synthetic close when real fills exist"
+
+    conn = sqlite3.connect(db_path)
+    synth = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert synth == 0, "no CLOSE_FULL_FILLED should exist after reconciliation"
