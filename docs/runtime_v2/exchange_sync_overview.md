@@ -61,7 +61,7 @@ Tre controlli aggiuntivi eseguiti periodicamente:
 | Quantità posizione chiusa | `ops_trade_chains.closed_position_qty` | aumenta a ogni TP/close |
 | PnL lordo cumulato | `ops_trade_chains.cumulative_gross_pnl` | `qty × (fill_price − entry_avg) × sign(side)` |
 | Fee cumulate | `ops_trade_chains.cumulative_fees` | somma delle `exec_fee` di ogni fill |
-| Funding fee cumulate | `ops_trade_chains.cumulative_funding` | campo presente, **non ancora scritto** |
+| Funding fee cumulate | `ops_trade_chains.cumulative_funding` | somma degli `exec_fee` degli eventi `FUNDING_SETTLED` |
 | Stop loss corrente | `ops_trade_chains.current_stop_price` | aggiornato a ogni move stop confermato |
 | Margine allocato | `ops_trade_chains.allocated_margin` | da `risk_snapshot` al momento della creazione — campo legacy |
 | Margine di picco | `ops_trade_chains.peak_margin_used` | massimo margine reale impiegato — denominatore di `roi_net_pct` |
@@ -153,13 +153,7 @@ dopo ogni fill, ma il modello `TradeChain` non espone questi campi e la vista `/
 del control plane mostra letteralmente `"Realized PnL: n/a"`. I dati ci sono, non vengono
 mostrati.
 
-### 2. Funding fee non tracciate
-
-Il campo `cumulative_funding` esiste nello schema del DB ma nessun worker lo scrive.
-Le funding fee pagate/ricevute durante la vita della posizione non vengono registrate.
-Il PnL netto reale (lordo − fee − funding) non è quindi calcolabile.
-
-### 3. Chiusura TP attached rimossa esternamente non gestita nel lifecycle
+### 2. Chiusura TP attached rimossa esternamente non gestita nel lifecycle
 
 Quando Bybit rileva che un TP attached a livello di posizione è stato rimosso senza fill,
 il sistema inserisce un evento `PROTECTIVE_ORDER_CANCELLED` nel DB. Tuttavia il

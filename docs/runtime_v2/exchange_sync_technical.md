@@ -145,7 +145,7 @@ Aggiornato da `workers._persist_result()` dopo ogni `LifecycleEventProcessor.pro
 | `risk_remaining` | `ENTRY_FILLED` | `max(0, risk_total − risk_already_realized)` |
 | `cumulative_gross_pnl` | fill events (vedi §4) | PnL lordo cumulato |
 | `cumulative_fees` | fill events (vedi §4) | fee cumulate |
-| `cumulative_funding` | **mai scritto** (vedi Gap §6) | — |
+| `cumulative_funding` | eventi `FUNDING_SETTLED` | funding cumulato sulla chain |
 | `allocated_margin` | creazione chain | `risk_snapshot.risk_amount` — campo legacy, non più denominatore ROI |
 | `peak_margin_used` | aggiornato a ogni fill di entry | massimo margine reale impiegato nel tempo; denominatore di `roi_net_pct` |
 | `initial_risk_amount` | creazione chain | rischio monetario iniziale; denominatore di `return_on_risk_pct` |
@@ -190,7 +190,7 @@ e TP_FILLED sono eventi separati).
 ### Metriche ROI nel report finale
 
 ```
-total_pnl_net       = cumulative_gross_pnl - cumulative_fees + cumulative_funding
+total_pnl_net       = cumulative_gross_pnl - cumulative_fees - cumulative_funding
 roi_net_pct         = total_pnl_net / peak_margin_used * 100
 return_on_risk_pct  = total_pnl_net / initial_risk_amount * 100
 ```
@@ -281,21 +281,7 @@ campi — vengono estratti dalla riga ma mai passati al costruttore. Sono silenz
 
 **I dati ci sono nel DB, ma nessuno li legge.**
 
-### Gap 2 — Funding fee non tracciate
-
-**Gravità: Media**
-
-`ops_trade_chains.cumulative_funding` esiste nello schema, è in `_CHAIN_COLS`, viene
-destrutturato in `_chain_from_row()`. Nessun worker lo scrive mai.
-
-Le funding fee vengono pagate/ricevute ogni 8h su posizioni aperte overnight.
-Senza questo dato il PnL netto reale non è calcolabile:
-
-```
-PnL netto = cumulative_gross_pnl - cumulative_fees - cumulative_funding
-```
-
-### Gap 3 — PROTECTIVE_ORDER_CANCELLED non gestito dal lifecycle
+### Gap 2 — PROTECTIVE_ORDER_CANCELLED non gestito dal lifecycle
 
 **Gravità: Media**
 

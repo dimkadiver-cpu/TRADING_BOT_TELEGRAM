@@ -82,8 +82,8 @@ def _final_result(
     fee_total = float(fees) if fees is not None else None
     funding_total = float(funding) if funding is not None else None
     net = None
-    if gross is not None and fee_total is not None and funding_total is not None:
-        net = gross - fee_total - funding_total
+    if gross is not None and fee_total is not None:
+        net = gross - fee_total - (funding_total or 0.0)
     roi = None
     if net is not None and peak_margin_used is not None and float(peak_margin_used) > 0.0:
         roi = round(net / float(peak_margin_used) * 100.0, 4)

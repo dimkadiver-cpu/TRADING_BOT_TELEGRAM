@@ -882,3 +882,29 @@ def test_update_clean_log_includes_changed_field_for_be_move(ops_db):
         c.get("field") == "SL" and c.get("note") == "BE"
         for c in changed
     ), f"Expected SL BE in changed, got: {changed}"
+
+
+def test_final_result_computes_net_pnl_without_explicit_funding(ops_db):
+    # cumulative_funding defaults to 0.0 (DEFAULT 0.0 in schema) — production case
+    # for chains that never received a FUNDING_SETTLED event.
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 720)
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET cumulative_gross_pnl=?, cumulative_fees=?, peak_margin_used=?, initial_risk_amount=? "
+            "WHERE trade_chain_id=?",
+            (10.0, 2.0, 100.0, 50.0, 720),
+        )
+        _seed_event(conn, 720, "CLOSE_FULL_FILLED", "close_full:720:1", {
+            "fill_price": 1.0, "filled_qty": 1.0, "exec_fee": 0.0, "closed_size": 1.0,
+        })
+        project_clean_log_for_chain(conn, 720)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None
+    final_result = json.loads(row[0])["final_result"]
+    assert final_result["total_pnl_net"] == pytest.approx(8.0)
+    assert final_result["funding"] == pytest.approx(0.0)
+    assert final_result["roi_net_pct"] == pytest.approx(8.0, rel=1e-3)
+    assert final_result["return_on_risk_pct"] == pytest.approx(16.0, rel=1e-3)
