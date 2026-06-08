@@ -13,6 +13,12 @@ if TYPE_CHECKING:
     from src.runtime_v2.execution_gateway.event_ingest.models import ClassifiedEvent
 
 
+_EXCHANGE_IDENTITY_TYPES = frozenset({
+    "TP_FILLED", "SL_FILLED", "MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL",
+    "LIQUIDATION_FILLED", "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED", "FUNDING_SETTLED",
+})
+
+
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -790,10 +796,6 @@ class GatewayCommandRepository:
         # Fill events from execution streams are deduplicated by exchange identity (execId),
         # not by semantic classification. This allows two TP fills for the same chain
         # (e.g. TP1 partial + TP final, both tp_level=None) to coexist without collision.
-        _EXCHANGE_IDENTITY_TYPES = frozenset({
-            "TP_FILLED", "SL_FILLED", "MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL",
-            "LIQUIDATION_FILLED", "CLOSE_PARTIAL_FILLED", "CLOSE_FULL_FILLED", "FUNDING_SETTLED",
-        })
         if classified.event_type in _EXCHANGE_IDENTITY_TYPES and raw.exchange_event_id:
             ops_idem_key = f"fill:{raw.exchange_event_id}"
         elif classified.event_type == "ENTRY_FILLED":
@@ -801,6 +803,8 @@ class GatewayCommandRepository:
             _order_anchor = raw.order_id or raw.exchange_event_id
             ops_idem_key = f"ENTRY_FILLED:{classified.trade_chain_id}:{_order_anchor}"
         else:
+            # Non-fill events (order snapshots, position snapshots, reconciliation-inferred)
+            # and fill events where exchange_event_id is absent use semantic keys.
             ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
 
         ep = ExchangeEventPayload(
