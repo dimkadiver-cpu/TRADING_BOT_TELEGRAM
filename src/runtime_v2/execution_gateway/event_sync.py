@@ -99,6 +99,11 @@ class ExchangeEventSyncWorker:
                 if qty is None:
                     continue
                 if qty == 0.0 and open_qty > 0.0:
+                    # Skip synthetic close if a real fill event already exists.
+                    # The lifecycle will close the chain from the WS/REST fill path.
+                    if self._repo.real_close_fill_exists(chain_id):
+                        continue
+
                     # Attempt to recover fill price from recent reduce trades (REST safety net)
                     fill_price: float | None = None
                     exec_fee: float | None = None

@@ -43,7 +43,8 @@ def _make_db(tmp_path) -> str:
         );
         CREATE TABLE ops_trade_chains (
             trade_chain_id INTEGER PRIMARY KEY,
-            symbol TEXT, side TEXT, lifecycle_state TEXT, updated_at TEXT
+            symbol TEXT, side TEXT, lifecycle_state TEXT, updated_at TEXT,
+            open_position_qty REAL DEFAULT 10000.0
         );
         CREATE TABLE ops_lifecycle_events (
             event_id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -285,3 +286,96 @@ def test_trade_based_reconciliation_skips_when_ws_fill_already_present(tmp_path)
     cnt = conn.execute("SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='TP_FILLED'").fetchone()[0]
     conn.close()
     assert cnt == 1  # still just the one from WS
+
+
+def _make_position_reconciliation_db(tmp_path, insert_tp_fill: bool) -> str:
+    """DB with open chain. Optionally pre-inserts a real TP_FILLED."""
+    db_path = _make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (1, 'ASTERUSDT', 'LONG', 'PARTIALLY_CLOSED')"
+    )
+    if insert_tp_fill:
+        conn.execute(
+            "INSERT INTO ops_exchange_events "
+            "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+            "VALUES (1, 'TP_FILLED', '{}', 'DONE', 'fill:exec-ws-111', '2026-06-07T22:14:20Z')"
+        )
+    conn.commit()
+    conn.close()
+    return db_path
+
+
+class _FakePositionAdapter:
+    """Returns qty=0 for any position (simulates closed position on exchange)."""
+    def get_position_qty(self, symbol, side, execution_account_id):
+        return 0.0
+
+    def get_order_status(self, *a, **kw):
+        return None
+
+    def get_capabilities(self):
+        from src.runtime_v2.execution_gateway.models import AdapterCapabilities
+        return AdapterCapabilities(
+            place_entry=False, protective_stop_native=False, take_profit_native=False,
+            bracket_order=False, move_stop=False, close_partial=False, close_full=False,
+            executor_position=False, sync_protective_orders=False,
+        )
+
+
+def test_position_reconciliation_skips_when_tp_fill_exists(tmp_path):
+    """Se un TP_FILLED reale esiste già in ops_exchange_events, la position reconciliation
+    non deve inserire un CLOSE_FULL_FILLED sintetico."""
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    db_path = _make_position_reconciliation_db(tmp_path, insert_tp_fill=True)
+    repo = GatewayCommandRepository(db_path)
+    adapter = _FakePositionAdapter()
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=db_path,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="test_account",
+    )
+
+    inserted_count = worker.run_position_reconciliation()
+
+    assert inserted_count == 0, "should not insert synthetic close when TP_FILLED is already present"
+
+    conn = sqlite3.connect(db_path)
+    synth = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert synth == 0
+
+
+def test_position_reconciliation_inserts_when_no_real_fill(tmp_path):
+    """Se non c'è nessun fill reale, la position reconciliation deve produrre il close sintetico."""
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    db_path = _make_position_reconciliation_db(tmp_path, insert_tp_fill=False)
+    repo = GatewayCommandRepository(db_path)
+    adapter = _FakePositionAdapter()
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=db_path,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="test_account",
+    )
+
+    inserted_count = worker.run_position_reconciliation()
+
+    assert inserted_count == 1
+
+    conn = sqlite3.connect(db_path)
+    synth = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='CLOSE_FULL_FILLED' "
+        "AND idempotency_key='CLOSE_FULL_FILLED:ext:1'"
+    ).fetchone()[0]
+    conn.close()
+    assert synth == 1

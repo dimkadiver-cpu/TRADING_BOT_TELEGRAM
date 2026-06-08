@@ -946,6 +946,26 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def real_close_fill_exists(self, trade_chain_id: int) -> bool:
+        """Returns True if a real exchange fill that closes the chain exists.
+
+        Used by position reconciliation to avoid inserting a synthetic CLOSE_FULL_FILLED
+        when the WS or REST path has already recorded the actual fill.
+        """
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM ops_exchange_events "
+                "WHERE trade_chain_id = ? "
+                "  AND event_type IN ("
+                "    'TP_FILLED', 'SL_FILLED', 'MANUAL_CLOSE_FULL', 'LIQUIDATION_FILLED'"
+                "  ) LIMIT 1",
+                (trade_chain_id,),
+            ).fetchone()
+            return row is not None
+        finally:
+            conn.close()
+
     def protective_cancelled_exists(self, trade_chain_id: int) -> bool:
         """Checks if a PROTECTIVE_ORDER_CANCELLED event already exists for this chain."""
         conn = sqlite3.connect(self._db)
