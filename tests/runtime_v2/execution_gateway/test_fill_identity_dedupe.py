@@ -169,3 +169,119 @@ def test_tp_fill_exists_false_when_no_tp_in_chain(tmp_path):
     repo = GatewayCommandRepository(db_path)
 
     assert repo.tp_fill_exists(1) is False
+
+
+import json
+
+
+def _make_rest_reconciliation_db(tmp_path) -> str:
+    """DB with open chain + active TP command, no existing TP_FILLED."""
+    db_path = _make_db(tmp_path)
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains (trade_chain_id, symbol, side, lifecycle_state) "
+        "VALUES (1, 'ASTERUSDT', 'LONG', 'OPEN')"
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, idempotency_key, created_at, updated_at) "
+        "VALUES (1, 1, 'SET_POSITION_TPSL_PARTIAL', 'SENT', '{}', 'idem:1', '2026-06-07T00:00:00Z', '2026-06-07T00:00:00Z')"
+    )
+    conn.commit()
+    conn.close()
+    return db_path
+
+
+class _FakeTrade:
+    def __init__(self, trade_id: str, price: float, amount: float):
+        self.trade_id = trade_id
+        self.price = price
+        self.amount = amount
+        self.fee = 0.0
+
+
+class _FakeReconciliationAdapter:
+    def __init__(self, trades: list):
+        self._trades = trades
+
+    def fetch_recent_reduce_trades(self, symbol, side, execution_account_id, limit=50):
+        return self._trades
+
+    def get_order_status(self, *a, **kw):
+        return None
+
+    def get_position_qty(self, *a, **kw):
+        return None
+
+    def get_capabilities(self):
+        from src.runtime_v2.execution_gateway.models import AdapterCapabilities
+        return AdapterCapabilities(
+            place_entry=False, protective_stop_native=False, take_profit_native=False,
+            bracket_order=False, move_stop=False, close_partial=False, close_full=False,
+            executor_position=False, sync_protective_orders=False,
+        )
+
+
+def test_trade_based_reconciliation_uses_fill_identity_key(tmp_path):
+    """REST reconciliation deve inserire il fill con chiave fill:<trade_id>, non TP_FILLED:<chain>."""
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    db_path = _make_rest_reconciliation_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+    adapter = _FakeReconciliationAdapter([_FakeTrade("exec-rest-999", 0.6393, 7071.0)])
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=db_path,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="test_account",
+    )
+
+    inserted_count = worker.run_trade_based_reconciliation()
+
+    assert inserted_count == 1
+
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT idempotency_key, event_type FROM ops_exchange_events WHERE event_type='TP_FILLED'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row[0] == "fill:exec-rest-999", f"expected fill:exec-rest-999, got {row[0]!r}"
+
+
+def test_trade_based_reconciliation_skips_when_ws_fill_already_present(tmp_path):
+    """Se il WS ha già inserito il fill, la reconciliation REST non deve inserire un duplicato."""
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    db_path = _make_rest_reconciliation_db(tmp_path)
+    repo = GatewayCommandRepository(db_path)
+
+    # Simulate WS having already inserted the fill with identity key
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (1, 'TP_FILLED', '{}', 'NEW', 'fill:exec-rest-999', '2026-06-07T22:14:20Z')"
+    )
+    conn.commit()
+    conn.close()
+
+    adapter = _FakeReconciliationAdapter([_FakeTrade("exec-rest-999", 0.6393, 7071.0)])
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=db_path,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="test_account",
+    )
+
+    inserted_count = worker.run_trade_based_reconciliation()
+
+    assert inserted_count == 0
+
+    conn = sqlite3.connect(db_path)
+    cnt = conn.execute("SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='TP_FILLED'").fetchone()[0]
+    conn.close()
+    assert cnt == 1  # still just the one from WS

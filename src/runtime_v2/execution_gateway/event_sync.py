@@ -183,17 +183,14 @@ class ExchangeEventSyncWorker:
                     symbol, side, chain_id,
                 )
 
-            # tp_level=None for position-level TPs (no standalone orderLinkId)
+            # tp_level=None: position-level TPs on Bybit have no standalone orderLinkId
             tp_level: int | None = None
-            if self._repo.tp_fill_exists(chain_id, tp_level):
-                continue  # already recorded (by WS or previous REST run)
+            if self._repo.tp_fill_exists(chain_id):
+                continue  # already recorded by WS or previous REST run
 
             trade = trades[0]
-            idem_key = (
-                f"TP_FILLED:{chain_id}:level:{tp_level}"
-                if tp_level is not None
-                else f"TP_FILLED:{chain_id}"
-            )
+            # Use exchange trade_id as identity key — matches execId from WS watch_my_trades
+            idem_key = f"fill:{trade.trade_id}"
             payload = json.dumps({
                 "tp_level": tp_level,
                 "fill_price": trade.price,
