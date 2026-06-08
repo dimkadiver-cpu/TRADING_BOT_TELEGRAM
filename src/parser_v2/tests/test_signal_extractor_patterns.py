@@ -257,3 +257,36 @@ def test_trader_b_range_entry_produces_range_structure() -> None:
     assert len(signal.entries) == 2
     assert signal.entries[0].price.value == 2000.0
     assert signal.entries[1].price.value == 2100.0
+
+
+def test_trader_b_market_entry_price_inside_current_parentheses() -> None:
+    from src.parser_v2.contracts.markers import NormalizedText
+    from src.parser_v2.profiles.trader_b.signal_extractor import SignalExtractor as TraderBExtractor
+
+    text = (
+        "[trader#b] Signal ID: #b43\n\n"
+        "$BTCUSDT - Лонг (сделка на споте)\n\n"
+        "Вход: по текущим (≈63150)\n\n"
+        "Тейк профит: 65050\n\n"
+        "Стоп лосс: 62790\n\n"
+        "Риск на сделку 0.6%\n"
+        "Потенциальная прибыль 3%"
+    )
+
+    normalized = NormalizedText(
+        raw_text=text,
+        normalized_text=text.lower(),
+        lines=text.splitlines(),
+    )
+
+    signal = TraderBExtractor().extract(normalized, market_hint=True)
+
+    assert signal is not None
+    assert signal.completeness == "COMPLETE"
+    assert len(signal.entries) == 1
+    assert signal.entries[0].entry_type == "MARKET"
+    assert signal.entries[0].price is not None
+    assert signal.entries[0].price.value == 63150.0
+    assert signal.stop_loss.price.value == 62790.0
+    assert signal.take_profits[0].price.value == 65050.0
+    assert signal.risk_hint.value == 0.6
