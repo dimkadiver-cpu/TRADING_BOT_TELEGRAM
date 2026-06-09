@@ -1,6 +1,5 @@
-Spec: C:\TeleSignalBot\docs\superpowers\specs\2026-06-06-log-templating-design.md
-
-1. differenze in ENTRY OPENED ricevute e quello in esempio (C:\TeleSignalBot\docs\Raggionamento\Controllo_Notifica\Template_clean_log\Clean_log_entry_entry_update.md):
+1.  Spec: C:\TeleSignalBot\docs\superpowers\specs\2026-06-06-log-templating-design.md
+ differenze in ENTRY OPENED ricevute e quello in esempio (C:\TeleSignalBot\docs\Raggionamento\Controllo_Notifica\Template_clean_log\Clean_log_entry_entry_update.md):
 
 📊 #7 — ENTRY OPENED
 - - - - - - - - - - - - - - -
@@ -54,9 +53,10 @@ SL qty: 11.299435 → 11.299 (adj. to fill) // motivo??? arodonamento???
 Source: exchange
 
 
-2. Classificazione di reason in  POSITION CLOSED:
+2. verificare la Classificazione di reason in  POSITION CLOSED:
   - Close reason: BREAKEVEN_AFTER_TP: solo se e stato imposytato BE + Source: exchange ()
-  - Close reason: MANUAL_CLOSE: Source: manual_command (da comado via /xxxx)
+  - Close reason: MANUAL_CLOSE: Source: manual_command (da comado via /xxxx) 
   - Close reason: TRADER_COMMAND Source: trader_update
+
 
 
