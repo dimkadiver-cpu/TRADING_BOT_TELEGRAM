@@ -59,4 +59,40 @@ Source: exchange
   - Close reason: TRADER_COMMAND Source: trader_update
 
 
+3. 📊 #9 — ENTRY OPENED
+- - - - - - - - - - - - - - - - - - - -
+SOL/USDT — 📈 LONG
+https://t.me/c/4240829081/252
+- - - - - - - - - - - - - - - - - - - -
+Filled:
+Entry_1: 64.75 Limit
+Qty: 34.7 (planned: 34.782609)
+Value: 2246.82 USDT
+Fee rate: 0.020%
+Fee: 0.45 USDT
+Partial: 99.80%
+- - - - - - - - - - - - - - - - - - - -
+Position:
+Avg entry: 64.75
+Total qty: 34.7
+Total value: 2246.82 USDT
+Total fees: 0.45 USDT
+Filled: 99.80%              // eliminare
+Pending: none
+- - - - - - - - - - - - - - - - - - - -
+Changed:
+SL qty: 34.782609 → 34.7 (adj. to fill)
+- - - - - - - - - - - - - - - - - - - -
+Source: exchange
 
+
+4. ✅ #11 — UPDATE DONE          // ricevyto update, dice che ha fatto ma Note: manca regola di esclusione nel parser, manca il controllo di modifica entry (è gia entrato ma ha riconsciuto di intrere al market/ modificare entry)
+- - - - - - - - - - - - - - -
+HYPE/USDT — 📈 LONG
+https://t.me/c/4240829081/263
+- - - - - - - - - - - - - - -
+Operation:
+▪️ MODIFY_ENTRIES
+- - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3722628653/6863
