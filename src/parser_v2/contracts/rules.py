@@ -84,8 +84,14 @@ class MarkerResolutionRules(RulesModel):
     marker_context_exclusions: list[MarkerContextExclusionRule] = Field(default_factory=list)
 
 
+class ConvergenceRules(RulesModel):
+    intent: dict[str, str] = Field(default_factory=dict)
+    scope_hint: dict[str, str] = Field(default_factory=dict)
+
+
 class ParserRules(RulesModel):
     marker_resolution: MarkerResolutionRules = Field(default_factory=MarkerResolutionRules)
     disambiguation: list[dict[str, Any]] = Field(default_factory=list)
     primary_intent_precedence: list[IntentType] = Field(default_factory=list)
     extraction_markers: dict[str, MarkerSet] = Field(default_factory=dict)
+    convergence: ConvergenceRules = Field(default_factory=ConvergenceRules)

@@ -110,4 +110,15 @@ def price(value: object) -> str:
     return formatted
 
 
-__all__ = ["num", "text", "money", "money_signed", "pct", "pct_signed", "fee_rate", "price"]
+def r_mult(value: object) -> str:
+    if value is None:
+        return "n/a"
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    prefix = "+" if number >= 0 else ""
+    return f"{prefix}{number:.2f}R"
+
+
+__all__ = ["num", "text", "money", "money_signed", "pct", "pct_signed", "fee_rate", "price", "r_mult"]

@@ -4,6 +4,18 @@
     "weak_context_exclusions": [
 
       {
+        "name": "false_dodify_entry",
+        "intent": "MODIFY_ENTRY",
+        "markers": {"source": "intent_weak"},
+        "scope": "same_sentence",
+        "if_regex_any": [ 
+          "(?:зафиксирую|фиксирую|фиксация)\\s+(?:100%\\s+)?(?:все\\s+(?:свои\\s+)?позиции|остаток)?\\s*по\\s+текущим(?:\\s+отметкам)?",
+          "(?:закрываю|закрываем|закрыть|закрою|закрыл)\\s+(?:(?:все|остаток|лонги|шорты|позиции)\\s+)?по\\s+текущим(?:\\s+отметкам)?",
+          "(?:закрываю|закрываем|закрыть|закрою|закрыл)\\s+все\\s+по\\s+текущим(?:\\s+отметкам)?"],
+        "reason": "false_positive_modify_entry_in_close_full_context"
+      },
+
+      {
         "name": "false_cancel_pending",
         "intent": "CANCEL_PENDING",
         "markers": {"source": "intent_weak"},
@@ -34,8 +46,8 @@
         "intent": "MOVE_STOP_TO_BE",
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
-        "if_regex_any": [],
-        "if_contains_any": ["не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу"],
+        "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
+        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -44,10 +56,9 @@
         "markers": {"source": "intent_weak"},
         "scope": "same_sentence",
         "if_regex_any": ["\\b(\\w+бу\\w*|\\w*бу\\w+)\\b"],
-        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу"],
+        "if_contains_any": ["не переносим в бу","фактически в бу"],
         "reason": "false_positive_weak_markers_in_exit_be_context"
       },
-
 
       {
         "name": "tp_after_n_tp_historical_context",
@@ -99,6 +110,17 @@
         "if_contains_any": ["p.s.", "у вас прибыль по шортам"],
         "reason": "scope_hint_in_postscript_not_actionable"
       },
+
+      {
+        "name": "all_short_in_ps_informational_context",
+        "strength": "strong",
+        "marker_name": "ALL_SHORT",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["p.s.", "у вас прибыль по шортам"],
+        "reason": "scope_hint_in_postscript_not_actionable"
+      },
+
        {
         "name": "no_reenter_context",
         "strength": "strong",
@@ -271,5 +293,14 @@
     "REENTER",
     "ENTRY_FILLED",
     "INFO_ONLY"
-  ]
+  ],
+  "convergence": {
+    "intent": {
+      "INVALIDATE_SETUP": "CANCEL_PENDING"
+    },
+    "scope_hint": {
+      "ALL_OPEN": "ALL_POSITIONS",
+      "ALL_REMAINING": "ALL_POSITIONS"
+    }
+  }
 }

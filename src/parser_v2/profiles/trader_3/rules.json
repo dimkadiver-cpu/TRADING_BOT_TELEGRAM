@@ -13,5 +13,12 @@
     "TP_HIT",
     "REPORT_RESULT",
     "INFO_ONLY"
-  ]
+  ],
+  "convergence": {
+    "intent": {},
+    "scope_hint": {
+      "ALL_OPEN": "ALL_POSITIONS",
+      "ALL_REMAINING": "ALL_POSITIONS"
+    }
+  }
 }

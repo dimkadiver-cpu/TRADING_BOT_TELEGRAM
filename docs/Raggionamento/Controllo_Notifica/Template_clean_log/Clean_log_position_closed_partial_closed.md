@@ -27,6 +27,7 @@ Fee: <fee | n/a>
 Final Result:
 ROI net: <roi | n/a>
 RoR: <ror | n/a>
+R <rf | n/a>          // d intradurre fattore  di Rendimento
 Total PnL net: <net | n/a>
 Gross PnL: <gross | n/a>
 Fees: <fees | n/a>

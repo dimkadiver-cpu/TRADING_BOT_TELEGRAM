@@ -90,9 +90,13 @@ def _final_result(
     return_on_risk = None
     if net is not None and initial_risk_amount is not None and float(initial_risk_amount) > 0.0:
         return_on_risk = round(net / float(initial_risk_amount) * 100.0, 4)
+    r_multiple = None
+    if net is not None and initial_risk_amount is not None and float(initial_risk_amount) > 0.0:
+        r_multiple = round(net / float(initial_risk_amount), 2)
     return {
         "roi_net_pct": roi,
         "return_on_risk_pct": return_on_risk,
+        "r_multiple": r_multiple,
         "total_pnl_net": round(net, 8) if net is not None else None,
         "gross_pnl": round(gross, 8) if gross is not None else None,
         "fees": round(-fee_total, 8) if fee_total is not None else None,
@@ -209,8 +213,8 @@ def _compute_entry_enrichment(
     total_planned = sum(float(l["qty"]) for l in risk_legs if l.get("qty") is not None)
 
     is_partial = False
-    if planned_qty is not None and ev_qty is not None:
-        is_partial = ev_qty < float(planned_qty) - 1e-9
+    if planned_qty is not None and ev_qty is not None and float(planned_qty) > 0:
+        is_partial = (float(planned_qty) - ev_qty) / float(planned_qty) > 0.005
 
     leg_fill_pct = None
     if is_partial and planned_qty is not None and ev_qty is not None and float(planned_qty) > 0:
@@ -233,6 +237,7 @@ def _compute_entry_enrichment(
         "planned_qty": planned_qty,
         "is_partial_leg": is_partial,
         "_leg_fill_pct": leg_fill_pct,
+        "_total_legs": len(legs),
         "total_filled_qty": filled_entry_qty,
         "total_value": total_value,
         "total_fees": risk.get("open_fee_residual") if isinstance(risk, dict) else None,
@@ -392,11 +397,13 @@ def _build_payload(
     if notification_type == "SL_FILLED":
         closed_qty = ev.get("closed_size", ev.get("filled_qty"))
         fill_price = ev.get("fill_price")
-        close_reason = (
-            "BREAKEVEN_AFTER_TP"
-            if be_protection_status == "PROTECTED"
-            else "STOP_LOSS"
-        )
+        event_source = ev.get("source", "exchange")
+        if be_protection_status == "PROTECTED" and event_source == "exchange":
+            close_reason = "BREAKEVEN_AFTER_TP"
+        elif event_source == "trader_update":
+            close_reason = "TRADER_COMMAND"
+        else:
+            close_reason = "STOP_LOSS"
         payload = {
             **base,
             "fill_price": fill_price,

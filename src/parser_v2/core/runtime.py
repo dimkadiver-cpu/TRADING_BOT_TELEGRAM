@@ -11,6 +11,7 @@ from src.parser_v2.core.local_disambiguator import LocalDisambiguator
 from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver
 from src.parser_v2.core.marker_matcher import MarkerMatcher
 from src.parser_v2.core.parsed_message_builder import ParsedMessageBuilder
+from src.parser_v2.core.semantic_normalizer import SemanticNormalizer
 from src.parser_v2.core.target_binding_resolver import TargetBindingResolver
 from src.parser_v2.core.target_hints_extractor import TargetHintsExtractor
 from src.parser_v2.core.text_normalizer import TextNormalizer
@@ -54,6 +55,7 @@ class UniversalParserRuntime:
         target_hints_extractor: TargetHintsExtractor | None = None,
         target_binding_resolver: TargetBindingResolver | None = None,
         parsed_message_builder: ParsedMessageBuilder | None = None,
+        semantic_normalizer: SemanticNormalizer | None = None,
         canonical_translator: CanonicalTranslator | None = None,
     ) -> None:
         self._text_normalizer = text_normalizer or TextNormalizer()
@@ -63,6 +65,7 @@ class UniversalParserRuntime:
         self._target_hints_extractor = target_hints_extractor or TargetHintsExtractor()
         self._target_binding_resolver = target_binding_resolver or TargetBindingResolver()
         self._parsed_message_builder = parsed_message_builder or ParsedMessageBuilder()
+        self._semantic_normalizer = semantic_normalizer or SemanticNormalizer()
         self._canonical_translator = canonical_translator or CanonicalTranslator()
 
     def parse(
@@ -135,6 +138,7 @@ class UniversalParserRuntime:
             diagnostics=build_diagnostics,
         )
 
+        parsed = self._semantic_normalizer.normalize(parsed, rules)
         return self._canonical_translator.translate(parsed)
 
     def _extract_target_hints(

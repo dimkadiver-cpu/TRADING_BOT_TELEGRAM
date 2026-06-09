@@ -8,7 +8,7 @@ from src.runtime_v2.control_plane.formatters._blocks import (
     TemplateConfig,
 )
 from src.runtime_v2.control_plane.formatters._formatters import (
-    num, text, money, money_signed, pct, pct_signed, fee_rate, price,
+    num, text, money, money_signed, pct, pct_signed, fee_rate, price, r_mult,
 )
 from src.runtime_v2.control_plane.formatters.display import display_symbol
 
@@ -75,6 +75,8 @@ FINAL_RESULT: list = [
                fmt=pct_signed,   optional=False, default="n/a"),
     FieldBlock("RoR",           value_fn=lambda p: (p.get("final_result") or {}).get("return_on_risk_pct"),
                fmt=pct_signed,   optional=False, default="n/a"),
+    FieldBlock("R",             value_fn=lambda p: (p.get("final_result") or {}).get("r_multiple"),
+               fmt=r_mult,       optional=False, default="n/a"),
     FieldBlock("Total PnL net", value_fn=lambda p: (p.get("final_result") or {}).get("total_pnl_net"),
                fmt=money_signed, optional=False, default="n/a"),
     FieldBlock("Gross PnL",     value_fn=lambda p: (p.get("final_result") or {}).get("gross_pnl"),
@@ -88,8 +90,11 @@ FINAL_RESULT: list = [
 _FILL_SECTION: list = [
     StaticBlock("Filled:"),
     DerivedBlock(text_fn=lambda p: (
-        f"Entry_{p['filled_leg_sequence']}: {price(p.get('fill_price'))} "
-        f"{p.get('entry_type_for_leg', 'Limit').capitalize()}"
+        (
+            "Entry"
+            if p.get("_total_legs", 1) == 1
+            else f"Entry_{p['filled_leg_sequence']}"
+        ) + f": {price(p.get('fill_price'))} {p.get('entry_type_for_leg', 'Limit').capitalize()}"
         if p.get("filled_leg_sequence") is not None else ""
     )),
     BranchBlock(
