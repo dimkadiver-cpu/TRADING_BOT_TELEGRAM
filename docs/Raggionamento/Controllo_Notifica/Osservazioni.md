@@ -48,7 +48,7 @@ Filled: 100%                 /
 Pending: none
 - - - - - - - - - - - - - - - - - - - - -
 Changed:
-SL qty: 11.299435 → 11.299 (adj. to fill) // motivo??? arodonamento???
+SL qty: 11.299435 → 11.299 (adj. to fill) // motivo??? arodonamento lo risolve???
 - - - - - - - - - - - - - - - - - - - - -
 Source: exchange
 
