@@ -1092,6 +1092,22 @@ class LifecycleEntryGate:
                         "new_price": new_price,
                     })
 
+        if not commands:
+            return UpdateChainResult(
+                trade_chain_id=chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain_id,
+                    event_type="NOOP_NO_PENDING_ENTRIES",
+                    source_type="telegram_update",
+                    source_id=str(cmid),
+                    payload_json=json.dumps({"reason": "no_pending_entries_to_modify"}),
+                    idempotency_key=f"noop_modify_entries:{chain_id}:{cmid}",
+                )],
+                execution_commands=[],
+            )
+
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
