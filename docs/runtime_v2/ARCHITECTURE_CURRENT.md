@@ -2,7 +2,7 @@
 
 > Stato del documento: mappa operativa corrente del runtime V2.
 >
-> Scopo: descrivere la successione dei livelli, i contratti tra componenti, il flusso dati, gli eventi, i comandi e i punti critici da tenere sotto controllo durante modifiche future.
+> Scopo: descrivere la successione dei livelli, i contratti tra componenti, il flusso dati, gli eventi, i comandi e i punti critici da controllare prima di modificare il sistema.
 
 ---
 
