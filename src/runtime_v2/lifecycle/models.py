@@ -92,6 +92,7 @@ class TradeChain(BaseModel):
     plan_state_json: str = "{}"
     source_chat_id: str | None = None
     telegram_message_id: int | None = None
+    external_signal_id: str | None = None
     initial_risk_amount: float | None = None
     peak_margin_used: float | None = None
     created_at: datetime | None = None

@@ -4,6 +4,60 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-09 — Patch V1: Signal Identity, Update Classification, Explicit ID Resolution
+
+### Step completato
+
+Implementata la Patch V1 descritta in `docs/Raggionamento/Patch V1 — Signal Identity, Update Classification, Explicit ID Resolution.md`.
+
+**Proposta 1 — Parser extraction**: ✅ già funzionante (nessuna modifica necessaria). `_extract_explicit_ids()` normalizza correttamente `"Signal ID: #C4"` → `"c4"`.
+
+**Proposta 1b — Persistenza identità chain**: Aggiunto campo `external_signal_id` a `ops_trade_chains`. Il canonical translator ora salva gli `explicit_ids` del segnale nei diagnostics (`signal_explicit_ids`). `_persist_signal()` li legge e li scrive sulla chain.
+
+**Proposta 2 — Classificazione**: Un SIGNAL parziale con `has_update_intent AND has_target_hint` viene riclassificato come UPDATE con warning `signal_like_update_forced_to_update`. Segnali COMPLETE non vengono toccati.
+
+**Proposta 3 — Explicit ID resolution**: `_resolve_targets()` confronta ora `c.external_signal_id` invece di `str(c.canonical_message_id)`. Zero match → `[]` (review). >1 match → `None` (ambiguous). Nessun fallthrough.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `db/ops_migrations/014_ops_signal_identity.sql` | Nuovo | Aggiunge `external_signal_id TEXT` a `ops_trade_chains` + indice |
+| `src/parser_v2/core/classification_resolver.py` | Modificato | Aggiunta logica `_looks_like_targeted_update()` per PARTIAL signal con update intent+hint |
+| `src/parser_v2/translation/canonical_translator.py` | Modificato | Salva `signal_explicit_ids` in diagnostics per messaggi SIGNAL |
+| `src/runtime_v2/lifecycle/models.py` | Modificato | Aggiunto `external_signal_id: str | None` a `TradeChain` |
+| `src/runtime_v2/lifecycle/repositories.py` | Modificato | `_CHAIN_COLS`, `_chain_from_row`, `save()` aggiornati |
+| `src/runtime_v2/lifecycle/entry_gate.py` | Modificato | `_persist_signal` legge `external_signal_id` da diagnostics; `_resolve_targets` usa `external_signal_id`; helper `_norm_signal_id` |
+
+### Risultato test
+
+```
+pytest src/parser_v2/tests/ (escluso test preesistente rotto trader_a)
+→ 147 passed ✅
+```
+
+Il test `test_trader_a_active_tp_hit_after_historical_context_still_emits_tp_hit` era già rotto prima di questa patch.
+
+### Decisioni tecniche
+
+- **Solo PARTIAL forza UPDATE**: Un SIGNAL COMPLETE con Signal ID e false-positive MODIFY_ENTRY (es. trader_d) NON viene riclassificato. Solo i PARTIAL vengono forzati.
+- **external_signal_id via diagnostics**: Non modifica il contratto CanonicalMessage. I diagnostics sono il canale corretto per metadati secondari.
+- **Nessun fallthrough su explicit_ids**: Se explicit_ids presenti ma nessuna chain trovata → `[]` (non si cade sul single-chain fallback).
+
+### Commit
+
+| SHA | Messaggio |
+|---|---|
+| `4c1e3fd` | Patch V1: signal identity, update classification, explicit ID resolution |
+
+### Rischi aperti
+
+- **Chain esistenti**: `external_signal_id` sarà NULL per tutte le chain create prima di questa patch. Il fallback implicito (nessun match → review) è conservativo.
+- **Migration**: `014_ops_signal_identity.sql` va applicato con lo script di migrazione ops prima del deploy.
+- **TradeChainRepository.save()**: aggiornato per consistenza ma non usato nel path produzione (`_persist_signal` fa INSERT diretto).
+
+---
+
 ## 2026-06-07 — Type Hints: Add missing parameter annotations to _formatters.py
 
 ### Step completato
