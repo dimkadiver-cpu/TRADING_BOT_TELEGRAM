@@ -19,7 +19,8 @@ _CHAIN_COLS = (
     "entry_timeout_at, management_plan_json, risk_snapshot_json, "
     "planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty, "
     "last_position_sync_at, execution_mode, risk_already_realized, risk_remaining, "
-    "plan_state_json, source_chat_id, telegram_message_id, cumulative_gross_pnl, "
+    "plan_state_json, source_chat_id, telegram_message_id, external_signal_id, "
+    "cumulative_gross_pnl, "
     "cumulative_fees, cumulative_funding, allocated_margin, initial_risk_amount, "
     "peak_margin_used, created_at, updated_at"
 )
@@ -36,7 +37,8 @@ def _chain_from_row(row: tuple) -> TradeChain:
      entry_timeout_at, management_plan_json, risk_snapshot_json,
      planned_entry_qty, filled_entry_qty, open_position_qty, closed_position_qty,
      last_position_sync_at, execution_mode, risk_already_realized, risk_remaining,
-     plan_state_json, source_chat_id, telegram_message_id, cumulative_gross_pnl,
+     plan_state_json, source_chat_id, telegram_message_id, external_signal_id,
+     cumulative_gross_pnl,
      cumulative_fees, cumulative_funding, allocated_margin, initial_risk_amount,
      peak_margin_used, created_at, updated_at) = row
     return TradeChain(
@@ -71,6 +73,7 @@ def _chain_from_row(row: tuple) -> TradeChain:
         plan_state_json=plan_state_json or "{}",
         source_chat_id=source_chat_id,
         telegram_message_id=telegram_message_id,
+        external_signal_id=external_signal_id,
         initial_risk_amount=initial_risk_amount,
         peak_margin_used=peak_margin_used,
         created_at=datetime.fromisoformat(created_at) if created_at else None,
@@ -110,11 +113,12 @@ class TradeChainRepository:
                     risk_snapshot_json, planned_entry_qty, filled_entry_qty,
                     open_position_qty, closed_position_qty, last_position_sync_at,
                     execution_mode, risk_already_realized, risk_remaining,
-                    plan_state_json, source_chat_id, telegram_message_id, allocated_margin,
+                    plan_state_json, source_chat_id, telegram_message_id,
+                    external_signal_id, allocated_margin,
                     initial_risk_amount, peak_margin_used, cumulative_gross_pnl,
                     cumulative_fees, cumulative_funding,
                     created_at, updated_at
-                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     chain.source_enrichment_id, chain.canonical_message_id, chain.raw_message_id,
@@ -129,6 +133,7 @@ class TradeChainRepository:
                     chain.last_position_sync_at.isoformat() if chain.last_position_sync_at else None,
                     chain.execution_mode, chain.risk_already_realized, chain.risk_remaining,
                     chain.plan_state_json, chain.source_chat_id, chain.telegram_message_id,
+                    chain.external_signal_id,
                     allocated_margin, initial_risk_amount, chain.peak_margin_used,
                     0.0, 0.0, 0.0,
                     now, now,

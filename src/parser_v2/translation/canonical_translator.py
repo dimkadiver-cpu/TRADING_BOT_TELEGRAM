@@ -85,6 +85,10 @@ class CanonicalTranslator:
                 else parsed.primary_intent
             )
 
+            signal_diag = dict(parsed.diagnostics)
+            if parsed.target_hints and parsed.target_hints.explicit_ids:
+                signal_diag["signal_explicit_ids"] = list(parsed.target_hints.explicit_ids)
+
             return CanonicalMessage(
                 parser_profile=parsed.parser_profile,
                 primary_class=parsed.primary_class,
@@ -94,7 +98,7 @@ class CanonicalTranslator:
                 intents=intents,
                 signal=_signal_payload(parsed.signal),
                 warnings=warnings,
-                diagnostics=parsed.diagnostics,
+                diagnostics=signal_diag,
                 raw_context=parsed.raw_context,
             )
 

@@ -8,6 +8,13 @@ from src.parser_v2.contracts.parsed_message import ParsedIntent, SignalDraft
 
 
 UPDATE_WITHOUT_TARGET_HINT = "update_without_target_hint"
+SIGNAL_LIKE_UPDATE_FORCED = "signal_like_update_forced_to_update"
+
+_UPDATE_INTENT_TYPES = frozenset({
+    "MODIFY_ENTRY", "MOVE_STOP", "MOVE_STOP_TO_BE", "CANCEL_PENDING",
+    "CLOSE_FULL", "CLOSE_PARTIAL", "MODIFY_TARGETS", "INVALIDATE_SETUP",
+    "REENTER", "ADD_ENTRY",
+})
 
 
 @dataclass(frozen=True)
@@ -26,9 +33,16 @@ class ClassificationResolver:
         target_hints: TargetHints | None = None,
     ) -> ClassificationResult:
         if signal is not None:
+            parse_status = _signal_parse_status(signal)
+            if parse_status == "PARTIAL" and _looks_like_targeted_update(intents, target_hints):
+                return ClassificationResult(
+                    primary_class="UPDATE",
+                    parse_status="PARSED",
+                    warnings=[SIGNAL_LIKE_UPDATE_FORCED],
+                )
             return ClassificationResult(
                 primary_class="SIGNAL",
-                parse_status=_signal_parse_status(signal),
+                parse_status=parse_status,
                 warnings=[],
             )
 
@@ -89,3 +103,11 @@ def _has_target_hint(target_hints: TargetHints | None) -> bool:
             target_hints.scope_hint != "UNKNOWN",
         ]
     )
+
+
+def _looks_like_targeted_update(
+    intents: list[ParsedIntent],
+    target_hints: TargetHints | None,
+) -> bool:
+    has_update_intent = any(i.type in _UPDATE_INTENT_TYPES for i in intents)
+    return has_update_intent and _has_target_hint(target_hints)
