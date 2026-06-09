@@ -54,4 +54,9 @@ SL qty: 11.299435 → 11.299 (adj. to fill) // motivo??? arodonamento???
 Source: exchange
 
 
+2. Classificazione di reason in  POSITION CLOSED:
+  - Close reason: BREAKEVEN_AFTER_TP: solo se e stato imposytato BE + Source: exchange ()
+  - Close reason: MANUAL_CLOSE: Source: manual_command (da comado via /xxxx)
+  - Close reason: TRADER_COMMAND Source: trader_update
+
 
