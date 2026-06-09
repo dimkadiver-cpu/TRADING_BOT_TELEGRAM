@@ -548,6 +548,7 @@ class LifecycleEntryGate:
         enriched: EnrichedCanonicalMessage,
         open_chains: list[TradeChain],
         control_mode: ControlMode,
+        account_chains: list[TradeChain] | None = None,
     ) -> SignalGateResult:
         eid = enriched.enrichment_id
 
@@ -557,6 +558,11 @@ class LifecycleEntryGate:
         signal = enriched.enriched_signal
         if signal is None or not signal.symbol or not signal.side:
             return self._reject_signal(eid, "missing_symbol_or_side")
+
+        if account_chains is not None:
+            other_trader_chains = [c for c in account_chains if c.trader_id != enriched.trader_id]
+            if any(c.symbol == signal.symbol and c.side == signal.side for c in other_trader_chains):
+                return self._reject_signal(eid, "account_symbol_side_conflict")
 
         if not self._port.symbol_exists(enriched.account_id, signal.symbol):
             return self._reject_signal(eid, "unknown_symbol")
@@ -2181,7 +2187,8 @@ class LifecycleGateWorker:
         control_mode = self._control_repo.get_effective_mode(account_id, trader_id, symbol, side)
 
         if primary_class == "SIGNAL":
-            result = self._gate.process_signal(enriched, open_chains, control_mode)
+            account_chains = self._chain_repo.get_active_by_account(account_id)
+            result = self._gate.process_signal(enriched, open_chains, control_mode, account_chains=account_chains)
             self._persist_signal(enriched, result)
         else:
             active_cmds = {

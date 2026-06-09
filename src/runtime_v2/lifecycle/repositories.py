@@ -177,6 +177,20 @@ class TradeChainRepository:
         finally:
             conn.close()
 
+    def get_active_by_account(self, account_id: str) -> list[TradeChain]:
+        conn = sqlite3.connect(self._db_path)
+        try:
+            rows = conn.execute(
+                f"""
+                SELECT {_CHAIN_COLS} FROM ops_trade_chains
+                WHERE account_id=? AND lifecycle_state NOT IN ('CLOSED','CANCELLED','EXPIRED')
+                """,
+                (account_id,),
+            ).fetchall()
+            return [_chain_from_row(r) for r in rows]
+        finally:
+            conn.close()
+
     def get_timed_out_waiting_entry(self, limit: int = 100) -> list[TradeChain]:
         conn = sqlite3.connect(self._db_path)
         try:
