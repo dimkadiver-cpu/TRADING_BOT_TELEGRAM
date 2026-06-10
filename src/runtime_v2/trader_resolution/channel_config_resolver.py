@@ -5,7 +5,7 @@ from typing import Any
 
 import yaml
 
-from src.core.trader_tags import normalize_trader_tag
+from src.core.trader_tags import normalize_trader_aliases
 
 
 @dataclass(slots=True, frozen=True)
@@ -45,12 +45,8 @@ class ChannelConfigResolver:
             parser_profile: str = raw.get("parser_profile") or trader_id or ""
             resolution = raw.get("resolution") or {}
             aliases_raw: dict[str, str] = resolution.get("aliases") or {}
-            aliases: dict[str, str] = {}
-            for alias_key, alias_trader in aliases_raw.items():
-                normalized = normalize_trader_tag(str(alias_key))
-                if normalized:
-                    aliases[normalized] = str(alias_trader)
-            max_depth = int(resolution.get("max_depth", 5))
+            aliases = normalize_trader_aliases(aliases_raw)
+            max_depth = max(1, int(resolution.get("max_depth", 5)))
             entry = ChannelEntry(
                 chat_id=chat_id,
                 topic_id=topic_id,

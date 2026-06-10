@@ -191,3 +191,27 @@ def test_existing_entries_unaffected_by_aliases_field(resolver):
     assert entry is not None
     assert entry.aliases == {}
     assert entry.resolution_max_depth == 5
+
+
+def test_multi_trader_topic_aliases_normalized(tmp_path):
+    """Alias keys in YAML are normalized: Trader [#А] (Cyrillic А) → trader#a."""
+    yaml_content = """
+channels:
+  - chat_id: -1009999999999
+    topic_id: 9
+    label: "NormTest"
+    active: true
+    trader_id: null
+    resolution:
+      aliases:
+        "Trader [#А]": trader_a
+    blacklist: []
+"""
+    p = tmp_path / "channels.yaml"
+    p.write_text(yaml_content, encoding="utf-8")
+    resolver = ChannelConfigResolver(p)
+    entry = resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    # Cyrillic А normalized to latin a → key becomes "trader#a"
+    assert "trader#a" in entry.aliases
+    assert entry.aliases["trader#a"] == "trader_a"
