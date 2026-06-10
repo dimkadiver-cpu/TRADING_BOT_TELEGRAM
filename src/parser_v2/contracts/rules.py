@@ -95,3 +95,4 @@ class ParserRules(RulesModel):
     primary_intent_precedence: list[IntentType] = Field(default_factory=list)
     extraction_markers: dict[str, MarkerSet] = Field(default_factory=dict)
     convergence: ConvergenceRules = Field(default_factory=ConvergenceRules)
+    default_entry_type: EntryType | None = None

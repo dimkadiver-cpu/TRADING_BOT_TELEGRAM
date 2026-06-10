@@ -46,6 +46,9 @@ topics:
     # Un avviso di log viene emesso all'avvio se una chiave non trova match in channels.yaml.
     per_trader:
        trader_prova: 637
+       sma_intraday:
+       rsi_swing:
+       rsi_intraday:
        #trader_3: 57
     # Campo previsto dal design, ma al momento non attivo nel runtime:
     # oggi non introduce un vero ritardo configurabile sui CLEAN_LOG.

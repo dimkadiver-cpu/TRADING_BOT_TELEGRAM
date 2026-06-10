@@ -24,8 +24,9 @@ class TraderAProfile:
         signal_extractor: SignalExtractor | None = None,
         intent_entity_extractor: IntentEntityExtractor | None = None,
     ) -> None:
+        rules = self.load_rules()
+        self._default_entry_type = rules.default_entry_type
         if signal_extractor is None:
-            rules = self.load_rules()
             em = rules.extraction_markers
             signal_extractor = SignalExtractor(
                 risk_prefixes=em["risk_prefix"].strong or None if "risk_prefix" in em else None,
@@ -50,10 +51,14 @@ class TraderAProfile:
         context: ParserContext,
         evidence: list[MarkerEvidence],
     ) -> SignalDraft | None:
-        market_hint = any(
-            e.kind == "entry_type" and e.name == "MARKET" and not e.suppressed
-            for e in evidence
-        )
+        has_limit = any(e.kind == "entry_type" and e.name == "LIMIT" and not e.suppressed for e in evidence)
+        has_market = any(e.kind == "entry_type" and e.name == "MARKET" and not e.suppressed for e in evidence)
+        if has_limit:
+            market_hint = False
+        elif has_market:
+            market_hint = True
+        else:
+            market_hint = self._default_entry_type == "MARKET"
         return self._signal_extractor.extract(text, market_hint=market_hint)
 
     def extract_intent_entities(
