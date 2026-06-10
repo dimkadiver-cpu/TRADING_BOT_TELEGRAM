@@ -54,8 +54,20 @@ channels:
     blacklist: []     # estendere qui solo per rumore specifico del canale
 
 
+  # Esempio topic multi-trader: topic_id 9 = RSI channel, trader risolto per tag/alias
+  - chat_id: -1003722628653
+    topic_id: 9
+    label: "RSI_MultiTrader"
+    active: false
+    trader_id: null           # null = risoluzione dinamica per tag
+    parser_profile: null      # derivato dalla risoluzione del trader
+    resolution:
+      max_depth: 5
+      aliases: {}             # compilare con i tag reali usati dai trader, es: { "@trader_a_tag": "trader_a" }
+    blacklist: []
+
   - chat_id: -1003927267771
-    topic_id: 
+    topic_id:
     label: prova  # canale reale attivo concordato
     active: true  # disattivato per test, da attivare quando serve
     trader_id: trader_prova   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
