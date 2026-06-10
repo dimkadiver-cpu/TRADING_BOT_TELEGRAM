@@ -30,6 +30,7 @@ from src.runtime_v2.persistence.raw_messages import RawMessageRepository
 from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
 from src.runtime_v2.trader_resolution.models import ParserDispatchCandidate, ResolvedTraderContext
+from src.telegram.trader_resolver import TraderResolver
 from src.storage.processing_status import ProcessingStatusStore
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.channel_config import ChannelsConfig
@@ -88,6 +89,7 @@ class TelegramListener:
         channel_resolver: ChannelConfigResolver,
         parser_pipeline: ParserPipelineProcessor,
         enrichment_processor: SignalEnrichmentProcessor,
+        trader_resolver: TraderResolver,
         logger: logging.Logger,
         channels_config: ChannelsConfig,
         fallback_allowed_chat_ids: Iterable[int] | None = None,
@@ -98,6 +100,7 @@ class TelegramListener:
         self._channel_resolver = channel_resolver
         self._parser_pipeline = parser_pipeline
         self._enrichment_processor = enrichment_processor
+        self._trader_resolver = trader_resolver
         self._logger = logger
         self._config = channels_config
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
@@ -411,6 +414,22 @@ class TelegramListener:
 
         envelope = self._raw_repo.get_by_id(item.raw_message_id)
 
+        resolved = self._trader_resolver.resolve(envelope)
+        resolved = resolved.model_copy(update={"raw_message_id": item.raw_message_id})
+
+        if resolved.is_ambiguous or resolved.trader_id is None:
+            self._logger.info(
+                "trader unresolved | raw_message_id=%s method=%s",
+                item.raw_message_id,
+                resolved.method,
+            )
+            self._raw_repo.update_processing_status(item.raw_message_id, "review")
+            return
+
+        self._raw_repo.update_trader_resolution(item.raw_message_id, resolved)
+
+        parser_profile = entry.parser_profile if entry.parser_profile else resolved.trader_id
+
         raw_context = RawContext(
             raw_text=envelope.raw_text or "",
             message_id=envelope.telegram_message_id,
@@ -425,18 +444,10 @@ class TelegramListener:
             source_chat_id=envelope.source_chat_id,
             source_topic_id=envelope.source_topic_id,
         )
-        resolved = ResolvedTraderContext(
-            raw_message_id=item.raw_message_id,
-            trader_id=entry.trader_id,
-            method="source_chat_id",
-            detail=None,
-            is_ambiguous=False,
-            resolved_at=datetime.now(timezone.utc),
-        )
         candidate = ParserDispatchCandidate(
             raw_message=envelope,
             resolved_trader=resolved,
-            parser_profile=entry.parser_profile,
+            parser_profile=parser_profile,
             parser_context=parser_context,
         )
 
@@ -449,11 +460,12 @@ class TelegramListener:
             )
         else:
             self._logger.info(
-                "parsed | raw_message_id=%s canonical_id=%s class=%s status=%s",
+                "parsed | raw_message_id=%s canonical_id=%s class=%s status=%s trader=%s",
                 item.raw_message_id,
                 result.canonical_message_id,
                 result.primary_class,
                 result.parse_status,
+                resolved.trader_id,
             )
             enriched = self._enrichment_processor.process(result)
             self._logger.info(

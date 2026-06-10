@@ -52,6 +52,8 @@ def _make_listener() -> TelegramListener:
         raw_repo=MagicMock(),
         channel_resolver=MagicMock(),
         parser_pipeline=MagicMock(),
+        enrichment_processor=MagicMock(),
+        trader_resolver=MagicMock(),
         logger=MagicMock(),
         channels_config=cfg,
     )

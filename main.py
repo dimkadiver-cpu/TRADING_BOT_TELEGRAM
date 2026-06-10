@@ -61,6 +61,7 @@ from src.telegram.listener import (
     build_ingestion_service,
     build_processing_status_store,
 )
+from src.telegram.trader_resolver import TraderResolver
 
 
 @dataclass
@@ -359,6 +360,11 @@ async def _async_main(
         on_pass=new_enriched_event.set,
     )
 
+    trader_resolver = TraderResolver(
+        channel_config=channel_resolver,
+        raw_repo=raw_repo,
+    )
+
     listener = TelegramListener(
         ingestion_service=ingestion_service,
         processing_status_store=processing_status_store,
@@ -366,6 +372,7 @@ async def _async_main(
         channel_resolver=channel_resolver,
         parser_pipeline=parser_pipeline,
         enrichment_processor=enrichment_processor,
+        trader_resolver=trader_resolver,
         logger=logger,
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,

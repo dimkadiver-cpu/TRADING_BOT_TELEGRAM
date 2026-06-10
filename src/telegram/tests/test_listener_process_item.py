@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult, ParserJobStatus
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
+from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.listener import TelegramListener, _QueueItem
 
@@ -24,6 +25,7 @@ def _make_listener(
     parser_pipeline: MagicMock | None = None,
     raw_repo: MagicMock | None = None,
     enrichment_processor: MagicMock | None = None,
+    trader_resolver: MagicMock | None = None,
 ) -> TelegramListener:
     return TelegramListener(
         ingestion_service=MagicMock(),
@@ -32,6 +34,7 @@ def _make_listener(
         channel_resolver=channel_resolver or MagicMock(),
         parser_pipeline=parser_pipeline or MagicMock(),
         enrichment_processor=enrichment_processor or MagicMock(),
+        trader_resolver=trader_resolver or MagicMock(),
         logger=MagicMock(),
         channels_config=_make_config(),
     )
@@ -59,7 +62,26 @@ def _make_channel_entry(*, active: bool = True, parser_profile: str = "trader_a"
         trader_id="trader_a",
         parser_profile=parser_profile,
         blacklist=[],
+        aliases={},
+        resolution_max_depth=5,
     )
+
+
+def _make_resolved_trader(trader_id: str = "trader_a") -> ResolvedTraderContext:
+    return ResolvedTraderContext(
+        raw_message_id=1,
+        trader_id=trader_id,
+        method="source_chat_id",
+        detail=None,
+        is_ambiguous=False,
+        resolved_at=datetime.now(timezone.utc),
+    )
+
+
+def _make_trader_resolver_mock(trader_id: str = "trader_a") -> MagicMock:
+    mock = MagicMock()
+    mock.resolve.return_value = _make_resolved_trader(trader_id)
+    return mock
 
 
 def _make_envelope():
@@ -132,6 +154,7 @@ def test_process_item_calls_pipeline_on_active_channel() -> None:
         channel_resolver=resolver,
         raw_repo=raw_repo,
         parser_pipeline=pipeline,
+        trader_resolver=_make_trader_resolver_mock(),
     )
     listener._process_item(_make_queue_item(raw_message_id=1))
 
@@ -162,6 +185,7 @@ def test_process_item_logs_warning_on_failed_parse() -> None:
         channel_resolver=resolver,
         parser_pipeline=pipeline,
         enrichment_processor=MagicMock(),
+        trader_resolver=_make_trader_resolver_mock(),
         logger=logger,
         channels_config=_make_config(),
     )
