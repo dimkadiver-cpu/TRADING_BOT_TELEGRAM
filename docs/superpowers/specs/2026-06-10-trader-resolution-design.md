@@ -52,7 +52,9 @@ Ogni entry dichiara se il topic è single-trader (`trader_id` valorizzato) o mul
   label: "MultiTopic_X"
   active: true
   trader_id: null          # segnala risoluzione dinamica
-  parser_profile: null     # determinato dopo risoluzione
+  parser_profile: null     # null → usa resolved_trader_id come profilo (ogni trader il suo)
+                           # valorizzato → tutti i messaggi del topic usano quel profilo
+                           #   (utile quando più trader condividono lo stesso formato)
   resolution:
     max_depth: 5           # max livelli di risalita reply chain (default 5)
     aliases:               # per-topic, nessun fallback globale
