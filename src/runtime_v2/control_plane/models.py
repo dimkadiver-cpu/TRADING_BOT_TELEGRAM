@@ -43,6 +43,7 @@ class CleanLogConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     thread_id: int | None = None
+    per_trader: dict[str, int | None] = Field(default_factory=dict)
     debounce_seconds: int = 20
     aggregate_fills_seconds: int = 30
     aggregate_updates_seconds: int = 20

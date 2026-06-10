@@ -350,7 +350,7 @@ class TelegramNotificationDispatcher:
                 continue
 
             try:
-                chat_id, thread_id = self._router.route(destination)
+                chat_id, thread_id = self._router.route(destination, trader_id=payload.get("trader_id"))
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
                     chain_id = payload.get("chain_id")
                     if chain_id is not None:
