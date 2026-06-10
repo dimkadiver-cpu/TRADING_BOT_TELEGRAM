@@ -884,6 +884,39 @@ def test_update_clean_log_includes_changed_field_for_be_move(ops_db):
     ), f"Expected SL BE in changed, got: {changed}"
 
 
+def test_trader_id_present_in_all_notification_payloads(ops_db):
+    """Regression: trader_id must appear in every notification payload, not only SIGNAL_ACCEPTED.
+
+    The bug was: _build_payload.base did not include trader_id, so ENTRY_OPENED,
+    TP_FILLED, SL_FILLED, POSITION_CLOSED all had trader_id=None in the outbox,
+    causing the dispatcher to fall back to the global clean_log thread instead of
+    the trader-specific one.
+    """
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 800)
+        _seed_event(conn, 800, "SIGNAL_ACCEPTED", "sig:800:1", {})
+        _seed_event(conn, 800, "ENTRY_FILLED", "fill:800:1", {
+            "fill_price": 1.0, "fill_qty": 100.0, "exec_fee": 0.05,
+        })
+        _seed_event(conn, 800, "TP_FILLED", "tp:800:1", {
+            "fill_price": 1.1, "filled_qty": 50.0, "exec_fee": 0.03,
+        })
+        project_clean_log_for_chain(conn, 800)
+
+    rows = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox ORDER BY notification_id"
+    ).fetchall()
+    conn.close()
+
+    assert len(rows) >= 3
+    for notification_type, payload_json in rows:
+        payload = json.loads(payload_json)
+        assert payload.get("trader_id") == "trader_a", (
+            f"{notification_type} payload missing trader_id: {payload}"
+        )
+
+
 def test_final_result_computes_net_pnl_without_explicit_funding(ops_db):
     # cumulative_funding defaults to 0.0 (DEFAULT 0.0 in schema) — production case
     # for chains that never received a FUNDING_SETTLED event.
