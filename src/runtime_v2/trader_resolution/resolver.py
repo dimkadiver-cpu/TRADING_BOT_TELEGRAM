@@ -21,7 +21,9 @@ _METHOD_MAP: dict[str, ResolutionMethod] = {
 
 
 class RuntimeV2TraderResolver:
-    """Resolves effective trader using config-first strategy.
+    """Deprecated — use TraderResolver from src.telegram.trader_resolver instead.
+
+    Resolves effective trader using config-first strategy.
 
     Step 1: channels.yaml lookup by (source_chat_id, source_topic_id).
            Returns immediately if entry is active and has trader_id.
@@ -37,6 +39,12 @@ class RuntimeV2TraderResolver:
         channel_config_resolver: ChannelConfigResolver,
         effective_trader_resolver: EffectiveTraderResolver,
     ) -> None:
+        import warnings
+        warnings.warn(
+            "RuntimeV2TraderResolver is deprecated — use TraderResolver from src.telegram.trader_resolver instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._channel_config = channel_config_resolver
         self._effective = effective_trader_resolver
 

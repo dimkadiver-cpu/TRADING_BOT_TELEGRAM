@@ -28,6 +28,8 @@ class EffectiveTraderResult:
 
 
 class EffectiveTraderResolver:
+    """Deprecated — use TraderResolver from src.telegram.trader_resolver instead."""
+
     def __init__(
         self,
         source_mapper: TelegramSourceTraderMapper,
@@ -35,6 +37,12 @@ class EffectiveTraderResolver:
         trader_aliases: dict[str, str],
         known_trader_ids: set[str],
     ) -> None:
+        import warnings
+        warnings.warn(
+            "EffectiveTraderResolver is deprecated — use TraderResolver from src.telegram.trader_resolver instead.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
         self._source_mapper = source_mapper
         self._raw_store = raw_store
         self._known_trader_ids = known_trader_ids
