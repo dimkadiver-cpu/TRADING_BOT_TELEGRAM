@@ -438,6 +438,7 @@ async def _async_main(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
         ops_db_path=ops_db_path,
         log_path=log_path,
+        known_trader_ids={ch.trader_id for ch in channels_config.channels if ch.trader_id},
     )
     control_bot = _cp.bot if _cp is not None else None
     cp_dispatcher = _cp.dispatcher if _cp is not None else None

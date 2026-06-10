@@ -40,6 +40,13 @@ topics:
   clean_log:
     # Topic/thread usato per messaggi operativi visibili all'utente.
     thread_id: 11
+    # Routing opzionale per trader_id specifici.
+    # I trader NON elencati usano il thread_id globale sopra come fallback.
+    # Il trader_id deve corrispondere esattamente al valore in channels.yaml.
+    # Un avviso di log viene emesso all'avvio se una chiave non trova match in channels.yaml.
+    # per_trader:
+    #   trader_a: 42
+    #   trader_3: 57
     # Campo previsto dal design, ma al momento non attivo nel runtime:
     # oggi non introduce un vero ritardo configurabile sui CLEAN_LOG.
     debounce_seconds: 20
