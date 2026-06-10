@@ -4,6 +4,89 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-10 — Trader Resolution v2: TraderResolver unificato (8 task, 115/115 PASS listener)
+
+### Step completato
+
+Implementazione completa del sistema di risoluzione trader v2. Un singolo `TraderResolver` sostituisce i due resolver legacy (`EffectiveTraderResolver`, `RuntimeV2TraderResolver`) con una pipeline a priorità che gestisce canali single-trader e multi-trader.
+
+### Pipeline implementata (ordine di priorità)
+
+1. Config statico (`entry.trader_id` valorizzato) → stop
+2. Tag nel testo → `aliases` per-topic → `pattern_extractors.py` (hardcoded)
+3. Reply chain walking (`resolved_trader_id ?? source_trader_id`, max_depth configurabile)
+4. Single t.me link nel testo
+5. Multi-link → concordi → trader; discordanti → ambiguous → review
+6. Nessun segnale → unresolved → review
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/trader_resolution/channel_config_resolver.py` | Modificato | `ChannelEntry` + `aliases: dict[str,str]` e `resolution_max_depth: int`; parsing blocco `resolution:` da YAML |
+| `src/runtime_v2/persistence/raw_messages.py` | Modificato | `ChainNode` dataclass + `get_chain_node()` per reply chain walker |
+| `src/runtime_v2/trader_resolution/models.py` | Modificato | `ResolutionMethod` + `"link"` e `"link_multi"` |
+| `src/telegram/pattern_extractors.py` | Creato | Hardcoded RSI topic 9: `"trader_rsi_intraday"` / `"trader_rsi_swing"` da pattern semantici |
+| `src/telegram/trader_resolver.py` | Creato | `TraderResolver` completo: `resolve()`, `_from_text()`, `_resolve_chain()`, `_extract_links()` |
+| `src/telegram/listener.py` | Modificato | `_process_item()` chiama `TraderResolver`; unresolved → review; scrive `resolved_trader_id` |
+| `main.py` / `main_linux_server.py` | Modificato | `TraderResolver` istanziato e passato a `TelegramListener` |
+| `config/channels.yaml` | Modificato | Entry topic_id=9 `RSI_MultiTrader` con `trader_id: null` e `resolution:` block |
+| `src/telegram/effective_trader.py` | Deprecato | Warning in `EffectiveTraderResolver.__init__` |
+| `src/runtime_v2/trader_resolution/resolver.py` | Deprecato | Warning in `RuntimeV2TraderResolver.__init__` |
+| `config/telegram_source_map.json` | Eliminato | Sostituito da `channels.yaml resolution:` |
+| `tests/telegram/test_trader_resolver.py` | Creato | 16 test TraderResolver |
+| `tests/telegram/test_pattern_extractors.py` | Creato | 5 test pattern extractors |
+| `tests/runtime_v2/test_channel_config_resolver.py` | Modificato | +17 test aliases/max_depth |
+| `tests/runtime_v2/test_raw_message_repository.py` | Modificato | +10 test ChainNode |
+| `src/telegram/tests/` (7 file) | Modificato | Fixture `TelegramListener` aggiornate con `trader_resolver=MagicMock()` |
+
+### Risultato test
+
+```
+src/telegram/tests/ → 115 passed ✅
+tests/telegram/ → 16+5 passed ✅
+tests/runtime_v2/ → pre-existing failures only (ModuleNotFoundError: ccxt/telegram/truststore) ✅
+```
+
+### Decisioni architetturali chiave
+
+- **`from_id` non usato**: inaffidabile in presenza di bot aggregatori — solo tag testo + reply chain
+- **Aliases per-topic**: nessun fallback globale — stesso tag può mappare a trader diversi in topic diversi
+- **Tag testo vince su reply chain**: se tag trovato nel messaggio corrente, non si risale
+- **`resolved_trader_id ?? source_trader_id`** nella chain walk: dopo risoluzione, parent già risolto per reply successivi
+- **Stop rule reply chain**: resolved → stop; unresolved parent → continua; parent non in DB → stop unresolved; max_depth → stop
+- **`parser_profile`**: `entry.parser_profile` se valorizzato, altrimenti `resolved.trader_id` (ogni trader il suo profilo)
+
+### Commit
+
+| SHA | Messaggio |
+|---|---|
+| `d95d229` | feat: add aliases and resolution_max_depth to ChannelEntry |
+| `70ba7c1` | fix: use normalize_trader_aliases helper, add normalization test, guard max_depth range |
+| `3f6a005` | feat: add link and link_multi to ResolutionMethod |
+| `461a323` | feat: add ChainNode and get_chain_node to RawMessageRepository |
+| `0e16d56` | feat: add pattern_extractors for hardcoded topic-based trader identification |
+| `7a5ebfa` | feat: add TraderResolver with full priority cascade |
+| `edd1b71` | config: add resolution block for multi-trader topics |
+| `ddccda7` | feat: wire TraderResolver into listener._process_item, write resolved_trader_id to DB |
+| `12eb742` | deprecate: EffectiveTraderResolver and RuntimeV2TraderResolver replaced by TraderResolver; remove telegram_source_map.json |
+
+### Rischi aperti
+
+- **`channels.yaml` aliases vuoti**: il topic RSI (topic_id=9) ha `aliases: {}` — i tag reali dei trader vanno popolati quando noti. Finché vuoti, la risoluzione cade su pattern_extractors.
+- **Dead code non rimosso**: `EffectiveTraderResolver`, `RuntimeV2TraderResolver` e `RuntimeV2IntakeProcessor` hanno deprecation warnings ma sono ancora nel codebase — da rimuovere quando `RuntimeV2IntakeProcessor` viene eliminato o migrato.
+- **Pre-existing test failures**: 52 test nella suite `tests/` falliscono per `ModuleNotFoundError: ccxt/telegram/truststore` + lifecycle failures — non introdotti da questa feature.
+- **pattern_extractors.py hardcoded**: topic_id=9 specificato come costante `RSI_TOPIC_ID`. Se il topic cambia, va aggiornato manualmente.
+
+### Prossimi step
+
+- Popolare `aliases` in `channels.yaml` quando i tag reali dei trader sono noti
+- Rimuovere `RuntimeV2IntakeProcessor` e i resolver legacy dopo migrazione completa
+- Step B: Migrare `operation_rules` → usa `CanonicalMessage`
+- Step C: Migrare `target_resolver` → usa `CanonicalMessage`
+
+---
+
 ## 2026-06-09 — Patch V1: Signal Identity, Update Classification, Explicit ID Resolution
 
 ### Step completato
