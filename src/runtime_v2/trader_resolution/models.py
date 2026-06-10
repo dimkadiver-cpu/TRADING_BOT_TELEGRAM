@@ -18,6 +18,8 @@ ResolutionMethod = Literal[
     "source_chat_title",
     "source_topic_config",
     "assume_trader",
+    "link",
+    "link_multi",
     "unresolved",
 ]
 
