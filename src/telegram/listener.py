@@ -417,6 +417,8 @@ class TelegramListener:
         resolved = self._trader_resolver.resolve(envelope)
         resolved = resolved.model_copy(update={"raw_message_id": item.raw_message_id})
 
+        self._raw_repo.update_trader_resolution(item.raw_message_id, resolved)
+
         if resolved.is_ambiguous or resolved.trader_id is None:
             self._logger.info(
                 "trader unresolved | raw_message_id=%s method=%s",
@@ -425,8 +427,6 @@ class TelegramListener:
             )
             self._raw_repo.update_processing_status(item.raw_message_id, "review")
             return
-
-        self._raw_repo.update_trader_resolution(item.raw_message_id, resolved)
 
         parser_profile = entry.parser_profile if entry.parser_profile else resolved.trader_id
 

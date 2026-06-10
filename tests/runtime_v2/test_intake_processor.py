@@ -85,6 +85,8 @@ def _build_processor(repo, trader_id="trader_a", globally_blacklisted=False):
         trader_id=trader_id,
         parser_profile=trader_id,
         blacklist=[],
+        aliases={},
+        resolution_max_depth=5,
     )
     resolver = MagicMock()
     resolved = _make_resolved(trader_id, "source_chat_id")

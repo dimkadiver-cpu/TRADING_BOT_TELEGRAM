@@ -52,6 +52,8 @@ def _make_channel_entry(trader_id: str, topic_id: int | None = None, active: boo
         trader_id=trader_id,
         parser_profile=trader_id,
         blacklist=[],
+        aliases={},
+        resolution_max_depth=5,
     )
 
 
