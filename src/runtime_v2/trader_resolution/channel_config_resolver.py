@@ -5,6 +5,8 @@ from typing import Any
 
 import yaml
 
+from src.core.trader_tags import normalize_trader_tag
+
 
 @dataclass(slots=True, frozen=True)
 class ChannelEntry:
@@ -15,6 +17,8 @@ class ChannelEntry:
     trader_id: str | None
     parser_profile: str  # defaults to trader_id when not overridden in yaml
     blacklist: list[str]
+    aliases: dict[str, str]          # normalized tag → trader_id; empty for single-trader
+    resolution_max_depth: int        # default 5; used only when trader_id is None
 
 
 class ChannelConfigResolver:
@@ -39,6 +43,14 @@ class ChannelConfigResolver:
             topic_id: int | None = raw.get("topic_id")
             trader_id: str | None = raw.get("trader_id")
             parser_profile: str = raw.get("parser_profile") or trader_id or ""
+            resolution = raw.get("resolution") or {}
+            aliases_raw: dict[str, str] = resolution.get("aliases") or {}
+            aliases: dict[str, str] = {}
+            for alias_key, alias_trader in aliases_raw.items():
+                normalized = normalize_trader_tag(str(alias_key))
+                if normalized:
+                    aliases[normalized] = str(alias_trader)
+            max_depth = int(resolution.get("max_depth", 5))
             entry = ChannelEntry(
                 chat_id=chat_id,
                 topic_id=topic_id,
@@ -47,6 +59,8 @@ class ChannelConfigResolver:
                 trader_id=trader_id,
                 parser_profile=parser_profile,
                 blacklist=list(raw.get("blacklist", [])),
+                aliases=aliases,
+                resolution_max_depth=max_depth,
             )
             index[(chat_id, topic_id)] = entry
         self._index = index

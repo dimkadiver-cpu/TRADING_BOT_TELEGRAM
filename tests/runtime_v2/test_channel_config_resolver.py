@@ -124,3 +124,70 @@ def test_topic_fallback_to_chat_only(resolver):
     entry = resolver.lookup("-1002222222222", topic_id=99)
     assert entry is not None
     assert entry.trader_id == "trader_c"
+
+
+_MULTI_TRADER_YAML = """
+channels:
+  - chat_id: -1009999999999
+    topic_id: 9
+    label: "MultiTopic"
+    active: true
+    trader_id: null
+    parser_profile: null
+    resolution:
+      max_depth: 3
+      aliases:
+        "trader#a": trader_a
+        "trader#b": trader_b
+    blacklist: []
+  - chat_id: -1009999999999
+    topic_id: 10
+    label: "SingleTopic"
+    active: true
+    trader_id: trader_c
+    blacklist: []
+"""
+
+
+@pytest.fixture
+def multi_config_file(tmp_path):
+    p = tmp_path / "channels.yaml"
+    p.write_text(_MULTI_TRADER_YAML)
+    return str(p)
+
+
+@pytest.fixture
+def multi_resolver(multi_config_file):
+    return ChannelConfigResolver(multi_config_file)
+
+
+def test_multi_trader_topic_has_null_trader_id(multi_resolver):
+    entry = multi_resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    assert entry.trader_id is None
+
+
+def test_multi_trader_topic_aliases_loaded(multi_resolver):
+    entry = multi_resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    assert entry.aliases == {"trader#a": "trader_a", "trader#b": "trader_b"}
+
+
+def test_multi_trader_topic_max_depth(multi_resolver):
+    entry = multi_resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    assert entry.resolution_max_depth == 3
+
+
+def test_single_trader_topic_empty_aliases(multi_resolver):
+    entry = multi_resolver.lookup("-1009999999999", topic_id=10)
+    assert entry is not None
+    assert entry.aliases == {}
+    assert entry.resolution_max_depth == 5  # default
+
+
+def test_existing_entries_unaffected_by_aliases_field(resolver):
+    entry = resolver.lookup("-1001111111111", topic_id=3)
+    assert entry is not None
+    assert entry.aliases == {}
+    assert entry.resolution_max_depth == 5
