@@ -271,7 +271,7 @@ def _build_payload(
     be_protection_status: str | None = None,
 ) -> dict:
     """Build the enriched notification payload for a given notification_type."""
-    base: dict = {"chain_id": chain_id, "symbol": symbol, "side": side}
+    base: dict = {"chain_id": chain_id, "symbol": symbol, "side": side, "trader_id": trader_id, "account_id": account_id}
 
     legs = plan.get("legs", [])
     tps = list(plan.get("intermediate_tps", []) or [])
