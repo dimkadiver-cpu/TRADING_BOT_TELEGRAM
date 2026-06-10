@@ -469,5 +469,6 @@
       "ALL_OPEN": "ALL_POSITIONS",
       "ALL_REMAINING": "ALL_POSITIONS"
     }
-  }
+  },
+  "default_entry_type": null
 }
