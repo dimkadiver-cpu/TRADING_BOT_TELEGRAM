@@ -3,7 +3,7 @@ import pytest
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from src.runtime_v2.persistence.raw_messages import RawMessageRepository
+from src.runtime_v2.persistence.raw_messages import RawMessageRepository, ChainNode
 from src.runtime_v2.intake.models import RawIngestItem
 from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
 
@@ -106,3 +106,43 @@ def test_update_trader_resolution(repo):
     assert updated.resolved_trader_id == "trader_a"
     assert updated.resolution_method == "source_chat_id"
     assert updated.resolution_detail is None
+
+
+def test_get_chain_node_returns_none_for_unknown(repo):
+    result = repo.get_chain_node("-100123", 9999)
+    assert result is None
+
+
+def test_get_chain_node_returns_node(repo):
+    item = _make_item(chat_id="-100123", msg_id=100)
+    env = repo.save_raw(item)
+    conn = __import__("sqlite3").connect(repo._db_path)
+    conn.execute(
+        "UPDATE raw_messages SET resolved_trader_id=? WHERE raw_message_id=?",
+        ("trader_a", env.raw_message_id),
+    )
+    conn.commit()
+    conn.close()
+    node = repo.get_chain_node("-100123", 100)
+    assert node is not None
+    assert node.resolved_trader_id == "trader_a"
+    assert node.source_trader_id is None
+    assert node.reply_to_message_id is None
+
+
+def test_get_chain_node_source_trader_id(repo):
+    conn = __import__("sqlite3").connect(repo._db_path)
+    conn.execute(
+        "INSERT INTO raw_messages (source_chat_id, telegram_message_id, source_trader_id, "
+        "raw_text, reply_to_message_id, message_ts, acquired_at, acquisition_status) "
+        "VALUES (?,?,?,?,?,?,?,?)",
+        ("-100123", 200, "trader_b", "some text", 150,
+         "2026-01-01T00:00:00", "2026-01-01T00:00:00", "ACQUIRED"),
+    )
+    conn.commit()
+    conn.close()
+    node = repo.get_chain_node("-100123", 200)
+    assert node is not None
+    assert node.source_trader_id == "trader_b"
+    assert node.raw_text == "some text"
+    assert node.reply_to_message_id == 150

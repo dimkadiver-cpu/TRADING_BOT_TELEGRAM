@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timezone
 
 from src.storage.raw_messages import RawMessageStore, RawMessageRecord
@@ -11,6 +12,15 @@ from src.runtime_v2.intake.models import (
     ProcessingStatusV2,
 )
 from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
+
+
+@dataclass(slots=True)
+class ChainNode:
+    """Minimal view of a raw message for reply-chain walking."""
+    source_trader_id: str | None
+    resolved_trader_id: str | None
+    raw_text: str | None
+    reply_to_message_id: int | None
 
 
 class RawMessageRepository:
@@ -78,6 +88,26 @@ class RawMessageRepository:
         )
         conn.commit()
         conn.close()
+
+    def get_chain_node(self, source_chat_id: str, telegram_message_id: int) -> ChainNode | None:
+        """Read the minimal fields needed for reply-chain resolution."""
+        conn = sqlite3.connect(self._db_path)
+        row = conn.execute(
+            "SELECT source_trader_id, resolved_trader_id, raw_text, reply_to_message_id "
+            "FROM raw_messages "
+            "WHERE source_chat_id = ? AND telegram_message_id = ? "
+            "LIMIT 1",
+            (source_chat_id, telegram_message_id),
+        ).fetchone()
+        conn.close()
+        if row is None:
+            return None
+        return ChainNode(
+            source_trader_id=row[0],
+            resolved_trader_id=row[1],
+            raw_text=row[2],
+            reply_to_message_id=int(row[3]) if row[3] is not None else None,
+        )
 
     def _update_column(self, raw_message_id: int, column: str, value: object) -> None:
         conn = sqlite3.connect(self._db_path)
