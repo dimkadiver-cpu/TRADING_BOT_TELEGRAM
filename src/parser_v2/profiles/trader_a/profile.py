@@ -9,6 +9,7 @@ from src.parser_v2.contracts.rules import (
     ParserRules,
     SemanticMarkers,
 )
+from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
 from src.parser_v2.profiles.trader_a.intent_entity_extractor import IntentEntityExtractor
 from src.parser_v2.profiles.trader_a.signal_extractor import SignalExtractor
 
@@ -36,14 +37,10 @@ class TraderAProfile:
         self._intent_entity_extractor = intent_entity_extractor or IntentEntityExtractor()
 
     def load_markers(self) -> SemanticMarkers:
-        return SemanticMarkers.model_validate_json(
-            (_PROFILE_DIR / "semantic_markers.json").read_text(encoding="utf-8")
-        )
+        return load_markers_cached(_PROFILE_DIR)
 
     def load_rules(self) -> ParserRules:
-        return ParserRules.model_validate_json(
-            (_PROFILE_DIR / "rules.json").read_text(encoding="utf-8")
-        )
+        return load_rules_cached(_PROFILE_DIR)
 
     def extract_signal(
         self,

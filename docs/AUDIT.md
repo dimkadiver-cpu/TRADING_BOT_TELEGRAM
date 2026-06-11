@@ -1673,3 +1673,27 @@ invariato per il warning `update_without_target_hint`.
 (symbol-only resta SIGNAL/PARTIAL; explicit_id e reply_to forzano UPDATE).
 Esito: 225 passed su parser_v2; 1 failure pre-esistente non correlata
 (`test_trader_a_weak_context_rules`).
+
+### FIXATO: rules.json e semantic_markers.json riletti da disco a ogni messaggio
+
+**File coinvolti:** `src/parser_v2/core/profile_assets.py` (nuovo),
+`src/parser_v2/profiles/*/profile.py` (7 profili)
+
+**Problema:** il registry crea un'istanza nuova del profilo per ogni messaggio e
+l'`__init__` chiama `load_rules()`; in più `runtime.py:77-78` richiama
+`load_markers()` + `load_rules()` per ogni parse. Totale: 3 letture file +
+validazioni Pydantic per messaggio (il semantic_markers.json di trader_prova è
+~1700 righe).
+
+**Fix:** nuovo modulo `profile_assets.py` con `load_rules_cached()` /
+`load_markers_cached()` — lru_cache con chiave (path, mtime_ns): una modifica al
+JSON invalida la entry, quindi il watch mode continua a funzionare. I 14 metodi
+`load_*` dei 7 profili delegano al loader condiviso. Le istanze in cache sono
+condivise: non vanno mutate (i consumer esistenti usano già model_copy).
+
+**Misura:** 1000 cicli (init profilo + markers + rules) = 22 ms totali
+(~0.02 ms/msg, prima ~3 letture+validazioni per messaggio).
+
+**Test aggiunti:** `tests/parser_v2/test_profile_assets.py` (identità istanza a
+file invariato, reload su mtime cambiato). Esito: 228 passed su parser_v2,
+1 failure pre-esistente non correlata.
