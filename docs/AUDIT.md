@@ -1872,3 +1872,25 @@ context corretto, non invocata sul percorso re-process, errore callback
 assorbito), nuovo `test_notify_listener_edit_skipped.py` (riga PENDING
 corretta, dedupe stesso edit, edit distinti notificano). Suite: 1220 passed,
 37 failed pre-esistenti invariati.
+
+### FIX: notifiche SIGNAL_REJECTED duplicate per revisioni editate
+
+**Sintomo (segnalato dall'utente):** segnale con simbolo non trovato bloccato
+dal gate → 3 notifiche CLEAN_LOG "segnale bloccato" identiche di fila.
+
+**Causa:** il percorso è idempotente per enrichment_id, ma la gestione
+MessageEdited rivaluta ogni revisione con testo cambiato di un messaggio
+senza chain → ogni revisione produce un nuovo enrichment_id → nuovo dedupe
+key `clean:signal_rejected:<eid>` → nuova notifica identica se il simbolo
+resta sbagliato.
+
+**Fix:** `_write_no_chain_signal_clean_log` (entry_gate.py) ora usa un dedupe
+key per contenuto: `clean:signal_rejected:<raw_message_id>:<symbol>:<side>:<reason>`.
+Stessa origine + stesso simbolo/side/ragione → una sola notifica; correzione
+del simbolo o ragione diversa → notifica nuova. Gli eventi lifecycle restano
+per-eid (storia completa, nessun cambio audit).
+
+**Test:** nuovo `tests/runtime_v2/lifecycle/test_no_chain_clean_log_dedupe.py`
+(4 test: dedupe su 3 revisioni, simbolo corretto rinotifica, ragione diversa
+rinotifica, messaggio diverso rinotifica). Suite: 1224 passed, 37 failed
+pre-esistenti invariati.
