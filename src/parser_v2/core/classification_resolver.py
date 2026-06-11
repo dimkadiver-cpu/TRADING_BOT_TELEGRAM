@@ -105,9 +105,26 @@ def _has_target_hint(target_hints: TargetHints | None) -> bool:
     )
 
 
+def _has_strong_target_hint(target_hints: TargetHints | None) -> bool:
+    # Esclude symbols: il simbolo è estratto anche dal testo di un segnale nuovo,
+    # quindi da solo non distingue un update da un segnale.
+    if target_hints is None:
+        return False
+
+    return any(
+        [
+            target_hints.reply_to_message_id is not None,
+            bool(target_hints.telegram_message_ids),
+            bool(target_hints.telegram_links),
+            bool(target_hints.explicit_ids),
+            target_hints.scope_hint != "UNKNOWN",
+        ]
+    )
+
+
 def _looks_like_targeted_update(
     intents: list[ParsedIntent],
     target_hints: TargetHints | None,
 ) -> bool:
     has_update_intent = any(i.type in _UPDATE_INTENT_TYPES for i in intents)
-    return has_update_intent and _has_target_hint(target_hints)
+    return has_update_intent and _has_strong_target_hint(target_hints)

@@ -3556,3 +3556,80 @@ def test_gate_signal_no_risk_hint_applied_key_when_hint_absent():
     result = gate.process_signal(enriched, [], "NONE")
     plan = json.loads(result.trade_chain.plan_state_json)
     assert "risk_hint_applied" not in plan
+
+
+# --- targeting per explicit_ids (_resolve_targets) ---
+
+
+def _make_chain_for_targeting(chain_id, canonical_id, external_signal_id, raw_message_id=3):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=chain_id, source_enrichment_id=1,
+        canonical_message_id=canonical_id, raw_message_id=raw_message_id,
+        trader_id="t1", account_id="acc1",
+        symbol="BTC/USDT", side="LONG", lifecycle_state="OPEN",
+        entry_mode="ONE_SHOT",
+        management_plan_json='{"be_trigger": null}',
+        external_signal_id=external_signal_id,
+    )
+
+
+def _make_targeting_tag(explicit_ids, reply_to=None):
+    from unittest.mock import MagicMock
+    tag = MagicMock()
+    tag.targeting.scope_hint = "SINGLE_SIGNAL"
+    tag.targeting.symbols = None
+    tag.targeting.explicit_ids = explicit_ids
+    tag.targeting.telegram_message_ids = []
+    tag.targeting.reply_to_message_id = reply_to
+    return tag
+
+
+def _make_enriched_for_targeting():
+    from unittest.mock import MagicMock
+    enriched = MagicMock()
+    enriched.trader_id = "t1"
+    return enriched
+
+
+def test_explicit_id_matches_any_persisted_id():
+    # external_signal_id persiste tutti gli ID separati da "|": anche il secondo deve matchare
+    gate = _make_gate()
+    target = _make_chain_for_targeting(10, 2, "sig001|sig002")
+    other = _make_chain_for_targeting(11, 4, "sig999")
+    tag = _make_targeting_tag(["#SIG002"])
+    matched = gate._resolve_targets(_make_enriched_for_targeting(), [target, other], tag)
+    assert matched == [target]
+
+
+def test_explicit_id_falls_back_to_canonical_message_id():
+    # chain pre-migrazione 014: external_signal_id NULL, match su canonical_message_id
+    gate = _make_gate()
+    target = _make_chain_for_targeting(10, 2, None)
+    other = _make_chain_for_targeting(11, 4, None)
+    tag = _make_targeting_tag(["2"])
+    matched = gate._resolve_targets(_make_enriched_for_targeting(), [target, other], tag)
+    assert matched == [target]
+
+
+def test_explicit_id_not_found_falls_through_to_telegram_ids():
+    # explicit_id senza match non deve bloccare il fallback al matching per telegram ID
+    gate = _make_gate()
+    target = _make_chain_for_targeting(10, 2, "sig001", raw_message_id=3)
+    other = _make_chain_for_targeting(11, 4, "sig999", raw_message_id=7)
+    tag = _make_targeting_tag(["#UNKNOWN"], reply_to=100)
+    matched = gate._resolve_targets(
+        _make_enriched_for_targeting(), [target, other], tag,
+        tg_id_to_raw_id={100: 3},
+    )
+    assert matched == [target]
+
+
+def test_explicit_id_ambiguous_goes_to_review():
+    # più chain con lo stesso external_signal_id → ambiguo → review (None)
+    gate = _make_gate()
+    a = _make_chain_for_targeting(10, 2, "sig001")
+    b = _make_chain_for_targeting(11, 4, "sig001")
+    tag = _make_targeting_tag(["#SIG001"])
+    matched = gate._resolve_targets(_make_enriched_for_targeting(), [a, b], tag)
+    assert matched is None

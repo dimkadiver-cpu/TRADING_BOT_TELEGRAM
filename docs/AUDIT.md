@@ -1605,3 +1605,71 @@ cmd22 emesso con qty TP sbagliata (0.1185 su posizione reale 0.175).
 **Quando implementare:** prima del go-live in produzione, se si prevedono downtime
 anche brevi. Considerare un evento dedicato `POSITION_DRIFT_DETECTED` invece di un
 `CLOSE_PARTIAL_FILLED` sintetico, gestito esplicitamente dal lifecycle.
+
+---
+
+## 2026-06-11 — Revisione branch + fix targeting explicit_ids (entry_gate)
+
+### FIXATO: targeting per explicit_ids — tre regressioni in `_resolve_targets`/`_persist_signal`
+
+**File coinvolto:** `src/runtime_v2/lifecycle/entry_gate.py`
+
+**Problemi trovati in revisione (confermati):**
+
+1. **Solo il primo explicit_id persistito** — `_persist_signal` salvava
+   `sig_ids[0]` in `external_signal_id`: un update che citava il secondo ID
+   del segnale non matchava mai e finiva in review.
+2. **Chain pre-migrazione 014 non raggiungibili** — `external_signal_id` è NULL
+   per le chain create prima della migrazione (nessun backfill); il matching
+   le scartava sempre.
+3. **Fallthrough rimosso** — con explicit_ids senza match la funzione ritornava
+   subito `[]` invece di proseguire col matching per reply/telegram ID
+   (comportamento precedente), causando review `no_update_target` evitabili.
+
+**Fix:**
+- `external_signal_id` ora persiste tutti gli ID separati da `|` (convenzione liste).
+- Nuovo helper `_chain_signal_ids()` splitta e normalizza gli ID della chain;
+  il matching accetta qualsiasi ID persistito **oppure** `canonical_message_id`
+  (fallback per chain pre-migrazione).
+- Ripristinato il fallthrough al matching telegram quando explicit_ids non matcha;
+  il caso ambiguo (più chain stesso ID) continua ad andare in review.
+
+**Test aggiunti:** 4 test `test_explicit_id_*` in
+`tests/runtime_v2/lifecycle/test_entry_gate.py` (multi-ID, fallback canonical,
+fallthrough telegram, ambiguità → review). Esito: 88 passed; restano 7 failure
+pre-esistenti non correlate (naming NOOP_* e clean_log update).
+
+### Rischi aperti emersi dalla revisione (non fixati in questa sessione)
+
+- `src/parser_v2/core/classification_resolver.py:37` — riclassificazione
+  PARTIAL→UPDATE senza guard: un segnale nuovo parziale con intent di update
+  e un simbolo nel testo diventa UPDATE. Nessun test copre il caso.
+- `src/runtime_v2/control_plane/outbox_writer.py:403` — `close_reason=TRADER_COMMAND`
+  dipende da `source=="trader_update"`, mai prodotto dal path WebSocket
+  (SL position-level senza orderLinkId → `exchange_auto`); idempotency key
+  WS/REST divergenti → rischio eventi duplicati.
+- Efficienza: `rules.json` riletto da disco a ogni messaggio (registry senza cache,
+  `load_rules()` ora incondizionato in `__init__` di tutti i profili).
+- Duplicazione: helper di parsing prezzi/numeri byte-identici in 6 profili
+  (incluso il nuovo `strategy_parser`); blocchi rules.json copiati in 4-5 profili.
+
+### FIXATO: riclassificazione PARTIAL→UPDATE senza guard (classification_resolver)
+
+**File coinvolto:** `src/parser_v2/core/classification_resolver.py`
+
+**Problema:** `_looks_like_targeted_update` considerava sufficiente un qualsiasi
+target hint, incluso il solo simbolo — che però viene estratto anche dal testo
+di un segnale nuovo. Un segnale parziale con un'istruzione di gestione nel testo
+(es. "poi spostate lo stop a BE") e il simbolo veniva forzato a UPDATE: niente
+apertura posizione, e l'update finiva in review `no_update_target` (trade perso).
+
+**Fix:** nuovo helper `_has_strong_target_hint` usato solo dalla riclassificazione:
+esclude `symbols`, mantiene reply_to, telegram ids/links, explicit_ids e scope_hint
+esplicito. Il caso d'uso del design doc (testo signal-like con `Signal ID: #c4` +
+MODIFY_ENTRY) continua a funzionare via explicit_ids. `_has_target_hint` resta
+invariato per il warning `update_without_target_hint`.
+
+**Test aggiunti:** 3 test in `tests/parser_v2/test_classification_resolver_phase8.py`
+(symbol-only resta SIGNAL/PARTIAL; explicit_id e reply_to forzano UPDATE).
+Esito: 225 passed su parser_v2; 1 failure pre-esistente non correlata
+(`test_trader_a_weak_context_rules`).
