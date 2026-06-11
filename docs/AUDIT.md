@@ -1850,3 +1850,47 @@ correzione mai vista.
 verdi), estesi `test_raw_message_repository.py` e
 `lifecycle/test_repositories.py`. Suite completa: 1214 passed; 37 failed
 pre-esistenti identici sul commit base (dipendenze ambiente: telethon/pyaes).
+
+### AGGIUNTO: notifica TECH_LOG per edit di segnale già eseguito scartato
+
+**File coinvolti:** `src/runtime_v2/control_plane/outbox_writer.py`
+(`notify_listener_edit_skipped`), `src/telegram/listener.py` (callback
+`notify_edit_skipped` + `_emit_edit_skipped_notification`), `main.py`,
+`main_linux_server.py` (wiring via `functools.partial`).
+
+**Comportamento:** quando il listener scarta l'edit di un messaggio che ha
+già una trade chain (`edit_of_executed_signal_skipped`), oltre al warning
+nel log file scrive una riga `LISTENER_EDIT_SKIPPED` (TECH_LOG, WARNING,
+priority HIGH) in ops_notification_outbox con context
+{chat, topic, msg_id, raw_message_id, edit_ts, new_text_preview}.
+Dedupe per (chat, msg_id, edit_ts): lo stesso edit non duplica, edit
+successivi dello stesso messaggio notificano di nuovo. Fallimento della
+scrittura outbox non interrompe l'handler (try/except + log).
+
+**Test:** +3 in `test_listener_edited_messages.py` (callback invocata con
+context corretto, non invocata sul percorso re-process, errore callback
+assorbito), nuovo `test_notify_listener_edit_skipped.py` (riga PENDING
+corretta, dedupe stesso edit, edit distinti notificano). Suite: 1220 passed,
+37 failed pre-esistenti invariati.
+
+### FIX: notifiche SIGNAL_REJECTED duplicate per revisioni editate
+
+**Sintomo (segnalato dall'utente):** segnale con simbolo non trovato bloccato
+dal gate → 3 notifiche CLEAN_LOG "segnale bloccato" identiche di fila.
+
+**Causa:** il percorso è idempotente per enrichment_id, ma la gestione
+MessageEdited rivaluta ogni revisione con testo cambiato di un messaggio
+senza chain → ogni revisione produce un nuovo enrichment_id → nuovo dedupe
+key `clean:signal_rejected:<eid>` → nuova notifica identica se il simbolo
+resta sbagliato.
+
+**Fix:** `_write_no_chain_signal_clean_log` (entry_gate.py) ora usa un dedupe
+key per contenuto: `clean:signal_rejected:<raw_message_id>:<symbol>:<side>:<reason>`.
+Stessa origine + stesso simbolo/side/ragione → una sola notifica; correzione
+del simbolo o ragione diversa → notifica nuova. Gli eventi lifecycle restano
+per-eid (storia completa, nessun cambio audit).
+
+**Test:** nuovo `tests/runtime_v2/lifecycle/test_no_chain_clean_log_dedupe.py`
+(4 test: dedupe su 3 revisioni, simbolo corretto rinotifica, ragione diversa
+rinotifica, messaggio diverso rinotifica). Suite: 1224 passed, 37 failed
+pre-esistenti invariati.

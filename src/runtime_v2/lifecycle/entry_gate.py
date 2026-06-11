@@ -1952,13 +1952,14 @@ def _write_no_chain_signal_clean_log(
         risk_pct = None
         if ev_data.get("capital") and ev_data.get("risk_amount"):
             risk_pct = round(ev_data["risk_amount"] / ev_data["capital"] * 100, 2)
+        reason = ev_data.get("reason", "unknown")
         payload = {
             "chain_id": None,
             "symbol": signal.symbol if signal else None,
             "side": str(signal.side) if signal and signal.side else None,
             "trader_id": enriched.trader_id,
             "account_id": enriched.account_id,
-            "reason": ev_data.get("reason", "unknown"),
+            "reason": reason,
             "entries": entries_payload,
             "sl": sl_payload,
             "tps": tps_payload,
@@ -1966,12 +1967,21 @@ def _write_no_chain_signal_clean_log(
             "source": ev_data.get("source", "runtime"),
             "link": link,
         }
+        # Dedupe per contenuto, non per enrichment_id: le revisioni editate di uno
+        # stesso messaggio producono enrichment distinti, ma se simbolo/side/ragione
+        # non cambiano la notifica Telegram non deve ripetersi. L'evento lifecycle
+        # resta per-eid (storia completa).
+        dedupe_key = (
+            f"clean:signal_rejected:{enriched.raw_message_id}:"
+            f"{signal.symbol if signal else None}:"
+            f"{signal.side if signal and signal.side else None}:{reason}"
+        )
         write_clean_log_event(
             conn,
             notification_type=event.event_type,
             chain_id=None,
             payload=payload,
-            dedupe_key=f"clean:{event.idempotency_key}",
+            dedupe_key=dedupe_key,
         )
 
 

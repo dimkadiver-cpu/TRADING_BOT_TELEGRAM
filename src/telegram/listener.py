@@ -100,6 +100,7 @@ class TelegramListener:
         channels_config: ChannelsConfig,
         fallback_allowed_chat_ids: Iterable[int] | None = None,
         chain_exists_for_raw: Callable[[int], bool] | None = None,
+        notify_edit_skipped: Callable[[dict], None] | None = None,
     ) -> None:
         self._ingestion = ingestion_service
         self._status_store = processing_status_store
@@ -112,6 +113,7 @@ class TelegramListener:
         self._config = channels_config
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
         self._chain_exists_for_raw = chain_exists_for_raw
+        self._notify_edit_skipped = notify_edit_skipped
         self._queue: asyncio.Queue[_QueueItem] = asyncio.Queue()
 
     def update_config(self, new_config: ChannelsConfig) -> None:
@@ -388,6 +390,13 @@ class TelegramListener:
                 message.id,
                 raw_message_id,
             )
+            self._emit_edit_skipped_notification(
+                message=message,
+                source_chat_id=source_chat_id,
+                topic_id=topic_id,
+                raw_message_id=raw_message_id,
+                new_text=new_text,
+            )
             return
 
         if self._is_blacklisted(new_text, chat_id_raw, topic_id):
@@ -428,6 +437,34 @@ class TelegramListener:
             raw_message_id,
             run_context,
         )
+
+    def _emit_edit_skipped_notification(
+        self,
+        *,
+        message: Message,
+        source_chat_id: str,
+        topic_id: int | None,
+        raw_message_id: int,
+        new_text: str,
+    ) -> None:
+        if self._notify_edit_skipped is None:
+            return
+        edit_ts = getattr(message, "edit_date", None)
+        try:
+            self._notify_edit_skipped(
+                {
+                    "chat": source_chat_id,
+                    "topic": topic_id,
+                    "msg_id": int(message.id),
+                    "raw_message_id": raw_message_id,
+                    "edit_ts": int(_as_utc(edit_ts).timestamp()) if edit_ts else None,
+                    "new_text_preview": new_text[:120],
+                }
+            )
+        except Exception:
+            self._logger.exception(
+                "edit skipped notification failed | raw_message_id=%s", raw_message_id
+            )
 
     def _chain_exists_for_message(self, raw_message_id: int) -> bool:
         if self._chain_exists_for_raw is None:
