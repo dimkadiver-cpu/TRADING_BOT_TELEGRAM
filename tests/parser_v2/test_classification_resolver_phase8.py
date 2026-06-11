@@ -131,3 +131,42 @@ def test_empty_or_no_markers_is_info_unclassified() -> None:
     assert result.primary_class == "INFO"
     assert result.parse_status == "UNCLASSIFIED"
     assert result.warnings == []
+
+
+def test_partial_signal_with_update_intent_and_symbol_only_stays_signal() -> None:
+    # Segnale nuovo parziale che menziona "move stop" nel testo: il solo simbolo
+    # (estratto dal testo del segnale stesso) non basta a forzare UPDATE.
+    result = ClassificationResolver().resolve(
+        signal=_signal(completeness="INCOMPLETE", missing_fields=["take_profits"]),
+        intents=[_intent("MOVE_STOP_TO_BE", MoveStopToBEEntities())],
+        target_hints=TargetHints(symbols=["BTCUSDT"]),
+    )
+
+    assert result.primary_class == "SIGNAL"
+    assert result.parse_status == "PARTIAL"
+
+
+def test_partial_signal_with_update_intent_and_explicit_id_forced_to_update() -> None:
+    # Caso del design doc: testo signal-like con Signal ID esplicito + intent di
+    # modifica → riferimento a segnale esistente → forzato a UPDATE.
+    result = ClassificationResolver().resolve(
+        signal=_signal(completeness="INCOMPLETE", missing_fields=["take_profits"]),
+        intents=[_intent("MOVE_STOP_TO_BE", MoveStopToBEEntities())],
+        target_hints=TargetHints(explicit_ids=["c4"], symbols=["BTCUSDT"]),
+    )
+
+    assert result.primary_class == "UPDATE"
+    assert result.parse_status == "PARSED"
+    assert result.warnings == ["signal_like_update_forced_to_update"]
+
+
+def test_partial_signal_with_update_intent_and_reply_forced_to_update() -> None:
+    result = ClassificationResolver().resolve(
+        signal=_signal(completeness="INCOMPLETE", missing_fields=["take_profits"]),
+        intents=[_intent("MOVE_STOP_TO_BE", MoveStopToBEEntities())],
+        target_hints=TargetHints(reply_to_message_id=123),
+    )
+
+    assert result.primary_class == "UPDATE"
+    assert result.parse_status == "PARSED"
+    assert result.warnings == ["signal_like_update_forced_to_update"]

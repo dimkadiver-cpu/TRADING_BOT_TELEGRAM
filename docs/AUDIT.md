@@ -1652,3 +1652,24 @@ pre-esistenti non correlate (naming NOOP_* e clean_log update).
   `load_rules()` ora incondizionato in `__init__` di tutti i profili).
 - Duplicazione: helper di parsing prezzi/numeri byte-identici in 6 profili
   (incluso il nuovo `strategy_parser`); blocchi rules.json copiati in 4-5 profili.
+
+### FIXATO: riclassificazione PARTIAL→UPDATE senza guard (classification_resolver)
+
+**File coinvolto:** `src/parser_v2/core/classification_resolver.py`
+
+**Problema:** `_looks_like_targeted_update` considerava sufficiente un qualsiasi
+target hint, incluso il solo simbolo — che però viene estratto anche dal testo
+di un segnale nuovo. Un segnale parziale con un'istruzione di gestione nel testo
+(es. "poi spostate lo stop a BE") e il simbolo veniva forzato a UPDATE: niente
+apertura posizione, e l'update finiva in review `no_update_target` (trade perso).
+
+**Fix:** nuovo helper `_has_strong_target_hint` usato solo dalla riclassificazione:
+esclude `symbols`, mantiene reply_to, telegram ids/links, explicit_ids e scope_hint
+esplicito. Il caso d'uso del design doc (testo signal-like con `Signal ID: #c4` +
+MODIFY_ENTRY) continua a funzionare via explicit_ids. `_has_target_hint` resta
+invariato per il warning `update_without_target_hint`.
+
+**Test aggiunti:** 3 test in `tests/parser_v2/test_classification_resolver_phase8.py`
+(symbol-only resta SIGNAL/PARTIAL; explicit_id e reply_to forzano UPDATE).
+Esito: 225 passed su parser_v2; 1 failure pre-esistente non correlata
+(`test_trader_a_weak_context_rules`).
