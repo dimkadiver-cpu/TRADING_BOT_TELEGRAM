@@ -38,6 +38,13 @@
     }
   },
 
+  "target_hint_markers": {
+    "symbol": {
+      "strong": ["usdt", "usdc"],
+      "weak": []
+    }
+  },
+
   "intent_markers": {
     "TP_HIT": {
       "strong": ["цель достигнута"],

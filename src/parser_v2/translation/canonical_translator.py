@@ -365,6 +365,9 @@ def _resolve_target_hints(
     ):
         base = base.model_copy(update={"scope_hint": "SINGLE_SIGNAL"})
 
+    if base.target_source == "SYMBOL" and base.scope_hint == "UNKNOWN":
+        base = base.model_copy(update={"scope_hint": "SYMBOL"})
+
     has_explicit = bool(base.telegram_message_ids or base.telegram_links or base.explicit_ids)
     has_reply = bool(base.reply_to_message_id)
 
