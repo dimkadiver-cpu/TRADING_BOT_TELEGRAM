@@ -4,6 +4,51 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-11 — Nuovo profilo parser_v2: strategy_parser
+
+### Step completato
+
+Implementato profilo parser_v2 minimale per il bot "Стратегия" che produce segnali automatici da strategie algoritmiche (RSI(2) Коннора, Supertrend, ecc.) su canale Telegram. Profilo built-from-evidence sui pattern di messaggi forniti dall'utente, nessun DB reale campionato.
+
+### Message family map (da esempi reali)
+
+| Famiglia | Pattern chiave | primary_class | primary_intent |
+|---|---|---|---|
+| SIGNAL open | `открыла ЛОНГ/ШОРТ по <SYMBOL>` + `Вход / стоп / цель` | `SIGNAL` | — |
+| CLOSE + SL | `закрыла … — поймала стоп` | `UPDATE` | `SL_HIT` |
+| CLOSE + reverse | `вышла по обратному сигналу` | `UPDATE` | `CLOSE_FULL` |
+| CLOSE + TP (implicito) | `цель достигнута` | `UPDATE` | `TP_HIT` |
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/profiles/strategy_parser/__init__.py` | Creato | scaffold |
+| `src/parser_v2/profiles/strategy_parser/profile.py` | Creato | `StrategyParserProfile` — interfaccia Pydantic completa (come trader_a) |
+| `src/parser_v2/profiles/strategy_parser/signal_extractor.py` | Creato | guard `закрыла`, symbol da `по <SYMBOL>`, entry/sl/tp specifici |
+| `src/parser_v2/profiles/strategy_parser/intent_entity_extractor.py` | Creato | SL_HIT/TP_HIT/CLOSE_FULL/REPORT_RESULT + exit price da `→ выход` |
+| `src/parser_v2/profiles/strategy_parser/semantic_markers.json` | Creato | markers grounded su esempi reali |
+| `src/parser_v2/profiles/strategy_parser/rules.json` | Creato | minimal: suppress_weak, cross_intent_suppression SL/TP→CLOSE_FULL |
+| `src/parser_v2/profiles/registry.py` | Modificato | aggiunto `strategy_parser` + alias |
+
+### Risultato smoke-test
+
+```
+SIGNAL open    → primary_class=SIGNAL  parse_status=PARSED  symbol=HYPE  side=LONG  entry=54.69  sl=53.32  tp=[59.46]  ✅
+CLOSE SL_HIT   → primary_class=UPDATE  primary_intent=SL_HIT  intents=[CLOSE_FULL, SL_HIT, REPORT_RESULT]  ✅
+CLOSE reverse  → primary_class=UPDATE  primary_intent=CLOSE_FULL  intents=[CLOSE_FULL, REPORT_RESULT]  ✅
+```
+
+### Rischi aperti / blind spot
+
+- **Nessun DB reale campionato**: profilo grounded solo su 3 esempi forniti manualmente — potrebbe esserci variazione nella punteggiatura, nel formato del simbolo (es. simboli abbreviati come "H" invece di "HUSDT"), o nella struttura del messaggio di chiusura con TP.
+- **Symbol abbreviato**: nel secondo esempio il simbolo è "H" (probabilmente HUSDT) — `normalize_symbol` gestisce l'aggiunta di USDT se non presente, da verificare con dati reali.
+- **INFO_ONLY su SIGNAL**: i disclaimer "виртуальная сделка / реальных денег нет" nelle SIGNAL message producono intents INFO_ONLY (weak). Non impatta primary_class=SIGNAL, ma è rumore — da valutare se rimuovere i marker.
+- **update_without_target_hint**: warning atteso su tutti i messaggi di chiusura — il bot non usa reply chain, non ha riferimento esplicito alla posizione aperta.
+- **TP_HIT non testato**: non era disponibile un esempio reale, il marker `цель достигнута` è derivato dal vocabolario utente.
+
+---
+
 ## 2026-06-10 — Trader Resolution v2: TraderResolver unificato (8 task, 115/115 PASS listener)
 
 ### Step completato
