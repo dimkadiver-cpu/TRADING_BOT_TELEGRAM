@@ -1,0 +1,19 @@
+account:
+  id: "account_nuovo"      # deve corrispondere alla chiave in account_routing
+  capital_base_usdt: 10000.0
+  max_leverage: 5
+  max_capital_at_risk_pct: 100.0
+  hard_max_per_signal_risk_pct: 2.0
+
+risk:
+  mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
+  risk_pct_of_capital: 2.0  # Usato quando mode=risk_pct_of_capital.
+  risk_usdt_fixed: 10.0  # Usato quando mode=risk_usdt_fixed.
+  capital_base_mode: static_config  # Valori supportati: static_config | live_equity.
+  capital_base_usdt: 10000.0  # Base capitale locale se non si usa equity live.
+  leverage: 5  # Leva operativa da usare per aprire la posizione.
+  use_trader_risk_hint: false  # true = usa eventuale hint rischio dal segnale/trader.
+  risk_hint_range_mode: min_value  # Valori: min_value | max_value | midpoint. Usato quando risk_hint e' un range.
+  max_capital_at_risk_per_trader_pct: 50.0  # Cap di rischio totale per trader.
+  max_concurrent_trades: 50  # Numero massimo chain aperte contemporanee per trader.
+  max_concurrent_same_symbol: 2  # Numero massimo trade contemporanei sullo stesso simbolo.
