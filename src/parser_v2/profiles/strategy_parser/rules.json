@@ -12,6 +12,35 @@
         "suppress_weak": ["CLOSE_FULL"],
         "reason": "TP_HIT already implies full close"
       }
+    ],
+    "weak_context_exclusions": [
+      {
+        "name": "close_full_weak_suppressed_by_sl_hit",
+        "intent": "CLOSE_FULL",
+        "markers": { "source": "intent_weak" },
+        "scope": "whole_message",
+        "if_contains_any": ["поймала стоп", "словила стоп"],
+        "reason": "SL_HIT already implies full close"
+      },
+      {
+        "name": "close_full_weak_suppressed_by_tp_hit",
+        "intent": "CLOSE_FULL",
+        "markers": { "source": "intent_weak" },
+        "scope": "whole_message",
+        "if_contains_any": ["цель достигнута"],
+        "reason": "TP_HIT already implies full close"
+      }
+    ],
+    "marker_context_exclusions": [
+      {
+        "name": "close_full_weak_suppressed_by_close_full_strong",
+        "strength": "weak",
+        "marker_name": "CLOSE_FULL",
+        "markers": { "source": "semantic" },
+        "scope": "whole_message",
+        "if_contains_any": ["вышла по обратному сигналу"],
+        "reason": "strong close intent already present"
+      }
     ]
   },
   "primary_intent_precedence": [
