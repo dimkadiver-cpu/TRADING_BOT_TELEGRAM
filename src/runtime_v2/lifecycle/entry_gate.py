@@ -36,6 +36,17 @@ def _norm_signal_id(value: str) -> str:
     return value.lstrip("#").strip().lower()
 
 
+def _chain_signal_ids(chain: TradeChain) -> set[str]:
+    # external_signal_id può contenere più ID separati da "|" (convenzione liste CSV)
+    if not chain.external_signal_id:
+        return set()
+    return {
+        _norm_signal_id(part)
+        for part in chain.external_signal_id.split("|")
+        if part.strip()
+    }
+
+
 def _find_leg_snap(legs_snap: list[dict], sequence: int) -> dict | None:
     for snap in legs_snap or []:
         if snap.get("sequence") == sequence:
@@ -941,14 +952,16 @@ class LifecycleEntryGate:
             wanted = {_norm_signal_id(x) for x in tag.targeting.explicit_ids}
             matched = [
                 c for c in trader_chains
-                if c.external_signal_id is not None
-                and _norm_signal_id(c.external_signal_id) in wanted
+                # fallback su canonical_message_id per chain pre-migrazione 014
+                # (external_signal_id NULL, nessun backfill)
+                if (wanted & _chain_signal_ids(c))
+                or _norm_signal_id(str(c.canonical_message_id)) in wanted
             ]
             if len(matched) == 1:
                 return matched
             if len(matched) > 1:
                 return None  # ambiguous — send to review
-            return []  # not found — do not fall through, send to review
+            # not found — fall through to telegram-ID matching
 
         tg_ids_to_check = list(tag.targeting.telegram_message_ids)
         if tag.targeting.reply_to_message_id is not None:
@@ -2233,7 +2246,7 @@ class LifecycleGateWorker:
                     try:
                         diag = json.loads(cm_row[2] or "{}")
                         sig_ids = diag.get("signal_explicit_ids") or []
-                        external_signal_id = sig_ids[0] if sig_ids else None
+                        external_signal_id = "|".join(sig_ids) if sig_ids else None
                     except Exception:
                         pass
             finally:
