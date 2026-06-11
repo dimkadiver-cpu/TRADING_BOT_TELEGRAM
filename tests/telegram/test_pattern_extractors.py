@@ -14,11 +14,11 @@ _UNRELATED_MSG = "BUY BTC at 45000 sl 44000 tp 47000"
 
 
 def test_rsi_intraday_recognized(rsi_topic_id):
-    assert extract_trader_by_pattern(rsi_topic_id, _INTRADAY_MSG) == "trader_rsi_intraday"
+    assert extract_trader_by_pattern(rsi_topic_id, _INTRADAY_MSG) == "rsi_intraday"
 
 
 def test_rsi_swing_recognized(rsi_topic_id):
-    assert extract_trader_by_pattern(rsi_topic_id, _SWING_MSG) == "trader_rsi_swing"
+    assert extract_trader_by_pattern(rsi_topic_id, _SWING_MSG) == "rsi_swing"
 
 
 def test_unrelated_message_returns_none(rsi_topic_id):

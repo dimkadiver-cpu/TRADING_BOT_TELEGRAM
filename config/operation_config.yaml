@@ -43,7 +43,7 @@ registered_traders:
   - trader_d
   - trader_prova
   - sma_intraday
-  - rsi_swing    
+  - rsi_swing
   - rsi_intraday
 
 symbol_blacklist:

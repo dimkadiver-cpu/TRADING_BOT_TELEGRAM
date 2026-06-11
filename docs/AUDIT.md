@@ -1894,3 +1894,42 @@ per-eid (storia completa, nessun cambio audit).
 (4 test: dedupe su 3 revisioni, simbolo corretto rinotifica, ragione diversa
 rinotifica, messaggio diverso rinotifica). Suite: 1224 passed, 37 failed
 pre-esistenti invariati.
+
+### FIX: allineamento id/topic/alias/profilo del canale RSI multi-strategia
+
+**Origine:** code review xhigh sul working tree — tre finding RSI correlati:
+gli id emessi dal pattern extractor (`trader_rsi_*`) non erano in
+registered_traders (`rsi_*`), il topic hardcoded (9, esempio della spec) non
+corrispondeva al topic reale di channels.yaml (4180), e gli alias del canale
+erano placeholder (`@trader_a_tag`) che non potevano mai matchare (il resolver
+cerca solo tag normalizzati `trader#x`, e i messaggi RSI non contengono tag).
+
+**File coinvolti:**
+- `src/telegram/pattern_extractors.py` — ritorna `rsi_intraday`/`rsi_swing`
+  (id canonici senza prefisso, allineati a registered_traders);
+  `RSI_TOPIC_ID = 4180` (topic reale di RSI_MultiTrader in channels.yaml).
+- `tests/telegram/test_pattern_extractors.py` — aspettative aggiornate
+  (il topic è già parametrico via fixture su RSI_TOPIC_ID).
+- `config/channels.yaml` — entry RSI_MultiTrader: rimossi gli alias
+  placeholder (`aliases: {}`, la risoluzione è via pattern semantici);
+  `parser_profile: multi_strategi` → `strategy_parser` (unico profilo nel
+  registry parser_v2); commento stale "topic_id 9" corretto.
+- `config/operation_config.yaml` — rimossi spazi finali dopo `rsi_swing`.
+
+**Validazione:** tests/telegram 33 passed; suite resolver/resolution/channel_config
+59 passed; `python -m src.startup_check` → 0 errori, 7 warning (spariti
+l'avviso parser_profile sconosciuto e l'errore alias↔registered).
+
+**Rischi residui / da fare prima di attivare il canale RSI:**
+- `sma_intraday` non ha ancora un pattern di riconoscimento in
+  pattern_extractors.py (marker sconosciuto, vedi promemoria) → oggi
+  irrisolvibile; il canale resta `active: false`.
+- Gli id ritornati dai pattern extractor non sono cross-validati dallo
+  startup_check contro registered_traders (sono hardcoded nel codice):
+  un futuro disallineamento non verrebbe segnalato a boot.
+- rsi_swing/rsi_intraday registrati senza override config/traders/*.yaml
+  (defaults globali: risk 2%, max_concurrent_trades 50) e blocco `account`
+  di sma_intraday.yaml inerte con account_mode=single — finding della stessa
+  review, non in scope di questo fix.
+- I warning clean_log.per_trader per i tre id derivano dalla rimozione degli
+  alias: il validatore incrocia solo channels.yaml, non i pattern extractor.
