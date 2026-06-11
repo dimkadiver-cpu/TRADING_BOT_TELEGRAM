@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 import logging
 from typing import Iterable
@@ -15,6 +16,10 @@ except ModuleNotFoundError:  # pragma: no cover - test fallback when Telethon is
 
     class _EventsModule:
         class NewMessage:
+            class Event:
+                pass
+
+        class MessageEdited:
             class Event:
                 pass
 
@@ -48,6 +53,7 @@ class _QueueItem:
     reply_to_message_id: int | None
     acquisition_mode: str
     source_topic_id: int | None = None
+    run_context: str = "live"
 
 
 def _is_blacklisted_text(
@@ -93,6 +99,7 @@ class TelegramListener:
         logger: logging.Logger,
         channels_config: ChannelsConfig,
         fallback_allowed_chat_ids: Iterable[int] | None = None,
+        chain_exists_for_raw: Callable[[int], bool] | None = None,
     ) -> None:
         self._ingestion = ingestion_service
         self._status_store = processing_status_store
@@ -104,6 +111,7 @@ class TelegramListener:
         self._logger = logger
         self._config = channels_config
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
+        self._chain_exists_for_raw = chain_exists_for_raw
         self._queue: asyncio.Queue[_QueueItem] = asyncio.Queue()
 
     def update_config(self, new_config: ChannelsConfig) -> None:
@@ -118,6 +126,10 @@ class TelegramListener:
         @client.on(events.NewMessage)
         async def _on_message(event: events.NewMessage.Event) -> None:
             await self._handle_new_message(event, acquisition_mode="live")
+
+        @client.on(events.MessageEdited)
+        async def _on_message_edited(event: events.MessageEdited.Event) -> None:
+            await self._handle_edited_message(event)
 
     async def run_recovery(self, client: TelegramClient) -> None:
         await self._reenqueue_stale()
@@ -312,6 +324,125 @@ class TelegramListener:
             source_topic_id=topic_id,
         )
 
+    async def _handle_edited_message(self, event: events.MessageEdited.Event) -> None:
+        """Edited messages: ingest if never acquired (e.g. caption added to a media
+        post), re-process if the text changed and no trade chain was created yet
+        (e.g. trader corrects a rejected signal). Edits of messages that already
+        produced a trade chain are never re-executed."""
+        message: Message = event.message
+        chat_id_raw = int(event.chat_id) if event.chat_id is not None else None
+        topic_id = self._extract_topic_id(chat_id_raw, message)
+
+        if not self._is_allowed_message(chat_id_raw, topic_id):
+            return
+
+        new_text = message.message or ""
+        if not new_text:
+            return
+
+        if self._config.recovery_max_hours > 0 and message.date is not None:
+            cutoff = datetime.now(timezone.utc) - timedelta(hours=self._config.recovery_max_hours)
+            if _as_utc(message.date) < cutoff:
+                self._logger.info(
+                    "edit_too_old_skipped | chat=%s topic=%s msg_id=%s",
+                    chat_id_raw,
+                    topic_id,
+                    message.id,
+                )
+                return
+
+        source_chat_id = str(chat_id_raw)
+        existing = self._raw_repo.get_id_and_text(source_chat_id, int(message.id))
+
+        if existing is None:
+            # Never acquired live (es. foto senza caption) → ingest come nuovo.
+            chat_title = getattr(event.chat, "title", None) or getattr(event.chat, "username", None)
+            chat_username = getattr(event.chat, "username", None)
+            await self._ingest_and_enqueue(
+                message=message,
+                chat_id=chat_id_raw,
+                chat_title=chat_title,
+                chat_username=chat_username,
+                acquisition_mode="edit",
+                source_topic_id=topic_id,
+            )
+            return
+
+        raw_message_id, old_text = existing
+        if (old_text or "") == new_text:
+            self._logger.info(
+                "edit_no_text_change_skipped | chat=%s topic=%s msg_id=%s raw_message_id=%s",
+                source_chat_id,
+                topic_id,
+                message.id,
+                raw_message_id,
+            )
+            return
+
+        if self._chain_exists_for_message(raw_message_id):
+            self._logger.warning(
+                "edit_of_executed_signal_skipped | chat=%s topic=%s msg_id=%s raw_message_id=%s "
+                "— una trade chain esiste già, correzione da gestire manualmente",
+                source_chat_id,
+                topic_id,
+                message.id,
+                raw_message_id,
+            )
+            return
+
+        if self._is_blacklisted(new_text, chat_id_raw, topic_id):
+            self._logger.info(
+                "edit_blacklisted_skipped | chat=%s topic=%s msg_id=%s",
+                source_chat_id,
+                topic_id,
+                message.id,
+            )
+            return
+
+        edit_ts = getattr(message, "edit_date", None) or datetime.now(timezone.utc)
+        run_context = f"edit:{int(_as_utc(edit_ts).timestamp())}"
+        self._raw_repo.update_raw_text(raw_message_id, new_text)
+        self._status_store.update(raw_message_id, "pending")
+        reply_to_message_id = extract_real_reply_to_message_id(
+            message,
+            source_topic_id=topic_id,
+        )
+        await self._queue.put(
+            _QueueItem(
+                raw_message_id=raw_message_id,
+                source_chat_id=source_chat_id,
+                telegram_message_id=int(message.id),
+                raw_text=new_text,
+                source_trader_id=None,
+                reply_to_message_id=reply_to_message_id,
+                acquisition_mode="edit",
+                source_topic_id=topic_id,
+                run_context=run_context,
+            )
+        )
+        self._logger.info(
+            "edited message re-enqueued | chat=%s topic=%s msg_id=%s raw_message_id=%s run_context=%s",
+            source_chat_id,
+            topic_id,
+            message.id,
+            raw_message_id,
+            run_context,
+        )
+
+    def _chain_exists_for_message(self, raw_message_id: int) -> bool:
+        if self._chain_exists_for_raw is None:
+            # Senza accesso alle chain non possiamo escludere un'esecuzione già
+            # avvenuta: fail-safe, non si riprocessa.
+            return True
+        try:
+            return self._chain_exists_for_raw(raw_message_id)
+        except Exception:
+            self._logger.exception(
+                "chain lookup failed | raw_message_id=%s — edit non riprocessato (fail-safe)",
+                raw_message_id,
+            )
+            return True
+
     async def _ingest_and_enqueue(
         self,
         *,
@@ -451,7 +582,7 @@ class TelegramListener:
             parser_context=parser_context,
         )
 
-        result = self._parser_pipeline.process(candidate)
+        result = self._parser_pipeline.process(candidate, run_context=item.run_context)
         if isinstance(result, ParserJobStatus):
             self._logger.warning(
                 "parse failed | raw_message_id=%s reason=%s",

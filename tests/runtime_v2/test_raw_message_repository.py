@@ -108,6 +108,26 @@ def test_update_trader_resolution(repo):
     assert updated.resolution_detail is None
 
 
+def test_get_id_and_text_returns_none_for_unknown(repo):
+    assert repo.get_id_and_text("-100123", 9999) is None
+
+
+def test_get_id_and_text_returns_row(repo):
+    env = repo.save_raw(_make_item(chat_id="-100123", msg_id=456))
+    result = repo.get_id_and_text("-100123", 456)
+    assert result is not None
+    raw_message_id, raw_text = result
+    assert raw_message_id == env.raw_message_id
+    assert raw_text == "BUY BTC"
+
+
+def test_update_raw_text(repo):
+    env = repo.save_raw(_make_item(chat_id="-100123", msg_id=456))
+    repo.update_raw_text(env.raw_message_id, "BUY ETH")
+    updated = repo.get_by_id(env.raw_message_id)
+    assert updated.raw_text == "BUY ETH"
+
+
 def test_get_chain_node_returns_none_for_unknown(repo):
     result = repo.get_chain_node("-100123", 9999)
     assert result is None

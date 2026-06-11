@@ -364,6 +364,9 @@ async def _async_main(
         raw_repo=raw_repo,
     )
 
+    # PRD-04 lifecycle layer (chain_repo serve anche al listener per il gating degli edit)
+    chain_repo = TradeChainRepository(ops_db_path)
+
     listener = TelegramListener(
         ingestion_service=ingestion_service,
         processing_status_store=processing_status_store,
@@ -375,10 +378,9 @@ async def _async_main(
         logger=logger,
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,
+        chain_exists_for_raw=chain_repo.has_chain_for_raw_message,
     )
 
-    # PRD-04 lifecycle layer
-    chain_repo = TradeChainRepository(ops_db_path)
     event_repo = LifecycleEventRepository(ops_db_path)
     command_repo = ExecutionCommandRepository(ops_db_path)
     control_repo = ControlStateRepository(ops_db_path)

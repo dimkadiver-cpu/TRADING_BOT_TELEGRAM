@@ -163,6 +163,18 @@ class TradeChainRepository:
         finally:
             conn.close()
 
+    def has_chain_for_raw_message(self, raw_message_id: int) -> bool:
+        """True if any trade chain (in any state) originated from this raw message."""
+        conn = sqlite3.connect(self._db_path)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM ops_trade_chains WHERE raw_message_id=? LIMIT 1",
+                (raw_message_id,),
+            ).fetchone()
+            return row is not None
+        finally:
+            conn.close()
+
     def get_active_by_trader(self, trader_id: str) -> list[TradeChain]:
         conn = sqlite3.connect(self._db_path)
         try:

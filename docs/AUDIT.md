@@ -1805,3 +1805,48 @@ in registered_traders.
 
 **Test:** run su config reale + scenario B simulato in tmp dir (account.id
 senza routing → errore corretto).
+
+### AGGIUNTO: gestione MessageEdited nel listener Telegram
+
+**Contesto (incidente 2026-06-11):** segnale AVAXUSDT pubblicato come foto
+senza caption alle 13:50 (`media_only_skipped`), testo aggiunto dal trader
+via edit — mai acquisito live perché il listener ascoltava solo
+`events.NewMessage`. Recuperato solo dal catchup al riavvio delle 14:19,
+ma ormai vecchio di 29 minuti → `GATEWAY_ENTRY_ALL_FAILED`. Secondo caso
+reale: segnale con simbolo errato rifiutato dal gate, corretto via edit,
+correzione mai vista.
+
+**File coinvolti:** `src/telegram/listener.py` (handler `MessageEdited`,
+`_handle_edited_message`, `run_context` in `_QueueItem`),
+`src/runtime_v2/persistence/raw_messages.py` (`get_id_and_text`,
+`update_raw_text`), `src/runtime_v2/lifecycle/repositories.py`
+(`TradeChainRepository.has_chain_for_raw_message`), `main.py` e
+`main_linux_server.py` (wiring `chain_exists_for_raw`).
+
+**Comportamento:**
+- Edit di messaggio mai acquisito (es. media senza testo) + ora ha testo →
+  ingest come nuovo (`acquisition_mode=edit`), identico al catchup.
+- Edit con testo invariato → skip (`edit_no_text_change_skipped`).
+- Edit con testo cambiato e NESSUNA trade chain per quel raw_message_id →
+  update del raw_text + re-enqueue con `run_context=edit:<epoch>`; il vincolo
+  UNIQUE(raw_message_id, run_context) su canonical_messages crea una nuova
+  catena parse→enrichment→lifecycle. Le guardie esistenti (duplicate_position,
+  max_concurrent_same_symbol, account_symbol_side_conflict) restano l'ultima
+  difesa contro doppie esecuzioni.
+- Edit con trade chain già esistente → skip con warning
+  (`edit_of_executed_signal_skipped`) — correzione manuale.
+- Fail-safe: senza callback chain o se la lookup fallisce → non si riprocessa.
+- Guardia anti-stale: edit di messaggi più vecchi di `recovery_max_hours`
+  ignorati (`edit_too_old_skipped`). Blacklist applicata anche al testo editato.
+
+**Rischi residui:**
+- Edit di un segnale GIÀ ACCETTATO che corregge prezzo/side non viene
+  riprocessato (by design): serve intervento manuale; il warning è solo nel
+  log file, non arriva su TECH_LOG — possibile miglioramento futuro.
+- `parser_results_v2` fa upsert su (run_id, raw_message_id): il record di
+  debug riflette solo l'ultima revisione parsata.
+
+**Test:** `tests/telegram/test_listener_edited_messages.py` (9 nuovi, tutti
+verdi), estesi `test_raw_message_repository.py` e
+`lifecycle/test_repositories.py`. Suite completa: 1214 passed; 37 failed
+pre-esistenti identici sul commit base (dipendenze ambiente: telethon/pyaes).
