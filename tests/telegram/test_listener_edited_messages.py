@@ -74,6 +74,7 @@ def _make_listener(
     chain_exists=None,
     blacklist_global: list[str] | None = None,
     ingestion: FakeIngestion | None = None,
+    notify_edit_skipped=None,
 ) -> tuple[TelegramListener, FakeRawRepo, FakeStatusStore, FakeIngestion]:
     raw_repo = raw_repo or FakeRawRepo()
     status_store = FakeStatusStore()
@@ -94,6 +95,7 @@ def _make_listener(
         logger=logging.getLogger("test"),
         channels_config=config,
         chain_exists_for_raw=chain_exists,
+        notify_edit_skipped=notify_edit_skipped,
     )
     return listener, raw_repo, status_store, ingestion
 
@@ -207,6 +209,59 @@ def test_edit_of_old_message_is_skipped():
     assert not raw_repo.text_updates
     assert not ingestion.calls
     assert listener._queue.empty()
+
+
+def test_edit_with_existing_chain_emits_tech_log_notification():
+    raw_repo = FakeRawRepo()
+    raw_repo.rows[("-100123", 10)] = (55, "LONG BTCUSDT entry 60000")
+    notified: list[dict] = []
+    listener, _, _, _ = _make_listener(
+        raw_repo=raw_repo,
+        chain_exists=lambda _rid: True,
+        notify_edit_skipped=notified.append,
+    )
+    edit_ts = datetime(2026, 6, 11, 15, 0, 0, tzinfo=timezone.utc)
+    message = FakeMessage(10, "LONG BTCUSDT entry 61000", edit_date=edit_ts)
+    _run(listener._handle_edited_message(FakeEvent(message)))
+
+    assert len(notified) == 1
+    context = notified[0]
+    assert context["chat"] == "-100123"
+    assert context["msg_id"] == 10
+    assert context["raw_message_id"] == 55
+    assert context["edit_ts"] == int(edit_ts.timestamp())
+    assert context["new_text_preview"].startswith("LONG BTCUSDT entry 61000")
+
+
+def test_reprocessed_edit_does_not_notify():
+    raw_repo = FakeRawRepo()
+    raw_repo.rows[("-100123", 10)] = (55, "old text")
+    notified: list[dict] = []
+    listener, _, _, _ = _make_listener(
+        raw_repo=raw_repo,
+        chain_exists=lambda _rid: False,
+        notify_edit_skipped=notified.append,
+    )
+    _run(listener._handle_edited_message(FakeEvent(FakeMessage(10, "new text"))))
+    assert not notified
+    assert not listener._queue.empty()
+
+
+def test_notification_failure_does_not_break_handler():
+    raw_repo = FakeRawRepo()
+    raw_repo.rows[("-100123", 10)] = (55, "old text")
+
+    def boom(_context: dict) -> None:
+        raise RuntimeError("outbox unavailable")
+
+    listener, _, _, _ = _make_listener(
+        raw_repo=raw_repo,
+        chain_exists=lambda _rid: True,
+        notify_edit_skipped=boom,
+    )
+    _run(listener._handle_edited_message(FakeEvent(FakeMessage(10, "new text"))))
+    assert listener._queue.empty()
+    assert not raw_repo.text_updates
 
 
 def test_edit_with_blacklisted_text_is_skipped():

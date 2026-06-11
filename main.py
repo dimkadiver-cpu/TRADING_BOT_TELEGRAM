@@ -13,6 +13,7 @@ import sqlite3
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from functools import partial
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -51,6 +52,7 @@ from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 from src.runtime_v2.control_plane.bootstrap import build_control_plane
 from src.runtime_v2.control_plane.notification_dispatcher import TelegramNotificationDispatcher
+from src.runtime_v2.control_plane.outbox_writer import notify_listener_edit_skipped
 from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.telegram_bot import TelegramControlBot
 from src.storage.parser_results_v2 import ParserResultV2Store
@@ -380,6 +382,7 @@ async def _async_main(
         channels_config=channels_config,
         fallback_allowed_chat_ids=fallback_ids,
         chain_exists_for_raw=chain_repo.has_chain_for_raw_message,
+        notify_edit_skipped=partial(notify_listener_edit_skipped, ops_db_path),
     )
 
     event_repo = LifecycleEventRepository(ops_db_path)
