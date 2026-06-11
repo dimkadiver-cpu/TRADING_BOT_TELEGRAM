@@ -170,16 +170,19 @@ class TestStrategyParserProfileSymbolTargeting:
 
     # --- custom extract_target_hints: bare ticker via "по SYMBOL" ---
 
-    def test_close_bare_ticker_hype(self):
+    def test_close_sl_hit_produces_report_not_update(self):
+        # "поймала стоп" (SL_HIT strong) suppresses "закрыла" (CLOSE_FULL weak)
+        # via whole_message weak_context_exclusion → primary_class=REPORT, no target_action_groups
         text = (
             "Стратегия «RSI(2) Коннора» закрыла ЛОНГ по H · интрадей (1H) — поймала стоп\n\n"
             "Результат: −1.0R  (вход 0.1851 → выход 0.16289)"
         )
-        groups = self._update_groups(text)
-        group = groups[0]
-        assert group.targeting.target_source == "SYMBOL"
-        assert group.targeting.scope_hint == "SYMBOL"
-        assert "H" in group.targeting.symbols
+        result = self._run(text)
+        assert result.primary_class == "REPORT"
+        assert "SL_HIT" in result.intents
+        assert not result.target_action_groups
+        assert result.report is not None
+        assert any(e.event_type == "SL_HIT" for e in result.report.events)
 
     def test_close_bare_ticker_sui(self):
         text = (
