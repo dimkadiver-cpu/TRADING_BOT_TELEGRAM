@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
+from src.runtime_v2.execution_gateway import client_order_id as coid_mod
 from src.runtime_v2.execution_gateway.event_ingest.payload import ExchangeEventPayload
 from src.runtime_v2.lifecycle.models import ExecutionCommand
 
@@ -720,6 +721,32 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def has_exchange_event_for_order(
+        self,
+        trade_chain_id: int,
+        event_type: str,
+        order_id: str | None,
+    ) -> bool:
+        """True se esiste già un evento per lo stesso ordine (stesso chain+tipo+order_id).
+
+        Le chiavi di idempotenza WS (fill:{execId}) e REST ({event_type}:{chain}:{order_id})
+        divergono: questo check evita che la reconciliation REST reinserisca un fill
+        già registrato dal WebSocket.
+        """
+        if not order_id:
+            return False
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM ops_exchange_events "
+                "WHERE trade_chain_id=? AND event_type=? "
+                "AND json_extract(payload_json, '$.order_id')=? LIMIT 1",
+                (trade_chain_id, event_type, order_id),
+            ).fetchone()
+            return row is not None
+        finally:
+            conn.close()
+
     def get_active_tp_commands(self, trade_chain_id: int) -> list[dict]:
         """TP attivi SENT/DONE per chain OPEN/PARTIALLY_CLOSED.
 
@@ -807,6 +834,23 @@ class GatewayCommandRepository:
             # and fill events where exchange_event_id is absent use semantic keys.
             ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
 
+        # Se l'ordine appartiene a un comando (orderLinkId tsb:...), il source del
+        # payload riflette l'origine del comando (es. trader_update) — stessa
+        # attribuzione del path REST (event_sync._save_fill_event). Il classifier
+        # non può saperlo: conosce solo i campi exchange.
+        effective_source = classified.source
+        command_id: int | None = None
+        if raw.order_link_id:
+            try:
+                coid = coid_mod.parse(raw.order_link_id)
+            except ValueError:
+                coid = None
+            if coid is not None:
+                command_id = coid.command_id
+                cmd_source = self.get_command_source(coid.trade_chain_id, coid.command_id)
+                if cmd_source:
+                    effective_source = cmd_source
+
         ep = ExchangeEventPayload(
             fill_price=raw.exec_price,
             filled_qty=raw.exec_qty,
@@ -822,7 +866,8 @@ class GatewayCommandRepository:
             order_link_id=raw.order_link_id,
             exchange_time=raw.exchange_time,
             tp_level=classified.tp_level,
-            source=classified.source,
+            command_id=command_id,
+            source=effective_source,
         )
         payload = ep.model_dump()
         if classified.event_type == "PENDING_ENTRY_CANCELLED":

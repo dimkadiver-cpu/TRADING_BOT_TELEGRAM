@@ -9,6 +9,8 @@ from src.parser_v2.contracts.rules import (
     ParserRules,
     SemanticMarkers,
 )
+from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
+from src.parser_v2.core.parsing_utils import resolve_market_hint
 from src.parser_v2.profiles.trader_prova.intent_entity_extractor import IntentEntityExtractor
 from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor
 
@@ -36,14 +38,10 @@ class TraderProvaProfile:
         self._intent_entity_extractor = intent_entity_extractor or IntentEntityExtractor()
 
     def load_markers(self) -> SemanticMarkers:
-        return SemanticMarkers.model_validate_json(
-            (_PROFILE_DIR / "semantic_markers.json").read_text(encoding="utf-8")
-        )
+        return load_markers_cached(_PROFILE_DIR)
 
     def load_rules(self) -> ParserRules:
-        return ParserRules.model_validate_json(
-            (_PROFILE_DIR / "rules.json").read_text(encoding="utf-8")
-        )
+        return load_rules_cached(_PROFILE_DIR)
 
     def extract_signal(
         self,
@@ -51,14 +49,7 @@ class TraderProvaProfile:
         context: ParserContext,
         evidence: list[MarkerEvidence],
     ) -> SignalDraft | None:
-        has_limit = any(e.kind == "entry_type" and e.name == "LIMIT" and not e.suppressed for e in evidence)
-        has_market = any(e.kind == "entry_type" and e.name == "MARKET" and not e.suppressed for e in evidence)
-        if has_limit:
-            market_hint = False
-        elif has_market:
-            market_hint = True
-        else:
-            market_hint = self._default_entry_type == "MARKET"
+        market_hint = resolve_market_hint(evidence, self._default_entry_type)
         return self._signal_extractor.extract(text, market_hint=market_hint)
 
     def extract_intent_entities(

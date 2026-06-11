@@ -7,6 +7,7 @@ from src.parser_v2.contracts.context import ParserContext, TargetExtractionResul
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent, SignalDraft
 from src.parser_v2.contracts.rules import ParserRules, SemanticMarkers
+from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
 from src.parser_v2.core.symbol_normalizer import normalize_symbol
 from src.parser_v2.core.target_hints_extractor import TargetHintsExtractor
 from src.parser_v2.profiles.strategy_parser.intent_entity_extractor import IntentEntityExtractor
@@ -39,14 +40,10 @@ class StrategyParserProfile:
         self._intent_entity_extractor = intent_entity_extractor or IntentEntityExtractor()
 
     def load_markers(self) -> SemanticMarkers:
-        return SemanticMarkers.model_validate_json(
-            (_PROFILE_DIR / "semantic_markers.json").read_text(encoding="utf-8")
-        )
+        return load_markers_cached(_PROFILE_DIR)
 
     def load_rules(self) -> ParserRules:
-        return ParserRules.model_validate_json(
-            (_PROFILE_DIR / "rules.json").read_text(encoding="utf-8")
-        )
+        return load_rules_cached(_PROFILE_DIR)
 
     def extract_signal(
         self,

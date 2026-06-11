@@ -13,6 +13,7 @@ from src.parser_v2.contracts.entities import (
 from src.parser_v2.contracts.enums import INTENT_CATEGORY_BY_TYPE, STRONG_WEIGHT, WEAK_WEIGHT
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent
+from src.parser_v2.core.parsing_utils import deduplicate_by_span as _deduplicate_by_span, float_from_raw as _float_from_raw, price_from_raw as _price_from_raw
 
 
 _NUMBER_PATTERN = r"\d(?:[\d.,]*\d)?"
@@ -90,50 +91,3 @@ def _exit_price(text: str) -> Price | None:
     return _price_from_raw(m.group("value"))
 
 
-def _price_from_raw(raw: str | None) -> Price | None:
-    value = _float_from_raw(raw)
-    if raw is None or value is None:
-        return None
-    return Price(raw=raw.strip(), value=value)
-
-
-def _float_from_raw(raw: str | None) -> float | None:
-    if not raw:
-        return None
-    compact = raw.strip().replace(" ", "")
-    if not compact:
-        return None
-    if "," in compact and "." in compact:
-        if compact.rfind(",") > compact.rfind("."):
-            compact = compact.replace(".", "").replace(",", ".")
-        else:
-            compact = compact.replace(",", "")
-    elif "," in compact:
-        compact = compact.replace(",", ".")
-    try:
-        return float(compact)
-    except ValueError:
-        return None
-
-
-def _deduplicate_by_span(intents: list[ParsedIntent]) -> list[ParsedIntent]:
-    if len(intents) <= 1:
-        return intents
-
-    ordered = sorted(intents, key=lambda i: (i.confidence, i.span_end - i.span_start), reverse=True)
-    kept: list[ParsedIntent] = []
-    for candidate in ordered:
-        c0, c1 = candidate.span_start, candidate.span_end
-        drop = False
-        for keeper in kept:
-            k0, k1 = keeper.span_start, keeper.span_end
-            contained = k0 <= c0 and c1 <= k1
-            same_type_overlap = keeper.type == candidate.type and not (c1 <= k0 or c0 >= k1)
-            if contained or same_type_overlap:
-                drop = True
-                break
-        if not drop:
-            kept.append(candidate)
-
-    kept.sort(key=lambda i: i.span_start)
-    return kept
