@@ -1,0 +1,67 @@
+{
+  "language": "ru",
+
+  "field_markers": {
+    "entry": {
+      "strong": ["вход"],
+      "weak": []
+    },
+    "stop_loss": {
+      "strong": ["стоп"],
+      "weak": []
+    },
+    "take_profit": {
+      "strong": ["цель"],
+      "weak": []
+    }
+  },
+
+  "side_markers": {
+    "LONG": {
+      "strong": ["лонг", "long"],
+      "weak": []
+    },
+    "SHORT": {
+      "strong": ["шорт", "short"],
+      "weak": []
+    }
+  },
+
+  "entry_type_markers": {
+    "LIMIT": {
+      "strong": [],
+      "weak": []
+    },
+    "MARKET": {
+      "strong": [],
+      "weak": []
+    }
+  },
+
+  "intent_markers": {
+    "TP_HIT": {
+      "strong": ["цель достигнута"],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong": ["поймала стоп", "словила стоп"],
+      "weak": []
+    },
+    "CLOSE_FULL": {
+      "strong": ["вышла по обратному сигналу"],
+      "weak": ["закрыла"]
+    },
+    "REPORT_RESULT": {
+      "strong": ["результат:"],
+      "weak": []
+    },
+    "INFO_ONLY": {
+      "strong": [],
+      "weak": [
+        "виртуальная сделка",
+        "реальных денег нет",
+        "открытый тест"
+      ]
+    }
+  }
+}
