@@ -89,6 +89,25 @@ class RawMessageRepository:
         conn.commit()
         conn.close()
 
+    def get_id_and_text(
+        self, source_chat_id: str, telegram_message_id: int
+    ) -> tuple[int, str | None] | None:
+        """Return (raw_message_id, raw_text) for an already-acquired message, or None."""
+        conn = sqlite3.connect(self._db_path)
+        row = conn.execute(
+            "SELECT raw_message_id, raw_text FROM raw_messages "
+            "WHERE source_chat_id = ? AND telegram_message_id = ? "
+            "LIMIT 1",
+            (source_chat_id, telegram_message_id),
+        ).fetchone()
+        conn.close()
+        if row is None:
+            return None
+        return int(row[0]), row[1]
+
+    def update_raw_text(self, raw_message_id: int, raw_text: str) -> None:
+        self._update_column(raw_message_id, "raw_text", raw_text)
+
     def get_chain_node(self, source_chat_id: str, telegram_message_id: int) -> ChainNode | None:
         """Read the minimal fields needed for reply-chain resolution."""
         conn = sqlite3.connect(self._db_path)

@@ -72,6 +72,20 @@ def test_chain_repo_save_and_get_preserves_explicit_roi_fields(ops_db):
     assert fetched.peak_margin_used == 242.25
 
 
+def test_chain_repo_has_chain_for_raw_message(ops_db):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+    repo = TradeChainRepository(ops_db)
+    chain = TradeChain(
+        source_enrichment_id=9, canonical_message_id=90, raw_message_id=900,
+        trader_id="trader_a", account_id="acc_1", symbol="BTC/USDT", side="LONG",
+        lifecycle_state="WAITING_ENTRY", entry_mode="ONE_SHOT", management_plan_json="{}",
+    )
+    repo.save(chain)
+    assert repo.has_chain_for_raw_message(900) is True
+    assert repo.has_chain_for_raw_message(901) is False
+
+
 def test_chain_repo_save_idempotent(ops_db):
     from src.runtime_v2.lifecycle.models import TradeChain
     from src.runtime_v2.lifecycle.repositories import TradeChainRepository
