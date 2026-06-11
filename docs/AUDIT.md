@@ -1754,3 +1754,36 @@ signal/intent extractor + profile.py di trader_a/b/c/d/prova e strategy_parser
   i profili restano autonomi per convenzione di progetto.
 
 **Esito test:** 234 passed (parser_v2 + processor); 1 failure pre-esistente.
+
+### AGGIUNTO: validatore di configurazione all'avvio (startup_check)
+
+**File coinvolti:** `src/startup_check/__init__.py`, `src/startup_check/validator.py`,
+`src/startup_check/__main__.py` (nuovi), `main.py`, `main_linux_server.py` (hook)
+
+**Cosa fa:** prima dell'avvio del runtime verifica env vars
+(TELEGRAM_API_ID/HASH, LOG_LEVEL, override *_PATH), directory attese
+(config/, config/traders/, db/migrations, db/ops_migrations, profili parser_v2),
+esistenza+parsabilità dei file di config (channels.yaml, operation_config.yaml,
+execution.yaml, telegram_control.yaml, trader_aliases.json) e coerenza
+incrociata: trader_id dei canali ↔ registered_traders, parser_profile ↔
+registry parser_v2 (+ rules.json/semantic_markers.json validi), adapter
+instradati ↔ env api_key/api_secret, gate live (TSB_ALLOW_LIVE_TRADING),
+placeholder ${ENV} del control plane, per_trader del clean_log ↔ channels.yaml.
+Dove possibile riusa i loader runtime reali (load_channels_config,
+OperationConfigLoader, ExecutionConfigLoader, load_control_plane_config)
+per non duplicare gli schemi.
+
+**Integrazione:** `main.py` e `main_linux_server.py` eseguono i check dopo
+load_dotenv e bloccano l'avvio con report a video se ci sono errori.
+Flag nuovi: `--check-config` (solo verifica, exit code 0/1) e `--skip-checks`
+(bypass). Standalone: `python -m src.startup_check`.
+
+**Problemi reali già rilevati dal validatore (warning, canali non attivi):**
+- channels.yaml: canale 'RSI_MultiTrader' usa parser_profile 'multi_strategi'
+  inesistente nel registry (esiste 'strategy_parser').
+- trader_prova registrato in operation_config ma senza
+  config/traders/trader_prova.yaml (usa solo defaults globali).
+
+**Test eseguiti:** run standalone senza env (7 errori attesi, exit 1) e con
+env complete fittizie (0 errori, 2 warning, exit 0). Nessun test pytest
+aggiunto (il modulo è I/O-driven; candidato a test con tmp_path in futuro).

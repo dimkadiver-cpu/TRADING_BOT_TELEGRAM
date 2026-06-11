@@ -627,10 +627,35 @@ def _acquire_instance_lock() -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--migrate", action="store_true", help="Apply DB migrations and exit.")
+    parser.add_argument(
+        "--check-config", action="store_true",
+        help="Run configuration checks and exit (no bot startup).",
+    )
+    parser.add_argument(
+        "--skip-checks", action="store_true",
+        help="Skip startup configuration checks.",
+    )
     args = parser.parse_args()
 
     load_dotenv()
     root_dir = Path(__file__).resolve().parent
+
+    if args.check_config or not args.skip_checks:
+        from src.startup_check.validator import run_startup_checks
+
+        report = run_startup_checks(root_dir)
+        if args.check_config or report.has_errors or report.warnings:
+            print(report.render())
+        if args.check_config:
+            sys.exit(1 if report.has_errors else 0)
+        if report.has_errors:
+            print(
+                "Avvio interrotto: correggi gli errori di configurazione segnalati sopra "
+                "(oppure usa --skip-checks per forzare l'avvio).",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
     _acquire_instance_lock()
     parser_db_path = os.getenv("PARSER_DB_PATH", str(root_dir / "db" / "parser.sqlite3"))
     migrations_dir = str(root_dir / "db" / "migrations")
