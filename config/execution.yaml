@@ -56,24 +56,3 @@ execution:
 
       live_safety:
         allow_live_trading: false  # Per live deve essere true e va settata anche la env di sblocco.
-
-    bybit_paper:
-      type: ccxt_bybit  # Adapter CCXT per Bybit.
-      mode: paper  # Stati attesi: demo | paper | live.
-      connector: bybit  # Exchange/connector target usato dall'adapter.
-      adjust_for_time_difference: true
-      recv_window_ms: 10000
-      time_sync_on_startup: true
-
-      strategy:
-        simple_attached_enabled: true  # Abilita percorso attached TP/SL quando il caso lo consente.
-        trigger_by: MarkPrice  # Valori possibili: MarkPrice | LastPrice | IndexPrice.
-        one_tp_mode: FULL  # Unico valore supportato oggi per 1 TP.
-        multi_tp_mode: PARTIAL  # Unico valore supportato oggi per TP multipli.
-
-      retry:
-        max_attempts: 3  # Numero massimo di tentativi per errori retryable.
-        backoff_seconds: [30, 90, 300]  # Attese progressive tra i retry.
-
-      live_safety:
-        allow_live_trading: false  # In paper resta normalmente false; il gate live non serve.

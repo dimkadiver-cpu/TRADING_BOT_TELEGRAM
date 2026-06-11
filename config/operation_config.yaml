@@ -42,6 +42,9 @@ registered_traders:
   - trader_c
   - trader_d
   - trader_prova
+  - sma_intraday
+  - rsi_swing    
+  - rsi_intraday
 
 symbol_blacklist:
   global: []  # Simboli bloccati per tutti i trader.

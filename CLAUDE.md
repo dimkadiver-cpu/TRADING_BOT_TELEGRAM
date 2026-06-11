@@ -1,291 +1,192 @@
-# TeleSignalBot — CLAUDE.md
+# AGENTS.md
 
-Documento di contesto per Claude Code. Leggi questo file all'inizio di ogni sessione prima di toccare qualsiasi codice.
+This file applies to the whole repository unless a deeper `AGENTS.md` overrides it.
 
----
+## Operating Standard
 
-## Cos'è il progetto
+- Answer in the user's language
+- Read the relevant chat history before acting.
+- Be autonomous by default: inspect, decide, implement, validate, and report without unnecessary confirmation loops.
+- Ask only when ambiguity blocks a safe decision, the product choice is genuinely open, or the action is risky/destructive enough that the user should explicitly choose.
+- Do not hallucinate. Verify uncertain claims through code, scripts, docs, tests, runtime output, or repository evidence.
+- Preserve unrelated user changes. Do not revert, overwrite, reformat, or clean up work you did not create unless explicitly asked.
+- Prefer evidence over ceremony. Keep process proportional to the task.
+- The job is not to sound smart. The job is to leave the system clearer, more correct, and easier to trust.
 
-Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi, li parsa in formato canonico, e li esegue su exchange tramite freqtrade. Composto da due sistemi: esecuzione live (Sistema 1) e backtesting storico (Sistema 2).
+## Repository Grounding
 
-## Stato attuale
+- Start from the repository itself, not assumptions.
+- For non-trivial work, read `README.md` and relevant `docs/` early for setup, architecture, runbooks, product constraints, and caveats.
+- Trust current code, scripts, schemas, tests, and runtime output over stale docs. Call out doc drift and align it when practical.
+- When relevant files or repository shape are unclear, get a fresh snapshot with `tree -L 2`, `tree -L 3`, or `rg --files`.
+- Do not treat `README.md` as a file inventory. Discover structure dynamically.
+- Use the repository's existing package manager, scripts, test runner, formatter, linter, build tools, and generators.
+- In Codex shell sessions, do not assume JS tooling is already on `PATH`. For `node`, `npm`, and `bun`, prefer `PATH="/opt/homebrew/bin:$HOME/.bun/bin:$PATH"`.
+- Do not add new production dependencies without explicit user approval. Prefer existing utilities, framework APIs, and the standard library.
+- When code discovery is needed, keep the main process focused on decisions and implementation; delegate broad repository search to a Codex 5.3 Spark subagent when available, if Spark is not available use Codex 5.3 subagent.
+- The subagent must return a compact evidence map only: `path:line`, symbol/component/route name, the relevant code snippet or signature, and why it matters for the main task.
+- The main process should use that map for targeted reading and implementation, verifying critical findings before editing.
 
-La migrazione del parser alla nuova architettura canonicav1 è **completata** (Fasi 1-9 parziale).
-Tutti i profili trader emettono `CanonicalMessage` nativamente tramite `parse_canonical()`.
-Il router persiste `CanonicalMessage` in `parse_results_v1`. I layer downstream (operation_rules,
-target_resolver, backtesting) sono ancora su modelli legacy — migrazione non ancora iniziata.
 
-## Flusso generale
+## Task Mode
 
-```
-Telegram channels
-      ↓
-Listener (Telethon)          src/telegram/listener.py
-      ↓
-raw_messages DB              processing_status: pending → processing → done | failed | blacklisted | review
-      ↓
-Router / Pre-parser          src/telegram/router.py  [DA IMPLEMENTARE]
-      ↓
-Parser pipeline              src/parser/
-      ↓
-parse_results DB
-      ↓
-Validazione coerenza         [DA IMPLEMENTARE]
-      ↓
-Operation rules              [DA IMPLEMENTARE]
-      ↓
-Target resolver              [DA IMPLEMENTARE]
-      ↓
-Sistema 1 / Sistema 2        [DA IMPLEMENTARE]
-```
+Classify the task before editing and scale the process to the task.
 
----
+- `Direct`: cosmetic, copy, spacing, styling, comments, or obvious local edits that do not change runtime behavior.
+- `Investigation`: diagnosis or debugging when the root cause or failure path is not yet clear.
+- `TDD-first`: behavior, logic, contracts, auth, permissions, persistence, validation, query semantics, routing, state transitions, concurrency, or non-trivial user-facing changes.
 
-## Architettura parser — DESIGN ATTUALE (v1 nativa)
+For `Direct` tasks, inspect the affected file and nearby usage, make the smallest coherent change, and run narrow validation when cheap and relevant.
 
-La migrazione è completata. Ogni profilo emette `CanonicalMessage` direttamente senza passare per il normalizer.
+For `Investigation` tasks, reproduce or trace the observed failure path when possible, use vertical and horizontal research before patching, identify the owning layer, and stop to reframe if two attempts fail to move the primary signal.
 
-### Flusso interno parser
+For `TDD-first` tasks, prefer the highest-value failing test already supported by the repo. Start from user-visible or contract-level behavior when possible, add narrow unit tests for isolated high-branching pure rules, and keep the loop strict: failing case, minimal implementation, green, next case. If no suitable automated test exists and adding one is disproportionate, say so and use the fastest reliable validation path.
 
-```
-testo + ParserContext
-      ↓
-RulesEngine          legge parsing_rules.json → classificazione + confidence
-      ↓
-profile.py::parse_canonical()   estrae e produce CanonicalMessage direttamente
-      ↓
-CanonicalMessage     src/parser/canonical_v1/models.py — contratto unico
-      ↓
-parse_results_v1 DB  router persiste il JSON canonico
-```
+## Acceptance Contract
 
-### Cosa NON esiste più nella nuova architettura
+For non-trivial work, define a short acceptance contract when it clarifies scope:
 
-- `src/parser/action_builders/canonical_v2.py` — **RIMOSSO** (Fase 9)
-- `pipeline.py` generico con regex universali — legacy, da eliminare
-- `normalization.py` come layer separato — legacy, da eliminare
-- riconciliazione tra pipeline e profilo — non esiste più
+- what “done” means;
+- 3 to 5 observable pass/fail criteria;
+- the primary signal, preferably user-visible or runtime behavior;
+- secondary signals such as tests, typecheck, lint, build, logs, or targeted scripts.
 
-### Contratto canonico — CanonicalMessage
+Do not create ceremony for simple local tasks. Implement directly when the correct move is obvious and low-risk.
 
-```python
-# src/parser/canonical_v1/models.py
-primary_class:    SIGNAL | UPDATE | REPORT | INFO
-parse_status:     PARSED | PARTIAL | UNCLASSIFIED
-trader_id:        str
-raw_context:      RawContext (raw_text, reply_to_message_id, ...)
-targeting:        Targeting (refs + scope)
-signal:           SignalPayload | None
-update:           UpdatePayload | None
-report:           ReportPayload | None
-warnings:         list[str]
-```
+## Vertical And Horizontal Research
 
-### Come usare i profili v1-nativi
+Before fixing non-trivial behavior, inspect both the runtime path and neighboring systems.
 
-```python
-# Ogni profilo implementa parse_canonical():
-result: CanonicalMessage = parser.parse_canonical(text, context)
+Vertical research follows the execution path:
 
-# Il router rileva automaticamente i profili v1-nativi:
-callable(getattr(type(parser), 'parse_canonical', None))
-```
+- UI/caller -> route/guard/layout -> page/container/orchestrator -> hook/handler/service -> contract/API -> persistence/external system.
+- Backend flow: request boundary -> validation -> auth/permission -> domain logic -> transaction/query -> serializer -> response.
+- Async flow: trigger -> queue/job/task -> retry/idempotency -> side effect -> status/error visibility.
 
-### Entry model (canonico v1)
+Horizontal research checks adjacent surfaces that must stay consistent:
 
-```
-EntryStructure (livello signal):
-  ONE_SHOT  → 1 leg
-  TWO_STEP  → 2 leg discreti (averaging classico)
-  RANGE     → 2 leg che definiscono [min, max] (zona di entrata)
-  LADDER    → 3+ leg discreti
+- sibling routes, similar components, related hooks, shared services, schemas, serializers, tests, docs, and existing patterns;
+- loading, empty, error, success, disabled, optimistic, retry, and stale-cache states;
+- producer and consumer sides of contracts;
+- read paths and write paths for persistence changes.
 
-EntryType (livello leg):
-  MARKET    → esecuzione a mercato (price opzionale e indicativo)
-  LIMIT     → esecuzione a limite (price obbligatorio)
-```
+Do enough research to find the owner layer. Do not turn research into wandering.
 
-Matrice EntryStructure × EntryType (enforced dal validator Pydantic):
+## Root Cause Discipline
 
-| Structure | Leg 1        | Leg 2..N |
-|-----------|--------------|----------|
-| ONE_SHOT  | MARKET/LIMIT | —        |
-| TWO_STEP  | MARKET/LIMIT | LIMIT    |
-| RANGE     | LIMIT        | LIMIT    |
-| LADDER    | MARKET/LIMIT | LIMIT    |
+- Do not patch symptoms before understanding the failure path.
+- Fix the owner layer, not the nearest visible symptom.
+- If a bug appears in a child component, hook, helper, or leaf function, inspect the parent or owning layer before adding local compensation.
+- Reject child-side fallbacks, defensive state repair, duplicated decision logic, and local branching that merely hides an upstream mistake.
+- One-file fixes for cross-layer behavior are suspicious until proven otherwise.
+- Do not preserve a broken decision with guards, flags, wrappers, or duplicated logic.
+- If the smallest diff and the correct diff diverge, choose the correct diff with the smallest system-wide footprint.
+- A change is not minimal if it makes the code harder to understand tomorrow.
+- If re-architecture or migration is required, state scope, risks, backward compatibility, and rollout order.
 
-`MARKET` ammesso solo su `sequence=1`. Le leg successive sono sempre `LIMIT`.
+## Change-Surface Triggers
 
-Mapping legacy:
-```
-MARKET legacy    → ONE_SHOT con leg MARKET
-LIMIT legacy     → ONE_SHOT con leg LIMIT
-AVERAGING (n=2)  → TWO_STEP con leg LIMIT
-AVERAGING (n≥3)  → LADDER con leg LIMIT
-ZONE             → RANGE con 2 leg LIMIT
-```
+When touching a boundary, inspect and align directly coupled code.
 
-Demozione strutturale: cardinalità insufficiente → struttura inferiore + `parse_status=PARTIAL`
-+ warning `entry_structure_demoted:<from>-><to>:<reason>`.
+- Shared contracts or schemas: validate producer and consumer sides.
+- Routes, guards, redirects, or layouts: inspect protected/public flows, parent orchestration, and navigation side effects.
+- Queries, mutations, or fetch contracts: inspect keys, invalidation, loading, empty, error, success, optimistic, and stale states.
+- Schema or persistence behavior: inspect contract shape, serializers, migrations, generated client usage, read paths, and write paths.
+- Auth or permission logic: inspect guards, loaders, session shape, backend enforcement, and affected user-visible states.
+- Async workflows: inspect retries, idempotency, ordering, cancellation, and failure visibility.
+- User-facing copy with legal, billing, privacy, security, or support meaning: preserve the product contract and flag ambiguity.
 
-### Intents UPDATE
+## Minimal Sufficient Change
 
-**CONTEXT:** `U_TP_HIT`, `U_SL_HIT`
+- Aim for the smallest coherent change that fully solves the real problem at the owning layer.
+- Minimal means minimal surface area, moving parts, and abstraction count, not smallest diff at any cost.
+- Prefer flat, simple implementations over extra layers, folders, patterns, and abstractions.
+- Prefer local clarity over clever reuse.
+- Prefer decoupling over DRY. Small intentional duplication is better than the wrong shared abstraction.
+- Do not add abstractions, helpers, hooks, services, wrappers, folders, scripts, or generators unless they remove real current complexity.
+- Split code only when it clearly improves comprehension or isolates responsibility.
+- Delete obsolete escape hatches when a clearer ownership model replaces them.
+- Do not build framework-like architecture for small features.
 
-**ACTION:**
-```
-U_MOVE_STOP           → new_sl_level: Price | None (assente = breakeven)
-U_CLOSE_FULL          → nessuna entità
-U_CLOSE_PARTIAL       → close_pct: float
-U_CANCEL_PENDING      → nessuna entità
-U_REENTER             → entries: lista Price, entry_type
-U_ADD_ENTRY           → new_entry_price: Price, entry_type
-U_MODIFY_ENTRY        → old_entry_price: Price, new_entry_price: Price | None
-U_UPDATE_TAKE_PROFITS → old_take_profits: lista Price | None, new_take_profits: lista Price
-```
+## Documentation Discipline
 
-### Target ref
+- Code is the primary source of truth for implementation details.
+- `README.md` and `docs/` should capture durable context: architecture, workflows, operational constraints, runbooks, caveats, and non-obvious decisions.
+- Do not mirror code structure in docs, maintain exhaustive file inventories by hand, or create doc churn for trivial refactors, obvious code movement, formatting, or self-evident details.
+- Update docs when a change materially affects architecture, setup, operations, contracts, user flows, or important engineering decisions.
+- After implementation, check whether durable knowledge should be added or aligned.
+- If relevant doc drift remains out of scope, call it out explicitly.
 
-```
-STRONG  → method: REPLY | TELEGRAM_LINK | EXPLICIT_ID + ref: int|str
-SYMBOL  → symbol: str (cerca tra posizioni aperte del trader)
-GLOBAL  → scope: str (es. "all_long", "all_positions")
-```
+## Testing And Validation
 
----
+- Run the smallest meaningful validation that covers the changed surface.
+- Prefer cheap gates first: targeted tests, typecheck, lint, build, focused scripts, then wider suites only when needed.
+- Use test infrastructure already present in the repository. Do not invent a heavier test layer unless clearly justified.
+- Validate after implementation and before closing the task.
+- If contracts or shared schemas change, validate both producer and consumer sides.
+- Treat non-zero exits, runtime errors, unhandled promise rejections, failed assertions, type errors, lint errors, build failures, and timeouts as failed validation.
+- Do not declare success on proxy metrics alone. Green tests, lint, or typecheck are not enough if the primary user-visible signal is still broken.
+- If only secondary signals were checked, report the task as partially validated.
+- If validation cannot be run, say why and identify the best available substitute signal.
+- Do not hide validation failures. Report what failed, what it means, and the next useful experiment.
 
-## Struttura cartelle
+## Prisma Migration Policy
 
-```
-TeleSignalBot/
-├── CLAUDE.md                        ← questo file
-├── requirements.txt
-├── src/
-│   ├── core/                        ← utilities condivise, non toccare
-│   ├── storage/                     ← storage layer, non toccare
-│   ├── telegram/                    ← listener, ingestion, trader resolution
-│   └── parser/
-│       ├── canonical_v1/            ← CONTRATTO UNICO (non toccare struttura)
-│       │   ├── __init__.py
-│       │   ├── models.py            ← CanonicalMessage, Price, EntryLeg, ...
-│       │   ├── normalizer.py        ← normalizer legacy→v1 (usato come fallback)
-│       │   └── tests/
-│       ├── adapters/
-│       │   └── legacy_to_event_envelope_v1.py  ← bridge TraderParseResult→v1
-│       ├── event_envelope_v1.py     ← TraderEventEnvelopeV1 (bridge minimo)
-│       ├── models/                  ← LEGACY — usati da backtesting/operation_rules
-│       │   ├── canonical.py         ← LEGACY Price, Intent, TargetRef (vecchio)
-│       │   ├── new_signal.py        ← LEGACY NewSignalEntities
-│       │   ├── update.py            ← LEGACY UpdateEntities
-│       │   └── operational.py       ← LEGACY OperationalSignal, ResolvedTarget
-│       ├── action_builders/         ← LEGACY svuotato (canonical_v2.py rimosso)
-│       ├── rules_engine.py          ← RulesEngine
-│       ├── trader_profiles/
-│       │   ├── base.py              ← ParserContext, TraderParseResult dataclass, Protocols
-│       │   ├── registry.py          ← registro profili
-│       │   ├── trader_3/            ← ✅ v1-nativo
-│       │   ├── trader_a/            ← ✅ v1-nativo
-│       │   ├── trader_b/            ← ✅ v1-nativo
-│       │   ├── trader_c/            ← ✅ v1-nativo
-│       │   └── trader_d/            ← ✅ v1-nativo
-│       ├── pipeline.py              ← LEGACY, non toccare
-│       └── normalization.py         ← LEGACY, non toccare
-├── parser_test/
-│   ├── db/
-│   ├── scripts/
-│   │   ├── replay_parser.py
-│   │   ├── audit_canonical_v1.py
-│   │   └── generate_parser_reports.py
-│   └── reporting/
-├── tests/
-│   └── parser_canonical_v1/         ← test schema + normalizer
-└── config/
-    ├── channels.yaml
-    └── telegram_source_map.json
-```
+- Do not hand-write Prisma migration SQL in this repository.
+- Express schema changes declaratively in `schema.prisma` using Prisma features such as `@unique`, indexes, relations, defaults, and enums.
+- Generate migrations with the Prisma workflow already used by the repository.
+- Do not author or customize `migration.sql` by hand unless explicitly asked.
+- If extra safety checks, backfills, preconditions, or rollout guards are needed, implement them in the owning backend layer, endpoint flow, or existing repository-supported workflow.
 
----
+## UI And Design
 
-## Regole fondamentali
+- Follow the existing design system, component primitives, and styling conventions.
+- Preserve the existing visual language unless explicitly asked for a redesign.
+- Prefer parent padding plus container gap for layout rhythm over ad hoc margins.
+- Keep spacing on the shared scale. Avoid one-off values unless visually justified.
+- Treat shared visual components as visually closed units: surface, padding, radius, internal spacing, typography, and control sizing belong to the component itself.
+- Compose shared components from the outside through wrappers, not visual overrides.
+- If a consumer needs different treatment, prefer existing semantic props, then the smallest reusable semantic prop, then a local feature-level wrapper.
+- Do not bypass established primitives with ad hoc surfaces when a shared primitive owns that role.
+- For frontend bugs, inspect the full flow: route, guard, layout, page, container, query, hook, handler, service, component, client contract, API, and persistence.
 
-### Documentazione archiviata
-I file in docs/old/ sono documentazione della vecchia architettura.
-Non leggere e non seguire come istruzioni operative.
-Usa solo i file in docs/ (PRD_generale, PRD_listener, PRD_router, PRD_parser, AUDIT).
+## Safety And Workspace Hygiene
 
-### Non toccare mai
-- `src/storage/` — storage layer stabile
-- `src/core/` — utilities condivise
-- `db/migrations/` — schema DB
-- `pipeline.py` e `normalization.py` — legacy, eliminare solo dopo migrazione backtesting
-- `src/parser/models/` (canonical.py, new_signal.py, update.py, operational.py) — LEGACY ancora in uso da backtesting, operation_rules, target_resolver; non eliminare prima di migrare quei layer
-- `src/parser/canonical_v1/models.py` — contratto canonico definitivo, non modificare struttura
+- Never stop or kill processes just to free ports. Use isolated ports, alternate URLs, or test config overrides.
+- Do not propose or implement CI/CD, hosted automation, deployment pipelines, or release ceremony unless explicitly asked.
+- Add automation only when it removes real repeated pain, not when it merely looks mature.
+- Do not print secrets, tokens, private keys, credentials, cookies, customer data, or raw `.env` values in final responses.
+- Do not add real secrets to fixtures, tests, docs, screenshots, logs, or committed files.
+- Keep ad-hoc investigation artifacts out of the repository root. Put temporary screenshots, logs, and one-off exports under `./.scratch/` or the tool-owned artifact directory, and do not create new root-level `.tmp-*` or `.codex-tmp-*` files.
+- Do not weaken auth, permissions, validation, encryption, rate limits, or auditability to make a task easier.
+- Do not manually edit generated files unless the repository explicitly requires it. Update the source and run the generator instead.
+- Do not stage, commit, amend, rebase, reset, stash, push, or delete files unless explicitly asked.
+- Keep diffs focused. Avoid unrelated formatting churn.
 
-### Prima di qualsiasi modifica
-1. Leggi la skill pertinente in `skills/`
-2. Verifica che i test esistenti passino: `pytest parser/trader_profiles/trader_X/tests/`
-3. Non mischiare responsabilità tra layer
+## Decision Rules
 
-### Convenzioni codice
-- Python 3.12+
-- Pydantic v2 per tutti i modelli canonici
-- Type hints ovunque
-- `from __future__ import annotations` in ogni file
-- Niente dict raw nel codice — tutto tipizzato
-- Separatore liste in CSV: `|`
-- Encoding CSV: `UTF-8-sig` (compatibile LibreOffice)
+- If the solution is obvious and low-risk, execute it.
+- If material product or architecture tradeoffs exist, present up to two viable options and recommend one.
+- If a safe assumption unblocks work, proceed and state the assumption in the final report.
+- If an action is destructive, irreversible, security-sensitive, privacy-sensitive, or likely to affect unrelated users or data, ask before doing it.
+- If the target behavior is still not achieved, say what is still wrong, why, and the best next experiment.
 
-### Quando crei un nuovo profilo trader
-1. Leggi `skills/build-parser-profile/SKILL.md`
-2. Parti dalla struttura di `trader_3/` come riferimento
-3. Crea `parsing_rules.json` prima di `profile.py`
-4. Verifica output su dati reali con replay_parser.py
+## Completion Protocol
 
-### Quando modifichi parsing_rules.json
-Il watch mode rilancia automaticamente il replay e aggiorna i CSV di debug. Non serve lanciare manualmente.
+At the end of every implementation or investigation, report:
 
----
+- what changed and why;
+- root cause, when identified;
+- affected layers;
+- validation performed;
+- `Primary signal status`: met, not met, or partially validated;
+- `Secondary signal status`: exact checks run and what they showed;
+- documentation status: updated, not needed, or still needs alignment;
+- remaining risks, missing coverage, or follow-up work when relevant;
+- migration or rollout implications when contracts, schemas, persistence, auth, routing, or architecture changed;
+- a concise suggested commit message when the change is ready.
 
-## Dipendenze principali
-
-```
-telethon>=1.34.0      # listener Telegram
-pydantic>=2.0         # modelli canonici
-watchdog>=4.0         # hot reload e watch mode debug
-aiosqlite>=0.20.0     # storage async
-python-dotenv>=1.0.0  # configurazione
-pytest>=8.0           # test
-pytest-asyncio>=0.23  # test async
-```
-
-LLM hook opzionali (installare solo se configurati per un trader):
-```
-# openai>=1.0
-# anthropic>=0.20
-# ollama
-```
-
----
-
-## Stato migrazione — parser
-
-```
-✅ Fase 1-8  Migrazione profili completata — tutti i profili emettono CanonicalMessage
-✅ Fase 9a   canonical_v2.py rimosso — action_builders svuotato
-⚠️  Fase 9b   Modelli legacy in src/parser/models/ non rimovibili:
-              canonical.py, new_signal.py, update.py, operational.py
-              → bloccati da: operation_rules, target_resolver
-```
-
-## Prossimi step (dopo Fase 9)
-
-```
-✅ Step A  src/backtesting/ rimosso — SignalBridgeBacktestStrategy.py eliminato
-Step B  Migrare operation_rules        src/operation_rules/ → usa CanonicalMessage
-Step C  Migrare target_resolver        src/target_resolver/ → usa CanonicalMessage
-Step D  Rimuovere src/parser/models/   solo dopo B+C completati
-Step E  Aggiornare CLAUDE.md finale
-```
+A task is not done if the visible symptom is gone but the same mechanic remains structurally inconsistent across directly coupled layers.
 
 ---
 
