@@ -1787,3 +1787,21 @@ Flag nuovi: `--check-config` (solo verifica, exit code 0/1) e `--skip-checks`
 **Test eseguiti:** run standalone senza env (7 errori attesi, exit 1) e con
 env complete fittizie (0 errori, 2 warning, exit 0). Nessun test pytest
 aggiunto (il modulo è I/O-driven; candidato a test con tmp_path in futuro).
+
+### ESTESO: startup_check copre la checklist di ISTRUZIONI_ACCOUNT_EXCHANGE.md
+
+**File coinvolti:** `src/startup_check/validator.py`
+
+**Aggiunti:** sezione "Routing account" — account.id nei config/traders/*.yaml
+↔ chiavi di execution.yaml:account_routing (errore se manca in
+per_trader_subaccount); warning se un trader definisce `account` con
+account_mode=single (verrebbe ignorato); errore se manca account_routing.default;
+alias dei canali multi-trader ↔ registered_traders. In "Altri file": errore se
+.env esiste ma non è in .gitignore.
+
+**Rilevato sulla config attuale (warning, canale non attivo):** gli alias di
+'RSI_MultiTrader' puntano a sma_intraday/rsi_swing/rsi_intraday che non sono
+in registered_traders.
+
+**Test:** run su config reale + scenario B simulato in tmp dir (account.id
+senza routing → errore corretto).

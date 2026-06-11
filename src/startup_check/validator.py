@@ -376,6 +376,81 @@ def _check_execution_config(report: ValidationReport, root_dir: Path) -> None:
                 )
 
 
+def _check_account_routing(report: ValidationReport, root_dir: Path) -> None:
+    """Coerenza account: operation_config/traders ↔ execution.account_routing.
+
+    Copre la checklist di config/ISTRUZIONI_ACCOUNT_EXCHANGE.md:
+    account.id nel trader yaml deve corrispondere a una chiave di account_routing.
+    """
+    section = "Routing account"
+    try:
+        op_raw = _load_yaml(root_dir / "config" / "operation_config.yaml") or {}
+        exec_raw = _load_yaml(root_dir / "config" / "execution.yaml") or {}
+    except Exception:
+        return  # parsing già segnalato nelle sezioni dedicate
+
+    routing = (exec_raw.get("execution") or {}).get("account_routing") or {}
+    if "default" not in routing:
+        report.error(section, "execution.yaml: account_routing.default mancante (richiesto dal runtime)")
+    if not routing:
+        return
+
+    account_mode = op_raw.get("account_mode", "single")
+    global_account_id = (op_raw.get("account") or {}).get("id", "main")
+    if account_mode == "per_trader_subaccount" and global_account_id not in routing:
+        report.warn(
+            section,
+            f"account globale '{global_account_id}' senza routing dedicato in account_routing "
+            "(i trader senza override useranno il routing 'default')",
+        )
+
+    for trader_path in sorted((root_dir / "config" / "traders").glob("*.yaml")):
+        try:
+            trader_raw = _load_yaml(trader_path) or {}
+        except Exception as exc:
+            report.error(section, f"{trader_path.name}: parsing fallito — {exc}")
+            continue
+        account = trader_raw.get("account")
+        if not isinstance(account, dict):
+            continue
+        account_id = account.get("id")
+        if account_mode == "single":
+            report.warn(
+                section,
+                f"{trader_path.name}: blocco 'account' definito ma account_mode=single — "
+                "verrà ignorato (serve per_trader_subaccount)",
+            )
+        elif account_id and account_id not in routing:
+            report.error(
+                section,
+                f"{trader_path.name}: account.id '{account_id}' non ha una chiave corrispondente "
+                f"in execution.yaml:account_routing (disponibili: {', '.join(routing)})",
+            )
+        elif account_id:
+            report.ok(section, f"{trader_path.name}: account.id '{account_id}' → routing presente")
+
+    # Trader risolti dinamicamente via alias nei canali multi-trader
+    registered = set(_registered_traders(root_dir))
+    if registered:
+        try:
+            channels_raw = _load_yaml(root_dir / "config" / "channels.yaml") or {}
+        except Exception:
+            return
+        for entry in channels_raw.get("channels") or []:
+            if not isinstance(entry, dict):
+                continue
+            aliases = (entry.get("resolution") or {}).get("aliases") or {}
+            for tag, resolved in aliases.items():
+                if resolved and str(resolved) not in registered:
+                    emit = report.error if entry.get("active") else report.warn
+                    emit(
+                        section,
+                        f"canale '{entry.get('label')}': alias {tag} → '{resolved}' non presente "
+                        "in registered_traders"
+                        + ("" if entry.get("active") else " (canale non attivo)"),
+                    )
+
+
 def _check_control_plane(report: ValidationReport, root_dir: Path) -> None:
     section = "telegram_control.yaml"
     path = root_dir / "config" / "telegram_control.yaml"
@@ -458,6 +533,18 @@ def _check_misc_files(report: ValidationReport, root_dir: Path) -> None:
     else:
         report.warn(section, f"file opzionale assente: {aliases_path.relative_to(root_dir)}")
 
+    # .env non deve finire in git
+    gitignore = root_dir / ".gitignore"
+    if (root_dir / ".env").exists():
+        ignored = gitignore.exists() and any(
+            line.strip() in {".env", "/.env", ".env*"}
+            for line in gitignore.read_text(encoding="utf-8").splitlines()
+        )
+        if not ignored:
+            report.error(section, ".env presente ma non elencato in .gitignore — rischio commit di segreti")
+        else:
+            report.ok(section, ".env presente e ignorato da git")
+
 
 # ── Entry point ──────────────────────────────────────────────────────────────
 
@@ -470,6 +557,7 @@ def run_startup_checks(root_dir: Path) -> ValidationReport:
     _check_channels(report, root_dir)
     _check_operation_config(report, root_dir)
     _check_execution_config(report, root_dir)
+    _check_account_routing(report, root_dir)
     _check_control_plane(report, root_dir)
     _check_misc_files(report, root_dir)
     return report
