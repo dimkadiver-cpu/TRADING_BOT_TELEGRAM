@@ -162,17 +162,49 @@ class TestStrategyParserProfileSymbolTargeting:
         context = ParserContext(raw_context=raw_ctx, reply_to_message_id=reply_id)
         return UniversalParserRuntime().parse(text, context, StrategyParserProfile())
 
-    def test_close_with_symbol_produces_symbol_targeting(self):
-        result = self._run("закрыла по BTCUSDT → выход 45000")
-        if result.primary_class == "UPDATE" and result.target_action_groups:
-            group = result.target_action_groups[0]
-            assert group.targeting.target_source == "SYMBOL"
-            assert group.targeting.scope_hint == "SYMBOL"
-            assert "BTCUSDT" in group.targeting.symbols
+    def _update_groups(self, text: str, reply_id: int | None = None):
+        result = self._run(text, reply_id=reply_id)
+        assert result.primary_class == "UPDATE", f"expected UPDATE, got {result.primary_class}"
+        assert result.target_action_groups, "expected target_action_groups"
+        return result.target_action_groups
 
-    def test_close_with_reply_uses_reply_targeting(self):
-        result = self._run("закрыла → выход 0.162", reply_id=1234)
-        if result.primary_class == "UPDATE" and result.target_action_groups:
+    # --- custom extract_target_hints: bare ticker via "по SYMBOL" ---
+
+    def test_close_bare_ticker_hype(self):
+        text = (
+            "Стратегия «RSI(2) Коннора» закрыла ЛОНГ по H · интрадей (1H) — поймала стоп\n\n"
+            "Результат: −1.0R  (вход 0.1851 → выход 0.16289)"
+        )
+        groups = self._update_groups(text)
+        group = groups[0]
+        assert group.targeting.target_source == "SYMBOL"
+        assert group.targeting.scope_hint == "SYMBOL"
+        assert "H" in group.targeting.symbols
+
+    def test_close_bare_ticker_sui(self):
+        text = (
+            "Стратегия «Supertrend» закрыла ШОРТ по SUI · интрадей (1H) — вышла по обратному сигналу\n\n"
+            "Результат: −0.7R  (вход 0.7326 → выход 0.7551)"
+        )
+        groups = self._update_groups(text)
+        group = groups[0]
+        assert group.targeting.target_source == "SYMBOL"
+        assert group.targeting.scope_hint == "SYMBOL"
+        assert "SUI" in group.targeting.symbols
+
+    def test_close_usdt_ticker_still_works(self):
+        text = "закрыла по BTCUSDT → выход 45000"
+        groups = self._update_groups(text)
+        group = groups[0]
+        assert group.targeting.target_source == "SYMBOL"
+        assert group.targeting.scope_hint == "SYMBOL"
+        assert "BTCUSDT" in group.targeting.symbols
+
+    def test_reply_takes_priority_over_po_symbol(self):
+        text = "закрыла по SUI → выход 0.7551"
+        result = self._run(text, reply_id=1234)
+        assert result.primary_class == "UPDATE"
+        if result.target_action_groups:
             group = result.target_action_groups[0]
             assert group.targeting.target_source == "REPLY"
             assert group.targeting.reply_to_message_id == 1234
@@ -182,3 +214,46 @@ class TestStrategyParserProfileSymbolTargeting:
         if result.primary_class == "UPDATE" and result.target_action_groups:
             group = result.target_action_groups[0]
             assert group.targeting.target_source == "UNKNOWN"
+
+    # --- signal message classification ---
+
+    def test_signal_with_virtual_trade_marker_still_produces_signal(self):
+        # strategy_parser has no info_markers section → INFO short-circuit never fires.
+        # Messages with Вход/стоп/цель are classified as SIGNAL regardless of
+        # INFO_ONLY intent markers (those are in intent_markers, not info_markers).
+        text = (
+            "Стратегия «RSI(2) Коннора» открыла ЛОНГ по HYPE · интрадей (1H)\n\n"
+            "Вход 54.69, стоп 53.32, цель 59.46 — риск к прибыли 1 к 3.5\n\n"
+            "Это виртуальная сделка в открытом тесте, реальных денег нет."
+        )
+        result = self._run(text)
+        assert result.primary_class == "SIGNAL"
+
+    # --- extract_target_hints unit-level ---
+
+    def test_extract_target_hints_po_symbol_no_reply(self):
+        from src.parser_v2.profiles.strategy_parser.profile import StrategyParserProfile
+        profile = StrategyParserProfile()
+        markers = profile.load_markers()
+        normalized = NormalizedText(
+            raw_text="закрыла по SUI → выход 0.75",
+            normalized_text="закрыла по sui → выход 0.75",
+        )
+        context = ParserContext()
+        result = profile.extract_target_hints(normalized, context, markers)
+        assert result.message_target_hints.target_source == "SYMBOL"
+        assert "SUI" in result.message_target_hints.symbols
+
+    def test_extract_target_hints_reply_overrides_po_symbol(self):
+        from src.parser_v2.profiles.strategy_parser.profile import StrategyParserProfile
+        profile = StrategyParserProfile()
+        markers = profile.load_markers()
+        raw_ctx = RawContext(raw_text="закрыла по SUI → выход 0.75", reply_to_message_id=999)
+        normalized = NormalizedText(
+            raw_text="закрыла по SUI → выход 0.75",
+            normalized_text="закрыла по sui → выход 0.75",
+        )
+        context = ParserContext(raw_context=raw_ctx, reply_to_message_id=999)
+        result = profile.extract_target_hints(normalized, context, markers)
+        assert result.message_target_hints.target_source == "REPLY"
+        assert result.message_target_hints.reply_to_message_id == 999
