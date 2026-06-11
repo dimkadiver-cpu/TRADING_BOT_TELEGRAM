@@ -301,6 +301,15 @@ class ExchangeEventSyncWorker:
             tp_level = None
             idem_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
 
+        # Il WS può aver già registrato questo fill con chiave fill:{execId}:
+        # le chiavi WS/REST divergono, quindi il dedup va fatto sull'ordine.
+        if self._repo.has_exchange_event_for_order(coid.trade_chain_id, event_type, exchange_order_id):
+            logger.info(
+                "fill already recorded (likely via WS) for order %s — skipping duplicate",
+                exchange_order_id,
+            )
+            return True
+
         if coid.command_id:
             command_source = self._repo.get_command_source(coid.trade_chain_id, coid.command_id)
             fill_source = command_source or "manual_command"

@@ -10,6 +10,7 @@ from src.parser_v2.contracts.rules import (
     SemanticMarkers,
 )
 from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
+from src.parser_v2.core.parsing_utils import resolve_market_hint
 from src.parser_v2.profiles.trader_c.intent_entity_extractor import IntentEntityExtractor
 from src.parser_v2.profiles.trader_c.signal_extractor import SignalExtractor
 
@@ -48,14 +49,7 @@ class TraderCProfile:
         context: ParserContext,
         evidence: list[MarkerEvidence],
     ) -> SignalDraft | None:
-        has_limit = any(e.kind == "entry_type" and e.name == "LIMIT" and not e.suppressed for e in evidence)
-        has_market = any(e.kind == "entry_type" and e.name == "MARKET" and not e.suppressed for e in evidence)
-        if has_limit:
-            market_hint = False
-        elif has_market:
-            market_hint = True
-        else:
-            market_hint = self._default_entry_type == "MARKET"
+        market_hint = resolve_market_hint(evidence, self._default_entry_type)
         return self._signal_extractor.extract(text, market_hint=market_hint)
 
     def extract_intent_entities(

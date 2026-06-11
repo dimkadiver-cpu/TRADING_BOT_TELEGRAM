@@ -1697,3 +1697,60 @@ condivise: non vanno mutate (i consumer esistenti usano già model_copy).
 **Test aggiunti:** `tests/parser_v2/test_profile_assets.py` (identità istanza a
 file invariato, reload su mtime cambiato). Esito: 228 passed su parser_v2,
 1 failure pre-esistente non correlata.
+
+### FIXATO: source dei fill non attribuito al comando nel path WS + duplicati WS/REST
+
+**File coinvolti:** `src/runtime_v2/execution_gateway/repositories.py`,
+`src/runtime_v2/execution_gateway/event_sync.py`
+
+**Problema (2 gambe):**
+1. Il classifier WS conosce solo i campi exchange e non produce mai
+   `source="trader_update"`: i fill di ordini piazzati da comandi trader
+   (CLOSE_FULL, exit, SL con orderLinkId) arrivavano con `manual_command`/
+   `exchange_auto`. Conseguenza: `close_reason` sbagliato in outbox_writer
+   (STOP_LOSS invece di TRADER_COMMAND) e in event_processor
+   (MANUAL_CLOSE invece di TRADER_UPDATE — il ramo non scattava mai via WS
+   perché il payload WS non aveva nemmeno command_id).
+2. Chiavi di idempotenza divergenti — WS `fill:{execId}` vs REST
+   `{event_type}:{chain}:{order_id}` — lo stesso fill poteva essere inserito
+   due volte (doppio evento lifecycle, doppia notifica, doppio conteggio qty).
+
+**Fix:**
+1. `insert_raw_and_classified` (convergenza WS): se l'orderLinkId è un coid
+   `tsb:{chain}:{command}:{role}:{seq}`, risale al `command_source` del comando
+   con la stessa lookup del path REST e popola `command_id` nel payload.
+   Il verdetto del classifier resta nell'audit (exchange_raw_events).
+2. Nuovo `has_exchange_event_for_order()` (match su chain+event_type+
+   json_extract order_id); `_save_fill_event` REST lo usa come guard e salta
+   l'inserimento se il WS ha già registrato il fill per quello stesso ordine.
+
+**Limite residuo noto:** gli SL position-level (senza orderLinkId) restano
+`exchange_auto` — non c'è un coid da cui risalire al comando. Se serve
+TRADER_COMMAND anche lì, va correlato via chain+timing (design da fare).
+
+**Test aggiunti:** 6 test in
+`tests/runtime_v2/execution_gateway/test_command_source_attribution.py`.
+Esito: nessuna regressione (diff failure prima/dopo = 0; le 38 failure di
+tests/runtime_v2 sono pre-esistenti).
+
+### FIXATO: helper di parsing duplicati nei profili (punto 3 revisione)
+
+**File coinvolti:** `src/parser_v2/core/parsing_utils.py` (nuovo),
+signal/intent extractor + profile.py di trader_a/b/c/d/prova e strategy_parser
+
+**Fix:** verificato via AST che le copie fossero identiche, poi consolidati in
+`parsing_utils.py`: `float_from_raw`, `price_from_raw` (12 file),
+`deduplicate_by_span` (6 file), `resolve_market_hint` (blocco identico di
+~9 righe nei 5 profile.py). Import aliasati per non toccare i call site.
+
+**Esclusioni deliberate:**
+- trader_3 mantiene la sua implementazione di `_float_from_raw`/`_price_from_raw`
+  (diversa dalle altre — non è una copia).
+- `_NUMBER_PATTERN` NON unificato: i signal_extractor accettano spazi/tab nei
+  numeri (`[\d \t.,]`), gli intent extractor no (`[\d.,]`) — due varianti
+  semanticamente diverse, unificarle cambierebbe il comportamento.
+- Blocchi duplicati nei rules.json (weak_context_exclusions, convergence)
+  lasciati as-is: deduplicarli richiede un meccanismo di merge nel loader;
+  i profili restano autonomi per convenzione di progetto.
+
+**Esito test:** 234 passed (parser_v2 + processor); 1 failure pre-esistente.

@@ -12,6 +12,7 @@ from src.parser_v2.contracts.entities import (
 from src.parser_v2.contracts.markers import NormalizedText
 from src.parser_v2.contracts.parsed_message import SignalDraft
 from src.parser_v2.core.symbol_normalizer import normalize_symbol
+from src.parser_v2.core.parsing_utils import float_from_raw as _float_from_raw, price_from_raw as _price_from_raw
 
 
 _NUMBER_PATTERN = r"\d(?:[\d \t.,]*\d)?"
@@ -387,30 +388,3 @@ def _search_price(pattern: re.Pattern[str], text: str) -> Price | None:
     return _price_from_raw(match.group("value"))
 
 
-def _price_from_raw(raw: str | None) -> Price | None:
-    value = _float_from_raw(raw)
-    if raw is None or value is None:
-        return None
-    return Price(raw=raw.strip(), value=value)
-
-
-def _float_from_raw(raw: str | None) -> float | None:
-    if not raw:
-        return None
-
-    compact = raw.strip().replace(" ", "")
-    if not compact:
-        return None
-
-    if "," in compact and "." in compact:
-        if compact.rfind(",") > compact.rfind("."):
-            compact = compact.replace(".", "").replace(",", ".")
-        else:
-            compact = compact.replace(",", "")
-    elif "," in compact:
-        compact = compact.replace(",", ".")
-
-    try:
-        return float(compact)
-    except ValueError:
-        return None
