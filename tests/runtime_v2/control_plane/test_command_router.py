@@ -186,7 +186,9 @@ def test_trade_reply_includes_original_message_link_when_available(ops_db):
         command_text="/trade 78", message_id=79,
         chat_id=-100999, thread_id=101, user_id=42, username="op",
     )
-    assert "Source link: https://t.me/c/1234567890/456" in res.reply_text
+    # il link sorgente è reso come "Use:" + url su riga propria (clean log redesign)
+    assert "Use:" in res.reply_text
+    assert "https://t.me/c/1234567890/456" in res.reply_text
 
 
 def test_trade_with_invalid_id_is_rejected_and_returns_usage(ops_db):

@@ -13,7 +13,7 @@ Formato prodotto dal template system (`_ENTRY_BLOCKS`).
 {symbol} — {side_emoji} {side}
 - - - - - - - - - - -
 Filled:
-Entry_N: {fill_price} {type}
+Entry_N: {fill_price} {type}                 ← "Entry:" senza numero se il piano ha 1 sola entry
 Qty: {filled_qty}                            ← full fill
 Qty: {filled_qty} (planned: {planned_qty})   ← partial fill
 Value: {exec_value} USDT
@@ -38,7 +38,9 @@ Source: exchange
 ```
 
 **Regole:**
-- `Fee rate` prima di `Fee` — ordine nel template: Value → Fee rate → Fee
+- **Numerazione**: `Entry_N`/`TP_N` solo quando il piano ha più di una entry/TP; con elemento singolo l'etichetta è `Entry`/`TP` senza suffisso (vale anche per `Pending:`)
+- **Formato prezzi**: il formatter `price()` rende gli interi con 2 decimali (`65,020.00`) — gli esempi sotto mostrano i valori senza decimali per leggibilità
+- `Fee rate` prima di `Fee` — ordine nel template: Value → Fee rate → Fee; se assente nel payload viene mostrato `Fee rate: n/a` (non omesso)
 - `Risk` appare **sempre** (opzione B) — condizione: `actual_risk_usdt is not None`
 - `actual_risk = filled_entry_qty × |avg_entry − sl_price|` — usa prezzi reali, sensibile a slippage
 - `Total qty/value/fees` sempre presenti — ridondanti su fill singolo, espliciti su UPDATED multi-leg
@@ -67,7 +69,7 @@ Total qty 0.010 / Total value 650.20 / Total fees 1.30
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,020 Market
+Entry: 65,020 Market
 Qty: 0.010
 Value: 650.20 USDT
 Fee rate: 0.200%
@@ -99,7 +101,7 @@ Total qty 0.007 / Total value 455.14 / Total fees 0.91
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,020 Market
+Entry: 65,020 Market
 Qty: 0.007 (planned: 0.010)
 Value: 455.14 USDT
 Fee rate: 0.200%
@@ -136,7 +138,7 @@ Total qty 0.010 / Total value 650.00 / Total fees 1.30
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,000 Limit
+Entry: 65,000 Limit
 Qty: 0.010
 Value: 650.00 USDT
 Fee rate: 0.200%
@@ -171,7 +173,7 @@ Total qty 0.004 / Total value 260.00 / Total fees 0.52
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,000 Limit
+Entry: 65,000 Limit
 Qty: 0.004 (planned: 0.010)
 Value: 260.00 USDT
 Fee rate: 0.200%
@@ -185,7 +187,7 @@ Total value: 260.00 USDT
 Total fees: 0.52 USDT
 Filled: 40%
 Risk: 104 USDT (planned: 260 USDT)
-Pending: Entry_1 65,000 Limit
+Pending: Entry 65,000 Limit
 - - - - - - - - - - -- - - - - - - - - - -
 Changed:
 SL qty: 0.010 → 0.004 (adj. to fill)
@@ -206,7 +208,7 @@ Total qty 0.010 / Total value 650.00 / Total fees 0.52 + 0.78 = 1.30
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,000 Limit
+Entry: 65,000 Limit
 Qty: 0.006
 Value: 390.00 USDT
 Fee rate: 0.200%
@@ -470,7 +472,7 @@ Source: exchange
 
 ## Caso 8 — SHORT, ONE_SHOT LIMIT completo
 
-Entry_1 65,000 Limit SHORT, SL 91,000 (sopra per SHORT), rischio 260 USDT.
+Entry 65,000 Limit SHORT, SL 91,000 (sopra per SHORT), rischio 260 USDT.
 actual_risk = 0.010 × (91,000 − 65,000) = **260 USDT**
 Total qty 0.010 / Total value 650.00 / Total fees 1.30
 
@@ -480,7 +482,7 @@ Total qty 0.010 / Total value 650.00 / Total fees 1.30
 BTC/USDT — 📉 SHORT
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,000 Limit
+Entry: 65,000 Limit
 Qty: 0.010
 Value: 650.00 USDT
 Fee rate: 0.200%
@@ -512,7 +514,7 @@ Total qty 0.010 / Total value 658.00 / Total fees 1.32
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 65,800 Market
+Entry: 65,800 Market
 Qty: 0.010
 Value: 658.00 USDT
 Fee rate: 0.200%
@@ -546,7 +548,7 @@ Total qty 0.010 / Total value 638.00 / Total fees 1.28
 BTC/USDT — 📈 LONG
 - - - - - - - - - - -- - - - - - - - - - -
 Filled:
-Entry_1: 63,800 Limit
+Entry: 63,800 Limit
 Qty: 0.010
 Value: 638.00 USDT
 Fee rate: 0.200%

@@ -56,9 +56,9 @@ https://t.me/c/123456/987
 - - - - - - - - - - - - -
 ETH/USDT — 📈 LONG
 - - - - - - - - - - - - -
-Entry_1: 3,500 Limit
+Entry: 3,500 Limit
 SL: 3,400
-TP_1: 3,650
+TP: 3,650
 Risk: 0.8%
 Leverage: x3
 - - - - - - - - - - - - -
@@ -69,7 +69,8 @@ Source: trader_signal
 https://t.me/c/123456/987
 ```
 
-> ONE_SHOT + TP singolo — nessuna % (liste con 1 elemento).
+> ONE_SHOT + TP singolo — nessuna % (liste con 1 elemento) e nessun numero
+> (`Entry`/`TP` senza suffisso quando la lista ha 1 solo elemento).
 
 ---
 
@@ -78,7 +79,7 @@ https://t.me/c/123456/987
 - - - - - - - - - - - - -
 BTC/USDT — 📈 LONG
 - - - - - - - - - - - - -
-Entry_1: 64,000 Limit
+Entry: 64,000 Limit
 SL: 62,000
 TP_1: 67,000 (50%)
 TP_2: 69,000 (50%)
@@ -108,7 +109,7 @@ ETH/USDT — 📉 SHORT
 Entry_1: 3,820 Limit (60%)
 Entry_2: 3,900 Limit (40%)
 SL: 3,910
-TP_1: 3,600 (100%)
+TP: 3,600
 Risk: 0.8%
 Leverage: x5
 - - - - - - - - - - - - -
@@ -129,7 +130,7 @@ https://t.me/c/123456/987
 - - - - - - - - - - - - -
 ETH/USDT — 📉 SHORT
 - - - - - - - - - - - - -
-Entry_1: 3,820 Limit
+Entry: 3,820 Limit
 SL: n/a
 TP_1: 4,100
 TP_2: 4,250
@@ -151,13 +152,13 @@ https://t.me/c/123456/987
 
 ## Note
 
-| Condizione | % mostrata |
-|-----------|-----------|
-| entry singola (ONE_SHOT) | no |
-| 2+ entry (TWO_STEP / LADDER / RANGE) | sì |
-| TP singolo | no |
-| 2+ TP | sì, se `_tp_pcts` popolato |
-| REJECTED prima del plan | no (liste vuote) |
+| Condizione | % mostrata | numerazione (`_N`) |
+|-----------|-----------|--------------------|
+| entry singola (ONE_SHOT) | no | no (`Entry`) |
+| 2+ entry (TWO_STEP / LADDER / RANGE) | sì | sì (`Entry_N`) |
+| TP singolo | no | no (`TP`) |
+| 2+ TP | sì, se `_tp_pcts` popolato | sì (`TP_N`) |
+| REJECTED prima del plan | no (liste vuote) | — |
 
 `_entry_pcts` e `_tp_pcts` sono liste di interi (round). Popolate in `_build_payload` da
 `plan["legs"][i]["qty"]` e `plan["tps"][i]["close_pct"]`. Se il plan non esiste (rejected
@@ -178,9 +179,9 @@ Nessuna % su entry/TP — il plan non è ancora stato creato (`_entry_pcts`/`_tp
 ETH/USDT — 📉 SHORT
 https://t.me/c/123456/987
 - - - - - - - - - - - - -
-Entry_1: 3,820 Limit
+Entry: 3,820 Limit
 SL: n/a
-TP_1: 3,600
+TP: 3,600
 Risk: 0.8%
 - - - - - - - - - - - - -
 Trader: TraderA
@@ -213,6 +214,8 @@ Source: runtime
 - `Entry - Lastpoint [min-max]`
 - `Entry - Endpoints [min-max]`
 - `Risk - Reduced by trader`
+- `TP - Reduced by policy (N → M)` — quando `use_tp_count` taglia i TP parsati
+  (propagato come `tp_trimmed` nel plan; solo SIGNAL_ACCEPTED)
 
 Regole:
 

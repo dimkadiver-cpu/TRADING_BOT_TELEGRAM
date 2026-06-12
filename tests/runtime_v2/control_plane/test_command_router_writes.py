@@ -86,7 +86,8 @@ def test_block_then_control_shows_it(ops_db):
     router = _router(ops_db)
     _route(router, "/block BTCUSDT", 4)
     control = _route(router, "/control", 5)
-    assert "BTCUSDT" in control.reply_text
+    # i simboli sono resi in formato display (BTC/USDT), non raw
+    assert "BTC/USDT" in control.reply_text
 
 
 def test_block_per_trader(ops_db):

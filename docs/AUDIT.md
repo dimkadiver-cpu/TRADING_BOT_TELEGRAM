@@ -1961,3 +1961,73 @@ l'avviso parser_profile sconosciuto e l'errore alias↔registered).
   review, non in scope di questo fix.
 - I warning clean_log.per_trader per i tre id derivano dalla rimozione degli
   alias: il validatore incrocia solo channels.yaml, non i pattern extractor.
+
+### FEATURE: regola numerazione ENTRY/TP uniforme + nota TP trim da policy
+
+**Origine:** osservazioni in docs/Raggionamento/Controllo_Notifica/Osservazioni.md
+(3 punti: drift doc ENTRY OPENED, numerazione incoerente tra template, nota
+mancante quando la policy riduce i TP).
+
+**Regola adottata (quella già nel codice per la sezione Filled):** `Entry_N`/`TP_N`
+solo quando il piano ha più di una entry/TP; con elemento singolo `Entry`/`TP`
+senza suffisso. Fallback retrocompatibile: se il conteggio manca nel payload
+(`_total_legs`/`_total_tps` assenti) resta la numerazione.
+
+**File coinvolti:**
+- `src/runtime_v2/control_plane/formatters/templates/clean_log.py` — helper
+  `_entry_label`/`_tp_label`; applicati a entries/TP dei segnali, Pending,
+  sezione Filled (refactor), TP_FILLED/_FINAL, ENTRY_CANCELLED; nuova nota
+  `TP - Reduced by policy (N → M)` in `_build_signal_notes` da `tp_trimmed`.
+- `src/runtime_v2/control_plane/outbox_writer.py` — payload arricchiti:
+  `_total_tps` (TP_FILLED/_FINAL), `_total_legs` (ENTRY_CANCELLED),
+  `tp_trimmed` (SIGNAL_ACCEPTED, dal plan).
+- `src/runtime_v2/signal_enrichment/models.py` — `EnrichedSignalPayload.original_tp_count`.
+- `src/runtime_v2/signal_enrichment/processor.py` — set `original_tp_count` al trim.
+- `src/runtime_v2/lifecycle/entry_gate.py` — propagazione `tp_trimmed`
+  {original, used} in extra_plan (come range_derivation/risk_hint_applied).
+- Doc allineati: `Clean_log_entry_entry_update.md` (esempi single-leg → `Entry`,
+  regole numerazione/prezzi/fee rate), `Clean_log_signals.md` (esempi, tabella
+  numerazione, nota TP trim), `Clean_log_tp_partial.md`,
+  `Clean_log_position_closed_partial_closed.md`.
+
+**Test:** TDD — 15 nuovi test (formatter numbering/note, outbox payload
+`_total_tps`/`_total_legs`/`tp_trimmed`, processor `original_tp_count`,
+entry_gate `tp_trimmed` nel plan); 3 assert stantii aggiornati alla regola.
+Validazione: control_plane + signal_enrichment 440 passed, lifecycle 351 passed;
+i fallimenti residui (5+9) verificati identici alla baseline HEAD via worktree.
+
+**Rischi residui:**
+- Notifiche ENTRY_CANCELLED/TP su chain create prima del deploy non hanno
+  `_total_legs`/`_total_tps` nel plan/payload → restano numerate (fallback).
+- La nota TP trim appare solo su SIGNAL_ACCEPTED (come le note risk/range);
+  SIGNAL_REJECTED non propaga tp_trimmed (coerente con comportamento esistente).
+
+### FIX: test preesistenti falliti allineati al comportamento corrente (solo test)
+
+**Origine:** follow-up della sessione precedente — 14 test rossi preesistenti.
+Nessuna modifica al codice di produzione: tutti i fallimenti erano test stantii
+rispetto a cambi di prodotto intenzionali, verificati nella git history.
+
+**Root cause per gruppo:**
+1. `test_outbox_incremental_projection.py` (3 test) — schema fixture duplicato
+   a mano, drift dalla migration 013 (`initial_risk_amount`, `peak_margin_used`).
+   Fix strutturale: la fixture ora applica le migration reali di
+   `db/ops_migrations` (stesso pattern di test_outbox_writer.py) → il drift
+   non può ripetersi.
+2. `test_entry_gate.py` review-path (3 test) + `test_integration.py` AC2 +
+   `test_workers.py` block_new_entries — il commit 861ff8b ha cambiato i
+   blocchi del gate da REVIEW_REQUIRED a SIGNAL_REJECTED; assert ed eventi
+   attesi aggiornati, test rinominati `*_produces_reject`.
+3. `test_entry_gate.py` move_to_be (2 test) — il commit eea1c45 ha reso
+   NOOP_NOT_PENDING il caso entry_avg_price=None (no fill) invece di review;
+   il test already_protected ora passa entry_avg_price per raggiungere il
+   branch giusto; il test without_entry_avg rinominato `*_is_noop`.
+4. `test_entry_gate.py` clean_log update (2 test) — il display rimuove il
+   prefisso `NOOP_` dalle rejected_actions (`removeprefix` in entry_gate:155);
+   attese aggiornate a `ALREADY_PROTECTED_BE`.
+5. `test_command_router.py` + `test_command_router_writes.py` (2 test) —
+   formato link cambiato in "Use:" + url (commit d9381c2) e simboli resi in
+   formato display (BTC/USDT); assert aggiornati.
+
+**Validazione:** control_plane + lifecycle + signal_enrichment:
+**805 passed, 0 failed** (prima: 14 failed preesistenti).

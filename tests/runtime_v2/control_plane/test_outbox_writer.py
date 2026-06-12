@@ -941,3 +941,94 @@ def test_final_result_computes_net_pnl_without_explicit_funding(ops_db):
     assert final_result["funding"] == pytest.approx(0.0)
     assert final_result["roi_net_pct"] == pytest.approx(8.0, rel=1e-3)
     assert final_result["return_on_risk_pct"] == pytest.approx(16.0, rel=1e-3)
+
+
+# ---------------------------------------------------------------------------
+# Payload enrichment for the numbering rule and TP trim note
+# ---------------------------------------------------------------------------
+
+def _set_plan_state(conn, chain_id, plan):
+    conn.execute(
+        "UPDATE ops_trade_chains SET plan_state_json=? WHERE trade_chain_id=?",
+        (json.dumps(plan), chain_id),
+    )
+
+
+def test_tp_filled_payload_includes_total_tps(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1100)
+        _set_plan_state(conn, 1100, {
+            "legs": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+            "intermediate_tps": [68000.0],
+            "final_tp": 71000.0,
+        })
+        _seed_event(conn, 1100, "TP_FILLED", "tp:1100:1", {
+            "tp_level": 1, "fill_price": 68000.0, "filled_qty": 0.002,
+        })
+        project_clean_log_for_chain(conn, 1100)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    payload = json.loads(row[0])
+    assert payload["_total_tps"] == 2
+
+
+def test_tp_filled_final_payload_includes_total_tps(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1101)
+        _set_plan_state(conn, 1101, {
+            "legs": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+            "intermediate_tps": [],
+            "final_tp": 71000.0,
+        })
+        _seed_event(conn, 1101, "TP_FILLED", "tp:1101:1", {
+            "tp_level": 1, "is_final": True, "fill_price": 71000.0, "filled_qty": 0.002,
+        })
+        project_clean_log_for_chain(conn, 1101)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "TP_FILLED_FINAL"
+    payload = json.loads(row[1])
+    assert payload["_total_tps"] == 1
+
+
+def test_entry_cancelled_payload_includes_total_legs(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1102)
+        _set_plan_state(conn, 1102, {
+            "legs": [
+                {"sequence": 1, "entry_type": "MARKET", "price": None},
+                {"sequence": 2, "entry_type": "LIMIT", "price": 64000.0},
+            ],
+        })
+        _seed_event(conn, 1102, "PENDING_ENTRY_CANCELLED", "pec:1102:1", {
+            "sequence": 2,
+            "cancel_reason": "LIQUIDATED",
+        })
+        project_clean_log_for_chain(conn, 1102)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    payload = json.loads(row[0])
+    assert payload["_total_legs"] == 2
+
+
+def test_signal_accepted_payload_includes_tp_trimmed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1103)
+        _set_plan_state(conn, 1103, {
+            "legs": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+            "intermediate_tps": [68000.0],
+            "final_tp": 71000.0,
+            "tp_trimmed": {"original": 5, "used": 2},
+        })
+        _seed_event(conn, 1103, "SIGNAL_ACCEPTED", "sig:1103")
+        project_clean_log_for_chain(conn, 1103)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    payload = json.loads(row[0])
+    assert payload["tp_trimmed"] == {"original": 5, "used": 2}

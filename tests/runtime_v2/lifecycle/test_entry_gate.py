@@ -40,6 +40,7 @@ def _make_enriched_signal(
     be_trigger: str | None = None,
     risk_hint=None,
     use_trader_risk_hint: bool = False,
+    original_tp_count: int | None = None,
 ):
     from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
     from src.runtime_v2.signal_enrichment.models import (
@@ -91,6 +92,7 @@ def _make_enriched_signal(
             else None
         ),
         risk_hint=risk_hint,
+        original_tp_count=original_tp_count,
     )
     weights = EntryWeightsConfig(weights={"E1": 1.0})
     policy = EffectiveEnrichmentConfig(
@@ -168,14 +170,14 @@ def test_gate_signal_events_include_signal_accepted_and_chain_created():
     assert "TRADE_CHAIN_CREATED" in event_types
 
 
-def test_gate_signal_block_new_entries_produces_review():
+def test_gate_signal_block_new_entries_produces_reject():
     gate = _make_gate()
     enriched = _make_enriched_signal()
     result = gate.process_signal(enriched, [], "BLOCK_NEW_ENTRIES")
     assert result.review_reason is not None
     assert "new_entries_paused" in result.review_reason
     assert result.trade_chain is None
-    assert any(e.event_type == "REVIEW_REQUIRED" for e in result.lifecycle_events)
+    assert any(e.event_type == "SIGNAL_REJECTED" for e in result.lifecycle_events)
 
 
 def test_gate_signal_full_stop_produces_review():
@@ -267,13 +269,32 @@ def test_gate_signal_copies_range_derivation_into_plan_state_json():
     assert plan["range_derivation"]["original_max_price"] == 65000.0
 
 
-def test_gate_signal_review_event_has_no_chain():
+def test_gate_signal_copies_tp_trim_into_plan_state_json():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        tp_prices=[51000.0, 52000.0],
+        original_tp_count=5,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert plan["tp_trimmed"] == {"original": 5, "used": 2}
+
+
+def test_gate_signal_without_tp_trim_has_no_tp_trimmed_in_plan():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(tp_prices=[51000.0, 52000.0])
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert "tp_trimmed" not in plan
+
+
+def test_gate_signal_reject_event_has_no_chain():
     gate = _make_gate()
     enriched = _make_enriched_signal()
     result = gate.process_signal(enriched, [], "BLOCK_NEW_ENTRIES")
     assert result.trade_chain is None
-    review_events = [e for e in result.lifecycle_events if e.event_type == "REVIEW_REQUIRED"]
-    assert len(review_events) == 1
+    reject_events = [e for e in result.lifecycle_events if e.event_type == "SIGNAL_REJECTED"]
+    assert len(reject_events) == 1
 
 
 # ── UPDATE path tests ──────────────────────────────────────────────────────────
@@ -371,7 +392,9 @@ def test_update_move_to_be_creates_command():
 def test_update_move_to_be_already_protected_noop():
     gate = _make_gate()
     enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
-    chain = _make_open_chain(be_status="PROTECTED")
+    # entry_avg_price set: without a fill the gate returns NOOP_NOT_PENDING
+    # before even reaching the already-protected check.
+    chain = _make_open_chain(be_status="PROTECTED", entry_avg_price=50000.0)
     result = gate.process_update(enriched, [chain], {})
     cr = result.chain_results[0]
     assert len(cr.execution_commands) == 0
@@ -392,7 +415,9 @@ def test_update_move_to_be_duplicate_command_noop():
     assert cr.lifecycle_events[0].event_type == "NOOP_DUPLICATE_COMMAND"
 
 
-def test_update_move_to_be_without_entry_avg_requires_review():
+def test_update_move_to_be_without_entry_avg_is_noop():
+    # entry_avg_price None (no fill yet) → NOOP_NOT_PENDING, not review:
+    # WAITING_ENTRY chains in global updates must not produce false reviews.
     gate = _make_gate()
     enriched = _make_update_enriched(scope_hint="SINGLE_SIGNAL", symbols=["BTC/USDT"])
     chain = _make_open_chain(
@@ -405,8 +430,7 @@ def test_update_move_to_be_without_entry_avg_requires_review():
     assert cr.execution_commands == []
     assert cr.new_lifecycle_state is None
     assert cr.new_be_protection_status is None
-    assert cr.lifecycle_events[0].event_type == "REVIEW_REQUIRED"
-    assert json.loads(cr.lifecycle_events[0].payload_json)["reason"] == "missing_entry_avg_price_for_be"
+    assert cr.lifecycle_events[0].event_type == "NOOP_NOT_PENDING"
 
 
 def test_update_close_full_active_chain():
@@ -1187,7 +1211,7 @@ def test_resolve_targets_single_chain_telegram_id_no_match_returns_chain():
     assert result == []  # Telegram evidence pointed elsewhere → do not apply to wrong chain
 
 
-def test_gate_signal_empty_entries_produces_review():
+def test_gate_signal_empty_entries_produces_reject():
     """BUG 3: signal with no entry legs must be rejected, not create a stuck WAITING_ENTRY chain."""
     from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
     from src.runtime_v2.signal_enrichment.models import (
@@ -1211,7 +1235,7 @@ def test_gate_signal_empty_entries_produces_review():
     result = gate.process_signal(enriched, [], "NONE")
     assert result.trade_chain is None
     assert result.review_reason == "no_entry_legs"
-    assert any(e.event_type == "REVIEW_REQUIRED" for e in result.lifecycle_events)
+    assert any(e.event_type == "SIGNAL_REJECTED" for e in result.lifecycle_events)
 
 
 def test_process_update_uses_tg_id_to_raw_id():
@@ -2490,7 +2514,8 @@ def test_write_update_clean_log_rejected_includes_reason_and_rejected_actions(tm
     assert len(row) == 1
     payload = json.loads(row[0][1])
     assert payload["reason"] == "already_protected"
-    assert payload["rejected_actions"] == ["NOOP_ALREADY_PROTECTED_BE"]
+    # display strips the NOOP_ prefix (entry_gate removeprefix("NOOP_"))
+    assert payload["rejected_actions"] == ["ALREADY_PROTECTED_BE"]
 
 
 def test_write_update_clean_log_partial_keeps_changed_and_rejected_actions(tmp_path):
@@ -2558,7 +2583,8 @@ def test_write_update_clean_log_partial_keeps_changed_and_rejected_actions(tmp_p
     assert row[0] == "UPDATE_PARTIAL"
     payload = json.loads(row[1])
     assert payload["reason"] == "already_protected"
-    assert payload["rejected_actions"] == ["NOOP_ALREADY_PROTECTED_BE"]
+    # display strips the NOOP_ prefix (entry_gate removeprefix("NOOP_"))
+    assert payload["rejected_actions"] == ["ALREADY_PROTECTED_BE"]
     assert payload["changed"] == [
         {"field": "Entry_2", "old": 48000.0, "new": 47000.0},
     ]

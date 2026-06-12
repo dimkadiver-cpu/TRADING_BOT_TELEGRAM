@@ -105,7 +105,7 @@ def test_signal_accepted_market_with_price():
         "entries": [{"sequence": 1, "entry_type": "MARKET", "price": 3000.0}],
         "sl": None, "tps": [], "risk_pct": None, "source": "original_message",
     })
-    assert "Entry_1: Market ~3,000" in text
+    assert "Entry: Market ~3,000" in text
 
 
 def test_entry_opened_with_avg_and_pending():
@@ -146,7 +146,7 @@ def test_entry_opened_market_without_fee_rate_shows_na():
         "fee": 2.71,
         "source": "exchange",
     })
-    assert "Entry_1: 0.36620 Market" in text
+    assert "Entry: 0.36620 Market" in text
     assert "Fee rate: n/a" in text
 
 
@@ -234,7 +234,7 @@ def test_signal_rejected():
     assert "❌" in text
     assert "SIGNAL REJECTED" in text
     assert "#146" in text
-    assert "Entry_1: 65,000 Limit" in text
+    assert "Entry: 65,000 Limit" in text
     assert "SL: 62,000" in text
     assert "Leverage: x5" in text
     assert "Rejected: invalid_risk_profile" in text
@@ -718,3 +718,154 @@ def test_multi_chain_summary_move_stop_price_reference():
     })
 
     assert "Reference: Price" in text
+
+
+# ---------------------------------------------------------------------------
+# Numbering rule: ENTRY/TP numbered only when total count > 1
+# ---------------------------------------------------------------------------
+
+def test_signal_accepted_single_entry_and_single_tp_unnumbered():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 1, "symbol": "BTC/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "tps": [68000.0],
+        "risk_pct": 0.5,
+        "source": "original_message",
+    })
+    assert "Entry: 65,000 Limit" in text
+    assert "Entry_1" not in text
+    assert "TP: 68,000" in text
+    assert "TP_1" not in text
+
+
+def test_signal_rejected_single_entry_unnumbered():
+    text = format_clean_log("SIGNAL_REJECTED", {
+        "chain_id": 2, "symbol": "BTC/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "tps": [68000.0],
+        "reason": "x",
+        "source": "original_message",
+    })
+    assert "Entry: 65,000 Limit" in text
+    assert "Entry_1" not in text
+    assert "TP: 68,000" in text
+
+
+def test_entry_opened_pending_single_leg_unnumbered():
+    text = format_clean_log("ENTRY_OPENED", {
+        "chain_id": 3, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 65000.0, "filled_qty": 0.004,
+        "filled_leg_sequence": 1,
+        "_total_legs": 1,
+        "pending_entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "source": "exchange",
+    })
+    assert "Pending: Entry 65,000.00 Limit" in text
+    assert "Pending: Entry_1" not in text
+
+
+def test_entry_opened_pending_multi_leg_numbered():
+    text = format_clean_log("ENTRY_OPENED", {
+        "chain_id": 4, "symbol": "BTC/USDT", "side": "LONG",
+        "fill_price": 65020.0, "filled_qty": 0.007,
+        "filled_leg_sequence": 1,
+        "_total_legs": 2,
+        "pending_entries": [{"sequence": 2, "entry_type": "LIMIT", "price": 64000.0}],
+        "source": "exchange",
+    })
+    assert "Pending: Entry_2 64,000.00 Limit" in text
+
+
+def test_tp_filled_final_single_tp_unnumbered():
+    text = format_clean_log("TP_FILLED_FINAL", {
+        "chain_id": 5, "symbol": "BTC/USDT", "side": "LONG",
+        "tp_level": 1, "fill_price": 68000.0,
+        "_total_tps": 1,
+        "source": "exchange",
+    })
+    assert "TP: 68,000" in text
+    assert "TP_1" not in text
+
+
+def test_tp_filled_final_multi_tp_numbered():
+    text = format_clean_log("TP_FILLED_FINAL", {
+        "chain_id": 6, "symbol": "BTC/USDT", "side": "LONG",
+        "tp_level": 2, "fill_price": 71000.0,
+        "_total_tps": 2,
+        "source": "exchange",
+    })
+    assert "TP_2: 71,000" in text
+
+
+def test_tp_filled_partial_single_tp_unnumbered():
+    text = format_clean_log("TP_FILLED", {
+        "chain_id": 7, "symbol": "BTC/USDT", "side": "LONG",
+        "tp_level": 1, "fill_price": 68000.0,
+        "_total_tps": 1,
+        "source": "exchange",
+    })
+    assert "TP FILLED" in text
+    assert "TP1 FILLED" not in text
+    assert "TP: 68,000" in text
+    assert "TP_1" not in text
+
+
+def test_entry_cancelled_single_leg_unnumbered():
+    text = format_clean_log("ENTRY_CANCELLED", {
+        "chain_id": 8, "symbol": "BTC/USDT", "side": "LONG",
+        "cancelled_entry": {"sequence": 1, "entry_type": "LIMIT", "price": 64000.0},
+        "_total_legs": 1,
+        "source": "timeout_worker",
+    })
+    assert "Entry: 64,000 Limit" in text
+    assert "Entry_1" not in text
+
+
+def test_entry_cancelled_multi_leg_numbered():
+    text = format_clean_log("ENTRY_CANCELLED", {
+        "chain_id": 9, "symbol": "BTC/USDT", "side": "LONG",
+        "cancelled_entry": {"sequence": 2, "entry_type": "LIMIT", "price": 64000.0},
+        "_total_legs": 2,
+        "source": "timeout_worker",
+    })
+    assert "Entry_2: 64,000 Limit" in text
+
+
+def test_entry_cancelled_without_total_legs_keeps_numbering():
+    # Backward compat: old payloads without _total_legs keep the numbered label.
+    text = format_clean_log("ENTRY_CANCELLED", {
+        "chain_id": 10, "symbol": "BTC/USDT", "side": "LONG",
+        "cancelled_entry": {"sequence": 2, "entry_type": "LIMIT", "price": 64000.0},
+        "source": "timeout_worker",
+    })
+    assert "Entry_2: 64,000 Limit" in text
+
+
+# ---------------------------------------------------------------------------
+# TP trim note (policy reduced TP count)
+# ---------------------------------------------------------------------------
+
+def test_signal_accepted_tp_trim_note():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 11, "symbol": "BTC/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "tps": [68000.0, 71000.0],
+        "tp_trimmed": {"original": 5, "used": 2},
+        "source": "original_message",
+    })
+    assert "Notes:" in text
+    assert "TP - Reduced by policy (5 → 2)" in text
+
+
+def test_signal_accepted_no_tp_trim_no_note():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 12, "symbol": "BTC/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "tps": [68000.0, 71000.0],
+        "source": "original_message",
+    })
+    assert "Reduced by policy" not in text

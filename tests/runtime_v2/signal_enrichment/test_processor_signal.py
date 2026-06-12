@@ -350,7 +350,15 @@ def test_signal_pass_with_tp_trim(tmp_path):
     log = next(e for e in enriched.enrichment_log if e.check == "tp_count_trimmed")
     assert log.original == "5"
     assert log.result == "2"
+    assert enriched.enriched_signal.original_tp_count == 5
     assert enriched.lifecycle_processed is False
+
+
+def test_signal_without_tp_trim_has_no_original_tp_count(processor):
+    result = _make_parse_result(tp_count=2)
+    enriched = processor.process(result)
+    assert enriched.enrichment_decision == "PASS"
+    assert enriched.enriched_signal.original_tp_count is None
 
 
 def test_signal_pass_has_management_plan(processor):

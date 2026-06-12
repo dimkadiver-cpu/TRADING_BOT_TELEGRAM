@@ -261,8 +261,8 @@ Campi iniettati dai transform (`_t_tp_partial` / `_t_partial_close`):
 | Campo | `TP_FILLED` | `PARTIAL_CLOSE_EXECUTED` |
 |-------|-------------|--------------------------|
 | `_emoji` | `"📊"` | `"✅"` |
-| `_event_label` | `f"TP{level} FILLED"` | `"PARTIAL CLOSED"` |
-| `_price_label` | `f"TP_{level}"` | `"Price"` |
+| `_event_label` | `f"TP{level} FILLED"` (`"TP FILLED"` se TP singolo) | `"PARTIAL CLOSED"` |
+| `_price_label` | `f"TP_{level}"` (`"TP"` se TP singolo, da `_total_tps`) | `"Price"` |
 | `_price_value` | `fill_price` ∣ `tp_price` | `fill_price` |
 | `_show_value` | `True` | `False` |
 

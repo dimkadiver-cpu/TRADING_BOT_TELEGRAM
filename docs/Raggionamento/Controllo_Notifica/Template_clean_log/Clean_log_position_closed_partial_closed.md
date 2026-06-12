@@ -8,6 +8,7 @@ Regole:
 - tutte le categorie sono sempre visibili.
 - se un dato non è disponibile, mostrare `n/a`.
 - `BE_EXIT` non ha più un layout dedicato: resta solo come semantica in `Close reason: BREAKEVEN_AFTER_TP`.
+- per `TP_FILLED_FINAL` l'`exit_field` è `TP_N` solo se il piano ha più di un TP; con TP singolo è `TP` senza suffisso (conteggio da `_total_tps` nel payload).
 
 Template:
 

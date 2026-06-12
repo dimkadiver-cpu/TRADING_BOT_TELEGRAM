@@ -351,6 +351,8 @@ def _build_payload(
             payload["range_derivation"] = plan["range_derivation"]
         if plan.get("risk_hint_applied"):
             payload["risk_hint_applied"] = plan["risk_hint_applied"]
+        if plan.get("tp_trimmed"):
+            payload["tp_trimmed"] = plan["tp_trimmed"]
         return payload
 
     if notification_type == "ENTRY_OPENED":
@@ -408,6 +410,7 @@ def _build_payload(
             **base,
             "tp_level": tp_level,
             "tp_price": tp_price,
+            "_total_tps": len(tps) or None,
             "fill_price": fill_price,
             "closed_qty": closed_qty,
             "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
@@ -676,6 +679,7 @@ def _build_payload(
         return {
             **base,
             "cancelled_entry": cancelled_entry,
+            "_total_legs": len(plan.get("legs", [])) or None,
             "partial_fill_pct": partial_pct,
             "partial_fill_qty": partial_qty,
             "avg_entry": entry_avg_price,

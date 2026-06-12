@@ -112,13 +112,14 @@ class SignalEnrichmentProcessor:
 
         # 5. TP trim
         take_profits = list(signal.take_profits)
+        original_tp_count: int | None = None
         use_tp_count = config.signal_policy.tp.use_tp_count
         if use_tp_count is not None and len(take_profits) > use_tp_count:
-            original_count = len(take_profits)
+            original_tp_count = len(take_profits)
             take_profits = take_profits[:use_tp_count]
             log.append(EnrichmentLogEntry(
                 check="tp_count_trimmed",
-                original=str(original_count),
+                original=str(original_tp_count),
                 result=str(use_tp_count),
             ))
 
@@ -146,6 +147,7 @@ class SignalEnrichmentProcessor:
             stop_loss=signal.stop_loss,
             range_derivation=range_derivation,
             risk_hint=signal.risk_hint,
+            original_tp_count=original_tp_count,
         )
 
         return EnrichedCanonicalMessage(

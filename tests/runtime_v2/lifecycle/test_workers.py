@@ -232,7 +232,7 @@ def test_worker_idempotent_on_double_run(dbs):
     assert chains[0] == 1
 
 
-def test_worker_block_new_entries_produces_review(dbs):
+def test_worker_block_new_entries_produces_reject(dbs):
     parser_db, ops_db = dbs
     enriched = _make_enriched_signal(enrichment_id=4)
     _insert_enriched(parser_db, 4, enriched)
@@ -251,12 +251,12 @@ def test_worker_block_new_entries_produces_review(dbs):
 
     conn = sqlite3.connect(ops_db)
     chains = conn.execute("SELECT COUNT(*) FROM ops_trade_chains").fetchone()
-    review_events = conn.execute(
-        "SELECT COUNT(*) FROM ops_lifecycle_events WHERE event_type='REVIEW_REQUIRED'"
+    reject_events = conn.execute(
+        "SELECT COUNT(*) FROM ops_lifecycle_events WHERE event_type='SIGNAL_REJECTED'"
     ).fetchone()
     conn.close()
     assert chains[0] == 0
-    assert review_events[0] == 1
+    assert reject_events[0] == 1
 
 
 def _make_chain_in_db(ops_db: str, *, trade_chain_id_hint: int, state: str,

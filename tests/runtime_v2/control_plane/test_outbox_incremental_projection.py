@@ -2,73 +2,48 @@ from __future__ import annotations
 
 import json
 import sqlite3
+from datetime import datetime, timezone
+from pathlib import Path
 
 
 def _make_db() -> sqlite3.Connection:
+    """In-memory DB with the real ops migrations applied.
+
+    The previous hand-rolled schema drifted from production (missing columns
+    added by later migrations); applying db/ops_migrations keeps the fixture
+    aligned by construction.
+    """
     conn = sqlite3.connect(":memory:")
-    conn.executescript("""
-    CREATE TABLE ops_trade_chains (
-        trade_chain_id INTEGER PRIMARY KEY,
-        symbol TEXT DEFAULT 'BTCUSDT',
-        side TEXT DEFAULT 'LONG',
-        entry_mode TEXT,
-        trader_id TEXT,
-        account_id TEXT,
-        plan_state_json TEXT DEFAULT '{}',
-        risk_snapshot_json TEXT DEFAULT '{}',
-        entry_avg_price REAL,
-        current_stop_price REAL,
-        source_chat_id TEXT,
-        telegram_message_id TEXT,
-        cumulative_gross_pnl REAL,
-        cumulative_fees REAL,
-        cumulative_funding REAL,
-        allocated_margin REAL,
-        filled_entry_qty REAL,
-        open_position_qty REAL,
-        be_protection_status TEXT DEFAULT 'NOT_PROTECTED',
-        last_projected_event_id INTEGER NOT NULL DEFAULT 0
-    );
-    CREATE TABLE ops_lifecycle_events (
-        event_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        trade_chain_id INTEGER,
-        event_type TEXT,
-        source_type TEXT DEFAULT 'test',
-        previous_state TEXT,
-        next_state TEXT,
-        source_id TEXT,
-        payload_json TEXT DEFAULT '{}',
-        idempotency_key TEXT UNIQUE,
-        created_at TEXT DEFAULT (datetime('now'))
-    );
-    CREATE TABLE ops_notification_outbox (
-        outbox_id INTEGER PRIMARY KEY AUTOINCREMENT,
-        notification_type TEXT,
-        destination TEXT,
-        payload_json TEXT,
-        priority TEXT,
-        status TEXT DEFAULT 'PENDING',
-        dedupe_key TEXT UNIQUE,
-        attempts INTEGER DEFAULT 0,
-        created_at TEXT,
-        send_after TEXT,
-        aggregation_group TEXT,
-        source_message_id TEXT
-    );
-    """)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
     return conn
 
 
+def _now() -> str:
+    return datetime.now(timezone.utc).isoformat()
+
+
 def _insert_chain(conn, chain_id=1):
-    conn.execute("INSERT INTO ops_trade_chains (trade_chain_id) VALUES (?)", (chain_id,))
+    now = _now()
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        " management_plan_json, risk_snapshot_json, plan_state_json, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, chain_id, chain_id, chain_id, "trader_a", "main", "BTCUSDT", "LONG",
+         "WAITING_ENTRY", "ONE_SHOT", "{}", "{}", "{}", now, now),
+    )
     conn.commit()
 
 
 def _insert_event(conn, chain_id, event_type, idem, payload=None):
     cursor = conn.execute(
-        "INSERT INTO ops_lifecycle_events (trade_chain_id, event_type, payload_json, idempotency_key) "
-        "VALUES (?,?,?,?)",
-        (chain_id, event_type, json.dumps(payload or {}), idem),
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (?,?,?,?,?,?)",
+        (chain_id, event_type, "test", json.dumps(payload or {}), idem, _now()),
     )
     conn.commit()
     return cursor.lastrowid

@@ -155,6 +155,8 @@ class EnrichedSignalPayload(BaseModel):
     stop_loss: StopLoss | None
     range_derivation: RangeDerivation | None = None
     risk_hint: RiskHint | None = None
+    # Set only when policy use_tp_count trimmed the parsed TPs (original count).
+    original_tp_count: int | None = None
 
 
 class EnrichmentLogEntry(BaseModel):

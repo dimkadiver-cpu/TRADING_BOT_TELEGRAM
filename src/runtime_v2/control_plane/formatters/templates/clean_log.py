@@ -17,6 +17,17 @@ from src.runtime_v2.control_plane.formatters.display import display_symbol
 # Shared item renderers (used as item_renderer in ListBlock)
 # ---------------------------------------------------------------------------
 
+def _entry_label(seq: object, total: int | None) -> str:
+    """Numbering rule: Entry_N only when the signal has more than one entry.
+    total=None (count unknown) keeps the numbered label for backward compat."""
+    return "Entry" if total == 1 else f"Entry_{seq}"
+
+
+def _tp_label(level: object, total: int | None) -> str:
+    """Numbering rule: TP_N only when the signal has more than one TP."""
+    return "TP" if total == 1 else f"TP_{level}"
+
+
 def _render_entry_item(entry: dict, i: int, p: dict) -> list[str]:
     seq = entry.get("sequence", i)
     etype = entry.get("entry_type", "LIMIT")
@@ -27,13 +38,15 @@ def _render_entry_item(entry: dict, i: int, p: dict) -> list[str]:
         price_str = f"{num(price)} Limit" if price is not None else "Limit"
     pcts = p.get("_entry_pcts") or []
     pct_suffix = f" ({pcts[i - 1]}%)" if len(pcts) >= 2 and i <= len(pcts) else ""
-    return [f"Entry_{seq}: {price_str}{pct_suffix}"]
+    label = _entry_label(seq, len(p.get("entries") or []))
+    return [f"{label}: {price_str}{pct_suffix}"]
 
 
 def _render_tp_item(tp: object, i: int, p: dict) -> list[str]:
     pcts = p.get("_tp_pcts") or []
     pct_suffix = f" ({pcts[i - 1]}%)" if len(pcts) >= 2 and i <= len(pcts) else ""
-    return [f"TP_{i}: {num(tp)}{pct_suffix}"]
+    label = _tp_label(i, len(p.get("tps") or []))
+    return [f"{label}: {num(tp)}{pct_suffix}"]
 
 
 def _render_pending_entry(entry: dict, i: int, p: dict) -> list[str]:
@@ -41,7 +54,8 @@ def _render_pending_entry(entry: dict, i: int, p: dict) -> list[str]:
     px = entry.get("price")
     etype = entry.get("entry_type", "LIMIT").capitalize()
     price_str = price(px) if px is not None else "?"
-    return [f"Pending: Entry_{seq} {price_str} {etype}"]
+    label = _entry_label(seq, p.get("_total_legs"))
+    return [f"Pending: {label} {price_str} {etype}"]
 
 
 def _render_changed_item(item: object, i: int, p: dict) -> list[str]:
@@ -90,11 +104,8 @@ FINAL_RESULT: list = [
 _FILL_SECTION: list = [
     StaticBlock("Filled:"),
     DerivedBlock(text_fn=lambda p: (
-        (
-            "Entry"
-            if p.get("_total_legs", 1) == 1
-            else f"Entry_{p['filled_leg_sequence']}"
-        ) + f": {price(p.get('fill_price'))} {p.get('entry_type_for_leg', 'Limit').capitalize()}"
+        _entry_label(p["filled_leg_sequence"], p.get("_total_legs", 1))
+        + f": {price(p.get('fill_price'))} {p.get('entry_type_for_leg', 'Limit').capitalize()}"
         if p.get("filled_leg_sequence") is not None else ""
     )),
     BranchBlock(
@@ -158,6 +169,9 @@ def _build_signal_notes(p: dict) -> list[str]:
             notes.append(f"Entry - {mode} [{num(min_p)}-{num(max_p)}]")
     if p.get("risk_hint_applied"):
         notes.append("Risk - Reduced by trader")
+    trim = p.get("tp_trimmed") or {}
+    if trim.get("original") is not None and trim.get("used") is not None:
+        notes.append(f"TP - Reduced by policy ({trim['original']} → {trim['used']})")
     return notes
 
 
@@ -186,7 +200,7 @@ def _t_tp_final(p: dict) -> dict:
     return {
         **p,
         "_emoji": "✅",
-        "exit_label": f"TP_{level}" if level is not None else "TP",
+        "exit_label": _tp_label(level, p.get("_total_tps")) if level is not None else "TP",
         "exit_price": display_price,
         "close_reason": p.get("close_reason") or "FINAL TP FILLED",
     }
@@ -304,9 +318,9 @@ def _t_entry_updated(p: dict) -> dict:
 _ENTRY_CANCELLED_BLOCKS: list = [
     HeaderBlock(emoji="⚠️", event_label="ENTRY CANCELLED"),
     DerivedBlock(text_fn=lambda p:
-        f"Entry_{p['_c_seq']}: {num(p['_c_price'])} {p['_c_etype']}"
+        f"{_entry_label(p['_c_seq'], p.get('_total_legs'))}: {num(p['_c_price'])} {p['_c_etype']}"
         if p.get("_c_price") is not None
-        else f"Entry_{p['_c_seq']}: {p['_c_etype']}"
+        else f"{_entry_label(p['_c_seq'], p.get('_total_legs'))}: {p['_c_etype']}"
     ),
     ConditionalBlock(
         condition=lambda p: p.get("partial_fill_pct") is not None,
@@ -374,11 +388,12 @@ _PARTIAL_RESULT_BLOCKS: list = [
 def _t_tp_partial(p: dict) -> dict:
     level = p.get("tp_level")
     display_price = p.get("fill_price") if p.get("fill_price") is not None else p.get("tp_price")
+    single_tp = p.get("_total_tps") == 1
     return {
         **p,
         "_emoji":       "📊",
-        "_event_label": f"TP{level} FILLED" if level is not None else "TP FILLED",
-        "_price_label": f"TP_{level}" if level is not None else "TP",
+        "_event_label": f"TP{level} FILLED" if level is not None and not single_tp else "TP FILLED",
+        "_price_label": _tp_label(level, p.get("_total_tps")) if level is not None else "TP",
         "_price_value": display_price,
         "_show_value":  True,
     }

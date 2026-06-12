@@ -168,8 +168,8 @@ def test_ac1_signal_pass_creates_one_chain(dbs):
     assert count == 1
 
 
-# AC2: Risk/capacity fail → nessuna chain, REVIEW_REQUIRED event
-def test_ac2_risk_fail_produces_review(dbs):
+# AC2: Risk/capacity fail → nessuna chain, SIGNAL_REJECTED event
+def test_ac2_risk_fail_produces_reject(dbs):
     parser_db, ops_db = dbs
     enriched = _make_enriched_signal(enrichment_id=2, max_concurrent_trades=0)
     _insert_enriched_row(parser_db, 2, enriched)
@@ -178,7 +178,7 @@ def test_ac2_risk_fail_produces_review(dbs):
     conn = sqlite3.connect(ops_db)
     chains = conn.execute("SELECT COUNT(*) FROM ops_trade_chains").fetchone()[0]
     reviews = conn.execute(
-        "SELECT COUNT(*) FROM ops_lifecycle_events WHERE event_type='REVIEW_REQUIRED'"
+        "SELECT COUNT(*) FROM ops_lifecycle_events WHERE event_type='SIGNAL_REJECTED'"
     ).fetchone()[0]
     conn.close()
     assert chains == 0
