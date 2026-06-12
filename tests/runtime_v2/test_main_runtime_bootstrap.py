@@ -381,6 +381,59 @@ def test_build_lifecycle_entry_gate_uses_simple_attached_strategy(monkeypatch, t
     assert gate._simple_attached_enabled is True
 
 
+def test_build_exchange_port_uses_live_port_when_runtime_has_adapters(monkeypatch, tmp_path):
+    import main as app_main
+    from src.runtime_v2.execution_gateway.models import (
+        AccountRoutingEntry,
+        AdapterConfig,
+        ExecutionConfig,
+    )
+    from src.runtime_v2.lifecycle.live_exchange_data_port import LiveExchangeDataPort
+
+    exec_config = ExecutionConfig(
+        default_adapter="bybit_demo",
+        account_routing={
+            "default": AccountRoutingEntry(adapter="bybit_demo", execution_account_id="main"),
+        },
+        adapters={"bybit_demo": AdapterConfig(type="ccxt_bybit", mode="demo", connector="bybit")},
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionConfigLoader",
+        lambda path: SimpleNamespace(load=lambda: exec_config),
+    )
+
+    runtime = app_main.ExecutionRuntime(
+        adapter=MagicMock(name="default_adapter"),
+        execution_worker=MagicMock(),
+        sync_worker=MagicMock(),
+        ws_watcher=None,
+        reconciliation_interval_seconds=None,
+        adapters={"bybit_demo": MagicMock(name="default_adapter")},
+    )
+
+    port = app_main._build_exchange_port(
+        root_dir=tmp_path,
+        execution_runtime=runtime,
+        known_symbols=frozenset({"BTC/USDT:USDT"}),
+    )
+
+    assert isinstance(port, LiveExchangeDataPort)
+
+
+def test_build_exchange_port_falls_back_to_static_port_without_runtime(tmp_path):
+    import main as app_main
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    port = app_main._build_exchange_port(
+        root_dir=tmp_path,
+        execution_runtime=None,
+        known_symbols=frozenset({"BTC/USDT:USDT"}),
+    )
+
+    assert isinstance(port, StaticExchangeDataPort)
+
+
 def test_close_execution_runtime_stops_watcher_and_closes_adapter():
     import main as app_main
 

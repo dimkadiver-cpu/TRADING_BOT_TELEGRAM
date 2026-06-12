@@ -104,3 +104,95 @@ def test_static_port_returns_position():
     port = StaticExchangeDataPort(positions=[pos])
     assert port.get_open_position("acc_1", "BTC/USDT", "LONG") is pos
     assert port.get_open_position("acc_1", "BTC/USDT", "SHORT") is None
+
+
+def test_live_port_uses_routed_adapter_snapshots():
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import (
+        AccountRoutingEntry,
+        AdapterConfig,
+        ExecutionConfig,
+        RawAccountSnapshot,
+        RawMarketSnapshot,
+    )
+    from src.runtime_v2.lifecycle.live_exchange_data_port import LiveExchangeDataPort
+
+    adapter = FakeAdapter(
+        account_snapshot=RawAccountSnapshot(
+            equity_usdt=1111.0,
+            available_balance_usdt=999.0,
+            total_margin_used_usdt=123.0,
+            source="fake_live",
+        ),
+        market_snapshots={
+            "BTCUSDT": RawMarketSnapshot(
+                symbol="BTCUSDT",
+                mark_price=50000.0,
+                bid=49999.0,
+                ask=50001.0,
+                min_order_size=0.001,
+                price_precision=1,
+                qty_precision=3,
+                source="fake_live",
+            )
+        },
+    )
+    config = ExecutionConfig(
+        default_adapter="demo",
+        account_routing={
+            "default": AccountRoutingEntry(adapter="demo", execution_account_id="main"),
+            "acc_1": AccountRoutingEntry(adapter="demo", execution_account_id="main"),
+        },
+        adapters={"demo": AdapterConfig(type="fake", mode="demo", connector="fake")},
+    )
+
+    port = LiveExchangeDataPort(
+        execution_config=config,
+        adapter_registry={"demo": adapter},
+        known_symbols=frozenset({"BTC/USDT:USDT"}),
+    )
+
+    account = port.get_account_state("acc_1")
+    market = port.get_symbol_market_state("acc_1", "BTCUSDT")
+
+    assert account.equity_usdt == 1111.0
+    assert account.available_balance_usdt == 999.0
+    assert account.total_margin_used_usdt == 123.0
+    assert account.source == "fake_live"
+    assert market.mark_price == 50000.0
+    assert market.bid == 49999.0
+    assert market.ask == 50001.0
+    assert market.min_order_size == 0.001
+    assert market.price_precision == 1
+    assert market.qty_precision == 3
+    assert market.source == "fake_live"
+
+
+def test_live_port_falls_back_to_static_defaults_when_adapter_has_no_snapshot():
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.models import AccountRoutingEntry, AdapterConfig, ExecutionConfig
+    from src.runtime_v2.lifecycle.live_exchange_data_port import LiveExchangeDataPort
+
+    config = ExecutionConfig(
+        default_adapter="demo",
+        account_routing={
+            "default": AccountRoutingEntry(adapter="demo", execution_account_id="main"),
+            "acc_1": AccountRoutingEntry(adapter="demo", execution_account_id="main"),
+        },
+        adapters={"demo": AdapterConfig(type="fake", mode="demo", connector="fake")},
+    )
+    port = LiveExchangeDataPort(
+        execution_config=config,
+        adapter_registry={"demo": FakeAdapter()},
+        known_symbols=frozenset({"ETH/USDT:USDT"}),
+    )
+
+    account = port.get_account_state("acc_1")
+    market = port.get_symbol_market_state("acc_1", "ETHUSDT")
+
+    assert account.account_id == "acc_1"
+    assert account.source == "static_default"
+    assert account.equity_usdt is None
+    assert market.symbol == "ETHUSDT"
+    assert market.source == "static_default"
+    assert market.mark_price is None

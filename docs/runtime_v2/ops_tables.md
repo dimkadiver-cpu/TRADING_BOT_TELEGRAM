@@ -60,6 +60,11 @@ Writer attuale:
 
 - `src/runtime_v2/lifecycle/repositories.py`
 - `src/runtime_v2/lifecycle/entry_gate.py`
+
+Nota runtime:
+
+- il lifecycle prova a leggere snapshot live dagli adapter execution instradati per account;
+- se lo snapshot live non è disponibile, fa fallback a `static_default`.
 - `src/runtime_v2/lifecycle/workers.py`
 
 Uso nel live:
@@ -93,6 +98,11 @@ Writer attuale:
 
 - `src/runtime_v2/lifecycle/repositories.py`
 - `src/runtime_v2/lifecycle/entry_gate.py`
+
+Nota runtime:
+
+- il lifecycle prova a leggere snapshot live dagli adapter execution instradati per account;
+- se lo snapshot live non è disponibile, fa fallback a `static_default`.
 - `src/runtime_v2/lifecycle/workers.py`
 
 Uso nel live:

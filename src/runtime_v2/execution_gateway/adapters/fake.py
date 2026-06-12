@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.models import (
-    AdapterCapabilities, AdapterResult, RawAdapterOrder,
-    RawAdapterTrade, RawFundingExecution, RawPositionDetails,
+    AdapterCapabilities, AdapterResult, RawAccountSnapshot, RawAdapterOrder,
+    RawAdapterTrade, RawFundingExecution, RawMarketSnapshot, RawPositionDetails,
 )
 
 
@@ -20,6 +20,8 @@ class FakeAdapter(ExecutionAdapter):
         positions: dict[str, float] | None = None,
         mark_prices: dict[str, float] | None = None,
         max_order_qty: dict[str, float] | None = None,
+        account_snapshot: RawAccountSnapshot | None = None,
+        market_snapshots: dict[str, RawMarketSnapshot] | None = None,
     ) -> None:
         self._capabilities = capabilities or AdapterCapabilities(
             place_entry=True,
@@ -37,6 +39,8 @@ class FakeAdapter(ExecutionAdapter):
         self._positions = positions or {}
         self._mark_prices: dict[str, float] = mark_prices or {}
         self._max_order_qty: dict[str, float] = max_order_qty or {}
+        self._account_snapshot = account_snapshot
+        self._market_snapshots: dict[str, RawMarketSnapshot] = market_snapshots or {}
         self._orders: dict[str, RawAdapterOrder] = {}
         self.calls: list[dict] = []
         self._last_place_qty: float | None = None
@@ -137,6 +141,16 @@ class FakeAdapter(ExecutionAdapter):
 
     def fetch_max_order_qty(self, symbol: str, execution_account_id: str) -> float | None:
         return self._max_order_qty.get(symbol)
+
+    def fetch_account_snapshot(self, execution_account_id: str) -> RawAccountSnapshot | None:
+        return self._account_snapshot
+
+    def fetch_market_snapshot(
+        self,
+        symbol: str,
+        execution_account_id: str,
+    ) -> RawMarketSnapshot | None:
+        return self._market_snapshots.get(symbol)
 
     def load_known_symbols(self) -> frozenset[str] | None:
         # Return None (no restriction) unless specific mark prices were configured —

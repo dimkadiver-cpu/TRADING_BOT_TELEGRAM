@@ -1323,6 +1323,55 @@ def test_fetch_mark_price_returns_none_on_error():
     assert result is None
 
 
+def test_fetch_account_snapshot_extracts_usdt_metrics():
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = {
+        "total": {"USDT": 1111.0},
+        "free": {"USDT": 999.0},
+        "used": {"USDT": 112.0},
+        "info": {},
+    }
+    adapter = _make_adapter(exchange)
+
+    snapshot = adapter.fetch_account_snapshot("acc1")
+
+    assert snapshot is not None
+    assert snapshot.equity_usdt == 1111.0
+    assert snapshot.available_balance_usdt == 999.0
+    assert snapshot.total_margin_used_usdt == 112.0
+    assert snapshot.source == "ccxt_bybit:live"
+
+
+def test_fetch_market_snapshot_extracts_ticker_and_market_constraints():
+    exchange = MagicMock()
+    exchange.fetch_ticker.return_value = {
+        "markPrice": 50123.45,
+        "bid": 50120.0,
+        "ask": 50126.0,
+    }
+    exchange.load_markets.return_value = {
+        "BTC/USDT:USDT": {
+            "id": "BTCUSDT",
+            "precision": {"price": 1, "amount": 0.001},
+            "limits": {"amount": {"min": 0.001}},
+            "info": {"lotSizeFilter": {"minOrderQty": "0.001"}},
+        }
+    }
+    adapter = _make_adapter(exchange)
+
+    snapshot = adapter.fetch_market_snapshot("BTC/USDT:USDT", "acc1")
+
+    assert snapshot is not None
+    assert snapshot.symbol == "BTCUSDT"
+    assert snapshot.mark_price == 50123.45
+    assert snapshot.bid == 50120.0
+    assert snapshot.ask == 50126.0
+    assert snapshot.min_order_size == 0.001
+    assert snapshot.price_precision == 1
+    assert snapshot.qty_precision == 3
+    assert snapshot.source == "ccxt_bybit:live"
+
+
 def test_fetch_recent_reduce_trades_returns_reduce_only_fills():
     """fetch_recent_reduce_trades filters to reduceOnly trades, normalizes symbol to raw."""
     from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter

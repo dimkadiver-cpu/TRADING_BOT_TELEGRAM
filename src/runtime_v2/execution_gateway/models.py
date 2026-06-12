@@ -146,9 +146,35 @@ class RawPositionDetails(BaseModel):
     stop_loss: float | None = None
 
 
+class RawAccountSnapshot(BaseModel):
+    """Normalized account-level snapshot returned by execution adapters."""
+    model_config = ConfigDict(extra="ignore")
+    equity_usdt: float | None = None
+    available_balance_usdt: float | None = None
+    total_open_risk_usdt: float | None = None
+    total_margin_used_usdt: float | None = None
+    payload: dict = Field(default_factory=dict)
+    source: str
+
+
+class RawMarketSnapshot(BaseModel):
+    """Normalized symbol market snapshot returned by execution adapters."""
+    model_config = ConfigDict(extra="ignore")
+    symbol: str
+    mark_price: float | None = None
+    bid: float | None = None
+    ask: float | None = None
+    min_order_size: float | None = None
+    price_precision: int | None = None
+    qty_precision: int | None = None
+    payload: dict = Field(default_factory=dict)
+    source: str
+
+
 __all__ = [
     "RetryConfig", "LiveSafetyConfig", "WebsocketConfig",
     "ExecutionStrategyConfig",
     "AdapterConfig", "AccountRoutingEntry", "ExecutionConfig",
     "RawAdapterOrder", "RawAdapterTrade", "RawPositionDetails", "AdapterResult",
+    "RawAccountSnapshot", "RawMarketSnapshot",
 ]

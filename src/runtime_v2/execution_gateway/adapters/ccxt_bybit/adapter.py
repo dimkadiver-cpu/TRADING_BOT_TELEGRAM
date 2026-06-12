@@ -11,8 +11,8 @@ from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.order_builder import BybitOrderBuilder
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper, _f, _ms_to_iso
 from src.runtime_v2.execution_gateway.models import (
-    AdapterCapabilities, AdapterResult, RawAdapterOrder,
-    RawAdapterTrade, RawFundingExecution, RawPositionDetails,
+    AdapterCapabilities, AdapterResult, RawAccountSnapshot, RawAdapterOrder,
+    RawAdapterTrade, RawFundingExecution, RawMarketSnapshot, RawPositionDetails,
 )
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
@@ -21,6 +21,45 @@ if TYPE_CHECKING:
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
 logger = logging.getLogger(__name__)
+
+
+def _safe_float(value: object) -> float | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    if text == "":
+        return None
+    try:
+        return float(text)
+    except (TypeError, ValueError):
+        return None
+
+
+def _precision_to_digits(value: object) -> int | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, int):
+        return value if value >= 0 else None
+    text = str(value).strip()
+    if text == "":
+        return None
+    if "e-" in text.lower():
+        try:
+            return max(0, int(text.lower().split("e-")[1]))
+        except (IndexError, ValueError):
+            return None
+    if "." in text:
+        return len(text.rstrip("0").split(".")[1])
+    try:
+        parsed = float(text)
+    except (TypeError, ValueError):
+        return None
+    if parsed >= 1 and parsed.is_integer():
+        return int(parsed)
+    normalized = f"{parsed:.12f}".rstrip("0").rstrip(".")
+    if "." in normalized:
+        return len(normalized.split(".")[1])
+    return 0
 
 
 class CcxtBybitAdapter(ExecutionAdapter):
@@ -73,6 +112,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 time_sync_on_startup=time_sync_on_startup,
             )
         self._connector = connector
+        self._mode = mode
         self._repo = repo
         self._builder = BybitOrderBuilder()
 
@@ -357,6 +397,100 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 pass
         return None
 
+    def fetch_account_snapshot(self, execution_account_id: str) -> RawAccountSnapshot | None:
+        del execution_account_id
+        try:
+            balance = self._exchange.fetch_balance()
+        except Exception as exc:
+            logger.warning("fetch_account_snapshot failed: %s", exc)
+            return None
+
+        total = balance.get("total") if isinstance(balance.get("total"), dict) else {}
+        free = balance.get("free") if isinstance(balance.get("free"), dict) else {}
+        used = balance.get("used") if isinstance(balance.get("used"), dict) else {}
+        usdt_wallet = balance.get("USDT") if isinstance(balance.get("USDT"), dict) else {}
+        info = balance.get("info") if isinstance(balance.get("info"), dict) else {}
+
+        account_row = None
+        for row in (((info.get("result") or {}).get("list")) or []):
+            if not isinstance(row, dict):
+                continue
+            coins = row.get("coin") or []
+            if not isinstance(coins, list):
+                continue
+            for coin_row in coins:
+                if isinstance(coin_row, dict) and coin_row.get("coin") == "USDT":
+                    account_row = coin_row
+                    break
+            if account_row is not None:
+                break
+
+        return RawAccountSnapshot(
+            equity_usdt=(
+                _safe_float(usdt_wallet.get("total"))
+                or _safe_float(total.get("USDT"))
+                or _safe_float(account_row.get("equity") if account_row else None)
+            ),
+            available_balance_usdt=(
+                _safe_float(usdt_wallet.get("free"))
+                or _safe_float(free.get("USDT"))
+                or _safe_float(account_row.get("availableToWithdraw") if account_row else None)
+                or _safe_float(account_row.get("walletBalance") if account_row else None)
+            ),
+            total_open_risk_usdt=None,
+            total_margin_used_usdt=(
+                _safe_float(usdt_wallet.get("used"))
+                or _safe_float(used.get("USDT"))
+                or _safe_float(account_row.get("totalPositionIM") if account_row else None)
+                or _safe_float(account_row.get("totalOrderIM") if account_row else None)
+            ),
+            payload=balance,
+            source=f"ccxt_bybit:{self._mode}",
+        )
+
+    def fetch_market_snapshot(
+        self,
+        symbol: str,
+        execution_account_id: str,
+    ) -> RawMarketSnapshot | None:
+        del execution_account_id
+        try:
+            ticker = self._exchange.fetch_ticker(symbol)
+            markets = self._exchange.load_markets()
+        except Exception as exc:
+            logger.warning("fetch_market_snapshot failed for %s: %s", symbol, exc)
+            return None
+
+        normalized = self._normalize_bybit_symbol(symbol)
+        market = markets.get(symbol)
+        if market is None:
+            for candidate in markets.values():
+                if candidate.get("id") == normalized:
+                    market = candidate
+                    break
+
+        limits = (market or {}).get("limits")
+        limits_amount = limits.get("amount", {}) if isinstance(limits, dict) else {}
+        info = (market or {}).get("info", {}) if isinstance((market or {}).get("info"), dict) else {}
+        lot_filter = info.get("lotSizeFilter", {}) if isinstance(info.get("lotSizeFilter"), dict) else {}
+        precision = (market or {}).get("precision", {}) if isinstance((market or {}).get("precision"), dict) else {}
+
+        return RawMarketSnapshot(
+            symbol=normalized,
+            mark_price=_safe_float(ticker.get("markPrice") or ticker.get("last")),
+            bid=_safe_float(ticker.get("bid")),
+            ask=_safe_float(ticker.get("ask")),
+            min_order_size=(
+                _safe_float(lot_filter.get("minOrderQty"))
+                or _safe_float(lot_filter.get("qtyStep"))
+                or _safe_float(limits_amount.get("min"))
+            ),
+            price_precision=_precision_to_digits(precision.get("price")),
+            qty_precision=_precision_to_digits(precision.get("amount")),
+            payload={"ticker": ticker, "market": market or {}},
+            source=f"ccxt_bybit:{self._mode}",
+        )
+
     def load_known_symbols(self) -> frozenset[str] | None:
         try:
             markets = self._exchange.load_markets()
@@ -507,17 +641,6 @@ class CcxtBybitAdapter(ExecutionAdapter):
         side: str,
         extra_params: dict,
     ) -> AdapterResult:
-        def _safe_float(value: object) -> float | None:
-            if value is None:
-                return None
-            text = str(value).strip()
-            if text == "":
-                return None
-            try:
-                return float(text)
-            except (TypeError, ValueError):
-                return None
-
         close_side = "sell" if side == "LONG" else "buy"
         position_idx = int(extra_params.get("position_idx", 0))
         tps = list(extra_params.get("tps") or [])

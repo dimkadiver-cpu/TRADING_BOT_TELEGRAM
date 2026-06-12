@@ -37,6 +37,8 @@ from src.runtime_v2.lifecycle.repositories import (
     SnapshotRepository,
     TradeChainRepository,
 )
+from src.runtime_v2.lifecycle.live_exchange_data_port import LiveExchangeDataPort
+from src.runtime_v2.lifecycle.ports import ExchangeDataPort
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
@@ -258,7 +260,7 @@ def _build_lifecycle_entry_gate(
     *,
     root_dir: Path,
     risk_engine: RiskCapacityEngine,
-    exchange_port: StaticExchangeDataPort,
+    exchange_port: ExchangeDataPort,
 ) -> LifecycleEntryGate:
     execution_config_path = str(root_dir / "config" / "execution.yaml")
     exec_config = ExecutionConfigLoader(execution_config_path).load()
@@ -268,6 +270,23 @@ def _build_lifecycle_entry_gate(
         risk_engine=risk_engine,
         exchange_port=exchange_port,
         simple_attached_enabled=strategy.simple_attached_enabled,
+    )
+
+
+def _build_exchange_port(
+    *,
+    root_dir: Path,
+    execution_runtime: ExecutionRuntime | None,
+    known_symbols: frozenset[str] | None,
+):
+    if execution_runtime is None or not execution_runtime.adapters:
+        return StaticExchangeDataPort(known_symbols=known_symbols)
+    execution_config_path = str(root_dir / "config" / "execution.yaml")
+    exec_config = ExecutionConfigLoader(execution_config_path).load()
+    return LiveExchangeDataPort(
+        execution_config=exec_config,
+        adapter_registry=execution_runtime.adapters,
+        known_symbols=known_symbols,
     )
 
 
@@ -505,7 +524,11 @@ async def _async_main(
     else:
         logger.info("symbol whitelist unavailable — entry gate symbol check disabled")
 
-    exchange_port = StaticExchangeDataPort(known_symbols=known_symbols)
+    exchange_port = _build_exchange_port(
+        root_dir=root_dir,
+        execution_runtime=execution_runtime,
+        known_symbols=known_symbols,
+    )
     risk_engine = RiskCapacityEngine()
     entry_gate = _build_lifecycle_entry_gate(
         root_dir=root_dir,

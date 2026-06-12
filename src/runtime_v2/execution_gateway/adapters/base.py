@@ -3,7 +3,13 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from src.runtime_v2.execution_gateway.models import AdapterCapabilities, AdapterResult, RawAdapterOrder
+from src.runtime_v2.execution_gateway.models import (
+    AdapterCapabilities,
+    AdapterResult,
+    RawAccountSnapshot,
+    RawAdapterOrder,
+    RawMarketSnapshot,
+)
 
 
 class ExecutionAdapter(ABC):
@@ -74,6 +80,21 @@ class ExecutionAdapter(ABC):
         execution_account_id: str,
     ) -> float | None:
         """Return the max entry quantity accepted by the exchange for this symbol, or None."""
+        return None
+
+    def fetch_account_snapshot(
+        self,
+        execution_account_id: str,
+    ) -> RawAccountSnapshot | None:
+        """Return a normalized account snapshot for lifecycle risk/audit, or None if unavailable."""
+        return None
+
+    def fetch_market_snapshot(
+        self,
+        symbol: str,
+        execution_account_id: str,
+    ) -> RawMarketSnapshot | None:
+        """Return a normalized market snapshot for lifecycle risk/audit, or None if unavailable."""
         return None
 
 
