@@ -775,34 +775,47 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def get_open_chains_for_symbol(self, symbol: str, side: str) -> list[int]:
+    def get_open_chains_for_symbol(
+        self, symbol: str, side: str, account_id: str | None = None
+    ) -> list[int]:
         """Lista di trade_chain_id OPEN/PARTIALLY_CLOSED per symbol+side.
 
         Usato da watchMyTrades per trovare le chain candidate per un fill TP.
         `side` è il lato della posizione (LONG/SHORT), non il lato del fill.
+        Con `account_id` la ricerca è ristretta alle chain di quell'account —
+        necessario in per_trader_subaccount, dove symbol+side può essere aperto
+        su più account contemporaneamente.
         """
+        sql = (
+            "SELECT trade_chain_id FROM ops_trade_chains "
+            "WHERE symbol=? AND side=? "
+            "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
+        )
+        params: list = [symbol, side]
+        if account_id is not None:
+            sql += " AND account_id=?"
+            params.append(account_id)
         conn = sqlite3.connect(self._db)
         try:
-            rows = conn.execute(
-                "SELECT trade_chain_id FROM ops_trade_chains "
-                "WHERE symbol=? AND side=? "
-                "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
-                (symbol, side),
-            ).fetchall()
+            rows = conn.execute(sql, params).fetchall()
             return [int(r[0]) for r in rows]
         finally:
             conn.close()
 
-    def resolve_chain_for_fill(self, symbol: str, side: str) -> int | None:
+    def resolve_chain_for_fill(
+        self, symbol: str, side: str, account_id: str | None = None
+    ) -> int | None:
         """Return the unique open chain_id for symbol+side, or None if 0 or >1.
 
-        Used to attribute TP/SL fills that lack an orderLinkId (Bybit position-level
-        orders never carry orderLinkId). Returns None when attribution is ambiguous
-        (multiple open chains on the same symbol) to avoid mis-routing.
+        Used to attribute TP/SL fills and funding executions that lack an
+        orderLinkId (Bybit position-level orders never carry orderLinkId).
+        Returns None when attribution is ambiguous (multiple open chains on the
+        same symbol+side within the account scope) to avoid mis-routing.
 
         `side` must be the position side: 'LONG' or 'SHORT'.
+        `account_id` scopes resolution to one account (per_trader_subaccount).
         """
-        chains = self.get_open_chains_for_symbol(symbol, side)
+        chains = self.get_open_chains_for_symbol(symbol, side, account_id)
         return chains[0] if len(chains) == 1 else None
 
     # ------------------------------------------------------------------
@@ -958,18 +971,28 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def get_open_chains_with_tps(self) -> list[dict]:
-        """Returns open chains that have active TP commands. Used by run_trade_based_reconciliation."""
+    def get_open_chains_with_tps(self, account_id: str | None = None) -> list[dict]:
+        """Returns open chains that have active TP commands. Used by run_trade_based_reconciliation.
+
+        With `account_id`, only that account's chains are returned — each sync
+        worker polls its own adapter and must not attribute fills to chains
+        whose position lives on a different subaccount.
+        """
+        sql = (
+            "SELECT DISTINCT t.trade_chain_id, t.symbol, t.side "
+            "FROM ops_trade_chains t "
+            "JOIN ops_execution_commands c ON c.trade_chain_id = t.trade_chain_id "
+            "WHERE t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
+            "  AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
+            "  AND c.status IN ('SENT', 'DONE')"
+        )
+        params: list = []
+        if account_id is not None:
+            sql += " AND t.account_id=?"
+            params.append(account_id)
         conn = sqlite3.connect(self._db)
         try:
-            rows = conn.execute(
-                "SELECT DISTINCT t.trade_chain_id, t.symbol, t.side "
-                "FROM ops_trade_chains t "
-                "JOIN ops_execution_commands c ON c.trade_chain_id = t.trade_chain_id "
-                "WHERE t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
-                "  AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
-                "  AND c.status IN ('SENT', 'DONE')"
-            ).fetchall()
+            rows = conn.execute(sql, params).fetchall()
             return [{"trade_chain_id": int(r[0]), "symbol": r[1], "side": r[2]} for r in rows]
         finally:
             conn.close()

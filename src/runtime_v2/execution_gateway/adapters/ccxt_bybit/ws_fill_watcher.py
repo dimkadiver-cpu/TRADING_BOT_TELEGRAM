@@ -34,6 +34,7 @@ class BybitWsFillWatcher:
         reconciliation_callback=None,
         mode: str = "live",
         wake_callback: Callable[[], None] | None = None,
+        account_id: str | None = None,
     ) -> None:
         self._api_key = api_key
         self._api_secret = api_secret
@@ -41,6 +42,9 @@ class BybitWsFillWatcher:
         self._mode = mode
         self._ops_db_path = ops_db_path
         self._repo = repo
+        # Logical account this watcher serves: scopes symbol+side chain resolution
+        # so two accounts holding the same symbol+side don't look ambiguous.
+        self._account_id = account_id
         self._normalizer = normalizer
         self._classifier = classifier  # reserved: batch processing re-creates EventClassifier with fresh data
         self._reconciliation_callback = reconciliation_callback
@@ -195,7 +199,9 @@ class BybitWsFillWatcher:
                 ):
                     fill_side = (raw.side or "").strip()
                     position_side = "LONG" if fill_side.lower() == "sell" else "SHORT"
-                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
+                    chain_id = self._repo.resolve_chain_for_fill(
+                        raw.symbol, position_side, self._account_id
+                    )
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
 
@@ -207,14 +213,17 @@ class BybitWsFillWatcher:
                 ):
                     funding_side = (raw.side or "").strip()
                     position_side = "LONG" if funding_side.lower() in ("buy", "long") else "SHORT"
-                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
+                    chain_id = self._repo.resolve_chain_for_fill(
+                        raw.symbol, position_side, self._account_id
+                    )
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
                     else:
                         logger.warning(
-                            "funding execution %s (%s %s, exec_fee=%s) not attributable: "
+                            "funding execution %s (%s %s account=%s, exec_fee=%s) not attributable: "
                             "0 or >1 open chains for symbol+side — cumulative_funding will not be updated",
-                            raw.exchange_event_id, raw.symbol, position_side, raw.exec_fee,
+                            raw.exchange_event_id, raw.symbol, position_side,
+                            self._account_id, raw.exec_fee,
                         )
 
                 inserted = self._repo.insert_raw_and_classified(classified)

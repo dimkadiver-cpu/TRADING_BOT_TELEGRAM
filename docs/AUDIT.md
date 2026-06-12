@@ -4,6 +4,44 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-12 — Risoluzione chain account-aware (fix ambiguità multi-chain cross-account)
+
+### Step completato
+
+Con `per_trader_subaccount` attivo, la risoluzione chain per symbol+side era cieca rispetto all'account: due chain sullo stesso simbolo+lato su **account diversi** apparivano ambigue (funding e fill position-level scartati) nonostante l'attribuzione fosse determinabile. Peggio: `run_position_reconciliation` del worker di un account vedeva le chain dell'altro account, interrogava il proprio adapter (qty=0) e **avrebbe sintetizzato un CLOSE_FULL_FILLED spurio** chiudendo chain altrui.
+
+**Fix**: filtro `account_id` opzionale lungo tutta la catena di risoluzione:
+- `get_open_chains_for_symbol` / `resolve_chain_for_fill` / `get_open_chains_with_tps` accettano `account_id` (None = comportamento legacy);
+- `BybitWsFillWatcher` riceve `account_id` e lo usa per TP/SL e funding;
+- `ExchangeEventSyncWorker`: `_get_open_chains` filtra per `execution_account_id` (position reconciliation), `get_open_chains_with_tps` scoped (trade-based + protective), funding reconciliation scoped;
+- `main.py`/`main_linux_server.py`: il watcher per-account riceve il proprio `account_id`.
+
+Mappatura verificata: `execution_account_id` in `config/execution.yaml` coincide con `ops_trade_chains.account_id` logico (`main`, `account_nuovo`).
+
+**Resta irriducibile**: due segnali dello stesso trader, stesso simbolo+lato, stesso account (Bybit netta la posizione → un solo evento funding). Caso gestito con skip+WARNING; ripartizione pro-quota solo se i log mostrano che accade.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/execution_gateway/repositories.py` | Modificato | filtro account su 3 metodi di risoluzione |
+| `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/ws_fill_watcher.py` | Modificato | param `account_id`, usato in TP/SL e funding |
+| `src/runtime_v2/execution_gateway/event_sync.py` | Modificato | tutte le riconciliazioni scoped per account |
+| `main.py` / `main_linux_server.py` | Modificati | `account_id=account_id` al watcher |
+| `tests/...` (4 file) | Modificati | 5 nuovi test TDD; fixture `test_fill_identity_dedupe` allineata (colonna `account_id` mancante nello schema artigianale); 1 mock assertion aggiornata |
+
+### Validazione
+
+`pytest tests/runtime_v2/ -q` → **1241 passed, 4 failed, 6 skipped** (stessi 4 pre-esistenti: live trading gate ×3, canonicalizzazione ×1). TDD: 5 test rossi → implementazione → verdi.
+
+### Rischi aperti / blind spot
+
+- **Drift schema test**: `test_fill_identity_dedupe.py` (e forse altri) usano CREATE TABLE artigianali invece delle migration reali — il drift ha già nascosto la colonna `account_id`. Valutare migrazione delle fixture a `db/ops_migrations`.
+- **Ambiguità same-account**: invariata (irriducibile senza ripartizione pro-quota).
+- **Watcher legacy senza account**: se `BybitWsFillWatcher` viene costruito senza `account_id` (test, eventuali tool), la risoluzione resta account-blind come prima — comportamento intenzionale ma da non dimenticare.
+
+---
+
 ## 2026-06-12 — Riconciliazione REST funding + warning su funding scartato + fix NameError `_f`
 
 ### Step completato

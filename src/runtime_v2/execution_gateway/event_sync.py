@@ -155,7 +155,7 @@ class ExchangeEventSyncWorker:
         if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
             return 0
 
-        open_chains = self._repo.get_open_chains_with_tps()
+        open_chains = self._repo.get_open_chains_with_tps(self._execution_account_id)
         if not open_chains:
             return 0
 
@@ -249,12 +249,15 @@ class ExchangeEventSyncWorker:
                     continue
                 funding_side = (fe.side or "").strip()
                 position_side = "LONG" if funding_side.lower() in ("buy", "long") else "SHORT"
-                chain_id = self._repo.resolve_chain_for_fill(fe.symbol, position_side)
+                chain_id = self._repo.resolve_chain_for_fill(
+                    fe.symbol, position_side, self._execution_account_id
+                )
                 if chain_id is None:
                     logger.warning(
-                        "funding execution %s (%s %s, exec_fee=%s) not attributable via REST: "
-                        "0 or >1 open chains for symbol+side",
-                        fe.exec_id, fe.symbol, position_side, fe.exec_fee,
+                        "funding execution %s (%s %s account=%s, exec_fee=%s) not attributable "
+                        "via REST: 0 or >1 open chains for symbol+side",
+                        fe.exec_id, fe.symbol, position_side,
+                        self._execution_account_id, fe.exec_fee,
                     )
                     continue
 
@@ -283,7 +286,7 @@ class ExchangeEventSyncWorker:
         if not hasattr(self._adapter, "fetch_position_details"):
             return 0
 
-        open_chains = self._repo.get_open_chains_with_tps()
+        open_chains = self._repo.get_open_chains_with_tps(self._execution_account_id)
         if not open_chains:
             return 0
 
@@ -448,13 +451,21 @@ class ExchangeEventSyncWorker:
         )
 
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
-        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains."""
+        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains
+        belonging to this worker's account.
+
+        The account filter is essential in per_trader_subaccount mode: this worker
+        polls its own adapter, and checking another account's chains against it
+        would report qty=0 and synthesize a spurious close.
+        """
         conn = sqlite3.connect(self._ops_db)
         try:
             rows = conn.execute(
                 "SELECT trade_chain_id, symbol, side, open_position_qty "
                 "FROM ops_trade_chains "
-                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
+                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
+                "AND account_id=?",
+                (self._execution_account_id,),
             ).fetchall()
             return [(int(r[0]), str(r[1]), str(r[2]), float(r[3] or 0.0)) for r in rows]
         finally:

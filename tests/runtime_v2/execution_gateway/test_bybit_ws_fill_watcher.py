@@ -378,3 +378,75 @@ def test_ws_funding_event_unresolvable_chain_logs_warning(ops_db, caplog):
         "funding" in rec.message.lower() and rec.levelname == "WARNING"
         for rec in caplog.records
     ), "expected a WARNING about unattributable funding execution"
+
+
+def test_ws_funding_event_resolves_chain_for_own_account(ops_db):
+    """Two chains on the same symbol+side but different accounts: the watcher,
+    knowing its own account, must attribute funding to its account's chain
+    instead of dropping the event as ambiguous."""
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
+    from src.runtime_v2.execution_gateway.event_ingest.models import ExchangeRawEvent
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_chain_open(ops_db, chain_id=31)              # account "main"
+    # Second chain, same symbol+side, different account
+    conn = sqlite3.connect(ops_db)
+    now = "2026-01-01T00:00:00+00:00"
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+        (32, 32, 132, 232, "trader_b", "account_nuovo", "BTCUSDT", "LONG",
+         "OPEN", "TWO_STEP", now, now),
+    )
+    conn.commit()
+    main_chain_id = conn.execute(
+        "SELECT trade_chain_id FROM ops_trade_chains WHERE account_id='main'"
+    ).fetchone()[0]
+    conn.close()
+
+    repo = GatewayCommandRepository(ops_db)
+    watcher = BybitWsFillWatcher(
+        api_key="key",
+        api_secret="secret",
+        testnet=True,
+        ops_db_path=ops_db,
+        repo=repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+        account_id="main",
+    )
+    raw = ExchangeRawEvent(
+        source_stream="watch_my_trades",
+        exchange_event_id="funding-acc-1",
+        idempotency_key="funding-acc-1",
+        symbol="BTCUSDT",
+        side="Buy",
+        create_type=None,
+        stop_order_type=None,
+        exec_type="Funding",
+        order_status=None,
+        order_link_id=None,
+        order_id=None,
+        seq=None,
+        exec_price=None,
+        exec_qty=None,
+        closed_size=None,
+        leaves_qty=None,
+        pos_qty=0.01,
+        exec_value=None,
+        exec_fee=0.05,
+        fee_rate=None,
+        cum_exec_qty=None,
+    )
+
+    watcher._process_batch([{"id": "funding-acc-1"}], lambda _: raw)
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT trade_chain_id FROM ops_exchange_events WHERE event_type='FUNDING_SETTLED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == main_chain_id

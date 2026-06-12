@@ -563,6 +563,7 @@ def _insert_open_chain_with_tp_v2(
     tp_size: float = 3871.5,
     tp_level: int = 1,
     open_qty: float = 7743.0,
+    account_id: str = "acc",
 ) -> None:
     """Chain OPEN (raw symbol) + active SET_POSITION_TPSL_PARTIAL command."""
     import datetime as dt
@@ -574,7 +575,7 @@ def _insert_open_chain_with_tp_v2(
         "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
         "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
         "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
+        (chain_id, chain_id, chain_id, chain_id, "t1", account_id,
          symbol, side, "OPEN", "TWO_STEP", "{}", open_qty, open_qty, now, now),
     )
     conn.execute(
@@ -1177,6 +1178,7 @@ def _insert_funding_chain(
     side: str = "LONG",
     open_qty: float = 1000.0,
     lifecycle_state: str = "OPEN",
+    account_id: str = "acc",
 ) -> None:
     import datetime as dt
 
@@ -1188,7 +1190,7 @@ def _insert_funding_chain(
         "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
         "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
         "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
+        (chain_id, chain_id, chain_id, chain_id, "t1", account_id,
          symbol, side, lifecycle_state, "TWO_STEP", "{}", open_qty, open_qty, now, now),
     )
     conn.commit()
@@ -1340,3 +1342,88 @@ def test_funding_reconciliation_noop_when_adapter_lacks_method(ops_db):
 
     count = worker.run_funding_reconciliation()
     assert count == 0
+
+
+# ── account-aware chain resolution tests ─────────────────────────────────────
+
+def test_resolve_chain_for_fill_account_aware(ops_db):
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_funding_chain(ops_db, 80, symbol="ONDOUSDT", side="LONG", account_id="acc")
+    _insert_funding_chain(ops_db, 81, symbol="ONDOUSDT", side="LONG", account_id="other")
+    repo = GatewayCommandRepository(ops_db)
+
+    # Without account filter: ambiguous → None (legacy behavior preserved)
+    assert repo.resolve_chain_for_fill("ONDOUSDT", "LONG") is None
+    # With account filter: each account resolves its own chain
+    assert repo.resolve_chain_for_fill("ONDOUSDT", "LONG", account_id="acc") == 80
+    assert repo.resolve_chain_for_fill("ONDOUSDT", "LONG", account_id="other") == 81
+
+
+def test_funding_reconciliation_resolves_cross_account_chains(ops_db):
+    """Two chains on the same symbol+side but different accounts must NOT be
+    ambiguous for the per-account sync worker."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 82, symbol="ONDOUSDT", side="LONG", account_id="acc")
+    _insert_funding_chain(ops_db, 83, symbol="ONDOUSDT", side="LONG", account_id="other")
+    adapter = FakeAdapter()
+    adapter.simulate_funding_execution(
+        "ONDOUSDT", "Buy", 0.0186, "fund-cross-acc", "2026-06-12T08:00:00+00:00"
+    )
+    worker = _make_funding_worker(ops_db, adapter)  # execution_account_id="acc"
+
+    count = worker.run_funding_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT trade_chain_id FROM ops_exchange_events WHERE event_type='FUNDING_SETTLED'"
+    ).fetchone()
+    conn.close()
+    assert row[0] == 82  # attributed to the worker's own account chain
+
+
+def test_position_reconciliation_ignores_other_account_chains(ops_db):
+    """Worker for account 'acc' must not synthesize a close for a chain owned by
+    another account: its adapter would report qty=0 for a position that lives
+    on a different subaccount."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 84, symbol="ETHUSDT", side="LONG", account_id="other", open_qty=2.0)
+    # acc's adapter has no ETHUSDT position → qty 0.0 (would trigger synthetic close pre-fix)
+    adapter = FakeAdapter(positions={"ETHUSDT:LONG": 0.0})
+    worker = _make_funding_worker(ops_db, adapter)  # execution_account_id="acc"
+
+    count = worker.run_position_reconciliation()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert rows == 0
+
+
+def test_trade_based_reconciliation_ignores_other_account_chains(ops_db):
+    """Reduce trades from acc's adapter must not be attributed to chains owned
+    by another account."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain_with_tp_v2(
+        ops_db, 85, symbol="PHAUSDT", side="SHORT", tp_price=0.05754, account_id="other"
+    )
+    adapter = FakeAdapter()
+    adapter.simulate_reduce_trade("PHAUSDT", "SHORT", 0.05754, 3871.5, "t-other-acc")
+    worker = _make_funding_worker(ops_db, adapter)  # execution_account_id="acc"
+
+    count = worker.run_trade_based_reconciliation()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE event_type='TP_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert rows == 0

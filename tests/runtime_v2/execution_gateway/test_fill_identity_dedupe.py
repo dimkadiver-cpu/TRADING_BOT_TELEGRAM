@@ -44,6 +44,7 @@ def _make_db(tmp_path) -> str:
         CREATE TABLE ops_trade_chains (
             trade_chain_id INTEGER PRIMARY KEY,
             symbol TEXT, side TEXT, lifecycle_state TEXT, updated_at TEXT,
+            account_id TEXT DEFAULT 'test_account',
             open_position_qty REAL DEFAULT 10000.0
         );
         CREATE TABLE ops_lifecycle_events (

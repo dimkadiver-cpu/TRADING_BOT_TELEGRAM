@@ -226,6 +226,7 @@ def _build_execution_runtime(
                 reconciliation_callback=sync_worker.run_reconciliation,
                 mode=route_adapter_cfg.mode,
                 wake_callback=wake_callback,
+                account_id=account_id,
             )
             ws_watcher.start()
             ws_watchers[account_id] = ws_watcher

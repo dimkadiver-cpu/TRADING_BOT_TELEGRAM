@@ -244,7 +244,7 @@ def test_process_batch_enriches_tp_fill_with_chain_id_when_no_link_id():
         MockClassifier.return_value.classify.return_value = unlinked
         watcher._process_batch([{"id": "tp-trade-1"}], normalize_fn)
 
-    mock_repo.resolve_chain_for_fill.assert_called_once_with("BTCUSDT", "LONG")
+    mock_repo.resolve_chain_for_fill.assert_called_once_with("BTCUSDT", "LONG", None)
     inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
     assert inserted_event.trade_chain_id == 42
     assert inserted_event.event_type == "TP_FILLED"
