@@ -570,6 +570,10 @@ class LifecycleEntryGate:
         if signal is None or not signal.symbol or not signal.side:
             return self._reject_signal(eid, "missing_symbol_or_side")
 
+        # Normalize bare ticker to canonical exchange form before any further checks
+        # (e.g. "WLD" → "WLDUSDT" so chain, commands and exchange calls all use the right id)
+        signal.symbol = self._port.resolve_symbol(enriched.account_id, signal.symbol)
+
         if account_chains is not None:
             other_trader_chains = [c for c in account_chains if c.trader_id != enriched.trader_id]
             if any(c.symbol == signal.symbol and c.side == signal.side for c in other_trader_chains):

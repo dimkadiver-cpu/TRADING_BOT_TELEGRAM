@@ -7,6 +7,7 @@ from src.parser_v2.contracts.context import ParserContext, TargetExtractionResul
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent, SignalDraft
 from src.parser_v2.contracts.rules import ParserRules, SemanticMarkers
+from src.parser_v2.core.parsing_utils import resolve_market_hint
 from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
 from src.parser_v2.core.symbol_normalizer import normalize_symbol
 from src.parser_v2.core.target_hints_extractor import TargetHintsExtractor
@@ -36,6 +37,8 @@ class StrategyParserProfile:
         signal_extractor: SignalExtractor | None = None,
         intent_entity_extractor: IntentEntityExtractor | None = None,
     ) -> None:
+        rules = self.load_rules()
+        self._default_entry_type = rules.default_entry_type
         self._signal_extractor = signal_extractor or SignalExtractor()
         self._intent_entity_extractor = intent_entity_extractor or IntentEntityExtractor()
 
@@ -51,7 +54,8 @@ class StrategyParserProfile:
         context: ParserContext,
         evidence: list[MarkerEvidence],
     ) -> SignalDraft | None:
-        return self._signal_extractor.extract(text, market_hint=False)
+        market_hint = resolve_market_hint(evidence, self._default_entry_type)
+        return self._signal_extractor.extract(text, market_hint=market_hint)
 
     def extract_intent_entities(
         self,

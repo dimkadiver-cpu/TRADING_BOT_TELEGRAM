@@ -71,5 +71,16 @@ class StaticExchangeDataPort(ExchangeDataPort):
         # Bare symbols from Telegram messages (e.g. "HYPE") may match USDT-quoted perpetuals ("HYPEUSDT")
         return (lookup_symbol + "USDT") in self._known_symbols
 
+    def resolve_symbol(self, account_id: str, symbol: str) -> str:
+        if self._known_symbols is None:
+            return symbol
+        lookup = to_raw_symbol(symbol) or symbol
+        if lookup in self._known_symbols:
+            return lookup
+        usdt_form = lookup + "USDT"
+        if usdt_form in self._known_symbols:
+            return usdt_form
+        return lookup
+
 
 __all__ = ["StaticExchangeDataPort"]

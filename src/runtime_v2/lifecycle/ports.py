@@ -75,6 +75,14 @@ class ExchangeDataPort(ABC):
         """
         ...
 
+    def resolve_symbol(self, account_id: str, symbol: str) -> str:
+        """Return the canonical exchange symbol (e.g. 'WLD' → 'WLDUSDT').
+
+        Default: return symbol unchanged. Override in implementations that have
+        a known-symbol list and can perform the bare-ticker → USDT mapping.
+        """
+        return symbol
+
 
 __all__ = [
     "AccountStateSnapshot", "SymbolMarketSnapshot",

@@ -50,5 +50,5 @@
     "REPORT_RESULT",
     "INFO_ONLY"
   ],
-  "default_entry_type": "LIMIT"
+  "default_entry_type": "MARKET"
 }

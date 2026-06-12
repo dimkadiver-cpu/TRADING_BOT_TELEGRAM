@@ -55,8 +55,8 @@ channels:
 
 
   # Topic multi-trader: trader risolto dinamicamente via aliases/pattern_group/reply-chain.
-  - chat_id: -1004298542632
-    topic_id: 
+  - chat_id: -1003722628653
+    topic_id: 4180
     label: "RSI_MultiTrader"
     active: true
     trader_id: null           # null = risoluzione dinamica (pattern extractor)
