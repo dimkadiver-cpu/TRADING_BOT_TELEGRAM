@@ -62,6 +62,7 @@ from src.telegram.listener import (
     build_ingestion_service,
     build_processing_status_store,
 )
+from src.telegram.pattern_extractors import TextPatternCatalog
 from src.telegram.trader_resolver import TraderResolver
 
 
@@ -117,10 +118,23 @@ def _build_execution_runtime(
     adapter_name = exec_config.default_adapter
     routing, adapter_cfg = exec_config.resolve_routing("default")
     adapter = build_adapter(adapter_name, adapter_cfg)
+
+    # Build all adapters referenced in account_routing so the gateway can route per-account.
+    adapter_registry = {adapter_name: adapter}
+    for route in exec_config.account_routing.values():
+        if route.adapter not in adapter_registry:
+            try:
+                adapter_registry[route.adapter] = build_adapter(
+                    route.adapter, exec_config.adapters[route.adapter]
+                )
+                logger.info("loaded adapter: %s", route.adapter)
+            except Exception:
+                logger.warning("adapter '%s' failed to load — commands routed to it will fail", route.adapter)
+
     gateway_repo = GatewayCommandRepository(ops_db_path)
     gateway = ExecutionGateway(
         config=exec_config,
-        adapter_registry={adapter_name: adapter},
+        adapter_registry=adapter_registry,
         repo=gateway_repo,
     )
     execution_worker = ExecutionCommandWorker(
@@ -360,10 +374,12 @@ async def _async_main(
         repository=EnrichedCanonicalMessageRepository(parser_db_path),
         on_pass=new_enriched_event.set,
     )
+    pattern_catalog = TextPatternCatalog(root_dir / "config" / "text_patterns.yaml")
 
     trader_resolver = TraderResolver(
         channel_config=channel_resolver,
         raw_repo=raw_repo,
+        pattern_catalog=pattern_catalog,
     )
 
     # PRD-04 lifecycle layer (chain_repo serve anche al listener per il gating degli edit)
@@ -449,7 +465,10 @@ async def _async_main(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
         ops_db_path=ops_db_path,
         log_path=log_path,
-        known_trader_ids={ch.trader_id for ch in channels_config.channels if ch.trader_id},
+        known_trader_ids=(
+            {ch.trader_id for ch in channels_config.channels if ch.trader_id}
+            | pattern_catalog.all_trader_ids
+        ),
     )
     control_bot = _cp.bot if _cp is not None else None
     cp_dispatcher = _cp.dispatcher if _cp is not None else None

@@ -6,6 +6,8 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
+import pytest
+
 
 def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
     import main as app_main
@@ -31,6 +33,7 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
     routing = SimpleNamespace(execution_account_id="master_account")
     exec_config = SimpleNamespace(
         default_adapter="bybit_demo",
+        account_routing={},
         resolve_routing=lambda account_id: (routing, adapter_cfg),
     )
 
@@ -87,6 +90,141 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
     assert watcher_kwargs["testnet"] is False
     assert watcher_kwargs["mode"] == "demo"
     watcher.start.assert_called_once_with()
+
+
+def test_linux_build_execution_runtime_loads_routed_adapters(monkeypatch, tmp_path):
+    import main_linux_server as app_main
+
+    logger = logging.getLogger("test")
+    default_adapter = MagicMock(name="default_adapter")
+    routed_adapter = MagicMock(name="routed_adapter")
+    gateway_kwargs = {}
+
+    adapter_cfg = SimpleNamespace(
+        type="ccxt_bybit",
+        mode="demo",
+        api_key_env="BYBIT_API_KEY_BYBIT_DEMO",
+        api_secret_env="BYBIT_API_SECRET_BYBIT_DEMO",
+        websocket=SimpleNamespace(
+            enabled=False,
+            poll_fallback_enabled=False,
+            poll_fallback_period_seconds=45,
+            position_reconciliation_interval_seconds=600,
+        ),
+    )
+    routing = SimpleNamespace(execution_account_id="master_account")
+    exec_config = SimpleNamespace(
+        default_adapter="bybit_demo",
+        adapters={
+            "bybit_demo": SimpleNamespace(),
+            "bybit_night": SimpleNamespace(),
+        },
+        account_routing={
+            "night": SimpleNamespace(adapter="bybit_night"),
+        },
+        resolve_routing=lambda account_id: (routing, adapter_cfg),
+    )
+
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionConfigLoader",
+        lambda path: SimpleNamespace(load=lambda: exec_config),
+    )
+
+    def fake_build_adapter(name, cfg):
+        return default_adapter if name == "bybit_demo" else routed_adapter
+
+    monkeypatch.setattr(app_main, "build_adapter", fake_build_adapter)
+    monkeypatch.setattr(
+        app_main,
+        "GatewayCommandRepository",
+        lambda db_path: MagicMock(name="gateway_repo"),
+    )
+
+    def fake_execution_gateway(**kwargs):
+        gateway_kwargs.update(kwargs)
+        return MagicMock(name="gateway")
+
+    monkeypatch.setattr(app_main, "ExecutionGateway", fake_execution_gateway)
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionCommandWorker",
+        lambda **kwargs: MagicMock(name="execution_worker"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExchangeEventSyncWorker",
+        lambda **kwargs: MagicMock(name="sync_worker"),
+    )
+
+    runtime = app_main._build_execution_runtime(
+        root_dir=tmp_path,
+        ops_db_path=str(tmp_path / "ops.sqlite3"),
+        logger=logger,
+    )
+
+    assert runtime is not None
+    assert gateway_kwargs["adapter_registry"] == {
+        "bybit_demo": default_adapter,
+        "bybit_night": routed_adapter,
+    }
+
+
+def test_linux_async_main_passes_text_pattern_catalog(monkeypatch, tmp_path):
+    import main_linux_server as app_main
+
+    captured = {}
+
+    class DummyPatternCatalog:
+        def __init__(self, path):
+            captured["pattern_catalog_path"] = Path(path)
+
+        @property
+        def all_trader_ids(self):
+            return {"pattern_trader"}
+
+    class StopBootstrap(Exception):
+        pass
+
+    monkeypatch.setattr(app_main, "setup_logging", lambda **kwargs: logging.getLogger("test"))
+    monkeypatch.setattr(app_main, "apply_migrations", lambda **kwargs: 0)
+    monkeypatch.setenv("TELEGRAM_API_ID", "12345")
+    monkeypatch.setenv("TELEGRAM_API_HASH", "abcde")
+    monkeypatch.setattr(app_main, "load_channels_config", lambda path: SimpleNamespace(channels=[]))
+    monkeypatch.setattr(app_main, "build_ingestion_service", lambda **kwargs: MagicMock(name="ingestion"))
+    monkeypatch.setattr(app_main, "build_processing_status_store", lambda **kwargs: MagicMock(name="status"))
+    monkeypatch.setattr(app_main, "RawMessageRepository", lambda **kwargs: MagicMock(name="raw_repo"))
+    monkeypatch.setattr(app_main, "ChannelConfigResolver", lambda **kwargs: MagicMock(name="channel_resolver"))
+    monkeypatch.setattr(app_main, "CanonicalMessageRepository", lambda **kwargs: MagicMock(name="canonical_repo"))
+    monkeypatch.setattr(app_main.sqlite3, "connect", lambda *args, **kwargs: MagicMock(name="sqlite_conn"))
+    monkeypatch.setattr(app_main, "ParserRunStore", lambda conn: SimpleNamespace(create_run=lambda **kwargs: 1))
+    monkeypatch.setattr(app_main, "ParserResultV2Store", lambda conn: MagicMock(name="result_v2_store"))
+    monkeypatch.setattr(app_main, "ParserPipelineProcessor", lambda **kwargs: MagicMock(name="parser_pipeline"))
+    monkeypatch.setattr(app_main, "SignalEnrichmentProcessor", lambda **kwargs: MagicMock(name="enrichment_processor"))
+    monkeypatch.setattr(app_main, "OperationConfigLoader", lambda path: MagicMock(name="config_loader"))
+    monkeypatch.setattr(app_main, "EnrichedCanonicalMessageRepository", lambda *args, **kwargs: MagicMock(name="enriched_repo"))
+    monkeypatch.setattr(app_main, "TextPatternCatalog", DummyPatternCatalog, raising=False)
+
+    def fake_trader_resolver(**kwargs):
+        captured["trader_resolver_kwargs"] = kwargs
+        raise StopBootstrap
+
+    monkeypatch.setattr(app_main, "TraderResolver", fake_trader_resolver)
+
+    with pytest.raises(StopBootstrap):
+        asyncio.run(
+            app_main._async_main(
+                parser_db_path=str(tmp_path / "parser.sqlite3"),
+                migrations_dir=str(tmp_path / "migrations"),
+                ops_db_path=str(tmp_path / "ops.sqlite3"),
+                ops_migrations_dir=str(tmp_path / "ops_migrations"),
+                log_path=str(tmp_path / "bot.log"),
+                root_dir=tmp_path,
+            )
+        )
+
+    assert captured["pattern_catalog_path"] == tmp_path / "config" / "text_patterns.yaml"
+    assert captured["trader_resolver_kwargs"]["pattern_catalog"].all_trader_ids == {"pattern_trader"}
 
 
 def test_build_lifecycle_entry_gate_uses_simple_attached_strategy(monkeypatch, tmp_path):
