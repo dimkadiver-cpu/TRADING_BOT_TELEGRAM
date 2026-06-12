@@ -1,89 +1,115 @@
 # TeleSignalBot
 
-Sistema di trading automatico che acquisisce segnali da canali Telegram di terzi, li parsa in formato canonico, e li esegue su exchange tramite freqtrade.
-
-## Stato attuale
-
-Il progetto ha già completato la catena core: listener live, router/pre-parser, parser nuova architettura, validazione di coerenza, operation rules, target resolver ed execution live Freqtrade sono presenti nel repository.
-
-Verifica eseguita il 2026-04-06:
-
-- mixed suite su parser, telegram, validation, operation rules, target resolver, execution e parser_test: `657 passed, 20 failed, 1 skipped`
-- le regressioni viste nel workspace riguardano soprattutto `src/telegram/tests/test_listener_recovery.py::test_catchup_skips_channel_with_no_last_id`
-
-### Implementato e stabile
-
-- persistenza raw messages con dedup e metadata sorgente (`src/storage/raw_messages.py`)
-- listener live con recovery, queue e hot reload config (`src/telegram/listener.py`)
-- router / pre-parser con blacklist, review queue e persistenza parse result (`src/telegram/router.py`)
-- risoluzione trader effettivo (`src/telegram/effective_trader.py`)
-- eligibility e strong linking (`src/telegram/eligibility.py`)
-- parser nuova architettura con models Pydantic e RulesEngine (`src/parser/models/`, `src/parser/rules_engine.py`)
-- profili trader migrati sulla nuova architettura (`src/parser/trader_profiles/`)
-- validazione coerenza integrata nel Router (`src/validation/coherence.py`)
-- operation rules applicate al flusso operativo (`src/operation_rules/`)
-- target resolver integrato nel routing e nell'operational flow (`src/target_resolver/`)
-- execution live / exchange-backed e reconciliation (`src/execution/`)
-- harness replay e report CSV (`parser_test/`)
-
-### Stato per fasi
-
-```
-Fase 1  Parser                       completata nella base architetturale
-Fase 2  Listener robusto             implementata
-Fase 3  Router / Pre-parser          implementata
-Fase 4  Validazione + operation      implementata
-Fase 4  Target resolver              implementato
-Fase 5  Sistema 1 — freqtrade live   implementato e validato in dry-run
-Fase 6  Sistema 2 — backtesting      modulo rimosso da `src/backtesting/`
-Fase 7  Scenario engine v2           presente come direzione, loader ancora da allineare
-Fase 8  Report / ottimizzazione       documentata, implementazione runtime non chiusa
-Fase 9  Entry plan runtime           documentata, implementazione runtime non chiusa
-```
+Sistema di trading automatico che acquisisce segnali da canali Telegram, li parsa in formato canonico e li esegue su exchange tramite ccxt/Bybit.
 
 ## Architettura
 
 ```
 Telegram channels
       ↓
-Listener (Telethon)
+TelegramListener  (Telethon)
       ↓
-raw_messages (SQLite) — processing_status: pending → done | failed | blacklisted | review
+raw_messages  (parser.sqlite3)
       ↓
-Router / Pre-parser
+TraderResolver  →  ParserPipelineProcessor  (parser_v2)
       ↓
-Parser — RulesEngine + profile.py per trader → TraderParseResult (Pydantic)
+CanonicalMessage  (parser_results_v2)
       ↓
-parse_results (SQLite)
+SignalEnrichmentProcessor  (enriched_canonical_messages)
       ↓
-Validazione coerenza → Operation rules → Target resolver
+LifecycleGateWorker  →  LifecycleEventWorker
       ↓
-Sistema 1 (freqtrade live)
+ExecutionGateway  (ccxt/Bybit)  ←→  ops.sqlite3
+      ↓
+ControlPlane  (Telegram bot)
 ```
 
-## Nuova architettura parser
+Due database separati:
+- `parser.sqlite3` — raw messages, canonical messages, parser results, enriched signals
+- `ops.sqlite3` — trade chains, lifecycle events, execution commands, exchange events, control plane
 
-Il parser è stato riprogettato con un percorso unico per trader:
+## Struttura repository
 
 ```
-testo + ParserContext
-      ↓
-RulesEngine          legge parsing_rules.json per trader
-      ↓
-profile.py           estrae entità + intents
-      ↓
-Pydantic models      normalizza e valida
-      ↓
-TraderParseResult    output canonico unico
+TeleSignalBot/
+├── main.py                       → entrypoint runtime_v2
+├── main_linux_server.py          → entrypoint per Linux
+├── CLAUDE.md                     → istruzioni per Claude Code
+├── config/
+│   ├── channels.yaml             → canali Telegram e trader attivi
+│   ├── execution.yaml            → adapter ccxt/Bybit, strategy config
+│   ├── operation_config.yaml     → regole signal enrichment
+│   ├── telegram_control.yaml     → control plane Telegram bot
+│   └── trader_aliases.json       → mapping alias trader
+├── db/
+│   ├── migrations/               → schema parser.sqlite3 (incrementale)
+│   └── ops_migrations/           → schema ops.sqlite3 (incrementale)
+├── docs/
+│   └── AUDIT.md                  → registro step completati e rischi aperti
+├── scripts/                      → script operativi (inspect, reset, monitor)
+├── skills/                       → skill per Claude Code
+├── src/
+│   ├── core/                     → logger, config_loader, migrations, trader_tags, timeutils
+│   ├── storage/                  → raw_messages, processing_status, signals_store,
+│   │                               parser_runs, parser_results_v2
+│   ├── telegram/                 → listener, ingestion, channel_config, eligibility,
+│   │                               trader_resolver, trader_mapping, effective_trader,
+│   │                               topic_utils, pattern_extractors
+│   ├── parser_v2/
+│   │   ├── contracts/            → CanonicalMessage, ParsedMessage, enums, entities,
+│   │   │                           context, markers
+│   │   ├── core/                 → marker_matcher, marker_evidence_resolver,
+│   │   │                           parsed_message_builder, target_binding_resolver,
+│   │   │                           target_hints_extractor, local_disambiguator,
+│   │   │                           text_normalizer, symbol_normalizer
+│   │   ├── profiles/             → trader_3, trader_a, trader_b, trader_c, trader_d,
+│   │   │                           trader_prova, strategy_parser
+│   │   │   └── profili_vecchi/   → archivio vecchi profili (non usare come riferimento)
+│   │   └── translation/          → canonical translator
+│   └── runtime_v2/
+│       ├── intake/               → processor, eligibility, models
+│       ├── persistence/          → raw_messages, canonical_messages
+│       ├── parser_pipeline/      → processor, models
+│       ├── trader_resolution/    → TraderResolver, channel_config_resolver, models
+│       ├── signal_enrichment/    → processor, repository, config_loader, models
+│       ├── lifecycle/            → entry_gate, event_processor, workers, execution_plan,
+│       │                           diff_engine, post_fill_rebuilder, be_move_resolver,
+│       │                           breakeven_pricing, cancel_expander, entry_command_factory,
+│       │                           risk_capacity, static_exchange_data_port, repositories
+│       ├── execution_gateway/    → gateway, command_worker, event_sync, repositories, models,
+│       │   ├── adapters/         → ccxt_bybit, fake, factory, base
+│       │   └── event_ingest/     → classifier, normalizer, payload, models
+│       └── control_plane/        → service, telegram_bot, bootstrap, startup, notification_dispatcher,
+│           │                       outbox_writer, status_queries, topic_router, debug_controller,
+│           │                       audit_store, override_store, snapshot_store
+│           └── formatters/       → status, pnl, trades, health, debug, clean_log, …
+└── parser_test/                  → harness replay, report CSV, scripts
+    ├── scripts/                  → replay_parser_v2, watch_parser, import_history, resolve_traders
+    ├── reporting/                → flatteners_v2, report_export_v2, report_schema_v2
+    └── db/                       → schema harness DB
 ```
 
-Output canonico:
-- `message_type`: `NEW_SIGNAL | UPDATE | INFO_ONLY | UNCLASSIFIED`
-- `completeness`: `COMPLETE | INCOMPLETE`
-- `entities`: `NewSignalEntities | UpdateEntities`
-- `intents`: lista con kind `CONTEXT | ACTION`
-- `target_ref`: `STRONG | SYMBOL | GLOBAL`
-- `confidence`, `warnings`, `trader_id`, `raw_text`
+## Parser v2 — output canonico
+
+```
+testo raw
+      ↓
+profilo trader  (signal_extractor + intent_entity_extractor)
+      ↓
+ParsedMessage  (marker evidence)
+      ↓
+CanonicalMessage  (output finale)
+```
+
+Campi principali di `CanonicalMessage`:
+- `primary_class`: `SIGNAL | UPDATE | REPORT | INFO`
+- `parse_status`: `PARSED | PARTIAL | UNCLASSIFIED | ERROR`
+- `primary_intent`: intent principale (es. `CLOSE_FULL`, `MOVE_STOP_TO_BE`)
+- `intents`: lista completa di `IntentType`
+- `signal`: `SignalPayload` (solo per SIGNAL)
+- `target_action_groups`: `TargetActionGroup[]` (solo per UPDATE)
+- `report`: `ReportPayload` (solo per REPORT)
+- `confidence`, `warnings`, `parser_profile`, `raw_context`
 
 ## Tecnologie
 
@@ -91,12 +117,11 @@ Output canonico:
 |---|---|
 | Listener | Telethon |
 | Parser models | Pydantic v2 |
-| Profili trader | profile.py + parsing_rules.json |
-| DB | SQLite → Postgres in produzione |
-| Execution | freqtrade + ccxt |
-| UI controllo | FreqUI |
+| Profili trader | signal_extractor + intent_entity_extractor + rules.json |
+| DB | SQLite (parser + ops) |
+| Exchange | ccxt / Bybit (WebSocket fill watcher + REST) |
+| Control UI | Telegram bot (control_plane) |
 | File watching | watchdog |
-| LLM hook | openai / anthropic / ollama (opzionale per trader) |
 
 ## Setup
 
@@ -112,133 +137,69 @@ Variabili ambiente minime (`.env`):
 ```
 TELEGRAM_API_ID=
 TELEGRAM_API_HASH=
-DB_PATH=db/tele_signal_bot.sqlite3
+PARSER_DB_PATH=db/parser.sqlite3
+OPS_DB_PATH=db/ops.sqlite3
 ```
 
 Avvio:
 ```bash
+# applica migrazioni ed esci
 python main.py --migrate
+
+# verifica config senza avvio
+python main.py --check-config
+
+# avvio normale
 python main.py
 ```
 
 ## Test
 
-Prerequisito: `.venv` attiva con `pip install -r requirements.txt` (vedi sezione Setup).
 Usa sempre `.venv/Scripts/python.exe -m pytest` — mai `pytest` bare dal Python globale.
 
-### Smoke suite — controllo rapido del sistema (212 test, ~5s)
-
-Copre: modelli Pydantic, RulesEngine, listener/router Telegram, validazione coerenza.
-Da eseguire prima di ogni commit come verifica minima.
+### Smoke suite — parser_v2 e core (rapido)
 
 ```bash
 .venv/Scripts/python.exe -m pytest \
-  src/parser/models/tests/ \
-  src/parser/tests/ \
+  src/parser_v2/tests/ \
+  src/parser_v2/profiles/trader_3/ \
+  src/parser_v2/profiles/trader_a/ \
+  src/core/tests/ \
   src/telegram/tests/ \
-  src/validation/tests/ \
   -q
 ```
 
-### Full suite — tutti i profili trader e harness
-
-Copre: profili trader (trader_3/a/b/c/d), harness replay, execution planner/applier.
-Richiede workspace stabile e `.venv` completa.
+### Full suite
 
 ```bash
 .venv/Scripts/python.exe -m pytest \
-  src/parser/trader_profiles/ \
+  src/ \
   parser_test/tests/ \
-  src/execution/test_update_planner.py \
-  src/execution/test_update_applier.py \
   -q
 ```
 
-Note:
-- Su Windows, file SQLite nei test router possono lasciare artefatti in `.test_tmp/` — inoffensivi, ignorati da git.
-- `src/execution/` usa `unittest.TestCase` — compatibile con pytest, nessuna dipendenza da fixture custom.
-- `parser_test/tests/` richiede il DB di test in `parser_test/db/` per i test di integrazione.
-- La verifica piu recente non e tutta verde: vedi il blocco "Verifica eseguita" sopra per i failure correnti.
-
-### Test profilo specifico
+### Replay harness su profilo specifico
 
 ```bash
-.venv/Scripts/python.exe -m pytest src/parser/trader_profiles/trader_3/tests/
+python parser_test/scripts/replay_parser_v2.py --trader trader_3
 
-# replay su DB test
-python parser_test/scripts/replay_parser.py --trader trader_3
-
-# watch mode debug (replay automatico su modifica file)
+# watch mode (replay automatico su modifica file)
 python parser_test/scripts/watch_parser.py --trader trader_3
 ```
 
 ### Troubleshooting test
 
-**Errore di ambiente** — non indica regressione del parser:
-
 | Sintomo | Causa | Soluzione |
 |---|---|---|
-| `ModuleNotFoundError: No module named 'pydantic'` | pytest lanciato fuori dalla `.venv` | Usa `.venv/Scripts/python.exe -m pytest` |
-| `ModuleNotFoundError: No module named 'src'` | CWD errata | Lancia pytest dalla root del progetto (`C:\TeleSignalBot`) |
-| `PermissionError` su `.pytest_cache` o `.test_tmp` | Path non scrivibile | Verifica che cache e temp siano nel workspace (vedi `pytest.ini` e `conftest.py`) |
-| `ERRORS` in collection, zero test raccolti | Import fallito per dipendenza mancante | `pip install -r requirements.txt` nella `.venv` |
-
-**Errore di logica** — indica regressione del parser:
-
-| Sintomo | Causa |
-|---|---|
-| `AssertionError: assert 'UPDATE' == 'NEW_SIGNAL'` | Classificazione cambiata |
-| `assert result.entities.symbol == 'BTCUSDT'` | Estrazione entità rotta |
-| `assert len(result.intents) == 2` | Intent mancante o aggiunto inatteso |
-| `KeyError` o `ValidationError` Pydantic | Modello o struttura output cambiata |
-
-Gli errori di ambiente non vanno mai interpretati come regressioni del parser. Risolvi l'ambiente prima di analizzare i test falliti.
-
-## Struttura repository
-
-```
-TeleSignalBot/
-├── CLAUDE.md                    → contesto per Claude Code
-├── docs/
-│   ├── PRD_generale.md          → architettura e tecnologie
-│   ├── PRD_listener.md          → Listener dettagliato
-│   ├── PRD_router.md            → Router / Pre-parser
-│   ├── PRD_parser.md            → Parser + sistema debug
-│   └── AUDIT.md                 → stato progetto, file da toccare/non toccare
-│   
-├── skills/                      → skill per Claude Code
-├── src/
-│   ├── core/                    → utilities condivise
-│   ├── storage/                 → persistenza DB
-│   ├── telegram/                → listener, ingestion, trader resolution
-│   ├── parser/
-│   │   ├── models/              → Pydantic models canonici [NUOVO]
-│   │   ├── rules_engine.py      → RulesEngine [NUOVO]
-│   │   ├── trader_profiles/
-│   │   │   ├── shared/          → vocabolari condivisi [NUOVO]
-│   │   │   ├── trader_3/        → primo profilo nuova arch
-│   │   │   ├── trader_a/
-│   │   │   ├── trader_b/
-│   │   │   ├── trader_c/
-│   │   │   └── trader_d/
-│   │   └── trader_profiles/     → profili parser attivi
-│   ├── execution/               → placeholder (Fase 5+)
-│   └── exchange/                → placeholder (Fase 5+)
-├── config/
-│   └── channels.yaml            → canali Telegram e trader attivi
-├── db/migrations/               → schema SQLite incrementale
-└── parser_test/                 → replay, debug CSV, watch mode
-```
+| `ModuleNotFoundError: No module named 'pydantic'` | pytest fuori dalla `.venv` | Usa `.venv/Scripts/python.exe -m pytest` |
+| `ModuleNotFoundError: No module named 'src'` | CWD errata | Lancia pytest dalla root (`C:\TeleSignalBot`) |
+| `PermissionError` su `.pytest_cache` o `.test_tmp` | Path non scrivibile | Verifica `pytest.ini` e `conftest.py` |
+| `ERRORS` in collection, zero test raccolti | Import fallito | `pip install -r requirements.txt` |
 
 ## Documentazione
 
-La documentazione autorevole è in `docs/`:
-- `CLAUDE.md` — contesto per Claude Code (root del progetto)
-- `CODEX.md` — contesto per CODEX APP (root del progetto)
-- `docs/PRD_generale.md` — visione e architettura
-- `docs/PRD_parser.md` — parser dettagliato e stato architettura parser
-- `docs/PHASE_3_ROUTER_STATUS.md` — stato reale, gap e criterio di chiusura della Fase 3
-- `docs/AUDIT.md` — stato progetto aggiornato
-- `docs/TEST_ENV_STABILIZATION_CHECKLIST.md` — checklist operativa per chiudere la stabilizzazione ambiente test
-
-I file in `docs/old/` sono archivio della vecchia architettura — non usare come riferimento operativo.
+- `CLAUDE.md` — istruzioni per Claude Code
+- `docs/AUDIT.md` — log step completati, file toccati, rischi aperti
+- `config/execution.yaml` — configurazione adapter e strategy
+- `config/operation_config.yaml` — regole signal enrichment
+- `config/channels.yaml` — canali Telegram attivi

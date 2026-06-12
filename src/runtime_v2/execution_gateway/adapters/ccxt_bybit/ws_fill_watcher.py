@@ -224,7 +224,15 @@ class BybitWsFillWatcher:
         exchange = ccxtpro.bybit({
             "apiKey": self._api_key,
             "secret": self._api_secret,
-            "options": {"defaultType": "linear"},
+            "options": {
+                "defaultType": "linear",
+                # ccxt default filterExecTypes excludes "Funding": without this
+                # override watch_my_trades silently drops funding fee executions
+                # and FUNDING_SETTLED never reaches the lifecycle.
+                "watchMyTrades": {
+                    "filterExecTypes": ["Trade", "AdlTrade", "BustTrade", "Settle", "Funding"],
+                },
+            },
         })
         if self._mode == "demo":
             exchange.enable_demo_trading(True)

@@ -297,3 +297,30 @@ def test_ws_funding_event_resolves_raw_symbol_chain_and_forwards_to_lifecycle(op
     assert row[0] == expected_chain_id
     assert row[1] == "FUNDING_SETTLED"
     assert json.loads(row[2])["exec_fee"] == 0.07628025
+
+
+def test_build_exchange_does_not_filter_out_funding_executions(ops_db):
+    # ccxt.pro bybit defaults filterExecTypes to ['Trade','AdlTrade','BustTrade','Settle'],
+    # which silently drops execType=Funding from watch_my_trades. The watcher must
+    # override it, otherwise FUNDING_SETTLED never reaches the lifecycle.
+    import src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher as ws_mod
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    repo = GatewayCommandRepository(ops_db)
+    watcher = ws_mod.BybitWsFillWatcher(
+        api_key="key",
+        api_secret="secret",
+        testnet=True,
+        ops_db_path=ops_db,
+        repo=repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+    fake_ccxtpro = MagicMock()
+    with patch.object(ws_mod, "ccxtpro", fake_ccxtpro):
+        watcher._build_exchange()
+
+    config = fake_ccxtpro.bybit.call_args[0][0]
+    filter_exec_types = config["options"]["watchMyTrades"]["filterExecTypes"]
+    assert "Funding" in filter_exec_types
+    assert "Trade" in filter_exec_types

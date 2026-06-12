@@ -45,6 +45,7 @@ def money_signed(value: object) -> str:
         number = float(value)
     except (TypeError, ValueError):
         return str(value)
+    number += 0.0  # normalize -0.0, otherwise it renders as "+-0.00"
     prefix = "+" if number >= 0 else ""
     return f"{prefix}{number:.2f} USDT"
 
@@ -67,6 +68,7 @@ def pct_signed(value: object) -> str:
         number = float(value)
     except (TypeError, ValueError):
         return str(value)
+    number += 0.0  # normalize -0.0, otherwise it renders as "+-0.00"
     prefix = "+" if number >= 0 else ""
     result = f"{prefix}{number:.2f}%"
     return result.replace(".00%", "%")

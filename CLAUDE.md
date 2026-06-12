@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file applies to the whole repository unless a deeper `AGENTS.md` overrides it.
+This file applies to the whole repository unless a deeper `CLAUDE.md` overrides it.
 
 ## Operating Standard
 
@@ -21,9 +21,9 @@ This file applies to the whole repository unless a deeper `AGENTS.md` overrides 
 - When relevant files or repository shape are unclear, get a fresh snapshot with `tree -L 2`, `tree -L 3`, or `rg --files`.
 - Do not treat `README.md` as a file inventory. Discover structure dynamically.
 - Use the repository's existing package manager, scripts, test runner, formatter, linter, build tools, and generators.
-- In Codex shell sessions, do not assume JS tooling is already on `PATH`. For `node`, `npm`, and `bun`, prefer `PATH="/opt/homebrew/bin:$HOME/.bun/bin:$PATH"`.
+- In Claude  shell sessions, do not assume JS tooling is already on `PATH`. For `node`, `npm`, and `bun`, prefer `PATH="/opt/homebrew/bin:$HOME/.bun/bin:$PATH"`.
 - Do not add new production dependencies without explicit user approval. Prefer existing utilities, framework APIs, and the standard library.
-- When code discovery is needed, keep the main process focused on decisions and implementation; delegate broad repository search to a Codex 5.3 Spark subagent when available, if Spark is not available use Codex 5.3 subagent.
+- When code discovery is needed, keep the main process focused on decisions and implementation; delegate broad repository search to a Haiku 4.5 Spark subagent when available, if Spark is not available use Haiku 4.5 subagent.
 - The subagent must return a compact evidence map only: `path:line`, symbol/component/route name, the relevant code snippet or signature, and why it matters for the main task.
 - The main process should use that map for targeted reading and implementation, verifying critical findings before editing.
 
@@ -157,7 +157,7 @@ When touching a boundary, inspect and align directly coupled code.
 - Add automation only when it removes real repeated pain, not when it merely looks mature.
 - Do not print secrets, tokens, private keys, credentials, cookies, customer data, or raw `.env` values in final responses.
 - Do not add real secrets to fixtures, tests, docs, screenshots, logs, or committed files.
-- Keep ad-hoc investigation artifacts out of the repository root. Put temporary screenshots, logs, and one-off exports under `./.scratch/` or the tool-owned artifact directory, and do not create new root-level `.tmp-*` or `.codex-tmp-*` files.
+- Keep ad-hoc investigation artifacts out of the repository root. Put temporary screenshots, logs, and one-off exports under `./.scratch/` or the tool-owned artifact directory, and do not create new root-level `.tmp-*` or `.claude-tmp-*` files.
 - Do not weaken auth, permissions, validation, encryption, rate limits, or auditability to make a task easier.
 - Do not manually edit generated files unless the repository explicitly requires it. Update the source and run the generator instead.
 - Do not stage, commit, amend, rebase, reset, stash, push, or delete files unless explicitly asked.

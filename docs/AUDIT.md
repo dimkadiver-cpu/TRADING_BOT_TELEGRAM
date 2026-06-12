@@ -4,6 +4,34 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-12 — Fix funding mai registrato (ccxt filterExecTypes) + display "+-0.00"
+
+### Step completato
+
+Indagine sulla discrepanza tra report POSITION CLOSED e dati reali exchange: il funding risultava sempre `+-0.00 USDT` anche su posizioni tenute aperte per giorni.
+
+**Root cause 1 (strutturale)**: ccxt.pro bybit `watch_my_trades` ha il default `filterExecTypes: ['Trade','AdlTrade','BustTrade','Settle']` — le execution con `execType=Funding` venivano scartate da ccxt prima di arrivare al normalizer. L'intera pipeline downstream (classifier → FUNDING_SETTLED → worker → cumulative_funding) era corretta ma non riceveva mai eventi. Evidenza: 0 eventi `exec_type='Funding'` su 231 raw events in `db/Test_live/ops.sqlite3`, `cumulative_funding=0.0` su tutte le 17 chain.
+
+**Root cause 2 (cosmetica)**: `outbox_writer._final_result` produce `round(-funding_total, 8)` → con 0.0 genera `-0.0`; `money_signed(-0.0)` stampava `+-0.00 USDT` perché `-0.0 >= 0` dà prefisso `+` ma il formato `%.2f` mantiene il segno meno.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/ws_fill_watcher.py` | Modificato | `_build_exchange`: override `watchMyTrades.filterExecTypes` includendo `Funding` |
+| `src/runtime_v2/control_plane/formatters/_formatters.py` | Modificato | `money_signed`/`pct_signed`: normalizzazione `-0.0` |
+| `tests/runtime_v2/execution_gateway/test_bybit_ws_fill_watcher.py` | Modificato | nuovo test su filterExecTypes |
+| `tests/runtime_v2/control_plane/test_blocks_formatters.py` | Modificato | test `-0.0` per money_signed/pct_signed |
+
+### Rischi aperti / blind spot
+
+- **Funding storico perso**: le chain già chiuse (incluse quelle nel DB live) hanno `cumulative_funding=0.0` definitivo — il fix vale solo per gli eventi futuri. Eventuale backfill richiederebbe REST `/v5/execution/list` con `execType=Funding` per chain storiche.
+- **Riconciliazione REST**: `fetch_my_trades` REST non filtra per execType, quindi un funding arrivato durante downtime del WS verrebbe ripreso dalla riconciliazione — ma la riconciliazione gira solo su errore WS, non periodicamente.
+- **Report #20 XAUT**: la chain #20 non esiste in `db/Test_live/ops.sqlite3` (max 17) — il report citato proviene da un altro ambiente/DB; la diagnosi vale comunque perché il codice è lo stesso.
+- **Test downstream preesistente mascherava il bug**: `test_ws_funding_event_resolves_raw_symbol_chain_and_forwards_to_lifecycle` inietta l'evento già normalizzato, bypassando il filtro ccxt.
+
+---
+
 ## 2026-06-11 — Nuovo profilo parser_v2: strategy_parser
 
 ### Step completato

@@ -23,6 +23,7 @@ def test_money_signed_none():    assert money_signed(None) == "n/a"
 def test_money_signed_pos():     assert money_signed(12.34) == "+12.34 USDT"
 def test_money_signed_neg():     assert money_signed(-5.00) == "-5.00 USDT"
 def test_money_signed_zero():    assert money_signed(0.0) == "+0.00 USDT"
+def test_money_signed_neg_zero(): assert money_signed(-0.0) == "+0.00 USDT"
 
 def test_pct_none():        assert pct(None) == "n/a"
 def test_pct_whole():       assert pct(30.0) == "30%"
@@ -30,6 +31,7 @@ def test_pct_frac():        assert pct(12.34) == "12.34%"
 
 def test_pct_signed_pos():  assert pct_signed(5.0) == "+5%"
 def test_pct_signed_neg():  assert pct_signed(-5.17) == "-5.17%"
+def test_pct_signed_neg_zero(): assert pct_signed(-0.0) == "+0%"
 
 def test_fee_rate_none():   assert fee_rate(None) == "n/a"
 def test_fee_rate():        assert fee_rate(0.001) == "0.100%"
