@@ -324,3 +324,57 @@ def test_build_exchange_does_not_filter_out_funding_executions(ops_db):
     filter_exec_types = config["options"]["watchMyTrades"]["filterExecTypes"]
     assert "Funding" in filter_exec_types
     assert "Trade" in filter_exec_types
+
+
+def test_ws_funding_event_unresolvable_chain_logs_warning(ops_db, caplog):
+    """Funding execution with no (or ambiguous) open chain must log a WARNING,
+    not disappear silently. The event is still persisted with NULL chain for audit."""
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
+    from src.runtime_v2.execution_gateway.event_ingest.models import ExchangeRawEvent
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    # No open chain inserted: resolution must fail.
+    repo = GatewayCommandRepository(ops_db)
+    watcher = BybitWsFillWatcher(
+        api_key="key",
+        api_secret="secret",
+        testnet=True,
+        ops_db_path=ops_db,
+        repo=repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+    raw = ExchangeRawEvent(
+        source_stream="watch_my_trades",
+        exchange_event_id="funding-orphan-1",
+        idempotency_key="funding-orphan-1",
+        symbol="BTCUSDT",
+        side="Buy",
+        create_type=None,
+        stop_order_type=None,
+        exec_type="Funding",
+        order_status=None,
+        order_link_id=None,
+        order_id=None,
+        seq=None,
+        exec_price=None,
+        exec_qty=None,
+        closed_size=None,
+        leaves_qty=None,
+        pos_qty=0.01,
+        exec_value=None,
+        exec_fee=0.07628025,
+        fee_rate=None,
+        cum_exec_qty=None,
+    )
+
+    with caplog.at_level(
+        "WARNING",
+        logger="src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher",
+    ):
+        watcher._process_batch([{"id": "funding-orphan-1"}], lambda _: raw)
+
+    assert any(
+        "funding" in rec.message.lower() and rec.levelname == "WARNING"
+        for rec in caplog.records
+    ), "expected a WARNING about unattributable funding execution"

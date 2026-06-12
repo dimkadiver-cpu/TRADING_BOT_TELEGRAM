@@ -58,7 +58,7 @@ channels:
   - chat_id: -1003722628653
     topic_id: 4180
     label: "RSI_MultiTrader"
-    active: true
+    active: false
     trader_id: null           # null = risoluzione dinamica (pattern extractor)
     parser_profile: strategy_parser     # profilo condiviso da tutte le strategie del topic
     resolution: 

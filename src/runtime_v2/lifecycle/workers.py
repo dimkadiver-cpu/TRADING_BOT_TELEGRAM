@@ -334,6 +334,11 @@ class LifecycleEventWorker:
 
     def _handle_funding_settled(self, exchange_event) -> None:
         if exchange_event.trade_chain_id is None:
+            logger.warning(
+                "FUNDING_SETTLED %s has no trade_chain_id — funding amount dropped, "
+                "cumulative_funding not updated",
+                exchange_event.exchange_event_id,
+            )
             return
         try:
             payload = json.loads(exchange_event.payload_json or "{}")

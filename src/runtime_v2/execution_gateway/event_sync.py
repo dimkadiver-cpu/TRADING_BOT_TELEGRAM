@@ -214,6 +214,70 @@ class ExchangeEventSyncWorker:
 
         return processed
 
+    def run_funding_reconciliation(self) -> int:
+        """Poll recent funding executions via REST — safety net for funding settled
+        during WS downtime.
+
+        Uses the same idempotency key format as the WS path (fill:{execId}), so
+        executions already recorded by watch_my_trades dedupe automatically.
+        Chain attribution mirrors the WS path: Bybit funding `side` is the position
+        side (Buy = LONG, Sell = SHORT), resolved via symbol+side; ambiguous
+        attributions (0 or >1 open chains) are skipped with a warning.
+        """
+        if not hasattr(self._adapter, "fetch_recent_funding_executions"):
+            return 0
+
+        chains = self._get_open_chains()
+        if not chains:
+            return 0
+
+        symbols = sorted({symbol for _, symbol, _, _ in chains})
+        processed = 0
+        for symbol in symbols:
+            try:
+                executions = self._adapter.fetch_recent_funding_executions(
+                    symbol=symbol,
+                    execution_account_id=self._execution_account_id,
+                    limit=50,
+                )
+            except Exception:
+                logger.exception("fetch_recent_funding_executions error for %s", symbol)
+                continue
+
+            for fe in executions:
+                if not fe.exec_fee:
+                    continue
+                funding_side = (fe.side or "").strip()
+                position_side = "LONG" if funding_side.lower() in ("buy", "long") else "SHORT"
+                chain_id = self._repo.resolve_chain_for_fill(fe.symbol, position_side)
+                if chain_id is None:
+                    logger.warning(
+                        "funding execution %s (%s %s, exec_fee=%s) not attributable via REST: "
+                        "0 or >1 open chains for symbol+side",
+                        fe.exec_id, fe.symbol, position_side, fe.exec_fee,
+                    )
+                    continue
+
+                idem_key = f"fill:{fe.exec_id}"  # same key the WS path generates
+                payload = json.dumps({
+                    "exec_fee": fe.exec_fee,
+                    "exchange_time": fe.exchange_time,
+                    "exchange_event_id": fe.exec_id,
+                    "source": "funding_reconciliation",
+                })
+                inserted = self._repo.insert_exchange_event(
+                    chain_id, "FUNDING_SETTLED", payload, idem_key
+                )
+                if inserted:
+                    logger.info(
+                        "FUNDING_SETTLED from funding reconciliation: chain=%s %s exec_fee=%s",
+                        chain_id, fe.symbol, fe.exec_fee,
+                    )
+                    self._wake()
+                    processed += 1
+
+        return processed
+
     def run_protective_orders_reconciliation(self) -> int:
         """Detect when a position-level TP was externally cancelled (no fill occurred)."""
         if not hasattr(self._adapter, "fetch_position_details"):

@@ -210,6 +210,12 @@ class BybitWsFillWatcher:
                     chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
+                    else:
+                        logger.warning(
+                            "funding execution %s (%s %s, exec_fee=%s) not attributable: "
+                            "0 or >1 open chains for symbol+side — cumulative_funding will not be updated",
+                            raw.exchange_event_id, raw.symbol, position_side, raw.exec_fee,
+                        )
 
                 inserted = self._repo.insert_raw_and_classified(classified)
                 if inserted and classified.should_forward_to_lifecycle and self._wake_callback:

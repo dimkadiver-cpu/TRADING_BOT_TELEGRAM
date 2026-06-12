@@ -9,10 +9,10 @@ import ccxt
 
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.order_builder import BybitOrderBuilder
-from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper
+from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper, _f, _ms_to_iso
 from src.runtime_v2.execution_gateway.models import (
     AdapterCapabilities, AdapterResult, RawAdapterOrder,
-    RawAdapterTrade, RawPositionDetails,
+    RawAdapterTrade, RawFundingExecution, RawPositionDetails,
 )
 
 from src.runtime_v2.execution_gateway import client_order_id as coid_mod
@@ -413,6 +413,46 @@ class CcxtBybitAdapter(ExecutionAdapter):
                 ))
             except Exception:
                 logger.debug("skipping malformed trade %s", t.get("id"))
+        return result
+
+    def fetch_recent_funding_executions(
+        self,
+        *,
+        symbol: str,
+        execution_account_id: str,
+        limit: int = 50,
+    ) -> list[RawFundingExecution]:
+        """Return recent funding fee executions (execType=Funding) for symbol.
+
+        REST safety net for funding settled during bot/WS downtime — the WS path
+        (watch_my_trades with filterExecTypes including 'Funding') covers live
+        operation. Window: last 24h, matching fetch_recent_reduce_trades.
+        """
+        since_ms = int((time.time() - 86400) * 1000)
+        try:
+            raw_trades = self._exchange.fetch_my_trades(
+                symbol, since=since_ms, limit=limit, params={"execType": "Funding"}
+            )
+        except Exception as exc:
+            logger.warning("fetch_my_trades(Funding) failed for %s: %s", symbol, exc)
+            return []
+
+        result: list[RawFundingExecution] = []
+        for t in raw_trades:
+            info = t.get("info") or {}
+            if (info.get("execType") or "") != "Funding":
+                continue
+            exec_id = str(t.get("id") or info.get("execId") or "")
+            exec_fee = _f(info.get("execFee"))
+            if not exec_id or exec_fee is None:
+                continue
+            result.append(RawFundingExecution(
+                exec_id=exec_id,
+                symbol=self._normalize_bybit_symbol(t.get("symbol") or symbol),
+                side=str(info.get("side") or t.get("side") or ""),
+                exec_fee=exec_fee,
+                exchange_time=_ms_to_iso(info.get("execTime")),
+            ))
         return result
 
     def fetch_position_details(

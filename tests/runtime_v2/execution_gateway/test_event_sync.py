@@ -1165,3 +1165,178 @@ def test_save_fill_event_includes_exec_fee_and_closed_size_for_tp(ops_db):
     assert payload["filled_qty"] == 0.002
     assert "closed_size" in payload
     assert payload["closed_size"] == 0.002
+
+
+# ── funding reconciliation tests ──────────────────────────────────────────────
+
+def _insert_funding_chain(
+    db_path: str,
+    chain_id: int,
+    *,
+    symbol: str = "ONDOUSDT",
+    side: str = "LONG",
+    open_qty: float = 1000.0,
+    lifecycle_state: str = "OPEN",
+) -> None:
+    import datetime as dt
+
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        "trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        "management_plan_json, open_position_qty, filled_entry_qty, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (chain_id, chain_id, chain_id, chain_id, "t1", "acc",
+         symbol, side, lifecycle_state, "TWO_STEP", "{}", open_qty, open_qty, now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def _make_funding_worker(ops_db, adapter):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    repo = GatewayCommandRepository(ops_db)
+    return ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc"
+    )
+
+
+def test_funding_reconciliation_inserts_funding_settled_for_open_chain(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 70, symbol="ONDOUSDT", side="LONG")
+    adapter = FakeAdapter()
+    adapter.simulate_funding_execution(
+        "ONDOUSDT", "Buy", 0.01865106, "fund-1", "2026-06-12T08:00:00+00:00"
+    )
+    worker = _make_funding_worker(ops_db, adapter)
+
+    count = worker.run_funding_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT trade_chain_id, event_type, payload_json, idempotency_key "
+        "FROM ops_exchange_events"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == 70
+    assert row[1] == "FUNDING_SETTLED"
+    # idem key must match the WS key format (fill:{execId}) so WS/REST dedup is automatic
+    assert row[3] == "fill:fund-1"
+    payload = json.loads(row[2])
+    assert payload["exec_fee"] == 0.01865106
+
+
+def test_funding_reconciliation_dedup_with_ws_and_idempotent(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 71, symbol="REZUSDT", side="LONG")
+    # Simulate WS already recorded this funding execution with key fill:{execId}
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_exchange_events "
+        "(trade_chain_id, event_type, payload_json, processing_status, idempotency_key, received_at) "
+        "VALUES (?,?,?,?,?,datetime('now'))",
+        (71, "FUNDING_SETTLED", '{"exec_fee":0.07593288,"source":"exchange_auto"}',
+         "DONE", "fill:fund-ws-dup"),
+    )
+    conn.commit()
+    conn.close()
+
+    adapter = FakeAdapter()
+    adapter.simulate_funding_execution(
+        "REZUSDT", "Buy", 0.07593288, "fund-ws-dup", "2026-06-12T08:00:00+00:00"
+    )
+    worker = _make_funding_worker(ops_db, adapter)
+
+    first = worker.run_funding_reconciliation()
+    second = worker.run_funding_reconciliation()
+
+    assert first == 0
+    assert second == 0
+    conn = sqlite3.connect(ops_db)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=71"
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_funding_reconciliation_skips_ambiguous_chains(ops_db, caplog):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 72, symbol="ONDOUSDT", side="LONG")
+    _insert_funding_chain(ops_db, 73, symbol="ONDOUSDT", side="LONG")
+    adapter = FakeAdapter()
+    adapter.simulate_funding_execution(
+        "ONDOUSDT", "Buy", 0.0186, "fund-ambiguous", "2026-06-12T08:00:00+00:00"
+    )
+    worker = _make_funding_worker(ops_db, adapter)
+
+    with caplog.at_level("WARNING", logger="src.runtime_v2.execution_gateway.event_sync"):
+        count = worker.run_funding_reconciliation()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert rows == 0
+    assert any("funding" in rec.message.lower() for rec in caplog.records)
+
+
+def test_funding_reconciliation_attributes_sell_side_to_short_chain(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 74, symbol="XAUTUSDT", side="SHORT")
+    adapter = FakeAdapter()
+    # Bybit side for funding is the position side: Sell = SHORT
+    adapter.simulate_funding_execution(
+        "XAUTUSDT", "Sell", -0.012, "fund-short", "2026-06-12T16:00:00+00:00"
+    )
+    worker = _make_funding_worker(ops_db, adapter)
+
+    count = worker.run_funding_reconciliation()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT trade_chain_id, payload_json FROM ops_exchange_events "
+        "WHERE event_type='FUNDING_SETTLED'"
+    ).fetchone()
+    conn.close()
+    assert row[0] == 74
+    assert json.loads(row[1])["exec_fee"] == -0.012
+
+
+def test_funding_reconciliation_skips_zero_fee(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_funding_chain(ops_db, 75, symbol="ONDOUSDT", side="LONG")
+    adapter = FakeAdapter()
+    adapter.simulate_funding_execution(
+        "ONDOUSDT", "Buy", 0.0, "fund-zero", "2026-06-12T08:00:00+00:00"
+    )
+    worker = _make_funding_worker(ops_db, adapter)
+
+    count = worker.run_funding_reconciliation()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute("SELECT COUNT(*) FROM ops_exchange_events").fetchone()[0]
+    conn.close()
+    assert rows == 0
+
+
+def test_funding_reconciliation_noop_when_adapter_lacks_method(ops_db):
+    _insert_funding_chain(ops_db, 76, symbol="ONDOUSDT", side="LONG")
+    adapter = MagicMock(spec=[])  # hasattr always False
+    worker = _make_funding_worker(ops_db, adapter)
+
+    count = worker.run_funding_reconciliation()
+    assert count == 0

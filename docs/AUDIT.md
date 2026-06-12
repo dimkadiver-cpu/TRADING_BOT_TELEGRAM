@@ -4,6 +4,44 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-12 — Riconciliazione REST funding + warning su funding scartato + fix NameError `_f`
+
+### Step completato
+
+Chiusura delle lacune residue della pipeline funding (vedi entry "Fix funding mai registrato" sotto). Verifica live preliminare superata: in `db/ops.sqlite3` 8 esecuzioni `Funding` raccolte via WS, `cumulative_funding` coincide al centesimo con la somma degli `exec_fee` per le chain 10 (ONDO, incluso funding negativo ricevuto) e 13 (REZ).
+
+**1. Riconciliazione REST funding** (`run_funding_reconciliation`): nuovo metodo in `ExchangeEventSyncWorker` che interroga `/v5/execution/list` con `execType=Funding` (via `fetch_recent_funding_executions`, finestra 24h) per i simboli delle chain aperte. Attribuzione chain identica al percorso WS (side Bybit = lato posizione, `resolve_chain_for_fill`). Chiave di idempotenza `fill:{execId}` — identica a quella WS → dedup WS/REST automatico. Agganciato al loop periodico di riconciliazione posizioni e alla riconciliazione di startup in entrambi gli entrypoint: copre funding maturato durante downtime del bot.
+
+**2. Warning su funding scartato**: `_handle_funding_settled` (lifecycle) e il blocco funding del WS watcher ora loggano WARNING quando un `FUNDING_SETTLED` non è attribuibile a una chain (0 o >1 chain aperte per symbol+side) — prima l'importo spariva in silenzio.
+
+**3. Fix bug latente `NameError: _f`** (commit `509ae2e`): `adapter.py` usava `_f(...)` in `fetch_recent_reduce_trades` senza importarlo; il `except Exception` inghiottiva il `NameError` → **la funzione ritornava sempre lista vuota in produzione**, azzerando il recupero fill price/fee della riconciliazione posizioni. Importato `_f` (e `_ms_to_iso`) da `status_mapper`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/execution_gateway/event_sync.py` | Modificato | nuovo `run_funding_reconciliation()` |
+| `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/adapter.py` | Modificato | fix import `_f`/`_ms_to_iso`; nuovo `fetch_recent_funding_executions()` |
+| `src/runtime_v2/execution_gateway/models.py` | Modificato | nuovo modello `RawFundingExecution` |
+| `src/runtime_v2/execution_gateway/adapters/fake.py` | Modificato | `simulate_funding_execution` + `fetch_recent_funding_executions` |
+| `src/runtime_v2/lifecycle/workers.py` | Modificato | WARNING su FUNDING_SETTLED senza chain |
+| `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/ws_fill_watcher.py` | Modificato | WARNING su funding non attribuibile |
+| `main.py` / `main_linux_server.py` | Modificati | funding reconciliation nel loop periodico e allo startup |
+| `tests/...` (4 file) | Modificati | 10 nuovi test TDD (worker, watcher, event_sync, adapter ccxt) |
+
+### Validazione
+
+`pytest tests/runtime_v2/ -q` → **1230 passed, 4 failed, 6 skipped**. I 4 falliti sono pre-esistenti (live trading gate ×3, canonicalizzazione simbolo entry gate ×1), non correlati. Il fix `_f` ha riportato in verde anche il test pre-esistente `test_fetch_recent_reduce_trades_returns_reduce_only_fills`.
+
+### Rischi aperti / blind spot
+
+- **Finestra REST 24h**: downtime superiore a 24h perde comunque il funding più vecchio (limite di `since` in `fetch_recent_funding_executions`). Estendibile se servisse.
+- **Ambiguità multi-chain**: con >1 chain aperte sullo stesso symbol+side il funding resta non attribuito (ora almeno loggato). Ripartizione pro-quota possibile ma rimandata finché i log non dimostrano che il caso si verifica.
+- **Funding storico chain chiuse**: invariato — non recuperato di proposito (dati di test, report già emessi).
+- **Verifica live REST**: il percorso REST è validato solo a unit level; conferma definitiva al prossimo restart del bot con posizione aperta attraverso un timestamp di funding.
+
+---
+
 ## 2026-06-12 — Fix per_trader_subaccount: adapter_registry multi-adapter + safety check account_id
 
 ### Step completato

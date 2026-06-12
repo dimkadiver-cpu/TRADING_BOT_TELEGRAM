@@ -126,6 +126,16 @@ class RawAdapterTrade(BaseModel):
     fee_rate: float | None = None
 
 
+class RawFundingExecution(BaseModel):
+    """A funding fee execution returned by fetch_recent_funding_executions()."""
+    model_config = ConfigDict(extra="ignore")
+    exec_id: str
+    symbol: str          # Bybit raw format: ONDOUSDT
+    side: str            # Bybit position side: "Buy" = LONG, "Sell" = SHORT
+    exec_fee: float      # positive = funding paid, negative = funding received
+    exchange_time: str | None = None
+
+
 class RawPositionDetails(BaseModel):
     """Position snapshot from fetch_position_details()."""
     model_config = ConfigDict(extra="ignore")

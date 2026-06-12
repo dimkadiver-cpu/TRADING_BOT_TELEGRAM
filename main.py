@@ -321,6 +321,7 @@ async def _run_position_reconciliation_periodically(
             sync_worker.run_position_reconciliation()
             sync_worker.run_trade_based_reconciliation()
             sync_worker.run_protective_orders_reconciliation()
+            sync_worker.run_funding_reconciliation()
         except Exception:
             logger.exception("periodic position/tp reconciliation error")
 
@@ -604,6 +605,7 @@ async def _async_main(
                 for worker in (execution_runtime.sync_workers or {}).values():
                     worker.run_reconciliation()
                     worker.run_position_reconciliation()
+                    worker.run_funding_reconciliation()
             except Exception:
                 logger.warning("startup reconciliation failed (non-critical)")
 

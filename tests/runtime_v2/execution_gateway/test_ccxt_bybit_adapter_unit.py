@@ -1431,3 +1431,94 @@ def test_fetch_position_details_returns_none_when_not_found():
         symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
     )
     assert pos is None
+
+
+# --- fetch_recent_reduce_trades: fee extraction regression (NameError on _f) ---
+
+def test_fetch_recent_reduce_trades_returns_trades_with_fee():
+    """Regression: fee=_f(...) raised NameError (helper never imported) and the
+    broad except silently dropped EVERY trade — the method always returned []."""
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_my_trades.return_value = [
+        {
+            "id": "t-1",
+            "symbol": "PHA/USDT:USDT",
+            "price": 0.05754,
+            "amount": 3871.5,
+            "info": {
+                "reduceOnly": True,
+                "execFee": "0.1226",
+                "feeRate": "0.00055",
+            },
+        }
+    ]
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+
+    trades = adapter.fetch_recent_reduce_trades(
+        symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
+    )
+
+    assert len(trades) == 1
+    assert trades[0].trade_id == "t-1"
+    assert trades[0].fee == pytest.approx(0.1226)
+    assert trades[0].fee_rate == pytest.approx(0.00055)
+
+
+# --- fetch_recent_funding_executions ---
+
+def test_fetch_recent_funding_executions_returns_funding_rows():
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_my_trades.return_value = [
+        {
+            "id": "f-1",
+            "symbol": "ONDO/USDT:USDT",
+            "price": 0.3573,
+            "amount": 1044.0,
+            "info": {
+                "execType": "Funding",
+                "side": "Buy",
+                "execFee": "0.01865106",
+                "execTime": "1781596800000",
+            },
+        },
+        {
+            # Non-funding row must be skipped even if the exchange returns it
+            "id": "t-2",
+            "symbol": "ONDO/USDT:USDT",
+            "price": 0.36,
+            "amount": 100.0,
+            "info": {"execType": "Trade", "side": "Sell", "execFee": "0.002"},
+        },
+    ]
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+
+    rows = adapter.fetch_recent_funding_executions(
+        symbol="ONDOUSDT", execution_account_id="acc"
+    )
+
+    # Must request only funding executions from Bybit
+    _, kwargs = exchange.fetch_my_trades.call_args
+    assert kwargs.get("params", {}).get("execType") == "Funding"
+
+    assert len(rows) == 1
+    assert rows[0].exec_id == "f-1"
+    assert rows[0].symbol == "ONDOUSDT"
+    assert rows[0].side == "Buy"
+    assert rows[0].exec_fee == pytest.approx(0.01865106)
+
+
+def test_fetch_recent_funding_executions_returns_empty_on_error():
+    from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.adapter import CcxtBybitAdapter
+
+    exchange = MagicMock()
+    exchange.fetch_my_trades.side_effect = RuntimeError("boom")
+    adapter = CcxtBybitAdapter(api_key="k", api_secret="s", connector="c", _exchange=exchange)
+
+    rows = adapter.fetch_recent_funding_executions(
+        symbol="ONDOUSDT", execution_account_id="acc"
+    )
+    assert rows == []

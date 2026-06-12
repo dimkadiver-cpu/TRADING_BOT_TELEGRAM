@@ -3454,6 +3454,25 @@ def test_known_symbol_passes_check():
     assert result.trade_chain.symbol == "BTC/USDT"
 
 
+def test_symbol_present_only_in_non_default_adapter_union_passes_gate():
+    """Regression: la whitelist aggregata multi-adapter deve accettare simboli non presenti nel default."""
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    aggregated_symbols = frozenset({"BTC/USDT", "HOME/USDT:USDT"})
+    gate = LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(known_symbols=aggregated_symbols),
+    )
+    enriched = _make_enriched_signal(symbol="HOMEUSDT", entry_type="MARKET", entry_price=0.03094)
+    result = gate.process_signal(enriched, [], "NONE")
+
+    assert result.review_reason != "unknown_symbol"
+    assert result.trade_chain is not None
+    assert result.trade_chain.symbol == "HOMEUSDT"
+
+
 def test_no_known_symbols_list_is_fail_open():
     """known_symbols=None (nessun dato dall'exchange) → non blocca i segnali."""
     from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate

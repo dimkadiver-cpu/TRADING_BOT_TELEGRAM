@@ -2006,3 +2006,61 @@ def test_lifecycle_worker_funding_settled_stores_positive_exchange_fee_as_positi
     conn2.close()
     assert funding_row[0] == pytest.approx(0.07628025)
     assert status_row[0] == "DONE"
+
+
+def test_lifecycle_worker_funding_settled_without_chain_logs_warning(tmp_path, caplog):
+    """FUNDING_SETTLED with NULL trade_chain_id must not vanish silently."""
+    import sqlite3 as _sqlite3
+    from pathlib import Path
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.repositories import (
+        ExecutionCommandRepository, ExchangeEventRepository,
+        LifecycleEventRepository, TradeChainRepository,
+    )
+    from src.runtime_v2.lifecycle.workers import LifecycleEventWorker
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = _sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.execute(
+        """
+        INSERT INTO ops_exchange_events (
+            trade_chain_id, event_type, payload_json,
+            processing_status, idempotency_key, received_at
+        ) VALUES (NULL,?,?,?,?,?)
+        """,
+        (
+            "FUNDING_SETTLED",
+            json.dumps({"exec_fee": 0.05, "source": "exchange_auto"}),
+            "NEW",
+            "fill:funding-orphan-1",
+            "2026-06-12T08:00:00+00:00",
+        ),
+    )
+    conn.commit()
+    conn.close()
+
+    worker = LifecycleEventWorker(
+        ops_db_path=db,
+        processor=LifecycleEventProcessor(),
+        chain_repo=TradeChainRepository(db),
+        event_repo=LifecycleEventRepository(db),
+        command_repo=ExecutionCommandRepository(db),
+        exchange_event_repo=ExchangeEventRepository(db),
+    )
+    with caplog.at_level("WARNING", logger="src.runtime_v2.lifecycle.workers"):
+        count = worker.run_once()
+
+    assert count == 1
+    assert any(
+        "FUNDING_SETTLED" in rec.message and rec.levelname == "WARNING"
+        for rec in caplog.records
+    ), "expected a WARNING about the dropped funding event"
+
+    conn2 = _sqlite3.connect(db)
+    status = conn2.execute(
+        "SELECT processing_status FROM ops_exchange_events WHERE idempotency_key='fill:funding-orphan-1'"
+    ).fetchone()[0]
+    conn2.close()
+    assert status == "DONE"

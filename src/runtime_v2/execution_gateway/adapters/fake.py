@@ -4,7 +4,7 @@ from __future__ import annotations
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.models import (
     AdapterCapabilities, AdapterResult, RawAdapterOrder,
-    RawAdapterTrade, RawPositionDetails,
+    RawAdapterTrade, RawFundingExecution, RawPositionDetails,
 )
 
 
@@ -42,6 +42,7 @@ class FakeAdapter(ExecutionAdapter):
         self._last_place_qty: float | None = None
         self._reduce_trades: dict[str, list[RawAdapterTrade]] = {}
         self._position_details: dict[str, RawPositionDetails] = {}
+        self._funding_executions: dict[str, list[RawFundingExecution]] = {}
 
     def get_capabilities(self) -> AdapterCapabilities:
         return self._capabilities
@@ -180,6 +181,34 @@ class FakeAdapter(ExecutionAdapter):
     ) -> list[RawAdapterTrade]:
         key = f"{symbol}:{side}"
         return list(self._reduce_trades.get(key, []))[:limit]
+
+    def simulate_funding_execution(
+        self,
+        symbol: str,
+        side: str,
+        exec_fee: float,
+        exec_id: str,
+        exchange_time: str | None = None,
+    ) -> None:
+        """Register a funding execution for fetch_recent_funding_executions() to return."""
+        self._funding_executions.setdefault(symbol, []).append(
+            RawFundingExecution(
+                exec_id=exec_id,
+                symbol=symbol,
+                side=side,
+                exec_fee=exec_fee,
+                exchange_time=exchange_time,
+            )
+        )
+
+    def fetch_recent_funding_executions(
+        self,
+        *,
+        symbol: str,
+        execution_account_id: str,
+        limit: int = 50,
+    ) -> list[RawFundingExecution]:
+        return list(self._funding_executions.get(symbol, []))[:limit]
 
     def set_position_details(
         self,
