@@ -92,6 +92,131 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
     watcher.start.assert_called_once_with()
 
 
+def test_build_execution_runtime_creates_sync_workers_and_watchers_for_all_routed_accounts(
+    monkeypatch, tmp_path
+):
+    import main as app_main
+
+    logger = logging.getLogger("test")
+    default_adapter = MagicMock(name="default_adapter")
+    routed_adapter = MagicMock(name="routed_adapter")
+    built_adapters = {
+        "bybit_demo": default_adapter,
+        "bybit_nuovo": routed_adapter,
+    }
+    sync_workers: list[dict] = []
+    watcher_calls: list[dict] = []
+    watchers: list[MagicMock] = []
+
+    default_cfg = SimpleNamespace(
+        type="ccxt_bybit",
+        mode="demo",
+        api_key_env="BYBIT_API_KEY_BYBIT_DEMO",
+        api_secret_env="BYBIT_API_SECRET_BYBIT_DEMO",
+        websocket=SimpleNamespace(
+            enabled=True,
+            poll_fallback_enabled=True,
+            poll_fallback_period_seconds=45,
+            position_reconciliation_interval_seconds=600,
+        ),
+    )
+    routed_cfg = SimpleNamespace(
+        type="ccxt_bybit",
+        mode="demo",
+        api_key_env="BYBIT_API_KEY_ACCOUNT_NUOVO",
+        api_secret_env="BYBIT_API_SECRET_ACCOUNT_NUOVO",
+        websocket=SimpleNamespace(
+            enabled=True,
+            poll_fallback_enabled=True,
+            poll_fallback_period_seconds=60,
+            position_reconciliation_interval_seconds=900,
+        ),
+    )
+    default_routing = SimpleNamespace(adapter="bybit_demo", execution_account_id="main")
+    routed_routing = SimpleNamespace(adapter="bybit_nuovo", execution_account_id="account_nuovo")
+    exec_config = SimpleNamespace(
+        default_adapter="bybit_demo",
+        adapters={
+            "bybit_demo": default_cfg,
+            "bybit_nuovo": routed_cfg,
+        },
+        account_routing={
+            "default": default_routing,
+            "main": default_routing,
+            "account_nuovo": routed_routing,
+        },
+        resolve_routing=lambda account_id: (
+            default_routing if account_id == "default" else routed_routing,
+            default_cfg if account_id == "default" else routed_cfg,
+        ),
+    )
+
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionConfigLoader",
+        lambda path: SimpleNamespace(load=lambda: exec_config),
+    )
+    monkeypatch.setattr(app_main, "build_adapter", lambda name, cfg: built_adapters[name])
+    monkeypatch.setattr(
+        app_main,
+        "GatewayCommandRepository",
+        lambda db_path: MagicMock(name="gateway_repo"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionGateway",
+        lambda **kwargs: MagicMock(name="gateway"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionCommandWorker",
+        lambda **kwargs: MagicMock(name="execution_worker"),
+    )
+
+    def fake_sync_worker(**kwargs):
+        sync_workers.append(kwargs)
+        worker = MagicMock(name=f"sync_{kwargs['execution_account_id']}")
+        worker.execution_account_id = kwargs["execution_account_id"]
+        return worker
+
+    monkeypatch.setattr(app_main, "ExchangeEventSyncWorker", fake_sync_worker)
+
+    def fake_ws_watcher(**kwargs):
+        watcher_calls.append(kwargs)
+        watcher = MagicMock(name=f"watcher_{len(watcher_calls)}")
+        watchers.append(watcher)
+        return watcher
+
+    monkeypatch.setattr(app_main, "BybitWsFillWatcher", fake_ws_watcher)
+    monkeypatch.setenv("BYBIT_API_KEY_BYBIT_DEMO", "demo_key")
+    monkeypatch.setenv("BYBIT_API_SECRET_BYBIT_DEMO", "demo_secret")
+    monkeypatch.setenv("BYBIT_API_KEY_ACCOUNT_NUOVO", "nuovo_key")
+    monkeypatch.setenv("BYBIT_API_SECRET_ACCOUNT_NUOVO", "nuovo_secret")
+
+    runtime = app_main._build_execution_runtime(
+        root_dir=tmp_path,
+        ops_db_path=str(tmp_path / "ops.sqlite3"),
+        logger=logger,
+    )
+
+    assert runtime is not None
+    assert runtime.sync_workers.keys() == {"main", "account_nuovo"}
+    assert runtime.ws_watchers.keys() == {"main", "account_nuovo"}
+    assert runtime.reconciliation_intervals == {
+        "main": 45,
+        "account_nuovo": 60,
+    }
+    assert runtime.position_reconciliation_intervals == {
+        "main": 600,
+        "account_nuovo": 900,
+    }
+    assert [call["execution_account_id"] for call in sync_workers] == ["main", "account_nuovo"]
+    assert [call["mode"] for call in watcher_calls] == ["demo", "demo"]
+    assert [call["api_key"] for call in watcher_calls] == ["demo_key", "nuovo_key"]
+    for watcher in watchers:
+        watcher.start.assert_called_once_with()
+
+
 def test_linux_build_execution_runtime_loads_routed_adapters(monkeypatch, tmp_path):
     import main_linux_server as app_main
 
@@ -275,6 +400,44 @@ def test_close_execution_runtime_stops_watcher_and_closes_adapter():
     adapter.close.assert_called_once_with()
 
 
+def test_close_execution_runtime_stops_all_watchers_and_closes_all_adapters():
+    import main as app_main
+
+    default_adapter = MagicMock(name="default_adapter")
+    routed_adapter = MagicMock(name="routed_adapter")
+    main_watcher = MagicMock(name="main_watcher")
+    routed_watcher = MagicMock(name="routed_watcher")
+    runtime = app_main.ExecutionRuntime(
+        adapter=default_adapter,
+        execution_worker=MagicMock(),
+        sync_worker=MagicMock(),
+        ws_watcher=main_watcher,
+        reconciliation_interval_seconds=45,
+        sync_workers={
+            "main": MagicMock(name="sync_main"),
+            "account_nuovo": MagicMock(name="sync_nuovo"),
+        },
+        ws_watchers={
+            "main": main_watcher,
+            "account_nuovo": routed_watcher,
+        },
+        adapters={
+            "bybit_demo": default_adapter,
+            "bybit_nuovo": routed_adapter,
+        },
+        reconciliation_intervals={"main": 45, "account_nuovo": 60},
+        position_reconciliation_intervals={"main": 600, "account_nuovo": 900},
+        poll_fallback_by_account={"main": True, "account_nuovo": True},
+    )
+
+    app_main._close_execution_runtime(runtime)
+
+    main_watcher.stop.assert_called_once_with()
+    routed_watcher.stop.assert_called_once_with()
+    default_adapter.close.assert_called_once_with()
+    routed_adapter.close.assert_called_once_with()
+
+
 def test_run_reconciliation_periodically_uses_configured_interval():
     import main as app_main
 
@@ -319,6 +482,59 @@ def test_execution_runtime_has_position_reconciliation_interval():
     )
     assert rt.position_reconciliation_interval_seconds == 120
     assert rt.poll_fallback_enabled is False
+
+
+def test_collect_runtime_known_symbols_unions_all_adapters():
+    import main as app_main
+
+    adapter_a = MagicMock(name="adapter_a")
+    adapter_b = MagicMock(name="adapter_b")
+    adapter_a.load_known_symbols.return_value = frozenset({"BTC/USDT:USDT", "ETH/USDT:USDT"})
+    adapter_b.load_known_symbols.return_value = frozenset({"HOME/USDT:USDT"})
+
+    runtime = app_main.ExecutionRuntime(
+        adapter=adapter_a,
+        execution_worker=MagicMock(),
+        sync_worker=MagicMock(),
+        ws_watcher=None,
+        reconciliation_interval_seconds=None,
+        adapters={
+            "bybit_demo": adapter_a,
+            "bybit_nuovo": adapter_b,
+        },
+    )
+
+    assert app_main._collect_runtime_known_symbols(runtime, logging.getLogger("test")) == frozenset(
+        {"BTC/USDT:USDT", "ETH/USDT:USDT", "HOME/USDT:USDT"}
+    )
+
+
+def test_collect_runtime_known_symbols_ignores_none_and_failures():
+    import main as app_main
+
+    adapter_ok = MagicMock(name="adapter_ok")
+    adapter_none = MagicMock(name="adapter_none")
+    adapter_fail = MagicMock(name="adapter_fail")
+    adapter_ok.load_known_symbols.return_value = frozenset({"BTC/USDT:USDT"})
+    adapter_none.load_known_symbols.return_value = None
+    adapter_fail.load_known_symbols.side_effect = RuntimeError("boom")
+
+    runtime = app_main.ExecutionRuntime(
+        adapter=adapter_ok,
+        execution_worker=MagicMock(),
+        sync_worker=MagicMock(),
+        ws_watcher=None,
+        reconciliation_interval_seconds=None,
+        adapters={
+            "ok": adapter_ok,
+            "none": adapter_none,
+            "fail": adapter_fail,
+        },
+    )
+
+    assert app_main._collect_runtime_known_symbols(runtime, logging.getLogger("test")) == frozenset(
+        {"BTC/USDT:USDT"}
+    )
 
 
 def test_websocket_config_exposes_position_reconciliation_interval():
