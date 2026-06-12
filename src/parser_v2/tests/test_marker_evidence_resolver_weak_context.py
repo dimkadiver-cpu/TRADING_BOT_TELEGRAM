@@ -159,6 +159,29 @@ def test_strong_marker_not_suppressed_if_condition_not_met():
     assert len(result.suppressed_markers) == 0
 
 
+def test_strong_close_partial_suppressed_in_tp1_context():
+    text = "TP1: фикс 50%"
+    marker_text = "фикс 50%"
+    pos = text.find(marker_text)
+    matches = [_make_match_kind("CLOSE_PARTIAL", marker_text, "strong", pos, pos + len(marker_text))]
+    rule = MarkerContextExclusionRule(
+        name="close_partial_tp1_context",
+        strength="strong",
+        marker_name="CLOSE_PARTIAL",
+        markers=[marker_text],
+        scope="same_sentence",
+        if_regex_any=[
+            r"(?i)(?=.*(?:\b(?:tp|тп)\s*1\b|\b1\s*тейк\b|\bперв\w*\s+тейк\b))(?=.*(?:\b(?:фикс\w*|зафиксир\w*|частичн\w*|закрыва\w*)\s*(?:25|30|40|50|70|80)%)).*"
+        ],
+        reason="tp1_partial_close_context",
+    )
+    resolver = MarkerEvidenceResolver()
+    result = resolver.resolve(matches, _make_rules_ctx([rule]), text=text)
+    assert len(result.evidence) == 0
+    assert len(result.suppressed_markers) == 1
+    assert result.suppressed_markers[0].reason == "tp1_partial_close_context"
+
+
 def test_list_marker_name_suppresses_all_matching():
     text = "фактически в бу закрылись"
     pos = text.find("бу")

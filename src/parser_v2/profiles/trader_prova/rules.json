@@ -20,6 +20,19 @@
     ],
     "reason": "false_positive_close_full_in_partial_exit_or_be_context"
   },
+{
+  "name": "detect_close_partial",
+  "intent": "CLOSE_PARTIAL",
+  "markers": 
+  { "source": "intent_regex" 
+  },
+  "scope": "same_sentence",
+  "if_regex_any":[
+  ],
+  "if_contains_any": ["TP1 фикс 50%"],
+  "reason": "detect_partial_close_or_partial_profit_fixation"
+},
+
  {
     "name": "false_entry_filled",
     "intent": "ENTRY_FILLED",
@@ -268,6 +281,17 @@
 
     ],
     "marker_context_exclusions": [
+      {
+        "name": "false_close_partial_in_tp_hit_context",
+        "strength": "strong",
+        "marker_name": "CLOSE_PARTIAL",
+        "markers": {"source": "semantic"},
+        "scope": "same_sentence",
+        "if_regex_any": [
+          "(?i)(?=.*(?:\\b(?:tp|тп)\\s*1\\b|\\b1\\s*тейк\\b|\\bперв\\w*\\s+тейк\\b))(?=.*(?:\\b(?:фикс\\w*|зафиксир\\w*|частичн\\w*|закрыва\\w*)\\s*(?:25|30|40|50|70|80)%)).*"
+        ],
+        "reason": "tp1_partial_close_context_not_actionable"
+      },
       {
         "name": "all_short_in_ps_informational_context",
         "strength": "strong",
