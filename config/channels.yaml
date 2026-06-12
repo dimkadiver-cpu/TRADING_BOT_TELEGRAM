@@ -54,11 +54,7 @@ channels:
     blacklist: []     # estendere qui solo per rumore specifico del canale
 
 
-  # Topic multi-trader: topic_id 4180 = RSI channel, trader risolto via pattern semantici
-  # hardcoded in src/telegram/pattern_extractors.py (rsi_intraday / rsi_swing).
-  # I messaggi non contengono tag trader, quindi niente aliases.
-  # sma_intraday non ha ancora un pattern di riconoscimento: da aggiungere in
-  # pattern_extractors.py prima di attivare il canale.
+  # Topic multi-trader: trader risolto dinamicamente via aliases/pattern_group/reply-chain.
   - chat_id: -1003722628653
     topic_id: 4180
     label: "RSI_MultiTrader"
@@ -66,6 +62,8 @@ channels:
     trader_id: null           # null = risoluzione dinamica (pattern extractor)
     parser_profile: strategy_parser     # profilo condiviso da tutte le strategie del topic
     resolution:
+      mode: default
+      pattern_group: multi_strategy_ru
       max_depth: 5
       aliases: {}
     blacklist: []

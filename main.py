@@ -63,6 +63,7 @@ from src.telegram.listener import (
     build_ingestion_service,
     build_processing_status_store,
 )
+from src.telegram.pattern_extractors import TextPatternCatalog
 from src.telegram.trader_resolver import TraderResolver
 
 
@@ -361,10 +362,12 @@ async def _async_main(
         repository=EnrichedCanonicalMessageRepository(parser_db_path),
         on_pass=new_enriched_event.set,
     )
+    pattern_catalog = TextPatternCatalog(root_dir / "config" / "text_patterns.yaml")
 
     trader_resolver = TraderResolver(
         channel_config=channel_resolver,
         raw_repo=raw_repo,
+        pattern_catalog=pattern_catalog,
     )
 
     # PRD-04 lifecycle layer (chain_repo serve anche al listener per il gating degli edit)
@@ -450,7 +453,10 @@ async def _async_main(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
         ops_db_path=ops_db_path,
         log_path=log_path,
-        known_trader_ids={ch.trader_id for ch in channels_config.channels if ch.trader_id},
+        known_trader_ids=(
+            {ch.trader_id for ch in channels_config.channels if ch.trader_id}
+            | pattern_catalog.all_trader_ids
+        ),
     )
     control_bot = _cp.bot if _cp is not None else None
     cp_dispatcher = _cp.dispatcher if _cp is not None else None

@@ -1,0 +1,15 @@
+groups:
+  multi_strategy_ru:
+    patterns:
+      - trader_id: rsi_intraday
+        all_of:
+          - "RSI(2) Коннора"
+          - "интрадей"
+      - trader_id: rsi_swing
+        all_of:
+          - "RSI(2) Коннора"
+          - "свинг"
+      - trader_id: sma_intraday
+        all_of:
+          - "Кросс SMA 21/55"
+          - "интрадей"

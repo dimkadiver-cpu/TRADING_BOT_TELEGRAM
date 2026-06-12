@@ -1,11 +1,15 @@
 from __future__ import annotations
-import pytest
+
 from datetime import datetime, timezone
 from unittest.mock import MagicMock
+
+import pytest
+
+from src.telegram.pattern_extractors import TextPatternMatch
 from src.telegram.trader_resolver import TraderResolver
-from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
 from src.runtime_v2.intake.models import RawMessageEnvelope
 from src.runtime_v2.persistence.raw_messages import ChainNode
+from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
 
 _TS = datetime(2026, 6, 10, 12, 0, 0, tzinfo=timezone.utc)
 
@@ -42,7 +46,14 @@ def _envelope(
     )
 
 
-def _entry(trader_id: str | None, topic_id: int | None = 9, aliases: dict | None = None, max_depth: int = 5) -> ChannelEntry:
+def _entry(
+    trader_id: str | None,
+    topic_id: int | None = 9,
+    aliases: dict | None = None,
+    max_depth: int = 5,
+    resolution_mode: str = "default",
+    pattern_group: str | None = None,
+) -> ChannelEntry:
     return ChannelEntry(
         chat_id="-100123",
         topic_id=topic_id,
@@ -53,6 +64,8 @@ def _entry(trader_id: str | None, topic_id: int | None = 9, aliases: dict | None
         blacklist=[],
         aliases=aliases or {},
         resolution_max_depth=max_depth,
+        resolution_mode=resolution_mode,
+        pattern_group=pattern_group,
     )
 
 
@@ -67,8 +80,19 @@ def raw_repo():
 
 
 @pytest.fixture
-def resolver(channel_config, raw_repo):
-    return TraderResolver(channel_config=channel_config, raw_repo=raw_repo)
+def pattern_catalog():
+    catalog = MagicMock()
+    catalog.resolve.return_value = TextPatternMatch(trader_id=None, is_ambiguous=False)
+    return catalog
+
+
+@pytest.fixture
+def resolver(channel_config, raw_repo, pattern_catalog):
+    return TraderResolver(
+        channel_config=channel_config,
+        raw_repo=raw_repo,
+        pattern_catalog=pattern_catalog,
+    )
 
 
 # --- Step 1: config statico ---
@@ -112,6 +136,42 @@ def test_alias_same_trader_twice_not_ambiguous(resolver, channel_config):
     ctx = resolver.resolve(_envelope(text="[trader#A] buy btc trader #A confirmed"))
     assert ctx.trader_id == "trader_a"
     assert not ctx.is_ambiguous
+
+
+def test_text_patterns_resolved_when_aliases_miss(resolver, channel_config, pattern_catalog):
+    channel_config.lookup.return_value = _entry(None, aliases={}, pattern_group="multi_strategy_ru")
+    pattern_catalog.resolve.return_value = TextPatternMatch(
+        trader_id="sma_intraday",
+        is_ambiguous=False,
+    )
+    text = "Кросс SMA 21/55 · интрадей (1H)"
+    ctx = resolver.resolve(_envelope(text=text))
+    assert ctx.trader_id == "sma_intraday"
+    assert ctx.method == "content_alias"
+    pattern_catalog.resolve.assert_called_once_with("multi_strategy_ru", text)
+
+
+def test_text_patterns_ambiguous_marks_review(resolver, channel_config, pattern_catalog):
+    channel_config.lookup.return_value = _entry(None, aliases={}, pattern_group="multi_strategy_ru")
+    pattern_catalog.resolve.return_value = TextPatternMatch(trader_id=None, is_ambiguous=True)
+    ctx = resolver.resolve(_envelope(text="ambiguous strategy"))
+    assert ctx.trader_id is None
+    assert ctx.is_ambiguous is True
+    assert ctx.method == "content_alias_ambiguous"
+
+
+def test_patterns_only_skips_reply_chain_and_links(resolver, channel_config, raw_repo, pattern_catalog):
+    channel_config.lookup.return_value = _entry(
+        None,
+        aliases={},
+        resolution_mode="patterns_only",
+        pattern_group="multi_strategy_ru",
+    )
+    pattern_catalog.resolve.return_value = TextPatternMatch(trader_id=None, is_ambiguous=False)
+    ctx = resolver.resolve(_envelope(text="no match", reply_id=42))
+    assert ctx.trader_id is None
+    assert ctx.method == "unresolved"
+    raw_repo.get_chain_node.assert_not_called()
 
 
 # --- Step 3: reply chain ---

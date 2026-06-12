@@ -19,6 +19,8 @@ class ChannelEntry:
     blacklist: list[str]
     aliases: dict[str, str]          # normalized tag → trader_id; empty for single-trader
     resolution_max_depth: int        # default 5; used only when trader_id is None
+    resolution_mode: str = "default"
+    pattern_group: str | None = None
 
 
 class ChannelConfigResolver:
@@ -47,6 +49,13 @@ class ChannelConfigResolver:
             aliases_raw: dict[str, str] = resolution.get("aliases") or {}
             aliases = normalize_trader_aliases(aliases_raw)
             max_depth = max(1, int(resolution.get("max_depth", 5)))
+            resolution_mode = str(resolution.get("mode", "default")).strip() or "default"
+            if resolution_mode not in {"default", "patterns_only"}:
+                raise ValueError(
+                    f"invalid resolution.mode for chat_id={chat_id}, topic_id={topic_id}: {resolution_mode!r}"
+                )
+            pattern_group_raw = resolution.get("pattern_group")
+            pattern_group = str(pattern_group_raw).strip() if pattern_group_raw else None
             entry = ChannelEntry(
                 chat_id=chat_id,
                 topic_id=topic_id,
@@ -57,6 +66,8 @@ class ChannelConfigResolver:
                 blacklist=list(raw.get("blacklist", [])),
                 aliases=aliases,
                 resolution_max_depth=max_depth,
+                resolution_mode=resolution_mode,
+                pattern_group=pattern_group,
             )
             index[(chat_id, topic_id)] = entry
         self._index = index

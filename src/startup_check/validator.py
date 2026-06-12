@@ -186,6 +186,25 @@ def _registered_traders(root_dir: Path) -> list[str]:
     return [str(t) for t in traders] if isinstance(traders, list) else []
 
 
+def _load_text_pattern_groups(root_dir: Path) -> dict[str, set[str]]:
+    path = root_dir / "config" / "text_patterns.yaml"
+    if not path.exists():
+        return {}
+    raw = _load_yaml(path) or {}
+    groups_raw = raw.get("groups") or {}
+    groups: dict[str, set[str]] = {}
+    for group_name, group_value in groups_raw.items():
+        if not isinstance(group_value, dict):
+            groups[str(group_name)] = set()
+            continue
+        traders: set[str] = set()
+        for item in group_value.get("patterns") or []:
+            if isinstance(item, dict) and item.get("trader_id"):
+                traders.add(str(item["trader_id"]))
+        groups[str(group_name)] = traders
+    return groups
+
+
 def _check_channels(report: ValidationReport, root_dir: Path) -> None:
     section = "channels.yaml"
     path = root_dir / "config" / "channels.yaml"
@@ -201,6 +220,15 @@ def _check_channels(report: ValidationReport, root_dir: Path) -> None:
         report.ok(section, "struttura canali valida (loader runtime)")
     except Exception as exc:
         report.error(section, f"struttura canali non valida: {exc}")
+        return
+
+    try:
+        from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+
+        ChannelConfigResolver(str(path))
+        report.ok(section, "resolution config valida (channel resolver)")
+    except Exception as exc:
+        report.error(section, f"resolution config non valida: {exc}")
         return
 
     try:
@@ -451,6 +479,44 @@ def _check_account_routing(report: ValidationReport, root_dir: Path) -> None:
                     )
 
 
+def _check_text_patterns(report: ValidationReport, root_dir: Path) -> None:
+    section = "text_patterns.yaml"
+    path = root_dir / "config" / "text_patterns.yaml"
+    raw = _check_file_parses(report, section, path)
+    if raw is None:
+        return
+
+    groups = _load_text_pattern_groups(root_dir)
+    registered = set(_registered_traders(root_dir))
+    channels_raw = _load_yaml(root_dir / "config" / "channels.yaml") or {}
+
+    for entry in channels_raw.get("channels") or []:
+        if not isinstance(entry, dict):
+            continue
+        resolution = entry.get("resolution") or {}
+        mode = str(resolution.get("mode", "default")).strip() or "default"
+        pattern_group = resolution.get("pattern_group")
+        label = entry.get("label") or entry.get("chat_id")
+        active = bool(entry.get("active", True))
+        emit = report.error if active else report.warn
+        suffix = "" if active else " (canale non attivo)"
+
+        if mode == "patterns_only" and not pattern_group:
+            emit(section, f"canale '{label}': mode=patterns_only richiede pattern_group{suffix}")
+            continue
+        if not pattern_group:
+            continue
+        if str(pattern_group) not in groups:
+            emit(section, f"canale '{label}': pattern_group '{pattern_group}' non esiste{suffix}")
+            continue
+        for trader_id in groups[str(pattern_group)]:
+            if registered and trader_id not in registered:
+                emit(
+                    section,
+                    f"pattern_group '{pattern_group}': trader_id '{trader_id}' non presente in registered_traders{suffix}",
+                )
+
+
 def _check_control_plane(report: ValidationReport, root_dir: Path) -> None:
     section = "telegram_control.yaml"
     path = root_dir / "config" / "telegram_control.yaml"
@@ -508,6 +574,7 @@ def _check_control_plane(report: ValidationReport, root_dir: Path) -> None:
     if per_trader:
         try:
             channels_raw = _load_yaml(root_dir / "config" / "channels.yaml") or {}
+            pattern_groups = _load_text_pattern_groups(root_dir)
             known: set[str] = set()
             for entry in channels_raw.get("channels") or []:
                 if isinstance(entry, dict):
@@ -515,6 +582,9 @@ def _check_control_plane(report: ValidationReport, root_dir: Path) -> None:
                         known.add(str(entry["trader_id"]))
                     aliases = (entry.get("resolution") or {}).get("aliases") or {}
                     known.update(str(v) for v in aliases.values())
+                    pattern_group = (entry.get("resolution") or {}).get("pattern_group")
+                    if pattern_group:
+                        known.update(pattern_groups.get(str(pattern_group), set()))
             for trader_id in per_trader:
                 if str(trader_id) not in known:
                     report.warn(
@@ -556,6 +626,7 @@ def run_startup_checks(root_dir: Path) -> ValidationReport:
     _check_directories(report, root_dir)
     _check_channels(report, root_dir)
     _check_operation_config(report, root_dir)
+    _check_text_patterns(report, root_dir)
     _check_execution_config(report, root_dir)
     _check_account_routing(report, root_dir)
     _check_control_plane(report, root_dir)

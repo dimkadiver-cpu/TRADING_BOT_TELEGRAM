@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import pytest
 import yaml
+
 from src.runtime_v2.trader_resolution.channel_config_resolver import (
     ChannelConfigResolver,
     ChannelEntry,
@@ -120,7 +122,6 @@ def test_reload_picks_up_changes(config_file):
 
 
 def test_topic_fallback_to_chat_only(resolver):
-    # topic_id=99 not configured; falls back to chat-level entry (no topic_id in yaml)
     entry = resolver.lookup("-1002222222222", topic_id=99)
     assert entry is not None
     assert entry.trader_id == "trader_c"
@@ -179,11 +180,18 @@ def test_multi_trader_topic_max_depth(multi_resolver):
     assert entry.resolution_max_depth == 3
 
 
+def test_multi_trader_topic_defaults_to_resolution_mode_default(multi_resolver):
+    entry = multi_resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    assert entry.resolution_mode == "default"
+    assert entry.pattern_group is None
+
+
 def test_single_trader_topic_empty_aliases(multi_resolver):
     entry = multi_resolver.lookup("-1009999999999", topic_id=10)
     assert entry is not None
     assert entry.aliases == {}
-    assert entry.resolution_max_depth == 5  # default
+    assert entry.resolution_max_depth == 5
 
 
 def test_existing_entries_unaffected_by_aliases_field(resolver):
@@ -194,7 +202,6 @@ def test_existing_entries_unaffected_by_aliases_field(resolver):
 
 
 def test_multi_trader_topic_aliases_normalized(tmp_path):
-    """Alias keys in YAML are normalized: Trader [#А] (Cyrillic А) → trader#a."""
     yaml_content = """
 channels:
   - chat_id: -1009999999999
@@ -212,6 +219,29 @@ channels:
     resolver = ChannelConfigResolver(p)
     entry = resolver.lookup("-1009999999999", topic_id=9)
     assert entry is not None
-    # Cyrillic А normalized to latin a → key becomes "trader#a"
     assert "trader#a" in entry.aliases
     assert entry.aliases["trader#a"] == "trader_a"
+
+
+def test_multi_trader_topic_loads_resolution_mode_and_pattern_group(tmp_path):
+    yaml_content = """
+channels:
+  - chat_id: -1009999999999
+    topic_id: 9
+    label: "PatternTopic"
+    active: true
+    trader_id: null
+    resolution:
+      mode: patterns_only
+      pattern_group: multi_strategy_ru
+      max_depth: 7
+    blacklist: []
+"""
+    p = tmp_path / "channels.yaml"
+    p.write_text(yaml_content, encoding="utf-8")
+    resolver = ChannelConfigResolver(p)
+    entry = resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    assert entry.resolution_mode == "patterns_only"
+    assert entry.pattern_group == "multi_strategy_ru"
+    assert entry.resolution_max_depth == 7
