@@ -199,6 +199,11 @@ Campi principali:
 - `captured_at`: momento della cattura.
 - `payload_json`: payload grezzo.
 
+Nota runtime:
+
+- `total_open_risk_usdt` è derivato dalle trade chain attive del bot, non dal payload exchange;
+- `payload_json` conserva il payload grezzo restituito dal port quando disponibile.
+
 Writer attuale:
 
 - `src/runtime_v2/lifecycle/repositories.py`
@@ -229,6 +234,10 @@ Campi principali:
 - `source`: origine dello snapshot.
 - `captured_at`: momento della cattura.
 - `payload_json`: payload grezzo.
+
+Nota runtime:
+
+- `payload_json` conserva ticker e metadata grezzi restituiti dal port quando disponibili.
 
 Writer attuale:
 

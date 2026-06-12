@@ -259,6 +259,58 @@ def test_control_state_most_restrictive_wins(ops_db):
     assert mode == "FULL_STOP"
 
 
+def test_snapshot_repo_persists_payload_json(ops_db):
+    from datetime import datetime, timezone
+
+    from src.runtime_v2.lifecycle.ports import AccountStateSnapshot, SymbolMarketSnapshot
+    from src.runtime_v2.lifecycle.repositories import SnapshotRepository
+
+    repo = SnapshotRepository(ops_db)
+    now = datetime.now(timezone.utc)
+    repo.save_account(
+        AccountStateSnapshot(
+            account_id="acc_1",
+            equity_usdt=1000.0,
+            available_balance_usdt=900.0,
+            total_open_risk_usdt=25.0,
+            total_margin_used_usdt=100.0,
+            source="test",
+            captured_at=now,
+            payload_json='{"wallet": {"equity": "1000.0"}}',
+        ),
+        "acc_1",
+    )
+    repo.save_market(
+        SymbolMarketSnapshot(
+            symbol="BTCUSDT",
+            mark_price=50000.0,
+            bid=49999.0,
+            ask=50001.0,
+            min_order_size=0.001,
+            price_precision=1,
+            qty_precision=3,
+            source="test",
+            captured_at=now,
+            payload_json='{"ticker": {"markPrice": 50000.0}}',
+        ),
+        "acc_1",
+    )
+
+    conn = sqlite3.connect(ops_db)
+    try:
+        account_payload = conn.execute(
+            "SELECT payload_json FROM ops_account_snapshots ORDER BY snapshot_id DESC LIMIT 1"
+        ).fetchone()[0]
+        market_payload = conn.execute(
+            "SELECT payload_json FROM ops_market_snapshots ORDER BY snapshot_id DESC LIMIT 1"
+        ).fetchone()[0]
+    finally:
+        conn.close()
+
+    assert account_payload == '{"wallet": {"equity": "1000.0"}}'
+    assert market_payload == '{"ticker": {"markPrice": 50000.0}}'
+
+
 # --- ExchangeEventRepository ---
 
 def test_exchange_event_repo_get_new_and_mark(ops_db):

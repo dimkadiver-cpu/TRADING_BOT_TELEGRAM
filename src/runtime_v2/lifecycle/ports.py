@@ -15,6 +15,7 @@ class AccountStateSnapshot(BaseModel):
     total_margin_used_usdt: float | None = None
     captured_at: datetime
     source: str
+    payload_json: str = "{}"
 
 
 class SymbolMarketSnapshot(BaseModel):
@@ -28,6 +29,7 @@ class SymbolMarketSnapshot(BaseModel):
     qty_precision: int | None = None
     captured_at: datetime
     source: str
+    payload_json: str = "{}"
 
 
 class OrderSnapshot(BaseModel):

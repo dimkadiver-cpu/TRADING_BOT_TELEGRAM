@@ -414,6 +414,7 @@ def test_build_exchange_port_uses_live_port_when_runtime_has_adapters(monkeypatc
 
     port = app_main._build_exchange_port(
         root_dir=tmp_path,
+        ops_db_path=str(tmp_path / "ops.sqlite3"),
         execution_runtime=runtime,
         known_symbols=frozenset({"BTC/USDT:USDT"}),
     )
@@ -427,6 +428,7 @@ def test_build_exchange_port_falls_back_to_static_port_without_runtime(tmp_path)
 
     port = app_main._build_exchange_port(
         root_dir=tmp_path,
+        ops_db_path=str(tmp_path / "ops.sqlite3"),
         execution_runtime=None,
         known_symbols=frozenset({"BTC/USDT:USDT"}),
     )

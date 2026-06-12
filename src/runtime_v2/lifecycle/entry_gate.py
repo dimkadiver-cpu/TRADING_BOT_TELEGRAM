@@ -2386,7 +2386,7 @@ class LifecycleGateWorker:
                         (
                             enriched.account_id, s.equity_usdt, s.available_balance_usdt,
                             s.total_open_risk_usdt, s.total_margin_used_usdt,
-                            s.source, s.captured_at.isoformat(), "{}",
+                            s.source, s.captured_at.isoformat(), s.payload_json,
                         ),
                     )
 
@@ -2402,7 +2402,7 @@ class LifecycleGateWorker:
                         (
                             enriched.account_id, s.symbol, s.mark_price, s.bid, s.ask,
                             s.min_order_size, s.price_precision, s.qty_precision,
-                            s.source, s.captured_at.isoformat(), "{}",
+                            s.source, s.captured_at.isoformat(), s.payload_json,
                         ),
                     )
                 if chain_id is not None:

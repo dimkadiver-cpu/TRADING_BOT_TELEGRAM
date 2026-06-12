@@ -39,6 +39,7 @@ class StaticExchangeDataPort(ExchangeDataPort):
             account_id=account_id,
             captured_at=datetime.now(timezone.utc),
             source="static_default",
+            payload_json="{}",
         )
 
     def get_symbol_market_state(self, account_id: str, symbol: str) -> SymbolMarketSnapshot:
@@ -49,6 +50,7 @@ class StaticExchangeDataPort(ExchangeDataPort):
             symbol=lookup_symbol,
             captured_at=datetime.now(timezone.utc),
             source="static_default",
+            payload_json="{}",
         )
 
     def get_open_orders(self, account_id: str, symbol: str | None = None) -> list[OrderSnapshot]:

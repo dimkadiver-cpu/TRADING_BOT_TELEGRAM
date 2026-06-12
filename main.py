@@ -278,6 +278,7 @@ def _build_lifecycle_entry_gate(
 def _build_exchange_port(
     *,
     root_dir: Path,
+    ops_db_path: str,
     execution_runtime: ExecutionRuntime | None,
     known_symbols: frozenset[str] | None,
 ):
@@ -288,6 +289,7 @@ def _build_exchange_port(
     return LiveExchangeDataPort(
         execution_config=exec_config,
         adapter_registry=execution_runtime.adapters,
+        ops_db_path=ops_db_path,
         known_symbols=known_symbols,
     )
 
@@ -528,6 +530,7 @@ async def _async_main(
 
     exchange_port = _build_exchange_port(
         root_dir=root_dir,
+        ops_db_path=ops_db_path,
         execution_runtime=execution_runtime,
         known_symbols=known_symbols,
     )

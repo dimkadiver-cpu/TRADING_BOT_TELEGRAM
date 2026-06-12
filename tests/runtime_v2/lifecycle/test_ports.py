@@ -122,6 +122,7 @@ def test_live_port_uses_routed_adapter_snapshots():
             equity_usdt=1111.0,
             available_balance_usdt=999.0,
             total_margin_used_usdt=123.0,
+            payload={"wallet": {"equity": "1111.0"}},
             source="fake_live",
         ),
         market_snapshots={
@@ -133,6 +134,7 @@ def test_live_port_uses_routed_adapter_snapshots():
                 min_order_size=0.001,
                 price_precision=1,
                 qty_precision=3,
+                payload={"ticker": {"markPrice": 50000.0}},
                 source="fake_live",
             )
         },
@@ -145,10 +147,17 @@ def test_live_port_uses_routed_adapter_snapshots():
         },
         adapters={"demo": AdapterConfig(type="fake", mode="demo", connector="fake")},
     )
+    ops_db = _make_live_port_db([
+        ("acc_1", "WAITING_ENTRY", "NONE", 0.0, '{"risk_amount": 10.0}'),
+        ("acc_1", "OPEN", "NONE", 7.5, '{"risk_amount": 20.0}'),
+        ("acc_1", "OPEN", "PROTECTED", 0.0, '{"risk_amount": 30.0}'),
+        ("other", "OPEN", "NONE", 50.0, '{"risk_amount": 50.0}'),
+    ])
 
     port = LiveExchangeDataPort(
         execution_config=config,
         adapter_registry={"demo": adapter},
+        ops_db_path=ops_db,
         known_symbols=frozenset({"BTC/USDT:USDT"}),
     )
 
@@ -157,8 +166,10 @@ def test_live_port_uses_routed_adapter_snapshots():
 
     assert account.equity_usdt == 1111.0
     assert account.available_balance_usdt == 999.0
+    assert account.total_open_risk_usdt == 17.5
     assert account.total_margin_used_usdt == 123.0
     assert account.source == "fake_live"
+    assert account.payload_json == '{"wallet": {"equity": "1111.0"}}'
     assert market.mark_price == 50000.0
     assert market.bid == 49999.0
     assert market.ask == 50001.0
@@ -166,6 +177,7 @@ def test_live_port_uses_routed_adapter_snapshots():
     assert market.price_precision == 1
     assert market.qty_precision == 3
     assert market.source == "fake_live"
+    assert market.payload_json == '{"ticker": {"markPrice": 50000.0}}'
 
 
 def test_live_port_falls_back_to_static_defaults_when_adapter_has_no_snapshot():
@@ -184,6 +196,7 @@ def test_live_port_falls_back_to_static_defaults_when_adapter_has_no_snapshot():
     port = LiveExchangeDataPort(
         execution_config=config,
         adapter_registry={"demo": FakeAdapter()},
+        ops_db_path=_make_live_port_db([]),
         known_symbols=frozenset({"ETH/USDT:USDT"}),
     )
 
@@ -196,3 +209,38 @@ def test_live_port_falls_back_to_static_defaults_when_adapter_has_no_snapshot():
     assert market.symbol == "ETHUSDT"
     assert market.source == "static_default"
     assert market.mark_price is None
+
+
+def _make_live_port_db(chains: list[tuple[str, str, str, float | None, str]]) -> str:
+    import sqlite3
+    from tempfile import NamedTemporaryFile
+
+    handle = NamedTemporaryFile(suffix=".sqlite3", delete=False)
+    handle.close()
+    conn = sqlite3.connect(handle.name)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE ops_trade_chains (
+                trade_chain_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id TEXT NOT NULL,
+                lifecycle_state TEXT NOT NULL,
+                be_protection_status TEXT,
+                risk_remaining REAL,
+                risk_snapshot_json TEXT
+            )
+            """
+        )
+        for account_id, lifecycle_state, be_status, risk_remaining, risk_snapshot_json in chains:
+            conn.execute(
+                """
+                INSERT INTO ops_trade_chains (
+                    account_id, lifecycle_state, be_protection_status, risk_remaining, risk_snapshot_json
+                ) VALUES (?,?,?,?,?)
+                """,
+                (account_id, lifecycle_state, be_status, risk_remaining, risk_snapshot_json),
+            )
+        conn.commit()
+    finally:
+        conn.close()
+    return handle.name

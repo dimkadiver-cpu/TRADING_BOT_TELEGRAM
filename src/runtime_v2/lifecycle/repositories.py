@@ -420,7 +420,7 @@ class SnapshotRepository:
                 (
                     account_id, snap.equity_usdt, snap.available_balance_usdt,
                     snap.total_open_risk_usdt, snap.total_margin_used_usdt,
-                    snap.source, snap.captured_at.isoformat(), "{}",
+                    snap.source, snap.captured_at.isoformat(), snap.payload_json,
                 ),
             )
             conn.commit()
@@ -443,7 +443,7 @@ class SnapshotRepository:
                 (
                     account_id, snap.symbol, snap.mark_price, snap.bid, snap.ask,
                     snap.min_order_size, snap.price_precision, snap.qty_precision,
-                    snap.source, snap.captured_at.isoformat(), "{}",
+                    snap.source, snap.captured_at.isoformat(), snap.payload_json,
                 ),
             )
             conn.commit()
