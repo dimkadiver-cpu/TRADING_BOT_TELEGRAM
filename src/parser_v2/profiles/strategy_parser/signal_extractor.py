@@ -44,7 +44,15 @@ class SignalExtractor:
             return None
 
         entries = (
-            [EntryLeg(sequence=1, entry_type="LIMIT", price=entry, role="PRIMARY", is_optional=False)]
+            [
+                EntryLeg(
+                    sequence=1,
+                    entry_type="MARKET" if market_hint else "LIMIT",
+                    price=entry,
+                    role="PRIMARY",
+                    is_optional=False,
+                )
+            ]
             if entry is not None
             else []
         )
