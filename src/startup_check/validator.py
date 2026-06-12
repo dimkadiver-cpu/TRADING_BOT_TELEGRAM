@@ -443,11 +443,20 @@ def _check_account_routing(report: ValidationReport, root_dir: Path) -> None:
             continue
         account_id = account.get("id")
         if account_mode == "single":
-            report.warn(
-                section,
-                f"{trader_path.name}: blocco 'account' definito ma account_mode=single — "
-                "verrà ignorato (serve per_trader_subaccount)",
-            )
+            if account_id and account_id != global_account_id:
+                report.error(
+                    section,
+                    f"{trader_path.name}: account.id '{account_id}' diverso dall'account globale "
+                    f"'{global_account_id}' ma account_mode=single — il blocco verrà ignorato "
+                    "e i trade eseguiti su account sbagliato. Cambia account_mode: per_trader_subaccount "
+                    "oppure rimuovi il blocco account dal trader yaml.",
+                )
+            else:
+                report.warn(
+                    section,
+                    f"{trader_path.name}: blocco 'account' definito ma account_mode=single — "
+                    "verrà ignorato (serve per_trader_subaccount)",
+                )
         elif account_id and account_id not in routing:
             report.error(
                 section,

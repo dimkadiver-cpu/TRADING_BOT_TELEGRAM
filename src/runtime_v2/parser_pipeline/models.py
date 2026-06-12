@@ -15,6 +15,7 @@ class CanonicalParseResult(BaseModel):
     raw_message_id: int
     canonical_message_id: int
     parser_profile: str
+    resolved_trader_id: str | None = None
     primary_class: MessageClass
     parse_status: ParseStatus
     canonical_message: CanonicalMessage

@@ -119,10 +119,23 @@ def _build_execution_runtime(
     adapter_name = exec_config.default_adapter
     routing, adapter_cfg = exec_config.resolve_routing("default")
     adapter = build_adapter(adapter_name, adapter_cfg)
+
+    # Build all adapters referenced in account_routing so the gateway can route per-account.
+    adapter_registry = {adapter_name: adapter}
+    for route in exec_config.account_routing.values():
+        if route.adapter not in adapter_registry:
+            try:
+                adapter_registry[route.adapter] = build_adapter(
+                    route.adapter, exec_config.adapters[route.adapter]
+                )
+                logger.info("loaded adapter: %s", route.adapter)
+            except Exception:
+                logger.warning("adapter '%s' failed to load — commands routed to it will fail", route.adapter)
+
     gateway_repo = GatewayCommandRepository(ops_db_path)
     gateway = ExecutionGateway(
         config=exec_config,
-        adapter_registry={adapter_name: adapter},
+        adapter_registry=adapter_registry,
         repo=gateway_repo,
     )
     execution_worker = ExecutionCommandWorker(

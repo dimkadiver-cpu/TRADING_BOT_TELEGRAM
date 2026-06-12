@@ -69,6 +69,7 @@ def _minimal_global_config() -> dict:
 def _make_parse_result(
     *,
     trader_id: str = "trader_a",
+    resolved_trader_id: str | None = None,
     canonical_message_id: int = 1,
     raw_message_id: int = 10,
     symbol: str = "BTC/USDT",
@@ -113,6 +114,7 @@ def _make_parse_result(
         raw_message_id=raw_message_id,
         canonical_message_id=canonical_message_id,
         parser_profile=trader_id,
+        resolved_trader_id=resolved_trader_id,
         primary_class=primary_class,
         parse_status="PARSED",
         canonical_message=canonical,
@@ -146,6 +148,33 @@ def test_unregistered_trader_is_blocked(processor):
     assert enriched.enrichment_decision == "BLOCK"
     assert enriched.reason_code == "trader_not_registered"
     assert enriched.lifecycle_processed is True
+
+
+def test_signal_uses_resolved_trader_id_over_parser_profile(tmp_path):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    cfg["registered_traders"] = ["trader_a"]
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+    result = _make_parse_result(trader_id="strategy_parser", resolved_trader_id="trader_a")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "PASS"
+    assert enriched.trader_id == "trader_a"
+    assert enriched.lifecycle_processed is False
+    from_db = proc._repo.get_by_canonical_message_id(enriched.canonical_message_id)
+    assert from_db is not None
+    assert from_db.trader_id == "trader_a"
 
 
 def test_global_blacklisted_symbol_is_blocked(tmp_path):

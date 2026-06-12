@@ -26,6 +26,12 @@ execution:
     default:
       adapter: bybit_demo
       execution_account_id: main  # Account logico instradato verso l'adapter selezionato.
+    main:
+      adapter: bybit_demo
+      execution_account_id: main
+    account_nuovo:
+      adapter: bybit_nuovo
+      execution_account_id: account_nuovo  # Sostituire con il vero account ID Bybit del subaccount.
 
   adapters:
     bybit_demo:
@@ -56,3 +62,33 @@ execution:
 
       live_safety:
         allow_live_trading: false  # Per live deve essere true e va settata anche la env di sblocco.
+
+    bybit_nuovo:
+      type: ccxt_bybit
+      mode: demo  # Cambiare in live quando il subaccount è pronto.
+      connector: bybit
+
+      api_key_env: BYBIT_API_KEY_ACCOUNT_NUOVO    # Impostare con le credenziali del subaccount.
+      api_secret_env: BYBIT_API_SECRET_ACCOUNT_NUOVO
+
+      adjust_for_time_difference: true
+      recv_window_ms: 10000
+      time_sync_on_startup: true
+
+      strategy:
+        simple_attached_enabled: true
+        trigger_by: MarkPrice
+        one_tp_mode: FULL
+        multi_tp_mode: PARTIAL
+
+      websocket:
+        enabled: true
+        poll_fallback_enabled: true
+        poll_fallback_period_seconds: 60
+
+      retry:
+        max_attempts: 3
+        backoff_seconds: [30, 90, 300]
+
+      live_safety:
+        allow_live_trading: false

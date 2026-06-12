@@ -24,7 +24,7 @@
 global_safety:
   allow_unprotected_positions: false  # false = richiede protezione SL; true = ammette posizioni senza SL.
 
-account_mode: single  # Valori supportati: single | per_trader_subaccount.
+account_mode: per_trader_subaccount  # Valori supportati: single | per_trader_subaccount.
 
 # single: unico account condiviso; i limiti account restano hard cap globali.
 # per_trader_subaccount: ogni config/traders/<id>.yaml puo' definire il proprio blocco account.

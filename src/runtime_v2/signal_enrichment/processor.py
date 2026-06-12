@@ -37,7 +37,7 @@ class SignalEnrichmentProcessor:
             return existing
 
         self._config.reload_if_changed()
-        trader_id = result.parser_profile
+        trader_id = self._resolve_trader_id(result)
         config = self._config.get_effective_config(trader_id)
 
         if config is None:
@@ -83,7 +83,7 @@ class SignalEnrichmentProcessor:
     ) -> EnrichedCanonicalMessage:
         log: list[EnrichmentLogEntry] = []
         signal = result.canonical_message.signal
-        trader_id = result.parser_profile
+        trader_id = self._resolve_trader_id(result)
         symbol = to_raw_symbol(signal.symbol) or ""
 
         def block(reason: str) -> EnrichedCanonicalMessage:
@@ -304,7 +304,7 @@ class SignalEnrichmentProcessor:
         policy_version: str,
     ) -> EnrichedCanonicalMessage:
         log: list[EnrichmentLogEntry] = []
-        trader_id = result.parser_profile
+        trader_id = self._resolve_trader_id(result)
         tags = result.canonical_message.target_action_groups
 
         if not tags:
@@ -364,7 +364,7 @@ class SignalEnrichmentProcessor:
         return EnrichedCanonicalMessage(
             canonical_message_id=result.canonical_message_id,
             raw_message_id=result.raw_message_id,
-            trader_id=result.parser_profile,
+            trader_id=self._resolve_trader_id(result),
             account_id=config.account_id,
             primary_class=result.primary_class,
             enrichment_decision="PASS",
@@ -391,7 +391,7 @@ class SignalEnrichmentProcessor:
         return EnrichedCanonicalMessage(
             canonical_message_id=result.canonical_message_id,
             raw_message_id=result.raw_message_id,
-            trader_id=result.parser_profile,
+            trader_id=self._resolve_trader_id(result),
             account_id=config.account_id if config else "",
             primary_class=result.primary_class,
             enrichment_decision=decision,
@@ -401,6 +401,16 @@ class SignalEnrichmentProcessor:
             policy_version=policy_version,
             lifecycle_processed=lifecycle_processed,
         )
+
+    @staticmethod
+    def _resolve_trader_id(result: CanonicalParseResult) -> str:
+        resolved = getattr(result, "resolved_trader_id", None)
+        if isinstance(resolved, str) and resolved.strip():
+            return resolved
+        parser_profile = getattr(result, "parser_profile", None)
+        if isinstance(parser_profile, str) and parser_profile.strip():
+            return parser_profile
+        raise ValueError("canonical parse result missing trader identity")
 
 
 __all__ = ["SignalEnrichmentProcessor"]

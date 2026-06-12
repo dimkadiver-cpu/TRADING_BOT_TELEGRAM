@@ -4,6 +4,64 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-12 — Fix per_trader_subaccount: adapter_registry multi-adapter + safety check account_id
+
+### Step completato
+
+**Problema 1 (safety)**: `account_mode: single` ignorava silenziosamente blocchi `account:` con `account.id` diverso da quello globale nei trader yaml (`rsi_intraday`, `rsi_swing`, `sma_intraday` avevano `account_nuovo` che veniva scartato senza errore). Il bot partiva ed eseguiva trade su `main` invece di `account_nuovo`.
+
+**Fix**: startup validator elevato da ⚠️ a ❌ quando `account.id` del trader diverge dall'account globale in `account_mode=single`.
+
+**Problema 2 (runtime)**: Dopo aver attivato `per_trader_subaccount`, il gateway produceva `adapter_not_found:bybit_nuovo`. `main.py` costruiva `adapter_registry` con solo il default adapter; `ExecutionGateway.process()` cercava `bybit_nuovo` nel registry → non trovato → chain cancellata.
+
+**Fix**: `_build_execution_runtime` ora itera tutti i valori di `account_routing` e istanzia ogni adapter unico referenziato. Il default adapter resta quello primario per `sync_worker` e `ws_watcher`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/startup_check/validator.py` | Modificato | `_check_account_routing`: account.id divergente in single mode → ERROR |
+| `config/operation_config.yaml` | Modificato | `account_mode: single → per_trader_subaccount` |
+| `config/execution.yaml` | Modificato | aggiunto routing `main` e `account_nuovo`, adapter scaffold `bybit_nuovo` |
+| `main.py` | Modificato | `_build_execution_runtime`: `adapter_registry` costruito da tutti i routing unici |
+
+### Rischi aperti
+
+- **`bybit_nuovo` credential vuote**: le env `BYBIT_API_KEY_ACCOUNT_NUOVO` / `BYBIT_API_SECRET_ACCOUNT_NUOVO` non sono ancora impostate. All'avvio il build adapter tenterà la connessione e potrebbe fallire — il `try/except` lo loggherà come warning e i comandi per `account_nuovo` falliranno. Impostare le credenziali reali prima di live.
+- **WS watcher e sync worker monoaccount**: rimangono collegati solo al default adapter (`bybit_demo`). Fill e riconciliazioni per `account_nuovo` non arrivano via WS — ci vorrà un secondo watcher in futuro.
+- **`load_known_symbols` monoadapter**: i simboli noti vengono caricati solo da `bybit_demo`. Se `bybit_nuovo` ha un diverso set di mercati abilitati, la whitelist potrebbe essere imprecisa.
+
+---
+
+## 2026-06-12 — Fix SIGNAL REJECTED unknown_symbol per simboli bare (HYPE → HYPEUSDT)
+
+### Step completato
+
+Indagine e fix del caso `❌ SIGNAL REJECTED / Rejected: unknown_symbol` per il segnale HYPE LONG da `rsi_intraday` (source: `trader_signal`, https://t.me/c/4298542632/9).
+
+**Percorso tracciato**: raw_message #23 → parser_result #23 (PARSED, symbol=HYPE) → enriched #23 (PASS, account=main, rsi_intraday) → `LifecycleEntryGate.process_signal()` → `symbol_exists("main", "HYPE")` → **False** → SIGNAL_REJECTED (event_id=98).
+
+**Root cause**: `to_raw_symbol("HYPE")` → `"HYPE"`. L'adapter Bybit carica `"HYPEUSDT"` da ccxt key `"HYPE/USDT:USDT"`. Il set `known_symbols` conteneva `"HYPEUSDT"` ma non `"HYPE"` — il lookup esatto falliva.
+
+**Note aggiuntive**:
+- enriched #22 (stesso messaggio, sessione precedente): `resolved_trader_id=null` → fallback a `parser_profile="strategy_parser"` → BLOCK `trader_not_registered`. Segnale trasiente: dopo il fix channels.yaml (chat_id corretto, active=true), la risoluzione dinamica via `multi_strategy_ru` funziona.
+- Startup check warnings attivi: `rsi_intraday.yaml`, `rsi_swing.yaml`, `sma_intraday.yaml` hanno blocco `account` definito ma `account_mode=single` → ignorato. Il sistema usa un unico account condiviso `"main"`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/lifecycle/static_exchange_data_port.py` | Modificato | `symbol_exists`: fallback `lookup_symbol + "USDT"` se exact match fallisce |
+| `tests/runtime_v2/lifecycle/test_ports.py` | Modificato | nuovo test `test_static_port_symbol_exists_bare_symbol_matches_usdt_future` |
+
+### Rischi aperti / blind spot
+
+- **Simboli non-USDT**: il fallback aggiunge solo `"USDT"`. Futures quotate in BTC o USDC non sarebbero coperte. In pratica tutti i perpetual Bybit sono USDT-quoted, ma è un edge case da monitorare.
+- **Riprocessamento segnale**: il segnale HYPE (enrichment_id=23) è già stato marcato `lifecycle_processed=1` e l'evento SIGNAL_REJECTED è nel DB. Non verrà riprocessato automaticamente — se si vuole ritentare HYPE occorre un replay manuale.
+- **Simbolo "H" da audit precedente**: il rischio segnalato in 2026-06-11 (simboli abbreviati come "H") rimane: `to_raw_symbol("H")` → `"H"`, `"HUSDT"` potrebbe non corrispondere all'exchange id reale.
+
+---
+
 ## 2026-06-12 — Fix funding mai registrato (ccxt filterExecTypes) + display "+-0.00"
 
 ### Step completato

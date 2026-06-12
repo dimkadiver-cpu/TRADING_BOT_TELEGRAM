@@ -90,6 +90,7 @@ class ParserPipelineProcessor:
             raw_message_id=raw_message_id,
             canonical_message_id=canonical_message_id,
             parser_profile=canonical.parser_profile,
+            resolved_trader_id=trader_id,
             primary_class=canonical.primary_class,
             parse_status=canonical.parse_status,
             canonical_message=canonical,

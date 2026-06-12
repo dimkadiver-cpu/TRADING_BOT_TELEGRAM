@@ -74,6 +74,17 @@ def test_static_port_symbol_exists_accepts_raw_symbol():
     assert port.symbol_exists("acc_1", "SOLUSDT") is False
 
 
+def test_static_port_symbol_exists_bare_symbol_matches_usdt_future():
+    # "HYPE" from Telegram must match "HYPEUSDT" loaded from exchange (HYPE/USDT:USDT ccxt key)
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+
+    port = StaticExchangeDataPort(known_symbols=frozenset({"HYPE/USDT:USDT", "BTC/USDT:USDT"}))
+
+    assert port.symbol_exists("acc_1", "HYPE") is True
+    assert port.symbol_exists("acc_1", "BTC") is True
+    assert port.symbol_exists("acc_1", "SOL") is False
+
+
 def test_static_port_filters_orders_by_symbol():
     from src.runtime_v2.lifecycle.ports import OrderSnapshot
     from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort

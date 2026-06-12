@@ -66,7 +66,10 @@ class StaticExchangeDataPort(ExchangeDataPort):
         if self._known_symbols is None:
             return True  # fail-open: no symbol list loaded -> don't block signals
         lookup_symbol = to_raw_symbol(symbol) or symbol
-        return lookup_symbol in self._known_symbols
+        if lookup_symbol in self._known_symbols:
+            return True
+        # Bare symbols from Telegram messages (e.g. "HYPE") may match USDT-quoted perpetuals ("HYPEUSDT")
+        return (lookup_symbol + "USDT") in self._known_symbols
 
 
 __all__ = ["StaticExchangeDataPort"]
