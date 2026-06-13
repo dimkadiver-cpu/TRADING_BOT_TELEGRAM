@@ -912,17 +912,19 @@ def write_engine_rule_update_clean_log(
                 })
 
     chain_row = conn.execute(
-        "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+        "SELECT symbol, side, trader_id FROM ops_trade_chains WHERE trade_chain_id=?",
         (chain_id,),
     ).fetchone()
     symbol = chain_row[0] if chain_row else None
     side = chain_row[1] if chain_row else None
+    trader_id = chain_row[2] if chain_row else None
 
     first = events[0]
     payload = {
         "chain_id": chain_id,
         "symbol": symbol,
         "side": side,
+        "trader_id": trader_id,
         "applied_actions": applied_actions,
         "rejected_actions": [],
         "changed": changed,

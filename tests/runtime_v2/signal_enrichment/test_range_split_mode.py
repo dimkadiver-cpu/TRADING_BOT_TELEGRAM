@@ -42,6 +42,28 @@ class TestApplyRangeSplit:
         result, _, _, _ = SignalEnrichmentProcessor._apply_range_split(legs, "endpoints")
         assert result is legs
 
+    def test_endpoints_orders_long_from_higher_to_lower_price(self):
+        legs = _make_range_legs(64_000.0, 65_000.0)
+        result, structure, derivation, logs = SignalEnrichmentProcessor._apply_range_split(
+            legs, "endpoints", side="LONG"
+        )
+        assert [leg.price.value for leg in result] == [65_000.0, 64_000.0]
+        assert [leg.sequence for leg in result] == [1, 2]
+        assert structure == "TWO_STEP"
+        assert derivation is not None
+        assert logs[0].check == "range_endpoints_retained"
+
+    def test_endpoints_orders_short_from_lower_to_higher_price(self):
+        legs = _make_range_legs(64_000.0, 65_000.0)
+        result, structure, derivation, logs = SignalEnrichmentProcessor._apply_range_split(
+            legs, "endpoints", side="SHORT"
+        )
+        assert [leg.price.value for leg in result] == [64_000.0, 65_000.0]
+        assert [leg.sequence for leg in result] == [1, 2]
+        assert structure == "TWO_STEP"
+        assert derivation is not None
+        assert logs[0].check == "range_endpoints_retained"
+
     def test_firstpoint_collapses_to_single_leg(self):
         legs = _make_range_legs(64_000.0, 65_000.0)
         result, structure, derivation, logs = SignalEnrichmentProcessor._apply_range_split(legs, "firstpoint")
@@ -177,7 +199,7 @@ class TestApplyRangeSplit:
 class TestRangeSplitIntegration:
     """Integration tests: split_mode applied through full _apply_entry_weights."""
 
-    def _make_signal(self, split_mode: str, price1: float, price2: float):
+    def _make_signal(self, split_mode: str, price1: float, price2: float, *, side: str = "LONG"):
         """Build a minimal signal object with RANGE structure."""
         from src.parser_v2.contracts.entities import EntryLeg, Price, StopLoss, TakeProfit
         from types import SimpleNamespace
@@ -192,7 +214,7 @@ class TestRangeSplitIntegration:
             stop_loss=StopLoss(price=Price(raw="62000", value=62_000.0)),
             take_profits=[TakeProfit(sequence=1, price=Price(raw="68000", value=68_000.0))],
             symbol="BTCUSDT",
-            side="LONG",
+            side=side,
         )
         return signal
 
@@ -248,7 +270,7 @@ class TestRangeSplitIntegration:
         )
 
     @pytest.mark.parametrize("split_mode,price1,price2,expected_structure,expected_prices", [
-        ("endpoints", 64_000.0, 65_000.0, "TWO_STEP", [64_000.0, 65_000.0]),
+        ("endpoints", 64_000.0, 65_000.0, "TWO_STEP", [65_000.0, 64_000.0]),
         ("firstpoint", 64_000.0, 65_000.0, "ONE_SHOT", [64_000.0]),
         ("lastpoint", 64_000.0, 65_000.0, "ONE_SHOT", [65_000.0]),
         ("midpoint", 64_000.0, 65_000.0, "ONE_SHOT", [64_500.0]),
@@ -269,6 +291,32 @@ class TestRangeSplitIntegration:
         assert [leg.price.value for leg in result] == expected_prices
         assert derivation is not None
         assert derivation.split_mode == split_mode
+        assert logs
+
+    @pytest.mark.parametrize(
+        "side, expected_prices",
+        [
+            ("LONG", [65_000.0, 64_000.0]),
+            ("SHORT", [64_000.0, 65_000.0]),
+        ],
+    )
+    def test_endpoints_via_apply_entry_weights_orders_by_side(self, side, expected_prices):
+        from unittest.mock import MagicMock
+
+        processor = SignalEnrichmentProcessor(
+            config_loader=MagicMock(),
+            repository=MagicMock(),
+        )
+        signal = self._make_signal("endpoints", 64_000.0, 65_000.0, side=side)
+        config = self._make_config("endpoints")
+
+        result, structure, derivation, logs = processor._apply_entry_weights(signal, config)
+
+        assert structure == "TWO_STEP"
+        assert [leg.price.value for leg in result] == expected_prices
+        assert [leg.sequence for leg in result] == [1, 2]
+        assert derivation is not None
+        assert derivation.split_mode == "endpoints"
         assert logs
 
     def test_non_range_structure_not_affected(self):
@@ -425,6 +473,7 @@ class TestRangeSplitIntegration:
         assert enriched.enriched_signal is not None
         assert enriched.enriched_signal.entry_structure == "TWO_STEP"
         assert len(enriched.enriched_signal.entries) == 2
+        assert [leg.price.value for leg in enriched.enriched_signal.entries] == [65_000.0, 64_000.0]
         assert enriched.enriched_signal.range_derivation is not None
         assert enriched.enriched_signal.range_derivation.split_mode == "endpoints"
         assert any(

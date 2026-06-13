@@ -226,7 +226,7 @@ class SignalEnrichmentProcessor:
             ))
 
         if structure == "RANGE" and entry_type_key == "LIMIT":
-            return self._apply_range_split(result, split.LIMIT.range.split_mode)
+            return self._apply_range_split(result, split.LIMIT.range.split_mode, side=signal.side)
 
         return result, structure, None, []
 
@@ -234,6 +234,8 @@ class SignalEnrichmentProcessor:
     def _apply_range_split(
         legs: list[EnrichedEntryLeg],
         split_mode: str,
+        *,
+        side: str | None = None,
     ) -> tuple[list[EnrichedEntryLeg], str, RangeDerivation | None, list[EnrichmentLogEntry]]:
         from src.parser_v2.contracts.entities import Price
 
@@ -251,6 +253,22 @@ class SignalEnrichmentProcessor:
         last_authored_leg = max(legs, key=lambda l: l.sequence)
 
         if split_mode == "endpoints":
+            ordered_legs = legs
+            if side in {"LONG", "SHORT"}:
+                reverse = side == "LONG"
+                ordered_legs = [
+                    leg.model_copy(update={"sequence": idx})
+                    for idx, leg in enumerate(
+                        sorted(
+                            legs,
+                            key=lambda l: (
+                                l.price.value if l.price is not None else float("-inf")
+                            ),
+                            reverse=reverse,
+                        ),
+                        start=1,
+                    )
+                ]
             meta = RangeDerivation(
                 derived_from_range=True,
                 split_mode=split_mode,
@@ -263,7 +281,7 @@ class SignalEnrichmentProcessor:
                 result="two_step",
                 detail="endpoints",
             )
-            return legs, "TWO_STEP", meta, [log_entry]
+            return ordered_legs, "TWO_STEP", meta, [log_entry]
 
         if split_mode == "firstpoint":
             if first_authored_leg.price is None:
