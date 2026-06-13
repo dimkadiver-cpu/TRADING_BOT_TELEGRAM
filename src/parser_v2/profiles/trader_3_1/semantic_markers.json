@@ -1,0 +1,99 @@
+{
+  "language": "en",
+  "field_markers": {
+    "coin": {
+      "strong": ["coin :"],
+      "weak": []
+    },
+    "entry": {
+      "strong": ["entry:"],
+      "weak": []
+    },
+    "stop_loss": {
+      "strong": ["stoploss:"],
+      "weak": []
+    },
+    "take_profit": {
+      "strong": ["target 1:"],
+      "weak": []
+    },
+    "leverage": {
+      "strong": ["leverage:"],
+      "weak": []
+    }
+  },
+  "side_markers": {
+    "LONG": {
+      "strong": ["🟢 long"],
+      "weak": []
+    },
+    "SHORT": {
+      "strong": ["🔴 short"],
+      "weak": []
+    }
+  },
+  "intent_markers": {
+    "TP_HIT": {
+      "strong": ["targets "],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong": ["closed at sl"],
+      "weak": []
+    },
+    "REPORT_RESULT": {
+      "strong": ["quick ", "all tragets done"],
+      "weak": []
+    },
+    "INFO_ONLY": {
+      "strong": [
+        "premium plans",
+        "membership",
+        "payment method",
+        "limited time fee",
+        "slot available premium channel"
+      ],
+      "weak": []
+    }
+  },
+  "info_markers": {
+    "PROMO": {
+      "strong": [
+        "premium plans",
+        "membership",
+        "payment method",
+        "limited time fee",
+        "slot available premium channel"
+      ],
+      "weak": []
+    },
+    "MARKET_COMMENT": {
+      "strong": [
+        "descending channel",
+        "descending triangle",
+        "falling wedge",
+        "broadening wedge",
+        "weekly timeframe",
+        "weekly chart",
+        "3d timeframe",
+        "3d chart",
+        "support zone",
+        "current price action suggests",
+        "market participants appear",
+        "technical setup looks promising",
+        "price toward $",
+        "upward movement toward $",
+        "drive the price toward $",
+        "the breakout above resistance confirms"
+      ],
+      "weak": []
+    }
+  },
+  "target_hint_markers": {
+    "symbol": {
+      "strong": ["usdt", "usdc", "usd"],
+      "weak": []
+    }
+  },
+  "ignore_markers": []
+}

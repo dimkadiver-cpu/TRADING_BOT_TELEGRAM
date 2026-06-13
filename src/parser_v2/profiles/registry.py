@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from src.parser_v2.core.runtime import TraderParserProfile
 from src.parser_v2.profiles.trader_3.profile import Trader3Profile
+from src.parser_v2.profiles.trader_3_1.profile import Trader31Profile
 from src.parser_v2.profiles.trader_a.profile import TraderAProfile
 from src.parser_v2.profiles.trader_b.profile import TraderBProfile
 from src.parser_v2.profiles.trader_c.profile import TraderCProfile
@@ -12,6 +13,7 @@ from src.parser_v2.profiles.strategy_parser.profile import StrategyParserProfile
 _PROFILE_FACTORIES: dict[str, type] = {
     "strategy_parser": StrategyParserProfile,
     "trader_3": Trader3Profile,
+    "trader_3_1": Trader31Profile,
     "trader_a": TraderAProfile,
     "trader_b": TraderBProfile,
     "trader_c": TraderCProfile,
@@ -23,6 +25,10 @@ _ALIASES: dict[str, str] = {
     "strategy_parser": "strategy_parser",
     "3": "trader_3",
     "trader_3": "trader_3",
+    "31": "trader_3_1",
+    "3_1": "trader_3_1",
+    "trader_31": "trader_3_1",
+    "trader_3_1": "trader_3_1",
     "ta": "trader_a",
     "a": "trader_a",
     "trader_a": "trader_a",
