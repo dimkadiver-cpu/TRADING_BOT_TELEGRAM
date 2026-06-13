@@ -63,7 +63,7 @@
       "weak": []
     },
     "INFO_ONLY": {
-      "strong": [],
+      "strong": ["Обзор","Набор"],
       "weak": [
      
       ]
