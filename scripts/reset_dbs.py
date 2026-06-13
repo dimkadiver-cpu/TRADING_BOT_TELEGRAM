@@ -26,18 +26,20 @@ PARSER_TABLES = [
 
 OPS_TABLES = [
     "exchange_raw_events",
+    "ops_account_snapshots",
+    "ops_order_snapshots",
+    "ops_clean_log_tracking",
+    "ops_config_overrides",
+    "ops_control_state",
     "ops_exchange_events",
     "ops_execution_commands",
     "ops_lifecycle_events",
-    "ops_account_snapshots",
     "ops_market_snapshots",
-    "ops_order_snapshots",
-    "ops_position_snapshots",
-    "ops_control_state",
-    "ops_trade_chains",
+    "ops_position_snapshots", 
     "ops_notification_outbox",
+    "ops_runtime_snapshots",
     "ops_telegram_control_commands",
-    "ops_clean_log_tracking",
+    "ops_trade_chains",
 ]
 
 
