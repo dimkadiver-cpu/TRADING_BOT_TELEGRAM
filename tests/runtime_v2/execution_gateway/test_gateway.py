@@ -446,15 +446,13 @@ def test_new_command_id_includes_nonce_so_db_reset_does_not_hit_stale_order(ops_
 def test_live_trading_blocked(ops_db):
     import yaml
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
-    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
     from src.runtime_v2.execution_gateway.models import ExecutionConfig
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     raw = yaml.safe_load(open("config/execution.yaml").read())
-    raw["execution"]["adapters"]["bybit_paper"]["live_safety"]["allow_live_trading"] = True
-    raw["execution"]["adapters"]["bybit_paper"]["mode"] = "live"
-
+    raw["execution"]["adapters"]["bybit_demo"]["live_safety"]["allow_live_trading"] = True
+    raw["execution"]["adapters"]["bybit_demo"]["mode"] = "live"
     config = ExecutionConfig.model_validate(raw["execution"])
 
     _insert_cmd(ops_db, 1004, payload={
@@ -464,7 +462,7 @@ def test_live_trading_blocked(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=config,
-        adapter_registry={"bybit_paper": FakeAdapter()},
+        adapter_registry={"bybit_demo": FakeAdapter()},
         repo=repo,
     )
     cmd = repo.get_pending_batch()[0]
@@ -778,10 +776,8 @@ def test_live_trading_gate_does_not_cancel_chain(ops_db):
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     raw = yaml.safe_load(open("config/execution.yaml").read())
-    # Route acc_1 → bybit_paper (mode=live) so the live safety gate is actually reached
-    raw["execution"]["account_routing"]["default"]["adapter"] = "bybit_paper"
-    raw["execution"]["adapters"]["bybit_paper"]["live_safety"]["allow_live_trading"] = True
-    raw["execution"]["adapters"]["bybit_paper"]["mode"] = "live"
+    raw["execution"]["adapters"]["bybit_demo"]["live_safety"]["allow_live_trading"] = True
+    raw["execution"]["adapters"]["bybit_demo"]["mode"] = "live"
     config = ExecutionConfig.model_validate(raw["execution"])
 
     _insert_cmd(ops_db, 2013, payload={
@@ -791,7 +787,7 @@ def test_live_trading_gate_does_not_cancel_chain(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=config,
-        adapter_registry={"bybit_paper": FakeAdapter()},
+        adapter_registry={"bybit_demo": FakeAdapter()},
         repo=repo,
     )
     cmd = repo.get_pending_batch()[0]

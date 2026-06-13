@@ -1,8 +1,25 @@
 from __future__ import annotations
 
+import re
+
 from src.parser_v2.contracts.entities import Price
 from src.parser_v2.contracts.markers import MarkerEvidence
 from src.parser_v2.contracts.parsed_message import ParsedIntent
+
+# Side keywords shared across all profiles.
+# Covers Russian (лонг/шорт) and English (long/short).
+# Profiles may extend this by pre-processing text (e.g. translating labels) before calling.
+_SIDE_LONG_RE = re.compile(r"\b(?:лонг|long)\b", re.IGNORECASE)
+_SIDE_SHORT_RE = re.compile(r"\b(?:шорт|short)\b", re.IGNORECASE)
+
+
+def extract_side_from_text(text: str) -> str | None:
+    """Return 'LONG', 'SHORT', or None based on side keywords in *text*."""
+    if _SIDE_LONG_RE.search(text):
+        return "LONG"
+    if _SIDE_SHORT_RE.search(text):
+        return "SHORT"
+    return None
 
 
 def float_from_raw(raw: str | None) -> float | None:
@@ -76,4 +93,4 @@ def resolve_market_hint(evidence: list[MarkerEvidence], default_entry_type: str 
     return default_entry_type == "MARKET"
 
 
-__all__ = ["float_from_raw", "price_from_raw", "deduplicate_by_span", "resolve_market_hint"]
+__all__ = ["float_from_raw", "price_from_raw", "deduplicate_by_span", "resolve_market_hint", "extract_side_from_text"]

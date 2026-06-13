@@ -4,6 +4,29 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-13 — Fix bybit_paper + extract_side_from_text condiviso
+
+### Step completati
+
+**Fix 1 — Eliminato bybit_paper dai test (execution_gateway)**
+- Causa: i 3 test (`test_live_trading_blocked`, `test_live_trading_gate_does_not_cancel_chain`, `test_ac7_live_trading_blocked`) usavano `raw["execution"]["adapters"]["bybit_paper"]` ma `bybit_paper` non esiste in `config/execution.yaml` → `KeyError`.
+- Fix: sostituito `bybit_paper` → `bybit_demo` modificato in-memory nei test; nessuna entry YAML aggiunta (modalità paper eliminata per decisione utente).
+- File toccati: `tests/runtime_v2/execution_gateway/test_gateway.py`, `tests/runtime_v2/execution_gateway/test_integration.py`.
+
+**Fix 2 — `extract_side_from_text` promosso a meccanismo condiviso**
+- Spostata la logica di estrazione side (лонг/шорт/long/short) da `strategy_parser/profile.py` a `src/parser_v2/core/parsing_utils.py` come funzione pubblica `extract_side_from_text`.
+- `strategy_parser/profile.py` aggiornato per importarla da lì; rimossi `_SIDE_LONG_RE`, `_SIDE_SHORT_RE` e `_extract_side` locali.
+- Gli altri 6 profili non sono stati modificati — l'utente decide se/come usare la funzione profilo per profilo.
+- File toccati: `src/parser_v2/core/parsing_utils.py`, `src/parser_v2/profiles/strategy_parser/profile.py`.
+
+### Validazione
+- 3 test prima FAILED → ora PASSED. Suite parser: 64/64 green. Suite completa: in corso.
+
+### Rischi aperti
+- I 6 profili non-russi non estraggono ancora il side negli update. Impatto hedge dipende da se quei trader operano mai con 2 posizioni aperte sullo stesso simbolo.
+
+---
+
 ## 2026-06-12 — Risoluzione chain account-aware (fix ambiguità multi-chain cross-account)
 
 ### Step completato

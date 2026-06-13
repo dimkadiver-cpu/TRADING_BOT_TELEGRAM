@@ -260,3 +260,69 @@ class TestStrategyParserProfileSymbolTargeting:
         result = profile.extract_target_hints(normalized, context, markers)
         assert result.message_target_hints.target_source == "REPLY"
         assert result.message_target_hints.reply_to_message_id == 999
+
+
+class TestRuntimeSideFill:
+    """Runtime post-processes SYMBOL-scope results and injects side when absent."""
+
+    def _run_extract(self, text: str, markers: SemanticMarkers):
+        class _StubProfile:
+            trader_code = "stub"
+
+        normalized = NormalizedText(
+            raw_text=text,
+            normalized_text=text.lower(),
+        )
+        context = ParserContext()
+        runtime = UniversalParserRuntime()
+        return runtime._extract_target_hints(normalized, context, _StubProfile(), markers)
+
+    def _symbol_markers(self) -> SemanticMarkers:
+        return SemanticMarkers(
+            target_hint_markers={"symbol": MarkerSet(strong=["usdt"])}
+        )
+
+    def test_side_long_filled_from_text_for_profile_without_custom_extractor(self):
+        result = self._run_extract("BTCUSDT long close", self._symbol_markers())
+        assert result.message_target_hints.target_source == "SYMBOL"
+        assert result.message_target_hints.side == "LONG"
+
+    def test_side_short_filled_from_text_for_profile_without_custom_extractor(self):
+        result = self._run_extract("closing short ETHUSDT", self._symbol_markers())
+        assert result.message_target_hints.target_source == "SYMBOL"
+        assert result.message_target_hints.side == "SHORT"
+
+    def test_side_none_when_no_keyword_present(self):
+        result = self._run_extract("close BTCUSDT position", self._symbol_markers())
+        assert result.message_target_hints.target_source == "SYMBOL"
+        assert result.message_target_hints.side is None
+
+    def test_side_not_overwritten_when_profile_already_set_it(self):
+        """Custom extractor (strategy_parser) sets side — runtime must not overwrite it."""
+        from src.parser_v2.profiles.strategy_parser.profile import StrategyParserProfile
+        profile = StrategyParserProfile()
+        markers = profile.load_markers()
+        normalized = NormalizedText(
+            raw_text="закрыла ЛОНГ по WLD",
+            normalized_text="закрыла лонг по wld",
+        )
+        context = ParserContext()
+        runtime = UniversalParserRuntime()
+        result = runtime._extract_target_hints(normalized, context, profile, markers)
+        assert result.message_target_hints.side == "LONG"
+
+    def test_side_not_filled_for_non_symbol_scope(self):
+        """REPLY-scope results are not touched even if text contains side keywords."""
+        from src.parser_v2.contracts.context import RawContext
+        markers = self._symbol_markers()
+
+        class _StubProfile:
+            trader_code = "stub"
+
+        normalized = NormalizedText(raw_text="close long BTCUSDT", normalized_text="close long btcusdt")
+        raw_ctx = RawContext(raw_text="close long BTCUSDT", reply_to_message_id=42)
+        context = ParserContext(raw_context=raw_ctx, reply_to_message_id=42)
+        runtime = UniversalParserRuntime()
+        result = runtime._extract_target_hints(normalized, context, _StubProfile(), markers)
+        assert result.message_target_hints.target_source == "REPLY"
+        assert result.message_target_hints.side is None

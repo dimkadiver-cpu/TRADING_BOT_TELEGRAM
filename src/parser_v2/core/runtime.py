@@ -11,6 +11,7 @@ from src.parser_v2.core.local_disambiguator import LocalDisambiguator
 from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver
 from src.parser_v2.core.marker_matcher import MarkerMatcher
 from src.parser_v2.core.parsed_message_builder import ParsedMessageBuilder
+from src.parser_v2.core.parsing_utils import extract_side_from_text
 from src.parser_v2.core.semantic_normalizer import SemanticNormalizer
 from src.parser_v2.core.target_binding_resolver import TargetBindingResolver
 from src.parser_v2.core.target_hints_extractor import TargetHintsExtractor
@@ -153,10 +154,29 @@ class UniversalParserRuntime:
             custom_hints = custom_extractor(normalized, context, markers)
             if custom_hints is not None:
                 if isinstance(custom_hints, TargetHints):
-                    return TargetExtractionResult(message_target_hints=custom_hints)
-                return custom_hints
+                    result = TargetExtractionResult(message_target_hints=custom_hints)
+                else:
+                    result = custom_hints
+                return _fill_side_if_symbol_scope(result, normalized)
 
-        return self._target_hints_extractor.extract(normalized, context, markers)
+        result = self._target_hints_extractor.extract(normalized, context, markers)
+        return _fill_side_if_symbol_scope(result, normalized)
+
+
+def _fill_side_if_symbol_scope(
+    result: TargetExtractionResult,
+    normalized: NormalizedText,
+) -> TargetExtractionResult:
+    hints = result.message_target_hints
+    if hints.target_source == "SYMBOL" and hints.side is None:
+        side = extract_side_from_text(normalized.normalized_text or normalized.raw_text)
+        if side is not None:
+            updated = hints.model_copy(update={"side": side})
+            return TargetExtractionResult(
+                message_target_hints=updated,
+                candidates=result.candidates,
+            )
+    return result
 
 
 def parse(
