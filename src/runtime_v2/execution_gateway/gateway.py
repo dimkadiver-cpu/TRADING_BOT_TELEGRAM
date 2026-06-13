@@ -37,6 +37,11 @@ _ROLE_MAP: dict[str, str] = {
     "SET_POSITION_TPSL_FULL": "tp",
 }
 
+_ENTRY_TYPES: frozenset[str] = frozenset({
+    "PLACE_ENTRY",
+    "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+})
+
 # Commands that execute synchronously and create no pollable exchange order.
 # Marked DONE immediately after mark_sent — the sync worker has nothing to poll.
 #
@@ -131,6 +136,13 @@ class ExecutionGateway:
         self._repo.cancel_chain_if_all_entries_failed(
             cmd.trade_chain_id, cmd.command_type, reason=reason
         )
+
+    @staticmethod
+    def _is_entry_signal_rejection(reason: str, *, command_type: str) -> bool:
+        if command_type not in _ENTRY_TYPES:
+            return False
+        normalized = reason.lower()
+        return "30228" in normalized and "delisting" in normalized
 
     def process(self, cmd: ExecutionCommand, *, account_id: str) -> None:
         routing, adapter_cfg = self._config.resolve_routing(account_id)
@@ -312,6 +324,9 @@ class ExecutionGateway:
 
         if not result.success:
             reason = result.reason or result.error or "unknown"
+            if self._is_entry_signal_rejection(reason, command_type=cmd.command_type):
+                self._repo.reject_entry_as_signal(cmd.command_id, reason=reason)
+                return
             self._repo.mark_failed(cmd.command_id, reason=reason)
             self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=reason

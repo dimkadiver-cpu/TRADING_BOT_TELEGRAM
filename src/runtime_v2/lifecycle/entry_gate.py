@@ -19,6 +19,7 @@ from src.runtime_v2.lifecycle.cancel_expander import (
     expand_cancel_pending_commands as _expand_cancel_pending_commands,
 )
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+from src.runtime_v2.symbols import to_raw_symbol
 from src.runtime_v2.signal_enrichment.models import (
     EnrichedCanonicalMessage, ManagementPlanConfig,
 )
@@ -946,15 +947,21 @@ class LifecycleEntryGate:
             return trader_chains
 
         if scope == "SYMBOL":
-            symbols = tag.targeting.symbols
-            return [c for c in trader_chains if c.symbol in symbols] if symbols else []
+            if not tag.targeting.symbols:
+                return []
+            matched = self._chains_matching_symbols(enriched, trader_chains, tag.targeting.symbols)
+            chains, ambiguous = self._apply_side_filter(matched, getattr(tag.targeting, "side", None))
+            return None if ambiguous else chains
 
         # SINGLE_SIGNAL or UNKNOWN — try symbol matching then explicit_ids then telegram IDs
         if tag.targeting.symbols:
-            matched = [c for c in trader_chains if c.symbol in tag.targeting.symbols]
-            if len(matched) == 1:
-                return matched
-            if len(matched) > 1:
+            matched = self._chains_matching_symbols(enriched, trader_chains, tag.targeting.symbols)
+            chains, ambiguous = self._apply_side_filter(matched, getattr(tag.targeting, "side", None))
+            if ambiguous:
+                return None
+            if len(chains) == 1:
+                return chains
+            if len(chains) > 1:
                 return None
 
         if tag.targeting.explicit_ids:
@@ -988,6 +995,36 @@ class LifecycleEntryGate:
         if len(trader_chains) > 1:
             return None
         return trader_chains
+
+    def _chains_matching_symbols(
+        self,
+        enriched: EnrichedCanonicalMessage,
+        trader_chains: list[TradeChain],
+        symbols,
+    ) -> list[TradeChain]:
+        # Targeting symbols arrive bare (e.g. "WLD"), chains store the resolved raw id
+        # (e.g. "WLDUSDT"). Canonicalize both sides through the same port + raw helper so
+        # update matching is symmetric with the entry path that created the chain.
+        targets: set[str] = set()
+        for sym in (symbols or []):
+            resolved = self._port.resolve_symbol(enriched.account_id, sym)
+            targets.add(to_raw_symbol(resolved) or resolved)
+            targets.add(to_raw_symbol(sym) or sym)
+        return [c for c in trader_chains if (to_raw_symbol(c.symbol) or c.symbol) in targets]
+
+    @staticmethod
+    def _apply_side_filter(
+        matched: list[TradeChain],
+        side: str | None,
+    ) -> tuple[list[TradeChain], bool]:
+        # Returns (chains, ambiguous). When the update names a side, keep only that leg.
+        # When it does not and the symbol has both hedge legs open, the action is ambiguous
+        # and must go to review rather than hit both directions.
+        if side in ("LONG", "SHORT"):
+            return [c for c in matched if c.side == side], False
+        if len({c.side for c in matched}) > 1:
+            return [], True
+        return matched, False
 
     def _apply_action_to_chain(
         self,

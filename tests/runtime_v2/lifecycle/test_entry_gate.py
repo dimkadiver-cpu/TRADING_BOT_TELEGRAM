@@ -3451,7 +3451,8 @@ def test_known_symbol_passes_check():
     result = gate.process_signal(enriched, [], "NONE")
 
     assert result.trade_chain is not None
-    assert result.trade_chain.symbol == "BTC/USDT"
+    # Chain persists the canonical raw symbol id (display slash-style is a formatter concern).
+    assert result.trade_chain.symbol == "BTCUSDT"
 
 
 def test_symbol_present_only_in_non_default_adapter_union_passes_gate():
@@ -3678,3 +3679,97 @@ def test_explicit_id_ambiguous_goes_to_review():
     tag = _make_targeting_tag(["#SIG001"])
     matched = gate._resolve_targets(_make_enriched_for_targeting(), [a, b], tag)
     assert matched is None
+
+
+# ── UPDATE symbol canonicalization + hedge side resolution ────────────────────
+
+def _make_gate_with_symbols(known):
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleEntryGate
+    from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
+    from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
+    return LifecycleEntryGate(
+        risk_engine=RiskCapacityEngine(),
+        exchange_port=StaticExchangeDataPort(known_symbols=frozenset(known)),
+        simple_attached_enabled=False,
+    )
+
+
+def _make_update_chain(symbol, side, cid, *, trader_id="t1", account_id="acc1", state="OPEN"):
+    from src.runtime_v2.lifecycle.models import TradeChain
+    return TradeChain(
+        trade_chain_id=cid, source_enrichment_id=cid, canonical_message_id=cid,
+        raw_message_id=cid, trader_id=trader_id, account_id=account_id,
+        symbol=symbol, side=side, lifecycle_state=state, entry_mode="ONE_SHOT",
+        management_plan_json="{}", entry_avg_price=100.0,
+    )
+
+
+def _make_close_update(symbols, side, *, trader_id="t1", account_id="acc1", cmid=900):
+    from src.parser_v2.contracts.canonical_message import (
+        ActionItem, CloseOperation, TargetActionGroup,
+    )
+    from src.parser_v2.contracts.context import TargetHints
+    from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
+    tag = TargetActionGroup(
+        targeting=TargetHints(
+            target_source="SYMBOL", scope_hint="SYMBOL", symbols=symbols, side=side,
+        ),
+        actions=[ActionItem(
+            action_type="CLOSE",
+            close=CloseOperation(close_scope="FULL"),
+            source_intent="CLOSE_FULL",
+        )],
+    )
+    return EnrichedCanonicalMessage(
+        enrichment_id=cmid, canonical_message_id=cmid, raw_message_id=cmid,
+        trader_id=trader_id, account_id=account_id,
+        primary_class="UPDATE", enrichment_decision="PASS",
+        enriched_actions=[tag], policy_snapshot={},
+    )
+
+
+def _review_reasons(result):
+    import json as _json
+    return [_json.loads(e.payload_json)["reason"] for e in result.review_events]
+
+
+def test_update_symbol_match_canonicalizes_bare_ticker():
+    # Fix #1: update target carries bare "WLD"; chain stores resolved "WLDUSDT".
+    gate = _make_gate_with_symbols({"WLDUSDT"})
+    chain = _make_update_chain("WLDUSDT", "LONG", 39)
+    enriched = _make_close_update(["WLD"], None)
+    result = gate.process_update(enriched, [chain], {39: []})
+    assert _review_reasons(result) == []
+    assert [cr.trade_chain_id for cr in result.chain_results] == [39]
+
+
+def test_update_symbol_side_selects_hedge_leg():
+    # Fix #2: two hedge legs open; update specifies LONG -> only LONG leg acted on.
+    gate = _make_gate_with_symbols({"WLDUSDT"})
+    short_leg = _make_update_chain("WLDUSDT", "SHORT", 37)
+    long_leg = _make_update_chain("WLDUSDT", "LONG", 39)
+    enriched = _make_close_update(["WLD"], "LONG")
+    result = gate.process_update(enriched, [short_leg, long_leg], {37: [], 39: []})
+    assert _review_reasons(result) == []
+    assert [cr.trade_chain_id for cr in result.chain_results] == [39]
+
+
+def test_update_symbol_no_side_hedge_goes_to_review():
+    # Fix #2: two hedge legs, no side in the update -> ambiguous -> REVIEW, no execution.
+    gate = _make_gate_with_symbols({"WLDUSDT"})
+    short_leg = _make_update_chain("WLDUSDT", "SHORT", 37)
+    long_leg = _make_update_chain("WLDUSDT", "LONG", 39)
+    enriched = _make_close_update(["WLD"], None)
+    result = gate.process_update(enriched, [short_leg, long_leg], {37: [], 39: []})
+    assert result.chain_results == []
+    assert _review_reasons(result) == ["ambiguous_update_target"]
+
+
+def test_update_symbol_side_without_matching_leg_no_target():
+    # Update says close LONG but only the SHORT leg exists -> no target.
+    gate = _make_gate_with_symbols({"SUIUSDT"})
+    short_leg = _make_update_chain("SUIUSDT", "SHORT", 47)
+    enriched = _make_close_update(["SUI"], "LONG")
+    result = gate.process_update(enriched, [short_leg], {47: []})
+    assert result.chain_results == []
+    assert _review_reasons(result) == ["no_update_target"]

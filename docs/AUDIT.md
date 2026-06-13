@@ -2165,3 +2165,57 @@ rispetto a cambi di prodotto intenzionali, verificati nella git history.
 
 **Validazione:** control_plane + lifecycle + signal_enrichment:
 **805 passed, 0 failed** (prima: 14 failed preesistenti).
+
+### FIX: update matching — symbol canonicalization + hedge side resolution + 1000-prefix
+
+**Origine:** diagnosi su `db/Test_live` di update non eseguiti (enrichment_id
+123/126 e altri 8). Tre problemi distinti, tutti corretti in TDD.
+
+**Root cause:**
+1. **Symbol mismatch (sblocca 10 update SYMBOL-scope):** il targeting update
+   porta il ticker nudo (`WLD`, `SUI`), la chain salva il raw canonicalizzato
+   (`WLDUSDT`). `_resolve_targets` confrontava `c.symbol in symbols` senza
+   canonicalizzare → lista vuota → `no_update_target`. Il suffisso USDT veniva
+   aggiunto solo nel path signal (`entry_gate:575 resolve_symbol`), mai
+   nell'update. 10/11 update SYMBOL-scope avevano ticker nudo → tutti falliti.
+2. **Side assente nell'update (conflitto hedge):** `strategy_parser` estraeva
+   solo `symbols` nel target hints, mai il side, pur essendo presente nel testo
+   ("закрыла ЛОНГ"). Con due leg hedge aperti (es. WLDUSDT LONG + SHORT,
+   `max_concurrent_same_symbol: 2`) un CLOSE colpiva entrambe le direzioni.
+3. **Simboli `1000PEPE`/`1000BONK`:** la regex `_SYMBOL_RE`/`_PO_SYMBOL_RE` di
+   strategy_parser (`[A-Z][A-Z0-9]{0,19}`) richiedeva lettera iniziale → il
+   prefisso numerico rompeva il match. (trader_a/b/c/d/prova/3 già supportano
+   cifre iniziali via `[A-Z0-9]`/hashtag/base.)
+
+**Layer corretti:**
+- `src/parser_v2/contracts/context.py` — nuovo campo `TargetHints.side: Side | None`.
+- `src/parser_v2/profiles/strategy_parser/signal_extractor.py` + `profile.py`
+  — regex con prefisso numerico opzionale (`\d{0,7}[A-Z][A-Z0-9]{0,19}`, almeno
+  una lettera); estrazione side nel target hints dell'update.
+- `src/runtime_v2/lifecycle/entry_gate.py` — `_resolve_targets` usa due nuovi
+  helper: `_chains_matching_symbols` (match raw-to-raw via `resolve_symbol` +
+  `to_raw_symbol`, simmetrico col path entry) e `_apply_side_filter`
+  (side noto → filtra; side assente + leg hedge opposti → `None` = REVIEW
+  `ambiguous_update_target`). Applicato a scope SYMBOL e SINGLE_SIGNAL.
+
+**Comportamento risultante (verificato su dati Test_live):**
+- 123 "закрыла ЛОНГ по WLD" → chiude solo la leg LONG (chain 39), non la SHORT.
+- 126 "закрыла ЛОНГ по SUI" → nessuna leg LONG (solo SHORT aperta) →
+  `no_update_target` corretto (nessuna posizione LONG da chiudere).
+- update senza side + due leg hedge → `ambiguous_update_target` → REVIEW.
+
+**Validazione:**
+- Nuovi test: `tests/parser_v2/test_strategy_parser_profile.py` (+4),
+  `tests/runtime_v2/lifecycle/test_entry_gate.py` (+4). TDD red→green.
+- `tests/` completa: **1363 passed, 6 skipped, 3 failed**. I 3 failed
+  (`execution_gateway` live-trading `KeyError: 'bybit_paper'`) sono
+  PREESISTENTI e indipendenti (falliscono identici su main pulito via stash).
+- Allineato 1 test stantio della migrazione symbol-canonicalization:
+  `test_known_symbol_passes_check` ora attende `BTCUSDT` (raw canonico).
+
+**Rischi residui / follow-up:**
+- Working tree contiene modifiche NON mie e non correlate in
+  `src/runtime_v2/execution_gateway/gateway.py` e `tests/.../test_gateway.py`
+  (work-in-progress su live trading / `bybit_paper`, causa delle 3 failure).
+  LASCIATE INTATTE — da rivedere a parte.
+- Lo scope ALL_LONG/ALL_SHORT già filtra per side; lo scope SYMBOL ora coerente.

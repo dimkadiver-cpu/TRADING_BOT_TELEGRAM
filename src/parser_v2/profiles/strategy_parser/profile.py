@@ -16,8 +16,21 @@ from src.parser_v2.profiles.strategy_parser.signal_extractor import SignalExtrac
 
 _PROFILE_DIR = Path(__file__).parent
 
-# "по HYPE", "по SUI", "по H" — symbol after Russian preposition "по"
-_PO_SYMBOL_RE = re.compile(r"\bпо\s+(?P<symbol>[A-Z][A-Z0-9]{0,19})\b", re.IGNORECASE)
+# "по HYPE", "по SUI", "по H", "по 1000PEPE" — symbol after Russian preposition "по".
+# Optional leading numeric multiplier (e.g. 1000PEPE/1000BONK) is preserved; at least one letter required.
+_PO_SYMBOL_RE = re.compile(r"\bпо\s+(?P<symbol>\d{0,7}[A-Z][A-Z0-9]{0,19})\b", re.IGNORECASE)
+
+# Side hint inside an update message ("закрыла ЛОНГ", "шорт по ...").
+_SIDE_LONG_RE = re.compile(r"\b(?:лонг|long)\b", re.IGNORECASE)
+_SIDE_SHORT_RE = re.compile(r"\b(?:шорт|short)\b", re.IGNORECASE)
+
+
+def _extract_side(text: str) -> str | None:
+    if _SIDE_LONG_RE.search(text):
+        return "LONG"
+    if _SIDE_SHORT_RE.search(text):
+        return "SHORT"
+    return None
 
 _STRONG_SOURCES = frozenset({
     "LOCAL_TEXT_LINK",
@@ -84,10 +97,12 @@ class StrategyParserProfile:
 
         raw = match.group("symbol").upper()
         symbol = normalize_symbol(raw) or raw
+        side = _extract_side(normalized.normalized_text or normalized.raw_text)
 
         updated = base.message_target_hints.model_copy(update={
             "target_source": "SYMBOL",
             "symbols": [symbol],
+            "side": side,
         })
         return TargetExtractionResult(
             message_target_hints=updated,

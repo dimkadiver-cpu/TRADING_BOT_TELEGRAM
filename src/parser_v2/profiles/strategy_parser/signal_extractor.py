@@ -11,8 +11,9 @@ from src.parser_v2.core.parsing_utils import float_from_raw as _float_from_raw, 
 
 _NUMBER_PATTERN = r"\d(?:[\d \t.,]*\d)?"
 
-# "по HYPE", "по SUI" — symbol word immediately after Cyrillic preposition "по"
-_SYMBOL_RE = re.compile(r"\bпо\s+(?P<symbol>[A-Z][A-Z0-9]{0,19})\b", re.IGNORECASE)
+# "по HYPE", "по SUI", "по 1000PEPE" — symbol after Cyrillic preposition "по".
+# Optional leading numeric multiplier (e.g. 1000PEPE/1000BONK) is preserved; at least one letter required.
+_SYMBOL_RE = re.compile(r"\bпо\s+(?P<symbol>\d{0,7}[A-Z][A-Z0-9]{0,19})\b", re.IGNORECASE)
 
 # "Вход 54.69"
 _ENTRY_RE = re.compile(rf"\bвход\s+(?P<value>{_NUMBER_PATTERN})(?!\s*%)", re.IGNORECASE)

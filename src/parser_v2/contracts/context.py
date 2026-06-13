@@ -4,7 +4,7 @@ from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from .enums import ScopeHint, TargetSource
+from .enums import ScopeHint, Side, TargetSource
 
 
 class ContextModel(BaseModel):
@@ -29,6 +29,7 @@ class TargetHints(ContextModel):
     telegram_links: list[str] = Field(default_factory=list)
     explicit_ids: list[str] = Field(default_factory=list)
     symbols: list[str] = Field(default_factory=list)
+    side: Side | None = None
     scope_hint: ScopeHint = "UNKNOWN"
 
 
