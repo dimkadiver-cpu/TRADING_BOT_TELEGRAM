@@ -76,7 +76,7 @@ channels:
     parser_profile: trader_prova       # Opzionale — override del profilo parser
     blacklist: []     # estendere qui solo per rumore specifico del canale
  
-  - chat_id: -1003927267771
+  - chat_id: -1002581410049
     topic_id:
     label: Binance Killers  # canale reale attivo concordato
     active: true  # disattivato per test, da attivare quando serve
