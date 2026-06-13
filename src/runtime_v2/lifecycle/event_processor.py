@@ -120,9 +120,9 @@ class LifecycleEventProcessor:
             return self._process_tp_filled(exchange_event, chain, active_commands)
         if etype == "SL_FILLED":
             return self._process_sl_filled(exchange_event, chain)
-        if etype == "CLOSE_FULL_FILLED":
+        if etype in ("CLOSE_FULL_FILLED", "MANUAL_CLOSE_FULL"):
             return self._process_close_full_filled(exchange_event, chain)
-        if etype == "CLOSE_PARTIAL_FILLED":
+        if etype in ("CLOSE_PARTIAL_FILLED", "MANUAL_CLOSE_PARTIAL"):
             return self._process_close_partial_filled(exchange_event, chain)
         if etype == "STOP_MOVED_CONFIRMED":
             return self._process_stop_moved_confirmed(exchange_event, chain)

@@ -591,6 +591,41 @@ def test_close_partial_filled_partially_closes_chain():
     assert result.new_open_position_qty == 0.005
 
 
+def test_manual_close_full_is_processed_as_close_full():
+    """MANUAL_CLOSE_FULL must close the chain — same as CLOSE_FULL_FILLED."""
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = ExchangeEvent(
+        exchange_event_id=20, trade_chain_id=chain.trade_chain_id,
+        event_type="MANUAL_CLOSE_FULL",
+        payload_json=json.dumps({"fill_price": 51500.0, "filled_qty": 0.01}),
+        idempotency_key="manual_close_full:10:20",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "CLOSED"
+    assert result.new_open_position_qty == 0.0
+    lc_events = [e.event_type for e in result.lifecycle_events]
+    assert "CLOSE_FULL_FILLED" in lc_events
+
+
+def test_manual_close_partial_is_processed_as_close_partial():
+    """MANUAL_CLOSE_PARTIAL must partially close the chain — same as CLOSE_PARTIAL_FILLED."""
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import ExchangeEvent
+    proc = LifecycleEventProcessor()
+    chain = _make_chain_open_filled()
+    ev = ExchangeEvent(
+        exchange_event_id=21, trade_chain_id=chain.trade_chain_id,
+        event_type="MANUAL_CLOSE_PARTIAL",
+        payload_json=json.dumps({"fill_price": 51500.0, "filled_qty": 0.005}),
+        idempotency_key="manual_close_partial:10:21",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "PARTIALLY_CLOSED"
+    assert result.new_open_position_qty == 0.005
+
 
 # --- Task 8: STOP_MOVED_CONFIRMED and PENDING_ENTRY_CANCELLED_CONFIRMED ---
 

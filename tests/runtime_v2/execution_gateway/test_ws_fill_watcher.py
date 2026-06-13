@@ -293,3 +293,143 @@ def test_process_batch_does_not_enrich_tp_fill_when_multiple_chains():
 
     inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
     assert inserted_event.trade_chain_id is None
+
+
+@pytest.mark.parametrize("event_type", ["MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL"])
+def test_process_batch_enriches_manual_close_with_chain_id(event_type):
+    """MANUAL_CLOSE_FULL/PARTIAL with no chain_id gets enriched via resolve_chain_for_fill."""
+    from src.runtime_v2.execution_gateway.event_ingest.models import (
+        ClassifiedEvent, ExchangeRawEvent,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
+    mock_repo.resolve_chain_for_fill.return_value = 99
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+        account_id="acc_A",
+    )
+
+    mock_raw = MagicMock(spec=ExchangeRawEvent)
+    mock_raw.side = "Sell"
+    mock_raw.symbol = "BTCUSDT"
+    mock_raw.exchange_event_id = "exec-001"
+
+    unlinked = ClassifiedEvent(
+        raw=mock_raw,
+        event_type=event_type,
+        source="exchange_manual",
+        trade_chain_id=None,
+        is_actionable=True,
+    )
+
+    normalize_fn = MagicMock(return_value=mock_raw)
+
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = unlinked
+        watcher._process_batch([{"id": "manual-1"}], normalize_fn)
+
+    mock_repo.resolve_chain_for_fill.assert_called_once_with("BTCUSDT", "LONG", "acc_A")
+    inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
+    assert inserted_event.trade_chain_id == 99
+    assert inserted_event.event_type == event_type
+
+
+@pytest.mark.parametrize("event_type", ["MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL"])
+def test_process_batch_manual_close_buy_side_resolves_short(event_type):
+    """MANUAL_CLOSE Buy side → SHORT position (Buy closes a SHORT)."""
+    from src.runtime_v2.execution_gateway.event_ingest.models import (
+        ClassifiedEvent, ExchangeRawEvent,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
+    mock_repo.resolve_chain_for_fill.return_value = 77
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+        account_id="acc_B",
+    )
+
+    mock_raw = MagicMock(spec=ExchangeRawEvent)
+    mock_raw.side = "Buy"
+    mock_raw.symbol = "ETHUSDT"
+    mock_raw.exchange_event_id = "exec-002"
+
+    unlinked = ClassifiedEvent(
+        raw=mock_raw,
+        event_type=event_type,
+        source="exchange_manual",
+        trade_chain_id=None,
+        is_actionable=True,
+    )
+
+    normalize_fn = MagicMock(return_value=mock_raw)
+
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = unlinked
+        watcher._process_batch([{"id": "manual-2"}], normalize_fn)
+
+    mock_repo.resolve_chain_for_fill.assert_called_once_with("ETHUSDT", "SHORT", "acc_B")
+    inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
+    assert inserted_event.trade_chain_id == 77
+
+
+@pytest.mark.parametrize("event_type", ["MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL"])
+def test_process_batch_manual_close_stays_unlinked_when_ambiguous(event_type):
+    """MANUAL_CLOSE stays trade_chain_id=None when resolve returns None (0 or >1 chains)."""
+    from src.runtime_v2.execution_gateway.event_ingest.models import (
+        ClassifiedEvent, ExchangeRawEvent,
+    )
+
+    mock_repo = MagicMock()
+    mock_repo.get_known_order_link_ids.return_value = {}
+    mock_repo.insert_raw_and_classified.return_value = True
+    mock_repo.resolve_chain_for_fill.return_value = None
+
+    watcher = BybitWsFillWatcher(
+        api_key="k", api_secret="s", testnet=False,
+        ops_db_path=":memory:",
+        repo=mock_repo,
+        normalizer=MagicMock(),
+        classifier=MagicMock(),
+    )
+
+    mock_raw = MagicMock(spec=ExchangeRawEvent)
+    mock_raw.side = "Sell"
+    mock_raw.symbol = "BTCUSDT"
+    mock_raw.exchange_event_id = "exec-003"
+
+    unlinked = ClassifiedEvent(
+        raw=mock_raw,
+        event_type=event_type,
+        source="exchange_manual",
+        trade_chain_id=None,
+        is_actionable=True,
+    )
+
+    normalize_fn = MagicMock(return_value=mock_raw)
+
+    with patch(
+        "src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher.EventClassifier"
+    ) as MockClassifier:
+        MockClassifier.return_value.classify.return_value = unlinked
+        watcher._process_batch([{"id": "manual-3"}], normalize_fn)
+
+    inserted_event = mock_repo.insert_raw_and_classified.call_args[0][0]
+    assert inserted_event.trade_chain_id is None

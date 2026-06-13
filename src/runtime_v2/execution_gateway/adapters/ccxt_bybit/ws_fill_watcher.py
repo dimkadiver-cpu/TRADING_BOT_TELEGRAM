@@ -205,6 +205,26 @@ class BybitWsFillWatcher:
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
 
+                # Manual closes (CreateByUser, no orderLinkId): same side inversion as TP/SL.
+                # "Sell" fill closes a LONG; "Buy" fill closes a SHORT.
+                if (
+                    classified.event_type in ("MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL")
+                    and classified.trade_chain_id is None
+                ):
+                    fill_side = (raw.side or "").strip()
+                    position_side = "LONG" if fill_side.lower() == "sell" else "SHORT"
+                    chain_id = self._repo.resolve_chain_for_fill(
+                        raw.symbol, position_side, self._account_id
+                    )
+                    if chain_id is not None:
+                        classified = dataclasses.replace(classified, trade_chain_id=chain_id)
+                    else:
+                        logger.warning(
+                            "manual close %s (%s %s account=%s) not attributable: "
+                            "0 or >1 open chains for symbol+side",
+                            raw.exchange_event_id, raw.symbol, position_side, self._account_id,
+                        )
+
                 # Funding events: resolve chain by symbol + side (Bybit side is position side,
                 # not fill direction — "Buy" = LONG position, "Sell" = SHORT position).
                 if (
