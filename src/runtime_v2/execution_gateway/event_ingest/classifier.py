@@ -110,7 +110,21 @@ class EventClassifier:
                     is_actionable=(event_type != "UNKNOWN"),
                 )
 
-        # Priority 3 — structural inference (CreateByUser, no orderLinkId)
+        # Priority 3 — structural inference (manual closes, no orderLinkId)
+        #
+        # CreateByClosing = Bybit "Close Position" button — always a full close.
+        # pos_qty is not provided by watch_my_trades for this create_type.
+        if raw.create_type == "CreateByClosing":
+            if (raw.closed_size or 0.0) > 0:
+                return ClassifiedEvent(
+                    raw=raw,
+                    event_type="MANUAL_CLOSE_FULL",
+                    source="exchange_manual",
+                    is_actionable=True,
+                )
+
+        # CreateByUser = reduce-only order placed by user (partial or full).
+        # pos_qty is provided by watch_my_trades and disambiguates full vs partial.
         if raw.create_type == "CreateByUser":
             closed = raw.closed_size or 0.0
             pos = raw.pos_qty or 0.0

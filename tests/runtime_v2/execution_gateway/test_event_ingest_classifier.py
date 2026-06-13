@@ -218,6 +218,32 @@ class TestPriority3StructuralInference:
         assert result.event_type == "MANUAL_CLOSE_PARTIAL"
         assert result.source == "exchange_manual"
 
+    def test_classify_create_by_closing_full(self):
+        """createType=CreateByClosing (Bybit Close button), pos_qty absent → MANUAL_CLOSE_FULL."""
+        clf = EventClassifier(known_order_link_ids={})
+        raw = _raw(
+            create_type="CreateByClosing",
+            order_link_id=None,
+            closed_size=0.108,
+            pos_qty=None,  # watch_my_trades does not include pos_qty for this create_type
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "MANUAL_CLOSE_FULL"
+        assert result.source == "exchange_manual"
+        assert result.is_actionable is True
+
+    def test_classify_create_by_closing_zero_closed_size_is_unknown(self):
+        """createType=CreateByClosing with no filled qty → UNKNOWN (not a fill event)."""
+        clf = EventClassifier(known_order_link_ids={})
+        raw = _raw(
+            create_type="CreateByClosing",
+            order_link_id=None,
+            closed_size=None,
+            pos_qty=None,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "UNKNOWN"
+
 
 class TestWatchOrdersStream:
 
