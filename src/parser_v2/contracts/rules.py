@@ -1,10 +1,23 @@
 from __future__ import annotations
 
+import re
 from typing import Any, Literal, Union
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 
 from .enums import EntryType, IntentType, MarkerStrength, ModifyEntryMode, ScopeHint, Side
+
+
+def _compile_pattern_list(patterns: list[str], label: str) -> list[re.Pattern]:
+    compiled = []
+    for p in patterns:
+        try:
+            compiled.append(re.compile(p))
+        except re.error as exc:
+            raise ValueError(
+                f"Invalid regex in {label}: {p!r} — {exc}"
+            ) from exc
+    return compiled
 
 
 class RulesModel(BaseModel):
@@ -14,6 +27,17 @@ class RulesModel(BaseModel):
 class MarkerSet(RulesModel):
     strong: list[str] = Field(default_factory=list)
     weak: list[str] = Field(default_factory=list)
+    strong_patterns: list[str] = Field(default_factory=list)
+    weak_patterns: list[str] = Field(default_factory=list)
+
+    _strong_compiled: list[re.Pattern] = PrivateAttr(default_factory=list)
+    _weak_compiled: list[re.Pattern] = PrivateAttr(default_factory=list)
+
+    @model_validator(mode="after")
+    def _compile_patterns(self) -> "MarkerSet":
+        self._strong_compiled = _compile_pattern_list(self.strong_patterns, "strong_patterns")
+        self._weak_compiled = _compile_pattern_list(self.weak_patterns, "weak_patterns")
+        return self
 
 
 class SemanticMarkers(RulesModel):
