@@ -244,6 +244,30 @@
         "reason": "historical_context"
       },
       {
+        "name": "exit_be_бу_embedded_in_word",
+        "intent": "EXIT_BE",
+        "markers": ["бу"],
+        "scope": "same_sentence",
+        "if_regex_any": ["(?i)(?:[а-яё]бу|бу[а-яё])"],
+        "reason": "suppress_бу_when_substring_of_longer_cyrillic_word"
+      },
+      {
+        "name": "sl_hit_сл_embedded_in_word",
+        "intent": "SL_HIT",
+        "markers": ["сл"],
+        "scope": "same_sentence",
+        "if_regex_any": ["(?i)(?:[а-яё]сл|сл[а-яё])"],
+        "reason": "suppress_сл_when_substring_of_longer_cyrillic_word"
+      },
+      {
+        "name": "sl_hit_sl_embedded_in_latin_word",
+        "intent": "SL_HIT",
+        "markers": ["sl"],
+        "scope": "same_sentence",
+        "if_regex_any": ["(?:[a-z]sl|sl[a-z])"],
+        "reason": "suppress_sl_when_substring_of_longer_latin_word"
+      },
+      {
         "name": "sl_hit_ambiguous_general_context",
         "intent": "SL_HIT",
         "markers": {"source": "intent_weak"},
