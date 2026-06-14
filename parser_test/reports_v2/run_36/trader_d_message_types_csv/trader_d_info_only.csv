@@ -1,0 +1,28 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,info_raw_fragment
+36,trader_d,INFO,UNCLASSIFIED,1453,1498,1491,"Trader#d
+Gun Полный фикс,не нравится.
++0.5%",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Trader#d
+Gun Полный фикс,не нравится.
++0.5%"
+36,trader_d,INFO,UNCLASSIFIED,1420,1548,1541,"Trader#d
+upd
+btc первый фикс сделаем на снятии Лондона 91591",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Trader#d
+upd
+btc первый фикс сделаем на снятии Лондона 91591"
+36,trader_d,INFO,UNCLASSIFIED,1419,1549,1548,"фикс +0,25",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"фикс +0,25"
+36,trader_d,INFO,UNCLASSIFIED,1057,2128,2123,Sl:-0.5r,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:sl@0:2"", ""stop_loss/strong:sl:@0:3""], ""suppressed_markers"": [""SL_HIT/weak:sl@0:2""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_ambiguous_general_context""], ""ca",,,Sl:-0.5r
+36,trader_d,INFO,UNCLASSIFIED,806,2463,2462,Sl:-0.5,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:sl@0:2"", ""stop_loss/strong:sl:@0:3""], ""suppressed_markers"": [""SL_HIT/weak:sl@0:2""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_ambiguous_general_context""], ""ca",,,Sl:-0.5
+36,trader_d,INFO,UNCLASSIFIED,720,2579,2578,"Б.у 
+поищем перезаход",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Б.у 
+поищем перезаход"
+36,trader_d,INFO,UNCLASSIFIED,719,2580,2578,Перезаход,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,Перезаход
+36,trader_d,INFO,UNCLASSIFIED,709,2593,2581,"Trader [ #D]
+tp фикс еще 25 %
+Остаток 25%",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""take_profit/strong:tp@13:15""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"Trader [ #D]
+tp фикс еще 25 %
+Остаток 25%"
+36,trader_d,INFO,UNCLASSIFIED,342,3096,3095,"давайте закроем в микро +
+не нравится па
+глянем на ню",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"давайте закроем в микро +
+не нравится па
+глянем на ню"

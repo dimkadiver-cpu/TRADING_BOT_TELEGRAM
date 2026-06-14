@@ -98,6 +98,53 @@ Smoke test 5 scenari chiave: MARKET+price, MARKET+no-price, LIMIT+explicit, mark
 
 ---
 
+## 2026-06-14 — Task 5: Analisi anomalie run_36 e fix parser_prova
+
+### Step completato
+
+Analizzate tutte le anomalie tra testo e classificazione del parser_prova su run_36 (1729 messaggi, 4 trader). Implementate 7 fix + 1 fix di regressione post-validazione.
+
+**Fix applicati:**
+
+| Fix | File | Descrizione | Esito run_38 |
+|---|---|---|---|
+| FIX 1 — `"tp"` false positive URL | `semantic_markers.json` | Rimosso literal `"tp"` da take_profit.strong → aggiunto `(?i)\\btp\\b` con word boundary | Validato: no false match su `https://t.me/` |
+| FIX 2 — "Тп N🥳" → SIGNAL falso | `signal_extractor.py` | Aggiunto skip in `_extract_take_profits` per digit interi 1-9 senza `:` e senza `index` | SIGNAL→REPORT: +31 trader_c, +1 trader_d ✓ |
+| FIX 3 — "реализована" UNCLASSIFIED | `semantic_markers.json` | Aggiunto strong_patterns in CLOSE_FULL: `реализована`, `закрылась` (con полностью), `закрою по текущим` | INFO→UPDATE: +8 trader_b ✓ |
+| FIX 4a — Header "Tейк-профит" non riconosciuto | `signal_extractor.py` | `_TAKE_PROFIT_HEADER_RE`: hyphen opzionale, `:` opzionale | UPDATE→SIGNAL: +14 trader_c ✓ |
+| FIX 4b — Entries "1)88650(1/3)" non estratte | `signal_extractor.py` | Nuovo `_ENTRY_NUMBERED_ITEM_RE` + `_extract_numbered_list_entries()` | UPDATE→SIGNAL: stessi 14 trader_c ✓ |
+| FIX 5 — "Тр 3" typo TP_HIT | `semantic_markers.json` | Aggiunto `(?i)\\bтр\\s*[1-5]\\b` a TP_HIT.weak_patterns | INFO→REPORT: +2 trader_a, trader_c ✓ |
+| FIX 6 — "Sl:-0.5" UNCLASSIFIED | `semantic_markers.json` | Aggiunto `(?i)\\bsl\\s*:\\s*[-−][\\d.,]+` a SL_HIT.strong_patterns | INFO→REPORT: +2 trader_d ✓ |
+| FIX 7 — "фикс еще 25%" non matched | `semantic_markers.json` | Aggiunto strong_patterns a CLOSE_PARTIAL per varianti con `еще/ещё` | Nessuna regressione ✓ |
+| FIX REPORT_RESULT — "итог" markers vuoti | `semantic_markers.json` | Aggiunto strong_patterns + strong/weak literals a REPORT_RESULT | INFO→REPORT: +4 trader_a ✓ |
+| **FIX 8 — Regressione `закрылась`/`закрылось`** | `semantic_markers.json` | Rimossi da CLOSE_FULL.weak (causavano REPORT→UPDATE su "после тейка закрылась в бу" e "закрылась по SL") | Zero regressioni REPORT→UPDATE ✓ |
+
+**Risultati validazione (run_36 → run_38):**
+
+| Trader | SIGNAL | UPDATE | REPORT | INFO |
+|---|---|---|---|---|
+| A | 356→356 (±0) | 223→225 (+2) | 216→220 (+4) | 41→35 (-6) |
+| B | 85→85 (±0) | 69→77 (+8) | 26→26 (±0) | 12→4 (-8) |
+| C | 149→132 (-17) | 151→137 (-14) | 68→101 (+33) | 30→28 (-2) |
+| D | 101→100 (-1) | 118→119 (+1) | 75→78 (+3) | 9→6 (-3) |
+
+Tutti i cambi sono miglioramenti diretti dalle fix. Zero regressioni REPORT→UPDATE o SIGNAL→UPDATE.
+
+### File toccati
+
+| File | Stato |
+|---|---|
+| `src/parser_v2/profiles/trader_prova/semantic_markers.json` | Modificato (marker + pattern) |
+| `src/parser_v2/profiles/trader_prova/signal_extractor.py` | Modificato (FIX 2, 4a, 4b) |
+
+### Rischi aperti
+
+- trader_c UNCLASSIFIED (26 msg in run_38) — non analizzati in questo task; potenziali gap nei marker
+- trader_d PARTIAL (40 SETUP_INCOMPLETE) — monete non-standard (Brev, Iotx, GMT) senza USDT suffix non risolte da `_SYMBOL_RE`
+- trader_d entry extraction: "рыночный" senza keyword "вход" non catturato
+
+---
+
 Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---

@@ -1,0 +1,3619 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
+37,trader_c,INFO,PARSED,1753,1047,,"Друзья, привет! Админ на связи 👋
+У нас хорошие новости - пополнение в команде!
+
+Мы долго смотрели на пустое место [trader#4]. Всё-таки жаль этого добряка!🥲
+Хотя...после его сигналов кто-то, возможно, до сих пор просыпается ночью с криком: «ГДЕ МОИ 27 ИКСОВ!?»😂
+В общем, уберите иконы, не нужно святой воды - мы решили: к цифре 4 пока не возвращаемся. 😇
+Оставим её жить в фольклоре нашего канала!
+
+Но зато! 
+Без всяких реинкарнаций и теней призраков прошлого...
+Представляем вам нового трейдера под тегом [trader#C].
+
+Как вы поняли, буквам мы в команде доверяем больше.😉
+
+Теперь - коротко и по делу о работе с сигналами trader#C:
+
+По активам и формату:
+BTC / ETH - бодрый интрадей
+Альта - свинг, без суеты
+
+Таймфреймы:
+1h-4h, уточнение входа на 3м, по альте - 15м
+
+Риск:
+в рабочем диапазоне 1-5%
+
+По активности:
+в среднем около 10 сделок в неделю —
+не пулемёт, но и не «одна мысль в месяц»
+
+Ну и ещё!
+Интрадей часто будет выходить ближе к американской сессии (16:30-23.00 UTC+3) 
+Так что при желании можно садиться за терминал с фразой «Good morning, New Yorkers» и торговать под Фрэнка Синатру для полного погружения. 😎
+
+В общем, встречайте наш C-class в новом кузове 😉
+Дальше - стандартно:
+смотрим в деле. Рынок, как всегда, рассудит лучше любых описаний 🫡
+#админ",1.0,,"{""matched_markers"": [""ADMIN/strong:админ на связи@16:30"", ""SL_HIT/weak:сл@164:166"", ""stop_loss/strong:сл@164:166"", ""INVALIDATE_SETUP/weak:возвращаем@336:346"", ""EXIT_BE/weak:бу@528:530"", ""MODIFY_ENTRY/weak:вход@728:732"", ""risk/weak:риск@756:760"", ""SL_HIT/weak:сл@867:869"", ""stop_loss/strong:сл@867:869"
+37,trader_c,SIGNAL,PARSED,1749,1054,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход с текущих (88000-87900) 
+
+Stop 88450.  1% деп
+
+Tейк-профит:
+1) 87100 (RR - 1:2)
+
+2) 86500 (RR - 1:3)
+
+3) 86000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход с текущих@28:42"", ""MARKET/strong:вход с текущих@28:4"
+37,trader_c,UPDATE,PARSED,1748,1055,,"[trader#C]
+https://t.me/c/3171748254/1054  
+В бу перевел",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""MOVE_STOP_TO_BE/weak:в бу@42:46"", ""EXIT_BE/weak:бу@44:46""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,SIGNAL,PARSED,1743,1062,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимиткой 
+
+1)88650(1/3)
+2)89100(2/3)
+
+Stop 89450.  1% деп
+
+Tейк-профит 
+
+1)87500(RR - 1:2)
+
+ 2)86800(RR - 1:3)
+
+ 3)85800",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""entry/strong:вход лимиткой@28:41"", ""LIMIT/strong:вход лимиткой@28:41"", ""LIMIT/weak:лимиткой@33:41"", ""SL_HI"
+37,trader_c,UPDATE,PARSED,1742,1063,,"[trader#C]
+
+https://t.me/c/3171748254/1054
+Ушли в б/у",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""MOVE_STOP_TO_BE/weak:в б/у@47:52"", ""EXIT_BE/weak:б/у@49:52""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [],"
+37,trader_c,UPDATE,PARSED,1739,1066,,"https://t.me/c/3171748254/1062
+Добор убрал, в бу перевел 
+[trader#C]",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""ADD_ENTRY/weak:добор@31:36"", ""ENTRY_FILLED/weak:добор@31:36"", ""MOVE_STOP_TO_BE/weak:в бу@44:48"", ""EXIT_BE/weak:бу@46:48""], ""suppressed_markers"": [], ""applied_marker_rules"": ["
+37,trader_c,REPORT,PARSED,1738,1067,,"]https://t.me/c/3171748254/1062
+🥳 Tp1
+ 
+[ trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@1:14"", ""telegram_link/strong:t.me/@9:14"", ""TP_HIT/weak:tp1@34:37""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,1732,1078,,"[trader#С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,519(1/3)
+2)0,508(2/3)
+
+Stop 0,498.  1% деп
+
+Tейк-профит 
+
+1)0,539(RR1-1)
+
+ 2)0,56(RR1-2)
+
+ 3)0,582(RR1-3)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@67:71""], ""suppressed"
+37,trader_c,SIGNAL,PARSED,1731,1079,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0675(1/3)
+2)0,066(2/3)
+
+Stop 0,065.  1% деп
+
+Tейк-профит 
+
+1)0,0698(RR1-1)
+
+ 2)0,0072(RR1-2)
+
+ 3)0,075(RR1-3)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@14:15"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:"
+37,trader_c,SIGNAL,PARSED,1721,1094,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход лимиткой 
+
+1)87650(1/3)
+2)87150(2/3)
+
+Stop 86700.  1% деп
+
+Tейк-профит 
+
+1)88300(RR1-2)
+
+ 2)89000(RR1-3)
+
+ 3)90500",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@67:71""], ""suppressed"
+37,trader_c,SIGNAL,PARSED,1720,1095,," [trader#С]
+
+$BTCUSDT - LONG
+
+Вход с текущих (88000 +-100)
+
+Stop 87700.  1%деп
+
+Tейк-профит 
+
+1) 88600(RR1-2)
+
+ 2)88950 (RR1-3)
+
+ 3)89555-90",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход с текущих@27:41"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:вход с те"
+37,trader_c,UPDATE,PARSED,1719,1098,,"https://t.me/c/3171748254/1095
+Закрываю на точке входа,нет реакции
+  
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""CLOSE_FULL/weak:закрываю@31:39"", ""CLOSE_FULL/strong:закрываю на@31:42"", ""CLOSE_FULL/strong:закрываю на точке входа@31:54"", ""MODIFY_ENTRY/weak:вход@49:53""], ""suppressed_marker"
+37,trader_c,UPDATE,PARSED,1718,1099,,"https://t.me/c/3171748254/1095  
+Не актуально 
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,REPORT,PARSED,1715,1104,,"https://t.me/c/3171748254/1094
+Первая лимитка сработала
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""ENTRY_FILLED/weak:лимитка@38:45"", ""ENTRY_FILLED/strong:лимитка сработала@38:55"", ""ENTRY_FILLED/weak:сработал@46:54"", ""ENTRY_FILLED/weak:сработала@46:55""], ""suppressed_markers"
+37,trader_c,REPORT,PARSED,1712,1108,,"https://t.me/c/3171748254/1094
+Тейк 1🥳
+[ trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тейк@31:35"", ""TP_HIT/weak:тейк 1@31:37""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category"
+37,trader_c,UPDATE,PARSED,1710,1112,,"https://t.me/c/3171748254/1094
+ В бу перевел 
+Доливку убрал 
+[trader#C ]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,REPORT,PARSED,1707,1116,,"https://t.me/c/3171748254/1094
+Тейк 2🥳
+[trader#c]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тейк@31:35"", ""TP_HIT/weak:тейк 2@31:37""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category"
+37,trader_c,UPDATE,PARSED,1704,1119,,"https://t.me/c/3171748254/1079
+ Не актуально 
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,1703,1120,,"https://t.me/c/3171748254/1078
+Не актуально 
+[trader#c]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,SIGNAL,PARSED,1702,1121,,"[trader#С]
+
+$SNXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,4(1/3)
+2)0,393(2/3)
+
+Stop 0,381.  1% деп
+
+Tейк-профит 
+
+1)0,419(RR1-1)
+
+ 2)0,435(RR1-2)
+
+ 3)0,45+(RR1-3)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@14:15"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:"
+37,trader_c,SIGNAL,PARSED,1701,1122,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0677(1/3)
+2)0,0662(2/3)
+
+Stop 0,065.  1% деп
+
+Tейк-профит 
+
+1)0,071(RR1-1)
+
+ 2)0,075(RR1-2)
+
+ 3)0,078(RR1-3)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@14:15"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:"
+37,trader_c,REPORT,PARSED,1689,1136,,"https://t.me/c/3171748254/1094
+90500 Позиция закрыта по тейку. Поздравляю! 🥳
+
+[trader#C ]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""CLOSE_FULL/weak:закрыта@45:52"", ""TP_HIT/strong:закрыта по тейку@45:61""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_ru"
+37,trader_c,SIGNAL,PARSED,1681,1151,,"[trader#С]
+
+$BTCUSDT - LONG
+
+Вход с текущих (88000-88100)
+
+Stop 87800.  1%деп
+
+Tейк-профит 
+
+1) 88500(RR1-2)
+
+ 2)88850(RR1-3)
+
+ 3)89500",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход с текущих@27:41"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:вход с те"
+37,trader_c,UPDATE,PARSED,1680,1152,,"https://t.me/c/3171748254/1151
+ После первого тп в бу 
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:сл@33:35"", ""stop_loss/strong:сл@33:35"", ""MOVE_STOP_TO_BE/weak:в бу@48:52"", ""EXIT_BE/weak:бу@50:52""], ""suppressed_markers"": [""SL_HIT/weak:сл@33:35""], ""applied_mark"
+37,trader_c,REPORT,PARSED,1679,1153,,"https://t.me/c/3171748254/1151  
+Тп2 🥳
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп2@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,1678,1154,1151,"Остаток ушел в бу после 2 тп
+ 
+[trader#C ]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@0:17"", ""EXIT_BE/strong:ушел в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17"", ""SL_HIT/weak:сл@20:22"", ""stop_loss/strong:сл@20:22""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_B"
+37,trader_c,SIGNAL,PARSED,1673,1161,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход лимиткой 
+
+1)86710(1/3)
+2)85950(2/3)
+
+Stop 85600.  1% деп
+
+Tейк-профит 
+
+1)87709(RR1-1)
+
+ 2)88800(RR1-2)
+
+ 3)90600",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@67:71""], ""suppressed"
+37,trader_c,UPDATE,PARSED,1672,1162,,"https://t.me/c/3171748254/1161
+ Тп1🥳🥳🥳
+Доливку убрал в бу перевел 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@31:34"", ""MOVE_STOP_TO_BE/weak:в бу@52:56"", ""EXIT_BE/weak:бу@54:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [],"
+37,trader_c,UPDATE,PARSED,1669,1167,,"https://t.me/c/3171748254/1161
+Доливаю сейчас по рынку объем.
+
+Средняя стала - 86950 
+Стоп в Б/У
+ТП промежуточный тот же:
+87650
+88200
+90600
+[trader#C]",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [""MODIFY_ENTRY:по рынку""], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MARKET_NOW/weak:сейчас@39:45"", ""MODIFY_ENTRY/strong:по рынку@46:54"", ""MODIFY_ENTRY/weak:по рынку@46:54"", ""MARKET_NOW/weak:по рынку@46:54"", ""ENTRY_FILLE"
+37,trader_c,REPORT,PARSED,1667,1169,,"https://t.me/c/3171748254/1161
+Позиция закрыта в бу
+ [trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""CLOSE_FULL/weak:закрыта@39:46"", ""EXIT_BE/strong:закрыта в бу@39:51"", ""MOVE_STOP_TO_BE/weak:в бу@47:51"", ""EXIT_BE/weak:бу@49:51""], ""suppressed_markers"": [""CLOSE_FULL/weak:закр"
+37,trader_c,SIGNAL,PARTIAL,1665,1175,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход с текущих (86700-800)
+
+Stop 86300. 1%деп
+
+Tейк-профит 
+
+1) 87500. (RR1-1,5)
+
+2) 88000. (RR1-2,4)
+
+3) 89000. (RR1-4)
+
+4)90600",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход с текущих@27:41"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:вход с те"
+37,trader_c,REPORT,PARSED,1664,1177,,"https://t.me/c/3171748254/1175
+
+🥳🥳🥳🥳
+  Тп 1
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@36:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1663,1178,,"https://t.me/c/3171748254/1175
+Изменения -
+Тп2 88150
+ 
+[trader#C]",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп2@43:46""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}, ""s"
+37,trader_c,UPDATE,PARSED,1660,1183,,"https://t.me/c/3171748254/1122
+ Не актуально не дошел до лимитки 😔
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,1659,1184,,"https://t.me/c/3171748254/1121
+Не актуально 
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,1656,1189,1175,"В бу перевел 
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,1651,1199,,"https://t.me/c/3171748254/1178
+
+Тп 2 RR1-3+ 🥳🥳🥳
+[trader#c]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,1644,1209,,"https://t.me/c/3171748254/1175
+ 
+Тп3 🥳🥳🥳 RR 1-4
+
+[trader#C ]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп3@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1642,1214,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход с текущих (2920-8)
+
+Stop 2915. 1%деп
+
+Tейк-профит 
+
+1)2945. (RR1-1,5)
+
+2)2960.  (RR1-3)
+
+3)2970
+
+4)2990",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход с текущих@27:41"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:вход с те"
+37,trader_c,REPORT,PARSED,1641,1215,,"https://t.me/c/3171748254/1214
+
+Стоп -1%
+[trader#c]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1640,1216,,"https://t.me/c/3171748254/1175
+  Остаток в бу ушёл 
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARTIAL,1639,1217,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход с лимиткой 
+
+2910 (1/3)
+2900 (2/3)
+
+Stop 2890. 1%деп
+
+Tейк-профит 
+
+1)2930. (RR1-1,5)
+
+2)2940.  (RR1-2)
+
+3)2960
+
+4)2990",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""LIMIT/weak:лимиткой@34:42"", ""SL_HIT/weak:stop@65:69""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"
+37,trader_c,REPORT,PARSED,1638,1219,,"https://t.me/c/3171748254/1217
+
+Тп1🥳 RR1-1
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1637,1220,,"https://t.me/c/3171748254/1217
+ В бу перевел, добор убрал 
+
+[trader#C]",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35"", ""ADD_ENTRY/weak:добор@45:50"", ""ENTRY_FILLED/weak:добор@45:50""], ""suppressed_markers"": [], ""applied_marker_rules"": ["
+37,trader_c,SIGNAL,PARTIAL,1635,1224,,"[trader#С]
+
+$BTCUSDT - LONG 
+
+Вход с текущих (87400-450)
+
+Stop 87200. 1%деп
+
+Tейк-профит 
+
+1) 87950. (RR1-2)
+
+2) 88500. (RR1-3)
+
+3) 89000
+
+4)90600",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход с текущих@27:41"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:вход с те"
+37,trader_c,UPDATE,PARSED,1631,1229,1224,"Тп 1  RR1-2 🥳🥳🥳в бу перевел
+  
+[trader#С]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@14:18"", ""EXIT_BE/weak:бу@16:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4, ""UPDATE"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1627,1237,,"[trader#С]
+
+$ETHUSDT - LONG в сущ позиции!
+
+https://t.me/c/3171748254/1217
+
+Вход с текущих (2940-2935)добавляем объем тот что остался в существующей позиции( к примеру было 0,1 эфира должно стать 0,2)в два раза и добавляем 
+промежуточный ТП
+
+Stop в бу 2925
+
+Tейк-профит 
+
+1)2965
+
+2)2990",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""telegram_link/strong:https://t.me/@42:55"", ""telegram_link/strong:t.me/@50:55"", ""MODIFY_ENTRY/weak:вход@73:77"", ""MODIFY_ENTRY/strong:вход с те"
+37,trader_c,UPDATE,PARSED,1613,1252,,"[trader#c]
+
+Так, ребята, возникли вопросы по поводу вот этого сетапа: https://t.me/c/3171748254/1224
+
+Дело в том, что прошедшей ночью (03:15 UTC+3) у меня сработал первый тейк по этой позиции. 
+В ночи не посмотрел цену закрытия и на автомате написал вам сообщение в канал о срабатывании тейка и переводе в БУ. 
+На деле же, мой тейк сработал на 87911 (проскальзывание или биржа дала сбой), тогда как в сигнале 1TP - 87950 и на Bybit, мы не дошли до тейка.
+Кого-то это могло смутить.
+Но!
+В данном случае ничего критичного не случилось:
+хотя в следующие полчаса после этого ""не произошедшего тейка"" произошёл откат до ≈ 87490 , - вас всё-равно не выбило бы в БУ ,если вы заходили в диапазоне 87400-87450 по сигналу.
+
+А уже в 3 часа ночи вы бы зафиксировали тейк в любом случае, так как цена, наконец, достигла его на всех биржах.
+
+Вот как-то так!👌
+
+По итогу:  сделка в работе, первый тейк взяли, перевелись в БУ.
+Всем профита!✊️",1.0,,"{""suppressed_intents"": [""TP_HIT:первый тейк"", ""TP_HIT:тейка"", ""TP_HIT:тейк"", ""TP_HIT:дошли до тейка"", ""TP_HIT:тейка"", ""TP_HIT:тейк"", ""TP_HIT:тейк взяли""], ""matched_markers"": [""telegram_link/strong:https://t.me/@69:82"", ""telegram_link/strong:t.me/@77:82"", ""ENTRY_FILLED/weak:сработал@153:161"", ""TP_HIT"
+37,trader_c,REPORT,PARSED,1605,1268,,"https://t.me/c/3171748254/1237
+ Закрыто в бу 
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/strong:закрыто в бу@31:43"", ""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41"
+37,trader_c,UPDATE,PARSED,1604,1269,,"https://t.me/c/3171748254/1224
+
+Закрыт остаток в бу
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@46:50"", ""EXIT_BE/weak:бу@48:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARSED,1602,1275,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход с текущих (90100-200) 
+
+Stop 90400.  1% деп
+
+Tейк-профит 
+
+1)89605(RR1-1)
+
+ 2)89200(RR1-2)
+
+ 3)88400(RR1-4)
+
+4)87000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход с текущих@28:42"", ""MARKET/strong:вход с текущих@28:4"
+37,trader_c,UPDATE,PARSED,1601,1276,1275,"🥳 тп 1 в бу перевел , понаблюдаем 
+https://t.me/c/3171748254/1275
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 1275, ""matched_markers"": [""TP_HIT/weak:тп 1@2:6"", ""MOVE_STOP_TO_BE/weak:в бу@7:11"", ""EXIT_BE/weak:бу@9:11"", ""telegram_link/strong:https://t.me/@34:47"", ""telegram_link/strong:t.me/@42:47""], ""suppressed_markers"": [], ""applied_marker_rules"": [],"
+37,trader_c,REPORT,PARSED,1599,1278,,"https://t.me/c/3171748254/1275
+ 
+Тп2🥳 
+ [trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп2@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1598,1279,,"https://t.me/c/3171748254/1275
+
+Тп 3🥳🥳🥳
+
+Остаток объема везём дальше 
+87000
+86444
+ [trader#C]",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 3@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}, """
+37,trader_c,REPORT,PARSED,1595,1283,,"https://t.me/c/3171748254/1275
+  
+Тп 4 🥳🥳🥳 RR1-7
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 4@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1593,1287,,"[trader #С]
+
+Btcusdt SHORT 
+
+Доливаю часть шорта:87800-900
+Чтобы средняя оказалась в 88500 стоп в бу ,это чуть больше того что в позе для тех кто не закрыл остаток на 87000!!!Кто закрыл нечего делать не нужно 
+Тп1.  87222
+Тп2.  86666
+Тп3.  85888",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@20:25"", ""ALL_SHORT/weak:short@20:25"", ""SHORT/strong:шорт@40:44"", ""ENTRY_FILLED/weak:средняя@62:69"", ""SL_HIT/weak:стоп@88:92"", ""MOVE_STOP_TO_BE/strong:стоп в бу@88:97"", ""MOVE_STO"
+37,trader_c,SIGNAL,PARTIAL,1592,1288,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход с текущих (87550-450)
+
+Stop 87222. 1%деп
+
+Tейк-профит 
+
+1) 87830. (RR1-1)
+
+2) 88150. (RR1-2)
+
+3) 88550. (RR1-3)
+
+4)90600",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход с текущих@27:41"", ""MARKET/strong:вход с текущих@27:41"", ""MARKET_NOW/strong:вход с те"
+37,trader_c,REPORT,PARSED,1591,1289,,"https://t.me/c/3171748254/1288
+ 
+🥳 Тп1
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@33:36""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1590,1290,1288,"Закрываю по рынку 87450 остаток,не нравится реакция 
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по рынку@0:17"", ""MODIFY_ENTRY/strong:по рынку@9:17"", ""MODIFY_ENTRY/weak:по рынку@9:17"", ""MARKET_NOW/weak:по рынку@9:17""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/we"
+37,trader_c,REPORT,PARSED,1589,1292,1287,"Тп 1 🥳
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1585,1301,1287,"Закрыт остаток в бу
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,1574,1327,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  89600-700
+
+Stop 89900.  1% деп
+
+Tейк-профит 
+
+1)89000(RR1-2)
+
+ 2)88700(RR1-3)
+
+ 3)88000
+
+4)86600",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,SIGNAL,PARTIAL,1573,1328,1327,"На байбит стоп 89950!!!!!!
+ [trader #C]",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@10:14""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}, ""signal_missing_fields"": [""symbol"", ""side"", ""entries"", ""take_profits""], ""signal"
+37,trader_c,REPORT,PARSED,1570,1333,1327,"Тп1🥳
+ [trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп1@0:3""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,1569,1334,,"https://t.me/c/3171748254/1327
+ Тп2🥳
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп2@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1568,1335,1327,"[trader#C]
+В бу перевел 89650",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,1567,1336,1335,"[trader#C]
+  Остаток ушел в бу.",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@11:28"", ""EXIT_BE/strong:ушел в бу@19:28"", ""MOVE_STOP_TO_BE/weak:в бу@24:28"", ""EXIT_BE/weak:бу@26:28""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@24:28"", ""EXIT_BE/weak:бу@26:28""], ""applied_marker_rules"": [""weak_i"
+37,trader_c,SIGNAL,PARSED,1564,1340,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  90500-600
+
+Stop 91000.  1% деп
+
+Tейк-профит 
+
+1)89800(RR1-2)
+
+ 2)89400(RR1-3)
+
+ 3)88600
+
+4)86600",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,REPORT,PARSED,1561,1344,,"https://t.me/c/3171748254/1340
+
+Тп1🥳
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1559,1347,,"https://t.me/c/3171748254/1340
+  В бу перевел,90500
+  
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,REPORT,PARSED,1555,1354,,"https://t.me/c/3171748254/1340
+
+Тп 2🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1548,1363,1340,"Закрываю по рынку остаток 
+90200-100
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по рынку@0:17"", ""MODIFY_ENTRY/strong:по рынку@9:17"", ""MODIFY_ENTRY/weak:по рынку@9:17"", ""MARKET_NOW/weak:по рынку@9:17""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/we"
+37,trader_c,SIGNAL,PARSED,1541,1372,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  91500-600
+
+Stop 91800  1% деп
+
+Tейк-профит 
+
+1)91000(RR1-2)
+
+ 2)90700(RR1-3)
+
+ 3)90200
+
+4)88800",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,REPORT,PARSED,1537,1380,,"https://t.me/c/3171748254/1374
+
+Tp1🥳
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:tp1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,1536,1381,,"https://t.me/c/3171748254/1374
+ 
+Стоп в 91600, рискуем профитом с тп1
+
+[trader #C]",0.4,,"{""suppressed_intents"": [""TP_HIT:тп1""], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35"", ""risk/weak:риск@45:49"", ""TP_HIT/weak:тп1@64:67""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": ["
+37,trader_c,INFO,UNCLASSIFIED,1531,1389,,"https://t.me/c/3171748254/1381
+ Сэтап закрыт в 0
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARSED,1530,1390,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  92850-950
+
+Stop 93400  1% деп
+
+Tейк-профит 
+
+1)92300(RR1-1)
+
+ 2)91700(RR1-2)
+
+ 3)91000
+
+4)90000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,UPDATE,PARSED,1522,1404,,"[trader#C]
+В бу перевел 92900
+https://t.me/c/3171748254/1390",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15"", ""telegram_link/strong:https://t.me/@30:43"", ""telegram_link/strong:t.me/@38:43""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,REPORT,PARSED,1521,1405,1404,"Остаток ушел в бу
+ [trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@0:17"", ""EXIT_BE/strong:ушел в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_ins"
+37,trader_c,SIGNAL,PARSED,1517,1409,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  93650-93750
+
+Stop 94070  1% деп
+
+Tейк-профит 
+
+1)93200(RR1-1)
+
+ 2)92700(RR1-2)
+
+ 3)92200
+
+4)90000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,UPDATE,PARSED,1515,1411,,"[trader#C]
+
+https://t.me/c/3171748254/1409
+ До тп 0,1 пипс не дошли 
+ Закрываю по рынку 93700",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""telegram_link/strong:t.me/@19:24"", ""CLOSE_FULL/weak:закрываю@66:74"", ""CLOSE_FULL/strong:закрываю по рынку@66:83"", ""MODIFY_ENTRY/strong:по рынку@75:83"", ""MODIFY_ENTRY/weak:по рынку@75:83"", ""MARKET_NOW/weak:по "
+37,trader_c,SIGNAL,PARSED,1510,1416,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  94200-94300
+
+Stop 94500  1% деп
+
+Tейк-профит 
+
+1)93900(RR1-1)
+
+ 2)93400(RR1-2)
+
+ 3)92750
+
+4)91600",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,REPORT,PARSED,1509,1417,,"https://t.me/c/3171748254/1416
+ 
+Стоп -1% 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,INFO,PARSED,1505,1423,,"Друзья, это снова #админ 👋
+По просьбам ТРЕЙДящихся - варианты фиксации прибыли по сигналам trader#C !
+
+Чтобы не создавалось впечатления, что у этого самурая нет цели - а есть только путь комиссия за фандинг. 😂
+Вот схема, которую он использует и рекомендует, если вы работаете с риском 1% на сделку.
+
+
+1️⃣ Если в сигнале 3 тейк-профита (TP1-TP3)
+
+Оптимальная фиксация:
+
+TP1 - 30%
+TP2 - 30%
+TP3 - 40%
+
+По R/R:
+
+Если забрали все тейки → RR ~ 1-3
+Если после TP2 перевели в БУ → RR ~ 1.47
+Если перевели в БУ уже после TP1 → RR ~ 1-0.5
+(Запомните и повторяйте себе перед сном: ""не трус, а консервативно распорядившийся депозитом...""😌)
+
+---
+
+2️⃣ Если в сигнале 4 тейк-профита (TP1-TP4)
+
+Рекомендуемая фиксация:
+
+TP1 - 25%
+TP2 - 25%
+TP3 - 30%
+TP4 - 20%
+
+По R/R:
+
+Если забрали все тейки → RR ~ 1-3.4
+Если после TP3 перевели в БУ → RR ~ 1-2.45
+Если перевели в БУ уже после TP1 → RR ~ 1-0.6
+(Еще вариант для аффирмации: ""не бояка а долгосрочный участник рынка!"" 😂)
+
+---
+
+Если коротко:
+Понятные режимы  частичной фиксации, без особой жадности aka «Хатико и его последний тейк», но и не паникёрство из разряда «увидел зелёную свечу - зафиксировался, перекрестился и удалил приложение биржи». 😂
+Вот как-то так.
+
+#админ",1.0,,"{""matched_markers"": [""ADMIN/strong:#админ@18:24"", ""TP_HIT/weak:цели@160:164"", ""take_profit/strong:цели@160:164"", ""take_profit/strong:цели -@160:166"", ""SL_HIT/weak:сл@258:260"", ""stop_loss/strong:сл@258:260"", ""risk/weak:риск@277:281"", ""SL_HIT/weak:сл@303:305"", ""stop_loss/strong:сл@303:305"", ""TP_HIT/we"
+37,trader_c,SIGNAL,PARTIAL,1504,1427,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 92450-550
+
+Stop 92250. 1%деп
+
+Tейк-профит 
+
+1) 93100. (RR1-2)
+
+2) 93400. (RR1-3)
+
+3) 93800
+
+4)94500",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1503,1428,,"https://t.me/c/3171748254/1427
+
+Стоп -1%
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1499,1436,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 91250-350
+
+Stop 90900. 1%деп
+
+Tейк-профит 
+
+1) 91800. (RR1-2)
+
+2) 92100. (RR1-3)
+
+3) 92600
+
+4)93300",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,UPDATE,PARSED,1498,1437,1436,"Стоп в бу на точку входа 92200
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9"", ""MODIFY_ENTRY/weak:вход@19:23""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9"
+37,trader_c,REPORT,PARSED,1496,1440,,"https://t.me/c/3171748254/1436
+
+Закрыто в бу 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/strong:закрыто в бу@31:43"", ""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41"
+37,trader_c,INFO,UNCLASSIFIED,1495,1441,1440,"На байбит не закрыло,)
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,INFO,UNCLASSIFIED,1494,1442,,"https://t.me/c/3171748254/1441
+Теперь закрыто до тп не дошли 30 пунктов (.
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,1491,1446,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход лимитка  3145 (1/3)
+
+                             3133 (2/3)
+
+Stop 3115. 1%деп
+
+Tейк-профит 
+
+1)3155. (RR1-1)
+
+2)3170.  (RR1-2)
+
+3)3190 изменено!!!
+
+4)3220",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@62:66""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARTIAL,1488,1449,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 90950-850
+
+Stop 90650. 1%деп
+
+Tейк-профит 
+
+1) 91500. (RR1-2)
+
+2) 91800. (RR1-3)
+
+3) 92300
+
+4)94500",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1487,1450,1449,"Стоп -1%
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,1486,1453,,"https://t.me/c/3171748254/1446
+
+Tp1🥳
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:tp1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1485,1454,1446,"https://t.me/c/3171748254/1446
+Тп 2 ,в бу перевел 3136
+
+[tradet#C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 1446, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@37:41"", ""EXIT_BE/weak:бу@39:41""], ""suppressed_markers"": [], ""applied_marker_rules"": ["
+37,trader_c,SIGNAL,PARTIAL,1484,1456,,"https://t.me/c/3171748254/1449
+   
+Перезашел стоп 90550, изменённо !!! тп тоже
+
+[trader#C]",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@41:45""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}, """
+37,trader_c,REPORT,PARSED,1482,1458,,"https://t.me/c/3171748254/1446
+ После тп 2 +0,6 в бу ушли
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:сл@33:35"", ""stop_loss/strong:сл@33:35"", ""TP_HIT/weak:тп 2@37:41"", ""MOVE_STOP_TO_BE/weak:в бу@47:51"", ""EXIT_BE/strong:в бу ушли@47:56"", ""EXIT_BE/weak:бу@49:51""], """
+37,trader_c,REPORT,PARSED,1481,1459,,"https://t.me/c/3171748254/1456
+ Стоп -1% 
+ [trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1476,1467,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 89650-750
+
+Stop 89200. 1%деп
+
+Tейк-профит 
+
+1) 90300. (RR1-1)
+
+2) 90800. (RR1-2)
+
+3) 91300
+
+4)92500",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1475,1469,1467,"Тп1🥳
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп1@0:3""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1474,1470,,"https://t.me/c/3171748254/1467
+  Тп 2🥳
+ В бу перевел 89800
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@37:41"", ""EXIT_BE/weak:бу@39:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+37,trader_c,REPORT,PARSED,1473,1471,,"https://t.me/c/3171748254/1467
+
+Тп3🥳 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп3@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1470,1478,1467,"Остаток позы на последний ТП увеличиваю в два раза в диапазоне 90750-650 лимиткой, с учётом чтобы позиция осталась после увеличения в бу диапазоне до 90300 . 
+ТП дополнительный - 91100
+
+Вход теперь на 90280 в БУ
+
+[trader #C]",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:сл@18:20"", ""stop_loss/strong:сл@18:20"", ""LIMIT/weak:лимиткой@73:81"", ""SL_HIT/weak:сл@117:119"", ""stop_loss/strong:сл@117:119"", ""MOVE_STOP_TO_BE/weak:в бу@132:136"", ""EXIT_BE/weak:бу@134:136"", ""MODIFY_ENTRY/weak:вход@184:188"", ""MODIFY_ENTRY/st"
+37,trader_c,INFO,UNCLASSIFIED,1468,1480,1478,"Закрыт остаток 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,1451,1504,,"[trader#С]
+
+$ICPUSDT - LONG 
+
+Вход лимиткой 
+
+1) 3,008(1/3)
+2) 2,856(2/3)
+
+Stop 2,785 1% деп
+
+Tейк-профит 
+
+1) 3,168 (RR 1-2,2)
+
+ 2) 3,38. (RR 1-4)
+
+ ",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@69:73""], ""suppressed"
+37,trader_c,SIGNAL,PARSED,1450,1505,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0744(1/3)
+2)0,0719(2/3)
+
+Stop 0,07.  1% деп
+
+Tейк-профит 
+
+1)0,0788(RR1-2,5)
+
+ 2)0,082(RR1-4)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@14:15"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:"
+37,trader_c,UPDATE,PARSED,1439,1525,,"https://t.me/c/3171748254/1505
+
+Скинул часть по текущим 0,0765 (30%)
+В бу перевел,доливку убрал 
+
+[trader #C]",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MODIFY_ENTRY/weak:по текущим@44:54"", ""MOVE_STOP_TO_BE/weak:в бу@68:72"", ""EXIT_BE/weak:бу@70:72""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguatio"
+37,trader_c,SIGNAL,PARTIAL,1438,1526,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход по рынку  
+
+Stop 92550.      1% деп
+
+Tейк-профит 
+
+1).  91400(RR1-1)
+
+ 2). 90800(RR1-2)
+
+ 3) 90200
+
+4)89000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход по рынку@28:41"", ""MARKET_NOW/strong:вход по рынку@28:"
+37,trader_c,REPORT,PARSED,1436,1530,,"https://t.me/c/3171748254/1526
+
+Тп 1🥳
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1435,1531,,"https://t.me/c/3171748254/1526
+
+Тп 2 🥳в бу перевел 
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@37:41"", ""EXIT_BE/weak:бу@39:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+37,trader_c,REPORT,PARSED,1434,1532,,"https://t.me/c/3171748254/1525
+
+Остаток ушел в бу
+
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/strong:остаток ушел в бу@31:48"", ""EXIT_BE/strong:ушел в бу@39:48"", ""MOVE_STOP_TO_BE/weak:в бу@44:48"", ""EXIT_BE/weak:бу@46:48""], ""suppressed_markers"": [""MOVE_STOP_TO_B"
+37,trader_c,REPORT,PARSED,1427,1540,1526,"Тр 3🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тр 3@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1425,1542,1540,"Доливаю по 90900 лимит объем то что остался цель 90200,89200
+Стоп в бу на 91500",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:цель@44:48"", ""SL_HIT/weak:стоп@61:65"", ""MOVE_STOP_TO_BE/strong:стоп в бу@61:70"", ""MOVE_STOP_TO_BE/weak:в бу@66:70"", ""EXIT_BE/weak:бу@68:70""], ""suppressed_markers"": [""SL_HIT/weak:стоп@61:65"", ""MOVE_STOP_TO_BE/weak:в бу@66:70"", ""EXIT_BE/weak:"
+37,trader_c,REPORT,PARSED,1421,1547,,"https://t.me/c/3171748254/1542
+ Закрыто в бу 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/strong:закрыто в бу@31:43"", ""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41"
+37,trader_c,UPDATE,PARSED,1402,1575,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 92550
+
+Stop 92900  0,5!!!% деп
+
+Tейк-профит 
+
+1).  91700(RR1-2)
+
+ 2). 90950(RR1-4)
+
+ 3)
+
+4)",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,REPORT,PARSED,1401,1576,1575,"Стоп -0,5 
+ 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1399,1578,1504,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,1397,1580,,"[trader#С]
+
+$ETHUSDT - LONG 
+
+Вход лимит 3150
+
+Stop 3110. 0,5%деп
+
+Tейк-профит 
+
+1)   3190(RR1-1)
+
+2)   3230(RR1-2)
+
+3). 3300",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""SL_HIT/weak:stop@43:47""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,UPDATE,PARSED,1396,1581,1580,"Не актуально пока писал улители)
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,1382,1596,,"[trader#С]
+
+$LTCUSDT - LONG 
+
+Вход лимиткой 
+
+1) 76,5(1/3)
+2) 75(2/3)
+
+Stop 73,5. 1% деп
+
+Tейк-профит 
+
+1) 78(RR 1-1,5)
+
+ 2) 80. (RR 1-2)
+
+ 3) 83",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@65:69""], ""suppressed"
+37,trader_c,UPDATE,PARSED,1369,1611,,"https://t.me/c/3171748254/1596
+
+[trader#C]    tp1🥳
+
+  В бу перевел,доливку убрал.",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:tp1@42:45"", ""MOVE_STOP_TO_BE/weak:в бу@47:51"", ""EXIT_BE/weak:бу@49:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [],"
+37,trader_c,REPORT,PARSED,1353,1631,,"https://t.me/c/3171748254/1596
+
+Тп2🥳
+
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп2@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1347,1640,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 97250
+
+Stop 97800. 1% деп
+
+Tейк-профит 
+
+1).  96600(RR1-1)
+
+ 2). 95900(RR1-2)
+
+ 3). 95200(RR1-3)
+
+4)94400",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,1345,1642,1640,"Не актуально пошли без нас
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,1340,1650,,"https://t.me/c/3171748254/1596
+
+Остаток в бу ушёл 
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARTIAL,1319,1674,,"[trader#С]
+
+$ETCUSDT - LONG 
+
+Вход лимиткой 
+
+1) 12,7(1/3)
+2) 12,42(2/3)
+
+Stop 12,09. 1% деп
+
+Tейк-профит 
+
+1) 13,3(RR 1-1)
+
+ 2) 13,9 (RR 1-2)
+
+ 3) 14,5",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@68:72""], ""suppressed"
+37,trader_c,UPDATE,PARSED,1314,1682,,"https://t.me/c/3171748254/1674
+
+Закрываю по текущим 
+-0,05
+Доливку убрал 
+
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""CLOSE_FULL/weak:закрываю@31:39"", ""CLOSE_FULL/strong:закрываю по текущим@31:50"", ""MODIFY_ENTRY/weak:по текущим@40:50""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@31:39"""
+37,trader_c,SIGNAL,PARSED,1313,1683,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 
+
+Stop 95000. 0,5!!!%деп
+
+Tейк-профит 
+
+1)    95750(RR1-1)
+
+2)   96300(RR1-2)
+
+3)   97000
+
+4). 98000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1310,1687,,"https://t.me/c/3171748254/1683
+
+
+Тр1🥳
+
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тр1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1309,1689,,"https://t.me/c/3171748254/1683
+ В бу перевел 95350 
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARSED,1308,1690,,"[trader#С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,592(1/3)
+2)0,578(2/3)
+
+Stop 0,565.  1% деп
+
+Tейк-профит 
+
+1)0,6255(RR1-1,5)
+
+ 2)0,65(RR1-2,5)
+
+ 3)0,682(RR1-4)
+Исправлено",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@67:71""], ""suppressed"
+37,trader_c,REPORT,PARSED,1307,1691,1683,"Остаток закрыт в бу
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток закрыт в бу@0:19"", ""EXIT_BE/strong:закрыт в бу@8:19"", ""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""applied_marker_rules"": [""weak"
+37,trader_c,SIGNAL,PARTIAL,1304,1695,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку
+
+Stop 95000. 0,5%деп
+
+Tейк-профит 
+
+1)   95750 (RR1-1)
+
+2)   96400(RR1-2)
+
+3)   97000
+
+4). 98000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1302,1697,1695,"Стоп -0,5
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1300,1699,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход рынок
+
+Stop 94700. 1%деп
+
+Tейк-профит 
+
+1)   95650 (RR1-1)
+
+2)   96400(RR1-2)
+
+3)   97000
+
+4). 98000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MARKET/weak:рынок@32:37"", ""SL_HIT/weak:stop@38:42""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"":"
+37,trader_c,REPORT,PARSED,1299,1700,1699,"Стоп -1
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1298,1701,,"[trader#С]
+
+$BTSUSDT - LONG 
+
+Вход по рынку 
+
+Stop 94300. 1%деп
+
+Tейк-профит 
+
+1)   95250 (RR1-1)
+
+2)   95800(RR1-2)
+
+3) 96400
+
+4)97000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1297,1702,1701,"Стоп -1
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1291,1709,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по лимитке 94650
+
+Stop 94200. 1%деп
+
+Tейк-профит 
+
+1)   95500(RR1-2)
+
+2)  95950 (RR1-3)
+
+3) 96400
+
+4) 97200",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""SL_HIT/weak:stop@49:53""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,REPORT,PARSED,1287,1716,,"https://t.me/c/3171748254/1709
+
+Тп1🥳
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1286,1720,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 3272
+
+Stop 3255. 0,5%деп
+
+Tейк-профит 
+
+1) 3295(RR1-1,5)
+
+2)3310 (RR1-2)
+
+3)3330
+
+4)3350",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@45:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1274,1740,,"https://t.me/c/3171748254/1720
+ Не актуально 
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,1273,1741,1709,"[trader#C]
+В бу перевел",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,1266,1751,1741,"Остаток ушел в бу 
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@0:17"", ""EXIT_BE/strong:ушел в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_ins"
+37,trader_c,REPORT,PARSED,1265,1752,,"https://t.me/c/3171748254/1690
+
+Стоп -1%
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1260,1766,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 
+
+Stop 91200. 1%деп
+
+Tейк-профит 
+
+1)    92100(RR1-1)
+
+2)  92500 (RR1-2)
+
+3) 93000
+
+4)94500",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,REPORT,PARSED,1259,1768,,"https://t.me/c/3171748254/1766
+
+Стоп -1%
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1258,1770,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 91030
+
+Stop 90600. 1%деп
+
+Tейк-профит 
+
+1)   92000(RR1-1)
+
+2)  92500 (RR1-2)
+
+3)   93000
+
+4). 94000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1251,1779,1770,"Закрыл по рынку 
+91000
+
+[ trader#C ]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/strong:по рынку@7:15"", ""MODIFY_ENTRY/weak:по рынку@7:15"", ""MARKET_NOW/weak:по рынку@7:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по рынку@7:15""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rule"
+37,trader_c,SIGNAL,PARTIAL,1249,1781,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 90251
+
+Stop 89800. 1%деп
+
+Tейк-профит 
+
+1)   91000(RR1-1)
+
+2)  92000 (RR1-2)
+
+3)   93000
+
+4). 94000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,1242,1789,,"https://t.me/c/3171748254/1781
+
+Стоп -1%
+
+[tradet #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1239,1792,,"[trader#С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,07014
+
+Stop 0,0685 0,5% деп
+
+Tейк-профит 
+
+1)0,07353
+
+ 2)0,077",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@14:15"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:"
+37,trader_c,UPDATE,PARSED,1234,1801,1792,"[trader#C]
+В бу перевел",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1233,1802,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 88250
+
+Stop 87750. 1%деп
+
+Tейк-профит 
+
+1)   88900(RR1-1)
+
+2)  90000 (RR1-2)
+
+3)   91000
+
+4). 92000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1228,1809,1792,"Закрыл по текущим на комиссию 
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:закрыл по текущим@0:17"", ""MODIFY_ENTRY/weak:по текущим@7:17""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@7:17""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_m"
+37,trader_c,UPDATE,PARSED,1220,1818,,"https://t.me/c/3171748254/1802
+
+Тп 1 🥳 , впереди Трамп так что в бу 88250
+
+[tradet#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@62:66"", ""EXIT_BE/weak:бу@64:66""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+37,trader_c,REPORT,PARSED,1219,1820,,"https://t.me/c/3171748254/1802
+Изменения 89900 тп 2 
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,1218,1821,1820,"Тп 2🥳
+
+[tradet#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 2@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,1216,1823,,"https://t.me/c/3171748254/1802
+
+Пробуем долить до объема того что был 
+ 
+Btcusdt Long 
+ 
+Лимитка 89250 
+
+Объем. 0,5 
+
+Средняя сместиться в 88770 стоп в бу 
+
+Тп на 90000 ,и на 93000 добавляем если все получится 
+
+[tradet#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/weak:бу@34:36"", ""symbol/strong:usdt@72:76"", ""symbol/strong:usdt@72:76"", ""LONG/strong:long@77:81"", ""ENTRY_FILLED/weak:лимитка@82:89"", ""ENTRY_FILLED/weak:средняя@107:11"
+37,trader_c,SIGNAL,PARTIAL,1215,1824,,"[trader#С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2925
+
+Stop 2900. 0,5%деп
+
+Tейк-профит 
+
+1) 2950(RR1-1)
+
+2)3000(RR1-2)
+
+3)3030
+
+4)3060",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@45:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1214,1825,1823,"Увы ушли в бу 
+
+[tradet#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@9:13"", ""EXIT_BE/weak:бу@11:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,1213,1826,1824,"Стоп -0,5
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1205,1836,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 88450
+
+Stop 87350. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARTIAL,1203,1844,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 
+
+Stop 88800. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,UPDATE,PARSED,1202,1845,1836,"Не актуально 
+
+[trader#C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,REPORT,PARSED,1201,1846,1844,"Стоп -1%
+
+[tradet#c]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1200,1847,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 88900
+
+Stop 88400. 1%деп
+
+Tейк-профит 
+
+1)   90000(RR1-1)
+
+2)  91000 (RR1-2)
+
+3)   92000
+
+4). 93000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1196,1853,,"https://t.me/c/3171748254/1847
+
+Стоп переносим на 88650 в -0,5 RR
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35"", ""MOVE_STOP/strong:стоп переносим@31:45"", ""MOVE_STOP/strong:стоп переносим на@31:48"", ""MODIFY_ENTRY/weak:переносим@36:45""], ""suppressed_markers"": [""SL"
+37,trader_c,SIGNAL,PARTIAL,1194,1859,,"https://t.me/c/3171748254/1847
+ 
+Тп 1🥳. Стоп 88800
+
+[tradet#C]",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тп 1""], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35"", ""SL_HIT/weak:стоп@38:42""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""sl_hit_redundant_with"
+37,trader_c,UPDATE,PARSED,1188,1867,1847,"Остаток закрыт по рынку 
+89100
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/strong:по рынку@15:23"", ""MODIFY_ENTRY/weak:по рынку@15:23"", ""MARKET_NOW/weak:по рынку@15:23""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по рынку@15:23""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_"
+37,trader_c,SIGNAL,PARTIAL,1183,1884,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход по рынку 88300-400
+
+Stop 88000. 1%деп
+
+Tейк-профит 
+
+1)   88850(RR1-1)
+
+2)  89250 (RR1-2)
+
+3)   90000
+
+4). 91000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по рынку""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""MODIFY_ENTRY/strong:вход по рынку@27:40"", ""MARKET_NOW/strong:вход по рынку@27:40"", ""MODIFY_ENTRY/strong:по рын"
+37,trader_c,SIGNAL,PARTIAL,1182,1885,,"https://t.me/c/3171748254/1884
+
+Изменения!!!
+Тп 1 сейчас 88600 +
+Тп 2 89000
+Тп 3 89500
+Тп 4 по сэтапу 
+
+Стоп 88300
+
+[trader #C]",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тп 1"", ""TP_HIT:тп 2"", ""TP_HIT:тп 3"", ""TP_HIT:тп 4""], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@44:48"", ""MARKET_NOW/weak:сейчас@49:55"", ""TP_HIT/weak:тп 2@64:68"", ""TP_HIT/weak:тп 3@75:79"", ""TP_HIT"
+37,trader_c,REPORT,PARSED,1181,1888,,"https://t.me/c/3171748254/1884
+
+Остаток ушел в бу
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/strong:остаток ушел в бу@31:48"", ""EXIT_BE/strong:ушел в бу@39:48"", ""MOVE_STOP_TO_BE/weak:в бу@44:48"", ""EXIT_BE/weak:бу@46:48""], ""suppressed_markers"": [""MOVE_STOP_TO_B"
+37,trader_c,SIGNAL,PARTIAL,1179,1893,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 87250
+
+Stop 86850. 1%деп
+
+Tейк-профит 
+
+1)   87700 (RR1-1)
+
+2)  88150 (RR1-2)
+
+3)  88800
+
+4). 90000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1176,1898,,"https://t.me/c/3171748254/1893
+ 
+Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,SIGNAL,PARTIAL,1175,1902,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 87250
+
+Stop 86850. 1%деп
+
+Tейк-профит 
+
+1)   87700 (RR1-1)
+
+2)  88150 (RR1-2)
+
+3)  88800
+
+4). 90000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1173,1907,,"https://t.me/c/3171748254/1902
+
+Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,1167,1916,,"[trader#С]
+
+$ETHUSDT - Short 
+
+Вход лимитка 2970
+
+Stop 3000. 0,5%деп
+
+Tейк-профит 
+
+1) 2920(RR1-1)
+
+2)2880(RR1-2)
+
+3)2850
+
+4)2750",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,INFO,UNCLASSIFIED,1166,1919,,"Закрыл 2980 -
+
+https://t.me/c/3171748254/1916
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@14:27"", ""telegram_link/strong:t.me/@22:27""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARSED,1162,1929,,"[trader#С]
+
+ $LTCUSDT - LONG 
+
+Вход лимиткой 
+
+1)67,25
+2)
+
+Stop 65,2  0,5% деп
+
+Tейк-профит 
+
+1)70(RR1-1,5)
+
+ 2)72(RR1-2,5)
+
+ 3)74(RR1-3+)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""entry/strong:вход лимиткой@27:40"", ""LIMIT/strong:вход лимиткой@27:40"", ""LIMIT/weak:лимиткой@32:40"", ""SL_HIT/weak:stop@52:56""], ""suppressed"
+37,trader_c,SIGNAL,PARSED,1160,1931,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 90100
+
+Stop 90600  1% деп
+
+Tейк-профит 
+
+1).  89500(RR1-1)
+
+ 2). 89000(RR1-2)
+
+ 3). 88500
+
+4) 87000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,INFO,UNCLASSIFIED,1159,1933,,"https://t.me/c/3171748254/1931
+
+Фрс скоро. убрал лимитку
+
+[trader#C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,REPORT,PARSED,1148,1952,1929,"Стоп -0,5
+
+[trader#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1147,1953,,"[trader#С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 84600-650
+
+Stop 84250 1%деп
+
+Tейк-профит 
+
+1)   85200 (RR1-1)
+
+2)  85650(RR1-2)
+
+3)  86200
+
+4). 87000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""LONG/strong:long@22:26"", ""MODIFY_ENTRY/weak:вход@27:31"", ""ENTRY_FILLED/weak:лимитка@32:39"", ""SL_HIT/weak:stop@50:54""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,1145,1955,,"https://t.me/c/3171748254/1953
+
+Стоп -1% на бинанс не забрало (
+
+[tradet#C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,1128,1982,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2670
+
+Stop 2635. 0,5%деп
+
+Tейк-профит 
+
+1) 2730(RR1-2)
+
+2)2770(RR1-3)
+
+3)2820
+
+4)2900",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1126,1986,,"https://t.me/c/3171748254/1982
+
+В бу перевел 😴
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,UPDATE,PARSED,1123,1991,,"https://t.me/c/3171748254/1982
+
+Ушли в бу 
+
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@36:40"", ""EXIT_BE/weak:бу@38:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARTIAL,1122,1992,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 82420
+
+Stop 81820. 1%деп
+
+Tейк-профит 
+
+1)   83000 (RR1-1)
+
+2)  84000 (RR1-2)
+
+3)  85000
+
+4). 86500",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,1121,1995,,"https://t.me/c/3171748254/1992
+
+Закрыл не нравится 82500
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARSED,1101,2062,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2200
+
+Stop 2150  0,5%деп
+
+Tейк-профит 
+
+1) 2260 (RR1-1)
+
+2) 2310 (RR1-2)
+
+3) 2390
+
+4) 2460",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARTIAL,1092,2075,,"[trader #С]
+
+$KAS USDT - LONG 
+
+Вход лимиткой 
+
+1)0,031
+2)
+
+Stop 0,0295   0,5% деп
+
+Tейк-профит 
+
+1)  0,0331(RR1-1)
+
+ 2) 0,035 (RR1-2)
+
+ 3) 0,04 (RR1-4)",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@17:21"", ""symbol/strong:usdt@17:21"", ""LONG/strong:long@24:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""entry/strong:вход лимиткой@29:42"", ""LIMIT/strong:вход лимиткой@29:42"", ""LIMIT/weak:лимиткой@34:42"", ""SL_HIT/weak:stop@54:58""], ""suppressed"
+37,trader_c,SIGNAL,PARTIAL,1081,2090,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 77400-300
+
+Stop 77000.  0,5. %деп
+
+Tейк-профит 
+
+1)  78000 (RR1-1)
+
+2)  79000 (RR1-2)
+
+3)  80000
+
+4)  82000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@51:55""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,1080,2091,2090,"Тп 1 в бу перевел 🥳
+4 пункта до стопа не дошло
+
+[trader #C]",0.6,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9"", ""SL_HIT/weak:стоп@32:36""], ""suppressed_markers"": [""SL_HIT/weak:стоп@32:36""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": []"
+37,trader_c,REPORT,PARSED,1079,2092,,"https://t.me/c/3171748254/2090
+
+Остаток ушел в бу, RR+0,21
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/strong:остаток ушел в бу@31:48"", ""EXIT_BE/strong:ушел в бу@39:48"", ""MOVE_STOP_TO_BE/weak:в бу@44:48"", ""EXIT_BE/weak:бу@46:48""], ""suppressed_markers"": [""MOVE_STOP_TO_B"
+37,trader_c,UPDATE,PARSED,1077,2094,2075,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,1076,2095,,"https://t.me/c/3171748254/2062
+Не актуально, шортовый наротив
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43"", ""SHORT/strong:шорт@45:49"", ""ALL_SHORT/weak:шортов@45:51""], ""suppressed_markers"": ["""
+37,trader_c,SIGNAL,PARTIAL,1013,2182,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 
+
+Stop 65300.  0,5%деп
+
+Tейк-профит 
+
+1)  67500 (RR1-1)
+
+2)  68500 (RR1-2)
+
+3)  70000
+
+4)  72000",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""SL_HIT/weak:stop@33:37""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,REPORT,PARSED,1012,2183,,"https://t.me/c/3171748254/2182
+
+Стоп -0,5
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,995,2209,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 70800-71000
+
+Stop 71500  0,5!!!% деп
+
+Tейк-профит 
+
+1)  70000(RR1-2)
+
+ 2)  69300(RR1-3)
+
+ 3) 68000
+
+4) 66000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@54:58""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,REPORT,PARSED,994,2210,,"https://t.me/c/3171748254/2209
+
+Tp1 🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:tp1@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,992,2212,2209,"В бу перевел 70800
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,981,2226,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 
+
+-66220  0,5%
+-63750  0,5%
+
+Stop 61600.  1%деп
+
+Tейк-профит 
+
+1)  69000 (RR1-1)
+
+2)  71000 (RR1-2)
+
+3)  73000
+
+4)  76500",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@65:69""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARTIAL,975,2240,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 70000-69900
+
+Stop 69000.  0,3%деп
+
+Tейк-профит 
+
+1)  72000 (RR1-2)
+
+2)  73000 (RR1-3)
+
+3)  74000
+
+4) ",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""SL_HIT/weak:stop@45:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,UPDATE,PARSED,971,2245,,"https://t.me/c/3171748254/2240
+
+В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,REPORT,PARSED,970,2247,,"https://t.me/c/3171748254/2240
+
+Закрыл часть по  70950 
+
+Тп1 и Тп 2 актуально если придём 
+
+[trader #C]",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@53:56"", ""TP_HIT/weak:тп 2@59:63"", ""SL_HIT/weak:сл@75:77"", ""stop_loss/strong:сл@75:77""], ""suppressed_markers"": [""SL_HIT/weak:сл@75:77""], ""applied_marker_rules"""
+37,trader_c,UPDATE,PARSED,967,2253,,"https://t.me/c/3171748254/2247
+
+Тп 1 🥳 остаток в бу ушёл ,+0,3RR
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@46:50"", ""EXIT_BE/weak:бу@48:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+37,trader_c,INFO,UNCLASSIFIED,966,2254,2226,Актуально,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,963,2258,,"[trader #С]
+
+$CFXUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0431
+
+Stop 0,040 0,5% деп
+
+Tейк-профит 
+
+1) 0,0489
+
+2) 0,0534
+
+3) 0,0579",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@15:16"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""entry/strong:вход лимиткой@28:41"", ""LIMIT/strong:вход лимиткой@28:41"", ""LIMIT/weak:лимиткой@33:41"", ""SL_HIT/weak:"
+37,trader_c,SIGNAL,PARTIAL,947,2283,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 68950-850
+
+Stop 67850.  0,3%деп
+
+Tейк-профит 
+
+1)  70250 (RR1-1)
+
+2)  71500 (RR1-2)
+
+3)  73000
+
+4) ",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""SL_HIT/weak:stop@43:47""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,SIGNAL,PARSED,946,2284,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2025
+
+Stop 1985  0,3%деп
+
+Tейк-профит 
+
+1) 2065(RR1-1)
+
+2) 2110(RR1-2)
+
+3) 2170",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,943,2288,2283,"Закрыл в бу 68950
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:закрыл в бу@0:11"", ""MOVE_STOP_TO_BE/weak:в бу@7:11"", ""EXIT_BE/weak:бу@9:11""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+37,trader_c,INFO,UNCLASSIFIED,942,2289,2284,"Закрыл -0,11 RR 
+2015
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,INFO,UNCLASSIFIED,938,2296,2226,Актуально,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,933,2303,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66666
+
+Stop 66250.  0,3%деп
+
+Tейк-профит 
+
+1)  67460 (RR1-1)
+
+2)  68000 (RR1-3)
+
+3)  69000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,921,2315,,"https://t.me/c/3171748254/2303
+
+Не актуально ушли без нас 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,875,2365,2258,"Не актуально ушел без нас 
+
+[ trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARSED,862,2380,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 68100
+
+Stop 68950.  0,3%деп
+
+Tейк-профит 
+
+1)  67300 (RR1-1)
+
+2)  66400 (RR1-2)
+
+3)  65000
+
+4)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@48:52""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,861,2381,2380,"В бу перевел 68100
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,856,2387,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 
+
+-65200 0,5% вход по текущим 
+-63750  0,5%
+
+Stop 61600.  1%деп
+
+Tейк-профит 
+
+1)  69000 (RR1-1)
+
+2)  71000 (RR1-2)
+
+3)  73000
+
+4)  76500",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход по текущим""], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""MODIFY_ENTRY/weak:вход@53:57"", ""MODIFY_ENTRY/strong:вход по текущим@53:68"
+37,trader_c,UPDATE,PARSED,855,2391,,"https://t.me/c/3171748254/2387
+
+В бу перевел 65250
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARSED,850,2399,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 67900
+
+Stop  68700  0,3% деп
+
+Tейк-профит 
+
+1) 67000(RR1-1)
+
+ 2) 66000(RR1-2)
+
+ 3) 65000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@48:52""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,849,2400,2399,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,REPORT,PARSED,843,2407,2387,"Тп 1🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,840,2410,,"https://t.me/c/3171748254/2387
+
+Лимитку с 63750 убираем 
+
+Ставим на 67600 на тот же объем что в позиции остался(0,375) после тп1 
+
+Средняя станет в 66400+- стоп в бу ,
+Тп дополнительный на этот объем будет на 72000
+ 
+Будет дополнения 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MODIFY_ENTRY/weak:убираем@47:54"", ""SL_HIT/weak:сл@118:120"", ""stop_loss/strong:сл@118:120"", ""TP_HIT/weak:тп1@122:125"", ""ENTRY_FILLED/weak:средняя@126:133"", ""SL_HIT/weak:стоп@1"
+37,trader_c,UPDATE,PARSED,828,2427,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 2092
+
+Stop 2109. 0,3%деп
+
+Tейк-профит 
+
+1)   2072(RR1-2)
+
+2)   2045(RR1-2)
+
+3)  2020",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,826,2430,,"https://t.me/c/3171748254/2427
+
+Тп 1 
+
+В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@36:40"", ""EXIT_BE/weak:бу@38:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+37,trader_c,SIGNAL,PARTIAL,812,2451,,"[trader #С]
+
+$SOLUSDT - LONG 
+
+Вход лимитка 
+
+- 82,15  0,3% 
+-  79,7   0,3%
+
+Stop .  76,6  0,6%деп
+
+Tейк-профит 
+
+1)   87,9(RR1-1)
+
+2)  93,6 (RR1-2)
+
+3)  
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@66:70""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,811,2452,2410,"Беру по текущим по 68300
+Средняя 66750 стоп в 66800
+Цель этого обьема 70000
+
+[trader #C]",1.0,,"{""suppressed_intents"": [""TP_HIT:цель""], ""matched_markers"": [""MODIFY_ENTRY/strong:беру по текущим@0:15"", ""MARKET_NOW/strong:беру по текущим@0:15"", ""MODIFY_ENTRY/weak:по текущим@5:15"", ""ENTRY_FILLED/weak:средняя@25:32"", ""SL_HIT/weak:стоп@39:43"", ""TP_HIT/weak:цель@52:56""], ""suppressed_markers"": [""MODIF"
+37,trader_c,INFO,UNCLASSIFIED,810,2459,,"https://t.me/c/3171748254/2452
+ С профитом 🥳🥳🥳 + RR 0,45
+
+[trader #C]. 
+остаток в позе 0,375
+Тп далее по сэтапу, будет дополнения",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""EXIT_BE/weak:бу@110:112""], ""suppressed_markers"": [""EXIT_BE/weak:бу@110:112""], ""applied_marker_rules"": [""exit_be_бу_embedded_in_word""], ""applied_disambiguation_rules"": [], ""ap"
+37,trader_c,UPDATE,PARSED,805,2464,2459,"67330 добираю ,средняя 67030
+Стоп 67080 в бу
+
+Тп 69500 если придём
+
+[trader #C]",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""ADD_ENTRY/weak:добираю@6:13"", ""ENTRY_FILLED/weak:средняя@15:22"", ""SL_HIT/weak:стоп@29:33"", ""MOVE_STOP_TO_BE/weak:в бу@40:44"", ""EXIT_BE/weak:бу@42:44"", ""SL_HIT/weak:сл@55:57"", ""stop_loss/strong:сл@55:57""], ""suppressed_markers"": [""SL_HIT/weak:сл@55:57""],"
+37,trader_c,SIGNAL,PARTIAL,804,2465,2464,"Изменения делим объем который добрали 0,375
+На тп 
+68000-
+68750-
+69500-
+[trader #C]",0.6,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}, ""signal_missing_fields"": [""symbol"", ""side"", ""entries"", ""stop_loss""], ""signal_entry_count"": 0, ""signal_tp_count"": 1}"
+37,trader_c,REPORT,PARSED,803,2467,2465,"Тп1
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп1@0:3""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,800,2471,,"https://t.me/c/3171748254/2465
+
+Tp2🥳
+
+[trader #С]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:tp2@31:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,794,2482,,"https://t.me/c/3171748254/2471
+Остаток в бу закрыт 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@39:43"", ""EXIT_BE/weak:бу@41:43""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARTIAL,788,2490,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66200
+
+Stop 65100.  0,5%деп
+
+Tейк-профит 
+
+1)  67300 (RR1-1)
+
+2)  68400 (RR1-3)
+
+3)  69500
+
+4) 70700",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,775,2510,,"https://t.me/c/3171748254/2451
+ 
+Активировалась
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,UPDATE,PARSED,745,2545,,"https://t.me/c/3171748254/2490
+
+В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,REPORT,PARSED,744,2547,,"https://t.me/c/3171748254/2490
+
+Тп 1🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,742,2552,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 1975
+
+Stop 1990. 0,3%деп
+
+Tейк-профит 
+
+1)   1945(RR1-2)
+
+2)   1920(RR1-2)
+
+3)  1890",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,REPORT,PARSED,737,2558,2490,"Остаток ушел в бу 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@0:17"", ""EXIT_BE/strong:ушел в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_ins"
+37,trader_c,SIGNAL,PARTIAL,734,2562,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66100.  0,5%
+65000.   0,5%
+
+Stop 64000.  1%деп
+
+Tейк-профит 
+
+1)  68000 (RR1-1)
+
+2)  70000 (RR1-2)
+
+3)   72000
+
+4)   74000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@65:69""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,733,2563,,"https://t.me/c/3171748254/2451
+
+Средняя 80.92
+
+Доп тп на 85.4
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""ENTRY_FILLED/weak:средняя@31:38""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"""
+37,trader_c,UPDATE,PARSED,731,2567,,"https://t.me/c/3171748254/2552
+
+Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,SIGNAL,PARTIAL,716,2584,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66666  0,5%
+65000.   0,5%
+
+Stop 64400.  1%деп
+
+Tейк-профит 
+
+1)  68000 (RR1-1)
+
+2)  70000 (RR1-2)
+
+3)   72000
+
+4)   74000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,715,2585,2584,"Сори, не актуально!!!! У нас уже стоит сэтап",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@6:18"", ""INVALIDATE_SETUP/strong:не актуально@6:18""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@6:18""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,713,2587,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66666
+
+Stop 66130.  0,5%деп
+
+Tейк-профит 
+
+1)  68400 (RR1-1)
+
+2)  70000 (RR1-3)
+
+3)  72500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,702,2600,2587,"В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,UPDATE,PARSED,700,2602,2451,"Так же в бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@7:11"", ""EXIT_BE/weak:бу@9:11""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,696,2606,2587,"Закрыто в бу 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:закрыто в бу@0:12"", ""MOVE_STOP_TO_BE/weak:в бу@8:12"", ""EXIT_BE/weak:бу@10:12""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@8:12"", ""EXIT_BE/weak:бу@10:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent"", ""move_stop_to_b"
+37,trader_c,SIGNAL,PARTIAL,692,2611,,"[trader #С]
+
+$BTСUSDT - LONG перезахожу 
+
+Вход лимитка 67100
+
+Stop 66400.  0,5%деп
+
+Tейк-профит 
+
+1)  68400 (RR1-1)
+
+2)  70000 (RR1-3)
+
+3)  72500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@39:43"", ""ENTRY_FILLED/weak:лимитка@44:51"", ""SL_HIT/weak:stop@58:62""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,690,2614,,"https://t.me/c/3171748254/2563
+
+Тп 1🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,688,2617,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 1950
+
+Stop 1935  0,5%деп
+
+Tейк-профит 
+
+1) 1980(RR1-1)
+
+2) 2000(RR1-2)
+
+3) 2045",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,684,2628,2617,"Не актуально
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,683,2629,,"https://t.me/c/3171748254/2611
+
+Тп 1 🥳 в бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@38:42"", ""EXIT_BE/weak:бу@40:42""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": []"
+37,trader_c,UPDATE,PARSED,677,2640,,"https://t.me/c/3171748254/2611
+
+Доливаю обьем такой же по 68000
+ 
+Стоп в бу 67550
+
+Тп 68800
+
+
+[trader #C]",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@63:67"", ""MOVE_STOP_TO_BE/strong:стоп в бу@63:72"", ""MOVE_STOP_TO_BE/weak:в бу@68:72"", ""EXIT_BE/weak:бу@70:72""], ""suppressed_markers"": [""SL_HIT/weak:стоп@63:67"
+37,trader_c,REPORT,PARSED,674,2645,2640,"Остаток ушел в бу
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@0:17"", ""EXIT_BE/strong:ушел в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_ins"
+37,trader_c,INFO,UNCLASSIFIED,673,2647,,"На руках solusdt 
+
+Лимиток не каких нет актуальных
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@12:16"", ""symbol/strong:usdt@12:16""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,662,2666,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 64330
+
+Stop 64100.  0,3%деп
+
+Tейк-профит 
+
+1)  64850 (RR1-1)
+
+2)  65600 (RR1-3)
+
+3)  66600
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,661,2667,2666,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,647,2687,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 62900
+
+Stop 62400.  0,3%деп
+
+Tейк-профит 
+
+1)  63600 (RR1-1)
+
+2)  64100 (RR1-3)
+
+3)  65600
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARSED,646,2688,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 1820
+
+Stop 1795  0,3%деп
+
+Tейк-профит 
+
+1) 1845(RR1-1)
+
+2) 1870(RR1-2)
+
+3) 1900",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,638,2700,2688,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,637,2701,,"https://t.me/c/3171748254/2687
+
+Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,SIGNAL,PARSED,624,2717,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 66300-400
+
+Stop  66900  0,3% деп
+
+Tейк-профит 
+
+1) 65600(RR1-1)
+
+ 2) 64800(RR1-2)
+
+ 3) 63900",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@52:56""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,REPORT,PARSED,620,2721,2717,"Стоп -0,3
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,595,2747,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 69000-100
+
+Stop  69600  0,3% деп
+
+Tейк-профит 
+
+1) 68400(RR1-1)
+
+ 2) 67500(RR1-2)
+
+ 3) 66666",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@52:56""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,592,2751,,"https://t.me/c/3171748254/2747
+
+В бу либо в микро + закрыл по 68950
+Слабая реакция 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35"", ""SL_HIT/weak:сл@67:69"", ""stop_loss/strong:сл@67:69""], ""suppressed_markers"": [""SL_HIT/weak:сл@67:69""], ""applied_mark"
+37,trader_c,SIGNAL,PARTIAL,588,2760,,"[trader #С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,315 
+2)0,3088
+
+Stop 0,298 0,6% деп
+
+Tейк-профит 
+
+1) 0,33
+
+2) 0,345
+
+3) 0,36",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""entry/strong:вход лимиткой@28:41"", ""LIMIT/strong:вход лимиткой@28:41"", ""LIMIT/weak:лимиткой@33:41"", ""SL_HIT/weak:stop@59:63""], ""suppressed"
+37,trader_c,SIGNAL,PARTIAL,583,2765,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67600
+
+Stop 67000.  0,3%деп
+
+Tейк-профит 
+
+1)  68500 (RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,582,2767,,"https://t.me/c/3171748254/2765
+
+Стоп -0,3
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,580,2769,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67300-400
+
+Stop 66700.  0,3%деп
+
+Tейк-профит 
+
+1)  68200 (RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@51:55""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,578,2771,,"https://t.me/c/3171748254/2769
+
+Стоп -0,3
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,574,2777,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67150
+
+Stop 66400.  0,3%деп
+
+Tейк-профит 
+
+1)  68500 (RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,573,2780,,"https://t.me/c/3171748254/2777
+
+В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,UPDATE,PARSED,569,2786,2760,"https://t.me/c/3171748254/2760
+
+В бу перевел 
+0,311
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 2760, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MOVE_STOP_TO_BE/weak:в бу@31:35"", ""EXIT_BE/weak:бу@33:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARSED,557,2806,,"[trader #С]
+
+$DOTUSDT - SHORT 
+
+Вход лимитка 1,54
+
+Stop  1.62  0,3% деп
+
+Tейк-профит 
+
+1) 1,43(RR1-2)
+
+ 2) 
+
+ 3)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,555,2808,2806,"В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,UPDATE,PARSED,551,2813,,"https://t.me/c/3171748254/2806
+
+Снял часть по текущим 1,475 ( 0,1%)
+
+И тп переставил 1,41
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""MODIFY_ENTRY/weak:по текущим@42:52""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDA"
+37,trader_c,REPORT,PARSED,545,2822,2813,"Остаток ушел в бу 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток ушел в бу@0:17"", ""EXIT_BE/strong:ушел в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""applied_marker_rules"": [""weak_ins"
+37,trader_c,SIGNAL,PARTIAL,539,2831,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66800
+
+Stop 65900.  0,3%деп
+
+Tейк-профит 
+
+1)  68200(RR1-1)
+
+2)  69500 (RR1-3)
+
+3)  71000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,534,2839,,"[trader #C]
+
+https://t.me/c/3171748254/2831
+
+ В бу перевел,мутят что то",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@12:25"", ""telegram_link/strong:t.me/@20:25"", ""MOVE_STOP_TO_BE/weak:в бу@43:47"", ""EXIT_BE/weak:бу@45:47""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,531,2848,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66001
+
+Stop 65000.  0,3%деп
+
+Tейк-профит 
+
+1)  67000(RR1-1)
+
+2)  68200 (RR1-3)
+
+3)  69500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,513,2871,,"https://t.me/c/3171748254/2848
+Тп1🥳
+В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@31:34"", ""MOVE_STOP_TO_BE/weak:в бу@36:40"", ""EXIT_BE/weak:бу@38:40""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [],"
+37,trader_c,REPORT,PARSED,511,2873,2848,"https://t.me/c/3171748254/2848
+
+Тп 2 🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 2848, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], "
+37,trader_c,REPORT,PARSED,509,2876,2848,"Тп 3 🥳 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 3@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,490,2901,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+64630 0,3%
+
+63660 0,3%
+
+Stop 62500  0,6%деп
+
+Tейк-профит 
+
+1)  66600 (RR1-1)
+
+2)  67550 (RR1-2)
+
+3)  68800",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@63:67""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARTIAL,488,2903,,"[trader #С]
+
+$LDOUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,291 0,3деп
+2)
+
+Stop 0,279 0,3% деп
+
+Tейк-профит 
+
+1) 0,31
+
+2) 0,325
+
+3)",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""entry/strong:вход лимиткой@28:41"", ""LIMIT/strong:вход лимиткой@28:41"", ""LIMIT/weak:лимиткой@33:41"", ""SL_HIT/weak:stop@60:64""], ""suppressed"
+37,trader_c,SIGNAL,PARSED,471,2925,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+72000
+73300
+
+Stop  74500  0,6% деп
+
+Tейк-профит 
+
+1) 70500(RR1-1)
+
+ 2) 69000(RR1-2)
+
+ 3) 67500 
+
+4) 65000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@54:58""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,467,2929,,"https://t.me/c/3171748254/2903
+  
+Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""INVALIDATE_SETUP/strong:\nне актуально@30:43"", ""INVALIDATE_SETUP/weak:не актуально@31:43""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@31:43""], ""applied_marke"
+37,trader_c,UPDATE,PARSED,461,2936,2901,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,460,2937,2925,"Не актуально, будем наблюдать 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12"", ""EXIT_BE/weak:бу@14:16""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""EXIT_BE/weak:бу@14:16""], ""applied_marker_rules"": [""weak_inside_strong_sa"
+37,trader_c,SIGNAL,PARSED,452,2945,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+72000
+
+73300
+
+74500  0,6%
+
+Stop  75500  1,2% деп
+
+Tейк-профит 
+
+1) 70500(RR1-1)
+
+ 2) 69000(RR1-2)
+
+ 3) 67500 
+
+4)65000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@65:69""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,REPORT,PARSED,442,2959,2956,"Лимитка на 73400 на этот объем 
+0,3% то что скинули
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""ENTRY_FILLED/weak:лимитка@0:7""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,437,2965,,"https://t.me/c/3171748254/2959
+
+Сократил -0,3% по 72800
+
+Средняя 73025
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""ENTRY_FILLED/weak:средняя@55:62""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"""
+37,trader_c,REPORT,PARSED,436,2966,2965,"Новая лимитка на 73700 +0,3%
+
+[trader #С]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""ENTRY_FILLED/weak:лимитка@6:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,434,2970,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 72100
+
+Stop 71650.  0,3%депъ
+
+Tейк-профит 
+
+1)  72900(RR1-1)
+
+2)  73500 (RR1-3)
+
+3)  74500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,433,2971,2970,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,431,2974,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 2115
+
+Stop 2165. 0,3%деп
+
+Tейк-профит 
+
+1)   2065(RR1-1)
+
+2)   2025(RR1-2)
+
+3)  1980",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,430,2975,2974,"Чуть не дошли в бу перевел 2118 у меня вход 
+
+[trader #C]",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@14:18"", ""EXIT_BE/weak:бу@16:18"", ""MODIFY_ENTRY/weak:вход@39:43""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.8}}"
+37,trader_c,REPORT,PARSED,427,2978,2974,"Тп 1🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,410,2998,,"https://t.me/c/3171748254/2945
+
+Tp1 🥳 В бу перевел лимитки убрал
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:tp1@31:34"", ""MOVE_STOP_TO_BE/weak:в бу@37:41"", ""EXIT_BE/weak:бу@39:41""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [],"
+37,trader_c,REPORT,PARSED,400,3012,,"https://t.me/c/3171748254/2945
+
+Тп 2 🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,399,3013,2974,"https://t.me/c/3171748254/2945
+
+Тп 2🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 2974, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], "
+37,trader_c,SIGNAL,PARTIAL,389,3023,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+68400
+67300
+Stop 66000.  0,6%деп
+
+Tейк-профит 
+
+1)  69500(RR1-1)
+
+2)  71000 (RR1-3)
+
+3)  73000
+
+4) 75000",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,383,3030,3023,"Закрыл в минус 67800,лимитку убрал слабая реакция ,на ночь не хочу оставилять.
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:сл@35:37"", ""stop_loss/strong:сл@35:37""], ""suppressed_markers"": [""SL_HIT/weak:сл@35:37""], ""applied_marker_rules"": [""sl_hit_сл_embedded_in_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_сл_embedded_in_word""], ""category_"
+37,trader_c,REPORT,PARSED,378,3038,2945,"Тп 3🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 3@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,371,3049,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 67190
+
+Stop 66600.  0,3%деп
+
+Tейк-профит 
+
+1)  68000(RR1-1)
+
+2)  69000 (RR1-3)
+
+3)  70000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,370,3050,3049,"Стоп короче!!! Изменено 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,369,3053,3049,"Стоп -0,3
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,368,3054,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка 66950
+
+Stop 66450.  0,3%деп
+
+Tейк-профит 
+
+1)  68000(RR1-1)
+
+2)  69000 (RR1-3)
+
+3)  70000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,367,3056,3054,"Не актуально
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,360,3069,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+67100
+66100
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  68800(RR1-1)
+
+2)  69950 (RR1-2)
+
+3)  72000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,359,3073,3069,"Не актуально,ушли без меня , 180 пунктов не дошли 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,356,3077,2965,"Долил остаток позы по текущим 68850 таким же объёмом как в позе ,средняя 70950 стоп в бу  70900
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:по текущим@19:29"", ""ENTRY_FILLED/weak:средняя@65:72"", ""SL_HIT/weak:стоп@79:83"", ""MOVE_STOP_TO_BE/strong:стоп в бу@79:88"", ""MOVE_STOP_TO_BE/weak:в бу@84:88"", ""EXIT_BE/weak:бу@86:88""], ""suppressed_markers"": [""SL_HIT/weak:стоп@79:83"", ""M"
+37,trader_c,INFO,UNCLASSIFIED,348,3088,3077,"Закрыл в микро + по 70200
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,325,3119,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+69500
+68300
+Stop 67000.  0,6%деп
+
+Tейк-профит 
+
+1)  71000(RR1-1)
+
+2)  72500 (RR1-2)
+
+3)  74000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,324,3120,,"[trader #С]
+
+https://t.me/c/3171748254/3119
+
+Не актуально",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@12:25"", ""telegram_link/strong:t.me/@20:25"", ""INVALIDATE_SETUP/strong:\nне актуально@42:55"", ""INVALIDATE_SETUP/weak:не актуально@43:55""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@43:55""], ""applied_mar"
+37,trader_c,SIGNAL,PARSED,321,3128,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+71150
+
+72600
+
+
+Stop  74000  0,6% деп
+
+Tейк-профит 
+
+1) 68800(RR1-1)
+
+ 2) 67200(RR1-2)
+
+ 3) 65000
+
+4)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@54:58""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,SIGNAL,PARTIAL,320,3130,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+69500-по текущих взял 69300
+68300
+Stop 67000.  0,6%деп
+
+Tейк-профит 
+
+1)  71000(RR1-1)
+
+2)  72500 (RR1-2)
+
+3)  74000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@75:79""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,318,3132,3128,"Пока не актуально посмотрим как будет реакция на импульс.
+
+[ trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong: не актуально@4:17"", ""INVALIDATE_SETUP/weak:не актуально@5:17"", ""EXIT_BE/weak:бу@32:34""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@5:17"", ""EXIT_BE/weak:бу@32:34""], ""applied_marker_rules"": [""weak_inside_strong_s"
+37,trader_c,UPDATE,PARSED,317,3133,3130,"[trader #С]
+
+Тп 1 🥳 в бу перевел,лимитку ниже убрал",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@12:16"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4, ""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,308,3143,,"[trader #С]
+
+$DOTUSDT - LONG 
+
+Вход лимиткой 
+
+1)1,522  0,3деп
+2)
+
+Stop 1,465 0,3% деп
+
+Tейк-профит 
+
+1) 1,63
+
+2) 1,8
+
+3)",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""entry/strong:вход лимиткой@28:41"", ""LIMIT/strong:вход лимиткой@28:41"", ""LIMIT/weak:лимиткой@33:41"", ""SL_HIT/weak:stop@60:64""], ""suppressed"
+37,trader_c,INFO,UNCLASSIFIED,307,3144,3143,"Изменения лишний 0, был",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,INFO,UNCLASSIFIED,304,3152,,"https://t.me/c/3171748254/3143
+
+Закрыл у твх 1,524
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARTIAL,296,3162,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+70200-по текущим взял
+68700
+Stop 67500.  0,6%деп
+
+Tейк-профит 
+
+1)  71500(RR1-1)
+
+2)  72500 (RR1-2)
+
+3)  74000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""MODIFY_ENTRY/weak:по текущим@47:57"", ""SL_HIT/weak:stop@69:73""], ""suppressed_markers"": [], ""applied_mark"
+37,trader_c,UPDATE,PARSED,290,3170,3162,"https://t.me/c/3171748254/3162
+
+Тп1 🥳 в бу перевел лимитку убрал 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 3162, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп1@31:34"", ""MOVE_STOP_TO_BE/weak:в бу@37:41"", ""EXIT_BE/weak:бу@39:41""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+37,trader_c,REPORT,PARSED,285,3177,,"https://t.me/c/3171748254/3162
+
+Тп 2🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 2@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,284,3178,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+73800
+
+74850
+
+75750 0,6%
+
+Stop  76500  1,2% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@65:69""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,272,3192,3162,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход 72100 долил остаток позы к текущему сэтапу.
+
+Stop 71250 в бу .  0,2%деп
+
+Tейк-профит 
+
+1)  74500 на этот объем 
+
+2)  
+
+3)  
+
+4) ",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""SL_HIT/weak:stop@77:81"", ""MOVE_STOP_TO_BE/weak:в бу@88:92"", ""EXIT_BE/weak:бу@90:92""], ""suppressed_markers"": [], ""applied_marker_rules"": []"
+37,trader_c,REPORT,PARSED,269,3195,3178,"https://t.me/c/3171748254/3192
+
+Тп 1🥳
+
+[trader C]",0.4,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 3178, ""matched_markers"": [""telegram_link/strong:https://t.me/@0:13"", ""telegram_link/strong:t.me/@8:13"", ""TP_HIT/weak:тп 1@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], "
+37,trader_c,UPDATE,PARSED,265,3199,3192,"Позиция закрыта 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@8:15""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,263,3201,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+71750
+
+Stop 70000.  0,3%деп
+
+Tейк-профит 
+
+1)  73800(RR1-1)
+
+2)  74500(RR1-2)
+
+3)  
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,258,3207,3178,"Изменения второй тп на 70000
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,UPDATE,PARSED,252,3221,3201,"Закрыл в бу 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:закрыл в бу@0:11"", ""MOVE_STOP_TO_BE/weak:в бу@7:11"", ""EXIT_BE/weak:бу@9:11""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}"
+37,trader_c,UPDATE,PARSED,251,3222,3178,"В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARSED,243,3236,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+73800
+
+74850
+
+75750 0,6%
+
+Stop  76500  1,2% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@65:69""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,237,3245,3236,"В бу перевел верхние лимитки оставил
+
+[ trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,INFO,UNCLASSIFIED,231,3251,3245,"Лимитки убрал наблюдаем 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARSED,230,3252,,"[trader #С]
+
+$BTCUSDT - SHORT 
+
+Вход лимитка 
+
+73800
+
+74850
+
+75750 0,6%
+
+Stop  76500  1,2% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000
+
+Еще раз попробуем",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@65:69"", ""EXIT_BE/weak:бу@160:162""], ""suppressed_marker"
+37,trader_c,INFO,UNCLASSIFIED,220,3265,3252,"Риски сократил лимитки на ночь убрал 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""risk/weak:риск@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,SIGNAL,PARSED,213,3274,,"[trader #С]
+
+$BTCUSDT - SHORT обновления 
+
+Вход лимитка 
+
+73800 сущес
+ 
+75050 0,3
+
+
+Stop  76500  0,6% деп
+
+Tейк-профит 
+
+1) 71800(RR1-1)
+
+ 2) 69900(RR1-2)
+
+ 3) 67500
+
+4) 65000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@40:44"", ""ENTRY_FILLED/weak:лимитка@45:52"", ""SL_HIT/weak:stop@75:79""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,212,3275,,"[trader #С]
+
+$ETHUSDT - SHORT 
+
+Вход лимитка 2360
+
+Stop 2410. 0,3%деп
+
+Tейк-профит 
+
+1)   2310(RR1-1)
+
+2)   2260(RR1-2)
+
+3)  2210",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,205,3284,3275,"Не актуально, уверенно смотрится 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,UPDATE,PARSED,196,3293,3274,"В бу перевел лимитку убрал
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,195,3294,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+73200
+
+Stop 71000.  0,3%деп
+
+Tейк-профит 
+
+1)  75000(RR1-1)
+
+2)  76000(RR1-2)
+
+3)  77000
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,188,3302,3274,"Тп 1 🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,187,3303,3294,"Стоп 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,186,3305,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+71300-50
+
+Stop 69000.  0,3%деп
+
+Tейк-профит 
+
+1)  73100(RR1-1)
+
+2)  74500(RR1-2)
+
+3)  
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@50:54""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,185,3306,3274,"Тп 2 единственный ставим на 69000 на остаток позиции 
+
+Изменения 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 2@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,183,3308,3305,"В бу перевел
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,182,3309,3306,"Так как Лонг закрыт в бу то оставляем тп без изменений 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@8:12"", ""EXIT_BE/strong:закрыт в бу@13:24"", ""MOVE_STOP_TO_BE/weak:в бу@20:24"", ""EXIT_BE/weak:бу@22:24""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@20:24"", ""EXIT_BE/weak:бу@22:24""], ""applied_marker_rules"": [""weak_inside_strong_sa"
+37,trader_c,REPORT,PARSED,180,3312,3274,"Тп 2🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 2@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,170,3325,3274,"Долил такой же объем по 70650
+Стоп в бу 72200 тп на этот объем 68900
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@30:34"", ""MOVE_STOP_TO_BE/strong:стоп в бу@30:39"", ""MOVE_STOP_TO_BE/weak:в бу@35:39"", ""EXIT_BE/weak:бу@37:39""], ""suppressed_markers"": [""SL_HIT/weak:стоп@30:34"", ""MOVE_STOP_TO_BE/weak:в бу@35:39"", ""EXIT_BE/weak:бу@37:39""], ""applied_marke"
+37,trader_c,SIGNAL,PARTIAL,164,3333,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+70550
+
+Stop 69550.  0,3%деп
+
+Tейк-профит 
+
+1)  71700(RR1-1)
+
+2)  72700(RR1-2)
+
+3)  73700
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,162,3335,3333,"В бу перевел 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}"
+37,trader_c,INFO,UNCLASSIFIED,159,3338,3325,"С профитом 🥳 Tp после доливки
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""take_profit/strong:tp@13:15"", ""SL_HIT/weak:сл@18:20"", ""stop_loss/strong:сл@18:20""], ""suppressed_markers"": [""SL_HIT/weak:сл@18:20""], ""applied_marker_rules"": [""sl_hit_сл_embedded_in_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_сл"
+37,trader_c,SIGNAL,PARTIAL,157,3359,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+68300
+
+67000
+
+Stop 66000.  0,6%деп
+
+Tейк-профит 
+
+1)  69600(RR1-1)
+
+2)  71000(RR1-2)
+
+3)  72500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,153,3364,3359,"Не актуально,если кто в позиции закройте в бу, я перевел в бу
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12"", ""SL_HIT/weak:сл@14:16"", ""stop_loss/strong:сл@14:16"", ""MOVE_STOP_TO_BE/weak:в бу@41:45"", ""EXIT_BE/weak:бу@43:45"", ""MOVE_STOP_TO_BE/weak:в бу@57:61"", ""EXIT_BE/weak:бу@"
+37,trader_c,SIGNAL,PARTIAL,152,3365,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+67300
+
+66000
+
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  69600(RR1-1)
+
+2)  71000(RR1-2)
+
+3)  72500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,150,3367,3365,"Не актуально, подождем утро с Трампом 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,REPORT,PARSED,149,3368,3274,"Тп 3🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 3@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,133,3384,,"[trader #С]
+
+$BTСUSDT - SHORT 
+
+Вход 71550 долил остаток позы к текущему сэтапу.
+
+Stop 71850 в бу .  0,1%деп
+
+Tейк-профит 
+
+1)  70000 на этот объем 
+
+2)  
+
+3)  
+
+4) ",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""SL_HIT/weak:stop@78:82"", ""MOVE_STOP_TO_BE/weak:в бу@89:93"", ""EXIT_BE/weak:бу@91:93""], ""suppressed_markers"""
+37,trader_c,SIGNAL,PARTIAL,122,3395,,"[trader #С]
+
+$KASUSDT - LONG 
+
+Вход лимиткой 
+
+1)0,0359  
+2)
+
+Stop 0,0341 0,3% деп
+
+Tейк-профит 
+
+1) 0,0415
+
+2) 0,045
+
+3)",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""entry/strong:вход лимиткой@28:41"", ""LIMIT/strong:вход лимиткой@28:41"", ""LIMIT/weak:лимиткой@33:41"", ""SL_HIT/weak:stop@54:58""], ""suppressed"
+37,trader_c,SIGNAL,PARTIAL,116,3401,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+70050
+
+69050
+
+Stop 68000.  0,6%деп
+
+Tейк-профит 
+
+1)  72000(RR1-1)
+
+2)  73000(RR1-2)
+
+3)  74500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,114,3403,3384,"Тп🥳
+[trаdеr #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,INFO,UNCLASSIFIED,107,3410,3395,"Закрыл у твх
+
+[ trader #C ]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,UPDATE,PARSED,106,3411,3401,"[trader #С]
+
+$BTСUSDT - LONG изменения!!! 
+Доп ТП 69666 на 0,3 объема 
+
+Вход лимитка
+
+70050
+
+69050
+
+Stop 68000.  0,6%деп
+
+Tейк-профит 
+
+1)  72000(RR1-1)
+
+2)  73000(RR1-2)
+
+3)  74500
+
+4) ",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@68:72"", ""ENTRY_FILLED/weak:лимитка@73:80"", ""SL_HIT/weak:stop@93:97""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARSED,105,3412,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2114
+
+Stop 2100  0,3%деп
+
+Tейк-профит 
+
+1) 2128(RR1-1)
+
+2) 2141(RR1-2)
+
+3) 2160",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,103,3414,3412,"Тп1 ,2🥳 в бу перевел 
+
+[ trader #C ]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп1@0:3"", ""MOVE_STOP_TO_BE/weak:в бу@8:12"", ""EXIT_BE/weak:бу@10:12""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4, ""UPDATE"": 0.4}}"
+37,trader_c,REPORT,PARSED,100,3417,3412,"Тп 3🥳
+Сэтап закрыт
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 3@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,99,3418,3411,"Обновления 
+Тп1 71450
+ в бу перевел 69600
+
+[trader #C]",0.6,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп1@11:14"", ""MOVE_STOP_TO_BE/weak:в бу@21:25"", ""EXIT_BE/weak:бу@23:25""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4, ""UPDATE"": 0.4}, ""sign"
+37,trader_c,REPORT,PARSED,95,3422,3418,"Тп 1 🥳
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,REPORT,PARSED,90,3427,3384,"Остаток закрыт в бу
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/strong:остаток закрыт в бу@0:19"", ""EXIT_BE/strong:закрыт в бу@8:19"", ""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""suppressed_markers"": [""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""applied_marker_rules"": [""weak"
+37,trader_c,SIGNAL,PARSED,84,3433,,"[trader #С]
+
+$ETHUSDT - LONG
+
+Вход лимитка 2135
+
+Stop 2100  0,3%деп
+
+Tейк-профит 
+
+1) 2170(RR1-1)
+
+2) 2210(RR1-2)
+
+3) 2250",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@46:50""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,82,3435,3433,"Не актуально 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """
+37,trader_c,SIGNAL,PARTIAL,81,3436,,"[trader #С]
+
+$BTСUSDT - LONG доливка к сущ. сэтапу
+
+Вход лимитка 70850
+
+Твх сместится 70200
+
+Stop 70250.  0,4%деп в бу
+
+Tейк-профит 
+
+1)  72000
+
+2)  75000
+
+На этот объем",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@50:54"", ""ENTRY_FILLED/weak:лимитка@55:62"", ""SL_HIT/weak:stop@89:93"", ""MOVE_STOP_TO_BE/weak:в бу@109:113"", ""EXIT_BE/weak:бу@111:113""], ""suppressed_m"
+37,trader_c,SIGNAL,PARSED,76,3441,,"[trader #С]
+
+$ETHUSDT - LONG повторим
+
+Вход лимитка 2135
+
+Stop 2100  0,3%деп
+
+Tейк-профит 
+
+1) 2170(RR1-1)
+
+2) 2210(RR1-2)
+
+3) 2250",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@37:41"", ""ENTRY_FILLED/weak:лимитка@42:49"", ""SL_HIT/weak:stop@55:59""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,SIGNAL,PARTIAL,72,3445,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+69900
+
+68800
+
+Stop 67000.  0,6%деп
+
+Tейк-профит 
+
+1)  72000(RR1-1)
+
+2)  73000(RR1-2)
+
+3)  74500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,69,3448,3441,"Стоп ETHUSDT 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""symbol/strong:usdt@8:12"", ""symbol/strong:usdt@8:12""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,INFO,UNCLASSIFIED,65,3452,3445,"Закрыл лишнее объем по 69100(0,3)
+Микро- 
+BTCUSDT 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@44:48"", ""symbol/strong:usdt@44:48""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,REPORT,PARSED,57,3460,3445,"Стоп BTCUSDT LONG 
+
+[ trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""symbol/strong:usdt@8:12"", ""symbol/strong:usdt@8:12"", ""LONG/strong:long@13:17""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,SIGNAL,PARTIAL,53,3464,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66100
+
+
+
+Stop 65500.  0,3%деп
+
+Tейк-профит 
+
+1)  66700(RR1-1)
+
+2)  67400(RR1-2)
+
+3)  68100
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,52,3465,3464,"Btcusdt long
+
+Закрыл у твх слабо 
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@3:7"", ""symbol/strong:usdt@3:7"", ""LONG/strong:long@8:12"", ""SL_HIT/weak:сл@26:28"", ""stop_loss/strong:сл@26:28""], ""suppressed_markers"": [""SL_HIT/weak:сл@26:28""], ""applied_marker_rules"": [""sl_hit_сл_embedded_in_word""], ""applied_disambigu"
+37,trader_c,SIGNAL,PARTIAL,49,3468,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66100-200
+
+
+
+Stop 65500.  0,3%деп
+
+Tейк-профит 
+
+1)  66800(RR1-1)
+
+2)  67600(RR1-2)
+
+3)  68350
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@51:55""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,REPORT,PARSED,46,3471,3468,"Тп 1🥳
+
+Btcusdt 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4"", ""symbol/strong:usdt@9:13"", ""symbol/strong:usdt@9:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,45,3472,3468,"В бу перевел
+
+ BTCUSDT 66200
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@0:4"", ""EXIT_BE/weak:бу@2:4"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"":"
+37,trader_c,SIGNAL,PARTIAL,38,3479,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66350
+
+
+Stop 65000.  0,5%деп
+
+Tейк-профит 
+
+1)  67700(RR1-1)
+
+2)  69000(RR1-2)
+
+3)  70500
+
+4) ",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@47:51""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,31,3486,,"[trader #С]
+
+$BTСUSDT - SHORT 
+
+Вход лимитка
+
+68200
+
+69200
+
+
+Stop 70500.  0,6%деп
+
+Tейк-профит 
+
+1)  66500(RR1-1)
+
+2)  65500(RR1-2)
+
+3)  64000
+
+4) ",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@54:58""], ""suppressed_markers"": [], ""applied_marker_rul"
+37,trader_c,UPDATE,PARSED,28,3489,3486,"Не актуально 2 пункта не дошли 
+
+Btcusdt short 
+
+[trader #C]",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12"", ""symbol/strong:usdt@34:38"", ""symbol/strong:usdt@34:38"", ""SHORT/strong:short@39:44"", ""ALL_SHORT/weak:short@39:44""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не а"
+37,trader_c,UPDATE,PARSED,27,3490,3479,"[trader #С]
+
+$BTСUSDT - LONG  Изменения! 
+
+Вход лимитка
+
+66350
+
+65770
+
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  67700(RR1-1)
+
+2)  69000(RR1-2)
+
+3)  70500
+
+4) ",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@39:43"", ""ENTRY_FILLED/weak:лимитка@44:51"", ""SL_HIT/weak:stop@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,UPDATE,PARSED,23,3494,3490,"Тп 1🥳 BTCUSDT в бу перевел,лимитку убрал 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4"", ""symbol/strong:usdt@9:13"", ""symbol/strong:usdt@9:13"", ""MOVE_STOP_TO_BE/weak:в бу@14:18"", ""EXIT_BE/weak:бу@16:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""ca"
+37,trader_c,SIGNAL,PARTIAL,16,3501,,"[trader #С]
+
+$BTСUSDT - LONG 
+
+Вход лимитка
+
+66350
+
+65770
+
+Stop 65000.  0,6%деп
+
+Tейк-профит 
+
+1)  67700(RR1-1)
+
+2)  69000(RR1-2)
+
+3)  70500
+
+4) перезашел",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""LONG/strong:long@23:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""ENTRY_FILLED/weak:лимитка@33:40"", ""SL_HIT/weak:stop@53:57""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation"
+37,trader_c,INFO,UNCLASSIFIED,11,3506,,"Btcusdt 
+
+Лимитку на 65770 убрал
+
+[trader #C]",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@3:7"", ""symbol/strong:usdt@3:7""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+37,trader_c,UPDATE,PARSED,10,3507,,"Btcusdt long 
+В бу перевел 
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@3:7"", ""symbol/strong:usdt@3:7"", ""LONG/strong:long@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""cat"
+37,trader_c,REPORT,PARSED,9,3508,,"Тп 1🥳 
+
+BTCUSDT 
+
+[trader #C]",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тп 1@0:4"", ""symbol/strong:usdt@9:13"", ""symbol/strong:usdt@9:13""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+37,trader_c,UPDATE,PARSED,6,3511,,"[trader #С]
+
+$BTСUSDT - SHORT 
+
+Вход лимитка
+
+69350
+
+70650
+
+
+Stop 72000.  0,6%деп
+
+Tейк-профит 
+
+1)  67300(RR1-1)
+
+2)  66000(RR1-2)
+
+3)  64500
+
+4) 62500",0.8,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""SHORT/strong:short@23:28"", ""ALL_SHORT/weak:short@23:28"", ""MODIFY_ENTRY/weak:вход@29:33"", ""ENTRY_FILLED/weak:лимитка@34:41"", ""SL_HIT/weak:stop@54:58""], ""suppressed_markers"": [], ""applied_marker_rul"

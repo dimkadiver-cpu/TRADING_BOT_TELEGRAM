@@ -112,8 +112,9 @@ _TAKE_PROFIT_RE = re.compile(
     re.IGNORECASE,
 )
 # тпs? (trader_d), [Tт]ейк профит? (prova+trader_b), tps? (universal)
+# Colon optional to match headers like "Tейк-профит" (trader_c) without trailing colon.
 _TAKE_PROFIT_HEADER_RE = re.compile(
-    rf"^[^\n]*(?:\btps?\b|\b{_CYR_TP}s?\b|[Tт]ейк\w*(?:\s+{_CYR_PROFIT}\w*)?)[^\n]*:\s*$",
+    rf"^[^\n]*(?:\btps?\b|\b{_CYR_TP}s?\b|[Tт]ейк\w*(?:[-\s]+{_CYR_PROFIT}\w*)?)[^\n]*:?\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
 # \d+[.)] handles numbered lists like "1) 87100" in addition to bullet chars
@@ -122,8 +123,46 @@ _TAKE_PROFIT_BARE_LINE_RE = re.compile(
     re.IGNORECASE,
 )
 
+_ENTRY_NUMBERED_ITEM_RE = re.compile(
+    rf"^[^\S\n]*(?P<seq>[1-9])[.)]\s*(?P<value>{_NUMBER_PATTERN})\s*(?:\([^)]*\))?[^\S\n]*$",
+    re.MULTILINE,
+)
+
 _DEFAULT_RISK_PREFIXES = ["risk", "риск", "вход", "на сделку"]
 _DEFAULT_RISK_SUFFIXES = ["от депозита", "риска", "на сделку"]
+
+
+def _extract_numbered_list_entries(text: str) -> list[EntryLeg]:
+    """Extract entries from numbered-list format: '1)88650(1/3)', '2)89100(2/3)'."""
+    entry_kw = _ENTRY_KEYWORD_RE.search(text)
+    if not entry_kw:
+        return []
+
+    # Limit search to the section between entry keyword and stop/TP section
+    section_end = len(text)
+    stop_match = _STOP_LOSS_RE.search(text, entry_kw.end())
+    if stop_match:
+        section_end = min(section_end, stop_match.start())
+    tp_header = _TAKE_PROFIT_HEADER_RE.search(text, entry_kw.end())
+    if tp_header:
+        section_end = min(section_end, tp_header.start())
+
+    section = text[entry_kw.end():section_end]
+    entries: list[EntryLeg] = []
+    for match in _ENTRY_NUMBERED_ITEM_RE.finditer(section):
+        price = _price_from_raw(match.group("value"))
+        if price is None:
+            continue
+        seq = int(match.group("seq"))
+        role: str = "PRIMARY" if seq == 1 else "AVERAGING"
+        entries.append(EntryLeg(
+            sequence=seq,
+            entry_type="LIMIT",
+            price=price,
+            role=role,  # type: ignore[arg-type]
+            is_optional=seq > 1,
+        ))
+    return entries
 
 
 def _try_range_entry(text: str) -> list[EntryLeg] | None:
@@ -264,6 +303,10 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
             )
         )
 
+    # Fallback: numbered list items after entry keyword (e.g. "1)88650(1/3)", "2)89100(2/3)")
+    if not entries and has_entry_keyword:
+        entries = _extract_numbered_list_entries(text)
+
     return entries
 
 
@@ -307,6 +350,16 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
             continue
 
         index_raw = match.group("index")
+        # Skip "тп 1" / "тейк 2" where the digit is a TP level indicator, not a price.
+        # Heuristic: no explicit TP index AND price is a single-digit integer AND no colon.
+        if (
+            index_raw is None
+            and price.value <= 9
+            and price.value == int(price.value)
+            and ":" not in match.group(0)
+        ):
+            continue
+
         sequence = int(index_raw) if index_raw else fallback_sequence
         take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
 

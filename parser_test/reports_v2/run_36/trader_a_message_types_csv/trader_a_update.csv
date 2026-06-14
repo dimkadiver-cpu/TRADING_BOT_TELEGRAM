@@ -1,0 +1,745 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,groups_count,actions_count,actions_summary,action_types,source_intents,action_confidences,action_raw_fragments,target_scope_hint,target_reply_to_message_id,target_telegram_message_ids,target_telegram_links,target_explicit_ids,target_symbols,set_stop_target_type,set_stop_price,set_stop_tp_level,close_scope,close_fraction,close_price,cancel_scope_hint,modify_entries_kind,modify_entries_count,modify_entries_summary,modify_entries_entry_structure,modify_targets_mode,modify_targets_count,modify_targets_prices,modify_targets_target_tp_level,invalidate_reason_text
+36,trader_a,UPDATE,PARSED,2326,262,229,Можно переставить стоп на точку входа. С учетом усреднения у меня точка входа 1.1340,1.0,,"{""suppressed_intents"": [""MOVE_STOP:переставить стоп""], ""matched_markers"": [""MOVE_STOP/strong:переставить стоп@6:22"", ""SL_HIT/weak:стоп@18:22"", ""MOVE_STOP/weak:стоп на@18:25"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@18:37"", ""MODIFY_ENTRY/weak:вход@32:36"", ""MODIFY_ENTRY/weak:вход@72:76""], ""suppres",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MODIFY_ENTRY,1,2,SET_STOP(MOVE_STOP_TO_BE)|MODIFY_ENTRIES(MODIFY_ENTRY),SET_STOP|MODIFY_ENTRIES,MOVE_STOP_TO_BE|MODIFY_ENTRY,1.0|0.4,стоп на точку входа|вход,UNKNOWN,229,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2308,280,229,"[trader#A]
+
+1 тейк, заработали 19.7% чистого движения. Стоп обязательно на точку входа, кто не закрывал позицию.
+
+Поздравляю!",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@54:58"", ""MOVE_STOP_TO_BE/strong:стоп обязательно на точку входа@54:85"", ""MODIFY_ENTRY/weak:вход@80:84""], ""suppressed_markers"": [""SL_HIT/weak:стоп@54:58"", ""MODIFY_ENTRY/weak:вход@80:",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп обязательно на точку входа,UNKNOWN,229,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2307,281,270,"[trader#A]
+
+1 тейк, стоп на точку входа. Лимитку на усреднение обязательно убираем
+
+Поздравляю с 2.48% чистого движения!",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@19:23"", ""MOVE_STOP/weak:стоп на@19:26"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@19:38"", ""MODIFY_ENTRY/weak:вход@33:37"", ""CANCEL_PENDING/strong:лимитку на усреднение обязательно ",TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп на точку входа|лимитку на усреднение обязательно убираем,UNKNOWN,270,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2304,284,270,"[trader#A]
+
+После первого тейка, цена вернулась на точку входа и закрылась в безубыток. Сетап полностью закрыт",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:сл@13:15"", ""stop_loss/strong:сл@13:15"", ""TP_HIT/weak:тейка@25:30"", ""MODIFY_ENTRY/weak:вход@56:60"", ""MOVE_STOP_TO_BE/weak:безубыток@76:85"", ""EXIT_BE/weak:безубыток@76:85""], ""suppressed_markers"": [""SL_HIT/weak:сл@13:15"", ""MOVE_STOP_TO_BE/weak",EXIT_BE,TP_HIT|MODIFY_ENTRY|EXIT_BE,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,вход,UNKNOWN,270,,,,,,,,,,,,UNKNOWN,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2303,285,,"[trader#A]
+
+https://t.me/c/3171748254/265
+https://t.me/c/3171748254/266
+
+по этим сетапам стоп нужно обязательно поставить на точку входа и убрать все лимитные ордера",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""take_profit/strong:tp@13:15"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@41:54"", ""take_profit/strong:tp@43:45"", ""telegram_link/strong:t.me/@49:54"", ""SL_HIT/weak:стоп@87:91"", ""MOVE",CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,поставить на точку входа|убрать все лимитные ордера,SINGLE_SIGNAL,,265|266,https://t.me/c/3171748254/265|https://t.me/c/3171748254/266,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2300,288,287,"На примере этого сигнала объясню как я работаю со сделкой. Делать также или нет - решение полностью ваше
+
+
+ SEIUSDT.P — ЛОНГ (с текущих). Как работать
+
+Что поставить сразу
+
+* Покупка-1: 0.1803
+* Покупка-2 (добавка, только если дадут откат): 0.1749
+* Стоп: 0.1659
+* Цели (по очереди): 0.1933 → 0.2019 → 0.2147 → 0.2289 → 0.2463
+
+Риск и плечо
+
+* На весь план — до 1% депозита, пока нет подтверждения — лучше 0.3–0.5%.
+* Плечо — не больше 5×.
+
+Объём
+
+* Делим 60% на Покупку-1 и 40% на Покупку-2.
+* Третьей добавки не бывает.
+
+Порядок действий
+
+1. Ставлю лимит на 0.1803 (60% объёма), сразу же — стоп 0.1659 и все 5 целей.
+2. Если взяли Покупку-2 — она на 40% объёма, стоп не двигаю.
+
+После первой цели
+
+* Как только сработала цель-1 (0.1933) — перевожу в безубыток
+  (чуть ниже средней цены входа) и дальше выхожу «лесенкой» по остальным целям.
+
+Если пошло против
+
+* Пробили 0.1659 — полный выход.
+  Никаких «геройств», повторных входов в этот же план — ждём новый.
+
+Запреты
+
+* Только 2 входа. Доборов «по пути» нет.
+* Стоп «в минус» не переносим. Тянем только после цели-1.",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [""TP_HIT:цели"", ""TP_HIT:целей"", ""TP_HIT:цели"", ""TP_HIT:цель"", ""TP_HIT:целям"", ""TP_HIT:цели""], ""matched_markers"": [""INFO_ONLY/strong:объясню как @25:37"", ""symbol/strong:usdt@108:112"", ""symbol/strong:usdt@108:112"", ""symbol/weak:.p@112:114"", ""symbol/strong:.p@112:114"", ""LONG/stro",SL_HIT,INFO_ONLY|MODIFY_ENTRY|SL_HIT|ENTRY_FILLED|MOVE_STOP_TO_BE|ADD_ENTRY,1,7,MODIFY_ENTRIES(MODIFY_ENTRY)|SET_STOP(MOVE_STOP_TO_BE)|MODIFY_ENTRIES(MODIFY_ENTRY)|MODIFY_ENTRIES(MODIFY_ENTRY)|MODIFY_ENTRIES(MODIFY_ENTRY)|MODIFY_ENTRIES(ADD_ENTRY)|MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES|SET_STOP|MODIFY_ENTRIES|MODIFY_ENTRIES|MODIFY_ENTRIES|MODIFY_ENTRIES|MODIFY_ENTRIES,MODIFY_ENTRY|MOVE_STOP_TO_BE|MODIFY_ENTRY|MODIFY_ENTRY|MODIFY_ENTRY|ADD_ENTRY|MODIFY_ENTRY,0.4|0.4|0.4|0.4|0.4|0.4|0.4,с текущих|безубыток|вход|вход|вход|добор|переносим,UNKNOWN,287,,,,SEIUSDT,,,,,,,,UPDATE_PRICE,5,1:LIMIT@1.0|2:LIMIT@0.1803|3:LIMIT@2.0|4:LIMIT@0.1749|5:LIMIT@0.1659,LADDER,,0,,,
+36,trader_a,UPDATE,PARSED,2287,301,286,"[trader#A]
+
+1 тейк!
+Поздравляю, заработали 2.4% чистого движения
+
+Стоп обязательно на точку входа и убираем лимтку на усреднение",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@64:68"", ""MOVE_STOP_TO_BE/strong:стоп обязательно на точку входа@64:95"", ""MODIFY_ENTRY/weak:вход@90:94"", ""MODIFY_ENTRY/weak:убираем@98:105"", ""CANCEL_PENDING/strong:убираем лимтку@98:",TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп обязательно на точку входа|убираем лимтку,UNKNOWN,286,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2286,303,287,"Не нравится как ведет себя монета, давайте прикроем ее на том месте где сейчас, убыток составит 1%
+
+Сделка закрыта!",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:давайте прикроем@35:51"", ""CLOSE_FULL/weak:прикроем@43:51"", ""CLOSE_FULL/strong:прикроем ее@43:54"", ""MARKET_NOW/weak:сейчас@72:78"", ""CLOSE_FULL/weak:закрыта@106:113""], ""suppressed_markers"": [""CLOSE_FULL/weak:прикроем@43:51""], ""applied_m",CLOSE_FULL,CLOSE_FULL,1,2,CLOSE(CLOSE_FULL)|CLOSE(CLOSE_FULL),CLOSE|CLOSE,CLOSE_FULL|CLOSE_FULL,1.0|0.4,давайте прикроем|закрыта,UNKNOWN,287,,,,,,,,FULL,,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2259,332,309,"[trader#A]
+
+1 тейк!
+
+Поздравляю! Заработали чистыми 4.38%, а кто усреднял, около 6.5%
+
+Стоп на точку входа, обязательно!",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@84:88"", ""MOVE_STOP/weak:стоп на@84:91"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@84:103"", ""MODIFY_ENTRY/weak:вход@98:102""], ""suppressed_markers"": [""SL_HIT/weak:стоп@84:88"", ""MOVE",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,309,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2251,340,304,"[trader#A]
+
+1 тейк!
+
+Поздравляю, заработали 5.5%
+
+Стоп на точку входа. Лимитку на усреднение убираем",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@47:51"", ""MOVE_STOP/weak:стоп на@47:54"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@47:66"", ""MODIFY_ENTRY/weak:вход@61:65"", ""CANCEL_PENDING/strong:лимитку на усреднение убираем@68:9",TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп на точку входа|лимитку на усреднение убираем,UNKNOWN,304,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2247,344,311,"[trader#A]
+
+Закрываю сделку у первого тейка, заработали 6%
+
+Поздравляю!",1.0,,"{""suppressed_intents"": [""TP_HIT:тейка""], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@11:19"", ""CLOSE_FULL/strong:закрываю сделку@11:26"", ""TP_HIT/weak:тейка@37:42""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@11:19""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambi",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю сделку,UNKNOWN,311,,,,,,,,FULL,,6.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2245,346,229,"Закрываю полностью сделку!
+
+Заработали чистыми 31.2%
+
+Поздравляю",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю полностью@0:18""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,229,,,,,,,,FULL,,31.2,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2219,373,312,"[trader#A]
+
+1 тейк! 
+
+Забрали 10,5% процента
+
+Стоп на точку входа, лимитку убираем.
+
+Поздравляю!",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""ENTRY_FILLED/weak:забрали@19:26"", ""SL_HIT/weak:стоп@42:46"", ""MOVE_STOP/weak:стоп на@42:49"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@42:61"", ""MODIFY_ENTRY/weak:вход@56:60"", ""CANCEL_PENDING/strong",TP_HIT,TP_HIT|ENTRY_FILLED|MOVE_STOP_TO_BE|CANCEL_PENDING,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп на точку входа|лимитку убираем,UNKNOWN,312,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2205,389,385,"[trader#A]
+
+1 тейк! Чистыми 22% 
+
+Стоп в бу и убираем лимитку
+
+Поздравляю",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@31:35"", ""MOVE_STOP_TO_BE/strong:стоп в бу@31:40"", ""MOVE_STOP_TO_BE/weak:в бу@36:40"", ""EXIT_BE/weak:бу@38:40"", ""MODIFY_ENTRY/weak:убираем@43:50"", ""CANCEL_PENDING/strong:убираем лимит",TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп в бу|убираем лимитку,UNKNOWN,385,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2204,390,385,"[trader#A]
+
+Все тейки, сделка закрыта",0.4,,"{""suppressed_intents"": [""TP_HIT:тейки""], ""matched_markers"": [""TP_HIT/weak:тейки@15:20"", ""take_profit/strong:тейки@15:20"", ""CLOSE_FULL/weak:закрыта@29:36""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_tp_hit""], ""applied_rules"": [""c",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,385,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2200,395,200,"[trader#A]
+
+Очередной тейк. Чистыми 19% 
+
+Поздравляю, стоп переводим в бу, лимитку убираем, очень жаль, что ее не взяли.",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@21:25"", ""SL_HIT/weak:стоп@51:55"", ""MOVE_STOP_TO_BE/strong:стоп переводим в бу@51:70"", ""MOVE_STOP_TO_BE/weak:в бу@66:70"", ""EXIT_BE/weak:бу@68:70"", ""CANCEL_PENDING/strong:лимитку убираем@72:87"", ""MODIFY_ENTRY/weak:убираем@80:87"", ""ENTRY_",TP_HIT,TP_HIT|MOVE_STOP_TO_BE|CANCEL_PENDING|ENTRY_FILLED,1,2,SET_STOP(MOVE_STOP_TO_BE)|CANCEL_PENDING(CANCEL_PENDING),SET_STOP|CANCEL_PENDING,MOVE_STOP_TO_BE|CANCEL_PENDING,1.0|1.0,стоп переводим в бу|лимитку убираем,UNKNOWN,200,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2199,398,391,"[trader#A]
+
+Взяли лимитку.
+
+Моя средняя 0.2265
+
+Стоп ставим обязательно. На 1 тейке, рекомендация, закрывать 80% позиции, касается всех сетапов, которые публикую. 
+
+Оставшуюся часть позиции тянуть по остальным тейкам. 
+
+При взятии 1 тейка, всегда, стоп переводим в безубыток, т.е. ставим чуть выше точки входа",1.0,,"{""suppressed_intents"": [""TP_HIT:1 тейке"", ""TP_HIT:тейкам"", ""TP_HIT:1 тейка""], ""matched_markers"": [""ENTRY_FILLED/weak:взяли@11:16"", ""ENTRY_FILLED/strong:взяли лимитку@11:24"", ""ENTRY_FILLED/strong:моя средняя@26:37"", ""ENTRY_FILLED/weak:средняя@30:37"", ""SL_HIT/weak:стоп@45:49"", ""TP_HIT/weak:1 тейке@73:",SL_HIT,ENTRY_FILLED|SL_HIT|CLOSE_PARTIAL|MOVE_STOP_TO_BE|MODIFY_ENTRY,1,3,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|SET_STOP|MODIFY_ENTRIES,CLOSE_PARTIAL|MOVE_STOP_TO_BE|MODIFY_ENTRY,1.0|1.0|0.4,закрывать 80% позиции|стоп переводим в безубыток|вход,UNKNOWN,391,,,,,,,,PARTIAL,0.8,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2196,401,357,"[trader#A]
+
+1 тейк, чистыми 8%
+
+Поздравляю. стоп в бу
+
+Спасибо за вашу поддержку в виде реакций на мои посты",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@42:46"", ""MOVE_STOP_TO_BE/strong:стоп в бу@42:51"", ""MOVE_STOP_TO_BE/weak:в бу@47:51"", ""EXIT_BE/weak:бу@49:51""], ""suppressed_markers"": [""SL_HIT/weak:стоп@42:46"", ""MOVE_STOP_TO_BE/weak",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,357,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2195,405,383,"[trader#A]
+
+1 тейк 
+
+Стоп в бу
+
+Поздравляю",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@18:22"", ""MOVE_STOP_TO_BE/strong:стоп в бу@18:27"", ""MOVE_STOP_TO_BE/weak:в бу@23:27"", ""EXIT_BE/weak:бу@25:27""], ""suppressed_markers"": [""SL_HIT/weak:стоп@18:22"", ""MOVE_STOP_TO_BE/weak",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,383,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2194,406,,"[trader#A]
+
+
+По всем моим оставшимся шортам нужно перевести стоп в безубыток, обязательно",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""ALL_SHORT/strong:по всем моим оставшимся шортам@11:41"", ""ALL_SHORT/strong:всем моим оставшимся шортам@14:41"", ""SHORT/strong:шорт@35:39"", ""ALL_SHORT/weak:шортам@35:41"", ""MOVE_STOP_TO_BE/strong:перевести стоп в безубыток@48:74"", ""SL_HIT/weak:стоп@58:62"",",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перевести стоп в безубыток,ALL_SHORT,,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2193,407,,"[trader#A]
+
+https://t.me/c/3171748254/379
+
+https://t.me/c/3171748254/290
+
+Вот по этим шортам стоп должен стоять в безубытке",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""take_profit/strong:tp@13:15"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@41:54"", ""take_profit/strong:tp@43:45"", ""telegram_link/strong:t.me/@49:54"", ""SHORT/strong:шорт@83:87"", ""ALL",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп должен стоять в безубытке,SINGLE_SIGNAL,,379|290,https://t.me/c/3171748254/379|https://t.me/c/3171748254/290,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2180,425,417,"[trader#A]
+
+Так, тут тейк. 8.8%
+
+Поздравляю. Стоп на точку входа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@20:24"", ""SL_HIT/weak:стоп@43:47"", ""MOVE_STOP/weak:стоп на@43:50"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@43:62"", ""MODIFY_ENTRY/weak:вход@57:61""], ""suppressed_markers"": [""SL_HIT/weak:стоп@43:47"", ""MOVE_STOP/weak:стоп на@43:50"", ""MO",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,417,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2177,433,410,"Давайте прикроем, после усреднения находится около точки входа, убыток будет меньше 1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:давайте прикроем@0:16"", ""CLOSE_FULL/weak:прикроем@8:16"", ""SL_HIT/weak:сл@20:22"", ""stop_loss/strong:сл@20:22"", ""MODIFY_ENTRY/weak:вход@57:61"", ""EXIT_BE/weak:бу@71:73""], ""suppressed_markers"": [""CLOSE_FULL/weak:прикроем@8:16"", ""SL_HIT/we",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,1.0|0.4,давайте прикроем|вход,UNKNOWN,410,,,,,,,,FULL,,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2176,434,290,"Закрылся в безубыток 
+
+https://t.me/c/3171748254/407 тут писал о том, что необходимо поставить стоп на точку входа",1.0,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 290, ""matched_markers"": [""CLOSE_FULL/weak:закрылся@0:8"", ""EXIT_BE/strong:закрылся в безубыток@0:20"", ""MOVE_STOP_TO_BE/weak:безубыток@11:20"", ""EXIT_BE/weak:безубыток@11:20"", ""telegram_link/strong:https://t.me/@21:34"", ""take_profit/strong:tp@23",EXIT_BE,EXIT_BE|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,поставить стоп на точку входа,SINGLE_SIGNAL,,407,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2143,477,444,"[trader#A]
+
+
+убираю 2 и 3 тейк, добавлю тейк спота, чтобы получить красивый pnl и немного заработать
+
+стоп поставить обязательно чуть выше точки входа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_TARGETS/strong:убираю 2 и 3 тейк@11:28"", ""TP_HIT/weak:3 тейк@22:28"", ""TP_HIT/weak:тейк@24:28"", ""ADD_ENTRY/weak:добавлю@30:37"", ""MODIFY_TARGETS/strong:добавлю тейк@30:42"", ""MODIFY_TARGETS/strong:добавлю тейк спота@30:48"", ""TP_HIT/weak:тейк@38:42""",MODIFY_TARGETS,MODIFY_TARGETS|MODIFY_ENTRY,1,3,MODIFY_TARGETS(MODIFY_TARGETS)|MODIFY_TARGETS(MODIFY_TARGETS)|MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_TARGETS|MODIFY_TARGETS|MODIFY_ENTRIES,MODIFY_TARGETS|MODIFY_TARGETS|MODIFY_ENTRY,1.0|1.0|0.4,убираю 2 и 3 тейк|добавлю тейк спота|вход,UNKNOWN,444,,,,,,,,,,,,,0,,,UNKNOWN,0,,,
+36,trader_a,UPDATE,PARSED,2141,483,478,"[trader#A]
+
+1 тейк, стоп на точку входа
+
+поздравляю",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""SL_HIT/weak:стоп@19:23"", ""MOVE_STOP/weak:стоп на@19:26"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@19:38"", ""MODIFY_ENTRY/weak:вход@33:37""], ""suppressed_markers"": [""SL_HIT/weak:стоп@19:23"", ""MOVE_S",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,UNKNOWN,478,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2138,486,439,"[trader#A]
+
+закрываю в убыток. -1.5%",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@11:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,439,,,,,,,,FULL,,1.5,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2137,487,450,"[trader#A]
+
+закрываю в убыток 3%",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@11:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,450,,,,,,,,FULL,,3.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2136,488,470,"[trader#A]
+
+закрываю по текущим. чуть меньше 1% прибыли",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@11:19"", ""CLOSE_FULL/strong:закрываю по текущим@11:30"", ""MODIFY_ENTRY/weak:по текущим@20:30""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@11:19"", ""MODIFY_ENTRY/weak:по текущим@20:30""], ""applied_marker_rules"": [""weak_inside",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,470,,,,,,,,FULL,,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2135,489,452,"[trader#A]
+
+закрываю по текущим на точке входа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@11:19"", ""CLOSE_FULL/strong:закрываю по текущим@11:30"", ""MODIFY_ENTRY/weak:по текущим@20:30"", ""MODIFY_ENTRY/weak:вход@40:44""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@11:19"", ""MODIFY_ENTRY/weak:по текущим@20:30"", ""MODIF",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,452,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2134,490,418,"[trader#A]
+
+закрываю. не приятный минус",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@11:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,418,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2132,493,485,"[trader#A]
+
+1 тейк. поздравляю
+
+хоть немного минуса прикрыли
+
+по шортам стоп на точку входа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@11:17"", ""TP_HIT/weak:тейк@13:17"", ""ALL_SHORT/strong:по шортам@59:68"", ""SHORT/strong:шорт@62:66"", ""ALL_SHORT/weak:шортам@62:68"", ""SL_HIT/weak:стоп@69:73"", ""MOVE_STOP/weak:стоп на@69:76"", ""MOVE_STOP_TO_BE/strong:стоп на точку входа@69:",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп на точку входа,ALL_SHORT,485,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2123,514,496,"[trader#A]
+
+Увы стоп. Была надежда на отскок. Но учитывая вход на 0.3% от депозита, то убыток хоть и не приятный, но не такой уж и большой, как мог быть",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/strong:увы стоп@11:19"", ""SL_HIT/weak:стоп@15:19"", ""MODIFY_ENTRY/weak:вход@57:61""], ""suppressed_markers"": [""SL_HIT/weak:стоп@15:19""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"":",SL_HIT,SL_HIT|MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,вход,UNKNOWN,496,,,,,,,,,,,,UPDATE_PRICE,1,1:LIMIT@0.3,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,2121,517,516,"Отбой, модель сбойнула и не учла важные параметры расчета сетапа
+
+3.2% убытка закрываю",0.4,,"{""suppressed_intents"": [""CANCEL_PENDING:отбой""], ""matched_markers"": [""CANCEL_PENDING/weak:отбой@0:5"", ""INVALIDATE_SETUP/weak:отбой@0:5"", ""CLOSE_FULL/weak:закрываю@77:85""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_over_cancel_pending""], ""appli",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,516,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2116,523,484,"закрываю полностью сделку, заработали более 20%
+
+поздравляю",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю полностью@0:18""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,484,,,,,,,,FULL,,20.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2109,536,527,"[trader#A]
+
+Давайте стоп поставим на точку входа, точнее немного выше, чтобы отбить комиссию, 1 тейк должны сегодня забрать
+
+p.s. если возьмет стоп, значит чуть ниже перезайдем",1.0,,"{""suppressed_intents"": [""REENTER:перезайдем""], ""matched_markers"": [""SL_HIT/weak:стоп@19:23"", ""MOVE_STOP/strong:стоп поставим на@19:35"", ""MOVE_STOP_TO_BE/strong:стоп поставим на точку входа@19:47"", ""MODIFY_ENTRY/weak:вход@42:46"", ""TP_HIT/weak:1 тейк@93:99"", ""TP_HIT/weak:тейк@95:99"", ""SL_HIT/weak:сл@1",TP_HIT,MOVE_STOP_TO_BE|TP_HIT,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп поставим на точку входа,UNKNOWN,527,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2099,551,527,"фиксирую 70% позиции. 4% чистого движения.
+
+поздравляю
+
+
+З.ы. Тейк был. Но засчитаю себе только 4%
+
+Лимитку на усреднение можно убрать. Стоп обязательно чуть выше точки входа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_PARTIAL/strong:фиксирую 70% позиции@0:20"", ""TP_HIT/weak:тейк@59:63"", ""CANCEL_PENDING/strong:лимитку на усреднение можно убрать@96:130"", ""ADD_ENTRY/weak:усреднение@107:117"", ""ENTRY_FILLED/weak:усреднение@107:117"", ""entry/weak:усреднение@107:117"", ",TP_HIT,CLOSE_PARTIAL|TP_HIT|CANCEL_PENDING|MODIFY_ENTRY,1,3,CLOSE(CLOSE_PARTIAL)|CANCEL_PENDING(CANCEL_PENDING)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|CANCEL_PENDING|MODIFY_ENTRIES,CLOSE_PARTIAL|CANCEL_PENDING|MODIFY_ENTRY,1.0|1.0|0.4,фиксирую 70% позиции|лимитку на усреднение можно убрать|вход,UNKNOWN,527,,,,,,,,PARTIAL,0.7,4.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2074,586,518,"1  тейк. с учетом усреднения +13%
+
+Поздравляю. Стопы по ARB и FART вернули (с учетом тейка https://t.me/c/3171748254/566) и даже заработали сверху 4%
+
+обязательно стоп в безубыток",1.0,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 518, ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@45:49"", ""TP_HIT/weak:тейка@83:88"", ""telegram_link/strong:https://t.me/@89:102"", ""take_profit/strong:tp@91:93"", ""telegram_link/strong:t.me/@97:102"", """,TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в безубыток,SINGLE_SIGNAL,,566,https://t.me/c/3171748254/566,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,2068,612,,"[trader#A]
+
+Все лонги закрываю на текущих отметках, не нравится рынок.",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""ALL_LONG/strong:все лонги@11:20"", ""LONG/strong:лонг@15:19"", ""ALL_LONG/weak:лонги@15:20"", ""CLOSE_FULL/weak:закрываю@21:29"", ""CLOSE_FULL/strong:закрываю на@21:32"", ""MARKET/weak:рынок@63:68""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@21:29""], ""app",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю на,ALL_LONG,,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1979,748,,"[trader#A]
+
+за ноябрь осталось два сигнала, которые еще не взяли, минимум, 1 тейк или стоп:
+1. https://t.me/c/3171748254/686 p.s. стоп был, почему-то установил у себя другой стоп... -10.3%, но так как вход был на 0.3%, минус не должен был быть сильно неприятным
+2. https://t.me/c/3171748254/569",1.0,signal_like_update_forced_to_update,"{""suppressed_intents"": [""TP_HIT:1 тейк""], ""matched_markers"": [""ENTRY_FILLED/weak:взяли@58:63"", ""TP_HIT/weak:1 тейк@74:80"", ""TP_HIT/weak:тейк@76:80"", ""SL_HIT/weak:стоп@85:89"", ""stop_loss/strong:стоп:@85:90"", ""telegram_link/strong:https://t.me/@94:107"", ""take_profit/strong:tp@96:98"", ""telegram_link/st",SL_HIT,ENTRY_FILLED|SL_HIT|MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,вход,SINGLE_SIGNAL,,686,,,,,,,,,,,UPDATE_PRICE,4,1:LIMIT@0.3|2:LIMIT@2.0|3:LIMIT@3171748254.0|4:LIMIT@569.0,LADDER,,0,,,
+36,trader_a,UPDATE,PARSED,1913,832,795,"Закрываю у тейка. Поздравляю, почти 8%
+
+Тейк все равно случился)",1.0,,"{""suppressed_intents"": [""TP_HIT:тейка"", ""TP_HIT:тейк""], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю у@0:10"", ""TP_HIT/weak:тейка@11:16"", ""TP_HIT/weak:тейк@39:43"", ""SL_HIT/weak:сл@54:56"", ""stop_loss/strong:сл@54:56""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю у,UNKNOWN,795,,,,,,,,FULL,,8.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1862,904,,"[trader#A]
+
+
+XRP - https://t.me/c/3171748254/822 3.94% прибыли
+ENA - https://t.me/c/3171748254/856 убыток 9.32
+LDO - https://t.me/c/3171748254/861 прибыль 4.2% 
+SHIB - https://t.me/c/3171748254/870 прибыль 3.4%
+
+Эти монеты закрываю по текущим, так как нет времени за ними следить
+
+Встретимся в воскресенье
+
+p.s. проценты указал без учета усреднения. кто выставлял лимитки на усреднение - у вас прибыль по шортам будет больше, убыток по ENA перекроется существеннее",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@11:12"", ""telegram_link/strong:https://t.me/@17:30"", ""take_profit/strong:tp@19:21"", ""telegram_link/strong:t.me/@25:30"", ""telegram_link/strong:https://t.me/@67:80"", ""take_profit/strong:tp@69:71"", ""telegram_link/strong:t.me/@75:80"", ""teleg",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,SINGLE_SIGNAL,,822|856|861|870,https://t.me/c/3171748254/822|https://t.me/c/3171748254/856|https://t.me/c/3171748254/861|https://t.me/c/3171748254/870,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1813,970,933,3 тейк. сделка закрыта. поздравляю.,0.4,,"{""suppressed_intents"": [""TP_HIT:3 тейк""], ""matched_markers"": [""TP_HIT/weak:3 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""CLOSE_FULL/weak:закрыта@15:22""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_tp_hit""], ""applied_rules"": [""close_full_",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,933,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1805,981,921,закрываю по текущим. 8% движения. поздравляю,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""weak_inside_strong",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,921,,,,,,,,FULL,,8.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1801,985,964,Закрываю фактически на точке входа,0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:вход@29:33""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.8}}",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,0.4|0.4,закрываю|вход,UNKNOWN,964,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1800,986,,"[trader#A]
+#intraday
+
+
+ASTER - https://t.me/c/3171748254/924 
+INJ - https://t.me/c/3171748254/936 
+
+По этим монетам остаток закрываю по текущей цене. Фактически эти монеты дошли до 2-х тейков",1.0,,"{""suppressed_intents"": [""TP_HIT:дошли до 2-х тейков""], ""matched_markers"": [""telegram_link/strong:https://t.me/@29:42"", ""take_profit/strong:tp@31:33"", ""telegram_link/strong:t.me/@37:42"", ""telegram_link/strong:https://t.me/@65:78"", ""take_profit/strong:tp@67:69"", ""telegram_link/strong:t.me/@73:78"", ""CL",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущей,SINGLE_SIGNAL,,924|936,https://t.me/c/3171748254/924|https://t.me/c/3171748254/936,,,,,,FULL,,2.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1767,1030,1024,"закрываю, модель ошиблась, вход без подтверждения на малых ТФ
+
+стоп 1.67%",0.8,close_full_redundant_with_sl_hit,"{""suppressed_intents"": [""SL_HIT:стоп""], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:вход@27:31"", ""SL_HIT/weak:стоп@62:66""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_sl_hit""], ""applied_rules"": [""close_",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,0.4|0.4,закрываю|вход,UNKNOWN,1024,,,,,,,,FULL,,1.67,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1763,1035,,"[trader#A]
+
+LINK - https://t.me/c/3171748254/978 - стоп в бу
+ALGO - https://t.me/c/3171748254/1002 стоп в бу
+ARKM - https://t.me/c/3171748254/1003 стоп в бу
+FART - https://t.me/c/3171748254/1005 стоп на 1 тейк
+UNI - https://t.me/c/3171748254/1018 стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@18:31"", ""take_profit/strong:tp@20:22"", ""telegram_link/strong:t.me/@26:31"", ""SL_HIT/weak:стоп@50:54"", ""MOVE_STOP_TO_BE/strong:стоп в бу@50:59"", ""MOVE_STOP_TO_BE/weak:в бу@55:59"", ""EXIT_BE/weak:бу@57:59"", ""telegram_link",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE|MOVE_STOP,5,5,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP|MOVE_STOP_TO_BE,1.0|1.0|1.0|1.0|1.0,стоп в бу|стоп в бу|стоп в бу|стоп на 1 тейк|стоп в бу,SINGLE_SIGNAL,,978,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1750,1053,,"[trader#A]
+
+XRP - https://t.me/c/3171748254/1015
+ADA - https://t.me/c/3171748254/1017
+
+А давайте их прикроем, пока они рядом с ТВХ",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@11:12"", ""telegram_link/strong:https://t.me/@17:30"", ""take_profit/strong:tp@19:21"", ""telegram_link/strong:t.me/@25:30"", ""telegram_link/strong:https://t.me/@54:67"", ""take_profit/strong:tp@56:58"", ""telegram_link/strong:t.me/@62:67"", ""CLOSE",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,давайте их прикроем,SINGLE_SIGNAL,,1015|1017,https://t.me/c/3171748254/1015|https://t.me/c/3171748254/1017,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1724,1089,1005,"И этот закрылся в бу на первом тейке. Конечно же после того как взяли 2 тейка. Сделка закрыта 
+
+О переводе стопа на 1 тейк писал тут - https://t.me/c/3171748254/1035
+
+Шортов у вас не должно остаться, если, конечно, я не пропустил ничего",0.4,,"{""suppressed_intents"": [""TP_HIT:2 тейка"", ""TP_HIT:1 тейк"", ""EXIT_BE:закрылся в бу""], ""ignored_reply_to_message_id"": 1005, ""matched_markers"": [""CLOSE_FULL/weak:закрылся@7:15"", ""EXIT_BE/strong:закрылся в бу@7:20"", ""MOVE_STOP_TO_BE/weak:в бу@16:20"", ""EXIT_BE/weak:бу@18:20"", ""SL_HIT/weak:сл@51:53"", ""sto",CLOSE_FULL,ENTRY_FILLED|CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,SINGLE_SIGNAL,,1035,https://t.me/c/3171748254/1035,,,,,,FULL,,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1696,1128,1037,"2 тейк, сделку закрываю полностью",1.0,,"{""suppressed_intents"": [""TP_HIT:2 тейк""], ""matched_markers"": [""TP_HIT/weak:2 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""CLOSE_FULL/weak:закрываю@15:23"", ""CLOSE_FULL/strong:закрываю полностью@15:33""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@15:23""], ""applied_marker_rules"": [""weak_inside_strong_same",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю полностью,UNKNOWN,1037,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1625,1239,1034,"всем привет. рынок очень ""тугой"". среднесрок очень долго отрабатывает. пробежимся по позициям, проведем инвентаризацию, освободим маржу для новых сделок
+
+эту закрываю полностью по текущим, цена как раз на 1 тейке",1.0,,"{""suppressed_intents"": [""TP_HIT:1 тейке""], ""matched_markers"": [""MARKET/weak:рынок@13:18"", ""CLOSE_FULL/weak:закрываю@157:165"", ""CLOSE_FULL/strong:закрываю полностью@157:175"", ""MODIFY_ENTRY/weak:по текущим@176:186"", ""TP_HIT/weak:1 тейке@204:211""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@157:1",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,1.0|0.4,закрываю полностью|по текущим,UNKNOWN,1034,,,,,,,,FULL,,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1624,1240,1036,полностью закрываю,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@10:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрываю,UNKNOWN,1036,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1623,1241,1044,закрываю на текущих ценах. +8%,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю на@0:11""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""weak_inside",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю на,UNKNOWN,1044,,,,,,,,FULL,,8.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1621,1243,1081,закрываю по текущим +13%,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""weak_inside_strong",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,1081,,,,,,,,FULL,,13.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1428,1539,1506,"1 тейк. 0.44R
+стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@14:18"", ""MOVE_STOP_TO_BE/strong:стоп в бу@14:23"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [""SL_HIT/weak:стоп@14:18"", ""MOVE_STOP_TO_BE/weak:в б",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1506,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1409,1563,1482,Доброе утро. Перенесите стоп в бу,1.0,,"{""suppressed_intents"": [""MOVE_STOP:перенесите стоп""], ""matched_markers"": [""MOVE_STOP/strong:перенесите стоп@13:28"", ""SL_HIT/weak:стоп@24:28"", ""MOVE_STOP_TO_BE/strong:стоп в бу@24:33"", ""MOVE_STOP_TO_BE/weak:в бу@29:33"", ""EXIT_BE/weak:бу@31:33""], ""suppressed_markers"": [""SL_HIT/weak:стоп@24:28"", ""MOVE_",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1482,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1392,1586,,"[trader#A]
+
+HOOK лонг с текущих.
+Остальные данные чуть позже",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@16:20"", ""MODIFY_ENTRY/strong:лонг с текущих@16:30"", ""MARKET_NOW/strong:лонг с текущих@16:30"", ""MODIFY_ENTRY/weak:с текущих@21:30""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:с текущих@21:30""], ""applied_marker_rules"": [""weak_inside_stro",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,1.0,лонг с текущих,UNKNOWN,,,,,,,,,,,,,MARKET_NOW,1,1:MARKET@,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,1391,1587,,"[trader#A]
+
+KAS лонг с текущих.
+Остальные данные чуть позже",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@15:19"", ""MODIFY_ENTRY/strong:лонг с текущих@15:29"", ""MARKET_NOW/strong:лонг с текущих@15:29"", ""MODIFY_ENTRY/weak:с текущих@20:29""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:с текущих@20:29""], ""applied_marker_rules"": [""weak_inside_stro",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,1.0,лонг с текущих,UNKNOWN,,,,,,,,,,,,,MARKET_NOW,1,1:MARKET@,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,1390,1588,,"[trader#A]
+
+STORJ лонг с текущих.
+Остальные данные чуть позже",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@17:21"", ""MODIFY_ENTRY/strong:лонг с текущих@17:31"", ""MARKET_NOW/strong:лонг с текущих@17:31"", ""MODIFY_ENTRY/weak:с текущих@22:31""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:с текущих@22:31""], ""applied_marker_rules"": [""weak_inside_stro",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,1.0,лонг с текущих,UNKNOWN,,,,,,,,,,,,,MARKET_NOW,1,1:MARKET@,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,1388,1590,,"[trader#A]
+
+TLM лонг с текущих.
+Остальные данные чуть позже
+
+финальная от меня",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@15:19"", ""MODIFY_ENTRY/strong:лонг с текущих@15:29"", ""MARKET_NOW/strong:лонг с текущих@15:29"", ""MODIFY_ENTRY/weak:с текущих@20:29""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:с текущих@20:29""], ""applied_marker_rules"": [""weak_inside_stro",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,1.0,лонг с текущих,UNKNOWN,,,,,,,,,,,,,MARKET_NOW,1,1:MARKET@,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,1356,1628,,"[trader#A]
+
+https://t.me/c/3171748254/1620
+https://t.me/c/3171748254/1620
+https://t.me/c/3171748254/1599
+https://t.me/c/3171748254/1594
+https://t.me/c/3171748254/1593
+https://t.me/c/3171748254/1592
+https://t.me/c/3171748254/1591
+
+По лонгам стопы в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""take_profit/strong:tp@13:15"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@42:55"", ""take_profit/strong:tp@44:46"", ""telegram_link/strong:t.me/@50:55"", ""telegram_link/strong:https://t",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стопы в бу,SINGLE_SIGNAL,,1620|1599|1594|1593|1592|1591,https://t.me/c/3171748254/1620|https://t.me/c/3171748254/1599|https://t.me/c/3171748254/1594|https://t.me/c/3171748254/1593|https://t.me/c/3171748254/1592|https://t.me/c/3171748254/1591,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1301,1698,1654,"1 тейк. 0.22R
+стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@14:18"", ""MOVE_STOP_TO_BE/strong:стоп в бу@14:23"", ""MOVE_STOP_TO_BE/weak:в бу@19:23"", ""EXIT_BE/weak:бу@21:23""], ""suppressed_markers"": [""SL_HIT/weak:стоп@14:18"", ""MOVE_STOP_TO_BE/weak:в б",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1654,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1279,1730,,"[trader#A]
+
+https://t.me/c/3171748254/1725
+https://t.me/c/3171748254/1726
+
+пора перенести стоп в бу
+кто желает может фиксировать прибыль",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""take_profit/strong:tp@13:15"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@42:55"", ""take_profit/strong:tp@44:46"", ""telegram_link/strong:t.me/@50:55"", ""MOVE_STOP/strong:перенести сто",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,перенести стоп в бу,SINGLE_SIGNAL,,1725|1726,https://t.me/c/3171748254/1725|https://t.me/c/3171748254/1726,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1268,1749,1685,"1 тейк. Стоп в бу
++0.5RR",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1685,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1267,1750,1704,"1 тейк. Стоп в бу
++0.5RR",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1704,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1253,1775,1756,"очень большой риск получить стоп. кто хочет не раздувать убыток - можно закрыть по текущим
+
+я закрывать не буду, чтобы не искажать статистику",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""risk/weak:риск@14:18"", ""SL_HIT/weak:стоп@28:32"", ""CLOSE_FULL/strong:закрыть по текущим@72:90"", ""MODIFY_ENTRY/weak:по текущим@80:90"", ""EXIT_BE/weak:бу@106:108""], ""suppressed_markers"": [""SL_HIT/weak:стоп@28:32"", ""MODIFY_ENTRY/weak:по текущим@80:90"", ""EXI",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрыть по текущим,UNKNOWN,1756,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1252,1776,1774,Убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@0:7"", ""CANCEL_PENDING/strong:убираем лимитку@0:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@0:7""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,1774,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1244,1787,1760,"1 тейк. Стоп в бу
+0.26R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1760,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1232,1804,,"[trader#A]
+
+
+https://t.me/c/3171748254/1685 MOVR
+https://t.me/c/3171748254/1738 CYBER
+https://t.me/c/3171748254/1706 ZEC
+
+закрываю по текущим ценам
+MOVR - 1.35RR
+CYBER - 1.37RR
+ZEC - 1.43RR",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""take_profit/strong:tp@13:15"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@47:60"", ""take_profit/strong:tp@49:51"", ""telegram_link/strong:t.me/@55:60"", ""telegram_link/strong:https://t",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,SINGLE_SIGNAL,,1685|1738|1706,https://t.me/c/3171748254/1685|https://t.me/c/3171748254/1738|https://t.me/c/3171748254/1706,,,,,,FULL,,1.35,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1231,1805,1760,"его тоже не будем мучить. закрываю по текущим
+1.06R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/weak:бу@12:14"", ""CLOSE_FULL/weak:закрываю@26:34"", ""CLOSE_FULL/strong:закрываю по текущим@26:45"", ""MODIFY_ENTRY/weak:по текущим@35:45""], ""suppressed_markers"": [""EXIT_BE/weak:бу@12:14"", ""CLOSE_FULL/weak:закрываю@26:34"", ""MODIFY_ENTRY/weak:по теку",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,1760,,,,,,,,FULL,,1.06,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1211,1829,,"[trader#A]
+Все лонги закрываю по текущим
+Какие вышли стопы, дополню пост чуть позже
+
+FARTCOIN -0.338R
+ASTER -0.03R
+DOGE -0.63R
+PEPE -0.46R
+ENA - 0.634R
+C98 -0.36R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""ALL_LONG/strong:все лонги@11:20"", ""LONG/strong:лонг@15:19"", ""ALL_LONG/weak:лонги@15:20"", ""CLOSE_FULL/weak:закрываю@21:29"", ""CLOSE_FULL/strong:закрываю по текущим@21:40"", ""MODIFY_ENTRY/weak:по текущим@30:40"", ""SL_HIT/weak:стоп@53:57""], ""suppressed_marke",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,ALL_LONG,,,,,,,,,FULL,,0.338,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1180,1890,,"[trader#A]
+
+https://t.me/c/3171748254/1830
+https://t.me/c/3171748254/1832
+
+Стопы в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@11:24"", ""take_profit/strong:tp@13:15"", ""telegram_link/strong:t.me/@19:24"", ""telegram_link/strong:https://t.me/@42:55"", ""take_profit/strong:tp@44:46"", ""telegram_link/strong:t.me/@50:55"", ""SL_HIT/weak:стоп@73:77"", ""MOVE",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стопы в бу,SINGLE_SIGNAL,,1830|1832,https://t.me/c/3171748254/1830|https://t.me/c/3171748254/1832,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1154,1945,1927,"1 тейк, стоп в бу
+0.3R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1927,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1153,1946,1924,"1 тейк, стоп в бу
+0.23R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1924,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1151,1948,1911,"1 тейк, стоп в бу
+0.28R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1911,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1149,1950,1927,"3 тейка. Сделка закрыта
+1.67R
+
+RR добавлю к каждой сделке, когда  буду у журнала, сорян",0.8,,"{""suppressed_intents"": [""TP_HIT:3 тейка""], ""matched_markers"": [""TP_HIT/weak:3 тейка@0:7"", ""TP_HIT/weak:тейка@2:7"", ""CLOSE_FULL/weak:закрыта@16:23"", ""ADD_ENTRY/weak:добавлю@33:40"", ""EXIT_BE/weak:бу@64:66""], ""suppressed_markers"": [""EXIT_BE/weak:бу@64:66""], ""applied_marker_rules"": [""exit_be_бу_embedded",CLOSE_FULL,CLOSE_FULL|ADD_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(ADD_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|ADD_ENTRY,0.4|0.4,закрыта|добавлю,UNKNOWN,1927,,,,,,,,FULL,,1.67,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1140,1961,1909,"1 тейк. Стоп в бу
+0.38R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1909,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1139,1963,1913,"1 тейк, стоп в бу
+0.2Р",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1913,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1138,1964,1930,"1 тейк, стоп в бу
+0.27Р",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,1930,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1134,1969,,"[trader#A]
+принимаю решение зафиксировать все шорты. собрали в целом не плохой профит. хочу закрыть январь. 
+Лонг, по сетапу выше, переходит на февраль, скорее всего, либо стоп в январе (рынок уже решит самостоятельно)",1.0,close_full_redundant_with_sl_hit,"{""suppressed_intents"": [""SL_HIT:стоп""], ""matched_markers"": [""CLOSE_FULL/weak:зафиксировать@28:41"", ""CLOSE_FULL/strong:зафиксировать все@28:45"", ""ALL_POSITIONS/strong:зафиксировать все@28:45"", ""CLOSE_FULL/strong:зафиксировать все шорты@28:51"", ""ALL_SHORT/strong:зафиксировать все шорты@28:51"", ""ALL_SH",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,зафиксировать все шорты,ALL_SHORT,,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1115,2007,2006,убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@0:7"", ""CANCEL_PENDING/strong:убираем лимитку@0:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@0:7""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2006,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1112,2011,2010,да что ж такое. и этот без нас улетел. убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@39:46"", ""CANCEL_PENDING/strong:убираем лимитку@39:54""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@39:46""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_mo",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2010,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1109,2048,2005,"1 тейк, стоп в бу
++0.13R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2005,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1106,2052,2049,убираем лимитку. опять без нас((,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@0:7"", ""CANCEL_PENDING/strong:убираем лимитку@0:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@0:7""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2049,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1102,2059,2057,убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@0:7"", ""CANCEL_PENDING/strong:убираем лимитку@0:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@0:7""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2057,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1100,2063,2055,тут тоже убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@9:16"", ""CANCEL_PENDING/strong:убираем лимитку@9:24""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@9:16""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modif",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2055,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1086,2084,2074,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2074,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1075,2097,2066,"1 тейк. стоп в бу
+0.26R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2066,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1074,2098,2093,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2093,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1073,2099,2050,"1 тейк. стоп в бу
+0.11R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2050,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1070,2105,2093,Зайду по текущим,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/strong:зайду по текущим@0:16"", ""MARKET_NOW/strong:зайду по текущим@0:16"", ""MODIFY_ENTRY/weak:по текущим@6:16""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@6:16""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""appli",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,1.0,зайду по текущим,UNKNOWN,2093,,,,,,,,,,,,MARKET_NOW,1,1:MARKET@,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,1069,2108,2093,"1 тейк. стоп в бу
+0.59R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2093,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1063,2120,2110,"1 тейк. стоп в бу
+0.38R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2110,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1062,2121,2113,снимаем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CANCEL_PENDING/strong:снимаем лимитку@0:15""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снимаем лимитку,UNKNOWN,2113,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1059,2124,2093,"закрываю остаток (10%) сделки по текущим
+1.67R итоговый результат",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю остаток@0:16"", ""MODIFY_ENTRY/weak:по текущим@30:40""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,1.0|0.4,закрываю остаток|по текущим,UNKNOWN,2093,,,,,,,,FULL,,10.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1055,2130,2110,"тоже закрываю по текущим
+итог 1.11R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@5:13"", ""CLOSE_FULL/strong:закрываю по текущим@5:24"", ""MODIFY_ENTRY/weak:по текущим@14:24""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@5:13"", ""MODIFY_ENTRY/weak:по текущим@14:24""], ""applied_marker_rules"": [""weak_inside_st",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2110,,,,,,,,FULL,,1.11,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1054,2131,2000,"поставьте стоп в бу, ну как в бу, чтобы комиссию отбить
+
+надоел уже",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@10:14"", ""MOVE_STOP_TO_BE/strong:стоп в бу@10:19"", ""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19"", ""MOVE_STOP_TO_BE/weak:в бу@28:32"", ""EXIT_BE/weak:бу@30:32""], ""suppressed_markers"": [""SL_HIT/weak:стоп@10:14"", ""MOVE_STOP_TO_B",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,1.0|0.4,стоп в бу|в бу,UNKNOWN,2000,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1052,2133,2066,тут стоп на 1 тейк,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@4:8"", ""MOVE_STOP/weak:стоп на@4:11"", ""MOVE_STOP/strong:стоп на 1 тейк@4:18"", ""TP_HIT/weak:1 тейк@12:18"", ""TP_HIT/weak:тейк@14:18""], ""suppressed_markers"": [""SL_HIT/weak:стоп@4:8"", ""MOVE_STOP/weak:стоп на@4:11""], ""applied_marker_rules"": ",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп на 1 тейк,UNKNOWN,2066,,,,,TP_LEVEL,,1,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1049,2136,2066,"закрылся полностью на 1 тейке
+итог 0.88R",1.0,,"{""suppressed_intents"": [""TP_HIT:1 тейке""], ""matched_markers"": [""CLOSE_FULL/weak:закрылся@0:8"", ""CLOSE_FULL/strong:закрылся полностью@0:18"", ""TP_HIT/weak:1 тейке@22:29""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрылся@0:8""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disam",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрылся полностью,UNKNOWN,2066,,,,,,,,FULL,,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1043,2146,2143,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2143,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1042,2147,2126,3 тейк. Сделка закрыта,0.4,,"{""suppressed_intents"": [""TP_HIT:3 тейк""], ""matched_markers"": [""TP_HIT/weak:3 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""CLOSE_FULL/weak:закрыта@15:22""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_tp_hit""], ""applied_rules"": [""close_full_",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,2126,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1035,2156,2151,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2151,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1033,2158,2152,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2152,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1032,2159,2151,"3 тейк. Сделка закрыта
+итого - 0.63R",0.4,,"{""suppressed_intents"": [""TP_HIT:3 тейк""], ""matched_markers"": [""TP_HIT/weak:3 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""CLOSE_FULL/weak:закрыта@15:22""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_tp_hit""], ""applied_rules"": [""close_full_",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,2151,,,,,,,,FULL,,0.63,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1024,2170,2165,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2165,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1023,2171,2166,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2166,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1022,2172,2164,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2164,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1021,2173,2161,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2161,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1019,2175,2152,"Сделка закрыта по 3 тейкам
+итог 0.63R",0.4,,"{""suppressed_intents"": [""TP_HIT:3 тейкам""], ""matched_markers"": [""CLOSE_FULL/weak:закрыта@7:14"", ""TP_HIT/weak:3 тейкам@18:26"", ""TP_HIT/weak:тейкам@20:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_tp_hit""], ""applied_rules"": [""cl",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,2152,,,,,,,,FULL,,3.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1015,2179,2177,"поторопился  с лонгами, зафиксируем микроминус",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:лонг@14:18"", ""ALL_LONG/weak:лонгам@14:20"", ""CLOSE_FULL/weak:зафиксируем@23:34""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,зафиксируем,ALL_LONG,2177,,,,,,,,FULL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1014,2180,2178,"а тут уберем лимитку
+
+всем хорошего вечера",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CANCEL_PENDING/strong:уберем лимитку@6:20""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,уберем лимитку,UNKNOWN,2178,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1004,2198,2192,"В целом можно зафиксировать часть прибыли. С учетом того, что вошли гораздо ниже твх по сигналу, можно сказать, что тейк взят
+
+Стоп в бу после фиксации части
+Зафиксировал 50% на 0.3406",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:зафиксировать@14:27"", ""CLOSE_PARTIAL/strong:зафиксировать часть@14:33"", ""ENTRY_FILLED/weak:вошли@62:67"", ""TP_HIT/weak:тейк@116:120"", ""TP_HIT/strong:тейк взят@116:125"", ""SL_HIT/weak:стоп@126:130"", ""MOVE_STOP_TO_BE/strong:стоп в бу@126:13",TP_HIT,CLOSE_PARTIAL|ENTRY_FILLED|TP_HIT|MOVE_STOP_TO_BE,1,3,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE)|CLOSE(CLOSE_PARTIAL),CLOSE|SET_STOP|CLOSE,CLOSE_PARTIAL|MOVE_STOP_TO_BE|CLOSE_PARTIAL,1.0|1.0|1.0,зафиксировать часть|стоп в бу|зафиксировал 50%,UNKNOWN,2192,,,,,,,,PARTIAL,,50.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1002,2200,2195,Тут отмена,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:тут отмена@0:10"", ""INVALIDATE_SETUP/weak:отмена@4:10""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:отмена@4:10""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules""",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,тут отмена,UNKNOWN,2195,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,1001,2202,2186,"здесь уже прилично прошли, кто переживает - можете частично фиксировать позицию и защищать ее стопом в бу
+
+я буду держать согласно сетапа",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_PARTIAL/weak:частично@51:59"", ""CLOSE_PARTIAL/strong:частично фиксировать@51:71"", ""SL_HIT/weak:стоп@94:98"", ""MOVE_STOP_TO_BE/weak:в бу@101:105"", ""EXIT_BE/weak:бу@103:105"", ""EXIT_BE/weak:бу@108:110""], ""suppressed_markers"": [""CLOSE_PARTIAL/weak:част",CLOSE_PARTIAL,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|0.4,частично фиксировать|в бу,UNKNOWN,2186,,,,,,,,PARTIAL,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,999,2204,2186,а вот и 1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@8:14"", ""TP_HIT/weak:тейк@10:14"", ""SL_HIT/weak:стоп@16:20"", ""MOVE_STOP_TO_BE/strong:стоп в бу@16:25"", ""MOVE_STOP_TO_BE/weak:в бу@21:25"", ""EXIT_BE/weak:бу@23:25""], ""suppressed_markers"": [""SL_HIT/weak:стоп@16:20"", ""MOVE_STOP_TO_BE/weak:",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2186,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,974,2241,2187,"что-то я пропустил. вчера, оказывается, был 1 тейк
+
+стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@44:50"", ""TP_HIT/weak:тейк@46:50"", ""SL_HIT/weak:стоп@51:55"", ""MOVE_STOP_TO_BE/strong:стоп в бу@51:60"", ""MOVE_STOP_TO_BE/weak:в бу@56:60"", ""EXIT_BE/weak:бу@58:60""], ""suppressed_markers"": [""SL_HIT/weak:стоп@51:55"", ""MOVE_STOP_TO_BE/weak",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2187,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,969,2249,2186,Стоп поставьте на первый тейк - 69295.6,1.0,,"{""suppressed_intents"": [""TP_HIT:первый тейк""], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/strong:стоп поставьте на@0:17"", ""TP_HIT/weak:первый тейк@18:29"", ""TP_HIT/weak:тейк@25:29""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп поставьте на,UNKNOWN,2186,,,,,PRICE,69295.6,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,965,2255,2186,"Эту закрываем полностью
+открываем новую
+
+1.16R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываем@4:13"", ""CLOSE_FULL/strong:закрываем полностью@4:23""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываем@4:13""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules"": [",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываем полностью,UNKNOWN,2186,,,,,,,,FULL,,1.16,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,957,2266,,"[trader #A]
+
+https://t.me/c/3171748254/2243
+https://t.me/c/3171748254/2242
+https://t.me/c/3171748254/2222
+https://t.me/c/3171748254/2221
+
+давайте по этим сигналам пока уберем лимитки
+
+буду следить за ними, может позже вернем",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@12:25"", ""take_profit/strong:tp@14:16"", ""telegram_link/strong:t.me/@20:25"", ""telegram_link/strong:https://t.me/@43:56"", ""take_profit/strong:tp@45:47"", ""telegram_link/strong:t.me/@51:56"", ""telegram_link/strong:https://t",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,уберем лимитки,SINGLE_SIGNAL,,2243|2242|2222|2221,https://t.me/c/3171748254/2243|https://t.me/c/3171748254/2242|https://t.me/c/3171748254/2222|https://t.me/c/3171748254/2221,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,940,2293,2287,тут отмена,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:тут отмена@0:10"", ""INVALIDATE_SETUP/weak:отмена@4:10""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:отмена@4:10""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules""",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,тут отмена,UNKNOWN,2287,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,918,2318,2294,"тут отмена, вечером уже активно поторгуем",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:тут отмена@0:10"", ""INVALIDATE_SETUP/weak:отмена@4:10""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:отмена@4:10""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules""",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,тут отмена,UNKNOWN,2294,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,867,2375,,"[trader #A]
+
+хочу зафиксировать некоторые монеты, фиксация 100% по текущим отметкам
+
+https://t.me/c/3171748254/2361
+https://t.me/c/3171748254/2359
+https://t.me/c/3171748254/2275
+https://t.me/c/3171748254/2261
+
+результаты в RR дополню этот пост
+
+fart - 0.38R
+ldo - 0.14R
+zil - 0.32R
+haedal - 0.91R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:хочу зафиксировать@12:30"", ""CLOSE_FULL/weak:зафиксировать@17:30"", ""CLOSE_FULL/strong:фиксация 100%@49:62"", ""CLOSE_FULL/strong:фиксация 100% по текущим отметкам@49:82"", ""MODIFY_ENTRY/weak:по текущим@63:73"", ""telegram_link/strong:https:",CLOSE_FULL,CLOSE_FULL,1,2,CLOSE(CLOSE_FULL)|CLOSE(CLOSE_FULL),CLOSE|CLOSE,CLOSE_FULL|CLOSE_FULL,1.0|1.0,хочу зафиксировать|фиксация 100% по текущим отметкам,SINGLE_SIGNAL,,2361|2359|2275|2261,https://t.me/c/3171748254/2361|https://t.me/c/3171748254/2359|https://t.me/c/3171748254/2275|https://t.me/c/3171748254/2261,,,,,,FULL,,100.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,865,2377,2234,"фиксирую по текущим
+-0.21R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:фиксирую по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,фиксирую по текущим,UNKNOWN,2234,,,,,,,,FULL,,0.21,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,864,2378,2371,"фиксирую по текущим
+-0.03R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:фиксирую по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,фиксирую по текущим,UNKNOWN,2371,,,,,,,,FULL,,0.03,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,863,2379,2360,"фиксирую по текущим
+-0.04R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:фиксирую по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,фиксирую по текущим,UNKNOWN,2360,,,,,,,,FULL,,0.04,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,854,2392,2371,Заходим по текущим заново,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/strong:заходим по текущим@0:18"", ""MARKET_NOW/strong:заходим по текущим@0:18"", ""REENTER/strong:заходим по текущим заново@0:25"", ""MODIFY_ENTRY/weak:по текущим@8:18""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@8:18""], ""applied_mark",REENTER,REENTER,1,1,MODIFY_ENTRIES(REENTER),MODIFY_ENTRIES,REENTER,1.0,заходим по текущим заново,UNKNOWN,2371,,,,,,,,,,,,REENTER,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,853,2393,2360,Тоже заходим по текущим заново,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/strong:заходим по текущим@5:23"", ""MARKET_NOW/strong:заходим по текущим@5:23"", ""REENTER/strong:заходим по текущим заново@5:30"", ""MODIFY_ENTRY/weak:по текущим@13:23""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@13:23""], ""applied_ma",REENTER,REENTER,1,1,MODIFY_ENTRIES(REENTER),MODIFY_ENTRIES,REENTER,1.0,заходим по текущим заново,UNKNOWN,2360,,,,,,,,,,,,REENTER,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,848,2401,2397,Отмена,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:отмена@0:6""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,0.4,отмена,UNKNOWN,2397,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,846,2404,2234,эту тоже возвращаем,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:эту тоже возвращаем@0:19"", ""INVALIDATE_SETUP/weak:возвращаем@9:19""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:возвращаем@9:19""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": []",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,эту тоже возвращаем,UNKNOWN,2234,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,844,2406,2405,"для чистоты статистики. у меня вход по 0.0332, считаться также будет от этой цифры",0.6,signal_like_update_forced_to_update,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:вход@31:35"", ""EXIT_BE/weak:бу@63:65""], ""suppressed_markers"": [""EXIT_BE/weak:бу@63:65""], ""applied_marker_rules"": [""exit_be_бу_embedded_in_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""exit_be_бу_embedded_in_word""], ""ca",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,вход,UNKNOWN,2405,,,,,,,,,,,,UPDATE_PRICE,1,1:LIMIT@0.0332,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,841,2409,2348,убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@0:7"", ""CANCEL_PENDING/strong:убираем лимитку@0:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@0:7""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2348,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,837,2413,,"Trader #A
+
+зафиксирую все свои позиции по текущим, не будет возможности контролировать сделки
+
+Ниже напишу результаты
+PORTALUSDT - 0.2R
+SAGAUSDT - 0.18R
+VIRTUALUSDT -0.01R
+PEOPLEUSDT - 0.24R
+DOGEUSDT - 0.23R
+
+
+Всем хорошего вечера и выходных",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""ALL_POSITIONS/strong:зафиксирую все@10:24"", ""ALL_POSITIONS/strong:зафиксирую все свои позиции@10:37"", ""CLOSE_FULL/strong:зафиксирую все свои позиции по текущим@10:48"", ""CLOSE_FULL/strong:фиксирую все@12:24"", ""ALL_POSITIONS/strong:фиксирую все@12:24"", """,CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,зафиксирую все свои позиции по текущим,ALL_POSITIONS,,,,,PORTALUSDT|SAGAUSDT|VIRTUALUSDT|PEOPLEUSDT|DOGEUSDT,,,,FULL,,0.2,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,833,2421,2234,Кто не закрывал вместе со мной - поздравляю с тейком. В мою статистку не идет. Не забывайте стопы переводить в бу,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@92:96"", ""MOVE_STOP_TO_BE/weak:в бу@109:113"", ""EXIT_BE/weak:бу@111:113""], ""suppressed_markers"": [""SL_HIT/weak:стоп@92:96""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], ""applied_rules",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,UNKNOWN,2234,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,820,2442,2425,стоп в бу ставим,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2425,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,814,2449,2446,"без нас улетели..печально. 
+лимитку убираем",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CANCEL_PENDING/strong:лимитку убираем@27:42"", ""MODIFY_ENTRY/weak:убираем@35:42""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@35:42""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_mo",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,лимитку убираем,UNKNOWN,2446,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,813,2450,2447,"без нас улетели..печально
+лимитку убираем",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CANCEL_PENDING/strong:лимитку убираем@26:41"", ""MODIFY_ENTRY/weak:убираем@34:41""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@34:41""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_mo",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,лимитку убираем,UNKNOWN,2447,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,809,2460,2443,чтобы минимизировать риск - стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""risk/weak:риск@21:25"", ""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP_TO_BE/strong:стоп в бу@28:37"", ""MOVE_STOP_TO_BE/weak:в бу@33:37"", ""EXIT_BE/weak:бу@35:37""], ""suppressed_markers"": [""SL_HIT/weak:стоп@28:32"", ""MOVE_STOP_TO_BE/weak:в бу@33:37"", ""EXIT_BE/weak:бу",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2443,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,808,2461,2443,"тейк, стоп уже в бу
+0.72R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@0:4"", ""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@6:10""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": ",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,UNKNOWN,2443,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,748,2539,2444,"1 тейк, стоп в бу
+0.23R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2444,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,743,2548,2443,стоп переносим на 1 тейк - 0.0998,1.0,,"{""suppressed_intents"": [""TP_HIT:1 тейк""], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/strong:стоп переносим@0:14"", ""MOVE_STOP/strong:стоп переносим на@0:17"", ""MODIFY_ENTRY/weak:переносим@5:14"", ""TP_HIT/weak:1 тейк@18:24"", ""TP_HIT/weak:тейк@20:24""], ""suppressed_markers"": [""SL_HIT/weak:стоп",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переносим на,UNKNOWN,2443,,,,,PRICE,1.0,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,741,2553,2443,"давайте закроем по текущим, в целом неплохо заработали, нужно маржу освободить для новых сделок
+
+1.68R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:по текущим@16:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,по текущим,UNKNOWN,2443,,,,,,,,,,,,UPDATE_PRICE,1,1:LIMIT@1.68,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,736,2559,2480,"1 тейк, стоп в бу
+0.62R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2480,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,730,2568,,"Trader #A
+Закрываю все позиции, результаты по каждой обновлю в этом посте, нужно подождать, посмотреть на рынок
+BTC - 2.8R
+Link - 0.54R
+xrp - 0.46R
+AAVE - фактически в бу
+sol - 0.18R
+near - 0.96R
+ton - 0.7R
+pepe - 0.14R (убыток)
+aster - 0.32R (убыток)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@10:18"", ""ALL_POSITIONS/strong:закрываю все@10:22"", ""CLOSE_FULL/strong:закрываю все позиции@10:30"", ""ALL_POSITIONS/strong:закрываю все позиции@10:30"", ""ALL_POSITIONS/strong:все позиции@19:30"", ""MARKET/weak:рынок@106:111"", ""lever",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю все позиции,ALL_POSITIONS,,,,,,,,,FULL,,2.8,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,729,2569,2544,"Здесь, если закрыть по текущим, получатся скромные 0.2R
+
+Напомню, что эта сделка в статистику не идет",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:сл@8:10"", ""stop_loss/strong:сл@8:10"", ""CLOSE_FULL/strong:закрыть по текущим@12:30"", ""MODIFY_ENTRY/weak:по текущим@20:30""], ""suppressed_markers"": [""SL_HIT/weak:сл@8:10"", ""MODIFY_ENTRY/weak:по текущим@20:30""], ""applied_marker_rules"": [""sl_hit",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрыть по текущим,UNKNOWN,2544,,,,,,,,FULL,,0.2,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,706,2596,,"trader #A
+
+https://t.me/c/3171748254/2571
+https://t.me/c/3171748254/2573
+
+снимаем лимитки
+
+посмотрим сегодня среднесрок😊",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@10:23"", ""take_profit/strong:tp@12:14"", ""telegram_link/strong:t.me/@18:23"", ""telegram_link/strong:https://t.me/@41:54"", ""take_profit/strong:tp@43:45"", ""telegram_link/strong:t.me/@49:54"", ""CANCEL_PENDING/strong:снимаем ",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снимаем лимитки,SINGLE_SIGNAL,,2571|2573,https://t.me/c/3171748254/2571|https://t.me/c/3171748254/2573,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,703,2599,2572,Тейк. Стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@0:4"", ""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/strong:стоп в бу@6:15"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2572,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,682,2632,2577,Стоп поставьте на 0.5749,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/strong:стоп поставьте на@0:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_ambiguous_gen",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп поставьте на,UNKNOWN,2577,,,,,PRICE,0.5749,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,681,2633,2577,"Закрываю по текущим - 0.5962
+1.8R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""weak_inside_strong",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2577,,,,,,,,FULL,,0.5962,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,678,2638,2635,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2635,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,676,2641,2634,Не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2634,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,669,2657,2612,"1 тейк. Стоп в бу
+0.42R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2612,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,665,2662,2610,поставьте стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@10:14"", ""MOVE_STOP_TO_BE/strong:стоп в бу@10:19"", ""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""suppressed_markers"": [""SL_HIT/weak:стоп@10:14"", ""MOVE_STOP_TO_BE/weak:в бу@15:19"", ""EXIT_BE/weak:бу@17:19""], ""applied_marke",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2610,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,660,2669,2663,"1 тейк. Стоп в бу
+0.45R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2663,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,659,2671,2663,"закрываю сейчас по текущим полностью позицию. уже хороший профит
+
+1.17R",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MARKET_NOW/weak:сейчас@9:15"", ""MODIFY_ENTRY/weak:по текущим@16:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.8}}",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,0.4|0.4,закрываю|по текущим,UNKNOWN,2663,,,,,,,,FULL,,1.17,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,658,2672,2643,"закрываю 50% по текущим. стоп в бу
+
+0.42R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_PARTIAL/strong:закрываю 50%@0:12"", ""MODIFY_ENTRY/weak:по текущим@13:23"", ""SL_HIT/weak:стоп@25:29"", ""MOVE_STOP_TO_BE/strong:стоп в бу@25:34"", ""MOVE_STOP_TO_BE/weak:в бу@30:34"", ""EXIT_BE/weak:бу@32:34""], ""suppressed_",CLOSE_PARTIAL,CLOSE_PARTIAL|MODIFY_ENTRY|MOVE_STOP_TO_BE,1,3,CLOSE(CLOSE_PARTIAL)|MODIFY_ENTRIES(MODIFY_ENTRY)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|MODIFY_ENTRIES|SET_STOP,CLOSE_PARTIAL|MODIFY_ENTRY|MOVE_STOP_TO_BE,1.0|0.4|1.0,закрываю 50%|по текущим|стоп в бу,UNKNOWN,2643,,,,,,,,PARTIAL,0.5,0.42,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,656,2675,,"Trader #A 
+
+пока новых сделок не будет. доведем до тейков те, что остались
+
+Открыты: 
+ETH
+ASTER
+BTC
+PAXG (стоп в бу стоит)
+JST (был 1 тейк, стоп в бу)
+BONK (был 1 тейк, стоп в бу)
+BNB",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""EXIT_BE/weak:бу@31:33"", ""TP_HIT/weak:тейков@49:55"", ""leverage/weak:x@98:99"", ""SL_HIT/weak:стоп@102:106"", ""MOVE_STOP_TO_BE/strong:стоп в бу@102:111"", ""MOVE_STOP_TO_BE/weak:в бу@107:111"", ""EXIT_BE/weak:бу@109:111"", ""TP_HIT/weak:1 тейк@128:134"", ""TP_HIT/w",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,3,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,1.0|1.0|1.0,стоп в бу|стоп в бу|стоп в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,649,2685,2675,"передвиньте стопы в плюс или бу (я буду в бу двигать), по ASTER оставляем стоп как есть",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP/strong:передвиньте стоп@0:16"", ""MOVE_STOP_TO_BE/strong:передвиньте стопы в плюс@0:24"", ""SL_HIT/weak:стоп@12:16"", ""EXIT_BE/weak:бу@29:31"", ""EXIT_BE/weak:бу@35:37"", ""MOVE_STOP_TO_BE/weak:в бу@40:44"", ""MOVE_STOP_TO_BE/strong:в бу двигать@40:52"",",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,2,SET_STOP(MOVE_STOP_TO_BE)|SET_STOP(MOVE_STOP_TO_BE),SET_STOP|SET_STOP,MOVE_STOP_TO_BE|MOVE_STOP_TO_BE,1.0|1.0,передвиньте стопы в плюс|в бу двигать,UNKNOWN,2675,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,619,2722,2712,"Trader #A
+
+https://t.me/c/3171748254/2712
+https://t.me/c/3171748254/2713
+https://t.me/c/3171748254/2718
+ 
+Отменяем лимитки
+
+Продолжим после 19:00",1.0,,"{""suppressed_intents"": [], ""ignored_reply_to_message_id"": 2712, ""matched_markers"": [""telegram_link/strong:https://t.me/@10:23"", ""take_profit/strong:tp@12:14"", ""telegram_link/strong:t.me/@18:23"", ""telegram_link/strong:https://t.me/@41:54"", ""take_profit/strong:tp@43:45"", ""telegram_link/strong:t.me/@49",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,отменяем лимитки,SINGLE_SIGNAL,,2712|2713|2718,https://t.me/c/3171748254/2712|https://t.me/c/3171748254/2713|https://t.me/c/3171748254/2718,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,618,2723,2719,Тут тоже снимаем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CANCEL_PENDING/strong:снимаем лимитку@9:24""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 1.0}}",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снимаем лимитку,UNKNOWN,2719,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,596,2746,,"Trader #A
+
+Сегодняшний марафон подошел к концу, что делаем:
+1. Оставляем YGG в работе
+2. Оставляем лимитку по SXP
+3. Все остальные лимитки убираем
+
+на сейчас заработали 1.32R
+
+Всем спасибо",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""INFO_ONLY/strong:марафон подошел@22:37"", ""leverage/weak:x@110:111"", ""CANCEL_PENDING/strong:лимитки убираем@130:145"", ""MODIFY_ENTRY/weak:убираем@138:145"", ""MARKET_NOW/weak:сейчас@149:155""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@138:145""], ""a",CANCEL_PENDING,INFO_ONLY|CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,лимитки убираем,UNKNOWN,,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,576,2773,2772,точка входа 84.86,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:вход@6:10""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,вход,UNKNOWN,2772,,,,,,,,,,,,UPDATE_PRICE,1,1:LIMIT@84.86,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,561,2798,,"[trader #A]
+
+Чтобы не кормить ""лося"" закрываю по текущим AVAX и PEOPLE
+
+По  SOL и SUI стоп в бу
+
+AVAX - 0.5R (убыток)
+PEOPLE - 0.28R (убыток)",1.0,update_without_target_hint,"{""suppressed_intents"": [""MOVE_STOP_TO_BE:стоп в бу""], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@36:44"", ""CLOSE_FULL/strong:закрываю по текущим@36:55"", ""MODIFY_ENTRY/weak:по текущим@45:55"", ""leverage/weak:x@59:60"", ""SL_HIT/weak:стоп@83:87"", ""MOVE_STOP_TO_BE/strong:стоп в бу@83:92"", ""MOVE_STOP_TO_",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,,,,,,,,,FULL,,0.5,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,559,2801,2610,"Фиксирую 50% по текущей цене. Стоп в бу
+
+0.79R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_PARTIAL/strong:фиксирую 50%@0:12"", ""SL_HIT/weak:стоп@30:34"", ""MOVE_STOP_TO_BE/strong:стоп в бу@30:39"", ""MOVE_STOP_TO_BE/weak:в бу@35:39"", ""EXIT_BE/weak:бу@37:39""], ""suppressed_markers"": [""SL_HIT/weak:стоп@30:34"", ""MOVE_STOP_TO_BE/weak:в бу@35:39""",CLOSE_PARTIAL,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|1.0,фиксирую 50%|стоп в бу,UNKNOWN,2610,,,,,,,,PARTIAL,0.5,0.79,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,558,2802,2761,"Тейк. Стоп в бу
+
+0.34R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@0:4"", ""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/strong:стоп в бу@6:15"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2761,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,556,2807,2772,"тейк, стоп в бу
+0.36R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@0:4"", ""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/strong:стоп в бу@6:15"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2772,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,553,2810,2809,"проценты до тейков и стопа немного меньше/больше, нет времени пересчитывать для публикации, статистика все равно считается от точки входа",0.4,,"{""suppressed_intents"": [""TP_HIT:тейков""], ""matched_markers"": [""TP_HIT/weak:тейков@12:18"", ""SL_HIT/weak:стоп@21:25"", ""MODIFY_ENTRY/weak:вход@132:136""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""sl_hit_redundant_with_tp_hit""], ""applied_rules"": [""sl_hit_red",SL_HIT,SL_HIT|MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,вход,UNKNOWN,2809,,,,,,,,,,,,UNKNOWN,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,549,2816,,"Trader #A 
+
+Закрываю все позиции по текущим, чтобы закрыть февраль
+
+hype - в бу
+pepe - в бу
+bnb - 0.07R (убыток)
+sol - 0.82R
+sui - 0.95R
+paxg - 2.2R
+aster - 0.12R",1.0,,"{""suppressed_intents"": [""MOVE_STOP_TO_BE:в бу"", ""MOVE_STOP_TO_BE:в бу""], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@10:18"", ""ALL_POSITIONS/strong:закрываю все@10:22"", ""CLOSE_FULL/strong:закрываю все позиции@10:30"", ""ALL_POSITIONS/strong:закрываю все позиции@10:30"", ""ALL_POSITIONS/strong:все позиц",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,1.0|0.4,закрываю все позиции|по текущим,ALL_POSITIONS,,,,,,,,,FULL,,0.07,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,542,2828,2817,Стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2817,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,528,2852,2851,Тут с текущих,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/strong:тут с текущих@0:13"", ""MODIFY_ENTRY/weak:тут с текущих@0:13"", ""MARKET_NOW/strong:тут с текущих@0:13"", ""MODIFY_ENTRY/weak:с текущих@4:13""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:тут с текущих@0:13"", ""MODIFY_ENTRY/weak:с текущих@4:",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,1.0,тут с текущих,UNKNOWN,2851,,,,,,,,,,,,MARKET_NOW,1,1:MARKET@,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,527,2853,2851,"1 тейк. Стоп в бу
+
+0.62R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2851,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,524,2856,2855,тут отмена,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/strong:тут отмена@0:10"", ""INVALIDATE_SETUP/weak:отмена@4:10""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:отмена@4:10""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], ""applied_rules""",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,тут отмена,UNKNOWN,2855,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,521,2860,2859,"хочется написать много непечатных слов по поводу 1 копейки...
+
+убираем лимитку😔",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:сл@34:36"", ""stop_loss/strong:сл@34:36"", ""MODIFY_ENTRY/weak:убираем@62:69"", ""CANCEL_PENDING/strong:убираем лимитку@62:77""], ""suppressed_markers"": [""SL_HIT/weak:сл@34:36"", ""MODIFY_ENTRY/weak:убираем@62:69""], ""applied_marker_rules"": [""sl_hit_с",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2859,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,517,2867,2862,"1 тейк. стоп в бу
+
+0.37R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2862,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,512,2872,2854,"1 тейк. стоп в бу
+0.59R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2854,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,510,2875,2817,"1 тейк, стоп в бу
+
+0.66R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2817,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,508,2877,2862,"закрываю остаток по текущим
+итог 1.12R 
+
+Для справки, здесь и во всех постах о тейках или стопах R нарастающим итогом",1.0,close_full_redundant_with_sl_hit,"{""suppressed_intents"": [""SL_HIT:стоп"", ""TP_HIT:тейках""], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю остаток@0:16"", ""CLOSE_FULL/strong:закрываю остаток по текущим@0:27"", ""MODIFY_ENTRY/weak:по текущим@17:27"", ""TP_HIT/weak:тейках@77:83"", ""SL_HIT/weak:стоп@88:92""], """,CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю остаток по текущим,UNKNOWN,2862,,,,,,,,FULL,,1.12,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,507,2878,2854,"3 тейка. сделка закрыта
+
+2.58R",0.4,,"{""suppressed_intents"": [""TP_HIT:3 тейка""], ""matched_markers"": [""TP_HIT/weak:3 тейка@0:7"", ""TP_HIT/weak:тейка@2:7"", ""CLOSE_FULL/weak:закрыта@16:23""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [""close_full_redundant_with_tp_hit""], ""applied_rules"": [""close_fu",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,UNKNOWN,2854,,,,,,,,FULL,,2.58,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,503,2882,2817,стоп переношу на 65000,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/strong:стоп переношу@0:13"", ""MOVE_STOP/strong:стоп переношу на@0:16""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applied_disambiguation_rules"": [], """,MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переношу на,UNKNOWN,2817,,,,,PRICE,65000.0,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,499,2890,2832,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2832,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,494,2896,2892,"1 тейк. стоп в бу
+0.27R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2892,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,491,2900,2832,"1 тейк. Стоп в бу
+
+0.37R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2832,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,477,2919,2914,тейк. стоп пока не переносим в бу,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@0:4"", ""SL_HIT/weak:стоп@6:10"", ""MODIFY_ENTRY/weak:переносим@19:28"", ""MOVE_STOP_TO_BE/weak:в бу@29:33"", ""EXIT_BE/weak:бу@31:33""], ""suppressed_markers"": [""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/weak:в бу@29:33"", ""EXIT_BE/weak:бу@31:33""",TP_HIT,TP_HIT|MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,переносим,UNKNOWN,2914,,,,,,,,,,,,UNKNOWN,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,476,2920,2817,стоп переносим на 67000,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/strong:стоп переносим@0:14"", ""MOVE_STOP/strong:стоп переносим на@0:17"", ""MODIFY_ENTRY/weak:переносим@5:14""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MODIFY_ENTRY/weak:переносим@5:14""], ""applied_marker_rules"": [",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переносим на,UNKNOWN,2817,,,,,PRICE,67000.0,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,475,2921,2916,убираем лимитку,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:убираем@0:7"", ""CANCEL_PENDING/strong:убираем лимитку@0:15""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:убираем@0:7""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_",CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,убираем лимитку,UNKNOWN,2916,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,474,2922,,"Trader #A 
+
+WOO и ATP стопы в бу",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""take_profit/strong:tp@17:19"", ""SL_HIT/weak:стоп@20:24"", ""MOVE_STOP_TO_BE/strong:стопы в бу@20:30"", ""MOVE_STOP_TO_BE/weak:в бу@26:30"", ""EXIT_BE/weak:бу@28:30""], ""suppressed_markers"": [""SL_HIT/weak:стоп@20:24"", ""MOVE_STOP_TO_BE/weak:в бу@26:30"", ""EXIT_BE",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стопы в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,473,2923,,"Trader #A 
+
+PYTH тоже стоп в бу",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@20:24"", ""MOVE_STOP_TO_BE/strong:стоп в бу@20:29"", ""MOVE_STOP_TO_BE/weak:в бу@25:29"", ""EXIT_BE/weak:бу@27:29""], ""suppressed_markers"": [""SL_HIT/weak:стоп@20:24"", ""MOVE_STOP_TO_BE/weak:в бу@25:29"", ""EXIT_BE/weak:бу@27:29""], ""applied_marke",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,457,2940,2930,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2930,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,454,2943,2817,"закрываю по текущим
+
+1.62R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""weak_inside_strong",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2817,,,,,,,,FULL,,1.62,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,446,2953,2950,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2950,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,445,2954,2950,"ну и в бу сразу
+0.3R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,UNKNOWN,2950,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,441,2960,2955,Не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,2955,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,416,2991,,"Trader #A
+
+Друзья, сегодня, видимо, рынок включил режим «лимитки? не слышал».🙂
+
+Из 6 лимиток - 2 взяли. А также поймали 1 стоп
+Чтобы не переносить лишний риск через ночь, рекомендую снять все лимитные ордера. 
+
+Я у себя лимитки оставлю - для полной картины стратегии интрадей и статистики по переносам.
+
+Если ночью что-то исполнится - обязательно сообщу и зафиксирую результат.🫡",1.0,,"{""suppressed_intents"": [""SL_HIT:стоп""], ""matched_markers"": [""MARKET/weak:рынок@35:40"", ""SL_HIT/weak:сл@68:70"", ""stop_loss/strong:сл@68:70"", ""ENTRY_FILLED/weak:взяли@95:100"", ""SL_HIT/weak:стоп@120:124"", ""risk/weak:риск@152:156"", ""ALL_POSITIONS/strong:снять все@180:189"", ""CANCEL_PENDING/strong:снять в",CANCEL_PENDING,ENTRY_FILLED|CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,снять все лимитные ордера,ALL_POSITIONS,,,,,,,,,,,,ALL_PENDING,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,391,3021,3017,не актуально,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12"", ""INVALIDATE_SETUP/strong:не актуально@0:12""], ""suppressed_markers"": [""INVALIDATE_SETUP/weak:не актуально@0:12""], ""applied_marker_rules"": [""weak_inside_strong_same_intent""], ""applied_disambiguation_rules"": [], """,CANCEL_PENDING,CANCEL_PENDING,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,1.0,не актуально,UNKNOWN,3017,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,385,3028,3018,теперь стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@7:11"", ""MOVE_STOP_TO_BE/strong:стоп в бу@7:16"", ""MOVE_STOP_TO_BE/weak:в бу@12:16"", ""EXIT_BE/weak:бу@14:16""], ""suppressed_markers"": [""SL_HIT/weak:стоп@7:11"", ""MOVE_STOP_TO_BE/weak:в бу@12:16"", ""EXIT_BE/weak:бу@14:16""], ""applied_marker_r",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3018,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,380,3036,3020,тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@0:4"", ""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/strong:стоп в бу@6:15"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13:15""], ""suppressed_markers"": [""SL_HIT/weak:стоп@6:10"", ""MOVE_STOP_TO_BE/weak:в бу@11:15"", ""EXIT_BE/weak:бу@13",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3020,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,379,3037,2944,1 тейк. стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/strong:стоп в бу@8:17"", ""MOVE_STOP_TO_BE/weak:в бу@13:17"", ""EXIT_BE/weak:бу@15:17""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2944,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,372,3047,2884,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2884,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,365,3063,3020,"Закрыл по текущим
+0.41R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:закрыл по текущим@0:17"", ""MODIFY_ENTRY/weak:по текущим@7:17""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@7:17""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_m",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрыл по текущим,UNKNOWN,3020,,,,,,,,FULL,,0.41,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,364,3064,2944,"закрываю по текущим
+0.85R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""weak_inside_strong",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2944,,,,,,,,FULL,,0.85,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,363,3065,3042,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3042,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,361,3068,2884,"закрываю по текущим
+0.37R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""CLOSE_FULL/strong:закрываю по текущим@0:19"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываю@0:8"", ""MODIFY_ENTRY/weak:по текущим@9:19""], ""applied_marker_rules"": [""weak_inside_strong",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,UNKNOWN,2884,,,,,,,,FULL,,0.37,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,358,3074,3042,1 тейк. стоп уже в бу стоит,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@8:12"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""SL_HIT/weak:стоп@8:12""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""appli",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,UNKNOWN,3042,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,344,3094,3042,стоп поставьте на 1 тейк,1.0,,"{""suppressed_intents"": [""TP_HIT:1 тейк""], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/strong:стоп поставьте на@0:17"", ""TP_HIT/weak:1 тейк@18:24"", ""TP_HIT/weak:тейк@20:24""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""appli",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп поставьте на,UNKNOWN,3042,,,,,PRICE,1.0,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,337,3102,3041,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3041,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,334,3108,2964,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2964,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,322,3126,3042,"давайте закроем оставшиеся 10% позиции по текущим. не будем мучить)
+
+итог 1.3R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:по текущим@39:49"", ""EXIT_BE/weak:бу@54:56""], ""suppressed_markers"": [""EXIT_BE/weak:бу@54:56""], ""applied_marker_rules"": [""exit_be_бу_embedded_in_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""exit_be_бу_embedded_in_word""",MODIFY_ENTRY,MODIFY_ENTRY,1,1,MODIFY_ENTRIES(MODIFY_ENTRY),MODIFY_ENTRIES,MODIFY_ENTRY,0.4,по текущим,UNKNOWN,3042,,,,,,,,,,,,UPDATE_PRICE,1,1:LIMIT@1.3,ONE_SHOT,,0,,,
+36,trader_a,UPDATE,PARSED,291,3169,3040,1 тейк стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@0:6"", ""TP_HIT/weak:тейк@2:6"", ""SL_HIT/weak:стоп@7:11"", ""MOVE_STOP_TO_BE/strong:стоп в бу@7:16"", ""MOVE_STOP_TO_BE/weak:в бу@12:16"", ""EXIT_BE/weak:бу@14:16""], ""suppressed_markers"": [""SL_HIT/weak:стоп@7:11"", ""MOVE_STOP_TO_BE/weak:в бу@1",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3040,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,280,3183,,"Trader #A
+
+Doge
+LDO
+SOL
+BTC
+ETH
+
+стоп двигаем в бу",1.0,update_without_target_hint,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@31:35"", ""MOVE_STOP/strong:стоп двигаем@31:43"", ""MOVE_STOP_TO_BE/strong:стоп двигаем в бу@31:48"", ""MOVE_STOP_TO_BE/weak:в бу@44:48"", ""EXIT_BE/weak:бу@46:48""], ""suppressed_markers"": [""SL_HIT/weak:стоп@31:35"", ""MOVE_STOP_TO_BE/weak:в бу@4",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп двигаем в бу,UNKNOWN,,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,240,3240,3080,стоп на 1 тейк,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/weak:стоп на@0:7"", ""MOVE_STOP/strong:стоп на 1 тейк@0:14"", ""TP_HIT/weak:1 тейк@8:14"", ""TP_HIT/weak:тейк@10:14""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/weak:стоп на@0:7""], ""applied_marker_rules"": [""w",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп на 1 тейк,UNKNOWN,3080,,,,,TP_LEVEL,,1,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,235,3247,3172,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3172,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,233,3249,2963,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,2963,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,221,3264,3258,"Давайте все закроем, чтобы не терять прибыль
+
+В этом посте добавлю результаты:
+#LTCUSDT - 0.45R
+#OPUSDT - 0.52R
+#API3USDT  - 0.2R (убыток)
+#AAVEUSDT  - 1.38R
+#ASTERUSDT - 0.41R
+#SOLUSDT - 1.64R
+#DOGEUSDT - 1.2R
+#XRPUSDT - 0.84R
+#ETHUSDT - 1.74R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/strong:давайте все закроем@0:19"", ""ALL_POSITIONS/strong:все закроем@8:19"", ""ADD_ENTRY/weak:добавлю@58:65"", ""symbol/strong:usdt@82:86"", ""symbol/strong:usdt@82:86"", ""symbol/strong:usdt@98:102"", ""symbol/strong:usdt@98:102"", ""symbol/strong:usdt@",CLOSE_FULL,CLOSE_FULL|ADD_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(ADD_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|ADD_ENTRY,1.0|0.4,давайте все закроем|добавлю,ALL_POSITIONS,3258,,,,LTCUSDT|OPUSDT|API3USDT|AAVEUSDT|ASTERUSDT|SOLUSDT|DOGEUSDT|XRPUSDT|ETHUSDT,,,,FULL,,0.45,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,211,3277,3272,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3272,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,209,3280,3272,Давайте тут зафиксируем 50%. Не будем дожидаться 1 тейка. Все равно рядом с ним,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:зафиксируем@12:23"", ""CLOSE_PARTIAL/strong:зафиксируем 50%@12:27"", ""EXIT_BE/weak:бу@32:34"", ""TP_HIT/weak:1 тейка@49:56"", ""TP_HIT/weak:тейка@51:56""], ""suppressed_markers"": [""CLOSE_FULL/weak:зафиксируем@12:23"", ""EXIT_BE/weak:бу@32:34""], ""a",TP_HIT,CLOSE_PARTIAL|TP_HIT,1,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,зафиксируем 50%,UNKNOWN,3272,,,,,,,,PARTIAL,0.5,1.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,207,3282,3273,Давайте поставим стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@17:21"", ""MOVE_STOP_TO_BE/strong:стоп в бу@17:26"", ""MOVE_STOP_TO_BE/weak:в бу@22:26"", ""EXIT_BE/weak:бу@24:26""], ""suppressed_markers"": [""SL_HIT/weak:стоп@17:21"", ""MOVE_STOP_TO_BE/weak:в бу@22:26"", ""EXIT_BE/weak:бу@24:26""], ""applied_marke",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3273,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,192,3298,3272,стоп на 1 тейк поставьте,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/weak:стоп на@0:7"", ""MOVE_STOP/strong:стоп на 1 тейк@0:14"", ""TP_HIT/weak:1 тейк@8:14"", ""TP_HIT/weak:тейк@10:14""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP/weak:стоп на@0:7""], ""applied_marker_rules"": [""w",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп на 1 тейк,UNKNOWN,3272,,,,,TP_LEVEL,,1,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,171,3323,3307,стоп в бу,1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/strong:стоп в бу@0:9"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""suppressed_markers"": [""SL_HIT/weak:стоп@0:4"", ""MOVE_STOP_TO_BE/weak:в бу@5:9"", ""EXIT_BE/weak:бу@7:9""], ""applied_marker_rules"": [""we",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3307,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,165,3332,,"Trader #A
+
+Закрываю шорты по текущим.
+Ниже напишу результат по монетам
+Не нравится рынок. Нужно понаблюдать
+
+Итог:
+
+#1000PEPEUSDT - 1.22R
+#ETHUSDT - 0.33R
+#BTCUSDT - 0.16R (убыток)
+#DOGEUSDT - 0.2R (убыток)
+#LINKUSDT - 0.34R (убыток)
+#SOLUSDT - 0.33R (убыток)",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""CLOSE_FULL/weak:закрываю@10:18"", ""ALL_SHORT/strong:закрываю шорты@10:24"", ""ALL_SHORT/strong:закрываю шорты по@10:27"", ""CLOSE_FULL/strong:закрываю шорты по текущим@10:35"", ""SHORT/strong:шорт@19:23"", ""ALL_SHORT/weak:шорты@19:24"", ""MODIFY_ENTRY/weak:по те",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю шорты по текущим,ALL_SHORT,,,,,1000PEPEUSDT|ETHUSDT|BTCUSDT|DOGEUSDT|LINKUSDT|SOLUSDT,,,,FULL,,1000.0,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,73,3444,3428,"тут 2 тейка
+стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:2 тейка@4:11"", ""TP_HIT/weak:тейка@6:11"", ""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/strong:стоп в бу@12:21"", ""MOVE_STOP_TO_BE/weak:в бу@17:21"", ""EXIT_BE/weak:бу@19:21""], ""suppressed_markers"": [""SL_HIT/weak:стоп@12:16"", ""MOVE_STOP_TO_BE/weak",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3428,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,56,3461,3459,"отбой, поторопился. у меня почему-то стоял другой тейк",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""CANCEL_PENDING/weak:отбой@0:5"", ""INVALIDATE_SETUP/weak:отбой@0:5"", ""TP_HIT/weak:тейк@50:54""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4, ""REPORT"": 0.",TP_HIT,CANCEL_PENDING|TP_HIT,1,1,CANCEL_PENDING(CANCEL_PENDING),CANCEL_PENDING,CANCEL_PENDING,0.4,отбой,UNKNOWN,3459,,,,,,,,,,,UNKNOWN,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,40,3477,3404,"теперь точно 1 тейк
+стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:1 тейк@13:19"", ""TP_HIT/weak:тейк@15:19"", ""SL_HIT/weak:стоп@20:24"", ""MOVE_STOP_TO_BE/strong:стоп в бу@20:29"", ""MOVE_STOP_TO_BE/weak:в бу@25:29"", ""EXIT_BE/weak:бу@27:29""], ""suppressed_markers"": [""SL_HIT/weak:стоп@20:24"", ""MOVE_STOP_TO_BE/weak",TP_HIT,TP_HIT|MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,UNKNOWN,3404,,,,,ENTRY,,,,,,,,0,,,,0,,,
+36,trader_a,UPDATE,PARSED,20,3497,3478,давайте тут переведем в бу,0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""MOVE_STOP_TO_BE/weak:в бу@22:26"", ""EXIT_BE/weak:бу@24:26""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDATE"": 0.4}}",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,UNKNOWN,3478,,,,,ENTRY,,,,,,,,0,,,,0,,,

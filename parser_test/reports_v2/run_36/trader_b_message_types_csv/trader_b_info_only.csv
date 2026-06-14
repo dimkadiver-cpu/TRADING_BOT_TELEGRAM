@@ -1,0 +1,111 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,info_raw_fragment
+36,trader_b,INFO,UNCLASSIFIED,2237,354,314,"[trader#В]
+
+Как и ожидалось по btc, мы сняли 98k$, сейчас рассматриваю для вас новые возможности для открытия позиций, следующий пост",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MARKET_NOW/weak:сейчас@50:56"", ""SL_HIT/weak:сл@118:120"", ""stop_loss/strong:сл@118:120""], ""suppressed_markers"": [""SL_HIT/weak:сл@118:120""], ""applied_marker_rules"": [""sl_hit_сл_embedded_in_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl",,,"[trader#В]
+
+Как и ожидалось по btc, мы сняли 98k$, сейчас рассматриваю для вас новые возможности для открытия позиций, следующий пост"
+36,trader_b,INFO,UNCLASSIFIED,1629,1234,1228,"[trader#B]
+
+Сделка полностью реализована в +3.3%
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#B]
+
+Сделка полностью реализована в +3.3%
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,1607,1265,1238,"[trader#B]
+
+Сделка полностью реализована в +2.5% 
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#B]
+
+Сделка полностью реализована в +2.5% 
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,1557,1352,1323,"[trader#B]
+
+Сделка полностью реализована в +5% 
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#B]
+
+Сделка полностью реализована в +5% 
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,1508,1418,1321,"[trader#B]
+
+$XRPUSDT Update:
+
+Сделка полностью реализована в +8% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@12:13"", ""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#B]
+
+$XRPUSDT Update:
+
+Сделка полностью реализована в +8% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,1507,1419,1394,"[trader#B]
+
+$BTCUSDT Update:
+
+Сделка по биткоину не заставила нас долго ждать и она так же полностью реализована в +2% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#B]
+
+$BTCUSDT Update:
+
+Сделка по биткоину не заставила нас долго ждать и она так же полностью реализована в +2% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,1368,1613,1602,"[trader#B]
+
+$SOLUSDT Update:
+
+Сделка полностью реализована в +3% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#B]
+
+$SOLUSDT Update:
+
+Сделка полностью реализована в +3% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,929,2307,2300,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,
+36,trader_b,INFO,UNCLASSIFIED,928,2308,2300,"[trader #B]
+
+Небольшие изменения!",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader #B]
+
+Небольшие изменения!"
+36,trader_b,INFO,UNCLASSIFIED,917,2319,2314,"[trader #B]
+
+Сделка полностью реализована в +2.5% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader #B]
+
+Сделка полностью реализована в +2.5% к депозиту 😊
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,449,2948,2934,"[trader #B]
+
+Сделка полностью реализована в +5% к депозиту
+
+Поздравляю с профитом 💸💸💸",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader #B]
+
+Сделка полностью реализована в +5% к депозиту
+
+Поздравляю с профитом 💸💸💸"
+36,trader_b,INFO,UNCLASSIFIED,223,3262,3232,"[trader #B]
+
+Сделка полностью реализована в +5.1% к депозиту 
+
+Поздравляю с профитом 💸💸💸
+
+P.s. все таки выжали с xrp 
+🤣",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@109:110""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader #B]
+
+Сделка полностью реализована в +5.1% к депозиту 
+
+Поздравляю с профитом 💸💸💸
+
+P.s. все таки выжали с xrp 
+🤣"
