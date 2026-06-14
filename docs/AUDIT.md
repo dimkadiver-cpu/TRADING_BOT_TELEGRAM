@@ -1,5 +1,59 @@
 # AUDIT — TeleSignalBot
 
+---
+
+## 2026-06-14 — Task 3: Trasformazione completa `semantic_markers.json` trader_prova in formato regex
+
+### Step completato
+
+Trasformato `src/parser_v2/profiles/trader_prova/semantic_markers.json` (1887 → ~650 righe logiche) applicando `strong_patterns`/`weak_patterns` in tutte le sezioni con 5+ varianti simili. I literal coperti dai pattern sono stati rimossi; literal unici e frasi senza struttura ripetitiva sono stati mantenuti.
+
+### Sezioni trasformate
+
+| Sezione | Pattern aggiunti | Literal rimossi |
+|---|---|---|
+| `field_markers.take_profit` | 7 | 53 |
+| `modify_entry_mode_markers.MARKET_NOW` | 6 | ~44 |
+| `intent_markers.MOVE_STOP_TO_BE` | 17 | ~90 |
+| `intent_markers.MOVE_STOP` | 16 | ~40 |
+| `intent_markers.CLOSE_FULL` | 15 | ~50 |
+| `intent_markers.CLOSE_PARTIAL` | 15 | ~60 |
+| `intent_markers.CANCEL_PENDING` | 9 | ~50 |
+| `intent_markers.MODIFY_ENTRY` | 12 (incl. dedup blocco MARKET_NOW) | ~80 |
+| `intent_markers.ADD_ENTRY` | 11 | ~55 |
+| `intent_markers.MODIFY_TARGETS` | 15 | ~45 |
+| `intent_markers.ENTRY_FILLED` | 11 | ~35 |
+| `intent_markers.TP_HIT` | 8 strong + 5 weak | ~50 |
+| `intent_markers.SL_HIT` | 6 | ~30 |
+| `intent_markers.EXIT_BE` | 14 | ~80 |
+| `target_hint_markers.ALL_LONG/SHORT/POSITIONS` | 6 | ~20 |
+
+**Sezioni invariate** (frasi troppo eterogenee per pattern): `INVALIDATE_SETUP`, `REENTER`, `INFO_ONLY`, `info_markers`, `entry_selector_markers`, `side_markers`, `field_markers` (symbol/entry/stop_loss).
+
+### Validazione
+
+```
+pytest src/parser_v2/tests/test_marker_matcher_patterns.py -q
+→ 13 passed ✅
+
+pytest src/parser_v2/tests/ -q
+→ 195 passed, 1 failed (pre-existing trader_a test, invariato) ✅
+```
+
+### File toccati
+
+| File | Stato |
+|---|---|
+| `src/parser_v2/profiles/trader_prova/semantic_markers.json` | Trasformato |
+
+### Rischi aperti
+
+- Alcuni pattern usano alternanze Cyrillic `[её]` — verificare sul runtime reale con messaggi genuini di trader_prova per assicurarsi che non vi siano false positive sui marcatori di CLOSE_PARTIAL/CANCEL_PENDING.
+- Il blocco duplicate `MODIFY_ENTRY` (copia di `MARKET_NOW`, ~60 literal) era nell'originale — ora rimosso e sostituito con pattern condivisi.
+- `SL_HIT` pattern `(?:стоп(?:лосс)?|stop\s+loss|sl|сл)\s+сработал|сработал\s+...` richiede test su messaggi reali per evitare falsi match su sigle.
+
+---
+
 Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
