@@ -1,0 +1,1 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,symbol,side,entry_structure,entries_count,entries_summary,stop_loss_price,take_profit_count,take_profit_prices,risk_hint_raw,risk_hint_value,risk_hint_min_value,risk_hint_max_value,leverage_hint,missing_fields,completeness

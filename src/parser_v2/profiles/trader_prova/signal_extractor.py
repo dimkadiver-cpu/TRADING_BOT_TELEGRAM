@@ -26,6 +26,9 @@ _CYR_LIMIT_ROOT = "\u043b\u0438\u043c\u0438\u0442"
 _CYR_CURRENT_ROOT = "\u0442\u0435\u043a\u0443\u0449"
 _CYR_MARKET_ROOT = "\u0440\u044b\u043d"
 _CYR_SPOT_ROOT = "\u0441\u043f\u043e\u0442"
+_CYR_TAKE = "\u0442\u0435\u0439\u043a"   # \u0442\u0435\u0439\u043a
+_CYR_PROFIT = "\u043f\u0440\u043e\u0444\u0438\u0442"  # \u043f\u0440\u043e\u0444\u0438\u0442
+_CYR_TP = "\u0442\u043f"  # \u0442\u043f
 _BULLET_CHARS = r"\-*•—–"
 
 _ENTRY_RANGE_RE = re.compile(
@@ -51,6 +54,13 @@ _ENTRY_MARKET_RE = re.compile(
 _ENTRY_MARKET_PAREN_RE = re.compile(
     rf"(?:entry|enter|vhod|{_CYR_ENTRY})\s*:?\s*(?P<value>{_NUMBER_PATTERN})"
     rf"\s*\((?=[^)]*(?:{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT}|market))[^)]*\)",
+    re.IGNORECASE,
+)
+# "вход: по текущим (≈63150)" — price INSIDE parens after market description (trader_b format)
+_ENTRY_MARKET_PAREN_AFTER_RE = re.compile(
+    rf"\b(?:entry|enter|vhod|{_CYR_ENTRY})\b"
+    rf"(?:\s*:)?\s*[^\n(]{{0,40}}"
+    rf"\([\s~≈]*(?P<value>{_NUMBER_PATTERN})\)",
     re.IGNORECASE,
 )
 _ENTRY_KEYWORD_RE = re.compile(
@@ -85,10 +95,21 @@ _STOP_LOSS_RE = re.compile(
     rf"(?:\s*\([^)]*\))?\s*:?\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
     re.IGNORECASE,
 )
-_TAKE_PROFIT_RE = re.compile(rf"\btp(?P<index>\d+)?\b\s*:?\s*(?P<value>{_NUMBER_PATTERN})", re.IGNORECASE)
-_TAKE_PROFIT_HEADER_RE = re.compile(r"^[^\n]*(?:\btps?\b|тейк\w*)[^\n]*:\s*$", re.IGNORECASE | re.MULTILINE)
+# тп<N> (trader_d), тейк профит: inline (trader_b), tp<N> (universal)
+_TAKE_PROFIT_RE = re.compile(
+    rf"(?:\b(?:tp|{_CYR_TP})(?P<index>\d+)?\b"
+    rf"|{_CYR_TAKE}\w*(?:\s+{_CYR_PROFIT}\w*)?)"
+    rf"\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
+    re.IGNORECASE,
+)
+# тпs? (trader_d), [Tт]ейк профит? (prova+trader_b), tps? (universal)
+_TAKE_PROFIT_HEADER_RE = re.compile(
+    rf"^[^\n]*(?:\btps?\b|\b{_CYR_TP}s?\b|[Tт]ейк\w*(?:\s+{_CYR_PROFIT}\w*)?)[^\n]*:\s*$",
+    re.IGNORECASE | re.MULTILINE,
+)
+# \d+[.)] handles numbered lists like "1) 87100" in addition to bullet chars
 _TAKE_PROFIT_BARE_LINE_RE = re.compile(
-    rf"^\s*(?:[{_BULLET_CHARS}]\s*)?(?P<value>{_NUMBER_PATTERN})(?:\s|\(|$)",
+    rf"^\s*(?:(?:[{_BULLET_CHARS}]|\d+[.)])\s*)?(?P<value>{_NUMBER_PATTERN})(?:\s|\(|$)",
     re.IGNORECASE,
 )
 
@@ -198,6 +219,8 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
     if primary is None:
         primary = _search_price(_ENTRY_MARKET_PAREN_RE, text)
     if primary is None:
+        primary = _search_price(_ENTRY_MARKET_PAREN_AFTER_RE, text)
+    if primary is None:
         primary = _search_price(_ENTRY_ORDER_RE, text)
         primary_type = "LIMIT"
     if primary is None:
@@ -280,11 +303,8 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
     if not header:
         return take_profits
 
-    started = False
     for line in text[header.end():].splitlines():
         if not line.strip():
-            if started:
-                break
             continue
         match = _TAKE_PROFIT_BARE_LINE_RE.match(line)
         if not match:
@@ -294,7 +314,6 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
         price = _price_from_raw(match.group("value"))
         if price is None:
             continue
-        started = True
         sequence = len(take_profits) + 1
         take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
 

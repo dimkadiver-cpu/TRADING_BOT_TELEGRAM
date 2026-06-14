@@ -259,6 +259,154 @@ def test_trader_b_range_entry_produces_range_structure() -> None:
     assert signal.entries[1].price.value == 2100.0
 
 
+def test_prova_extracts_cyrillic_тп1_inline() -> None:
+    """тп1: price (trader_d format) must be recognised by trader_prova extractor."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = "$WLFIUSDT Шорт\nВход: 0.062 рынок\nSL: 0.0633\nТП1: 0.0592\nТП2: 0.0492\nТП3: 0.0392\n"
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized, market_hint=True)
+
+    assert signal is not None
+    assert [tp.price.value for tp in signal.take_profits] == [0.0592, 0.0492, 0.0392]
+    assert signal.completeness == "COMPLETE"
+
+
+def test_prova_extracts_тейк_профит_inline() -> None:
+    """'Тейк профит: price' inline (trader_b format) must be recognised."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = "$BTCUSDT Лонг\nВход: по текущим (≈63150)\nТейк профит: 65050\nСтоп лосс: 62790\n"
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized, market_hint=True)
+
+    assert signal is not None
+    assert len(signal.take_profits) == 1
+    assert signal.take_profits[0].price.value == 65050.0
+
+
+def test_prova_entry_price_inside_parens_after_market_text() -> None:
+    """'Вход: по текущим (≈63150)' — price in parens after market desc (trader_b format)."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = "$BTCUSDT Лонг (сделка на споте)\nВход: по текущим (≈63150)\nТейк профит: 65050\nСтоп лосс: 62790\n"
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized, market_hint=True)
+
+    assert signal is not None
+    assert signal.entries[0].entry_type == "MARKET"
+    assert signal.entries[0].price is not None
+    assert signal.entries[0].price.value == 63150.0
+
+
+def test_trader_c_numbered_tp_list_with_latin_T_header() -> None:
+    """trader_c real format: Latin T in 'Tейк-профит:' + numbered list '1) price (RR)'."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "[trader#С]\n\n"
+        "$BTCUSDT - SHORT \n\n"
+        "Вход с текущих (88000-87900) \n\n"
+        "Stop 88450.\xa0 1% деп\n\n"
+        "Tейк-профит:\n"
+        "1) 87100 (RR - 1:2)\n\n"
+        "2) 86500 (RR - 1:3)\n\n"
+        "3) 86000"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized, market_hint=True)
+
+    assert signal is not None
+    assert signal.side == "SHORT"
+    assert [tp.price.value for tp in signal.take_profits] == [87100.0, 86500.0, 86000.0]
+    assert signal.stop_loss is not None
+    assert signal.stop_loss.price.value == 88450.0
+    assert "take_profits" not in signal.missing_fields
+    assert signal.completeness == "COMPLETE"
+
+
+def test_trader_c_cyrillic_T_header_still_works() -> None:
+    """Regression: full-Cyrillic 'Тейк-профит:' must still work after the Latin-T fix."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "$ETHUSDT SHORT\n"
+        "Вход: 2500\n"
+        "Stop 2600\n"
+        "Тейк-профит:\n"
+        "1) 2400\n"
+        "2) 2300\n"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized)
+
+    assert signal is not None
+    assert [tp.price.value for tp in signal.take_profits] == [2400.0, 2300.0]
+
+
+def test_tp_numbered_list_with_blank_lines_between_entries() -> None:
+    """All 3 TPs must be extracted even when blank lines separate them."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "$LINKUSDT LONG\n"
+        "Вход: 14\n"
+        "Stop 12\n"
+        "Tейк-профит:\n"
+        "1) 16 (RR - 1:2)\n\n"
+        "2) 18 (RR - 1:4)\n\n"
+        "3) 20"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized)
+
+    assert signal is not None
+    assert len(signal.take_profits) == 3
+    assert signal.take_profits[2].price.value == 20.0
+
+
+def test_tp_numbered_list_stops_at_non_price_line() -> None:
+    """Numbered TP block must stop when a non-price line follows the list."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "$BTCUSDT SHORT\n"
+        "Вход: 90000\n"
+        "Stop 92000\n"
+        "Tейк-профит:\n"
+        "1) 88000\n"
+        "2) 86000\n"
+        "Комментарий: держим позицию\n"
+        "3) 84000\n"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized)
+
+    assert signal is not None
+    assert len(signal.take_profits) == 2
+    assert [tp.price.value for tp in signal.take_profits] == [88000.0, 86000.0]
+
+
+def test_existing_bullet_tp_format_not_broken() -> None:
+    """Regression: dash-bullet format 'TPs: — 5.86' must still work."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "ORDIUSDT.P — ЛОНГ (вход с текущих)\n"
+        "• Вход: 5.0113\n"
+        "• Стоп: 4.4913\n"
+        "• TPs:\n"
+        "— 5.8613 (+17.0%)\n"
+        "— 6.3269 (+26.3%)\n"
+        "— 7.2469 (+44.6%)\n"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized)
+
+    assert signal is not None
+    assert [tp.price.value for tp in signal.take_profits] == [5.8613, 6.3269, 7.2469]
+
+
 def test_trader_b_market_entry_price_inside_current_parentheses() -> None:
     from src.parser_v2.contracts.markers import NormalizedText
     from src.parser_v2.profiles.trader_b.signal_extractor import SignalExtractor as TraderBExtractor
