@@ -1,0 +1,995 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,info_raw_fragment
+39,trader_3,INFO,UNCLASSIFIED,2471,85,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+Bitcoin got rejected from the key horizontal resistance zone near $116,000 after multiple failed breakout attempts. The price has now broken below the ascending trendline support, signaling a potential shift in short-term momentum.
+
+As long as BTC trades below the broken trendline, bearish pressure may continue, with the next support area seen around $108,000. A reclaim and retest above the trendline would be the first sign of recovery and potential bullish continuation.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SHORT/strong:short@254:259"", ""ALL_SHORT/weak:short@254:259"", ""LONG/strong:long@278:282"", ""leverage/weak:x@367:368""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+Bitcoin got rejected from the key horizontal resistance zone near $116,000 after multiple failed breakout attempts. The price has now broken below the ascending trendline support, signaling a potential shift in short-term momentum.
+
+As long as BTC trades below the broken trendline, bearish pressure may continue, with the next support area seen around $108,000. A reclaim and retest above the trendline would be the first sign of recovery and potential bullish continuation.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2469,90,,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖
+BTC pulled back and then perfectly bounced from the $108K level as predicted. 
+
+However, it is still trading below the triangle, indicating short-term indecision in the market.
+
+Once BTC breaks above this structure, we can expect bullish momentum to return soon.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SHORT/strong:short@183:188"", ""ALL_SHORT/weak:short@183:188"", ""leverage/weak:x@266:267""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖
+BTC pulled back and then perfectly bounced from the $108K level as predicted. 
+
+However, it is still trading below the triangle, indicating short-term indecision in the market.
+
+Once BTC breaks above this structure, we can expect bullish momentum to return soon.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2449,121,,"[trader#3] VIP MARKET UPDATE: $ETC
+➖➖➖➖➖➖➖
+ETC has broken out of the descending triangle and is currently pulling back for a retest. 
+
+A successful retest would confirm bullish momentum and signal continued upside potential.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETC
+➖➖➖➖➖➖➖
+ETC has broken out of the descending triangle and is currently pulling back for a retest. 
+
+A successful retest would confirm bullish momentum and signal continued upside potential.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2448,122,,"[trader#3] VIP MARKET UPDATE: $4
+➖➖➖➖➖➖➖
+$4 has confirmed a breakout from the descending trendline, now consolidating near $0.094 expecting bullish momentum. 
+
+If price sustains above $0.088–$0.090, continuation toward $0.120–$0.140 looks likely. However, a short-term retest toward $0.085 may occur before the next impulsive move higher.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@131:132"", ""SHORT/strong:short@256:261"", ""ALL_SHORT/weak:short@256:261"", ""leverage/weak:x@311:312""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $4
+➖➖➖➖➖➖➖
+$4 has confirmed a breakout from the descending trendline, now consolidating near $0.094 expecting bullish momentum. 
+
+If price sustains above $0.088–$0.090, continuation toward $0.120–$0.140 looks likely. However, a short-term retest toward $0.085 may occur before the next impulsive move higher.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2446,124,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+Bitcoin is consolidating below the descending trendline, showing seller pressure at lower highs. Price bounced from the support but hasn’t confirmed strength yet.
+
+A breakout and retest above the trendline would signal bullish momentum, while rejection may send BTC back toward 108,900 or even the 106,000 demand zone.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+Bitcoin is consolidating below the descending trendline, showing seller pressure at lower highs. Price bounced from the support but hasn’t confirmed strength yet.
+
+A breakout and retest above the trendline would signal bullish momentum, while rejection may send BTC back toward 108,900 or even the 106,000 demand zone.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2445,125,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC has lost momentum and is currently moving toward the $106K horizontal support, a key zone for bulls to step in and regain strength. 
+
+In case of a confirmed breakdown and retest of this support could open the door for further correction in the market.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC has lost momentum and is currently moving toward the $106K horizontal support, a key zone for bulls to step in and regain strength. 
+
+In case of a confirmed breakdown and retest of this support could open the door for further correction in the market.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2444,126,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+
+BTC regaining momentum from the horizontal support.
+
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+
+BTC regaining momentum from the horizontal support.
+
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2441,129,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+Bitcoin is currently trading near a key support zone after a sharp pullback, holding around the $106K area. Price has been consistently making lower highs under the descending trendline, showing persistent seller presence and a lack of bullish strength on attempts to push higher.
+
+A rebound from this support could bring a short-term relief bounce, but bulls need a breakout above the descending trendline to shift momentum. If this support fails and price breaks below the zone with strong volume, further downside toward lower levels may follow.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SHORT/strong:short@366:371"", ""ALL_SHORT/weak:short@366:371""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+Bitcoin is currently trading near a key support zone after a sharp pullback, holding around the $106K area. Price has been consistently making lower highs under the descending trendline, showing persistent seller presence and a lack of bullish strength on attempts to push higher.
+
+A rebound from this support could bring a short-term relief bounce, but bulls need a breakout above the descending trendline to shift momentum. If this support fails and price breaks below the zone with strong volume, further downside toward lower levels may follow.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2438,132,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC is losing the key support/resistance level and attempting to break below the trendline support. 
+
+A candle close beneath both the trendline and the S/R level would confirm bearish momentum. 
+
+However, if price reclaims the S/R level, the breakdown may turn out to be a bearish trap.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC is losing the key support/resistance level and attempting to break below the trendline support. 
+
+A candle close beneath both the trendline and the S/R level would confirm bearish momentum. 
+
+However, if price reclaims the S/R level, the breakdown may turn out to be a bearish trap.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2437,133,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+$BTC is currently trading around $101,900 and testing the $99,000–$101,000 demand zone, where buyers have stepped in several times in the past.
+
+If price holds above this zone, a bounce toward $106,000–$110,000 could follow. However, if it breaks below $98,000, we can expect the price drops towards $92,000 - $95,000.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@312:313""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+$BTC is currently trading around $101,900 and testing the $99,000–$101,000 demand zone, where buyers have stepped in several times in the past.
+
+If price holds above this zone, a bounce toward $106,000–$110,000 could follow. However, if it breaks below $98,000, we can expect the price drops towards $92,000 - $95,000.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2436,134,,"[trader#3] VIP MARKET UPDATE: $AVAX
+➖➖➖➖➖➖➖
+$AVAX is currently trading around $16.50, testing the $15–$16 major support zone.
+
+If buyers hold this level, a rebound toward $18–$20 could follow. However, a breakdown below $15 may trigger a deeper correction toward $12–$13.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@34:35"", ""leverage/weak:x@48:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $AVAX
+➖➖➖➖➖➖➖
+$AVAX is currently trading around $16.50, testing the $15–$16 major support zone.
+
+If buyers hold this level, a rebound toward $18–$20 could follow. However, a breakdown below $15 may trigger a deeper correction toward $12–$13.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2434,139,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+$BTC has reacted strongly from the $99,000–$101,000 demand zone, now trading around $103,900, up +4.9%🔥
+
+If momentum holds, price could revisit $106,000–$108,000 next. However, failure to sustain above $102,000 might lead to another retest of the $100,000 zone.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@206:207""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+$BTC has reacted strongly from the $99,000–$101,000 demand zone, now trading around $103,900, up +4.9%🔥
+
+If momentum holds, price could revisit $106,000–$108,000 next. However, failure to sustain above $102,000 might lead to another retest of the $100,000 zone.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2403,176,,"[trader#3] VIP MARKET UPDATE: $BTC DOMINANCE 🔥
+➖➖➖➖➖➖➖
+BTC.D perfectly moved as predicted, and we've seen a nice bullish rally in Alts.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC DOMINANCE 🔥
+➖➖➖➖➖➖➖
+BTC.D perfectly moved as predicted, and we've seen a nice bullish rally in Alts.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2399,180,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH is forming an ascending triangle on the 1H timeframe. It was recently rejected from the horizontal resistance and is now moving toward the trendline support. 
+
+A bounce from the trendline support is expected, and a breakout with a successful retest of the triangle would confirm a bullish move.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@245:246""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH is forming an ascending triangle on the 1H timeframe. It was recently rejected from the horizontal resistance and is now moving toward the trendline support. 
+
+A bounce from the trendline support is expected, and a breakout with a successful retest of the triangle would confirm a bullish move.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2397,182,,"[trader#3] VIP MARKET UPDATE: $ICP
+➖➖➖➖➖➖➖
+$ICP is currently trading around $9.16, breaking out of a long-term descending wedge pattern. The price breakout with strong volume, signaling bullish momentum.
+
+If price holds above $8.5–$9, continuation toward $11–$13 remains likely. However, a weekly close below $7.00 could invalidate the breakout and trigger a retest toward $6.5–$5. before any further upside.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:long@101:105""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ICP
+➖➖➖➖➖➖➖
+$ICP is currently trading around $9.16, breaking out of a long-term descending wedge pattern. The price breakout with strong volume, signaling bullish momentum.
+
+If price holds above $8.5–$9, continuation toward $11–$13 remains likely. However, a weekly close below $7.00 could invalidate the breakout and trigger a retest toward $6.5–$5. before any further upside.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2383,197,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC is forming a falling wedge on the 30M chart after a strong bullish rally, a potential continuation pattern. A breakout above the wedge could spark another upward move.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC is forming a falling wedge on the 30M chart after a strong bullish rally, a potential continuation pattern. A breakout above the wedge could spark another upward move.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2381,199,,"[trader#3] 
+➖➖➖➖➖➖➖
+
+LINK is trading above a strong trendline support. As long as it holds above this level, an upward move is expected👀
+
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:long@72:76"", ""leverage/weak:x@126:127""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 
+➖➖➖➖➖➖➖
+
+LINK is trading above a strong trendline support. As long as it holds above this level, an upward move is expected👀
+
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2376,204,,"[trader#3] VIP MARKET UPDATE: $MYX
+➖➖➖➖➖➖➖
+$MYX has broken out of the falling wedge pattern, showing a clear shift in momentum after a prolonged downtrend. 
+
+If price holds above $2.2, continuation toward $2.8 - $3.5 looks likely in the coming days. However, a dip back below $2 could invalidate the setup.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@33:34"", ""leverage/weak:x@46:47"", ""LONG/strong:long@138:142""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $MYX
+➖➖➖➖➖➖➖
+$MYX has broken out of the falling wedge pattern, showing a clear shift in momentum after a prolonged downtrend. 
+
+If price holds above $2.2, continuation toward $2.8 - $3.5 looks likely in the coming days. However, a dip back below $2 could invalidate the setup.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2367,213,,[trader#3] $BTC 🔥,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,[trader#3] $BTC 🔥
+39,trader_3,INFO,UNCLASSIFIED,2354,227,,[trader#3] Adding more $XVG here,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@24:25""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,[trader#3] Adding more $XVG here
+39,trader_3,INFO,UNCLASSIFIED,2353,228,,"[trader#3] VIP MARKET UPDATE: $BNB
+➖➖➖➖➖➖➖
+$BNB is  consolidating just below the  resistance zone, forming higher lows along an ascending trendline. Structure shows steady accumulation and building bullish momentum.
+
+A breakout and sustained move above $1000 could trigger continuation toward $1040–$1080, while holding above $980 keeps the bias bullish. A drop below $960 would weaken the structure.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:long@118:122""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BNB
+➖➖➖➖➖➖➖
+$BNB is  consolidating just below the  resistance zone, forming higher lows along an ascending trendline. Structure shows steady accumulation and building bullish momentum.
+
+A breakout and sustained move above $1000 could trigger continuation toward $1040–$1080, while holding above $980 keeps the bias bullish. A drop below $960 would weaken the structure.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2297,291,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH is forming a potential bullish harmonic pattern on ETH (1H timeframe). The price is approaching the D point, near the completion zone around $3,390, which could act as a strong reversal area.
+
+As long as ETH holds above the invalidation point near $3,353, a bounce toward the $3,520-$3650 zone is likely. A breakdown below that invalidation level, however, would invalidate the bullish setup.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:long@242:246""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH is forming a potential bullish harmonic pattern on ETH (1H timeframe). The price is approaching the D point, near the completion zone around $3,390, which could act as a strong reversal area.
+
+As long as ETH holds above the invalidation point near $3,353, a bounce toward the $3,520-$3650 zone is likely. A breakdown below that invalidation level, however, would invalidate the bullish setup.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2290,298,,"[trader#3] VIP MARKET UPDATE: $BTC DOMINANCE 🔥
+➖➖➖➖➖➖➖
+BTC.D has perfectly broken down from the triangle and is currently retesting below it. 
+
+A successful retest would confirm a bearish move, which is typically a bullish signal for altcoins, as they usually move in the opposite direction.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC DOMINANCE 🔥
+➖➖➖➖➖➖➖
+BTC.D has perfectly broken down from the triangle and is currently retesting below it. 
+
+A successful retest would confirm a bearish move, which is typically a bullish signal for altcoins, as they usually move in the opposite direction.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2272,319,,"[trader#3] VIP MARKET UPDATE: $ETH 🔥
+➖➖➖➖➖➖➖
+ETH perfectly bounced after touching the reversal zone, just as predicted.
+
+It’s now facing the descending trendline, a breakout and retest above it would confirm further bullish momentum.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETH 🔥
+➖➖➖➖➖➖➖
+ETH perfectly bounced after touching the reversal zone, just as predicted.
+
+It’s now facing the descending trendline, a breakout and retest above it would confirm further bullish momentum.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2263,328,,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖
+The market appears to be quite volatile. It may be wise to consider slightly reducing position sizes in long trades to manage risk more effectively.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:sl@105:107"", ""LONG/strong:long@141:145""], ""suppressed_markers"": [""SL_HIT/weak:sl@105:107""], ""applied_marker_rules"": [""sl_hit_sl_embedded_in_latin_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_sl_embedded_in_latin_wor",,,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖
+The market appears to be quite volatile. It may be wise to consider slightly reducing position sizes in long trades to manage risk more effectively.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2241,350,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+$BTC faced rejection and struggling under the descending trendline, and price has now slipped back into the DEMAND ZONE, The repeated rejection near $103,000–$104,000 confirms that bulls are losing momentum for now.
+
+For strength to return, $BTC must break and reclaim $104,000–$106,000, which would open the door toward $108,000–$110,000. However, failure to bounce soon from the demand zone could expose price to a deeper move toward $96,000 –$93,000.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:sl@129:131"", ""leverage/weak:x@442:443""], ""suppressed_markers"": [""SL_HIT/weak:sl@129:131""], ""applied_marker_rules"": [""sl_hit_sl_embedded_in_latin_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_sl_embedded_in_latin_word",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+$BTC faced rejection and struggling under the descending trendline, and price has now slipped back into the DEMAND ZONE, The repeated rejection near $103,000–$104,000 confirms that bulls are losing momentum for now.
+
+For strength to return, $BTC must break and reclaim $104,000–$106,000, which would open the door toward $108,000–$110,000. However, failure to bounce soon from the demand zone could expose price to a deeper move toward $96,000 –$93,000.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2238,353,,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖
+Over $1,030,000,000 (1.03 BILLION) worth of crypto longs have been liquidated in the past 24 hours.
+
+This sharp flush signals aggressive selling pressure, shaking out leveraged positions. Volatility may remain elevated across the market in the short term.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""LONG/strong:long@88:92"", ""leverage/strong:leverage@203:211"", ""SHORT/strong:short@280:285"", ""ALL_SHORT/weak:short@280:285""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores""",,,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖
+Over $1,030,000,000 (1.03 BILLION) worth of crypto longs have been liquidated in the past 24 hours.
+
+This sharp flush signals aggressive selling pressure, shaking out leveraged positions. Volatility may remain elevated across the market in the short term.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2233,358,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH is currently trying to hold above the trendline support while trading below the horizontal resistance. 
+
+Bulls need to reclaim the horizontal resistance for bullish confirmation, whereas a candle close below the trendline support would signal further bearish continuation.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH is currently trying to hold above the trendline support while trading below the horizontal resistance. 
+
+Bulls need to reclaim the horizontal resistance for bullish confirmation, whereas a candle close below the trendline support would signal further bearish continuation.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2227,365,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH has broken below the mid-range demand zone (~$3,350–$3,250), turning it into resistance. Sellers are currently in control, and the price is heading toward the next major demand zone around $3,050–$2,880, which is the strongest near-term support.
+
+If ETH holds and reacts bullishly from this lower demand zone, a bounce toward the previous breakdown zone (~$3,300) is likely. But a clean breakdown below $2,880 would open the door for a deeper drop toward the next major demand area around $2,480–$2,430.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@208:209"", ""leverage/weak:x@507:508""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+ETH has broken below the mid-range demand zone (~$3,350–$3,250), turning it into resistance. Sellers are currently in control, and the price is heading toward the next major demand zone around $3,050–$2,880, which is the strongest near-term support.
+
+If ETH holds and reacts bullishly from this lower demand zone, a bounce toward the previous breakdown zone (~$3,300) is likely. But a clean breakdown below $2,880 would open the door for a deeper drop toward the next major demand area around $2,480–$2,430.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2218,374,,"[trader#3] VIP MARKET UPDATE: $IMX
+➖➖➖➖➖➖➖
+IMX is currently trading above the horizontal support. A bounce from this level followed by a breakout and retest of the descending trendline would confirm a bullish move.
+
+However, a breakdown and retest of the horizontal support would signal potential downside momentum.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@33:34"", ""leverage/weak:x@45:46""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $IMX
+➖➖➖➖➖➖➖
+IMX is currently trading above the horizontal support. A bounce from this level followed by a breakout and retest of the descending trendline would confirm a bullish move.
+
+However, a breakdown and retest of the horizontal support would signal potential downside momentum.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2215,377,,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖
+The market is currently in a state of extreme fear, and a bounce is likely soon.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@76:77""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE
+➖➖➖➖➖➖➖
+The market is currently in a state of extreme fear, and a bounce is likely soon.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2206,388,,"[trader#3] VIP MARKET UPDATE: $ENA
+➖➖➖➖➖➖➖
+$ENA is currently holding above the $0.25–$0.28 SUPPORT zone, where buyers have reacted multiple times previously. This area continues to act as a strong DEMAND region after the pullback.
+
+If $ENA maintains SUPPORT and builds momentum, a bounce toward $0.32 - $0.42 looks likely. However, a breakdown below $0.23 may trigger deeper correction.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SL_HIT/weak:sl@153:155""], ""suppressed_markers"": [""SL_HIT/weak:sl@153:155""], ""applied_marker_rules"": [""sl_hit_sl_embedded_in_latin_word""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""sl_hit_sl_embedded_in_latin_word""], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ENA
+➖➖➖➖➖➖➖
+$ENA is currently holding above the $0.25–$0.28 SUPPORT zone, where buyers have reacted multiple times previously. This area continues to act as a strong DEMAND region after the pullback.
+
+If $ENA maintains SUPPORT and builds momentum, a bounce toward $0.32 - $0.42 looks likely. However, a breakdown below $0.23 may trigger deeper correction.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2157,455,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+$ETH has perfectly followed our previous analysis, price broke above $3,150 and reclaimed $3,170. $ETH up +5.6% from yesterday’s lows, showing buyers stepping back in.🔥
+
+If $ETH holds above $3,100, continuation toward $3,300–$3,400 becomes likely as bullish momentum builds.
+However, a drop back below $3,000 may signal weakness and another retest of the $2,900–$2,850 region is possible.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $ETH
+➖➖➖➖➖➖➖
+$ETH has perfectly followed our previous analysis, price broke above $3,150 and reclaimed $3,170. $ETH up +5.6% from yesterday’s lows, showing buyers stepping back in.🔥
+
+If $ETH holds above $3,100, continuation toward $3,300–$3,400 becomes likely as bullish momentum builds.
+However, a drop back below $3,000 may signal weakness and another retest of the $2,900–$2,850 region is possible.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2151,465,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+
+Closed Manually
+
+🚫12% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""leverage/weak:x@107:108""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""catego",,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2-4x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+
+Closed Manually
+
+🚫12% Loss (2x)🚫
+
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2021,696,,"[trader#3] IMPORTANT
+
+Market conditions currently not ideal, we will update once they look better for our next Mega Signal
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@107:108""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] IMPORTANT
+
+Market conditions currently not ideal, we will update once they look better for our next Mega Signal
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2002,721,,"[trader#3] 🚨MEGA SIGNAL: $CHESS🚨
+
+Exchange: Binance (Futures and Spot)
+
+Entry: Below $0.052
+
+Targets: 0.054 - 0.057 - 0.060 - 0.065 - 0.073 - 0.087 - 0.132 - 0.176 - 0.242 - OPEN
+
+Longing $CHESS now. Breakout confirmed and extremely undervalued. Easiest Mega Signal we’ve ever had
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@34:35"", ""take_profit/strong:targets:@90:98"", ""LONG/strong:long@176:180"", ""leverage/weak:x@220:221""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 🚨MEGA SIGNAL: $CHESS🚨
+
+Exchange: Binance (Futures and Spot)
+
+Entry: Below $0.052
+
+Targets: 0.054 - 0.057 - 0.060 - 0.065 - 0.073 - 0.087 - 0.132 - 0.176 - 0.242 - OPEN
+
+Longing $CHESS now. Breakout confirmed and extremely undervalued. Easiest Mega Signal we’ve ever had
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,2001,722,,[trader#3] #CHESS is at its perfect bottom,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,[trader#3] #CHESS is at its perfect bottom
+39,trader_3,INFO,UNCLASSIFIED,1999,725,,"[trader#3] #CHESS (Binance Futures and Spot)
+
+✅Sub $10 million market cap coin
+✅Fully bottomed 
+✅Loking exactly like MYX at $1, before making a 1800% move to $18
+
+CHESS is an easy 10x move, grabbing a big bag here below $0.05",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@103:104"", ""leverage/weak:x@117:118"", ""leverage/weak:x@179:180""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] #CHESS (Binance Futures and Spot)
+
+✅Sub $10 million market cap coin
+✅Fully bottomed 
+✅Loking exactly like MYX at $1, before making a 1800% move to $18
+
+CHESS is an easy 10x move, grabbing a big bag here below $0.05"
+39,trader_3,INFO,UNCLASSIFIED,1996,728,,"[trader#3] 🚨MEGA SIGNAL: $CHESS🚨
+
+Still in entry and ready to blow up
+
+Buying more here
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""PRIMARY/strong:entry a@42:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 🚨MEGA SIGNAL: $CHESS🚨
+
+Still in entry and ready to blow up
+
+Buying more here
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,1986,741,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC is attempting to regain momentum from the horizontal support. The RSI is in the oversold region and showing hidden bullish divergence, suggesting strengthening buyer interest. 
+
+A bounce is expected from the current support. However, if a breakdown and retest occur, the price may find its next rebound from the lower marked horizontal support.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@236:237"", ""leverage/weak:x@337:338""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC
+➖➖➖➖➖➖➖
+BTC is attempting to regain momentum from the horizontal support. The RSI is in the oversold region and showing hidden bullish divergence, suggesting strengthening buyer interest. 
+
+A bounce is expected from the current support. However, if a breakdown and retest occur, the price may find its next rebound from the lower marked horizontal support.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,1982,745,,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖
+BTC perfectly bounced from the horizontal support after creating a hidden bullish divergence just as predicted.
+
+Holding above this support keeps the short-term outlook bullish.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""SHORT/strong:short@194:199"", ""ALL_SHORT/weak:short@194:199""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖
+BTC perfectly bounced from the horizontal support after creating a hidden bullish divergence just as predicted.
+
+Holding above this support keeps the short-term outlook bullish.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,1972,757,,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖
+We identified the perfect oversold region, and BTC pumped exactly from our marked reversal zone, right on target.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@104:105""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] VIP MARKET UPDATE: $BTC 🔥
+➖➖➖➖➖➖➖
+We identified the perfect oversold region, and BTC pumped exactly from our marked reversal zone, right on target.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,1945,793,764,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,
+39,trader_3,INFO,PARSED,1587,1296,,"Всем привет, это #админ ! 👋
+
+Декабрь пролетел, год заканчивается - время подводить черту, собирать камни и смотреть правде в...калькулятор. 😉
+Сразу предупреждаю: пассажей об итогах года в духе «мы смогли», «мы выросли», «мы осознали» здесь не будет.
+Мы трейдеры, скучные люди - видим мир в числах и циферках. 
+Так что надевайте очки, представляйте себя Нео и давайте надаем по щщам агенту Смиту разберёмся, что там наторговали трейдеры #1, #2, #3 и A, B, C. 😎
+────────────────────────────
+Часть 1. Зарубежные сигнальные каналы (TRADER#1 / #2 / #3)
+🔥Важно🔥 (дисклеймер для всех)
+Сигналы TRADER#1-#3 берутся со сторонних ресурсов и почти не сопровождаются авторами. 
+Обычно там нет:
+- объёма на сделку
+- распределения по тейкам
+- своевременных уведомлений о переводе в БУ
+- иногда и адекватного риск-менеджмента (зато есть широкие плечи и красивые “+200%”🤪)
+
+Поэтому результаты ниже посчитаны по нашей модели:
+- риск фиксированный: 1% депозита на сделку
+- фиксация по тейкам равными долями
+- результат считаем в % к депозиту, а не “по плечу”
+
+В другом режиме (агрессивный объём/плечо) цифры могут выглядеть красивее, но и риск потерь становится несопоставимо выше.
+
+Итог по “цифровым” трейдерам на момент 30.12 00:00:
+TRADER#1: +1.385% (10 сделок)
+TRADER#2: +1.595% (22 сделки)
+TRADER#3: +2.41% (20 сделок)
+Суммарно TRADER#1-#3: +5.39% по модели 1% риск + равные тейки
+
+Если у вас вышло больше - супер! Мы реально рады. 👍
+Но важно понимать: эти сигналы дают идею и уровни, а вот самого главного не дают:
+сколько денег выделить на сделку и как распределить фиксацию по тейкам.
+Для новичков это всё равно что получить маршрут без указания скорости и тормозов.
+Используйте с умом!
+
+Ну и коротко по каждому:
+TRADER#1
+10 сделок: стабильный умеренный плюс, часть сделок с частичной фиксацией и переводом в БУ (а они не всегда это пишут😏).
+
+TRADER#2
+22 сделки: высокая активность, много сделок в работе, были серии стопов(мы в команде называем их ""хлопки"" или ""отрицательный профит""😂), но отдельные сильные выстрелы (например AXL +3.15%) компенсируют.
+
+TRADER#3
+20 сделок: самый высокий итоговый результат среди “цифровых”. 
+При этом есть показательные минуса с завышенным RR и короткими стопами - типичная проблема сторонних сигналов без сопровождения.
+
+Вывод простой: 
+сетапы у TRADER#1-#3 часто годные, иногда даже очень.
+Но когда сигнал заканчивается на слове “Entry” - дальше начинается народное творчество: 
+кто-то фиксирует, кто-то не фиксирует, кто-то вообще забывает, что в позиции.🤦‍♂️
+В 2026 будем решать, что делать с этими тремя, потому что по уровню внимания и сопровождения они заметно проигрывают нашим трейдерам.
+А сопровождение - это не “сервис”, это часть прибыли. 😌
+Переходим к позитивной части и это...",1.0,,"{""matched_markers"": [""ADMIN/strong:#админ@17:23"", ""REPORT_RESULT/weak:итог@173:177"", ""SL_HIT/weak:сл@213:215"", ""stop_loss/strong:сл@213:215"", ""EXIT_BE/weak:бу@242:244"", ""SL_HIT/weak:сл@291:293"", ""stop_loss/strong:сл@291:293"", ""TP_HIT/weak:тейкам@716:722"", ""MOVE_STOP_TO_BE/weak:в бу@762:766"", ""EXIT_B",,,"Всем привет, это #админ ! 👋
+
+Декабрь пролетел, год заканчивается - время подводить черту, собирать камни и смотреть правде в...калькулятор. 😉
+Сразу предупреждаю: пассажей об итогах года в духе «мы смогли», «мы выросли», «мы осознали» здесь не будет.
+Мы трейдеры, скучные люди - видим мир в числах и циферках. 
+Так что надевайте очки, представляйте себя Нео и давайте надаем по щщам агенту Смиту разберёмся, что там наторговали трейдеры #1, #2, #3 и A, B, C. 😎
+────────────────────────────
+Часть 1. Зарубежные сигнальные каналы (TRADER#1 / #2 / #3)
+🔥Важно🔥 (дисклеймер для всех)
+Сигналы TRADER#1-#3 берутся со сторонних ресурсов и почти не сопровождаются авторами. 
+Обычно там нет:
+- объёма на сделку
+- распределения по тейкам
+- своевременных уведомлений о переводе в БУ
+- иногда и адекватного риск-менеджмента (зато есть широкие плечи и красивые “+200%”🤪)
+
+Поэтому результаты ниже посчитаны по нашей модели:
+- риск фиксированный: 1% депозита на сделку
+- фиксация по тейкам равными долями
+- результат считаем в % к депозиту, а не “по плечу”
+
+В другом режиме (агрессивный объём/плечо) цифры могут выглядеть красивее, но и риск потерь становится несопоставимо выше.
+
+Итог по “цифровым” трейдерам на момент 30.12 00:00:
+TRADER#1: +1.385% (10 сделок)
+TRADER#2: +1.595% (22 сделки)
+TRADER#3: +2.41% (20 сделок)
+Суммарно TRADER#1-#3: +5.39% по модели 1% риск + равные тейки
+
+Если у вас вышло больше - супер! Мы реально рады. 👍
+Но важно понимать: эти сигналы дают идею и уровни, а вот самого главного не дают:
+сколько денег выделить на сделку и как распределить фиксацию по тейкам.
+Для новичков это всё равно что получить маршрут без указания скорости и тормозов.
+Используйте с умом!
+
+Ну и коротко по каждому:
+TRADER#1
+10 сделок: стабильный умеренный плюс, часть сделок с частичной фиксацией и переводом в БУ (а они не всегда это пишут😏).
+
+TRADER#2
+22 сделки: высокая активность, много сделок в работе, были серии стопов(мы в команде называем их ""хлопки"" или ""отрицательный профит""😂), но отдельные сильные выстрелы (например AXL +3.15%) компенсируют.
+
+TRADER#3
+20 сделок: самый высокий итоговый результат среди “цифровых”. 
+При этом есть показательные минуса с завышенным RR и короткими стопами - типичная проблема сторонних сигналов без сопровождения.
+
+Вывод простой: 
+сетапы у TRADER#1-#3 часто годные, иногда даже очень.
+Но когда сигнал заканчивается на слове “Entry” - дальше начинается народное творчество: 
+кто-то фиксирует, кто-то не фиксирует, кто-то вообще забывает, что в позиции.🤦‍♂️
+В 2026 будем решать, что делать с этими тремя, потому что по уровню внимания и сопровождения они заметно проигрывают нашим трейдерам.
+А сопровождение - это не “сервис”, это часть прибыли. 😌
+Переходим к позитивной части и это..."
+39,trader_3,INFO,UNCLASSIFIED,1582,1316,,[trader#3] $ICP 🔥,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,[trader#3] $ICP 🔥
+39,trader_3,INFO,UNCLASSIFIED,1534,1383,,"[trader#3] 📍SIGNAL ID: #2044📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Orders set at the 0.228 - 0.23 key level, expecting a short term retest before heading up to our targets. 
+
+Invalidation below 0.22
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@120:121"", ""SHORT/strong:short@131:136"", ""ALL_SHORT/weak:short@131:136""], ""suppressed_markers"": [], ""appl",,,"[trader#3] 📍SIGNAL ID: #2044📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Orders set at the 0.228 - 0.23 key level, expecting a short term retest before heading up to our targets. 
+
+Invalidation below 0.22
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,PARSED,1525,1395,,"Друзья, #админ на связи 👋
+
+Итоги голосования подведены.
+Победил [trader#3] - ему пока с нами по пути. 👌
+А остальных двух мы…высадили на трассе где-то между Ликвидашево и Многоплечинском (не дай вам Бог, посетить эти мрачные местечки)👹
+ 
+Да! Мне тут уже начали писать в личку вопросы в духе:
+«А почему вы так не любите западных трейдеров?»
+Чтобы окончательно закрыть тему:
+нам вообще всё-равно, где находится трейдер - в США, Европе или на Кирибати! 🤷‍♂️
+Мы смотрим только на две вещи:
+1) эффективность сигналов
+2) удобство работы для подписчиков
+
+Поэтому если трейдер работает из Европы и любит другого трейдера - это его личное дело. 😂
+Мы оцениваем PnL и сопровождение. Всё остальное - просто наши шутки.
+Если кого-то задело - сорри, не со зла, без негатива 😄
+
+Ещё напоминание: вся работа команды и все сигналы - полностью бесплатны для вас.
+И мы не только собираемся продолжать в том же духе, но и будем улучшать канал, вводить платные подписки, донаты. 😆
+Сейчас, например, тестируем новую систему автоматического сбора статистики - чтоб ну совсем прозрачно. 🫥
+Плюс, отдельно будем выпускать посты с обновлениями правил работы с сигналами каждого трейдера:
+Куда, Как и в Какие фазы луны лучше торговать TON, напимер…
+(поверьте, там у CEO фляга посвистывает - он и не такое внутрь проекта закладывал…😂)
+
+Теперь ещё пару слов про зарубежных трейдеров!
+Набор новых зарубежных источников мы пока ставим на стоп.
+Потому что большинство каналов имеют те же болячки, что и trader#1 и #2:
+А некоторые и вовсе… как trader#4 (мир его праху).
+Но если найдём «бриллиант» - не переживайте, сразу сообщим и добавим.👌
+А пока работаем с нашей командой.
+И, кстати…",1.0,,"{""matched_markers"": [""ADMIN/strong:#админ@8:14"", ""ADMIN/strong:админ на связи@9:23"", ""REPORT_RESULT/weak:итог@26:30"", ""SL_HIT/weak:сл@552:554"", ""stop_loss/strong:сл@552:554"", ""SL_HIT/weak:сл@703:705"", ""stop_loss/strong:сл@703:705"", ""EXIT_BE/weak:бу@895:897"", ""MARKET_NOW/weak:сейчас@953:959"", ""EXIT_B",,,"Друзья, #админ на связи 👋
+
+Итоги голосования подведены.
+Победил [trader#3] - ему пока с нами по пути. 👌
+А остальных двух мы…высадили на трассе где-то между Ликвидашево и Многоплечинском (не дай вам Бог, посетить эти мрачные местечки)👹
+ 
+Да! Мне тут уже начали писать в личку вопросы в духе:
+«А почему вы так не любите западных трейдеров?»
+Чтобы окончательно закрыть тему:
+нам вообще всё-равно, где находится трейдер - в США, Европе или на Кирибати! 🤷‍♂️
+Мы смотрим только на две вещи:
+1) эффективность сигналов
+2) удобство работы для подписчиков
+
+Поэтому если трейдер работает из Европы и любит другого трейдера - это его личное дело. 😂
+Мы оцениваем PnL и сопровождение. Всё остальное - просто наши шутки.
+Если кого-то задело - сорри, не со зла, без негатива 😄
+
+Ещё напоминание: вся работа команды и все сигналы - полностью бесплатны для вас.
+И мы не только собираемся продолжать в том же духе, но и будем улучшать канал, вводить платные подписки, донаты. 😆
+Сейчас, например, тестируем новую систему автоматического сбора статистики - чтоб ну совсем прозрачно. 🫥
+Плюс, отдельно будем выпускать посты с обновлениями правил работы с сигналами каждого трейдера:
+Куда, Как и в Какие фазы луны лучше торговать TON, напимер…
+(поверьте, там у CEO фляга посвистывает - он и не такое внутрь проекта закладывал…😂)
+
+Теперь ещё пару слов про зарубежных трейдеров!
+Набор новых зарубежных источников мы пока ставим на стоп.
+Потому что большинство каналов имеют те же болячки, что и trader#1 и #2:
+А некоторые и вовсе… как trader#4 (мир его праху).
+Но если найдём «бриллиант» - не переживайте, сразу сообщим и добавим.👌
+А пока работаем с нашей командой.
+И, кстати…"
+39,trader_3,INFO,PARSED,1448,1507,,"Друзья, #админ на связи 👋
+
+У нас небольшое, но важное обновление по каналу.
+Мы наконец собрали единое руководство по сигналам - как читать, как входить, как фиксировать...чтобы ваш трейдинг не превращался в игру в Сапёра на Windows (лично я долгое время полагал, что эта игра про удачу, а цифры там только для красоты 💣😂)
+
+📌 С этого момента в закрепе будет лежать:
+- правила работы с сигнальным чатом
+- регламенты по каждому трейдеру (A / B / C / D + trader#3)
+- как считаем статистику
+- и базовые ответы на вопросы в духе “кто виноват?”,  “что делать?”, ""если я улыбаюсь в зеркало - это взаимно?"" и.т.д.
+
+Сделано это по одной простой причине:
+сигнал - штука полезная, но если читать его в режиме ""ФРИСТАЙЛО"", то не стоит удивляться, что в итоге получилось ""РАКАМАКАФО"" 😂
+
+⚙️ Руководство будет обновляться по мере необходимости:
+— ежемесячная статистика
+— уточнения по стратегиям и фиксациям
+Короче: закреп — это теперь ваша база и необходимый минимум. 
+Поэтому чтобы не писать потом админу: “я тут что-то нажал(а) и всё исчезло!” - загляните туда, там много полезного 👀
+#админ",1.0,,"{""matched_markers"": [""ADMIN/strong:#админ@8:14"", ""ADMIN/strong:админ на связи@9:23"", ""MODIFY_ENTRY/weak:вход@143:147"", ""EXIT_BE/weak:бу@349:351"", ""SL_HIT/weak:сл@554:556"", ""stop_loss/strong:сл@554:556"", ""SL_HIT/weak:сл@669:671"", ""stop_loss/strong:сл@669:671"", ""REPORT_RESULT/weak:итог@736:740"", ""EXIT",,,"Друзья, #админ на связи 👋
+
+У нас небольшое, но важное обновление по каналу.
+Мы наконец собрали единое руководство по сигналам - как читать, как входить, как фиксировать...чтобы ваш трейдинг не превращался в игру в Сапёра на Windows (лично я долгое время полагал, что эта игра про удачу, а цифры там только для красоты 💣😂)
+
+📌 С этого момента в закрепе будет лежать:
+- правила работы с сигнальным чатом
+- регламенты по каждому трейдеру (A / B / C / D + trader#3)
+- как считаем статистику
+- и базовые ответы на вопросы в духе “кто виноват?”,  “что делать?”, ""если я улыбаюсь в зеркало - это взаимно?"" и.т.д.
+
+Сделано это по одной простой причине:
+сигнал - штука полезная, но если читать его в режиме ""ФРИСТАЙЛО"", то не стоит удивляться, что в итоге получилось ""РАКАМАКАФО"" 😂
+
+⚙️ Руководство будет обновляться по мере необходимости:
+— ежемесячная статистика
+— уточнения по стратегиям и фиксациям
+Короче: закреп — это теперь ваша база и необходимый минимум. 
+Поэтому чтобы не писать потом админу: “я тут что-то нажал(а) и всё исчезло!” - загляните туда, там много полезного 👀
+#админ"
+39,trader_3,INFO,UNCLASSIFIED,1276,1737,,[trader#3] WLDUSDT,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@14:18"", ""symbol/strong:usdt@14:18""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,[trader#3] WLDUSDT
+39,trader_3,INFO,PARSED,1141,1959,,"----------------------------------
+
+Наша команда закончилась. Теперь иностранный легионер!
+Пока один, но сейчас присматриваемся к ещё одному бразильцу...⚽️😂
+
+trader#3
+
+Формат расчёта: наша консервативная модель (1% риск, равные тейки)
+
+Статистика:
+Всего закрытых сделок: 20
+Плюсовые (полная отработка тейков): 4
+Частичный тейк + БУ: 6
+Стопы: 10
+Открытые: 2 (не учитываются в январской статистике)
+
+Результат:
+Итог по январю: +0.41%
+
+Коротко по сути:
+Идей много, как у знатного темщика
+Сопровождения мало, как у китайского сенсея, который говорит, что понять сигнал невозможно - нужно почувствовать! 😂
+При консервативном подсчёте результат выглядит скромно
+Но сами сетапы, по-прежнему, часто основаны на вменяемом ТА
+
+С учётом сложного месяца...Не чудо, но и не мусор. Использовать с головой. И с чувством. 😉
+
+----------------------------------
+
+Общий вывод
+
+Январь был месяцем дисциплины, защиты депозита и проверки систем на прочность.🛡
+Где-то получилось,
+Где-то нет,
+Но, в целом, такие месяцы тоже нужны, чтобы понять: трейдинг - это не спринт, а марафонский забег.
+Продолжаем...раз, два, три, четыре...(голосом Шуфутинского🧔🏻‍♂️)
+
+#админ",1.0,,"{""matched_markers"": [""MARKET_NOW/weak:сейчас@104:110"", ""risk/weak:риск@212:216"", ""TP_HIT/weak:тейки@225:230"", ""take_profit/strong:тейки@225:230"", ""TP_HIT/weak:тейков@297:303"", ""TP_HIT/weak:тейк@318:322"", ""EXIT_BE/weak:бу@325:327"", ""SL_HIT/weak:стоп@331:335"", ""REPORT_RESULT/weak:итог@404:408"", ""MODIF",,,"----------------------------------
+
+Наша команда закончилась. Теперь иностранный легионер!
+Пока один, но сейчас присматриваемся к ещё одному бразильцу...⚽️😂
+
+trader#3
+
+Формат расчёта: наша консервативная модель (1% риск, равные тейки)
+
+Статистика:
+Всего закрытых сделок: 20
+Плюсовые (полная отработка тейков): 4
+Частичный тейк + БУ: 6
+Стопы: 10
+Открытые: 2 (не учитываются в январской статистике)
+
+Результат:
+Итог по январю: +0.41%
+
+Коротко по сути:
+Идей много, как у знатного темщика
+Сопровождения мало, как у китайского сенсея, который говорит, что понять сигнал невозможно - нужно почувствовать! 😂
+При консервативном подсчёте результат выглядит скромно
+Но сами сетапы, по-прежнему, часто основаны на вменяемом ТА
+
+С учётом сложного месяца...Не чудо, но и не мусор. Использовать с головой. И с чувством. 😉
+
+----------------------------------
+
+Общий вывод
+
+Январь был месяцем дисциплины, защиты депозита и проверки систем на прочность.🛡
+Где-то получилось,
+Где-то нет,
+Но, в целом, такие месяцы тоже нужны, чтобы понять: трейдинг - это не спринт, а марафонский забег.
+Продолжаем...раз, два, три, четыре...(голосом Шуфутинского🧔🏻‍♂️)
+
+#админ"
+39,trader_3,INFO,UNCLASSIFIED,163,3334,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5x)  
+Direction: LONG
+➖➖➖➖➖➖➖
+This signal is still running and under close watch. 
+
+Targets have not been reached yet, but the overall idea remains intact at this stage. Next target is at 1.875.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""leverage/weak:x@218:219""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""catego",,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5x)  
+Direction: LONG
+➖➖➖➖➖➖➖
+This signal is still running and under close watch. 
+
+Targets have not been reached yet, but the overall idea remains intact at this stage. Next target is at 1.875.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,160,3337,,"[trader#3] 📍SIGNAL ID: #2092📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+First target is at 0.2875.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""LONG/strong:long@146:150""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""categ",,,"[trader#3] 📍SIGNAL ID: #2092📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+First target is at 0.2875.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,158,3339,,"[trader#3] 📍SIGNAL ID: #2087📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+This signal is still running and under close watch. 
+
+Targets have not been reached yet, but the overall idea remains intact at this stage. 
+
+First target is at 0.9700.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 📍SIGNAL ID: #2087📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+This signal is still running and under close watch. 
+
+Targets have not been reached yet, but the overall idea remains intact at this stage. 
+
+First target is at 0.9700.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,147,3370,,"[trader#3] 📍SIGNAL ID: #2093📍
+COIN: $XTZ/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+The first target is located at 0.3900.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""LONG/strong:long@146:150""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""a",,,"[trader#3] 📍SIGNAL ID: #2093📍
+COIN: $XTZ/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+The first target is located at 0.3900.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,118,3399,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+The first target is located at 1.875.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""LONG/strong:long@147:151""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""categ",,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+The first target is located at 1.875.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,101,3416,,"[trader#3] 📍SIGNAL ID: #2096📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+Next target is at 9.75.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@40:41"", ""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""LONG/strong:long@147:151"", ""leverage/weak:x@204:205""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_di",,,"[trader#3] 📍SIGNAL ID: #2096📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets have been hit so far, but the signal is still in play. 
+
+As long as the structure holds, this setup remains valid.
+
+Next target is at 9.75.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,75,3442,,"[trader#3] 📍SIGNAL ID: #2098📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The signal remains active and structurally valid. 
+
+Price has not reached targets so far, though current conditions continue to support the setup.
+
+First target is lopcated at 1.400.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 📍SIGNAL ID: #2098📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The signal remains active and structurally valid. 
+
+Price has not reached targets so far, though current conditions continue to support the setup.
+
+First target is lopcated at 1.400.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,66,3451,,"[trader#3] 📍SIGNAL ID: #2099📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The trade is still active and moving within the expected zone. 
+
+Nothing has changed in the overall idea for now, so the setup remains valid.
+
+First target is at 0.1010.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@126:127""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""catego",,,"[trader#3] 📍SIGNAL ID: #2099📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The trade is still active and moving within the expected zone. 
+
+Nothing has changed in the overall idea for now, so the setup remains valid.
+
+First target is at 0.1010.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,62,3455,,"[trader#3] 📍SIGNAL ID: #2088📍
+COIN: $ICP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets yet, but the setup remains alive. 
+
+Market structure continues to support the signal at this stage.
+
+Next target is at 2.700.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@188:189""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""catego",,,"[trader#3] 📍SIGNAL ID: #2088📍
+COIN: $ICP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets yet, but the setup remains alive. 
+
+Market structure continues to support the signal at this stage.
+
+Next target is at 2.700.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,47,3470,,"[trader#3] 📍SIGNAL ID: #2100📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets yet, but the setup remains alive. 
+
+Market structure continues to support the signal at this stage.
+
+First target is at 1.000.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 📍SIGNAL ID: #2100📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+No targets yet, but the setup remains alive. 
+
+Market structure continues to support the signal at this stage.
+
+First target is at 1.000.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,44,3473,,"[trader#3] 📍SIGNAL ID: #2098📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The signal is still in play. 
+
+No targets have been reached yet, but the setup remains valid at this stage.
+
+First target is located at 1.400.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}",,,"[trader#3] 📍SIGNAL ID: #2098📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The signal is still in play. 
+
+No targets have been reached yet, but the setup remains valid at this stage.
+
+First target is located at 1.400.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,37,3480,,"[trader#3] 📍SIGNAL ID: #2101📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The trade is still active and moving within the expected zone. 
+
+Nothing has changed in the overall idea for now, so the setup remains valid.
+
+First target is at 0.1700.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@126:127""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""ap",,,"[trader#3] 📍SIGNAL ID: #2101📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The trade is still active and moving within the expected zone. 
+
+Nothing has changed in the overall idea for now, so the setup remains valid.
+
+First target is at 0.1700.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,24,3493,,"[trader#3] 📍SIGNAL ID: #2102📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+This setup remains active and valid for now. 
+
+Price continues to respect the main structure and we keep monitoring closely.
+
+Target is located at 1.3750.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category",,,"[trader#3] 📍SIGNAL ID: #2102📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+This setup remains active and valid for now. 
+
+Price continues to respect the main structure and we keep monitoring closely.
+
+Target is located at 1.3750.
+➖➖➖➖➖➖➖"
+39,trader_3,INFO,UNCLASSIFIED,21,3496,,"[trader#3] 📍SIGNAL ID: #2100📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The trade is still active and moving within the expected zone. 
+
+Nothing has changed in the overall idea for now, so the setup remains valid.
+➖➖➖➖➖➖➖",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@126:127""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""catego",,,"[trader#3] 📍SIGNAL ID: #2100📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+The trade is still active and moving within the expected zone. 
+
+Nothing has changed in the overall idea for now, so the setup remains valid.
+➖➖➖➖➖➖➖"
