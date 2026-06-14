@@ -1,0 +1,15 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,symbol,side,entry_structure,entries_count,entries_summary,stop_loss_price,take_profit_count,take_profit_prices,risk_hint_raw,risk_hint_value,risk_hint_min_value,risk_hint_max_value,leverage_hint,missing_fields,completeness
+35,trader_c,SIGNAL,PARSED,1749,1054,,"[trader#С]
+
+$BTCUSDT - SHORT 
+
+Вход с текущих (88000-87900) 
+
+Stop 88450.  1% деп
+
+Tейк-профит:
+1) 87100 (RR - 1:2)
+
+2) 86500 (RR - 1:3)
+
+3) 86000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""MODIFY_ENTRY:вход с текущих""], ""matched_markers"": [""symbol/strong:usdt@15:19"", ""symbol/strong:usdt@15:19"", ""SHORT/strong:short@22:27"", ""ALL_SHORT/weak:short@22:27"", ""MODIFY_ENTRY/weak:вход@28:32"", ""MODIFY_ENTRY/strong:вход с текущих@28:42"", ""MARKET/strong:вход с текущих@28:4",BTCUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@,88450.0,3,87100.0|86500.0|86000.0,,,,,,,COMPLETE

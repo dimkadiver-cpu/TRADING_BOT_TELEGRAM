@@ -1,0 +1,78 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
+35,trader_a,INFO,UNCLASSIFIED,2324,264,200,Эта сделка по прежнему в работе. Скорее всего возьмем лимитку,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,2320,268,,"[trader#A]
+
+📊 BTCUSDT — обзор на 11 ноября
+
+Биткоин торгуется у 105 000 USDT, под недельным и дневным сопротивлением.
+После неудачного прокола 106 000 актив сформировал CHoCH и пошёл в откат — это типичный ретест зоны предложения под EMA 200 (4H).
+Структура остаётся нисходящей: ЕМА 20<50<200, фон медвежий.
+
+Ближайшие цели — 104 100 → 101 900 → 98 500, пока цена ниже 106 300.
+Фон по RSI/ADX нейтральный, импульс слабый, рынок готовится к новому движению — скорее вниз.
+Для смены сценария нужно дневное закрепление выше 106 500.
+
+🟠 Направление: шортовое
+⚙️ Поддержки: 104.1k / 101.9k / 98.5k
+📈 Инвалидация: 106.6k+",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@16:20"", ""symbol/strong:usdt@70:74"", ""symbol/strong:usdt@70:74"", ""SL_HIT/weak:сл@118:120"", ""stop_loss/strong:сл@118:120"", ""TP_HIT/weak:цели@316:320"", ""take_profit/strong:цели@316:320"", ""take_profit/strong:ц"
+35,trader_a,INFO,UNCLASSIFIED,2244,347,293,"Тут, увы, убыток почти 8%
+
+Не поздравляю",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,1921,824,823,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,1691,1133,,"[trader#A]
+
+PEOPLE - https://t.me/c/3171748254/1034 
+SXP - https://t.me/c/3171748254/1036 
+QTUM - https://t.me/c/3171748254/1038 
+HYPE - https://t.me/c/3171748254/1044
+JTO - https://t.me/c/3171748254/1081
+MANA - https://t.me/c/3171748254/1083
+
+
+Эти сделки продолжаю держать",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@20:33"", ""take_profit/strong:tp@22:24"", ""telegram_link/strong:t.me/@28:33"", ""leverage/weak:x@52:53"", ""telegram_link/strong:https://t.me/@57:70"", ""take_profit/strong:tp@59:61"", ""telegram_link/strong:t.me/@65:70"", ""teleg"
+35,trader_a,INFO,UNCLASSIFIED,1619,1245,,"[trader#A]
+
+MANA - https://t.me/c/3171748254/1083
+SOL - https://t.me/c/3171748254/1159
+LINK - https://t.me/c/3171748254/1160
+SUI - https://t.me/c/3171748254/1168
+
+Должны остаться в работе. Ближе к вечеру гляну, что можно открыть",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""telegram_link/strong:https://t.me/@18:31"", ""take_profit/strong:tp@20:22"", ""telegram_link/strong:t.me/@26:31"", ""telegram_link/strong:https://t.me/@55:68"", ""take_profit/strong:tp@57:59"", ""telegram_link/strong:t.me/@63:68"", ""telegram_link/strong:https://t"
+35,trader_a,INFO,UNCLASSIFIED,1133,1970,,"[trader#A]
+итог по сделкам:
+hype - 1.27R
+aave -1.67R
+aster - 1.15R
+xrp - 0.75R
+doge - 1.38R
+btc - 1.62R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@67:68""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,1053,2132,2008,"Тут закрою по текущим
+0.28R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""MODIFY_ENTRY/weak:по текущим@11:21""], ""suppressed_markers"": [""MODIFY_ENTRY/weak:по текущим@11:21""], ""applied_marker_rules"": [""false_modify_entry""], ""applied_disambiguation_rules"": [], ""applied_rules"": [""false_modify_entry""], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,1018,2176,2165,"И она закрылась
+итог - 1.19R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,977,2233,2192,"сделка закрылась
+итог 1.36R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,903,2334,,"trader #A
+
+пока ждем",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,829,2426,2348,Актуально,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,780,2503,2481,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,650,2682,2681,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,614,2728,2708,продолжаем,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,600,2742,,"[trader #A]
+
+на этом пока все, ожидаем лимитки и тейки
+
+Скорее всего лимитки будем переносить в ночь и уже завтра утром решу, что с ними делать, либо нас порадуют тейками😊",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [""TP_HIT/weak:тейк@48:52"", ""TP_HIT/weak:тейки@48:53"", ""take_profit/strong:тейки@48:53"", ""EXIT_BE/weak:бу@75:77"", ""TP_HIT/weak:тейк@161:165""], ""suppressed_markers"": [""TP_HIT/weak:тейк@48:52"", ""TP_HIT/weak:тейки@48:53"", ""EXIT_BE/weak:бу@75:77"", ""TP_HIT/wea"
+35,trader_a,INFO,UNCLASSIFIED,479,2917,2881,"Этот наконец-то вспомнил, что он интрадей, а не среднесрок…",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,429,2976,,"Trader #A
+
+Давайте начинать 
+
+Фиксация 50/40/10
+Вернемся к штатному формату фиксации",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,286,3175,3040,"давайте закроем, че мучить оставшиеся 10% позиции
+
+итого 1.06R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+35,trader_a,INFO,UNCLASSIFIED,239,3241,3080,"позиция полностью закрылась
+итог - 1.33R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
