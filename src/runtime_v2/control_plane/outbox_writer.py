@@ -842,8 +842,15 @@ def project_clean_log_for_chain(conn: sqlite3.Connection, chain_id: int) -> int:
         if notification_type == "PARTIAL_CLOSE_EXECUTED" and ev.get("source") != "manual_command":
             continue
 
-        # Promote CLOSE_FULL_FILLED on PROTECTED chain → BE_EXIT
-        if event_type == "CLOSE_FULL_FILLED" and be_protection_status == "PROTECTED":
+        # Promote CLOSE_FULL_FILLED on PROTECTED chain → BE_EXIT only when the
+        # exchange executed the SL automatically (source != "exchange_manual").
+        # A manual close from the exchange UI has source="exchange_manual" and must
+        # remain POSITION_CLOSED even if the chain has SL at breakeven.
+        if (
+            event_type == "CLOSE_FULL_FILLED"
+            and be_protection_status == "PROTECTED"
+            and ev.get("source") != "exchange_manual"
+        ):
             notification_type = "BE_EXIT"
 
         payload = _build_payload(

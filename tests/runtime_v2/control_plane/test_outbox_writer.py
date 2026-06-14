@@ -631,6 +631,34 @@ def test_close_full_filled_on_protected_chain_projects_be_exit(ops_db):
     assert payload["exit_price"] == 65020.0
 
 
+def test_close_full_filled_exchange_manual_on_protected_chain_projects_position_closed(ops_db):
+    # Regression: manual close from exchange UI with source="exchange_manual" on a
+    # PROTECTED chain must NOT be promoted to BE_EXIT.
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1104)
+        conn.execute(
+            "UPDATE ops_trade_chains SET be_protection_status='PROTECTED', "
+            "entry_avg_price=65000.0, cumulative_gross_pnl=118.0, "
+            "cumulative_fees=5.70, allocated_margin=10000.0 WHERE trade_chain_id=?",
+            (1104,),
+        )
+        _seed_event(conn, 1104, "CLOSE_FULL_FILLED", "close_full:1104:1", {
+            "fill_price": 65020.0,
+            "filled_qty": 0.01,
+            "exec_fee": 1.70,
+            "closed_size": 0.01,
+            "source": "exchange_manual",
+        })
+        project_clean_log_for_chain(conn, 1104)
+    row = conn.execute("SELECT notification_type, payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "POSITION_CLOSED"
+    payload = json.loads(row[1])
+    assert payload.get("close_reason") != "BREAKEVEN_AFTER_TP"
+
+
 def test_sl_filled_on_unprotected_chain_projects_stop_loss(ops_db):
     conn = sqlite3.connect(ops_db)
     with conn:
