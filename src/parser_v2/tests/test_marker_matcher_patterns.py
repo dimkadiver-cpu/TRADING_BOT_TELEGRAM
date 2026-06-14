@@ -116,17 +116,18 @@ def test_pattern_feeds_into_marker_evidence_resolver():
     from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver
 
     matcher = MarkerMatcher()
-    text = "стоп в безубыток и бу"
+    text = "стоп в бу"
     markers = SemanticMarkers(
         intent_markers={
             "MOVE_STOP_TO_BE": MarkerSet(
-                strong_patterns=["стоп в безубыток"],
+                strong_patterns=["стоп в бу"],
                 weak=["бу"],
             )
         }
     )
     matches = matcher.match(_text(text), markers)
-    assert len(matches) == 2  # strong pattern + weak literal
+    # strong pattern "стоп в бу" @0-9, weak literal "бу" @7-9 — weak dentro strong
+    assert len(matches) == 2
 
     rules = ParserRules(
         marker_resolution=MarkerResolutionRules(suppress_weak_inside_strong_same_intent=True)
