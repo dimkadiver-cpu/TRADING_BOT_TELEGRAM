@@ -224,7 +224,7 @@ def _write_update_clean_log(
                     "new": ce.get("new_price"),
                 })
         elif action == "MOVE_STOP":
-            _VALID_REFS = {"Price", "TP_1", "TP_2", "TP_3"}
+            _VALID_REFS = {"Price", "Risk", "TP_1", "TP_2", "TP_3"}
             changed.append({
                 "field": "SL",
                 "old": p.get("old_sl_price"),
@@ -316,7 +316,7 @@ def _render_update_display_lines(
             new_sl = p.get("new_sl_price", "?")
             lines.append(f"SL: {old_sl} -> {new_sl}")
             ref = p.get("reference")
-            if ref in {"Price", "TP_1", "TP_2", "TP_3"}:
+            if ref in {"Price", "Risk", "TP_1", "TP_2", "TP_3"}:
                 lines.append(f"Reference: {ref}")
         elif action == "CLOSE_FULL":
             lines.append("Position: open -> closed 100%")
@@ -1045,6 +1045,13 @@ class LifecycleEntryGate:
                 if tp_price is None:
                     return self._review_chain(enriched, chain, f"tp_level_price_not_found:{op.tp_level}")
                 return self._apply_move_stop_price(enriched, chain, tp_price, active_commands=active_commands, reference=f"TP_{op.tp_level}")
+            if op and op.target_type == "RISK_TARGET" and op.risk_reduction_target is not None:
+                return self._apply_move_stop_risk_target(
+                    enriched,
+                    chain,
+                    op.risk_reduction_target,
+                    active_commands=active_commands,
+                )
             return self._review_chain(enriched, chain, "unsupported_set_stop_target_type")
 
         if action_type == "CLOSE":
@@ -1626,6 +1633,7 @@ class LifecycleEntryGate:
         *,
         active_commands: list[ExecutionCommand],
         reference: str | None = None,
+        metadata: dict | None = None,
     ) -> "UpdateChainResult":
         chain_id = chain.trade_chain_id
         cmid = enriched.canonical_message_id
@@ -1674,6 +1682,8 @@ class LifecycleEntryGate:
         }
         if reference is not None:
             payload["reference"] = reference
+        if metadata:
+            payload.update(metadata)
 
         cmd = ExecutionCommand(
             trade_chain_id=chain_id,
@@ -1696,6 +1706,8 @@ class LifecycleEntryGate:
         }
         if reference is not None:
             event_payload["reference"] = reference
+        if metadata:
+            event_payload.update(metadata)
 
         event = LifecycleEvent(
             trade_chain_id=chain_id,
@@ -1711,6 +1723,120 @@ class LifecycleEntryGate:
             new_be_protection_status=None,
             lifecycle_events=[event],
             execution_commands=[cmd],
+        )
+
+    @staticmethod
+    def _resolve_chain_stop_price(chain: "TradeChain") -> float | None:
+        if chain.current_stop_price is not None:
+            return chain.current_stop_price
+        try:
+            value = json.loads(chain.risk_snapshot_json or "{}").get("sl_price")
+            return float(value) if value is not None else None
+        except Exception:
+            return None
+
+    @staticmethod
+    def _resolve_base_initial_risk(chain: "TradeChain") -> float | None:
+        if chain.initial_risk_amount is not None and chain.initial_risk_amount > 0:
+            return chain.initial_risk_amount
+        try:
+            value = json.loads(chain.risk_snapshot_json or "{}").get("risk_amount")
+            value = float(value) if value is not None else None
+        except Exception:
+            value = None
+        if value is not None and value > 0:
+            return value
+        return None
+
+    @staticmethod
+    def _compute_residual_risk(chain: "TradeChain", stop_price: float) -> float | None:
+        if chain.entry_avg_price is None or chain.open_position_qty <= 0:
+            return None
+        if chain.side == "LONG":
+            if stop_price >= chain.entry_avg_price:
+                return 0.0
+            return (chain.entry_avg_price - stop_price) * chain.open_position_qty
+        if chain.side == "SHORT":
+            if stop_price <= chain.entry_avg_price:
+                return 0.0
+            return (stop_price - chain.entry_avg_price) * chain.open_position_qty
+        return None
+
+    def _apply_move_stop_risk_target(
+        self,
+        enriched: "EnrichedCanonicalMessage",
+        chain: "TradeChain",
+        risk_target,
+        *,
+        active_commands: list[ExecutionCommand],
+    ) -> "UpdateChainResult":
+        if chain.entry_avg_price is None:
+            return self._review_chain(enriched, chain, "missing_entry_avg_price_for_risk_target")
+        if chain.open_position_qty <= 0:
+            return self._review_chain(enriched, chain, "invalid_open_position_qty_for_risk_target")
+
+        base_initial_risk = self._resolve_base_initial_risk(chain)
+        if base_initial_risk is None:
+            return self._review_chain(enriched, chain, "missing_initial_risk_for_risk_target")
+
+        if risk_target.unit == "PERCENT_OF_INITIAL_RISK":
+            target_abs_risk = base_initial_risk * float(risk_target.value) / 100.0
+        elif risk_target.unit == "R_MULTIPLE":
+            target_abs_risk = base_initial_risk * float(risk_target.value)
+        else:
+            return self._review_chain(enriched, chain, "unsupported_risk_target_unit")
+
+        if target_abs_risk <= 0:
+            return self._apply_move_to_be(enriched, chain, active_commands)
+
+        distance = target_abs_risk / chain.open_position_qty
+        if chain.side == "LONG":
+            new_stop = chain.entry_avg_price - distance
+            at_or_through_be = new_stop >= chain.entry_avg_price
+        elif chain.side == "SHORT":
+            new_stop = chain.entry_avg_price + distance
+            at_or_through_be = new_stop <= chain.entry_avg_price
+        else:
+            return self._review_chain(enriched, chain, "unsupported_chain_side_for_risk_target")
+
+        if at_or_through_be:
+            return self._apply_move_to_be(enriched, chain, active_commands)
+
+        current_stop = self._resolve_chain_stop_price(chain)
+        if current_stop is None:
+            return self._review_chain(enriched, chain, "missing_current_stop_for_risk_target")
+
+        current_residual_risk = self._compute_residual_risk(chain, current_stop)
+        if current_residual_risk is None:
+            return self._review_chain(enriched, chain, "missing_current_residual_risk_for_risk_target")
+        if target_abs_risk >= current_residual_risk:
+            return UpdateChainResult(
+                trade_chain_id=chain.trade_chain_id,
+                new_lifecycle_state=None,
+                new_be_protection_status=None,
+                lifecycle_events=[LifecycleEvent(
+                    trade_chain_id=chain.trade_chain_id,
+                    event_type="NOOP_NO_APPLICABLE_TARGET",
+                    source_type="telegram_update",
+                    source_id=str(enriched.canonical_message_id),
+                    payload_json=json.dumps({"reason": "risk_target_already_met"}),
+                    idempotency_key=(
+                        f"noop_risk_target_already_met:{chain.trade_chain_id}:{enriched.canonical_message_id}"
+                    ),
+                )],
+                execution_commands=[],
+            )
+
+        return self._apply_move_stop_price(
+            enriched,
+            chain,
+            new_stop,
+            active_commands=active_commands,
+            reference="Risk",
+            metadata={
+                "risk_target_unit": risk_target.unit,
+                "risk_target_value": float(risk_target.value),
+            },
         )
 
     def _apply_close_full(

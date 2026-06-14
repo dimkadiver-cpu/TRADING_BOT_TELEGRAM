@@ -306,6 +306,8 @@ def _make_update_enriched(
     scope_hint: str = "SINGLE_SIGNAL",
     action_type: str = "SET_STOP",
     set_stop_target: str = "ENTRY",
+    risk_target_unit: str | None = None,
+    risk_target_value: float | None = None,
     symbols: list[str] | None = None,
     close_scope: str = "FULL",
     fraction: float | None = None,
@@ -314,12 +316,22 @@ def _make_update_enriched(
         ActionItem, CancelPendingOperation, CloseOperation, SetStopOperation, TargetActionGroup,
     )
     from src.parser_v2.contracts.context import TargetHints
+    from src.parser_v2.contracts.entities import RiskReductionTarget
     from src.runtime_v2.signal_enrichment.models import EnrichedCanonicalMessage
 
     if action_type == "SET_STOP":
+        risk_target = None
+        if risk_target_unit is not None and risk_target_value is not None:
+            risk_target = RiskReductionTarget(
+                unit=risk_target_unit,
+                value=risk_target_value,
+            )
         action = ActionItem(
             action_type="SET_STOP",
-            set_stop=SetStopOperation(target_type=set_stop_target),
+            set_stop=SetStopOperation(
+                target_type=set_stop_target,
+                risk_reduction_target=risk_target,
+            ),
             source_intent="MOVE_STOP_TO_BE",
         )
     elif action_type == "CANCEL_PENDING":
@@ -360,6 +372,9 @@ def _make_open_chain(
     entry_avg_price: float | None = None,
     current_stop_price: float | None = None,
     be_status: str = "NOT_PROTECTED",
+    open_position_qty: float = 0.0,
+    risk_snapshot_json: str = "{}",
+    initial_risk_amount: float | None = None,
 ):
     from src.runtime_v2.lifecycle.models import TradeChain
     return TradeChain(
@@ -373,6 +388,9 @@ def _make_open_chain(
         entry_avg_price=entry_avg_price,
         current_stop_price=current_stop_price,
         be_protection_status=be_status,
+        open_position_qty=open_position_qty,
+        risk_snapshot_json=risk_snapshot_json,
+        initial_risk_amount=initial_risk_amount,
     )
 
 
@@ -431,6 +449,148 @@ def test_update_move_to_be_without_entry_avg_is_noop():
     assert cr.new_lifecycle_state is None
     assert cr.new_be_protection_status is None
     assert cr.lifecycle_events[0].event_type == "NOOP_NOT_PENDING"
+
+
+def test_update_move_stop_risk_target_long_percent_computes_price_and_logs_risk_reference():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL",
+        symbols=["BTC/USDT"],
+        set_stop_target="RISK_TARGET",
+        risk_target_unit="PERCENT_OF_INITIAL_RISK",
+        risk_target_value=25.0,
+    )
+    chain = _make_open_chain(
+        entry_avg_price=50000.0,
+        current_stop_price=49000.0,
+        open_position_qty=2.0,
+        initial_risk_amount=4000.0,
+        risk_snapshot_json=json.dumps({"risk_amount": 4000.0, "sl_price": 49000.0}),
+    )
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP")
+    command_payload = json.loads(command.payload_json)
+    assert command_payload["new_stop_price"] == pytest.approx(49500.0)
+    assert command_payload["reference"] == "Risk"
+    assert command_payload["risk_target_unit"] == "PERCENT_OF_INITIAL_RISK"
+    assert command_payload["risk_target_value"] == pytest.approx(25.0)
+
+    accepted = next(e for e in cr.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED")
+    accepted_payload = json.loads(accepted.payload_json)
+    assert accepted_payload["action"] == "MOVE_STOP"
+    assert accepted_payload["old_sl_price"] == pytest.approx(49000.0)
+    assert accepted_payload["new_sl_price"] == pytest.approx(49500.0)
+    assert accepted_payload["reference"] == "Risk"
+    assert accepted_payload["risk_target_unit"] == "PERCENT_OF_INITIAL_RISK"
+    assert accepted_payload["risk_target_value"] == pytest.approx(25.0)
+
+
+def test_update_move_stop_risk_target_short_r_multiple_computes_price():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL",
+        symbols=["BTC/USDT"],
+        set_stop_target="RISK_TARGET",
+        risk_target_unit="R_MULTIPLE",
+        risk_target_value=0.5,
+    )
+    chain = _make_open_chain(
+        side="SHORT",
+        entry_avg_price=50000.0,
+        current_stop_price=52000.0,
+        open_position_qty=2.0,
+        initial_risk_amount=None,
+        risk_snapshot_json=json.dumps({"risk_amount": 4000.0, "sl_price": 52000.0}),
+    )
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    command = next(c for c in cr.execution_commands if c.command_type == "MOVE_STOP")
+    payload = json.loads(command.payload_json)
+    assert payload["new_stop_price"] == pytest.approx(51000.0)
+    assert payload["reference"] == "Risk"
+    assert payload["risk_target_unit"] == "R_MULTIPLE"
+    assert payload["risk_target_value"] == pytest.approx(0.5)
+
+
+def test_update_move_stop_risk_target_already_achieved_returns_noop():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL",
+        symbols=["BTC/USDT"],
+        set_stop_target="RISK_TARGET",
+        risk_target_unit="PERCENT_OF_INITIAL_RISK",
+        risk_target_value=50.0,
+    )
+    chain = _make_open_chain(
+        entry_avg_price=50000.0,
+        current_stop_price=49500.0,
+        open_position_qty=2.0,
+        initial_risk_amount=4000.0,
+        risk_snapshot_json=json.dumps({"risk_amount": 4000.0, "sl_price": 49000.0}),
+    )
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    assert cr.execution_commands == []
+    assert cr.lifecycle_events[0].event_type == "NOOP_NO_APPLICABLE_TARGET"
+    assert json.loads(cr.lifecycle_events[0].payload_json)["reason"] == "risk_target_already_met"
+
+
+def test_update_move_stop_risk_target_missing_state_returns_review():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL",
+        symbols=["BTC/USDT"],
+        set_stop_target="RISK_TARGET",
+        risk_target_unit="PERCENT_OF_INITIAL_RISK",
+        risk_target_value=25.0,
+    )
+    chain = _make_open_chain(
+        entry_avg_price=50000.0,
+        current_stop_price=49000.0,
+        open_position_qty=2.0,
+        risk_snapshot_json=json.dumps({"sl_price": 49000.0}),
+    )
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    assert cr.execution_commands == []
+    assert cr.lifecycle_events[0].event_type == "REVIEW_REQUIRED"
+    assert json.loads(cr.lifecycle_events[0].payload_json)["reason"] == "missing_initial_risk_for_risk_target"
+
+
+def test_update_move_stop_risk_target_degrades_to_breakeven_when_non_positive():
+    gate = _make_gate()
+    enriched = _make_update_enriched(
+        scope_hint="SINGLE_SIGNAL",
+        symbols=["BTC/USDT"],
+        set_stop_target="RISK_TARGET",
+        risk_target_unit="PERCENT_OF_INITIAL_RISK",
+        risk_target_value=0.0,
+    )
+    chain = _make_open_chain(
+        entry_avg_price=50000.0,
+        current_stop_price=49000.0,
+        open_position_qty=2.0,
+        initial_risk_amount=4000.0,
+        risk_snapshot_json=json.dumps({"risk_amount": 4000.0, "sl_price": 49000.0}),
+    )
+
+    result = gate.process_update(enriched, [chain], {})
+
+    cr = result.chain_results[0]
+    assert any(c.command_type == "MOVE_STOP_TO_BREAKEVEN" for c in cr.execution_commands)
+    accepted = next(e for e in cr.lifecycle_events if e.event_type == "TELEGRAM_UPDATE_ACCEPTED")
+    accepted_payload = json.loads(accepted.payload_json)
+    assert accepted_payload["action"] == "MOVE_SL_TO_BE"
+    assert accepted_payload["is_breakeven"] is True
 
 
 def test_update_close_full_active_chain():
@@ -2587,6 +2747,69 @@ def test_write_update_clean_log_partial_keeps_changed_and_rejected_actions(tmp_p
     assert payload["rejected_actions"] == ["ALREADY_PROTECTED_BE"]
     assert payload["changed"] == [
         {"field": "Entry_2", "old": 48000.0, "new": 47000.0},
+    ]
+
+
+def test_write_update_clean_log_move_stop_risk_keeps_reference_note(tmp_path):
+    import json
+    import sqlite3
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import UpdateChainResult, _write_update_clean_log
+    from src.runtime_v2.lifecycle.models import LifecycleEvent
+
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(ops_db, "db/ops_migrations")
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        """INSERT INTO ops_trade_chains (
+            source_enrichment_id, canonical_message_id, raw_message_id,
+            trader_id, account_id, symbol, side, lifecycle_state, entry_mode,
+            management_plan_json, plan_state_json, created_at, updated_at
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))""",
+        (1, 1, 1, "trader_a", "acc_1", "BTC/USDT", "LONG", "OPEN", "ONE_SHOT", "{}", "{}"),
+    )
+    chain_id = conn.execute(
+        "SELECT trade_chain_id FROM ops_trade_chains WHERE source_enrichment_id=?",
+        (1,),
+    ).fetchone()[0]
+
+    cr = UpdateChainResult(
+        trade_chain_id=chain_id,
+        new_lifecycle_state=None,
+        new_be_protection_status=None,
+        lifecycle_events=[
+            LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="TELEGRAM_UPDATE_ACCEPTED",
+                source_type="telegram_update",
+                source_id="1",
+                payload_json=json.dumps({
+                    "action": "MOVE_STOP",
+                    "old_sl_price": 49000.0,
+                    "new_sl_price": 49500.0,
+                    "reference": "Risk",
+                    "risk_target_unit": "PERCENT_OF_INITIAL_RISK",
+                    "risk_target_value": 25.0,
+                }),
+                idempotency_key="accepted:1",
+            ),
+        ],
+        execution_commands=[],
+    )
+
+    with conn:
+        _write_update_clean_log(conn, cr, canonical_message_id=1, link=None)
+
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox WHERE notification_type='UPDATE_DONE'"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    payload = json.loads(row[1])
+    assert payload["applied_actions"] == ["MOVE_STOP"]
+    assert payload["changed"] == [
+        {"field": "SL", "old": 49000.0, "new": 49500.0, "note": "Risk"},
     ]
 
 

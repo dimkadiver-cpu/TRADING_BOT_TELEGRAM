@@ -21,20 +21,25 @@ from src.parser_v2.contracts.entities import (
     Price,
     ReenterEntities,
     ReportResultEntities,
+    RiskReductionTarget,
     SlHitEntities,
     TpHitEntities,
 )
 from src.parser_v2.contracts.enums import INTENT_CATEGORY_BY_TYPE, ModifyEntryMode, STRONG_WEIGHT, WEAK_WEIGHT
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
 from src.parser_v2.contracts.parsed_message import ParsedIntent
-from src.parser_v2.core.parsing_utils import deduplicate_by_span as _deduplicate_by_span, float_from_raw as _float_from_raw, price_from_raw as _price_from_raw
+from src.parser_v2.core.parsing_utils import (
+    deduplicate_by_span as _deduplicate_by_span,
+    float_from_raw as _float_from_raw,
+    price_from_raw as _price_from_raw,
+)
 
 
 _NUMBER_PATTERN = r"\d(?:[\d.,]*\d)?"
 _PRICE_RE = re.compile(_NUMBER_PATTERN)
 
-# Mini-regex used only for entity extraction from the matched marker text
-# Handles "tpN"/"тпN", "N тейк", and ordinals "первый"/"второй"/"третий"
+# Mini-regex used only for entity extraction from the matched marker text.
+# Handles tp levels, percentages, and risk-reduction targets.
 _RE_TP_LEVEL = re.compile(
     r"(?:tp|тп)\s*(?P<n1>[123])"
     r"|(?P<n2>[123])\s*тейк"
@@ -45,6 +50,15 @@ _RE_PCT = re.compile(r"(?P<pct>\d+(?:[.,]\d+)?)\s*%")
 _RE_HALF = re.compile(r"\bhalf\b|половин", re.IGNORECASE)
 _RE_TP1 = re.compile(r"первый|тп\s*1|tp\s*1|1\s*тейк", re.IGNORECASE)
 _RANGE_RE = re.compile(r"(?P<p1>\d[\d.,]*) *- *(?P<p2>\d[\d.,]*)")
+_RE_RISK_REDUCTION_TARGET = re.compile(
+    r"(?:"
+    r"(?:сокраща(?:ем|й(?:те)?|ю)|снижа(?:ем|й(?:те)?|ю)|уменьша(?:ем|й(?:те)?|ю))\s+риск\s+до"
+    r"|риск\s+до"
+    r")\s*"
+    r"(?P<value>\d+(?:[.,]\d+)?)\s*"
+    r"(?:(?P<pct>%)|(?P<rr>[rр]{1,2})\b)",
+    re.IGNORECASE,
+)
 
 _TP_ORDINAL_MAP = {"перв": 1, "втор": 2, "треть": 3}
 
@@ -52,21 +66,14 @@ EntityBuilder = Callable[[MarkerEvidence, NormalizedText], object]
 
 
 class IntentEntityExtractor:
-    """Extracts typed entities for each intent already detected by MarkerMatcher.
-
-    Intent detection (which IntentType is present) is driven by semantic_markers.json
-    via MarkerMatcher → MarkerEvidenceResolver. This class only handles the
-    entity-extraction step: given a detected intent marker at a known position,
-    parse prices, levels, and percentages from the surrounding text.
-    """
+    """Extract typed entities for each detected intent marker."""
 
     def extract(
         self,
         normalized: NormalizedText,
         evidence: list[MarkerEvidence],
     ) -> list[ParsedIntent]:
-        # A strong INFO marker (e.g. admin message) suppresses all weak intent markers:
-        # admin/schedule/greeting messages don't carry trading intents.
+        # Strong INFO markers suppress weak trading intents.
         has_strong_info = any(
             ev.kind == "info" and ev.strength == "strong" and not ev.suppressed
             for ev in evidence
@@ -101,20 +108,18 @@ class IntentEntityExtractor:
         return _deduplicate_by_span(intents)
 
 
-# ---------------------------------------------------------------------------
-# Entity builders — one per IntentType
-# Each receives the MarkerEvidence (which carries the matched marker text and
-# its span) and the full NormalizedText. They must NOT re-detect the intent;
-# they only extract numeric/textual entities from the surrounding context.
-# ---------------------------------------------------------------------------
-
-
 def _move_stop_entities(ev: MarkerEvidence, normalized: NormalizedText) -> MoveStopEntities:
+    risk_text = normalized.normalized_text[ev.start:]
+    risk_target = _risk_reduction_target_from_text(risk_text)
+    if risk_target is not None:
+        return MoveStopEntities(risk_reduction_target=risk_target)
+
     m = _RE_TP_LEVEL.search(ev.marker)
     if m:
         level = _tp_level_from_match(m)
         if level is not None:
             return MoveStopEntities(stop_to_tp_level=level)
+
     price = _first_price_after(normalized.normalized_text, ev.end)
     return MoveStopEntities(new_stop_price=price)
 
@@ -130,6 +135,20 @@ def _tp_level_from_match(m: re.Match[str]) -> int | None:
             if prefix.startswith(k):
                 return v
     return None
+
+
+def _risk_reduction_target_from_text(text: str) -> RiskReductionTarget | None:
+    match = _RE_RISK_REDUCTION_TARGET.search(text)
+    if not match:
+        return None
+
+    value = _float_from_raw(match.group("value"))
+    if value is None:
+        return None
+
+    if match.group("pct"):
+        return RiskReductionTarget(unit="PERCENT_OF_INITIAL_RISK", value=value)
+    return RiskReductionTarget(unit="R_MULTIPLE", value=value)
 
 
 def _close_full_entities(ev: MarkerEvidence, normalized: NormalizedText) -> CloseFullEntities:
@@ -184,7 +203,6 @@ def _modify_entry_entities(
     selector = _detect_entry_selector(ev, all_evidence)
     entries, entry_structure = _extract_modify_entry_prices(window, mode)
 
-    # Upgrade mode dal price structure quando il marker non è esplicito
     if entry_structure == "RANGE" and mode in ("UPDATE_PRICE", "UNKNOWN"):
         mode = "UPDATE_RANGE"
     elif entries and mode == "UNKNOWN":
@@ -230,7 +248,7 @@ def _detect_entry_selector(
     for e in all_evidence:
         if e.kind == "entry_selector" and not e.suppressed:
             if _spans_overlap_or_adjacent(e, ev):
-                role = e.name  # "PRIMARY" | "AVERAGING"
+                role = e.name
                 seq = 1 if role == "PRIMARY" else None
                 return EntrySelector(role=role, sequence=seq, raw=e.marker)  # type: ignore[arg-type]
     return None
@@ -324,16 +342,6 @@ _ENTITY_BUILDERS: dict[str, EntityBuilder] = {
 }
 
 
-# ---------------------------------------------------------------------------
-# Span deduplication
-# ---------------------------------------------------------------------------
-
-
-# ---------------------------------------------------------------------------
-# Price parsing helpers
-# ---------------------------------------------------------------------------
-
-
 def _first_price_after(text: str, offset: int) -> Price | None:
     prices = _prices_after(text, offset)
     return prices[0] if prices else None
@@ -346,5 +354,3 @@ def _prices_after(text: str, offset: int) -> list[Price]:
         if price is not None:
             prices.append(price)
     return prices
-
-
