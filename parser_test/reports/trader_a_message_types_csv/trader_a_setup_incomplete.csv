@@ -1,6 +1,0 @@
-﻿raw_message_id,reply_to_message_id,raw_text,parse_status,primary_class,symbol,direction,risk_hint_value,market_type,completeness,entry_plan_type,entry_structure,entry_count,entries_summary,stop_loss_price,tp_prices,signal_id
-1976,,"[trader#A]
-
-за ноябрь осталось два сигнала, которые еще не взяли, минимум, 1 тейк или стоп:
-1. https://t.me/c/3171748254/686 p.s. стоп был, почему-то установил у себя другой стоп... -10.3%, но так как вход был на 0.3%, минус не должен был быть сильно неприятным
-2. https://t.me/c/3171748254/569",PARTIAL,SIGNAL,,,0.3,,INCOMPLETE,,,0,,1,,1976
