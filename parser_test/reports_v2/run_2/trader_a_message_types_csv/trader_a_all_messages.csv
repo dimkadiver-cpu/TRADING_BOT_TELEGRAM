@@ -1,0 +1,173 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary
+2,trader_a,INFO,UNCLASSIFIED,32,3,,,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+2,trader_a,SIGNAL,PARSED,31,6131,,"[trader #A] Signal #a1
+#WLFIUSDT LONG
+Риск 1%
+Вход по маркету: 0,06023
+TP1: 0.06489
+Tp2: 0.0732
+Tp3: 0.0804
+Стоп: 0.05609",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:long@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""take_profit/strong:tp@71:73"", ""TP_HIT/weak:tp1@71:74"", ""take_profit/strong:tp1:@71:75"", ""take_profit/strong:tp@84:"
+2,trader_a,SIGNAL,PARSED,30,6133,,"[trader #A] Signal #a2
+#PUMPFUNUSDT Лонг
+Риск 1%
+Вход : 0.0017338
+TP1: 0.001857
+Tp2: 0.002
+Tp3: 0.002255
+Стоп: 0.00163",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@36:40"", ""risk/weak:риск@41:45"", ""MODIFY_ENTRY/weak:вход@49:53"", ""take_profit/strong:tp@66:68"", ""TP_HIT/weak:tp1@66:69"", ""take_profit/strong:tp1:@66:70"", ""take_profit/strong:tp@80:"
+2,trader_a,SIGNAL,PARSED,29,6134,,"[trader #A] Signal #a3
+#BTCUSDT Лонг
+Риск 1%
+Вход : 71560
+TP1: 73900
+Tp2: 74313
+Tp3: 77500
+Стоп: 70000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""take_profit/strong:tp@58:60"", ""TP_HIT/weak:tp1@58:61"", ""take_profit/strong:tp1:@58:62"", ""take_profit/strong:tp@69:"
+2,trader_a,UPDATE,PARSED,28,6148,6133,"[trader #A] Signal #a2
+Tp1 фикс 50%
+Sl в безубыток",1.0,,"{""suppressed_intents"": [""TP_HIT:tp1""], ""matched_markers"": [""take_profit/strong:tp@23:25"", ""TP_HIT/weak:tp1@23:26"", ""CLOSE_PARTIAL/strong:фикс 50%@27:35"", ""SL_HIT/weak:sl@36:38"", ""MOVE_STOP_TO_BE/weak:безубыток@41:50"", ""EXIT_BE/weak:безубыток@41:50""], ""suppressed_markers"": [], ""applied_marker_rules"":"
+2,trader_a,REPORT,PARSED,27,6170,,"[trader #A] Signal #a3
+BTCUSDT 
+Стоп",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@26:30"", ""symbol/strong:usdt@26:30"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}"
+2,trader_a,SIGNAL,PARSED,26,6186,,"[trader #A] Signal #a4
+#JUPUSDT Лонг
+Риск 1%
+Вход : 0.2023 рыночный
+TP1: 0.2211
+Tp2: 0.2363
+Tp3: 0.2791
+Стоп: 0.1887",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""MARKET/weak:рыночный@59:67"", ""take_profit/strong:tp@68:70"", ""TP_HIT/weak:tp1@68:71"", ""take_profit/strong:tp1:@68:7"
+2,trader_a,UPDATE,PARSED,25,6197,,"[trader #A] Signal #a4
+#JUPUSDT Лонг
+Стоп переносим в безубыток",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп переносим""], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP/strong:стоп переносим@37:51"", ""MODIFY_ENTRY/weak:переносим@42:51"", ""MOVE_STOP_TO_BE/weak:безубыток@54:63"", """
+2,trader_a,REPORT,PARSED,24,6204,,"[trader #A] Signal #a4
+#JUPUSDT Лонг
+Закрылись по бу
+пониже глянем перезаход",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""EXIT_BE/strong:закрылись по бу@37:52"", ""EXIT_BE/weak:по бу@47:52"", ""EXIT_BE/weak:бу@50:52""], ""suppressed_markers"": [""EXIT_BE/weak:по бу@47:52"", ""EXIT_BE/weak:бу@50:52""], "
+2,trader_a,UPDATE,PARSED,23,6207,,"[trader #A] Signal #a2
+#PUMPFUNUSDT Лонг
+Сделка закрыта +0,59R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@36:40"", ""CLOSE_FULL/weak:закрыта@48:55""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDAT"
+2,trader_a,INFO,UNCLASSIFIED,22,6211,6186,Перезаход,0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"
+2,trader_a,SIGNAL,PARSED,21,6212,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Риск 1%
+Вход : 0.1962 рыночный
+TP1: 0.2211
+Tp2: 0.2363
+Tp3: 0.2791
+Стоп: 0.18062",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""MARKET/weak:рыночный@59:67"", ""take_profit/strong:tp@68:70"", ""TP_HIT/weak:tp1@68:71"", ""take_profit/strong:tp1:@68:7"
+2,trader_a,INFO,PARSED,20,6230,,"Привет, это админ!
+Дабы не было путаницы... 👌
+
+Сегодня trader#А дал сигнал #a4. Позже этот сигнал был закрыт в БУ, плюс трейдер написал, что будет искать перезаход.
+
+После этого появилось отдельное сообщение «перезаход», но без полноценного оформления сигнала. 
+Ниже уже был опубликован новый сигнал #a5 - именно он и является тем самым перезаходом. 
+Не запутались с этими заходами?😂
+
+То есть логика такая:
+
+#а4 - закрыт в БУ.
+#а5 - новый сигнал / перезаход.
+
+Чтобы в дальнейшем не было недопонимания, такие моменты будем оформлять понятнее: если идет перезаход, он будет сопровождаться полноценным новым сигналом с отдельным хэштегом.
+
+Ориентируемся именно на хэштеги сигналов и финальные сообщения по ним, окээй? 😉
+
+#админ 
+
+P.S. норму ""перезаходов"" в одном сообщении я перевыполнил.
+Прошу понять и простить!",1.0,,"{""matched_markers"": [""ADMIN/strong:это админ@8:17"", ""EXIT_BE/strong:закрыт в бу@101:112"", ""MOVE_STOP_TO_BE/weak:в бу@108:112"", ""EXIT_BE/weak:бу@110:112"", ""EXIT_BE/weak:бу@140:142"", ""SL_HIT/weak:сл@166:168"", ""stop_loss/strong:сл@166:168"", ""EXIT_BE/strong:закрыт в бу@408:419"", ""MOVE_STOP_TO_BE/weak:в "
+2,trader_a,UPDATE,PARSED,19,6262,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Cтоп переносим в бу",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""MODIFY_ENTRY/weak:переносим@42:51"", ""MOVE_STOP_TO_BE/weak:в бу@52:56"", ""EXIT_BE/weak:бу@54:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambigua"
+2,trader_a,UPDATE,PARSED,18,6285,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Стоп переносим в +
+0.2073",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP/strong:стоп переносим@37:51"", ""MODIFY_ENTRY/weak:переносим@42:51""], ""suppressed_markers"": [""SL_HIT/weak:стоп@37:41"", ""MODIFY_ENTRY/wea"
+2,trader_a,UPDATE,PARSED,17,6287,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Закрываем позицию по текущим 0,21252
++1R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""CLOSE_FULL/weak:закрываем@37:46"", ""CLOSE_FULL/strong:закрываем позицию@37:54"", ""MODIFY_ENTRY/weak:по текущим@55:65""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываем@37"
+2,trader_a,UPDATE,PARSED,16,6295,,"[trader #A] Signal #a1
+#WLFIUSDT LONG
+Стоп двигаем в безубыток",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:long@33:37"", ""SL_HIT/weak:стоп@38:42"", ""MOVE_STOP/strong:стоп двигаем@38:50"", ""MOVE_STOP_TO_BE/strong:стоп двигаем в безубыток@38:62"", ""MOVE_STOP_TO_BE/weak:безубыток@53:62"", ""EXIT_BE/"
+2,trader_a,UPDATE,PARSED,15,6354,,"[trader #A] Signal #a1
+#WLFIUSDT LONG
+Ушли в бу",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:long@33:37"", ""MOVE_STOP_TO_BE/weak:в бу@43:47"", ""EXIT_BE/weak:бу@45:47""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [],"
+2,trader_a,SIGNAL,PARSED,14,6818,,"[trader #A] Signal #a6
+#ICNTUSDT Лонг
+Риск 1%
+Вход : 0.2198 рыночный
+TP1: 0.2666
+Tp2: 0.4163
+Tp3: 0.607
+Стоп: 0.2042",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""MARKET/weak:рыночный@60:68"", ""take_profit/strong:tp@69:71"", ""TP_HIT/weak:tp1@69:72"", ""take_profit/strong:tp1:@69:7"
+2,trader_a,SIGNAL,PARSED,13,6913,,"[trader #A] Signal #a7
+#BTCUSDT Лонг
+Риск 1%
+Вход : 61420 рыночный
+TP1: 64734
+Tp2: 67500
+Tp3: 73600
+Стоп: 59465",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""MARKET/weak:рыночный@58:66"", ""take_profit/strong:tp@67:69"", ""TP_HIT/weak:tp1@67:70"", ""take_profit/strong:tp1:@67:7"
+2,trader_a,SIGNAL,PARSED,12,6958,,"[trader #A] Signal #a8
+#ONDOUSDT Лонг
+Риск 1%
+Вход : 0.3614 рыночный
+TP1: 0.4867
+Tp2: 0.5388
+Tp3: 0.8416
+Стоп: 0.3135",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""MARKET/weak:рыночный@60:68"", ""take_profit/strong:tp@69:71"", ""TP_HIT/weak:tp1@69:72"", ""take_profit/strong:tp1:@69:7"
+2,trader_a,REPORT,PARSED,11,7055,,"[trader #A] Signal #a6
+#ICNTUSDT Лонг
+стоп",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""SL_HIT/weak:стоп@38:42""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4"
+2,trader_a,UPDATE,PARSED,10,7109,,"[trader #A] Signal #a7
+#BTCUSDT Лонг
+Стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP_TO_BE/strong:стоп в бу@37:46"", ""MOVE_STOP_TO_BE/weak:в бу@42:46"", ""EXIT_BE/weak:бу@44:46""], ""suppressed_markers"": [""SL_HIT/weak:стоп@3"
+2,trader_a,REPORT,PARSED,9,7249,,"[trader #A] Signal #a7
+#BTCUSDT Лонг
+Бу,обидный",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""EXIT_BE/weak:бу@37:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}"
+2,trader_a,SIGNAL,PARSED,8,7283,,"[trader #A] Signal #a9
+#RLCUSDT Лонг
+Риск 1%
+Вход : 0.3403 рыночный
+TP1: 0.3633
+TP2: 0.3802
+Стоп: 0.3288",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""MARKET/weak:рыночный@59:67"", ""take_profit/strong:tp@68:70"", ""TP_HIT/weak:tp1@68:71"", ""take_profit/strong:tp1:@68:7"
+2,trader_a,SIGNAL,PARSED,7,7298,,"[trader #A] Signal #a10
+#ANKRUSDT Лонг
+Риск 1%
+Вход : 0.003804 рыночный
+TP1: 0.004223
+TP2: 0.00479
+Стоп: 0.003598",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""LONG/strong:лонг@34:38"", ""risk/weak:риск@39:43"", ""MODIFY_ENTRY/weak:вход@47:51"", ""MARKET/weak:рыночный@63:71"", ""take_profit/strong:tp@72:74"", ""TP_HIT/weak:tp1@72:75"", ""take_profit/strong:tp1:@72:7"
+2,trader_a,UPDATE,PARSED,6,7345,,"[trader #A] Signal #a9
+#RLCUSDT Лонг
+Стоп переносим в бу",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп переносим""], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP/strong:стоп переносим@37:51"", ""MODIFY_ENTRY/weak:переносим@42:51"", ""MOVE_STOP_TO_BE/weak:в бу@52:56"", ""EXIT_"
+2,trader_a,UPDATE,PARSED,5,7355,,"[trader #A] Signal #a10
+#ANKRUSDT Лонг
+Стоп переносим в бу",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп переносим""], ""matched_markers"": [""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""LONG/strong:лонг@34:38"", ""SL_HIT/weak:стоп@39:43"", ""MOVE_STOP/strong:стоп переносим@39:53"", ""MODIFY_ENTRY/weak:переносим@44:53"", ""MOVE_STOP_TO_BE/weak:в бу@54:58"", ""EXIT_"
+2,trader_a,UPDATE,PARSED,4,7384,,"[trader #A] Signal #a9
+#RLCUSDT Лонг
+Tp1 фикс 50% 
++1R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""take_profit/strong:tp@37:39"", ""TP_HIT/weak:tp1@37:40"", ""CLOSE_PARTIAL/strong:фикс 50%@41:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguati"
+2,trader_a,SIGNAL,PARSED,3,7386,,"[trader #A] Signal #a11
+#REZUSDT Лонг
+Риск 1%
+Вход : 0.003212 рыночный
+TP1: 0.00404
+TP2: 0.004663
+Стоп: 0.003004",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""MARKET/weak:рыночный@62:70"", ""take_profit/strong:tp@71:73"", ""TP_HIT/weak:tp1@71:74"", ""take_profit/strong:tp1:@71:7"
+2,trader_a,UPDATE,PARSED,2,8389,,"[trader #A] 
+Signal #a11
+#REZUSDT Лонг
+Signal #a10
+#ANKRUSDT Лонг
+Signal #a9
+#RLCUSDT Лонг
+Закрываю по текущим",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""symbol/strong:usdt@55:59"", ""symbol/strong:usdt@55:59"", ""LONG/strong:лонг@60:64"", ""symbol/strong:usdt@80:84"", ""symbol/strong:usdt@80:84"", ""LONG/strong:лонг@85:89"", ""CLOSE_"
+2,trader_a,INFO,UNCLASSIFIED,1,8391,8389,"Rez +0.46R
+Ankr + 0.77R
+Rlc + 1.61R",0.0,,"{""suppressed_intents"": [], ""matched_markers"": [], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {}}"

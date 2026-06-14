@@ -1,0 +1,48 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,groups_count,actions_count,actions_summary,action_types,source_intents,action_confidences,action_raw_fragments,target_scope_hint,target_reply_to_message_id,target_telegram_message_ids,target_telegram_links,target_explicit_ids,target_symbols,set_stop_target_type,set_stop_price,set_stop_tp_level,close_scope,close_fraction,close_price,cancel_scope_hint,modify_entries_kind,modify_entries_count,modify_entries_summary,modify_entries_entry_structure,modify_targets_mode,modify_targets_count,modify_targets_prices,modify_targets_target_tp_level,invalidate_reason_text
+2,trader_a,UPDATE,PARSED,28,6148,6133,"[trader #A] Signal #a2
+Tp1 фикс 50%
+Sl в безубыток",1.0,,"{""suppressed_intents"": [""TP_HIT:tp1""], ""matched_markers"": [""take_profit/strong:tp@23:25"", ""TP_HIT/weak:tp1@23:26"", ""CLOSE_PARTIAL/strong:фикс 50%@27:35"", ""SL_HIT/weak:sl@36:38"", ""MOVE_STOP_TO_BE/weak:безубыток@41:50"", ""EXIT_BE/weak:безубыток@41:50""], ""suppressed_markers"": [], ""applied_marker_rules"":",SL_HIT,CLOSE_PARTIAL|SL_HIT|MOVE_STOP_TO_BE,1,2,CLOSE(CLOSE_PARTIAL)|SET_STOP(MOVE_STOP_TO_BE),CLOSE|SET_STOP,CLOSE_PARTIAL|MOVE_STOP_TO_BE,1.0|0.4,фикс 50%|безубыток,UNKNOWN,6133,,,,,,,,PARTIAL,0.5,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,25,6197,,"[trader #A] Signal #a4
+#JUPUSDT Лонг
+Стоп переносим в безубыток",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп переносим""], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP/strong:стоп переносим@37:51"", ""MODIFY_ENTRY/weak:переносим@42:51"", ""MOVE_STOP_TO_BE/weak:безубыток@54:63"", """,MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,безубыток,SYMBOL,,,,,JUPUSDT,ENTRY,,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,23,6207,,"[trader #A] Signal #a2
+#PUMPFUNUSDT Лонг
+Сделка закрыта +0,59R",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@36:40"", ""CLOSE_FULL/weak:закрыта@48:55""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""UPDAT",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,0.4,закрыта,SYMBOL,,,,,PUMPFUNUSDT,,,,FULL,,0.59,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,19,6262,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Cтоп переносим в бу",0.8,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""MODIFY_ENTRY/weak:переносим@42:51"", ""MOVE_STOP_TO_BE/weak:в бу@52:56"", ""EXIT_BE/weak:бу@54:56""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambigua",MOVE_STOP_TO_BE,MODIFY_ENTRY|MOVE_STOP_TO_BE,1,2,MODIFY_ENTRIES(MODIFY_ENTRY)|SET_STOP(MOVE_STOP_TO_BE),MODIFY_ENTRIES|SET_STOP,MODIFY_ENTRY|MOVE_STOP_TO_BE,0.4|0.4,переносим|в бу,SYMBOL,,,,,JUPUSDT,,,,,,,,UNKNOWN,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,18,6285,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Стоп переносим в +
+0.2073",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP/strong:стоп переносим@37:51"", ""MODIFY_ENTRY/weak:переносим@42:51""], ""suppressed_markers"": [""SL_HIT/weak:стоп@37:41"", ""MODIFY_ENTRY/wea",MOVE_STOP,MOVE_STOP,1,1,SET_STOP(MOVE_STOP),SET_STOP,MOVE_STOP,1.0,стоп переносим,SYMBOL,,,,,JUPUSDT,PRICE,0.2073,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,17,6287,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Закрываем позицию по текущим 0,21252
++1R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""CLOSE_FULL/weak:закрываем@37:46"", ""CLOSE_FULL/strong:закрываем позицию@37:54"", ""MODIFY_ENTRY/weak:по текущим@55:65""], ""suppressed_markers"": [""CLOSE_FULL/weak:закрываем@37",CLOSE_FULL,CLOSE_FULL|MODIFY_ENTRY,1,2,CLOSE(CLOSE_FULL)|MODIFY_ENTRIES(MODIFY_ENTRY),CLOSE|MODIFY_ENTRIES,CLOSE_FULL|MODIFY_ENTRY,1.0|0.4,закрываем позицию|по текущим,SYMBOL,,,,,JUPUSDT,,,,FULL,,0.21252,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,16,6295,,"[trader #A] Signal #a1
+#WLFIUSDT LONG
+Стоп двигаем в безубыток",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:long@33:37"", ""SL_HIT/weak:стоп@38:42"", ""MOVE_STOP/strong:стоп двигаем@38:50"", ""MOVE_STOP_TO_BE/strong:стоп двигаем в безубыток@38:62"", ""MOVE_STOP_TO_BE/weak:безубыток@53:62"", ""EXIT_BE/",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп двигаем в безубыток,SYMBOL,,,,,WLFIUSDT,ENTRY,,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,15,6354,,"[trader #A] Signal #a1
+#WLFIUSDT LONG
+Ушли в бу",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:long@33:37"", ""MOVE_STOP_TO_BE/weak:в бу@43:47"", ""EXIT_BE/weak:бу@45:47""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [],",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,SYMBOL,,,,,WLFIUSDT,ENTRY,,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,10,7109,,"[trader #A] Signal #a7
+#BTCUSDT Лонг
+Стоп в бу",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP_TO_BE/strong:стоп в бу@37:46"", ""MOVE_STOP_TO_BE/weak:в бу@42:46"", ""EXIT_BE/weak:бу@44:46""], ""suppressed_markers"": [""SL_HIT/weak:стоп@3",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,1.0,стоп в бу,SYMBOL,,,,,BTCUSDT,ENTRY,,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,6,7345,,"[trader #A] Signal #a9
+#RLCUSDT Лонг
+Стоп переносим в бу",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп переносим""], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""SL_HIT/weak:стоп@37:41"", ""MOVE_STOP/strong:стоп переносим@37:51"", ""MODIFY_ENTRY/weak:переносим@42:51"", ""MOVE_STOP_TO_BE/weak:в бу@52:56"", ""EXIT_",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,SYMBOL,,,,,RLCUSDT,ENTRY,,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,5,7355,,"[trader #A] Signal #a10
+#ANKRUSDT Лонг
+Стоп переносим в бу",0.4,,"{""suppressed_intents"": [""MOVE_STOP:стоп переносим""], ""matched_markers"": [""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""LONG/strong:лонг@34:38"", ""SL_HIT/weak:стоп@39:43"", ""MOVE_STOP/strong:стоп переносим@39:53"", ""MODIFY_ENTRY/weak:переносим@44:53"", ""MOVE_STOP_TO_BE/weak:в бу@54:58"", ""EXIT_",MOVE_STOP_TO_BE,MOVE_STOP_TO_BE,1,1,SET_STOP(MOVE_STOP_TO_BE),SET_STOP,MOVE_STOP_TO_BE,0.4,в бу,SYMBOL,,,,,ANKRUSDT,ENTRY,,,,,,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,4,7384,,"[trader #A] Signal #a9
+#RLCUSDT Лонг
+Tp1 фикс 50% 
++1R",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""take_profit/strong:tp@37:39"", ""TP_HIT/weak:tp1@37:40"", ""CLOSE_PARTIAL/strong:фикс 50%@41:49""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguati",TP_HIT,TP_HIT|CLOSE_PARTIAL,1,1,CLOSE(CLOSE_PARTIAL),CLOSE,CLOSE_PARTIAL,1.0,фикс 50%,SYMBOL,,,,,RLCUSDT,,,,PARTIAL,0.5,1.0,,,0,,,,0,,,
+2,trader_a,UPDATE,PARSED,2,8389,,"[trader #A] 
+Signal #a11
+#REZUSDT Лонг
+Signal #a10
+#ANKRUSDT Лонг
+Signal #a9
+#RLCUSDT Лонг
+Закрываю по текущим",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""symbol/strong:usdt@55:59"", ""symbol/strong:usdt@55:59"", ""LONG/strong:лонг@60:64"", ""symbol/strong:usdt@80:84"", ""symbol/strong:usdt@80:84"", ""LONG/strong:лонг@85:89"", ""CLOSE_",CLOSE_FULL,CLOSE_FULL,1,1,CLOSE(CLOSE_FULL),CLOSE,CLOSE_FULL,1.0,закрываю по текущим,SYMBOL,,,,,REZUSDT|ANKRUSDT|RLCUSDT,,,,FULL,,,,,0,,,,0,,,

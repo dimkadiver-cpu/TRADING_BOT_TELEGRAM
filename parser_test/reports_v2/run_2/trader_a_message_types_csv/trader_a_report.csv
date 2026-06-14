@@ -1,0 +1,14 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,primary_intent,intents,report_events_count,report_events_summary,report_event_types,report_event_levels,report_event_prices,report_event_source_intents,report_event_raw_fragments,report_result_raw_fragment,hit_target,hit_price
+2,trader_a,REPORT,PARSED,27,6170,,"[trader #A] Signal #a3
+BTCUSDT 
+Стоп",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@26:30"", ""symbol/strong:usdt@26:30"", ""SL_HIT/weak:стоп@31:35""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}}",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,,SL_HIT,стоп,,SL,
+2,trader_a,REPORT,PARSED,24,6204,,"[trader #A] Signal #a4
+#JUPUSDT Лонг
+Закрылись по бу
+пониже глянем перезаход",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""EXIT_BE/strong:закрылись по бу@37:52"", ""EXIT_BE/weak:по бу@47:52"", ""EXIT_BE/weak:бу@50:52""], ""suppressed_markers"": [""EXIT_BE/weak:по бу@47:52"", ""EXIT_BE/weak:бу@50:52""], ",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,закрылись по бу,,BE,
+2,trader_a,REPORT,PARSED,11,7055,,"[trader #A] Signal #a6
+#ICNTUSDT Лонг
+стоп",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""SL_HIT/weak:стоп@38:42""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4",SL_HIT,SL_HIT,1,SL_HIT(lvl=None),SL_HIT,,,SL_HIT,стоп,,SL,
+2,trader_a,REPORT,PARSED,9,7249,,"[trader #A] Signal #a7
+#BTCUSDT Лонг
+Бу,обидный",0.4,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""EXIT_BE/weak:бу@37:39""], ""suppressed_markers"": [], ""applied_marker_rules"": [], ""applied_disambiguation_rules"": [], ""applied_rules"": [], ""category_scores"": {""REPORT"": 0.4}",EXIT_BE,EXIT_BE,1,EXIT_BE(lvl=None),EXIT_BE,,,EXIT_BE,бу,,BE,
