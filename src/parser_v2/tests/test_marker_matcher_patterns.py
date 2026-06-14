@@ -24,6 +24,7 @@ def test_markerset_compiles_strong_patterns():
     ms = MarkerSet(strong_patterns=["(?i)тп\\s*[1-5]:"])
     assert len(ms._strong_compiled) == 1
     assert isinstance(ms._strong_compiled[0], re.Pattern)
+    assert ms._strong_compiled[0].search("тп 1: сигнал") is not None
 
 
 def test_markerset_compiles_weak_patterns():

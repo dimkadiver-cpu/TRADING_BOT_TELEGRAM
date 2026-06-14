@@ -8,7 +8,7 @@ from pydantic import BaseModel, ConfigDict, Field, PrivateAttr, model_validator
 from .enums import EntryType, IntentType, MarkerStrength, ModifyEntryMode, ScopeHint, Side
 
 
-def _compile_pattern_list(patterns: list[str], label: str) -> list[re.Pattern]:
+def _compile_pattern_list(patterns: list[str], label: str) -> list[re.Pattern[str]]:
     compiled = []
     for p in patterns:
         try:
@@ -30,8 +30,8 @@ class MarkerSet(RulesModel):
     strong_patterns: list[str] = Field(default_factory=list)
     weak_patterns: list[str] = Field(default_factory=list)
 
-    _strong_compiled: list[re.Pattern] = PrivateAttr(default_factory=list)
-    _weak_compiled: list[re.Pattern] = PrivateAttr(default_factory=list)
+    _strong_compiled: list[re.Pattern[str]] = PrivateAttr(default_factory=list)
+    _weak_compiled: list[re.Pattern[str]] = PrivateAttr(default_factory=list)
 
     @model_validator(mode="after")
     def _compile_patterns(self) -> "MarkerSet":
