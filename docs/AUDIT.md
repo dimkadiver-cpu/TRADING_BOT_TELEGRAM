@@ -4,6 +4,46 @@ Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
 
+## 2026-06-14 — Quality Fixes: Task 1 (parser_v2 MarkerSet patterns)
+
+### Step completato
+
+Applicate due correzioni di qualità al Task 1 della Phase 8 (parser_v2 MarkerSet pattern compilation):
+
+**Fix 1 — Type hints `re.Pattern[str]`:** Aggiornate le annotation in `src/parser_v2/contracts/rules.py`:
+- `_compile_pattern_list()` ritorna `list[re.Pattern[str]]` anziché `list[re.Pattern]`
+- `MarkerSet._strong_compiled` e `._weak_compiled` sono `list[re.Pattern[str]]`
+
+**Fix 2 — Behavioral assertion:** Potenziato il test in `src/parser_v2/tests/test_marker_matcher_patterns.py`:
+- `test_markerset_compiles_strong_patterns()` ora verifica che il pattern compilato matchi effettivamente testo (`ms._strong_compiled[0].search("тп 1: сигнал") is not None`)
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/parser_v2/contracts/rules.py` | Modificato | `re.Pattern[str]` in 2 PrivateAttr + 1 return type |
+| `src/parser_v2/tests/test_marker_matcher_patterns.py` | Modificato | +1 assertion comportamentale |
+
+### Validazione
+
+```
+pytest src/parser_v2/tests/test_marker_matcher_patterns.py -v
+→ 4 passed in 0.40s ✅
+
+pytest src/parser_v2/tests/ -q
+→ 187 passed, 1 failed (pre-existing) ✅
+```
+
+### Rischi aperti
+
+Nessuno — fix è minimale e type-safe. La suite passa completamente.
+
+### Commit
+
+`8694b7a` — fix(parser_v2): use re.Pattern[str] annotation and add behavioral assertion in test
+
+---
+
 ## 2026-06-13 — Fix bybit_paper + extract_side_from_text condiviso
 
 ### Step completati
