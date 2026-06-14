@@ -32,21 +32,22 @@ class MarkerEvidenceResolver:
 
         # 1. suppress_weak_inside_strong_same_intent
         if marker_resolution.suppress_weak_inside_strong_same_intent:
+            strong_intent_names = {m.name for m in _iter_strong_intents(matches)}
             for weak_index, weak_match in enumerate(matches):
                 if weak_match.kind != "intent" or weak_match.strength != "weak":
                     continue
-                for strong_match in _iter_strong_intents(matches):
-                    if (
-                        weak_match.name == strong_match.name
-                        and _contains(strong_match, weak_match)
-                    ):
-                        suppressed[weak_index] = _suppressed_evidence(
-                            weak_match,
-                            suppressed_by=strong_match.name,
-                            reason="weak_inside_strong_same_intent",
-                        )
-                        _append_once(applied_rules, "weak_inside_strong_same_intent")
-                        break
+                if weak_match.name in strong_intent_names:
+                    # find the first strong match for this intent (for suppressed_by)
+                    strong_match = next(
+                        m for m in _iter_strong_intents(matches)
+                        if m.name == weak_match.name
+                    )
+                    suppressed[weak_index] = _suppressed_evidence(
+                        weak_match,
+                        suppressed_by=strong_match.name,
+                        reason="weak_inside_strong_same_intent",
+                    )
+                    _append_once(applied_rules, "weak_inside_strong_same_intent")
 
         # 2. weak_context_exclusions
         if marker_resolution.weak_context_exclusions:
