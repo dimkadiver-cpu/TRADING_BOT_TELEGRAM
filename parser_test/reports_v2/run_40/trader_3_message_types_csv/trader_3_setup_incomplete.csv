@@ -1,0 +1,1441 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,symbol,side,entry_structure,entries_count,entries_summary,stop_loss_price,take_profit_count,take_profit_prices,risk_hint_raw,risk_hint_value,risk_hint_min_value,risk_hint_max_value,leverage_hint,missing_fields,completeness
+40,trader_3,SIGNAL,PARTIAL,2467,92,,"[trader#3] 📍SIGNAL ID: #1997📍
+COIN: $BTC/USDT (3-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 105200 - 107878
+
+TARGETS: 109600 - 111500 - 114000 - 116000 - 120000 - 126000
+
+STOP LOSS: 104103
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@162:166"", ""SL_HIT/weak:stop loss@162:171"", ""stop_loss/strong:stop loss@162:171""], ""suppressed_markers"": [], ""applied_marker_rule",1997USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@105200.0|2:LIMIT:AVERAGING@107878.0,104103.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2466,93,,"[trader#3] 📍SIGNAL ID: #1998📍
+COIN: $ETH/USDT (2–5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+ENTRY: 3,840 – 3,870
+
+TARGETS: 3,900 – 3,950 – 4,000 – 4,150 – 4,220 – 4,300 – 4,400 – 4,480 – 4,550 – 4,625
+
+STOP LOSS: 3,600
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@185:189"", ""SL_HIT/weak:stop loss@185:194"", ""stop_loss/strong:stop loss@185:194""], ""suppressed_markers"": [], ""applied_marker_rule",1998USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@3.84|2:LIMIT:AVERAGING@3.87,3.6,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2465,94,,"[trader#3] 📍SIGNAL ID: #1999📍
+COIN: $BNB/USDT (2–5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+ENTRY: 1,040 – 1,070
+
+TARGETS: 1,110 – 1,150 – 1,200 – 1,240 – 1,280 – 1,320 – 1,340 – 1,360 – 1,372 – 1,380
+
+STOP LOSS: 1,000
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@185:189"", ""SL_HIT/weak:stop loss@185:194"", ""stop_loss/strong:stop loss@185:194""], ""suppressed_markers"": [], ""applied_marker_rule",1999USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.04|2:LIMIT:AVERAGING@1.07,1.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2455,105,,"[trader#3] 📍SIGNAL ID: #2000📍
+COIN: $NEAR/USDT (2-5x)
+Direction: LONG
+➖➖➖➖➖➖➖
+ENTRY: 2.08 – 2.12
+
+TARGETS: 2.17 – 2.27 – 2.35– 2.45 – 2.65 – 2.8  – 3.0 – 3.15– 3.28 – 3.37
+
+STOP LOSS: 1.85
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2000USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2.08|2:LIMIT:AVERAGING@2.12,1.85,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2443,127,,"[trader#3] 📍SIGNAL ID: #2001📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 172 - 176.40
+
+TARGETS: 179 - 185 - 195 - 210 - 237
+
+STOP LOSS: 170.23
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@134:138"", ""SL_HIT/weak:stop loss@134:143"", ""stop_loss/strong:stop loss@134:143""], ""suppressed_markers"": [], ""applied_marker_rule",2001USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@172.0|2:LIMIT:AVERAGING@176.4,170.23,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2442,128,,"[trader#3] 📍SIGNAL ID: #2001📍
+COIN: $SOL/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+STOP LOSS: 170.23
+
+🚫4.55% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@109:110""], ""suppressed_markers"": [],",2001USDT,LONG,,0,,170.23,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2396,183,,"[trader#3] 📍SIGNAL ID: #2002📍
+COIN: $TAO/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 345 – 360
+
+TARGETS: 380 – 400 – 420 – 440 – 460 – 480 – 500 – 520 – 540
+
+STOP LOSS: 320
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@155:159"", ""SL_HIT/weak:stop loss@155:164"", ""stop_loss/strong:stop loss@155:164""], ""suppressed_markers"": [], ""applied_marker_rule",2002USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@345.0|2:LIMIT:AVERAGING@360.0,320.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2377,203,,"[trader#3] 📍SIGNAL ID: #2003📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 14.5 - 15.165
+
+TARGETS: 15.34 - 15.6 - 16 - 18 - 22 - 28
+
+STOP LOSS: 14.2
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@141:145"", ""SL_HIT/weak:stop loss@141:150"", ""stop_loss/strong:stop loss@141:150""], ""suppressed_markers"": [], ""applied_marker_rule",2003USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@14.5|2:LIMIT:AVERAGING@15.165,14.2,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2358,222,,"[trader#3] 📍SIGNAL ID: #2003📍
+COIN: $WLFI/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 0.12 – 0.124
+
+TARGETS: 0.130 – 0.140 – 0.150 – 0.160 – 0.170 – 0.180 – 0.190 – 0.205 – 0.223
+
+STOP LOSS: 0.11
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@177:181"", ""SL_HIT/weak:stop loss@177:186"", ""stop_loss/strong:stop loss@177:186""], ""suppressed_markers"": [], ""applied_marker_rule",2003USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.12|2:LIMIT:AVERAGING@0.124,0.11,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2355,225,,"[trader#3] 📍SIGNAL ID: #2005📍
+COIN: $XVG/USDT (3-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Extremely rare setup, expecting an easy 2-3x from $XVG
+Buying / Longing here (Binance / Binance Futures)
+
+ENTRY: Below 0.0082
+
+TARGETS: 0.0084 - 0.0087 - 0.0093 - 0.0102 - 0.0129 - 0.0149 - 0.0184 - 0.023 - OPEN
+
+STOP LOSS: 0.00655
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@78:79"", ""leverage/weak:x@100:101"", ""leverage/weak:x@120:121"", ""leverage/weak:x@128:129"", ""LONG/strong:lo",2005USDT,LONG,,0,,0.00655,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2350,231,,"[trader#3] 📍SIGNAL ID: #2005📍
+COIN: $AVAX/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 17.40 – 18.00
+
+TARGETS: 18.6 – 19.6 – 21.5 – 23.50 – 25.00 – 26.50 – 28.00 – 29.00 – 31.60
+
+STOP LOSS: 15.95
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@40:41"", ""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@175:179"", ""SL_HIT/weak:stop loss@175:184"", ""stop_loss/strong:stop loss@175:184""], ""suppressed_markers"":",2005USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@17.4|2:LIMIT:AVERAGING@18.0,15.95,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2278,313,,"[trader#3] 📍SIGNAL ID: #2006📍
+COIN: $BTC/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 100,000– 101,600
+
+TARGETS: 102,000 – 103,000 – 105,000 – 106,530 – 109,400 – 112,586  – 114,900 – 117,000 – 119,800 – 121,500 – 123,000 – 125,800
+
+STOP LOSS: 97,000
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@228:232"", ""SL_HIT/weak:stop loss@228:237"", ""stop_loss/strong:stop loss@228:237""], ""suppressed_markers"": [], ""applied_marker_rule",2006USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@100.0|2:LIMIT:AVERAGING@101.6,97.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2267,324,,"[trader#3] 📍SIGNAL ID: #2007📍
+COIN: $SUI/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 1.95 – 2.01
+
+TARGETS: 2.06 – 2.11 – 2.20 – 2.28 – 2.35 – 2.42 – 2.50 – 2.65 – 2.78– 2.89
+
+STOP LOSS: 1.83
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@172:176"", ""SL_HIT/weak:stop loss@172:181"", ""stop_loss/strong:stop loss@172:181""], ""suppressed_markers"": [], ""applied_marker_rule",2007USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.95|2:LIMIT:AVERAGING@2.01,1.83,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2266,325,,"[trader#3] 📍SIGNAL ID: #2008📍
+COIN: $ETH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 3368 - 3333
+
+TARGETS: 3410 - 3500 - 3650 - 3800
+
+STOP LOSS: 3298
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@131:135"", ""SL_HIT/weak:stop loss@131:140"", ""stop_loss/strong:stop loss@131:140""], ""suppressed_markers"": [], ""applied_marker_rule",2008USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@3333.0|2:LIMIT:AVERAGING@3368.0,3298.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2264,327,,"[trader#3] 📍SIGNAL ID: #2009📍
+COIN: $SOL/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 147.7 – 151
+
+TARGETS: 153 – 157 – 160 – 165 – 170 – 177 – 185 – 197 – 207 – 215 – 222 – 230
+
+STOP LOSS: 139
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@175:179"", ""SL_HIT/weak:stop loss@175:184"", ""stop_loss/strong:stop loss@175:184""], ""suppressed_markers"": [], ""applied_marker_rule",2009USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@147.7|2:LIMIT:AVERAGING@151.0,139.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2262,329,,"[trader#3] 📍SIGNAL ID: #2008📍
+COIN: $ETH/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+Unfortunately, it broke down the S/R level.
+
+STOP LOSS: 3298
+
+🚫3.13% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@121:125"", ""SL_HIT/weak:stop loss@121:130"", ""stop_loss/strong:stop loss@121:130"", ""leverage/weak:x@151:152""], ""suppressed_markers",2008USDT,LONG,,0,,3298.0,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2242,349,,"[trader#3] 📍SIGNAL ID: #2007📍
+COIN: $SUI/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 1.83
+
+🚫15.1% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@107:108""], ""suppressed_markers"": [],",2007USDT,LONG,,0,,1.83,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2232,360,,"[trader#3] 📍SIGNAL ID: #2009📍
+COIN: $SOL/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 139
+
+🚫13% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@104:105""], ""suppressed_markers"": [],",2009USDT,LONG,,0,,139.0,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2201,393,,"[trader#3] 📍SIGNAL ID: #2010📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 15.129 - 15.685
+
+TARGETS: 15.95 - 16.2 - 17 - 20 - 23  -28
+
+STOP LOSS: 14.814
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@40:41"", ""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@142:146"", ""SL_HIT/weak:stop loss@142:151"", ""stop_loss/strong:stop loss@142:151""], ""suppressed_markers"":",2010USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@15.129|2:LIMIT:AVERAGING@15.685,14.814,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2189,412,,"[trader#3] 📍SIGNAL ID: #2011📍
+COIN: $LINK/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 13.40 – 13.95
+
+TARGETS: 14.50 – 15.20 – 16.00 – 17.20 – 18.50 – 19.80 – 21.00 – 22.30 – 23.50 – 24.47
+
+STOP LOSS: 12.5
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@186:190"", ""SL_HIT/weak:stop loss@186:195"", ""stop_loss/strong:stop loss@186:195""], ""suppressed_markers"": [], ""applied_marker_rule",2011USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@13.4|2:LIMIT:AVERAGING@13.95,12.5,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2179,426,,"[trader#3] 📍SIGNAL ID: #2012📍
+COIN: $SOL/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Back above the horizontal support. Chances of a rebound.
+
+ENTRY: 126 - 130.20
+
+TARGETS: 132 - 135 - 140 - 150 - 175 - 200
+
+STOP LOSS: 124.74
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@197:201"", ""SL_HIT/weak:stop loss@197:206"", ""stop_loss/strong:stop loss@197:206""], ""suppressed_markers"": [], ""applied_marker_rule",2012USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@126.0|2:LIMIT:AVERAGING@130.2,124.74,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2161,451,,"[trader#3] 📍SIGNAL ID: #2013📍
+COIN: $XRP/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+ENTRY: 2.15 – 2.188
+
+TARGETS: 2.225 – 2.25 – 2.35 – 2.46 – 2.54 – 2.62 – 2.70 – 2.78 – 2.86 – 3.00
+
+STOP LOSS: 2.02
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@175:179"", ""SL_HIT/weak:stop loss@175:184"", ""stop_loss/strong:stop loss@175:184""], ""suppressed_markers"":",2013USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2.15|2:LIMIT:AVERAGING@2.188,2.02,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2150,468,,"[trader#3] 📍SIGNAL ID: #2014📍
+COIN: $ETH/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Reached the S/R level. Chances of a bounce from this support.
+
+ENTRY: 2800 - 2880
+
+TARGETS: 2920 - 3000 - 3180 - 3500 - 3843
+
+STOP LOSS: 2753
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@200:204"", ""SL_HIT/weak:stop loss@200:209"", ""stop_loss/strong:stop loss@200:209""], ""suppressed_markers"": [], ""applied_marker_rule",2014USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2800.0|2:LIMIT:AVERAGING@2880.0,2753.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2130,495,,"[trader#3] 📍SIGNAL ID: #2015📍
+COIN: $BTC/USDT (2-4x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Reached the order block zone.
+
+ENTRY: 83700 - 86300
+
+TARGETS: 88000 - 90000 - 93000 - 97000 - 102000 - 107482
+
+STOP LOSS: 82846
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@185:189"", ""SL_HIT/weak:stop loss@185:194"", ""stop_loss/strong:stop loss@185:194""], ""suppressed_markers"": [], ""applied_marker_rule",2015USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@83700.0|2:LIMIT:AVERAGING@86300.0,82846.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2126,502,,"[trader#3] 📍SIGNAL ID: #2016📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 120 - 127.28
+
+TARGETS: 129.5 - 132 - 139 - 148 - 180 - 200 - 220
+
+STOP LOSS: 117.87
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@148:152"", ""SL_HIT/weak:stop loss@148:157"", ""stop_loss/strong:stop loss@148:157""], ""suppressed_markers"": [], ""applied_marker_rule",2016USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@120.0|2:LIMIT:AVERAGING@127.28,117.87,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2115,524,,"[trader#3] 📍SIGNAL ID: #2017📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 11.45 - 11.79
+
+TARGETS: 12 - 12.3 - 12.8 - 13.5 - 15 - 17 - 19
+
+STOP LOSS: 11.281
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@147:151"", ""SL_HIT/weak:stop loss@147:156"", ""stop_loss/strong:stop loss@147:156""], ""suppressed_markers"": [], ""applied_marker_rule",2017USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@11.45|2:LIMIT:AVERAGING@11.79,11.281,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2111,534,,"[trader#3] 📍SIGNAL ID: #2018📍
+COIN: $LTC/USDT (2-5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 80.5 – 82
+
+TARGETS: 82.73 – 84 – 88 – 92 – 97.7 – 101.5 – 105.4 – 109.1 – 113.0 – 116.7
+
+STOP LOSS: 75.1
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@106:110"", ""SL_HIT/weak:stop@211:215"", ""SL_HIT/weak:stop loss@211:220"", ""stop_loss/strong:stop loss@211:220""], ""suppressed_marker",2018USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@80.5|2:LIMIT:AVERAGING@82.0,75.1,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2061,623,,"[trader#3] 📍SIGNAL ID: #2019📍
+COIN: $NEAR/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 1.86 – 1.94
+
+TARGETS: 2.00 – 2.10 – 2.24 – 2.36 – 2.48 – 2.60 – 2.72 – 2.84 – 2.96 – 3.10
+
+STOP LOSS: 1.71
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@107:111"", ""SL_HIT/weak:stop@214:218"", ""SL_HIT/weak:stop loss@214:223"", ""stop_loss/strong:stop loss@214:223""], ""suppressed_marker",2019USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.86|2:LIMIT:AVERAGING@1.94,1.71,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2059,631,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 875 – 893
+
+TARGETS: 910 – 940 – 978 – 1,000 – 1,030 – 1,070 – 1,100– 1,150 – 1,220 – 1,275
+
+STOP LOSS: 810
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@106:110"", ""SL_HIT/weak:stop@214:218"", ""SL_HIT/weak:stop loss@214:223"", ""stop_loss/strong:stop loss@214:223""], ""suppressed_marker",2020USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@875.0|2:LIMIT:AVERAGING@893.0,810.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2052,640,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2–5x)
+DIRECTION: LONG
+➖➖➖➖➖➖➖
+Use 1-2% of Margin, Stick to Stop-Loss.
+
+ENTRY: 875 – 890
+
+TARGETS: 910 – 940 – 978 – 1,000 – 1,030 – 1,070 – 1,100– 1,150 – 1,220 – 1,275
+
+STOP LOSS: 810
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@106:110"", ""SL_HIT/weak:stop@214:218"", ""SL_HIT/weak:stop loss@214:223"", ""stop_loss/strong:stop loss@214:223""], ""suppressed_marker",2020USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@875.0|2:LIMIT:AVERAGING@890.0,810.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,2036,671,,"[trader#3] 📍SIGNAL ID: #2021📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.97 - 6.15
+
+TARGETS: 6.27 - 6.4 - 6.8 - 7.5 - 8.3 - 9.3 - 10.3
+
+STOP LOSS: 5.84
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@147:151"", ""SL_HIT/weak:stop loss@147:156"", ""stop_loss/strong:stop loss@147:156""], ""suppressed_markers"": [], ""applied_marker_rule",2021USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@5.97|2:LIMIT:AVERAGING@6.15,5.84,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1988,739,,"[trader#3] 📍SIGNAL ID: #2022📍
+COIN: $ETH/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Reaching the support zone, where a potential double-bottom formation is expected.
+
+ENTRY: 2600 - 2725
+
+TARGETS: 2780 - 2850 - 2950 - 3150 - 3300 - 3660
+
+STOP LOSS: 2598
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""leverage/weak:x@151:152"", ""SL_HIT/weak:stop@228:232"", ""SL_HIT/weak:stop loss@228:237"", ""stop_loss/strong:stop loss@228:237""], ""suppressed_markers",2022USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2600.0|2:LIMIT:AVERAGING@2725.0,2598.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1987,740,,"[trader#3] 📍SIGNAL ID: #2020📍
+COIN: $BNB/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 810
+
+🚫16% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@104:105""], ""suppressed_markers"": [],",2020USDT,LONG,,0,,810.0,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1944,794,,"[trader#3] 📍SIGNAL ID: #2023📍
+COIN: $TRX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Completed the bullish bat pattern.
+
+ENTRY: 0.272 - 0.28
+
+TARGETS: 0.283 - 0.288 - 0.295 - 0.31 - 0.33 - 0.37
+
+STOP LOSS: 0.268
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@184:188"", ""SL_HIT/weak:stop loss@184:193"", ""stop_loss/strong:stop loss@184:193""], ""suppressed_markers"":",2023USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.272|2:LIMIT:AVERAGING@0.28,0.268,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1920,825,,"[trader#3] 📍SIGNAL ID: #2024📍
+COIN: $BDXN/USDT (3-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+Completed bottomed out and getting ready for a massive bullish rally 🚀
+
+Entry: Below 0.027
+
+Targets: 0.029 - 0.033 - 0.039 - 0.043 - 0.050 - 0.069 - 0.084 - 0.15 - 0.30 - 0.45 - 0.75
+
+SL: 0.019
+
+You can also buy on spot in exchanges like bybit, bitget, mexc and gate.
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:sl@260:262"", ""stop_loss/strong:sl:@260:263"", ""leverage/weak:x@299:300"", ""leverage/weak:x@330:331""], ""suppres",2024USDT,LONG,,0,,0.019,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1912,833,,"[trader#3] 📍SIGNAL ID: #2025📍
+COIN: $CRV/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.369 - 0.38
+
+TARGETS: 0.386 - 0.393 - 0.40 - 0.42 - 0.45 - 0.50 - 0.55
+
+STOP LOSS: 0.361
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@155:159"", ""SL_HIT/weak:stop loss@155:164"", ""stop_loss/strong:stop loss@155:164""], ""suppressed_markers"": [], ""applied_marker_rule",2025USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.369|2:LIMIT:AVERAGING@0.38,0.361,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1907,840,,"[trader#3] 📍SIGNAL ID: #2026📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY:  1.996 - 2.032
+
+TARGETS: 2.064 - 2.1 - 2.2 - 2.35 - 2.45 - 2.60
+
+STOP LOSS: 1.9623
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@146:150"", ""SL_HIT/weak:stop loss@146:155"", ""stop_loss/strong:stop loss@146:155""], ""suppressed_markers"":",2026USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.996|2:LIMIT:AVERAGING@2.032,1.9623,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1870,894,,"[trader#3] 📍SIGNAL ID: #2027📍
+COIN: $JUP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2244 - 0.2318
+
+TARGETS: 0.235 - 0.238 - 0.243 - 0.252 - 0.26 - 0.28 - 0.30
+
+STOP LOSS: 0.2211
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@160:164"", ""SL_HIT/weak:stop loss@160:169"", ""stop_loss/strong:stop loss@160:169""], ""suppressed_markers"": [], ""applied_marker_rule",2027USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.2244|2:LIMIT:AVERAGING@0.2318,0.2211,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1860,906,,"[trader#3] 📍SIGNAL ID: #2028📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.27 - 0.2747
+
+TARGETS: 0.279 - 0.29 - 0.30 - 0.315 - 0.33 - 0.36
+
+STOP LOSS: 0.2665
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@149:153"", ""SL_HIT/weak:stop loss@149:158"", ""stop_loss/strong:stop loss@149:158""], ""suppressed_markers"":",2028USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.27|2:LIMIT:AVERAGING@0.2747,0.2665,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1850,920,,"[trader#3] 📍SIGNAL ID: #2029📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2422 - 0.247
+
+TARGETS: 0.251 - 0.256 - 0.265 - 0.280 - 0.2934
+
+STOP LOSS: 0.239
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@147:151"", ""SL_HIT/weak:stop loss@147:156"", ""stop_loss/strong:stop loss@147:156""], ""suppressed_markers"": [], ""applied_marker_rule",2029USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.2422|2:LIMIT:AVERAGING@0.247,0.239,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1841,935,,"[trader#3] 📍SIGNAL ID: #2030📍
+COIN: $DOGE/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 0.13362 - 0.13651
+
+TARGETS: 0.139 - 0.142 - 0.147 - 0.155 - 0.165 - 0.186
+
+STOP LOSS: 0.13128
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@159:163"", ""SL_HIT/weak:stop loss@159:168"", ""stop_loss/strong:stop loss@159:168""], ""suppressed_markers"": [], ""applied_marker_rule",2030USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.13362|2:LIMIT:AVERAGING@0.13651,0.13128,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1822,961,,"[trader#3] 📍SIGNAL ID: #2031📍
+COIN: $XRP/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 1.88 - 1.913
+
+TARGETS: 1.94 - 1.98 - 2 - 2.1 - 2.32
+
+STOP LOSS: 1.86
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@136:140"", ""SL_HIT/weak:stop loss@136:145"", ""stop_loss/strong:stop loss@136:145""], ""suppressed_markers"":",2031USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.88|2:LIMIT:AVERAGING@1.913,1.86,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1806,979,,"[trader#3] 📍SIGNAL ID: #2031📍
+COIN: $XRP/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+Unfortunately, it broke down the reversal zone as market is very volatile.
+
+STOP LOSS: 1.86
+
+🚫3.85% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@152:156"", ""SL_HIT/weak:stop loss@152:161"", ""stop_loss/strong:stop loss@152:161"", ""leverage/weak:x@182:1",2031USDT,LONG,,0,,1.86,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1786,1006,,"[trader#3] 📍SIGNAL ID: #2032📍
+COIN: $LTC/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY:  74.63 - 76.2
+
+TARGETS: 77.2 - 78.5 - 82 - 88 - 100 - 113
+
+STOP LOSS: 73.05
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@141:145"", ""SL_HIT/weak:stop loss@141:150"", ""stop_loss/strong:stop loss@141:150""], ""suppressed_markers"": [], ""applied_marker_rule",2032USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@74.63|2:LIMIT:AVERAGING@76.2,73.05,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1754,1045,,"[trader#3] 📍SIGNAL ID: #2033📍
+COIN: $SUI/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+ENTRY: 1.4675 - 1.43
+
+TARGETS: 1.4072 - 1.38 - 1.34 - 1.29 - 1.22
+
+STOP LOSS: 1.4954
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""SHORT/strong:short@64:69"", ""ALL_SHORT/weak:short@64:69"", ""SL_HIT/weak:stop@143:147"", ""SL_HIT/weak:stop loss@143:152"", ""stop_loss/strong:stop loss@143:152""], ""suppressed_ma",2033USDT,SHORT,RANGE,2,1:LIMIT:PRIMARY@1.43|2:LIMIT:AVERAGING@1.4675,1.4954,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1752,1048,,"[trader#3] 📍SIGNAL ID: #2034📍
+COIN: $ENA/USDT (2-5x)
+Direction: LONG📈
+➖➖➖➖➖➖➖
+ENTRY: 0.196 - 0.203
+
+TARGETS: 0.206 - 0.21 - 0.22 - 0.23 - 0.245 - 0.264
+
+STOP LOSS: 0.1903
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@151:155"", ""SL_HIT/weak:stop loss@151:160"", ""stop_loss/strong:stop loss@151:160""], ""suppressed_markers"": [], ""applied_marker_rule",2034USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.196|2:LIMIT:AVERAGING@0.203,0.1903,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1698,1125,,"[trader#3] 📍SIGNAL ID: #2035📍
+COIN: $LTC/USDT (2-5x)
+Direction: SHORT
+➖➖➖➖➖➖➖
+Facing horizontal and the EMA 200 resistance. Risky scalp take it with low leverage.
+
+ENTRY: 79.3 - 77.73
+
+TARGETS: 76.5 - 75 - 73 - 70 - 67
+
+STOP LOSS: 80.46
+➖➖➖➖➖➖➖
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""SHORT/strong:short@64:69"", ""ALL_SHORT/weak:short@64:69"", ""leverage/strong:leverage@153:161"", ""SL_HIT/weak:stop@217:221"", ""SL_HIT/weak:stop loss@217:226"", ""stop_loss/strong",2035USDT,SHORT,RANGE,2,1:LIMIT:PRIMARY@77.73|2:LIMIT:AVERAGING@79.3,80.46,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1677,1156,,"[trader#3] 📍SIGNAL ID: #2036📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.218 - 0.223
+
+TARGETS: 0.2266 - 0.23 - 0.24 - 0.26 - 0.28 - 0.31
+
+STOP LOSS: 0.2134
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@149:153"", ""SL_HIT/weak:stop loss@149:158"", ""stop_loss/strong:stop loss@149:158""], ""suppressed_markers"":",2036USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.218|2:LIMIT:AVERAGING@0.223,0.2134,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1662,1179,,"[trader#3] 📍SIGNAL ID: #2037 📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.4735 - 0.4750
+
+TARGETS: 0.49 - 0.51 - 0.535 - 0.56 - 0.58 - 0.61 - 0 .65  
+
+STOP LOSS: 0.46
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@159:163"", ""SL_HIT/weak:stop loss@159:168"", ""stop_loss/strong:stop loss@159:168""], ""suppressed_markers"": [], ""applied_marker_rule",2037USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.4735|2:LIMIT:AVERAGING@0.475,0.46,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1653,1197,,"[trader#3] 📍SIGNAL ID: #2038📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3470 - 0.3480
+
+TARGETS: 0.35 - 0.352 - 0.355 - 0.36 - 0.37 - 0.38 - 0.40  
+
+STOP LOSS: 0.3430
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@158:162"", ""SL_HIT/weak:stop loss@158:167"", ""stop_loss/strong:stop loss@158:167""], ""suppressed_markers"": [], ""applied_marker_rule",2038USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.347|2:LIMIT:AVERAGING@0.348,0.343,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1645,1207,,"[trader#3] 📍SIGNAL ID: #2039📍
+COIN: $ARB/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Breakout the triangle after a good consolidation.
+
+ENTRY: 0.1877 - 0.1913
+
+TARGETS: 0.1942 - 0.198 - 0.205 - 0.22 - 0.23
+
+STOP LOSS: 0.1854
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@196:200"", ""SL_HIT/weak:stop loss@196:205"", ""stop_loss/strong:stop loss@196:205""], ""suppressed_markers"": [], ""applied_marker_rule",2039USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.1877|2:LIMIT:AVERAGING@0.1913,0.1854,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1643,1210,,"[trader#3] 📍SIGNAL ID: #2039📍
+COIN: $ARB/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+It grabbed liquidity by doing a fake out.
+
+STOP LOSS: 0.1854
+
+🚫4.37% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@119:123"", ""SL_HIT/weak:stop loss@119:128"", ""stop_loss/strong:stop loss@119:128"", ""leverage/weak:x@151:152""], ""suppressed_markers",2039USDT,LONG,,0,,0.1854,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1636,1221,,"[trader#3] 📍SIGNAL ID: #2040📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+Key reaction zone.
+
+ENTRY: 0.2100 - 0.2110
+
+TARGETS: 0.2130 - 0.2160 - 0.2200 - 0.2260 - 0.2325 - 0.2400
+
+STOP LOSS: 0.2060
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@180:184"", ""SL_HIT/weak:stop loss@180:189"", ""stop_loss/strong:stop loss@180:189""], ""suppressed_markers"":",2040USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.21|2:LIMIT:AVERAGING@0.211,0.206,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1616,1248,,"[trader#3] 📍SIGNAL ID: #2041📍
+COIN: $DOT/USDT (2-5x)  
+Direction: SHORT
+➖➖➖➖➖➖➖  
+Getting rejected from the S/R level.
+
+ENTRY: 1.94 - 1.887
+
+TARGETS: 1.86 - 1.83 - 1.80 - 1.75 - 1.70 - 1.54
+
+STOP LOSS: 1.983
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""SHORT/strong:short@64:69"", ""ALL_SHORT/weak:short@64:69"", ""SL_HIT/weak:stop@184:188"", ""SL_HIT/weak:stop loss@184:193"", ""stop_loss/strong:stop loss@184:193""], ""suppressed_ma",2041USDT,SHORT,RANGE,2,1:LIMIT:PRIMARY@1.887|2:LIMIT:AVERAGING@1.94,1.983,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1597,1281,,"[trader#3] 📍SIGNAL ID: #2042📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 12.3 - 12.71
+
+TARGETS: 12.9 - 13.1 - 13.5 - 14 - 15 - 16
+
+STOP LOSS: 12.109
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@40:41"", ""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@141:145"", ""SL_HIT/weak:stop loss@141:150"", ""stop_loss/strong:stop loss@141:150""], ""suppressed_markers"":",2042USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@12.3|2:LIMIT:AVERAGING@12.71,12.109,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1547,1364,,"[trader#3] 📍SIGNAL ID: #2043📍
+COIN: $LTC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 80 - 80.20
+
+TARGETS: 84 - 89 - 95 - 102 - 108 - 115
+
+STOP LOSS: 75
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@135:139"", ""SL_HIT/weak:stop loss@135:144"", ""stop_loss/strong:stop loss@135:144""], ""suppressed_markers"": [], ""applied_marker_rule",2043USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@80.0|2:LIMIT:AVERAGING@80.2,75.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1535,1382,,"[trader#3] 📍SIGNAL ID: #2044📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2280 - 0.23
+
+TARGETS: 0.235 - 0.245 - 0.26 - 0.28 - 0.30 - 0.32 - 0.34
+
+STOP LOSS: 0.22
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@156:160"", ""SL_HIT/weak:stop loss@156:165"", ""stop_loss/strong:stop loss@156:165""], ""suppressed_markers"":",2044USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.228|2:LIMIT:AVERAGING@0.23,0.22,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1533,1386,,"[trader#3] 📍SIGNAL ID: #2045📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.58 - 5.605
+
+TARGETS: 5.75 - 6.00 - 6.50 - 7.00 - 7.50 - 8.00
+
+STOP LOSS: 5.30
+
+Previous resistance is now acting as support.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@146:150"", ""SL_HIT/weak:stop loss@146:155"", ""stop_loss/strong:stop loss@146:155""], ""suppressed_markers"": [], ""applied_marker_rule",2045USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@5.58|2:LIMIT:AVERAGING@5.605,5.3,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1520,1406,,"[trader#3] 📍SIGNAL ID: #2046 📍
+COIN: $ZEC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 470 - 480
+
+TARGETS: 500 - 530 - 570 - 625 - 680 - 750   
+
+STOP LOSS: 440
+
+Multiple resistance zones and a rising trend line from the lows.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@138:142"", ""SL_HIT/weak:stop loss@138:147"", ""stop_loss/strong:stop loss@138:147""], ""suppressed_markers"": [], ""applied_marker_rule",2046USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@470.0|2:LIMIT:AVERAGING@480.0,440.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1506,1421,,"[trader#3] 📍SIGNAL ID: #2047 📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.150 - 2.175
+
+TARGETS: 2.250 - 2.350 - 2.500 - 2.650 - 2.800 - 3.000   
+
+STOP LOSS: 2.050
+
+Strong confluence between support zones and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@154:158"", ""SL_HIT/weak:stop loss@154:163"", ""stop_loss/strong:stop loss@154:163""], ""suppressed_markers"": [], ""applied_marker_rule",2047USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2.15|2:LIMIT:AVERAGING@2.175,2.05,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1502,1430,,"[trader#3] 📍SIGNAL ID: #2048📍
+COIN: $BCH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 605 - 610
+
+TARGETS: 625 - 640 - 665 -690 - 720 - 750 
+
+STOP LOSS: 585
+
+Strong confluence between support zones, ascending trend line and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@136:140"", ""SL_HIT/weak:stop loss@136:145"", ""stop_loss/strong:stop loss@136:145""], ""suppressed_markers"": [], ""applied_marker_rule",2048USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@605.0|2:LIMIT:AVERAGING@610.0,585.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1500,1435,,"[trader#3] 📍SIGNAL ID: #2049📍
+COIN: $MNT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.01 - 1.02
+
+TARGETS: 1.05 - 1.10 - 1.16 - 1.23 - 1.31 - 1.40 - 1.50 
+
+STOP LOSS: 0.95
+
+Strong confluence between support zones, ascending trend line and order blocks. Buyers defended the area.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@152:156"", ""SL_HIT/weak:stop loss@152:161"", ""stop_loss/strong:stop loss@152:161""], ""suppressed_markers"": [], ""applied_marker_rule",2049USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.01|2:LIMIT:AVERAGING@1.02,0.95,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1477,1466,,"[trader#3] 📍SIGNAL ID: #2046📍
+COIN: $ZEC/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 440
+
+🚫15% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@104:105""], ""suppressed_markers"": [],",2046USDT,LONG,,0,,440.0,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1457,1494,,"[trader#3] 📍SIGNAL ID: #2050📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.04 - 2.05
+
+TARGETS: 2.10 - 2.25 - 2.40 - 2.60 - 2.80 - 3.00 
+
+STOP LOSS: 1.95
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@145:149"", ""SL_HIT/weak:stop loss@145:154"", ""stop_loss/strong:stop loss@145:154""], ""suppressed_markers"":",2050USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2.04|2:LIMIT:AVERAGING@2.05,1.95,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1452,1503,,"[trader#3] 📍SIGNAL ID: #2051📍
+COIN: $HYPE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 23.825 - 23.875
+
+TARGETS: 24.5 - 25.75 - 27 - 28.25 - 30 - 32 
+
+STOP LOSS: 22.2
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@146:150"", ""SL_HIT/weak:stop loss@146:155"", ""stop_loss/strong:stop loss@146:155""], ""suppressed_markers"": [], ""applied_marker_rule",2051USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@23.825|2:LIMIT:AVERAGING@23.875,22.2,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1433,1534,,"[trader#3] 📍SIGNAL ID: #2052📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1350 - 0.1355
+
+TARGETS: 0.139 - 0.144 - 0.150 - 0.157 - 0.165 - 0.174 - 0.185  
+
+STOP LOSS: 0.125
+
+Strong confluence between support zones and order blocks.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@164:168"", ""SL_HIT/weak:stop loss@164:173"", ""stop_loss/strong:stop loss@164:173""], ""suppressed_markers"": [], ""applied_marker_rule",2052USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.135|2:LIMIT:AVERAGING@0.1355,0.125,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1400,1577,,"[trader#3] 🔥GEM SIGNAL: $ZIG🔥
+➖➖➖➖➖➖➖
+Exchanges: ByBit, Bitget, MEXC, Gate
+
+$ZIG has proven to be extremely resilient while the rest of the market dumped, and it has also been in heavy whale accumulation for he last months. 
+
+This is an an easy play, buying a heavy bag here🚀
+
+ENTRY: Below 0.06
+
+TARGETS: 0.062 – 0.064 – 0.067 - 0.070 - 0.075 - 0.081 - 0.090 - 0.117 - 0.144 - 0.182 - OPEN
+
+SL: 0.0528
+➖➖➖➖➖➖➖",0.6,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""leverage/weak:x@66:67"", ""leverage/weak:x@98:99"", ""SL_HIT/weak:sl@385:387"", ""stop_loss/strong:sl:@385:388""], ""suppressed_markers"": [""SL_HIT/weak:sl@385:387""], ""applied_marker_rules"": [""sl_hit_ambiguous_general_context""], ""applie",,LONG,,0,,0.0528,0,,,,,,,symbol|entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1357,1627,,"[trader#3] 📍SIGNAL ID: #2053📍
+COIN: $AAVE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 169 - 170
+
+TARGETS: 175 - 180 - 187 - 195 - 205 - 215 - 225
+
+STOP LOSS: 157.5
+
+Strong confluence between support zones.
+➖➖➖➖➖➖➖  
+This message cannot be forwarded or replicated",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@144:148"", ""SL_HIT/weak:stop loss@144:153"", ""stop_loss/strong:stop loss@144:153""], ""suppressed_markers"": [], ""applied_marker_rule",2053USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@169.0|2:LIMIT:AVERAGING@170.0,157.5,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1328,1665,,"[trader#3] 📍SIGNAL ID: #2054📍
+COIN: $UNI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 5.3 - 5.325
+
+TARGETS: 5.5 - 5.75 - 6.15 - 6.75 - 7.5 - 8.5
+
+STOP LOSS: 4.85
+
+Multiple support zones plus an order block.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@142:146"", ""SL_HIT/weak:stop loss@142:151"", ""stop_loss/strong:stop loss@142:151""], ""suppressed_markers"": [], ""applied_marker_rule",2054USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@5.3|2:LIMIT:AVERAGING@5.325,4.85,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1316,1678,,"[trader#3] 📍SIGNAL ID: #2055📍
+COIN: $ASTER/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.68 - 0.69
+
+TARGETS: 0.71 - 0.75 - 0.80 - 0.86 - 0.93 - 1.00
+
+STOP LOSS: 0.635
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@43:47"", ""symbol/strong:usdt@43:47"", ""leverage/weak:x@52:53"", ""LONG/strong:long@66:70"", ""SL_HIT/weak:stop@147:151"", ""SL_HIT/weak:stop loss@147:156"", ""stop_loss/strong:stop loss@147:156"", ""LONG/strong:long@188:192""], ""suppressed_marker",2055USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.68|2:LIMIT:AVERAGING@0.69,0.635,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1270,1747,,"[trader#3] 📍SIGNAL ID: #2056📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.520 - 0.525
+
+TARGETS: 0.540 - 0.570 - 0.600 - 0.640 - 0.690 - 0.750
+
+STOP LOSS: 0.480
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@153:157"", ""SL_HIT/weak:stop loss@153:162"", ""stop_loss/strong:stop loss@153:162"", ""LONG/strong:long@194:198""], ""suppressed_marker",2056USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.52|2:LIMIT:AVERAGING@0.525,0.48,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1241,1790,,"[trader#3] 📍SIGNAL ID: #2057📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.348 - 0.350
+
+TARGETS: 0.362 - 0.375 - 0.390 - 0.410 - 0.435 - 0.465 - 0.500
+
+STOP LOSS: 0.325
+
+Support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170"", ""LONG/strong:long@203:207""], ""suppressed_marker",2057USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.348|2:LIMIT:AVERAGING@0.35,0.325,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1240,1791,,"[trader#3] 📍SIGNAL ID: #2058📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 12.00 - 12.10
+
+TARGETS: 12.45 - 12.90 - 13.50 - 14.25 - 15.10 - 16.00
+
+STOP LOSS: 11.00
+
+Support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@154:158"", ""SL_HIT/weak:stop loss@154:163"", ""stop_loss/strong:stop loss@154:163"", ""LONG/strong:long@186:190""], ""suppressed_marker",2058USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@12.0|2:LIMIT:AVERAGING@12.1,11.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1198,1851,,"[trader#3] 📍SIGNAL ID: #2059📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.4750 - 1.4800
+
+TARGETS: 1.5400 - 1.6000 - 1.6800 - 1.7700 - 1.8800 - 2.0000 - 2.2500
+
+STOP LOSS: 1.3500
+
+Support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179"", ""LONG/strong:long@213:217""], ""suppressed_marker",2059USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.475|2:LIMIT:AVERAGING@1.48,1.35,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1186,1872,,"[trader#3] 📍SIGNAL ID: #2060📍
+COIN: $POL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1240 - 0.1250
+
+TARGETS: 0.1300 - 0.1370 - 0.1450 - 0.1550 - 0.1680 - 0.1840 - 0.2000 
+
+STOP LOSS: 0.1150
+
+High-confluence support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179"", ""LONG/strong:long@219:223""], ""suppressed_marker",2060USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.124|2:LIMIT:AVERAGING@0.125,0.115,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1174,1906,,"[trader#3] 📍SIGNAL ID: #2061📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.4530 - 0.4550
+
+TARGETS: 0.4600 - 0.4800 - 0.5000 - 0.5300 - 0.5600 - 0.6000
+
+STOP LOSS: 0.4300
+
+High-confluence support zones and a FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170"", ""LONG/strong:long@220:224""], ""suppressed_marker",2061USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.453|2:LIMIT:AVERAGING@0.455,0.43,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1170,1912,,"[trader#3] 📍SIGNAL ID: #2062📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.510 - 1.520
+
+TARGETS: 1.550 - 1.590 - 1.650 - 1.720 - 1.800 - 1.890 - 2.000
+
+STOP LOSS: 1.420
+
+High-confluence support zones and FVGs along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170"", ""LONG/strong:long@218:222""], ""suppressed_marker",2062USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.51|2:LIMIT:AVERAGING@1.52,1.42,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1158,1934,,"[trader#3] 📍SIGNAL ID: #2063📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.895 - 1.900
+
+TARGETS: 1.960 - 2.050 - 2.150 - 2.250 - 2.360 - 2.480 - 2.600 
+
+STOP LOSS: 1.760
+
+Entry sits on a support cluster with an FVG backing it.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"":",2063USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.895|2:LIMIT:AVERAGING@1.9,1.76,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1155,1944,,"[trader#3] 📍SIGNAL ID: #2064📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1195 - 0.1200
+
+TARGETS: 0.1235 - 0.1270 - 0.1320 -0.1380 - 0.1450 - 0.1525 - 0.1600  
+
+STOP LOSS: 0.1125
+
+High-confluence HTF support cluster influencing the current entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2064USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.1195|2:LIMIT:AVERAGING@0.12,0.1125,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1119,1998,,"[trader#3] 📍SIGNAL ID: #2065📍
+COIN: $SOL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 105 - 105.5
+
+TARGETS: 109 - 115 - 122 - 130 - 139 - 150  
+
+STOP LOSS: 97
+
+High-confluence support cluster and a descending channel structure along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@139:143"", ""SL_HIT/weak:stop loss@139:148"", ""stop_loss/strong:stop loss@139:148"", ""LONG/strong:long@221:225""], ""suppressed_marker",2065USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@105.0|2:LIMIT:AVERAGING@105.5,97.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1105,2053,,"[trader#3] 📍SIGNAL ID: #2065📍
+COIN: $SOL/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 97
+
+🚫15% Loss (2x)🚫
+
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@103:104""], ""suppressed_markers"": [],",2065USDT,LONG,,0,,97.0,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1099,2064,,"[trader#3] 📍SIGNAL ID: #2066📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.290 - 0.291
+
+TARGETS: 0.300 - 0.315 - 0.335 - 0.355 - 0.375 - 0.400 
+
+STOP LOSS: 0.265
+
+Strong support confluence reinforced by an adjacent FVG.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@153:157"", ""SL_HIT/weak:stop loss@153:162"", ""stop_loss/strong:stop loss@153:162""], ""suppressed_markers"": [], ""applied_marker_rule",2066USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.29|2:LIMIT:AVERAGING@0.291,0.265,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,1098,2065,,"[trader#3] 📍SIGNAL ID: #2067📍
+COIN: $ETH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2290 - 2300
+
+TARGETS: 2350 - 2425 - 2500 - 2600 - 2725 - 2850 - 3000 
+
+STOP LOSS: 2150
+
+Confluent support zone backed by a higher-timeframe FVG and OB.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@152:156"", ""SL_HIT/weak:stop loss@152:161"", ""stop_loss/strong:stop loss@152:161""], ""suppressed_markers"": [], ""applied_marker_rule",2067USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2290.0|2:LIMIT:AVERAGING@2300.0,2150.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,955,2269,,"[trader#3] 📍SIGNAL ID: #2068📍
+COIN: $LINK/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 8.40 - 8.50
+
+TARGETS: 8.80 - 9.35 - 10.00 - 10.70 - 11.45 - 12.20 - 13.00 
+
+STOP LOSS: 7.85
+
+Post sell-off consolidation below resistance favors a short-term reaction.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@158:162"", ""SL_HIT/weak:stop loss@158:167"", ""stop_loss/strong:stop loss@158:167"", ""SHORT/strong:short@228:233"", ""ALL_SHORT/weak:s",2068USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@8.4|2:LIMIT:AVERAGING@8.5,7.85,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,950,2279,,"[trader#3] 📍SIGNAL ID: #2069📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3680 - 0.3700
+
+TARGETS: 0.3850 - 0.4100 - 0.4450 - 0.4800 - 0.5150 - 0.5500
+
+STOP LOSS: 0.3375
+
+Support area strengthened by confluence and a surrounding FVG.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"": [], ""applied_marker_rule",2069USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.368|2:LIMIT:AVERAGING@0.37,0.3375,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,925,2311,,"[trader#3] 📍SIGNAL ID: #2070📍
+COIN: $WLFI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1035 - 0.1080 - 0.1150 - 0.1250 - 0.1375 - 0.1500
+
+STOP LOSS: 0.0925
+
+Support confluence and liquidity sweep favor a reaction bounce.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@162:166"", ""SL_HIT/weak:stop loss@162:171"", ""stop_loss/strong:stop loss@162:171""], ""suppressed_markers"": [], ""applied_marker_rule",2070USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.099|2:LIMIT:AVERAGING@0.1,0.0925,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,923,2313,,"[trader#3] 📍SIGNAL ID: #2071📍
+COIN: $TAO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 144 - 145
+
+TARGETS: 150 - 160 - 175 - 190 - 205 - 225 - 250
+
+STOP LOSS: 135
+
+Strong support zones and liquidity sweep along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@143:147"", ""SL_HIT/weak:stop loss@143:152"", ""stop_loss/strong:stop loss@143:152"", ""LONG/strong:long@200:204""], ""suppressed_marker",2071USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@144.0|2:LIMIT:AVERAGING@145.0,135.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,858,2385,,"[trader#3] 📍SIGNAL ID: #2072📍
+COIN: $TRX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2760 - 0.2770
+
+TARGETS: 0.2840 - 0.2940 - 0.3050 - 0.3180 - 0.3320 - 0.3500 - 0.3700
+
+STOP LOSS: 0.2600
+
+Strong support zones and a 4H FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179"", ""LONG/strong:long@223:",2072USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.276|2:LIMIT:AVERAGING@0.277,0.26,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,738,2557,,"[trader#3] 📍SIGNAL ID: #2074📍
+COIN: $IMX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.154 - 0.155
+
+TARGETS: 0.160 - 0.168 - 0.180 - 0.195 - 0.210 - 0.230 - 0.250
+
+STOP LOSS: 0.142
+
+Strong support zone and a 4H FVG along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@39:40"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170"", ""LONG/strong:long@212:",2074USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.154|2:LIMIT:AVERAGING@0.155,0.142,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,705,2597,,"[trader#3] 📍SIGNAL ID: #2073📍
+COIN: $DASH/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 33
+
+🚫18% Loss (2x)🚫
+
+SL hit, but one doesn't define us. Risk managed. On to the next one!
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@78:82"", ""SL_HIT/weak:stop loss@78:87"", ""stop_loss/strong:stop loss@78:87"", ""leverage/weak:x@104:105"", ""SL_HIT/weak:sl@108:110"", ",2073USDT,LONG,,0,,33.0,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,694,2609,,"[trader#3] 📍SIGNAL ID: #2075📍
+COIN: $SKY/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0620 - 0.0622
+
+TARGETS: 0.0640 - 0.0670 - 0.0720 - 0.0790 - 0.0880 - 0.1000
+
+STOP LOSS: 0.0575
+
+Strong support zone within the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"": [], ""applied_marker_rule",2075USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.062|2:LIMIT:AVERAGING@0.0622,0.0575,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,672,2648,,"[trader#3] 📍SIGNAL ID: #2076📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1040 - 0.1100 - 0.1180 - 0.1280 - 0.1390 - 0.1500
+
+STOP LOSS: 0.0925
+
+Liquidity sweep into support favors a short-term reaction while structure holds.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170"", ""SHORT/strong:short@217:222"", ""ALL_SHORT/weak:s",2076USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.099|2:LIMIT:AVERAGING@0.1,0.0925,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,564,2795,,"[trader#3] 📍SIGNAL ID: #2077📍
+COIN: $BCH/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 450 - 455
+
+TARGETS: 470 - 490 - 520 - 560 - 620 - 700
+
+STOP LOSS: 420
+
+Multiple support zones along the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@137:141"", ""SL_HIT/weak:stop loss@137:146"", ""stop_loss/strong:stop loss@137:146"", ""LONG/strong:long@176:180""], ""suppressed_marker",2077USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@450.0|2:LIMIT:AVERAGING@455.0,420.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,563,2796,,"[trader#3] 📍SIGNAL ID: #2078📍
+COIN: $CRO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0. 0745 - 0.0750
+
+TARGETS: 0.0775 - 0.0800 - 0.0840 - 0.0890 - 0.0940 - 0.1000 - 0.1100
+
+STOP LOSS: 0.0700
+
+Confluence of high-interest zones around the entry area.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@171:175"", ""SL_HIT/weak:stop loss@171:180"", ""stop_loss/strong:stop loss@171:180"", ""PRIMARY/strong:entry a@234:241""], ""suppressed_",2078USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.0745|2:LIMIT:AVERAGING@0.075,0.07,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,562,2797,,"[trader#3] 📍SIGNAL ID: #2079📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.500 - 1.510
+
+TARGETS: 1.575 - 1.675 - 1.800 - 1.900 - 2.000 - 2.125 - 2.250
+
+STOP LOSS: 1.375
+
+Confluence between 4H FVG, support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"": [], ""applied_marker_rule",2079USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.5|2:LIMIT:AVERAGING@1.51,1.375,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,550,2815,,"[trader#3] 📍SIGNAL ID: #2080📍
+COIN: $ETC/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 8.00 - 8.10
+
+TARGETS: 8.30 - 8.75 - 9.25 - 10.00 - 11.00 - 12.00
+
+STOP LOSS: 7.35
+
+Confluence between 4H FVG, support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@148:152"", ""SL_HIT/weak:stop loss@148:157"", ""stop_loss/strong:stop loss@148:157""], ""suppressed_markers"": [], ""applied_marker_rule",2080USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@8.0|2:LIMIT:AVERAGING@8.1,7.35,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,497,2893,,"[trader#3] 📍SIGNAL ID: #2081📍
+COIN: $DOGE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0895 - 0.0900
+
+TARGETS: 0.0940 - 0.0990 - 0.1050 - 0.1120 - 0.1200 - 0.1300
+
+STOP LOSS: 0.0825
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@162:166"", ""SL_HIT/weak:stop loss@162:171"", ""stop_loss/strong:stop loss@162:171""], ""suppressed_markers"": [], ""applied_marker_rule",2081USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.0895|2:LIMIT:AVERAGING@0.09,0.0825,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,483,2911,,"[trader#3] 📍SIGNAL ID: #2082📍
+COIN: $HYPE/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 29.90 - 30.00
+
+TARGETS: 31.25 - 33.00 - 35.00 - 37.50 - 41.00 - 45.00 - 50.00
+
+STOP LOSS: 27.50
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@162:166"", ""SL_HIT/weak:stop loss@162:171"", ""stop_loss/strong:stop loss@162:171""], ""suppressed_markers"": [], ""applied_marker_rule",2082USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@29.9|2:LIMIT:AVERAGING@30.0,27.5,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,432,2972,,"[trader#3] 📍SIGNAL ID: #2083📍
+COIN: $NEAR/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.240 - 1.250
+
+TARGETS: 1.300 - 1.375 - 1.475 - 1.600 - 1.750 - 1.900 - 50.00
+
+STOP LOSS: 1.150
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@162:166"", ""SL_HIT/weak:stop loss@162:171"", ""stop_loss/strong:stop loss@162:171""], ""suppressed_markers"": [], ""applied_marker_rule",2083USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.24|2:LIMIT:AVERAGING@1.25,1.15,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,424,2982,,"[trader#3] 📍SIGNAL ID: #2084📍
+COIN: $BNB/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 640 - 645
+
+TARGETS: 665 - 700 - 740 - 790 - 850 - 920 - 1000
+
+STOP LOSS: 585
+
+Strong support confluence reinforced by a 4H FVG and the retest of the upper trendline from a previously broken descending channel at entry.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@144:148"", ""SL_HIT/weak:stop loss@144:153"", ""stop_loss/strong:stop loss@144:153"", ""SL_HIT/weak:sl@260:262""], ""suppressed_markers""",2084USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@640.0|2:LIMIT:AVERAGING@645.0,585.0,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,401,3011,,"[trader#3] 📍SIGNAL ID: #2085📍
+COIN: $TON/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.290 - 1.300
+
+TARGETS: 1.350 - 1.420 - 1.500 - 1.600 - 1.720 - 1.850 - 2.000
+
+STOP LOSS: 1.200
+
+Strong support confluence reinforced by a daily FVG and an ascending trendline at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"": [], ""applied_marker_rule",2085USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.29|2:LIMIT:AVERAGING@1.3,1.2,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,352,3082,,"[trader#3] 📍SIGNAL ID: #2086📍
+COIN: $JUP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1540 - 0.1550
+
+TARGETS: 0.1600 - 0.1675 - 0.1775 - 0.1900 - 0.2050 - 0.2250 - 0.2500
+
+STOP LOSS: 0.1425
+
+Strong support confluence reinforced by a 4h FVG and an ascending channel at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2086USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.154|2:LIMIT:AVERAGING@0.155,0.1425,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,326,3117,,"[trader#3] 📍SIGNAL ID: #2087📍
+COIN: $SUI/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.9270 - 0.9300
+
+TARGETS: 0.9700 - 1.0300 - 1.1000 - 1.1750 - 1.2750 - 1.3850 - 1.5000
+
+STOP LOSS: 0.8500
+
+Strong support confluence reinforced by a 4h FVG and an ascending channel at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2087USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.927|2:LIMIT:AVERAGING@0.93,0.85,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,262,3202,,"[trader#3] 📍SIGNAL ID: #2088📍
+COIN: $ICP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 2.530 - 2.550
+
+TARGETS: 2.700 - 3.000 - 3.350 - 3.800 - 4.300 - 4.800
+
+STOP LOSS: 2.250
+
+Confluence between support zones and an ascending trendline in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@153:157"", ""SL_HIT/weak:stop loss@153:162"", ""stop_loss/strong:stop loss@153:162""], ""suppressed_markers"": [], ""applied_marker_rule",2088USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@2.53|2:LIMIT:AVERAGING@2.55,2.25,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,260,3204,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.780 - 1.800
+
+TARGETS: 1.875 - 2.000 - 2.150 - 2.325 - 2.500 - 2.700
+
+STOP LOSS: 1.650
+
+Confluence between strong support zones in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@154:158"", ""SL_HIT/weak:stop loss@154:163"", ""stop_loss/strong:stop loss@154:163""], ""suppressed_markers"": [], ""applied_marker_rule",2089USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.78|2:LIMIT:AVERAGING@1.8,1.65,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,250,3223,,"[trader#3] 📍SIGNAL ID: #2090📍
+COIN: $MNT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.768 - 0.770
+
+TARGETS: 0.800 - 0.850 - 0.920 - 1.000 - 1.080 - 1.170
+
+STOP LOSS: 0.700
+
+Confluence between strong support zones, a 4H FVG and an ascending trend line in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@153:157"", ""SL_HIT/weak:stop loss@153:162"", ""stop_loss/strong:stop loss@153:162""], ""suppressed_markers"": [], ""applied_marker_rule",2090USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.768|2:LIMIT:AVERAGING@0.77,0.7,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,234,3248,,"[trader#3] 📍SIGNAL ID: #2091📍
+COIN: $POL/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0990 - 0.1000
+
+TARGETS: 0.1040 - 0.1100 - 0.1170 - 0.1240 - 0.1320 - 0.1400 - 0.1500
+
+STOP LOSS: 0.0915
+
+Confluence between strong support zones, a 4H FVG and an ascending trend line in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2091USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.099|2:LIMIT:AVERAGING@0.1,0.0915,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,194,3296,,"[trader#3] 📍SIGNAL ID: #2092📍
+COIN: $ADA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2740 - 0.2750
+
+TARGETS: 0.2875 - 0.3000 - 0.3150 - 0.3300 - 0.3500 - 0.3750 - 0.4100 - 0.4500
+
+STOP LOSS: 0.2475
+
+Confluence between strong support zones, a 4h FVG and an ascending trend line in the entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@179:183"", ""SL_HIT/weak:stop loss@179:188"", ""stop_loss/strong:stop loss@179:188""], ""suppressed_markers"": [], ""applied_marker_rule",2092USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.274|2:LIMIT:AVERAGING@0.275,0.2475,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,191,3299,,"[trader#3] 📍SIGNAL ID: #2093📍
+COIN: $XTZ/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3740 - 0.3750
+
+TARGETS: 0.3900 - 0.4100 - 0.4400 - 0.4750 - 0.5100 - 0.5500 - 0.6000
+
+STOP LOSS: 0.3400
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"":",2093USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.374|2:LIMIT:AVERAGING@0.375,0.34,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,169,3328,,"[trader#3] 📍SIGNAL ID: #2094📍
+COIN: $WLD/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.3180 - 0.3200
+
+TARGETS: 0.3300 - 0.3450 - 0.3650 - 0.3900 - 0.4200 - 0.4600 - 0.5000
+
+STOP LOSS: 0.2950
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2094USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.318|2:LIMIT:AVERAGING@0.32,0.295,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,155,3362,,"[trader#3] 📍SIGNAL ID: #2095📍
+COIN: $ALGO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0844 - 0.0850
+
+TARGETS: 0.0890 - 0.0950 - 0.1020 - 0.1100 - 0.1190 - 0.1300
+
+STOP LOSS: 0.0775
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@162:166"", ""SL_HIT/weak:stop loss@162:171"", ""stop_loss/strong:stop loss@162:171""], ""suppressed_markers"": [], ""applied_marker_rule",2095USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.0844|2:LIMIT:AVERAGING@0.085,0.0775,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,140,3377,,"[trader#3] 📍SIGNAL ID: #2091📍
+COIN: $POL/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 0.0915
+
+🚫17% Loss (2x)🚫
+
+SL hit, but one doesn't define us. Risk managed. On to the next one!
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@107:108"", ""SL_HIT/weak:sl@111:113"", ",2091USDT,LONG,,0,,0.0915,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,135,3382,,"[trader#3] 📍SIGNAL ID: #2092📍
+COIN: $ADA/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 0.2475
+
+🚫20% Loss (2x)🚫
+
+SL hit, but one doesn't define us. Risk managed. On to the next one!
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@107:108"", ""SL_HIT/weak:sl@111:113"", ",2092USDT,LONG,,0,,0.2475,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,126,3391,,"[trader#3] 📍SIGNAL ID: #2096📍
+COIN: $AVAX/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 9.30 - 9.35
+
+TARGETS: 9.75 - 10.25 - 10.85 - 11.50 - 12.25 - 13.10 - 14.00 - 15.00
+
+STOP LOSS: 8.50
+
+Support cluster at entry zone plus an ascending trend line and a 6h FVG..
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@40:41"", ""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@167:171"", ""SL_HIT/weak:stop loss@167:176"", ""stop_loss/strong:stop loss@167:176""], ""suppressed_markers"":",2096USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@9.3|2:LIMIT:AVERAGING@9.35,8.5,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,104,3413,,"[trader#3] 📍SIGNAL ID: #2097📍
+COIN: $ONDO/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.2440 - 0.2450
+
+TARGETS: 0.2550 - 0.2650 - 0.2775 - 0.2925 - 0.3100 - 0.3300 - 0.3600 - 0.4000
+
+STOP LOSS: 0.2250
+
+Support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@180:184"", ""SL_HIT/weak:stop loss@180:189"", ""stop_loss/strong:stop loss@180:189""], ""suppressed_markers"": [], ""applied_marker_rule",2097USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.244|2:LIMIT:AVERAGING@0.245,0.225,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,80,3437,,"[trader#3] 📍SIGNAL ID: #2098📍
+COIN: $DOT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.340 - 1.350
+
+TARGETS: 1.400 - 1.475 - 1.550 - 1.650 - 1.800 - 1.950 - 2.150 - 2.350
+
+STOP LOSS: 1.215
+
+Support cluster at entry zone plus a 4h FVG.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@169:173"", ""SL_HIT/weak:stop loss@169:178"", ""stop_loss/strong:stop loss@169:178""], ""suppressed_markers"": [], ""applied_marker_rule",2098USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.34|2:LIMIT:AVERAGING@1.35,1.215,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,78,3439,,"[trader#3] 📍SIGNAL ID: #2099📍
+COIN: $ENA/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.0965 - 0.0975
+
+TARGETS: 0.1010 - 0.1050 - 0.1100 - 0.1175 - 0.1275 - 0.1375 - 0.1500
+
+STOP LOSS: 0.0900
+
+4H FVG reinforcing a strong support cluster at entry.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"": [], ""applied_marker_rule",2099USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.0965|2:LIMIT:AVERAGING@0.0975,0.09,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,54,3463,,"[trader#3] 📍SIGNAL ID: #2088📍
+COIN: $ICP/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 2.250
+
+🚫23.5% Loss (2x)🚫
+
+SL hit, but one doesn't define us. Risk managed. On to the next one!
+➖➖➖➖➖➖➖",0.8,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@108:109"", ""SL_HIT/weak:sl@112:114"", ",2088USDT,LONG,,0,,2.25,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,51,3466,,"[trader#3] 📍SIGNAL ID: #2099📍
+COIN: $ENA/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 0.0900
+
+🚫13.5% Loss (2x)🚫
+
+Volatility across global markets took this one out. Risk contained. On to the next.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@77:81"", ""SL_HIT/weak:stop loss@77:86"", ""stop_loss/strong:stop loss@77:86"", ""leverage/weak:x@109:110"", ""leverage/weak:x@193:194""]",2099USDT,LONG,,0,,0.09,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,50,3467,,"[trader#3] 📍SIGNAL ID: #2100📍
+COIN: $APT/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.940 - 0.950
+
+TARGETS: 1.000 - 1.075 - 1.150 - 1.250 - 1.375 - 1.500 - 1.650
+
+STOP LOSS: 0.850
+
+An ascending trendline reinforcing a strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"": [], ""applied_marker_rule",2100USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.94|2:LIMIT:AVERAGING@0.95,0.85,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,48,3469,,"[trader#3] 📍SIGNAL ID: #2101📍
+COIN: $XLM/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 0.1625 - 0.1635
+
+TARGETS: 0.1700 - 0.1775 - 0.1875 - 0.2000 - 0.2150 - 0.2300 - 0.2500
+
+STOP LOSS: 0.1500
+
+An ascending trendline reinforcing a strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"":",2101USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@0.1625|2:LIMIT:AVERAGING@0.1635,0.15,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,42,3475,,"[trader#3] 📍SIGNAL ID: #2102📍
+COIN: $XRP/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.3200 - 1.3250
+
+TARGETS: 1.3750 - 1.4500 - 1.5500 - 1.6500 - 1.7500 - 1.8750 - 2.0000
+
+STOP LOSS: 1.2000
+
+Strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@37:38"", ""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@170:174"", ""SL_HIT/weak:stop loss@170:179"", ""stop_loss/strong:stop loss@170:179""], ""suppressed_markers"":",2102USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.32|2:LIMIT:AVERAGING@1.325,1.2,0,,,,,,,take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,41,3476,,"[trader#3] 📍SIGNAL ID: #2089📍
+COIN: $ATOM/USDT (2-5X)
+Direction: LONG
+➖➖➖➖➖➖➖
+
+STOP LOSS: 1.650
+
+🚫16.7% Loss (2x)🚫
+
+Volatility across global markets took this one out. Risk contained. On to the next.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@42:46"", ""symbol/strong:usdt@42:46"", ""leverage/weak:x@51:52"", ""LONG/strong:long@65:69"", ""SL_HIT/weak:stop@78:82"", ""SL_HIT/weak:stop loss@78:87"", ""stop_loss/strong:stop loss@78:87"", ""leverage/weak:x@109:110"", ""leverage/weak:x@193:194""]",2089USDT,LONG,,0,,1.65,0,,,,,,,entries|take_profits,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,33,3484,,"Секция иностранных торговых связей 😉
+или
+trader #3
+Модель расчёта: консервативная (1% риск, равные тейки)
+
+Статистика:
+20 сделок
+5 стопов
+Остальное - частичные фиксации, БУ и сделки, которые ещё остаются в работе.
+Итог: +2.7%
+
+Комментарий:
+Месяц получился составным: часть прибыли доехала из февральских сигналов, часть мартовских сделок ещё продолжает отрабатываться.🤷‍♂️
+
+---
+Общий итог:
+Типичный март.
+Вроде уже весна, и ты ждёшь, что сейчас всё дружно зацветёт зелёным.🕯🔼
+А он, собака, всё морозит. 😏
+Ну а в апрель мы заходим уже с новым адресом и нормальным человеческим оптимизмом. 👌",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейки""], ""matched_markers"": [""risk/weak:риск@86:90"", ""TP_HIT/weak:тейки@99:104"", ""SL_HIT/weak:стоп@130:134"", ""EXIT_BE/weak:бу@169:171"", ""REPORT_RESULT/weak:итог@213:217"", ""REPORT_RESULT/weak:итог@381:385"", ""MARKET_NOW/weak:сейчас@435:441""], ""suppressed_markers"": [], """,,,,0,,,2,20.0|5.0,,,,,,symbol|side|entries|stop_loss,INCOMPLETE
+40,trader_3,SIGNAL,PARTIAL,12,3505,,"[trader#3] 📍SIGNAL ID: #2103📍
+COIN: $TON/USDT (2-5x)  
+Direction: LONG  
+➖➖➖➖➖➖➖  
+ENTRY: 1.190 - 1.200
+
+TARGETS: 1.250 - 1.300 - 1.375 - 1.500 - 1.650 - 1.800 - 2.000
+
+STOP LOSS: 1.100
+
+Strong support cluster at entry zone.
+➖➖➖➖➖➖➖",0.6,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@41:45"", ""symbol/strong:usdt@41:45"", ""leverage/weak:x@50:51"", ""LONG/strong:long@64:68"", ""SL_HIT/weak:stop@161:165"", ""SL_HIT/weak:stop loss@161:170"", ""stop_loss/strong:stop loss@161:170""], ""suppressed_markers"": [], ""applied_marker_rule",2103USDT,LONG,RANGE,2,1:LIMIT:PRIMARY@1.19|2:LIMIT:AVERAGING@1.2,1.1,0,,,,,,,take_profits,INCOMPLETE

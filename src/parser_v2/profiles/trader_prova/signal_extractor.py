@@ -359,6 +359,9 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
             and ":" not in match.group(0)
         ):
             continue
+        # Skip result-metric values: R-ratio ("тейк 0.9Р") or percentage ("2 тейк 29%").
+        if index_raw is None and text[match.end() : match.end() + 1] in ("r", "R", "р", "Р", "%"):
+            continue
 
         sequence = int(index_raw) if index_raw else fallback_sequence
         take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
