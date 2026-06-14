@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .enums import (
@@ -89,6 +91,14 @@ class RiskHint(ContractModel):
     max_value: float | None = None
 
 
+RiskReductionTargetUnit = Literal["PERCENT_OF_INITIAL_RISK", "R_MULTIPLE"]
+
+
+class RiskReductionTarget(ContractModel):
+    unit: RiskReductionTargetUnit
+    value: float = Field(ge=0.0)
+
+
 class SignalFields(ContractModel):
     symbol: str | None = None
     side: Side | None = None
@@ -113,6 +123,24 @@ class MoveStopToBEEntities(IntentEntities):
 class MoveStopEntities(IntentEntities):
     new_stop_price: Price | None = None
     stop_to_tp_level: int | None = Field(default=None, ge=1)
+    risk_reduction_target: RiskReductionTarget | None = None
+
+    @model_validator(mode="after")
+    def _validate_single_target(self) -> MoveStopEntities:
+        populated = sum(
+            value is not None
+            for value in (
+                self.new_stop_price,
+                self.stop_to_tp_level,
+                self.risk_reduction_target,
+            )
+        )
+        if populated > 1:
+            raise ValueError(
+                "MOVE_STOP entities require exactly one of new_stop_price, "
+                "stop_to_tp_level, or risk_reduction_target"
+            )
+        return self
 
 
 class CloseFullEntities(IntentEntities):

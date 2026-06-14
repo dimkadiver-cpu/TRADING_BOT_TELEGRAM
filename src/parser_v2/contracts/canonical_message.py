@@ -5,7 +5,16 @@ from typing import Any
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from .context import RawContext, TargetHints
-from .entities import EntryLeg, EntrySelector, Price, RiskHint, SignalFields, StopLoss, TakeProfit
+from .entities import (
+    EntryLeg,
+    EntrySelector,
+    Price,
+    RiskHint,
+    RiskReductionTarget,
+    SignalFields,
+    StopLoss,
+    TakeProfit,
+)
 from .enums import (
     CANONICAL_MESSAGE_SCHEMA_VERSION,
     CancelScopeHint,
@@ -34,15 +43,31 @@ class SetStopOperation(CanonicalModel):
     target_type: SetStopTargetType
     price: Price | None = None
     tp_level: int | None = Field(default=None, ge=1)
+    risk_reduction_target: RiskReductionTarget | None = None
 
     @model_validator(mode="after")
     def _validate_target_payload(self) -> SetStopOperation:
-        if self.target_type == "PRICE" and self.price is None:
-            raise ValueError("SET_STOP PRICE requires price")
-        if self.target_type == "TP_LEVEL" and self.tp_level is None:
-            raise ValueError("SET_STOP TP_LEVEL requires tp_level")
-        if self.target_type == "ENTRY" and (self.price is not None or self.tp_level is not None):
-            raise ValueError("SET_STOP ENTRY forbids price/tp_level")
+        if self.target_type == "PRICE":
+            if self.price is None:
+                raise ValueError("SET_STOP PRICE requires price")
+            if self.tp_level is not None or self.risk_reduction_target is not None:
+                raise ValueError("SET_STOP PRICE forbids tp_level/risk_reduction_target")
+        if self.target_type == "TP_LEVEL":
+            if self.tp_level is None:
+                raise ValueError("SET_STOP TP_LEVEL requires tp_level")
+            if self.price is not None or self.risk_reduction_target is not None:
+                raise ValueError("SET_STOP TP_LEVEL forbids price/risk_reduction_target")
+        if self.target_type == "RISK_TARGET":
+            if self.risk_reduction_target is None:
+                raise ValueError("SET_STOP RISK_TARGET requires risk_reduction_target")
+            if self.price is not None or self.tp_level is not None:
+                raise ValueError("SET_STOP RISK_TARGET forbids price/tp_level")
+        if self.target_type == "ENTRY" and (
+            self.price is not None
+            or self.tp_level is not None
+            or self.risk_reduction_target is not None
+        ):
+            raise ValueError("SET_STOP ENTRY forbids price/tp_level/risk_reduction_target")
         return self
 
 

@@ -264,6 +264,7 @@
         "intent": "SL_HIT",
         "markers": ["sl"],
         "scope": "same_sentence",
+        "if_contains_any": [ "sl в безубыток"],
         "if_regex_any": ["(?:[a-z]sl|sl[a-z])"],
         "reason": "suppress_sl_when_substring_of_longer_latin_word"
       },
@@ -312,8 +313,10 @@
         "markers": {"source": "semantic"},
         "scope": "same_sentence",
         "if_regex_any": [
-          "(?i)(?=.*(?:\\b(?:tp|тп)\\s*1\\b|\\b1\\s*тейк\\b|\\bперв\\w*\\s+тейк\\b))(?=.*(?:\\b(?:фикс\\w*|зафиксир\\w*|частичн\\w*|закрыва\\w*)\\s*(?:25|30|40|50|70|80)%)).*"
+          "(?i)(?=.*(?:\\b(?:tp|тп)\\s*1\\b|\\b1\\s*тейк\\b|\\bперв\\w*\\s+тейк\\b))(?=.*(?:\\b(?:фикс\\w*|зафиксир\\w*|частичн\\w*|закрыва\\w*)\\s*(?:25|30|40|50|70|80)%)).*",
+          "(?i)\\b(?:tp|тп|тейк|target|цель)\\s*(\\d+)\\b.*(?:фикс\\w*|закр\\w*|fix\\w*|close\\w*)\\s*(20|25|30|40|50|70|80|100)%?"
         ],
+        "if_contains_any": [],
         "reason": "tp1_partial_close_context_not_actionable"
       },
       {

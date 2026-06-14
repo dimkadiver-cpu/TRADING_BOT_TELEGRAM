@@ -71,7 +71,7 @@ UpdateOperationType = Literal[
     "MODIFY_TARGETS",
     "INVALIDATE_SETUP",
 ]
-SetStopTargetType = Literal["ENTRY", "PRICE", "TP_LEVEL"]
+SetStopTargetType = Literal["ENTRY", "PRICE", "TP_LEVEL", "RISK_TARGET"]
 CloseScope = Literal["FULL", "PARTIAL"]
 ReportEventType = Literal["ENTRY_FILLED", "TP_HIT", "SL_HIT", "EXIT_BE"]
 

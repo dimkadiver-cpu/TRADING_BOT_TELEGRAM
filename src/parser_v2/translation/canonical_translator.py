@@ -192,6 +192,11 @@ def _operation_from_intent(intent: ParsedIntent) -> ActionItem | None:
             set_stop = SetStopOperation(target_type="PRICE", price=entities.new_stop_price)
         elif entities.stop_to_tp_level is not None:
             set_stop = SetStopOperation(target_type="TP_LEVEL", tp_level=entities.stop_to_tp_level)
+        elif entities.risk_reduction_target is not None:
+            set_stop = SetStopOperation(
+                target_type="RISK_TARGET",
+                risk_reduction_target=entities.risk_reduction_target,
+            )
         else:
             set_stop = SetStopOperation(target_type="ENTRY")
         return ActionItem(
