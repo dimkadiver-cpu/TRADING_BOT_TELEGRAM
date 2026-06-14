@@ -101,7 +101,7 @@ _ENTRY_AB_RE = re.compile(
 )
 _STOP_LOSS_RE = re.compile(
     rf"(?:\bsl\b|stop(?:\s+loss)?|{_CYR_STOP}(?:\s+\u043b\u043e\u0441\u0441)?)"
-    rf"(?:\s*\([^)]*\))?\s*:?\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
+    rf"(?:\s*\([^)]*\))?[\u201d\u2019\"']*\s*:?[\u201d\u2019\"']*\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
     re.IGNORECASE,
 )
 # тп<N> (trader_d), тейк профит: inline (trader_b), tp<N> (universal)
@@ -207,6 +207,12 @@ class SignalExtractor:
 
         stop_loss = _extract_stop_loss(text)
         take_profits = _extract_take_profits(text)
+
+        # Market-implicit entries (price=None) without stop or TPs are MODIFY_ENTRY context,
+        # not new signals (e.g. "тут уже вход с текущих").
+        if entries and all(e.price is None for e in entries) and not stop_loss and not take_profits:
+            entries = []
+
         risk_hint = _extract_risk_hint(text, self._risk_prefixes, self._risk_suffixes)
 
         if not any((entries, stop_loss, take_profits)):
