@@ -388,7 +388,19 @@
     ]
   },
   "disambiguation": [
-      {
+     {
+      "name": "prefer_close_full_in_add_entry",
+      "when_all_detected": ["CLOSE_FULL", "ADD_ENTRY"],
+      "prefer": "CLOSE_FULL",
+      "over": ["ADD_ENTRY"]
+    },  
+     {
+      "name": "prefer_close_full_in_modify_enry",
+      "when_all_detected": ["CLOSE_FULL", "MODIFY_ENTRY"],
+      "prefer": "CLOSE_FULL",
+      "over": ["MODIFY_ENTRY"]
+    },  
+    {
       "name": "prefer_move_stop_to_be_over_reentry_in_move_stop_to_be_context",
       "when_all_detected": ["MOVE_STOP_TO_BE", "REENTER"],
       "prefer": "MOVE_STOP_TO_BE",
