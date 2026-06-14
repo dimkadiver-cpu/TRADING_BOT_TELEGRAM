@@ -111,6 +111,17 @@ def test_literal_and_pattern_different_spans_both_kept():
     assert len(result) == 2
 
 
+def test_single_pattern_matches_twice_in_same_text():
+    matcher = MarkerMatcher()
+    result = matcher.match(
+        _text("тп1: 100 тп2: 200"),
+        _field_markers(strong_patterns=["(?i)тп\\s*[1-5]:"]),
+    )
+    assert len(result) == 2
+    assert result[0].marker == "тп1:"
+    assert result[1].marker == "тп2:"
+
+
 def test_pattern_feeds_into_marker_evidence_resolver():
     from src.parser_v2.contracts.rules import MarkerResolutionRules, ParserRules
     from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver

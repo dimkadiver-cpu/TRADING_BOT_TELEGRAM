@@ -58,7 +58,7 @@ class MarkerMatcher:
         indexed_matches.sort(key=lambda item: (item[1].start, item[1].end, item[0]))
 
         # dedup: stesso (start, end, name, kind, strength, marker) → tieni il primo (literal precede per sequence)
-        seen: set[tuple] = set()
+        seen: set[tuple[int, int, str, str, str, str]] = set()
         result: list[MarkerMatch] = []
         for _, match in indexed_matches:
             key = (match.start, match.end, match.name, match.kind, match.strength, match.marker)
