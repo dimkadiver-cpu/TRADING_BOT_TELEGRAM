@@ -299,6 +299,50 @@ def test_prova_entry_price_inside_parens_after_market_text() -> None:
     assert signal.entries[0].price.value == 63150.0
 
 
+def test_prova_caso_a_cyrillic_market_loanword_with_price() -> None:
+    """'Вход по маркету: 0,06023' — Cyrillic loanword 'маркету' must be recognised as MARKET entry."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "[trader #A] Signal #a1\n"
+        "#WLFIUSDT LONG\n"
+        "Риск 1%\n"
+        "Вход по маркету: 0,06023\n"
+        "TP1: 0.06489\n"
+        "Tp2: 0.0732\n"
+        "Tp3: 0.0804\n"
+        "Стоп: 0.05609\n"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized, market_hint=False)
+
+    assert signal is not None
+    assert len(signal.entries) == 1
+    assert signal.entries[0].entry_type == "MARKET"
+    assert signal.entries[0].price is not None
+    assert abs(signal.entries[0].price.value - 0.06023) < 1e-9
+
+
+def test_prova_caso_c_market_entry_no_price() -> None:
+    """'Вход по рынку' with no explicit price → MARKET entry with price=None (no market_hint needed)."""
+    from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor
+
+    text = (
+        "Signal ID: #c6  #ZECUSDT SHORT\n"
+        "Вход по рынку\n"
+        "TP: 244\n"
+        "SL: 482,47\n"
+        "Без плеча, риск на сделку 1%\n"
+    )
+    normalized = NormalizedText(raw_text=text, normalized_text=text.lower(), lines=text.splitlines())
+    signal = ProvaExtractor().extract(normalized, market_hint=False)
+
+    assert signal is not None
+    assert len(signal.entries) == 1
+    assert signal.entries[0].entry_type == "MARKET"
+    assert signal.entries[0].price is None
+
+
 def test_trader_c_numbered_tp_list_with_latin_T_header() -> None:
     """trader_c real format: Latin T in 'Tейк-профит:' + numbered list '1) price (RR)'."""
     from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor as ProvaExtractor

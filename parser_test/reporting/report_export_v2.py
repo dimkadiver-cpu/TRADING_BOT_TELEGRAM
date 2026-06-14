@@ -52,6 +52,36 @@ def export_all(
     trader: str | None,
     reports_dir: Path,
 ) -> list[Path]:
+    if trader is None:
+        traders = _list_run_traders(conn, run_id)
+        if traders:
+            generated: list[Path] = []
+            for trader_id in traders:
+                generated.extend(_export_for_trader(conn, run_id, trader_id, reports_dir))
+            return generated
+
+    return _export_for_trader(conn, run_id, trader, reports_dir)
+
+
+def _list_run_traders(conn: sqlite3.Connection, run_id: int) -> list[str]:
+    rows = conn.execute(
+        """
+        SELECT DISTINCT trader_id
+        FROM parser_results_v2
+        WHERE run_id = ? AND trader_id IS NOT NULL AND TRIM(trader_id) != ''
+        ORDER BY trader_id ASC
+        """,
+        (run_id,),
+    ).fetchall()
+    return [str(row[0]) for row in rows]
+
+
+def _export_for_trader(
+    conn: sqlite3.Connection,
+    run_id: int,
+    trader: str | None,
+    reports_dir: Path,
+) -> list[Path]:
     run_dir = reports_dir / f"run_{run_id}"
     trader_name = trader or "all_traders"
     csv_dir = run_dir / f"{trader_name}_message_types_csv"

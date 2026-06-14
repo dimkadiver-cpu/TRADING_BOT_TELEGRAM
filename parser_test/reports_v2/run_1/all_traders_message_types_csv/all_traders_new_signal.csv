@@ -1,0 +1,671 @@
+﻿run_id,trader_id,primary_class,parse_status,raw_message_id,telegram_message_id,reply_to_message_id,raw_text,confidence,warnings,diagnostics_summary,symbol,side,entry_structure,entries_count,entries_summary,stop_loss_price,take_profit_count,take_profit_prices,risk_hint_raw,risk_hint_value,risk_hint_min_value,risk_hint_max_value,leverage_hint,missing_fields,completeness
+1,trader_b,SIGNAL,PARSED,86,4363,,"[trader#b] Signal ID: #b17
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: по текущим (2257)
+
+Тейк профит: 2485
+
+Стоп лосс: 2232
+
+Риск на сделку 1%
+Потенциальная прибыль 9%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@85:89"", ""take_profit/strong:профит:@90:97""",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2257.0,2232.0,1,2485.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,84,4422,,"[trader#b] Signal ID: #b18
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: по текущим (2263)
+
+Тейк профит: 2480
+
+Стоп лосс: 2240.5
+
+Риск на сделку 1%
+Потенциальная прибыль 9.5%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@85:89"", ""take_profit/strong:профит:@90:97""",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2263.0,2240.5,1,2480.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,82,4468,,"[trader#b] Signal ID: #b19
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: по текущим (2282)
+
+Тейк профит: 2485
+
+Стоп лосс: 2257
+
+Риск на сделку 1%
+Потенциальная прибыль 8%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@85:89"", ""take_profit/strong:профит:@90:97""",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2282.0,2257.0,1,2485.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,81,5455,,"[trader#b] Signal ID: #b35
+
+$BTCUSDT - Лонг (сделка на споте)
+
+Вход: 77180
+
+Тейк профит: 79500
+
+Стоп лосс: 76650
+
+Риск на сделку 0.7%
+Потенциальная прибыль 3%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""TP_HIT/weak:тейк@73:77"", ""take_profit/strong:профит:@78:85"", ""SL_HIT/weak:стоп@92:96"", ""risk/weak",BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@77180.0,76650.0,1,79500.0,Риск на сделку 0.7%,0.7,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,79,5550,,"[trader#b] Signal ID: #b36
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: 2122
+
+Тейк профит: 2207
+
+Стоп лосс: 2101
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:2\nтейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""TP_HIT/weak:2\nтейк@70:76"", ""TP_HIT/weak:тейк@72:76"", ""take_profit/strong:профит:@77:84"", ""SL_",ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2122.0,2101.0,1,2207.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,75,5646,,"[trader#b] Signal ID: #b37
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: по текущим (≈ 2140)
+
+Тейк профит: 2227
+
+Стоп лосс: 2119
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@87:91"", ""take_profit/strong:профит:@92:99""",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2140.0,2119.0,1,2227.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,73,5691,,"[trader#b] Signal ID: #b38
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: по текущим (≈ 2134)
+
+Тейк профит: 2178
+
+Стоп лосс: 2120
+
+Риск на сделку 0.7%
+Потенциальная прибыль 2%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@87:91"", ""take_profit/strong:профит:@92:99""",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2134.0,2120.0,1,2178.0,Риск на сделку 0.7%,0.7,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,71,5773,,"[trader#b] Signal ID: #b39
+
+$ETHUSDT - Лонг (сделка на споте)
+
+Вход: 2085
+
+Тейк профит: 2174
+
+Стоп лосс: 2063
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""TP_HIT/weak:тейк@72:76"", ""take_profit/strong:профит:@77:84"", ""SL_HIT/weak:стоп@90:94"", ""risk/weak",ETHUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2085.0,2063.0,1,2174.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,68,5828,,"[trader#b] Signal ID: #b40
+
+$ETHUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈2080)
+
+Тейк профит: 2169
+
+Стоп лосс: 2058
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@86:90"", ""take_profit/strong:профит:@91:98""",ETHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2080.0,2058.0,1,2169.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,66,5954,,"[trader#b] Signal ID: #b41
+
+$NEARUSDT - Лонг (сделка на споте)
+ 
+Вход: 2.35
+
+Тейк профит: 3.05
+
+Стоп лосс: 2.25
+
+Риск на сделку 1%
+Потенциальная прибыль 7%
+Upd: Стоп (-1%)",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""TP_HIT/weak:тейк@73:77"", ""take_profit/strong:профит:@78:85"", ""SL_HIT/weak:стоп@91:95"", ""risk/weak",NEARUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@2.35,2.25,1,3.05,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,107,6116,,"[trader #c] Signal ID: #с1
+
+ #LINKUSDT LONG
+
+Вход: 8.9960 рынок 
+
+SL: 8.616
+
+TP1: 9.2169 
+
+TP2: 9.542 
+
+TP3: 9.8324",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:long@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@55:60"", ""SL_HIT/weak:sl@61:63"", ""stop_loss/strong:sl:@61:64"", ""take_profit/strong:tp@71:73"",",LINKUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@8.996,8.616,3,9.2169|9.542|9.8324,,,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,156,6122,,"[trader #d] Signal ID: #d1
+
+#LITUSDT SHORT
+
+Вход: 1.286 рынок
+
+SL: 1.36
+
+ТП1: 1.165",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""SHORT/strong:short@36:41"", ""ALL_SHORT/weak:short@36:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@54:59"", ""SL_HIT/weak:sl@60:62"", ""stop_loss/strong:sl:@60:63""",LITUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@1.286,1.36,1,1.165,,,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,30,6133,,"[trader #A] Signal #a2
+#PUMPFUNUSDT Лонг
+Риск 1%
+Вход : 0.0017338
+TP1: 0.001857
+Tp2: 0.002
+Tp3: 0.002255
+Стоп: 0.00163",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@36:40"", ""risk/weak:риск@41:45"", ""MODIFY_ENTRY/weak:вход@49:53"", ""take_profit/strong:tp@66:68"", ""TP_HIT/weak:tp1@66:69"", ""take_profit/strong:tp1:@66:70"", ""take_profit/strong:tp@80:",PUMPFUNUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.0017338,0.00163,3,0.001857|0.002|0.002255,Риск 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,29,6134,,"[trader #A] Signal #a3
+#BTCUSDT Лонг
+Риск 1%
+Вход : 71560
+TP1: 73900
+Tp2: 74313
+Tp3: 77500
+Стоп: 70000",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""take_profit/strong:tp@58:60"", ""TP_HIT/weak:tp1@58:61"", ""take_profit/strong:tp1:@58:62"", ""take_profit/strong:tp@69:",BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@71560.0,70000.0,3,73900.0|74313.0|77500.0,Риск 1%,1.0,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,106,6167,,"[trader #c] Signal ID: #c2
+
+Риск на сделку 1%
+
+SOLUSDT LONG
+
+Вход: 79.84 рынок
+
+SL: 77.1819
+
+TP1: 82.2963 
+
+TP2: 84.321 
+
+TP3: 86.8296",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""risk/weak:риск@27:31"", ""symbol/strong:usdt@48:52"", ""symbol/strong:usdt@48:52"", ""LONG/strong:long@53:57"", ""MODIFY_ENTRY/weak:вход@58:62"", ""entry/strong:вход:@58:63"", ""MARKET/weak:рынок@70:75"", ""SL_HIT/weak:sl@76:78"", ""stop_loss/strong:sl:@76:79"", ""take_",SOLUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@79.84,77.1819,3,82.2963|84.321|86.8296,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,26,6186,,"[trader #A] Signal #a4
+#JUPUSDT Лонг
+Риск 1%
+Вход : 0.2023 рыночный
+TP1: 0.2211
+Tp2: 0.2363
+Tp3: 0.2791
+Стоп: 0.1887",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""take_profit/strong:tp@68:70"", ""TP_HIT/weak:tp1@68:71"", ""take_profit/strong:tp1:@68:72"", ""take_profit/strong:tp@80:",JUPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2023,0.1887,3,0.2211|0.2363|0.2791,Риск 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,153,6205,,"[trader #d] Signal ID: #d2
+
+#OPUSDT Лонг
+
+Вход: 0.1228 рынок
+
+SL: 0.1186
+
+ТП1: 0.1303
+
+ТП2: 0.1343
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@30:34"", ""symbol/strong:usdt@30:34"", ""LONG/strong:лонг@35:39"", ""MODIFY_ENTRY/weak:вход@40:44"", ""entry/strong:вход:@40:45"", ""MARKET/weak:рынок@53:58"", ""SL_HIT/weak:sl@59:61"", ""stop_loss/strong:sl:@59:62"", ""TP_HIT/weak:тп1@70:73"", ""take",OPUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.1228,0.1186,2,0.1303|0.1343,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,21,6212,,"[trader #A] Signal #a5
+#JUPUSDT Лонг
+Риск 1%
+Вход : 0.1962 рыночный
+TP1: 0.2211
+Tp2: 0.2363
+Tp3: 0.2791
+Стоп: 0.18062",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""take_profit/strong:tp@68:70"", ""TP_HIT/weak:tp1@68:71"", ""take_profit/strong:tp1:@68:72"", ""take_profit/strong:tp@80:",JUPUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.1962,0.18062,3,0.2211|0.2363|0.2791,Риск 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,151,6231,,"[trader #d] Signal ID: #d3
+
+#CLUSDT Лонг
+
+Вход: 93.16 рынок
+
+SL: 90.2
+
+ТП1: 95.37
+
+ТП2: 98.28
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@30:34"", ""symbol/strong:usdt@30:34"", ""LONG/strong:лонг@35:39"", ""MODIFY_ENTRY/weak:вход@40:44"", ""entry/strong:вход:@40:45"", ""MARKET/weak:рынок@52:57"", ""SL_HIT/weak:sl@58:60"", ""stop_loss/strong:sl:@58:61"", ""TP_HIT/weak:тп1@67:70"", ""take",CLUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@93.16,90.2,2,95.37|98.28,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,149,6250,,"[trader #d] Signal ID: #d4
+
+#ASTERUSDT Лонг
+
+Вход: 0.6784 рынок
+
+SL: 0.6606
+
+ТП1: 0.7005
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@43:47"", ""entry/strong:вход:@43:48"", ""MARKET/weak:рынок@56:61"", ""SL_HIT/weak:sl@62:64"", ""stop_loss/strong:sl:@62:65"", ""TP_HIT/weak:тп1@73:76"", ""take",ASTERUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.6784,0.6606,1,0.7005,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,147,6261,,"[trader #d] Signal ID: #d5
+
+#TONUSDT Лонг
+
+Вход: 2.027 рынок
+
+SL: 1.9245
+
+ТП1: 0.2116
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@36:40"", ""MODIFY_ENTRY/weak:вход@41:45"", ""entry/strong:вход:@41:46"", ""MARKET/weak:рынок@53:58"", ""SL_HIT/weak:sl@59:61"", ""stop_loss/strong:sl:@59:62"", ""TP_HIT/weak:тп1@70:73"", ""take",TONUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@2.027,1.9245,1,0.2116,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,146,6272,,"[trader #d] Signal ID: #d6
+
+#PENGUUSDT Лонг
+
+Вход: 0.00722 рынок
+
+SL: 0.00669
+
+ТП1: 0.00799
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@43:47"", ""entry/strong:вход:@43:48"", ""MARKET/weak:рынок@57:62"", ""SL_HIT/weak:sl@63:65"", ""stop_loss/strong:sl:@63:66"", ""TP_HIT/weak:тп1@75:78"", ""take",PENGUUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.00722,0.00669,1,0.00799,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,103,6276,,"[trader #c] Signal ID: #c3
+
+#INJUSDT SHORT
+
+Вход: рынок
+ 
+TP: 4.534
+
+SL: 7.372
+
+Риск на сделку: 1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""SHORT/strong:short@36:41"", ""ALL_SHORT/weak:short@36:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@48:53"", ""take_profit/strong:tp@54:56"", ""take_profit/strong:t",INJUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@,7.372,1,4.534,Риск на сделку: 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,143,6280,,"[trader #d] Signal ID: #d7
+
+#INJUSDT Лонг
+
+Вход: 6.73 рынок
+
+SL: 6.564
+
+ТП1: 7.25
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@36:40"", ""MODIFY_ENTRY/weak:вход@41:45"", ""entry/strong:вход:@41:46"", ""MARKET/weak:рынок@52:57"", ""SL_HIT/weak:sl@58:60"", ""stop_loss/strong:sl:@58:61"", ""TP_HIT/weak:тп1@68:71"", ""take",INJUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.73,6.564,1,7.25,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,138,6346,,"[trader #d] Signal ID: #d8
+
+#WLFIUSDT Шорт
+
+Вход: 0.06203 рынок
+
+SL: 0.06331
+
+ТП1: 0.0592
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""SHORT/strong:шорт@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@56:61"", ""SL_HIT/weak:sl@62:64"", ""stop_loss/strong:sl:@62:65"", ""TP_HIT/weak:тп1@74:77"", ""tak",WLFIUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.06203,0.06331,1,0.0592,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,136,6393,,"[trader #d] Signal ID: #d9
+
+#SEIUSDT Шорт
+
+Вход: 0.05145 рынок
+
+SL: 0.0535
+
+ТП1: 0.0485
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""SHORT/strong:шорт@36:40"", ""MODIFY_ENTRY/weak:вход@41:45"", ""entry/strong:вход:@41:46"", ""MARKET/weak:рынок@55:60"", ""SL_HIT/weak:sl@61:63"", ""stop_loss/strong:sl:@61:64"", ""TP_HIT/weak:тп1@72:75"", ""tak",SEIUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.05145,0.0535,1,0.0485,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,65,6566,,"[trader#b] Signal ID: #b42
+
+$NEARUSDT - Лонг (сделка на споте)
+ 
+Вход: 1.93
+
+Тейк профит: 2.142
+
+Стоп лосс: 1.883
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:3\nтейк""], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""TP_HIT/weak:3\nтейк@71:77"", ""TP_HIT/weak:тейк@73:77"", ""take_profit/strong:профит:@78:85"", ""SL_",NEARUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@1.93,1.883,1,2.142,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,134,6573,,"[trader #d] Signal ID: #d10
+
+#SOLUSDT Лонг
+
+Вход: 65.2 рынок
+
+SL: 60.25
+
+ТП1: 74.5
+
+ТП2: 78.5
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@53:58"", ""SL_HIT/weak:sl@59:61"", ""stop_loss/strong:sl:@59:62"", ""TP_HIT/weak:тп1@69:72"", ""take",SOLUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@65.2,60.25,2,74.5|78.5,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,63,6596,,"[trader#b] Signal ID: #b43
+
+$BTCUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈63150)
+
+Тейк профит: 65050
+
+Стоп лосс: 62790
+
+Риск на сделку 0.6%
+Потенциальная прибыль 3%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@87:91"", ""take_profit/strong:профит:@92:99""",BTCUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@63150.0,62790.0,1,65050.0,Риск на сделку 0.6%,0.6,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,101,6640,,"[trader #c] Signal ID: #c4
+
+#AAVEUSDT LONG
+
+Вход: 61 лимитка
+
+TP: 69,73
+
+SL: 59,57
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:long@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""ENTRY_FILLED/weak:лимитка@51:58"", ""take_profit/strong:tp@59:61"", ""take_profit/strong:tp:@59:62"", ""SL_HIT/weak:",AAVEUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@61.0,59.57,1,69.73,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,100,6650,,"[trader #c] Signal ID: #c5
+
+#AVAXUSDT LONG
+
+Вход: рынок
+
+TP: 7.535
+
+Sl: 6.475
+
+Риск на сделку 1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:long@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@48:53"", ""take_profit/strong:tp@54:56"", ""take_profit/strong:tp:@54:5",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@,6.475,1,7.535,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,61,6652,,"[trader#b] Signal ID: #b44
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.79)
+
+Тейк профит: 7.6
+
+Стоп лосс: 6.63
+
+Риск на сделку 1%
+Потенциальная прибыль 5%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@87:91"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.79,6.63,1,7.6,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,131,6683,,"[trader #d] Signal ID: #d11
+
+#JTOUSDT Лонг
+
+Вход: 0.634 рынок
+
+SL: 0.587
+
+ТП1: 0.77
+
+ТП2: 0.935
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@54:59"", ""SL_HIT/weak:sl@60:62"", ""stop_loss/strong:sl:@60:63"", ""TP_HIT/weak:тп1@70:73"", ""take",JTOUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.634,0.587,2,0.77|0.935,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,130,6693,,"[trader #d] Signal ID: #d12
+
+#FIDAUSDT Шорт
+
+Вход: 0.02605 рынок
+
+SL: 0.02815
+
+ТП1: 0.02366
+
+ТП2: 0.02014
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""SHORT/strong:шорт@38:42"", ""MODIFY_ENTRY/weak:вход@43:47"", ""entry/strong:вход:@43:48"", ""MARKET/weak:рынок@57:62"", ""SL_HIT/weak:sl@63:65"", ""stop_loss/strong:sl:@63:66"", ""TP_HIT/weak:тп1@75:78"", ""tak",FIDAUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.02605,0.02815,2,0.02366|0.02014,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,14,6818,,"[trader #A] Signal #a6
+#ICNTUSDT Лонг
+Риск 1%
+Вход : 0.2198 рыночный
+TP1: 0.2666
+Tp2: 0.4163
+Tp3: 0.607
+Стоп: 0.2042",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""take_profit/strong:tp@69:71"", ""TP_HIT/weak:tp1@69:72"", ""take_profit/strong:tp1:@69:73"", ""take_profit/strong:tp@81:",ICNTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.2198,0.2042,3,0.2666|0.4163|0.607,Риск 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,58,6820,,"[trader#b] Signal ID: #b45
+
+$HYPEUSDT - Лонг (сделка на споте)
+ 
+Вход: 62.4
+
+Тейк профит: 69
+
+Стоп лосс: 61.5
+
+Риск на сделку 1%
+Потенциальная прибыль 7.3%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:4\nтейк""], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""TP_HIT/weak:4\nтейк@71:77"", ""TP_HIT/weak:тейк@73:77"", ""take_profit/strong:профит:@78:85"", ""SL_",HYPEUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@62.4,61.5,1,69.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,123,6907,,"[trader #d] Signal ID: #d14
+
+#DASHUSDT Шорт
+
+Вход: 35.52 рынок
+
+SL: 37.37
+
+ТП1: 33.66
+
+ТП2: 31.82
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""SHORT/strong:шорт@38:42"", ""MODIFY_ENTRY/weak:вход@43:47"", ""entry/strong:вход:@43:48"", ""MARKET/weak:рынок@55:60"", ""SL_HIT/weak:sl@61:63"", ""stop_loss/strong:sl:@61:64"", ""TP_HIT/weak:тп1@71:74"", ""tak",DASHUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@35.52,37.37,2,33.66|31.82,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,13,6913,,"[trader #A] Signal #a7
+#BTCUSDT Лонг
+Риск 1%
+Вход : 61420 рыночный
+TP1: 64734
+Tp2: 67500
+Tp3: 73600
+Стоп: 59465",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""take_profit/strong:tp@67:69"", ""TP_HIT/weak:tp1@67:70"", ""take_profit/strong:tp1:@67:71"", ""take_profit/strong:tp@78:",BTCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@61420.0,59465.0,3,64734.0|67500.0|73600.0,Риск 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,56,6927,6652,"[trader#b] Signal ID: #b46
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.545)
+
+Тейк профит: 7.005
+
+Стоп лосс: 6.48
+
+Риск на сделку 1%
+Потенциальная прибыль 7%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@88:92"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.545,6.48,1,7.005,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,12,6958,,"[trader #A] Signal #a8
+#ONDOUSDT Лонг
+Риск 1%
+Вход : 0.3614 рыночный
+TP1: 0.4867
+Tp2: 0.5388
+Tp3: 0.8416
+Стоп: 0.3135",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""take_profit/strong:tp@69:71"", ""TP_HIT/weak:tp1@69:72"", ""take_profit/strong:tp1:@69:73"", ""take_profit/strong:tp@81:",ONDOUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.3614,0.3135,3,0.4867|0.5388|0.8416,Риск 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,53,7018,,"[trader#b] Signal ID: #b47
+
+$BCHUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈200)
+
+Тейк профит: 215
+
+Стоп лосс: 197
+
+Риск на сделку 1%
+Потенциальная прибыль 5%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@85:89"", ""take_profit/strong:профит:@90:97""",BCHUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@200.0,197.0,1,215.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,51,7041,,"[trader#b] Signal ID: #b48
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.49)
+
+Тейк профит: 7.01
+
+Стоп лосс: 6.425
+
+Риск на сделку 1%
+Потенциальная прибыль 8%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@87:91"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.49,6.425,1,7.01,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,95,7078,,"[trader #c] Signal ID: #c7
+
+#FOLKSUSDT LONG
+
+Вход: 1.9254 рынок
+
+TP: 2.5
+
+sl: 1.752
+
+Без плеча, риск на сделку 1%",1.0,,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""LONG/strong:long@38:42"", ""MODIFY_ENTRY/weak:вход@43:47"", ""entry/strong:вход:@43:48"", ""MARKET/weak:рынок@56:61"", ""take_profit/strong:tp@62:64"", ""take_profit/strong:tp:@62:65"", ""SL_HIT/weak:sl@70:72",FOLKSUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@1.9254,1.752,1,2.5,риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,49,7083,,"[trader#b] Signal ID: #b49
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: 6.53
+
+Тейк профит: 7.04
+
+Стоп лосс: 6.445
+
+Риск на сделку 1%
+Потенциальная прибыль 6%
+Попробуем еще раз",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:3\nтейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""TP_HIT/weak:3\nтейк@71:77"", ""TP_HIT/weak:тейк@73:77"", ""take_profit/st",AVAXUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@6.53,6.445,1,7.04,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,46,7116,,"[trader#b] Signal ID: #b50
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.575)
+
+Тейк профит: 7.04
+
+Стоп лосс: 6.51
+
+Риск на сделку 1%
+Потенциальная прибыль 7%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@88:92"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.575,6.51,1,7.04,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,44,7250,,"[trader#b] Signal ID: #b51
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.595)
+
+Тейк профит: 7.06
+
+Стоп лосс: 6.29
+
+Риск на сделку 1%
+Потенциальная прибыль 7%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@88:92"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.595,6.29,1,7.06,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,8,7283,,"[trader #A] Signal #a9
+#RLCUSDT Лонг
+Риск 1%
+Вход : 0.3403 рыночный
+TP1: 0.3633
+TP2: 0.3802
+Стоп: 0.3288",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@27:31"", ""symbol/strong:usdt@27:31"", ""LONG/strong:лонг@32:36"", ""risk/weak:риск@37:41"", ""MODIFY_ENTRY/weak:вход@45:49"", ""take_profit/strong:tp@68:70"", ""TP_HIT/weak:tp1@68:71"", ""take_profit/strong:tp1:@68:72"", ""take_profit/strong:tp@80:",RLCUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.3403,0.3288,2,0.3633|0.3802,Риск 1%,1.0,,,,,COMPLETE
+1,trader_c,SIGNAL,PARSED,91,7284,,"[trader #c] Signal ID: #c8
+
+#XAUTUSDT LONG
+
+Вход: 4052.23 лимитка
+
+TP: 4138
+
+sl: 4042.16
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@28:29"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:long@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""ENTRY_FILLED/weak:лимитка@56:63"", ""take_profit/strong:tp@64:66"", ""take_profit/strong:",XAUTUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@4052.23,4042.16,1,4138.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,7,7298,,"[trader #A] Signal #a10
+#ANKRUSDT Лонг
+Риск 1%
+Вход : 0.003804 рыночный
+TP1: 0.004223
+TP2: 0.00479
+Стоп: 0.003598",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@29:33"", ""symbol/strong:usdt@29:33"", ""LONG/strong:лонг@34:38"", ""risk/weak:риск@39:43"", ""MODIFY_ENTRY/weak:вход@47:51"", ""take_profit/strong:tp@72:74"", ""TP_HIT/weak:tp1@72:75"", ""take_profit/strong:tp1:@72:76"", ""take_profit/strong:tp@86:",ANKRUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.003804,0.003598,2,0.004223|0.00479,Риск 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,42,7306,,"[trader#b] Signal ID: #b52
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.592)
+
+Тейк профит: 7.05
+
+Стоп лосс: 6.527
+
+Риск на сделку 1%
+Потенциальная прибыль 7%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@88:92"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.592,6.527,1,7.05,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,40,7338,,"[trader#b] Signal ID: #b53
+
+$AVAXUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈6.59)
+
+Тейк профит: 7.03
+
+Стоп лосс: 6.48
+
+Риск на сделку 1%
+Потенциальная прибыль 4%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@31:32"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@39:43"", ""MODIFY_ENTRY/weak:вход@62:66"", ""entry/strong:вход:@62:67"", ""MODIFY_ENTRY/weak:по текущим@68:78"", ""TP_HIT/weak:тейк@87:91"", ""take_pro",AVAXUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@6.59,6.48,1,7.03,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,119,7375,,"[trader #d] Signal ID: #d15
+
+#SOLUSDT Лонг
+
+Вход: 66.7 рынок
+
+SL: 62.3
+
+ТП1: 74.5
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@53:58"", ""SL_HIT/weak:sl@59:61"", ""stop_loss/strong:sl:@59:62"", ""TP_HIT/weak:тп1@68:71"", ""take",SOLUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@66.7,62.3,1,74.5,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_a,SIGNAL,PARSED,3,7386,,"[trader #A] Signal #a11
+#REZUSDT Лонг
+Риск 1%
+Вход : 0.003212 рыночный
+TP1: 0.00404
+TP2: 0.004663
+Стоп: 0.003004",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@28:32"", ""symbol/strong:usdt@28:32"", ""LONG/strong:лонг@33:37"", ""risk/weak:риск@38:42"", ""MODIFY_ENTRY/weak:вход@46:50"", ""take_profit/strong:tp@71:73"", ""TP_HIT/weak:tp1@71:74"", ""take_profit/strong:tp1:@71:75"", ""take_profit/strong:tp@84:",REZUSDT,LONG,ONE_SHOT,1,1:LIMIT:PRIMARY@0.003212,0.003004,2,0.00404|0.004663,Риск 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,117,7451,,"[trader #d] Signal ID: #d16
+
+#USELESSUSDT Шорт
+
+Вход: 0.0609 рынок
+
+SL: 0.065
+
+ТП1: 0.0555
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@36:40"", ""symbol/strong:usdt@36:40"", ""SHORT/strong:шорт@41:45"", ""MODIFY_ENTRY/weak:вход@46:50"", ""entry/strong:вход:@46:51"", ""MARKET/weak:рынок@59:64"", ""SL_HIT/weak:sl@65:67"", ""stop_loss/strong:sl:@65:68"", ""TP_HIT/weak:тп1@75:78"", ""tak",USELESSUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@0.0609,0.065,1,0.0555,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,39,7524,,"[trader#b] Signal ID: #b54
+
+$BTCUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈63780)
+
+Тейк профит: 65100
+
+Стоп лосс: 63150
+
+Риск на сделку 1%
+Потенциальная прибыль 2%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@87:91"", ""take_profit/strong:профит:@92:99""",BTCUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@63780.0,63150.0,1,65100.0,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,114,7627,,"[trader #d] Signal ID: #d17
+
+#ATOMUSDT Шорт
+
+Вход: 1.984 рынок
+
+SL: 2.0355
+
+ТП1: 1.897
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@33:37"", ""symbol/strong:usdt@33:37"", ""SHORT/strong:шорт@38:42"", ""MODIFY_ENTRY/weak:вход@43:47"", ""entry/strong:вход:@43:48"", ""MARKET/weak:рынок@55:60"", ""SL_HIT/weak:sl@61:63"", ""stop_loss/strong:sl:@61:64"", ""TP_HIT/weak:тп1@72:75"", ""tak",ATOMUSDT,SHORT,ONE_SHOT,1,1:MARKET:PRIMARY@1.984,2.0355,1,1.897,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,37,7633,,"[trader#b] Signal ID: #b55
+
+$TONUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈1.678)
+
+Тейк профит: 1.822
+
+Стоп лосс: 1.66
+
+Риск на сделку 1%
+Потенциальная прибыль 8%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@87:91"", ""take_profit/strong:профит:@92:99""",TONUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@1.678,1.66,1,1.822,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,113,7634,,"[trader #d] Signal ID: #d18
+
+#ARBUSDT Лонг
+
+Вход: 0.08575 рынок
+
+SL: 0.08157
+
+ТП1: 0.0968
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@56:61"", ""SL_HIT/weak:sl@62:64"", ""stop_loss/strong:sl:@62:65"", ""TP_HIT/weak:тп1@74:77"", ""take",ARBUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.08575,0.08157,1,0.0968,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_b,SIGNAL,PARSED,36,7635,,"[trader#b] Signal ID: #b56 
+
+$XRPUSDT - Лонг (сделка на споте)
+ 
+Вход: по текущим (≈1.14)
+
+Тейк профит: 1.1915
+
+Стоп лосс: 1.129
+
+Риск на сделку 1%
+Потенциальная прибыль 4.5%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [""TP_HIT:тейк""], ""matched_markers"": [""leverage/weak:x@28:29"", ""symbol/strong:usdt@31:35"", ""symbol/strong:usdt@31:35"", ""LONG/strong:лонг@38:42"", ""MODIFY_ENTRY/weak:вход@61:65"", ""entry/strong:вход:@61:66"", ""MODIFY_ENTRY/weak:по текущим@67:77"", ""TP_HIT/weak:тейк@86:90"", ""take_pro",XRPUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@1.14,1.129,1,1.1915,Риск на сделку 1%,1.0,,,,,COMPLETE
+1,trader_d,SIGNAL,PARSED,112,7660,,"[trader #d] Signal ID: #d19
+
+#XPLUSDT Лонг
+
+Вход: 0.0865 рынок
+
+SL: 0.0808
+
+ТП1: 0.09755
+
+Риск на сделку 1%",1.0,non_signal_intents_dropped_in_signal_message,"{""suppressed_intents"": [], ""matched_markers"": [""leverage/weak:x@29:30"", ""symbol/strong:usdt@32:36"", ""symbol/strong:usdt@32:36"", ""LONG/strong:лонг@37:41"", ""MODIFY_ENTRY/weak:вход@42:46"", ""entry/strong:вход:@42:47"", ""MARKET/weak:рынок@55:60"", ""SL_HIT/weak:sl@61:63"", ""stop_loss/strong:sl:@61:64"", ""TP_H",XPLUSDT,LONG,ONE_SHOT,1,1:MARKET:PRIMARY@0.0865,0.0808,1,0.09755,Риск на сделку 1%,1.0,,,,,COMPLETE

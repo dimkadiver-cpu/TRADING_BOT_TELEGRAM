@@ -210,6 +210,25 @@ python parser_test/scripts/generate_parser_reports_v2.py ^
   --force-reparse
 ```
 
+Se non passi `--trader-filter`:
+- il replay processa tutti i messaggi compatibili con i parametri scelti;
+- l'export genera automaticamente un set CSV separato per ogni `trader_id` presente nel run.
+
+Esempio: DB unico multitrader, profilo parser unico per tutti, report separati per trader:
+
+```bash
+python parser_test/scripts/generate_parser_reports_v2.py ^
+  --db-name multi ^
+  --parser-profile trader_prova ^
+  --allow-cross-profile-parse ^
+  --force-reparse
+```
+
+In questo caso:
+- il replay usa `trader_prova` per tutti i messaggi compatibili;
+- non serve `--trader-filter`;
+- i CSV finali vengono comunque separati per `trader_id` (`trader_a`, `trader_b`, ecc.).
+
 Accetta tutti gli stessi argomenti di `replay_parser_v2.py` più:
 
 | Argomento | Descrizione |
@@ -253,6 +272,19 @@ python parser_test/scripts/resolve_traders.py --db-name multi
 python parser_test/scripts/replay_parser_v2.py --db-name multi --trader-filter trader_a --parser-profile trader_a --force-reparse
 ```
 
+### Multitrader con profilo unico e report separati per trader
+
+```bash
+python parser_test/scripts/import_history.py --chat-id -123 --db-name multi
+python parser_test/scripts/resolve_traders.py --db-name multi
+python parser_test/scripts/generate_parser_reports_v2.py --db-name multi --parser-profile trader_prova --allow-cross-profile-parse --force-reparse
+```
+
+Usa questo flusso quando:
+- il DB contiene più trader già risolti in `resolved_trader_id`;
+- vuoi parsare tutto con un solo profilo parser;
+- vuoi ottenere CSV distinti per ogni trader senza lanciare il comando più volte.
+
 ### Tutto il DB con profilo auto
 
 ```bash
@@ -263,7 +295,7 @@ python parser_test/scripts/replay_parser_v2.py --db-name multi --parser-profile 
 
 ## Output CSV
 
-I CSV vengono generati in:
+Con `--trader-filter trader_a`, i CSV vengono generati in:
 
 ```
 parser_test/reports_v2/run_<run_id>/<trader>_message_types_csv/
@@ -275,6 +307,22 @@ parser_test/reports_v2/run_<run_id>/<trader>_message_types_csv/
   <trader>_setup_incomplete.csv
   <trader>_unclassified.csv
   <trader>_errors.csv
+```
+
+Senza `--trader-filter`, viene generata una cartella per ogni trader trovato nel run:
+
+```
+parser_test/reports_v2/run_<run_id>/trader_a_message_types_csv/
+parser_test/reports_v2/run_<run_id>/trader_b_message_types_csv/
+parser_test/reports_v2/run_<run_id>/trader_c_message_types_csv/
+```
+
+Esempio reale:
+
+```
+parser_test/reports_v2/run_42/trader_a_message_types_csv/trader_a_all_messages.csv
+parser_test/reports_v2/run_42/trader_b_message_types_csv/trader_b_all_messages.csv
+parser_test/reports_v2/run_42/trader_c_message_types_csv/trader_c_all_messages.csv
 ```
 
 ### Scope CSV

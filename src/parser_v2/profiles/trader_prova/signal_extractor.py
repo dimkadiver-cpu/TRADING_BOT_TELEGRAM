@@ -47,8 +47,17 @@ _BARE_HASHTAG_SYMBOL_RE = re.compile(r"#(?P<symbol>[A-Z0-9]{2,20})\b", re.IGNORE
 
 _ENTRY_MARKET_RE = re.compile(
     rf"(?:entry|enter|vhod|{_CYR_ENTRY})\s+"
-    rf"(?:market|at\s+market|now|[^\n]*{_CYR_CURRENT_ROOT}\w*|[^\n]*{_CYR_MARKET_ROOT}\w*)"
+    rf"(?:market|at\s+market|now"
+    rf"|[^\n]*(?:маркет|{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT})\w*)"
     rf"\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
+    re.IGNORECASE,
+)
+# "вход по рынку" / "вход по маркету" with NO explicit price → MARKET entry, price=None
+_ENTRY_MARKET_IMPLICIT_RE = re.compile(
+    rf"\b(?:entry|enter|vhod|{_CYR_ENTRY})\b"
+    rf"(?:\s*:)?\s*"
+    rf"[^\n]{{0,30}}?(?:market|маркет|{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT})\w*"
+    rf"(?!\s*[:=]?\s*\d)",
     re.IGNORECASE,
 )
 _ENTRY_MARKET_PAREN_RE = re.compile(
@@ -70,7 +79,7 @@ _ENTRY_KEYWORD_RE = re.compile(
 _ENTRY_RE = re.compile(
     rf"\b(?:entry|vhod|{_CYR_ENTRY})"
     rf"(?:\s+(?:limit|limitka|{_CYR_LIMIT_ROOT}\w*))?"
-    rf"(?:\s+(?:\([^)\n]*\)|[^\n:()]{1,32}))*"
+    rf"(?:[^\S\n]+(?:\([^)\n]*\)|[^\n:()]{{1,32}}))*"
     rf"\s*[:=@-]?\s*(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
     re.IGNORECASE,
 )
@@ -227,7 +236,12 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
         primary = _search_price(_ENTRY_RE, text)
         primary_type = "MARKET" if market_hint else "LIMIT"
 
-    if primary is not None or (market_hint and has_entry_keyword):
+    is_implicit_market = False
+    if primary is None and _ENTRY_MARKET_IMPLICIT_RE.search(text):
+        is_implicit_market = True
+        primary_type = "MARKET"
+
+    if primary is not None or (market_hint and has_entry_keyword) or is_implicit_market:
         entries.append(
             EntryLeg(
                 sequence=1,

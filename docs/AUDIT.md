@@ -54,6 +54,50 @@ pytest src/parser_v2/tests/ -q
 
 ---
 
+## 2026-06-14 — Task 4: Fix entry extraction — caso A (маркету) e caso C (рынку senza prezzo)
+
+### Step completato
+
+Risolti due bug di extraction in `trader_prova/signal_extractor.py`:
+
+**Caso A** — `Вход по маркету: 0,06023` → entries=[]:
+- `_ENTRY_MARKET_RE` non riconosceva il prestito Cyrillic "маркет\w*" (solo "рын\w*" e "текущ\w*" erano coperti).
+- Fix: aggiunta alternanza `маркет` nel gruppo descrittivo di `_ENTRY_MARKET_RE`.
+
+**Caso C** — `Вход по рынку` senza prezzo esplicito → entries=[]:
+- Nessun pattern riconosceva un'entrata di mercato senza prezzo quando `market_hint=False`.
+- Il fix corretto NON è passare per `MARKET_NOW/по рынку` (quel marker appartiene a MODIFY_ENTRY).
+- Fix: aggiunto `_ENTRY_MARKET_IMPLICIT_RE` con lookahead negativo `(?!\s*[:=]?\s*\d)` per rilevare "вход + market description" senza prezzo → produce `EntryLeg(MARKET, price=None)`.
+
+**F-string bug `_ENTRY_RE`** — `{1,32}` valutato come `(1, 32)` in f-string:
+- Fix: `{{1,32}}` corretto, ma `\s+` cambiato in `[^\S\n]+` (whitespace orizzontale solo) per evitare che il gruppo middle-text attraversi newline e catturi prezzi TP come entry.
+
+### Validazione
+
+```
+pytest src/parser_v2/tests/test_signal_extractor_patterns.py -q
+→ 27 passed ✅ (include 2 nuovi test: caso_a e caso_c)
+
+pytest src/parser_v2/tests/ -q
+→ 205 passed, 1 failed (pre-existing trader_a test invariato) ✅
+```
+
+Smoke test 5 scenari chiave: MARKET+price, MARKET+no-price, LIMIT+explicit, market_hint, paren-price → tutti corretti.
+
+### File toccati
+
+| File | Stato |
+|---|---|
+| `src/parser_v2/profiles/trader_prova/signal_extractor.py` | Modificato |
+| `src/parser_v2/tests/test_signal_extractor_patterns.py` | 2 test aggiunti |
+
+### Rischi aperti
+
+- `_ENTRY_MARKET_IMPLICIT_RE` con `[^\n]{0,30}?` può potenzialmente fare match su messaggi UPDATE con "вход по рынку" in contesto MODIFY_ENTRY — il profilo dipende dall'intent classifier per distinguere SIGNAL da UPDATE, ma se un messaggio di update viene classificato SIGNAL potrebbe produrre un'entry MARKET spuria.
+- Il profilo trader_prova gestisce ora caso A+C ma non è stato testato contro il DB reale di trader_c — validare con parser_test.
+
+---
+
 Registro degli step di migrazione completati, stato dei file e rischi aperti.
 
 ---
