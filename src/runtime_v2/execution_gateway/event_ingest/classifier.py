@@ -174,19 +174,38 @@ class EventClassifier:
             # Cancelled but not in known ids
             return ClassifiedEvent(
                 raw=raw,
-                event_type="UNKNOWN",
+                event_type="ORDER_CANCELLED_UNKNOWN",
                 source="exchange_manual",
                 is_actionable=False,
             )
 
-        return self._unknown(raw)
+        # Non-cancelled order status update (New, PartiallyFilled, Filled, etc.)
+        # These are placement/update confirmations — audit only, not actionable.
+        link = raw.order_link_id
+        chain_id: int | None = None
+        if link:
+            entry = self._known.get(link)
+            if entry is not None:
+                chain_id = entry[0]
+        return ClassifiedEvent(
+            raw=raw,
+            event_type="ORDER_OPEN_UPDATE",
+            source="exchange_auto",
+            trade_chain_id=chain_id,
+            is_actionable=False,
+        )
 
     def _classify_watch_positions(self, raw: ExchangeRawEvent) -> ClassifiedEvent:
         """Handle watch_positions stream."""
         # Empty position slot (hedge mode sends zero-size slots on connect/reconnect).
         # TP/SL are naturally 0.0 when pos_qty=0 — not a cancellation signal.
         if (raw.pos_qty or 0.0) == 0.0:
-            return self._unknown(raw)
+            return ClassifiedEvent(
+                raw=raw,
+                event_type="POSITION_SNAPSHOT_EMPTY",
+                source="exchange_auto",
+                is_actionable=False,
+            )
         tp = raw.position_take_profit
         sl = raw.position_stop_loss
         # Bybit sends "0" (→ 0.0) when a protective is cleared; None means the field was
@@ -198,9 +217,10 @@ class EventClassifier:
                 source="exchange_auto",
                 is_actionable=True,
             )
+        # Non-actionable position delta (size/price update without TP/SL clear signal).
         return ClassifiedEvent(
             raw=raw,
-            event_type="UNKNOWN",
+            event_type="POSITION_SNAPSHOT_UPDATE",
             source="exchange_auto",
             is_actionable=False,
         )

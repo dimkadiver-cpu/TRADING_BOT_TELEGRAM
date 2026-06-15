@@ -2,6 +2,67 @@
 
 ---
 
+## 2026-06-15 — Analisi anomalie Test_live + Fix 1-4 (Gateway logging, Race condition, Classifier, Snapshot)
+
+### Step completati
+
+Analisi completa di `db/Test_live/ops.sqlite3` su 3 dimensioni (parsing, lifecycle, logging). Individuate e corrette 4 anomalie strutturali.
+
+---
+
+**Fix 1 — GATEWAY_COMMAND_FAILED tech_log mancante** (Chain 11: MOVE_STOP_TO_BREAKEVEN fallito senza notifica)
+
+Root cause: `gateway.py process()` chiamava solo `mark_failed()` per i fallimenti non-entry. Solo `mark_review_required()` e `cancel_chain_if_all_entries_failed()` scrivevano tech_log. I comandi fire-and-forget (BE move, stop move) non avevano nessun percorso di notifica.
+
+Fix:
+- `repositories.py`: nuovo metodo `write_command_failed_tech_log(command_id, trade_chain_id, command_type, *, reason)` — scrive `GATEWAY_COMMAND_FAILED` TECH_LOG via `write_tech_log_event`.
+- `gateway.py process()`: dopo `mark_failed()`, se non cancellato e il comando non è ENTRY, chiama `write_command_failed_tech_log`.
+- `gateway.py _handle_error()`: stessa logica nel percorso permanente (max retry esaurito), con ramo speciale per `CANCEL_PENDING_ENTRY` che già scrive il proprio lifecycle event.
+
+---
+
+**Fix 2 — Race condition WAITING_ENTRY→None in lifecycle event** (Chain 12)
+
+Root cause: In `_process_pending_entry_cancelled_confirmed()`, quando il race guard scatta (entry in volo o leg pending), `new_state` rimane `None`. Questo `None` veniva passato direttamente come `next_state` all'evento lifecycle → `WAITING_ENTRY→None` nel DB.
+
+Fix: `event_processor.py` — `event_next_state = new_state if new_state is not None else chain.lifecycle_state` → quando il race guard scatta, l'evento registra `WAITING_ENTRY→WAITING_ENTRY` invece di `WAITING_ENTRY→None`.
+
+---
+
+**Fix 3 — 57% eventi exchange classificati UNKNOWN** ([EXCHANGE EVENTS])
+
+Root cause: Bybit invia eventi companion per ogni fill: conferme posizionamento ordine (`watch_orders`, status=New/open) e snapshot posizione (`watch_positions`). Il classifier non aveva tipi nominati per questi, defaultando a UNKNOWN.
+
+Fix: `classifier.py`:
+- `_classify_watch_orders()`: status non-Cancelled → `ORDER_OPEN_UPDATE` (is_actionable=False); Cancelled sconosciuto → `ORDER_CANCELLED_UNKNOWN` invece di `UNKNOWN`.
+- `_classify_watch_positions()`: pos_qty==0 → `POSITION_SNAPSHOT_EMPTY`; delta non-actionable → `POSITION_SNAPSHOT_UPDATE` invece di `UNKNOWN`.
+
+---
+
+**Fix 4 — Runtime snapshot stale** ([RUNTIME] Snapshot fermo all'07-06-2026)
+
+Root cause: `snapshot_store.save()` chiamato solo nel blocco `finally` allo shutdown in `main.py`. Mai chiamato allo startup → dopo ogni riavvio il snapshot rimaneva quello dello shutdown precedente.
+
+Fix: `main.py` — aggiunto blocco `if _cp is not None:` dopo `send_startup_notification()`, con `_cp.snapshot_store.save(...)` che specchia esattamente il pattern dello shutdown (stessa struttura, `shutdown_reason=None`). Protetto da `try/except` non-critico.
+
+### File toccati
+
+| File | Stato | Fix |
+|---|---|---|
+| `src/runtime_v2/execution_gateway/repositories.py` | Modificato | Fix 1: nuovo metodo `write_command_failed_tech_log` |
+| `src/runtime_v2/execution_gateway/gateway.py` | Modificato | Fix 1: wiring in `process()` e `_handle_error()` |
+| `src/runtime_v2/lifecycle/event_processor.py` | Modificato | Fix 2: `event_next_state` guarded contro None |
+| `src/runtime_v2/execution_gateway/event_ingest/classifier.py` | Modificato | Fix 3: ORDER_OPEN_UPDATE, ORDER_CANCELLED_UNKNOWN, POSITION_SNAPSHOT_EMPTY, POSITION_SNAPSHOT_UPDATE |
+| `main.py` | Modificato | Fix 4: startup snapshot save |
+
+### Rischi aperti
+
+- **Chain 4 (qty bug cheap symbol)**: noto, posticipato dall'utente.
+- **Chain 10/13 (delisting `deferred_market_no_mark_price`)**: trattato come REVIEW_REQUIRED, ma semanticamente equivale a SIGNAL_REJECTED — da valutare se aggiungere alla logica `_is_entry_signal_rejection`.
+- **Test copertura Fix 1-4**: nessun test automatico aggiunto. I fix sono comportamentali — da aggiungere unit test per `write_command_failed_tech_log` e il race-guard `event_next_state`.
+
+---
+
 ## 2026-06-14 — Task 3: Trasformazione completa `semantic_markers.json` trader_prova in formato regex
 
 ### Step completato

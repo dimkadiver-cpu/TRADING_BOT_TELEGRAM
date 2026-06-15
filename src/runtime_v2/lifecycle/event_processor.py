@@ -915,13 +915,17 @@ class LifecycleEventProcessor:
             else:
                 new_state = "CANCELLED"
 
+        # When the race guard fires (entry in flight or pending legs remain),
+        # new_state is None — use the current lifecycle state to make the event
+        # self-consistent: WAITING_ENTRY→WAITING_ENTRY instead of WAITING_ENTRY→None.
+        event_next_state = new_state if new_state is not None else chain.lifecycle_state
         events.insert(0, LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="PENDING_ENTRY_CANCELLED",
             source_type="exchange_event",
             source_id=str(eid),
             previous_state=chain.lifecycle_state,
-            next_state=new_state,
+            next_state=event_next_state,
             payload_json=exchange_event.payload_json,
             idempotency_key=f"pending_cancelled:{chain_id}:{eid}",
         ))

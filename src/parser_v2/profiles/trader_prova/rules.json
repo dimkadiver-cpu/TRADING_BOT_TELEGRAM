@@ -24,8 +24,7 @@
   "name": "detect_close_partial",
   "intent": "CLOSE_PARTIAL",
   "markers": 
-  { "source": "intent_regex" 
-  },
+  { "source": "intent_regex" },
   "scope": "same_sentence",
   "if_regex_any":[
   ],
@@ -232,8 +231,8 @@
           "(?i)цели\\s*(?::|\\-|—)?",
           "(?i)(?:новые\\s+таргеты|таргеты\\s+обновить|обновить\\s+таргеты|обновляем\\s+таргеты|таргеты\\s*(?::|\\-|—)?)"     
         ],
-        "if_contains_any": ["стоял другой тейк","закрываю у тейка","1 тейк должны","с тейком", "нормальными тейками","и тейки",
-        "закрыть на 1 тейке","порадуют тейками","фиксация на тейках","отбой по тейку","ждать тейков","и тейков"],
+        "if_contains_any": ["закрываю у тейка","1 тейк должны","с тейком", "нормальными тейками","и тейки",
+        "закрыть на 1 тейке","порадуют тейками","фиксация на тейках","отбой по тейку","ждать тейков","и тейков","другой тейк"],
         "unless_contains_any": [
           "тейк взят",
           "тейк взяли",
@@ -298,7 +297,7 @@
           "стопы переводить","стопы по","риск получить стоп","про стопы","стоп не двигаем","вышли стопы",
           "стоп - это защита","стоп пока не переносим","стоп не переносим","стоп нужно ","стоп поставим",
           "возьмет стоп","стоп возьмет","стоп поставить","стоп обязательно","переводе стопа","стоп уже в бу",
-          "стоп двигаем в бу","стопы в плюс","стопом в бу","этому стопу","другой стоп","стоп не трогаем","до стопа не дошло"
+          "стоп двигаем в бу","стопы в плюс","стопом в бу","этому стопу","другой стоп","стоп не трогаем","до стопа не дошло","стоп пока"
         ],
       
         "reason": "sl_markers_ambiguous_without_specific_context"
@@ -347,9 +346,27 @@
         "scope": "whole_message",
         "if_contains_any": ["не перезаходим"],
         "reason": "explicit_no_reentry_statement"
+      },
+        {
+        "name": "no_move_stop_to_be",
+        "strength": "strong",
+        "marker_name": "MOVE_STOP_TO_BE",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["не переносим в бу"],
+        "reason": "explicit_no_move_stop_to_be"
+      },
+        {
+        "name": "false_close_partial_in_tp_hit_context",
+        "strength": "strong",
+        "marker_name": "TP_HIT",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["После первого тейка","дожидаться 1 тейка","до 1 тейка","после 1 тейка"],
+        "reason": "explicit_no_move_stop_to_be"
       }
     ],
-    "cross_intent_suppression": [
+    "cross_intent_suppression": [ 
       {
         "if_strong": "MOVE_STOP_TO_BE",
         "suppress_weak": ["EXIT_BE", "INFO_ONLY"],
@@ -442,6 +459,12 @@
       "when_all_detected": ["CLOSE_PARTIAL", "CLOSE_FULL"],
       "prefer": "CLOSE_PARTIAL",
       "over": ["CLOSE_FULL"]
+    },
+    {
+      "name": "tp_hit_over_close_partial",
+      "when_all_detected": ["TP_HIT", "CLOSE_PARTIAL"],
+      "prefer": "TP_HIT",
+      "over": ["CLOSE_PARTIAL"]
     },
      {
       "name": "sl_hit_redundant_with_tp_hit",

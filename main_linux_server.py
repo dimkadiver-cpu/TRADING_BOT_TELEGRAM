@@ -626,6 +626,25 @@ async def _async_main(
             except Exception:
                 logger.warning("startup notification failed (non-critical)")
 
+        if _cp is not None:
+            try:
+                status = cp_service.get_status()
+                control = cp_service.get_control()
+                _cp.snapshot_store.save(
+                    control_mode=status.control_mode,
+                    active_blocks=[
+                        f"{b.scope_type}:{b.scope_value}" if b.scope_value else b.scope_type
+                        for b in control.active_blocks
+                    ],
+                    open_chain_count=(
+                        status.open_count + status.partial_count + status.waiting_entry_count
+                    ),
+                    pending_command_count=status.pending_commands,
+                    shutdown_reason=None,
+                )
+            except Exception:
+                logger.warning("startup snapshot save failed (non-critical)")
+
         if execution_runtime is not None:
             try:
                 for worker in (execution_runtime.sync_workers or {}).values():

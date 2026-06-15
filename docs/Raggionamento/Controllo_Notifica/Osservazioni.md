@@ -64,3 +64,37 @@ Fees: -6.17 USDT
 Funding: +0.00 USDT
 - - - - - - - - - - - - - - - -
 Source: exchange_manual
+
+
+
+
+
+
+
+
+
+
+✋ #9 — POSITION CLOSED
+- - - - - - - - - - - - - - -
+IP/USDT — 📈 LONG
+https://t.me/c/4240829081/906
+- - - - - - - - - - - - - - -
+Close reason: TRADER_UPDATE
+- - - - - - - - - - - - - - -
+Price: 0.3117
+Qty: 3,076.9
+PnL: -1.23 USDT
+Fee rate: 0.055%
+Fee: 0.53 USDT
+- - - - - - - - - - - - - - -
+Final Result:
+ROI net: -1.22%
+RoR: -2.33%
+R: -0.02R
+Total PnL net: -2.33 USDT
+Gross PnL: -1.23 USDT
+Fees: -1.06 USDT
+Funding: -0.05 USDT
+- - - - - - - - - - - - - - -
+Source: trader_update
+link                     mettere link del mesaggio del trader (solo se "Source: trader_update")

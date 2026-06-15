@@ -31,6 +31,22 @@ _CYR_PROFIT = "\u043f\u0440\u043e\u0444\u0438\u0442"  # \u043f\u0440\u043e\u0444
 _CYR_TP = "\u0442\u043f"  # \u0442\u043f
 _BULLET_CHARS = r"\-*•—–"
 
+# Cyrillic lookalike letters → Latin equivalents, applied only during symbol extraction.
+# Covers the most common confusables in Russian crypto channel tickers (e.g. BTСUSDT where С=U+0421).
+_CYRILLIC_TO_LATIN = str.maketrans({
+    "С": "C",  # С → C
+    "А": "A",  # А → A
+    "Е": "E",  # Е → E
+    "В": "B",  # В → B
+    "О": "O",  # О → O
+    "Р": "P",  # Р → P
+    "Х": "X",  # Х → X
+    "К": "K",  # К → K
+    "М": "M",  # М → M
+    "Т": "T",  # Т → T
+    "Н": "H",  # Н → H
+})
+
 _ENTRY_RANGE_RE = re.compile(
     rf"\b(?:entry|vhod|{_CYR_ENTRY})\b"
     rf"(?:\s+(?:\([^)\n]*\)|[^\n:(){{}}]{{1,32}}))?"
@@ -101,7 +117,7 @@ _ENTRY_AB_RE = re.compile(
 )
 _STOP_LOSS_RE = re.compile(
     rf"(?:\bsl\b|stop(?:\s+loss)?|{_CYR_STOP}(?:\s+\u043b\u043e\u0441\u0441)?)"
-    rf"(?:\s*\([^)]*\))?[\u201d\u2019\"']*\s*:?[\u201d\u2019\"']*\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
+    rf"(?:\s*\([^)]*\))?[\u201d\u2019\"']*\s*:?[\u201d\u2019\"']*\s*(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
     re.IGNORECASE,
 )
 # тп<N> (trader_d), тейк профит: inline (trader_b), tp<N> (universal)
@@ -240,11 +256,12 @@ class SignalExtractor:
 
 
 def _extract_symbol(text: str) -> str | None:
-    match = _SYMBOL_RE.search(text.upper())
+    normalized = text.upper().translate(_CYRILLIC_TO_LATIN)
+    match = _SYMBOL_RE.search(normalized)
     if match:
         return match.group("symbol").upper()
 
-    bare_match = _BARE_HASHTAG_SYMBOL_RE.search(text.upper())
+    bare_match = _BARE_HASHTAG_SYMBOL_RE.search(normalized)
     if bare_match:
         return f"{bare_match.group('symbol').upper()}USDT"
 

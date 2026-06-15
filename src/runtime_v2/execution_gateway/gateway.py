@@ -328,9 +328,13 @@ class ExecutionGateway:
                 self._repo.reject_entry_as_signal(cmd.command_id, reason=reason)
                 return
             self._repo.mark_failed(cmd.command_id, reason=reason)
-            self._repo.cancel_chain_if_all_entries_failed(
+            cancelled = self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=reason
             )
+            if not cancelled and cmd.command_type not in _ENTRY_TYPES:
+                self._repo.write_command_failed_tech_log(
+                    cmd.command_id, cmd.trade_chain_id, cmd.command_type, reason=reason
+                )
             return
 
         self._repo.mark_sent(
@@ -376,12 +380,16 @@ class ExecutionGateway:
                     cmd.command_id, type(exc).__name__, error_str,
                 )
             self._repo.mark_failed(cmd.command_id, reason=error_str)
-            self._repo.cancel_chain_if_all_entries_failed(
+            cancelled = self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=error_str
             )
             if cmd.command_type == "CANCEL_PENDING_ENTRY":
                 self._repo.write_cancel_entry_failed_lifecycle(
                     cmd.command_id, cmd.trade_chain_id, attempts=current_retry + 1
+                )
+            elif not cancelled and cmd.command_type not in _ENTRY_TYPES:
+                self._repo.write_command_failed_tech_log(
+                    cmd.command_id, cmd.trade_chain_id, cmd.command_type, reason=error_str
                 )
             return
 

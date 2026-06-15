@@ -263,6 +263,53 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def write_command_failed_tech_log(
+        self,
+        command_id: int,
+        trade_chain_id: int,
+        command_type: str,
+        *,
+        reason: str,
+    ) -> None:
+        """Write a TECH_LOG GATEWAY_COMMAND_FAILED notification for any failed non-entry command.
+
+        Called after mark_failed for commands like MOVE_STOP_TO_BREAKEVEN, MOVE_STOP, etc.
+        Entry failures are handled separately via cancel_chain_if_all_entries_failed.
+        """
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                chain_row = conn.execute(
+                    "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+                    (trade_chain_id,),
+                ).fetchone()
+                write_tech_log_event(
+                    conn,
+                    notification_type="GATEWAY_COMMAND_FAILED",
+                    payload={
+                        "level": "ERROR",
+                        "category": "Gateway",
+                        "title": "command_failed",
+                        "description": f"Comando {command_type} fallito.",
+                        "context": {
+                            "command_id": command_id,
+                            "command_type": command_type,
+                            "chain_id": trade_chain_id,
+                            "symbol": chain_row[0] if chain_row else None,
+                            "side": chain_row[1] if chain_row else None,
+                            "reason": reason,
+                        },
+                        "action": "verificare il motivo e intervenire manualmente se necessario",
+                        "source": "execution_gateway",
+                    },
+                    dedupe_key=f"gw_cmd_failed:{command_id}",
+                    priority="HIGH",
+                )
+        finally:
+            conn.close()
+
     def write_cancel_entry_failed_lifecycle(
         self, command_id: int, trade_chain_id: int, *, attempts: int
     ) -> None:
