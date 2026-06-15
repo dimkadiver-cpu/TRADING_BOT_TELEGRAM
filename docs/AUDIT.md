@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-06-15 — Cleanup `trader_prova/rules.json` (solo neutro, no logica conflitti)
+
+Analisi anomalie/ridondanze su `src/parser_v2/profiles/trader_prova/rules.json` e cleanup comportamento-neutro. Decisioni utente: §4 (conflitti precedence↔disambiguation) e §5 (`detect_close_partial` in lista di esclusione) **lasciati invariati**.
+
+Applicato:
+- §1 Duplicati esatti rimossi: 2ª copia `all_short_in_ps_informational_context`; disambiguation duplicata `prefer_close_full_in_modify_enry`.
+- §2 Naming corretto: `prefer_move_stop_to_be_in_modify_entry`(SL_HIT)→`prefer_sl_hit_in_modify_entry`; `prefer_move_stop_to_be_tp_hit`→`prefer_move_stop_over_tp_hit`; 2º `false_close_partial_in_tp_hit_context`→`no_tp_hit_in_historical_tp_context`; `false_modify_entry`(добор)→`false_modify_entry_dobor`; `sl_hit_stop_embedded_in_latin_word`→`sl_hit_стоп_in_стоп_лосс`.
+- §3 `reason` copy-paste corrette (modify_entry dobor, no_tp_hit historical, стоп/стоп лосс).
+- §7 Stringhe duplicate rimosse in `if_contains_any` (отбой по стопу и тейку, пока сделки в бу, другой тейк).
+
+Validazione: JSON valido (`python json.load` OK). Modifiche solo a `name`/`reason` (diagnostica) e dedup set-membership → nessun cambio di comportamento del parser. Conflitti logici §4 e regola §5 restano aperti come debito noto.
+
+Rischi aperti: precedence `TP_HIT>SL_HIT>CLOSE_FULL>CLOSE_PARTIAL` ancora contraddetta dalle disambiguation pairwise; `cross_intent_suppression` duplica 3 decisioni delle disambiguation; `detect_close_partial` semanticamente ambigua in lista di esclusione.
+
+---
+
 ## 2026-06-15 — Analisi anomalie Test_live + Fix 1-4 (Gateway logging, Race condition, Classifier, Snapshot)
 
 ### Step completati

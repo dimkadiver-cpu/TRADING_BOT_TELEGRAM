@@ -34,15 +34,15 @@
 },
 
 {
-  "name": "false_modify_entry_dobor",
+  "name": "false_modify_entry",
   "intent": "MODIFY_ENTRY",
-  "markers":
+  "markers": 
   { "source": "intent_weak" },
   "scope": "same_sentence",
   "if_regex_any":[
   ],
   "if_contains_any": ["добор убрал"],
-  "reason": "false_positive_modify_entry_dobor_removed"
+  "reason": "detect_partial_close_or_partial_profit_fixation"
   },
 
 
@@ -140,7 +140,7 @@
         "if_regex_any": [
        "(?i)(?:(?:тоже|тут|здесь|по\\s+этому|по\\s+этой)\\s+отбой|отбой\\s+по\\s+(?:сигналу|сделке|сетапу|идее))"
         ],
-        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку"],
+        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку","отбой по стопу и тейку"],
         "reason": "false_positive_weak_markers_in_cancel_pending_context"
       },
 
@@ -152,7 +152,7 @@
          "if_regex_any": [
        "(?i)(?:(?:тоже|тут|здесь|по\\s+этому|по\\s+этой)\\s+отбой|отбой\\s+по\\s+(?:сигналу|сделке|сетапу|идее))"
         ],
-        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку"],
+        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку","отбой по стопу и тейку"],
         "reason": "false_positive_weak_markers_in_invalidated_setup_context"
       },
 
@@ -191,7 +191,7 @@
       "(?i)новая\\s+(?:цена|зона)\\s+входа",
       "(?i)(?:лимитку\\s+на\\s+вход\\s+переносим|переносим\\s+лимитку\\s+на\\s+вход)"
     ],
-        "if_contains_any": ["обидный бу.","пока сделки в бу","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу","ушли в бу","стоп уже в бу","закрылся в безубыток","в бу ушёл"],
+        "if_contains_any": ["обидный бу.","пока сделки в бу","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу","пока сделки в бу","ушли в бу","стоп уже в бу","закрылся в безубыток","в бу ушёл"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -246,7 +246,7 @@
           "(?i)(?:новые\\s+таргеты|таргеты\\s+обновить|обновить\\s+таргеты|обновляем\\s+таргеты|таргеты\\s*(?::|\\-|—)?)"     
         ],
         "if_contains_any": ["закрываю у тейка","1 тейк должны","с тейком", "нормальными тейками","и тейки",
-        "закрыть на 1 тейке","порадуют тейками","фиксация на тейках","отбой по тейку","ждать тейков","и тейков","другой тейк","После тп 2","дожидаться 1 тейка"],
+        "закрыть на 1 тейке","порадуют тейками","фиксация на тейках","отбой по тейку","ждать тейков","и тейков","другой тейк","другой тейк","После тп 2","дожидаться 1 тейка"],
         "unless_contains_any": [
           "тейк взят",
           "тейк взяли",
@@ -282,12 +282,13 @@
         "reason": "suppress_sl_when_substring_of_longer_latin_word"
       },
       {
-        "name": "sl_hit_стоп_in_стоп_лосс",
+        "name": "sl_hit_stop_embedded_in_latin_word",
         "intent": "SL_HIT",
         "markers": ["стоп"],
         "scope": "same_sentence",
         "if_contains_any": [ "стоп лосс"],
-        "reason": "suppress_стоп_when_part_of_стоп_лосс"
+    
+        "reason": "suppress_sl_when_substring_of_longer_latin_word"
       },
       {
         "name": "sl_hit_ambiguous_general_context",
@@ -320,15 +321,15 @@
           "стоп - это защита","стоп пока не переносим","стоп не переносим","стоп нужно ","стоп поставим",
           "возьмет стоп","стоп возьмет","стоп поставить","стоп обязательно","переводе стопа","стоп уже в бу",
           "стоп двигаем в бу","стопы в плюс","стопом в бу","этому стопу","другой стоп","стоп не трогаем","до стопа не дошло","стоп пока","стоп все","стоп лосс в БУ переводим",
-          "стоп лосс переносим",
-          "стоп лосс передвигае", 
-          "Стоп переставим",
-          "Стоп можно перенести",
-          "предидущий стоп",
-          "частично стоп",
-          "погашения стопа",
-          "стоп лосс",
-          "стопы переносим"
+"стоп лосс переносим",
+"стоп лосс передвигае", 
+"Стоп переставим",
+"Стоп можно перенести",
+"предидущий стоп",
+"частично стоп",
+"погашения стопа",
+"стоп лосс",
+"стопы переносим"
         ],
       
         "reason": "sl_markers_ambiguous_without_specific_context"
@@ -359,6 +360,16 @@
         "reason": "scope_hint_in_postscript_not_actionable"
       },
 
+      {
+        "name": "all_short_in_ps_informational_context",
+        "strength": "strong",
+        "marker_name": "ALL_SHORT",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["p.s.", "у вас прибыль по шортам"],
+        "reason": "scope_hint_in_postscript_not_actionable"
+      },
+
        {
         "name": "no_reenter_context",
         "strength": "strong",
@@ -378,13 +389,13 @@
         "reason": "explicit_no_move_stop_to_be"
       },
         {
-        "name": "no_tp_hit_in_historical_tp_context",
+        "name": "false_close_partial_in_tp_hit_context",
         "strength": "strong",
         "marker_name": "TP_HIT",
         "markers": {"source": "semantic"},
         "scope": "whole_message",
         "if_contains_any": ["После первого тейка","дожидаться 1 тейка","до 1 тейка","после 1 тейка"],
-        "reason": "explicit_historical_tp_reference_not_actionable"
+        "reason": "explicit_no_move_stop_to_be"
       }
     ],
     "cross_intent_suppression": [ 
@@ -451,7 +462,7 @@
       "over": ["MODIFY_ENTRY"]
     },
          {
-      "name": "prefer_sl_hit_in_modify_entry",
+      "name": "prefer_move_stop_to_be_in_modify_entry",
       "when_all_detected": ["SL_HIT", "MODIFY_ENTRY"],
       "prefer": "SL_HIT",
       "over": ["MODIFY_ENTRY"]
@@ -461,7 +472,13 @@
       "when_all_detected": ["CLOSE_FULL", "ADD_ENTRY"],
       "prefer": "CLOSE_FULL",
       "over": ["ADD_ENTRY"]
-    },
+    },  
+     {
+      "name": "prefer_close_full_in_modify_enry",
+      "when_all_detected": ["CLOSE_FULL", "MODIFY_ENTRY"],
+      "prefer": "CLOSE_FULL",
+      "over": ["MODIFY_ENTRY"]
+    },  
     {
       "name": "prefer_move_stop_to_be_over_reentry_in_move_stop_to_be_context",
       "when_all_detected": ["MOVE_STOP_TO_BE", "REENTER"],
@@ -469,7 +486,7 @@
       "over": ["REENTER"]
     },
     {
-      "name": "prefer_move_stop_over_tp_hit",
+      "name": "prefer_move_stop_to_be_tp_hit",
       "when_all_detected": ["TP_HIT", "MOVE_STOP"],
       "prefer": "MOVE_STOP",
       "over": ["TP_HIT"]
