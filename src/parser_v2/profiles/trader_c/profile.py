@@ -11,14 +11,14 @@ from src.parser_v2.contracts.rules import (
 )
 from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
 from src.parser_v2.core.parsing_utils import resolve_market_hint
-from src.parser_v2.profiles.trader_prova.intent_entity_extractor import IntentEntityExtractor
-from src.parser_v2.profiles.trader_prova.signal_extractor import SignalExtractor
+from src.parser_v2.profiles.trader_c.intent_entity_extractor import IntentEntityExtractor
+from src.parser_v2.profiles.trader_c.signal_extractor import SignalExtractor
 
 _PROFILE_DIR = Path(__file__).parent
 
 
-class TraderProvaProfile:
-    trader_code = "trader_prova"
+class TraderCProfile:
+    trader_code = "trader_c"
 
     def __init__(
         self,
@@ -61,4 +61,4 @@ class TraderProvaProfile:
         return self._intent_entity_extractor.extract(text, evidence)
 
 
-__all__ = ["TraderProvaProfile"]
+__all__ = ["TraderCProfile"]
