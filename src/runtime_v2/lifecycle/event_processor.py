@@ -67,6 +67,7 @@ def _get_be_deferred_flag(plan_state_json: str) -> dict | None:
         plan = json.loads(plan_state_json or "{}")
         return plan.get("_be_deferred_by_auto_cancel") or None
     except Exception:
+        logger.warning("_get_be_deferred_flag: failed to parse plan_state_json, deferred BE logic will be skipped")
         return None
 
 
@@ -298,6 +299,7 @@ class LifecycleEventProcessor:
             current_plan_json = plan_state_json or "{}"
             plan = json.loads(current_plan_json)
         except Exception:
+            logger.warning("_mark_entry_leg_status: failed to parse plan_state_json, leg tracking will be skipped")
             return None
 
         legs = plan.get("legs", [])
@@ -341,6 +343,7 @@ class LifecycleEventProcessor:
         try:
             plan = json.loads(plan_state_json or "{}")
         except Exception:
+            logger.warning("_mark_entry_leg_status_by_sequence: failed to parse plan_state_json, leg tracking will be skipped")
             return None
         legs = plan.get("legs", [])
         target_legs = [
@@ -370,6 +373,7 @@ class LifecycleEventProcessor:
         try:
             plan = json.loads(plan_state_json or "{}")
         except Exception:
+            logger.warning("_find_target_leg_sequence: failed to parse plan_state_json, leg sequence lookup will be skipped")
             return None
         legs = plan.get("legs", [])
         target_legs = [
