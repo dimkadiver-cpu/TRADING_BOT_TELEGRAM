@@ -1591,7 +1591,7 @@ class LifecycleEntryGate:
             try:
                 old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
             except Exception:
-                pass
+                logger.debug("_apply_move_to_be: failed to parse risk_snapshot_json for chain %s, old_sl_price will be absent", chain_id)
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
@@ -1617,6 +1617,7 @@ class LifecycleEntryGate:
         try:
             plan = json.loads(chain.plan_state_json or "{}")
         except Exception:
+            logger.warning("_resolve_tp_level_price: failed to parse plan_state_json for chain %s", chain.trade_chain_id)
             return None
         intermediate: list[float] = plan.get("intermediate_tps") or []
         final_tp: float | None = plan.get("final_tp")
@@ -1698,7 +1699,7 @@ class LifecycleEntryGate:
             try:
                 old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
             except Exception:
-                pass
+                logger.debug("_apply_move_stop_price: failed to parse risk_snapshot_json for chain %s, old_sl_price will be absent", chain_id)
 
         event_payload: dict = {
             "action": "MOVE_STOP",
@@ -1734,6 +1735,7 @@ class LifecycleEntryGate:
             value = json.loads(chain.risk_snapshot_json or "{}").get("sl_price")
             return float(value) if value is not None else None
         except Exception:
+            logger.warning("_resolve_chain_stop_price: failed to parse risk_snapshot_json for chain %s", chain.trade_chain_id)
             return None
 
     @staticmethod
@@ -1988,7 +1990,7 @@ class LifecycleEntryGate:
                 if leg.get("status") == "PENDING"
             ]
         except Exception:
-            pass
+            logger.debug("_apply_cancel_pending: failed to parse plan_state_json for chain %s, cancelled_entries will be empty", chain_id)
 
         event = LifecycleEvent(
             trade_chain_id=chain_id,
