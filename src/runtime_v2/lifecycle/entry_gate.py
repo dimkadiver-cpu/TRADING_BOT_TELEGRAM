@@ -977,7 +977,7 @@ class LifecycleEntryGate:
                 return matched
             if len(matched) > 1:
                 return None  # ambiguous — send to review
-            # not found — fall through to telegram-ID matching
+            return []  # explicit ID specified but no active chain found — do not guess
 
         tg_ids_to_check = list(tag.targeting.telegram_message_ids)
         if tag.targeting.reply_to_message_id is not None:
@@ -988,9 +988,10 @@ class LifecycleEntryGate:
                 for tid in tg_ids_to_check
                 if tid in tg_id_to_raw_id
             }
-            if raw_ids:
-                matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
-                return matched  # [] if no chain matched — do NOT fall through to single-chain
+            if not raw_ids:
+                return []  # tg_ids specified but none in map — do not guess
+            matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
+            return matched  # [] if no chain matched — do NOT fall through to single-chain
 
         if len(trader_chains) > 1:
             return None
