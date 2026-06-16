@@ -349,6 +349,8 @@ class TelegramNotificationDispatcher:
                 self._mark_sent(notification_id)
                 continue
 
+            chat_id: int | None = None
+            thread_id: int | None = None
             try:
                 chat_id, thread_id = self._router.route(destination, trader_id=payload.get("trader_id"))
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
@@ -388,14 +390,25 @@ class TelegramNotificationDispatcher:
                 sent += 1
             except Exception as exc:  # noqa: BLE001
                 exc_str = str(exc)
-                logger.warning("notification %s send failed: %s", notification_id, exc_str)
+                logger.warning(
+                    "notification %s send failed: %s [trader_id=%s chat_id=%s thread_id=%s]",
+                    notification_id,
+                    exc_str,
+                    payload.get("trader_id"),
+                    chat_id,
+                    thread_id,
+                )
                 # "Message thread not found" is a permanent Telegram error (topic deleted or
                 # thread_id misconfigured). Skip retries and go straight to FAILED.
                 if "Message thread not found" in exc_str:
                     logger.error(
                         "notification %s permanently failed — thread not found "
-                        "(check thread_id in config). Marking FAILED without retry.",
+                        "(check thread_id in config). Marking FAILED without retry. "
+                        "[trader_id=%s chat_id=%s thread_id=%s]",
                         notification_id,
+                        payload.get("trader_id"),
+                        chat_id,
+                        thread_id,
                     )
                     self._mark_failure(notification_id, _MAX_ATTEMPTS - 1, exc_str)
                 else:

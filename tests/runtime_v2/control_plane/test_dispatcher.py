@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -172,6 +173,32 @@ async def test_recovers_after_transient_failure(ops_db):
     status = conn.execute("SELECT status FROM ops_notification_outbox").fetchone()[0]
     conn.close()
     assert status == "SENT"
+
+
+async def test_thread_not_found_log_includes_trader_and_route_context(ops_db, caplog):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="SIGNAL_ACCEPTED",
+            chain_id=145,
+            payload={"symbol": "BTC/USDT", "side": "LONG", "trader_id": "trader_a"},
+            dedupe_key="clean:thread-missing",
+        )
+    conn.close()
+
+    class ThreadMissingSender:
+        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
+            raise RuntimeError("Message thread not found")
+
+    disp = _dispatcher(ops_db, ThreadMissingSender())
+    with caplog.at_level(logging.WARNING, logger="src.runtime_v2.control_plane.notification_dispatcher"):
+        await disp.drain_once()
+
+    joined = "\n".join(caplog.messages)
+    assert "trader_id=trader_a" in joined
+    assert "chat_id=-100999" in joined
+    assert "thread_id=103" in joined
 
 
 async def test_private_bot_dispatches_without_thread_id(ops_db):
