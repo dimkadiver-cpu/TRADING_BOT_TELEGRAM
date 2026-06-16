@@ -26,6 +26,8 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "UPDATE_DONE": "UPDATE_DONE",
     "UPDATE_PARTIAL": "UPDATE_PARTIAL",
     "UPDATE_REJECTED": "UPDATE_REJECTED",
+    "LIQUIDATION_FILLED": "LIQUIDATION_CLOSED",
+    "STOP_MOVE_CONFIRMED": "STOP_MOVED",
 }
 
 _SIGNAL_NOTIFICATION_TYPES: frozenset[str] = frozenset({
@@ -37,6 +39,7 @@ _PRIORITY_BY_TYPE: dict[str, str] = {
     "POSITION_CLOSED": "HIGH",
     "REVIEW_REQUIRED": "HIGH",
     "SIGNAL_REJECTED": "HIGH",
+    "LIQUIDATION_CLOSED": "HIGH",
 }
 
 
@@ -713,6 +716,36 @@ def _build_payload(
         if "fee_rate" in ev:
             payload["fee_rate"] = ev.get("fee_rate")
         return payload
+
+    if notification_type == "LIQUIDATION_CLOSED":
+        closed_qty = ev.get("closed_size", ev.get("filled_qty"))
+        fill_price = ev.get("fill_price")
+        return {
+            **base,
+            "fill_price": fill_price,
+            "closed_qty": closed_qty,
+            "closed_pct": _closed_pct(closed_qty, filled_entry_qty),
+            "pnl": _side_pnl(side, entry_avg_price, fill_price, closed_qty),
+            "fee": ev.get("exec_fee"),
+            "close_reason": "LIQUIDATION",
+            "final_result": _final_result(
+                gross_pnl=cumulative_gross_pnl,
+                fees=cumulative_fees,
+                funding=cumulative_funding,
+                peak_margin_used=peak_margin_used,
+                initial_risk_amount=initial_risk_amount,
+                close_reason="LIQUIDATION",
+            ),
+            "source": ev.get("source", "exchange"),
+        }
+
+    if notification_type == "STOP_MOVED":
+        return {
+            **base,
+            "new_stop_price": ev.get("new_stop_price"),
+            "is_breakeven": ev.get("is_breakeven", False),
+            "source": ev.get("source", "exchange"),
+        }
 
     if notification_type == "CANCEL_FAILED":
         return {

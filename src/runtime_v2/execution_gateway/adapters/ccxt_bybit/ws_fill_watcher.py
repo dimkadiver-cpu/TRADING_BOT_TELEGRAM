@@ -3,7 +3,9 @@ from __future__ import annotations
 import asyncio
 import dataclasses
 import logging
+import sqlite3
 import threading
+import time
 from collections.abc import Callable
 from typing import TYPE_CHECKING
 
@@ -12,6 +14,7 @@ try:
 except ModuleNotFoundError:  # pragma: no cover - exercised through patched module in unit tests
     ccxtpro = None
 
+from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
 from src.runtime_v2.execution_gateway.event_ingest.classifier import EventClassifier
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
@@ -19,6 +22,9 @@ if TYPE_CHECKING:
     from src.runtime_v2.execution_gateway.event_ingest.normalizer import EventNormalizer
 
 logger = logging.getLogger(__name__)
+
+_WS_FAIL_NOTIFY_AFTER = 3
+_WS_FAIL_DEDUPE_WINDOW = 600  # seconds — re-notifies after reconnect + new failure window
 
 
 class BybitWsFillWatcher:
@@ -114,8 +120,38 @@ class BybitWsFillWatcher:
             if task is not None and not task.done():
                 task.cancel()
 
+    def _notify_ws_failure(self, stream_name: str) -> None:
+        bucket = int(time.time()) // _WS_FAIL_DEDUPE_WINDOW
+        try:
+            conn = sqlite3.connect(self._ops_db_path)
+            try:
+                with conn:
+                    write_tech_log_event(
+                        conn,
+                        notification_type="WS_RECONNECT",
+                        payload={
+                            "level": "WARNING",
+                            "category": "Exchange",
+                            "title": f"ws_{stream_name}_disconnected",
+                            "description": (
+                                f"WebSocket stream '{stream_name}' ha perso la connessione "
+                                f"{_WS_FAIL_NOTIFY_AFTER} volte consecutive. Reconnessione automatica in corso."
+                            ),
+                            "context": {"stream": stream_name, "account_id": self._account_id},
+                            "action": "Verifica la connessione exchange. Se persiste, controlla i log.",
+                            "source": "ws_fill_watcher",
+                        },
+                        dedupe_key=f"ws_fail:{stream_name}:{self._account_id}:{bucket}",
+                        priority="HIGH",
+                    )
+            finally:
+                conn.close()
+        except Exception:
+            logger.exception("failed to write ws disconnect tech_log for stream=%s", stream_name)
+
     async def _watch_orders_forever(self) -> None:
         exchange = self._build_exchange()
+        consecutive_failures = 0
         try:
             while not self._stop_event.is_set():
                 try:
@@ -126,15 +162,20 @@ class BybitWsFillWatcher:
                     if self._stop_event.is_set():
                         break
                     logger.exception("bybit watch_orders failed")
+                    consecutive_failures += 1
+                    if consecutive_failures >= _WS_FAIL_NOTIFY_AFTER:
+                        self._notify_ws_failure("watch_orders")
                     await self._run_reconciliation_callback()
                     await asyncio.sleep(5)
                     continue
+                consecutive_failures = 0
                 self._process_batch(orders, self._normalizer.from_order)
         finally:
             await exchange.close()
 
     async def _watch_trades_forever(self) -> None:
         exchange = self._build_exchange()
+        consecutive_failures = 0
         try:
             while not self._stop_event.is_set():
                 try:
@@ -145,15 +186,20 @@ class BybitWsFillWatcher:
                     if self._stop_event.is_set():
                         break
                     logger.exception("bybit watch_my_trades failed")
+                    consecutive_failures += 1
+                    if consecutive_failures >= _WS_FAIL_NOTIFY_AFTER:
+                        self._notify_ws_failure("watch_trades")
                     await self._run_reconciliation_callback()
                     await asyncio.sleep(5)
                     continue
+                consecutive_failures = 0
                 self._process_batch(trades, self._normalizer.from_trade)
         finally:
             await exchange.close()
 
     async def _watch_positions_forever(self) -> None:
         exchange = self._build_exchange()
+        consecutive_failures = 0
         try:
             while not self._stop_event.is_set():
                 try:
@@ -164,9 +210,13 @@ class BybitWsFillWatcher:
                     if self._stop_event.is_set():
                         break
                     logger.exception("bybit watch_positions failed")
+                    consecutive_failures += 1
+                    if consecutive_failures >= _WS_FAIL_NOTIFY_AFTER:
+                        self._notify_ws_failure("watch_positions")
                     await self._run_reconciliation_callback()
                     await asyncio.sleep(5)
                     continue
+                consecutive_failures = 0
                 self._process_batch(positions, self._normalizer.from_position)
         finally:
             await exchange.close()

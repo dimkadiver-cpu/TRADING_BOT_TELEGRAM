@@ -223,6 +223,16 @@ def _t_be_exit(p: dict) -> dict:
     return {**p, "_emoji": "⚡", "exit_label": price_label, "exit_price": price_value}
 
 
+def _t_liquidation_closed(p: dict) -> dict:
+    return {
+        **p,
+        "_emoji": "💀",
+        "exit_label": "Price",
+        "exit_price": p.get("fill_price"),
+        "close_reason": "LIQUIDATION",
+    }
+
+
 # ---------------------------------------------------------------------------
 # Signal templates (SIGNAL_ACCEPTED, SIGNAL_REJECTED, REVIEW_REQUIRED)
 # ---------------------------------------------------------------------------
@@ -487,6 +497,25 @@ def _t_update_rejected(p: dict) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Stop moved (STOP_MOVED)
+# ---------------------------------------------------------------------------
+
+_STOP_MOVED_BLOCKS: list = [
+    HeaderBlock(emoji=lambda p: p["_emoji"], event_label="STOP MOVED"),
+    FieldBlock("New SL", key="new_stop_price", fmt=num, optional=False, default="n/a"),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("is_breakeven")),
+        blocks=[StaticBlock("Breakeven protection active")],
+    ),
+    FooterBlock(default_source="exchange"),
+]
+
+
+def _t_stop_moved(p: dict) -> dict:
+    return {**p, "_emoji": "🛡️" if p.get("is_breakeven") else "📍"}
+
+
+# ---------------------------------------------------------------------------
 # Simple notifications
 # ---------------------------------------------------------------------------
 
@@ -620,6 +649,8 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "TP_FILLED_FINAL":        TemplateConfig(_CLOSED_BLOCKS,            _t_tp_final),
     "POSITION_CLOSED":        TemplateConfig(_CLOSED_BLOCKS,            _t_position_closed),
     "BE_EXIT":                TemplateConfig(_CLOSED_BLOCKS,            _t_be_exit),
+    "LIQUIDATION_CLOSED":     TemplateConfig(_CLOSED_BLOCKS,            _t_liquidation_closed),
+    "STOP_MOVED":             TemplateConfig(_STOP_MOVED_BLOCKS,        _t_stop_moved),
     "TP_FILLED":              TemplateConfig(_PARTIAL_RESULT_BLOCKS,    _t_tp_partial),
     "UPDATE_DONE":            TemplateConfig(_UPDATE_BLOCKS,            _t_update_done),
     "UPDATE_PARTIAL":         TemplateConfig(_UPDATE_BLOCKS,            _t_update_partial),
