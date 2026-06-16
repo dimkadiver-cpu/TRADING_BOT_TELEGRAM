@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.parser_v2.contracts.markers import NormalizedText
-from src.parser_v2.profiles.trader_a.signal_extractor import SignalExtractor
+from src.parser_v2.profiles.Legacy.trader_a_legacy.signal_extractor import SignalExtractor
 
 
 def _extract(text: str, market_hint: bool = False):
@@ -246,7 +246,7 @@ def test_trader_d_profile_extracts_cyrillic_tp_lines() -> None:
 
 
 def test_trader_b_range_entry_produces_range_structure() -> None:
-    from src.parser_v2.profiles.trader_b.signal_extractor import SignalExtractor as TraderBExtractor
+    from src.parser_v2.profiles.Legacy.trader_b_legacy.signal_extractor import SignalExtractor as TraderBExtractor
 
     extractor = TraderBExtractor()
     text = "ETHUSDT.P Лонг\nВход: 2000-2100\nSL: 1900\nTP1: 2300\n"
@@ -453,7 +453,7 @@ def test_existing_bullet_tp_format_not_broken() -> None:
 
 def test_trader_b_market_entry_price_inside_current_parentheses() -> None:
     from src.parser_v2.contracts.markers import NormalizedText
-    from src.parser_v2.profiles.trader_b.signal_extractor import SignalExtractor as TraderBExtractor
+    from src.parser_v2.profiles.Legacy.trader_b_legacy.signal_extractor import SignalExtractor as TraderBExtractor
 
     text = (
         "[trader#b] Signal ID: #b43\n\n"

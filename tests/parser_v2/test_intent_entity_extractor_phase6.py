@@ -17,8 +17,8 @@ from src.parser_v2.contracts.entities import (
 from src.parser_v2.core.marker_evidence_resolver import MarkerEvidenceResolver
 from src.parser_v2.core.marker_matcher import MarkerMatcher
 from src.parser_v2.core.text_normalizer import TextNormalizer
-from src.parser_v2.profiles.trader_a.intent_entity_extractor import IntentEntityExtractor
-from src.parser_v2.profiles.trader_a.profile import TraderAProfile
+from src.parser_v2.profiles.Legacy.trader_a_legacy.intent_entity_extractor import IntentEntityExtractor
+from src.parser_v2.profiles.Legacy.trader_a_legacy.profile import TraderAProfile
 
 
 STOP_TO_BE = "\u0441\u0442\u043e\u043f \u0432 \u0431\u0443"

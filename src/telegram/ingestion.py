@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 import logging
 
 from src.core.timeutils import utc_now_iso
+from src.storage.raw_message_revisions import RawMessageRevisionStore
 from src.storage.raw_messages import RawMessageRecord, RawMessageStore
 
 
@@ -36,9 +37,15 @@ class IngestionResult:
 
 
 class RawMessageIngestionService:
-    def __init__(self, store: RawMessageStore, logger: logging.Logger) -> None:
+    def __init__(
+        self,
+        store: RawMessageStore,
+        logger: logging.Logger,
+        revision_store: RawMessageRevisionStore | None = None,
+    ) -> None:
         self._store = store
         self._logger = logger
+        self._revision_store = revision_store
 
     @property
     def store(self) -> RawMessageStore:
@@ -73,6 +80,26 @@ class RawMessageIngestionService:
                 media_blob=incoming.media_blob,
             )
             save_result = self._store.save_with_id(record)
+            if (
+                save_result.saved
+                and save_result.raw_message_id is not None
+                and self._revision_store is not None
+            ):
+                self._revision_store.append_initial(
+                    raw_message_id=save_result.raw_message_id,
+                    source_chat_id=incoming.source_chat_id,
+                    telegram_message_id=incoming.telegram_message_id,
+                    raw_text=text,
+                    message_ts=self._as_utc_iso(incoming.message_ts),
+                    acquisition_status=incoming.acquisition_status,
+                    reply_to_message_id=incoming.reply_to_message_id,
+                    source_topic_id=incoming.source_topic_id,
+                    has_media=incoming.has_media,
+                    media_kind=incoming.media_kind,
+                    media_mime_type=incoming.media_mime_type,
+                    media_filename=incoming.media_filename,
+                    run_context="live",
+                )
             if not save_result.saved:
                 self._logger.info(
                     "duplicate raw message skipped | chat=%s msg_id=%s",

@@ -3,8 +3,8 @@ from __future__ import annotations
 from src.parser_v2.core.runtime import TraderParserProfile
 from src.parser_v2.profiles.trader_3.profile import Trader3Profile
 from src.parser_v2.profiles.trader_3_1.profile import Trader31Profile
-from src.parser_v2.profiles.trader_a.profile import TraderAProfile
-from src.parser_v2.profiles.trader_b.profile import TraderBProfile
+from src.parser_v2.profiles.Legacy.trader_a_legacy.profile import TraderAProfile
+from src.parser_v2.profiles.Legacy.trader_b_legacy.profile import TraderBProfile
 from src.parser_v2.profiles.trader_c.profile import TraderCProfile
 from src.parser_v2.profiles.trader_d.profile import TraderDProfile
 from src.parser_v2.profiles.trader_prova.profile import TraderProvaProfile

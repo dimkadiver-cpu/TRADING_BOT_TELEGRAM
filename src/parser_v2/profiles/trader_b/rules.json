@@ -18,8 +18,34 @@
       "(?i)(?:остаток\\s+)?закрылся\\s+(?:по\\s+(?:стопу|бу|б/у)|в\\s+(?:бу|б/у|безубыток|ноль))",
       "(?i)(?:в\\s+(?:безубыток|бу|б/у)|без\\s+убытка)\\s+закрылся"
     ],
+    "if_contains_any": ["полностью закрыта", "закрыта по стоп", "закрыта по сл", "закрыта по stop", "месяц закрываю"],
     "reason": "false_positive_close_full_in_partial_exit_or_be_context"
   },
+{
+  "name": "detect_close_partial",
+  "intent": "CLOSE_PARTIAL",
+  "markers": 
+  { "source": "intent_regex" },
+  "scope": "same_sentence",
+  "if_regex_any":[
+  ],
+  "if_contains_any": ["TP1 фикс 50%"],
+  "reason": "detect_partial_close_or_partial_profit_fixation"
+},
+
+{
+  "name": "false_modify_entry_dobor",
+  "intent": "MODIFY_ENTRY",
+  "markers":
+  { "source": "intent_weak" },
+  "scope": "same_sentence",
+  "if_regex_any":[
+  ],
+  "if_contains_any": ["добор убрал"],
+  "reason": "false_positive_modify_entry_dobor_removed"
+  },
+
+
  {
     "name": "false_entry_filled",
     "intent": "ENTRY_FILLED",
@@ -114,7 +140,7 @@
         "if_regex_any": [
        "(?i)(?:(?:тоже|тут|здесь|по\\s+этому|по\\s+этой)\\s+отбой|отбой\\s+по\\s+(?:сигналу|сделке|сетапу|идее))"
         ],
-        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку","отбой по стопу и тейку"],
+        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку"],
         "reason": "false_positive_weak_markers_in_cancel_pending_context"
       },
 
@@ -126,7 +152,7 @@
          "if_regex_any": [
        "(?i)(?:(?:тоже|тут|здесь|по\\s+этому|по\\s+этой)\\s+отбой|отбой\\s+по\\s+(?:сигналу|сделке|сетапу|идее))"
         ],
-        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку","отбой по стопу и тейку"],
+        "if_contains_any": ["отбой по тейку","отбой по стопу","отбой по стопу и тейку"],
         "reason": "false_positive_weak_markers_in_invalidated_setup_context"
       },
 
@@ -165,7 +191,7 @@
       "(?i)новая\\s+(?:цена|зона)\\s+входа",
       "(?i)(?:лимитку\\s+на\\s+вход\\s+переносим|переносим\\s+лимитку\\s+на\\s+вход)"
     ],
-        "if_contains_any": ["обидный бу.","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу"],
+        "if_contains_any": ["обидный бу.","пока сделки в бу","не переносим в бу","фактически в бу","в бу закрылись","Ушли в бу","ушли в бу","стоп уже в бу","закрылся в безубыток","в бу ушёл"],
         "reason": "false_positive_weak_markers_in_move_stop_to_be_context"
       },
       {
@@ -183,7 +209,7 @@
       "(?i)(?:попробуем|пробуем)\\s+(?:шорт|лонг)\\s+с\\s+текущих",
       "(?i)(?:стоп[ы]?\\s+долж(?:ен|ны)\\s+(?:стоять|быть)\\s+в\\s+безубытке|стоп[ы]?\\s+сто(?:ит|ят)\\s+в\\s+безубытке|(?:долж(?:ен|ны)\\s+)?стоять\\s+в\\s+безубытке)"
     ],
-        "if_contains_any": ["не переносим в бу","фактически в бу"],
+        "if_contains_any": ["не переносим в бу","фактически в бу","пока сделки в бу"],
         "reason": "false_positive_weak_markers_in_exit_be_context"
       },
 
@@ -219,8 +245,8 @@
           "(?i)цели\\s*(?::|\\-|—)?",
           "(?i)(?:новые\\s+таргеты|таргеты\\s+обновить|обновить\\s+таргеты|обновляем\\s+таргеты|таргеты\\s*(?::|\\-|—)?)"     
         ],
-        "if_contains_any": ["стоял другой тейк","закрываю у тейка","1 тейк должны","с тейком", "нормальными тейками","и тейки",
-        "закрыть на 1 тейке","порадуют тейками","фиксация на тейках","отбой по тейку","ждать тейков","и тейков"],
+        "if_contains_any": ["закрываю у тейка","1 тейк должны","с тейком", "нормальными тейками","и тейки",
+        "закрыть на 1 тейке","порадуют тейками","фиксация на тейках","отбой по тейку","ждать тейков","и тейков","другой тейк","После тп 2","дожидаться 1 тейка"],
         "unless_contains_any": [
           "тейк взят",
           "тейк взяли",
@@ -229,6 +255,39 @@
           "третий тейк взят"
         ],
         "reason": "historical_context"
+      },
+      {
+        "name": "exit_be_бу_embedded_in_word",
+        "intent": "EXIT_BE",
+        "markers": ["бу"],
+        "scope": "same_sentence",
+        "if_regex_any": ["(?i)(?:[а-яё]бу|бу[а-яё])"],
+        "reason": "suppress_бу_when_substring_of_longer_cyrillic_word"
+      },
+      {
+        "name": "sl_hit_сл_embedded_in_word",
+        "intent": "SL_HIT",
+        "markers": ["сл"],
+        "scope": "same_sentence",
+        "if_regex_any": ["(?i)(?:[а-яё]сл|сл[а-яё])"],
+        "reason": "suppress_сл_when_substring_of_longer_cyrillic_word"
+      },
+      {
+        "name": "sl_hit_sl_embedded_in_latin_word",
+        "intent": "SL_HIT",
+        "markers": ["sl"],
+        "scope": "same_sentence",
+        "if_contains_any": [ "sl в безубыток"],
+        "if_regex_any": ["(?:[a-z]sl|sl[a-z])"],
+        "reason": "suppress_sl_when_substring_of_longer_latin_word"
+      },
+      {
+        "name": "sl_hit_стоп_in_стоп_лосс",
+        "intent": "SL_HIT",
+        "markers": ["стоп"],
+        "scope": "same_sentence",
+        "if_contains_any": [ "стоп лосс"],
+        "reason": "suppress_стоп_when_part_of_стоп_лосс"
       },
       {
         "name": "sl_hit_ambiguous_general_context",
@@ -260,7 +319,16 @@
           "стопы переводить","стопы по","риск получить стоп","про стопы","стоп не двигаем","вышли стопы",
           "стоп - это защита","стоп пока не переносим","стоп не переносим","стоп нужно ","стоп поставим",
           "возьмет стоп","стоп возьмет","стоп поставить","стоп обязательно","переводе стопа","стоп уже в бу",
-          "стоп двигаем в бу","стопы в плюс","стопом в бу","этому стопу","другой стоп"
+          "стоп двигаем в бу","стопы в плюс","стопом в бу","этому стопу","другой стоп","стоп не трогаем","до стопа не дошло","стоп пока","стоп все","стоп лосс в БУ переводим",
+          "стоп лосс переносим",
+          "стоп лосс передвигае", 
+          "Стоп переставим",
+          "Стоп можно перенести",
+          "предидущий стоп",
+          "частично стоп",
+          "погашения стопа",
+          "стоп лосс",
+          "стопы переносим"
         ],
       
         "reason": "sl_markers_ambiguous_without_specific_context"
@@ -269,15 +337,18 @@
     ],
     "marker_context_exclusions": [
       {
-        "name": "all_short_in_ps_informational_context",
+        "name": "false_close_partial_in_tp_hit_context",
         "strength": "strong",
-        "marker_name": "ALL_SHORT",
+        "marker_name": "CLOSE_PARTIAL",
         "markers": {"source": "semantic"},
-        "scope": "whole_message",
-        "if_contains_any": ["p.s.", "у вас прибыль по шортам"],
-        "reason": "scope_hint_in_postscript_not_actionable"
+        "scope": "same_sentence",
+        "if_regex_any": [
+          "(?i)(?=.*(?:\\b(?:tp|тп)\\s*1\\b|\\b1\\s*тейк\\b|\\bперв\\w*\\s+тейк\\b))(?=.*(?:\\b(?:фикс\\w*|зафиксир\\w*|частичн\\w*|закрыва\\w*)\\s*(?:25|30|40|50|70|80)%)).*",
+          "(?i)\\b(?:tp|тп|тейк|target|цель)\\s*(\\d+)\\b.*(?:фикс\\w*|закр\\w*|fix\\w*|close\\w*)\\s*(20|25|30|40|50|70|80|100)%?"
+        ],
+        "if_contains_any": [],
+        "reason": "tp1_partial_close_context_not_actionable"
       },
-
       {
         "name": "all_short_in_ps_informational_context",
         "strength": "strong",
@@ -296,9 +367,27 @@
         "scope": "whole_message",
         "if_contains_any": ["не перезаходим"],
         "reason": "explicit_no_reentry_statement"
+      },
+        {
+        "name": "no_move_stop_to_be",
+        "strength": "strong",
+        "marker_name": "MOVE_STOP_TO_BE",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["не переносим в бу"],
+        "reason": "explicit_no_move_stop_to_be"
+      },
+        {
+        "name": "no_tp_hit_in_historical_tp_context",
+        "strength": "strong",
+        "marker_name": "TP_HIT",
+        "markers": {"source": "semantic"},
+        "scope": "whole_message",
+        "if_contains_any": ["После первого тейка","дожидаться 1 тейка","до 1 тейка","после 1 тейка"],
+        "reason": "explicit_historical_tp_reference_not_actionable"
       }
     ],
-    "cross_intent_suppression": [
+    "cross_intent_suppression": [ 
       {
         "if_strong": "MOVE_STOP_TO_BE",
         "suppress_weak": ["EXIT_BE", "INFO_ONLY"],
@@ -337,14 +426,50 @@
     ]
   },
   "disambiguation": [
+    {
+      "name": "prefer_close_partial_in_entry_filled_context",
+      "when_all_detected": ["CLOSE_PARTIAL", "ENTRY_FILLED"],
+      "prefer": "CLOSE_PARTIAL",
+      "over": ["ENTRY_FILLED"]
+    },
+    {
+      "name": "prefer_close_full_in_entry_filled_context",
+      "when_all_detected": ["CLOSE_FULL", "ENTRY_FILLED"],
+      "prefer": "CLOSE_FULL",
+      "over": ["ENTRY_FILLED"]
+    },
+     {
+      "name": "prefer_move_stop_to_be_in_modify_entry",
+      "when_all_detected": ["MOVE_STOP_TO_BE", "MODIFY_ENTRY"],
+      "prefer": "MOVE_STOP_TO_BE",
+      "over": ["MODIFY_ENTRY"]
+    },
       {
+      "name": "prefer_close_full_in_modify_entry",
+      "when_all_detected": ["CLOSE_FULL", "MODIFY_ENTRY"],
+      "prefer": "CLOSE_FULL",
+      "over": ["MODIFY_ENTRY"]
+    },
+         {
+      "name": "prefer_sl_hit_in_modify_entry",
+      "when_all_detected": ["SL_HIT", "MODIFY_ENTRY"],
+      "prefer": "SL_HIT",
+      "over": ["MODIFY_ENTRY"]
+    },
+     {
+      "name": "prefer_close_full_in_add_entry",
+      "when_all_detected": ["CLOSE_FULL", "ADD_ENTRY"],
+      "prefer": "CLOSE_FULL",
+      "over": ["ADD_ENTRY"]
+    },
+    {
       "name": "prefer_move_stop_to_be_over_reentry_in_move_stop_to_be_context",
       "when_all_detected": ["MOVE_STOP_TO_BE", "REENTER"],
       "prefer": "MOVE_STOP_TO_BE",
       "over": ["REENTER"]
     },
     {
-      "name": "prefer_move_stop_to_be_tp_hit",
+      "name": "prefer_move_stop_over_tp_hit",
       "when_all_detected": ["TP_HIT", "MOVE_STOP"],
       "prefer": "MOVE_STOP",
       "over": ["TP_HIT"]
@@ -379,6 +504,12 @@
       "when_all_detected": ["CLOSE_PARTIAL", "CLOSE_FULL"],
       "prefer": "CLOSE_PARTIAL",
       "over": ["CLOSE_FULL"]
+    },
+    {
+      "name": "tp_hit_over_close_partial",
+      "when_all_detected": ["TP_HIT", "CLOSE_PARTIAL"],
+      "prefer": "TP_HIT",
+      "over": ["CLOSE_PARTIAL"]
     },
      {
       "name": "sl_hit_redundant_with_tp_hit",

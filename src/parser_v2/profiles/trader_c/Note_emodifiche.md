@@ -36,6 +36,43 @@ Vedere bene come gestire i ref
 
 
 
+Controlla come il Sistema 
+
+
+Come  il parser gestiche seguenti casi update:
+
+- un messaggio reply
+- un messaggio contiene
+- un messagio reply contiente link/s 
+- un messagio reply contiente id/s 
+- un messaggio con target global/shots/longs 
+- un messagio contiente link/s 
+- un messagio contiente id/s
+- un messagio che ha come riferimento solo symbol/s
+
+
+
+si potrebbe fare
+"weak_context_exclusions" + "strong_context_exclusions" oppure "marker_context_exclusions" dove strong e weak diventano I parametri ?
+quale soluzione piu facile e migliore ?
+
+
+
+kind implicito,
+ marker_name: str/list
+
+
+
+se non erro inizialmente ero nato poer soprimere ho un marker debole scecifico/I , ho una intero vocabalario di marker debole
+
+
+
+
+"marker_name": ["EXIT_BE", "MOVE_STOP_TO_BE"] se ho intrambi in `match.name`  la regola veien aplicata a antrambi?
+
+
+
+Si puo aggiungere il controlo per update che del tipo MODIFY_ENTRY vengo assgnat solo se puntano aun ref che è scato classifcicato come sgenale
 
 
 

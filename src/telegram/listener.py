@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta, timezone
 import logging
-from typing import Iterable
+from typing import TYPE_CHECKING, Iterable
 
 try:
     from telethon import TelegramClient, events
@@ -30,17 +30,20 @@ from dataclasses import dataclass
 
 from src.parser_v2.contracts.context import ParserContext, RawContext
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult, ParserJobStatus
-from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
 from src.runtime_v2.persistence.raw_messages import RawMessageRepository
-from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
-from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
 from src.runtime_v2.trader_resolution.models import ParserDispatchCandidate, ResolvedTraderContext
-from src.telegram.trader_resolver import TraderResolver
 from src.storage.processing_status import ProcessingStatusStore
+from src.storage.raw_message_revisions import RawMessageRevisionStore
 from src.storage.raw_messages import RawMessageStore
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.topic_utils import extract_message_topic_id, extract_real_reply_to_message_id
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
+
+if TYPE_CHECKING:
+    from src.runtime_v2.parser_pipeline.processor import ParserPipelineProcessor
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+    from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelConfigResolver
+    from src.telegram.trader_resolver import TraderResolver
 
 
 @dataclass(slots=True)
@@ -76,7 +79,11 @@ def _is_blacklisted_text(
 
 
 def build_ingestion_service(db_path: str, logger: logging.Logger) -> RawMessageIngestionService:
-    return RawMessageIngestionService(store=RawMessageStore(db_path=db_path), logger=logger)
+    return RawMessageIngestionService(
+        store=RawMessageStore(db_path=db_path),
+        revision_store=RawMessageRevisionStore(db_path=db_path),
+        logger=logger,
+    )
 
 
 def build_processing_status_store(db_path: str) -> ProcessingStatusStore:
@@ -101,6 +108,7 @@ class TelegramListener:
         fallback_allowed_chat_ids: Iterable[int] | None = None,
         chain_exists_for_raw: Callable[[int], bool] | None = None,
         notify_edit_skipped: Callable[[dict], None] | None = None,
+        revision_store: RawMessageRevisionStore | None = None,
     ) -> None:
         self._ingestion = ingestion_service
         self._status_store = processing_status_store
@@ -114,6 +122,7 @@ class TelegramListener:
         self._fallback_ids: set[int] = set(fallback_allowed_chat_ids or [])
         self._chain_exists_for_raw = chain_exists_for_raw
         self._notify_edit_skipped = notify_edit_skipped
+        self._revision_store = revision_store
         self._queue: asyncio.Queue[_QueueItem] = asyncio.Queue()
 
     def update_config(self, new_config: ChannelsConfig) -> None:
@@ -381,7 +390,18 @@ class TelegramListener:
             )
             return
 
+        run_context = self._edit_run_context(message)
+
         if self._chain_exists_for_message(raw_message_id):
+            self._append_edit_revision(
+                raw_message_id=raw_message_id,
+                message=message,
+                source_chat_id=source_chat_id,
+                topic_id=topic_id,
+                new_text=new_text,
+                run_context=run_context,
+                applied_to_current=False,
+            )
             self._logger.warning(
                 "edit_of_executed_signal_skipped | chat=%s topic=%s msg_id=%s raw_message_id=%s "
                 "— una trade chain esiste già, correzione da gestire manualmente",
@@ -408,8 +428,15 @@ class TelegramListener:
             )
             return
 
-        edit_ts = getattr(message, "edit_date", None) or datetime.now(timezone.utc)
-        run_context = f"edit:{int(_as_utc(edit_ts).timestamp())}"
+        self._append_edit_revision(
+            raw_message_id=raw_message_id,
+            message=message,
+            source_chat_id=source_chat_id,
+            topic_id=topic_id,
+            new_text=new_text,
+            run_context=run_context,
+            applied_to_current=True,
+        )
         self._raw_repo.update_raw_text(raw_message_id, new_text)
         self._status_store.update(raw_message_id, "pending")
         reply_to_message_id = extract_real_reply_to_message_id(
@@ -479,6 +506,45 @@ class TelegramListener:
                 raw_message_id,
             )
             return True
+
+    def _append_edit_revision(
+        self,
+        *,
+        raw_message_id: int,
+        message: Message,
+        source_chat_id: str,
+        topic_id: int | None,
+        new_text: str,
+        run_context: str,
+        applied_to_current: bool,
+    ) -> None:
+        if self._revision_store is None:
+            return
+        edit_ts = getattr(message, "edit_date", None)
+        self._revision_store.append_edit(
+            raw_message_id=raw_message_id,
+            source_chat_id=source_chat_id,
+            telegram_message_id=int(message.id),
+            raw_text=new_text,
+            message_ts=_as_utc(message.date or datetime.now(timezone.utc)).isoformat(),
+            run_context=run_context,
+            telegram_edit_ts=_as_utc(edit_ts).isoformat() if edit_ts else None,
+            acquisition_status="ACQUIRED_ELIGIBLE",
+            reply_to_message_id=extract_real_reply_to_message_id(
+                message,
+                source_topic_id=topic_id,
+            ),
+            source_topic_id=topic_id,
+            has_media=bool(getattr(message, "media", None)),
+            media_kind=None,
+            media_mime_type=None,
+            media_filename=None,
+            applied_to_current=applied_to_current,
+        )
+
+    def _edit_run_context(self, message: Message) -> str:
+        edit_ts = getattr(message, "edit_date", None) or datetime.now(timezone.utc)
+        return f"edit:{int(_as_utc(edit_ts).timestamp())}"
 
     async def _ingest_and_enqueue(
         self,

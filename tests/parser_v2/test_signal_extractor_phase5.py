@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from src.parser_v2.core.text_normalizer import TextNormalizer
-from src.parser_v2.profiles.trader_a.signal_extractor import SignalExtractor
+from src.parser_v2.profiles.Legacy.trader_a_legacy.signal_extractor import SignalExtractor
 
 
 def _extract(text: str):

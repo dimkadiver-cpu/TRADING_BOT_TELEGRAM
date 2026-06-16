@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from src.parser_v2.contracts.context import ParserContext, RawContext
 from src.parser_v2.core.runtime import UniversalParserRuntime
-from src.parser_v2.profiles.trader_a.profile import TraderAProfile
+from src.parser_v2.profiles.Legacy.trader_a_legacy.profile import TraderAProfile
 
 
 def _parse(text: str):

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from src.parser_v2.contracts.context import ParserContext
 from src.parser_v2.core.runtime import UniversalParserRuntime, parse
-from src.parser_v2.profiles.trader_a.profile import TraderAProfile
+from src.parser_v2.profiles.Legacy.trader_a_legacy.profile import TraderAProfile
 
 
 STOP_TO_BE = "\u0441\u0442\u043e\u043f \u0432 \u0431\u0443"

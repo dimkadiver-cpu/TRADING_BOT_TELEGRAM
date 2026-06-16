@@ -26,7 +26,34 @@ _CYR_LIMIT_ROOT = "\u043b\u0438\u043c\u0438\u0442"
 _CYR_CURRENT_ROOT = "\u0442\u0435\u043a\u0443\u0449"
 _CYR_MARKET_ROOT = "\u0440\u044b\u043d"
 _CYR_SPOT_ROOT = "\u0441\u043f\u043e\u0442"
+_CYR_TAKE = "\u0442\u0435\u0439\u043a"   # \u0442\u0435\u0439\u043a
+_CYR_PROFIT = "\u043f\u0440\u043e\u0444\u0438\u0442"  # \u043f\u0440\u043e\u0444\u0438\u0442
+_CYR_TP = "\u0442\u043f"  # \u0442\u043f
 _BULLET_CHARS = r"\-*•—–"
+
+# Cyrillic lookalike letters → Latin equivalents, applied only during symbol extraction.
+# Covers the most common confusables in Russian crypto channel tickers (e.g. BTСUSDT where С=U+0421).
+_CYRILLIC_TO_LATIN = str.maketrans({
+    "С": "C",  # С → C
+    "А": "A",  # А → A
+    "Е": "E",  # Е → E
+    "В": "B",  # В → B
+    "О": "O",  # О → O
+    "Р": "P",  # Р → P
+    "Х": "X",  # Х → X
+    "К": "K",  # К → K
+    "М": "M",  # М → M
+    "Т": "T",  # Т → T
+    "Н": "H",  # Н → H
+})
+
+_ENTRY_RANGE_RE = re.compile(
+    rf"\b(?:entry|vhod|{_CYR_ENTRY})\b"
+    rf"(?:\s+(?:\([^)\n]*\)|[^\n:(){{}}]{{1,32}}))?"
+    rf"\s*[:=@]?\s*"
+    rf"(?P<min>{_NUMBER_PATTERN})\s*[-–—]\s*(?P<max>{_NUMBER_PATTERN})(?!\s*%)",
+    re.IGNORECASE,
+)
 
 _SYMBOL_RE = re.compile(
     r"(?:#|\$)?(?P<symbol>[A-Z0-9]{1,24}(?:USDT|USDC|USD|BTC|ETH)(?:\.P)?)\b",
@@ -36,13 +63,29 @@ _BARE_HASHTAG_SYMBOL_RE = re.compile(r"#(?P<symbol>[A-Z0-9]{2,20})\b", re.IGNORE
 
 _ENTRY_MARKET_RE = re.compile(
     rf"(?:entry|enter|vhod|{_CYR_ENTRY})\s+"
-    rf"(?:market|at\s+market|now|[^\n]*{_CYR_CURRENT_ROOT}\w*|[^\n]*{_CYR_MARKET_ROOT}\w*)"
+    rf"(?:market|at\s+market|now"
+    rf"|[^\n]*(?:маркет|{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT})\w*)"
     rf"\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
+    re.IGNORECASE,
+)
+# "вход по рынку" / "вход по маркету" with NO explicit price → MARKET entry, price=None
+_ENTRY_MARKET_IMPLICIT_RE = re.compile(
+    rf"\b(?:entry|enter|vhod|{_CYR_ENTRY})\b"
+    rf"(?:\s*:)?\s*"
+    rf"[^\n]{{0,30}}?(?:market|маркет|{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT})\w*"
+    rf"(?!\s*[:=]?\s*\d)",
     re.IGNORECASE,
 )
 _ENTRY_MARKET_PAREN_RE = re.compile(
     rf"(?:entry|enter|vhod|{_CYR_ENTRY})\s*:?\s*(?P<value>{_NUMBER_PATTERN})"
     rf"\s*\((?=[^)]*(?:{_CYR_CURRENT_ROOT}|{_CYR_MARKET_ROOT}|market))[^)]*\)",
+    re.IGNORECASE,
+)
+# "вход: по текущим (≈63150)" — price INSIDE parens after market description (trader_b format)
+_ENTRY_MARKET_PAREN_AFTER_RE = re.compile(
+    rf"\b(?:entry|enter|vhod|{_CYR_ENTRY})\b"
+    rf"(?:\s*:)?\s*[^\n(]{{0,40}}"
+    rf"\([\s~≈]*(?P<value>{_NUMBER_PATTERN})\)",
     re.IGNORECASE,
 )
 _ENTRY_KEYWORD_RE = re.compile(
@@ -52,7 +95,7 @@ _ENTRY_KEYWORD_RE = re.compile(
 _ENTRY_RE = re.compile(
     rf"\b(?:entry|vhod|{_CYR_ENTRY})"
     rf"(?:\s+(?:limit|limitka|{_CYR_LIMIT_ROOT}\w*))?"
-    rf"(?:\s+(?:\([^)\n]*\)|[^\n:()]{1,32}))*"
+    rf"(?:[^\S\n]+(?:\([^)\n]*\)|[^\n:()]{{1,32}}))*"
     rf"\s*[:=@-]?\s*(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
     re.IGNORECASE,
 )
@@ -74,24 +117,84 @@ _ENTRY_AB_RE = re.compile(
 )
 _STOP_LOSS_RE = re.compile(
     rf"(?:\bsl\b|stop(?:\s+loss)?|{_CYR_STOP}(?:\s+\u043b\u043e\u0441\u0441)?)"
-    rf"(?:\s*\([^)]*\))?\s*:?\s*(?P<value>{_NUMBER_PATTERN})(?![.,\d \t]*\s*%)",
+    rf"(?:\s*\([^)]*\))?[\u201d\u2019\"']*\s*:?[\u201d\u2019\"']*\s*(?P<value>{_NUMBER_PATTERN})(?!\s*%)",
     re.IGNORECASE,
 )
+# тп<N> (trader_d), тейк профит: inline (trader_b), tp<N> (universal)
 _TAKE_PROFIT_RE = re.compile(
-    rf"\b(?:tp|\u0442\u043f)(?P<index>\d+)?\b\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
+    rf"(?:\b(?:tp|{_CYR_TP})(?P<index>\d+)?\b"
+    rf"|{_CYR_TAKE}\w*(?:\s+{_CYR_PROFIT}\w*)?)"
+    rf"\s*:?\s*(?P<value>{_NUMBER_PATTERN})",
     re.IGNORECASE,
 )
+# тпs? (trader_d), [Tт]ейк профит? (prova+trader_b), tps? (universal)
+# Colon optional to match headers like "Tейк-профит" (trader_c) without trailing colon.
 _TAKE_PROFIT_HEADER_RE = re.compile(
-    r"^[^\n]*(?:\btps?\b|\u0442\u043fs?\b|тейк\w*)[^\n]*:\s*$",
+    rf"^[^\n]*(?:\btps?\b|\b{_CYR_TP}s?\b|[Tт]ейк\w*(?:[-\s]+{_CYR_PROFIT}\w*)?)[^\n]*:?\s*$",
     re.IGNORECASE | re.MULTILINE,
 )
+# \d+[.)] handles numbered lists like "1) 87100" in addition to bullet chars
 _TAKE_PROFIT_BARE_LINE_RE = re.compile(
-    rf"^\s*(?:[{_BULLET_CHARS}]\s*)?(?P<value>{_NUMBER_PATTERN})(?:\s|\(|$)",
+    rf"^\s*(?:(?:[{_BULLET_CHARS}]|\d+[.)])\s*)?(?P<value>{_NUMBER_PATTERN})(?:\s|\(|$)",
     re.IGNORECASE,
+)
+
+_ENTRY_NUMBERED_ITEM_RE = re.compile(
+    rf"^[^\S\n]*(?P<seq>[1-9])[.)]\s*(?P<value>{_NUMBER_PATTERN})\s*(?:\([^)]*\))?[^\S\n]*$",
+    re.MULTILINE,
 )
 
 _DEFAULT_RISK_PREFIXES = ["risk", "риск", "вход", "на сделку"]
 _DEFAULT_RISK_SUFFIXES = ["от депозита", "риска", "на сделку"]
+
+
+def _extract_numbered_list_entries(text: str) -> list[EntryLeg]:
+    """Extract entries from numbered-list format: '1)88650(1/3)', '2)89100(2/3)'."""
+    entry_kw = _ENTRY_KEYWORD_RE.search(text)
+    if not entry_kw:
+        return []
+
+    # Limit search to the section between entry keyword and stop/TP section
+    section_end = len(text)
+    stop_match = _STOP_LOSS_RE.search(text, entry_kw.end())
+    if stop_match:
+        section_end = min(section_end, stop_match.start())
+    tp_header = _TAKE_PROFIT_HEADER_RE.search(text, entry_kw.end())
+    if tp_header:
+        section_end = min(section_end, tp_header.start())
+
+    section = text[entry_kw.end():section_end]
+    entries: list[EntryLeg] = []
+    for match in _ENTRY_NUMBERED_ITEM_RE.finditer(section):
+        price = _price_from_raw(match.group("value"))
+        if price is None:
+            continue
+        seq = int(match.group("seq"))
+        role: str = "PRIMARY" if seq == 1 else "AVERAGING"
+        entries.append(EntryLeg(
+            sequence=seq,
+            entry_type="LIMIT",
+            price=price,
+            role=role,  # type: ignore[arg-type]
+            is_optional=seq > 1,
+        ))
+    return entries
+
+
+def _try_range_entry(text: str) -> list[EntryLeg] | None:
+    match = _ENTRY_RANGE_RE.search(text)
+    if not match:
+        return None
+    min_price = _price_from_raw(match.group("min"))
+    max_price = _price_from_raw(match.group("max"))
+    if min_price is None or max_price is None:
+        return None
+    if min_price.value > max_price.value:
+        min_price, max_price = max_price, min_price
+    return [
+        EntryLeg(sequence=1, entry_type="LIMIT", price=min_price, role="PRIMARY", is_optional=False),
+        EntryLeg(sequence=2, entry_type="LIMIT", price=max_price, role="AVERAGING", is_optional=False),
+    ]
 
 
 class SignalExtractor:
@@ -109,9 +212,23 @@ class SignalExtractor:
 
         symbol = normalize_symbol(_extract_symbol(text))
         side = _extract_side(normalized_text)
-        entries = _extract_entries(text, market_hint=market_hint)
+
+        range_entries = _try_range_entry(text)
+        if range_entries is not None:
+            entries = range_entries
+            entry_structure = "RANGE"
+        else:
+            entries = _extract_entries(text, market_hint=market_hint)
+            entry_structure = _entry_structure(entries)
+
         stop_loss = _extract_stop_loss(text)
         take_profits = _extract_take_profits(text)
+
+        # Market-implicit entries (price=None) without stop or TPs are MODIFY_ENTRY context,
+        # not new signals (e.g. "тут уже вход с текущих").
+        if entries and all(e.price is None for e in entries) and not stop_loss and not take_profits:
+            entries = []
+
         risk_hint = _extract_risk_hint(text, self._risk_prefixes, self._risk_suffixes)
 
         if not any((entries, stop_loss, take_profits)):
@@ -128,7 +245,7 @@ class SignalExtractor:
         return SignalDraft(
             symbol=symbol,
             side=side,
-            entry_structure=_entry_structure(entries),
+            entry_structure=entry_structure,
             entries=entries,
             stop_loss=stop_loss,
             take_profits=take_profits,
@@ -139,11 +256,12 @@ class SignalExtractor:
 
 
 def _extract_symbol(text: str) -> str | None:
-    match = _SYMBOL_RE.search(text.upper())
+    normalized = text.upper().translate(_CYRILLIC_TO_LATIN)
+    match = _SYMBOL_RE.search(normalized)
     if match:
         return match.group("symbol").upper()
 
-    bare_match = _BARE_HASHTAG_SYMBOL_RE.search(text.upper())
+    bare_match = _BARE_HASHTAG_SYMBOL_RE.search(normalized)
     if bare_match:
         return f"{bare_match.group('symbol').upper()}USDT"
 
@@ -172,13 +290,20 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
     if primary is None:
         primary = _search_price(_ENTRY_MARKET_PAREN_RE, text)
     if primary is None:
+        primary = _search_price(_ENTRY_MARKET_PAREN_AFTER_RE, text)
+    if primary is None:
         primary = _search_price(_ENTRY_ORDER_RE, text)
         primary_type = "LIMIT"
     if primary is None:
         primary = _search_price(_ENTRY_RE, text)
         primary_type = "MARKET" if market_hint else "LIMIT"
 
-    if primary is not None or (market_hint and has_entry_keyword):
+    is_implicit_market = False
+    if primary is None and _ENTRY_MARKET_IMPLICIT_RE.search(text):
+        is_implicit_market = True
+        primary_type = "MARKET"
+
+    if primary is not None or (market_hint and has_entry_keyword) or is_implicit_market:
         entries.append(
             EntryLeg(
                 sequence=1,
@@ -200,6 +325,10 @@ def _extract_entries(text: str, market_hint: bool = False) -> list[EntryLeg]:
                 is_optional=True,
             )
         )
+
+    # Fallback: numbered list items after entry keyword (e.g. "1)88650(1/3)", "2)89100(2/3)")
+    if not entries and has_entry_keyword:
+        entries = _extract_numbered_list_entries(text)
 
     return entries
 
@@ -244,6 +373,19 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
             continue
 
         index_raw = match.group("index")
+        # Skip "тп 1" / "тейк 2" where the digit is a TP level indicator, not a price.
+        # Heuristic: no explicit TP index AND price is a single-digit integer AND no colon.
+        if (
+            index_raw is None
+            and price.value <= 9
+            and price.value == int(price.value)
+            and ":" not in match.group(0)
+        ):
+            continue
+        # Skip result-metric values: R-ratio ("тейк 0.9Р") or percentage ("2 тейк 29%").
+        if index_raw is None and text[match.end() : match.end() + 1] in ("r", "R", "р", "Р", "%"):
+            continue
+
         sequence = int(index_raw) if index_raw else fallback_sequence
         take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
 
@@ -254,11 +396,8 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
     if not header:
         return take_profits
 
-    started = False
     for line in text[header.end():].splitlines():
         if not line.strip():
-            if started:
-                break
             continue
         match = _TAKE_PROFIT_BARE_LINE_RE.match(line)
         if not match:
@@ -268,7 +407,6 @@ def _extract_take_profits(text: str) -> list[TakeProfit]:
         price = _price_from_raw(match.group("value"))
         if price is None:
             continue
-        started = True
         sequence = len(take_profits) + 1
         take_profits.append(TakeProfit(sequence=sequence, price=price, label=f"TP{sequence}"))
 

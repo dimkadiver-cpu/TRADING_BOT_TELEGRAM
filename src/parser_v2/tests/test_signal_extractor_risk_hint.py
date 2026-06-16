@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from src.parser_v2.contracts.markers import NormalizedText
-from src.parser_v2.profiles.trader_a.signal_extractor import SignalExtractor
+from src.parser_v2.profiles.Legacy.trader_a_legacy.signal_extractor import SignalExtractor
 
 
 @pytest.mark.parametrize(

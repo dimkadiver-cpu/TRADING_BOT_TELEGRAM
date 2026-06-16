@@ -56,6 +56,7 @@ from src.runtime_v2.control_plane.notification_dispatcher import TelegramNotific
 from src.runtime_v2.control_plane.outbox_writer import notify_listener_edit_skipped
 from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.telegram_bot import TelegramControlBot
+from src.storage.raw_message_revisions import RawMessageRevisionStore
 from src.storage.parser_results_v2 import ParserResultV2Store
 from src.storage.parser_runs import ParserRunStore
 from src.telegram.channel_config import ChannelConfigWatcher, load_channels_config
@@ -448,6 +449,7 @@ async def _async_main(
     processing_status_store = build_processing_status_store(db_path=parser_db_path)
 
     raw_repo = RawMessageRepository(db_path=parser_db_path)
+    revision_store = RawMessageRevisionStore(db_path=parser_db_path)
     channel_resolver = ChannelConfigResolver(config_path=channels_yaml_path)
     canonical_repo = CanonicalMessageRepository(db_path=parser_db_path)
 
@@ -499,6 +501,7 @@ async def _async_main(
         fallback_allowed_chat_ids=fallback_ids,
         chain_exists_for_raw=chain_repo.has_chain_for_raw_message,
         notify_edit_skipped=partial(notify_listener_edit_skipped, ops_db_path),
+        revision_store=revision_store,
     )
 
     event_repo = LifecycleEventRepository(ops_db_path)

@@ -4,7 +4,7 @@ import pytest
 
 from src.parser_v2.contracts.entities import ModifyEntryEntities
 from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
-from src.parser_v2.profiles.trader_a.intent_entity_extractor import IntentEntityExtractor
+from src.parser_v2.profiles.Legacy.trader_a_legacy.intent_entity_extractor import IntentEntityExtractor
 
 
 def _ev(
