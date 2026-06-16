@@ -125,6 +125,8 @@ class LifecycleEventProcessor:
             return self._process_close_full_filled(exchange_event, chain)
         if etype in ("CLOSE_PARTIAL_FILLED", "MANUAL_CLOSE_PARTIAL"):
             return self._process_close_partial_filled(exchange_event, chain)
+        if etype == "LIQUIDATION_FILLED":
+            return self._process_liquidation_filled(exchange_event, chain)
         if etype == "STOP_MOVED_CONFIRMED":
             return self._process_stop_moved_confirmed(exchange_event, chain)
         if etype == "PENDING_ENTRY_CANCELLED_CONFIRMED":
@@ -803,6 +805,43 @@ class LifecycleEventProcessor:
             new_closed_position_qty=new_closed,
         )
 
+
+    def _process_liquidation_filled(
+        self, exchange_event: ExchangeEvent, chain: TradeChain
+    ) -> EventProcessorResult:
+        ep = ExchangeEventPayload.model_validate_json(exchange_event.payload_json)
+        fill_qty = float(ep.filled_qty or chain.open_position_qty)
+        eid = exchange_event.exchange_event_id
+        chain_id = chain.trade_chain_id
+        fill_payload = _normalized_fill_payload(ep.model_dump(), default_qty=fill_qty)
+        return EventProcessorResult(
+            new_lifecycle_state="CLOSED",
+            new_be_protection_status=None,
+            entry_avg_price=None,
+            current_stop_price=None,
+            lifecycle_events=[LifecycleEvent(
+                trade_chain_id=chain_id,
+                event_type="LIQUIDATION_FILLED",
+                source_type="exchange_event",
+                source_id=str(eid),
+                previous_state=chain.lifecycle_state,
+                next_state="CLOSED",
+                payload_json=json.dumps(fill_payload),
+                idempotency_key=f"liquidation_filled:{chain_id}:{eid}",
+            )],
+            execution_commands=[ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type="CANCEL_PENDING_ENTRY",
+                payload_json=json.dumps({
+                    "symbol": chain.symbol,
+                    "side": chain.side,
+                    "cancel_reason": "position_closed",
+                }),
+                idempotency_key=f"cancel_on_liquidation:{chain_id}",
+            )],
+            new_open_position_qty=0.0,
+            new_closed_position_qty=chain.closed_position_qty + fill_qty,
+        )
 
     def _process_stop_moved_confirmed(
         self, exchange_event: ExchangeEvent, chain: TradeChain
