@@ -2,6 +2,28 @@
 
 ---
 
+## 2026-06-17 — Fix false position close da position_reconciliation (singolo REST zero)
+
+**Problema:** In un test live su demo Bybit, la chain BTCUSDT LONG è stata marcata CLOSED (notifica Telegram "posizione chiusa") mentre la posizione era ancora aperta sull'exchange. Root cause: `run_position_reconciliation` in `event_sync.py` chiamava `fetch_positions` via REST una sola volta; se la risposta tornava vuota/zero (transient API issue, WS reconnect, demo flakiness), generava immediatamente un evento sintetico `CLOSE_FULL_FILLED` senza conferma.
+
+**Evidenza DB:** `ops_exchange_events.exchange_event_id=3` ha `source="position_reconciliation"`, `fill_price=null`, `exec_fee=null` — nessuna reduce trade confermava la chiusura.
+
+**Fix applicato:**
+- File: `src/runtime_v2/execution_gateway/event_sync.py`
+- Aggiunto `_position_zero_count: dict[int, int]` come stato interno della worker class
+- Quando `get_position_qty` restituisce 0 ma `fetch_recent_reduce_trades` non trova trade di riduzione (`fill_price is None`), il close viene **deferrato** fino a N letture consecutive (`_POSITION_ZERO_CONFIRM_REQUIRED = 2`)
+- Se una reduce trade viene trovata (`fill_price is not None`), la chiusura sintetica è immediata (comportamento invariato)
+- Contatore resettato quando `qty > 0` o `qty is None`
+- File: `tests/runtime_v2/execution_gateway/test_event_sync.py` — 3 test aggiornati per il nuovo comportamento
+
+**Validazione:** 7/7 test `position_reconciliation` passano. 3 failure pre-esistenti non toccate (`run_funding_reconciliation`, `test_resolve_chain_for_fill_account_aware`, `test_trade_based_reconciliation_ignores_other_account_chains`).
+
+**Stato chain corrente (Test_live):** La chain 1 è ancora CLOSED nel DB ma la posizione è aperta sull'exchange — richiede intervento manuale (v. handoff).
+
+**Rischi aperti:** La chain BTC è desincronizzata (DB=CLOSED, exchange=OPEN). La posizione deve essere chiusa manualmente sull'exchange oppure la chain va riallineata. Il fix previene il problema in futuro ma non corregge lo stato attuale.
+
+---
+
 ## 2026-06-17 — Fix WS reconnect loop (NetworkError 1006) in ws_fill_watcher
 
 **Problema:** Il server produceva errori ciclici `ccxt.base.errors.NetworkError: Connection closed by remote server, closing code 1006` per `watch_orders`, `watch_my_trades`, `watch_positions`. Dopo ogni disconnessione WS, il loop riprovava sulla **stessa istanza exchange corrotta**, causando fallimenti immediati ripetuti ogni 5 secondi.

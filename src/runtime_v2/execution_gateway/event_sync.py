@@ -36,6 +36,9 @@ def _reduce_trade_stats(trades: list) -> tuple[float | None, float | None, float
     return fill_price, total_fee, fee_rate
 
 
+_POSITION_ZERO_CONFIRM_REQUIRED = 2  # consecutive REST zeros before synthetic close
+
+
 class ExchangeEventSyncWorker:
     def __init__(
         self,
@@ -50,6 +53,8 @@ class ExchangeEventSyncWorker:
         self._repo = repo
         self._execution_account_id = execution_account_id
         self._wake_callback = wake_callback
+        # chain_id → consecutive REST reads returning qty=0 without a confirmed reduce trade
+        self._position_zero_count: dict[int, int] = {}
 
     def _wake(self) -> None:
         if self._wake_callback is not None:
@@ -97,11 +102,16 @@ class ExchangeEventSyncWorker:
                     execution_account_id=self._execution_account_id,
                 )
                 if qty is None:
+                    self._position_zero_count.pop(chain_id, None)
+                    continue
+                if qty > 0.0:
+                    self._position_zero_count.pop(chain_id, None)
                     continue
                 if qty == 0.0 and open_qty > 0.0:
                     # Skip synthetic close if a real fill event already exists.
                     # The lifecycle will close the chain from the WS/REST fill path.
                     if self._repo.real_close_fill_exists(chain_id):
+                        self._position_zero_count.pop(chain_id, None)
                         continue
 
                     # Attempt to recover fill price from recent reduce trades (REST safety net)
@@ -123,6 +133,25 @@ class ExchangeEventSyncWorker:
                                 chain_id,
                             )
 
+                    # If no reduce trade confirms the close, require consecutive zero reads
+                    # to guard against transient REST API returning empty positions (false zero).
+                    if fill_price is None:
+                        count = self._position_zero_count.get(chain_id, 0) + 1
+                        self._position_zero_count[chain_id] = count
+                        if count < _POSITION_ZERO_CONFIRM_REQUIRED:
+                            logger.warning(
+                                "position qty=0 from REST but no reduce trade found: "
+                                "chain=%s %s %s (zero_count=%d/%d) — deferring synthetic close",
+                                chain_id, symbol, side, count, _POSITION_ZERO_CONFIRM_REQUIRED,
+                            )
+                            continue
+                        logger.warning(
+                            "position qty=0 confirmed %d consecutive times without reduce trade: "
+                            "chain=%s %s %s — generating synthetic close",
+                            count, chain_id, symbol, side,
+                        )
+
+                    self._position_zero_count.pop(chain_id, None)
                     idem_key = f"CLOSE_FULL_FILLED:ext:{chain_id}"
                     payload = json.dumps({
                         "filled_qty": open_qty,

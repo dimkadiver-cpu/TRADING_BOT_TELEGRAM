@@ -394,6 +394,11 @@ def test_position_reconciliation_emits_close_full_filled(ops_db):
     worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter,
                                      repo=repo, execution_account_id="acc")
 
+    # First run: deferred — no reduce trade confirms the close, need consecutive confirmation.
+    first = worker.run_position_reconciliation()
+    assert first == 0
+
+    # Second run: confirmed → emits CLOSE_FULL_FILLED.
     count = worker.run_position_reconciliation()
 
     assert count == 1
@@ -467,11 +472,13 @@ def test_position_reconciliation_second_run_reports_zero_new_items(ops_db):
         execution_account_id="acc",
     )
 
-    first = worker.run_position_reconciliation()
-    second = worker.run_position_reconciliation()
+    first = worker.run_position_reconciliation()   # deferred (zero_count=1)
+    second = worker.run_position_reconciliation()  # emits (zero_count=2)
+    third = worker.run_position_reconciliation()   # idempotent (already CLOSED)
 
-    assert first == 1
-    assert second == 0
+    assert first == 0
+    assert second == 1
+    assert third == 0
 
 
 def test_run_reconciliation_continues_after_single_order_error(ops_db):
@@ -1106,6 +1113,9 @@ def test_position_reconciliation_falls_back_to_none_when_no_reduce_trades(ops_db
         repo=repo,
         execution_account_id="acc",
     )
+    # No reduce trade: first run defers, second run emits with fill_price=None.
+    first = worker.run_position_reconciliation()
+    assert first == 0
     n = worker.run_position_reconciliation()
     assert n == 1
 
