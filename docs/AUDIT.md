@@ -2,6 +2,22 @@
 
 ---
 
+## 2026-06-17 — Fix WS reconnect loop (NetworkError 1006) in ws_fill_watcher
+
+**Problema:** Il server produceva errori ciclici `ccxt.base.errors.NetworkError: Connection closed by remote server, closing code 1006` per `watch_orders`, `watch_my_trades`, `watch_positions`. Dopo ogni disconnessione WS, il loop riprovava sulla **stessa istanza exchange corrotta**, causando fallimenti immediati ripetuti ogni 5 secondi.
+
+**Root cause:** In `ws_fill_watcher.py`, l'exchange veniva creato una volta sola prima del `while` loop. Dopo un `NetworkError` la connessione interna è morta ma l'oggetto non viene ricreato — ogni `watch_*()` successivo fallisce immediatamente.
+
+**Fix applicato:**
+- File: `src/runtime_v2/execution_gateway/adapters/ccxt_bybit/ws_fill_watcher.py`
+- Pattern double-loop per tutti e tre i watcher (`_watch_orders_forever`, `_watch_trades_forever`, `_watch_positions_forever`): loop esterno ricrea l'exchange ad ogni ciclo di reconnect; loop interno esegue lo stream; su eccezione → `break` verso loop esterno → `exchange.close()` → ricostruzione con `_build_exchange()` dopo 5s backoff.
+
+**Validazione:** Ambiente remoto privo di pydantic, test non eseguibili in CI locale. Logica verificata per revisione manuale — struttura identica ai tre watcher, nessun cambio al `_process_batch` o ai path normali.
+
+**Rischi aperti:** Nessuno di nuovo. Il server deve ricevere il deploy del file aggiornato e riavviare il servizio.
+
+---
+
 ## 2026-06-15 — Cleanup `trader_prova/rules.json` (solo neutro, no logica conflitti)
 
 Analisi anomalie/ridondanze su `src/parser_v2/profiles/trader_prova/rules.json` e cleanup comportamento-neutro. Decisioni utente: §4 (conflitti precedence↔disambiguation) e §5 (`detect_close_partial` in lista di esclusione) **lasciati invariati**.
