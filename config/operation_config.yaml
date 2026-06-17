@@ -29,7 +29,7 @@ account_mode: per_trader_subaccount  # Valori supportati: single | per_trader_su
 # single: unico account condiviso; i limiti account restano hard cap globali.
 # per_trader_subaccount: ogni config/traders/<id>.yaml puo' definire il proprio blocco account.
 account:
-  id: "main"  # Account logico usato dal runtime enrichment/lifecycle.
+  id: "demo_1"  # Account logico usato dal runtime enrichment/lifecycle.
   capital_base_usdt: 10000.0  # Capitale statico di riferimento.
   max_leverage: 5  # Hard cap locale di leva ammessa per l'account.
   max_capital_at_risk_pct: 100.0  # Cap massimo di rischio capitale totale allocabile sull'account.
@@ -139,13 +139,13 @@ defaults:
 
   risk:
     mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
-    risk_pct_of_capital: 2.0  # Usato quando mode=risk_pct_of_capital.
+    risk_pct_of_capital: 0.5  # Usato quando mode=risk_pct_of_capital.
     risk_usdt_fixed: 10.0  # Usato quando mode=risk_usdt_fixed.
     capital_base_mode: static_config  # Valori supportati: static_config | live_equity.
     capital_base_usdt: 10000.0  # Base capitale locale se non si usa equity live.
-    leverage: 5  # Leva operativa da usare per aprire la posizione.
+    leverage: 10  # Leva operativa da usare per aprire la posizione.
     use_trader_risk_hint: true  # true = usa eventuale hint rischio dal segnale/trader.
     risk_hint_range_mode: min_value  # Valori: min_value | max_value | midpoint. Usato quando risk_hint e' un range.
-    max_capital_at_risk_per_trader_pct: 50.0  # Cap di rischio totale per trader.
+    max_capital_at_risk_per_trader_pct: 100.0  # Cap di rischio totale per trader.
     max_concurrent_trades: 50  # Numero massimo chain aperte contemporanee per trader.
-    max_concurrent_same_symbol: 2  # Numero massimo trade contemporanei sullo stesso simbolo.
+    max_concurrent_same_symbol: 1  # Numero massimo trade contemporanei sullo stesso simbolo.

@@ -1,20 +1,3 @@
 # config/traders/trader_a.yaml
 enabled: true
 gate_mode: block
-
-signal_policy:
-  tp:
-    use_tp_count: 3
-
-update_admission:
-  MOVE_STOP_TO_BE: true
-
-management_plan:
-  be_trigger: tp1
-  be_fee_correction_enabled: true
-  be_fee_fallback_profile: bybit_linear
-  market_convert_mode: cancel_subsequent
-
-risk:
-  risk_pct_of_capital: 1
-  max_concurrent_trades: 5

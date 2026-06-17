@@ -1,62 +1,119 @@
+# config/telegram_control_template.yaml
+#
+# Template per la configurazione del Control Plane Telegram.
+# Istruzioni:
+#   1. Copia questo file come telegram_control.yaml
+#   2. Sostituisci tutti i placeholder _______________ con i valori reali
+#   3. La chiave di ogni account (main, sub_a…) deve corrispondere
+#      ad account.id nel yaml del trader → config/traders/<trader>.yaml
+#
+# Come trovare i thread_id:
+#   Click su un messaggio nel topic Telegram → "Copy Link"
+#   Il numero dopo l'ultimo / è il thread_id
+
+# ─── CONNESSIONE ──────────────────────────────────────────────────────────────
 token_env: CONTROL_TELEGRAM_BOT_TOKEN
-
-default_account: main
-
-delivery_mode: supergroup_topics
-
 authorized_users:
   - "${CONTROL_TELEGRAM_USER_ID}"
 
+delivery_mode: supergroup_topics
+default_account: main
+
+# ─── AVVIO ────────────────────────────────────────────────────────────────────
 startup:
   mode: auto
   restore_max_age_seconds: 300
 
-keyboard:
-  - ["/status", "/health", "/control"]
-  - ["/trades", "/reviews", "/logs"]
-  - ["/pause", "/resume"]
-  - ["/block", "/debug_on"]
-
-notifications:
-  startup: "on"
-  shutdown: "on"
-  control_change: "on"
-  review_required: "on"
-  entry_order_placed: "silent"
-  entry_filled: "on"
-  tp_filled: "on"
-  sl_filled: "on"
-  close_full_filled: "on"
-  close_partial_filled: "on"
-  order_rejected: "on"
-  reconciliation_warning: "on"
-  technical_error: "on"
-
+# ─── ROUTING ──────────────────────────────────────────────────────────────────
 per_account:
-  main:
-    chat_id: 0
+
+  # ── ACCOUNT PRINCIPALE — più trader, conto exchange condiviso ──────────────
+  # Trader con account.id: "demo_1" in config/traders/<trader>.yaml
+  demo_1:
+    chat_id: -1004240829081      # ID numerico del supergroup Telegram
+
     topics:
       clean_log:
-        thread_id: 11
-        per_trader:
-          trader_prova: 637
-          sma_intraday: 637
-          rsi_swing: 637
-          rsi_intraday: 637
-        debounce_seconds: 20
-        aggregate_fills_seconds: 30
-        aggregate_updates_seconds: 20
-        max_messages_per_chain_per_minute: 4
-        min_partial_fill_notify_pct: 10
+        thread_id: 2            # topic fallback (trader non mappati)
+        per_trader:               # topic dedicato per trader su questo account
+          trader_a: 316
+          trader_b: 318
+          trader_c: 947
+          trader_d: 320
+          trader_3: 871
+          trader_prova: 808
+          # aggiungi altri trader qui
+
       tech_log:
-        thread_id: 3
-        enabled: true
+        thread_id: 37            # errori WS, reconnect, anomalie runtime
         min_level: INFO
         operational_events: true
-        batch_seconds: 10
-        max_messages_per_minute: 20
-        dedupe_window_seconds: 60
-        max_repeated_before_summary: 5
-        debug_max_duration_minutes: 60
+
       commands:
-        thread_id: 13
+        thread_id: 4            # topic da cui arrivano /pause /block ecc.
+
+  # ── SUB ACCOUNT A — exchange account dedicato, più trader ─────────────────
+  # Trader con account.id: "sub_a" in config/traders/<trader>.yaml
+  demo_2:
+    chat_id: -100___________      # può essere lo stesso supergroup o uno diverso
+
+    topics:
+      clean_log:
+        thread_id: ___
+        per_trader:
+          trader_x:   ___
+          trader_y:   ___
+
+      tech_log:
+        thread_id: ___
+        min_level: INFO
+        operational_events: true
+
+      commands:
+        thread_id: ___
+
+  # ── SUB ACCOUNT B — exchange account con un solo trader ───────────────────
+  # Trader con account.id: "sub_b" in config/traders/<trader>.yaml
+  demo_3:
+    chat_id: -100___________
+
+    topics:
+      clean_log:  {thread_id: ___}
+      tech_log:   {thread_id: ___, min_level: INFO, operational_events: true}
+      commands:   {thread_id: ___}
+
+# ─── NOTIFICHE ────────────────────────────────────────────────────────────────
+notifications:
+  startup:                "on"
+  shutdown:               "on"
+  control_change:         "on"
+  review_required:        "on"
+  entry_order_placed:     "silent"
+  entry_filled:           "on"
+  tp_filled:              "on"
+  sl_filled:              "on"
+  close_full_filled:      "on"
+  close_partial_filled:   "on"
+  order_rejected:         "on"
+  reconciliation_warning: "on"
+  technical_error:        "on"
+
+# ─── TUNING (lasciare commentato = usa i default) ─────────────────────────────
+# clean_log:
+#   debounce_seconds: 20
+#   aggregate_fills_seconds: 30
+#   aggregate_updates_seconds: 20
+#   max_messages_per_chain_per_minute: 4
+#   min_partial_fill_notify_pct: 10
+#
+# tech_log:
+#   batch_seconds: 10
+#   max_messages_per_minute: 20
+#   dedupe_window_seconds: 60
+#   max_repeated_before_summary: 5
+#   debug_max_duration_minutes: 60
+# keyboard: serve solo in modalità private_bot — quando il bot gira in chat privata e mostra i pulsanti di scelta rapida.
+#  - ["/status", "/health", "/control"]
+#  - ["/trades", "/reviews", "/logs"]
+#  - ["/pause", "/resume"]
+#  - ["/block", "/debug_on"]

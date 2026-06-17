@@ -1,5 +1,5 @@
 account:
-  id: "account_nuovo"      # deve corrispondere alla chiave in account_routing
+  id: "demo_2"      # deve corrispondere alla chiave in account_routing
   capital_base_usdt: 10000.0
   max_leverage: 5
   max_capital_at_risk_pct: 100.0

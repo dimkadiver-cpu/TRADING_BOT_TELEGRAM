@@ -20,21 +20,30 @@
 # - live_safety.allow_live_trading: gate locale; per mode=live serve anche env TSB_ALLOW_LIVE_TRADING.
 
 execution:
-  default_adapter: bybit_demo
+  default_adapter: bybit_demo_1
 
   account_routing:
     default:
-      adapter: bybit_demo
-      execution_account_id: main  # Account logico instradato verso l'adapter selezionato.
-    main:
-      adapter: bybit_demo
-      execution_account_id: main
-    account_nuovo:
+      adapter: bybit_demo_1
+      execution_account_id: demo_1  # Account logico instradato verso l'adapter selezionato.
+    
+    demo_1:                         # Locale demo, instradato verso adapter demo.
+      adapter: bybit_demo_1
+      execution_account_id: demo_1
+
+    demo_2:
       adapter: bybit_nuovo
-      execution_account_id: account_nuovo  # Sostituire con il vero account ID Bybit del subaccount.
+      execution_account_id: demo_2  # Sostituire con il vero account ID Bybit del subaccount.
+
+    demo_3:
+      adapter: bybit_nuovo
+      execution_account_id: demo_3  # Sostituire con il vero account ID Bybit del subaccount.
+
+
+
 
   adapters:
-    bybit_demo:
+    bybit_demo_1:
       type: ccxt_bybit  # Adapter CCXT per Bybit.
       mode: demo  # Stati attesi: demo | paper | live.
       connector: bybit  # Exchange/connector target usato dall'adapter.
@@ -63,13 +72,43 @@ execution:
       live_safety:
         allow_live_trading: false  # Per live deve essere true e va settata anche la env di sblocco.
 
-    bybit_nuovo:
+    bybit_demo_2:
       type: ccxt_bybit
       mode: demo  # Cambiare in live quando il subaccount è pronto.
       connector: bybit
 
-      api_key_env: BYBIT_API_KEY_ACCOUNT_NUOVO    # Impostare con le credenziali del subaccount.
-      api_secret_env: BYBIT_API_SECRET_ACCOUNT_NUOVO
+      api_key_env: BYBIT_API_KEY_BYBIT_DEMO_2    # Impostare con le credenziali del subaccount.
+      api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO_2
+
+      adjust_for_time_difference: true
+      recv_window_ms: 10000
+      time_sync_on_startup: true
+
+      strategy:
+        simple_attached_enabled: true
+        trigger_by: MarkPrice
+        one_tp_mode: FULL
+        multi_tp_mode: PARTIAL
+
+      websocket:
+        enabled: true
+        poll_fallback_enabled: true
+        poll_fallback_period_seconds: 60
+
+      retry:
+        max_attempts: 3
+        backoff_seconds: [30, 90, 300]
+
+      live_safety:
+        allow_live_trading: false
+
+  bybit_demo_3:
+      type: ccxt_bybit
+      mode: demo  # Cambiare in live quando il subaccount è pronto.
+      connector: bybit
+
+      api_key_env: BYBIT_API_KEY_BYBIT_DEMO_3    # Impostare con le credenziali del subaccount.
+      api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO_3
 
       adjust_for_time_difference: true
       recv_window_ms: 10000
