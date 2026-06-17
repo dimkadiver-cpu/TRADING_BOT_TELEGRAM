@@ -7,11 +7,12 @@ from pathlib import Path
 import pytest
 
 from src.runtime_v2.control_plane.models import (
+    AccountConfig,
+    AccountTopicsConfig,
     CleanLogConfig,
     ControlPlaneConfig,
     TechLogConfig,
     TopicConfig,
-    TopicsConfig,
 )
 from src.runtime_v2.control_plane.notification_dispatcher import (
     TelegramNotificationDispatcher,
@@ -47,25 +48,35 @@ class FakeSender:
 def _make_config(**tech_log_kwargs) -> ControlPlaneConfig:
     return ControlPlaneConfig(
         token="t",
-        chat_id=-100999,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102, **tech_log_kwargs),
-            clean_log=CleanLogConfig(thread_id=103),
-        ),
+        default_account="main",
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=101),
+                    tech_log=TechLogConfig(thread_id=102, **tech_log_kwargs),
+                    clean_log=CleanLogConfig(thread_id=103),
+                ),
+            )
+        },
     )
 
 
 def _make_private_config(**tech_log_kwargs) -> ControlPlaneConfig:
     return ControlPlaneConfig(
         token="t",
-        chat_id=42,
+        default_account="main",
         delivery_mode="private_bot",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None),
-            tech_log=TechLogConfig(thread_id=None, **tech_log_kwargs),
-            clean_log=CleanLogConfig(thread_id=None),
-        ),
+        per_account={
+            "main": AccountConfig(
+                chat_id=42,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=None),
+                    tech_log=TechLogConfig(thread_id=None, **tech_log_kwargs),
+                    clean_log=CleanLogConfig(thread_id=None),
+                ),
+            )
+        },
     )
 
 

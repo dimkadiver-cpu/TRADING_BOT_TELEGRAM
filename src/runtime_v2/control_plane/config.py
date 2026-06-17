@@ -27,7 +27,6 @@ def _substitute_env(value: Any) -> Any:
                     f"Environment variable {env_name} referenced in telegram_control.yaml is not set"
                 )
             return env_value
-
         return _ENV_PATTERN.sub(_replace, value)
     if isinstance(value, dict):
         return {key: _substitute_env(item) for key, item in value.items()}
@@ -36,7 +35,10 @@ def _substitute_env(value: Any) -> Any:
     return value
 
 
-def load_control_plane_config(path: str) -> ControlPlaneConfig:
+def load_control_plane_config(
+    path: str,
+    known_account_ids: set[str] | None = None,
+) -> ControlPlaneConfig:
     config_path = Path(path)
     if not config_path.exists():
         raise ControlPlaneConfigError(f"Config file not found: {path}")
@@ -53,6 +55,7 @@ def load_control_plane_config(path: str) -> ControlPlaneConfig:
 
     raw = _substitute_env(raw)
 
+    # Resolve token
     token = raw.get("token")
     if not token:
         token_env = raw.get("token_env")
@@ -65,15 +68,36 @@ def load_control_plane_config(path: str) -> ControlPlaneConfig:
             )
     raw["token"] = token
 
+    # Handle private_bot mode: set thread_id=None for all accounts/topics
     if raw.get("delivery_mode") == "private_bot":
-        topics = raw.setdefault("topics", {})
-        for key in ("commands", "tech_log", "clean_log"):
-            topics.setdefault(key, {"thread_id": None})
+        for acc in (raw.get("per_account") or {}).values():
+            topics = acc.setdefault("topics", {})
+            for key in ("commands", "tech_log", "clean_log"):
+                topics.setdefault(key, {"thread_id": None})
 
     try:
-        return ControlPlaneConfig.model_validate(raw)
+        config = ControlPlaneConfig.model_validate(raw)
     except ValidationError as exc:
         raise ControlPlaneConfigError(f"Invalid telegram_control config: {exc}") from exc
+
+    # Validate default_account exists in per_account
+    if config.default_account not in config.per_account:
+        raise ControlPlaneConfigError(
+            f"default_account '{config.default_account}' not found in per_account "
+            f"(available: {list(config.per_account)})"
+        )
+
+    # Warn if execution account_ids are missing from per_account
+    if known_account_ids:
+        for aid in known_account_ids:
+            if aid not in config.per_account:
+                import logging
+                logging.getLogger(__name__).warning(
+                    "load_control_plane_config: account_id %r not found in per_account config",
+                    aid,
+                )
+
+    return config
 
 
 __all__ = ["ControlPlaneConfigError", "load_control_plane_config"]

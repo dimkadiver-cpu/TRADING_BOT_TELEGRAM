@@ -10,7 +10,7 @@ from src.runtime_v2.control_plane.audit_store import CommandAuditStore
 from src.runtime_v2.control_plane.auth import AuthValidator
 from src.runtime_v2.control_plane.debug_controller import DebugModeController
 from src.runtime_v2.control_plane.models import (
-    CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+    AccountConfig, AccountTopicsConfig, CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig,
 )
 from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.telegram_bot import CommandRouter
@@ -38,12 +38,15 @@ def ops_db(tmp_path):
 def _config():
     return ControlPlaneConfig(
         token="t",
-        chat_id=-100999,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102),
-            clean_log=CleanLogConfig(thread_id=103),
-        ),
+        default_account="main",
+        per_account={"main": AccountConfig(
+            chat_id=-100999,
+            topics=AccountTopicsConfig(
+                commands=TopicConfig(thread_id=101),
+                tech_log=TechLogConfig(thread_id=102),
+                clean_log=CleanLogConfig(thread_id=103),
+            ),
+        )},
         authorized_users=[42],
     )
 

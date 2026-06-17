@@ -11,11 +11,14 @@ from src.runtime_v2.control_plane.config import (
 _VALID_YAML = """
 enabled: true
 token_env: CP_TOKEN
-chat_id: "${CP_CHAT}"
-topics:
-  commands: {thread_id: 101}
-  tech_log: {thread_id: 102}
-  clean_log: {thread_id: 103}
+default_account: main
+per_account:
+  main:
+    chat_id: -1009999
+    topics:
+      commands: {thread_id: 101}
+      tech_log: {thread_id: 102}
+      clean_log: {thread_id: 103}
 authorized_users:
   - "${CP_USER}"
 startup:
@@ -32,22 +35,20 @@ def _write(tmp_path, text):
 
 def test_load_valid_config_with_env(tmp_path, monkeypatch):
     monkeypatch.setenv("CP_TOKEN", "999:XYZ")
-    monkeypatch.setenv("CP_CHAT", "-1009999")
     monkeypatch.setenv("CP_USER", "42")
 
     cfg = load_control_plane_config(_write(tmp_path, _VALID_YAML))
 
     assert cfg.token == "999:XYZ"
-    assert cfg.chat_id == -1009999
     assert cfg.authorized_users == [42]
     assert cfg.startup.mode == "standby"
     assert cfg.startup.restore_max_age_seconds == 600
-    assert cfg.topics.commands.thread_id == 101
+    assert cfg.per_account["main"].topics.commands.thread_id == 101
+    assert cfg.default_account == "main"
 
 
 def test_missing_token_env_raises(tmp_path, monkeypatch):
     monkeypatch.delenv("CP_TOKEN", raising=False)
-    monkeypatch.setenv("CP_CHAT", "-1009999")
     monkeypatch.setenv("CP_USER", "42")
 
     with pytest.raises(ControlPlaneConfigError) as exc:
@@ -58,27 +59,27 @@ def test_missing_token_env_raises(tmp_path, monkeypatch):
 
 def test_unresolved_env_placeholder_raises(tmp_path, monkeypatch):
     monkeypatch.setenv("CP_TOKEN", "999:XYZ")
-    monkeypatch.delenv("CP_CHAT", raising=False)
-    monkeypatch.setenv("CP_USER", "42")
+    monkeypatch.delenv("CP_USER", raising=False)
 
     with pytest.raises(ControlPlaneConfigError) as exc:
         load_control_plane_config(_write(tmp_path, _VALID_YAML))
 
-    assert "CP_CHAT" in str(exc.value)
+    assert "CP_USER" in str(exc.value)
 
 
 def test_missing_required_field_raises(tmp_path, monkeypatch):
     monkeypatch.setenv("CP_TOKEN", "999:XYZ")
-    monkeypatch.setenv("CP_CHAT", "-1009999")
     monkeypatch.setenv("CP_USER", "42")
 
     bad = """
 token_env: CP_TOKEN
-chat_id: "${CP_CHAT}"
-topics:
-  commands: {thread_id: 101}
+per_account:
+  main:
+    chat_id: -1009999
+    topics:
+      commands: {thread_id: 101}
 """
-
+    # Missing default_account → should raise
     with pytest.raises(ControlPlaneConfigError):
         load_control_plane_config(_write(tmp_path, bad))
 
@@ -104,53 +105,69 @@ def test_missing_file_raises(tmp_path):
 _PRIVATE_BOT_YAML = """
 delivery_mode: private_bot
 token_env: CP_TOKEN
-chat_id: "${CP_CHAT}"
+default_account: main
+per_account:
+  main:
+    chat_id: -1009999
 authorized_users:
   - "${CP_USER}"
 """
 
 
-def test_private_bot_config_without_topics(tmp_path, monkeypatch):
+def test_private_bot_config_sets_null_thread_ids(tmp_path, monkeypatch):
     monkeypatch.setenv("CP_TOKEN", "999:XYZ")
-    monkeypatch.setenv("CP_CHAT", "-1009999")
     monkeypatch.setenv("CP_USER", "42")
     cfg = load_control_plane_config(_write(tmp_path, _PRIVATE_BOT_YAML))
     assert cfg.delivery_mode == "private_bot"
-    assert cfg.topics.commands.thread_id is None
-    assert cfg.topics.tech_log.thread_id is None
-    assert cfg.topics.clean_log.thread_id is None
+    acc = cfg.per_account["main"]
+    assert acc.topics.commands.thread_id is None
+    assert acc.topics.tech_log.thread_id is None
+    assert acc.topics.clean_log.thread_id is None
 
 
 def test_clean_log_debounce_and_aggregation_config_defaults():
     from src.runtime_v2.control_plane.models import (
-        CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+        AccountConfig,
+        AccountTopicsConfig,
+        CleanLogConfig,
+        ControlPlaneConfig,
+        TechLogConfig,
+        TopicConfig,
     )
     cfg = ControlPlaneConfig(
         token="t",
-        chat_id=-1001,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=1),
-            tech_log=TechLogConfig(thread_id=2),
-            clean_log=CleanLogConfig(thread_id=3),
-        ),
+        default_account="main",
+        per_account={
+            "main": AccountConfig(
+                chat_id=-1001,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=1),
+                    tech_log=TechLogConfig(thread_id=2),
+                    clean_log=CleanLogConfig(thread_id=3),
+                ),
+            )
+        },
     )
-    assert cfg.topics.clean_log.debounce_check_interval_seconds == 5
-    assert cfg.topics.clean_log.aggregate_fills_seconds == 30
-    assert cfg.topics.clean_log.aggregate_updates_seconds == 20
-    assert cfg.topics.clean_log.multi_chain_summary_threshold == 3
-    assert cfg.topics.clean_log.max_messages_per_chain_per_minute == 4
+    acc = cfg.per_account["main"]
+    assert acc.topics.clean_log.debounce_check_interval_seconds == 5
+    assert acc.topics.clean_log.aggregate_fills_seconds == 30
+    assert acc.topics.clean_log.aggregate_updates_seconds == 20
+    assert acc.topics.clean_log.multi_chain_summary_threshold == 3
+    assert acc.topics.clean_log.max_messages_per_chain_per_minute == 4
 
 
-def test_supergroup_without_topics_raises(tmp_path, monkeypatch):
+def test_default_account_not_in_per_account_raises(tmp_path, monkeypatch):
     monkeypatch.setenv("CP_TOKEN", "999:XYZ")
-    monkeypatch.setenv("CP_CHAT", "-1009999")
     monkeypatch.setenv("CP_USER", "42")
     bad = """
-delivery_mode: supergroup_topics
 token_env: CP_TOKEN
-chat_id: "${CP_CHAT}"
+default_account: missing_account
+per_account:
+  main:
+    chat_id: -1009999
 authorized_users:
   - "${CP_USER}"
 """
-    with pytest.raises(ControlPlaneConfigError):
+    with pytest.raises(ControlPlaneConfigError) as exc:
         load_control_plane_config(_write(tmp_path, bad))
+    assert "missing_account" in str(exc.value)

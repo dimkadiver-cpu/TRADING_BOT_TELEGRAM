@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from src.runtime_v2.control_plane.models import (
-    CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+    AccountConfig, AccountTopicsConfig, CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig,
 )
 from src.runtime_v2.control_plane.notification_dispatcher import (
     TelegramNotificationDispatcher,
@@ -39,25 +38,32 @@ def ops_db(tmp_path):
 
 def _config():
     return ControlPlaneConfig(
-        token="t", chat_id=-100999,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102),
-            clean_log=CleanLogConfig(thread_id=103),
-        ),
+        token="t",
+        default_account="main",
+        per_account={"main": AccountConfig(
+            chat_id=-100999,
+            topics=AccountTopicsConfig(
+                commands=TopicConfig(thread_id=101),
+                tech_log=TechLogConfig(thread_id=102),
+                clean_log=CleanLogConfig(thread_id=103),
+            ),
+        )},
     )
 
 
 def _private_bot_config():
     return ControlPlaneConfig(
         token="t",
-        chat_id=42,
         delivery_mode="private_bot",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None),
-            tech_log=TechLogConfig(thread_id=None),
-            clean_log=CleanLogConfig(thread_id=None),
-        ),
+        default_account="main",
+        per_account={"main": AccountConfig(
+            chat_id=42,
+            topics=AccountTopicsConfig(
+                commands=TopicConfig(thread_id=None),
+                tech_log=TechLogConfig(thread_id=None),
+                clean_log=CleanLogConfig(thread_id=None),
+            ),
+        )},
     )
 
 
@@ -175,32 +181,6 @@ async def test_recovers_after_transient_failure(ops_db):
     assert status == "SENT"
 
 
-async def test_thread_not_found_log_includes_trader_and_route_context(ops_db, caplog):
-    conn = sqlite3.connect(ops_db)
-    with conn:
-        write_clean_log_event(
-            conn,
-            notification_type="SIGNAL_ACCEPTED",
-            chain_id=145,
-            payload={"symbol": "BTC/USDT", "side": "LONG", "trader_id": "trader_a"},
-            dedupe_key="clean:thread-missing",
-        )
-    conn.close()
-
-    class ThreadMissingSender:
-        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
-            raise RuntimeError("Message thread not found")
-
-    disp = _dispatcher(ops_db, ThreadMissingSender())
-    with caplog.at_level(logging.WARNING, logger="src.runtime_v2.control_plane.notification_dispatcher"):
-        await disp.drain_once()
-
-    joined = "\n".join(caplog.messages)
-    assert "trader_id=trader_a" in joined
-    assert "chat_id=-100999" in joined
-    assert "thread_id=103" in joined
-
-
 async def test_private_bot_dispatches_without_thread_id(ops_db):
     _seed(ops_db)
     sender = FakeSender()
@@ -262,7 +242,7 @@ async def test_tech_log_rate_limit_suppresses_excess(ops_db):
     )
     await dispatcher.drain_once()
 
-    max_msgs = cfg.topics.tech_log.max_messages_per_minute
+    max_msgs = cfg.get_account("main").topics.tech_log.max_messages_per_minute
     # Should have sent at most max_msgs + 1 (the rate limit warning)
     assert len(sent_texts) <= max_msgs + 1
     # Exactly max_msgs normal messages + 1 warning

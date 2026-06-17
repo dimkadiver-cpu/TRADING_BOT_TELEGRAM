@@ -22,17 +22,20 @@ def _write_config(tmp_path: Path, *, mode: str = "auto", enabled: bool = True) -
     content = f"""\
 enabled: {str(enabled).lower()}
 token: "fake_token_for_test"
-chat_id: -100999
 delivery_mode: supergroup_topics
-topics:
-  commands:
-    thread_id: 101
-  tech_log:
-    thread_id: 102
-    enabled: true
-    min_level: WARNING
-  clean_log:
-    thread_id: 103
+default_account: main
+per_account:
+  main:
+    chat_id: -100999
+    topics:
+      commands:
+        thread_id: 101
+      tech_log:
+        thread_id: 102
+        enabled: true
+        min_level: WARNING
+      clean_log:
+        thread_id: 103
 authorized_users: []
 startup:
   mode: {mode}

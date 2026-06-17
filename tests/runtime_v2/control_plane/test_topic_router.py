@@ -6,32 +6,47 @@ import logging
 import pytest
 
 from src.runtime_v2.control_plane.models import (
-    CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+    AccountConfig, AccountTopicsConfig,
+    CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig,
 )
 from src.runtime_v2.control_plane.topic_router import TopicRouter
 
 
+def _make_account(chat_id: int, per_trader: dict | None = None, thread_clean=103, thread_tech=102, thread_cmd=101):
+    return AccountConfig(
+        chat_id=chat_id,
+        topics=AccountTopicsConfig(
+            commands=TopicConfig(thread_id=thread_cmd),
+            tech_log=TechLogConfig(thread_id=thread_tech),
+            clean_log=CleanLogConfig(thread_id=thread_clean, per_trader=per_trader or {}),
+        ),
+    )
+
+
 def _config_supergroup(per_trader: dict | None = None):
     return ControlPlaneConfig(
-        token="t", chat_id=-100999,
+        token="t",
+        default_account="main",
         delivery_mode="supergroup_topics",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102),
-            clean_log=CleanLogConfig(thread_id=103, per_trader=per_trader or {}),
-        ),
+        per_account={"main": _make_account(-100999, per_trader=per_trader)},
     )
 
 
 def _config_private_bot():
     return ControlPlaneConfig(
-        token="t", chat_id=-100999,
+        token="t",
+        default_account="main",
         delivery_mode="private_bot",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None),
-            tech_log=TechLogConfig(thread_id=None),
-            clean_log=CleanLogConfig(thread_id=None),
-        ),
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=None),
+                    tech_log=TechLogConfig(thread_id=None),
+                    clean_log=CleanLogConfig(thread_id=None),
+                ),
+            )
+        },
     )
 
 
@@ -53,6 +68,35 @@ def test_resolve_unknown_raises():
     router = TopicRouter(_config_supergroup())
     with pytest.raises((ValueError, KeyError)):
         router.route("NOPE")
+
+
+# --- per_account routing ---
+
+def test_routes_to_correct_account():
+    cfg = ControlPlaneConfig(
+        token="t",
+        default_account="main",
+        per_account={
+            "main": _make_account(-100111, thread_clean=11, thread_tech=3, thread_cmd=13),
+            "account_nuovo": _make_account(-100222, thread_clean=11, thread_tech=3, thread_cmd=123),
+        },
+    )
+    router = TopicRouter(cfg)
+    assert router.route("CLEAN_LOG", account_id="main") == (-100111, 11)
+    assert router.route("CLEAN_LOG", account_id="account_nuovo") == (-100222, 11)
+    assert router.route("TECH_LOG", account_id="account_nuovo") == (-100222, 3)
+    assert router.route("COMMANDS_REPLY", account_id="account_nuovo") == (-100222, 123)
+
+
+def test_unknown_account_falls_back_to_default():
+    cfg = ControlPlaneConfig(
+        token="t",
+        default_account="main",
+        per_account={"main": _make_account(-100111, thread_clean=11)},
+    )
+    router = TopicRouter(cfg)
+    assert router.route("CLEAN_LOG", account_id="sconosciuto") == (-100111, 11)
+    assert router.route("CLEAN_LOG", account_id=None) == (-100111, 11)
 
 
 # --- per_trader routing ---
