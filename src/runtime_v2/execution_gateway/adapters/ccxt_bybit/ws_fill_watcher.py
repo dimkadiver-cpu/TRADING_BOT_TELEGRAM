@@ -166,7 +166,12 @@ class BybitWsFillWatcher:
                     if consecutive_failures >= _WS_FAIL_NOTIFY_AFTER:
                         self._notify_ws_failure("watch_orders")
                     await self._run_reconciliation_callback()
-                    await asyncio.sleep(5)
+                    try:
+                        await exchange.close()
+                    except Exception:
+                        pass
+                    exchange = self._build_exchange()
+                    await asyncio.sleep(min(5 * consecutive_failures, 60))
                     continue
                 consecutive_failures = 0
                 self._process_batch(orders, self._normalizer.from_order)
@@ -190,7 +195,12 @@ class BybitWsFillWatcher:
                     if consecutive_failures >= _WS_FAIL_NOTIFY_AFTER:
                         self._notify_ws_failure("watch_trades")
                     await self._run_reconciliation_callback()
-                    await asyncio.sleep(5)
+                    try:
+                        await exchange.close()
+                    except Exception:
+                        pass
+                    exchange = self._build_exchange()
+                    await asyncio.sleep(min(5 * consecutive_failures, 60))
                     continue
                 consecutive_failures = 0
                 self._process_batch(trades, self._normalizer.from_trade)
@@ -214,7 +224,12 @@ class BybitWsFillWatcher:
                     if consecutive_failures >= _WS_FAIL_NOTIFY_AFTER:
                         self._notify_ws_failure("watch_positions")
                     await self._run_reconciliation_callback()
-                    await asyncio.sleep(5)
+                    try:
+                        await exchange.close()
+                    except Exception:
+                        pass
+                    exchange = self._build_exchange()
+                    await asyncio.sleep(min(5 * consecutive_failures, 60))
                     continue
                 consecutive_failures = 0
                 self._process_batch(positions, self._normalizer.from_position)
