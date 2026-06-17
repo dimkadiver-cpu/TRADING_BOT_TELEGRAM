@@ -217,18 +217,21 @@ class TelegramNotificationDispatcher:
 
     _SIGNAL_TYPES: frozenset[str] = frozenset({"SIGNAL_ACCEPTED", "SIGNAL_REJECTED", "REVIEW_REQUIRED"})
 
-    def _get_clean_log_root(self, chain_id: int) -> tuple[str | None, str | None]:
-        """Return (root_message_id, telegram_chat_id) for chain_id, or (None, None)."""
+    def _get_clean_log_root(
+        self, chain_id: int
+    ) -> tuple[str | None, str | None, int | None]:
+        """Return (root_message_id, telegram_chat_id, telegram_thread_id) for chain_id."""
         conn = sqlite3.connect(self._ops_db)
         try:
             row = conn.execute(
-                "SELECT clean_log_root_message_id, telegram_chat_id "
+                "SELECT clean_log_root_message_id, telegram_chat_id, telegram_thread_id "
                 "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
                 (chain_id,),
             ).fetchone()
             if row:
-                return str(row[0]) if row[0] else None, str(row[1]) if row[1] else None
-            return None, None
+                thread = int(row[2]) if row[2] is not None else None
+                return str(row[0]) if row[0] else None, str(row[1]) if row[1] else None, thread
+            return None, None, None
         finally:
             conn.close()
 
@@ -360,7 +363,12 @@ class TelegramNotificationDispatcher:
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
                     chain_id = payload.get("chain_id")
                     if chain_id is not None:
-                        root_msg_id, tracking_chat_id = self._get_clean_log_root(chain_id)
+                        root_msg_id, tracking_chat_id, pinned_thread_id = self._get_clean_log_root(chain_id)
+                        # Pin chat+thread to what was used for the first event of this chain,
+                        # so all events stay in the same conversation thread regardless of config changes.
+                        if tracking_chat_id is not None:
+                            chat_id = int(tracking_chat_id)
+                            thread_id = pinned_thread_id
                         link = self._build_signal_link(root_msg_id, tracking_chat_id)
                         if link:
                             payload = {**payload, "signal_link": link}

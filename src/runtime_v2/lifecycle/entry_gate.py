@@ -220,16 +220,20 @@ def _write_update_clean_log(
     source = _SOURCE_TYPE_TO_CLEAN_LOG_SOURCE.get(first.source_type, "runtime")
 
     chain_row = conn.execute(
-        "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+        "SELECT symbol, side, trader_id, account_id FROM ops_trade_chains WHERE trade_chain_id=?",
         (cr.trade_chain_id,),
     ).fetchone()
     symbol = chain_row[0] if chain_row else None
     side = chain_row[1] if chain_row else None
+    trader_id = chain_row[2] if chain_row else None
+    account_id = chain_row[3] if chain_row else None
 
     payload = {
         "chain_id": cr.trade_chain_id,
         "symbol": symbol,
         "side": side,
+        "trader_id": trader_id,
+        "account_id": account_id,
         "applied_actions": applied_actions,
         "rejected_actions": rejected_actions,
         "failed_actions": failed_actions,
@@ -244,6 +248,7 @@ def _write_update_clean_log(
         notification_type=notif_type,
         chain_id=cr.trade_chain_id,
         payload=payload,
+        account_id=account_id,
         dedupe_key=f"clean:update:{canonical_message_id}:{cr.trade_chain_id}",
     )
 
