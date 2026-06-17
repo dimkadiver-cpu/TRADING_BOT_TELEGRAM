@@ -4,6 +4,7 @@ from pathlib import Path
 
 from src.startup_check.validator import (
     ValidationReport,
+    _check_channels,
     _check_text_patterns,
     _load_text_pattern_groups,
 )
@@ -102,3 +103,21 @@ registered_traders:
     report = ValidationReport()
     _check_text_patterns(report, tmp_path)
     assert report.errors == []
+
+
+def test_check_channels_reports_blank_chat_id_with_human_message(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "config" / "channels.yaml",
+        """
+channels:
+  - chat_id:
+    topic_id: null
+    label: "Multi"
+    active: true
+    trader_id: trader_a
+    blacklist: []
+""",
+    )
+    report = ValidationReport()
+    _check_channels(report, tmp_path)
+    assert any("invalid channel entry 'Multi': chat_id is missing" in result.message for result in report.errors)

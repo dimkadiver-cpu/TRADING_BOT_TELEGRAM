@@ -90,10 +90,20 @@ def is_blacklisted_text(
 def _parse_topic_id(value: object) -> int | None:
     if value is None:
         return None
+    if isinstance(value, str) and not value.strip():
+        raise ValueError("topic_id is blank; use null or omit the field for forum-wide scope")
     topic_id = int(value)
     if topic_id <= 0:
         raise ValueError(f"topic_id must be a positive integer, got {topic_id!r}")
     return topic_id
+
+
+def _parse_chat_id(value: object) -> int:
+    if value is None:
+        raise ValueError("chat_id is missing")
+    if isinstance(value, str) and not value.strip():
+        raise ValueError("chat_id is blank")
+    return int(value)
 
 
 def load_channels_config(path: str) -> ChannelsConfig:
@@ -103,9 +113,13 @@ def load_channels_config(path: str) -> ChannelsConfig:
 
     seen_scopes: set[tuple[int, int | None]] = set()
     channels: list[ChannelEntry] = []
-    for channel in channels_raw:
-        chat_id = int(channel["chat_id"])
-        topic_id = _parse_topic_id(channel.get("topic_id"))
+    for index, channel in enumerate(channels_raw):
+        label = str(channel.get("label", "")).strip() or f"index={index}"
+        try:
+            chat_id = _parse_chat_id(channel.get("chat_id"))
+            topic_id = _parse_topic_id(channel.get("topic_id"))
+        except (TypeError, ValueError) as exc:
+            raise ValueError(f"invalid channel entry '{label}': {exc}") from exc
         scope = (chat_id, topic_id)
         if scope in seen_scopes:
             raise ValueError(

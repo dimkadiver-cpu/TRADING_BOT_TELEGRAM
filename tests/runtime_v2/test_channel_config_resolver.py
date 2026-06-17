@@ -245,3 +245,18 @@ channels:
     assert entry.resolution_mode == "patterns_only"
     assert entry.pattern_group == "multi_strategy_ru"
     assert entry.resolution_max_depth == 7
+
+
+def test_resolver_reports_blank_chat_id_clearly(tmp_path):
+    yaml_content = """
+channels:
+  - chat_id:
+    label: "Broken"
+    active: true
+    trader_id: trader_a
+    blacklist: []
+"""
+    p = tmp_path / "channels.yaml"
+    p.write_text(yaml_content, encoding="utf-8")
+    with pytest.raises(ValueError, match="invalid channel entry 'Broken': chat_id is missing"):
+        ChannelConfigResolver(p)

@@ -214,6 +214,24 @@ def test_load_invalid_topic_id_negative_raises(yaml_path: Path) -> None:
         load_channels_config(str(yaml_path))
 
 
+def test_load_blank_topic_id_string_raises_clear_error(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id: 1\n    label: x\n    active: true\n    trader_id: null\n    topic_id: ' '\n",
+    )
+    with pytest.raises(ValueError, match="invalid channel entry 'x': topic_id is blank"):
+        load_channels_config(str(yaml_path))
+
+
+def test_load_blank_chat_id_raises_clear_error(yaml_path: Path) -> None:
+    _write_yaml(
+        yaml_path,
+        "channels:\n  - chat_id:\n    label: x\n    active: true\n    trader_id: null\n",
+    )
+    with pytest.raises(ValueError, match="invalid channel entry 'x': chat_id is missing"):
+        load_channels_config(str(yaml_path))
+
+
 def test_load_duplicate_scope_raises(yaml_path: Path) -> None:
     _write_yaml(
         yaml_path,

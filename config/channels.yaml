@@ -69,7 +69,7 @@ channels:
     blacklist: []
 
   - chat_id: -1003927267771
-    topic_id:
+    topic_id: null
     label: prova_locale per test  # canale reale attivo concordato
     active: true  # disattivato per test, da attivare quando serve
     trader_id: trader_prova   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
@@ -77,24 +77,24 @@ channels:
     blacklist: []     # estendere qui solo per rumore specifico del canale
  
   - chat_id: -1002581410049
-    topic_id:
+    topic_id: null
     label: Binance Killers  # canale reale attivo concordato
     active: true  # disattivato per test, da attivare quando serve
     trader_id: trader_3_1   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
     parser_profile: trader_3_1       # Opzionale — override del profilo parser
     blacklist: []     # estendere qui solo per rumore specifico del canale    
 
-  - chat_id: 
-    topic_id: 
-    label: SoloTradePrivate
-    active: false
-    trader_id: null           # null = risoluzione dinamica (pattern extractor)
-    parser_profile:      # profilo condiviso da tutte le strategie del topic
-    resolution: 
-      mode:  default  # Valori supportati: default | patterns_only. default = flusso standard aliases -> text_patterns -> reply_chain -> links; patterns_only = solo text_patterns.
-      pattern_group: 
-      max_depth: 5
-      aliases: {}
-    blacklist: []
-    
+# Esempio disattivato per nuovi canali privati:
+#  - chat_id: -1001234567890
+#    topic_id: null
+#    label: SoloTradePrivate
+#    active: false
+#    trader_id: null
+#    parser_profile:
+#    resolution:
+#      mode: default
+#      pattern_group:
+#      max_depth: 5
+#      aliases: {}
+#    blacklist: []
 

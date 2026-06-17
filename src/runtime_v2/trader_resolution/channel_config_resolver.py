@@ -8,6 +8,26 @@ import yaml
 from src.core.trader_tags import normalize_trader_aliases
 
 
+def _parse_chat_id(value: object) -> str:
+    if value is None:
+        raise ValueError("chat_id is missing")
+    chat_id = str(value).strip()
+    if not chat_id:
+        raise ValueError("chat_id is blank")
+    return chat_id
+
+
+def _parse_topic_id(value: object) -> int | None:
+    if value is None:
+        return None
+    if isinstance(value, str) and not value.strip():
+        raise ValueError("topic_id is blank; use null or omit the field for forum-wide scope")
+    topic_id = int(value)
+    if topic_id <= 0:
+        raise ValueError(f"topic_id must be a positive integer, got {topic_id!r}")
+    return topic_id
+
+
 @dataclass(slots=True, frozen=True)
 class ChannelEntry:
     chat_id: str
@@ -40,9 +60,13 @@ class ChannelConfigResolver:
         with open(self._config_path, encoding="utf-8") as f:
             data: dict[str, Any] = yaml.safe_load(f)
         index: dict[tuple[str, int | None], ChannelEntry] = {}
-        for raw in data.get("channels", []):
-            chat_id = str(raw["chat_id"])
-            topic_id: int | None = raw.get("topic_id")
+        for channel_index, raw in enumerate(data.get("channels", [])):
+            label = str(raw.get("label", "")).strip() or f"index={channel_index}"
+            try:
+                chat_id = _parse_chat_id(raw.get("chat_id"))
+                topic_id = _parse_topic_id(raw.get("topic_id"))
+            except (TypeError, ValueError) as exc:
+                raise ValueError(f"invalid channel entry '{label}': {exc}") from exc
             trader_id: str | None = raw.get("trader_id")
             parser_profile: str = raw.get("parser_profile") or trader_id or ""
             resolution = raw.get("resolution") or {}
