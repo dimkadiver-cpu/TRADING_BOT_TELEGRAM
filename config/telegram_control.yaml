@@ -17,7 +17,7 @@ authorized_users:
   - "${CONTROL_TELEGRAM_USER_ID}"
 
 delivery_mode: supergroup_topics
-default_account: main
+default_account: demo_1  # Deve corrispondere ad account.id in config/traders/<trader>.yaml
 
 # ─── AVVIO ────────────────────────────────────────────────────────────────────
 startup:
