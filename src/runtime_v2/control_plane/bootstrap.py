@@ -42,6 +42,7 @@ def build_control_plane(
     config_path: str,
     ops_db_path: str,
     log_path: str | None,
+    known_trader_ids: set[str] | None = None,
 ) -> ControlPlane | None:
     try:
         config = load_control_plane_config(config_path)
@@ -64,7 +65,7 @@ def build_control_plane(
     audit = CommandAuditStore(ops_db_path)
     router = CommandRouter(config=config, auth=auth, audit=audit, service=service)
     bot = TelegramControlBot(config=config, router=router)
-    topic_router = TopicRouter(config)
+    topic_router = TopicRouter(config, known_trader_ids=known_trader_ids)
     dispatcher = TelegramNotificationDispatcher(
         config=config,
         ops_db_path=ops_db_path,

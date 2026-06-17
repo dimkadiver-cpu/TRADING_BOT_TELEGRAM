@@ -145,3 +145,30 @@ def test_shutdown_saves_runtime_snapshot_and_enqueues_tech_log(tmp_path):
 
     assert outbox_row is not None, "Expected an outbox row with destination=TECH_LOG"
     assert outbox_row[0] == "TECH_LOG"
+
+
+def test_build_control_plane_passes_known_trader_ids_to_topic_router(tmp_path):
+    config_file = _write_config(tmp_path, mode="auto")
+    db_path = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db_path)
+
+    topic_router_kwargs = {}
+
+    def fake_topic_router(config, known_trader_ids=None):
+        topic_router_kwargs["config"] = config
+        topic_router_kwargs["known_trader_ids"] = known_trader_ids
+        return MagicMock(name="topic_router")
+
+    with (
+        patch("telegram.Bot", return_value=MagicMock()),
+        patch("src.runtime_v2.control_plane.bootstrap.TopicRouter", side_effect=fake_topic_router),
+    ):
+        cp = build_control_plane(
+            config_path=str(config_file),
+            ops_db_path=db_path,
+            log_path=None,
+            known_trader_ids={"trader_a", "trader_b"},
+        )
+
+    assert cp is not None
+    assert topic_router_kwargs["known_trader_ids"] == {"trader_a", "trader_b"}
