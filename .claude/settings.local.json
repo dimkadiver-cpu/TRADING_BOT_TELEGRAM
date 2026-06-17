@@ -208,7 +208,11 @@
       "Bash(dir \"C:\\\\TeleSignalBot\\\\db\\\\Test_live\")",
       "Bash(ssh root@ubuntu \"journalctl -u trading-bot --no-pager -n 50 2>/dev/null || echo 'ssh not available locally'\")",
       "Read(//etc/systemd/system/**)",
-      "PowerShell($env:PYTHONIOENCODING = \"utf-8\"; python main.py 2>&1 | Select-Object -First 60)"
+      "PowerShell($env:PYTHONIOENCODING = \"utf-8\"; python main.py 2>&1 | Select-Object -First 60)",
+      "Bash(tasklist)",
+      "Bash(PYTHONIOENCODING=utf-8 python main.py)",
+      "Bash(echo \"PID=$!\")",
+      "Read(//c/TeleSignalBot/**)"
     ]
   }
 }
