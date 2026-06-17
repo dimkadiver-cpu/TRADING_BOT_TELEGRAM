@@ -52,36 +52,6 @@ per_account:
       commands:
         thread_id: 4            # topic da cui arrivano /pause /block ecc.
 
-  # ── SUB ACCOUNT A — exchange account dedicato, più trader ─────────────────
-  # Trader con account.id: "sub_a" in config/traders/<trader>.yaml
-  demo_2:
-    chat_id: -100___________      # può essere lo stesso supergroup o uno diverso
-
-    topics:
-      clean_log:
-        thread_id: ___
-        per_trader:
-          trader_x:   ___
-          trader_y:   ___
-
-      tech_log:
-        thread_id: ___
-        min_level: INFO
-        operational_events: true
-
-      commands:
-        thread_id: ___
-
-  # ── SUB ACCOUNT B — exchange account con un solo trader ───────────────────
-  # Trader con account.id: "sub_b" in config/traders/<trader>.yaml
-  demo_3:
-    chat_id: -100___________
-
-    topics:
-      clean_log:  {thread_id: ___}
-      tech_log:   {thread_id: ___, min_level: INFO, operational_events: true}
-      commands:   {thread_id: ___}
-
 # ─── NOTIFICHE ────────────────────────────────────────────────────────────────
 notifications:
   startup:                "on"
