@@ -205,7 +205,9 @@
       "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests/runtime_v2/control_plane/test_clean_log_formatter.py tests/runtime_v2/lifecycle/test_entry_gate.py tests/runtime_v2/control_plane/test_outbox_writer.py -v 2>&1 | Select-Object -Last 80)",
       "PowerShell(.venv\\\\Scripts\\\\python.exe -m pytest tests/runtime_v2/control_plane/test_clean_log_formatter.py tests/runtime_v2/lifecycle/test_entry_gate.py tests/runtime_v2/control_plane/test_outbox_writer.py -k \"autosufficient_non_close_full or close_full_uses_compact_rows or autosufficient_chain_payload or skips_immediate_emit_for_close_full or release_close_full_summary_uses_position_closed_links or move_stop_price_reference or move_stop_shows_reference_tp\" -v 2>&1)",
       "PowerShell(python -c \"import sqlite3; conn = sqlite3.connect\\(r'C:\\\\TeleSignalBot\\\\db\\\\Test_live\\\\ops.sqlite3'\\); cur = conn.cursor\\(\\); cur.execute\\('SELECT name FROM sqlite_master WHERE type=\\\\'table\\\\''\\); print\\([r[0] for r in cur.fetchall\\(\\)]\\)\")",
-      "Bash(dir \"C:\\\\TeleSignalBot\\\\db\\\\Test_live\")"
+      "Bash(dir \"C:\\\\TeleSignalBot\\\\db\\\\Test_live\")",
+      "Bash(ssh root@ubuntu \"journalctl -u trading-bot --no-pager -n 50 2>/dev/null || echo 'ssh not available locally'\")",
+      "Read(//etc/systemd/system/**)"
     ]
   }
 }
