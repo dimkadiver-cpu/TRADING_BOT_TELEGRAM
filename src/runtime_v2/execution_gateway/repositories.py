@@ -263,53 +263,6 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def write_command_failed_tech_log(
-        self,
-        command_id: int,
-        trade_chain_id: int,
-        command_type: str,
-        *,
-        reason: str,
-    ) -> None:
-        """Write a TECH_LOG GATEWAY_COMMAND_FAILED notification for any failed non-entry command.
-
-        Called after mark_failed for commands like MOVE_STOP_TO_BREAKEVEN, MOVE_STOP, etc.
-        Entry failures are handled separately via cancel_chain_if_all_entries_failed.
-        """
-        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
-
-        conn = sqlite3.connect(self._db)
-        try:
-            with conn:
-                chain_row = conn.execute(
-                    "SELECT symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
-                    (trade_chain_id,),
-                ).fetchone()
-                write_tech_log_event(
-                    conn,
-                    notification_type="GATEWAY_COMMAND_FAILED",
-                    payload={
-                        "level": "ERROR",
-                        "category": "Gateway",
-                        "title": "command_failed",
-                        "description": f"Comando {command_type} fallito.",
-                        "context": {
-                            "command_id": command_id,
-                            "command_type": command_type,
-                            "chain_id": trade_chain_id,
-                            "symbol": chain_row[0] if chain_row else None,
-                            "side": chain_row[1] if chain_row else None,
-                            "reason": reason,
-                        },
-                        "action": "verificare il motivo e intervenire manualmente se necessario",
-                        "source": "execution_gateway",
-                    },
-                    dedupe_key=f"gw_cmd_failed:{command_id}",
-                    priority="HIGH",
-                )
-        finally:
-            conn.close()
-
     def write_cancel_entry_failed_lifecycle(
         self, command_id: int, trade_chain_id: int, *, attempts: int
     ) -> None:
@@ -627,6 +580,24 @@ class GatewayCommandRepository:
         except Exception:
             return None
 
+    def get_command_source_link(self, trade_chain_id: int, command_id: int) -> str | None:
+        """Return source_message_link from a CLOSE_FULL/CLOSE_PARTIAL command payload."""
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT payload_json FROM ops_execution_commands "
+                "WHERE trade_chain_id=? AND command_id=? LIMIT 1",
+                (trade_chain_id, command_id),
+            ).fetchone()
+        finally:
+            conn.close()
+        if not row:
+            return None
+        try:
+            return json.loads(row[0] or "{}").get("source_message_link")
+        except Exception:
+            return None
+
     def get_chain_filled_entry_qty(self, trade_chain_id: int) -> float | None:
         conn = sqlite3.connect(self._db)
         try:
@@ -768,32 +739,6 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def has_exchange_event_for_order(
-        self,
-        trade_chain_id: int,
-        event_type: str,
-        order_id: str | None,
-    ) -> bool:
-        """True se esiste già un evento per lo stesso ordine (stesso chain+tipo+order_id).
-
-        Le chiavi di idempotenza WS (fill:{execId}) e REST ({event_type}:{chain}:{order_id})
-        divergono: questo check evita che la reconciliation REST reinserisca un fill
-        già registrato dal WebSocket.
-        """
-        if not order_id:
-            return False
-        conn = sqlite3.connect(self._db)
-        try:
-            row = conn.execute(
-                "SELECT 1 FROM ops_exchange_events "
-                "WHERE trade_chain_id=? AND event_type=? "
-                "AND json_extract(payload_json, '$.order_id')=? LIMIT 1",
-                (trade_chain_id, event_type, order_id),
-            ).fetchone()
-            return row is not None
-        finally:
-            conn.close()
-
     def get_active_tp_commands(self, trade_chain_id: int) -> list[dict]:
         """TP attivi SENT/DONE per chain OPEN/PARTIALLY_CLOSED.
 
@@ -822,47 +767,34 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def get_open_chains_for_symbol(
-        self, symbol: str, side: str, account_id: str | None = None
-    ) -> list[int]:
+    def get_open_chains_for_symbol(self, symbol: str, side: str) -> list[int]:
         """Lista di trade_chain_id OPEN/PARTIALLY_CLOSED per symbol+side.
 
         Usato da watchMyTrades per trovare le chain candidate per un fill TP.
         `side` è il lato della posizione (LONG/SHORT), non il lato del fill.
-        Con `account_id` la ricerca è ristretta alle chain di quell'account —
-        necessario in per_trader_subaccount, dove symbol+side può essere aperto
-        su più account contemporaneamente.
         """
-        sql = (
-            "SELECT trade_chain_id FROM ops_trade_chains "
-            "WHERE symbol=? AND side=? "
-            "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
-        )
-        params: list = [symbol, side]
-        if account_id is not None:
-            sql += " AND account_id=?"
-            params.append(account_id)
         conn = sqlite3.connect(self._db)
         try:
-            rows = conn.execute(sql, params).fetchall()
+            rows = conn.execute(
+                "SELECT trade_chain_id FROM ops_trade_chains "
+                "WHERE symbol=? AND side=? "
+                "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
+                (symbol, side),
+            ).fetchall()
             return [int(r[0]) for r in rows]
         finally:
             conn.close()
 
-    def resolve_chain_for_fill(
-        self, symbol: str, side: str, account_id: str | None = None
-    ) -> int | None:
+    def resolve_chain_for_fill(self, symbol: str, side: str) -> int | None:
         """Return the unique open chain_id for symbol+side, or None if 0 or >1.
 
-        Used to attribute TP/SL fills and funding executions that lack an
-        orderLinkId (Bybit position-level orders never carry orderLinkId).
-        Returns None when attribution is ambiguous (multiple open chains on the
-        same symbol+side within the account scope) to avoid mis-routing.
+        Used to attribute TP/SL fills that lack an orderLinkId (Bybit position-level
+        orders never carry orderLinkId). Returns None when attribution is ambiguous
+        (multiple open chains on the same symbol) to avoid mis-routing.
 
         `side` must be the position side: 'LONG' or 'SHORT'.
-        `account_id` scopes resolution to one account (per_trader_subaccount).
         """
-        chains = self.get_open_chains_for_symbol(symbol, side, account_id)
+        chains = self.get_open_chains_for_symbol(symbol, side)
         return chains[0] if len(chains) == 1 else None
 
     # ------------------------------------------------------------------
@@ -894,24 +826,25 @@ class GatewayCommandRepository:
             # and fill events where exchange_event_id is absent use semantic keys.
             ops_idem_key = f"{classified.event_type}:{classified.trade_chain_id}"
 
-        # Se l'ordine appartiene a un comando (orderLinkId tsb:...), il source del
-        # payload riflette l'origine del comando (es. trader_update) — stessa
-        # attribuzione del path REST (event_sync._save_fill_event). Il classifier
-        # non può saperlo: conosce solo i campi exchange.
+        # If the order belongs to a known command (orderLinkId tsb:...), resolve
+        # command_source and source_message_link from the command payload.  This
+        # mirrors the attribution logic in event_sync._save_fill_event (REST path).
         effective_source = classified.source
-        command_id: int | None = None
+        source_message_link: str | None = None
         if raw.order_link_id:
             try:
                 coid = coid_mod.parse(raw.order_link_id)
             except ValueError:
                 coid = None
             if coid is not None:
-                command_id = coid.command_id
                 cmd_source = self.get_command_source(coid.trade_chain_id, coid.command_id)
                 if cmd_source:
                     effective_source = cmd_source
+                source_message_link = self.get_command_source_link(
+                    coid.trade_chain_id, coid.command_id
+                )
 
-        ep = ExchangeEventPayload(
+        ep_kwargs: dict = dict(
             fill_price=raw.exec_price,
             filled_qty=raw.exec_qty,
             closed_size=raw.closed_size,
@@ -926,9 +859,11 @@ class GatewayCommandRepository:
             order_link_id=raw.order_link_id,
             exchange_time=raw.exchange_time,
             tp_level=classified.tp_level,
-            command_id=command_id,
             source=effective_source,
         )
+        if source_message_link is not None:
+            ep_kwargs["source_message_link"] = source_message_link
+        ep = ExchangeEventPayload(**ep_kwargs)
         payload = ep.model_dump()
         if classified.event_type == "PENDING_ENTRY_CANCELLED":
             payload.update(
@@ -1018,28 +953,18 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def get_open_chains_with_tps(self, account_id: str | None = None) -> list[dict]:
-        """Returns open chains that have active TP commands. Used by run_trade_based_reconciliation.
-
-        With `account_id`, only that account's chains are returned — each sync
-        worker polls its own adapter and must not attribute fills to chains
-        whose position lives on a different subaccount.
-        """
-        sql = (
-            "SELECT DISTINCT t.trade_chain_id, t.symbol, t.side "
-            "FROM ops_trade_chains t "
-            "JOIN ops_execution_commands c ON c.trade_chain_id = t.trade_chain_id "
-            "WHERE t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
-            "  AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
-            "  AND c.status IN ('SENT', 'DONE')"
-        )
-        params: list = []
-        if account_id is not None:
-            sql += " AND t.account_id=?"
-            params.append(account_id)
+    def get_open_chains_with_tps(self) -> list[dict]:
+        """Returns open chains that have active TP commands. Used by run_trade_based_reconciliation."""
         conn = sqlite3.connect(self._db)
         try:
-            rows = conn.execute(sql, params).fetchall()
+            rows = conn.execute(
+                "SELECT DISTINCT t.trade_chain_id, t.symbol, t.side "
+                "FROM ops_trade_chains t "
+                "JOIN ops_execution_commands c ON c.trade_chain_id = t.trade_chain_id "
+                "WHERE t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
+                "  AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
+                "  AND c.status IN ('SENT', 'DONE')"
+            ).fetchall()
             return [{"trade_chain_id": int(r[0]), "symbol": r[1], "side": r[2]} for r in rows]
         finally:
             conn.close()

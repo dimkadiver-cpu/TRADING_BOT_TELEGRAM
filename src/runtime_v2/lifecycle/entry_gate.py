@@ -19,7 +19,6 @@ from src.runtime_v2.lifecycle.cancel_expander import (
     expand_cancel_pending_commands as _expand_cancel_pending_commands,
 )
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
-from src.runtime_v2.symbols import to_raw_symbol
 from src.runtime_v2.signal_enrichment.models import (
     EnrichedCanonicalMessage, ManagementPlanConfig,
 )
@@ -31,21 +30,6 @@ from src.runtime_v2.control_plane.outbox_writer import (
 logger = logging.getLogger(__name__)
 
 GLOBAL_SCOPES = frozenset({"ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"})
-
-
-def _norm_signal_id(value: str) -> str:
-    return value.lstrip("#").strip().lower()
-
-
-def _chain_signal_ids(chain: TradeChain) -> set[str]:
-    # external_signal_id può contenere più ID separati da "|" (convenzione liste CSV)
-    if not chain.external_signal_id:
-        return set()
-    return {
-        _norm_signal_id(part)
-        for part in chain.external_signal_id.split("|")
-        if part.strip()
-    }
 
 
 def _find_leg_snap(legs_snap: list[dict], sequence: int) -> dict | None:
@@ -224,7 +208,7 @@ def _write_update_clean_log(
                     "new": ce.get("new_price"),
                 })
         elif action == "MOVE_STOP":
-            _VALID_REFS = {"Price", "Risk", "TP_1", "TP_2", "TP_3"}
+            _VALID_REFS = {"Price", "TP_1", "TP_2", "TP_3"}
             changed.append({
                 "field": "SL",
                 "old": p.get("old_sl_price"),
@@ -316,7 +300,7 @@ def _render_update_display_lines(
             new_sl = p.get("new_sl_price", "?")
             lines.append(f"SL: {old_sl} -> {new_sl}")
             ref = p.get("reference")
-            if ref in {"Price", "Risk", "TP_1", "TP_2", "TP_3"}:
+            if ref in {"Price", "TP_1", "TP_2", "TP_3"}:
                 lines.append(f"Reference: {ref}")
         elif action == "CLOSE_FULL":
             lines.append("Position: open -> closed 100%")
@@ -560,7 +544,6 @@ class LifecycleEntryGate:
         enriched: EnrichedCanonicalMessage,
         open_chains: list[TradeChain],
         control_mode: ControlMode,
-        account_chains: list[TradeChain] | None = None,
     ) -> SignalGateResult:
         eid = enriched.enrichment_id
 
@@ -570,15 +553,6 @@ class LifecycleEntryGate:
         signal = enriched.enriched_signal
         if signal is None or not signal.symbol or not signal.side:
             return self._reject_signal(eid, "missing_symbol_or_side")
-
-        # Normalize bare ticker to canonical exchange form before any further checks
-        # (e.g. "WLD" → "WLDUSDT" so chain, commands and exchange calls all use the right id)
-        signal.symbol = self._port.resolve_symbol(enriched.account_id, signal.symbol)
-
-        if account_chains is not None:
-            other_trader_chains = [c for c in account_chains if c.trader_id != enriched.trader_id]
-            if any(c.symbol == signal.symbol and c.side == signal.side for c in other_trader_chains):
-                return self._reject_signal(eid, "account_symbol_side_conflict")
 
         if not self._port.symbol_exists(enriched.account_id, signal.symbol):
             return self._reject_signal(eid, "unknown_symbol")
@@ -618,11 +592,6 @@ class LifecycleEntryGate:
             extra_plan["range_derivation"] = signal.range_derivation.model_dump()
         if decision.hint_applied is not None:
             extra_plan["risk_hint_applied"] = decision.hint_applied
-        if signal.original_tp_count is not None:
-            extra_plan["tp_trimmed"] = {
-                "original": signal.original_tp_count,
-                "used": len(signal.take_profits),
-            }
         close_pcts = self._get_close_pcts(management_plan, len(signal.take_profits))
         if close_pcts:
             extra_plan["close_pcts"] = close_pcts
@@ -947,37 +916,24 @@ class LifecycleEntryGate:
             return trader_chains
 
         if scope == "SYMBOL":
-            if not tag.targeting.symbols:
-                return []
-            matched = self._chains_matching_symbols(enriched, trader_chains, tag.targeting.symbols)
-            chains, ambiguous = self._apply_side_filter(matched, getattr(tag.targeting, "side", None))
-            return None if ambiguous else chains
+            symbols = tag.targeting.symbols
+            return [c for c in trader_chains if c.symbol in symbols] if symbols else []
 
         # SINGLE_SIGNAL or UNKNOWN — try symbol matching then explicit_ids then telegram IDs
         if tag.targeting.symbols:
-            matched = self._chains_matching_symbols(enriched, trader_chains, tag.targeting.symbols)
-            chains, ambiguous = self._apply_side_filter(matched, getattr(tag.targeting, "side", None))
-            if ambiguous:
-                return None
-            if len(chains) == 1:
-                return chains
-            if len(chains) > 1:
-                return None
-
-        if tag.targeting.explicit_ids:
-            wanted = {_norm_signal_id(x) for x in tag.targeting.explicit_ids}
-            matched = [
-                c for c in trader_chains
-                # fallback su canonical_message_id per chain pre-migrazione 014
-                # (external_signal_id NULL, nessun backfill)
-                if (wanted & _chain_signal_ids(c))
-                or _norm_signal_id(str(c.canonical_message_id)) in wanted
-            ]
+            matched = [c for c in trader_chains if c.symbol in tag.targeting.symbols]
             if len(matched) == 1:
                 return matched
             if len(matched) > 1:
-                return None  # ambiguous — send to review
-            return []  # explicit ID specified but no active chain found — do not guess
+                return None
+
+        if tag.targeting.explicit_ids:
+            matched = [
+                c for c in trader_chains
+                if str(c.canonical_message_id) in tag.targeting.explicit_ids
+            ]
+            if matched:
+                return matched
 
         tg_ids_to_check = list(tag.targeting.telegram_message_ids)
         if tag.targeting.reply_to_message_id is not None:
@@ -988,44 +944,13 @@ class LifecycleEntryGate:
                 for tid in tg_ids_to_check
                 if tid in tg_id_to_raw_id
             }
-            if not raw_ids:
-                return []  # tg_ids specified but none in map — do not guess
-            matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
-            return matched  # [] if no chain matched — do NOT fall through to single-chain
+            if raw_ids:
+                matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
+                return matched  # [] if no chain matched — do NOT fall through to single-chain
 
         if len(trader_chains) > 1:
             return None
         return trader_chains
-
-    def _chains_matching_symbols(
-        self,
-        enriched: EnrichedCanonicalMessage,
-        trader_chains: list[TradeChain],
-        symbols,
-    ) -> list[TradeChain]:
-        # Targeting symbols arrive bare (e.g. "WLD"), chains store the resolved raw id
-        # (e.g. "WLDUSDT"). Canonicalize both sides through the same port + raw helper so
-        # update matching is symmetric with the entry path that created the chain.
-        targets: set[str] = set()
-        for sym in (symbols or []):
-            resolved = self._port.resolve_symbol(enriched.account_id, sym)
-            targets.add(to_raw_symbol(resolved) or resolved)
-            targets.add(to_raw_symbol(sym) or sym)
-        return [c for c in trader_chains if (to_raw_symbol(c.symbol) or c.symbol) in targets]
-
-    @staticmethod
-    def _apply_side_filter(
-        matched: list[TradeChain],
-        side: str | None,
-    ) -> tuple[list[TradeChain], bool]:
-        # Returns (chains, ambiguous). When the update names a side, keep only that leg.
-        # When it does not and the symbol has both hedge legs open, the action is ambiguous
-        # and must go to review rather than hit both directions.
-        if side in ("LONG", "SHORT"):
-            return [c for c in matched if c.side == side], False
-        if len({c.side for c in matched}) > 1:
-            return [], True
-        return matched, False
 
     def _apply_action_to_chain(
         self,
@@ -1046,13 +971,6 @@ class LifecycleEntryGate:
                 if tp_price is None:
                     return self._review_chain(enriched, chain, f"tp_level_price_not_found:{op.tp_level}")
                 return self._apply_move_stop_price(enriched, chain, tp_price, active_commands=active_commands, reference=f"TP_{op.tp_level}")
-            if op and op.target_type == "RISK_TARGET" and op.risk_reduction_target is not None:
-                return self._apply_move_stop_risk_target(
-                    enriched,
-                    chain,
-                    op.risk_reduction_target,
-                    active_commands=active_commands,
-                )
             return self._review_chain(enriched, chain, "unsupported_set_stop_target_type")
 
         if action_type == "CLOSE":
@@ -1164,22 +1082,6 @@ class LifecycleEntryGate:
                         "old_price": old_price,
                         "new_price": new_price,
                     })
-
-        if not commands:
-            return UpdateChainResult(
-                trade_chain_id=chain_id,
-                new_lifecycle_state=None,
-                new_be_protection_status=None,
-                lifecycle_events=[LifecycleEvent(
-                    trade_chain_id=chain_id,
-                    event_type="NOOP_NO_PENDING_ENTRIES",
-                    source_type="telegram_update",
-                    source_id=str(cmid),
-                    payload_json=json.dumps({"reason": "no_pending_entries_to_modify"}),
-                    idempotency_key=f"noop_modify_entries:{chain_id}:{cmid}",
-                )],
-                execution_commands=[],
-            )
 
         event = LifecycleEvent(
             trade_chain_id=chain_id,
@@ -1591,7 +1493,7 @@ class LifecycleEntryGate:
             try:
                 old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
             except Exception:
-                logger.debug("_apply_move_to_be: failed to parse risk_snapshot_json for chain %s, old_sl_price will be absent", chain_id)
+                pass
         event = LifecycleEvent(
             trade_chain_id=chain_id,
             event_type="TELEGRAM_UPDATE_ACCEPTED",
@@ -1617,7 +1519,6 @@ class LifecycleEntryGate:
         try:
             plan = json.loads(chain.plan_state_json or "{}")
         except Exception:
-            logger.warning("_resolve_tp_level_price: failed to parse plan_state_json for chain %s", chain.trade_chain_id)
             return None
         intermediate: list[float] = plan.get("intermediate_tps") or []
         final_tp: float | None = plan.get("final_tp")
@@ -1635,7 +1536,6 @@ class LifecycleEntryGate:
         *,
         active_commands: list[ExecutionCommand],
         reference: str | None = None,
-        metadata: dict | None = None,
     ) -> "UpdateChainResult":
         chain_id = chain.trade_chain_id
         cmid = enriched.canonical_message_id
@@ -1684,8 +1584,6 @@ class LifecycleEntryGate:
         }
         if reference is not None:
             payload["reference"] = reference
-        if metadata:
-            payload.update(metadata)
 
         cmd = ExecutionCommand(
             trade_chain_id=chain_id,
@@ -1699,7 +1597,7 @@ class LifecycleEntryGate:
             try:
                 old_sl_price = float(json.loads(chain.risk_snapshot_json or "{}").get("sl_price") or 0) or None
             except Exception:
-                logger.debug("_apply_move_stop_price: failed to parse risk_snapshot_json for chain %s, old_sl_price will be absent", chain_id)
+                pass
 
         event_payload: dict = {
             "action": "MOVE_STOP",
@@ -1708,8 +1606,6 @@ class LifecycleEntryGate:
         }
         if reference is not None:
             event_payload["reference"] = reference
-        if metadata:
-            event_payload.update(metadata)
 
         event = LifecycleEvent(
             trade_chain_id=chain_id,
@@ -1725,121 +1621,6 @@ class LifecycleEntryGate:
             new_be_protection_status=None,
             lifecycle_events=[event],
             execution_commands=[cmd],
-        )
-
-    @staticmethod
-    def _resolve_chain_stop_price(chain: "TradeChain") -> float | None:
-        if chain.current_stop_price is not None:
-            return chain.current_stop_price
-        try:
-            value = json.loads(chain.risk_snapshot_json or "{}").get("sl_price")
-            return float(value) if value is not None else None
-        except Exception:
-            logger.warning("_resolve_chain_stop_price: failed to parse risk_snapshot_json for chain %s", chain.trade_chain_id)
-            return None
-
-    @staticmethod
-    def _resolve_base_initial_risk(chain: "TradeChain") -> float | None:
-        if chain.initial_risk_amount is not None and chain.initial_risk_amount > 0:
-            return chain.initial_risk_amount
-        try:
-            value = json.loads(chain.risk_snapshot_json or "{}").get("risk_amount")
-            value = float(value) if value is not None else None
-        except Exception:
-            value = None
-        if value is not None and value > 0:
-            return value
-        return None
-
-    @staticmethod
-    def _compute_residual_risk(chain: "TradeChain", stop_price: float) -> float | None:
-        if chain.entry_avg_price is None or chain.open_position_qty <= 0:
-            return None
-        if chain.side == "LONG":
-            if stop_price >= chain.entry_avg_price:
-                return 0.0
-            return (chain.entry_avg_price - stop_price) * chain.open_position_qty
-        if chain.side == "SHORT":
-            if stop_price <= chain.entry_avg_price:
-                return 0.0
-            return (stop_price - chain.entry_avg_price) * chain.open_position_qty
-        return None
-
-    def _apply_move_stop_risk_target(
-        self,
-        enriched: "EnrichedCanonicalMessage",
-        chain: "TradeChain",
-        risk_target,
-        *,
-        active_commands: list[ExecutionCommand],
-    ) -> "UpdateChainResult":
-        if chain.entry_avg_price is None:
-            return self._review_chain(enriched, chain, "missing_entry_avg_price_for_risk_target")
-        if chain.open_position_qty <= 0:
-            return self._review_chain(enriched, chain, "invalid_open_position_qty_for_risk_target")
-
-        base_initial_risk = self._resolve_base_initial_risk(chain)
-        if base_initial_risk is None:
-            return self._review_chain(enriched, chain, "missing_initial_risk_for_risk_target")
-
-        if risk_target.unit == "PERCENT_OF_INITIAL_RISK":
-            target_abs_risk = base_initial_risk * float(risk_target.value) / 100.0
-        elif risk_target.unit == "R_MULTIPLE":
-            target_abs_risk = base_initial_risk * float(risk_target.value)
-        else:
-            return self._review_chain(enriched, chain, "unsupported_risk_target_unit")
-
-        if target_abs_risk <= 0:
-            return self._apply_move_to_be(enriched, chain, active_commands)
-
-        distance = target_abs_risk / chain.open_position_qty
-        if chain.side == "LONG":
-            new_stop = chain.entry_avg_price - distance
-            at_or_through_be = new_stop >= chain.entry_avg_price
-        elif chain.side == "SHORT":
-            new_stop = chain.entry_avg_price + distance
-            at_or_through_be = new_stop <= chain.entry_avg_price
-        else:
-            return self._review_chain(enriched, chain, "unsupported_chain_side_for_risk_target")
-
-        if at_or_through_be:
-            return self._apply_move_to_be(enriched, chain, active_commands)
-
-        current_stop = self._resolve_chain_stop_price(chain)
-        if current_stop is None:
-            return self._review_chain(enriched, chain, "missing_current_stop_for_risk_target")
-
-        current_residual_risk = self._compute_residual_risk(chain, current_stop)
-        if current_residual_risk is None:
-            return self._review_chain(enriched, chain, "missing_current_residual_risk_for_risk_target")
-        if target_abs_risk >= current_residual_risk:
-            return UpdateChainResult(
-                trade_chain_id=chain.trade_chain_id,
-                new_lifecycle_state=None,
-                new_be_protection_status=None,
-                lifecycle_events=[LifecycleEvent(
-                    trade_chain_id=chain.trade_chain_id,
-                    event_type="NOOP_NO_APPLICABLE_TARGET",
-                    source_type="telegram_update",
-                    source_id=str(enriched.canonical_message_id),
-                    payload_json=json.dumps({"reason": "risk_target_already_met"}),
-                    idempotency_key=(
-                        f"noop_risk_target_already_met:{chain.trade_chain_id}:{enriched.canonical_message_id}"
-                    ),
-                )],
-                execution_commands=[],
-            )
-
-        return self._apply_move_stop_price(
-            enriched,
-            chain,
-            new_stop,
-            active_commands=active_commands,
-            reference="Risk",
-            metadata={
-                "risk_target_unit": risk_target.unit,
-                "risk_target_value": float(risk_target.value),
-            },
         )
 
     def _apply_close_full(
@@ -1920,6 +1701,7 @@ class LifecycleEntryGate:
                 "symbol": chain.symbol,
                 "side": chain.side,
                 "fraction": fraction,
+                "command_source": "trader_update",
                 **position_context,
             }),
             idempotency_key=f"close_partial:{chain_id}:{cmid}",
@@ -1990,7 +1772,7 @@ class LifecycleEntryGate:
                 if leg.get("status") == "PENDING"
             ]
         except Exception:
-            logger.debug("_apply_cancel_pending: failed to parse plan_state_json for chain %s, cancelled_entries will be empty", chain_id)
+            pass
 
         event = LifecycleEvent(
             trade_chain_id=chain_id,
@@ -2127,14 +1909,13 @@ def _write_no_chain_signal_clean_log(
         risk_pct = None
         if ev_data.get("capital") and ev_data.get("risk_amount"):
             risk_pct = round(ev_data["risk_amount"] / ev_data["capital"] * 100, 2)
-        reason = ev_data.get("reason", "unknown")
         payload = {
             "chain_id": None,
             "symbol": signal.symbol if signal else None,
             "side": str(signal.side) if signal and signal.side else None,
             "trader_id": enriched.trader_id,
             "account_id": enriched.account_id,
-            "reason": reason,
+            "reason": ev_data.get("reason", "unknown"),
             "entries": entries_payload,
             "sl": sl_payload,
             "tps": tps_payload,
@@ -2142,21 +1923,12 @@ def _write_no_chain_signal_clean_log(
             "source": ev_data.get("source", "runtime"),
             "link": link,
         }
-        # Dedupe per contenuto, non per enrichment_id: le revisioni editate di uno
-        # stesso messaggio producono enrichment distinti, ma se simbolo/side/ragione
-        # non cambiano la notifica Telegram non deve ripetersi. L'evento lifecycle
-        # resta per-eid (storia completa).
-        dedupe_key = (
-            f"clean:signal_rejected:{enriched.raw_message_id}:"
-            f"{signal.symbol if signal else None}:"
-            f"{signal.side if signal and signal.side else None}:{reason}"
-        )
         write_clean_log_event(
             conn,
             notification_type=event.event_type,
             chain_id=None,
             payload=payload,
-            dedupe_key=dedupe_key,
+            dedupe_key=f"clean:{event.idempotency_key}",
         )
 
 
@@ -2385,8 +2157,7 @@ class LifecycleGateWorker:
         control_mode = self._control_repo.get_effective_mode(account_id, trader_id, symbol, side)
 
         if primary_class == "SIGNAL":
-            account_chains = self._chain_repo.get_active_by_account(account_id)
-            result = self._gate.process_signal(enriched, open_chains, control_mode, account_chains=account_chains)
+            result = self._gate.process_signal(enriched, open_chains, control_mode)
             self._persist_signal(enriched, result)
         else:
             active_cmds = {
@@ -2402,12 +2173,11 @@ class LifecycleGateWorker:
 
     def _persist_signal(self, enriched: EnrichedCanonicalMessage, result: SignalGateResult) -> None:
         now = datetime.now(timezone.utc).isoformat()
-        # Lookup source_chat_id, telegram_message_id, and external_signal_id from parser DB.
+        # Lookup source_chat_id and telegram_message_id from parser DB.
         src_chat_id: str | None = None
         tg_msg_id: int | None = None
         parse_status: str | None = None
         parse_warnings: list[str] = []
-        external_signal_id: str | None = None
         try:
             pconn = _sqlite3.connect(self._parser_db)
             try:
@@ -2418,7 +2188,7 @@ class LifecycleGateWorker:
                 if rm_row:
                     src_chat_id, tg_msg_id = rm_row[0], rm_row[1]
                 cm_row = pconn.execute(
-                    "SELECT parse_status, warnings_json, diagnostics_json FROM canonical_messages WHERE canonical_message_id=?",
+                    "SELECT parse_status, warnings_json FROM canonical_messages WHERE canonical_message_id=?",
                     (enriched.canonical_message_id,),
                 ).fetchone()
                 if cm_row:
@@ -2428,12 +2198,6 @@ class LifecycleGateWorker:
                             parse_warnings = json.loads(cm_row[1] or "[]") or []
                         except Exception:
                             parse_warnings = []
-                    try:
-                        diag = json.loads(cm_row[2] or "{}")
-                        sig_ids = diag.get("signal_explicit_ids") or []
-                        external_signal_id = "|".join(sig_ids) if sig_ids else None
-                    except Exception:
-                        pass
             finally:
                 pconn.close()
         except Exception:
@@ -2464,9 +2228,9 @@ class LifecycleGateWorker:
                             open_position_qty, closed_position_qty, last_position_sync_at,
                             execution_mode, risk_already_realized, risk_remaining,
                             plan_state_json, source_chat_id, telegram_message_id,
-                            external_signal_id, initial_risk_amount, peak_margin_used,
+                            initial_risk_amount, peak_margin_used,
                             created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                         """,
                         (
                             c.source_enrichment_id, c.canonical_message_id, c.raw_message_id,
@@ -2481,7 +2245,7 @@ class LifecycleGateWorker:
                             c.last_position_sync_at.isoformat() if c.last_position_sync_at else None,
                             c.execution_mode, c.risk_already_realized, c.risk_remaining,
                             c.plan_state_json, src_chat_id, tg_msg_id,
-                            external_signal_id, initial_risk_amount, None,
+                            initial_risk_amount, None,
                             now, now,
                         ),
                     )
@@ -2552,7 +2316,7 @@ class LifecycleGateWorker:
                         (
                             enriched.account_id, s.equity_usdt, s.available_balance_usdt,
                             s.total_open_risk_usdt, s.total_margin_used_usdt,
-                            s.source, s.captured_at.isoformat(), s.payload_json,
+                            s.source, s.captured_at.isoformat(), "{}",
                         ),
                     )
 
@@ -2568,7 +2332,7 @@ class LifecycleGateWorker:
                         (
                             enriched.account_id, s.symbol, s.mark_price, s.bid, s.ask,
                             s.min_order_size, s.price_precision, s.qty_precision,
-                            s.source, s.captured_at.isoformat(), s.payload_json,
+                            s.source, s.captured_at.isoformat(), "{}",
                         ),
                     )
                 if chain_id is not None:
@@ -2645,11 +2409,25 @@ class LifecycleGateWorker:
                             ),
                         )
                     for cmd in cr.execution_commands:
+                        # Inject source_message_link into CLOSE_FULL / CLOSE_PARTIAL
+                        # payloads so the downstream notification pipeline can surface
+                        # a link back to the trader's original message.
+                        cmd_payload_json = cmd.payload_json
+                        if (
+                            update_source_link
+                            and cmd.command_type in ("CLOSE_FULL", "CLOSE_PARTIAL")
+                        ):
+                            try:
+                                _p = json.loads(cmd_payload_json or "{}")
+                                _p["source_message_link"] = update_source_link
+                                cmd_payload_json = json.dumps(_p)
+                            except Exception:
+                                pass  # non-fatal: keep original payload
                         for payload_json, idempotency_key in _expand_cancel_pending_commands(
                             conn,
                             trade_chain_id=cr.trade_chain_id,
                             command_type=cmd.command_type,
-                            payload_json=cmd.payload_json,
+                            payload_json=cmd_payload_json,
                             idempotency_key=cmd.idempotency_key,
                         ):
                             conn.execute(
