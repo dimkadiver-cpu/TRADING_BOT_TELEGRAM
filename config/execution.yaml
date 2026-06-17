@@ -32,11 +32,11 @@ execution:
       execution_account_id: demo_1
 
     demo_2:
-      adapter: bybit_nuovo
+      adapter: bybit_demo_2
       execution_account_id: demo_2  # Sostituire con il vero account ID Bybit del subaccount.
 
     demo_3:
-      adapter: bybit_nuovo
+      adapter: bybit_demo_3
       execution_account_id: demo_3  # Sostituire con il vero account ID Bybit del subaccount.
 
 
@@ -48,8 +48,8 @@ execution:
       mode: demo  # Stati attesi: demo | paper | live.
       connector: bybit  # Exchange/connector target usato dall'adapter.
 
-      api_key_env: BYBIT_API_KEY_BYBIT_DEMO
-      api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO
+      api_key_env: BYBIT_API_KEY_BYBIT_DEMO_1
+      api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO_1
       adjust_for_time_difference: true
       recv_window_ms: 10000
       time_sync_on_startup: true
@@ -102,32 +102,32 @@ execution:
       live_safety:
         allow_live_trading: false
 
-  bybit_demo_3:
-      type: ccxt_bybit
-      mode: demo  # Cambiare in live quando il subaccount è pronto.
-      connector: bybit
+    bybit_demo_3:
+        type: ccxt_bybit
+        mode: demo  # Cambiare in live quando il subaccount è pronto.
+        connector: bybit
 
-      api_key_env: BYBIT_API_KEY_BYBIT_DEMO_3    # Impostare con le credenziali del subaccount.
-      api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO_3
+        api_key_env: BYBIT_API_KEY_BYBIT_DEMO_3    # Impostare con le credenziali del subaccount.
+        api_secret_env: BYBIT_API_SECRET_BYBIT_DEMO_3
 
-      adjust_for_time_difference: true
-      recv_window_ms: 10000
-      time_sync_on_startup: true
+        adjust_for_time_difference: true
+        recv_window_ms: 10000
+        time_sync_on_startup: true
 
-      strategy:
-        simple_attached_enabled: true
-        trigger_by: MarkPrice
-        one_tp_mode: FULL
-        multi_tp_mode: PARTIAL
+        strategy:
+          simple_attached_enabled: true
+          trigger_by: MarkPrice
+          one_tp_mode: FULL
+          multi_tp_mode: PARTIAL
 
-      websocket:
-        enabled: true
-        poll_fallback_enabled: true
-        poll_fallback_period_seconds: 60
+        websocket:
+          enabled: true
+          poll_fallback_enabled: true
+          poll_fallback_period_seconds: 60
 
-      retry:
-        max_attempts: 3
-        backoff_seconds: [30, 90, 300]
+        retry:
+          max_attempts: 3
+          backoff_seconds: [30, 90, 300]
 
-      live_safety:
-        allow_live_trading: false
+        live_safety:
+          allow_live_trading: false
