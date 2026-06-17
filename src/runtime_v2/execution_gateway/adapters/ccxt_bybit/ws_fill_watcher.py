@@ -111,61 +111,64 @@ class BybitWsFillWatcher:
                 task.cancel()
 
     async def _watch_orders_forever(self) -> None:
-        exchange = self._build_exchange()
-        try:
-            while not self._stop_event.is_set():
-                try:
-                    orders = await exchange.watch_orders()
-                except asyncio.CancelledError:
-                    raise
-                except Exception:
-                    if self._stop_event.is_set():
-                        break
-                    logger.exception("bybit watch_orders failed")
-                    await self._run_reconciliation_callback()
-                    await asyncio.sleep(5)
-                    continue
-                self._process_batch(orders, self._normalizer.from_order)
-        finally:
-            await exchange.close()
+        while not self._stop_event.is_set():
+            exchange = self._build_exchange()
+            try:
+                while not self._stop_event.is_set():
+                    try:
+                        orders = await exchange.watch_orders()
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception:
+                        if self._stop_event.is_set():
+                            return
+                        logger.exception("bybit watch_orders failed")
+                        await self._run_reconciliation_callback()
+                        await asyncio.sleep(5)
+                        break  # rebuild exchange on next outer iteration
+                    self._process_batch(orders, self._normalizer.from_order)
+            finally:
+                await exchange.close()
 
     async def _watch_trades_forever(self) -> None:
-        exchange = self._build_exchange()
-        try:
-            while not self._stop_event.is_set():
-                try:
-                    trades = await exchange.watch_my_trades()
-                except asyncio.CancelledError:
-                    raise
-                except Exception:
-                    if self._stop_event.is_set():
-                        break
-                    logger.exception("bybit watch_my_trades failed")
-                    await self._run_reconciliation_callback()
-                    await asyncio.sleep(5)
-                    continue
-                self._process_batch(trades, self._normalizer.from_trade)
-        finally:
-            await exchange.close()
+        while not self._stop_event.is_set():
+            exchange = self._build_exchange()
+            try:
+                while not self._stop_event.is_set():
+                    try:
+                        trades = await exchange.watch_my_trades()
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception:
+                        if self._stop_event.is_set():
+                            return
+                        logger.exception("bybit watch_my_trades failed")
+                        await self._run_reconciliation_callback()
+                        await asyncio.sleep(5)
+                        break  # rebuild exchange on next outer iteration
+                    self._process_batch(trades, self._normalizer.from_trade)
+            finally:
+                await exchange.close()
 
     async def _watch_positions_forever(self) -> None:
-        exchange = self._build_exchange()
-        try:
-            while not self._stop_event.is_set():
-                try:
-                    positions = await exchange.watch_positions()
-                except asyncio.CancelledError:
-                    raise
-                except Exception:
-                    if self._stop_event.is_set():
-                        break
-                    logger.exception("bybit watch_positions failed")
-                    await self._run_reconciliation_callback()
-                    await asyncio.sleep(5)
-                    continue
-                self._process_batch(positions, self._normalizer.from_position)
-        finally:
-            await exchange.close()
+        while not self._stop_event.is_set():
+            exchange = self._build_exchange()
+            try:
+                while not self._stop_event.is_set():
+                    try:
+                        positions = await exchange.watch_positions()
+                    except asyncio.CancelledError:
+                        raise
+                    except Exception:
+                        if self._stop_event.is_set():
+                            return
+                        logger.exception("bybit watch_positions failed")
+                        await self._run_reconciliation_callback()
+                        await asyncio.sleep(5)
+                        break  # rebuild exchange on next outer iteration
+                    self._process_batch(positions, self._normalizer.from_position)
+            finally:
+                await exchange.close()
 
     def _process_batch(
         self,
