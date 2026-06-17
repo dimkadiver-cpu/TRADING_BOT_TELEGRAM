@@ -18,8 +18,9 @@ class AuthValidator:
     """Stateless per-update authorization."""
 
     def __init__(self, config: ControlPlaneConfig) -> None:
-        self._chat_id = config.chat_id
-        self._commands_thread_id = config.topics.commands.thread_id
+        default_acc = config.get_account(None)
+        self._chat_id = default_acc.chat_id
+        self._commands_thread_id = default_acc.topics.commands.thread_id
         self._authorized_users = frozenset(config.authorized_users)
         self._delivery_mode = config.delivery_mode
 

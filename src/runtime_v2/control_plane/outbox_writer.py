@@ -137,16 +137,19 @@ def _record(
     send_after: str | None = None,
     aggregation_group: str | None = None,
     source_message_id: str | None = None,
+    account_id: str | None = None,
 ) -> None:
     conn.execute(
         """
         INSERT OR IGNORE INTO ops_notification_outbox
             (notification_type, destination, payload_json, priority, status,
-             dedupe_key, attempts, created_at, send_after, aggregation_group, source_message_id)
-        VALUES (?,?,?,?, 'PENDING', ?, 0, ?, ?, ?, ?)
+             dedupe_key, attempts, created_at, send_after, aggregation_group, source_message_id,
+             account_id)
+        VALUES (?,?,?,?, 'PENDING', ?, 0, ?, ?, ?, ?, ?)
         """,
         (notification_type, destination, json.dumps(payload), priority,
-         dedupe_key, _now(), send_after, aggregation_group, source_message_id),
+         dedupe_key, _now(), send_after, aggregation_group, source_message_id,
+         account_id),
     )
 
 
@@ -159,12 +162,14 @@ def write_clean_log_event(
     payload: dict,
     priority: str | None = None,
     dedupe_key: str | None = None,
+    account_id: str | None = None,
 ) -> None:
     """Insert a CLEAN_LOG outbox row inside the caller's transaction."""
     key = dedupe_key or f"clean:{notification_type}:{chain_id}"
     pri = priority or _PRIORITY_BY_TYPE.get(notification_type, "MEDIUM")
     if chain_id is not None and "chain_id" not in payload:
         payload = {**payload, "chain_id": chain_id}
+    resolved_account_id = account_id or payload.get("account_id")
     _record(
         conn,
         notification_type=notification_type,
@@ -175,6 +180,7 @@ def write_clean_log_event(
         send_after=_send_after_for(notification_type),
         aggregation_group=_agg_group(notification_type, chain_id, payload),
         source_message_id=payload.get("source_message_id"),
+        account_id=resolved_account_id,
     )
 
 
@@ -185,13 +191,14 @@ def write_tech_log_event(
     payload: dict,
     dedupe_key: str,
     priority: str = "MEDIUM",
+    account_id: str | None = None,
 ) -> None:
     """Insert a TECH_LOG outbox row inside the caller's transaction."""
     _record(conn, notification_type=notification_type, destination="TECH_LOG",
-            payload=payload, priority=priority, dedupe_key=dedupe_key)
+            payload=payload, priority=priority, dedupe_key=dedupe_key, account_id=account_id)
 
 
-def notify_listener_edit_skipped(ops_db_path: str, context: dict) -> None:
+def notify_listener_edit_skipped(ops_db_path: str, context: dict, account_id: str | None = None) -> None:
     """TECH_LOG per un edit di segnale già eseguito, scartato dal listener.
 
     Apre una propria connessione: il chiamante (listener) non ha accesso
@@ -221,6 +228,7 @@ def notify_listener_edit_skipped(ops_db_path: str, context: dict) -> None:
                     f"{context.get('msg_id')}:{context.get('edit_ts')}"
                 ),
                 priority="HIGH",
+                account_id=account_id,
             )
     finally:
         conn.close()

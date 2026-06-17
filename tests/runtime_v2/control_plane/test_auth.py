@@ -2,23 +2,29 @@ from __future__ import annotations
 
 from src.runtime_v2.control_plane.auth import AuthValidator
 from src.runtime_v2.control_plane.models import (
+    AccountConfig,
+    AccountTopicsConfig,
     CleanLogConfig,
     ControlPlaneConfig,
     TechLogConfig,
     TopicConfig,
-    TopicsConfig,
 )
 
 
 def _config() -> ControlPlaneConfig:
     return ControlPlaneConfig(
         token="t",
-        chat_id=-100999,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102),
-            clean_log=CleanLogConfig(thread_id=103),
-        ),
+        default_account="main",
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=101),
+                    tech_log=TechLogConfig(thread_id=102),
+                    clean_log=CleanLogConfig(thread_id=103),
+                ),
+            )
+        },
         authorized_users=[42, 43],
     )
 
@@ -61,13 +67,18 @@ def test_missing_thread_id_treated_as_wrong_topic():
 def _config_private_bot() -> ControlPlaneConfig:
     return ControlPlaneConfig(
         token="t",
-        chat_id=-100999,
+        default_account="main",
         delivery_mode="private_bot",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None),
-            tech_log=TechLogConfig(thread_id=None),
-            clean_log=CleanLogConfig(thread_id=None),
-        ),
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=None),
+                    tech_log=TechLogConfig(thread_id=None),
+                    clean_log=CleanLogConfig(thread_id=None),
+                ),
+            )
+        },
         authorized_users=[42, 43],
     )
 

@@ -53,12 +53,19 @@ class CleanLogConfig(BaseModel):
     multi_chain_summary_threshold: int = 3
 
 
-class TopicsConfig(BaseModel):
+class AccountTopicsConfig(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    commands: TopicConfig
-    tech_log: TechLogConfig
-    clean_log: CleanLogConfig
+    clean_log: CleanLogConfig = Field(default_factory=CleanLogConfig)
+    tech_log: TechLogConfig = Field(default_factory=TechLogConfig)
+    commands: TopicConfig = Field(default_factory=TopicConfig)
+
+
+class AccountConfig(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+
+    chat_id: int
+    topics: AccountTopicsConfig = Field(default_factory=AccountTopicsConfig)
 
 
 class StartupConfig(BaseModel):
@@ -73,13 +80,19 @@ class ControlPlaneConfig(BaseModel):
 
     enabled: bool = True
     token: str
-    chat_id: int
     delivery_mode: Literal["supergroup_topics", "private_bot"] = "supergroup_topics"
-    topics: TopicsConfig
+    default_account: str
+    per_account: dict[str, AccountConfig]
     authorized_users: list[int] = Field(default_factory=list)
     startup: StartupConfig = Field(default_factory=StartupConfig)
     keyboard: list[list[str]] = Field(default_factory=list)
     notifications: dict[str, str] = Field(default_factory=dict)
+
+    def get_account(self, account_id: str | None) -> AccountConfig:
+        """Return AccountConfig for account_id, falling back to default_account."""
+        if account_id and account_id in self.per_account:
+            return self.per_account[account_id]
+        return self.per_account[self.default_account]
 
 
 class NotificationOutboxEntry(BaseModel):
@@ -162,6 +175,8 @@ class CleanLogTracking(BaseModel):
 
 
 __all__ = [
+    "AccountConfig",
+    "AccountTopicsConfig",
     "CleanLogConfig",
     "CleanLogTracking",
     "CommandStatus",
@@ -177,5 +192,4 @@ __all__ = [
     "StartupMode",
     "TechLogConfig",
     "TopicConfig",
-    "TopicsConfig",
 ]

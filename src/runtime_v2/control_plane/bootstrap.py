@@ -42,7 +42,6 @@ def build_control_plane(
     config_path: str,
     ops_db_path: str,
     log_path: str | None,
-    known_trader_ids: set[str] | None = None,
 ) -> ControlPlane | None:
     try:
         config = load_control_plane_config(config_path)
@@ -52,8 +51,9 @@ def build_control_plane(
     if not config.enabled:
         return None
 
+    default_acc = config.get_account(None)
     debug_controller = DebugModeController(
-        max_seconds=config.topics.tech_log.debug_max_duration_minutes * 60
+        max_seconds=default_acc.topics.tech_log.debug_max_duration_minutes * 60
     )
     service = RuntimeControlService(
         ops_db_path=ops_db_path,
@@ -64,7 +64,7 @@ def build_control_plane(
     audit = CommandAuditStore(ops_db_path)
     router = CommandRouter(config=config, auth=auth, audit=audit, service=service)
     bot = TelegramControlBot(config=config, router=router)
-    topic_router = TopicRouter(config, known_trader_ids=known_trader_ids)
+    topic_router = TopicRouter(config)
     dispatcher = TelegramNotificationDispatcher(
         config=config,
         ops_db_path=ops_db_path,

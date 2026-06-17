@@ -1,83 +1,16 @@
-# config/telegram_control.yaml
-# I segreti vengono letti da variabili ambiente tramite placeholder ${ENV}.
-# Interruttore principale del control plane Telegram.
-enabled: true
-
-# Variabile ambiente che contiene il token del bot.
 token_env: CONTROL_TELEGRAM_BOT_TOKEN
 
-# Chat di destinazione per comandi, TECH_LOG e CLEAN_LOG.
-chat_id: "${CONTROL_TELEGRAM_CHAT_ID}"
+default_account: main
 
-topics:
-  commands:
-    # Topic/thread usato per le risposte ai comandi in modalità supergroup.
-    # In modalità private_bot di solito è null.
-    thread_id: 13
-  tech_log:
-    # Topic/thread usato per notifiche tecniche e runtime.
-    thread_id: 3
-    # Interruttore principale per l'invio del TECH_LOG.
-    enabled: true
-    # Valori ammessi: WARNING | INFO | DEBUG
-    # WARNING = solo warning e livelli superiori
-    # INFO = info + warning e superiori, ma INFO richiede anche operational_events: true
-    # DEBUG = debug/info/warning, ma i messaggi DEBUG passano solo mentre /debug_on è attivo
-    min_level: INFO
-    # Se false, i messaggi TECH_LOG di livello INFO vengono soppressi
-    # anche quando min_level=INFO.
-    operational_events: true
-    # Intervallo di poll/debounce del dispatcher per invii TECH_LOG batchati.
-    batch_seconds: 10
-    # Limite rigido di messaggi TECH_LOG inviabili su Telegram.
-    max_messages_per_minute: 20
-    # Finestra temporale di deduplica per eventi TECH_LOG ripetuti.
-    dedupe_window_seconds: 60
-    # Dopo questo numero di eventi identici ripetuti, passa a comportamento di summary.
-    max_repeated_before_summary: 5
-    # Durata massima accettata da /debug_on, in minuti.
-    debug_max_duration_minutes: 60
-  clean_log:
-    # Topic/thread usato per messaggi operativi visibili all'utente.
-    thread_id: 11
-    # Routing opzionale per trader_id specifici.
-    # I trader NON elencati usano il thread_id globale sopra come fallback.
-    # Il trader_id deve corrispondere esattamente al valore in channels.yaml.
-    # Un avviso di log viene emesso all'avvio se una chiave non trova match in channels.yaml.
-    per_trader:
-       trader_prova: 637
-       sma_intraday: 637
-       rsi_swing: 637
-       rsi_intraday: 637
-       #trader_3: 57
-    # Campo previsto dal design, ma al momento non attivo nel runtime:
-    # oggi non introduce un vero ritardo configurabile sui CLEAN_LOG.
-    debounce_seconds: 20
-    # Campo previsto dal design, ma al momento non attivo nel runtime:
-    # oggi non esiste una vera aggregazione configurabile dei fill su questa finestra.
-    aggregate_fills_seconds: 30
-    # Campo previsto dal design, ma al momento non attivo nel runtime:
-    # oggi non esiste una vera aggregazione configurabile di update/eventi di stato su questa finestra.
-    aggregate_updates_seconds: 20
-    # Limite anti-spam per singola trade chain.
-    max_messages_per_chain_per_minute: 4
-    # Percentuale minima di partial fill prima di inviare una notifica.
-    min_partial_fill_notify_pct: 10
+delivery_mode: supergroup_topics
 
 authorized_users:
-  # ID utente Telegram autorizzati a inviare comandi di controllo.
   - "${CONTROL_TELEGRAM_USER_ID}"
 
 startup:
-  # Comportamento all'avvio:
-  # auto = sceglie automaticamente
-  # standby = avvia senza azioni di restore
-  # restore = forza il percorso di restore
   mode: auto
-  # Età massima di snapshot/stato considerata valida per il restore.
   restore_max_age_seconds: 300
 
-# Tastiera persistente opzionale per la modalità private_bot.
 keyboard:
   - ["/status", "/health", "/control"]
   - ["/trades", "/reviews", "/logs"]
@@ -85,9 +18,6 @@ keyboard:
   - ["/block", "/debug_on"]
 
 notifications:
-  # I valori ammessi sono tipicamente "on" o "silent".
-  # "on" invia una notifica Telegram normale.
-  # "silent" invia il messaggio senza suono/vibrazione di notifica.
   startup: "on"
   shutdown: "on"
   control_change: "on"
@@ -101,3 +31,32 @@ notifications:
   order_rejected: "on"
   reconciliation_warning: "on"
   technical_error: "on"
+
+per_account:
+  main:
+    chat_id: 0
+    topics:
+      clean_log:
+        thread_id: 11
+        per_trader:
+          trader_prova: 637
+          sma_intraday: 637
+          rsi_swing: 637
+          rsi_intraday: 637
+        debounce_seconds: 20
+        aggregate_fills_seconds: 30
+        aggregate_updates_seconds: 20
+        max_messages_per_chain_per_minute: 4
+        min_partial_fill_notify_pct: 10
+      tech_log:
+        thread_id: 3
+        enabled: true
+        min_level: INFO
+        operational_events: true
+        batch_seconds: 10
+        max_messages_per_minute: 20
+        dedupe_window_seconds: 60
+        max_repeated_before_summary: 5
+        debug_max_duration_minutes: 60
+      commands:
+        thread_id: 13

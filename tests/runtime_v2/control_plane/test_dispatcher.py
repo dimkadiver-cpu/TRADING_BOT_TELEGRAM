@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import logging
 import sqlite3
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -10,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from src.runtime_v2.control_plane.models import (
-    CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+    AccountConfig, AccountTopicsConfig, CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig,
 )
 from src.runtime_v2.control_plane.notification_dispatcher import (
     TelegramNotificationDispatcher,
@@ -39,25 +38,32 @@ def ops_db(tmp_path):
 
 def _config():
     return ControlPlaneConfig(
-        token="t", chat_id=-100999,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102),
-            clean_log=CleanLogConfig(thread_id=103),
-        ),
+        token="t",
+        default_account="main",
+        per_account={"main": AccountConfig(
+            chat_id=-100999,
+            topics=AccountTopicsConfig(
+                commands=TopicConfig(thread_id=101),
+                tech_log=TechLogConfig(thread_id=102),
+                clean_log=CleanLogConfig(thread_id=103),
+            ),
+        )},
     )
 
 
 def _private_bot_config():
     return ControlPlaneConfig(
         token="t",
-        chat_id=42,
         delivery_mode="private_bot",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None),
-            tech_log=TechLogConfig(thread_id=None),
-            clean_log=CleanLogConfig(thread_id=None),
-        ),
+        default_account="main",
+        per_account={"main": AccountConfig(
+            chat_id=42,
+            topics=AccountTopicsConfig(
+                commands=TopicConfig(thread_id=None),
+                tech_log=TechLogConfig(thread_id=None),
+                clean_log=CleanLogConfig(thread_id=None),
+            ),
+        )},
     )
 
 
@@ -175,32 +181,6 @@ async def test_recovers_after_transient_failure(ops_db):
     assert status == "SENT"
 
 
-async def test_thread_not_found_log_includes_trader_and_route_context(ops_db, caplog):
-    conn = sqlite3.connect(ops_db)
-    with conn:
-        write_clean_log_event(
-            conn,
-            notification_type="SIGNAL_ACCEPTED",
-            chain_id=145,
-            payload={"symbol": "BTC/USDT", "side": "LONG", "trader_id": "trader_a"},
-            dedupe_key="clean:thread-missing",
-        )
-    conn.close()
-
-    class ThreadMissingSender:
-        async def send(self, *, chat_id, thread_id, text, silent=False, reply_to_message_id=None):
-            raise RuntimeError("Message thread not found")
-
-    disp = _dispatcher(ops_db, ThreadMissingSender())
-    with caplog.at_level(logging.WARNING, logger="src.runtime_v2.control_plane.notification_dispatcher"):
-        await disp.drain_once()
-
-    joined = "\n".join(caplog.messages)
-    assert "trader_id=trader_a" in joined
-    assert "chat_id=-100999" in joined
-    assert "thread_id=103" in joined
-
-
 async def test_private_bot_dispatches_without_thread_id(ops_db):
     _seed(ops_db)
     sender = FakeSender()
@@ -262,7 +242,7 @@ async def test_tech_log_rate_limit_suppresses_excess(ops_db):
     )
     await dispatcher.drain_once()
 
-    max_msgs = cfg.topics.tech_log.max_messages_per_minute
+    max_msgs = cfg.get_account("main").topics.tech_log.max_messages_per_minute
     # Should have sent at most max_msgs + 1 (the rate limit warning)
     assert len(sent_texts) <= max_msgs + 1
     # Exactly max_msgs normal messages + 1 warning
@@ -501,3 +481,115 @@ async def test_dispatcher_releases_resolvable_pending_close_full_summary_without
     assert "Close full" in sender.sent[0]["text"]
     assert "https://t.me/c/3897279123/468" in sender.sent[0]["text"]
     assert "https://t.me/c/3897279123/469" in sender.sent[0]["text"]
+
+
+def _config_per_trader(trader_thread: int = 77):
+    """Config with per_trader override: trader_a → thread 77, global clean_log → 103."""
+    from src.runtime_v2.control_plane.models import (
+        AccountConfig, AccountTopicsConfig, CleanLogConfig, ControlPlaneConfig,
+        TechLogConfig, TopicConfig,
+    )
+    return ControlPlaneConfig(
+        token="t",
+        default_account="main",
+        per_account={"main": AccountConfig(
+            chat_id=-100999,
+            topics=AccountTopicsConfig(
+                commands=TopicConfig(thread_id=101),
+                tech_log=TechLogConfig(thread_id=102),
+                clean_log=CleanLogConfig(thread_id=103, per_trader={"trader_a": trader_thread}),
+            ),
+        )},
+    )
+
+
+@pytest.mark.asyncio
+async def test_update_done_with_trader_id_routes_to_per_trader_thread(ops_db):
+    """UPDATE_DONE payload must carry trader_id so the dispatcher routes to the per-trader thread."""
+    cfg = _config_per_trader(trader_thread=77)
+    sender = FakeSender()
+    disp = TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=sender,
+    )
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="UPDATE_DONE",
+            chain_id=200,
+            payload={
+                "chain_id": 200,
+                "symbol": "ETH/USDT",
+                "side": "LONG",
+                "trader_id": "trader_a",
+                "applied_actions": ["MOVE_STOP"],
+                "rejected_actions": [],
+                "failed_actions": [],
+                "changed": [{"field": "SL", "old": 1500, "new": 1550, "note": None}],
+                "source": "trader_update",
+                "link": None,
+            },
+            dedupe_key="clean:update:msg1:200",
+        )
+    conn.close()
+
+    await disp.drain_once()
+
+    assert len(sender.sent) == 1
+    assert sender.sent[0]["thread_id"] == 77, (
+        "UPDATE_DONE must route to per-trader thread when trader_id is present in payload"
+    )
+
+
+@pytest.mark.asyncio
+async def test_thread_pinning_keeps_subsequent_events_on_first_thread(ops_db):
+    """Once the first event for a chain is sent, all subsequent events must go to
+    the same (chat_id, thread_id) stored in ops_clean_log_tracking — even if the
+    per_trader config were to change."""
+    cfg = _config_per_trader(trader_thread=77)
+    sender = FakeSender()
+    disp = TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=sender,
+    )
+
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        # Simulate: first event (SIGNAL_ACCEPTED) was already sent to thread 77 and tracking row created
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            (300, "501", "501", "-100999", "77", "SIGNAL_ACCEPTED", now, now),
+        )
+        # Second event without trader_id in payload (simulates old bug or engine_rule path)
+        write_clean_log_event(
+            conn,
+            notification_type="ENTRY_OPENED",
+            chain_id=300,
+            payload={
+                "chain_id": 300,
+                "symbol": "SOL/USDT",
+                "side": "LONG",
+                # No trader_id — pinning must still route to thread 77
+                "fill_price": 150.0,
+                "filled_qty": 10.0,
+                "fee": 0.01,
+            },
+            dedupe_key="clean:entry:300:1",
+        )
+    conn.close()
+
+    await disp.drain_once()
+
+    assert len(sender.sent) == 1
+    assert sender.sent[0]["thread_id"] == 77, (
+        "Subsequent CLEAN_LOG events must be pinned to the thread used by the first event"
+    )

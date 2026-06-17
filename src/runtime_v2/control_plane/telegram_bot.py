@@ -104,7 +104,7 @@ class CommandRouter:
         self._auth = auth
         self._audit = audit
         self._service = service
-        self._debug_max_seconds = config.topics.tech_log.debug_max_duration_minutes * 60
+        self._debug_max_seconds = config.get_account(None).topics.tech_log.debug_max_duration_minutes * 60
 
     def route(
         self,
@@ -431,9 +431,10 @@ class TelegramControlBot:
         if command_name == "start" and result.decision == "EXECUTED":
             await self._send_reply_keyboard(update, user_id=user.id, force=True)
 
-        thread_id = self._config.topics.commands.thread_id
+        default_acc = self._config.get_account(None)
+        thread_id = default_acc.topics.commands.thread_id
         send_kwargs: dict[str, object] = {
-            "chat_id": self._config.chat_id,
+            "chat_id": default_acc.chat_id,
             "text": result.reply_text,
         }
         if thread_id is not None:

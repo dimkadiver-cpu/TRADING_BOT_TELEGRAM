@@ -84,9 +84,8 @@ class TelegramNotificationDispatcher:
         self._poll = poll_interval_seconds
         self._batch = batch_size
         self._debug_status = debug_status or (lambda: False)
-        # TECH_LOG rate limiting state
-        self._tech_log_sent_this_minute: int = 0
-        self._tech_log_minute_start: float = time.time()
+        # TECH_LOG rate limiting state — per-account
+        self._tech_log_minute_state: dict[str, dict] = {}
         self._tech_log_rate_limit_warned: bool = False
 
     def _claim_pending(self) -> list[tuple]:
@@ -95,7 +94,8 @@ class TelegramNotificationDispatcher:
             conn.execute("BEGIN IMMEDIATE")
             rows = conn.execute(
                 """
-                SELECT notification_id, notification_type, destination, payload_json, attempts
+                SELECT notification_id, notification_type, destination, payload_json, attempts,
+                       account_id
                 FROM ops_notification_outbox
                 WHERE status='PENDING'
                   AND (send_after IS NULL OR send_after <= ?)
@@ -154,9 +154,9 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
-    def _should_send_tech_log(self, payload: dict) -> bool:
+    def _should_send_tech_log(self, payload: dict, account_id: str | None = None) -> bool:
         """Apply policy gating for TECH_LOG: enabled, min_level, debug, operational_events."""
-        cfg = self._config.topics.tech_log
+        cfg = self._config.get_account(account_id).topics.tech_log
         if not cfg.enabled:
             return False
         level = str(payload.get("level", "INFO")).upper()
@@ -173,27 +173,28 @@ class TelegramNotificationDispatcher:
             logger.debug("_should_send_tech_log: unknown level %r — suppressing", level)
         return current >= min_level
 
-    def _check_tech_log_rate(self) -> bool:
+    def _check_tech_log_rate(self, account_id: str | None) -> bool:
         """Return True if message can be sent, False if rate limit exceeded.
 
-        Resets counter each minute. Sends a single warning when limit is first hit.
+        Resets counter each minute per account. Sends a single warning when limit is first hit.
         """
+        key = account_id or self._config.default_account
         now = time.time()
-        if now - self._tech_log_minute_start >= 60:
-            self._tech_log_sent_this_minute = 0
-            self._tech_log_minute_start = now
-            self._tech_log_rate_limit_warned = False
+        state = self._tech_log_minute_state.get(key)
+        if state is None or now - state["start"] >= 60:
+            state = {"count": 0, "start": now, "warned": False}
+            self._tech_log_minute_state[key] = state
 
-        max_per_min = self._config.topics.tech_log.max_messages_per_minute
-        if self._tech_log_sent_this_minute < max_per_min:
+        max_per_min = self._config.get_account(account_id).topics.tech_log.max_messages_per_minute
+        if state["count"] < max_per_min:
             # Optimistic: count the slot before sending. A send failure does not
             # reclaim the slot — callers are expected to be rare failures.
-            self._tech_log_sent_this_minute += 1
+            state["count"] += 1
             return True
 
         return False
 
-    async def _send_rate_limit_warning(self) -> None:
+    async def _send_rate_limit_warning(self, account_id: str | None = None) -> None:
         warning_text = (
             "[WARN] TECH_LOG: Rate limit raggiunto\n"
             "────────────────\n"
@@ -204,7 +205,7 @@ class TelegramNotificationDispatcher:
             "Source: notification_dispatcher"
         )
         try:
-            chat_id, thread_id = self._router.route("TECH_LOG")
+            chat_id, thread_id = self._router.route("TECH_LOG", account_id=account_id)
             await self._sender.send(
                 chat_id=chat_id, thread_id=thread_id,
                 text=warning_text, silent=False,
@@ -216,18 +217,21 @@ class TelegramNotificationDispatcher:
 
     _SIGNAL_TYPES: frozenset[str] = frozenset({"SIGNAL_ACCEPTED", "SIGNAL_REJECTED", "REVIEW_REQUIRED"})
 
-    def _get_clean_log_root(self, chain_id: int) -> tuple[str | None, str | None]:
-        """Return (root_message_id, telegram_chat_id) for chain_id, or (None, None)."""
+    def _get_clean_log_root(
+        self, chain_id: int
+    ) -> tuple[str | None, str | None, int | None]:
+        """Return (root_message_id, telegram_chat_id, telegram_thread_id) for chain_id."""
         conn = sqlite3.connect(self._ops_db)
         try:
             row = conn.execute(
-                "SELECT clean_log_root_message_id, telegram_chat_id "
+                "SELECT clean_log_root_message_id, telegram_chat_id, telegram_thread_id "
                 "FROM ops_clean_log_tracking WHERE trade_chain_id=?",
                 (chain_id,),
             ).fetchone()
             if row:
-                return str(row[0]) if row[0] else None, str(row[1]) if row[1] else None
-            return None, None
+                thread = int(row[2]) if row[2] is not None else None
+                return str(row[0]) if row[0] else None, str(row[1]) if row[1] else None, thread
+            return None, None, None
         finally:
             conn.close()
 
@@ -329,7 +333,7 @@ class TelegramNotificationDispatcher:
         self._try_release_pending_close_full_summaries()
         rows = self._claim_pending()
         sent = 0
-        for notification_id, notification_type, destination, payload_json, attempts in rows:
+        for notification_id, notification_type, destination, payload_json, attempts, account_id in rows:
             try:
                 payload = json.loads(payload_json or "{}")
             except Exception:
@@ -337,26 +341,34 @@ class TelegramNotificationDispatcher:
 
             # Policy gating — TECH_LOG only
             if destination == "TECH_LOG":
-                if not self._should_send_tech_log(payload):
+                if not self._should_send_tech_log(payload, account_id=account_id):
                     self._mark_sent(notification_id)
                     continue
 
             # Rate limit check — only TECH_LOG is subject to limiting
-            if destination == "TECH_LOG" and not self._check_tech_log_rate():
-                if not self._tech_log_rate_limit_warned:
-                    self._tech_log_rate_limit_warned = True
-                    await self._send_rate_limit_warning()
+            if destination == "TECH_LOG" and not self._check_tech_log_rate(account_id):
+                key = account_id or self._config.default_account
+                state = self._tech_log_minute_state.get(key, {})
+                if not state.get("warned"):
+                    state["warned"] = True
+                    await self._send_rate_limit_warning(account_id=account_id)
                 self._mark_sent(notification_id)
                 continue
 
-            chat_id: int | None = None
-            thread_id: int | None = None
             try:
-                chat_id, thread_id = self._router.route(destination, trader_id=payload.get("trader_id"))
+                chat_id, thread_id = self._router.route(
+                    destination, account_id=account_id,
+                    trader_id=payload.get("trader_id"),
+                )
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
                     chain_id = payload.get("chain_id")
                     if chain_id is not None:
-                        root_msg_id, tracking_chat_id = self._get_clean_log_root(chain_id)
+                        root_msg_id, tracking_chat_id, pinned_thread_id = self._get_clean_log_root(chain_id)
+                        # Pin chat+thread to what was used for the first event of this chain,
+                        # so all events stay in the same conversation thread regardless of config changes.
+                        if tracking_chat_id is not None:
+                            chat_id = int(tracking_chat_id)
+                            thread_id = pinned_thread_id
                         link = self._build_signal_link(root_msg_id, tracking_chat_id)
                         if link:
                             payload = {**payload, "signal_link": link}
@@ -389,30 +401,8 @@ class TelegramNotificationDispatcher:
                 self._mark_sent(notification_id)
                 sent += 1
             except Exception as exc:  # noqa: BLE001
-                exc_str = str(exc)
-                logger.warning(
-                    "notification %s send failed: %s [trader_id=%s chat_id=%s thread_id=%s]",
-                    notification_id,
-                    exc_str,
-                    payload.get("trader_id"),
-                    chat_id,
-                    thread_id,
-                )
-                # "Message thread not found" is a permanent Telegram error (topic deleted or
-                # thread_id misconfigured). Skip retries and go straight to FAILED.
-                if "Message thread not found" in exc_str:
-                    logger.error(
-                        "notification %s permanently failed — thread not found "
-                        "(check thread_id in config). Marking FAILED without retry. "
-                        "[trader_id=%s chat_id=%s thread_id=%s]",
-                        notification_id,
-                        payload.get("trader_id"),
-                        chat_id,
-                        thread_id,
-                    )
-                    self._mark_failure(notification_id, _MAX_ATTEMPTS - 1, exc_str)
-                else:
-                    self._mark_failure(notification_id, attempts, exc_str)
+                logger.warning("notification %s send failed: %s", notification_id, exc)
+                self._mark_failure(notification_id, attempts, str(exc))
         return sent
 
     async def run(self) -> None:

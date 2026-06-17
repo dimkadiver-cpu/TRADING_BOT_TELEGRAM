@@ -155,7 +155,7 @@ class ExchangeEventSyncWorker:
         if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
             return 0
 
-        open_chains = self._repo.get_open_chains_with_tps(self._execution_account_id)
+        open_chains = self._repo.get_open_chains_with_tps()
         if not open_chains:
             return 0
 
@@ -214,79 +214,12 @@ class ExchangeEventSyncWorker:
 
         return processed
 
-    def run_funding_reconciliation(self) -> int:
-        """Poll recent funding executions via REST — safety net for funding settled
-        during WS downtime.
-
-        Uses the same idempotency key format as the WS path (fill:{execId}), so
-        executions already recorded by watch_my_trades dedupe automatically.
-        Chain attribution mirrors the WS path: Bybit funding `side` is the position
-        side (Buy = LONG, Sell = SHORT), resolved via symbol+side; ambiguous
-        attributions (0 or >1 open chains) are skipped with a warning.
-        """
-        if not hasattr(self._adapter, "fetch_recent_funding_executions"):
-            return 0
-
-        chains = self._get_open_chains()
-        if not chains:
-            return 0
-
-        symbols = sorted({symbol for _, symbol, _, _ in chains})
-        processed = 0
-        for symbol in symbols:
-            try:
-                executions = self._adapter.fetch_recent_funding_executions(
-                    symbol=symbol,
-                    execution_account_id=self._execution_account_id,
-                    limit=50,
-                )
-            except Exception:
-                logger.exception("fetch_recent_funding_executions error for %s", symbol)
-                continue
-
-            for fe in executions:
-                if not fe.exec_fee:
-                    continue
-                funding_side = (fe.side or "").strip()
-                position_side = "LONG" if funding_side.lower() in ("buy", "long") else "SHORT"
-                chain_id = self._repo.resolve_chain_for_fill(
-                    fe.symbol, position_side, self._execution_account_id
-                )
-                if chain_id is None:
-                    logger.warning(
-                        "funding execution %s (%s %s account=%s, exec_fee=%s) not attributable "
-                        "via REST: 0 or >1 open chains for symbol+side",
-                        fe.exec_id, fe.symbol, position_side,
-                        self._execution_account_id, fe.exec_fee,
-                    )
-                    continue
-
-                idem_key = f"fill:{fe.exec_id}"  # same key the WS path generates
-                payload = json.dumps({
-                    "exec_fee": fe.exec_fee,
-                    "exchange_time": fe.exchange_time,
-                    "exchange_event_id": fe.exec_id,
-                    "source": "funding_reconciliation",
-                })
-                inserted = self._repo.insert_exchange_event(
-                    chain_id, "FUNDING_SETTLED", payload, idem_key
-                )
-                if inserted:
-                    logger.info(
-                        "FUNDING_SETTLED from funding reconciliation: chain=%s %s exec_fee=%s",
-                        chain_id, fe.symbol, fe.exec_fee,
-                    )
-                    self._wake()
-                    processed += 1
-
-        return processed
-
     def run_protective_orders_reconciliation(self) -> int:
         """Detect when a position-level TP was externally cancelled (no fill occurred)."""
         if not hasattr(self._adapter, "fetch_position_details"):
             return 0
 
-        open_chains = self._repo.get_open_chains_with_tps(self._execution_account_id)
+        open_chains = self._repo.get_open_chains_with_tps()
         if not open_chains:
             return 0
 
@@ -368,22 +301,17 @@ class ExchangeEventSyncWorker:
             tp_level = None
             idem_key = f"{event_type}:{coid.trade_chain_id}:{exchange_order_id}"
 
-        # Il WS può aver già registrato questo fill con chiave fill:{execId}:
-        # le chiavi WS/REST divergono, quindi il dedup va fatto sull'ordine.
-        if self._repo.has_exchange_event_for_order(coid.trade_chain_id, event_type, exchange_order_id):
-            logger.info(
-                "fill already recorded (likely via WS) for order %s — skipping duplicate",
-                exchange_order_id,
-            )
-            return True
-
+        source_message_link: str | None = None
         if coid.command_id:
             command_source = self._repo.get_command_source(coid.trade_chain_id, coid.command_id)
             fill_source = command_source or "manual_command"
+            source_message_link = self._repo.get_command_source_link(
+                coid.trade_chain_id, coid.command_id
+            )
         else:
             fill_source = "rest_reconciliation"
 
-        ep = ExchangeEventPayload(
+        ep_kwargs: dict = dict(
             fill_price=raw.average_price,
             filled_qty=raw.filled_qty,
             closed_size=raw.filled_qty if event_type in _CLOSE_FILL_TYPES else None,
@@ -398,6 +326,9 @@ class ExchangeEventSyncWorker:
             command_id=coid.command_id,
             source=fill_source,
         )
+        if source_message_link is not None:
+            ep_kwargs["source_message_link"] = source_message_link
+        ep = ExchangeEventPayload(**ep_kwargs)
 
         return self._repo.insert_exchange_event(
             coid.trade_chain_id, event_type, ep.model_dump_json(), idem_key
@@ -451,21 +382,13 @@ class ExchangeEventSyncWorker:
         )
 
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
-        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains
-        belonging to this worker's account.
-
-        The account filter is essential in per_trader_subaccount mode: this worker
-        polls its own adapter, and checking another account's chains against it
-        would report qty=0 and synthesize a spurious close.
-        """
+        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains."""
         conn = sqlite3.connect(self._ops_db)
         try:
             rows = conn.execute(
                 "SELECT trade_chain_id, symbol, side, open_position_qty "
                 "FROM ops_trade_chains "
-                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
-                "AND account_id=?",
-                (self._execution_account_id,),
+                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
             ).fetchall()
             return [(int(r[0]), str(r[1]), str(r[2]), float(r[3] or 0.0)) for r in rows]
         finally:

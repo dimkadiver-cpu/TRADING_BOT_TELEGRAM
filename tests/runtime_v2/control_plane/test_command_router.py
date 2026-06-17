@@ -9,7 +9,12 @@ import pytest
 from src.runtime_v2.control_plane.audit_store import CommandAuditStore
 from src.runtime_v2.control_plane.auth import AuthValidator
 from src.runtime_v2.control_plane.models import (
-    CleanLogConfig, ControlPlaneConfig, TechLogConfig, TopicConfig, TopicsConfig,
+    AccountConfig,
+    AccountTopicsConfig,
+    CleanLogConfig,
+    ControlPlaneConfig,
+    TechLogConfig,
+    TopicConfig,
 )
 from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.telegram_bot import CommandRouter
@@ -39,12 +44,18 @@ def ops_db(tmp_path):
 
 def _config():
     return ControlPlaneConfig(
-        token="t", chat_id=-100999,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=101),
-            tech_log=TechLogConfig(thread_id=102),
-            clean_log=CleanLogConfig(thread_id=103),
-        ),
+        token="t",
+        default_account="main",
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=101),
+                    tech_log=TechLogConfig(thread_id=102),
+                    clean_log=CleanLogConfig(thread_id=103),
+                ),
+            )
+        },
         authorized_users=[42],
     )
 
@@ -186,8 +197,6 @@ def test_trade_reply_includes_original_message_link_when_available(ops_db):
         command_text="/trade 78", message_id=79,
         chat_id=-100999, thread_id=101, user_id=42, username="op",
     )
-    # il link sorgente è reso come "Use:" + url su riga propria (clean log redesign)
-    assert "Use:" in res.reply_text
     assert "https://t.me/c/1234567890/456" in res.reply_text
 
 
@@ -243,14 +252,23 @@ from src.runtime_v2.control_plane.telegram_bot import TelegramControlBot
 
 
 def _make_bot(ops_db, delivery_mode="private_bot", keyboard=None):
+    thread_id = None if delivery_mode == "private_bot" else 101
+    tech_thread = None if delivery_mode == "private_bot" else 102
+    clean_thread = None if delivery_mode == "private_bot" else 103
     cfg = ControlPlaneConfig(
-        token="t", chat_id=-100999,
+        token="t",
+        default_account="main",
         delivery_mode=delivery_mode,
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None if delivery_mode == "private_bot" else 101),
-            tech_log=TechLogConfig(thread_id=None if delivery_mode == "private_bot" else 102),
-            clean_log=CleanLogConfig(thread_id=None if delivery_mode == "private_bot" else 103),
-        ),
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=thread_id),
+                    tech_log=TechLogConfig(thread_id=tech_thread),
+                    clean_log=CleanLogConfig(thread_id=clean_thread),
+                ),
+            )
+        },
         authorized_users=[42],
         keyboard=keyboard or [],
     )
@@ -301,13 +319,18 @@ def test_send_reply_keyboard_skips_repeat_for_same_user(ops_db):
 def test_private_bot_status_audits_without_thread_id(ops_db):
     cfg = ControlPlaneConfig(
         token="t",
-        chat_id=42,
+        default_account="main",
         delivery_mode="private_bot",
-        topics=TopicsConfig(
-            commands=TopicConfig(thread_id=None),
-            tech_log=TechLogConfig(thread_id=None),
-            clean_log=CleanLogConfig(thread_id=None),
-        ),
+        per_account={
+            "main": AccountConfig(
+                chat_id=42,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=None),
+                    tech_log=TechLogConfig(thread_id=None),
+                    clean_log=CleanLogConfig(thread_id=None),
+                ),
+            )
+        },
         authorized_users=[42],
         keyboard=[["/status"]],
     )
