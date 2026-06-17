@@ -34,11 +34,13 @@ class BybitWsFillWatcher:
         reconciliation_callback=None,
         mode: str = "live",
         wake_callback: Callable[[], None] | None = None,
+        account_id: str | None = None,
     ) -> None:
         self._api_key = api_key
         self._api_secret = api_secret
         self._testnet = testnet
         self._mode = mode
+        self._account_id = account_id
         self._ops_db_path = ops_db_path
         self._repo = repo
         self._normalizer = normalizer

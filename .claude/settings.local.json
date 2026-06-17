@@ -207,7 +207,8 @@
       "PowerShell(python -c \"import sqlite3; conn = sqlite3.connect\\(r'C:\\\\TeleSignalBot\\\\db\\\\Test_live\\\\ops.sqlite3'\\); cur = conn.cursor\\(\\); cur.execute\\('SELECT name FROM sqlite_master WHERE type=\\\\'table\\\\''\\); print\\([r[0] for r in cur.fetchall\\(\\)]\\)\")",
       "Bash(dir \"C:\\\\TeleSignalBot\\\\db\\\\Test_live\")",
       "Bash(ssh root@ubuntu \"journalctl -u trading-bot --no-pager -n 50 2>/dev/null || echo 'ssh not available locally'\")",
-      "Read(//etc/systemd/system/**)"
+      "Read(//etc/systemd/system/**)",
+      "PowerShell($env:PYTHONIOENCODING = \"utf-8\"; python main.py 2>&1 | Select-Object -First 60)"
     ]
   }
 }
