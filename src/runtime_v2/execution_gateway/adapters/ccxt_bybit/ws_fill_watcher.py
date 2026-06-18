@@ -200,7 +200,19 @@ class BybitWsFillWatcher:
                 ):
                     fill_side = (raw.side or "").strip()
                     position_side = "LONG" if fill_side.lower() == "sell" else "SHORT"
-                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
+                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side, self._account_id)
+                    if chain_id is not None:
+                        classified = dataclasses.replace(classified, trade_chain_id=chain_id)
+
+                # Manual closes and liquidations: same enrichment as TP/SL — Bybit does not
+                # provide orderLinkId for these fills either.
+                if (
+                    classified.event_type in ("MANUAL_CLOSE_FULL", "MANUAL_CLOSE_PARTIAL", "LIQUIDATION_FILLED")
+                    and classified.trade_chain_id is None
+                ):
+                    fill_side = (raw.side or "").strip()
+                    position_side = "LONG" if fill_side.lower() == "sell" else "SHORT"
+                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side, self._account_id)
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
 
@@ -212,7 +224,7 @@ class BybitWsFillWatcher:
                 ):
                     funding_side = (raw.side or "").strip()
                     position_side = "LONG" if funding_side.lower() in ("buy", "long") else "SHORT"
-                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side)
+                    chain_id = self._repo.resolve_chain_for_fill(raw.symbol, position_side, self._account_id)
                     if chain_id is not None:
                         classified = dataclasses.replace(classified, trade_chain_id=chain_id)
 

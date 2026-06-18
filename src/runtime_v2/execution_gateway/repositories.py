@@ -767,25 +767,38 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def get_open_chains_for_symbol(self, symbol: str, side: str) -> list[int]:
+    def get_open_chains_for_symbol(
+        self, symbol: str, side: str, account_id: str | None = None
+    ) -> list[int]:
         """Lista di trade_chain_id OPEN/PARTIALLY_CLOSED per symbol+side.
 
         Usato da watchMyTrades per trovare le chain candidate per un fill TP.
         `side` è il lato della posizione (LONG/SHORT), non il lato del fill.
+        Se `account_id` è fornito, filtra per account (necessario in ambienti multi-account).
         """
         conn = sqlite3.connect(self._db)
         try:
-            rows = conn.execute(
-                "SELECT trade_chain_id FROM ops_trade_chains "
-                "WHERE symbol=? AND side=? "
-                "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
-                (symbol, side),
-            ).fetchall()
+            if account_id is not None:
+                rows = conn.execute(
+                    "SELECT trade_chain_id FROM ops_trade_chains "
+                    "WHERE symbol=? AND side=? AND account_id=? "
+                    "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
+                    (symbol, side, account_id),
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT trade_chain_id FROM ops_trade_chains "
+                    "WHERE symbol=? AND side=? "
+                    "AND lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')",
+                    (symbol, side),
+                ).fetchall()
             return [int(r[0]) for r in rows]
         finally:
             conn.close()
 
-    def resolve_chain_for_fill(self, symbol: str, side: str) -> int | None:
+    def resolve_chain_for_fill(
+        self, symbol: str, side: str, account_id: str | None = None
+    ) -> int | None:
         """Return the unique open chain_id for symbol+side, or None if 0 or >1.
 
         Used to attribute TP/SL fills that lack an orderLinkId (Bybit position-level
@@ -793,8 +806,10 @@ class GatewayCommandRepository:
         (multiple open chains on the same symbol) to avoid mis-routing.
 
         `side` must be the position side: 'LONG' or 'SHORT'.
+        Pass `account_id` to scope the resolution to a single account (recommended
+        in multi-account setups to avoid cross-account mis-attribution).
         """
-        chains = self.get_open_chains_for_symbol(symbol, side)
+        chains = self.get_open_chains_for_symbol(symbol, side, account_id)
         return chains[0] if len(chains) == 1 else None
 
     # ------------------------------------------------------------------
