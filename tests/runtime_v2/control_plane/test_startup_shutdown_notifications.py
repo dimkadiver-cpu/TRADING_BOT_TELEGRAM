@@ -39,7 +39,7 @@ def test_startup_notification_writes_to_outbox(ops_db):
     assert row[1] == "TECH_LOG"
     p = json.loads(row[2])
     assert p["level"] == "INFO"
-    assert "Runtime" in p["category"]
+    assert "started_at" in p
 
 
 def test_shutdown_notification_writes_to_outbox(ops_db):
@@ -56,7 +56,7 @@ def test_shutdown_notification_writes_to_outbox(ops_db):
     assert row is not None
     p = json.loads(row[2])
     assert p["level"] == "INFO"
-    assert "SIGTERM" in p["description"]
+    assert p["reason"] == "SIGTERM"
 
 
 def test_shutdown_reads_open_chains_count(ops_db):
@@ -84,4 +84,4 @@ def test_shutdown_reads_open_chains_count(ops_db):
     ).fetchone()[0]
     conn.close()
     p = json.loads(payload_json)
-    assert p["context"]["open_chains"] == 1
+    assert p["open_chains"] == 1

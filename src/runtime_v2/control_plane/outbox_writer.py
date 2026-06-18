@@ -224,15 +224,12 @@ def notify_listener_edit_skipped(ops_db_path: str, context: dict, account_id: st
                 notification_type="LISTENER_EDIT_SKIPPED",
                 payload={
                     "level": "WARNING",
-                    "category": "Listener",
-                    "title": "edit_of_executed_signal_skipped",
-                    "description": (
-                        "Edit di un segnale con trade chain già creata — "
-                        "non riprocessato."
-                    ),
-                    "context": context,
-                    "action": "verifica il messaggio modificato e intervieni manualmente se serve",
-                    "source": "telegram_listener",
+                    "description": "Edit di un segnale con trade chain già creata — non riprocessato.",
+                    "chat":    context.get("chat"),
+                    "msg_id":  context.get("msg_id"),
+                    "edit_ts": context.get("edit_ts"),
+                    "action":  "verifica il messaggio modificato e intervieni manualmente se serve",
+                    "source":  "telegram_listener",
                 },
                 dedupe_key=(
                     f"edit_skipped:{context.get('chat')}:"

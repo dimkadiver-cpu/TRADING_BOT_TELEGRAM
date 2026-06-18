@@ -259,12 +259,8 @@ class RuntimeControlService:
                     notification_type="RUNTIME_STARTUP",
                     payload={
                         "level": "INFO",
-                        "category": "Runtime",
-                        "description": "Runtime avviato",
+                        "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
                         "source": "runtime_main",
-                        "context": {
-                            "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
-                        },
                     },
                     dedupe_key=f"startup:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
                     priority="MEDIUM",
@@ -291,14 +287,10 @@ class RuntimeControlService:
                     notification_type="RUNTIME_SHUTDOWN",
                     payload={
                         "level": "INFO",
-                        "category": "Runtime",
-                        "description": f"Runtime shutdown — {reason}",
+                        "reason": reason,
+                        "open_chains": open_chains,
+                        "pending_commands": pending_cmds,
                         "source": "runtime_main",
-                        "context": {
-                            "reason": reason,
-                            "open_chains": open_chains,
-                            "pending_commands": pending_cmds,
-                        },
                     },
                     dedupe_key=f"shutdown:{_now()}",
                     priority="HIGH",

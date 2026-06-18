@@ -87,11 +87,13 @@ def test_block_formatters_format_display_but_keep_command_raw() -> None:
 
 def test_tech_log_formats_symbol_in_context_for_display() -> None:
     text = format_tech_log(
+        "GATEWAY_ENTRY_ALL_FAILED",
         {
-            "level": "WARNING",
-            "category": "Gateway",
-            "context": {"symbol": "ASRUSDT", "chain_id": 42},
-        }
+            "level": "ERROR",
+            "symbol": "ASRUSDT",
+            "chain_id": 42,
+            "reason": "test",
+        },
     )
-    assert "symbol: ASR/USDT" in text
-    assert "chain_id: 42" in text
+    assert "ASR/USDT" in text
+    assert "#42" in text

@@ -51,8 +51,8 @@ def test_writes_pending_tech_log_row(ops_db):
     assert dedupe_key == "edit_skipped:-100123:7306:1781100000"
     payload = json.loads(payload_json)
     assert payload["level"] == "WARNING"
-    assert payload["category"] == "Listener"
-    assert payload["context"]["raw_message_id"] == 85
+    assert payload["chat"] == "-100123"
+    assert payload["msg_id"] == 7306
 
 
 def test_same_edit_is_deduplicated(ops_db):

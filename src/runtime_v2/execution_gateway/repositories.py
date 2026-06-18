@@ -296,6 +296,31 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def write_command_failed_tech_log(
+        self, command_id: int, trade_chain_id: int, command_type: str, *, reason: str
+    ) -> None:
+        """Write TECH_LOG for permanent failure of a non-entry command (SL, TP, CANCEL)."""
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                write_tech_log_event(
+                    conn,
+                    notification_type="GATEWAY_COMMAND_FAILED",
+                    payload={
+                        "level":        "ERROR",
+                        "command_id":   command_id,
+                        "command_type": command_type,
+                        "chain_id":     trade_chain_id,
+                        "reason":       reason,
+                        "source":       "execution_gateway",
+                    },
+                    dedupe_key=f"gw_cmd_failed:{command_id}",
+                    priority="HIGH",
+                )
+        finally:
+            conn.close()
+
     def cancel_chain_if_all_entries_failed(
         self, trade_chain_id: int, command_type: str, *, reason: str
     ) -> bool:
@@ -357,17 +382,13 @@ class GatewayCommandRepository:
                     notification_type="GATEWAY_ENTRY_ALL_FAILED",
                     payload={
                         "level": "ERROR",
-                        "category": "Gateway",
-                        "title": "entry_all_failed",
                         "description": "Tutti i comandi PLACE_ENTRY falliti. Catena cancellata.",
-                        "context": {
-                            "chain_id": trade_chain_id,
-                            "symbol": chain_row[1],
-                            "side": chain_row[2],
-                            "reason": reason,
-                        },
-                        "action": "intervento manuale richiesto",
-                        "source": "execution_gateway",
+                        "chain_id": trade_chain_id,
+                        "symbol":   chain_row[1],
+                        "side":     chain_row[2],
+                        "reason":   reason,
+                        "action":   "intervento manuale richiesto",
+                        "source":   "execution_gateway",
                     },
                     dedupe_key=f"gw_all_failed:{trade_chain_id}",
                     priority="HIGH",
@@ -397,18 +418,14 @@ class GatewayCommandRepository:
                     conn,
                     notification_type="GATEWAY_REVIEW_REQUIRED",
                     payload={
-                        "level": "WARNING",
-                        "category": "Gateway",
-                        "title": "command_blocked",
-                        "description": "Comando bloccato in REVIEW_REQUIRED.",
-                        "context": {
-                            "command_id": command_id,
-                            "command_type": cmd_row[1] if cmd_row else None,
-                            "chain_id": cmd_row[0] if cmd_row else None,
-                            "reason": reason,
-                        },
-                        "action": "intervento manuale richiesto",
-                        "source": "execution_gateway",
+                        "level":        "WARNING",
+                        "description":  "Comando bloccato in REVIEW_REQUIRED.",
+                        "command_id":   command_id,
+                        "command_type": cmd_row[1] if cmd_row else None,
+                        "chain_id":     cmd_row[0] if cmd_row else None,
+                        "reason":       reason,
+                        "action":       "intervento manuale richiesto",
+                        "source":       "execution_gateway",
                     },
                     dedupe_key=f"gw_review:{command_id}",
                     priority="HIGH",
