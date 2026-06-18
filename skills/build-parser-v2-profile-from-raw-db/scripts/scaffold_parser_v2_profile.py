@@ -8,45 +8,65 @@ from pathlib import Path
 
 PROFILE_TEMPLATE = """from __future__ import annotations
 
-import json
 from pathlib import Path
+
+from src.parser_v2.contracts.context import ParserContext
+from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
+from src.parser_v2.contracts.parsed_message import ParsedIntent, SignalDraft
+from src.parser_v2.contracts.rules import ParserRules, SemanticMarkers
+from src.parser_v2.core.profile_assets import load_markers_cached, load_rules_cached
 
 from .intent_entity_extractor import IntentEntityExtractor
 from .signal_extractor import SignalExtractor
+
+_PROFILE_DIR = Path(__file__).parent
 
 
 class {class_name}:
     trader_code = "{trader_code}"
 
     def __init__(self) -> None:
-        self._base_dir = Path(__file__).resolve().parent
         self._signal_extractor = SignalExtractor()
         self._intent_entity_extractor = IntentEntityExtractor()
 
-    def load_markers(self):
-        return json.loads((self._base_dir / "semantic_markers.json").read_text(encoding="utf-8"))
+    def load_markers(self) -> SemanticMarkers:
+        return load_markers_cached(_PROFILE_DIR)
 
-    def load_rules(self):
-        return json.loads((self._base_dir / "rules.json").read_text(encoding="utf-8"))
+    def load_rules(self) -> ParserRules:
+        return load_rules_cached(_PROFILE_DIR)
 
-    def extract_signal(self, text, context):
-        return self._signal_extractor.extract(text=text, context=context)
+    def extract_signal(
+        self,
+        text: NormalizedText,
+        context: ParserContext,
+        evidence: list[MarkerEvidence],
+    ) -> SignalDraft | None:
+        return self._signal_extractor.extract(text=text, context=context, evidence=evidence)
 
-    def extract_intent_entities(self, text, context, classification_hint=None, signal_hint=None):
-        return self._intent_entity_extractor.extract(
-            text=text,
-            context=context,
-            classification_hint=classification_hint,
-            signal_hint=signal_hint,
-        )
+    def extract_intent_entities(
+        self,
+        text: NormalizedText,
+        context: ParserContext,
+        evidence: list[MarkerEvidence],
+    ) -> list[ParsedIntent]:
+        return self._intent_entity_extractor.extract(text=text, context=context, evidence=evidence)
 """
 
 
 SIGNAL_EXTRACTOR_TEMPLATE = """from __future__ import annotations
 
+from src.parser_v2.contracts.context import ParserContext
+from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
+from src.parser_v2.contracts.parsed_message import SignalDraft
+
 
 class SignalExtractor:
-    def extract(self, text, context):
+    def extract(
+        self,
+        text: NormalizedText,
+        context: ParserContext,
+        evidence: list[MarkerEvidence],
+    ) -> SignalDraft | None:
         # Replace with trader-specific signal extraction logic backed by raw_messages evidence.
         return None
 """
@@ -54,11 +74,20 @@ class SignalExtractor:
 
 INTENT_EXTRACTOR_TEMPLATE = """from __future__ import annotations
 
+from src.parser_v2.contracts.context import ParserContext
+from src.parser_v2.contracts.markers import MarkerEvidence, NormalizedText
+from src.parser_v2.contracts.parsed_message import ParsedIntent
+
 
 class IntentEntityExtractor:
-    def extract(self, text, context, classification_hint=None, signal_hint=None):
+    def extract(
+        self,
+        text: NormalizedText,
+        context: ParserContext,
+        evidence: list[MarkerEvidence],
+    ) -> list[ParsedIntent]:
         # Replace with trader-specific intent/entity extraction logic backed by raw_messages evidence.
-        return {}
+        return []
 """
 
 

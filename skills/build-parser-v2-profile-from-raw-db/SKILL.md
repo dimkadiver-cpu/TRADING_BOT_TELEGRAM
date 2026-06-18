@@ -35,7 +35,7 @@ Inspect the real `parser_v2` shape before designing anything:
 
 - `src/parser_v2/core/runtime.py`
 - `src/parser_v2/profiles/registry.py`
-- one current concrete profile such as `src/parser_v2/profiles/trader_a/`
+- one current concrete profile such as `src/parser_v2/profiles/trader_prova/`
 - `parser_test/scripts/replay_parser_v2.py`
 - `parser_test/README.md`
 
@@ -94,7 +94,7 @@ Translate the family map into the current profile structure:
 - `signal_extractor.py`: message-to-signal extraction logic for entry-like messages;
 - `intent_entity_extractor.py`: management/update/entity extraction logic;
 - `profile.py`: current profile loader/delegator implementation;
-- `registry.py`: registration is updated automatically when a new trader profile is scaffolded.
+- `registry.py`: updated automatically by the scaffold script (`_upsert_registry`).
 
 If starting from zero, use [scripts/scaffold_parser_v2_profile.py](./scripts/scaffold_parser_v2_profile.py) to scaffold the directory shape under `src/parser_v2/profiles/<trader>/` and update `src/parser_v2/profiles/registry.py`.
 

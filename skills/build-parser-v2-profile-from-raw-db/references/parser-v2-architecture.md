@@ -14,18 +14,21 @@ The runtime expects a profile object that satisfies the current `TraderParserPro
 - `trader_code`
 - `load_markers()`
 - `load_rules()`
-- `extract_signal(text, context)`
-- `extract_intent_entities(text, context, classification_hint=None, signal_hint=None)`
+- `extract_signal(text: NormalizedText, context: ParserContext, evidence: list[MarkerEvidence]) -> SignalDraft | None`
+- `extract_intent_entities(text: NormalizedText, context: ParserContext, evidence: list[MarkerEvidence]) -> list[ParsedIntent]`
+
+Both extractors receive the resolved `evidence` list produced by `MarkerEvidenceResolver` — not `classification_hint` or `signal_hint`, which do not exist in the current protocol.
 
 The runtime flow is:
 
-1. normalize text;
+1. normalize text (`TextNormalizer`);
 2. load markers and rules from the profile;
-3. run classification and evidence resolution;
-4. extract signal-level structures;
-5. extract intents/entities;
-6. build a `ParsedMessage`;
-7. translate to canonical output when required by downstream code.
+3. match markers (`MarkerMatcher`) and resolve evidence (`MarkerEvidenceResolver`);
+4. **INFO short-circuit**: if any evidence marker has `kind == "info"`, skip steps 5–8 and return an INFO `ParsedMessage` immediately;
+5. extract signal-level structures (`profile.extract_signal`, receives `evidence`);
+6. extract intents/entities (`profile.extract_intent_entities`, receives `evidence`);
+7. disambiguate intents (`LocalDisambiguator`), bind targets (`TargetBindingResolver`), build `ParsedMessage` (`ParsedMessageBuilder`), normalize semantics (`SemanticNormalizer`);
+8. translate to `CanonicalMessage` (`CanonicalTranslator`).
 
 ## Current Profile Layout
 
@@ -41,11 +44,13 @@ Typical files:
 - `rules.json`
 - `semantic_markers.json`
 
-Existing concrete examples:
+Existing concrete examples (use these as structural templates):
 
-- `src/parser_v2/profiles/trader_a/`
-- `src/parser_v2/profiles/trader_b/`
+- `src/parser_v2/profiles/trader_prova/` — canonical reference, clean standalone profile
 - `src/parser_v2/profiles/trader_c/`
+- `src/parser_v2/profiles/trader_d/`
+
+Do not use `trader_a` or `trader_b` as templates: they delegate their extractors to `Legacy/trader_a_legacy/` and `Legacy/trader_b_legacy/` respectively.
 
 ## What Not To Model Against
 
