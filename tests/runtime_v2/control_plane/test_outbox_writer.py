@@ -1062,6 +1062,34 @@ def test_signal_accepted_payload_includes_tp_trimmed(ops_db):
     assert payload["tp_trimmed"] == {"original": 5, "used": 2}
 
 
+def test_signal_accepted_payload_includes_entry_sequence_realigned(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 1104)
+        _set_plan_state(conn, 1104, {
+            "legs": [{"sequence": 1, "entry_type": "LIMIT", "price": 69795.0}],
+            "final_tp": 71000.0,
+            "entry_sequence_realigned": {
+                "side": "LONG",
+                "original": [
+                    {"sequence": 1, "price": 69351.0},
+                    {"sequence": 2, "price": 69795.0},
+                ],
+                "normalized": [
+                    {"sequence": 1, "price": 69795.0},
+                    {"sequence": 2, "price": 69351.0},
+                ],
+            },
+        })
+        _seed_event(conn, 1104, "SIGNAL_ACCEPTED", "sig:1104")
+        project_clean_log_for_chain(conn, 1104)
+    row = conn.execute("SELECT payload_json FROM ops_notification_outbox").fetchone()
+    conn.close()
+    payload = json.loads(row[0])
+    assert payload["entry_sequence_realigned"]["side"] == "LONG"
+    assert payload["entry_sequence_realigned"]["normalized"][0]["price"] == 69795.0
+
+
 # ---------------------------------------------------------------------------
 # Intra-chain ordering: HIGH event must not jump ahead of preceding MEDIUM events
 # ---------------------------------------------------------------------------

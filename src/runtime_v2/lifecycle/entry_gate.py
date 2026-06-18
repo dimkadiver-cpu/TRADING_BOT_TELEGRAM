@@ -636,6 +636,13 @@ class LifecycleEntryGate:
             extra_plan["range_derivation"] = signal.range_derivation.model_dump()
         if decision.hint_applied is not None:
             extra_plan["risk_hint_applied"] = decision.hint_applied
+        if signal.original_tp_count is not None and signal.original_tp_count > len(signal.take_profits):
+            extra_plan["tp_trimmed"] = {
+                "original": signal.original_tp_count,
+                "used": len(signal.take_profits),
+            }
+        if signal.entry_sequence_realigned is not None:
+            extra_plan["entry_sequence_realigned"] = signal.entry_sequence_realigned.model_dump()
         close_pcts = self._get_close_pcts(management_plan, len(signal.take_profits))
         if close_pcts:
             extra_plan["close_pcts"] = close_pcts

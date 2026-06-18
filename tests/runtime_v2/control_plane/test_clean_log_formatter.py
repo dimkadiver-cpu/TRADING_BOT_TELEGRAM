@@ -869,3 +869,26 @@ def test_signal_accepted_no_tp_trim_no_note():
         "source": "original_message",
     })
     assert "Reduced by policy" not in text
+
+
+def test_signal_accepted_entry_sequence_realigned_note():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 13, "symbol": "SOL/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 69795.0}],
+        "sl": 64211.4,
+        "tps": [74680.65],
+        "entry_sequence_realigned": {
+            "side": "LONG",
+            "original": [
+                {"sequence": 1, "price": 69351.0},
+                {"sequence": 2, "price": 69795.0},
+            ],
+            "normalized": [
+                {"sequence": 1, "price": 69795.0},
+                {"sequence": 2, "price": 69351.0},
+            ],
+        },
+        "source": "original_message",
+    })
+    assert "Notes:" in text
+    assert "Entry - Reordered by side (LONG)" in text

@@ -7,6 +7,7 @@ from collections.abc import Callable, Iterable
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
 from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
 from src.runtime_v2.signal_enrichment.models import (
+    EntrySequenceRealignment,
     EffectiveEnrichmentConfig,
     EnrichedCanonicalMessage,
     EnrichedEntryLeg,
@@ -126,6 +127,8 @@ class SignalEnrichmentProcessor:
         # 6. Entry split weights
         entries, normalized_structure, range_derivation, range_logs = self._apply_entry_weights(signal, config)
         log.extend(range_logs)
+        entries, entry_sequence_realigned, reorder_logs = self._realign_limit_entries_by_side(entries, signal.side)
+        log.extend(reorder_logs)
 
         # 7. Price sanity (se abilitata)
         if config.signal_policy.price_sanity.enabled:
@@ -147,6 +150,7 @@ class SignalEnrichmentProcessor:
             stop_loss=signal.stop_loss,
             range_derivation=range_derivation,
             risk_hint=signal.risk_hint,
+            entry_sequence_realigned=entry_sequence_realigned,
             original_tp_count=original_tp_count,
         )
 
@@ -311,6 +315,50 @@ class SignalEnrichmentProcessor:
             detail=split_mode,
         )
         return [first_leg.model_copy(update={"price": new_price, "weight": 1.0})], "ONE_SHOT", meta, [log_entry]
+
+    @staticmethod
+    def _realign_limit_entries_by_side(
+        legs: list[EnrichedEntryLeg],
+        side: str | None,
+    ) -> tuple[list[EnrichedEntryLeg], EntrySequenceRealignment | None, list[EnrichmentLogEntry]]:
+        if side not in {"LONG", "SHORT"} or len(legs) < 2:
+            return legs, None, []
+        if any(leg.entry_type != "LIMIT" or leg.price is None for leg in legs):
+            return legs, None, []
+
+        reverse = side == "LONG"
+        ordered = sorted(
+            legs,
+            key=lambda leg: leg.price.value if leg.price is not None else float("-inf"),
+            reverse=reverse,
+        )
+        if [leg.sequence for leg in ordered] == list(range(1, len(legs) + 1)):
+            return legs, None, []
+
+        realigned = [
+            leg.model_copy(update={"sequence": idx})
+            for idx, leg in enumerate(ordered, start=1)
+        ]
+        meta = EntrySequenceRealignment(
+            side=side,
+            original=[
+                {"sequence": leg.sequence, "price": leg.price.value}
+                for leg in legs
+                if leg.price is not None
+            ],
+            normalized=[
+                {"sequence": leg.sequence, "price": leg.price.value}
+                for leg in realigned
+                if leg.price is not None
+            ],
+        )
+        log_entry = EnrichmentLogEntry(
+            check="entry_sequence_realigned_for_side",
+            original=", ".join(f"{leg.sequence}:{leg.price.value}" for leg in legs if leg.price is not None),
+            result=", ".join(f"{leg.sequence}:{leg.price.value}" for leg in realigned if leg.price is not None),
+            detail=side,
+        )
+        return realigned, meta, [log_entry]
 
     # ── UPDATE gate (Task 7) ──────────────────────────────────────────────────
 

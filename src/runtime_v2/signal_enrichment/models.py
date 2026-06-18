@@ -146,6 +146,12 @@ class RangeDerivation(BaseModel):
     original_max_price: float
 
 
+class EntrySequenceRealignment(BaseModel):
+    side: Side
+    original: list[dict]
+    normalized: list[dict]
+
+
 class EnrichedSignalPayload(BaseModel):
     symbol: str | None
     side: Side | None
@@ -155,6 +161,7 @@ class EnrichedSignalPayload(BaseModel):
     stop_loss: StopLoss | None
     range_derivation: RangeDerivation | None = None
     risk_hint: RiskHint | None = None
+    entry_sequence_realigned: EntrySequenceRealignment | None = None
     # Set only when policy use_tp_count trimmed the parsed TPs (original count).
     original_tp_count: int | None = None
 
@@ -193,6 +200,6 @@ __all__ = [
     "TpConfig", "SlConfig", "PriceCorrectionsConfig", "PriceSanityConfig",
     "SignalPolicyConfig", "CloseDistributionConfig", "ManagementPlanConfig",
     "RiskConfig", "AccountConfig", "EffectiveEnrichmentConfig",
-    "EnrichedEntryLeg", "RangeDerivation", "EnrichedSignalPayload",
+    "EnrichedEntryLeg", "RangeDerivation", "EntrySequenceRealignment", "EnrichedSignalPayload",
     "EnrichmentLogEntry", "EnrichedCanonicalMessage",
 ]

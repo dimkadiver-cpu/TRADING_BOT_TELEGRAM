@@ -41,6 +41,7 @@ def _make_enriched_signal(
     risk_hint=None,
     use_trader_risk_hint: bool = False,
     original_tp_count: int | None = None,
+    entry_sequence_realigned: dict | None = None,
 ):
     from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
     from src.runtime_v2.signal_enrichment.models import (
@@ -93,6 +94,7 @@ def _make_enriched_signal(
         ),
         risk_hint=risk_hint,
         original_tp_count=original_tp_count,
+        entry_sequence_realigned=entry_sequence_realigned,
     )
     weights = EntryWeightsConfig(weights={"E1": 1.0})
     policy = EffectiveEnrichmentConfig(
@@ -286,6 +288,36 @@ def test_gate_signal_without_tp_trim_has_no_tp_trimmed_in_plan():
     result = gate.process_signal(enriched, [], "NONE")
     plan = json.loads(result.trade_chain.plan_state_json)
     assert "tp_trimmed" not in plan
+
+
+def test_gate_signal_copies_entry_sequence_realigned_into_plan_state_json():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        entry_structure="LADDER",
+        entries=[
+            {"sequence": 1, "entry_type": "LIMIT", "price": 69351.0, "weight": 0.4},
+            {"sequence": 2, "entry_type": "LIMIT", "price": 69795.0, "weight": 0.3},
+            {"sequence": 3, "entry_type": "LIMIT", "price": 67654.9, "weight": 0.3},
+        ],
+        entry_sequence_realigned={
+            "side": "LONG",
+            "original": [
+                {"sequence": 1, "price": 69351.0},
+                {"sequence": 2, "price": 69795.0},
+                {"sequence": 3, "price": 67654.9},
+            ],
+            "normalized": [
+                {"sequence": 1, "price": 69795.0},
+                {"sequence": 2, "price": 69351.0},
+                {"sequence": 3, "price": 67654.9},
+            ],
+        },
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert plan["entry_sequence_realigned"]["side"] == "LONG"
+    assert plan["entry_sequence_realigned"]["original"][0]["price"] == 69351.0
+    assert plan["entry_sequence_realigned"]["normalized"][0]["price"] == 69795.0
 
 
 def test_gate_signal_reject_event_has_no_chain():

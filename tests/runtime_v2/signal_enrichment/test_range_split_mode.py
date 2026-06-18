@@ -319,6 +319,29 @@ class TestRangeSplitIntegration:
         assert derivation.split_mode == "endpoints"
         assert logs
 
+    @pytest.mark.parametrize(
+        "side, prices, expected_prices",
+        [
+            ("LONG", [69_351.0, 69_795.0, 67_654.9], [69_795.0, 69_351.0, 67_654.9]),
+            ("SHORT", [69_795.0, 69_351.0, 71_000.0], [69_351.0, 69_795.0, 71_000.0]),
+        ],
+    )
+    def test_multi_limit_non_range_entries_are_reordered_by_side(self, side, prices, expected_prices):
+        from src.runtime_v2.signal_enrichment.models import EnrichedEntryLeg
+
+        legs = [
+            EnrichedEntryLeg(sequence=idx, entry_type="LIMIT", price={"raw": str(price), "value": price})
+            for idx, price in enumerate(prices, start=1)
+        ]
+
+        result, meta, logs = SignalEnrichmentProcessor._realign_limit_entries_by_side(legs, side)
+
+        assert [leg.price.value for leg in result] == expected_prices
+        assert [leg.sequence for leg in result] == [1, 2, 3]
+        assert meta is not None
+        assert meta.side == side
+        assert any(log.check == "entry_sequence_realigned_for_side" for log in logs)
+
     def test_non_range_structure_not_affected(self):
         """ONE_SHOT LIMIT should never go through _apply_range_split."""
         from unittest.mock import MagicMock

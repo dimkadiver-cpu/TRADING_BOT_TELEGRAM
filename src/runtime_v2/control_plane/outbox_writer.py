@@ -372,6 +372,8 @@ def _build_payload(
             payload["risk_hint_applied"] = plan["risk_hint_applied"]
         if plan.get("tp_trimmed"):
             payload["tp_trimmed"] = plan["tp_trimmed"]
+        if plan.get("entry_sequence_realigned"):
+            payload["entry_sequence_realigned"] = plan["entry_sequence_realigned"]
         return payload
 
     if notification_type == "ENTRY_OPENED":

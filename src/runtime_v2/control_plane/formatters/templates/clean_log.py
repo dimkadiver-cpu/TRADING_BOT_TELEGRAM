@@ -172,6 +172,9 @@ def _build_signal_notes(p: dict) -> list[str]:
     trim = p.get("tp_trimmed") or {}
     if trim.get("original") is not None and trim.get("used") is not None:
         notes.append(f"TP - Reduced by policy ({trim['original']} → {trim['used']})")
+    realigned = p.get("entry_sequence_realigned") or {}
+    if realigned.get("original") and realigned.get("normalized"):
+        notes.append(f"Entry - Reordered by side ({realigned.get('side')})")
     return notes
 
 
