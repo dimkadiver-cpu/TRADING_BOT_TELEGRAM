@@ -1771,3 +1771,120 @@ def test_processor_with_full_ws_payload():
     # Verify exec_fee propagated from typed payload into lifecycle event
     lc_payload = json.loads(result.lifecycle_events[0].payload_json)
     assert lc_payload["exec_fee"] == 0.275
+
+
+# ---------------------------------------------------------------------------
+# Regression: tp_level inference when orderLinkId is absent (Bybit partial TP)
+# Bybit CreateByPartialTakeProfit fills do not carry orderLinkId, so the
+# classifier cannot correlate the fill — tp_level arrives as None.
+# Without the fix, every fill defaulted to tp_level=1, causing TP2 to be
+# treated as TP1 (wrong be_trigger, wrong auto-cancel, wrong Telegram label).
+# ---------------------------------------------------------------------------
+
+def test_tp_filled_without_tp_level_uses_counter_first_fill():
+    """First TP fill with tp_level=None must be tagged as tp_level=1."""
+    proc = _make_processor()
+    # payload has no tp_level (simulates missing orderLinkId)
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={"fill_price": 0.10222, "filled_qty": 34.0},
+    )
+    chain = _make_chain(state="OPEN").model_copy(update={
+        "open_position_qty": 278.0,
+        "closed_position_qty": 0.0,
+    })
+    result = proc.process(event, chain, [])
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["tp_level"] == 1
+
+
+def test_tp_filled_without_tp_level_increments_counter():
+    """After a TP fill without tp_level, plan_state_json must record _filled_tp_count=1."""
+    proc = _make_processor()
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={"fill_price": 0.10222, "filled_qty": 34.0},
+    )
+    chain = _make_chain(state="OPEN").model_copy(update={
+        "open_position_qty": 278.0,
+        "closed_position_qty": 0.0,
+    })
+    result = proc.process(event, chain, [])
+    assert result.new_plan_state_json is not None
+    plan = json.loads(result.new_plan_state_json)
+    assert plan.get("_filled_tp_count") == 1
+
+
+def test_tp_filled_without_tp_level_second_fill_gets_level_2():
+    """Second TP fill with tp_level=None must be tagged as tp_level=2.
+
+    This is the exact scenario observed in chain 7: both Bybit
+    CreateByPartialTakeProfit fills arrived without orderLinkId, both
+    received tp_level=1, and the be_trigger at tp2 never fired.
+    """
+    proc = _make_processor()
+
+    # Simulate chain state after TP1 already filled: counter=1 in plan_state
+    chain = _make_chain(state="PARTIALLY_CLOSED", be_trigger="tp2").model_copy(update={
+        "open_position_qty": 244.0,
+        "closed_position_qty": 34.0,
+        "plan_state_json": json.dumps({"_filled_tp_count": 1}),
+    })
+    event = _make_exchange_event(
+        event_id=2,
+        event_type="TP_FILLED",
+        payload={"fill_price": 0.10172, "filled_qty": 34.0},
+    )
+    result = proc.process(event, chain, [])
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["tp_level"] == 2
+
+
+def test_tp_filled_without_tp_level_second_fill_fires_be_trigger():
+    """When tp_level is inferred as 2 and be_trigger='tp2', the BE move must fire."""
+    proc = _make_processor()
+
+    chain = _make_chain(
+        state="PARTIALLY_CLOSED",
+        be_trigger="tp2",
+        be_status="NOT_PROTECTED",
+        entry_avg_price=0.10303,
+        current_stop_price=0.111088,
+    ).model_copy(update={
+        "open_position_qty": 244.0,
+        "closed_position_qty": 34.0,
+        "plan_state_json": json.dumps({"_filled_tp_count": 1}),
+        "symbol": "XPLUSDT",
+        "side": "SHORT",
+    })
+    event = _make_exchange_event(
+        event_id=2,
+        event_type="TP_FILLED",
+        payload={"fill_price": 0.10172, "filled_qty": 34.0},
+    )
+    result = proc.process(event, chain, [])
+
+    be_commands = [c for c in result.execution_commands if c.command_type == "MOVE_STOP_TO_BREAKEVEN"]
+    assert len(be_commands) == 1, (
+        "BE move must fire on tp2 when tp_level is inferred from counter instead of orderLinkId"
+    )
+
+
+def test_tp_filled_explicit_tp_level_overrides_counter():
+    """When tp_level IS present in the payload, it must be used directly (counter is fallback only)."""
+    proc = _make_processor()
+    # counter says 0 (no prior fills), but explicit tp_level=3 in payload
+    event = _make_exchange_event(
+        event_type="TP_FILLED",
+        payload={"tp_level": 3, "fill_price": 0.099, "filled_qty": 34.0},
+    )
+    chain = _make_chain(state="PARTIALLY_CLOSED").model_copy(update={
+        "open_position_qty": 244.0,
+        "closed_position_qty": 34.0,
+    })
+    result = proc.process(event, chain, [])
+    tp_event = next(e for e in result.lifecycle_events if e.event_type == "TP_FILLED")
+    payload = json.loads(tp_event.payload_json)
+    assert payload["tp_level"] == 3

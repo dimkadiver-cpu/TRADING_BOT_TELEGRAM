@@ -71,6 +71,25 @@ def _get_be_deferred_flag(plan_state_json: str) -> dict | None:
         return None
 
 
+def _get_filled_tp_count(plan_state_json: str) -> int:
+    """Ritorna quanti TP sono stati già confermati (contatore persistito nel plan state)."""
+    try:
+        plan = json.loads(plan_state_json or "{}")
+        return int(plan.get("_filled_tp_count") or 0)
+    except Exception:
+        return 0
+
+
+def _increment_filled_tp_count(plan_state_json: str) -> str:
+    """Incrementa _filled_tp_count nel plan_state_json e ritorna il JSON aggiornato."""
+    try:
+        plan = json.loads(plan_state_json or "{}")
+    except Exception:
+        plan = {}
+    plan["_filled_tp_count"] = int(plan.get("_filled_tp_count") or 0) + 1
+    return json.dumps(plan)
+
+
 def _normalized_fill_payload(payload: dict, *, default_qty: float = 0.0) -> dict:
     filled_qty = payload.get("filled_qty")
     if filled_qty is None:
@@ -505,7 +524,13 @@ class LifecycleEventProcessor:
         active_commands: list[ExecutionCommand],
     ) -> EventProcessorResult:
         ep = ExchangeEventPayload.model_validate_json(exchange_event.payload_json)
-        tp_level = int(ep.tp_level or 1)
+        # When the exchange fill lacks orderLinkId (e.g. Bybit CreateByPartialTakeProfit),
+        # the classifier cannot determine tp_level; derive it from the persistent counter
+        # stored in plan_state_json so that TP2, TP3, … are not all tagged as TP1.
+        if ep.tp_level is not None:
+            tp_level = int(ep.tp_level)
+        else:
+            tp_level = _get_filled_tp_count(chain.plan_state_json) + 1
         fill_qty = float(ep.filled_qty or 0.0)
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
@@ -520,7 +545,8 @@ class LifecycleEventProcessor:
         events: list[LifecycleEvent] = []
         commands: list[ExecutionCommand] = []
         new_be: BeProtectionStatus | None = None
-        new_plan_state_json: str | None = None
+        # Always increment the TP counter so subsequent fills get the correct level.
+        new_plan_state_json: str | None = _increment_filled_tp_count(chain.plan_state_json)
 
         if not is_final:
             try:
@@ -580,7 +606,7 @@ class LifecycleEventProcessor:
                     ))
                     if deferred_be:
                         new_plan_state_json = _set_be_deferred_flag(
-                            chain.plan_state_json,
+                            new_plan_state_json or chain.plan_state_json,
                             tp_level=tp_level,
                             averaging_legs_pending=len(averaging_legs),
                         )
