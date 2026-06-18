@@ -312,7 +312,7 @@ class TelegramNotificationDispatcher:
         if destination == "CLEAN_LOG":
             return format_clean_log(notification_type, payload)
         if destination == "TECH_LOG":
-            return format_tech_log(payload, delivery_mode=self._config.delivery_mode)
+            return format_tech_log(notification_type, payload, delivery_mode=self._config.delivery_mode)
         # COMMANDS_REPLY formatter arrives in a later part; safe fallback.
         return payload.get("text") or f"{notification_type}"
 

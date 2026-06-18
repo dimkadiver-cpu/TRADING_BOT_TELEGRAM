@@ -126,3 +126,38 @@ def test_all_six_types_are_registered():
         "GATEWAY_COMMAND_FAILED",
     }
     assert expected == set(TEMPLATE_REGISTRY.keys())
+
+
+from src.runtime_v2.control_plane.formatters.tech_log import format_tech_log
+
+
+def test_format_tech_log_dispatches_to_template():
+    text = format_tech_log("RUNTIME_STARTUP", {
+        "started_at": "2026-06-18 10:00:00 UTC",
+        "source": "runtime_main",
+    })
+    assert "ℹ️ RUNTIME: AVVIATO" in text
+
+
+def test_format_tech_log_private_bot_prepends_system():
+    text = format_tech_log(
+        "RUNTIME_STARTUP",
+        {"started_at": "2026-06-18 10:00:00 UTC"},
+        delivery_mode="private_bot",
+    )
+    assert text.startswith("⚠️ --SYSTEM--\n")
+    assert "ℹ️ RUNTIME: AVVIATO" in text
+
+
+def test_format_tech_log_unknown_type_fallback():
+    text = format_tech_log("UNKNOWN_EVENT", {
+        "level": "ERROR",
+        "description": "qualcosa è andato storto",
+    })
+    assert "UNKNOWN_EVENT" in text
+    assert "qualcosa è andato storto" in text
+
+
+def test_format_tech_log_fallback_default_delivery_mode():
+    text = format_tech_log("UNKNOWN_EVENT", {"level": "INFO", "description": "x"})
+    assert not text.startswith("⚠️ --SYSTEM--")

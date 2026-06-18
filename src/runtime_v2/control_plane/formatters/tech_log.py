@@ -1,38 +1,31 @@
+# src/runtime_v2/control_plane/formatters/tech_log.py
 from __future__ import annotations
 
-from src.runtime_v2.control_plane.formatters.display import display_symbol
+from src.runtime_v2.control_plane.formatters._blocks import render_template
+from src.runtime_v2.control_plane.formatters.templates.tech_log import TEMPLATE_REGISTRY
 
-_SEP = "────────────────"
 
-
-def format_tech_log(payload: dict, *, delivery_mode: str = "supergroup_topics") -> str:
-    level = str(payload.get("level", "INFO")).upper()
-    category = payload.get("category") or "Runtime"
-    title = payload.get("title") or ""
-    description = payload.get("description") or ""
-    source = payload.get("source")
-    context = payload.get("context")  # dict | None
-    action = payload.get("action")    # str | None
-
-    header = f"[{level}] {category}: {title}" if title else f"[{level}] {category}"
-    lines = [header, _SEP]
-    if description:
-        lines.append(description)
-    if context and isinstance(context, dict):
-        lines.extend(["", "Context:"])
-        for key, value in context.items():
-            if key == "symbol" and isinstance(value, str):
-                value = display_symbol(value)
-            lines.append(f"{key}: {value if value is not None else '—'}")
-    if action:
-        lines.extend(["", f"Action: {action}"])
-    if source:
-        lines.extend([_SEP, f"Source: {source}"])
-
-    body = "\n".join(lines).strip()
+def format_tech_log(
+    notification_type: str,
+    payload: dict,
+    *,
+    delivery_mode: str = "supergroup_topics",
+) -> str:
+    config = TEMPLATE_REGISTRY.get(notification_type)
+    body = (
+        render_template(config.blocks, payload, transform=config.payload_transform)
+        if config
+        else _fallback(notification_type, payload)
+    )
     if delivery_mode == "private_bot":
         return f"⚠️ --SYSTEM--\n{body}"
     return body
+
+
+def _fallback(notification_type: str, payload: dict) -> str:
+    level = str(payload.get("level", "INFO")).upper()
+    description = payload.get("description") or notification_type
+    return f"[{level}] {notification_type}\n────────────────\n{description}"
 
 
 __all__ = ["format_tech_log"]
