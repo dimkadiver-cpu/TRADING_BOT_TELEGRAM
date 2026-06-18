@@ -341,13 +341,59 @@ class CcxtBybitAdapter(ExecutionAdapter):
     ) -> float | None:
         try:
             positions = self._exchange.fetch_positions([symbol])
+            sides_found = [str(p.get("side") or "") for p in positions]
             for pos in positions:
                 if str(pos.get("side") or "").lower() == side.lower():
-                    return float(pos.get("contracts") or 0.0)
+                    qty = float(pos.get("contracts") or 0.0)
+                    logger.debug(
+                        "get_position_qty %s %s → qty=%s (positions_count=%d sides=%s)",
+                        symbol, side, qty, len(positions), sides_found,
+                    )
+                    return qty
+            logger.warning(
+                "get_position_qty %s %s → 0.0 (no matching side; positions_count=%d sides=%s)",
+                symbol, side, len(positions), sides_found,
+            )
             return 0.0
         except Exception:
             logger.warning("get_position_qty failed for %s %s", symbol, side)
             return None
+
+    def get_position_qty_with_details(
+        self,
+        *,
+        symbol: str,
+        side: str,
+        execution_account_id: str,
+    ) -> tuple[float | None, dict]:
+        """Like get_position_qty but also returns a details dict for DB audit.
+
+        Returns (qty, details) where details has: positions_count, sides_found, qty_found, error.
+        qty is None on exception (same semantics as get_position_qty).
+        """
+        try:
+            positions = self._exchange.fetch_positions([symbol])
+            sides_found = [str(p.get("side") or "") for p in positions]
+            for pos in positions:
+                if str(pos.get("side") or "").lower() == side.lower():
+                    qty = float(pos.get("contracts") or 0.0)
+                    details = {
+                        "positions_count": len(positions),
+                        "sides_found": sides_found,
+                        "qty_found": qty,
+                        "matched": True,
+                    }
+                    return qty, details
+            details = {
+                "positions_count": len(positions),
+                "sides_found": sides_found,
+                "qty_found": None,
+                "matched": False,
+            }
+            return 0.0, details
+        except Exception as exc:
+            details = {"error": str(exc), "positions_count": None, "sides_found": None}
+            return None, details
 
     def fetch_mark_price(self, symbol: str, execution_account_id: str) -> float | None:
         try:

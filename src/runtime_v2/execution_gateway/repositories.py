@@ -986,6 +986,29 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def insert_position_snapshot(
+        self,
+        *,
+        account_id: str,
+        symbol: str,
+        side: str,
+        source: str,
+        payload: dict,
+    ) -> None:
+        """Insert a row in ops_position_snapshots for audit/traceability."""
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            conn.execute(
+                "INSERT INTO ops_position_snapshots "
+                "(account_id, symbol, side, source, payload_json, captured_at) "
+                "VALUES (?,?,?,?,?,?)",
+                (account_id, symbol, side, source, json.dumps(payload), now),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def real_close_fill_exists(self, trade_chain_id: int) -> bool:
         """Returns True if a real exchange fill that closes the chain exists.
 

@@ -96,11 +96,26 @@ class ExchangeEventSyncWorker:
         processed = 0
         for chain_id, symbol, side, open_qty in chains:
             try:
-                qty = self._adapter.get_position_qty(
-                    symbol=symbol,
-                    side=side,
-                    execution_account_id=self._execution_account_id,
-                )
+                if hasattr(self._adapter, "get_position_qty_with_details"):
+                    qty, pos_details = self._adapter.get_position_qty_with_details(
+                        symbol=symbol,
+                        side=side,
+                        execution_account_id=self._execution_account_id,
+                    )
+                    if qty is not None:
+                        self._repo.insert_position_snapshot(
+                            account_id=self._execution_account_id,
+                            symbol=symbol,
+                            side=side,
+                            source="rest_reconciliation",
+                            payload=pos_details,
+                        )
+                else:
+                    qty = self._adapter.get_position_qty(
+                        symbol=symbol,
+                        side=side,
+                        execution_account_id=self._execution_account_id,
+                    )
                 if qty is None:
                     self._position_zero_count.pop(chain_id, None)
                     continue

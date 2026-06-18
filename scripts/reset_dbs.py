@@ -22,6 +22,7 @@ PARSER_TABLES = [
     "parser_runs",
     "canonical_messages",
     "raw_messages",
+    "raw_message_revisions",
 ]
 
 OPS_TABLES = [
