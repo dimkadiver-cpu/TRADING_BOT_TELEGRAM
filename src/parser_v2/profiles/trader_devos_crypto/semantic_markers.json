@@ -1,0 +1,97 @@
+{
+  "language": "en",
+  "field_markers": {
+    "symbol": {
+      "strong": ["usdt", "usdc"],
+      "weak": []
+    },
+    "entry": {
+      "strong": ["entry targets:", "entry:"],
+      "weak": []
+    },
+    "stop_loss": {
+      "strong": ["stop loss:", "stop loss"],
+      "weak": []
+    },
+    "take_profit": {
+      "strong": ["take profits:", "take profit:"],
+      "weak": []
+    },
+    "leverage": {
+      "strong": ["leverage:"],
+      "weak": []
+    }
+  },
+  "side_markers": {
+    "LONG": {
+      "strong": ["direction: long"],
+      "weak": []
+    },
+    "SHORT": {
+      "strong": ["direction: short"],
+      "weak": []
+    }
+  },
+  "intent_markers": {
+    "TP_HIT": {
+      "strong": [
+        "take-profit target 1",
+        "take-profit target 2",
+        "take-profit target 3",
+        "take-profit target 4",
+        "take-profit target 5",
+        "take-profit target 6",
+        "take-profit target 7",
+        "take-profit target 8",
+        "take-profit target 9",
+        "take-profit target 10",
+        "all targets achieved"
+      ],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong": [
+        "stop target hit"
+      ],
+      "weak": []
+    },
+    "EXIT_BE": {
+      "strong": [
+        "closed at trailing stoploss after reaching take profit",
+        "closed at stoploss after reaching take profit"
+      ],
+      "weak": []
+    },
+    "CLOSE_FULL": {
+      "strong": [
+        "closed due to opposite direction signal"
+      ],
+      "weak": []
+    },
+    "CANCEL_PENDING": {
+      "strong": [
+        "cancelled",
+        "canceled"
+      ],
+      "weak": []
+    },
+    "ENTRY_FILLED": {
+      "strong": [
+        "all entries achieved"
+      ],
+      "strong_patterns": [
+        "(?i)entry\\s+\\d+\\s*✅"
+      ],
+      "weak": []
+    }
+  },
+  "info_markers": {},
+  "target_hint_markers": {
+    "symbol": {
+      "strong": ["usdt", "usdc"],
+      "weak": []
+    }
+  },
+  "ignore_markers": [],
+  "blacklist": []
+}

@@ -9,9 +9,11 @@ from src.parser_v2.profiles.trader_c.profile import TraderCProfile
 from src.parser_v2.profiles.trader_d.profile import TraderDProfile
 from src.parser_v2.profiles.trader_prova.profile import TraderProvaProfile
 from src.parser_v2.profiles.strategy_parser.profile import StrategyParserProfile
+from src.parser_v2.profiles.trader_devos_crypto.profile import TraderDevosCryptoProfile
 
 _PROFILE_FACTORIES: dict[str, type] = {
     "strategy_parser": StrategyParserProfile,
+    "trader_devos_crypto": TraderDevosCryptoProfile,
     "trader_3": Trader3Profile,
     "trader_3_1": Trader31Profile,
     "trader_a": TraderAProfile,
@@ -42,6 +44,9 @@ _ALIASES: dict[str, str] = {
     "d": "trader_d",
     "trader_d": "trader_d",
     "trader_prova": "trader_prova",
+    "trader_devos_crypto": "trader_devos_crypto",
+    "devos_crypto": "trader_devos_crypto",
+    "trader_devos_crypto_signals": "trader_devos_crypto",
 }
 
 
