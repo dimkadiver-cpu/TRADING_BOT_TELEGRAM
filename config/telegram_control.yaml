@@ -42,6 +42,7 @@ per_account:
           trader_d: 320
           trader_3: 871
           trader_prova: 808
+          trader_devos_crypto: 1024
           # aggiungi altri trader qui
 
       tech_log:
