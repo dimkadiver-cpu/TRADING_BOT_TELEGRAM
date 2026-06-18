@@ -1060,3 +1060,132 @@ def test_signal_accepted_payload_includes_tp_trimmed(ops_db):
     conn.close()
     payload = json.loads(row[0])
     assert payload["tp_trimmed"] == {"original": 5, "used": 2}
+
+
+# ---------------------------------------------------------------------------
+# Intra-chain ordering: HIGH event must not jump ahead of preceding MEDIUM events
+# ---------------------------------------------------------------------------
+
+def test_high_priority_event_promotes_preceding_pending_rows_of_same_chain(ops_db):
+    """When SL_FILLED (HIGH) is written, all preceding PENDING rows of the same
+    chain are promoted to HIGH so the dispatcher sends them first (in insertion
+    order), preventing SL from appearing before ENTRY_OPENED in Telegram."""
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        # Write ENTRY_OPENED first (MEDIUM by default)
+        write_clean_log_event(
+            conn,
+            notification_type="ENTRY_OPENED",
+            chain_id=2001,
+            payload={"chain_id": 2001},
+            dedupe_key="clean:ENTRY_OPENED:2001",
+        )
+        # Then write SL_FILLED (HIGH) for the same chain
+        write_clean_log_event(
+            conn,
+            notification_type="SL_FILLED",
+            chain_id=2001,
+            payload={"chain_id": 2001},
+            dedupe_key="clean:SL_FILLED:2001",
+        )
+
+    rows = conn.execute(
+        "SELECT notification_type, priority, chain_id FROM ops_notification_outbox "
+        "ORDER BY notification_id"
+    ).fetchall()
+    conn.close()
+
+    assert len(rows) == 2
+    entry_type, entry_priority, entry_chain = rows[0]
+    sl_type, sl_priority, sl_chain = rows[1]
+
+    assert entry_type == "ENTRY_OPENED"
+    assert sl_type == "SL_FILLED"
+    # ENTRY_OPENED must have been promoted to HIGH
+    assert entry_priority == "HIGH", (
+        "ENTRY_OPENED preceding SL_FILLED on the same chain must be promoted to HIGH"
+    )
+    assert sl_priority == "HIGH"
+    # chain_id must be stored on both rows
+    assert entry_chain == 2001
+    assert sl_chain == 2001
+
+
+def test_high_priority_event_does_not_promote_rows_of_different_chain(ops_db):
+    """Priority promotion must be scoped to the same chain_id only."""
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        # ENTRY_OPENED for chain 3001 (different chain)
+        write_clean_log_event(
+            conn,
+            notification_type="ENTRY_OPENED",
+            chain_id=3001,
+            payload={"chain_id": 3001},
+            dedupe_key="clean:ENTRY_OPENED:3001",
+        )
+        # SL_FILLED for chain 3002
+        write_clean_log_event(
+            conn,
+            notification_type="SL_FILLED",
+            chain_id=3002,
+            payload={"chain_id": 3002},
+            dedupe_key="clean:SL_FILLED:3002",
+        )
+
+    rows = conn.execute(
+        "SELECT notification_type, priority FROM ops_notification_outbox ORDER BY notification_id"
+    ).fetchall()
+    conn.close()
+
+    by_type = {r[0]: r[1] for r in rows}
+    # ENTRY_OPENED of a different chain must NOT be promoted
+    assert by_type["ENTRY_OPENED"] == "MEDIUM", (
+        "ENTRY_OPENED of a different chain must remain MEDIUM"
+    )
+    assert by_type["SL_FILLED"] == "HIGH"
+
+
+def test_projection_entry_then_sl_same_chain_both_stored_with_correct_chain_id(ops_db):
+    """Regression for the observed SL-before-ENTRY ordering bug.
+
+    When ENTRY_FILLED and SL_FILLED arrive close together and are projected for
+    the same chain, the SL (HIGH) must not appear before the ENTRY (promoted to
+    HIGH) in the dispatcher's claim query.  Verified by checking that after
+    projection the ENTRY row is HIGH and has a lower notification_id than SL.
+    """
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 2002)
+        _seed_event(conn, 2002, "ENTRY_FILLED", "entry:2002:1", {
+            "fill_price": 65000.0, "fill_qty": 0.01,
+        })
+        _seed_event(conn, 2002, "SL_FILLED", "sl:2002:1", {
+            "fill_price": 63000.0, "filled_qty": 0.01, "closed_size": 0.01,
+        })
+        project_clean_log_for_chain(conn, 2002)
+
+    rows = conn.execute(
+        "SELECT notification_id, notification_type, priority, chain_id "
+        "FROM ops_notification_outbox ORDER BY notification_id"
+    ).fetchall()
+    conn.close()
+
+    types = [r[1] for r in rows]
+    assert "ENTRY_OPENED" in types
+    assert "SL_FILLED" in types
+
+    entry_row = next(r for r in rows if r[1] == "ENTRY_OPENED")
+    sl_row = next(r for r in rows if r[1] == "SL_FILLED")
+
+    # Both must carry the correct chain_id
+    assert entry_row[3] == 2002
+    assert sl_row[3] == 2002
+
+    # ENTRY must have been promoted to HIGH
+    assert entry_row[2] == "HIGH", "ENTRY_OPENED must be promoted to HIGH when SL_FILLED is written"
+    assert sl_row[2] == "HIGH"
+
+    # ENTRY must sort before SL in the dispatcher ORDER BY (same priority → notification_id wins)
+    assert entry_row[0] < sl_row[0], (
+        "ENTRY_OPENED notification_id must be lower than SL_FILLED so it dispatches first"
+    )

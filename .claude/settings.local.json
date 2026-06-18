@@ -212,7 +212,8 @@
       "Bash(tasklist)",
       "Bash(PYTHONIOENCODING=utf-8 python main.py)",
       "Bash(echo \"PID=$!\")",
-      "Read(//c/TeleSignalBot/**)"
+      "Read(//c/TeleSignalBot/**)",
+      "Bash(xargs grep -l \"log\\\\|Log\\\\|LOG\")"
     ]
   }
 }

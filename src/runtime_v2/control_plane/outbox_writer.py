@@ -138,18 +138,19 @@ def _record(
     aggregation_group: str | None = None,
     source_message_id: str | None = None,
     account_id: str | None = None,
+    chain_id: int | None = None,
 ) -> None:
     conn.execute(
         """
         INSERT OR IGNORE INTO ops_notification_outbox
             (notification_type, destination, payload_json, priority, status,
              dedupe_key, attempts, created_at, send_after, aggregation_group, source_message_id,
-             account_id)
-        VALUES (?,?,?,?, 'PENDING', ?, 0, ?, ?, ?, ?, ?)
+             account_id, chain_id)
+        VALUES (?,?,?,?, 'PENDING', ?, 0, ?, ?, ?, ?, ?, ?)
         """,
         (notification_type, destination, json.dumps(payload), priority,
          dedupe_key, _now(), send_after, aggregation_group, source_message_id,
-         account_id),
+         account_id, chain_id),
     )
 
 
@@ -181,7 +182,17 @@ def write_clean_log_event(
         aggregation_group=_agg_group(notification_type, chain_id, payload),
         source_message_id=payload.get("source_message_id"),
         account_id=resolved_account_id,
+        chain_id=chain_id,
     )
+    # When a HIGH-priority event lands for a chain (e.g. SL_FILLED), promote all
+    # preceding PENDING rows of the same chain to HIGH so they are dispatched first,
+    # preserving the chronological notification order within the chain.
+    if pri == "HIGH" and chain_id is not None:
+        conn.execute(
+            "UPDATE ops_notification_outbox SET priority='HIGH' "
+            "WHERE chain_id=? AND status='PENDING' AND priority!='HIGH'",
+            (chain_id,),
+        )
 
 
 def write_tech_log_event(
