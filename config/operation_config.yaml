@@ -31,7 +31,7 @@ account_mode: per_trader_subaccount  # Valori supportati: single | per_trader_su
 account:
   id: "demo_1"  # Account logico usato dal runtime enrichment/lifecycle.
   capital_base_usdt: 10000.0  # Capitale statico di riferimento.
-  max_leverage: 5  # Hard cap locale di leva ammessa per l'account.
+  max_leverage: 25  # Hard cap locale di leva ammessa per l'account.
   max_capital_at_risk_pct: 100.0  # Cap massimo di rischio capitale totale allocabile sull'account.
   hard_max_per_signal_risk_pct: 2.0  # Tetto massimo non overridabile per singolo segnale.
 

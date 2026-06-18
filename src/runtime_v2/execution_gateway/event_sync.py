@@ -199,7 +199,7 @@ class ExchangeEventSyncWorker:
         if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
             return 0
 
-        open_chains = self._repo.get_open_chains_with_tps()
+        open_chains = self._repo.get_open_chains_with_tps(self._execution_account_id)
         if not open_chains:
             return 0
 
@@ -263,7 +263,7 @@ class ExchangeEventSyncWorker:
         if not hasattr(self._adapter, "fetch_position_details"):
             return 0
 
-        open_chains = self._repo.get_open_chains_with_tps()
+        open_chains = self._repo.get_open_chains_with_tps(self._execution_account_id)
         if not open_chains:
             return 0
 
@@ -426,13 +426,15 @@ class ExchangeEventSyncWorker:
         )
 
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
-        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains."""
+        """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains belonging to this account."""
         conn = sqlite3.connect(self._ops_db)
         try:
             rows = conn.execute(
                 "SELECT trade_chain_id, symbol, side, open_position_qty "
                 "FROM ops_trade_chains "
-                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED')"
+                "WHERE lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
+                "AND account_id = ?",
+                (self._execution_account_id,),
             ).fetchall()
             return [(int(r[0]), str(r[1]), str(r[2]), float(r[3] or 0.0)) for r in rows]
         finally:

@@ -953,8 +953,8 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def get_open_chains_with_tps(self) -> list[dict]:
-        """Returns open chains that have active TP commands. Used by run_trade_based_reconciliation."""
+    def get_open_chains_with_tps(self, account_id: str) -> list[dict]:
+        """Returns open chains that have active TP commands, scoped to the given account."""
         conn = sqlite3.connect(self._db)
         try:
             rows = conn.execute(
@@ -962,8 +962,10 @@ class GatewayCommandRepository:
                 "FROM ops_trade_chains t "
                 "JOIN ops_execution_commands c ON c.trade_chain_id = t.trade_chain_id "
                 "WHERE t.lifecycle_state IN ('OPEN', 'PARTIALLY_CLOSED') "
+                "  AND t.account_id = ? "
                 "  AND c.command_type IN ('SET_POSITION_TPSL_PARTIAL', 'SET_POSITION_TPSL_FULL', 'REBUILD_PARTIAL_TPS') "
-                "  AND c.status IN ('SENT', 'DONE')"
+                "  AND c.status IN ('SENT', 'DONE')",
+                (account_id,),
             ).fetchall()
             return [{"trade_chain_id": int(r[0]), "symbol": r[1], "side": r[2]} for r in rows]
         finally:
