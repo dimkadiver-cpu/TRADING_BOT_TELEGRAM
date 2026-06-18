@@ -559,6 +559,18 @@ _RECONCILIATION_FIXED_BLOCKS: list = [
 
 
 # ---------------------------------------------------------------------------
+# Update not applied — no chain found (UPDATE_NOT_APPLIED)
+# ---------------------------------------------------------------------------
+
+_UPDATE_NOT_APPLIED_BLOCKS: list = [
+    HeaderBlock(emoji="⚠️", event_label="UPDATE NOT APPLIED"),
+    FieldBlock("Reason",  key="reason",      fmt=text, optional=False, default="unknown"),
+    FieldBlock("Action",  key="action_hint", fmt=text, optional=True),
+    FooterBlock(default_source="trader_update"),
+]
+
+
+# ---------------------------------------------------------------------------
 # Multi-chain (MULTI_CHAIN_SUMMARY, MULTI_CHAIN_UPDATE, MULTI_CHAIN_CLOSED)
 # ---------------------------------------------------------------------------
 
@@ -661,6 +673,7 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "CANCEL_FAILED":          TemplateConfig(_CANCEL_FAILED_BLOCKS),
     "RECONCILIATION_WARNING": TemplateConfig(_RECONCILIATION_WARN_BLOCKS),
     "RECONCILIATION_FIXED":   TemplateConfig(_RECONCILIATION_FIXED_BLOCKS),
+    "UPDATE_NOT_APPLIED":     TemplateConfig(_UPDATE_NOT_APPLIED_BLOCKS),
     "MULTI_CHAIN_SUMMARY":    TemplateConfig(_MULTI_CHAIN_BLOCKS,       _t_multi_chain),
     "MULTI_CHAIN_UPDATE":     TemplateConfig(_MULTI_CHAIN_BLOCKS,       _t_multi_chain),
     "MULTI_CHAIN_CLOSED":     TemplateConfig(_MULTI_CHAIN_BLOCKS,       _t_multi_chain),

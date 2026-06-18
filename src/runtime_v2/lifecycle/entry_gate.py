@@ -253,6 +253,45 @@ def _write_update_clean_log(
     )
 
 
+def _write_no_target_update_clean_log(
+    conn,
+    event: "LifecycleEvent",
+    enriched: "EnrichedCanonicalMessage",
+    link: str | None,
+) -> None:
+    """Scrive UPDATE_NOT_APPLIED per review_events senza chain (no_update_target / ambiguous)."""
+    try:
+        ev_data = json.loads(event.payload_json or "{}")
+    except Exception:
+        ev_data = {}
+    reason = ev_data.get("reason", "")
+    if reason not in ("no_update_target", "ambiguous_update_target"):
+        return
+    action_hint = (
+        "reply to the specific signal message" if reason == "ambiguous_update_target" else None
+    )
+    payload: dict = {
+        "chain_id": None,
+        "symbol": None,
+        "side": None,
+        "signal_link": link,
+        "reason": reason,
+        "source": "trader_update",
+        "trader_id": enriched.trader_id,
+        "account_id": enriched.account_id,
+    }
+    if action_hint is not None:
+        payload["action_hint"] = action_hint
+    write_clean_log_event(
+        conn,
+        notification_type="UPDATE_NOT_APPLIED",
+        chain_id=None,
+        payload=payload,
+        account_id=enriched.account_id,
+        dedupe_key=f"clean:{event.idempotency_key}",
+    )
+
+
 _STATUS_RANK: dict[str, int] = {"REVIEW": 3, "PARTIAL": 2, "SKIPPED": 1, "DONE": 0}
 
 _NOOP_REASON_TO_DISPLAY: dict[str, str] = {
@@ -2460,6 +2499,12 @@ class LifecycleGateWorker:
                             event.payload_json, event.idempotency_key, now,
                         ),
                     )
+                    try:
+                        _write_no_target_update_clean_log(conn, event, enriched, update_source_link)
+                    except Exception:
+                        logger.exception(
+                            "no_target_update_clean_log failed for %s", event.idempotency_key
+                        )
                 for cr in result.chain_results:
                     if cr.trade_chain_id:
                         try:
