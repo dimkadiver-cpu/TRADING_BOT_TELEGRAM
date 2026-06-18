@@ -1,10 +1,10 @@
 # config/trader_3.yaml
-account:
-  id: "demo_2"      # deve corrispondere alla chiave in account_routing
-  capital_base_usdt: 10000.0
-  max_leverage: 30
-  max_capital_at_risk_pct: 100.0
-  hard_max_per_signal_risk_pct: 2.0
+  account:
+    id: "demo_2"      # deve corrispondere alla chiave in account_routing
+    capital_base_usdt: 10000.0
+    max_leverage: 30
+    max_capital_at_risk_pct: 100.0
+    hard_max_per_signal_risk_pct: 2.0
 
   enabled: true  # Profilo default attivo.
   hedge_mode: true  # true = puo' coesistere LONG/SHORT sullo stesso simbolo.
@@ -32,7 +32,7 @@ account:
         averaging:
           weights: {E1: 0.70, E2: 0.30}  # Pesi averaging LIMIT.
         ladder:
-          weights: {E1: 0.50, E2: 0.30, E3: 0.20}  # Pesi ladder LIMIT.
+          weights: {E1: 0.40, E2: 0.30, E3: 0.20, E4: 0.10}  # Pesi ladder LIMIT.
       MARKET:
         single:
           weights: {E1: 1.0}  # Pesi entry MARKET singola.
