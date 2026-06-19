@@ -59,9 +59,22 @@ class FieldBlock:
 
 @dataclass
 class SectionBlock:
-    """Static label + sub-blocks."""
-    label: str
+    """Static label + sub-blocks. label may be callable(payload) -> str."""
+    label: str | Callable[[dict], str]
     blocks: list
+
+
+@dataclass
+class TableBlock:
+    """Renders aligned columnar data.
+    rows_key: payload key containing list of dicts.
+    columns: list of (header_label, row_key, min_width, fmt_fn).
+    fmt_fn receives the raw cell value and returns a string.
+    """
+    rows_key: str
+    columns: list[tuple[str, str, int, Callable]]
+    show_header: bool = True
+    fallback: str = "—"
 
 
 # ---------------------------------------------------------------------------
@@ -170,8 +183,10 @@ def _render_blocks(blocks: list, p: dict, lines: list[str]) -> None:
             case FieldBlock():
                 _render_field(block, p, lines)
             case SectionBlock(label=lbl, blocks=sub):
-                lines.append(lbl)
+                lines.append(lbl(p) if callable(lbl) else lbl)
                 _render_blocks(sub, p, lines)
+            case TableBlock():
+                _render_table(block, p, lines)
             case ConditionalBlock(condition=cond, blocks=sub):
                 if cond(p):
                     _render_blocks(sub, p, lines)
@@ -238,9 +253,40 @@ def _render_footer(block: FooterBlock, p: dict, lines: list[str]) -> None:
         lines.append(link)
 
 
+def _render_table(block: TableBlock, p: dict, lines: list[str]) -> None:
+    rows = p.get(block.rows_key) or []
+    columns = block.columns  # [(header, row_key, min_width, fmt_fn), ...]
+
+    # Build all cell strings first
+    headers = [col[0] for col in columns]
+    cell_rows: list[list[str]] = []
+    for row in rows:
+        cells: list[str] = []
+        for _header, row_key, _min_w, fmt_fn in columns:
+            raw = row.get(row_key)
+            cells.append(fmt_fn(raw) if raw is not None else block.fallback)
+        cell_rows.append(cells)
+
+    # Compute column widths
+    col_widths: list[int] = []
+    for col_idx, (header, _rk, min_w, _fn) in enumerate(columns):
+        w = max(min_w, len(header))
+        for cr in cell_rows:
+            w = max(w, len(cr[col_idx]))
+        col_widths.append(w)
+
+    if block.show_header:
+        header_line = "  ".join(h.ljust(col_widths[i]) for i, h in enumerate(headers))
+        lines.append(header_line.rstrip())
+
+    for cr in cell_rows:
+        row_line = "  ".join(cr[i].ljust(col_widths[i]) for i in range(len(cr)))
+        lines.append(row_line.rstrip())
+
+
 __all__ = [
     "SeparatorBlock", "StaticBlock", "DerivedBlock", "HeaderBlock",
-    "FieldBlock", "SectionBlock", "ConditionalBlock", "BranchBlock",
+    "FieldBlock", "SectionBlock", "TableBlock", "ConditionalBlock", "BranchBlock",
     "ListBlock", "FooterBlock", "TemplateConfig",
     "_SEP", "_BULLET",
     "render_template",

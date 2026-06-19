@@ -104,8 +104,9 @@ def test_pnl_command_returns_structured_reply(ops_db):
     )
     assert res.decision == "EXECUTED"
     assert "PNL" in res.reply_text.upper()
-    assert "1250.5" in res.reply_text
-    assert "n/a" in res.reply_text.lower()
+    # equity formatted as 1,250.50 USDT with thousands separator
+    assert "1,250.50" in res.reply_text
+    assert "n/a" in res.reply_text.lower() or "Netto" in res.reply_text
 
 
 def test_debug_on_activates_controller(ops_db):

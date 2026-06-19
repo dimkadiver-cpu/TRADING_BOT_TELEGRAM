@@ -48,7 +48,8 @@ def test_format_status_contains_sections():
 
 def test_format_trades_empty():
     text = format_trades(TradesView(updated_at="14:32:10", total=0, rows=[]))
-    assert "0" in text and "OPEN TRADES" in text
+    assert "TRADES" in text
+    assert "No open trades" in text
 
 
 def test_format_trades_rows():
