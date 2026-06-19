@@ -40,9 +40,9 @@ def _pnl_str(row: dict) -> str:
 def _protection_str(row: dict) -> str:
     if row.get("has_be"):
         sl_price = row.get("current_stop_price")
-        be_part = "BE: set"
-        sl_part = f"  SL: {num(sl_price)}" if sl_price is not None else ""
-        return be_part + sl_part
+        sl_part = f"SL: {num(sl_price)}" if sl_price is not None else "SL: set"
+        be_part = "  BE: set"
+        return sl_part + be_part
     if row.get("has_sl"):
         sl_price = row.get("current_stop_price")
         if sl_price is not None:
@@ -189,18 +189,8 @@ def _fmt_win_pct(value: object) -> str:
         return str(value)
 
 
-def _fmt_pnl_col(value: object) -> str:
-    if value is None:
-        return "—"
-    try:
-        f = float(value)
-        sign = "+" if f >= 0 else ""
-        return f"{sign}{f:.2f}"
-    except (TypeError, ValueError):
-        return str(value)
-
-
-def _fmt_fees_col(value: object) -> str:
+def _fmt_signed_float(value: object) -> str:
+    """Format a signed float with 2 decimal places."""
     if value is None:
         return "—"
     try:
@@ -223,8 +213,8 @@ _STATS_TABLE = TableBlock(
         ("", "label", 10, str),
         ("Trades", "trade_count", 6, _fmt_trade_count),
         ("Win%", "win_pct", 5, _fmt_win_pct),
-        ("PnL netto", "pnl_net", 10, _fmt_pnl_col),
-        ("Fees", "fees", 8, _fmt_fees_col),
+        ("PnL netto", "pnl_net", 10, _fmt_signed_float),
+        ("Fees", "fees", 8, _fmt_signed_float),
     ],
     show_header=True,
     fallback="—",
@@ -238,8 +228,7 @@ _STATS_BLOCKS: list = [
         condition=lambda p: p.get("best_chain_id") is not None,
         blocks=[
             DerivedBlock(text_fn=lambda p: (
-                f"Best trade:   #{p['best_chain_id']} {p.get('best_symbol', '')} "
-                f"{money_signed(p.get('best_pnl'))} USDT".rstrip(" USDT") + " USDT"
+                f"Best trade:   #{p['best_chain_id']} {p.get('best_symbol', '')} {money_signed(p.get('best_pnl'))}"
                 if p.get("best_pnl") is not None
                 else f"Best trade:   #{p['best_chain_id']}"
             )),
@@ -249,8 +238,7 @@ _STATS_BLOCKS: list = [
         condition=lambda p: p.get("worst_chain_id") is not None,
         blocks=[
             DerivedBlock(text_fn=lambda p: (
-                f"Worst trade:  #{p['worst_chain_id']} {p.get('worst_symbol', '')} "
-                f"{money_signed(p.get('worst_pnl'))} USDT".rstrip(" USDT") + " USDT"
+                f"Worst trade:  #{p['worst_chain_id']} {p.get('worst_symbol', '')} {money_signed(p.get('worst_pnl'))}"
                 if p.get("worst_pnl") is not None
                 else f"Worst trade:  #{p['worst_chain_id']}"
             )),

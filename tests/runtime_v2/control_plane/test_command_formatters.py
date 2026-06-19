@@ -233,6 +233,7 @@ def test_pnl_fees_omitted_when_none():
     text = format_pnl(_pnl_view(total_fees=None))
     # Should still render without error
     assert "PNL" in text
+    assert "Fees" not in text
 
 
 def test_pnl_open_count():
