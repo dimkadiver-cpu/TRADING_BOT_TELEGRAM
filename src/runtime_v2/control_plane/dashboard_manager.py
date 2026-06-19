@@ -252,7 +252,6 @@ class DashboardManager:
 
         chat_id: int = message.chat_id
         thread_id: int = message.message_thread_id or 0
-        message_id: int = message.message_id
 
         row = self._get_dashboard_row(chat_id, thread_id)
         if row is None:
@@ -300,7 +299,7 @@ class DashboardManager:
         try:
             await self._bot.edit_message_text(
                 chat_id=chat_id,
-                message_id=message_id,
+                message_id=stored_message_id,
                 text=text,
                 reply_markup=keyboard,
             )
@@ -345,7 +344,7 @@ class DashboardManager:
                 # Schedule for after cooldown (don't duplicate)
                 if key not in self._pending_tasks or self._pending_tasks[key].done():
                     delay = _THROTTLE_SECONDS - elapsed
-                    task = asyncio.get_event_loop().create_task(
+                    task = asyncio.get_running_loop().create_task(
                         self._deferred_refresh(
                             delay=delay,
                             chat_id=chat_id,

@@ -25,6 +25,7 @@ from src.runtime_v2.control_plane.topic_router import TopicRouter
 
 
 def _create_sender(token: str):
+    """Create a TelegramBotSender. Used by tests; production code inlines this."""
     from telegram import Bot
 
     return TelegramBotSender(Bot(token=token, request=build_telegram_request()))
@@ -83,12 +84,19 @@ def build_control_plane(
         dashboard_manager=dashboard_manager,
         scope_resolver=scope_resolver,
     )
+
+    # Create bot and sender, wire to dashboard_manager
+    from telegram import Bot
+    real_bot = Bot(token=config.token, request=build_telegram_request())
+    sender = TelegramBotSender(real_bot)
+    dashboard_manager.set_bot(real_bot)
+
     topic_router = TopicRouter(config, known_trader_ids=known_trader_ids)
     dispatcher = TelegramNotificationDispatcher(
         config=config,
         ops_db_path=ops_db_path,
         topic_router=topic_router,
-        sender=_create_sender(config.token),
+        sender=sender,
         debug_status=service.debug_status,
         on_clean_log_sent=dashboard_manager.on_trade_event,
     )
