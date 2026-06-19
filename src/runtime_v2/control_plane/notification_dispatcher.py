@@ -113,6 +113,7 @@ class TelegramNotificationDispatcher:
         poll_interval_seconds: float = 2.0,
         batch_size: int = 50,
         debug_status: Callable[[], bool] | None = None,
+        on_clean_log_sent: Callable[[str, str], object] | None = None,
     ) -> None:
         self._config = config
         self._ops_db = ops_db_path
@@ -121,6 +122,7 @@ class TelegramNotificationDispatcher:
         self._poll = poll_interval_seconds
         self._batch = batch_size
         self._debug_status = debug_status or (lambda: False)
+        self._on_clean_log_sent = on_clean_log_sent
         # TECH_LOG rate limiting state — per-account
         self._tech_log_minute_state: dict[str, dict] = {}
         self._tech_log_rate_limit_warned: bool = False
@@ -525,6 +527,13 @@ class TelegramNotificationDispatcher:
                     )
                     if notification_type == "POSITION_CLOSED":
                         self._try_release_pending_close_full_summaries()
+                    # Notify dashboard manager (if wired) about the trade event
+                    if self._on_clean_log_sent is not None:
+                        account_id_str = account_id or self._config.default_account
+                        trader_id_str = payload.get("trader_id", "")
+                        asyncio.create_task(
+                            self._on_clean_log_sent(account_id_str, trader_id_str)
+                        )
                 self._mark_sent(notification_id)
                 sent += 1
             except Exception as exc:  # noqa: BLE001

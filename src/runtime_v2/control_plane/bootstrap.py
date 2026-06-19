@@ -8,6 +8,7 @@ from src.runtime_v2.control_plane.config import (
     ControlPlaneConfigError,
     load_control_plane_config,
 )
+from src.runtime_v2.control_plane.dashboard_manager import DashboardManager
 from src.runtime_v2.control_plane.debug_controller import DebugModeController
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
 from src.runtime_v2.control_plane.notification_dispatcher import (
@@ -15,6 +16,7 @@ from src.runtime_v2.control_plane.notification_dispatcher import (
     TelegramNotificationDispatcher,
     build_telegram_request,
 )
+from src.runtime_v2.control_plane.scope_resolver import ScopeResolver
 from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.snapshot_store import SnapshotStore
 from src.runtime_v2.control_plane.startup import StartupPlan, resolve_startup
@@ -65,7 +67,22 @@ def build_control_plane(
     auth = AuthValidator(config)
     audit = CommandAuditStore(ops_db_path)
     router = CommandRouter(config=config, auth=auth, audit=audit, service=service)
-    bot = TelegramControlBot(config=config, router=router)
+    scope_resolver = ScopeResolver(config)
+
+    # DashboardManager created before bot — bot wired via set_bot() after creation
+    dashboard_manager = DashboardManager(
+        ops_db_path=ops_db_path,
+        scope_resolver=scope_resolver,
+        queries=service._queries,
+        bot=None,  # wired below after bot creation
+    )
+
+    bot = TelegramControlBot(
+        config=config,
+        router=router,
+        dashboard_manager=dashboard_manager,
+        scope_resolver=scope_resolver,
+    )
     topic_router = TopicRouter(config, known_trader_ids=known_trader_ids)
     dispatcher = TelegramNotificationDispatcher(
         config=config,
@@ -73,6 +90,7 @@ def build_control_plane(
         topic_router=topic_router,
         sender=_create_sender(config.token),
         debug_status=service.debug_status,
+        on_clean_log_sent=dashboard_manager.on_trade_event,
     )
     dispatcher.reset_stale_sending()
 

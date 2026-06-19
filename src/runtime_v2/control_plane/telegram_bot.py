@@ -70,11 +70,12 @@ class _DispatchResult:
 
 
 _READONLY_COMMANDS = frozenset(
-    {"help", "status", "trades", "trade", "health", "control", "reviews", "version"}
+    {"help", "status", "trades", "trade", "health", "control", "reviews", "version", "dashboard"}
 )
 _CONTROL_COMMANDS = frozenset({"pause", "resume", "start", "block", "unblock"})
 _ADVANCED_COMMANDS = frozenset({"pnl", "logs", "debug_on", "debug_off"})
 _ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | _ADVANCED_COMMANDS
+
 
 
 def _parse(command_text: str) -> tuple[str | None, list[str]]:
@@ -329,6 +330,11 @@ class CommandRouter:
             self._service.disable_debug()
             return _DispatchResult(format_debug_off())
 
+        if command_name == "dashboard":
+            # Signal that dashboard should be sent via DashboardManager.create()
+            # in TelegramControlBot._on_command; router marks it valid here.
+            return _DispatchResult("__DASHBOARD__", decision="EXECUTED")
+
         return _DispatchResult("Comando non riconosciuto.", decision="REJECTED")
 
     def _record(
@@ -360,14 +366,23 @@ class CommandRouter:
 class TelegramControlBot:
     """python-telegram-bot wrapper. Thin: delegates all logic to CommandRouter."""
 
-    def __init__(self, *, config: ControlPlaneConfig, router: CommandRouter) -> None:
+    def __init__(
+        self,
+        *,
+        config: ControlPlaneConfig,
+        router: CommandRouter,
+        dashboard_manager=None,  # DashboardManager | None
+        scope_resolver=None,     # ScopeResolver | None
+    ) -> None:
         self._config = config
         self._router = router
+        self._dashboard_manager = dashboard_manager
+        self._scope_resolver = scope_resolver
         self._app = None
         self._keyboard_users: set[int] = set()
 
     def _build_app(self):
-        from telegram.ext import Application, MessageHandler, filters
+        from telegram.ext import Application, CallbackQueryHandler, MessageHandler, filters
 
         app = (
             Application.builder()
@@ -377,6 +392,7 @@ class TelegramControlBot:
         )
         app.add_handler(MessageHandler(filters.COMMAND, self._on_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._on_text_message))
+        app.add_handler(CallbackQueryHandler(self._on_callback_query))
         return app
 
     async def _send_reply_keyboard(
@@ -438,6 +454,17 @@ class TelegramControlBot:
         if result.reply_text is None:
             return
 
+        # Dashboard command: delegate to DashboardManager
+        if result.reply_text == "__DASHBOARD__":
+            if self._dashboard_manager is not None and self._scope_resolver is not None:
+                scope = self._scope_resolver.resolve(message.message_thread_id)
+                await self._dashboard_manager.create(
+                    scope=scope,
+                    chat_id=message.chat_id,
+                    thread_id=message.message_thread_id or 0,
+                )
+            return
+
         command_name, _ = _parse(message.text or "")
         if command_name == "start" and result.decision == "EXECUTED":
             await self._send_reply_keyboard(update, user_id=user.id, force=True)
@@ -455,6 +482,14 @@ class TelegramControlBot:
             )
         except Exception as exc:  # noqa: BLE001
             logger.warning("control plane command reply send failed: %s", exc)
+
+    async def _on_callback_query(self, update, context) -> None:
+        del context
+        query = update.callback_query
+        if query is None or self._dashboard_manager is None:
+            return
+        await query.answer()  # acknowledge immediately
+        await self._dashboard_manager.handle_callback(query, query.data or "noop")
 
     async def run(self) -> None:
         self._app = self._build_app()
