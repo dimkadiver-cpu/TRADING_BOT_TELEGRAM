@@ -2,6 +2,68 @@
 
 ---
 
+## 2026-06-19 — Fix mirato: lentezza notifiche/comandi (root-link spin)
+
+### Diagnosi
+
+Lentezza in notifiche e risposte ai comandi causata dal commit `7ce699f` ("open prima del
+signal / chain 32"): in `drain_once`, un evento CLEAN_LOG figlio il cui signal root non ha
+ancora un `message_id` veniva `_requeue_pending` **senza scadenza** → spin ogni 2s
+all'infinito quando il root non si risolve (timeout/rifiuto). Ogni giro = lock di scrittura
+su `ops.sqlite3` (journal `delete`, non WAL), su event loop singolo condiviso → freeze del
+loop → timeout HTTP (22 notifiche FAILED "Timed out" nel DB server).
+
+Amplificatori (Fase 2, non in questo step): `ops.sqlite3` non in WAL + I/O sqlite bloccante
+sul loop. Doc design: `docs/superpowers/specs/2026-06-19-notification-outbox-order-deps-design.md`.
+
+### Step completato — fix mirato (Fase 1, task 1)
+
+Attesa del root ora **limitata da deadline** (`_ROOT_WAIT_SECONDS = 45s`): scaduta la
+finestra (o se il root è FAILED), l'evento parte **best-effort senza link** + WARNING in
+TECH_LOG (`CLEAN_LOG_ROOT_MISSING`, dedupe per chain). Mai più spin infinito.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/notification_dispatcher.py` | Modificato | `_ROOT_WAIT_SECONDS`; `_claim_pending` seleziona `created_at`; helper `_root_wait_expired` + `_emit_root_missing_tech_log`; deadline escape nel root-missing branch |
+| `tests/runtime_v2/control_plane/test_dispatcher.py` | Modificato | +2 test (deadline → best-effort+TECH_LOG; entro deadline → attende) |
+
+### Validazione
+
+- TDD red→green sui 2 nuovi test.
+- `tests/runtime_v2/control_plane/`: **390 passed** (nessuna regressione).
+- Primary signal: lo spin infinito è eliminato (verificato dai test); riduzione latenza
+  end-to-end sul server da confermare con deploy.
+
+### Rischi aperti
+
+- MULTI_CHAIN_SUMMARY e aggregazione update multipli: invariati (Opzione A).
+
+### Step completato — Fase 2: robustezza (amplificatore)
+
+- **WAL su ops.sqlite3** via migration `db/ops_migrations/017_ops_enable_wal.sql`
+  (`PRAGMA journal_mode=WAL`, persistente, auto-applicata al boot). Rimuove il lock
+  sull'intero DB tra reader/writer che congelava l'event loop. Si attiva automaticamente
+  sul DB live al prossimo avvio.
+- **`route()` fuori dall'event loop**: `telegram_bot._on_command` ora chiama
+  `asyncio.to_thread(self._router.route, ...)` → l'I/O SQLite bloccante dei comandi non
+  congela più polling/dispatcher/altri invii.
+
+File: `db/ops_migrations/017_ops_enable_wal.sql` (nuovo),
+`tests/runtime_v2/control_plane/test_ops_db_wal.py` (nuovo),
+`src/runtime_v2/control_plane/telegram_bot.py` (modificato).
+Validazione: TDD WAL red→green; suite control_plane verde.
+
+### Follow-up residui
+
+- Fase 1 completa (ordine via `notification_id` + `depends_on` generico): da spec, non ancora
+  implementata. Opzionale `synchronous=NORMAL`/`connect_ops` helper: marginale.
+- Dispatcher: valutare se incapsulare le sequenze DB di `drain_once` in `to_thread`
+  (sotto WAL i freeze sono già fortemente ridotti — misurare prima).
+
+---
+
 ## 2026-06-19 — Piano 3: Dashboard inline (design + piano scritto)
 
 ### Step completato

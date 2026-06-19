@@ -423,7 +423,11 @@ class TelegramControlBot:
         user = update.effective_user
         if message is None or user is None:
             return
-        result = self._router.route(
+        # route() is synchronous and performs blocking SQLite I/O (audit + queries).
+        # Run it off the event loop so a slow/locked DB cannot freeze polling, the
+        # notification dispatcher, or other concurrent sends sharing this loop.
+        result = await asyncio.to_thread(
+            self._router.route,
             command_text=message.text or "",
             message_id=message.message_id,
             chat_id=message.chat_id,

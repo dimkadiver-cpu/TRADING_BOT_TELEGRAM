@@ -737,6 +737,80 @@ async def test_non_signal_clean_log_sends_without_link_when_signal_root_failed(o
 
 
 @pytest.mark.asyncio
+async def test_non_signal_clean_log_sends_without_link_after_root_wait_deadline(ops_db):
+    # ENTRY_OPENED arrived before the SIGNAL root and the root never materialized
+    # (no SIGNAL row at all). After ROOT_WAIT_SECONDS the event must be sent
+    # best-effort (no link) and a TECH_LOG warning must be emitted — never spin forever.
+    conn = sqlite3.connect(ops_db)
+    old = (datetime.now(timezone.utc) - timedelta(seconds=120)).isoformat()
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_notification_outbox "
+            "(notification_type, destination, payload_json, priority, status, "
+            "dedupe_key, attempts, created_at, chain_id) "
+            "VALUES ('ENTRY_OPENED', 'CLEAN_LOG', ?, 'MEDIUM', 'PENDING', "
+            "'clean:entry:50', 0, ?, 50)",
+            (
+                json.dumps({
+                    "chain_id": 50, "symbol": "XAUTUSDT", "side": "LONG",
+                    "fill_price": 4139.6, "filled_qty": 4.807, "fee": 0.01,
+                }),
+                old,
+            ),
+        )
+    conn.close()
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+
+    sent = await disp.drain_once()
+
+    assert sent == 1
+    assert len(sender.sent) == 1
+    assert sender.sent[0]["text"].splitlines()[0] == "📊 #50 — ENTRY OPENED"
+    assert "t.me/c/" not in sender.sent[0]["text"]
+
+    conn = sqlite3.connect(ops_db)
+    tech_rows = conn.execute(
+        "SELECT notification_type FROM ops_notification_outbox WHERE destination='TECH_LOG'"
+    ).fetchall()
+    conn.close()
+    assert any(r[0] == "CLEAN_LOG_ROOT_MISSING" for r in tech_rows)
+
+
+@pytest.mark.asyncio
+async def test_non_signal_clean_log_still_waits_within_root_wait_deadline(ops_db):
+    # Within the deadline and with no failed root, the event must keep waiting
+    # (not sent yet), exactly as before.
+    conn = sqlite3.connect(ops_db)
+    fresh = datetime.now(timezone.utc).isoformat()
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_notification_outbox "
+            "(notification_type, destination, payload_json, priority, status, "
+            "dedupe_key, attempts, created_at, chain_id) "
+            "VALUES ('ENTRY_OPENED', 'CLEAN_LOG', ?, 'MEDIUM', 'PENDING', "
+            "'clean:entry:51', 0, ?, 51)",
+            (
+                json.dumps({
+                    "chain_id": 51, "symbol": "XAUTUSDT", "side": "LONG",
+                    "fill_price": 4139.6, "filled_qty": 4.807, "fee": 0.01,
+                }),
+                fresh,
+            ),
+        )
+    conn.close()
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+
+    sent = await disp.drain_once()
+
+    assert sent == 0
+    assert sender.sent == []
+
+
+@pytest.mark.asyncio
 async def test_update_done_uses_signal_link_but_not_telegram_reply(ops_db):
     sender = FakeSender()
     disp = _dispatcher(ops_db, sender)
