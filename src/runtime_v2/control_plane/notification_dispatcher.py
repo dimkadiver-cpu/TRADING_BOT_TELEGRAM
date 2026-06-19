@@ -21,6 +21,9 @@ logger = logging.getLogger(__name__)
 _MAX_ATTEMPTS = 3
 _SEND_TIMEOUT_SECONDS = 8.0
 _FAILURE_BACKOFF_SECONDS = (15, 60)
+# Max time a non-signal CLEAN_LOG event waits for its chain's signal root before being
+# sent best-effort (no link) — bounds the wait so it can never spin forever.
+_ROOT_WAIT_SECONDS = 45.0
 
 
 class NotificationSender(Protocol):
@@ -110,7 +113,7 @@ class TelegramNotificationDispatcher:
             rows = conn.execute(
                 """
                 SELECT notification_id, notification_type, destination, payload_json, attempts,
-                       account_id
+                       account_id, created_at
                 FROM ops_notification_outbox
                 WHERE status='PENDING'
                   AND (send_after IS NULL OR send_after <= ?)
@@ -357,6 +360,44 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
+    def _root_wait_expired(self, created_at: str | None) -> bool:
+        """True if the row has waited longer than _ROOT_WAIT_SECONDS for its signal root."""
+        if not created_at:
+            return True
+        try:
+            created = datetime.fromisoformat(created_at)
+        except ValueError:
+            return True
+        return (datetime.now(timezone.utc) - created).total_seconds() >= _ROOT_WAIT_SECONDS
+
+    def _emit_root_missing_tech_log(
+        self, chain_id: int, notification_type: str, account_id: str | None
+    ) -> None:
+        """Warn in TECH_LOG that a clean-log event was sent without its signal root link."""
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            with conn:
+                write_tech_log_event(
+                    conn,
+                    notification_type="CLEAN_LOG_ROOT_MISSING",
+                    payload={
+                        "level": "WARNING",
+                        "description": "Evento clean-log inviato senza link: signal root mancante.",
+                        "chain_id": chain_id,
+                        "event_type": notification_type,
+                        "source": "notification_dispatcher",
+                    },
+                    dedupe_key=f"clean_root_missing:{chain_id}",
+                    priority="MEDIUM",
+                    account_id=account_id,
+                )
+        except Exception:
+            logger.exception("emit CLEAN_LOG_ROOT_MISSING tech log failed | chain_id=%s", chain_id)
+        finally:
+            conn.close()
+
     def _render(self, destination: str, notification_type: str, payload: dict) -> str:
         if destination == "CLEAN_LOG":
             return format_clean_log(notification_type, payload)
@@ -382,7 +423,7 @@ class TelegramNotificationDispatcher:
         self._try_release_pending_close_full_summaries()
         rows = self._claim_pending()
         sent = 0
-        for notification_id, notification_type, destination, payload_json, attempts, account_id in rows:
+        for notification_id, notification_type, destination, payload_json, attempts, account_id, created_at in rows:
             try:
                 payload = json.loads(payload_json or "{}")
             except Exception:
@@ -414,13 +455,14 @@ class TelegramNotificationDispatcher:
                     if chain_id is not None:
                         root_msg_id, tracking_chat_id, pinned_thread_id = self._get_clean_log_root(chain_id)
                         if root_msg_id is None:
-                            if self._has_failed_signal_root(chain_id):
+                            if self._has_failed_signal_root(chain_id) or self._root_wait_expired(created_at):
                                 logger.warning(
-                                    "clean log root missing after failed signal notification; "
-                                    "sending without signal link | notification_id=%s chain_id=%s",
+                                    "clean log root missing; sending without signal link "
+                                    "| notification_id=%s chain_id=%s",
                                     notification_id,
                                     chain_id,
                                 )
+                                self._emit_root_missing_tech_log(chain_id, notification_type, account_id)
                             else:
                                 self._requeue_pending(notification_id)
                                 continue
