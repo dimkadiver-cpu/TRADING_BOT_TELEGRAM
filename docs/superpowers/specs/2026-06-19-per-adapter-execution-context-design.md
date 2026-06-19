@@ -1,7 +1,7 @@
 # Design: Contesto di esecuzione per-adapter (Opzione A)
 
 **Data:** 2026-06-19
-**Stato:** design — in attesa di approvazione
+**Stato:** design approvato — decisioni chiuse, pronto per il piano
 **Supersede:** `2026-06-19-event-loop-offload-blocking-workers-design.md` (bozza tattica di offload)
 **Topic:** isolare tutto il lavoro REST bloccante (ccxt) in un contesto per-adapter, tenendo
 l'event loop libero; modello che assorbe i worker attuali e quelli futuri (price-follow).
@@ -70,22 +70,25 @@ Responsabilità:
 - **SQLite**: i worker aprono connessioni **per-chiamata** → ogni connessione vive nel thread del
   contesto. Nessun oggetto SQLite condiviso fra loop e thread. (WAL già attivo: scritture rapide.)
 - **WS watcher**: client `ccxt.pro` **separato** (api_key proprie) → nessun conflitto col client
-  REST del contesto. Il `reconciliation_callback` del WS **accoda** un job al contesto
-  (`context.submit(...)`), non esegue REST sul loop.
+  REST del contesto. La `reconciliation_callback` passata al `BybitWsFillWatcher` cambia da
+  `sync_worker.run_reconciliation` (chiamata diretta dal thread WS) a
+  `lambda: context.submit(sync_worker.run_reconciliation)` — il job viene accodato al contesto,
+  non eseguito sul thread WS né sul loop.
 
 ### 3.3 Cadenze e consolidamento worker
 I worker attuali diventano **tick/job dentro il contesto**, eliminando le ridondanze:
 
 | Oggi | Domani (nel contesto per-adapter) |
 |---|---|
-| `_run_sync_worker.run_once` (8s) **+** `_run_reconciliation_periodically` (60s), entrambi = `run_reconciliation` | **un solo** tick `reconciliation` a cadenza unica (default 8s) — elimina il doppione |
+| `_run_sync_worker.run_once` (8s, hard-coded) **+** `_run_reconciliation_periodically` (`poll_fallback_period_seconds`, default 60s) — entrambi chiamano `run_reconciliation` | **eliminati entrambi**; sostituiti da un solo tick `reconciliation` interno al contesto, attivo solo se `poll_fallback_enabled=True`, alla cadenza `poll_fallback_period_seconds` (default 60s) |
+| WS `reconciliation_callback` → chiamata diretta da thread WS | `lambda: context.submit(sync_worker.run_reconciliation)` — accodato al contesto, mai diretto |
 | `_run_position_reconciliation_periodically` → `run_position_reconciliation` + `run_trade_based_reconciliation` + `run_protective_orders_reconciliation` (≈600s) | tick `position_reconciliation` (≈600s) che esegue i tre in sequenza, nel thread |
-| `execution_worker.run_once` (command, event-driven, nel lifecycle loop) | job `process_commands` accodato quando arrivano comandi (o tick breve) |
-| WS `reconciliation_callback` | job accodato al contesto |
+| `execution_worker.run_once` (command, nel lifecycle loop, event-driven + timeout 10s) | **invariato nel lifecycle loop** — il loop riceve il wakeup via `call_soon_threadsafe` dal contesto; il command worker resta condiviso e non per-adapter (Opzione A: zero modifiche a command_worker/repo) |
 | **futuro** price-follow / cancel-stale | nuovo tick `price_follow` (~1–2s) nel contesto — legge prezzo via REST e valuta trailing / chiusura ordini pendenti non filati |
 
-Cadenze configurabili per adapter (riuso dei valori già in `execution.yaml`:
-`poll_fallback_period_seconds`, `position_reconciliation_interval_seconds`).
+Cadenze configurabili per adapter via `execution.yaml` (campi già esistenti):
+- `poll_fallback_enabled` / `poll_fallback_period_seconds` → tick reconciliation
+- `position_reconciliation_interval_seconds` → tick position_reconciliation
 
 ---
 
@@ -116,11 +119,11 @@ Mapping necessari: `adapter_name → AdapterExecutionContext` e `account_id → 
 
 | File | Modifica |
 |---|---|
-| `src/runtime_v2/execution_gateway/adapter_context.py` *(nuovo)* | `AdapterExecutionContext`: thread, coda job, tick periodici, submit, shutdown, wakeup thread-safe |
-| `main_linux_server.py` | costruzione contesti per adapter; rimozione coroutine bloccanti; enqueue command/WS-recon; shutdown |
-| `event_sync.py` / `command_worker.py` | **invariati nella logica**; vengono solo *invocati* dal contesto invece che dal loop (eventuale piccolo adattamento di firma se serve raggruppare i comandi per adapter) |
+| `src/runtime_v2/execution_gateway/adapter_context.py` *(nuovo)* | `AdapterExecutionContext`: thread, coda job, tick `reconciliation` (se `poll_fallback_enabled`) e `position_reconciliation`, submit, shutdown, wakeup thread-safe |
+| `main_linux_server.py` | costruzione contesti per adapter; rimozione `_run_sync_worker` e `_run_reconciliation_periodically`; `_run_position_reconciliation_periodically` → tick interno; `reconciliation_callback` del WS da chiamata diretta a `lambda: context.submit(...)`; shutdown con `join()` dei thread |
+| `event_sync.py` / `command_worker.py` | **invariati** — logica, firma, DB query invariate |
 
-Nessuna migration, nessuno schema, nessun cambiamento al control plane o al WS watcher.
+Nessuna migration, nessuno schema, nessun cambiamento al control plane.
 
 ---
 
@@ -167,9 +170,14 @@ Nessuna migration, nessuno schema, nessun cambiamento al control plane o al WS w
 
 ---
 
-## 10. Decisioni aperte per il piano
-1. **Scheduler dei tick**: timer interni al thread del contesto (preferito) vs coroutine asyncio
-   che accodano i tick. Preferenza: timer interni → zero lavoro periodico sul loop.
-2. **Command worker**: enqueue per-account con raggruppamento dei comandi per adapter — verificare
-   `get_pending_batch`/`gateway.process` per la firma esatta.
-3. **Cadenza unica reconciliation**: valore di default (8s) e se renderlo per-adapter da config.
+## 10. Decisioni — chiuse
+
+1. **Scheduler dei tick**: timer interni al thread del contesto ✅ — zero lavoro periodico sul loop.
+2. **Command worker**: resta condiviso nel lifecycle loop (Opzione A) ✅ — zero modifiche a
+   `command_worker.py` e `repositories.py`; il wakeup event-driven arriva via
+   `call_soon_threadsafe` dai contesti per-adapter; il fallback 10s è già garantito dal
+   `asyncio.wait_for(..., timeout=10.0)` esistente in `_run_lifecycle_workers`.
+3. **Cadenza reconciliation**: usa i campi config esistenti `poll_fallback_enabled` +
+   `poll_fallback_period_seconds` (default 60s) ✅ — `_run_sync_worker` a 8s hard-coded
+   eliminato; campo `poll_fallback_period_seconds` riutilizzato come cadenza unica del tick
+   interno al contesto.
