@@ -51,66 +51,54 @@
 
 ---
 
-## Task 0: Pre-flight — JSON schema di `management_plan_json` / `plan_state_json`
+## Task 0: Pre-flight — verifica colonne DB per Chiusi e Bloccati
 
 **Files:** nessuno (solo verifica)
 
-Le viste Attivi con entry/TP per leg dipendono dal parsing di questi campi JSON. Prima di implementare Task 3, ispezionare la struttura effettiva.
+La struttura JSON dei campi di piano è già nota dal codice (`ExecutionPlanBuilder.build()` in `src/runtime_v2/lifecycle/execution_plan.py`):
 
-- [ ] **Step 1: Dump un esempio reale da DB**
+- **`plan_state_json`** — struttura runtime del piano:
+  ```json
+  {
+    "legs": [{"price": 63500.0, "status": "PENDING|FILLED|CANCELLED", "sequence": 1, ...}],
+    "stop_loss": 62000.0,
+    "final_tp": 65000.0,
+    "intermediate_tps": [64000.0, 64500.0]
+  }
+  ```
+  Entry legs → `plan["legs"]`, ognuna con `price` e `status`.
+  TP → `plan["intermediate_tps"]` + `plan["final_tp"]` come prezzi flat **senza status individuale**.
 
-```python
-# scripts/inspect_plan_json.py
-import sqlite3, sys, json, pprint
-conn = sqlite3.connect(sys.argv[1])
-rows = conn.execute(
-    "SELECT trade_chain_id, symbol, management_plan_json, plan_state_json "
-    "FROM ops_trade_chains WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED') LIMIT 3"
-).fetchall()
-for r in rows:
-    print(f"\n=== chain {r[0]} {r[1]} ===")
-    if r[2]: pprint.pprint(json.loads(r[2]))
-    print("--- plan_state ---")
-    if r[3]: pprint.pprint(json.loads(r[3]))
-conn.close()
+- **`management_plan_json`** — serializzato da `ManagementPlanConfig`: solo `be_trigger` e `be_fee_correction_enabled`. **Non contiene entry né TP.** Non usato in questo piano.
+
+Task 0 verifica solo le colonne DB opzionali per Chiusi e Bloccati.
+
+- [ ] **Step 1: Verificare colonne `ops_trade_chains`**
+
+```bash
+python -c "
+import sqlite3
+conn = sqlite3.connect('path/to/ops.db')
+cols = [r[1] for r in conn.execute('PRAGMA table_info(ops_trade_chains)').fetchall()]
+print(cols)
+"
 ```
 
-Run: `python scripts/inspect_plan_json.py path/to/ops.db`
+Cercare: `closed_at`, `cumulative_gross_pnl`, `cumulative_fees`, `cumulative_funding`, `review_reason`.
 
-- [ ] **Step 2: Documentare i path JSON usati in Task 3**
+Se `closed_at` è assente, la query Chiusi usa `updated_at` come fallback (già gestito in Task 2 con PRAGMA runtime). Se `cumulative_gross_pnl` è assente, il PnL chiusi mostra `NULL` (già gestito).
 
-Cercare in `management_plan_json`:
-- Struttura entry legs: lista di price + qty
-- Struttura TP legs: lista di price
-- Stop price: già coperto da `_extract_stop_price()`
+- [ ] **Step 2: Verificare stato `EXEC_FAILED`**
 
-Cercare in `plan_state_json`:
-- Fill status per ogni entry leg: es. `"filled"`, `"cancelled"`, `"pending"`
-- Fill status per ogni TP leg
-
-Annotare i path esatti (es. `data["entries"][0]["price"]`, `data["state"]["entries"][0]["status"]`) e usarli in `_parse_entry_legs()` / `_parse_tp_legs()` in Task 3.
-
-- [ ] **Step 3: Verifica colonne per Chiusi e Bloccati**
-
-```python
-# In inspect_plan_json.py, aggiungere:
-closed = conn.execute(
-    "SELECT trade_chain_id, symbol, closed_at, created_at, "
-    "cumulative_gross_pnl, cumulative_fees, cumulative_funding, "
-    "source_chat_id, telegram_message_id "
-    "FROM ops_trade_chains WHERE lifecycle_state='CLOSED' LIMIT 3"
-).fetchall()
-print("\nClosed trades:", closed)
-
-blocked = conn.execute(
-    "SELECT trade_chain_id, symbol, lifecycle_state, review_reason, "
-    "updated_at, source_chat_id, telegram_message_id "
-    "FROM ops_trade_chains WHERE lifecycle_state IN ('REVIEW_REQUIRED','EXEC_FAILED') LIMIT 3"
-).fetchall()
-print("\nBlocked trades:", blocked)
+```bash
+python -c "
+import sqlite3
+conn = sqlite3.connect('path/to/ops.db')
+print(conn.execute('SELECT DISTINCT lifecycle_state FROM ops_trade_chains').fetchall())
+"
 ```
 
-Confermare: `closed_at` (o alternativa), `review_reason` (o da `ops_lifecycle_events`), `EXEC_FAILED` come stato valido.
+Se `EXEC_FAILED` non compare tra gli stati presenti, ridurre `_BLOCKED_STATES` in Task 2 a `("REVIEW_REQUIRED",)` e omettere il ramo EXEC_FAILED nel formatter.
 
 ---
 
@@ -179,11 +167,7 @@ Nota: `get_stats()` e `get_pnl()` dalla Piano 1 sono riusati direttamente per le
 class EntryLeg:
     price: str
     status: str  # "filled" | "cancelled" | "pending"
-
-@dataclass
-class TpLeg:
-    price: str
-    status: str  # "filled" | "cancelled" | "pending"
+    # Mappa da plan_state_json["legs"][i]["status"]: FILLED→filled, CANCELLED→cancelled, PENDING→pending
 
 @dataclass
 class DashboardTradeRow:
@@ -194,7 +178,7 @@ class DashboardTradeRow:
     trader_id: str
     account_id: str
     entry_legs: list[EntryLeg]
-    tp_legs: list[TpLeg]
+    tp_prices: list[str]   # prezzi flat da intermediate_tps + final_tp; nessun status per TP
     sl_price: str | None
     has_be: bool
     pnl: float | None
@@ -240,54 +224,56 @@ class DashboardPnlView:
     snapshot_age_seconds: float | None  # None = no snapshot, >120 = stale
 ```
 
-- [ ] **Step 2: Aggiungere helper `_parse_entry_legs` e `_parse_tp_legs`**
-
-Questi helper devono usare i path JSON identificati in Task 0.
+- [ ] **Step 2: Aggiungere helper `_parse_entry_legs` e `_parse_tp_prices`**
 
 ```python
-def _parse_entry_legs(management_json: str | None, state_json: str | None) -> list[EntryLeg]:
-    """Estrae entry legs da management_plan_json + fill status da plan_state_json.
-    
-    ATTENZIONE: i path JSON vanno confermati in Task 0.
-    Struttura attesa (da confermare):
-      management_plan_json: {"entries": [{"price": "63500", ...}, ...]}
-      plan_state_json: {"entries": [{"status": "filled"|"cancelled"|"pending"}, ...]}
+def _fmt_price(raw) -> str:
+    """Converti prezzo float in stringa senza decimali inutili (63500.0 → '63500')."""
+    if raw is None:
+        return ""
+    try:
+        f = float(raw)
+        return str(int(f)) if f == int(f) else str(f)
+    except Exception:
+        return str(raw)
+
+
+def _parse_entry_legs(plan_state_json: str | None) -> list[EntryLeg]:
+    """Estrae entry legs da plan_state_json["legs"].
+
+    Struttura da ExecutionPlanBuilder (src/runtime_v2/lifecycle/execution_plan.py):
+      {"legs": [{"price": 63500.0, "status": "PENDING"|"FILLED"|"CANCELLED", ...}]}
+    management_plan_json non viene usato — contiene solo config BE.
     """
-    if not management_json:
+    if not plan_state_json:
         return []
     try:
-        plan = json.loads(management_json)
-        state = json.loads(state_json) if state_json else {}
-        entries = plan.get("entries") or []
-        state_entries = (state.get("entries") or [])
+        plan = json.loads(plan_state_json)
         legs = []
-        for i, e in enumerate(entries):
-            price = str(e.get("price", ""))
-            status = "pending"
-            if i < len(state_entries):
-                status = state_entries[i].get("status", "pending")
+        for leg in sorted(plan.get("legs") or [], key=lambda l: l.get("sequence", 0)):
+            price = _fmt_price(leg.get("price"))
+            raw_status = (leg.get("status") or "PENDING").upper()
+            status = "filled" if raw_status == "FILLED" else "cancelled" if raw_status == "CANCELLED" else "pending"
             legs.append(EntryLeg(price=price, status=status))
         return legs
     except Exception:
         return []
 
 
-def _parse_tp_legs(management_json: str | None, state_json: str | None) -> list[TpLeg]:
-    if not management_json:
+def _parse_tp_prices(plan_state_json: str | None) -> list[str]:
+    """Estrae prezzi TP da plan_state_json come lista flat (nessun status per singolo TP).
+
+    Ritorna intermediate_tps (ordinati) + final_tp in coda.
+    """
+    if not plan_state_json:
         return []
     try:
-        plan = json.loads(management_json)
-        state = json.loads(state_json) if state_json else {}
-        tps = plan.get("take_profits") or plan.get("tps") or []
-        state_tps = (state.get("take_profits") or state.get("tps") or [])
-        legs = []
-        for i, tp in enumerate(tps):
-            price = str(tp.get("price", ""))
-            status = "pending"
-            if i < len(state_tps):
-                status = state_tps[i].get("status", "pending")
-            legs.append(TpLeg(price=price, status=status))
-        return legs
+        plan = json.loads(plan_state_json)
+        prices = [_fmt_price(p) for p in (plan.get("intermediate_tps") or []) if p is not None]
+        final = plan.get("final_tp")
+        if final is not None:
+            prices.append(_fmt_price(final))
+        return prices
     except Exception:
         return []
 ```
@@ -324,13 +310,13 @@ def get_trades_attivi(
 
     result = []
     for r in rows:
-        entry_legs = _parse_entry_legs(r[6], r[7])
-        tp_legs = _parse_tp_legs(r[6], r[7])
+        entry_legs = _parse_entry_legs(r[7])       # solo plan_state_json
+        tp_prices = _parse_tp_prices(r[7])          # flat prices, nessun status per TP
         signal_link = _build_telegram_message_link(r[10], r[11])
         result.append(DashboardTradeRow(
             chain_id=r[0], symbol=r[1], side=r[2], state=r[3],
             trader_id=r[4] or "", account_id=r[5] or "",
-            entry_legs=entry_legs, tp_legs=tp_legs,
+            entry_legs=entry_legs, tp_prices=tp_prices,
             sl_price=str(r[8]) if r[8] is not None else None,
             has_be=r[9] == "PROTECTED",
             pnl=None,  # PnL unrealizzato non disponibile in questo schema — None
@@ -546,17 +532,16 @@ def _attivi_trade_renderer(trade: dict, idx: int, payload: dict) -> list[str]:
     trader_tag = f"  [{trade['trader_id']}]" if payload.get("show_trader") and trade.get("trader_id") else ""
     lines = [f"#{trade['chain_id']}  {symbol}  {side}  {state}{trader_tag}"]
 
-    # Entry legs
+    # Entry legs (con status ✓/✗ — dati da plan_state_json["legs"])
     if trade.get("entry_legs"):
         entry_parts = [_fmt_price_leg(l["price"], l["status"]) for l in trade["entry_legs"]]
         if trade["state"] == "WAITING_ENTRY" and all(l["status"] == "pending" for l in trade["entry_legs"]):
             lines.append("    In attesa di riempimento")
         else:
             lines.append(f"    Entry: {' · '.join(entry_parts)}")
-    # TP legs
-    if trade.get("tp_legs"):
-        tp_parts = [_fmt_price_leg(l["price"], l["status"]) for l in trade["tp_legs"]]
-        lines.append(f"    TP: {' · '.join(tp_parts)}")
+    # TP prices (flat — plan_state_json non ha status per singolo TP)
+    if trade.get("tp_prices"):
+        lines.append(f"    TP: {' · '.join(trade['tp_prices'])}")
     # SL e BE
     sl_str = f"SL: {trade['sl_price']}" if trade.get("sl_price") else ""
     be_str = "BE: ✓" if trade.get("has_be") else ""
@@ -842,16 +827,16 @@ def test_attivi_with_trade():
     payload = {**_base_payload("attivi"), "total": 1, "trades": [{
         "chain_id": 5, "symbol": "BTC/USDT", "side": "LONG", "state": "OPEN",
         "trader_id": "trader_a",
-        "entry_legs": [{"price": "63,500", "status": "filled"}, {"price": "63,200", "status": "cancelled"}],
-        "tp_legs": [{"price": "64,000", "status": "filled"}, {"price": "65,200", "status": "pending"}],
-        "sl_price": "62,000", "has_be": True, "pnl": 34.20,
-        "signal_link": "https://t.me/c/123/316/987",
+        "entry_legs": [{"price": "63500", "status": "filled"}, {"price": "63200", "status": "cancelled"}],
+        "tp_prices": ["64000", "65200", "66500"],   # flat — nessun status
+        "sl_price": "62000", "has_be": True, "pnl": 34.20,
+        "signal_link": "https://t.me/c/123/987",
     }]}
     result = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
     assert "#5" in result
-    assert "63,500✓" in result
-    assert "63,200✗" in result
-    assert "64,000✓" in result
+    assert "63500✓" in result
+    assert "63200✗" in result
+    assert "64000 · 65200 · 66500" in result   # prezzi flat, nessun simbolo TP
     assert "BE: ✓" in result
     assert "+34.20" in result
 
@@ -861,8 +846,8 @@ def test_attivi_waiting_entry():
     payload = {**_base_payload("attivi"), "total": 1, "trades": [{
         "chain_id": 9, "symbol": "SOL/USDT", "side": "LONG", "state": "WAITING_ENTRY",
         "trader_id": "trader_a",
-        "entry_legs": [{"price": "148.50", "status": "pending"}, {"price": "147.00", "status": "pending"}],
-        "tp_legs": [], "sl_price": "143.00", "has_be": False, "pnl": None,
+        "entry_legs": [{"price": "148", "status": "pending"}, {"price": "147", "status": "pending"}],
+        "tp_prices": ["155", "160"], "sl_price": "143", "has_be": False, "pnl": None,
         "signal_link": None,
     }]}
     result = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
@@ -1016,7 +1001,7 @@ def format_dashboard_view(
                     "side": t.side, "state": t.state,
                     "trader_id": t.trader_id,
                     "entry_legs": [{"price": l.price, "status": l.status} for l in t.entry_legs],
-                    "tp_legs": [{"price": l.price, "status": l.status} for l in t.tp_legs],
+                    "tp_prices": t.tp_prices,
                     "sl_price": t.sl_price, "has_be": t.has_be,
                     "pnl": t.pnl, "signal_link": t.signal_link,
                 }
@@ -1614,62 +1599,86 @@ def __init__(
 ) -> None:
 ```
 
-- [ ] **Step 2: Aggiornare `/dashboard` in `telegram_bot.py` (rimuovere placeholder)**
+- [ ] **Step 2: Aggiornare `RouteResult` e `/dashboard` in `telegram_bot.py`**
 
-In `_dispatch()`, sostituire il placeholder:
+`route()` e `_dispatch()` restano **sincroni** — nessuna modifica alle loro firme.
+
+**2a. Estendere `RouteResult`** con due campi opzionali per passare il scope a `_on_command()`:
+
+```python
+@dataclass
+class RouteResult:
+    decision: str
+    reply_text: str | None
+    dashboard_scope: "QueryScope | None" = None       # populate solo se decision=="DASHBOARD"
+    dashboard_scope_label: str | None = None
+```
+
+**2b. `_dispatch()` per `/dashboard`** — ritorna decision `"DASHBOARD"` senza await:
 
 ```python
 if command_name == "dashboard":
-    if self._dashboard_manager is None:
-        return _DispatchResult("🚧 Dashboard non disponibile.")
-    # auth.topic == "clean_log" → route già filtrato in route() (solo "dashboard" consentito)
-    scope = kwargs.get("scope") or scope  # scope già risolto
-    scope_label = _scope_label(scope)
-    # Gestire invio in modo async — il CommandRouter è sincrono.
-    # Soluzionia: eseguire la coroutine nel loop corrente (già in context PTB).
-    # Il router è chiamato da _on_command (async), quindi asyncio loop è attivo.
-    import asyncio
-    message_id = asyncio.get_event_loop().run_until_complete(
-        self._dashboard_manager.create_or_update(
-            chat_id=kwargs["chat_id"],
-            thread_id=kwargs["thread_id"] or 0,
-            scope=scope,
-            scope_label=scope_label,
-        )
+    return _DispatchResult(reply_text=None, decision="DASHBOARD")
+```
+
+**2c. `route()`** — propaga scope nel `RouteResult` quando decision è `"DASHBOARD"`:
+
+Il scope è già calcolato in `route()` (da `ScopeResolver`) prima di chiamare `_dispatch()`. Usarlo direttamente:
+
+```python
+# In route(), dopo dispatch_result = self._dispatch(...)
+if dispatch_result.decision == "DASHBOARD":
+    return RouteResult(
+        "DASHBOARD", None,
+        dashboard_scope=scope,
+        dashboard_scope_label=_scope_label(scope),
     )
-    return _DispatchResult(f"Dashboard creato (msg #{message_id}).", reply_text_override=None)
+return RouteResult(dispatch_result.decision, dispatch_result.reply_text)
 ```
 
-**Nota importante:** Il `CommandRouter._dispatch()` è sincrono, ma `/dashboard` richiede `await`. Opzioni:
-1. **Opzione A (raccomandata):** rendere `_dispatch()` e `route()` async — modifica più pulita, allinea il pattern a PTB.
-2. **Opzione B:** passare un `asyncio.Queue` e fare il send fuori dal router.
-
-**Usa Opzione A.** Aggiornare firme:
+**2d. `_on_command()`** — gestisce l'await qui, dopo la chiamata sincrona a `route()`:
 
 ```python
-async def route(self, *, command_text, message_id, chat_id, thread_id, user_id, username) -> RouteResult:
-    ...
-    dispatch_result = await self._dispatch(command_name, args, scope=scope, created_by=str(user_id), chat_id=chat_id, thread_id=thread_id)
-
-async def _dispatch(self, command_name, args, *, scope, created_by, chat_id=0, thread_id=0) -> _DispatchResult:
-```
-
-E in `TelegramControlBot._on_command()`:
-```python
-result = await self._router.route(...)
-```
-
-Aggiornare `/dashboard` in `_dispatch()`:
-```python
-if command_name == "dashboard":
-    if self._dashboard_manager is None:
-        return _DispatchResult("🚧 Dashboard non disponibile.")
-    scope_label = _scope_label(scope)
-    await self._dashboard_manager.create_or_update(
-        chat_id=chat_id, thread_id=thread_id or 0,
-        scope=scope, scope_label=scope_label,
+async def _on_command(self, update, context) -> None:
+    message = update.effective_message
+    user = update.effective_user
+    if message is None or user is None:
+        return
+    result = self._router.route(       # sync — invariato
+        command_text=message.text or "",
+        message_id=message.message_id,
+        chat_id=message.chat_id,
+        thread_id=message.message_thread_id,
+        user_id=user.id,
+        username=user.username,
     )
-    return _DispatchResult(None)  # reply_text=None → nessun messaggio aggiuntivo
+
+    if result.decision == "DASHBOARD":
+        if self._dashboard_manager is not None:
+            await self._dashboard_manager.create_or_update(
+                chat_id=message.chat_id,
+                thread_id=message.message_thread_id or 0,
+                scope=result.dashboard_scope,
+                scope_label=result.dashboard_scope_label,
+            )
+        return
+
+    if result.reply_text is None:
+        return
+
+    # ... resto invariato (start keyboard, send_message)
+```
+
+`_dashboard_manager` viene aggiunto a `TelegramControlBot.__init__`:
+
+```python
+class TelegramControlBot:
+    def __init__(self, *, config, router, dashboard_manager=None) -> None:
+        self._config = config
+        self._router = router
+        self._dashboard_manager = dashboard_manager
+        self._app = None
+        self._keyboard_users: set[int] = set()
 ```
 
 - [ ] **Step 3: Aggiungere routing callback `"dash:"` in `_on_callback_query()`**
@@ -1745,7 +1754,10 @@ class CommandRouter:
 
 - [ ] **Step 5: Aggiornare `bootstrap.py`**
 
+`Bot` è uno stateless HTTP client. Una singola istanza condivisa tra dispatcher e `DashboardManager` è sufficiente — nessuna necessità di istanze multiple.
+
 ```python
+from telegram import Bot
 from src.runtime_v2.control_plane.dashboard_manager import DashboardManager
 from src.runtime_v2.control_plane.scope_resolver import ScopeResolver
 
@@ -1753,14 +1765,14 @@ def build_control_plane(...) -> ControlPlane | None:
     ...
     scope_resolver = ScopeResolver(config)
 
-    # Bot PTB (necessario per DashboardManager prima del build_app)
-    from telegram import Bot
-    tg_bot = Bot(token=config.token)
-    sender = TelegramBotSender(tg_bot)
+    # Bot condiviso: usato da dispatcher (send notifiche) e DashboardManager (edit dashboard).
+    # Sostituisce _create_sender() che creava un'istanza separata.
+    shared_bot = Bot(token=config.token)
+    sender = TelegramBotSender(shared_bot)
 
     dashboard_manager = DashboardManager(
         ops_db_path=ops_db_path,
-        bot=tg_bot,
+        bot=shared_bot,   # stessa istanza del dispatcher
         service=service,
         scope_resolver=scope_resolver,
     )
@@ -1770,7 +1782,7 @@ def build_control_plane(...) -> ControlPlane | None:
         scope_resolver=scope_resolver,
         dashboard_manager=dashboard_manager,
     )
-    bot = TelegramControlBot(config=config, router=router)
+    bot = TelegramControlBot(config=config, router=router, dashboard_manager=dashboard_manager)
 
     dispatcher = TelegramNotificationDispatcher(
         config=config,
@@ -1783,7 +1795,7 @@ def build_control_plane(...) -> ControlPlane | None:
     ...
 ```
 
-Nota: `_create_sender()` attualmente crea un nuovo `Bot` → rimuoverlo e usare `tg_bot` direttamente.
+Rimuovere la funzione helper `_create_sender()` da `bootstrap.py` (non più necessaria).
 
 - [ ] **Step 6: Eseguire la suite completa**
 
@@ -1803,26 +1815,35 @@ git commit -m "feat: wire DashboardManager into dispatcher lifecycle hook and Co
 
 ## Self-Review Piano 3
 
-| Requisito spec | Task |
+| Requisito spec | Task | Note |
+|---|---|---|
+| `ops_dashboard_messages` con PK `(chat_id, thread_id)` e `DEFAULT 0` | Task 1 | |
+| 5 viste: Attivi/Chiusi/Bloccati/PnL/Stats | Task 3 | |
+| Entry legs con `✓`/`✗` status | Task 3 (`_attivi_trade_renderer`) | Dati da `plan_state_json["legs"]` |
+| TP come prezzi flat (nessun status per TP) | Task 3 (`_attivi_trade_renderer`) | `plan_state_json` non traccia status per singolo TP |
+| `In attesa di riempimento` per WAITING_ENTRY | Task 3 | |
+| Separatori `- - -` in vista Chiusi | Task 3 (sentinel `__SEP__`) | |
+| Chiusi: opened/closed timestamp + links + PnL + ⏱ | Task 3 + Task 2 | |
+| Bloccati: motivo + timestamp + link | Task 3 + Task 2 | |
+| Keyboard 2 righe + 1 condizionale (>5 trade) | Task 3 (`build_dashboard_keyboard`) | |
+| `← Prec` assente a pagina 0 | Task 3 | |
+| `Succ →` assente all'ultima pagina | Task 3 | |
+| `[Pagina N/M]` = noop | Task 3 | |
+| Reset pagina 0 su cambio vista | Task 5 (`navigate`) | |
+| Throttle 5s tra edit | Task 5 (`_THROTTLE_SECONDS`) | |
+| Edit schedulata durante cooldown, non scartata | Task 5 (`_delayed_edit`) | |
+| `MessageNotModified` gestita silenziosamente | Task 5 (`_do_edit`) | |
+| Auto-refresh su CLEAN_LOG sent | Task 6 (dispatcher hook) | |
+| Auto-refresh scope corretto (trader_id filter) | Task 5 (`_all_dashboards_for_scope`) | |
+| `/dashboard` da tech_log → IGNORE | Piano 1 Task 3 (auth) | |
+| Ricreazione sovrascrive: `ON CONFLICT DO UPDATE` | Task 5 (`_upsert`) | |
+| `thread_id=0` per private_bot | Task 1 (schema) + Task 5 (`create_or_update`) | |
+| `route()` / `_dispatch()` restano sincroni | Task 6 Step 2 | `await` gestito in `_on_command()` |
+| Bot condiviso tra dispatcher e DashboardManager | Task 6 Step 5 | Rimosso `_create_sender()` |
+
+## Gap noti (accettati)
+
+| Gap | Motivazione |
 |---|---|
-| `ops_dashboard_messages` con PK `(chat_id, thread_id)` e `DEFAULT 0` | Task 1 |
-| 5 viste: Attivi/Chiusi/Bloccati/PnL/Stats | Task 3 |
-| Entry legs con `✓`/`✗` status | Task 3 (`_attivi_trade_renderer`) |
-| `In attesa di riempimento` per WAITING_ENTRY | Task 3 |
-| Simboli a destra (entry/TP) | Task 3 |
-| Separatori `- - -` in vista Chiusi | Task 3 (sentinel `__SEP__`) |
-| Chiusi: opened/closed timestamp + links + PnL + ⏱ | Task 3 + Task 2 |
-| Bloccati: motivo + timestamp + link | Task 3 + Task 2 |
-| Keyboard 2 righe + 1 condizionale (>5 trade) | Task 3 (`build_dashboard_keyboard`) |
-| `← Prec` assente a pagina 0 | Task 3 |
-| `Succ →` assente all'ultima pagina | Task 3 |
-| `[Pagina N/M]` = noop | Task 3 |
-| Reset pagina 0 su cambio vista | Task 5 (`navigate`) |
-| Throttle 5s tra edit | Task 5 (`_THROTTLE_SECONDS`) |
-| Edit schedulata durante cooldown, non scartata | Task 5 (`_delayed_edit`) |
-| `MessageNotModified` gestita silenziosamente | Task 5 (`_do_edit`) |
-| Auto-refresh su CLEAN_LOG sent | Task 6 (dispatcher hook) |
-| Auto-refresh scope corretto (trader_id filter) | Task 5 (`_all_dashboards_for_scope`) |
-| `/dashboard` da tech_log → IGNORE | Piano 1 Task 3 (auth) + Piano 1 Task 8 (clean_log filter) |
-| Ricreazione sovrascrive: `ON CONFLICT DO UPDATE` | Task 5 (`_upsert`) |
-| `thread_id=0` per private_bot | Task 1 (schema) + Task 5 (`create_or_update`) |
+| Link segnale senza `thread_id` nel path | Telegram risolve correttamente senza di esso; `source_thread_id` non è in schema |
+| Nessun simbolo `✓`/`✗` per i TP | `plan_state_json` non traccia fill per singolo TP — dati non disponibili |
