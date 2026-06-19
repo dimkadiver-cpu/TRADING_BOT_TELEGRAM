@@ -265,17 +265,18 @@ class StatusQueries:
                         [state, *scope_params],
                     ).fetchone()[0]
 
+                t_frag, t_params = _scope_where(scope, 't')
                 pending = conn.execute(
                     f"SELECT COUNT(*) FROM ops_execution_commands ec "
                     f"JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
-                    f"WHERE ec.status='PENDING' AND {_scope_where(scope, 't')[0]}",
-                    _scope_where(scope, 't')[1],
+                    f"WHERE ec.status='PENDING' AND {t_frag}",
+                    t_params,
                 ).fetchone()[0]
                 failed = conn.execute(
                     f"SELECT COUNT(*) FROM ops_execution_commands ec "
                     f"JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
-                    f"WHERE ec.status='FAILED' AND {_scope_where(scope, 't')[0]}",
-                    _scope_where(scope, 't')[1],
+                    f"WHERE ec.status='FAILED' AND {t_frag}",
+                    t_params,
                 ).fetchone()[0]
                 no_sl = conn.execute(
                     f"SELECT COUNT(*) FROM ops_trade_chains "
@@ -533,20 +534,14 @@ class StatusQueries:
     def get_control(self, scope: QueryScope | None = None) -> ControlView:
         conn = self._connect()
         try:
-            if scope is not None:
-                # Filter blocks by account_id only (scope_value in ops_control_state
-                # refers to trader_id or symbol, not account_id; global blocks are always shown)
-                block_rows = conn.execute(
-                    "SELECT scope_type, scope_value, execution_pause_mode, created_at "
-                    "FROM ops_control_state "
-                    "WHERE active=1 AND execution_pause_mode IN ('BLOCK_NEW_ENTRIES','FULL_STOP')"
-                ).fetchall()
-            else:
-                block_rows = conn.execute(
-                    "SELECT scope_type, scope_value, execution_pause_mode, created_at "
-                    "FROM ops_control_state "
-                    "WHERE active=1 AND execution_pause_mode IN ('BLOCK_NEW_ENTRIES','FULL_STOP')"
-                ).fetchall()
+            # Control blocks (active pause modes) are always fetched globally.
+            # scope parameter accepted for API uniformity but has no effect on block retrieval.
+            # (Scope filtering would apply to trades or accounts, not global control state.)
+            block_rows = conn.execute(
+                "SELECT scope_type, scope_value, execution_pause_mode, created_at "
+                "FROM ops_control_state "
+                "WHERE active=1 AND execution_pause_mode IN ('BLOCK_NEW_ENTRIES','FULL_STOP')"
+            ).fetchall()
             override_rows = conn.execute(
                 "SELECT override_key, scope_type, scope_value, value_json "
                 "FROM ops_config_overrides WHERE active=1 AND override_key LIKE 'symbol_blacklist%'"
@@ -719,7 +714,7 @@ class StatusQueries:
         try:
             scope_frag, scope_params = _scope_where(scope)
 
-            def _stats_for_window(date_filter_sql: str, date_params: list) -> StatsRow:
+            def _stats_for_window(date_filter_sql: str, date_params: list) -> tuple[int, int, float, float, float | None]:
                 row = conn.execute(
                     f"SELECT "
                     f"COUNT(*), "
@@ -843,6 +838,7 @@ class StatusQueries:
         conn = self._connect()
         try:
             scope_frag, scope_params = _scope_where(scope)
+            t_frag, t_params = _scope_where(scope, 't')
 
             # REVIEW_REQUIRED chains in scope
             review_rows = conn.execute(
@@ -864,9 +860,9 @@ class StatusQueries:
                 f"SELECT DISTINCT t.trade_chain_id, t.symbol, ec.payload_json "
                 f"FROM ops_execution_commands ec "
                 f"JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
-                f"WHERE ec.status='FAILED' AND {_scope_where(scope, 't')[0]} "
+                f"WHERE ec.status='FAILED' AND {t_frag} "
                 f"ORDER BY t.trade_chain_id",
-                _scope_where(scope, 't')[1],
+                t_params,
             ).fetchall()
         finally:
             conn.close()
