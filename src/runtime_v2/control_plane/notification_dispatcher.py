@@ -371,7 +371,6 @@ class TelegramNotificationDispatcher:
                     destination, account_id=account_id,
                     trader_id=payload.get("trader_id"),
                 )
-                reply_to_message_id: str | None = None
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
                     chain_id = payload.get("chain_id")
                     if chain_id is not None:
@@ -387,7 +386,6 @@ class TelegramNotificationDispatcher:
                         link = self._build_signal_link(root_msg_id, tracking_chat_id)
                         if link:
                             payload = {**payload, "signal_link": link}
-                        reply_to_message_id = root_msg_id
                 if destination == "CLEAN_LOG" and notification_type == "MULTI_CHAIN_SUMMARY":
                     chains = []
                     for chain in payload.get("chains", []):
@@ -410,7 +408,6 @@ class TelegramNotificationDispatcher:
                     thread_id=thread_id,
                     text=text,
                     silent=silent,
-                    reply_to_message_id=reply_to_message_id,
                 )
                 if destination == "CLEAN_LOG":
                     self._update_clean_log_tracking(

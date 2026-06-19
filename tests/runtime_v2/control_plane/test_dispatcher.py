@@ -650,7 +650,7 @@ async def test_non_signal_clean_log_waits_for_signal_root_before_send(ops_db):
         "✅ #32 — SIGNAL ACCEPTED",
         "📊 #32 — ENTRY OPENED",
     ]
-    assert sender.sent[1]["reply_to_message_id"] == sender.sent[0]["message_id"]
+    assert sender.sent[1]["reply_to_message_id"] is None
     assert f"https://t.me/c/999/{sender.sent[0]['message_id']}" in sender.sent[1]["text"]
 
     conn = sqlite3.connect(ops_db)
@@ -660,3 +660,44 @@ async def test_non_signal_clean_log_waits_for_signal_root_before_send(ops_db):
     ).fetchone()
     conn.close()
     assert row == (sender.sent[0]["message_id"], sender.sent[1]["message_id"], "ENTRY_OPENED")
+
+
+@pytest.mark.asyncio
+async def test_update_done_uses_signal_link_but_not_telegram_reply(ops_db):
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            (36, "1292", "1292", "-1004240829081", "1024", "ENTRY_OPENED", now, now),
+        )
+        write_clean_log_event(
+            conn,
+            notification_type="UPDATE_DONE",
+            chain_id=36,
+            payload={
+                "chain_id": 36,
+                "symbol": "XLMUSDT",
+                "side": "SHORT",
+                "trader_id": "trader_devos_crypto",
+                "applied_actions": ["MOVE_SL_TO_BE"],
+                "rejected_actions": [],
+                "changed": [{"field": "SL", "old": None, "new": 0.22709, "note": "BE"}],
+                "source": "operation_rules",
+                "link": None,
+            },
+            dedupe_key="clean:update:36",
+        )
+    conn.close()
+
+    sent = await disp.drain_once()
+
+    assert sent == 1
+    assert len(sender.sent) == 1
+    assert "https://t.me/c/4240829081/1292" in sender.sent[0]["text"]
+    assert sender.sent[0]["reply_to_message_id"] is None

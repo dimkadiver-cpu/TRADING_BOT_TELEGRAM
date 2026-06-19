@@ -2,6 +2,39 @@
 
 ---
 
+## 2026-06-19 — Piano 3: Dashboard inline (design + piano scritto)
+
+### Step completato
+
+Scritto Piano 3 (`docs/superpowers/plans/2026-06-19-dashboard.md`) come terzo piano della triade Commands+Dashboard.
+
+**Scope del piano:**
+- Task 0: Pre-flight — ispezione `management_plan_json`/`plan_state_json` e colonne DB per Chiusi/Bloccati
+- Task 1: Migration SQL `ops_dashboard_messages` (PK `(chat_id, thread_id)`, `DEFAULT 0`)
+- Task 2: Nuove query `status_queries.py` — `get_trades_attivi`, `get_trades_chiusi`, `get_trades_bloccati`, `get_dashboard_pnl` con dataclass `DashboardTradeRow`, `ClosedTradeRow`, `BlockedTradeRow`, `DashboardPnlView`, `EntryLeg`, `TpLeg`
+- Task 3: `DASHBOARD_REGISTRY` con 5 template (Attivi/Chiusi/Bloccati/PnL/Stats) + `build_dashboard_keyboard()` con logica paginazione
+- Task 4: `formatters/dashboard.py` — `format_dashboard_view()` dispatcher per 5 viste + `format_dashboard_creation()`
+- Task 5: `DashboardManager` — creazione messaggio, navigazione vista/pagina, throttle 5s, edit schedulata durante cooldown, `MessageNotModified` silenzioso, auto-refresh scope-filtered
+- Task 6: Wiring — `lifecycle_callback` in dispatcher, `/dashboard` reale in `telegram_bot.py` (router reso async), routing `"dash:"` nel callback handler, `DashboardManager` in `bootstrap.py`
+
+**Piano 1 (scope read-only):** `docs/superpowers/plans/2026-06-19-commands-scope-read-only.md` — completato sessione precedente.
+**Piano 2 (emergency close):** `docs/superpowers/plans/2026-06-19-commands-emergency-close.md` — completato questa sessione.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `docs/superpowers/plans/2026-06-19-dashboard.md` | Creato | Piano 3 completo con 6 task + pre-flight |
+
+### Rischi aperti
+
+- **JSON schema `management_plan_json`**: i path (`plan["entries"][0]["price"]`, `state["entries"][0]["status"]`) sono ipotesi da confermare in Task 0 Pre-flight. Se la struttura differisce, i parser `_parse_entry_legs`/`_parse_tp_legs` vanno adattati prima di Task 3.
+- **`_on_command()` async**: rendere `route()` e `_dispatch()` async (Task 6 Step 2) è un cambio di firma significativo — Piano 2 Task 5 ha già aggiunto `CallbackQueryHandler`; verificare che non ci siano conflitti di wiring.
+- **Bot istanza condivisa**: `bootstrap.py` attualmente crea il `Bot` PTB dentro `TelegramControlBot._build_app()`. Il Piano 3 lo estrae in anticipo per `DashboardManager`. Va verificato che l'estrazione non rompa il ciclo di vita PTB `Application`.
+- **Link Opened/Closed**: `_build_telegram_message_link()` produce URL senza `thread_id`. La spec Chiusi mostra `chat_id/thread_id/message_id`. Discrepanza da risolvere in Task 0 o Task 2.
+
+---
+
 ## 2026-06-17 — Fix false position close da position_reconciliation (singolo REST zero)
 
 **Problema:** In un test live su demo Bybit, la chain BTCUSDT LONG è stata marcata CLOSED (notifica Telegram "posizione chiusa") mentre la posizione era ancora aperta sull'exchange. Root cause: `run_position_reconciliation` in `event_sync.py` chiamava `fetch_positions` via REST una sola volta; se la risposta tornava vuota/zero (transient API issue, WS reconnect, demo flakiness), generava immediatamente un evento sintetico `CLOSE_FULL_FILLED` senza conferma.
