@@ -154,6 +154,17 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
+    def _requeue_pending(self, notification_id: int) -> None:
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            conn.execute(
+                "UPDATE ops_notification_outbox SET status='PENDING' WHERE notification_id=?",
+                (notification_id,),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
     def _should_send_tech_log(self, payload: dict, account_id: str | None = None) -> bool:
         """Apply policy gating for TECH_LOG: enabled, min_level, debug, operational_events."""
         cfg = self._config.get_account(account_id).topics.tech_log
@@ -360,10 +371,14 @@ class TelegramNotificationDispatcher:
                     destination, account_id=account_id,
                     trader_id=payload.get("trader_id"),
                 )
+                reply_to_message_id: str | None = None
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
                     chain_id = payload.get("chain_id")
                     if chain_id is not None:
                         root_msg_id, tracking_chat_id, pinned_thread_id = self._get_clean_log_root(chain_id)
+                        if root_msg_id is None:
+                            self._requeue_pending(notification_id)
+                            continue
                         # Pin chat+thread to what was used for the first event of this chain,
                         # so all events stay in the same conversation thread regardless of config changes.
                         if tracking_chat_id is not None:
@@ -372,6 +387,7 @@ class TelegramNotificationDispatcher:
                         link = self._build_signal_link(root_msg_id, tracking_chat_id)
                         if link:
                             payload = {**payload, "signal_link": link}
+                        reply_to_message_id = root_msg_id
                 if destination == "CLEAN_LOG" and notification_type == "MULTI_CHAIN_SUMMARY":
                     chains = []
                     for chain in payload.get("chains", []):
@@ -390,7 +406,11 @@ class TelegramNotificationDispatcher:
                 text = self._render(destination, notification_type, payload)
                 silent = self._is_silent(notification_type)
                 sent_message_id = await self._sender.send(
-                    chat_id=chat_id, thread_id=thread_id, text=text, silent=silent
+                    chat_id=chat_id,
+                    thread_id=thread_id,
+                    text=text,
+                    silent=silent,
+                    reply_to_message_id=reply_to_message_id,
                 )
                 if destination == "CLEAN_LOG":
                     self._update_clean_log_tracking(

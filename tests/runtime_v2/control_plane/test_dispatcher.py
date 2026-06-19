@@ -77,8 +77,15 @@ class FakeSender:
         self.calls += 1
         if self.calls <= self._fail_times:
             raise RuntimeError("telegram down")
-        self.sent.append({"chat_id": chat_id, "thread_id": thread_id, "text": text})
-        return "123"
+        message_id = str(100 + self.calls)
+        self.sent.append({
+            "chat_id": chat_id,
+            "thread_id": thread_id,
+            "text": text,
+            "reply_to_message_id": reply_to_message_id,
+            "message_id": message_id,
+        })
+        return message_id
 
 
 def _dispatcher(ops_db, sender):
@@ -516,6 +523,14 @@ async def test_update_done_with_trader_id_routes_to_per_trader_thread(ops_db):
     )
     conn = sqlite3.connect(ops_db)
     with conn:
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            (200, "501", "501", "-100999", "77", "SIGNAL_ACCEPTED", now, now),
+        )
         write_clean_log_event(
             conn,
             notification_type="UPDATE_DONE",
@@ -593,3 +608,55 @@ async def test_thread_pinning_keeps_subsequent_events_on_first_thread(ops_db):
     assert sender.sent[0]["thread_id"] == 77, (
         "Subsequent CLEAN_LOG events must be pinned to the thread used by the first event"
     )
+
+
+@pytest.mark.asyncio
+async def test_non_signal_clean_log_waits_for_signal_root_before_send(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="SIGNAL_ACCEPTED",
+            chain_id=32,
+            payload={"chain_id": 32, "symbol": "MRVL/USDT", "side": "SHORT"},
+            dedupe_key="clean:signal:32",
+        )
+        write_clean_log_event(
+            conn,
+            notification_type="ENTRY_OPENED",
+            chain_id=32,
+            payload={
+                "chain_id": 32,
+                "symbol": "MRVL/USDT",
+                "side": "SHORT",
+                "fill_price": 312.11,
+                "filled_qty": 0.8,
+                "fee": 0.01,
+            },
+            dedupe_key="clean:entry:32",
+        )
+    conn.close()
+
+    sender = FakeSender(fail_times=1)
+    disp = _dispatcher(ops_db, sender)
+
+    first = await disp.drain_once()
+    assert first == 0
+    assert sender.sent == []
+
+    second = await disp.drain_once()
+    assert second == 2
+    assert [msg["text"].splitlines()[0] for msg in sender.sent] == [
+        "✅ #32 — SIGNAL ACCEPTED",
+        "📊 #32 — ENTRY OPENED",
+    ]
+    assert sender.sent[1]["reply_to_message_id"] == sender.sent[0]["message_id"]
+    assert f"https://t.me/c/999/{sender.sent[0]['message_id']}" in sender.sent[1]["text"]
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT clean_log_root_message_id, clean_log_last_message_id, last_clean_log_event_type "
+        "FROM ops_clean_log_tracking WHERE trade_chain_id=32"
+    ).fetchone()
+    conn.close()
+    assert row == (sender.sent[0]["message_id"], sender.sent[1]["message_id"], "ENTRY_OPENED")
