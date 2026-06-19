@@ -8,6 +8,30 @@
 
 **Tech Stack:** Python 3.11+, SQLite, python-telegram-bot (esistenti).
 
+---
+
+## ⚠️ Correzioni post-revisione (2026-06-19)
+
+Verifica contro schema reale e `status_queries.py`/`notification_dispatcher.py`:
+
+1. **Vista Bloccati — `review_reason` NON esiste** come colonna. La query in Task 2
+   (`get_trades_bloccati`) che fa `SELECT ..., review_reason, ...` crasha in produzione.
+   Il motivo va letto da `ops_lifecycle_events.payload_json` (come `get_reviews()`). Vedi
+   Task 2 Step 5 corretto.
+2. **`EXEC_FAILED` non è un `lifecycle_state`** valido (stati reali: OPEN, PARTIALLY_CLOSED,
+   WAITING_ENTRY, REVIEW_REQUIRED, BE_MOVE_PENDING, PROTECTED_BE, CLOSED). Filtrare
+   `ops_trade_chains` per `EXEC_FAILED` non restituisce nulla. La spec vuole i **comandi
+   falliti** da `ops_execution_commands WHERE status='FAILED'` (con `result_payload_json`
+   come motivo) — è una query separata, non un `lifecycle_state`. Vedi Task 2 Step 5.
+3. **`closed_at` non esiste** → fallback PRAGMA a `updated_at` (già previsto, mantenere).
+4. **Fixture di test dallo schema reale** (`db/ops_migrations/*.sql`), non inventate.
+5. **PnL non-realizzato** nella vista Attivi è fissato a `None` ("non disponibile"),
+   ma spec/header promettono "Snapshot: Ns fa" + PnL. O si legge da
+   `ops_position_snapshots(payload_json, captured_at)`, o si declassa a gap esplicito
+   nella spec. Decidere prima di implementare.
+
+---
+
 ## Dipendenze da Piani precedenti
 
 - Piano 1 Task 1: `TableBlock`, `SectionBlock` callable
@@ -88,7 +112,14 @@ Cercare: `closed_at`, `cumulative_gross_pnl`, `cumulative_fees`, `cumulative_fun
 
 Se `closed_at` è assente, la query Chiusi usa `updated_at` come fallback (già gestito in Task 2 con PRAGMA runtime). Se `cumulative_gross_pnl` è assente, il PnL chiusi mostra `NULL` (già gestito).
 
-- [ ] **Step 2: Verificare stato `EXEC_FAILED`**
+- [ ] **Step 2: (corretto) `EXEC_FAILED` NON è un lifecycle_state**
+
+`EXEC_FAILED` non esiste come stato di `ops_trade_chains`. La vista Bloccati unisce due
+fonti (vedi Task 2 Step 5 corretto):
+- `ops_trade_chains WHERE lifecycle_state='REVIEW_REQUIRED'` (motivo da `ops_lifecycle_events`);
+- `ops_execution_commands WHERE status='FAILED'` (motivo da `command_type` + `result_payload_json`).
+
+Verificare gli stati realmente presenti solo per conferma:
 
 ```bash
 python -c "
@@ -97,8 +128,6 @@ conn = sqlite3.connect('path/to/ops.db')
 print(conn.execute('SELECT DISTINCT lifecycle_state FROM ops_trade_chains').fetchall())
 "
 ```
-
-Se `EXEC_FAILED` non compare tra gli stati presenti, ridurre `_BLOCKED_STATES` in Task 2 a `("REVIEW_REQUIRED",)` e omettere il ramo EXEC_FAILED nel formatter.
 
 ---
 
@@ -385,39 +414,81 @@ def get_trades_chiusi(
 
 - [ ] **Step 5: Implementare `get_trades_bloccati()`**
 
-```python
-_BLOCKED_STATES = ("REVIEW_REQUIRED", "EXEC_FAILED")
+`review_reason` **non esiste** come colonna: il motivo dei REVIEW_REQUIRED si legge da
+`ops_lifecycle_events` (come `get_reviews()`). `EXEC_FAILED` **non è un lifecycle_state**:
+i comandi falliti sono righe di `ops_execution_commands WHERE status='FAILED'`. Bloccati =
+unione dei due insiemi.
 
+```python
 def get_trades_bloccati(self, scope: "QueryScope") -> list[BlockedTradeRow]:
     where, params = _scope_where(scope)
     conn = self._connect()
     try:
-        chain_cols = {r[1] for r in conn.execute("PRAGMA table_info(ops_trade_chains)").fetchall()}
-        ts_col = "updated_at"  # fallback universale
-
-        rows = conn.execute(
-            f"SELECT trade_chain_id, symbol, side, lifecycle_state, trader_id, account_id, "
-            f"review_reason, {ts_col}, source_chat_id, telegram_message_id "
+        # (a) REVIEW_REQUIRED da ops_trade_chains
+        review_rows = conn.execute(
+            f"SELECT trade_chain_id, symbol, side, updated_at, "
+            f"source_chat_id, telegram_message_id, trader_id, account_id "
             f"FROM ops_trade_chains "
-            f"WHERE lifecycle_state IN ({','.join('?' * len(_BLOCKED_STATES))}) AND {where} "
+            f"WHERE lifecycle_state='REVIEW_REQUIRED' AND {where} "
             f"ORDER BY trade_chain_id",
-            (*_BLOCKED_STATES, *params),
+            params,
+        ).fetchall()
+        # motivo da ops_lifecycle_events (ultimo REVIEW_REQUIRED per chain)
+        reasons = dict(conn.execute(
+            "SELECT trade_chain_id, payload_json FROM ops_lifecycle_events "
+            "WHERE event_type='REVIEW_REQUIRED' AND trade_chain_id IS NOT NULL "
+            "ORDER BY event_id DESC"
+        ).fetchall())
+        # (b) comandi falliti da ops_execution_commands (join su chain per scope/simbolo)
+        failed_rows = conn.execute(
+            f"SELECT c.trade_chain_id, t.symbol, t.side, c.updated_at, "
+            f"t.source_chat_id, t.telegram_message_id, t.trader_id, t.account_id, "
+            f"c.command_type, c.result_payload_json "
+            f"FROM ops_execution_commands c "
+            f"JOIN ops_trade_chains t ON t.trade_chain_id = c.trade_chain_id "
+            f"WHERE c.status='FAILED' AND {where} "
+            f"ORDER BY c.command_id DESC",
+            params,
         ).fetchall()
     finally:
         conn.close()
 
-    result = []
-    for r in rows:
-        link = _build_telegram_message_link(r[8], r[9])
+    result: list[BlockedTradeRow] = []
+    for r in review_rows:
+        motivo = "unknown"
+        blob = reasons.get(r[0])
+        if blob:
+            try:
+                motivo = json.loads(blob).get("reason", "unknown")
+            except Exception:
+                pass
         result.append(BlockedTradeRow(
-            chain_id=r[0], symbol=r[1], side=r[2], state=r[3],
-            trader_id=r[4] or "", account_id=r[5] or "",
-            motivo=r[6],  # review_reason dal DB
-            blocked_at=r[7],
-            link=link,
+            chain_id=r[0], symbol=r[1], side=r[2], state="REVIEW_REQUIRED",
+            trader_id=r[6] or "", account_id=r[7] or "",
+            motivo=motivo, blocked_at=r[3],
+            link=_build_telegram_message_link(r[4], r[5]),
+        ))
+    for r in failed_rows:
+        motivo = r[8]  # command_type fallito
+        try:
+            err = json.loads(r[9] or "{}").get("error") or json.loads(r[9] or "{}").get("reason")
+            if err:
+                motivo = f"{r[8]}: {err}"
+        except Exception:
+            pass
+        result.append(BlockedTradeRow(
+            chain_id=r[0], symbol=r[1], side=r[2], state="EXEC_FAILED",
+            trader_id=r[6] or "", account_id=r[7] or "",
+            motivo=motivo, blocked_at=r[3],
+            link=_build_telegram_message_link(r[4], r[5]),
         ))
     return result
 ```
+
+Nota: `_scope_where(scope)` produce `account_id=? [AND trader_id IN (...)]`. Nella query (b)
+le colonne `account_id`/`trader_id` provengono dal JOIN su `t.` — assicurarsi che
+`_scope_where` qualifichi le colonne (`t.account_id`, `t.trader_id`) o costruire il
+filtro con prefisso `t.` in questa query.
 
 - [ ] **Step 6: Implementare `get_dashboard_pnl()`**
 

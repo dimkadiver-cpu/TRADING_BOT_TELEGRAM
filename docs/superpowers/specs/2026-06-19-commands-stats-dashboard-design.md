@@ -4,6 +4,24 @@
 
 ---
 
+## ⚠️ Correzioni post-revisione codice (2026-06-19)
+
+Verifica contro schema reale (`db/ops_migrations/`) e gateway:
+
+- **Command type emergenza:** usare **`CLOSE_FULL`** (non `MARKET_CLOSE`) e
+  **`CANCEL_PENDING_ENTRY`** (non `CANCEL_ENTRY`). Vedi Step 0 in fondo.
+- **Creazione comandi:** via `ExecutionCommandRepository.save()` (lo schema reale richiede
+  `idempotency_key` NOT NULL UNIQUE e `updated_at`; non esiste `created_by` sulla tabella).
+- **`closed_at` non esiste:** ordinamenti/bucketing dei trade chiusi usano `updated_at`
+  come fallback (gestito nei piani via PRAGMA).
+- **Vista Bloccati:** `REVIEW_REQUIRED` (motivo da `ops_lifecycle_events`, non da una
+  colonna `review_reason` che non esiste) **+** `ops_execution_commands status='FAILED'`.
+  `EXEC_FAILED` non è un lifecycle_state.
+- **PnL non-realizzato** (`/trades`, dashboard Attivi): se non letto da
+  `ops_position_snapshots`, va dichiarato gap esplicito.
+
+---
+
 ## Contesto
 
 Il sistema supporta più account exchange (`per_account`), più trader per account, e può girare su un singolo supergroup Telegram con topic distinti. I comandi attuali (`/status`, `/trades`, `/pnl`, ecc.) non filtrano per account né per trader — restituiscono dati aggregati di tutto il DB.
@@ -267,7 +285,7 @@ CommandRouter
 CallbackQueryHandler (nuovo in TelegramControlBot)
   → risolve pending_id da dict in-memoria (TTL: 5 min)
   → se "confirm": EmergencyCloseService.execute(pending_id)
-      → inserisce ops_execution_commands (MARKET_CLOSE | CANCEL_ENTRY)
+      → crea comandi via ExecutionCommandRepository.save() (CLOSE_FULL | CANCEL_PENDING_ENTRY)
       → status = PENDING → gateway esistente preleva normalmente
   → query.edit_message_text(result_message)
 ```
@@ -417,8 +435,8 @@ Aggiornato: 14:32:05
 ```
 
 **Dati:**
-- `ops_trade_chains WHERE lifecycle_state='REVIEW_REQUIRED'` filtrato per scope → motivo da metadata/review_reason
-- `ops_execution_commands WHERE status='FAILED'` filtrato per scope → motivo da `error_message`
+- `ops_trade_chains WHERE lifecycle_state='REVIEW_REQUIRED'` filtrato per scope → motivo da `ops_lifecycle_events.payload_json` (NON da una colonna `review_reason`: non esiste)
+- `ops_execution_commands WHERE status='FAILED'` (JOIN su chain per scope) → motivo da `command_type` + `result_payload_json`
 
 ### Vista PnL
 
@@ -629,9 +647,9 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "close_single_result_ok":       _CLOSE_SINGLE_RESULT_OK,
     "close_single_result_cancelled": _CLOSE_SINGLE_RESULT_CANCELLED,
     # Emergency — cancel_all
-    "cancel_preview":               _CANCEL_PREVIEW,
-    "cancel_result_ok":             _CANCEL_RESULT_OK,
-    "cancel_result_cancelled":      _CANCEL_RESULT_CANCELLED,
+    "cancel_all_preview":           _CANCEL_ALL_PREVIEW,
+    "cancel_all_result_ok":         _CANCEL_ALL_RESULT_OK,
+    "cancel_all_result_cancelled":  _CANCEL_ALL_RESULT_CANCELLED,
     # Dashboard
     "dashboard_attivi":             _DASHBOARD_ATTIVI,
     "dashboard_chiusi":             _DASHBOARD_CHIUSI,
@@ -715,8 +733,11 @@ Il `TemplateConfig` non conosce keyboard. La keyboard è costruita in `telegram_
 
 ### Step 0 — Pre-requisito bloccante (verifica prima di implementare `EmergencyCloseService`)
 
-Verificare i command_type esistenti in `ops_execution_commands` e nel gateway:
-- **`MARKET_CLOSE`** — esiste già o va aggiunto come nuovo tipo?
-- **`CANCEL_ENTRY`** — esiste il meccanismo di cancellazione ordini pendenti nel lifecycle worker?
+**Esito verifica (2026-06-19):** i command_type reali nel gateway sono:
+- **`CLOSE_FULL`** — chiusura posizione (qty auto-risolta dal gateway). Usare questo, non `MARKET_CLOSE`.
+- **`CANCEL_PENDING_ENTRY`** — cancellazione ordini entry pendenti. Usare questo, non `CANCEL_ENTRY`.
 
-Se mancano, aggiungere come migration/estensione separata **prima** di qualsiasi altro step di implementazione.
+Entrambi esistono già e sono processati da `execution_gateway`. Nessuna migration nuova
+necessaria. La creazione passa per `ExecutionCommandRepository.save()` con un
+`idempotency_key` unico; **non** scrivere INSERT a mano (la tabella ha
+`idempotency_key`/`updated_at` obbligatori e non ha `created_by`).

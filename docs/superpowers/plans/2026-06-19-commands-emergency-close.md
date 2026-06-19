@@ -8,6 +8,27 @@
 
 **Tech Stack:** Python 3.11+, SQLite, python-telegram-bot (esistenti).
 
+---
+
+## ⚠️ Correzioni post-revisione (2026-06-19) — BLOCCANTI
+
+Verifica eseguita contro schema reale (`db/ops_migrations/001+002`), gateway (`execution_gateway/repositories.py`, `gateway.py`) e `lifecycle/repositories.py`. Le seguenti correzioni **sostituiscono** quanto scritto sotto dove in conflitto:
+
+1. **`command_type` corretti.** `MARKET_CLOSE` e `CANCEL_ENTRY` **non esistono**. I tipi reali processati dal gateway sono:
+   - **`CLOSE_FULL`** — chiusura posizione (qty auto-risolta dal gateway: `repositories.py` → `if cmd.command_type in {"CLOSE_FULL","CLOSE_PARTIAL"} and "qty" not in payload`).
+   - **`CANCEL_PENDING_ENTRY`** — cancellazione entry pendente.
+   - Aggiornare anche **il testo dei template** (`"comandi MARKET_CLOSE inseriti"` → `"comandi CLOSE_FULL inseriti"`, ecc.).
+
+2. **NON inserire comandi con un INSERT a mano.** Lo schema reale di `ops_execution_commands` ha `idempotency_key TEXT NOT NULL UNIQUE`, `payload_json NOT NULL DEFAULT '{}'`, `updated_at NOT NULL` e **non ha** una colonna `created_by`. Un INSERT con `created_by` e senza `idempotency_key`/`updated_at` **fallisce in produzione**.
+   - Riusare il path esistente: `ExecutionCommandRepository.save(cmd)` in `src/runtime_v2/lifecycle/repositories.py`, costruendo un `ExecutionCommand` (`src/runtime_v2/lifecycle/models.py`) con `idempotency_key` unico (es. `f"manual_close:{chain_id}:{token}"` / `f"cancel_entry:{chain_id}:{token}"`), `status="PENDING"`, `payload_json="{}"`.
+   - `created_by` (user_id) **non** va nella tabella comandi: tracciarlo nell'audit comando (`CommandAuditStore`), come già fanno gli altri comandi.
+
+3. **Le fixture di test devono derivare dallo schema reale**, applicando `db/ops_migrations/*.sql` su un DB temporaneo. Le fixture inventate sotto (con `created_by`, senza `idempotency_key`/`updated_at`) mascherano i bug #1 e #2: i test passano ma la produzione crasha. Da correggere.
+
+4. **Task 0 è bloccante**, non opzionale: confermare schema e contratto payload di `CLOSE_FULL` prima di scrivere il service.
+
+---
+
 ## Dipendenze da Piano 1
 
 - `QueryScope` / `ScopeResolver` (Task 2 Piano 1) — necessari prima di implementare Piano 2
@@ -60,9 +81,9 @@ conn.close()
 
 Run: `python scripts/check_exec_commands.py path/to/ops.db`
 
-Colonne attese minime: `command_type`, `trade_chain_id`, `account_id`, `trader_id`, `status`, `created_by`, `created_at`.
+Colonne reali (verificate, migration 001+002): `command_id` (PK), `trade_chain_id` (NOT NULL), `command_type`, `status`, `payload_json` (NOT NULL DEFAULT '{}'), `idempotency_key` (NOT NULL UNIQUE), `created_at` (NOT NULL), `updated_at` (NOT NULL), `adapter`, `execution_account_id`, `client_order_id`, `result_payload_json`, … **Non esiste** `created_by` né `account_id`/`trader_id` su questa tabella.
 
-I valori `command_type` per i comandi di chiusura — attesi: `MARKET_CLOSE` e `CANCEL_ENTRY`. Se i nomi differiscono, aggiornare le costanti in `emergency_close.py` (Task 2).
+I valori `command_type` per i comandi di chiusura sono **`CLOSE_FULL`** e **`CANCEL_PENDING_ENTRY`** (verificati in `execution_gateway/repositories.py`). `MARKET_CLOSE`/`CANCEL_ENTRY` non esistono. La creazione comandi passa per `ExecutionCommandRepository.save()` (Task 2), non per un INSERT manuale.
 
 ---
 
@@ -180,68 +201,63 @@ git commit -m "feat: add CloseCandidate and get_open_for_close/get_waiting_for_c
 # src/runtime_v2/control_plane/emergency_close.py
 from __future__ import annotations
 
-import sqlite3
-from datetime import datetime, timezone
+import secrets
 
+from src.runtime_v2.lifecycle.models import ExecutionCommand
+from src.runtime_v2.lifecycle.repositories import ExecutionCommandRepository
 
-def _now() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
-# Aggiornare queste costanti se Task 0 rivela nomi diversi in DB
-_CMD_MARKET_CLOSE = "MARKET_CLOSE"
-_CMD_CANCEL_ENTRY = "CANCEL_ENTRY"
+# Tipi reali processati dal gateway (verificati in execution_gateway/repositories.py).
+# NON usare MARKET_CLOSE / CANCEL_ENTRY: non esistono.
+_CMD_CLOSE_FULL = "CLOSE_FULL"
+_CMD_CANCEL_ENTRY = "CANCEL_PENDING_ENTRY"
 
 
 class EmergencyCloseService:
-    """Inserisce comandi di chiusura/cancellazione in ops_execution_commands."""
+    """Crea comandi di chiusura/cancellazione via il repository esistente.
+
+    Riusa ExecutionCommandRepository.save() (lifecycle/repositories.py) che
+    popola idempotency_key/created_at/updated_at e usa INSERT OR IGNORE.
+    NON scrive un INSERT a mano: lo schema reale richiede idempotency_key
+    NOT NULL UNIQUE + updated_at NOT NULL e non ha colonna created_by.
+    """
 
     def __init__(self, ops_db_path: str) -> None:
-        self._db = ops_db_path
+        self._repo = ExecutionCommandRepository(ops_db_path)
+
+    def _save(self, chain_ids: list[int], command_type: str, prefix: str) -> int:
+        count = 0
+        for chain_id in chain_ids:
+            cmd = ExecutionCommand(
+                trade_chain_id=chain_id,
+                command_type=command_type,
+                status="PENDING",
+                payload_json="{}",  # qty auto-risolta dal gateway per CLOSE_FULL
+                idempotency_key=f"{prefix}:{chain_id}:{secrets.token_hex(4)}",
+            )
+            self._repo.save(cmd)
+            count += 1
+        return count
 
     def execute_close(self, chain_ids: list[int], created_by: str) -> int:
-        """Inserisce un comando MARKET_CLOSE per ogni chain_id. Ritorna count inseriti."""
+        """Crea un comando CLOSE_FULL per ogni chain_id. Ritorna count creati.
+
+        created_by viene tracciato nell'audit comando dal router, non in questa tabella.
+        """
         if not chain_ids:
             return 0
-        conn = sqlite3.connect(self._db)
-        try:
-            now = _now()
-            for chain_id in chain_ids:
-                conn.execute(
-                    "INSERT INTO ops_execution_commands "
-                    "(command_type, trade_chain_id, status, created_by, created_at) "
-                    "VALUES (?, ?, 'PENDING', ?, ?)",
-                    (_CMD_MARKET_CLOSE, chain_id, created_by, now),
-                )
-            conn.commit()
-            return len(chain_ids)
-        finally:
-            conn.close()
+        return self._save(chain_ids, _CMD_CLOSE_FULL, "manual_close")
 
     def execute_cancel(self, chain_ids: list[int], created_by: str) -> int:
-        """Inserisce un comando CANCEL_ENTRY per ogni chain_id. Ritorna count inseriti."""
+        """Crea un comando CANCEL_PENDING_ENTRY per ogni chain_id. Ritorna count creati."""
         if not chain_ids:
             return 0
-        conn = sqlite3.connect(self._db)
-        try:
-            now = _now()
-            for chain_id in chain_ids:
-                conn.execute(
-                    "INSERT INTO ops_execution_commands "
-                    "(command_type, trade_chain_id, status, created_by, created_at) "
-                    "VALUES (?, ?, 'PENDING', ?, ?)",
-                    (_CMD_CANCEL_ENTRY, chain_id, created_by, now),
-                )
-            conn.commit()
-            return len(chain_ids)
-        finally:
-            conn.close()
+        return self._save(chain_ids, _CMD_CANCEL_ENTRY, "cancel_entry")
 
 
 __all__ = ["EmergencyCloseService"]
 ```
 
-Nota: se lo schema di `ops_execution_commands` ha colonne aggiuntive obbligatorie (rilevate in Task 0), aggiornare l'INSERT di conseguenza.
+Nota: verificare in Task 0 i campi obbligatori di `ExecutionCommand` (`src/runtime_v2/lifecycle/models.py`) e il contratto payload di `CLOSE_FULL` (se richiede `qty`/`reduce_only` espliciti, aggiungerli a `payload_json`).
 
 - [ ] **Step 2: Aggiungere `EmergencyCloseService` a `RuntimeControlService`**
 
@@ -291,9 +307,15 @@ git commit -m "feat: add EmergencyCloseService and delegate methods on RuntimeCo
 
 - [ ] **Step 1: Scrivere i test**
 
+> ⚠️ La fixture sotto deve usare lo **schema reale** applicando le migration
+> (`db/ops_migrations/*.sql`) su un DB temporaneo — NON ridichiarare a mano
+> `ops_execution_commands` con `created_by`/senza `idempotency_key`, altrimenti i
+> test passano ma la produzione crasha. `ops_trade_chains` qui ha solo le colonne
+> realmente presenti (niente `review_reason`; `closed_at` non esiste → fallback `updated_at`).
+
 ```python
 from __future__ import annotations
-import os, sqlite3, tempfile
+import os, sqlite3, tempfile, glob
 from src.runtime_v2.control_plane.emergency_close import EmergencyCloseService
 from src.runtime_v2.control_plane.status_queries import StatusQueries
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
@@ -303,31 +325,26 @@ def _make_db() -> str:
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     conn = sqlite3.connect(path)
-    conn.executescript("""
-        CREATE TABLE ops_trade_chains (
-            trade_chain_id INTEGER PRIMARY KEY,
-            symbol TEXT, side TEXT, trader_id TEXT, account_id TEXT,
-            lifecycle_state TEXT, current_stop_price REAL,
-            expected_stop_price REAL, be_protection_status TEXT,
-            cumulative_gross_pnl REAL, cumulative_fees REAL,
-            cumulative_funding REAL, closed_at TEXT,
-            management_plan_json TEXT, risk_snapshot_json TEXT,
-            plan_state_json TEXT, source_chat_id TEXT,
-            telegram_message_id INTEGER, review_reason TEXT
-        );
-        CREATE TABLE ops_execution_commands (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            command_type TEXT NOT NULL,
-            trade_chain_id INTEGER,
-            status TEXT NOT NULL DEFAULT 'PENDING',
-            created_by TEXT,
-            created_at TEXT
-        );
-    """)
-    conn.execute("INSERT INTO ops_trade_chains VALUES (1,'BTCUSDT','LONG','trader_a','demo_1','OPEN',63500,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-    conn.execute("INSERT INTO ops_trade_chains VALUES (2,'ETHUSDT','SHORT','trader_a','demo_1','PARTIALLY_CLOSED',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-    conn.execute("INSERT INTO ops_trade_chains VALUES (3,'SOLUSDT','LONG','trader_a','demo_1','WAITING_ENTRY',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-    conn.execute("INSERT INTO ops_trade_chains VALUES (4,'BNBUSDT','SHORT','trader_b','demo_1','OPEN',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
+    # Applica le migration reali: ops_trade_chains + ops_execution_commands con lo
+    # schema autentico (idempotency_key NOT NULL UNIQUE, updated_at NOT NULL, niente created_by).
+    for sql_file in sorted(glob.glob("db/ops_migrations/*.sql")):
+        with open(sql_file, encoding="utf-8") as f:
+            conn.executescript(f.read())
+    # INSERT con colonne esplicite: ops_trade_chains reale ha molte colonne NOT NULL
+    # (source_enrichment_id UNIQUE, canonical_message_id, raw_message_id, entry_mode, ...).
+    now = "2026-06-19T10:00:00+00:00"
+    def _chain(cid, symbol, side, trader, state):
+        conn.execute(
+            "INSERT INTO ops_trade_chains "
+            "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+            " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, created_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+            (cid, cid, cid, cid, trader, "demo_1", symbol, side, state, "limit", now, now),
+        )
+    _chain(1, "BTCUSDT", "LONG", "trader_a", "OPEN")
+    _chain(2, "ETHUSDT", "SHORT", "trader_a", "PARTIALLY_CLOSED")
+    _chain(3, "SOLUSDT", "LONG", "trader_a", "WAITING_ENTRY")
+    _chain(4, "BNBUSDT", "SHORT", "trader_b", "OPEN")
     conn.commit()
     conn.close()
     return path
@@ -365,19 +382,19 @@ def test_get_waiting_for_cancel():
     os.unlink(db)
 
 
-def test_execute_close_inserts_market_close():
+def test_execute_close_inserts_close_full():
     db = _make_db()
     svc = EmergencyCloseService(db)
     count = svc.execute_close([1, 2], created_by="42")
     assert count == 2
     conn = sqlite3.connect(db)
-    rows = conn.execute("SELECT command_type, trade_chain_id FROM ops_execution_commands ORDER BY id").fetchall()
+    rows = conn.execute("SELECT command_type, trade_chain_id FROM ops_execution_commands ORDER BY command_id").fetchall()
     conn.close()
-    assert rows == [("MARKET_CLOSE", 1), ("MARKET_CLOSE", 2)]
+    assert rows == [("CLOSE_FULL", 1), ("CLOSE_FULL", 2)]
     os.unlink(db)
 
 
-def test_execute_cancel_inserts_cancel_entry():
+def test_execute_cancel_inserts_cancel_pending_entry():
     db = _make_db()
     svc = EmergencyCloseService(db)
     count = svc.execute_cancel([3], created_by="42")
@@ -385,7 +402,7 @@ def test_execute_cancel_inserts_cancel_entry():
     conn = sqlite3.connect(db)
     rows = conn.execute("SELECT command_type FROM ops_execution_commands").fetchall()
     conn.close()
-    assert rows == [("CANCEL_ENTRY",)]
+    assert rows == [("CANCEL_PENDING_ENTRY",)]
     os.unlink(db)
 
 
@@ -471,7 +488,7 @@ _CLOSE_ALL_RESULT_OK = TemplateConfig(blocks=[
     ListBlock(key="chains", item_renderer=_chain_renderer_compact),
     SeparatorBlock(),
     DerivedBlock(text_fn=lambda p: f"✅ ESEGUITO — {p['executed_at']}"),
-    DerivedBlock(text_fn=lambda p: f"{p['count']} comandi MARKET_CLOSE inseriti."),
+    DerivedBlock(text_fn=lambda p: f"{p['count']} comandi CLOSE_FULL inseriti."),
     StaticBlock("⚡ Monitorare con /trades"),
 ])
 
@@ -523,7 +540,7 @@ _CLOSE_SINGLE_RESULT_OK = TemplateConfig(blocks=[
     ListBlock(key="chains", item_renderer=_chain_renderer_compact),
     SeparatorBlock(),
     DerivedBlock(text_fn=lambda p: f"✅ ESEGUITO — {p['executed_at']}"),
-    DerivedBlock(text_fn=lambda p: f"{p['count']} {'comando' if p['count'] == 1 else 'comandi'} MARKET_CLOSE inserito."),
+    DerivedBlock(text_fn=lambda p: f"{p['count']} {'comando' if p['count'] == 1 else 'comandi'} CLOSE_FULL inserito."),
     DerivedBlock(text_fn=lambda p: f"⚡ Monitorare con {'  /trade #' + str(p['chains'][0]['chain_id']) if p['count'] == 1 else '/trades'}"),
 ])
 

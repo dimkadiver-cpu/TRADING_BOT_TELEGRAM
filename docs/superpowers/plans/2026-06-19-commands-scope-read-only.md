@@ -8,6 +8,19 @@
 
 **Tech Stack:** Python 3.11+, SQLite, python-telegram-bot (esistenti). Nessuna nuova dipendenza.
 
+---
+
+## ⚠️ Correzioni post-revisione (2026-06-19)
+
+Verifica contro schema reale (`db/ops_migrations/`), `auth.py`, `telegram_bot.py`, `status_queries.py`:
+
+1. **`closed_at` non esiste** in `ops_trade_chains` (nessuna migration la aggiunge). Il fallback PRAGMA a `updated_at` usato in `get_stats()` è corretto e va **mantenuto**. Le fixture di test devono **NON** avere `closed_at` (altrimenti il ramo di fallback non è mai testato e la spec resta disallineata).
+2. **`review_reason` non esiste** come colonna. Il motivo dei review si legge da `ops_lifecycle_events.payload_json` (come già fa `get_reviews()`). Non aggiungerla alle fixture.
+3. **Le fixture di test devono derivare dallo schema reale** applicando `db/ops_migrations/*.sql`, non ridichiarando a mano `ops_trade_chains`. Colonne PnL (`cumulative_gross_pnl/fees/funding`, mig. 010), `plan_state_json` (004), `source_chat_id`/`telegram_message_id` (009) esistono davvero.
+4. **Routing reply multi-account (Task 8).** Oggi `_on_command` invia SEMPRE la risposta a `default_acc.chat_id` + commands thread del default. Con multi-account la risposta finisce nell'account sbagliato. Va corretto per rispondere a `message.chat_id` / `message.message_thread_id` di origine (vedi nota in Task 8 Step 12).
+
+---
+
 ## Divisione in piani
 
 | Piano | Contenuto |
@@ -1065,40 +1078,38 @@ from src.runtime_v2.control_plane.scope_resolver import QueryScope
 
 
 def _make_db() -> str:
-    """Crea un DB SQLite temporaneo con schema minimo."""
+    """Crea un DB SQLite temporaneo con lo SCHEMA REALE (migration applicate).
+
+    NON ridichiarare le tabelle a mano: `closed_at` e `review_reason` NON esistono;
+    inventarle produrrebbe test verdi e produzione rotta. Le colonne PnL e
+    plan_state_json/source_chat_id provengono dalle migration 004/009/010.
+    """
+    import glob
     fd, path = tempfile.mkstemp(suffix=".db")
     os.close(fd)
     conn = sqlite3.connect(path)
-    conn.executescript("""
-        CREATE TABLE ops_trade_chains (
-            trade_chain_id INTEGER PRIMARY KEY,
-            symbol TEXT, side TEXT, trader_id TEXT, account_id TEXT,
-            lifecycle_state TEXT, current_stop_price REAL,
-            expected_stop_price REAL, be_protection_status TEXT,
-            cumulative_gross_pnl REAL, cumulative_fees REAL,
-            cumulative_funding REAL, closed_at TEXT,
-            management_plan_json TEXT, risk_snapshot_json TEXT,
-            plan_state_json TEXT, source_chat_id TEXT,
-            telegram_message_id INTEGER, review_reason TEXT
-        );
-        CREATE TABLE ops_exchange_events (received_at TEXT);
-        CREATE TABLE ops_execution_commands (status TEXT);
-        CREATE TABLE ops_control_state (
-            scope_type TEXT, scope_value TEXT,
-            execution_pause_mode TEXT, created_at TEXT, active INTEGER
-        );
-        CREATE TABLE ops_config_overrides (
-            override_key TEXT, scope_type TEXT, scope_value TEXT,
-            value_json TEXT, active INTEGER
-        );
-        CREATE TABLE ops_lifecycle_events (
-            trade_chain_id INTEGER, event_type TEXT, payload_json TEXT, event_id INTEGER
-        );
-    """)
-    conn.execute("INSERT INTO ops_trade_chains VALUES (1,'BTCUSDT','LONG','trader_a','demo_1','OPEN',63500,NULL,'PROTECTED',NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-    conn.execute("INSERT INTO ops_trade_chains VALUES (2,'ETHUSDT','SHORT','trader_b','demo_1','OPEN',2100,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-    conn.execute("INSERT INTO ops_trade_chains VALUES (3,'SOLUSDT','LONG','trader_a','demo_2','OPEN',150,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL)")
-    conn.execute("INSERT INTO ops_trade_chains VALUES (4,'BNBUSDT','LONG','trader_a','demo_1','CLOSED',NULL,NULL,NULL,50.0,-5.0,1.0,'2026-06-19 10:00:00',NULL,NULL,NULL,NULL,NULL,NULL)")
+    for sql_file in sorted(glob.glob("db/ops_migrations/*.sql")):
+        with open(sql_file, encoding="utf-8") as f:
+            conn.executescript(f.read())
+
+    now = "2026-06-19T10:00:00+00:00"
+    def _chain(cid, symbol, side, trader, account, state, *, stop=None, be="NOT_PROTECTED",
+               gross=None, fees=None, funding=None):
+        conn.execute(
+            "INSERT INTO ops_trade_chains "
+            "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+            " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+            " current_stop_price, be_protection_status, "
+            " cumulative_gross_pnl, cumulative_fees, cumulative_funding, created_at, updated_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+            (cid, cid, cid, cid, trader, account, symbol, side, state, "limit",
+             stop, be, gross, fees, funding, now, now),
+        )
+    _chain(1, "BTCUSDT", "LONG", "trader_a", "demo_1", "OPEN", stop=63500, be="PROTECTED")
+    _chain(2, "ETHUSDT", "SHORT", "trader_b", "demo_1", "OPEN", stop=2100)
+    _chain(3, "SOLUSDT", "LONG", "trader_a", "demo_2", "OPEN", stop=150)
+    # trade chiuso: net = 50 - 5 + 1 = 46.0; closed_at assente → bucketing usa updated_at
+    _chain(4, "BNBUSDT", "LONG", "trader_a", "demo_1", "CLOSED", gross=50.0, fees=5.0, funding=1.0)
     conn.commit()
     conn.close()
     return path
@@ -2120,12 +2131,32 @@ router = CommandRouter(
 )
 ```
 
-- [ ] **Step 10: Eseguire la suite completa**
+- [ ] **Step 10: Correggere il routing della risposta in `_on_command`**
+
+Oggi `_on_command` invia la reply a `default_acc.chat_id` + commands thread del default
+account — sbagliato in multi-account e per topic diversi. Rispondere all'origine:
+
+```python
+# In _on_command, sostituire il blocco send_kwargs che usa default_acc:
+send_kwargs: dict[str, object] = {
+    "chat_id": message.chat_id,
+    "text": result.reply_text,
+}
+if message.message_thread_id is not None:
+    send_kwargs["message_thread_id"] = message.message_thread_id
+await context.bot.send_message(**send_kwargs)
+```
+
+Nota: i comandi read-only arrivano solo dal topic `commands` (i `clean_log` accettano
+solo `/dashboard`), quindi in pratica la reply resta nel topic commands dell'account
+di origine — corretto anche con più account.
+
+- [ ] **Step 11: Eseguire la suite completa**
 
 Run: `pytest tests/runtime_v2/control_plane/ -v --tb=short`
 Expected: tutti PASS
 
-- [ ] **Step 11: Commit finale**
+- [ ] **Step 12: Commit finale**
 
 ```bash
 git add src/runtime_v2/control_plane/telegram_bot.py
