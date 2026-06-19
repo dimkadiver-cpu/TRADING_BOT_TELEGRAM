@@ -460,3 +460,42 @@ def test_debug_off_responds(ops_db):
     assert res.reply_text is not None
     assert res.decision == "EXECUTED"
     assert "DEBUG MODE DISATTIVATO" in res.reply_text
+
+
+# ── Fix: parse before auth — clean_log thread routing ─────────────────────────
+
+def test_dashboard_from_clean_log_thread_is_not_ignored(ops_db):
+    """
+    /dashboard sent from the clean_log thread_id must NOT be ignored.
+    Before the fix, command_name was always None when validate() was called,
+    so the clean_log branch in auth was never reachable.
+    """
+    router = _router(ops_db)
+    # thread_id=103 is the clean_log thread defined in _config()
+    res = router.route(
+        command_text="/dashboard", message_id=30,
+        chat_id=-100999, thread_id=103, user_id=42, username="op",
+    )
+    # /dashboard is not in _ALLOWED_COMMANDS yet, so the router will REJECT it
+    # with "unknown_command" — but the key assertion is that it is NOT IGNORE,
+    # i.e., auth passed the clean_log gate correctly.
+    assert res.decision != "IGNORE", (
+        "/dashboard from clean_log thread was silently ignored — "
+        "command_name was not passed to auth.validate()"
+    )
+
+
+def test_non_dashboard_from_clean_log_thread_is_ignored(ops_db):
+    """
+    Any command other than /dashboard sent from the clean_log thread_id
+    must still be ignored (wrong_topic for non-dashboard commands).
+    """
+    router = _router(ops_db)
+    # thread_id=103 is the clean_log thread; /status is not allowed there
+    res = router.route(
+        command_text="/status", message_id=31,
+        chat_id=-100999, thread_id=103, user_id=42, username="op",
+    )
+    assert res.decision == "IGNORE", (
+        "/status from clean_log thread should be IGNORE (wrong_topic)"
+    )

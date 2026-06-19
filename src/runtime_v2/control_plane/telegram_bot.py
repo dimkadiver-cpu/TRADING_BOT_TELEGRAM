@@ -119,10 +119,12 @@ class CommandRouter:
         username: str | None,
     ) -> RouteResult:
         request_id = f"{chat_id}:{message_id}"
+        command_name, args = _parse(command_text)
         auth_result = self._auth.validate(
             chat_id=chat_id,
             thread_id=thread_id,
             user_id=user_id,
+            command_name=command_name,
         )
 
         if auth_result.decision == "IGNORE":
@@ -153,8 +155,6 @@ class CommandRouter:
                 reject_reason="unauthorized_user",
             )
             return RouteResult("REJECT_UNAUTHORIZED", None)
-
-        command_name, args = _parse(command_text)
         if command_name not in self._allowed_commands():
             self._record(
                 request_id=request_id,
@@ -442,14 +442,12 @@ class TelegramControlBot:
         if command_name == "start" and result.decision == "EXECUTED":
             await self._send_reply_keyboard(update, user_id=user.id, force=True)
 
-        default_acc = self._config.get_account(None)
-        thread_id = default_acc.topics.commands.thread_id
         send_kwargs: dict[str, object] = {
-            "chat_id": default_acc.chat_id,
+            "chat_id": message.chat_id,
             "text": result.reply_text,
         }
-        if thread_id is not None:
-            send_kwargs["message_thread_id"] = thread_id
+        if message.message_thread_id is not None:
+            send_kwargs["message_thread_id"] = message.message_thread_id
         try:
             await asyncio.wait_for(
                 context.bot.send_message(**send_kwargs),
