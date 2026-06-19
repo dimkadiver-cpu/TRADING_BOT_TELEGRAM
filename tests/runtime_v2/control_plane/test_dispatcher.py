@@ -697,6 +697,46 @@ async def test_non_signal_clean_log_waits_for_signal_root_before_send(ops_db):
 
 
 @pytest.mark.asyncio
+async def test_non_signal_clean_log_sends_without_link_when_signal_root_failed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    now = datetime.now(timezone.utc).isoformat()
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="ENTRY_OPENED",
+            chain_id=40,
+            payload={
+                "chain_id": 40,
+                "symbol": "XAUTUSDT",
+                "side": "LONG",
+                "fill_price": 4139.6,
+                "filled_qty": 4.807,
+                "fee": 0.01,
+            },
+            dedupe_key="clean:entry:40",
+        )
+        conn.execute(
+            "INSERT INTO ops_notification_outbox "
+            "(notification_type, destination, payload_json, priority, status, "
+            "dedupe_key, attempts, created_at, chain_id) "
+            "VALUES ('SIGNAL_ACCEPTED', 'CLEAN_LOG', ?, 'MEDIUM', 'FAILED', "
+            "'clean:signal:40', 3, ?, 40)",
+            (json.dumps({"chain_id": 40, "symbol": "XAUTUSDT", "side": "LONG"}), now),
+        )
+    conn.close()
+
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+
+    sent = await disp.drain_once()
+
+    assert sent == 1
+    assert len(sender.sent) == 1
+    assert sender.sent[0]["text"].splitlines()[0] == "📊 #40 — ENTRY OPENED"
+    assert "t.me/c/" not in sender.sent[0]["text"]
+
+
+@pytest.mark.asyncio
 async def test_update_done_uses_signal_link_but_not_telegram_reply(ops_db):
     sender = FakeSender()
     disp = _dispatcher(ops_db, sender)

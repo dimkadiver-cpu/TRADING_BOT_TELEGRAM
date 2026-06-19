@@ -342,6 +342,21 @@ class TelegramNotificationDispatcher:
         normalized = str(tracking_chat_id).removeprefix("-100")
         return f"https://t.me/c/{normalized}/{root_message_id}"
 
+    def _has_failed_signal_root(self, chain_id: int) -> bool:
+        conn = sqlite3.connect(self._ops_db)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM ops_notification_outbox "
+                "WHERE destination='CLEAN_LOG' "
+                "AND notification_type IN ('SIGNAL_ACCEPTED', 'REVIEW_REQUIRED') "
+                "AND chain_id=? AND status='FAILED' "
+                "LIMIT 1",
+                (chain_id,),
+            ).fetchone()
+            return row is not None
+        finally:
+            conn.close()
+
     def _render(self, destination: str, notification_type: str, payload: dict) -> str:
         if destination == "CLEAN_LOG":
             return format_clean_log(notification_type, payload)
@@ -399,8 +414,16 @@ class TelegramNotificationDispatcher:
                     if chain_id is not None:
                         root_msg_id, tracking_chat_id, pinned_thread_id = self._get_clean_log_root(chain_id)
                         if root_msg_id is None:
-                            self._requeue_pending(notification_id)
-                            continue
+                            if self._has_failed_signal_root(chain_id):
+                                logger.warning(
+                                    "clean log root missing after failed signal notification; "
+                                    "sending without signal link | notification_id=%s chain_id=%s",
+                                    notification_id,
+                                    chain_id,
+                                )
+                            else:
+                                self._requeue_pending(notification_id)
+                                continue
                         # Pin chat+thread to what was used for the first event of this chain,
                         # so all events stay in the same conversation thread regardless of config changes.
                         if tracking_chat_id is not None:

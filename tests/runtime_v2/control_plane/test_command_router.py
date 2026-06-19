@@ -358,6 +358,12 @@ def test_private_bot_status_audits_without_thread_id(ops_db):
     assert row == ("EXECUTED", "")
 
 
+def test_build_app_does_not_raise_with_custom_request(ops_db):
+    bot = _make_bot(ops_db, delivery_mode="supergroup_topics", keyboard=[])
+    app = bot._build_app()
+    assert app.bot is not None
+
+
 def test_private_bot_first_text_message_sends_keyboard(ops_db):
     bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[["/status", "/trades"]])
     update = MagicMock()
