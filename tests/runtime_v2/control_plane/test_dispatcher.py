@@ -108,6 +108,19 @@ def _private_dispatcher(ops_db, sender):
     )
 
 
+def test_build_telegram_request_tolerates_slow_connects_and_keeps_pool_warm():
+    # The dispatcher sends sparsely; with httpx's default 5s keepalive every send does a
+    # cold TCP/TLS connect, which times out under a slow/flaky outbound path. Keep the pool
+    # warm and give slow connects room instead of failing at 5s.
+    from src.runtime_v2.control_plane.notification_dispatcher import build_telegram_request
+
+    req = build_telegram_request()
+    kw = req._client_kwargs
+    assert kw["timeout"].connect == 20.0
+    assert kw["limits"].keepalive_expiry == 300.0
+    assert kw["limits"].max_connections == 32
+
+
 def _seed(ops_db, dedupe_key="clean:k1"):
     conn = sqlite3.connect(ops_db)
     with conn:

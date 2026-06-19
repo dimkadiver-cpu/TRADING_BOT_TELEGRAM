@@ -71,15 +71,31 @@ def _now() -> str:
 
 
 def build_telegram_request():
-    """Request settings tuned for control-plane sends under flaky Telegram API latency."""
+    """Request settings tuned for control-plane sends under flaky Telegram API latency.
+
+    The dispatcher sends sparsely, so with httpx's default 5s keepalive every send does a
+    cold TCP/TLS connect — which times out on a slow/flaky outbound path even when the
+    network is otherwise fine (getUpdates stays warm and succeeds). We keep the pool warm
+    (keepalive_expiry=300s) and give slow connects room (connect_timeout=20s) so the
+    dispatcher reuses established connections instead of reconnecting on every message.
+    """
+    import httpx
     from telegram.request import HTTPXRequest
 
+    pool_size = 32
     return HTTPXRequest(
-        connection_pool_size=32,
-        connect_timeout=5.0,
+        connection_pool_size=pool_size,
+        connect_timeout=20.0,
         read_timeout=8.0,
         write_timeout=8.0,
         pool_timeout=2.0,
+        httpx_kwargs={
+            "limits": httpx.Limits(
+                max_connections=pool_size,
+                max_keepalive_connections=pool_size,
+                keepalive_expiry=300.0,
+            ),
+        },
     )
 
 

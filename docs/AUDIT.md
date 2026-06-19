@@ -62,6 +62,25 @@ Validazione: TDD WAL red→green; suite control_plane verde.
 - Dispatcher: valutare se incapsulare le sequenze DB di `drain_once` in `to_thread`
   (sotto WAL i freeze sono già fortemente ridotti — misurare prima).
 
+### Step completato — mitigazione rete (ConnectTimeout verso Telegram)
+
+Post-deploy WAL: timeout di invio residui = `ConnectTimeout` su connessioni a freddo verso
+`api.telegram.org` (getUpdates caldo passa sempre, sendMessage sparso fa connect a freddo).
+Prima comparsa del problema nel log: **2026-06-18 13:35:55** (notifica 50), durante una
+raffica di segnali da canale ad alto volume; fragilità di rete latente dal 06-07,
+amplificata dal requeue-spin il 06-19.
+
+Mitigazione in `build_telegram_request()` (PTB 22.7): `connect_timeout` 5s→**20s** e pool
+**caldo** via `httpx_kwargs` con `httpx.Limits(keepalive_expiry=300s, max_keepalive_connections=32)`.
+Il dispatcher riusa connessioni stabilite invece di riconnettersi ad ogni messaggio.
+
+File: `src/runtime_v2/control_plane/notification_dispatcher.py`,
+`tests/runtime_v2/control_plane/test_dispatcher.py` (+1 test). Validazione: TDD red→green;
+dispatcher+command_router 48 passed.
+
+Nota: se i ConnectTimeout persistessero anche con pool caldo, la causa è infrastrutturale
+(uscita HTTPS del server verso Telegram) — verificare lato rete con socket connect test.
+
 ---
 
 ## 2026-06-19 — Piano 3: Dashboard inline (design + piano scritto)
