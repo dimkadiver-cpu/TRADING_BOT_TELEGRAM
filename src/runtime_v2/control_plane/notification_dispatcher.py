@@ -19,7 +19,10 @@ from src.runtime_v2.control_plane.topic_router import TopicRouter
 logger = logging.getLogger(__name__)
 
 _MAX_ATTEMPTS = 3
-_SEND_TIMEOUT_SECONDS = 8.0
+# Must be >= the request connect_timeout (build_telegram_request), otherwise this outer
+# wait_for aborts the send before a slow connect can complete and the keep-alive pool can
+# never warm up. See test_send_timeout_not_capped_below_connect_timeout.
+_SEND_TIMEOUT_SECONDS = 25.0
 _FAILURE_BACKOFF_SECONDS = (15, 60)
 # Max time a non-signal CLEAN_LOG event waits for its chain's signal root before being
 # sent best-effort (no link) — bounds the wait so it can never spin forever.

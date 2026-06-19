@@ -81,6 +81,21 @@ dispatcher+command_router 48 passed.
 Nota: se i ConnectTimeout persistessero anche con pool caldo, la causa è infrastrutturale
 (uscita HTTPS del server verso Telegram) — verificare lato rete con socket connect test.
 
+### Correzione — cap del wait_for sul connect_timeout
+
+Post-deploy mitigazione: latenze ancora pessime (ENTRY_OPENED 212s, SIGNAL_ACCEPTED 155s)
+e ora errori `send failed:` **vuoti** (asyncio.TimeoutError) invece di "Timed out". Causa:
+l'invio è avvolto in `asyncio.wait_for(send, timeout=_SEND_TIMEOUT_SECONDS=8s)`, che uccide
+il connect a 8s → il `connect_timeout=20s` era codice morto e il connect veniva abortito
+prima di completare, quindi il pool keep-alive non si scaldava mai. Corretto:
+`_SEND_TIMEOUT_SECONDS` 8s→**25s** (>= connect_timeout) + test-invariante
+`test_send_timeout_not_capped_below_connect_timeout`.
+
+Evidenza che la causa residua è di RETE: `getUpdates` (connessione calda) non fallisce mai,
+mentre i `sendMessage` (connect a freddo, sparsi) falliscono. Passo decisivo: socket connect
+test verso `api.telegram.org:443` lato server. Se i connect sono lenti/instabili → fix
+infrastrutturale (firewall/proxy/uscita HTTPS rete arpa.veneto.it).
+
 ---
 
 ## 2026-06-19 — Piano 3: Dashboard inline (design + piano scritto)

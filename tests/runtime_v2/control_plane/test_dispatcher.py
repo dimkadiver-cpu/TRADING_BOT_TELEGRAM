@@ -108,6 +108,19 @@ def _private_dispatcher(ops_db, sender):
     )
 
 
+def test_send_timeout_not_capped_below_connect_timeout():
+    # The per-send asyncio.wait_for must give the connect_timeout room to complete,
+    # otherwise the connect is aborted early and a warm keep-alive connection is never
+    # established (the connect_timeout would be dead code).
+    from src.runtime_v2.control_plane.notification_dispatcher import (
+        _SEND_TIMEOUT_SECONDS,
+        build_telegram_request,
+    )
+
+    req = build_telegram_request()
+    assert _SEND_TIMEOUT_SECONDS >= req._client_kwargs["timeout"].connect
+
+
 def test_build_telegram_request_tolerates_slow_connects_and_keeps_pool_warm():
     # The dispatcher sends sparsely; with httpx's default 5s keepalive every send does a
     # cold TCP/TLS connect, which times out under a slow/flaky outbound path. Keep the pool
