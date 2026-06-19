@@ -7,7 +7,7 @@ import logging
 import sqlite3
 import time
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Protocol
 
 from src.runtime_v2.control_plane.formatters.clean_log import format_clean_log
@@ -19,6 +19,8 @@ from src.runtime_v2.control_plane.topic_router import TopicRouter
 logger = logging.getLogger(__name__)
 
 _MAX_ATTEMPTS = 3
+_SEND_TIMEOUT_SECONDS = 8.0
+_FAILURE_BACKOFF_SECONDS = (15, 60)
 
 
 class NotificationSender(Protocol):
@@ -63,6 +65,19 @@ class TelegramBotSender:
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def build_telegram_request():
+    """Request settings tuned for control-plane sends under flaky Telegram API latency."""
+    from telegram.request import HTTPXRequest
+
+    return HTTPXRequest(
+        connection_pool_size=32,
+        connect_timeout=5.0,
+        read_timeout=8.0,
+        write_timeout=8.0,
+        pool_timeout=2.0,
+    )
 
 
 class TelegramNotificationDispatcher:
@@ -143,12 +158,20 @@ class TelegramNotificationDispatcher:
     def _mark_failure(self, notification_id: int, attempts: int, error: str) -> None:
         new_attempts = attempts + 1
         status = "FAILED" if new_attempts >= _MAX_ATTEMPTS else "PENDING"
+        if status == "FAILED":
+            send_after = None
+        else:
+            backoff_index = min(new_attempts - 1, len(_FAILURE_BACKOFF_SECONDS) - 1)
+            send_after = (
+                datetime.now(timezone.utc)
+                + timedelta(seconds=_FAILURE_BACKOFF_SECONDS[backoff_index])
+            ).isoformat()
         conn = sqlite3.connect(self._ops_db)
         try:
             conn.execute(
                 "UPDATE ops_notification_outbox "
-                "SET attempts=?, last_error=?, status=? WHERE notification_id=?",
-                (new_attempts, error[:500], status, notification_id),
+                "SET attempts=?, last_error=?, status=?, send_after=? WHERE notification_id=?",
+                (new_attempts, error[:500], status, send_after, notification_id),
             )
             conn.commit()
         finally:
@@ -403,11 +426,14 @@ class TelegramNotificationDispatcher:
                     payload = {**payload, "chains": chains}
                 text = self._render(destination, notification_type, payload)
                 silent = self._is_silent(notification_type)
-                sent_message_id = await self._sender.send(
-                    chat_id=chat_id,
-                    thread_id=thread_id,
-                    text=text,
-                    silent=silent,
+                sent_message_id = await asyncio.wait_for(
+                    self._sender.send(
+                        chat_id=chat_id,
+                        thread_id=thread_id,
+                        text=text,
+                        silent=silent,
+                    ),
+                    timeout=_SEND_TIMEOUT_SECONDS,
                 )
                 if destination == "CLEAN_LOG":
                     self._update_clean_log_tracking(

@@ -24,9 +24,11 @@ from src.runtime_v2.control_plane.formatters.status import format_status
 from src.runtime_v2.control_plane.formatters.trade_detail import format_trade_detail
 from src.runtime_v2.control_plane.formatters.trades import format_trades
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
+from src.runtime_v2.control_plane.notification_dispatcher import build_telegram_request
 from src.runtime_v2.control_plane.service import RuntimeControlService
 
 logger = logging.getLogger(__name__)
+_COMMAND_SEND_TIMEOUT_SECONDS = 8.0
 
 _HELP_TEXT = """COMANDI DISPONIBILI
 ────────────────
@@ -367,7 +369,17 @@ class TelegramControlBot:
     def _build_app(self):
         from telegram.ext import Application, MessageHandler, filters
 
-        app = Application.builder().token(self._config.token).build()
+        app = (
+            Application.builder()
+            .token(self._config.token)
+            .request(build_telegram_request())
+            .get_updates_connection_pool_size(4)
+            .get_updates_connect_timeout(5.0)
+            .get_updates_read_timeout(30.0)
+            .get_updates_write_timeout(8.0)
+            .get_updates_pool_timeout(2.0)
+            .build()
+        )
         app.add_handler(MessageHandler(filters.COMMAND, self._on_command))
         app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, self._on_text_message))
         return app
@@ -439,7 +451,13 @@ class TelegramControlBot:
         }
         if thread_id is not None:
             send_kwargs["message_thread_id"] = thread_id
-        await context.bot.send_message(**send_kwargs)
+        try:
+            await asyncio.wait_for(
+                context.bot.send_message(**send_kwargs),
+                timeout=_COMMAND_SEND_TIMEOUT_SECONDS,
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("control plane command reply send failed: %s", exc)
 
     async def run(self) -> None:
         self._app = self._build_app()

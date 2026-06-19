@@ -192,21 +192,35 @@ git commit -m "feat: add CloseCandidate and get_open_for_close/get_waiting_for_c
 - Consumes: `CloseCandidate` (Task 1), `QueryScope` (Piano 1 Task 2)
 - Produces:
   - `EmergencyCloseService(ops_db_path: str)`
-  - `.execute_close(chain_ids: list[int], created_by: str) -> int` — inserisce comandi MARKET_CLOSE, ritorna count
-  - `.execute_cancel(chain_ids: list[int], created_by: str) -> int` — inserisce comandi CANCEL_ENTRY, ritorna count
+  - `.execute_close(candidates: list[CloseCandidate], created_by: str) -> int` — crea comandi CLOSE_FULL (payload `{symbol(raw), side}`), ritorna count
+  - `.execute_cancel(candidates: list[CloseCandidate], created_by: str) -> int` — crea CANCEL_PENDING_ENTRY espansi per gamba, ritorna count comandi creati
 
 - [ ] **Step 1: Creare `emergency_close.py`**
+
+**Contratto payload verificato (`adapters/ccxt_bybit/order_builder.py`, `gateway.py`):**
+- `CLOSE_FULL` → payload deve contenere **`symbol` (raw, es. `ETHUSDT`) e `side`**. `qty`
+  auto-risolta dal gateway (`get_chain_open_position_qty`); `reduceOnly`/`positionIdx`
+  li mette il builder. **Mai** usare `display_symbol()` nel payload di esecuzione.
+- `CANCEL_PENDING_ENTRY` → va **espanso per gamba**: il gateway NON applica
+  `expand_cancel_pending_commands` (lo fanno solo entry_gate/workers). Il service deve
+  leggere i `client_order_id` reali con `load_pending_entry_client_order_ids(conn, chain_id)`
+  e creare un comando per ciascuno con `{"symbol":..., "entry_client_order_id": coid}`.
+  Se la chain non ha entry pendenti con coid reale → nessun comando creato per quella chain.
 
 ```python
 # src/runtime_v2/control_plane/emergency_close.py
 from __future__ import annotations
 
+import json
 import secrets
+import sqlite3
 
+from src.runtime_v2.control_plane.status_queries import CloseCandidate
+from src.runtime_v2.lifecycle.cancel_expander import load_pending_entry_client_order_ids
 from src.runtime_v2.lifecycle.models import ExecutionCommand
 from src.runtime_v2.lifecycle.repositories import ExecutionCommandRepository
 
-# Tipi reali processati dal gateway (verificati in execution_gateway/repositories.py).
+# Tipi reali processati dal gateway (verificati in execution_gateway/order_builder.py).
 # NON usare MARKET_CLOSE / CANCEL_ENTRY: non esistono.
 _CMD_CLOSE_FULL = "CLOSE_FULL"
 _CMD_CANCEL_ENTRY = "CANCEL_PENDING_ENTRY"
@@ -215,49 +229,68 @@ _CMD_CANCEL_ENTRY = "CANCEL_PENDING_ENTRY"
 class EmergencyCloseService:
     """Crea comandi di chiusura/cancellazione via il repository esistente.
 
-    Riusa ExecutionCommandRepository.save() (lifecycle/repositories.py) che
-    popola idempotency_key/created_at/updated_at e usa INSERT OR IGNORE.
-    NON scrive un INSERT a mano: lo schema reale richiede idempotency_key
-    NOT NULL UNIQUE + updated_at NOT NULL e non ha colonna created_by.
+    Riusa ExecutionCommandRepository.save() (lifecycle/repositories.py): popola
+    idempotency_key/created_at/updated_at e usa INSERT OR IGNORE. NON scrive INSERT
+    a mano (lo schema reale richiede idempotency_key NOT NULL UNIQUE + updated_at
+    NOT NULL e non ha colonna created_by — created_by resta solo nell'audit comando).
     """
 
     def __init__(self, ops_db_path: str) -> None:
+        self._db = ops_db_path
         self._repo = ExecutionCommandRepository(ops_db_path)
 
-    def _save(self, chain_ids: list[int], command_type: str, prefix: str) -> int:
+    def execute_close(self, candidates: list[CloseCandidate], created_by: str) -> int:
+        """Crea un CLOSE_FULL per ogni candidato. Ritorna count creati.
+
+        Usa il symbol RAW del candidato (CloseCandidate.symbol), non quello display.
+        """
         count = 0
-        for chain_id in chain_ids:
+        for c in candidates:
             cmd = ExecutionCommand(
-                trade_chain_id=chain_id,
-                command_type=command_type,
+                trade_chain_id=c.chain_id,
+                command_type=_CMD_CLOSE_FULL,
                 status="PENDING",
-                payload_json="{}",  # qty auto-risolta dal gateway per CLOSE_FULL
-                idempotency_key=f"{prefix}:{chain_id}:{secrets.token_hex(4)}",
+                payload_json=json.dumps({"symbol": c.symbol, "side": c.side}),
+                idempotency_key=f"manual_close:{c.chain_id}:{secrets.token_hex(4)}",
             )
             self._repo.save(cmd)
             count += 1
         return count
 
-    def execute_close(self, chain_ids: list[int], created_by: str) -> int:
-        """Crea un comando CLOSE_FULL per ogni chain_id. Ritorna count creati.
+    def execute_cancel(self, candidates: list[CloseCandidate], created_by: str) -> int:
+        """Crea i CANCEL_PENDING_ENTRY espandendoli per gamba entry reale.
 
-        created_by viene tracciato nell'audit comando dal router, non in questa tabella.
+        Ritorna il numero di comandi effettivamente creati (≥0). Una chain senza
+        entry pendenti con client_order_id reale non produce comandi.
         """
-        if not chain_ids:
-            return 0
-        return self._save(chain_ids, _CMD_CLOSE_FULL, "manual_close")
-
-    def execute_cancel(self, chain_ids: list[int], created_by: str) -> int:
-        """Crea un comando CANCEL_PENDING_ENTRY per ogni chain_id. Ritorna count creati."""
-        if not chain_ids:
-            return 0
-        return self._save(chain_ids, _CMD_CANCEL_ENTRY, "cancel_entry")
+        count = 0
+        conn = sqlite3.connect(self._db)
+        try:
+            for c in candidates:
+                coids = load_pending_entry_client_order_ids(conn, c.chain_id)
+                for coid in coids:
+                    cmd = ExecutionCommand(
+                        trade_chain_id=c.chain_id,
+                        command_type=_CMD_CANCEL_ENTRY,
+                        status="PENDING",
+                        payload_json=json.dumps(
+                            {"symbol": c.symbol, "entry_client_order_id": coid}
+                        ),
+                        idempotency_key=f"cancel_entry:{c.chain_id}:{coid}:{secrets.token_hex(4)}",
+                    )
+                    self._repo.save(cmd)
+                    count += 1
+        finally:
+            conn.close()
+        return count
 
 
 __all__ = ["EmergencyCloseService"]
 ```
 
-Nota: verificare in Task 0 i campi obbligatori di `ExecutionCommand` (`src/runtime_v2/lifecycle/models.py`) e il contratto payload di `CLOSE_FULL` (se richiede `qty`/`reduce_only` espliciti, aggiungerli a `payload_json`).
+Nota: `execute_cancel` può ritornare un count > del numero di chain (più gambe per chain) e
+il messaggio "ordini cancellati" deve riflettere il **count reale di comandi**, non
+`len(candidates)`. Allineare di conseguenza il payload del template result (vedi Task 5).
 
 - [ ] **Step 2: Aggiungere `EmergencyCloseService` a `RuntimeControlService`**
 
@@ -283,11 +316,11 @@ def get_waiting_for_cancel(self, scope: QueryScope) -> list:
 def get_open_count_excluding_waiting(self, scope: QueryScope) -> int:
     return self._queries.get_open_count_excluding_waiting(scope)
 
-def execute_close(self, chain_ids: list[int], created_by: str) -> int:
-    return self._emergency.execute_close(chain_ids, created_by)
+def execute_close(self, candidates: list, created_by: str) -> int:
+    return self._emergency.execute_close(candidates, created_by)
 
-def execute_cancel(self, chain_ids: list[int], created_by: str) -> int:
-    return self._emergency.execute_cancel(chain_ids, created_by)
+def execute_cancel(self, candidates: list, created_by: str) -> int:
+    return self._emergency.execute_cancel(candidates, created_by)
 ```
 
 - [ ] **Step 3: Commit**
@@ -382,28 +415,53 @@ def test_get_waiting_for_cancel():
     os.unlink(db)
 
 
-def test_execute_close_inserts_close_full():
+def test_execute_close_inserts_close_full_with_raw_symbol_and_side():
     db = _make_db()
+    q = StatusQueries(db)
     svc = EmergencyCloseService(db)
-    count = svc.execute_close([1, 2], created_by="42")
+    candidates = q.get_open_for_close(QueryScope(account_id="demo_1", trader_ids=None))
+    count = svc.execute_close(candidates, created_by="42")
     assert count == 2
     conn = sqlite3.connect(db)
-    rows = conn.execute("SELECT command_type, trade_chain_id FROM ops_execution_commands ORDER BY command_id").fetchall()
+    rows = conn.execute(
+        "SELECT command_type, trade_chain_id, payload_json "
+        "FROM ops_execution_commands ORDER BY command_id"
+    ).fetchall()
     conn.close()
-    assert rows == [("CLOSE_FULL", 1), ("CLOSE_FULL", 2)]
-    os.unlink(db)
+    assert [(r[0], r[1]) for r in rows] == [("CLOSE_FULL", 1), ("CLOSE_FULL", 2)]
+    p0 = json.loads(rows[0][2])
+    assert p0["symbol"] == "BTCUSDT"  # raw, non "BTC/USDT"
+    assert p0["side"] == "LONG"
 
 
-def test_execute_cancel_inserts_cancel_pending_entry():
+def test_execute_cancel_expands_per_pending_entry_leg():
     db = _make_db()
-    svc = EmergencyCloseService(db)
-    count = svc.execute_cancel([3], created_by="42")
-    assert count == 1
+    # chain 3 (WAITING_ENTRY) deve avere comandi PLACE_ENTRY con client_order_id reale
     conn = sqlite3.connect(db)
-    rows = conn.execute("SELECT command_type FROM ops_execution_commands").fetchall()
+    now = "2026-06-19T10:00:00+00:00"
+    for i, coid in enumerate(("tsb:leg1", "tsb:leg2"), start=1):
+        conn.execute(
+            "INSERT INTO ops_execution_commands "
+            "(trade_chain_id, command_type, status, payload_json, client_order_id, "
+            " idempotency_key, created_at, updated_at) "
+            "VALUES (3,'PLACE_ENTRY','PENDING','{}',?,?,?,?)",
+            (coid, f"place_entry:3:leg{i}", now, now),
+        )
+    conn.commit()
     conn.close()
-    assert rows == [("CANCEL_PENDING_ENTRY",)]
-    os.unlink(db)
+
+    q = StatusQueries(db)
+    svc = EmergencyCloseService(db)
+    candidates = q.get_waiting_for_cancel(QueryScope(account_id="demo_1", trader_ids=None))
+    count = svc.execute_cancel(candidates, created_by="42")
+    assert count == 2  # una cancel per gamba
+    conn = sqlite3.connect(db)
+    rows = conn.execute(
+        "SELECT payload_json FROM ops_execution_commands WHERE command_type='CANCEL_PENDING_ENTRY'"
+    ).fetchall()
+    conn.close()
+    coids = {json.loads(r[0])["entry_client_order_id"] for r in rows}
+    assert coids == {"tsb:leg1", "tsb:leg2"}
 
 
 def test_execute_close_empty_is_noop():
@@ -413,6 +471,8 @@ def test_execute_close_empty_is_noop():
     assert count == 0
     os.unlink(db)
 ```
+
+Aggiungere `import json` in cima al file di test.
 
 Run: `pytest tests/runtime_v2/control_plane/test_emergency_close.py -v`
 Expected: PASS
@@ -732,8 +792,8 @@ _PENDING_TTL = 300  # 5 minuti
 class _PendingAction:
     kind: Literal["close_all", "close_single", "cancel_all"]
     scope: "QueryScope"
-    chain_ids: list[int]
-    chains_payload: list[dict]  # già formattati per il template di risultato
+    candidates: list[CloseCandidate]  # RAW (symbol/side non-display) — per l'esecuzione
+    chains_payload: list[dict]  # display, per il template di risultato
     scope_label: str
     open_count: int  # per cancel_all — posizioni non toccate
     created_at: float = field(default_factory=time.time)
@@ -809,7 +869,7 @@ def handle_callback(
             "scope_label": pending.scope_label,
             "chains": pending.chains_payload,
             "cancelled_at": now,
-            "count": len(pending.chain_ids),
+            "count": len(pending.candidates),
             "open_count": pending.open_count,
         }
         text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
@@ -817,15 +877,15 @@ def handle_callback(
 
     # confirm
     if kind == "close_all":
-        count = self._service.execute_close(pending.chain_ids, created_by=created_by)
+        count = self._service.execute_close(pending.candidates, created_by=created_by)
         cfg = EMERGENCY_REGISTRY["close_all_result_ok"]
         payload = {"scope_label": pending.scope_label, "chains": pending.chains_payload, "count": count, "executed_at": now}
     elif kind == "close_single":
-        count = self._service.execute_close(pending.chain_ids, created_by=created_by)
+        count = self._service.execute_close(pending.candidates, created_by=created_by)
         cfg = EMERGENCY_REGISTRY["close_single_result_ok"]
         payload = {"scope_label": pending.scope_label, "chains": pending.chains_payload, "count": count, "executed_at": now}
     elif kind == "cancel_all":
-        count = self._service.execute_cancel(pending.chain_ids, created_by=created_by)
+        count = self._service.execute_cancel(pending.candidates, created_by=created_by)
         cfg = EMERGENCY_REGISTRY["cancel_all_result_ok"]
         payload = {
             "scope_label": pending.scope_label,
@@ -868,7 +928,7 @@ if command_name == "close_all":
     token = _make_token()
     self._pending[token] = _PendingAction(
         kind="close_all", scope=effective_scope,
-        chain_ids=[c.chain_id for c in candidates],
+        candidates=candidates,
         chains_payload=chains_payload, scope_label=sl, open_count=0,
     )
     return _DispatchResult(text, keyboard=_emergency_keyboard("close_all", token))
@@ -891,7 +951,7 @@ if command_name == "close":
     token = _make_token()
     self._pending[token] = _PendingAction(
         kind="close_single", scope=effective_scope,
-        chain_ids=[c.chain_id for c in candidates],
+        candidates=candidates,
         chains_payload=chains_payload, scope_label=sl, open_count=0,
     )
     return _DispatchResult(text, keyboard=_emergency_keyboard("close_single", token))
@@ -911,7 +971,7 @@ if command_name == "cancel_all":
     token = _make_token()
     self._pending[token] = _PendingAction(
         kind="cancel_all", scope=effective_scope,
-        chain_ids=[c.chain_id for c in candidates],
+        candidates=candidates,
         chains_payload=chains_payload, scope_label=sl, open_count=open_count,
     )
     return _DispatchResult(text, keyboard=_emergency_keyboard("cancel_all", token))

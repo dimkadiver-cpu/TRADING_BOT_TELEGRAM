@@ -406,6 +406,24 @@ def test_private_bot_non_start_command_does_not_push_keyboard(ops_db):
 
 # ── New commands: logs, debug_on, debug_off ───────────────────────────────────
 
+def test_command_reply_send_failure_is_logged_not_raised(ops_db, caplog):
+    bot = _make_bot(ops_db, delivery_mode="private_bot", keyboard=[])
+    update = MagicMock()
+    update.effective_message = MagicMock(
+        text="/status",
+        message_id=23,
+        chat_id=-100999,
+        message_thread_id=None,
+    )
+    update.effective_user = MagicMock(id=42, username="op")
+    context = MagicMock()
+    context.bot.send_message = AsyncMock(side_effect=TimeoutError("telegram slow"))
+
+    asyncio.run(bot._on_command(update, context))
+
+    assert "control plane command reply send failed" in caplog.text
+
+
 def test_logs_command_returns_log_content_or_not_found(ops_db):
     router = _router(ops_db)
     res = router.route(

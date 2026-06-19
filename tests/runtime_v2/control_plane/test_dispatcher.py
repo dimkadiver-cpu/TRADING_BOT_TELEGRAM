@@ -135,6 +135,16 @@ def _seed_tech_log(ops_db, dedupe_key="tech:k1"):
     conn.close()
 
 
+def _make_due(ops_db: str) -> None:
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        conn.execute(
+            "UPDATE ops_notification_outbox SET send_after=? WHERE status='PENDING'",
+            (datetime.now(timezone.utc).isoformat(),),
+        )
+    conn.close()
+
+
 async def test_drain_sends_and_marks_sent(ops_db):
     _seed(ops_db)
     sender = FakeSender()
@@ -155,7 +165,9 @@ async def test_drain_retries_then_fails(ops_db):
     disp = _dispatcher(ops_db, sender)
     # 3 drain passes -> attempts reaches max -> FAILED
     await disp.drain_once()
+    _make_due(ops_db)
     await disp.drain_once()
+    _make_due(ops_db)
     await disp.drain_once()
     conn = sqlite3.connect(ops_db)
     status, attempts = conn.execute(
@@ -166,12 +178,32 @@ async def test_drain_retries_then_fails(ops_db):
     assert attempts == 3
 
 
+async def test_drain_failure_sets_retry_backoff(ops_db):
+    _seed(ops_db)
+    sender = FakeSender(fail_times=1)
+    disp = _dispatcher(ops_db, sender)
+
+    await disp.drain_once()
+
+    conn = sqlite3.connect(ops_db)
+    status, attempts, send_after = conn.execute(
+        "SELECT status, attempts, send_after FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+
+    assert status == "PENDING"
+    assert attempts == 1
+    assert send_after is not None
+    assert datetime.fromisoformat(send_after) > datetime.now(timezone.utc)
+
+
 async def test_failed_entry_not_resent(ops_db):
     _seed(ops_db)
     sender = FakeSender(fail_times=99)
     disp = _dispatcher(ops_db, sender)
     for _ in range(5):
         await disp.drain_once()
+        _make_due(ops_db)
     assert sender.calls == 3  # stops attempting after FAILED
 
 
@@ -180,6 +212,7 @@ async def test_recovers_after_transient_failure(ops_db):
     sender = FakeSender(fail_times=1)
     disp = _dispatcher(ops_db, sender)
     await disp.drain_once()   # fails once
+    _make_due(ops_db)
     await disp.drain_once()   # succeeds
     assert len(sender.sent) == 1
     conn = sqlite3.connect(ops_db)
@@ -644,6 +677,7 @@ async def test_non_signal_clean_log_waits_for_signal_root_before_send(ops_db):
     assert first == 0
     assert sender.sent == []
 
+    _make_due(ops_db)
     second = await disp.drain_once()
     assert second == 2
     assert [msg["text"].splitlines()[0] for msg in sender.sent] == [

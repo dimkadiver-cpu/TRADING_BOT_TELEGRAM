@@ -13,6 +13,7 @@ from src.runtime_v2.control_plane.models import ControlPlaneConfig
 from src.runtime_v2.control_plane.notification_dispatcher import (
     TelegramBotSender,
     TelegramNotificationDispatcher,
+    build_telegram_request,
 )
 from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.snapshot_store import SnapshotStore
@@ -24,7 +25,7 @@ from src.runtime_v2.control_plane.topic_router import TopicRouter
 def _create_sender(token: str):
     from telegram import Bot
 
-    return TelegramBotSender(Bot(token=token))
+    return TelegramBotSender(Bot(token=token, request=build_telegram_request()))
 
 
 @dataclass(frozen=True)
