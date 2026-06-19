@@ -62,6 +62,40 @@ Validazione: TDD WAL red→green; suite control_plane verde.
 - Dispatcher: valutare se incapsulare le sequenze DB di `drain_once` in `to_thread`
   (sotto WAL i freeze sono già fortemente ridotti — misurare prima).
 
+### Step completato — mitigazione rete (ConnectTimeout verso Telegram)
+
+Post-deploy WAL: timeout di invio residui = `ConnectTimeout` su connessioni a freddo verso
+`api.telegram.org` (getUpdates caldo passa sempre, sendMessage sparso fa connect a freddo).
+Prima comparsa del problema nel log: **2026-06-18 13:35:55** (notifica 50), durante una
+raffica di segnali da canale ad alto volume; fragilità di rete latente dal 06-07,
+amplificata dal requeue-spin il 06-19.
+
+Mitigazione in `build_telegram_request()` (PTB 22.7): `connect_timeout` 5s→**20s** e pool
+**caldo** via `httpx_kwargs` con `httpx.Limits(keepalive_expiry=300s, max_keepalive_connections=32)`.
+Il dispatcher riusa connessioni stabilite invece di riconnettersi ad ogni messaggio.
+
+File: `src/runtime_v2/control_plane/notification_dispatcher.py`,
+`tests/runtime_v2/control_plane/test_dispatcher.py` (+1 test). Validazione: TDD red→green;
+dispatcher+command_router 48 passed.
+
+Nota: se i ConnectTimeout persistessero anche con pool caldo, la causa è infrastrutturale
+(uscita HTTPS del server verso Telegram) — verificare lato rete con socket connect test.
+
+### Correzione — cap del wait_for sul connect_timeout
+
+Post-deploy mitigazione: latenze ancora pessime (ENTRY_OPENED 212s, SIGNAL_ACCEPTED 155s)
+e ora errori `send failed:` **vuoti** (asyncio.TimeoutError) invece di "Timed out". Causa:
+l'invio è avvolto in `asyncio.wait_for(send, timeout=_SEND_TIMEOUT_SECONDS=8s)`, che uccide
+il connect a 8s → il `connect_timeout=20s` era codice morto e il connect veniva abortito
+prima di completare, quindi il pool keep-alive non si scaldava mai. Corretto:
+`_SEND_TIMEOUT_SECONDS` 8s→**25s** (>= connect_timeout) + test-invariante
+`test_send_timeout_not_capped_below_connect_timeout`.
+
+Evidenza che la causa residua è di RETE: `getUpdates` (connessione calda) non fallisce mai,
+mentre i `sendMessage` (connect a freddo, sparsi) falliscono. Passo decisivo: socket connect
+test verso `api.telegram.org:443` lato server. Se i connect sono lenti/instabili → fix
+infrastrutturale (firewall/proxy/uscita HTTPS rete arpa.veneto.it).
+
 ---
 
 ## 2026-06-19 — Piano 3: Dashboard inline (design + piano scritto)

@@ -51,6 +51,7 @@ from src.runtime_v2.execution_gateway.event_ingest.normalizer import EventNormal
 from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
 from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
 from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+from src.runtime_v2.execution_gateway.adapter_context import AdapterExecutionContext
 from src.runtime_v2.control_plane.bootstrap import build_control_plane
 from src.runtime_v2.control_plane.notification_dispatcher import TelegramNotificationDispatcher
 from src.runtime_v2.control_plane.outbox_writer import notify_listener_edit_skipped
@@ -84,6 +85,7 @@ class ExecutionRuntime:
     poll_fallback_by_account: dict[str, bool] | None = None
     position_reconciliation_interval_seconds: int = 600
     poll_fallback_enabled: bool = True
+    adapter_contexts: dict[str, AdapterExecutionContext] | None = None
 
 
 async def _wait_any(*events: asyncio.Event) -> None:
@@ -182,7 +184,12 @@ def _build_execution_runtime(
     reconciliation_intervals: dict[str, int] = {}
     position_reconciliation_intervals: dict[str, int] = {}
     poll_fallback_by_account: dict[str, bool] = {}
+    account_adapter_map: dict[str, str] = {}   # account_id → adapter_name
+    adapter_cfg_map: dict[str, object] = {}    # adapter_name → AdapterConfig
+
     route_keys = ["default", *[k for k in exec_config.account_routing.keys() if k != "default"]]
+
+    # --- Pass 1: build sync_workers ---
     for route_key in route_keys:
         route_cfg, route_adapter_cfg = exec_config.resolve_routing(route_key)
         account_id = route_cfg.execution_account_id
@@ -202,39 +209,107 @@ def _build_execution_runtime(
             wake_callback=wake_callback,
         )
         sync_workers[account_id] = sync_worker
+        account_adapter_map[account_id] = route_adapter_name
+        adapter_cfg_map[route_adapter_name] = route_adapter_cfg
         poll_fallback_by_account[account_id] = route_adapter_cfg.websocket.poll_fallback_enabled
         position_reconciliation_intervals[account_id] = (
             route_adapter_cfg.websocket.position_reconciliation_interval_seconds
         )
 
-        if route_adapter_cfg.type == "ccxt_bybit" and route_adapter_cfg.websocket.enabled:
-            api_key = os.environ.get(route_adapter_cfg.api_key_env or "") if route_adapter_cfg.api_key_env else ""
-            api_secret = os.environ.get(route_adapter_cfg.api_secret_env or "") if route_adapter_cfg.api_secret_env else ""
-            testnet = bool(
-                getattr(route_adapter_cfg, "testnet", False) or route_adapter_cfg.mode == "testnet"
+    # --- Build one AdapterExecutionContext per adapter ---
+    adapter_to_accounts: dict[str, list[str]] = {}
+    for acc_id, adp_name in account_adapter_map.items():
+        adapter_to_accounts.setdefault(adp_name, []).append(acc_id)
+
+    adapter_contexts: dict[str, AdapterExecutionContext] = {}
+    for adp_name, acc_ids in adapter_to_accounts.items():
+        adp_cfg = adapter_cfg_map[adp_name]
+        workers = [sync_workers[a] for a in acc_ids]
+
+        def _make_recon(ws=workers):
+            def _recon():
+                for w in ws:
+                    w.run_reconciliation()
+            return _recon
+
+        def _make_pos_recon(ws=workers):
+            def _pos_recon():
+                for w in ws:
+                    w.run_position_reconciliation()
+                    w.run_trade_based_reconciliation()
+                    w.run_protective_orders_reconciliation()
+            return _pos_recon
+
+        ctx = AdapterExecutionContext(
+            adp_name,
+            reconciliation_fn=_make_recon(),
+            position_reconciliation_fn=_make_pos_recon(),
+            poll_fallback_enabled=adp_cfg.websocket.poll_fallback_enabled,
+            poll_fallback_period_seconds=float(adp_cfg.websocket.poll_fallback_period_seconds),
+            position_reconciliation_interval_seconds=float(
+                adp_cfg.websocket.position_reconciliation_interval_seconds
+            ),
+        )
+        adapter_contexts[adp_name] = ctx
+
+    # --- Pass 2: build and start ws_watchers (contexts exist now) ---
+    for route_key in route_keys:
+        route_cfg, route_adapter_cfg = exec_config.resolve_routing(route_key)
+        account_id = route_cfg.execution_account_id
+        if account_id in ws_watchers:
+            continue
+        if route_adapter_cfg.type != "ccxt_bybit" or not route_adapter_cfg.websocket.enabled:
+            continue
+        route_adapter_name = account_adapter_map.get(account_id, adapter_name)
+        ctx = adapter_contexts.get(route_adapter_name)
+        sw = sync_workers[account_id]
+
+        recon_cb = (
+            (lambda c=ctx, w=sw: c.submit(w.run_reconciliation))
+            if ctx is not None
+            else sw.run_reconciliation
+        )
+
+        api_key = (
+            os.environ.get(route_adapter_cfg.api_key_env or "")
+            if route_adapter_cfg.api_key_env else ""
+        )
+        api_secret = (
+            os.environ.get(route_adapter_cfg.api_secret_env or "")
+            if route_adapter_cfg.api_secret_env else ""
+        )
+        testnet = bool(
+            getattr(route_adapter_cfg, "testnet", False)
+            or route_adapter_cfg.mode == "testnet"
+        )
+        normalizer = EventNormalizer()
+        classifier = EventClassifier(known_order_link_ids={})
+        ws_watcher = BybitWsFillWatcher(
+            api_key=api_key,
+            api_secret=api_secret,
+            testnet=testnet,
+            ops_db_path=ops_db_path,
+            repo=gateway_repo,
+            normalizer=normalizer,
+            classifier=classifier,
+            reconciliation_callback=recon_cb,
+            mode=route_adapter_cfg.mode,
+            wake_callback=wake_callback,
+            account_id=account_id,
+        )
+        ws_watcher.start()
+        ws_watchers[account_id] = ws_watcher
+        if route_adapter_cfg.websocket.poll_fallback_enabled:
+            reconciliation_intervals[account_id] = (
+                route_adapter_cfg.websocket.poll_fallback_period_seconds
             )
-            normalizer = EventNormalizer()
-            classifier = EventClassifier(known_order_link_ids={})
-            ws_watcher = BybitWsFillWatcher(
-                api_key=api_key,
-                api_secret=api_secret,
-                testnet=testnet,
-                ops_db_path=ops_db_path,
-                repo=gateway_repo,
-                normalizer=normalizer,
-                classifier=classifier,
-                reconciliation_callback=sync_worker.run_reconciliation,
-                mode=route_adapter_cfg.mode,
-                wake_callback=wake_callback,
-                account_id=account_id,
-            )
-            ws_watcher.start()
-            ws_watchers[account_id] = ws_watcher
-            if route_adapter_cfg.websocket.poll_fallback_enabled:
-                reconciliation_intervals[account_id] = route_adapter_cfg.websocket.poll_fallback_period_seconds
+
+    # Start all adapter contexts
+    for ctx in adapter_contexts.values():
+        ctx.start()
 
     sync_worker = sync_workers[routing.execution_account_id]
-    ws_watcher = ws_watchers.get(routing.execution_account_id)
+    ws_watcher_default = ws_watchers.get(routing.execution_account_id)
     reconciliation_interval_seconds = reconciliation_intervals.get(routing.execution_account_id)
 
     logger.info(
@@ -245,7 +320,7 @@ def _build_execution_runtime(
         adapter=adapter,
         execution_worker=execution_worker,
         sync_worker=sync_worker,
-        ws_watcher=ws_watcher,
+        ws_watcher=ws_watcher_default,
         reconciliation_interval_seconds=reconciliation_interval_seconds,
         adapters=adapter_registry,
         sync_workers=sync_workers,
@@ -255,6 +330,7 @@ def _build_execution_runtime(
         poll_fallback_by_account=poll_fallback_by_account,
         position_reconciliation_interval_seconds=adapter_cfg.websocket.position_reconciliation_interval_seconds,
         poll_fallback_enabled=adapter_cfg.websocket.poll_fallback_enabled,
+        adapter_contexts=adapter_contexts,
     )
 
 
@@ -297,6 +373,10 @@ def _build_exchange_port(
 def _close_execution_runtime(runtime: ExecutionRuntime | None) -> None:
     if runtime is None:
         return
+    # Stop adapter contexts first — no new REST calls will be submitted
+    for ctx in (runtime.adapter_contexts or {}).values():
+        ctx.stop()
+    # Stop WS watchers
     stopped_watchers: set[int] = set()
     for watcher in (runtime.ws_watchers or {}).values():
         if id(watcher) in stopped_watchers:
@@ -305,6 +385,7 @@ def _close_execution_runtime(runtime: ExecutionRuntime | None) -> None:
         stopped_watchers.add(id(watcher))
     if runtime.ws_watcher is not None and id(runtime.ws_watcher) not in stopped_watchers:
         runtime.ws_watcher.stop()
+    # Close adapter REST clients
     closed_adapters: set[int] = set()
     for adapter in (runtime.adapters or {}).values():
         close = getattr(adapter, "close", None)
@@ -315,36 +396,9 @@ def _close_execution_runtime(runtime: ExecutionRuntime | None) -> None:
         close = getattr(runtime.adapter, "close", None)
         if callable(close):
             close()
-
-
-async def _run_reconciliation_periodically(
-    *,
-    sync_worker: ExchangeEventSyncWorker,
-    interval_seconds: int,
-    logger,
-) -> None:
-    while True:
-        await asyncio.sleep(interval_seconds)
-        try:
-            sync_worker.run_reconciliation()
-        except Exception:
-            logger.exception("periodic reconciliation error")
-
-
-async def _run_position_reconciliation_periodically(
-    *,
-    sync_worker: ExchangeEventSyncWorker,
-    interval_seconds: int,
-    logger,
-) -> None:
-    while True:
-        await asyncio.sleep(interval_seconds)
-        try:
-            sync_worker.run_position_reconciliation()
-            sync_worker.run_trade_based_reconciliation()
-            sync_worker.run_protective_orders_reconciliation()
-        except Exception:
-            logger.exception("periodic position/tp reconciliation error")
+    # Join context threads (after REST clients closed — no in-flight calls remain)
+    for ctx in (runtime.adapter_contexts or {}).values():
+        ctx.join(timeout=5.0)
 
 
 async def _run_lifecycle_workers(
@@ -377,21 +431,6 @@ async def _run_lifecycle_workers(
                 execution_runtime.execution_worker.run_once()
         except Exception:
             logger.exception("lifecycle worker error")
-
-
-async def _run_sync_worker(
-    *,
-    sync_worker: ExchangeEventSyncWorker,
-    interval_seconds: int = 8,
-    logger,
-) -> None:
-    while True:
-        await asyncio.sleep(interval_seconds)
-        try:
-            sync_worker.run_once()
-        except Exception:
-            logger.exception("sync worker error")
-
 
 
 async def _start_control_bot(bot, logger) -> None:
@@ -655,58 +694,11 @@ async def _async_main(
             except Exception:
                 logger.warning("startup reconciliation failed (non-critical)")
 
-        sync_tasks = []
-        if execution_runtime is not None:
-            for account_id, worker in (execution_runtime.sync_workers or {}).items():
-                if not (execution_runtime.poll_fallback_by_account or {}).get(account_id, False):
-                    continue
-                sync_tasks.append(
-                    asyncio.create_task(
-                        _run_sync_worker(
-                            sync_worker=worker,
-                            logger=logger,
-                        )
-                    )
-                )
-
-        reconciliation_tasks = []
-        position_reconciliation_tasks = []
-        if execution_runtime is not None:
-            for account_id, worker in (execution_runtime.sync_workers or {}).items():
-                interval = (execution_runtime.reconciliation_intervals or {}).get(account_id)
-                if interval is not None:
-                    reconciliation_tasks.append(
-                        asyncio.create_task(
-                            _run_reconciliation_periodically(
-                                sync_worker=worker,
-                                interval_seconds=interval,
-                                logger=logger,
-                            )
-                        )
-                    )
-                pos_interval = (
-                    execution_runtime.position_reconciliation_intervals or {}
-                ).get(account_id, execution_runtime.position_reconciliation_interval_seconds)
-                position_reconciliation_tasks.append(
-                    asyncio.create_task(
-                        _run_position_reconciliation_periodically(
-                            sync_worker=worker,
-                            interval_seconds=pos_interval,
-                            logger=logger,
-                        )
-                    )
-                )
         try:
             await client.run_until_disconnected()
         finally:
             worker_task.cancel()
             lifecycle_task.cancel()
-            for task in sync_tasks:
-                task.cancel()
-            for task in reconciliation_tasks:
-                task.cancel()
-            for task in position_reconciliation_tasks:
-                task.cancel()
             if cp_dispatcher_task is not None:
                 cp_dispatcher_task.cancel()
             if control_bot_task is not None:
