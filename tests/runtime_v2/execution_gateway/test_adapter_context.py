@@ -222,3 +222,76 @@ def test_ticks_do_not_fire_after_stop():
 
     assert count_before >= 1, "at least one tick expected before stop"
     assert count_after == count_before, "no new ticks expected after stop"
+
+
+def test_reconciliation_via_context_writes_fill_event(tmp_path):
+    """run_reconciliation submitted to a context produces the same DB result as a direct call."""
+    import json
+    import sqlite3
+    import datetime as dt
+    from pathlib import Path
+    from src.runtime_v2.execution_gateway.adapter_context import AdapterExecutionContext
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    # --- setup DB ---
+    db = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, client_order_id, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (9001, 42, "PLACE_ENTRY", "SENT", "{}", "idem:9001", "tsb:42:9001:entry:1", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+    # --- setup fake adapter with a filled order ---
+    adapter = FakeAdapter()
+    adapter.place_order(
+        command_type="PLACE_ENTRY",
+        payload={},
+        client_order_id="tsb:42:9001:entry:1",
+        execution_account_id="acc",
+        connector="c",
+    )
+    adapter.simulate_fill("tsb:42:9001:entry:1", price=50000.0, qty=0.01)
+
+    # --- submit reconciliation via context ---
+    done = threading.Event()
+    repo = GatewayCommandRepository(db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    def job_with_signal() -> None:
+        worker.run_reconciliation()
+        done.set()
+
+    ctx = AdapterExecutionContext("functional-test")
+    ctx.start()
+    ctx.submit(job_with_signal)
+
+    assert done.wait(timeout=5.0), "reconciliation job did not complete in time"
+    ctx.stop()
+    ctx.join(timeout=2.0)
+
+    # --- verify DB ---
+    conn = sqlite3.connect(db)
+    events = conn.execute(
+        "SELECT event_type, payload_json FROM ops_exchange_events"
+    ).fetchall()
+    conn.close()
+    assert len(events) == 1
+    assert events[0][0] == "ENTRY_FILLED"
+    payload = json.loads(events[0][1])
+    assert payload["fill_price"] == 50000.0
