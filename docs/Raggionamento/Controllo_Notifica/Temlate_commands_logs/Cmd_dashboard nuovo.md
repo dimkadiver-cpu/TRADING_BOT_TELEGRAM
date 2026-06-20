@@ -1,298 +1,137 @@
-# Dashboard Telegram — `/dashboard`
+# Template — `/dashboard`
 
-Messaggio pinnabile con inline keyboard.
-Esiste **un solo dashboard attivo per chat + topic**.
+Messaggio inline pinnabile, **uno per topic**.
+Creato con `/dashboard` da topic `clean_log` o `commands`; non disponibile in `tech_log`.
 
-Il dashboard viene creato tramite `/dashboard` esclusivamente da:
-
-* topic `clean_log`, inclusi topic trader e fallback;
-* topic `commands`;
-* mai da `tech_log`.
-
-Il messaggio viene aggiornato tramite `edit_message_text`; nessun messaggio aggiuntivo viene inviato durante i refresh normali.
-
----
-
-## Scope
-
-Lo scope viene determinato una sola volta alla creazione e non cambia tramite callback.
-
-| Origine comando                  | Scope dashboard             |
-| -------------------------------- | --------------------------- |
-| `clean_log` trader_a, thread 316 | Solo `trader_a`             |
-| `clean_log` trader_b, thread 318 | Solo `trader_b`             |
-| `clean_log` fallback, thread 2   | Tutti i trader dell’account |
-| `commands` demo_1, thread 4      | Tutti i trader di `demo_1`  |
-| `tech_log`                       | Comando rifiutato           |
-
-Risposta in `tech_log`:
-
-```text
-Comando non disponibile in questo topic.
-```
-
-Nei dashboard con scope account, ogni trade mostra `[trader_id]`.
-
----
-
-## Stato persistito
-
-Tabella consigliata: `ops_dashboards`.
-
-```text
-chat_id
-thread_id
-dashboard_message_id
-scope_type              # trader | account
-account_id
-trader_id               # nullable se scope account
-current_view            # active | closed | blocked | pnl | stats
-current_page             # integer, default 0
-last_edit_at
-pending_refresh
-is_active
-created_at
-updated_at
-```
-
-Vincolo univoco:
-
-```text
-(chat_id, thread_id, is_active = true)
-```
-
-`thread_id = 0` rappresenta la chat senza topic.
-
----
-
-## Regole di aggiornamento
-
-Il dashboard viene aggiornato quando:
-
-* viene cliccata una vista;
-* viene cliccato `🔄 Refresh`;
-* viene cliccato un controllo di paginazione;
-* cambia il lifecycle di un trade appartenente allo scope;
-* arriva uno snapshot posizione/account che modifica dati visibili.
-
-Gli snapshot aggiornano automaticamente solo le viste:
-
-```text
-Attivi
-PnL
-```
-
-Un cambio lifecycle aggiorna tutte le viste, perché può modificare conteggi, PnL realizzato, statistiche e paginazione.
-
-Regole operative:
-
-```text
-- minimo 5 secondi tra due edit dello stesso dashboard;
-- eventi durante cooldown vengono coalesciti, non scartati;
-- MessageNotModified viene ignorato;
-- dashboard cancellato/non modificabile -> record marcato inactive;
-- pagina fuori range dopo refresh -> clamp all’ultima pagina disponibile;
-- cambio vista -> current_page = 0;
-- refresh manuale mantiene vista e pagina correnti;
-- ogni edit riattacca sempre la keyboard.
-```
+Aggiornato in-place tramite `edit_message_text`: nessun messaggio aggiuntivo durante refresh, callback o lifecycle update.
 
 ---
 
 ## Keyboard
 
-Vista selezionata indicata con `•`.
-
 ```text
-[•⚡ Attivi]   [✅ Chiusi]  [🚫 Bloccati]
-[💰 PnL]       [📉 Stats]   [🔄 Refresh]
+[⚡ Active]  [✅ Closed]  [🚫 Blocked]
+[💰 PnL]     [📉 Stats]   [🔄 Refresh]
+[← Prev]     [Page 2/5]  [Next →]
 ```
 
-La riga di paginazione appare solo nelle viste `Attivi`, `Chiusi`, `Bloccati` e solo se il totale trade è maggiore di 5.
+Regole:
 
-Pagina iniziale:
-
-```text
-[Pagina 1/3]  [Succ →]
-```
-
-Pagina intermedia:
-
-```text
-[← Prec]  [Pagina 2/3]  [Succ →]
-```
-
-Ultima pagina:
-
-```text
-[← Prec]  [Pagina 3/3]
-```
-
-`Pagina N/M` usa `callback_data = "noop"` e deve rispondere alla callback senza modificare il messaggio.
+* Terza riga visibile solo per `Active`, `Closed`, `Blocked` e solo se i trade sono più di 5.
+* `← Prev` assente sulla prima pagina.
+* `Next →` assente sull’ultima pagina.
+* `Page N/M` è un bottone inerte: `callback_data = "noop"`.
+* Cambio vista: reset pagina a `0`.
+* Default alla creazione: `active:0`.
 
 ---
-
-## Categorie
-
-### Attivi
-
-Include trade chain ancora operative:
-
-```text
-WAITING_ENTRY
-PARTIALLY_FILLED
-OPEN
-PARTIALLY_CLOSED
-```
-
-### Chiusi
-
-Include chain terminali.  // da vedere le categorie usate in codice
-
-```text
-CLOSED
-TP_COMPLETE
-SL_HIT
-MANUAL_CLOSE
-EXCHANGE_CLOSE
-CANCELLED_UNFILLED
-```
-
-`CANCELLED_UNFILLED` deve mostrare chiaramente che il trade non è mai entrato e non deve entrare in Win Rate, Best/Worst o PnL realizzato.
-
-### Bloccati
-
-Include chain che richiedono intervento:
-
-```text
-REVIEW_REQUIRED
-EXEC_FAILED
-RECONCILIATION_REQUIRED
-REJECTED  (regettati dalla polycu)
-```
-
----
-
-# Template messaggi
 
 ## Dashboard appena creato — trader scope
 
 ```text
 📊 Dashboard — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05
+Updated: 14:32:05
 
-Seleziona una vista o pinna questo messaggio.
+Select a view or pin this message.
 ```
+
+---
 
 ## Dashboard appena creato — account scope
 
 ```text
 📊 Dashboard — demo_1
 ────────────────────────
-Aggiornato: 14:32:05
+Updated: 14:32:05
 
-Seleziona una vista o pinna questo messaggio.
+Select a view or pin this message.
 ```
 
 ---
 
-## Vista Attivi — trader scope
+# View: Active — trader scope
 
 ```text
-⚡ Attivi — demo_1 · trader_a
+📊 ⚡ Active — demo_1 · trader_a
 ────────────────────────
-Update: 14:32:05 · Snapshots positions: 18s 
+Updated: 14:32:05 · Position snapshot: 18s ago
 
 #5  BTC/USDT  LONG  PARTIALLY_CLOSED
-Origine: Segnale
+Source: Signal
 
 Entry: 63,500 ✓ · 63,200 × · 62,800 ×
 TP:    64,000 ✓ · 65,200 · 66,500
-SL:    62,000 · BE: sì
+SL:    62,000 · BE: Yes
 uPnL:  +34.20 USDT
 
-Azioni: /trade 5 · /cancel 5 · /close 5 // vedere come acetta il sistema di comando
+Actions: /trade 5 · /cancel 5 · /close 5
 - - - - - - - - - - - - - - - - - - - -
 
 #9  SOL/USDT  LONG  WAITING_ENTRY
-Origine: Segnale
+Source: Signal
 
 Entry: 148.50 · 147.00
 TP:    155.00 · 160.00
 SL:    143.00
-State: In attesa di fill
+Status: Waiting for fill
 
-Action: /trade 9 · /cancel 9 · /close 9
+Actions: /trade 9 · /cancel 9 · /close 9
 ```
-
-`Segnale` è un hyperlink Telegram verso il messaggio originale. Se il link non esiste, la riga viene omessa.
 
 Legenda:
 
 ```text
-✓ = filled
-× = cancelled
-nessun simbolo = pending
+✓ = Filled
+× = Cancelled
+nessun simbolo = Pending
 ```
-
-`uPnL` significa sempre Unrealized PnL, non PnL realizzato.
 
 ---
 
-## Vista Attivi — account scope
+## View: Active — account scope
 
 ```text
-📊 ⚡ Attivi — demo_1
+📊 ⚡ Active — demo_1
 ────────────────────────
-Aggiornato: 14:32:05 · Snapshot posizioni: 18s fa
+Updated: 14:32:05 · Position snapshot: 18s ago
 
 #5  BTC/USDT  LONG   OPEN  [trader_a]
 Entry: 63,500 ✓
 TP:    64,000
-SL:    62,800 · BE: sì
+SL:    62,800 · BE: Yes
 uPnL:  +12.40 USDT
-Origine: Segnale
+Source: Signal
 - - - - - - - - - - - - - - - - - - - -
 
 #7  ETH/USDT  SHORT  OPEN  [trader_b]
-
-
 Entry: 2,140 ✓
 TP:    2,000
 SL:    2,180
 uPnL:  -3.20 USDT
-Origine: Segnale
+Source: Signal
 ```
 
 ---
 
-## Vista Attivi — nessun trade
+## View: Active — nessun trade
 
 ```text
-⚡ Attivi — demo_1 · trader_a
+📊 ⚡ Active — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05
+Updated: 14:32:05
 
-Nessun trade attivo.
+No active trades.
 ```
 
 ---
 
 ## Snapshot stale
 
-La soglia deve essere configurabile, ad esempio:
-
 ```text
-position_snapshot_stale_after_seconds: 90
-```
-
-Esempio:
-
-```text
-📊 ⚡ Attivi — demo_1 · trader_a
+📊 ⚡ Active — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05 · Snapshot posizioni: 183s fa ⚠️
+Updated: 14:32:05 · Position snapshot: 183s ago ⚠️
 
 #5  BTC/USDT  LONG  OPEN
 Entry: 63,500 ✓
@@ -301,170 +140,176 @@ SL:    62,800
 uPnL:  +12.40 USDT
 ```
 
-Il warning segnala solo dati potenzialmente non aggiornati; non implica che il trade sia in errore.
-
 ---
 
-## Vista Chiusi
+# View: Closed
 
 ```text
-📊 ✅ Chiusi — demo_1 · trader_a
+📊 ✅ Closed — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05
+Updated: 14:32:05
 
 #22  BTC/USDT  LONG  CLOSED
-Motivo: STOP_LOSS
-Aperto: 14 Jun 11:52 · Segnale
-Chiuso: 14 Jun 14:26 · Chiusura
-PnL netto: -3.20 USDT · ⏱ 2h 34m
+Reason: STOP_LOSS
+Opened: 14 Jun 11:52 · Signal
+Closed: 14 Jun 14:26 · Close event
+Net PnL: -3.20 USDT · ⏱ 2h 34m
 - - - - - - - - - - - - - - - - - - - -
 
 #18  SOL/USDT  LONG  CLOSED
-Motivo: TP_COMPLETE
-Aperto: 14 Jun 09:10 · Segnale
-Chiuso: 14 Jun 13:55 · Chiusura
-PnL netto: +34.50 USDT · ⏱ 4h 45m
+Reason: TP_COMPLETE
+Opened: 14 Jun 09:10 · Signal
+Closed: 14 Jun 13:55 · Close event
+Net PnL: +34.50 USDT · ⏱ 4h 45m
 ```
 
-`Motivo` non deve mai essere vuoto. Fallback:
-
-```text
-Motivo: UNKNOWN
-```
-
-Trade `CANCELLED_UNFILLED`:
+Trade annullato senza fill:
 
 ```text
 #24  ETH/USDT  LONG  CANCELLED_UNFILLED
-Motivo: CANCEL_PENDING
-Creato: 14 Jun 16:12 · Segnale
-PnL: — · Nessun fill
+Reason: CANCEL_PENDING
+Created: 14 Jun 16:12 · Signal
+PnL: — · No fill
+```
+
+Nessun trade:
+
+```text
+📊 ✅ Closed — demo_1 · trader_a
+────────────────────────
+Updated: 14:32:05
+
+No closed trades.
 ```
 
 ---
 
-## Vista Bloccati
+# View: Blocked
 
 ```text
-📊 🚫 Bloccati — demo_1 · trader_a
+📊 🚫 Blocked — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05
+Updated: 14:32:05
 
 #7  ETH/USDT  LONG  REVIEW_REQUIRED
-Motivo: missing_sl
-Bloccato: 14 Jun 11:52
-Origine: Segnale
+Reason: missing_sl
+Blocked: 14 Jun 11:52
+Source: Signal
 - - - - - - - - - - - - - - - - - - - -
 
 #12  SOL/USDT  LONG  EXEC_FAILED
-Motivo: insufficient_margin
-Bloccato: 14 Jun 14:26
-Origine: Errore tecnico
+Reason: insufficient_margin
+Blocked: 14 Jun 14:26
+Source: Technical error
 ```
 
-Per `REVIEW_REQUIRED`, il link punta al segnale/clean log.
-Per `EXEC_FAILED`, il link punta al messaggio tecnico o al record di errore disponibile.
+Nessun trade:
+
+```text
+📊 🚫 Blocked — demo_1 · trader_a
+────────────────────────
+Updated: 14:32:05
+
+No blocked trades.
+```
 
 ---
 
-## Vista PnL
+# View: PnL
 
 ```text
 📊 💰 PnL — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05 · Snapshot account: 18s fa
+Updated: 14:32:05 · Account snapshot: 18s ago
 
 Account demo_1:
 Equity:        10,432.50 USDT
 Balance:        9,100.00 USDT
 Margin used:      820.00 USDT
 
-Realizzato trader_a:
+Realized — trader_a:
 Gross:          +142.60 USDT
 Fees:            -11.20 USDT
-Netto:          +130.00 USDT
+Net:            +130.00 USDT
 
 Open: 1 · Waiting entry: 1
 ```
 
-Per account scope:
+Per scope account:
 
 ```text
-Realizzato tutti i trader:
-```
-
-Equity, balance e margin sono sempre account-level.
-Gross, fees e netto rispettano invece lo scope dashboard.
-
-Formula:
-
-```text
-Netto = Gross - Fees
+Realized — All traders:
 ```
 
 ---
 
-## Vista Stats
+# View: Stats
 
 ```text
 📊 📉 Stats — demo_1 · trader_a
 ────────────────────────
-Aggiornato: 14:32:05
+Updated: 14:32:05
 
-Periodo        Trade   Win%      Netto
-Oggi               1   100%    +18.40
-Ultimi 7g          6    67%    +62.10
-Ultimi 30g        19    63%   +148.30
-Totale            31    61%    +98.20
+Period          Trades   Win%      Net
+Today                1   100%   +18.40
+Last 7d             6    67%   +62.10
+Last 30d           19    63%  +148.30
+All time           31    61%   +98.20
 
 Best:  #8  SOL/USDT  +34.50 USDT
 Worst: #22 BNB/USDT -12.80 USDT
 ```
 
-Regole statistiche:
+---
+
+## Paginazione
+
+Prima pagina:
 
 ```text
-- timezone configurabile; default Europe/Rome;
-- include solo trade chiusi con almeno un fill;
-- Win% = trade con PnL netto > 0 / trade chiusi con PnL netto ≠ 0;
-- PnL = realized gross - fees;
-- CANCELLED_UNFILLED esclusi;
-- Best/Worst ordinati per PnL netto.
+[⚡ Active]  [✅ Closed]  [🚫 Blocked]
+[💰 PnL]     [📉 Stats]   [🔄 Refresh]
+[Page 1/3]   [Next →]
+```
+
+Pagina intermedia:
+
+```text
+[⚡ Active]  [✅ Closed]  [🚫 Blocked]
+[💰 PnL]     [📉 Stats]   [🔄 Refresh]
+[← Prev]     [Page 2/3]  [Next →]
+```
+
+Ultima pagina:
+
+```text
+[⚡ Active]  [✅ Closed]  [🚫 Blocked]
+[💰 PnL]     [📉 Stats]   [🔄 Refresh]
+[← Prev]     [Page 3/3]
 ```
 
 ---
 
-## Limiti tecnici di rendering
+## Comandi trade
 
 ```text
-- 5 trade per pagina;
-- massimo 3.900 caratteri renderizzati;
-- se Entry o TP sono troppo lunghi, mostrare i primi valori + “+N”;
-- usare sempre display_symbol(), ad esempio BTC/USDT;
-- escape HTML per ogni testo proveniente da DB o Telegram;
-- disabilitare preview link Telegram.
+/trade <id>      # mostra dettaglio trade
+/cancel <id>     # cancella gli entry pending del trade
+/close <id>      # richiede chiusura del trade
 ```
+
+Non usare `/cancel_all` nella card di un singolo trade: è ambiguo e rischia di agire su più chain.
 
 ---
 
-## `/dashboard` nello stesso topic
-
-Comportamento corretto:
+## Risposta da tech_log
 
 ```text
-1. Cerca dashboard attivo per chat_id + thread_id.
-2. Se esiste e il messaggio è modificabile:
-   - resetta vista a active:0;
-   - esegue refresh in-place;
-   - non crea un nuovo messaggio.
-3. Se il messaggio non esiste o non è modificabile:
-   - marca il record precedente inactive;
-   - crea nuovo messaggio;
-   - salva nuovo dashboard_message_id.
+Command is not available in this topic.
 ```
 
-Le callback provenienti da una dashboard inattiva devono ricevere solo:
+## Callback da dashboard non più attiva
 
 ```text
-Dashboard non più attiva. Usa /dashboard per crearne una nuova.
+Dashboard is no longer active. Use /dashboard to create a new one.
 ```
