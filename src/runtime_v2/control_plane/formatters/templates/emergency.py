@@ -95,8 +95,8 @@ _CLOSE_SINGLE_RESULT_OK = TemplateConfig(blocks=[
     ListBlock(key="chains", item_renderer=_chain_renderer_compact),
     SeparatorBlock(),
     DerivedBlock(text_fn=lambda p: f"✅ ESEGUITO — {p['executed_at']}"),
-    DerivedBlock(text_fn=lambda p: f"{p['count']} {'comando' if p['count'] == 1 else 'comandi'} CLOSE_FULL inserito."),
-    DerivedBlock(text_fn=lambda p: f"⚡ Monitorare con {'  /trade #' + str(p['chains'][0]['chain_id']) if p['count'] == 1 else '/trades'}"),
+    DerivedBlock(text_fn=lambda p: f"{p['count']} {'comando' if p['count'] == 1 else 'comandi'} CLOSE_FULL {'inserito' if p['count'] == 1 else 'inseriti'}."),
+    DerivedBlock(text_fn=lambda p: f"⚡ Monitorare con {'  /trade #' + str(p['chains'][0]['chain_id']) if len(p.get('chains', [])) == 1 else '/trades'}"),
 ])
 
 _CLOSE_SINGLE_RESULT_CANCELLED = TemplateConfig(blocks=[

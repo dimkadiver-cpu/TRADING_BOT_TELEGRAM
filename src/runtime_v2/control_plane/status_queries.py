@@ -918,7 +918,7 @@ class StatusQueries:
         return BlockedTradesView(updated_at=_now_iso(), rows=result_rows)
 
     def get_open_for_close(self, scope: QueryScope) -> list[CloseCandidate]:
-        """Trade aperti chiudibili via MARKET_CLOSE (OPEN + PARTIALLY_CLOSED)."""
+        """Trade aperti chiudibili via CLOSE_FULL (OPEN + PARTIALLY_CLOSED)."""
         _CLOSEABLE_STATES = ("OPEN", "PARTIALLY_CLOSED")
         where, params = _scope_where(scope)
         conn = self._connect()

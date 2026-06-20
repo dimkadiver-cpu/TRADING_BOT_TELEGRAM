@@ -63,5 +63,11 @@ class AuthValidator:
             return AuthResult("REJECT_UNAUTHORIZED", "unauthorized_user")
         return AuthResult("OK")
 
+    def is_authorized_user(self, user_id: int) -> bool:
+        return user_id in self._authorized_users
+
+    def is_authorized_chat(self, chat_id: int) -> bool:
+        return chat_id == self._chat_id
+
 
 __all__ = ["AuthDecision", "AuthResult", "AuthValidator"]

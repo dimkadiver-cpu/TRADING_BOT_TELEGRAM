@@ -739,7 +739,7 @@ class TelegramControlBot:
             return
 
         # Auth check — reject unauthorized users
-        if user.id not in self._router._auth._authorized_users:
+        if not self._router._auth.is_authorized_user(user.id):
             await query.answer(text="Unauthorized", show_alert=False)
             return
 
@@ -781,7 +781,7 @@ class TelegramControlBot:
         if self._dashboard_manager is None:
             await query.answer()
             return
-        if query.message is None or query.message.chat_id != self._router._auth._chat_id:
+        if query.message is None or not self._router._auth.is_authorized_chat(query.message.chat_id):
             await query.answer()
             return
         await query.answer()  # acknowledge immediately
