@@ -25,11 +25,14 @@ def _now_iso() -> str:
 
 
 def _matches_scope(
-    scope_account_id: str,
+    scope_account_id: str | None,
     scope_trader_id: str | None,
     account_id: str,
     trader_id: str,
 ) -> bool:
+    # Scope globale → si aggiorna sempre
+    if scope_account_id is None:
+        return True
     if scope_account_id != account_id:
         return False
     if scope_trader_id is None:
@@ -90,7 +93,7 @@ class DashboardManager:
                     chat_id           INTEGER NOT NULL,
                     thread_id         INTEGER NOT NULL DEFAULT 0,
                     message_id        INTEGER NOT NULL,
-                    scope_account_id  TEXT NOT NULL,
+                    scope_account_id  TEXT,
                     scope_trader_id   TEXT,
                     current_view      TEXT NOT NULL DEFAULT 'attivi:0',
                     updated_at        TEXT,
@@ -263,7 +266,9 @@ class DashboardManager:
         # Reconstruct scope from DB
         from src.runtime_v2.control_plane.scope_resolver import QueryScope
 
-        if scope_trader_id is not None:
+        if scope_account_id is None:
+            scope = QueryScope(account_id=None, trader_ids=None)
+        elif scope_trader_id is not None:
             scope = QueryScope(account_id=scope_account_id, trader_ids=[scope_trader_id])
         else:
             scope = QueryScope(account_id=scope_account_id, trader_ids=None)
@@ -365,7 +370,7 @@ class DashboardManager:
         chat_id: int,
         thread_id: int,
         message_id: int,
-        scope_account_id: str,
+        scope_account_id: str | None,
         scope_trader_id: str | None,
         current_view_str: str,
     ) -> None:
@@ -390,7 +395,7 @@ class DashboardManager:
         chat_id: int,
         thread_id: int,
         message_id: int,
-        scope_account_id: str,
+        scope_account_id: str | None,
         scope_trader_id: str | None,
         current_view_str: str,
     ) -> None:
@@ -399,7 +404,9 @@ class DashboardManager:
 
         from src.runtime_v2.control_plane.scope_resolver import QueryScope
 
-        if scope_trader_id is not None:
+        if scope_account_id is None:
+            scope = QueryScope(account_id=None, trader_ids=None)
+        elif scope_trader_id is not None:
             scope = QueryScope(account_id=scope_account_id, trader_ids=[scope_trader_id])
         else:
             scope = QueryScope(account_id=scope_account_id, trader_ids=None)

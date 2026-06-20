@@ -27,7 +27,7 @@ def _make_db(tmp_path) -> str:
             chat_id           INTEGER NOT NULL,
             thread_id         INTEGER NOT NULL DEFAULT 0,
             message_id        INTEGER NOT NULL,
-            scope_account_id  TEXT NOT NULL,
+            scope_account_id  TEXT,            -- NULL = scope globale
             scope_trader_id   TEXT,
             current_view      TEXT NOT NULL DEFAULT 'attivi:0',
             updated_at        TEXT,
@@ -42,6 +42,10 @@ def _make_db(tmp_path) -> str:
 
 def _make_scope(account_id: str = "acc1", trader_ids: list[str] | None = None) -> QueryScope:
     return QueryScope(account_id=account_id, trader_ids=trader_ids)
+
+
+def _make_global_scope() -> QueryScope:
+    return QueryScope(account_id=None, trader_ids=None)
 
 
 def _make_mock_bot(message_id: int = 42) -> MagicMock:
@@ -300,3 +304,74 @@ def test_matches_scope_trader_level():
     assert _matches_scope("acc1", "trader_a", "acc1", "trader_a") is True
     assert _matches_scope("acc1", "trader_a", "acc1", "trader_b") is False
     assert _matches_scope("acc1", "trader_a", "acc2", "trader_a") is False
+
+
+def test_matches_scope_global_always_true():
+    """scope_account_id=None matches any account and any trader."""
+    assert _matches_scope(None, None, "account_A", "trader_a") is True
+    assert _matches_scope(None, None, "account_B", "trader_x") is True
+    assert _matches_scope(None, None, "demo_2", "trader_devos_crypto") is True
+
+
+def test_matches_scope_specific_account_still_works():
+    """Non-global scopes remain filtered as before."""
+    assert _matches_scope("acc1", None, "acc1", "any_trader") is True
+    assert _matches_scope("acc1", None, "acc2", "any_trader") is False
+    assert _matches_scope("acc1", "t_a", "acc1", "t_a") is True
+    assert _matches_scope("acc1", "t_a", "acc1", "t_b") is False
+
+
+# ---------------------------------------------------------------------------
+# Test 6: create() with global scope saves NULL account_id
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_create_global_scope_saves_null_account_id(tmp_path):
+    """Dashboard with global scope saves scope_account_id=NULL in DB."""
+    manager = _make_manager(tmp_path, scope=_make_global_scope())
+    _patch_render_view(manager)
+
+    await manager.create(
+        scope=QueryScope(account_id=None, trader_ids=None),
+        chat_id=-100,
+        thread_id=4,
+    )
+
+    conn = sqlite3.connect(manager._db)
+    row = conn.execute(
+        "SELECT scope_account_id, scope_trader_id FROM ops_dashboard_messages "
+        "WHERE chat_id=? AND thread_id=?",
+        (-100, 4),
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row[0] is None   # scope_account_id = NULL
+    assert row[1] is None   # scope_trader_id = NULL
+
+
+# ---------------------------------------------------------------------------
+# Test 7: on_trade_event triggers global dashboard for any account/trader
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_on_trade_event_triggers_global_dashboard(tmp_path):
+    """A global dashboard is refreshed for any account/trader trade event."""
+    manager = _make_manager(tmp_path, scope=_make_global_scope())
+    fake_keyboard = _patch_render_view(manager)
+
+    # Manually insert a global dashboard row
+    conn = sqlite3.connect(manager._db)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages "
+        "(chat_id, thread_id, message_id, scope_account_id, scope_trader_id, current_view) "
+        "VALUES (?, ?, ?, ?, ?, ?)",
+        (-100, 4, 99, None, None, "attivi:0"),
+    )
+    conn.commit()
+    conn.close()
+
+    # Trade event from a completely different account — global dashboard must refresh
+    await manager.on_trade_event(account_id="account_Z", trader_id="trader_z")
+
+    manager._bot.edit_message_text.assert_awaited_once()
