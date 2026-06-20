@@ -3,7 +3,10 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
-from dataclasses import dataclass
+import secrets
+import time
+from dataclasses import dataclass, field
+from typing import Literal
 
 from src.runtime_v2.control_plane.audit_store import CommandAuditStore
 from src.runtime_v2.control_plane.auth import AuthValidator
@@ -11,6 +14,7 @@ from src.runtime_v2.control_plane.debug_controller import (
     is_valid_duration_arg,
     parse_duration,
 )
+from src.runtime_v2.control_plane.formatters._blocks import render_template
 from src.runtime_v2.control_plane.formatters.block import format_block, format_unblock
 from src.runtime_v2.control_plane.formatters.control import format_control
 from src.runtime_v2.control_plane.formatters.debug import format_debug_off, format_debug_on
@@ -23,12 +27,36 @@ from src.runtime_v2.control_plane.formatters.reviews import format_reviews
 from src.runtime_v2.control_plane.formatters.status import format_status
 from src.runtime_v2.control_plane.formatters.trade_detail import format_trade_detail
 from src.runtime_v2.control_plane.formatters.trades import format_trades
+from src.runtime_v2.control_plane.formatters.templates.emergency import EMERGENCY_REGISTRY
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
 from src.runtime_v2.control_plane.notification_dispatcher import build_telegram_request
 from src.runtime_v2.control_plane.service import RuntimeControlService
+from src.runtime_v2.control_plane.status_queries import CloseCandidate
 
 logger = logging.getLogger(__name__)
 _COMMAND_SEND_TIMEOUT_SECONDS = 8.0
+_PENDING_TTL = 300  # 5 minuti
+
+
+@dataclass
+class _PendingAction:
+    kind: Literal["close_all", "close_single", "cancel_all"]
+    scope: "QueryScope"  # type: ignore[name-defined]  # forward ref from scope_resolver
+    candidates: list[CloseCandidate]
+    chains_payload: list[dict]
+    scope_label: str
+    open_count: int
+    created_at: float = field(default_factory=time.time)
+
+    def is_expired(self) -> bool:
+        return time.time() - self.created_at > _PENDING_TTL
+
+
+@dataclass
+class CallbackResult:
+    reply_text: str
+    delete_message: bool = False
+    answer_text: str = ""
 
 _HELP_TEXT = """COMANDI DISPONIBILI
 ────────────────
@@ -60,6 +88,7 @@ Controllo:
 class RouteResult:
     decision: str
     reply_text: str | None
+    keyboard: object | None = None  # InlineKeyboardMarkup | None
 
 
 @dataclass(frozen=True)
@@ -67,15 +96,67 @@ class _DispatchResult:
     reply_text: str
     decision: str = "EXECUTED"
     reject_reason: str | None = None
+    keyboard: object | None = None  # InlineKeyboardMarkup | None
 
 
 _READONLY_COMMANDS = frozenset(
-    {"help", "status", "trades", "trade", "health", "control", "reviews", "version", "dashboard"}
+    {"help", "status", "trades", "trade", "health", "control", "reviews",
+     "version", "stats", "dashboard"}
 )
 _CONTROL_COMMANDS = frozenset({"pause", "resume", "start", "block", "unblock"})
+_EMERGENCY_COMMANDS = frozenset({"close_all", "close", "cancel_all"})
 _ADVANCED_COMMANDS = frozenset({"pnl", "logs", "debug_on", "debug_off"})
-_ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | _ADVANCED_COMMANDS
+_ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | _EMERGENCY_COMMANDS | _ADVANCED_COMMANDS
 
+
+
+def _make_token() -> str:
+    return secrets.token_hex(4)  # 8 hex chars, < 64 bytes with prefix
+
+
+def _emergency_keyboard(kind: str, token: str):
+    from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+    return InlineKeyboardMarkup([[
+        InlineKeyboardButton("✅ Conferma", callback_data=f"{kind}:confirm:{token}"),
+        InlineKeyboardButton("❌ Annulla", callback_data=f"{kind}:cancel:{token}"),
+    ]])
+
+
+def _now_hms() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime("%H:%M:%S")
+
+
+def _scope_label_from_scope(scope: "QueryScope") -> str:  # type: ignore[name-defined]
+    """Format a QueryScope as a human-readable label."""
+    if scope.trader_ids is None:
+        return scope.account_id.upper()
+    if len(scope.trader_ids) == 1:
+        return scope.trader_ids[0]
+    return ", ".join(scope.trader_ids)
+
+
+def _candidates_to_payload(candidates: list[CloseCandidate]) -> list[dict]:
+    from src.runtime_v2.control_plane.formatters.display import display_symbol
+    return [
+        {
+            "chain_id": c.chain_id,
+            "symbol": display_symbol(c.symbol),
+            "side": c.side,
+            "state": c.state,
+            "entry_price": None,
+            "pnl": None,
+        }
+        for c in candidates
+    ]
+
+
+def _override_trader(scope: "QueryScope", trader_arg: str | None) -> "QueryScope":  # type: ignore[name-defined]
+    """If trader_arg is specified, restrict scope to that trader."""
+    from src.runtime_v2.control_plane.scope_resolver import QueryScope
+    if trader_arg:
+        return QueryScope(account_id=scope.account_id, trader_ids=[trader_arg])
+    return scope
 
 
 def _parse(command_text: str) -> tuple[str | None, list[str]]:
@@ -108,6 +189,7 @@ class CommandRouter:
         self._audit = audit
         self._service = service
         self._debug_max_seconds = config.get_account(None).topics.tech_log.debug_max_duration_minutes * 60
+        self._pending: dict[str, _PendingAction] = {}
 
     def route(
         self,
@@ -187,7 +269,7 @@ class CommandRouter:
                 status=dispatch_result.decision,
                 reject_reason=dispatch_result.reject_reason,
             )
-            return RouteResult(dispatch_result.decision, dispatch_result.reply_text)
+            return RouteResult(dispatch_result.decision, dispatch_result.reply_text, dispatch_result.keyboard)
         except Exception:
             logger.exception("command handler failed: %s", command_text)
             self._audit.update_status(request_id, status="FAILED")
@@ -335,7 +417,168 @@ class CommandRouter:
             # in TelegramControlBot._on_command; router marks it valid here.
             return _DispatchResult("__DASHBOARD__", decision="EXECUTED")
 
+        if command_name == "close_all":
+            # optional: /close_all [trader]
+            from src.runtime_v2.control_plane.scope_resolver import QueryScope as _QS
+            default_scope = _QS(account_id=self._config.default_account, trader_ids=None)
+            trader_override = args[0] if args else None
+            effective_scope = _override_trader(default_scope, trader_override)
+            candidates = self._service.get_open_for_close(effective_scope)
+            sl = _scope_label_from_scope(effective_scope)
+            chains_payload = _candidates_to_payload(candidates)
+            cfg = EMERGENCY_REGISTRY["close_all_preview"]
+            payload = {"scope_label": sl, "total": len(candidates), "chains": chains_payload}
+            text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+            if not candidates:
+                return _DispatchResult(text)
+            token = _make_token()
+            self._pending[token] = _PendingAction(
+                kind="close_all", scope=effective_scope,
+                candidates=candidates,
+                chains_payload=chains_payload, scope_label=sl, open_count=0,
+            )
+            return _DispatchResult(text, keyboard=_emergency_keyboard("close_all", token))
+
+        if command_name == "close":
+            # /close [trader] <symbol>
+            from src.runtime_v2.control_plane.scope_resolver import QueryScope as _QS
+            default_scope = _QS(account_id=self._config.default_account, trader_ids=None)
+            trader_arg, symbol_arg = _parse_scope_symbol(args)
+            if not symbol_arg:
+                return _DispatchResult(
+                    "Usage: /close <symbol>  o  /close <trader> <symbol>",
+                    decision="REJECTED",
+                    reject_reason="invalid_arguments",
+                )
+            effective_scope = _override_trader(default_scope, trader_arg)
+            candidates = [
+                c for c in self._service.get_open_for_close(effective_scope)
+                if c.symbol.upper() == symbol_arg.upper()
+            ]
+            sl = _scope_label_from_scope(effective_scope)
+            chains_payload = _candidates_to_payload(candidates)
+            cfg = EMERGENCY_REGISTRY["close_single_preview"]
+            payload = {
+                "scope_label": sl,
+                "total": len(candidates),
+                "chains": chains_payload,
+                "symbol": symbol_arg.upper(),
+            }
+            text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+            if not candidates:
+                return _DispatchResult(text)
+            token = _make_token()
+            self._pending[token] = _PendingAction(
+                kind="close_single", scope=effective_scope,
+                candidates=candidates,
+                chains_payload=chains_payload, scope_label=sl, open_count=0,
+            )
+            return _DispatchResult(text, keyboard=_emergency_keyboard("close_single", token))
+
+        if command_name == "cancel_all":
+            from src.runtime_v2.control_plane.scope_resolver import QueryScope as _QS
+            default_scope = _QS(account_id=self._config.default_account, trader_ids=None)
+            trader_override = args[0] if args else None
+            effective_scope = _override_trader(default_scope, trader_override)
+            candidates = self._service.get_waiting_for_cancel(effective_scope)
+            open_count = self._service.get_open_count_excluding_waiting(effective_scope)
+            sl = _scope_label_from_scope(effective_scope)
+            chains_payload = _candidates_to_payload(candidates)
+            cfg = EMERGENCY_REGISTRY["cancel_all_preview"]
+            payload = {
+                "scope_label": sl,
+                "total": len(candidates),
+                "chains": chains_payload,
+                "open_count": open_count,
+            }
+            text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+            if not candidates:
+                return _DispatchResult(text)
+            token = _make_token()
+            self._pending[token] = _PendingAction(
+                kind="cancel_all", scope=effective_scope,
+                candidates=candidates,
+                chains_payload=chains_payload, scope_label=sl, open_count=open_count,
+            )
+            return _DispatchResult(text, keyboard=_emergency_keyboard("cancel_all", token))
+
         return _DispatchResult("Comando non riconosciuto.", decision="REJECTED")
+
+    def handle_callback(
+        self,
+        *,
+        callback_data: str,
+        user_id: int,
+        chat_id: int,
+        message_id: int,
+        thread_id: int | None,
+        created_by: str,
+    ) -> CallbackResult:
+        parts = callback_data.split(":", 2)
+        if len(parts) != 3:
+            return CallbackResult("Callback non valido.", answer_text="⚠️ Callback non valido")
+        kind, action, token = parts
+        if action not in ("confirm", "cancel"):
+            return CallbackResult("Azione non valida.", answer_text="⚠️")
+
+        pending = self._pending.get(token)
+        if pending is None:
+            return CallbackResult("", delete_message=False, answer_text="⏱ Azione scaduta — reinvia il comando.")
+
+        if pending.is_expired():
+            del self._pending[token]
+            return CallbackResult("", delete_message=True, answer_text="⏱ Azione scaduta — reinvia il comando.")
+
+        del self._pending[token]
+        now = _now_hms()
+
+        if action == "cancel":
+            result_key = f"{kind}_result_cancelled"
+            cfg = EMERGENCY_REGISTRY[result_key]
+            payload = {
+                "scope_label": pending.scope_label,
+                "chains": pending.chains_payload,
+                "cancelled_at": now,
+                "count": len(pending.candidates),
+                "open_count": pending.open_count,
+            }
+            text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+            return CallbackResult(text, answer_text="❌ Annullato")
+
+        # confirm
+        if kind == "close_all":
+            count = self._service.execute_close(pending.candidates, created_by=created_by)
+            cfg = EMERGENCY_REGISTRY["close_all_result_ok"]
+            payload = {
+                "scope_label": pending.scope_label,
+                "chains": pending.chains_payload,
+                "count": count,
+                "executed_at": now,
+            }
+        elif kind == "close_single":
+            count = self._service.execute_close(pending.candidates, created_by=created_by)
+            cfg = EMERGENCY_REGISTRY["close_single_result_ok"]
+            payload = {
+                "scope_label": pending.scope_label,
+                "chains": pending.chains_payload,
+                "count": count,
+                "executed_at": now,
+            }
+        elif kind == "cancel_all":
+            count = self._service.execute_cancel(pending.candidates, created_by=created_by)
+            cfg = EMERGENCY_REGISTRY["cancel_all_result_ok"]
+            payload = {
+                "scope_label": pending.scope_label,
+                "chains": pending.chains_payload,
+                "count": count,
+                "executed_at": now,
+                "open_count": pending.open_count,
+            }
+        else:
+            return CallbackResult("Tipo non valido.", answer_text="⚠️")
+
+        text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+        return CallbackResult(text, answer_text="✅ Eseguito")
 
     def _record(
         self,
@@ -475,6 +718,8 @@ class TelegramControlBot:
         }
         if message.message_thread_id is not None:
             send_kwargs["message_thread_id"] = message.message_thread_id
+        if result.keyboard is not None:
+            send_kwargs["reply_markup"] = result.keyboard
         try:
             await asyncio.wait_for(
                 context.bot.send_message(**send_kwargs),
@@ -486,16 +731,60 @@ class TelegramControlBot:
     async def _on_callback_query(self, update, context) -> None:
         del context
         query = update.callback_query
-        if query is None or self._dashboard_manager is None:
+        user = update.effective_user
+        if query is None or user is None:
             return
-        if query.from_user is None or query.from_user.id not in self._router._auth._authorized_users:
+
+        # Auth check — reject unauthorized users
+        if user.id not in self._router._auth._authorized_users:
             await query.answer(text="Unauthorized", show_alert=False)
+            return
+
+        # Determine if this is an emergency callback (kind:action:token format)
+        # or a dashboard callback.
+        callback_data = query.data or ""
+        parts = callback_data.split(":", 2)
+        is_emergency = (
+            len(parts) == 3
+            and parts[0] in ("close_all", "close_single", "cancel_all")
+            and parts[1] in ("confirm", "cancel")
+        )
+
+        if is_emergency:
+            await query.answer()  # acknowledge immediately to stop spinner
+            result = await asyncio.to_thread(
+                self._router.handle_callback,
+                callback_data=callback_data,
+                user_id=user.id,
+                chat_id=query.message.chat_id if query.message else 0,
+                message_id=query.message.message_id if query.message else 0,
+                thread_id=getattr(query.message, "message_thread_id", None) if query.message else None,
+                created_by=str(user.id),
+            )
+            if result.answer_text:
+                await query.answer(result.answer_text)
+            if result.delete_message:
+                try:
+                    await query.message.delete()
+                except Exception:  # noqa: BLE001
+                    pass
+                return
+            if result.reply_text:
+                try:
+                    await query.message.edit_text(result.reply_text)
+                except Exception:  # noqa: BLE001
+                    pass
+            return
+
+        # Dashboard callbacks
+        if self._dashboard_manager is None:
+            await query.answer()
             return
         if query.message is None or query.message.chat_id != self._router._auth._chat_id:
             await query.answer()
             return
         await query.answer()  # acknowledge immediately
-        await self._dashboard_manager.handle_callback(query, query.data or "noop")
+        await self._dashboard_manager.handle_callback(query, callback_data or "noop")
 
     async def run(self) -> None:
         self._app = self._build_app()
@@ -533,4 +822,4 @@ class TelegramControlBot:
             self._app = None
 
 
-__all__ = ["CommandRouter", "RouteResult", "TelegramControlBot"]
+__all__ = ["CallbackResult", "CommandRouter", "RouteResult", "TelegramControlBot"]
