@@ -84,7 +84,11 @@ class DashboardManager:
         return sqlite3.connect(self._db)
 
     def _ensure_table(self) -> None:
-        """Create ops_dashboard_messages table if not present (idempotent)."""
+        """Create ops_dashboard_messages table if not present.
+
+        If the table exists with scope_account_id TEXT NOT NULL (legacy schema),
+        recreate it without the NOT NULL constraint so global scope (NULL) can be stored.
+        """
         conn = self._connect()
         try:
             conn.execute(
@@ -102,6 +106,36 @@ class DashboardManager:
                 """
             )
             conn.commit()
+
+            # Migration: if scope_account_id was created NOT NULL, recreate the table.
+            # SQLite does not support ALTER COLUMN, so we use the rename-and-copy pattern.
+            row = conn.execute(
+                "SELECT sql FROM sqlite_master WHERE type='table' AND name='ops_dashboard_messages'"
+            ).fetchone()
+            if row and "scope_account_id  TEXT NOT NULL" in row[0]:
+                conn.executescript(
+                    """
+                    BEGIN;
+                    CREATE TABLE ops_dashboard_messages_new (
+                        chat_id           INTEGER NOT NULL,
+                        thread_id         INTEGER NOT NULL DEFAULT 0,
+                        message_id        INTEGER NOT NULL,
+                        scope_account_id  TEXT,
+                        scope_trader_id   TEXT,
+                        current_view      TEXT NOT NULL DEFAULT 'attivi:0',
+                        updated_at        TEXT,
+                        PRIMARY KEY (chat_id, thread_id)
+                    );
+                    INSERT INTO ops_dashboard_messages_new
+                        SELECT chat_id, thread_id, message_id, scope_account_id,
+                               scope_trader_id, current_view, updated_at
+                        FROM ops_dashboard_messages;
+                    DROP TABLE ops_dashboard_messages;
+                    ALTER TABLE ops_dashboard_messages_new RENAME TO ops_dashboard_messages;
+                    COMMIT;
+                    """
+                )
+                logger.info("ops_dashboard_messages migrated: scope_account_id no longer NOT NULL")
         finally:
             conn.close()
 
