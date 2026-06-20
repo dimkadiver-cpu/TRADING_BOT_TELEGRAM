@@ -243,10 +243,19 @@ def _scope_where(scope: QueryScope, table_alias: str = "") -> tuple[str, list]:
     """Return (WHERE-fragment, params) for the given scope.
 
     The fragment does NOT include the leading WHERE keyword.
+    account_id=None means global scope — no filter applied.
     """
     prefix = f"{table_alias}." if table_alias else ""
+
+    # Scope globale — nessun filtro account né trader
+    if scope.account_id is None and scope.trader_ids is None:
+        return "1=1", []
+
+    # Account singolo, tutti i trader
     if scope.trader_ids is None:
         return f"{prefix}account_id = ?", [scope.account_id]
+
+    # Account singolo + trader specifici
     placeholders = ",".join("?" * len(scope.trader_ids))
     return (
         f"{prefix}account_id = ? AND {prefix}trader_id IN ({placeholders})",
@@ -627,15 +636,25 @@ class StatusQueries:
         conn = self._connect()
         try:
             if scope is not None:
-                snapshot = conn.execute(
-                    "SELECT account_id, equity_usdt, available_balance_usdt, "
-                    "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
-                    "FROM ops_account_snapshots "
-                    "WHERE account_id=? "
-                    "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
-                    "LIMIT 1",
-                    (scope.account_id,),
-                ).fetchone()
+                if scope.account_id is not None:
+                    snapshot = conn.execute(
+                        "SELECT account_id, equity_usdt, available_balance_usdt, "
+                        "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
+                        "FROM ops_account_snapshots "
+                        "WHERE account_id=? "
+                        "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
+                        "LIMIT 1",
+                        (scope.account_id,),
+                    ).fetchone()
+                else:
+                    # Scope globale: snapshot più recente tra tutti gli account
+                    snapshot = conn.execute(
+                        "SELECT account_id, equity_usdt, available_balance_usdt, "
+                        "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
+                        "FROM ops_account_snapshots "
+                        "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
+                        "LIMIT 1"
+                    ).fetchone()
             else:
                 snapshot = conn.execute(
                     "SELECT account_id, equity_usdt, available_balance_usdt, "

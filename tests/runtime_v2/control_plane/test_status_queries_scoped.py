@@ -722,3 +722,69 @@ class TestStatsBestWorstSymbol:
         stats = q.get_stats(SCOPE_A)
         assert stats.best_symbol is None
         assert stats.worst_symbol is None
+
+
+# ---------------------------------------------------------------------------
+# Global scope (account_id=None) — _scope_where produces WHERE 1=1
+# ---------------------------------------------------------------------------
+
+def test_get_open_trades_global_scope_returns_all_accounts(tmp_path):
+    """Global scope must return trades from every account."""
+    db_path = str(tmp_path / "ops.db")
+    _apply_migrations(db_path)
+    conn = sqlite3.connect(db_path)
+
+    _add_chain(conn, 1, "OPEN", account_id="account_A", trader_id="trader_a")
+    _add_chain(conn, 2, "OPEN", account_id="account_B", trader_id="trader_b")
+    _add_chain(conn, 3, "OPEN", account_id="account_C", trader_id="trader_c")
+    conn.commit()
+    conn.close()
+
+    sq = StatusQueries(db_path)
+    global_scope = QueryScope(account_id=None, trader_ids=None)
+    view = sq.get_open_trades(global_scope)
+
+    ids = {r.chain_id for r in view.rows}
+    assert ids == {1, 2, 3}
+
+
+def test_get_closed_trades_global_scope_returns_all_accounts(tmp_path):
+    """Global scope must return closed trades from every account."""
+    db_path = str(tmp_path / "ops.db")
+    _apply_migrations(db_path)
+    conn = sqlite3.connect(db_path)
+
+    _add_chain(conn, 10, "CLOSED", account_id="account_A", trader_id="trader_a",
+               cumulative_gross_pnl=10.0)
+    _add_chain(conn, 11, "CLOSED", account_id="account_B", trader_id="trader_b",
+               cumulative_gross_pnl=20.0)
+    conn.commit()
+    conn.close()
+
+    sq = StatusQueries(db_path)
+    global_scope = QueryScope(account_id=None, trader_ids=None)
+    view = sq.get_closed_trades(global_scope)
+
+    ids = {r.chain_id for r in view.rows}
+    assert ids == {10, 11}
+
+
+def test_get_stats_global_scope_aggregates_all_accounts(tmp_path):
+    """Global scope stats must count trades from all accounts."""
+    db_path = str(tmp_path / "ops.db")
+    _apply_migrations(db_path)
+    conn = sqlite3.connect(db_path)
+
+    _add_chain(conn, 20, "CLOSED", account_id="account_A", trader_id="trader_a",
+               cumulative_gross_pnl=5.0)
+    _add_chain(conn, 21, "CLOSED", account_id="account_B", trader_id="trader_b",
+               cumulative_gross_pnl=15.0)
+    conn.commit()
+    conn.close()
+
+    sq = StatusQueries(db_path)
+    global_scope = QueryScope(account_id=None, trader_ids=None)
+    view = sq.get_stats(global_scope)
+
+    totale = next(r for r in view.rows if r.label == "Totale")
+    assert totale.trade_count == 2
