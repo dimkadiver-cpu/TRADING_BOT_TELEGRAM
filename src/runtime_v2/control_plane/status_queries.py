@@ -43,6 +43,16 @@ class TradeRow:
 
 
 @dataclass
+class CloseCandidate:
+    chain_id: int
+    symbol: str
+    side: str
+    state: str
+    trader_id: str
+    account_id: str
+
+
+@dataclass
 class TradesView:
     updated_at: str
     total: int
@@ -907,9 +917,56 @@ class StatusQueries:
 
         return BlockedTradesView(updated_at=_now_iso(), rows=result_rows)
 
+    def get_open_for_close(self, scope: QueryScope) -> list[CloseCandidate]:
+        """Trade aperti chiudibili via MARKET_CLOSE (OPEN + PARTIALLY_CLOSED)."""
+        _CLOSEABLE_STATES = ("OPEN", "PARTIALLY_CLOSED")
+        where, params = _scope_where(scope)
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                f"SELECT trade_chain_id, symbol, side, lifecycle_state, trader_id, account_id "
+                f"FROM ops_trade_chains "
+                f"WHERE lifecycle_state IN ({','.join('?' * len(_CLOSEABLE_STATES))}) "
+                f"AND {where} ORDER BY trade_chain_id",
+                (*_CLOSEABLE_STATES, *params),
+            ).fetchall()
+        finally:
+            conn.close()
+        return [CloseCandidate(r[0], r[1], r[2], r[3], r[4] or "", r[5] or "") for r in rows]
+
+    def get_waiting_for_cancel(self, scope: QueryScope) -> list[CloseCandidate]:
+        """Ordini WAITING_ENTRY cancellabili via CANCEL_ENTRY."""
+        where, params = _scope_where(scope)
+        conn = self._connect()
+        try:
+            rows = conn.execute(
+                f"SELECT trade_chain_id, symbol, side, lifecycle_state, trader_id, account_id "
+                f"FROM ops_trade_chains "
+                f"WHERE lifecycle_state='WAITING_ENTRY' AND {where} "
+                f"ORDER BY trade_chain_id",
+                params,
+            ).fetchall()
+        finally:
+            conn.close()
+        return [CloseCandidate(r[0], r[1], r[2], r[3], r[4] or "", r[5] or "") for r in rows]
+
+    def get_open_count_excluding_waiting(self, scope: QueryScope) -> int:
+        """Conta trade OPEN/PARTIALLY_CLOSED per il messaggio '/cancel_all — posizioni aperte non toccate'."""
+        where, params = _scope_where(scope)
+        conn = self._connect()
+        try:
+            count = conn.execute(
+                f"SELECT COUNT(*) FROM ops_trade_chains "
+                f"WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED') AND {where}",
+                params,
+            ).fetchone()[0]
+        finally:
+            conn.close()
+        return count
+
 
 __all__ = [
-    "StatusQueries", "StatusView", "TradesView", "TradeRow", "TradeDetail",
+    "StatusQueries", "StatusView", "TradesView", "TradeRow", "CloseCandidate", "TradeDetail",
     "HealthView", "ControlView", "BlockInfo", "ReviewsView", "ReviewItem",
     "PnlView", "StatsView", "StatsRow", "ClosedTradesView", "ClosedTradeRow",
     "BlockedTradesView", "BlockedTradeRow",
