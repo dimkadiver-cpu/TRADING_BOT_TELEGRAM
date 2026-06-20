@@ -1,7 +1,7 @@
 ```
 ✅  SIGNAL ACCEPTED
 - - - - - - - - - - - - -
- BTC/USDT — 📈 LONG
+#13 BTC/USDT — 📈 LONG
 - - - - - - - - - - - - -
 Entry:
 • E1: ~61420 Market (70%)
@@ -10,61 +10,43 @@ Targets:
 • TP1: `64734`
 • TP2: `67500`
 • TP3: `73600`
-
 Stop Loss:
-• SL: `59465`
+• `59465`
 
-Trader: Pipsygnal
-Exchange Account: main
-Stop Loss:
-• SL: `59465`
-
-
-
-
-
-
-
-
-
-
-
-
-Entry:
-E1: Market ~68,500 (70%)
-E2: 67,200 Limit (30%)
-SL: 66,400
-TP_1: 69,200 (50%)
-TP_2: 70,500 (50%)
 Risk: 0.5%
 Leverage: x5
-- - - - - - - - - - - - -
-Notes:
-Risk - Reduced by trader
-- - - - - - - - - - - - -
+
 Trader: Pipsygnal
-Exchange Account: main
-- - - - - - - - - - - - -
+Exchange: Bybit 
+Account: main
+
 Source: trader_signal
 https://t.me/c/123456/987
-```
+
+
 
 > TWO_STEP + 2 TP — % mostrate su entrambi.
 
 ---
 
 ```
-✅ #13 — SIGNAL ACCEPTED
+✅ SIGNAL ACCEPTED
 - - - - - - - - - - - - -
-BTC/USDT — 📈 LONG
+#13 BTC/USDT — 📈 LONG
 - - - - - - - - - - - - -
-Entry_1: 65,000 Limit (50%)
-Entry_2: 64,000 Limit (30%)
-Entry_3: 63,000 Limit (20%)
-SL: 62,000
-TP_1: 67,000 (30%)
-TP_2: 69,000 (40%)
-TP_3: 72,000 (30%)
+Entry:
+• E1: 65,000 Limit (50%)
+• E2: 64,000 Limit (30%)
+• E3: 63,000 Limit (20%)
+
+Targets:
+• TP1: 67,000 (30%)
+• TP2: 69,000 (40%)
+• TP3: 72,000 (30%)
+
+Stop Loss:
+• 62,000
+
 Risk: 1.0%
 Leverage: x5
 - - - - - - - - - - - - -
@@ -84,7 +66,8 @@ https://t.me/c/123456/987
 - - - - - - - - - - - - -
 ETH/USDT — 📈 LONG
 - - - - - - - - - - - - -
-Entry: 3,500 Limit
+Entry:
+• E1: 3,500 Limit (50%)
 SL: 3,400
 TP: 3,650
 Risk: 0.8%
