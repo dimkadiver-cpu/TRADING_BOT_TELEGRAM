@@ -1,6 +1,6 @@
-# Design: Commands Scope, Stats, PnL, Dashboard
+# Design Madre: Control Plane Commands
 **Data:** 2026-06-19  
-**Stato:** aggiornato post-revisione 2026-06-19 — pronto per piano di implementazione
+**Stato:** spec madre aggiornata post-revisione 2026-06-19 — pronta per piani di implementazione separati
 
 ---
 
@@ -17,8 +17,15 @@ Verifica contro schema reale (`db/ops_migrations/`) e gateway:
 - **Vista Bloccati:** `REVIEW_REQUIRED` (motivo da `ops_lifecycle_events`, non da una
   colonna `review_reason` che non esiste) **+** `ops_execution_commands status='FAILED'`.
   `EXEC_FAILED` non è un lifecycle_state.
-- **PnL non-realizzato** (`/trades`, dashboard Attivi): se non letto da
-  `ops_position_snapshots`, va dichiarato gap esplicito.
+- **PnL non-realizzato** (`/trades`, dashboard Attivi): **calcolato per-chain**, non letto
+  dall'exchange (l'`unrealizedPnl` non è salvato). Formula:
+  `(mark_price – entry_avg_price) × open_position_qty × (+1 LONG / –1 SHORT)`, con
+  `mark_price`/`captured_at` da `ops_market_snapshots` per `(account_id, symbol)`. Per-chain
+  corretto anche con più chain sullo stesso simbolo (ognuna usa il proprio entry/qty).
+  `PnL: —` se manca mark/entry/qty (es. WAITING_ENTRY). Mostrare sempre **ora snapshot**
+  e età del mark snapshot. La freshness segue
+  `websocket.position_reconciliation_interval_seconds`: snapshot stale se
+  `age_seconds > interval + max(30s, interval * 0.25)`.
 
 ---
 
@@ -26,7 +33,7 @@ Verifica contro schema reale (`db/ops_migrations/`) e gateway:
 
 Il sistema supporta più account exchange (`per_account`), più trader per account, e può girare su un singolo supergroup Telegram con topic distinti. I comandi attuali (`/status`, `/trades`, `/pnl`, ecc.) non filtrano per account né per trader — restituiscono dati aggregati di tutto il DB.
 
-Questo design introduce:
+Questa spec madre introduce:
 1. **Scope resolution** — i comandi si scopano automaticamente in base al topic da cui vengono inviati
 2. **Comandi read-only migliorati** — `/trades` con PnL snapshot, `/pnl` con realized PnL reale, `/stats` multi-periodo
 3. **Comandi di emergenza con conferma** — `/close_all`, `/close`, `/cancel_all`
@@ -96,7 +103,7 @@ Lista trade attivi con entry price e PnL da `ops_position_snapshots`.
 ```
 📊 TRADES — demo_1 · trader_a
 ────────────────
-Updated: 14:32:05  |  Snapshot: 18s fa
+Updated: 14:32:05  |  Mark snapshot: 14:31:47 (18s fa)
 
 #5  📈 BTCUSDT  LONG   OPEN
     Entry: 63,500  SL: 62,800  BE: set
@@ -106,13 +113,15 @@ Updated: 14:32:05  |  Snapshot: 18s fa
     Entry: 2,140   SL: 2,180
     Qty: 0.5   PnL: -3.20 USDT
 
-⚠️ Snapshot >120s — dati non aggiornati
+⚠️ Snapshot oltre intervallo riconciliazione — PnL aperta non aggiornata
 ────────────────
 /trade #id  · /close <symbol>  · /cancel_all
 ```
 
 **Dati:** `ops_trade_chains` (filtrato per scope) JOIN `ops_position_snapshots` per PnL unrealized.  
-**Warning snapshot:** se `captured_at` del snapshot è >120s → riga `⚠️ Snapshot >120s — dati non aggiornati`.  
+**Warning snapshot:** se `captured_at` del mark snapshot supera
+`position_reconciliation_interval_seconds + max(30s, interval * 0.25)` →
+riga `⚠️ Snapshot oltre intervallo riconciliazione — PnL aperta non aggiornata`.  
 **Argomento:** `/trades trader_a` → filtra `trader_id` dentro l'account.
 
 ---
@@ -386,7 +395,7 @@ Aggiornato: 14:32:05
 ```
 📊 DASHBOARD — demo_1 · trader_a
 ────────────────
-14:32:05  |  Snapshot: 18s fa
+14:32:05  |  Mark snapshot: 14:31:47 (18s fa)
 
 #5  📈 BTCUSDT   LONG   OPEN
     Entry: 63,500  SL: 62,800  BE: ✓
@@ -483,11 +492,11 @@ Worst: #22 BNBUSDT  -12.80
 
 ### Auto-refresh su cambio stato
 
-Event-driven: nessun timer, nessun polling.
+Event-driven: nessun timer dashboard, nessun polling dedicato alla UI.
 
 ```
-Lifecycle event (fill, TP, SL, close, state change) per trade X (trader_a, demo_1)
-  → NotificationDispatcher (clean_log, tech_log — invariato)
+Lifecycle event processato e CLEAN_LOG inviato per trade X (trader_a, demo_1)
+  → NotificationDispatcher (dopo invio CLEAN_LOG e tracking aggiornato)
   → DashboardManager.on_trade_event(account_id="demo_1", trader_id="trader_a")
       → cerca in ops_dashboard_messages tutti i dashboard il cui scope copre trader_a
           → thread 316 (scope trader_a)        → aggiorna ✓
@@ -495,10 +504,15 @@ Lifecycle event (fill, TP, SL, close, state change) per trade X (trader_a, demo_
           → thread 318 (scope trader_b)        → non toccato ✓
       → per ogni dashboard trovato:
           → parse current_view → (view, page)
-          → render fresh data per view corrente
+          → render fresh data per la stessa view/pagina corrente
           → edit_message_text(chat_id, message_id, text + keyboard)
           → gestisce "MessageNotModified" silenziosamente
 ```
+
+Il refresh **non cambia vista** e **non resetta pagina**: se l'utente sta guardando
+Attivi, il messaggio resta su Attivi e rilegge i dati freschi di Attivi. Se una chain
+passa a CLOSED, sparisce da Attivi al refresh; l'utente può poi aprire Chiusi.
+Solo i click su keyboard cambiano `current_view` o pagina.
 
 **Throttle:** minimo 5 secondi tra edit successive sullo stesso messaggio. Se arriva un evento durante il cooldown, l'edit viene schedulata per dopo il cooldown — non scartata.
 

@@ -1,4 +1,10 @@
+# SUPERSEDED — usare `2026-06-19-commands-observability-dashboard.md`
+
 # Piano 1 — Foundation + Comandi Read-Only
+
+Questo file resta come storico di lavoro, ma non è più il piano attivo.
+Il piano attivo read-only/dashboard è:
+`docs/superpowers/plans/2026-06-19-commands-observability-dashboard.md`
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -17,7 +23,8 @@ Verifica contro schema reale (`db/ops_migrations/`), `auth.py`, `telegram_bot.py
 1. **`closed_at` non esiste** in `ops_trade_chains` (nessuna migration la aggiunge). Il fallback PRAGMA a `updated_at` usato in `get_stats()` è corretto e va **mantenuto**. Le fixture di test devono **NON** avere `closed_at` (altrimenti il ramo di fallback non è mai testato e la spec resta disallineata).
 2. **`review_reason` non esiste** come colonna. Il motivo dei review si legge da `ops_lifecycle_events.payload_json` (come già fa `get_reviews()`). Non aggiungerla alle fixture.
 3. **Le fixture di test devono derivare dallo schema reale** applicando `db/ops_migrations/*.sql`, non ridichiarando a mano `ops_trade_chains`. Colonne PnL (`cumulative_gross_pnl/fees/funding`, mig. 010), `plan_state_json` (004), `source_chat_id`/`telegram_message_id` (009) esistono davvero.
-4. **Routing reply multi-account (Task 8).** Oggi `_on_command` invia SEMPRE la risposta a `default_acc.chat_id` + commands thread del default. Con multi-account la risposta finisce nell'account sbagliato. Va corretto per rispondere a `message.chat_id` / `message.message_thread_id` di origine (vedi nota in Task 8 Step 12).
+4. **Routing reply multi-account (Task 8).** Oggi `_on_command` invia SEMPRE la risposta a `default_acc.chat_id` + commands thread del default. Con multi-account la risposta finisce nell'account sbagliato. Va corretto per rispondere a `message.chat_id` / `message.message_thread_id` di origine (vedi nota in Task 8 Step 10).
+5. **PnL non-realizzato in `/trades`.** La spec mostra entry + PnL + warning snapshot, ma il template `_TRADES` e `TradeRow` di questo piano espongono solo SL/BE. Allineare: `TradeRow` aggiunge `entry_price`, `pnl`, `mark_age_seconds`; `get_open_trades` calcola il PnL per-chain con gli helper `_latest_mark` / `_chain_unrealized_pnl` (definiti in Piano 3 Task 2 Step 2-bis — condividerli in `status_queries.py`), leggendo anche `entry_avg_price` e `open_position_qty`. `PnL: —` se manca mark/entry/qty. Estendere `_TRADES` per riga con `Entry`/`PnL` e header con età mark.
 
 ---
 

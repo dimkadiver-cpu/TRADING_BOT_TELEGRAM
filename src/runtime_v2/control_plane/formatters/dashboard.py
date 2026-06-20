@@ -99,7 +99,6 @@ def _build_attivi_payload(
             "unrealized_pnl": r.unrealized_pnl,
             "mark_price": r.mark_price,
             "mark_captured_at": r.mark_captured_at,
-            "current_stop_price": r.mark_price,  # fallback; SL price in TradeRow is via has_sl
         }
         for r in page_rows
     ]

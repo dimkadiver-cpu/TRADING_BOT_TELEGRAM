@@ -488,6 +488,12 @@ class TelegramControlBot:
         query = update.callback_query
         if query is None or self._dashboard_manager is None:
             return
+        if query.from_user is None or query.from_user.id not in self._router._auth._authorized_users:
+            await query.answer(text="Unauthorized", show_alert=False)
+            return
+        if query.message is None or query.message.chat_id != self._router._auth._chat_id:
+            await query.answer()
+            return
         await query.answer()  # acknowledge immediately
         await self._dashboard_manager.handle_callback(query, query.data or "noop")
 

@@ -1,4 +1,4 @@
-# Piano 2 — Emergency Close (`/close_all`, `/close`, `/cancel_all`)
+# Piano B — Emergency Close (`/close_all`, `/close`, `/cancel_all`)
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -29,11 +29,11 @@ Verifica eseguita contro schema reale (`db/ops_migrations/001+002`), gateway (`e
 
 ---
 
-## Dipendenze da Piano 1
+## Dipendenze da Piano A
 
-- `QueryScope` / `ScopeResolver` (Task 2 Piano 1) — necessari prima di implementare Piano 2
-- `_scope_label()` (Task 8 Piano 1)
-- Auth + route corretti (Task 3, 8 Piano 1)
+- `QueryScope` / `ScopeResolver` dal piano `2026-06-19-commands-observability-dashboard.md`
+- `_scope_label()` dal wiring control-plane scoped
+- Auth + route corretti dal piano observability/dashboard
 
 ## Global Constraints
 
@@ -41,7 +41,7 @@ Verifica eseguita contro schema reale (`db/ops_migrations/001+002`), gateway (`e
 - Lazy deletion: nessun timer in background — scadenza verificata solo al click
 - TTL pending: 300 secondi (5 minuti)
 - `ops_execution_commands` insert: verificare schema in Task 0
-- Nessun template dashboard in questo piano — Piano 3
+- Nessun template dashboard in questo piano — coperti dal piano observability/dashboard
 - `display_symbol()` per simboli
 
 ---
@@ -189,7 +189,7 @@ git commit -m "feat: add CloseCandidate and get_open_for_close/get_waiting_for_c
 - Create: `src/runtime_v2/control_plane/emergency_close.py`
 
 **Interfaces:**
-- Consumes: `CloseCandidate` (Task 1), `QueryScope` (Piano 1 Task 2)
+- Consumes: `CloseCandidate` (Task 1), `QueryScope` (piano observability/dashboard)
 - Produces:
   - `EmergencyCloseService(ops_db_path: str)`
   - `.execute_close(candidates: list[CloseCandidate], created_by: str) -> int` — crea comandi CLOSE_FULL (payload `{symbol(raw), side}`), ritorna count
@@ -1105,7 +1105,7 @@ _ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | _EMERGENCY_COMMANDS
 Run: `pytest tests/runtime_v2/control_plane/ -v --tb=short`
 Expected: tutti PASS
 
-- [ ] **Step 12: Commit finale Piano 2**
+- [ ] **Step 12: Commit finale Piano B**
 
 ```bash
 git add src/runtime_v2/control_plane/telegram_bot.py
@@ -1114,7 +1114,7 @@ git commit -m "feat: add emergency close commands with inline keyboard confirm/c
 
 ---
 
-## Self-Review Piano 2
+## Self-Review Piano B
 
 | Requisito spec | Task |
 |---|---|
