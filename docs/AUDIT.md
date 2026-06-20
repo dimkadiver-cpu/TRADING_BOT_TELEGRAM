@@ -98,6 +98,40 @@ infrastrutturale (firewall/proxy/uscita HTTPS rete arpa.veneto.it).
 
 ---
 
+## 2026-06-20 — Piano B Task 5: telegram_bot.py — pending dict + callback handler + emergency commands
+
+### Step completato
+
+Implementato Task 5 del Piano B (emergency close) in `src/runtime_v2/control_plane/telegram_bot.py`.
+
+**Scope:**
+- `_PendingAction` / `CallbackResult` dataclass + `_PENDING_TTL = 300`
+- `keyboard: object | None` aggiunto a `_DispatchResult` e `RouteResult`
+- Helper modulo-level: `_make_token`, `_emergency_keyboard`, `_now_hms`, `_scope_label_from_scope`, `_candidates_to_payload`, `_override_trader`
+- `self._pending: dict[str, _PendingAction]` in `CommandRouter.__init__`
+- `CommandRouter.handle_callback()` — dispatch confirm/cancel, TTL lazy-delete, render via `EMERGENCY_REGISTRY`
+- `/close_all`, `/close`, `/cancel_all` in `_dispatch()` — preview template + keyboard
+- `route()` propaga `keyboard` da `_DispatchResult` a `RouteResult`
+- `_on_command()` passa `reply_markup` quando `result.keyboard is not None`
+- `_on_callback_query()` redesignato: distingue emergency (`kind:action:token`) da dashboard; path emergency via `asyncio.to_thread(handle_callback)`
+- `_EMERGENCY_COMMANDS`, `_ALLOWED_COMMANDS` aggiornati; `"stats"` aggiunto a `_READONLY_COMMANDS`
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/telegram_bot.py` | Modificato | Unico file toccato |
+
+### Validazione
+
+- `pytest tests/runtime_v2/control_plane/ -v --tb=short`: **508 passed** (nessuna regressione)
+
+### Rischi aperti
+
+- **Scope default account**: emergency commands usano `self._config.default_account` come account base. In setup multi-account, lo scope dovrebbe derivare da `thread_id → QueryScope` via `ScopeResolver`. Accettabile per ora (Piano B = single-account), da revisionare se multi-account attivo.
+
+---
+
 ## 2026-06-19 — Piano 3: Dashboard inline (design + piano scritto)
 
 ### Step completato

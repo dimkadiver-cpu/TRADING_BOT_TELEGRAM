@@ -9,10 +9,13 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.runtime_v2.control_plane.debug_controller import DebugModeController
+from src.runtime_v2.control_plane.emergency_close import EmergencyCloseService
 from src.runtime_v2.control_plane.override_store import OverrideStore
+from src.runtime_v2.control_plane.scope_resolver import QueryScope
 from src.runtime_v2.control_plane.status_queries import (
-    ControlView, HealthView, ReviewsView, StatusView, StatusQueries,
-    PnlView, TradeDetail, TradesView,
+    BlockedTradesView, ClosedTradesView, ControlView, HealthView,
+    ReviewsView, StatusView, StatusQueries, PnlView, StatsView,
+    TradeDetail, TradesView,
 )
 
 @dataclass
@@ -84,16 +87,17 @@ class RuntimeControlService:
         self._ops_db = ops_db_path
         self._queries = StatusQueries(ops_db_path)
         self._overrides = OverrideStore(ops_db_path)
+        self._emergency = EmergencyCloseService(ops_db_path)
         self._start_time = time.time()
         self._log_path = log_path
         self._debug_controller = debug_controller
 
     # ── reads ───────────────────────────────────────────────────────────────
-    def get_status(self) -> StatusView:
-        return self._queries.get_status()
+    def get_status(self, scope: QueryScope | None = None) -> StatusView:
+        return self._queries.get_status(scope)
 
-    def get_open_trades(self) -> TradesView:
-        return self._queries.get_open_trades()
+    def get_open_trades(self, scope: QueryScope | None = None) -> TradesView:
+        return self._queries.get_open_trades(scope)
 
     def get_trade(self, chain_id: int) -> TradeDetail | None:
         return self._queries.get_trade(chain_id)
@@ -101,14 +105,43 @@ class RuntimeControlService:
     def get_health(self) -> HealthView:
         return self._queries.get_health()
 
-    def get_control(self) -> ControlView:
-        return self._queries.get_control()
+    def get_control(self, scope: QueryScope | None = None) -> ControlView:
+        return self._queries.get_control(scope)
 
-    def get_reviews(self) -> ReviewsView:
-        return self._queries.get_reviews()
+    def get_reviews(self, scope: QueryScope | None = None) -> ReviewsView:
+        return self._queries.get_reviews(scope)
 
-    def get_pnl(self) -> PnlView:
-        return self._queries.get_pnl()
+    def get_pnl(self, scope: QueryScope | None = None) -> PnlView:
+        return self._queries.get_pnl(scope)
+
+    def get_stats(self, scope: QueryScope) -> StatsView:
+        return self._queries.get_stats(scope)
+
+    def get_closed_trades(
+        self,
+        scope: QueryScope,
+        page: int = 0,
+        page_size: int = 5,
+    ) -> ClosedTradesView:
+        return self._queries.get_closed_trades(scope, page=page, page_size=page_size)
+
+    def get_blocked_trades(self, scope: QueryScope) -> BlockedTradesView:
+        return self._queries.get_blocked_trades(scope)
+
+    def get_open_for_close(self, scope: QueryScope) -> list:
+        return self._queries.get_open_for_close(scope)
+
+    def get_waiting_for_cancel(self, scope: QueryScope) -> list:
+        return self._queries.get_waiting_for_cancel(scope)
+
+    def get_open_count_excluding_waiting(self, scope: QueryScope) -> int:
+        return self._queries.get_open_count_excluding_waiting(scope)
+
+    def execute_close(self, candidates: list, created_by: str) -> int:
+        return self._emergency.execute_close(candidates, created_by)
+
+    def execute_cancel(self, candidates: list, created_by: str) -> int:
+        return self._emergency.execute_cancel(candidates, created_by)
 
     def get_logs(self, n: int = 20) -> list[str]:
         import os
@@ -306,4 +339,5 @@ __all__ = [
     "RuntimeControlService",
     "UnblockResult",
     "VersionInfo",
+    "QueryScope",
 ]

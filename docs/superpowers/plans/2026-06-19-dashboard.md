@@ -1,4 +1,10 @@
+# SUPERSEDED — usare `2026-06-19-commands-observability-dashboard.md`
+
 # Piano 3 — Dashboard (`/dashboard`, 5 viste, paginazione, auto-refresh)
+
+Questo file resta come storico di dettaglio, ma non è più il piano attivo.
+Il piano attivo read-only/dashboard è:
+`docs/superpowers/plans/2026-06-19-commands-observability-dashboard.md`
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
@@ -25,10 +31,19 @@ Verifica contro schema reale e `status_queries.py`/`notification_dispatcher.py`:
    come motivo) — è una query separata, non un `lifecycle_state`. Vedi Task 2 Step 5.
 3. **`closed_at` non esiste** → fallback PRAGMA a `updated_at` (già previsto, mantenere).
 4. **Fixture di test dallo schema reale** (`db/ops_migrations/*.sql`), non inventate.
-5. **PnL non-realizzato** nella vista Attivi è fissato a `None` ("non disponibile"),
-   ma spec/header promettono "Snapshot: Ns fa" + PnL. O si legge da
-   `ops_position_snapshots(payload_json, captured_at)`, o si declassa a gap esplicito
-   nella spec. Decidere prima di implementare.
+5. **PnL non-realizzato** (vista Attivi) — **calcolato per-chain**, non fissato a `None`:
+   `(mark_price – entry_avg_price) × open_position_qty × (+1 LONG / –1 SHORT)`.
+   `mark_price`/`captured_at` da `ops_market_snapshots` per `(account_id, symbol)`
+   (l'`unrealizedPnl` dell'exchange NON è salvato). Vedi helper `_chain_unrealized_pnl`
+   e `_latest_mark` in Task 2 Step 2-bis. `PnL: —` se manca mark/entry/qty. L'header
+   mostra sempre l'ora dello snapshot e l'età: `Mark snapshot: HH:MM:SS (Ns fa)`.
+   La freshness segue `websocket.position_reconciliation_interval_seconds`: snapshot stale
+   se `age_seconds > interval + max(30s, interval * 0.25)`.
+6. **Auto-refresh vista corrente** — il dashboard si aggiorna dopo ogni CLEAN_LOG inviato
+   per una chain nello scope, non direttamente su ogni raw exchange event. Il refresh
+   rilegge la stessa `current_view` e pagina salvate in DB: se l'utente sta guardando
+   Attivi, resta su Attivi; se una chain chiude, sparisce da Attivi al refresh ma il tab
+   non cambia automaticamente a Chiusi. Solo i click keyboard cambiano vista o pagina.
 
 ---
 
@@ -49,7 +64,8 @@ Verifica contro schema reale e `status_queries.py`/`notification_dispatcher.py`:
 - Throttle edit: min 5s tra edit successivi sullo stesso `(chat_id, thread_id)` — edit schedulata, non scartata
 - `MessageNotModified` da Telegram gestita silenziosamente (contenuto invariato)
 - `/dashboard` da tech_log topic → risposta "comando non disponibile"
-- Auto-refresh scope: se il trade aggiornato è nel scope di un dashboard → refresh quel dashboard
+- Auto-refresh scope: dopo ogni CLEAN_LOG inviato, se il trade aggiornato è nel scope di un dashboard → refresh quel dashboard
+- Auto-refresh view: non cambia `current_view` e non resetta pagina; rilegge la view/pagina corrente
 - `thread_id=0` = `nessun thread` nel DB (private_bot mode)
 - `display_symbol()` per tutti i simboli
 - Separatore `- - - - -` = `SeparatorBlock()` già esistente
@@ -71,7 +87,7 @@ Verifica contro schema reale e `status_queries.py`/`notification_dispatcher.py`:
 - `src/runtime_v2/control_plane/notification_dispatcher.py` — `lifecycle_callback` opzionale
 - `src/runtime_v2/control_plane/telegram_bot.py` — `/dashboard` reale, routing callback `"dash:"`
 - `src/runtime_v2/control_plane/bootstrap.py` — `DashboardManager` costruito e iniettato
-- DB migration: `ops_dashboard_messages` table
+- DB migration in `db/ops_migrations`: `ops_dashboard_messages` table
 
 ---
 
@@ -134,12 +150,12 @@ print(conn.execute('SELECT DISTINCT lifecycle_state FROM ops_trade_chains').fetc
 ## Task 1: DB migration — `ops_dashboard_messages`
 
 **Files:**
-- Create: `src/runtime_v2/control_plane/migrations/add_ops_dashboard_messages.sql`
+- Create: `db/ops_migrations/NNN_ops_dashboard_messages.sql`
 
 - [ ] **Step 1: Scrivere la migration SQL**
 
 ```sql
--- src/runtime_v2/control_plane/migrations/add_ops_dashboard_messages.sql
+-- db/ops_migrations/NNN_ops_dashboard_messages.sql
 CREATE TABLE IF NOT EXISTS ops_dashboard_messages (
     chat_id      INTEGER NOT NULL,
     thread_id    INTEGER NOT NULL DEFAULT 0,
@@ -152,21 +168,21 @@ CREATE TABLE IF NOT EXISTS ops_dashboard_messages (
 );
 ```
 
-- [ ] **Step 2: Verificare come vengono applicate le migration nel progetto**
+- [ ] **Step 2: Verificare applicazione migration**
 
-Run: `rg "CREATE TABLE" src/runtime_v2/ --type py -l`
-Run: `rg "migration|migrate|schema" src/runtime_v2/ --type py -l`
+Il progetto applica le migration ops da `db/ops_migrations/` tramite `main.py --migrate`
+e startup runtime. Non creare migration sotto `src/runtime_v2/control_plane/migrations/`,
+perché non vengono applicate dal flusso standard.
 
-Se il progetto usa uno script di init schema (es. `ops_db_init.py` o simile), aggiungere il CREATE TABLE lì. Se usa file `.sql` standalone, applicare manualmente su dev con:
-
+Run:
 ```bash
-sqlite3 path/to/ops.db < src/runtime_v2/control_plane/migrations/add_ops_dashboard_messages.sql
+python main.py --migrate
 ```
 
 - [ ] **Step 3: Commit**
 
 ```bash
-git add src/runtime_v2/control_plane/migrations/add_ops_dashboard_messages.sql
+git add db/ops_migrations/NNN_ops_dashboard_messages.sql
 git commit -m "feat: add ops_dashboard_messages migration for dashboard message tracking"
 ```
 
@@ -210,8 +226,10 @@ class DashboardTradeRow:
     tp_prices: list[str]   # prezzi flat da intermediate_tps + final_tp; nessun status per TP
     sl_price: str | None
     has_be: bool
-    pnl: float | None
+    pnl: float | None  # non-realizzato calcolato per-chain (None se WAITING_ENTRY / no mark)
     signal_link: str | None  # link segnale originale
+    mark_age_seconds: float | None = None  # età ops_market_snapshots usato per il PnL
+    mark_captured_at: str | None = None  # ora snapshot mark usata per header/UI
 
 @dataclass
 class ClosedTradeRow:
@@ -250,7 +268,9 @@ class DashboardPnlView:
     net_pnl: float | None
     open_count: int
     waiting_count: int
-    snapshot_age_seconds: float | None  # None = no snapshot, >120 = stale
+    snapshot_age_seconds: float | None  # None = no snapshot; stale threshold da config reconciliation
+    snapshot_captured_at: str | None = None  # ora dello snapshot usato, mostrata in UI
+    snapshot_stale: bool = False
 ```
 
 - [ ] **Step 2: Aggiungere helper `_parse_entry_legs` e `_parse_tp_prices`**
@@ -307,6 +327,35 @@ def _parse_tp_prices(plan_state_json: str | None) -> list[str]:
         return []
 ```
 
+- [ ] **Step 2-bis: Helper PnL non-realizzato per-chain**
+
+L'`unrealizedPnl` dell'exchange NON è salvato: si calcola per-chain da `entry_avg_price` +
+`open_position_qty` (colonne chain) e `mark_price` (`ops_market_snapshots`, per simbolo).
+Per-chain corretto anche con più chain sullo stesso simbolo. `_age_seconds` esiste già.
+
+```python
+def _latest_mark(conn, account_id: str, symbol: str) -> tuple[float | None, str | None]:
+    """(mark_price, captured_at) dell'ultimo ops_market_snapshots per (account, symbol)."""
+    row = conn.execute(
+        "SELECT mark_price, captured_at FROM ops_market_snapshots "
+        "WHERE account_id=? AND symbol=? ORDER BY captured_at DESC LIMIT 1",
+        (account_id, symbol),
+    ).fetchone()
+    if not row:
+        return None, None
+    return (float(row[0]) if row[0] is not None else None), row[1]
+
+
+def _chain_unrealized_pnl(
+    side: str, entry_avg_price, open_qty, mark_price: float | None
+) -> float | None:
+    """(mark − entry) × qty × dir. None se manca un input o qty<=0 (es. WAITING_ENTRY)."""
+    if entry_avg_price is None or mark_price is None or not open_qty or open_qty <= 0:
+        return None
+    direction = 1.0 if side == "LONG" else -1.0
+    return (mark_price - float(entry_avg_price)) * float(open_qty) * direction
+```
+
 - [ ] **Step 3: Implementare `get_trades_attivi()`**
 
 ```python
@@ -327,32 +376,42 @@ def get_trades_attivi(
             f"management_plan_json, plan_state_json, "
             f"COALESCE(current_stop_price, expected_stop_price), "
             f"be_protection_status, "
-            f"source_chat_id, telegram_message_id "
+            f"source_chat_id, telegram_message_id, "
+            f"entry_avg_price, open_position_qty "
             f"FROM ops_trade_chains "
             f"WHERE lifecycle_state IN ({','.join('?' * len(_ACTIVE_STATES))}) AND {where} "
             f"ORDER BY trade_chain_id "
             f"LIMIT ? OFFSET ?",
             (*_ACTIVE_STATES, *params, per_page, page * per_page),
         ).fetchall()
+
+        result = []
+        for r in rows:
+            entry_legs = _parse_entry_legs(r[7])       # solo plan_state_json
+            tp_prices = _parse_tp_prices(r[7])          # flat prices, nessun status per TP
+            signal_link = _build_telegram_message_link(r[10], r[11])
+            mark_price, mark_ts = _latest_mark(conn, r[5] or "", r[1])
+            pnl = _chain_unrealized_pnl(r[2], r[12], r[13], mark_price)
+            result.append(DashboardTradeRow(
+                chain_id=r[0], symbol=r[1], side=r[2], state=r[3],
+                trader_id=r[4] or "", account_id=r[5] or "",
+                entry_legs=entry_legs, tp_prices=tp_prices,
+                sl_price=str(r[8]) if r[8] is not None else None,
+                has_be=r[9] == "PROTECTED",
+                pnl=pnl,  # non-realizzato calcolato per-chain (None se WAITING_ENTRY / no mark)
+                mark_age_seconds=_age_seconds(mark_ts),
+                mark_captured_at=mark_ts,
+                signal_link=signal_link,
+            ))
     finally:
         conn.close()
-
-    result = []
-    for r in rows:
-        entry_legs = _parse_entry_legs(r[7])       # solo plan_state_json
-        tp_prices = _parse_tp_prices(r[7])          # flat prices, nessun status per TP
-        signal_link = _build_telegram_message_link(r[10], r[11])
-        result.append(DashboardTradeRow(
-            chain_id=r[0], symbol=r[1], side=r[2], state=r[3],
-            trader_id=r[4] or "", account_id=r[5] or "",
-            entry_legs=entry_legs, tp_prices=tp_prices,
-            sl_price=str(r[8]) if r[8] is not None else None,
-            has_be=r[9] == "PROTECTED",
-            pnl=None,  # PnL unrealizzato non disponibile in questo schema — None
-            signal_link=signal_link,
-        ))
     return result, total
 ```
+
+Nota freshness: `mark_age_seconds` è interpretato dal formatter usando
+`position_reconciliation_interval_seconds` della config. Mostrare sempre `captured_at`
+del mark snapshot in formato `HH:MM:SS`, oltre all'età relativa. Warning stale solo se
+`age_seconds > interval + max(30s, interval * 0.25)`.
 
 - [ ] **Step 4: Implementare `get_trades_chiusi()`**
 
@@ -580,7 +639,7 @@ def _header_blocks(view_emoji: str) -> list:
         DerivedBlock(text_fn=lambda p, e=view_emoji: f"{e} DASHBOARD — {p['scope_label']}"),
         SeparatorBlock(),
         DerivedBlock(text_fn=lambda p: (
-            f"{p['updated_at']}  |  Snapshot: {p['snapshot_age']}  {p.get('stale_warn', '')}"
+            f"{p['updated_at']}  |  Mark snapshot: {p['snapshot_at']} ({p['snapshot_age']})  {p.get('stale_warn', '')}"
             if p.get("snapshot_age") else p["updated_at"]
         )),
     ]
@@ -1018,7 +1077,12 @@ from src.runtime_v2.control_plane.formatters.templates.dashboard import DASHBOAR
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
 
 _PER_PAGE = 5
-_STALE_WARN_SECONDS = 120
+_POSITION_RECONCILIATION_INTERVAL_SECONDS = 600  # TODO: leggere da execution config/runtime service
+
+# Nota implementativa obbligatoria:
+# - leggere position_reconciliation_interval_seconds dalla config/runtime service;
+# - calcolare la soglia stale come interval + max(30s, interval * 0.25);
+# - aggiungere _fmt_snapshot_time(ts) per mostrare sempre HH:MM:SS dello snapshot.
 
 
 def _now_hms() -> str:
@@ -1029,7 +1093,10 @@ def _snapshot_age_str(age_seconds: float | None) -> tuple[str | None, str]:
     if age_seconds is None:
         return None, ""
     label = f"{int(age_seconds)}s fa"
-    warn = "  ⚠️" if age_seconds > _STALE_WARN_SECONDS else ""
+    threshold = _POSITION_RECONCILIATION_INTERVAL_SECONDS + max(
+        30.0, _POSITION_RECONCILIATION_INTERVAL_SECONDS * 0.25
+    )
+    warn = "  ⚠️ Snapshot oltre intervallo riconciliazione" if age_seconds > threshold else ""
     return label, warn
 
 
@@ -1061,9 +1128,22 @@ def format_dashboard_view(
 
     if view_name == "attivi":
         trades, total = service.get_trades_attivi(scope, page=page, per_page=_PER_PAGE)
+        # Età header = mark più vecchio tra le posizioni mostrate (guida il warning stale)
+        mark_rows = [
+            (t.mark_age_seconds, t.mark_captured_at)
+            for t in trades
+            if t.mark_age_seconds is not None and t.mark_captured_at
+        ]
+        if mark_rows:
+            max_age, snap_ts = max(mark_rows, key=lambda item: item[0] or 0)
+            snap_age, stale_warn = _snapshot_age_str(max_age)
+            snapshot_at = _fmt_snapshot_time(snap_ts)
+        else:
+            snap_age, stale_warn, snapshot_at = None, "", None
         payload = {
             "scope_label": scope_label, "updated_at": now,
-            "snapshot_age": None, "stale_warn": "", "total": total,
+            "snapshot_at": snapshot_at, "snapshot_age": snap_age,
+            "stale_warn": stale_warn, "total": total,
             "show_trader": scope.trader_ids is None,
             "trades": [
                 {
@@ -1481,7 +1561,11 @@ class DashboardManager:
         trader_id: str | None,
         chain_id: int | None,
     ) -> None:
-        """Chiamato da TelegramNotificationDispatcher dopo ogni CLEAN_LOG inviato."""
+        """Chiamato da TelegramNotificationDispatcher dopo ogni CLEAN_LOG inviato.
+
+        Mantiene la current_view salvata in DB: il refresh aggiorna la vista/pagina
+        corrente e non cambia tab automaticamente.
+        """
         dashboards = self._all_dashboards_for_scope(account_id, trader_id)
         for dash in dashboards:
             await self._edit_message(dash)
@@ -1641,7 +1725,7 @@ from collections.abc import Callable, Awaitable
 self._lifecycle_callback: Callable | None = lifecycle_callback
 ```
 
-In `drain_once()`, dopo `_update_clean_log_tracking(...)`:
+In `drain_once()`, dopo `_update_clean_log_tracking(...)` e solo dopo invio CLEAN_LOG riuscito:
 ```python
 if destination == "CLEAN_LOG" and self._lifecycle_callback is not None:
     try:
@@ -1904,8 +1988,9 @@ git commit -m "feat: wire DashboardManager into dispatcher lifecycle hook and Co
 | Throttle 5s tra edit | Task 5 (`_THROTTLE_SECONDS`) | |
 | Edit schedulata durante cooldown, non scartata | Task 5 (`_delayed_edit`) | |
 | `MessageNotModified` gestita silenziosamente | Task 5 (`_do_edit`) | |
-| Auto-refresh su CLEAN_LOG sent | Task 6 (dispatcher hook) | |
+| Auto-refresh su CLEAN_LOG sent | Task 6 (dispatcher hook) | dopo invio e tracking aggiornato |
 | Auto-refresh scope corretto (trader_id filter) | Task 5 (`_all_dashboards_for_scope`) | |
+| Auto-refresh mantiene vista/pagina corrente | Task 5 (`_edit_message`) | nessun reset tab/pagina |
 | `/dashboard` da tech_log → IGNORE | Piano 1 Task 3 (auth) | |
 | Ricreazione sovrascrive: `ON CONFLICT DO UPDATE` | Task 5 (`_upsert`) | |
 | `thread_id=0` per private_bot | Task 1 (schema) + Task 5 (`create_or_update`) | |
