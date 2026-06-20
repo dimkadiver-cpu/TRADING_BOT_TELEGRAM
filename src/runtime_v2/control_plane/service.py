@@ -22,6 +22,7 @@ from src.runtime_v2.control_plane.status_queries import (
 class VersionInfo:
     runtime: str
     commit: str
+    commit_date: str
     branch: str
     uptime_seconds: int
 
@@ -176,6 +177,7 @@ class RuntimeControlService:
         return VersionInfo(
             runtime="v2",
             commit=_git(["rev-parse", "--short", "HEAD"]),
+            commit_date=_git(["log", "-1", "--format=%ci", "HEAD"]),
             branch=_git(["rev-parse", "--abbrev-ref", "HEAD"]),
             uptime_seconds=int(time.time() - self._start_time),
         )

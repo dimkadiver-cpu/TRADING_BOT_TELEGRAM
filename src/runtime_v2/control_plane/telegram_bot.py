@@ -332,7 +332,7 @@ class CommandRouter:
             return _DispatchResult(
                 "📦 VERSION\n────────────────\n"
                 f"Runtime: {v.runtime}\n"
-                f"Commit: {v.commit}\n"
+                f"Commit: {v.commit}  ({v.commit_date})\n"
                 f"Branch: {v.branch}\n"
                 f"Uptime: {uptime_str}"
             )
