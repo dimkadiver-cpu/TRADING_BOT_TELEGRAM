@@ -42,7 +42,6 @@ per_account:
           trader_d: 320
           trader_3: 871
           trader_prova: 808
-          trader_devos_crypto: 1024
           # aggiungi altri trader qui
 
       tech_log:
@@ -52,6 +51,25 @@ per_account:
 
       commands:
         thread_id: 4            # topic da cui arrivano /pause /block ecc.
+
+  # ── ACCOUNT SECONDARIO — trader_devos_crypto, stesso supergroup ────────────
+  # Trader con account.id: "demo_2" in config/traders/trader_devos_crypto.yaml
+  demo_2:
+    chat_id: -1004240829081      # stesso supergroup di demo_1
+
+    topics:
+      clean_log:
+        thread_id: null           # nessun topic fallback separato per demo_2
+        per_trader:
+          trader_devos_crypto: 1024
+
+      tech_log:
+        thread_id: 37             # condivide il tech_log con demo_1
+        min_level: INFO
+        operational_events: true
+
+      commands:
+        thread_id: null           # i comandi passano da thread 4 (demo_1) — nessun thread separato
 
 # ─── NOTIFICHE ────────────────────────────────────────────────────────────────
 notifications:
