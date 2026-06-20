@@ -313,3 +313,353 @@ Command is not available in this topic.
 ```text
 Dashboard is no longer active. Use /dashboard to create a new one.
 ```
+## Filter system
+
+Il dashboard ha due livelli distinti:
+
+```text
+Scope dashboard
+→ limite massimo dei dati visibili, deciso con /dashboard.
+
+Filters
+→ restringono temporaneamente i dati dentro lo scope.
+```
+
+Esempio:
+
+```text
+Dashboard scope: demo_1, all traders
+Global trader filter: trader_a
+Active filter: Open
+
+Risultato:
+mostra solo i trade OPEN di trader_a nell’account demo_1.
+```
+
+Un dashboard creato nel topic `trader_a` ha scope fisso su `trader_a`; il filtro trader non viene mostrato.
+
+---
+
+## Main keyboard
+
+```text
+[⚡ Active]  [✅ Closed]  [🚫 Blocked]
+[💰 PnL]     [📉 Stats]   [🔎 Filters]
+[🧹 Clear]   [🔄 Refresh]
+[← Prev]     [Page 2/5]  [Next →]
+```
+
+Regole:
+
+```text
+- 🔎 Filters apre il pannello filtri della vista corrente.
+- 🧹 Clear rimuove tutti i filtri, incluso il trader filter.
+- Il trader filter è globale: resta applicato passando tra le tab.
+- Gli altri filtri sono specifici per tab.
+- Modifica di un filtro → current_page = 0.
+- Refresh mantiene i filtri correnti.
+- La paginazione viene calcolata dopo l’applicazione dei filtri.
+- La riga di paginazione appare solo nelle viste Active, Closed e Blocked.
+```
+
+Quando almeno un filtro è attivo, sotto l’header:
+
+```text
+Filters: trader_a · Open · Long
+```
+
+---
+
+## Filter panel — Active
+
+```text
+🔎 Filters — Active
+────────────────────────
+Trader: All traders
+Status: All statuses
+Side: All sides
+
+[Trader ▸]  [Status ▸]  [Side ▸]
+[🧹 Clear view]  [← Back]
+```
+
+### Trader
+
+Disponibile solo nello scope account.
+
+```text
+[All traders]
+[trader_a]  [trader_b]  [trader_c]
+[← Back]
+```
+
+Se i trader sono troppi, il selettore trader è paginato.
+
+### Status
+
+```text
+[All statuses]
+[Waiting entry]      [Partially filled]
+[Open]               [Partially closed]
+[Closing]
+[← Back]
+```
+
+Mapping canonico:
+
+```text
+Waiting entry      -> WAITING_ENTRY
+Partially filled   -> PARTIALLY_FILLED
+Open               -> OPEN
+Partially closed   -> PARTIALLY_CLOSED
+Closing            -> CLOSE_PENDING
+```
+
+### Side
+
+```text
+[All sides]  [Long]  [Short]
+[← Back]
+```
+
+---
+
+## Filter panel — Closed
+
+```text
+🔎 Filters — Closed
+────────────────────────
+Trader: All traders
+Exit: All exits
+Period: All time
+
+[Trader ▸]  [Exit ▸]  [Period ▸]
+[🧹 Clear view]  [← Back]
+```
+
+### Exit
+
+```text
+[All exits]
+[Take profit]      [Stop loss]
+[Manual close]     [Exchange close]
+[Cancelled no fill]
+[Other]
+[← Back]
+```
+
+Mapping basato su `close_reason`, non sul solo lifecycle:
+
+```text
+Take profit         -> TP_COMPLETE
+Stop loss           -> SL_HIT | STOP_LOSS
+Manual close        -> MANUAL_CLOSE
+Exchange close      -> EXCHANGE_CLOSE
+Cancelled no fill   -> CANCELLED_UNFILLED
+Other               -> UNKNOWN | altri motivi terminali
+```
+
+### Period
+
+```text
+[All time]  [Today]  [Last 7d]
+[Last 30d]  [This month]
+[← Back]
+```
+
+Il periodo viene calcolato sulla data di chiusura.
+`CANCELLED_UNFILLED` appare in `Closed`, ma resta escluso da PnL netto, Win Rate, Best e Worst.
+
+---
+
+## Filter panel — Blocked
+
+```text
+🔎 Filters — Blocked
+────────────────────────
+Trader: All traders
+Type: All types
+Age: Any age
+
+[Trader ▸]  [Type ▸]  [Age ▸]
+[🧹 Clear view]  [← Back]
+```
+
+### Type
+
+```text
+[All types]
+[Review required]
+[Execution failed]
+[Reconciliation required]
+[← Back]
+```
+
+Mapping:
+
+```text
+Review required         -> REVIEW_REQUIRED
+Execution failed        -> EXEC_FAILED
+Reconciliation required -> RECONCILIATION_REQUIRED
+```
+
+### Age
+
+```text
+[Any age]  [Last hour]  [Last 24h]
+[Older than 24h]
+[← Back]
+```
+
+L’età si calcola da `blocked_at`; fallback su `updated_at`.
+
+---
+
+## Filter panel — PnL
+
+```text
+🔎 Filters — PnL
+────────────────────────
+Trader: All traders
+Period: All time
+
+[Trader ▸]  [Period ▸]
+[🧹 Clear view]  [← Back]
+```
+
+Valori `Period`:
+
+```text
+[All time]  [Today]  [Last 7d]
+[Last 30d]  [This month]
+[← Back]
+```
+
+Regole PnL:
+
+```text
+- Equity, Balance e Margin used restano sempre account-level.
+- Gross, Fees, Net, Open e Waiting rispettano trader e periodo selezionati.
+- Se è attivo un filtro trader, il titolo deve indicarlo chiaramente.
+```
+
+Esempio:
+
+```text
+📊 💰 PnL — demo_1
+────────────────────────
+Filters: trader_a · Last 7d
+
+Account snapshot:
+Equity:        10,432.50 USDT
+Balance:        9,100.00 USDT
+Margin used:      820.00 USDT
+
+Realized — trader_a · Last 7d:
+Gross:          +142.60 USDT
+Fees:            -11.20 USDT
+Net:            +130.00 USDT
+```
+
+---
+
+## Filter panel — Stats
+
+```text
+🔎 Filters — Stats
+────────────────────────
+Trader: All traders
+Side: All sides
+
+[Trader ▸]  [Side ▸]
+[🧹 Clear view]  [← Back]
+```
+
+Per `Stats`, non inserire un filtro periodo: la tab mostra già contemporaneamente `Today`, `Last 7d`, `Last 30d` e `All time`.
+
+Il filtro `Side` è coerente:
+
+```text
+[All sides]  [Long]  [Short]
+[← Back]
+```
+
+Esempio:
+
+```text
+📊 📉 Stats — demo_1
+────────────────────────
+Filters: trader_a · Long
+
+Period          Trades   Win%      Net
+Today                1   100%   +18.40
+Last 7d             6    67%   +62.10
+Last 30d           19    63%  +148.30
+All time           31    61%   +98.20
+```
+
+Non introdurre filtri `Wins only` o `Losses only` in questa tab: farebbero diventare il Win Rate artificialmente 100% o 0%.
+
+---
+
+## Stato DB
+
+```text
+current_view
+current_page
+
+filter_trader_id              # globale; null = tutti nello scope
+active_filter_status          # null = tutti
+active_filter_side            # null = tutti
+
+closed_filter_exit_reason     # null = tutti
+closed_filter_period          # null = all_time
+
+blocked_filter_type           # null = tutti
+blocked_filter_age            # null = any_age
+
+pnl_filter_period             # null = all_time
+
+stats_filter_side             # null = tutti
+```
+
+Alternativa più pulita: un singolo JSON versionato.
+
+```json
+{
+  "trader_id": null,
+  "active": {
+    "status": null,
+    "side": null
+  },
+  "closed": {
+    "exit_reason": null,
+    "period": "all_time"
+  },
+  "blocked": {
+    "type": null,
+    "age": "any_age"
+  },
+  "pnl": {
+    "period": "all_time"
+  },
+  "stats": {
+    "side": null
+  }
+}
+```
+
+---
+
+## Auto-refresh con filtri
+
+```text
+1. Arriva un evento lifecycle o uno snapshot.
+2. Vengono ricaricati i dati nel dashboard scope.
+3. Vengono applicati i filtri correnti.
+4. Vengono ricalcolati testo, totale pagine e keyboard.
+5. Se il rendering non cambia, nessun edit Telegram.
+6. Se la pagina non esiste più, viene portata all’ultima pagina valida.
+```
+
+Un evento non appartenente ai filtri attivi non deve causare un edit inutile, salvo che modifichi conteggi o contenuti realmente visibili.
