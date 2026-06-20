@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from src.runtime_v2.control_plane.debug_controller import DebugModeController
+from src.runtime_v2.control_plane.emergency_close import EmergencyCloseService
 from src.runtime_v2.control_plane.override_store import OverrideStore
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
 from src.runtime_v2.control_plane.status_queries import (
@@ -86,6 +87,7 @@ class RuntimeControlService:
         self._ops_db = ops_db_path
         self._queries = StatusQueries(ops_db_path)
         self._overrides = OverrideStore(ops_db_path)
+        self._emergency = EmergencyCloseService(ops_db_path)
         self._start_time = time.time()
         self._log_path = log_path
         self._debug_controller = debug_controller
@@ -125,6 +127,21 @@ class RuntimeControlService:
 
     def get_blocked_trades(self, scope: QueryScope) -> BlockedTradesView:
         return self._queries.get_blocked_trades(scope)
+
+    def get_open_for_close(self, scope: QueryScope) -> list:
+        return self._queries.get_open_for_close(scope)
+
+    def get_waiting_for_cancel(self, scope: QueryScope) -> list:
+        return self._queries.get_waiting_for_cancel(scope)
+
+    def get_open_count_excluding_waiting(self, scope: QueryScope) -> int:
+        return self._queries.get_open_count_excluding_waiting(scope)
+
+    def execute_close(self, candidates: list, created_by: str) -> int:
+        return self._emergency.execute_close(candidates, created_by)
+
+    def execute_cancel(self, candidates: list, created_by: str) -> int:
+        return self._emergency.execute_cancel(candidates, created_by)
 
     def get_logs(self, n: int = 20) -> list[str]:
         import os
