@@ -788,3 +788,36 @@ def test_get_stats_global_scope_aggregates_all_accounts(tmp_path):
 
     totale = next(r for r in view.rows if r.label == "Totale")
     assert totale.trade_count == 2
+
+
+def test_get_pnl_global_scope_uses_latest_snapshot_across_all_accounts(tmp_path):
+    """Global scope get_pnl must return the most-recent snapshot across ALL accounts."""
+    db_path = str(tmp_path / "ops.db")
+    _apply_migrations(db_path)
+    conn = sqlite3.connect(db_path)
+
+    # Insert snapshots for two different accounts; demo_2 snapshot is newer
+    conn.execute(
+        "INSERT INTO ops_account_snapshots "
+        "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
+        " total_margin_used_usdt, source, captured_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ("demo_1", 1000.0, 900.0, 50.0, 100.0, "ws", "2026-01-01T10:00:00+00:00"),
+    )
+    conn.execute(
+        "INSERT INTO ops_account_snapshots "
+        "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
+        " total_margin_used_usdt, source, captured_at) "
+        "VALUES (?, ?, ?, ?, ?, ?, ?)",
+        ("demo_2", 5000.0, 4500.0, 200.0, 500.0, "ws", "2026-01-01T11:00:00+00:00"),
+    )
+    conn.commit()
+    conn.close()
+
+    sq = StatusQueries(db_path)
+    global_scope = QueryScope(account_id=None, trader_ids=None)
+    view = sq.get_pnl(global_scope)
+
+    # Should return demo_2 snapshot (more recent)
+    assert view.account_id == "demo_2"
+    assert view.equity_usdt == 5000.0
