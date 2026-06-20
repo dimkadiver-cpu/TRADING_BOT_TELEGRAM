@@ -81,7 +81,16 @@ Controllo:
 /block <symbol>
 /block <trader> <symbol>
 /unblock <symbol>
-/unblock <trader> <symbol>"""
+/unblock <trader> <symbol>
+
+Emergenza (⚠️ destructivi — chiedono conferma):
+/close_all [trader]       - chiude tutte le posizioni aperte
+/close [trader] <symbol>  - chiude posizioni su un simbolo
+/cancel_all [trader]      - cancella tutti gli ordini WAITING_ENTRY
+
+Dashboard:
+/stats     - statistiche trades
+/dashboard - pannello di controllo"""
 
 
 @dataclass
