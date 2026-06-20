@@ -27,7 +27,7 @@ from src.runtime_v2.control_plane.formatters.reviews import format_reviews
 from src.runtime_v2.control_plane.formatters.status import format_status
 from src.runtime_v2.control_plane.formatters.trade_detail import format_trade_detail
 from src.runtime_v2.control_plane.formatters.trades import format_trades
-from src.runtime_v2.control_plane.formatters.templates.emergency import EMERGENCY_REGISTRY
+from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY as EMERGENCY_REGISTRY
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
 from src.runtime_v2.control_plane.notification_dispatcher import build_telegram_request
 from src.runtime_v2.control_plane.service import RuntimeControlService

@@ -126,7 +126,9 @@ class PnlView:
     partial_count: int
     waiting_entry_count: int
     gross_pnl: float | None = None
-    total_fees: float | None = None
+    total_fees: float | None = None    # fees + funding (backward compat)
+    fees_usdt: float | None = None     # solo cumulative_fees
+    funding_usdt: float | None = None  # solo cumulative_funding
     pnl_net: float | None = None
 
 
@@ -143,10 +145,12 @@ class StatsRow:
 class StatsView:
     updated_at: str
     rows: list[StatsRow]
-    best_chain_id: int | None
-    best_pnl: float | None
-    worst_chain_id: int | None
-    worst_pnl: float | None
+    best_chain_id: int | None = None
+    best_pnl: float | None = None
+    best_symbol: str | None = None
+    worst_chain_id: int | None = None
+    worst_pnl: float | None = None
+    worst_symbol: str | None = None
 
 
 @dataclass
@@ -656,7 +660,9 @@ class StatusQueries:
                 closed_row = conn.execute(
                     f"SELECT "
                     f"SUM(cumulative_gross_pnl), "
-                    f"SUM(cumulative_fees + cumulative_funding) "
+                    f"SUM(cumulative_fees + cumulative_funding), "
+                    f"SUM(cumulative_fees), "
+                    f"SUM(cumulative_funding) "
                     f"FROM ops_trade_chains "
                     f"WHERE lifecycle_state='CLOSED' AND {scope_frag}",
                     scope_params,
@@ -680,7 +686,9 @@ class StatusQueries:
                     closed_row = conn.execute(
                         "SELECT "
                         "SUM(cumulative_gross_pnl), "
-                        "SUM(cumulative_fees + cumulative_funding) "
+                        "SUM(cumulative_fees + cumulative_funding), "
+                        "SUM(cumulative_fees), "
+                        "SUM(cumulative_funding) "
                         "FROM ops_trade_chains "
                         "WHERE lifecycle_state='CLOSED' AND account_id=?",
                         (account_id,),
@@ -694,10 +702,14 @@ class StatusQueries:
 
             gross_pnl: float | None = None
             total_fees: float | None = None
+            fees_usdt: float | None = None
+            funding_usdt: float | None = None
             pnl_net: float | None = None
             if closed_row and closed_row[0] is not None:
                 gross_pnl = float(closed_row[0])
                 total_fees = float(closed_row[1]) if closed_row[1] is not None else 0.0
+                fees_usdt = float(closed_row[2]) if closed_row[2] is not None else 0.0
+                funding_usdt = float(closed_row[3]) if closed_row[3] is not None else 0.0
                 pnl_net = gross_pnl - (total_fees or 0.0)
         finally:
             conn.close()
@@ -716,6 +728,8 @@ class StatusQueries:
             waiting_entry_count=waiting_count,
             gross_pnl=gross_pnl,
             total_fees=total_fees,
+            fees_usdt=fees_usdt,
+            funding_usdt=funding_usdt,
             pnl_net=pnl_net,
         )
 
@@ -759,13 +773,13 @@ class StatusQueries:
 
             # Best / worst chain by cumulative_gross_pnl (all time, in scope)
             best_row = conn.execute(
-                f"SELECT trade_chain_id, cumulative_gross_pnl FROM ops_trade_chains "
+                f"SELECT trade_chain_id, cumulative_gross_pnl, symbol FROM ops_trade_chains "
                 f"WHERE lifecycle_state='CLOSED' AND {scope_frag} "
                 f"ORDER BY cumulative_gross_pnl DESC LIMIT 1",
                 scope_params,
             ).fetchone()
             worst_row = conn.execute(
-                f"SELECT trade_chain_id, cumulative_gross_pnl FROM ops_trade_chains "
+                f"SELECT trade_chain_id, cumulative_gross_pnl, symbol FROM ops_trade_chains "
                 f"WHERE lifecycle_state='CLOSED' AND {scope_frag} "
                 f"ORDER BY cumulative_gross_pnl ASC LIMIT 1",
                 scope_params,
@@ -788,8 +802,10 @@ class StatusQueries:
             rows=rows,
             best_chain_id=best_row[0] if best_row else None,
             best_pnl=float(best_row[1]) if best_row and best_row[1] is not None else None,
+            best_symbol=best_row[2] if best_row else None,
             worst_chain_id=worst_row[0] if worst_row else None,
             worst_pnl=float(worst_row[1]) if worst_row and worst_row[1] is not None else None,
+            worst_symbol=worst_row[2] if worst_row else None,
         )
 
     def get_closed_trades(

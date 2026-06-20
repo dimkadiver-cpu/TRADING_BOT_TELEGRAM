@@ -28,6 +28,8 @@ def _pnl_to_payload(view: PnlView, scope: QueryScope | None) -> dict:
         "waiting_entry_count": view.waiting_entry_count,
         "gross_pnl": view.gross_pnl,
         "total_fees": view.total_fees,
+        "fees_usdt": view.fees_usdt,
+        "funding_usdt": view.funding_usdt,
         "pnl_net": view.pnl_net,
     }
 

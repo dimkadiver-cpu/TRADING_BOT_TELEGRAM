@@ -4,8 +4,8 @@ from __future__ import annotations
 from datetime import datetime, timezone
 
 from src.runtime_v2.control_plane.formatters._blocks import render_template
-from src.runtime_v2.control_plane.formatters.templates.dashboard import (
-    DASHBOARD_TEMPLATE_REGISTRY,
+from src.runtime_v2.control_plane.formatters.templates.commands import (
+    TEMPLATE_REGISTRY as DASHBOARD_TEMPLATE_REGISTRY,
 )
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
 from src.runtime_v2.control_plane.status_queries import StatusQueries

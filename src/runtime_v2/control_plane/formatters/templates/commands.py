@@ -10,83 +10,16 @@ from src.runtime_v2.control_plane.formatters._blocks import (
 from src.runtime_v2.control_plane.formatters._formatters import (
     num, money_signed,
 )
+from src.runtime_v2.control_plane.formatters.templates._shared import (
+    _cmd_header,
+    _side_emoji_str,
+    _protection_str,
+    _pnl_str,
+    _render_trade_item,
+)
 
-
-# ---------------------------------------------------------------------------
-# Shared header helper
-# ---------------------------------------------------------------------------
-
-def _cmd_header(emoji: str, command: str) -> list:
-    return [
-        DerivedBlock(text_fn=lambda p, _e=emoji, _c=command:
-            f"{_e} {_c} — {p['account_id']}"
-            + (f" · {p['trader_id']}" if p.get("trader_id") else "")
-        ),
-        SeparatorBlock(),
-    ]
-
-
-# ---------------------------------------------------------------------------
-# TRADES template
-# ---------------------------------------------------------------------------
-
-def _pnl_str(row: dict) -> str:
-    v = row.get("unrealized_pnl")
-    if v is None:
-        return "PnL: —"
-    return f"PnL: {money_signed(v)}"
-
-
-def _protection_str(row: dict) -> str:
-    if row.get("has_be"):
-        sl_price = row.get("current_stop_price")
-        sl_part = f"SL: {num(sl_price)}" if sl_price is not None else "SL: set"
-        be_part = "  BE: set"
-        return sl_part + be_part
-    if row.get("has_sl"):
-        sl_price = row.get("current_stop_price")
-        if sl_price is not None:
-            return f"SL: {num(sl_price)}"
-        return "SL: set"   # has_sl but price not tracked on TradeRow
-    return "SL: —"
-
-
-def _side_emoji_str(side: str | None) -> str:
-    if side == "LONG":
-        return "📈"
-    if side == "SHORT":
-        return "📉"
-    return "•"
-
-
-def _render_trade_item(row: dict, i: int, p: dict) -> list[str]:
-    chain_id = row.get("chain_id", "?")
-    symbol = row.get("symbol_display", row.get("symbol", "?"))
-    side = row.get("side", "?")
-    state = row.get("state", "?")
-    emoji = _side_emoji_str(side)
-    entry_price = row.get("entry_avg_price")
-    qty = row.get("open_position_qty")
-
-    line1 = f"#{chain_id}  {emoji} {symbol}  {side}   {state}"
-    parts2 = []
-    if entry_price is not None:
-        parts2.append(f"Entry: {num(entry_price)}")
-    prot = _protection_str(row)
-    parts2.append(prot)
-    line2 = "    " + "  ".join(parts2) if parts2 else ""
-
-    parts3 = []
-    if qty is not None:
-        parts3.append(f"Qty: {num(qty)}")
-    parts3.append(_pnl_str(row))
-    line3 = "    " + "  ".join(parts3)
-
-    result = [line1]
-    if line2.strip():
-        result.append(line2)
-    result.append(line3)
-    return result
+# Re-export so existing importers of these names from commands still work
+__all_shared__ = [_cmd_header, _side_emoji_str, _protection_str, _pnl_str, _render_trade_item]
 
 
 _FRESHNESS_WARNING = ConditionalBlock(
@@ -147,8 +80,10 @@ def _pnl_realized_lines(p: dict) -> str:
     if p.get("gross_pnl") is not None:
         sign = "+" if p["gross_pnl"] >= 0 else ""
         parts.append(f"  Gross PnL:   {sign}{p['gross_pnl']:.2f} USDT")
-    if p.get("total_fees") is not None:
-        parts.append(f"  Fees:         {p['total_fees']:.2f} USDT")
+    if p.get("fees_usdt") is not None:
+        parts.append(f"  Fees:         {p['fees_usdt']:.2f} USDT")
+    if p.get("funding_usdt") is not None:
+        parts.append(f"  Funding:       {p['funding_usdt']:.2f} USDT")
     if p.get("pnl_net") is not None:
         sign = "+" if p["pnl_net"] >= 0 else ""
         parts.append(f"  Netto:       {sign}{p['pnl_net']:.2f} USDT")
@@ -405,10 +340,18 @@ TEMPLATE_REVIEWS = TemplateConfig(_REVIEWS_BLOCKS, payload_transform=None)
 
 
 # ---------------------------------------------------------------------------
-# TEMPLATE_REGISTRY
+# TEMPLATE_REGISTRY — unified registry (spec §7)
+# Aggregates read-only, emergency, and dashboard templates in one dict.
+# emergency.py and dashboard.py keep their own module-level registries for
+# internal use; those registries are also merged here so callers have a
+# single import point.
 # ---------------------------------------------------------------------------
 
+from src.runtime_v2.control_plane.formatters.templates.emergency import EMERGENCY_REGISTRY
+from src.runtime_v2.control_plane.formatters.templates.dashboard import DASHBOARD_TEMPLATE_REGISTRY
+
 TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
+    # Read-only commands
     "trades":  TEMPLATE_TRADES,
     "pnl":     TEMPLATE_PNL,
     "stats":   TEMPLATE_STATS,
@@ -416,4 +359,8 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "health":  TEMPLATE_HEALTH,
     "control": TEMPLATE_CONTROL,
     "reviews": TEMPLATE_REVIEWS,
+    # Emergency (close_all, close_single, cancel_all — preview + results)
+    **EMERGENCY_REGISTRY,
+    # Dashboard views
+    **DASHBOARD_TEMPLATE_REGISTRY,
 }

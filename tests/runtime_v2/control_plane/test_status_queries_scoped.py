@@ -655,3 +655,70 @@ class TestBackwardCompatibility:
         q = StatusQueries(ops_db)
         view = q.get_pnl()  # No scope
         assert view.equity_usdt == 1000.0
+
+
+# ---------------------------------------------------------------------------
+# GAP 1 — get_pnl: fees e funding separati
+# ---------------------------------------------------------------------------
+
+class TestPnlFundingSeparated:
+    def test_fees_and_funding_returned_separately(self, ops_db):
+        """PnlView deve esporre fees_usdt e funding_usdt come campi distinti."""
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_chain(conn, 700, "CLOSED", account_id="account_A",
+                       cumulative_gross_pnl=100.0, cumulative_fees=5.0, cumulative_funding=2.0)
+            _add_chain(conn, 701, "CLOSED", account_id="account_A",
+                       cumulative_gross_pnl=-30.0, cumulative_fees=3.0, cumulative_funding=1.0)
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        view = q.get_pnl(SCOPE_A)
+
+        assert view.fees_usdt is not None, "fees_usdt deve essere presente"
+        assert abs(view.fees_usdt - 8.0) < 0.001, f"fees attesi 8.0, got {view.fees_usdt}"
+        assert view.funding_usdt is not None, "funding_usdt deve essere presente"
+        assert abs(view.funding_usdt - 3.0) < 0.001, f"funding attesi 3.0, got {view.funding_usdt}"
+        # total_fees resta la somma per backward compat
+        assert abs(view.total_fees - 11.0) < 0.001
+
+    def test_fees_zero_funding_zero_when_no_closed_trades(self, ops_db):
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_chain(conn, 710, "OPEN", account_id="account_A")
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        view = q.get_pnl(SCOPE_A)
+        assert view.fees_usdt is None
+        assert view.funding_usdt is None
+
+
+# ---------------------------------------------------------------------------
+# GAP 2 — get_stats: best_symbol e worst_symbol
+# ---------------------------------------------------------------------------
+
+class TestStatsBestWorstSymbol:
+    def test_best_worst_chain_includes_symbol(self, ops_db):
+        """StatsView deve includere best_symbol e worst_symbol."""
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_chain(conn, 800, "CLOSED", account_id="account_A",
+                       symbol="BTC/USDT", cumulative_gross_pnl=200.0)
+            _add_chain(conn, 801, "CLOSED", account_id="account_A",
+                       symbol="ETH/USDT", cumulative_gross_pnl=-80.0)
+            _add_chain(conn, 802, "CLOSED", account_id="account_A",
+                       symbol="SOL/USDT", cumulative_gross_pnl=50.0)
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        stats = q.get_stats(SCOPE_A)
+
+        assert stats.best_symbol == "BTC/USDT", f"best_symbol atteso BTC/USDT, got {stats.best_symbol!r}"
+        assert stats.worst_symbol == "ETH/USDT", f"worst_symbol atteso ETH/USDT, got {stats.worst_symbol!r}"
+
+    def test_best_worst_symbol_none_when_no_closed_trades(self, ops_db):
+        q = StatusQueries(ops_db)
+        stats = q.get_stats(SCOPE_A)
+        assert stats.best_symbol is None
+        assert stats.worst_symbol is None

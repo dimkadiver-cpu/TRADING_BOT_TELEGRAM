@@ -303,3 +303,28 @@ def test_stats_no_scope():
     """format_stats works without scope."""
     text = format_stats(_stats_view())
     assert "STATS" in text
+
+
+
+# ---------------------------------------------------------------------------
+# GAP 3 — TEMPLATE_REGISTRY unificata in commands.py
+# ---------------------------------------------------------------------------
+
+def test_template_registry_contains_all_keys():
+    """TEMPLATE_REGISTRY in commands.py deve contenere tutti i template:
+    read-only, emergency, e dashboard."""
+    from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY
+
+    expected_keys = {
+        # read-only
+        "trades", "pnl", "stats", "status", "health", "control", "reviews",
+        # emergency
+        "close_all_preview", "close_all_result_ok", "close_all_result_cancelled",
+        "close_single_preview", "close_single_result_ok", "close_single_result_cancelled",
+        "cancel_all_preview", "cancel_all_result_ok", "cancel_all_result_cancelled",
+        # dashboard
+        "dashboard_attivi", "dashboard_chiusi", "dashboard_bloccati",
+        "dashboard_pnl", "dashboard_stats",
+    }
+    missing = expected_keys - set(TEMPLATE_REGISTRY.keys())
+    assert not missing, f"TEMPLATE_REGISTRY manca le chiavi: {missing}"

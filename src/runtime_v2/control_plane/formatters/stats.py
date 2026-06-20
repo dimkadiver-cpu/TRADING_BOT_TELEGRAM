@@ -29,10 +29,10 @@ def _stats_to_payload(view: StatsView, scope: QueryScope | None) -> dict:
         "stats_rows": stats_rows,
         "best_chain_id": view.best_chain_id,
         "best_pnl": view.best_pnl,
-        "best_symbol": None,  # not available in StatsView
+        "best_symbol": view.best_symbol,
         "worst_chain_id": view.worst_chain_id,
         "worst_pnl": view.worst_pnl,
-        "worst_symbol": None,  # not available in StatsView
+        "worst_symbol": view.worst_symbol,
     }
 
 

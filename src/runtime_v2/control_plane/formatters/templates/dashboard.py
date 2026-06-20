@@ -10,7 +10,7 @@ from src.runtime_v2.control_plane.formatters._blocks import (
 from src.runtime_v2.control_plane.formatters._formatters import (
     money_signed,
 )
-from src.runtime_v2.control_plane.formatters.templates.commands import (
+from src.runtime_v2.control_plane.formatters.templates._shared import (
     _cmd_header,
     _render_trade_item,
     _side_emoji_str,
