@@ -875,3 +875,67 @@ async def test_update_done_uses_signal_link_but_not_telegram_reply(ops_db):
     assert len(sender.sent) == 1
     assert "https://t.me/c/4240829081/1292" in sender.sent[0]["text"]
     assert sender.sent[0]["reply_to_message_id"] is None
+
+
+@pytest.mark.asyncio
+async def test_tech_log_uses_latest_clean_log_link_for_same_chain(ops_db):
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_clean_log_tracking "
+            "(trade_chain_id, clean_log_root_message_id, clean_log_last_message_id, "
+            " telegram_chat_id, telegram_thread_id, last_clean_log_event_type, "
+            " last_clean_log_sent_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
+            (72, "1292", "1337", "-1004240829081", "1024", "UPDATE_DONE", now, now),
+        )
+        write_tech_log_event(
+            conn,
+            notification_type="GATEWAY_COMMAND_FAILED",
+            payload={
+                "level": "ERROR",
+                "command_type": "MOVE_STOP_TO_BREAKEVEN",
+                "chain_id": 72,
+                "reason": "retCode=10001",
+                "source": "execution_gateway",
+            },
+            dedupe_key="tech:72:1",
+        )
+    conn.close()
+
+    sent = await disp.drain_once()
+
+    assert sent == 1
+    assert len(sender.sent) == 1
+    assert sender.sent[0]["thread_id"] == 102
+    assert "https://t.me/c/4240829081/1337" in sender.sent[0]["text"]
+
+
+@pytest.mark.asyncio
+async def test_tech_log_keeps_existing_link_without_overriding_it(ops_db):
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_tech_log_event(
+            conn,
+            notification_type="GATEWAY_COMMAND_FAILED",
+            payload={
+                "level": "ERROR",
+                "command_type": "MOVE_STOP_TO_BREAKEVEN",
+                "chain_id": 72,
+                "reason": "retCode=10001",
+                "source": "execution_gateway",
+                "link": "https://t.me/c/111/222",
+            },
+            dedupe_key="tech:72:2",
+        )
+    conn.close()
+
+    sent = await disp.drain_once()
+
+    assert sent == 1
+    assert len(sender.sent) == 1
+    assert "https://t.me/c/111/222" in sender.sent[0]["text"]

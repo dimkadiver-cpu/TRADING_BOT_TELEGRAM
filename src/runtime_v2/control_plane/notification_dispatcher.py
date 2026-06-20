@@ -366,6 +366,11 @@ class TelegramNotificationDispatcher:
         normalized = str(tracking_chat_id).removeprefix("-100")
         return f"https://t.me/c/{normalized}/{root_message_id}"
 
+    def _build_last_clean_log_link(self, chain_id: int) -> str | None:
+        """Build a t.me/c/ link to the latest clean-log message for the chain."""
+        last_message_id, tracking_chat_id = self._get_clean_log_last(chain_id)
+        return self._build_signal_link(last_message_id, tracking_chat_id)
+
     def _has_failed_signal_root(self, chain_id: int) -> bool:
         conn = sqlite3.connect(self._ops_db)
         try:
@@ -471,6 +476,12 @@ class TelegramNotificationDispatcher:
                     destination, account_id=account_id,
                     trader_id=payload.get("trader_id"),
                 )
+                if destination == "TECH_LOG" and not payload.get("link"):
+                    chain_id = payload.get("chain_id")
+                    if chain_id is not None:
+                        link = self._build_last_clean_log_link(chain_id)
+                        if link:
+                            payload = {**payload, "link": link}
                 if destination == "CLEAN_LOG" and notification_type not in self._SIGNAL_TYPES:
                     chain_id = payload.get("chain_id")
                     if chain_id is not None:
