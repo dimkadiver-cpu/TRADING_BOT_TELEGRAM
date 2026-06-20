@@ -39,16 +39,16 @@ def _config_multi() -> ControlPlaneConfig:
     )
 
 
-def test_commands_thread_maps_to_full_account_scope():
+def test_commands_thread_maps_to_global_scope():
     r = ScopeResolver(_config_multi())
     scope = r.resolve(4)
-    assert scope == QueryScope(account_id="demo_1", trader_ids=None)
+    assert scope == QueryScope(account_id=None, trader_ids=None)
 
 
-def test_commands_thread_second_account():
+def test_commands_thread_second_account_maps_to_global_scope():
     r = ScopeResolver(_config_multi())
     scope = r.resolve(42)
-    assert scope == QueryScope(account_id="demo_2", trader_ids=None)
+    assert scope == QueryScope(account_id=None, trader_ids=None)
 
 
 def test_clean_log_fallback_thread_maps_to_full_account_scope():
@@ -116,6 +116,21 @@ def test_query_scope_is_frozen():
     scope = QueryScope(account_id="x", trader_ids=None)
     try:
         scope.account_id = "y"  # type: ignore[misc]
+        assert False, "should raise"
+    except (AttributeError, TypeError):
+        pass
+
+
+def test_global_scope_has_none_account_id():
+    scope = QueryScope(account_id=None, trader_ids=None)
+    assert scope.account_id is None
+    assert scope.trader_ids is None
+
+
+def test_global_scope_is_frozen():
+    scope = QueryScope(account_id=None, trader_ids=None)
+    try:
+        scope.account_id = "x"  # type: ignore[misc]
         assert False, "should raise"
     except (AttributeError, TypeError):
         pass
