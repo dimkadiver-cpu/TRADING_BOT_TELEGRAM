@@ -12,7 +12,7 @@ Il scope del dashboard corrisponde al topic da cui è stato creato:
 
 Contenuto: solo trading — Attivi, Chiusi, Bloccati, PnL, Stats. Niente Status/Health/Control.
 
-Aggiornamenti:
+Aggiornamenti:  **deve comprendere aggiornamento di poszioni (snapshots delle psosioni) **
 - Click su tasto vista
 - Click [🔄 Refresh]
 - Click [← Prec] / [Succ →] per paginazione
@@ -71,24 +71,31 @@ Aggiornato: 14:32:05
 ## Vista: Attivi — trader_a
 
 ```
-📊 DASHBOARD — demo_1 · trader_a
+📊⚡ Attivi
+ A— demo_1 · trader_a
 ────────────────
 14:32:05  |  Snapshot: 18s fa
 
-#5  BTC/USDT   LONG   PARTIALLY_CLOSED
-    Entry: 63,500✓ · 63,200✗ · 62,800
+#5  BTC/USDT   LONG   PARTIALLY_CLOSED         niente emojy
+    https://t.me/c/4240829081/316/987
+                                             **spaziatore **spaziatore una riga
+    Entry: 63,500✓ · 63,200✗ · 62,800✗
     TP: 64,000✓ · 65,200 · 66,500
     SL: 62,000  BE: ✓
     PnL: +34.20 USDT
-    https://t.me/c/4240829081/316/987
-
+                                          **spaziatore una riga
+    /trade #id /cancel_all  /close         **Agiunta dell scorciatoe per azioni del singolo trade 
+ - - - - - - - - - - - - - - - - - -      **spaziatore tra trade
 #9  SOL/USDT   LONG   WAITING_ENTRY
+    https://t.me/c/4240829081/316/1024
+
     Entry: 148.50 · 147.00
     TP: 155.00 · 160.00
     SL: 143.00
     In attesa di riempimento
-    https://t.me/c/4240829081/316/1024
 
+    /trade #id /cancel_all /close  
+ - - - - - - - - - - - - - - - - - -
 [⚡ Attivi]  [✅ Chiusi]  [🚫 Bloccati]
 [💰 PnL]    [📉 Stats]   [🔄 Refresh]
 ```
@@ -157,14 +164,16 @@ Nessun trade attivo.
 ## Vista: Chiusi — trader_a (con paginazione)
 
 ```
-✅ DASHBOARD — demo_1 · trader_a
+✅ Chiusi — demo_1 · trader_a
 ────────────────
 14:32:05
 
 #22  BTC/USDT   LONG   CLOSED
+     Reason:                               **aggiungere resos
+     PnL: -3.20 USDT
      Opened: 14 Jun 11:52
      https://t.me/c/4240829081/316/987
-- - - - - - - -
+
      Closed: 14 Jun 14:26
      https://t.me/c/4240829081/316/1043
 - - - - - - - -
@@ -222,7 +231,7 @@ Nessun trade chiuso.
 ## Vista: Bloccati — trader_a
 
 ```
-🚫 DASHBOARD — demo_1 · trader_a
+🚫  Bloccati— demo_1 · trader_a
 ────────────────
 14:32:05
 
