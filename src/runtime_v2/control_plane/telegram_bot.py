@@ -529,6 +529,9 @@ class CommandRouter:
             del self._pending[token]
             return CallbackResult("", delete_message=True, answer_text="⏱ Azione scaduta — reinvia il comando.")
 
+        if kind != pending.kind:
+            return CallbackResult("Azione non valida.", answer_text="⚠️")
+
         del self._pending[token]
         now = _now_hms()
 
@@ -751,7 +754,6 @@ class TelegramControlBot:
         )
 
         if is_emergency:
-            await query.answer()  # acknowledge immediately to stop spinner
             result = await asyncio.to_thread(
                 self._router.handle_callback,
                 callback_data=callback_data,
@@ -761,8 +763,7 @@ class TelegramControlBot:
                 thread_id=getattr(query.message, "message_thread_id", None) if query.message else None,
                 created_by=str(user.id),
             )
-            if result.answer_text:
-                await query.answer(result.answer_text)
+            await query.answer(result.answer_text or "")
             if result.delete_message:
                 try:
                     await query.message.delete()
