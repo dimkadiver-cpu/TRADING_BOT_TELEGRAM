@@ -434,3 +434,98 @@ def test_reviews_global_scope_shows_trader_account():
     assert "All accounts" in text
     assert "trader_devos" in text
     assert "demo_2" in text
+
+
+# ---------------------------------------------------------------------------
+# Task 6: format_health — block system with live probe section
+# ---------------------------------------------------------------------------
+
+def test_health_format_uses_block_system():
+    """format_health deve usare render_template (output con separatori block system)."""
+    from src.runtime_v2.control_plane.formatters.health import format_health
+    from src.runtime_v2.control_plane.status_queries import HealthView
+    view = HealthView(
+        updated_at="14:32:05",
+        workers=[
+            ("Parser pipeline",    "OK",      ""),
+            ("Lifecycle gate",     "OK",      ""),
+            ("Execution worker",   "OK",      ""),
+            ("Exchange sync",      "OK",      ""),
+            ("Notification disp.", "OK",      ""),
+        ],
+        db_ok=True,
+        exchange_connected=True,
+        last_event_age_seconds=12.0,
+    )
+    text = format_health(view)
+    assert "🩺 HEALTH" in text
+    assert "Global runtime" in text
+    assert "Workers:" in text
+    assert "Parser pipeline" in text
+    assert "Checks: live probe passed" in text
+
+
+def test_health_format_degraded():
+    from src.runtime_v2.control_plane.formatters.health import format_health
+    from src.runtime_v2.control_plane.status_queries import HealthView
+    view = HealthView(
+        updated_at="14:32:05",
+        workers=[
+            ("Parser pipeline",    "OK",      ""),
+            ("Lifecycle gate",     "OK",      ""),
+            ("Execution worker",   "OK",      ""),
+            ("Exchange sync",      "WARNING", "last event 87s ago"),
+            ("Notification disp.", "OK",      ""),
+        ],
+        db_ok=True,
+        exchange_connected=False,
+        last_event_age_seconds=87.0,
+    )
+    text = format_health(view)
+    assert "WARNING" in text
+    assert "Checks: live probe partial" in text
+    assert "Warnings:" in text
+
+
+def test_health_format_critical():
+    from src.runtime_v2.control_plane.formatters.health import format_health
+    from src.runtime_v2.control_plane.status_queries import HealthView
+    view = HealthView(
+        updated_at="14:32:05",
+        workers=[
+            ("Parser pipeline",    "OK",     ""),
+            ("Lifecycle gate",     "FAILED", "heartbeat missing"),
+            ("Execution worker",   "OK",     ""),
+            ("Exchange sync",      "FAILED", "probe failed"),
+            ("Notification disp.", "OK",     ""),
+        ],
+        db_ok=True,
+        exchange_connected=False,
+        last_event_age_seconds=None,
+    )
+    text = format_health(view)
+    assert "FAILED" in text
+    assert "Checks: live probe failed" in text
+    assert "Critical:" in text
+
+
+def test_health_format_no_warnings_section_when_all_ok():
+    """When all workers are OK and exchange connected, no Warnings or Critical sections."""
+    from src.runtime_v2.control_plane.formatters.health import format_health
+    from src.runtime_v2.control_plane.status_queries import HealthView
+    view = HealthView(
+        updated_at="14:32:05",
+        workers=[
+            ("Parser pipeline",    "OK", ""),
+            ("Lifecycle gate",     "OK", ""),
+            ("Execution worker",   "OK", ""),
+            ("Exchange sync",      "OK", ""),
+            ("Notification disp.", "OK", ""),
+        ],
+        db_ok=True,
+        exchange_connected=True,
+        last_event_age_seconds=5.0,
+    )
+    text = format_health(view)
+    assert "Warnings:" not in text
+    assert "Critical:" not in text
