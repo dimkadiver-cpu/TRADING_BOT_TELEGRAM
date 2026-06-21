@@ -18,9 +18,9 @@ Tutti i comandi distruttivi seguono il pattern:
 ────────────────
 Posizioni da chiudere: 3
 
-#5  📈 BTCUSDT   LONG    OPEN
-#7  📉 ETHUSDT   SHORT   OPEN
-#9  📈 SOLUSDT   LONG    PARTIALLY_CLOSED
+#5   BTCUSDT   LONG    OPEN
+#7   ETHUSDT   SHORT   OPEN
+#9   SOLUSDT   LONG    PARTIALLY_CLOSED
 
 ⚠️ Verranno inviati ordini MARKET di chiusura.
 
@@ -33,9 +33,9 @@ Confermi?
 ```
 🚨 CLOSE ALL — demo_1
 ────────────────
-#5  📈 BTCUSDT   LONG
-#7  📉 ETHUSDT   SHORT
-#9  📈 SOLUSDT   LONG
+#5   BTCUSDT   LONG
+#7   ETHUSDT   SHORT
+#9   SOLUSDT   LONG
 
 ✅ ESEGUITO — 14:32:10
 3 comandi MARKET_CLOSE inseriti.
@@ -47,9 +47,9 @@ Confermi?
 ```
 🚨 CLOSE ALL — demo_1
 ────────────────
-#5  📈 BTCUSDT   LONG
-#7  📉 ETHUSDT   SHORT
-#9  📈 SOLUSDT   LONG
+#5   BTCUSDT   LONG
+#7   ETHUSDT   SHORT
+#9   SOLUSDT   LONG
 
 ❌ ANNULLATO — 14:32:08
 Nessuna azione eseguita.
@@ -64,7 +64,7 @@ Nessuna azione eseguita.
 ────────────────
 Posizioni da chiudere: 1
 
-#5  📈 BTCUSDT   LONG    OPEN
+#5   BTCUSDT   LONG    OPEN
 
 ⚠️ Verranno inviati ordini MARKET di chiusura.
 
@@ -102,7 +102,7 @@ Nessuna posizione aperta da chiudere.
 ────────────────
 Posizione da chiudere:
 
-#5  📈 BTCUSDT   LONG    OPEN
+#5   BTCUSDT   LONG    OPEN
     Entry: 63,500  |  PnL: +12.40 USDT
 
 ⚠️ Verrà inviato un ordine MARKET di chiusura.
@@ -116,7 +116,7 @@ Confermi?
 ```
 🚨 CLOSE — demo_1
 ────────────────
-#5  📈 BTCUSDT   LONG
+#5   BTCUSDT   LONG
 
 ✅ ESEGUITO — 14:32:10
 1 comando MARKET_CLOSE inserito.
@@ -128,7 +128,7 @@ Confermi?
 ```
 🚨 CLOSE — demo_1
 ────────────────
-#5  📈 BTCUSDT   LONG
+#5   BTCUSDT   LONG
 
 ❌ ANNULLATO — 14:32:08
 ```
@@ -152,9 +152,9 @@ XYZUSDT: nessuna posizione aperta trovata.
 ────────────────
 Trovate 2 posizioni su BTCUSDT:
 
-#5  📈 BTCUSDT   LONG    OPEN
+#5   BTCUSDT   LONG    OPEN
     Entry: 63,500  |  PnL: +12.40 USDT
-#11 📉 BTCUSDT   SHORT   OPEN
+#11  BTCUSDT   SHORT   OPEN
     Entry: 64,200  |  PnL: -5.10 USDT
 
 ⚠️ Verranno chiuse entrambe.
@@ -168,8 +168,8 @@ Step 2a eseguito (multi):
 ```
 🚨 CLOSE — demo_1
 ────────────────
-#5  📈 BTCUSDT   LONG
-#11 📉 BTCUSDT   SHORT
+#5   BTCUSDT   LONG
+#11  BTCUSDT   SHORT
 
 ✅ ESEGUITO — 14:32:10
 2 comandi MARKET_CLOSE inseriti.
@@ -187,10 +187,10 @@ Step 2a eseguito (multi):
 ────────────────
 Ordini entry in attesa: 4
 
-#2   📈 NEARUSDT  LONG    WAITING_ENTRY
-#4   📉 ZECUSDT   SHORT   WAITING_ENTRY
-#6   📈 SOLUSDT   LONG    WAITING_ENTRY
-#8   📉 BNBUSDT   SHORT   WAITING_ENTRY
+#2    NEARUSDT  LONG    WAITING_ENTRY
+#4    ZECUSDT   SHORT   WAITING_ENTRY
+#6    SOLUSDT   LONG    WAITING_ENTRY
+#8    BNBUSDT   SHORT   WAITING_ENTRY
 
 Posizioni aperte non toccate: 2
 
@@ -236,8 +236,8 @@ Posizioni aperte non toccate: 2
 ────────────────
 Ordini entry in attesa: 2
 
-#2   📈 NEARUSDT  LONG    WAITING_ENTRY
-#6   📈 SOLUSDT   LONG    WAITING_ENTRY
+#2    NEARUSDT  LONG    WAITING_ENTRY
+#6    SOLUSDT   LONG    WAITING_ENTRY
 
 Posizioni aperte non toccate: 1
 

@@ -11,6 +11,21 @@ from src.runtime_v2.control_plane.scope_resolver import QueryScope
 _ACTIVE_STATES = ("OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY", "REVIEW_REQUIRED",
                   "BE_MOVE_PENDING", "PROTECTED_BE")
 
+_EVENT_LABEL_MAP = {
+    "SIGNAL_ACCEPTED": "SIGNAL ACCEPTED",
+    "ENTRY_OPENED": "ENTRY OPENED",
+    "ENTRY_PARTIALLY_FILLED": "ENTRY PARTIALLY FILLED",
+    "TP_FILLED": "TP1 FILLED",
+    "SL_MOVED_TO_BE": "SL MOVED TO BE",
+    "UPDATE_DONE": "UPDATE DONE",
+    "REVIEW_REQUIRED": "REVIEW REQUIRED",
+    "POSITION_CLOSED": "POSITION CLOSED",
+    "POSITION_CANCELLED": "POSITION CANCELLED",
+}
+_TERMINAL_STATES = {"CLOSED", "CANCELLED_UNFILLED", "POSITION_CLOSED"}
+_ACTIONABLE_STATES = {"OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY",
+                      "REVIEW_REQUIRED", "PARTIALLY_FILLED", "CLOSE_PENDING"}
+
 
 @dataclass
 class StatusView:
@@ -540,17 +555,6 @@ class StatusQueries:
         finally:
             conn.close()
 
-        _EVENT_LABEL_MAP = {
-            "SIGNAL_ACCEPTED": "SIGNAL ACCEPTED",
-            "ENTRY_OPENED": "ENTRY OPENED",
-            "ENTRY_PARTIALLY_FILLED": "ENTRY PARTIALLY FILLED",
-            "TP_FILLED": "TP1 FILLED",
-            "SL_MOVED_TO_BE": "SL MOVED TO BE",
-            "UPDATE_DONE": "UPDATE DONE",
-            "REVIEW_REQUIRED": "REVIEW REQUIRED",
-            "POSITION_CLOSED": "POSITION CLOSED",
-            "POSITION_CANCELLED": "POSITION CANCELLED",
-        }
         structured_events: list[TradeEvent] = []
         for created_at, etype, payload_json in events_rows:
             label = _EVENT_LABEL_MAP.get(etype, etype.replace("_", " ") if etype else "EVENT")
@@ -591,9 +595,6 @@ class StatusQueries:
         ] if structured_events else []
 
         # Determine trade state flags
-        _TERMINAL_STATES = {"CLOSED", "CANCELLED_UNFILLED", "POSITION_CLOSED"}
-        _ACTIONABLE_STATES = {"OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY",
-                              "REVIEW_REQUIRED", "PARTIALLY_FILLED", "CLOSE_PENDING"}
         state_val = row[5]
         is_terminal = state_val in _TERMINAL_STATES
         is_actionable = state_val in _ACTIONABLE_STATES
@@ -602,7 +603,7 @@ class StatusQueries:
         entry_legs: list[dict] = []
         tp_legs: list[dict] = []
         sl_price_str: str | None = None
-        has_be = False
+        has_be = False  # not populated: be_protection_status not in SELECT — extend query when needed
 
         try:
             plan = json.loads(row[8] or "{}")
