@@ -367,7 +367,7 @@ async def test_on_trade_event_triggers_global_dashboard(tmp_path):
         "INSERT INTO ops_dashboard_messages "
         "(chat_id, thread_id, message_id, scope_account_id, scope_trader_id, current_view) "
         "VALUES (?, ?, ?, ?, ?, ?)",
-        (-100, 4, 99, None, None, "attivi:0"),
+        (-100, 4, 99, None, None, "active:0"),
     )
     conn.commit()
     conn.close()

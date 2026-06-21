@@ -229,11 +229,21 @@ def _build_chiusi_payload(
 def _build_blocked_payload(
     scope: QueryScope,
     queries: StatusQueries,
+    page: int = 0,
+    page_size: int = 5,
 ) -> tuple[dict, int]:
     view = queries.get_blocked_trades(scope)
 
     total = len(view.rows)
     is_global = scope.account_id is None
+
+    # Paginate
+    start = page * page_size
+    page_rows = view.rows[start: start + page_size]
+
+    # page_display
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page_display = f"{page + 1}/{total_pages}"
 
     row_dicts = [
         {
@@ -246,7 +256,7 @@ def _build_blocked_payload(
             "trader_id": getattr(r, "trader_id", None),
             "account_id": getattr(r, "account_id", None) or scope.account_id,
         }
-        for r in view.rows
+        for r in page_rows
     ]
 
     payload = {
@@ -255,7 +265,7 @@ def _build_blocked_payload(
         "updated_at": view.updated_at,
         "rows": row_dicts,
         "total": total,
-        "page_display": "1/1",
+        "page_display": page_display,
         "filters_str": None,
         "is_global": is_global,
     }
@@ -367,7 +377,7 @@ def format_dashboard_view(
     elif normalized == "closed":
         payload, total = _build_closed_payload(scope, queries, page, page_size)
     elif normalized == "blocked":
-        payload, total = _build_blocked_payload(scope, queries)
+        payload, total = _build_blocked_payload(scope, queries, page, page_size)
     elif normalized == "pnl":
         payload, total = _build_pnl_payload(scope, queries)
     elif normalized == "stats":
