@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import sqlite3
 import time
@@ -101,6 +102,7 @@ class DashboardManager:
                     scope_trader_id   TEXT,
                     current_view      TEXT NOT NULL DEFAULT 'attivi:0',
                     updated_at        TEXT,
+                    filters_json      TEXT DEFAULT NULL,
                     PRIMARY KEY (chat_id, thread_id)
                 )
                 """
@@ -124,11 +126,12 @@ class DashboardManager:
                         scope_trader_id   TEXT,
                         current_view      TEXT NOT NULL DEFAULT 'active:0',
                         updated_at        TEXT,
+                        filters_json      TEXT DEFAULT NULL,
                         PRIMARY KEY (chat_id, thread_id)
                     );
                     INSERT INTO ops_dashboard_messages_new
                         SELECT chat_id, thread_id, message_id, scope_account_id,
-                               scope_trader_id, current_view, updated_at
+                               scope_trader_id, current_view, updated_at, filters_json
                         FROM ops_dashboard_messages;
                     DROP TABLE ops_dashboard_messages;
                     ALTER TABLE ops_dashboard_messages_new RENAME TO ops_dashboard_messages;
@@ -393,18 +396,17 @@ class DashboardManager:
         elif callback_data.startswith("selector:"):
             parts = callback_data.split(":", 2)
             if len(parts) == 3:
-                import json as _json
                 _, filter_type, filter_value = parts
                 raw = self._get_filters_json(chat_id, thread_id)
                 try:
-                    current_filters = _json.loads(raw) if raw else {}
+                    current_filters = json.loads(raw) if raw else {}
                 except Exception:
                     current_filters = {}
                 if filter_value in ("all", ""):
                     current_filters.pop(filter_type, None)
                 else:
                     current_filters[filter_type] = filter_value
-                new_json = _json.dumps(current_filters) if current_filters else None
+                new_json = json.dumps(current_filters) if current_filters else None
                 self._update_filters_json(chat_id, thread_id, new_json)
             new_view = current_view_name
             new_page = 0
