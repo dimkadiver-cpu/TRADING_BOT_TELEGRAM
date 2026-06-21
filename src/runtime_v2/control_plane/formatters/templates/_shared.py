@@ -72,6 +72,7 @@ def _render_trade_item(row: dict, i: int, p: dict) -> list[str]:
         upnl = row.get("unrealized_pnl")
         rpnl = row.get("cum_realized_pnl")
         upnl_str = money_signed(upnl) if upnl is not None else "—"
+        # rPnL starts at 0 for live trades; uPnL unknown without mark price
         rpnl_str = money_signed(rpnl) if rpnl is not None else "+0.00 USDT"
         lines.append(f"uPnL: {upnl_str}  rPnL: {rpnl_str}")
 

@@ -23,6 +23,10 @@ except ModuleNotFoundError:  # pragma: no cover - test fallback when Telethon is
             class Event:
                 pass
 
+        class MessageDeleted:
+            class Event:
+                pass
+
     events = _EventsModule()  # type: ignore[assignment]
     Message = object  # type: ignore[assignment]
 
@@ -141,6 +145,10 @@ class TelegramListener:
         @client.on(events.MessageEdited)
         async def _on_message_edited(event: events.MessageEdited.Event) -> None:
             await self._handle_edited_message(event)
+
+        @client.on(events.MessageDeleted)
+        async def _on_message_deleted(event: events.MessageDeleted.Event) -> None:
+            await self._handle_deleted_message(event)
 
     async def run_recovery(self, client: TelegramClient) -> None:
         await self._reenqueue_stale()
@@ -465,6 +473,50 @@ class TelegramListener:
             run_context,
         )
 
+    async def _handle_deleted_message(self, event: events.MessageDeleted.Event) -> None:
+        chat_id_raw = int(event.chat_id) if getattr(event, "chat_id", None) is not None else None
+        if chat_id_raw is None:
+            return
+
+        deleted_ids = list(getattr(event, "deleted_ids", []) or [])
+        if not deleted_ids:
+            return
+
+        source_chat_id = str(chat_id_raw)
+        deleted_at = getattr(event, "deleted_at", None) or datetime.now(timezone.utc)
+        run_context = self._delete_run_context(deleted_at)
+
+        for telegram_message_id in deleted_ids:
+            existing = self._raw_repo.get_id_and_text(source_chat_id, int(telegram_message_id))
+            if existing is None:
+                continue
+
+            raw_message_id, old_text = existing
+            envelope = self._raw_repo.get_by_id(raw_message_id)
+            self._append_deleted_revision(
+                raw_message_id=raw_message_id,
+                source_chat_id=source_chat_id,
+                telegram_message_id=int(telegram_message_id),
+                raw_text=old_text,
+                message_ts=envelope.message_ts.isoformat(),
+                run_context=run_context,
+                acquisition_status=envelope.acquisition_status,
+                reply_to_message_id=envelope.reply_to_message_id,
+                source_topic_id=envelope.source_topic_id,
+                has_media=envelope.has_media,
+                media_kind=envelope.media_kind,
+                media_mime_type=envelope.media_mime_type,
+                media_filename=envelope.media_filename,
+            )
+            self._logger.info(
+                "deleted message observed | chat=%s topic=%s msg_id=%s raw_message_id=%s run_context=%s",
+                source_chat_id,
+                envelope.source_topic_id,
+                telegram_message_id,
+                raw_message_id,
+                run_context,
+            )
+
     def _emit_edit_skipped_notification(
         self,
         *,
@@ -542,9 +594,48 @@ class TelegramListener:
             applied_to_current=applied_to_current,
         )
 
+    def _append_deleted_revision(
+        self,
+        *,
+        raw_message_id: int,
+        source_chat_id: str,
+        telegram_message_id: int,
+        raw_text: str | None,
+        message_ts: str,
+        run_context: str,
+        acquisition_status: str | None,
+        reply_to_message_id: int | None,
+        source_topic_id: int | None,
+        has_media: bool,
+        media_kind: str | None,
+        media_mime_type: str | None,
+        media_filename: str | None,
+    ) -> None:
+        if self._revision_store is None:
+            return
+        self._revision_store.append_deleted(
+            raw_message_id=raw_message_id,
+            source_chat_id=source_chat_id,
+            telegram_message_id=telegram_message_id,
+            raw_text=raw_text,
+            message_ts=message_ts,
+            run_context=run_context,
+            acquisition_status=acquisition_status,
+            reply_to_message_id=reply_to_message_id,
+            source_topic_id=source_topic_id,
+            has_media=has_media,
+            media_kind=media_kind,
+            media_mime_type=media_mime_type,
+            media_filename=media_filename,
+            applied_to_current=False,
+        )
+
     def _edit_run_context(self, message: Message) -> str:
         edit_ts = getattr(message, "edit_date", None) or datetime.now(timezone.utc)
         return f"edit:{int(_as_utc(edit_ts).timestamp())}"
+
+    def _delete_run_context(self, deleted_at: datetime) -> str:
+        return f"delete:{int(_as_utc(deleted_at).timestamp())}"
 
     async def _ingest_and_enqueue(
         self,

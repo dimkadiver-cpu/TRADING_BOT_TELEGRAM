@@ -105,6 +105,43 @@ class RawMessageRevisionStore:
             applied_to_current=applied_to_current,
         )
 
+    def append_deleted(
+        self,
+        *,
+        raw_message_id: int,
+        source_chat_id: str,
+        telegram_message_id: int,
+        raw_text: str | None,
+        message_ts: str,
+        run_context: str,
+        acquisition_status: str | None,
+        reply_to_message_id: int | None,
+        source_topic_id: int | None,
+        has_media: bool,
+        media_kind: str | None,
+        media_mime_type: str | None,
+        media_filename: str | None,
+        applied_to_current: bool,
+    ) -> None:
+        self._append(
+            raw_message_id=raw_message_id,
+            source_chat_id=source_chat_id,
+            telegram_message_id=telegram_message_id,
+            revision_kind="deleted",
+            run_context=run_context,
+            raw_text=raw_text,
+            message_ts=message_ts,
+            telegram_edit_ts=None,
+            acquisition_status=acquisition_status,
+            reply_to_message_id=reply_to_message_id,
+            source_topic_id=source_topic_id,
+            has_media=has_media,
+            media_kind=media_kind,
+            media_mime_type=media_mime_type,
+            media_filename=media_filename,
+            applied_to_current=applied_to_current,
+        )
+
     def list_by_raw_message_id(self, raw_message_id: int) -> list[RawMessageRevisionRecord]:
         with sqlite3.connect(self._db_path) as conn:
             rows = conn.execute(

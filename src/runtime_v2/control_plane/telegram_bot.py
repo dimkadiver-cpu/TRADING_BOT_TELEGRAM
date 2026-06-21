@@ -192,11 +192,13 @@ class CommandRouter:
         auth: AuthValidator,
         audit: CommandAuditStore,
         service: RuntimeControlService,
+        scope_resolver=None,  # ScopeResolver | None
     ) -> None:
         self._config = config
         self._auth = auth
         self._audit = audit
         self._service = service
+        self._scope_resolver = scope_resolver
         self._debug_max_seconds = config.get_account(None).topics.tech_log.debug_max_duration_minutes * 60
         self._pending: dict[str, _PendingAction] = {}
 
@@ -272,7 +274,7 @@ class CommandRouter:
             status="ACCEPTED",
         )
         try:
-            dispatch_result = self._dispatch(command_name, args, created_by=str(user_id))
+            dispatch_result = self._dispatch(command_name, args, created_by=str(user_id), thread_id=thread_id)
             self._audit.update_status(
                 request_id,
                 status=dispatch_result.decision,
@@ -293,13 +295,19 @@ class CommandRouter:
         args: list[str],
         *,
         created_by: str,
+        thread_id: int | None = None,
     ) -> _DispatchResult:
+        # Resolve scope for the current thread context
+        scope = None
+        if self._scope_resolver is not None:
+            scope = self._scope_resolver.resolve(thread_id)
+
         if command_name == "help":
             return _DispatchResult(_HELP_TEXT)
         if command_name == "status":
-            return _DispatchResult(format_status(self._service.get_status()))
+            return _DispatchResult(format_status(self._service.get_status(), scope=scope))
         if command_name == "trades":
-            return _DispatchResult(format_trades(self._service.get_open_trades()))
+            return _DispatchResult(format_trades(self._service.get_open_trades(), scope=scope))
         if command_name == "trade":
             if not args or not args[0].lstrip("#").isdigit():
                 return _DispatchResult(
@@ -314,7 +322,7 @@ class CommandRouter:
         if command_name == "control":
             return _DispatchResult(format_control(self._service.get_control()))
         if command_name == "reviews":
-            return _DispatchResult(format_reviews(self._service.get_reviews()))
+            return _DispatchResult(format_reviews(self._service.get_reviews(), scope=scope))
         if command_name == "pnl":
             return _DispatchResult(format_pnl(self._service.get_pnl()))
         if command_name == "version":
