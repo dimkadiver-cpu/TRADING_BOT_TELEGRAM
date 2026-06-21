@@ -151,6 +151,14 @@ class DashboardManager:
                 """
             )
             conn.commit()
+
+            # Migration: add filters_json column if not present
+            columns = {row[1] for row in conn.execute("PRAGMA table_info(ops_dashboard_messages)")}
+            if "filters_json" not in columns:
+                conn.execute(
+                    "ALTER TABLE ops_dashboard_messages ADD COLUMN filters_json TEXT DEFAULT NULL"
+                )
+                conn.commit()
         finally:
             conn.close()
 
@@ -228,6 +236,32 @@ class DashboardManager:
             return row  # type: ignore[return-value]
         finally:
             conn.close()
+
+    def _update_filters_json(self, chat_id: int, thread_id: int, filters_json: str | None) -> None:
+        conn = self._connect()
+        try:
+            conn.execute(
+                "UPDATE ops_dashboard_messages SET filters_json=?, updated_at=? "
+                "WHERE chat_id=? AND thread_id=?",
+                (filters_json, _now_iso(), chat_id, thread_id),
+            )
+            conn.commit()
+        finally:
+            conn.close()
+
+    def _get_filters_json(self, chat_id: int, thread_id: int) -> str | None:
+        conn = self._connect()
+        try:
+            row = conn.execute(
+                "SELECT filters_json FROM ops_dashboard_messages WHERE chat_id=? AND thread_id=?",
+                (chat_id, thread_id),
+            ).fetchone()
+            return row[0] if row else None
+        finally:
+            conn.close()
+
+    def _clear_filters(self, chat_id: int, thread_id: int) -> None:
+        self._update_filters_json(chat_id, thread_id, None)
 
     def _get_all_dashboards(self) -> list[tuple[int, int, int, str, str | None, str]]:
         """Return all rows: (chat_id, thread_id, message_id, scope_account_id, scope_trader_id, current_view)."""
@@ -339,6 +373,41 @@ class DashboardManager:
         elif callback_data == "refresh":
             new_view = current_view_name
             new_page = current_page
+        elif callback_data == "filters":
+            await self._show_filters_panel(
+                callback_query=callback_query,
+                chat_id=chat_id,
+                thread_id=thread_id,
+                stored_message_id=stored_message_id,
+                current_view_name=current_view_name,
+                scope=scope,
+            )
+            return
+        elif callback_data == "clear":
+            self._clear_filters(chat_id, thread_id)
+            new_view = current_view_name
+            new_page = 0
+        elif callback_data == "selector:back":
+            new_view = current_view_name
+            new_page = current_page
+        elif callback_data.startswith("selector:"):
+            parts = callback_data.split(":", 2)
+            if len(parts) == 3:
+                import json as _json
+                _, filter_type, filter_value = parts
+                raw = self._get_filters_json(chat_id, thread_id)
+                try:
+                    current_filters = _json.loads(raw) if raw else {}
+                except Exception:
+                    current_filters = {}
+                if filter_value in ("all", ""):
+                    current_filters.pop(filter_type, None)
+                else:
+                    current_filters[filter_type] = filter_value
+                new_json = _json.dumps(current_filters) if current_filters else None
+                self._update_filters_json(chat_id, thread_id, new_json)
+            new_view = current_view_name
+            new_page = 0
         else:
             return
 
@@ -364,6 +433,60 @@ class DashboardManager:
                 logger.debug("handle_callback: message not modified chat=%s thread=%s", chat_id, thread_id)
             else:
                 logger.warning("handle_callback: edit failed chat=%s thread=%s: %s", chat_id, thread_id, exc)
+
+    async def _show_filters_panel(
+        self,
+        *,
+        callback_query,
+        chat_id: int,
+        thread_id: int,
+        stored_message_id: int,
+        current_view_name: str,
+        scope,
+    ) -> None:
+        """Edit the dashboard message to show a filter selector panel."""
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+        view_labels = {
+            "active": "Active",
+            "closed": "Closed",
+            "blocked": "Blocked",
+            "pnl": "PnL",
+            "stats": "Stats",
+        }
+        label = view_labels.get(current_view_name, current_view_name.capitalize())
+        text = f"🔎 Filters — {label}"
+
+        rows: list[list[InlineKeyboardButton]] = []
+
+        if current_view_name in ("active", "closed", "blocked", "pnl", "stats"):
+            rows.append([
+                InlineKeyboardButton("Account ▸", callback_data="selector_panel:account"),
+                InlineKeyboardButton("Trader ▸", callback_data="selector_panel:trader"),
+            ])
+        if current_view_name == "active":
+            rows.append([InlineKeyboardButton("Status ▸", callback_data="selector_panel:status")])
+        if current_view_name in ("active", "stats"):
+            rows.append([InlineKeyboardButton("Side ▸", callback_data="selector_panel:side")])
+        if current_view_name in ("closed", "pnl"):
+            rows.append([InlineKeyboardButton("Period ▸", callback_data="selector_panel:period")])
+
+        rows.append([
+            InlineKeyboardButton("🧹 Clear view", callback_data="clear"),
+            InlineKeyboardButton("← Back", callback_data="selector:back"),
+        ])
+
+        keyboard = InlineKeyboardMarkup(rows)
+        if self._bot:
+            try:
+                await self._bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=stored_message_id,
+                    text=text,
+                    reply_markup=keyboard,
+                )
+            except Exception:  # noqa: BLE001
+                pass
 
     async def on_trade_event(
         self,

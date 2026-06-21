@@ -418,3 +418,284 @@ def test_dashboard_naming_migration(tmp_path):
     assert rows[0][1] == "active:0"
     assert rows[1][1] == "closed:2"
     assert rows[2][1] == "blocked:0"
+
+
+# ---------------------------------------------------------------------------
+# Task 5: filters_json column and filter helpers
+# ---------------------------------------------------------------------------
+
+def test_filters_json_column_exists(tmp_path):
+    """DashboardManager creates ops_dashboard_messages with filters_json column."""
+    db_path = _make_db(tmp_path)
+    DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=None,
+    )
+    conn = sqlite3.connect(db_path)
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(ops_dashboard_messages)")}
+    conn.close()
+    assert "filters_json" in columns
+
+
+def test_filters_json_column_added_to_existing_table(tmp_path):
+    """DashboardManager adds filters_json via ALTER TABLE when table exists without it."""
+    db_path = _make_db(tmp_path)  # creates table without filters_json
+    # Verify it doesn't already have filters_json
+    conn = sqlite3.connect(db_path)
+    columns_before = {row[1] for row in conn.execute("PRAGMA table_info(ops_dashboard_messages)")}
+    conn.close()
+    assert "filters_json" not in columns_before
+
+    # Boot DashboardManager — should add the column
+    DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=None,
+    )
+    conn = sqlite3.connect(db_path)
+    columns_after = {row[1] for row in conn.execute("PRAGMA table_info(ops_dashboard_messages)")}
+    conn.close()
+    assert "filters_json" in columns_after
+
+
+def test_clear_callback_resets_filters(tmp_path):
+    """_clear_filters sets filters_json to NULL."""
+    db_path = _make_db(tmp_path)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=None,
+    )
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (1,0,42,NULL,NULL,'active:0','{}',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    # Set then clear filters
+    mgr._update_filters_json(1, 0, '{"trader": "trader_a"}')
+    mgr._clear_filters(1, 0)
+
+    row = mgr._get_dashboard_row(1, 0)
+    assert row is not None
+    filters_json = mgr._get_filters_json(1, 0)
+    assert filters_json is None
+
+
+def test_selector_callback_sets_filter(tmp_path):
+    """_update_filters_json + _get_filters_json roundtrip."""
+    db_path = _make_db(tmp_path)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=None,
+    )
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (1,0,42,NULL,NULL,'active:0','{}',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    mgr._update_filters_json(1, 0, '{"trader": "trader_a"}')
+    result = mgr._get_filters_json(1, 0)
+    assert result == '{"trader": "trader_a"}'
+
+
+@pytest.mark.asyncio
+async def test_filters_callback_shows_panel(tmp_path):
+    """handle_callback('filters') calls bot.edit_message_text with filter panel text."""
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=88)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+    _patch_render_view(mgr)
+
+    # Insert a dashboard row so handle_callback finds it
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (100,0,88,NULL,NULL,'active:0','{}',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 100
+    fake_message.message_thread_id = None
+    fake_message.message_id = 88
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "filters")
+
+    # bot.edit_message_text should be called with text containing "🔎 Filters"
+    bot.edit_message_text.assert_awaited_once()
+    call_kwargs = bot.edit_message_text.call_args
+    text_arg = call_kwargs.kwargs.get("text") or (call_kwargs.args[0] if call_kwargs.args else "")
+    assert "🔎 Filters" in text_arg
+
+
+@pytest.mark.asyncio
+async def test_clear_callback_resets_filters_and_rerenders(tmp_path):
+    """handle_callback('clear') resets filters_json and re-renders the dashboard."""
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=77)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+    _patch_render_view(mgr)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (200,0,77,NULL,NULL,'active:0','{}','2024-01-01')"
+    )
+    conn.commit()
+    conn.close()
+
+    # Set some filters first
+    mgr._update_filters_json(200, 0, '{"trader": "trader_a"}')
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 200
+    fake_message.message_thread_id = None
+    fake_message.message_id = 77
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "clear")
+
+    # filters_json should be cleared
+    assert mgr._get_filters_json(200, 0) is None
+    # Dashboard should be re-rendered (edit_message_text called)
+    bot.edit_message_text.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_selector_back_callback_rerenders(tmp_path):
+    """handle_callback('selector:back') re-renders without changing view or page."""
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=55)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+    _patch_render_view(mgr)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (300,0,55,NULL,NULL,'closed:1','{}','2024-01-01')"
+    )
+    conn.commit()
+    conn.close()
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 300
+    fake_message.message_thread_id = None
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "selector:back")
+
+    # view should remain closed:1
+    conn = sqlite3.connect(db_path)
+    row = conn.execute(
+        "SELECT current_view FROM ops_dashboard_messages WHERE chat_id=300"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "closed:1"
+    bot.edit_message_text.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_selector_set_filter_callback(tmp_path):
+    """handle_callback('selector:trader:trader_a') stores the filter and re-renders."""
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=66)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+    _patch_render_view(mgr)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (400,0,66,NULL,NULL,'active:0','{}','2024-01-01')"
+    )
+    conn.commit()
+    conn.close()
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 400
+    fake_message.message_thread_id = None
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "selector:trader:trader_a")
+
+    import json
+    raw = mgr._get_filters_json(400, 0)
+    assert raw is not None
+    filters = json.loads(raw)
+    assert filters.get("trader") == "trader_a"
+    bot.edit_message_text.assert_awaited_once()
+
+
+@pytest.mark.asyncio
+async def test_selector_all_removes_filter(tmp_path):
+    """handle_callback('selector:trader:all') removes the trader filter."""
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=44)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+    _patch_render_view(mgr)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (500,0,44,NULL,NULL,'active:0','{}','2024-01-01')"
+    )
+    conn.commit()
+    conn.close()
+
+    mgr._update_filters_json(500, 0, '{"trader": "trader_a"}')
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 500
+    fake_message.message_thread_id = None
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "selector:trader:all")
+
+    raw = mgr._get_filters_json(500, 0)
+    # Either None or empty dict — trader key must be gone
+    if raw:
+        import json
+        filters = json.loads(raw)
+        assert "trader" not in filters
+    # else None is fine
