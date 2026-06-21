@@ -131,7 +131,7 @@ class DashboardManager:
                     );
                     INSERT INTO ops_dashboard_messages_new
                         SELECT chat_id, thread_id, message_id, scope_account_id,
-                               scope_trader_id, current_view, updated_at, filters_json
+                               scope_trader_id, current_view, updated_at, NULL
                         FROM ops_dashboard_messages;
                     DROP TABLE ops_dashboard_messages;
                     ALTER TABLE ops_dashboard_messages_new RENAME TO ops_dashboard_messages;
