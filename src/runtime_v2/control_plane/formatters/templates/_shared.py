@@ -53,32 +53,30 @@ def _pnl_str(row: dict) -> str:
 
 
 def _render_trade_item(row: dict, i: int, p: dict) -> list[str]:
-    chain_id = row.get("chain_id", "?")
+    cid = row.get("chain_id", "?")
     symbol = row.get("symbol_display", row.get("symbol", "?"))
     side = row.get("side", "?")
     state = row.get("state", "?")
-    emoji = _side_emoji_str(side)
-    entry_price = row.get("entry_avg_price")
-    qty = row.get("open_position_qty")
+    is_global = p.get("is_global", False)
 
-    line1 = f"#{chain_id}  {emoji} {symbol}  {side}   {state}"
-    parts2 = []
-    if entry_price is not None:
-        parts2.append(f"Entry: {num(entry_price)}")
-    parts2.append(_protection_str(row))
-    line2 = "    " + "  ".join(parts2) if parts2 else ""
+    lines = [f"#{cid} · {symbol} · {side} · {state}"]
 
-    parts3 = []
-    if qty is not None:
-        parts3.append(f"Qty: {num(qty)}")
-    parts3.append(_pnl_str(row))
-    line3 = "    " + "  ".join(parts3)
+    if is_global:
+        trader = row.get("trader_id") or p.get("trader_id") or "?"
+        account = row.get("account_id") or p.get("account_id") or "?"
+        lines.append(f"Trader: {trader} · Account: {account}")
 
-    result = [line1]
-    if line2.strip():
-        result.append(line2)
-    result.append(line3)
-    return result
+    if state in ("WAITING_ENTRY", "PARTIALLY_FILLED"):
+        lines.append("rPnL: —")
+    else:
+        upnl = row.get("unrealized_pnl")
+        rpnl = row.get("cum_realized_pnl")
+        upnl_str = money_signed(upnl) if upnl is not None else "—"
+        rpnl_str = money_signed(rpnl) if rpnl is not None else "+0.00 USDT"
+        lines.append(f"uPnL: {upnl_str}  rPnL: {rpnl_str}")
+
+    lines.append(f"Details: /trade {cid}")
+    return lines
 
 
 __all__ = [

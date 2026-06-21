@@ -328,3 +328,109 @@ def test_template_registry_contains_all_keys():
     }
     missing = expected_keys - set(TEMPLATE_REGISTRY.keys())
     assert not missing, f"TEMPLATE_REGISTRY manca le chiavi: {missing}"
+
+
+# ---------------------------------------------------------------------------
+# Task 3: /trades spec-compact format
+# ---------------------------------------------------------------------------
+
+def test_trades_format_spec_compact():
+    """Spec format: #n · SYMBOL · SIDE · STATE / uPnL rPnL / Details: /trade n"""
+    view = _trades_view(
+        rows=[TradeRow(
+            chain_id=5, symbol="BTCUSDT", side="LONG", state="OPEN",
+            has_sl=True, has_be=False,
+            entry_avg_price=63500.0, open_position_qty=0.01,
+            unrealized_pnl=12.40, cum_realized_pnl=0.0,
+        )],
+        total=1,
+    )
+    scope = _scope("demo_1")
+    text = format_trades(view, scope)
+    # display_symbol("BTCUSDT") → "BTC/USDT"
+    assert "#5 · BTC/USDT · LONG · OPEN" in text
+    assert "uPnL:" in text
+    assert "rPnL:" in text
+    assert "Details: /trade 5" in text
+    # Old entry/sl structure must not appear
+    assert "Entry:" not in text
+    assert "SL:" not in text
+
+
+def test_trades_format_waiting_entry_no_upnl():
+    """WAITING_ENTRY shows rPnL: — and no uPnL line."""
+    view = _trades_view(
+        rows=[TradeRow(
+            chain_id=9, symbol="SOLUSDT", side="LONG", state="WAITING_ENTRY",
+            has_sl=False, has_be=False,
+        )],
+        total=1,
+    )
+    text = format_trades(view, _scope("demo_1"))
+    assert "rPnL: —" in text
+    assert "uPnL:" not in text
+
+
+def test_trades_format_global_scope_shows_all_accounts():
+    """Global scope (account_id=None) shows 'All accounts' in header."""
+    from src.runtime_v2.control_plane.scope_resolver import QueryScope
+    scope = QueryScope(account_id=None, trader_ids=None)
+    view = _trades_view(
+        rows=[TradeRow(
+            chain_id=17, symbol="ETHUSDT", side="SHORT", state="OPEN",
+            has_sl=True, has_be=False, unrealized_pnl=-3.20,
+        )],
+        total=1,
+    )
+    text = format_trades(view, scope)
+    assert "All accounts" in text
+
+
+# ---------------------------------------------------------------------------
+# Task 3: /status global scope
+# ---------------------------------------------------------------------------
+
+def test_status_global_scope_shows_all_accounts():
+    """Global scope shows 'All accounts' header and 'By account' breakdown."""
+    from src.runtime_v2.control_plane.formatters.status import format_status
+    from src.runtime_v2.control_plane.status_queries import StatusView
+    from src.runtime_v2.control_plane.scope_resolver import QueryScope
+    scope = QueryScope(account_id=None, trader_ids=None)
+    view = StatusView(
+        updated_at="14:32:05", control_mode="NONE", new_entries_enabled=True,
+        sync_age_seconds=12.0, open_count=7, partial_count=2,
+        waiting_entry_count=4, review_count=2, pending_commands=1,
+        failed_commands=3, no_sl_count=2,
+        by_account=[
+            {"account_id": "demo_2", "open_count": 3, "waiting_count": 1, "failed_commands": 1},
+            {"account_id": "demo_1", "open_count": 2, "waiting_count": 2, "failed_commands": 0},
+        ],
+    )
+    text = format_status(view, scope)
+    assert "All accounts" in text
+    assert "By account" in text
+    assert "demo_2" in text
+    assert "demo_1" in text
+
+
+# ---------------------------------------------------------------------------
+# Task 3: /reviews global scope
+# ---------------------------------------------------------------------------
+
+def test_reviews_global_scope_shows_trader_account():
+    """Global scope shows trader and account per review item."""
+    from src.runtime_v2.control_plane.formatters.reviews import format_reviews
+    from src.runtime_v2.control_plane.status_queries import ReviewsView, ReviewItem
+    from src.runtime_v2.control_plane.scope_resolver import QueryScope
+    scope = QueryScope(account_id=None, trader_ids=None)
+    view = ReviewsView(
+        updated_at="14:32:05",
+        items=[ReviewItem(
+            chain_id=7, symbol="ETHUSDT", reason="missing_sl",
+            trader_id="trader_devos", account_id="demo_2",
+        )],
+    )
+    text = format_reviews(view, scope)
+    assert "All accounts" in text
+    assert "trader_devos" in text
+    assert "demo_2" in text

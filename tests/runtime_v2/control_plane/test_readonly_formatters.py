@@ -59,7 +59,9 @@ def test_format_trades_rows():
     text = format_trades(view)
     assert "145" in text
     assert "BTC/USDT" in text
-    assert "SL: set" in text
+    # New spec-compact format: no SL/Entry lines in list view
+    assert "#145 · BTC/USDT · LONG · OPEN" in text
+    assert "Details: /trade 145" in text
 
 
 def test_format_trade_detail():

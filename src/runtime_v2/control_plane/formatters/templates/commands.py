@@ -193,32 +193,53 @@ TEMPLATE_STATS = TemplateConfig(_STATS_BLOCKS, payload_transform=None)
 # ---------------------------------------------------------------------------
 
 _STATUS_BLOCKS: list = [
-    DerivedBlock(text_fn=lambda p: f"{p.get('_level', '🟢')} Runtime V2 — STATUS — {p.get('account_id', '')}"),
+    DerivedBlock(text_fn=lambda p: (
+        f"{p.get('_level', '🟢')} Runtime V2 — STATUS  |  "
+        + (p.get("account_id") or "All accounts")
+    )),
     SeparatorBlock(),
     DerivedBlock(text_fn=lambda p: f"Updated: {p.get('updated_at', 'n/a')}"),
     StaticBlock(""),
     StaticBlock("Mode:"),
-    DerivedBlock(text_fn=lambda p: f"New entries: {'ENABLED' if p.get('new_entries_enabled') else 'BLOCKED'}"),
-    DerivedBlock(text_fn=lambda p: f"Control: {p.get('control_mode', 'n/a')}"),
-    DerivedBlock(text_fn=lambda p: f"Sync: {p.get('_sync_str', 'n/a')}"),
+    DerivedBlock(text_fn=lambda p: f"  New entries: {'ENABLED' if p.get('new_entries_enabled') else 'BLOCKED'}"),
+    DerivedBlock(text_fn=lambda p: f"  Control: {p.get('control_mode', 'NONE')}"),
+    DerivedBlock(text_fn=lambda p: f"  Sync: {p.get('_sync_str', 'n/a')}"),
     StaticBlock(""),
     StaticBlock("Trades:"),
-    DerivedBlock(text_fn=lambda p: f"Open: {p.get('open_count', 0)}"),
-    DerivedBlock(text_fn=lambda p: f"Waiting entry: {p.get('waiting_entry_count', 0)}"),
-    DerivedBlock(text_fn=lambda p: f"Partial: {p.get('partial_count', 0)}"),
-    DerivedBlock(text_fn=lambda p: f"Review required: {p.get('review_count', 0)}"),
+    DerivedBlock(text_fn=lambda p: f"  Open: {p.get('open_count', 0)}"),
+    DerivedBlock(text_fn=lambda p: f"  Waiting entry: {p.get('waiting_entry_count', 0)}"),
+    DerivedBlock(text_fn=lambda p: f"  Partial: {p.get('partial_count', 0)}"),
+    DerivedBlock(text_fn=lambda p: (
+        f"  Review required: {p.get('review_count', 0)}"
+        + ("  ⚠️" if p.get('review_count', 0) > 0 else "")
+    )),
     StaticBlock(""),
     StaticBlock("Execution:"),
-    DerivedBlock(text_fn=lambda p: f"Pending commands: {p.get('pending_commands', 0)}"),
-    DerivedBlock(text_fn=lambda p: f"Failed commands: {p.get('failed_commands', 0)}"),
+    DerivedBlock(text_fn=lambda p: f"  Pending commands: {p.get('pending_commands', 0)}"),
+    DerivedBlock(text_fn=lambda p: (
+        f"  Failed commands: {p.get('failed_commands', 0)}"
+        + ("  🔴" if p.get('failed_commands', 0) > 0 else "")
+    )),
     StaticBlock(""),
     StaticBlock("Risk:"),
-    DerivedBlock(text_fn=lambda p: f"No SL: {p.get('no_sl_count', 0)}"),
+    DerivedBlock(text_fn=lambda p: (
+        f"  No SL: {p.get('no_sl_count', 0)}"
+        + ("  🔴" if p.get('no_sl_count', 0) > 0 else "")
+    )),
+    # By account breakdown (only shown in global scope)
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("by_account")),
+        blocks=[
+            StaticBlock(""),
+            StaticBlock("By account:"),
+            ListBlock(key="by_account", item_renderer=lambda a, i, p: [
+                f"  {a['account_id']}  Open: {a['open_count']}  "
+                f"Waiting: {a['waiting_count']}  Failed: {a['failed_commands']}"
+            ]),
+        ],
+    ),
     StaticBlock(""),
-    StaticBlock("Use:"),
-    StaticBlock("/trades"),
-    StaticBlock("/reviews"),
-    StaticBlock("/control"),
+    StaticBlock("/trades  ·  /reviews  ·  /control"),
 ]
 
 TEMPLATE_STATUS = TemplateConfig(_STATUS_BLOCKS, payload_transform=None)

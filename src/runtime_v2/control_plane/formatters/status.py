@@ -22,8 +22,11 @@ def _status_to_payload(view: StatusView, scope: QueryScope | None) -> dict:
         if view.sync_age_seconds is not None
         else "n/a"
     )
+    is_global = scope is None or scope.account_id is None
+    account_label = "All accounts" if is_global else scope.account_id  # type: ignore[union-attr]
     return {
-        "account_id": scope.account_id if scope else "—",
+        "account_id": account_label,
+        "is_global": is_global,
         "trader_id": (
             scope.trader_ids[0]
             if scope and scope.trader_ids and len(scope.trader_ids) == 1
@@ -42,6 +45,7 @@ def _status_to_payload(view: StatusView, scope: QueryScope | None) -> dict:
         "failed_commands": view.failed_commands,
         "no_sl_count": view.no_sl_count,
         "_level": status_level(view),
+        "by_account": view.by_account,
     }
 
 

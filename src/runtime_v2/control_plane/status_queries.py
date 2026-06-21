@@ -143,6 +143,8 @@ class ReviewItem:
     chain_id: int | None
     symbol: str | None
     reason: str
+    trader_id: str | None = None
+    account_id: str | None = None
 
 
 @dataclass
@@ -727,14 +729,14 @@ class StatusQueries:
             if scope is not None:
                 scope_frag, scope_params = _scope_where(scope)
                 chain_rows = conn.execute(
-                    f"SELECT trade_chain_id, symbol FROM ops_trade_chains "
+                    f"SELECT trade_chain_id, symbol, trader_id, account_id FROM ops_trade_chains "
                     f"WHERE lifecycle_state='REVIEW_REQUIRED' AND {scope_frag} "
                     f"ORDER BY trade_chain_id",
                     scope_params,
                 ).fetchall()
             else:
                 chain_rows = conn.execute(
-                    "SELECT trade_chain_id, symbol FROM ops_trade_chains "
+                    "SELECT trade_chain_id, symbol, trader_id, account_id FROM ops_trade_chains "
                     "WHERE lifecycle_state='REVIEW_REQUIRED' ORDER BY trade_chain_id"
                 ).fetchall()
             reasons = dict(conn.execute(
@@ -745,7 +747,8 @@ class StatusQueries:
         finally:
             conn.close()
         items: list[ReviewItem] = []
-        for cid, symbol in chain_rows:
+        for row in chain_rows:
+            cid, symbol, trader_id, account_id = row[0], row[1], row[2], row[3]
             reason = "review_required"
             raw = reasons.get(cid)
             if raw:
@@ -753,7 +756,10 @@ class StatusQueries:
                     reason = json.loads(raw).get("reason", reason)
                 except Exception:
                     pass
-            items.append(ReviewItem(chain_id=cid, symbol=symbol, reason=reason))
+            items.append(ReviewItem(
+                chain_id=cid, symbol=symbol, reason=reason,
+                trader_id=trader_id, account_id=account_id,
+            ))
         return ReviewsView(updated_at=_now_iso(), items=items)
 
     def get_pnl(self, scope: QueryScope | None = None) -> PnlView:

@@ -11,6 +11,7 @@ _RECONCILIATION_THRESHOLD_SECONDS = 60.0
 
 
 def _trades_to_payload(view: TradesView, scope: QueryScope | None) -> dict:
+    is_global = scope is None or scope.account_id is None
     rows = []
     for r in view.rows:
         rows.append({
@@ -24,10 +25,14 @@ def _trades_to_payload(view: TradesView, scope: QueryScope | None) -> dict:
             "entry_avg_price": r.entry_avg_price,
             "open_position_qty": r.open_position_qty,
             "unrealized_pnl": r.unrealized_pnl,
+            "cum_realized_pnl": r.cum_realized_pnl,
             "mark_price": r.mark_price,
             "mark_captured_at": r.mark_captured_at,
             # current_stop_price not on TradeRow — use has_sl/has_be flags only
             "current_stop_price": None,
+            # trader_id / account_id not on TradeRow yet — placeholder for global scope
+            "trader_id": None,
+            "account_id": None,
         })
 
     mark_time: str | None = None
@@ -50,12 +55,13 @@ def _trades_to_payload(view: TradesView, scope: QueryScope | None) -> dict:
         mark_stale = max_age > _RECONCILIATION_THRESHOLD_SECONDS
 
     payload: dict = {
-        "account_id": scope.account_id if scope else "—",
+        "account_id": scope.account_id if (scope and scope.account_id) else "All accounts",
         "trader_id": (
             scope.trader_ids[0]
             if scope and scope.trader_ids and len(scope.trader_ids) == 1
             else None
         ),
+        "is_global": is_global,
         "updated_at": view.updated_at,
         "rows": rows,
         "_mark_time": mark_time,
