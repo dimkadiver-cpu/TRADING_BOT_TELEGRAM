@@ -27,7 +27,7 @@ def test_build_execution_runtime_enables_ws_watcher(monkeypatch, tmp_path):
             enabled=True,
             poll_fallback_enabled=True,
             poll_fallback_period_seconds=45,
-            position_reconciliation_interval_seconds=600,
+            position_live_snapshot_interval_seconds=60,
         ),
     )
     routing = SimpleNamespace(execution_account_id="master_account")
@@ -117,7 +117,7 @@ def test_build_execution_runtime_creates_sync_workers_and_watchers_for_all_route
             enabled=True,
             poll_fallback_enabled=True,
             poll_fallback_period_seconds=45,
-            position_reconciliation_interval_seconds=600,
+            position_live_snapshot_interval_seconds=60,
         ),
     )
     routed_cfg = SimpleNamespace(
@@ -129,7 +129,7 @@ def test_build_execution_runtime_creates_sync_workers_and_watchers_for_all_route
             enabled=True,
             poll_fallback_enabled=True,
             poll_fallback_period_seconds=60,
-            position_reconciliation_interval_seconds=900,
+            position_live_snapshot_interval_seconds=90,
         ),
     )
     default_routing = SimpleNamespace(adapter="bybit_demo", execution_account_id="main")
@@ -207,8 +207,8 @@ def test_build_execution_runtime_creates_sync_workers_and_watchers_for_all_route
         "account_nuovo": 60,
     }
     assert runtime.position_reconciliation_intervals == {
-        "main": 600,
-        "account_nuovo": 900,
+        "main": 60,
+        "account_nuovo": 90,
     }
     assert [call["execution_account_id"] for call in sync_workers] == ["main", "account_nuovo"]
     assert [call["mode"] for call in watcher_calls] == ["demo", "demo"]
@@ -234,7 +234,7 @@ def test_linux_build_execution_runtime_loads_routed_adapters(monkeypatch, tmp_pa
             enabled=False,
             poll_fallback_enabled=False,
             poll_fallback_period_seconds=45,
-            position_reconciliation_interval_seconds=600,
+            position_live_snapshot_interval_seconds=60,
         ),
     )
     routing = SimpleNamespace(execution_account_id="master_account")
@@ -481,7 +481,7 @@ def test_close_execution_runtime_stops_all_watchers_and_closes_all_adapters():
             "bybit_nuovo": routed_adapter,
         },
         reconciliation_intervals={"main": 45, "account_nuovo": 60},
-        position_reconciliation_intervals={"main": 600, "account_nuovo": 900},
+        position_reconciliation_intervals={"main": 60, "account_nuovo": 90},
         poll_fallback_by_account={"main": True, "account_nuovo": True},
     )
 
@@ -592,13 +592,104 @@ def test_collect_runtime_known_symbols_ignores_none_and_failures():
     )
 
 
-def test_websocket_config_exposes_position_reconciliation_interval():
+def test_build_execution_runtime_wires_bulk_position_sync_callback(monkeypatch, tmp_path):
+    import main as app_main
+
+    logger = logging.getLogger("test")
+    adapter = MagicMock(name="adapter")
+    worker = MagicMock(name="sync_worker")
+    worker.execution_account_id = "main"
+    ctx_calls = []
+
+    adapter_cfg = SimpleNamespace(
+        type="ccxt_bybit",
+        mode="demo",
+        api_key_env="BYBIT_API_KEY_BYBIT_DEMO",
+        api_secret_env="BYBIT_API_SECRET_BYBIT_DEMO",
+        websocket=SimpleNamespace(
+            enabled=False,
+            poll_fallback_enabled=True,
+            poll_fallback_period_seconds=45,
+            position_live_snapshot_interval_seconds=60,
+        ),
+    )
+    routing = SimpleNamespace(adapter="bybit_demo", execution_account_id="main")
+    exec_config = SimpleNamespace(
+        default_adapter="bybit_demo",
+        adapters={"bybit_demo": adapter_cfg},
+        account_routing={"default": routing},
+        resolve_routing=lambda account_id: (routing, adapter_cfg),
+    )
+
+    class FakeContext:
+        def __init__(self, name, **kwargs):
+            self.name = name
+            self.kwargs = kwargs
+            ctx_calls.append(self)
+
+        def start(self):
+            return None
+
+        def stop(self):
+            return None
+
+        def join(self, timeout=None):
+            return None
+
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionConfigLoader",
+        lambda path: SimpleNamespace(load=lambda: exec_config),
+    )
+    monkeypatch.setattr(app_main, "build_adapter", lambda name, cfg: adapter)
+    monkeypatch.setattr(
+        app_main,
+        "GatewayCommandRepository",
+        lambda db_path: MagicMock(name="gateway_repo"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionGateway",
+        lambda **kwargs: MagicMock(name="gateway"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExecutionCommandWorker",
+        lambda **kwargs: MagicMock(name="execution_worker"),
+    )
+    monkeypatch.setattr(
+        app_main,
+        "ExchangeEventSyncWorker",
+        lambda **kwargs: worker,
+    )
+    monkeypatch.setattr(app_main, "AdapterExecutionContext", FakeContext)
+
+    runtime = app_main._build_execution_runtime(
+        root_dir=tmp_path,
+        ops_db_path=str(tmp_path / "ops.sqlite3"),
+        logger=logger,
+    )
+
+    assert runtime is not None
+    assert len(ctx_calls) == 1
+    ctx = ctx_calls[0]
+    assert ctx.kwargs["position_reconciliation_interval_seconds"] == 60.0
+
+    ctx.kwargs["position_reconciliation_fn"]()
+
+    worker.run_bulk_position_sync.assert_called_once_with()
+    worker.run_trade_based_reconciliation.assert_called_once_with()
+    worker.run_protective_orders_reconciliation.assert_called_once_with()
+    assert not worker.run_position_reconciliation.called
+
+
+def test_websocket_config_exposes_position_live_snapshot_interval():
     from src.runtime_v2.execution_gateway.models import WebsocketConfig
-    cfg = WebsocketConfig(position_reconciliation_interval_seconds=120)
-    assert cfg.position_reconciliation_interval_seconds == 120
+    cfg = WebsocketConfig(position_live_snapshot_interval_seconds=120)
+    assert cfg.position_live_snapshot_interval_seconds == 120
 
 
-def test_websocket_config_default_position_reconciliation_interval():
+def test_websocket_config_default_position_live_snapshot_interval():
     from src.runtime_v2.execution_gateway.models import WebsocketConfig
     cfg = WebsocketConfig()
-    assert cfg.position_reconciliation_interval_seconds == 600
+    assert cfg.position_live_snapshot_interval_seconds == 60

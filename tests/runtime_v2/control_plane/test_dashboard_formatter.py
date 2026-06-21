@@ -96,6 +96,36 @@ def _add_market_snapshot(
     )
 
 
+def _add_position_snapshot(
+    conn: sqlite3.Connection,
+    account_id: str,
+    symbol: str,
+    side: str,
+    *,
+    qty: float,
+    mark_price: float | None = None,
+    unrealized_pnl: float | None = None,
+    cum_realized_pnl: float | None = None,
+) -> None:
+    conn.execute(
+        "INSERT INTO ops_position_snapshots "
+        "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+        " cum_realized_pnl, source, captured_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (
+            account_id,
+            symbol,
+            side,
+            qty,
+            mark_price,
+            unrealized_pnl,
+            cum_realized_pnl,
+            "test",
+            _now(),
+        ),
+    )
+
+
 def _add_exec_failed_command(
     conn: sqlite3.Connection,
     chain_id: int,
@@ -155,7 +185,15 @@ class TestVistaAttivi:
                 symbol="BTCUSDT", side="LONG",
                 entry_avg_price=63500.0, open_position_qty=0.01,
             )
-            _add_market_snapshot(conn, "demo_1", "BTCUSDT", 64740.0)
+            _add_position_snapshot(
+                conn,
+                "demo_1",
+                "BTCUSDT",
+                "LONG",
+                qty=0.01,
+                mark_price=64740.0,
+                unrealized_pnl=12.4,
+            )
         conn.close()
 
         q = StatusQueries(ops_db)
@@ -180,6 +218,39 @@ class TestVistaAttivi:
 
         assert "PnL: —" in text
         assert total == 1
+
+    @pytest.mark.parametrize(
+        ("cum_realized_pnl", "expected_visible"),
+        [(25.0, True), (0.0, False), (None, False)],
+    )
+    def test_cum_realized_pnl_visibility(self, ops_db, cum_realized_pnl, expected_visible):
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_chain(
+                conn, 10, "OPEN",
+                symbol="BTCUSDT", side="LONG",
+                entry_avg_price=63500.0, open_position_qty=0.01,
+            )
+            _add_position_snapshot(
+                conn,
+                "demo_1",
+                "BTCUSDT",
+                "LONG",
+                qty=0.01,
+                mark_price=64740.0,
+                unrealized_pnl=12.4,
+                cum_realized_pnl=cum_realized_pnl,
+            )
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        text, total = format_dashboard_view("attivi", SCOPE, q)
+
+        assert total == 1
+        if expected_visible:
+            assert "Real: +25.00 USDT" in text
+        else:
+            assert "Real:" not in text
 
     def test_header_no_trader_when_account_scope(self, ops_db):
         conn = sqlite3.connect(ops_db)

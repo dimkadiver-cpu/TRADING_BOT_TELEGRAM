@@ -1,7 +1,7 @@
 # src/runtime_v2/execution_gateway/adapters/fake.py
 from __future__ import annotations
 
-from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
+from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter, RawPositionLive
 from src.runtime_v2.execution_gateway.models import (
     AdapterCapabilities, AdapterResult, RawAccountSnapshot, RawAdapterOrder,
     RawAdapterTrade, RawFundingExecution, RawMarketSnapshot, RawPositionDetails,
@@ -47,6 +47,7 @@ class FakeAdapter(ExecutionAdapter):
         self._reduce_trades: dict[str, list[RawAdapterTrade]] = {}
         self._position_details: dict[str, RawPositionDetails] = {}
         self._funding_executions: dict[str, list[RawFundingExecution]] = {}
+        self._position_live: list[RawPositionLive] = []
 
     def get_capabilities(self) -> AdapterCapabilities:
         return self._capabilities
@@ -151,6 +152,15 @@ class FakeAdapter(ExecutionAdapter):
         execution_account_id: str,
     ) -> RawMarketSnapshot | None:
         return self._market_snapshots.get(symbol)
+
+    def set_position_live(self, positions: list[RawPositionLive]) -> None:
+        self._position_live = list(positions)
+
+    def fetch_all_positions(
+        self,
+        execution_account_id: str,
+    ) -> list[RawPositionLive]:
+        return list(self._position_live)
 
     def load_known_symbols(self) -> frozenset[str] | None:
         # Return None (no restriction) unless specific mark prices were configured —

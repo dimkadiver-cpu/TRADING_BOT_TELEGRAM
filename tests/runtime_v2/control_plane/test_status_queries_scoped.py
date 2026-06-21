@@ -76,13 +76,28 @@ def _add_market_snapshot(
     account_id: str,
     symbol: str,
     mark_price: float,
+    *,
+    side: str = "LONG",
+    unrealized_pnl: float | None = None,
+    cum_realized_pnl: float | None = None,
     captured_at: str | None = None,
 ) -> None:
     conn.execute(
-        "INSERT INTO ops_market_snapshots "
-        "(account_id, symbol, mark_price, source, captured_at) "
-        "VALUES (?,?,?,?,?)",
-        (account_id, symbol, mark_price, "test", captured_at or _now()),
+        "INSERT INTO ops_position_snapshots "
+        "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+        " cum_realized_pnl, source, captured_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (
+            account_id,
+            symbol,
+            side,
+            0.0,
+            mark_price,
+            unrealized_pnl,
+            cum_realized_pnl,
+            "test",
+            captured_at or _now(),
+        ),
     )
 
 
@@ -265,7 +280,7 @@ class TestUnrealizedPnl:
                 account_id="account_A", symbol="ETH/USDT", side="SHORT",
                 entry_avg_price=3000.0, open_position_qty=1.0,
             )
-            _add_market_snapshot(conn, "account_A", "ETH/USDT", mark_price=2900.0)
+            _add_market_snapshot(conn, "account_A", "ETH/USDT", mark_price=2900.0, side="SHORT")
         conn.close()
 
         q = StatusQueries(ops_db)

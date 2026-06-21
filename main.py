@@ -214,7 +214,7 @@ def _build_execution_runtime(
         adapter_cfg_map[route_adapter_name] = route_adapter_cfg
         poll_fallback_by_account[account_id] = route_adapter_cfg.websocket.poll_fallback_enabled
         position_reconciliation_intervals[account_id] = (
-            route_adapter_cfg.websocket.position_reconciliation_interval_seconds
+            route_adapter_cfg.websocket.position_live_snapshot_interval_seconds
         )
 
     # --- Build one AdapterExecutionContext per adapter ---
@@ -236,7 +236,7 @@ def _build_execution_runtime(
         def _make_pos_recon(ws=workers):
             def _pos_recon():
                 for w in ws:
-                    w.run_position_reconciliation()
+                    w.run_bulk_position_sync()
                     w.run_trade_based_reconciliation()
                     w.run_protective_orders_reconciliation()
             return _pos_recon
@@ -248,7 +248,7 @@ def _build_execution_runtime(
             poll_fallback_enabled=adp_cfg.websocket.poll_fallback_enabled,
             poll_fallback_period_seconds=float(adp_cfg.websocket.poll_fallback_period_seconds),
             position_reconciliation_interval_seconds=float(
-                adp_cfg.websocket.position_reconciliation_interval_seconds
+                adp_cfg.websocket.position_live_snapshot_interval_seconds
             ),
         )
         adapter_contexts[adp_name] = ctx
@@ -329,7 +329,7 @@ def _build_execution_runtime(
         reconciliation_intervals=reconciliation_intervals,
         position_reconciliation_intervals=position_reconciliation_intervals,
         poll_fallback_by_account=poll_fallback_by_account,
-        position_reconciliation_interval_seconds=adapter_cfg.websocket.position_reconciliation_interval_seconds,
+        position_reconciliation_interval_seconds=adapter_cfg.websocket.position_live_snapshot_interval_seconds,
         poll_fallback_enabled=adapter_cfg.websocket.poll_fallback_enabled,
         adapter_contexts=adapter_contexts,
     )
@@ -691,7 +691,7 @@ async def _async_main(
             try:
                 for worker in (execution_runtime.sync_workers or {}).values():
                     worker.run_reconciliation()
-                    worker.run_position_reconciliation()
+                    worker.run_bulk_position_sync()
             except Exception:
                 logger.warning("startup reconciliation failed (non-critical)")
 

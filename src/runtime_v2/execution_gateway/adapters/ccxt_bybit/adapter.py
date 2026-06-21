@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 import ccxt
 
-from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
+from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter, RawPositionLive
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.order_builder import BybitOrderBuilder
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.status_mapper import StatusMapper, _f, _ms_to_iso
 from src.runtime_v2.execution_gateway.models import (
@@ -402,6 +402,53 @@ class CcxtBybitAdapter(ExecutionAdapter):
             return float(mark) if mark is not None else None
         except Exception as exc:
             logger.warning("fetch_mark_price failed for %s: %s", symbol, exc)
+            return None
+
+    def fetch_all_positions(
+        self,
+        execution_account_id: str,
+    ) -> list[RawPositionLive] | None:
+        del execution_account_id
+        try:
+            positions = self._exchange.fetch_positions()
+        except Exception as exc:
+            logger.warning("fetch_all_positions failed: %s", exc)
+            return None
+
+        try:
+            result: list[RawPositionLive] = []
+            for pos in positions:
+                raw_side = str(pos.get("side") or "").strip().upper()
+                if raw_side == "LONG":
+                    side = "LONG"
+                elif raw_side == "SHORT":
+                    side = "SHORT"
+                else:
+                    continue
+
+                info = pos.get("info") or {}
+                raw_mark_price = pos.get("markPrice")
+                if raw_mark_price in (None, ""):
+                    raw_mark_price = info.get("markPrice")
+                raw_unrealized_pnl = pos.get("unrealizedPnl")
+                if raw_unrealized_pnl in (None, ""):
+                    raw_unrealized_pnl = info.get("unrealisedPnl")
+                raw_symbol = info.get("symbol") or self._normalize_bybit_symbol(
+                    str(pos.get("symbol") or "")
+                )
+                result.append(
+                    RawPositionLive(
+                        symbol=str(raw_symbol),
+                        side=side,
+                        qty=float(pos.get("contracts") or 0.0),
+                        mark_price=_safe_float(raw_mark_price),
+                        unrealized_pnl=_safe_float(raw_unrealized_pnl),
+                        cum_realized_pnl=_safe_float(info.get("cumRealisedPnl")),
+                    )
+                )
+            return result
+        except Exception as exc:
+            logger.warning("fetch_all_positions failed: %s", exc)
             return None
 
     def fetch_max_order_qty(self, symbol: str, execution_account_id: str) -> float | None:

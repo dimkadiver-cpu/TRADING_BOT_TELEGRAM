@@ -97,6 +97,7 @@ def _build_attivi_payload(
             "entry_avg_price": r.entry_avg_price,
             "open_position_qty": r.open_position_qty,
             "unrealized_pnl": r.unrealized_pnl,
+            "cum_realized_pnl": r.cum_realized_pnl,
             "mark_price": r.mark_price,
             "mark_captured_at": r.mark_captured_at,
         }

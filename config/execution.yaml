@@ -64,6 +64,7 @@ execution:
         enabled: true  # Avvia watcher websocket Bybit.
         poll_fallback_enabled: true  # Mantiene reconciliation polling come fallback.
         poll_fallback_period_seconds: 60  # Intervallo fallback in secondi.
+        position_live_snapshot_interval_seconds: 60  # Snapshot bulk delle posizioni live.
 
       retry:
         max_attempts: 3  # Numero massimo di tentativi per errori retryable.
@@ -94,6 +95,7 @@ execution:
         enabled: true
         poll_fallback_enabled: true
         poll_fallback_period_seconds: 60
+        position_live_snapshot_interval_seconds: 60
 
       retry:
         max_attempts: 3
@@ -124,6 +126,7 @@ execution:
           enabled: true
           poll_fallback_enabled: true
           poll_fallback_period_seconds: 60
+          position_live_snapshot_interval_seconds: 60
 
         retry:
           max_attempts: 3

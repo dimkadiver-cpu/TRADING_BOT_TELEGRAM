@@ -314,6 +314,9 @@ class _FakePositionAdapter:
     def get_position_qty(self, symbol, side, execution_account_id):
         return 0.0
 
+    def fetch_all_positions(self, execution_account_id):
+        return []
+
     def get_order_status(self, *a, **kw):
         return None
 
@@ -342,7 +345,7 @@ def test_position_reconciliation_skips_when_tp_fill_exists(tmp_path):
         execution_account_id="test_account",
     )
 
-    inserted_count = worker.run_position_reconciliation()
+    inserted_count = worker.run_bulk_position_sync()
 
     assert inserted_count == 0, "should not insert synthetic close when TP_FILLED is already present"
 
@@ -369,8 +372,10 @@ def test_position_reconciliation_inserts_when_no_real_fill(tmp_path):
         execution_account_id="test_account",
     )
 
-    inserted_count = worker.run_position_reconciliation()
+    first_count = worker.run_bulk_position_sync()
+    inserted_count = worker.run_bulk_position_sync()
 
+    assert first_count == 0
     assert inserted_count == 1
 
     conn = sqlite3.connect(db_path)
@@ -477,7 +482,7 @@ def test_bybit_position_level_tp_full_scenario(tmp_path):
         repo=repo,
         execution_account_id="test_account",
     )
-    synth_count = worker.run_position_reconciliation()
+    synth_count = worker.run_bulk_position_sync()
     assert synth_count == 0, "position reconciliation must not insert synthetic close when real fills exist"
 
     conn = sqlite3.connect(db_path)

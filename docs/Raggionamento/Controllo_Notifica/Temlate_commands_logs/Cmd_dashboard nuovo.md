@@ -26,11 +26,11 @@ Regole:
 
 ---
 
-## Dashboard appena creato — trader scope
+## Dashboard appena creato — trader scope // apre la prim tabs [⚡ Active]
 
 ```text
-📊 Dashboard — demo_1 · trader_a
-────────────────────────
+Dashboard — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 Select a view or pin this message.
@@ -41,8 +41,8 @@ Select a view or pin this message.
 ## Dashboard appena creato — account scope
 
 ```text
-📊 Dashboard — demo_1
-────────────────────────
+Dashboard — demo_1
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 Select a view or pin this message.
@@ -53,9 +53,9 @@ Select a view or pin this message.
 # View: Active — trader scope
 
 ```text
-📊 ⚡ Active — demo_1 · trader_a
-────────────────────────
-Updated: 14:32:05 · Position snapshot: 18s ago
+⚡ Active — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
+Updated: 14:32:05 
 
 #5  BTC/USDT  LONG  PARTIALLY_CLOSED
 Source: Signal
@@ -64,6 +64,7 @@ Entry: 63,500 ✓ · 63,200 × · 62,800 ×
 TP:    64,000 ✓ · 65,200 · 66,500
 SL:    62,000 · BE: Yes
 uPnL:  +34.20 USDT
+rPnL:  +14.20 USDT
 
 Actions: /trade 5 · /cancel 5 · /close 5
 - - - - - - - - - - - - - - - - - - - -
@@ -92,9 +93,9 @@ nessun simbolo = Pending
 ## View: Active — account scope
 
 ```text
-📊 ⚡ Active — demo_1
-────────────────────────
-Updated: 14:32:05 · Position snapshot: 18s ago
+⚡ Active — demo_1
+- - - - - - - - - - - - - - - - - - - -
+Updated: 14:32:05 
 
 #5  BTC/USDT  LONG   OPEN  [trader_a]
 Entry: 63,500 ✓
@@ -117,8 +118,8 @@ Source: Signal
 ## View: Active — nessun trade
 
 ```text
-📊 ⚡ Active — demo_1 · trader_a
-────────────────────────
+⚡ Active — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 No active trades.
@@ -129,9 +130,9 @@ No active trades.
 ## Snapshot stale
 
 ```text
-📊 ⚡ Active — demo_1 · trader_a
-────────────────────────
-Updated: 14:32:05 · Position snapshot: 183s ago ⚠️
+⚡ Active — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
+Updated: 14:32:05 
 
 #5  BTC/USDT  LONG  OPEN
 Entry: 63,500 ✓
@@ -145,8 +146,8 @@ uPnL:  +12.40 USDT
 # View: Closed
 
 ```text
-📊 ✅ Closed — demo_1 · trader_a
-────────────────────────
+✅ Closed — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 #22  BTC/USDT  LONG  CLOSED
@@ -175,8 +176,8 @@ PnL: — · No fill
 Nessun trade:
 
 ```text
-📊 ✅ Closed — demo_1 · trader_a
-────────────────────────
+✅ Closed — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 No closed trades.
@@ -187,8 +188,8 @@ No closed trades.
 # View: Blocked
 
 ```text
-📊 🚫 Blocked — demo_1 · trader_a
-────────────────────────
+🚫 Blocked — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 #7  ETH/USDT  LONG  REVIEW_REQUIRED
@@ -206,8 +207,8 @@ Source: Technical error
 Nessun trade:
 
 ```text
-📊 🚫 Blocked — demo_1 · trader_a
-────────────────────────
+🚫 Blocked — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 No blocked trades.
@@ -218,9 +219,9 @@ No blocked trades.
 # View: PnL
 
 ```text
-📊 💰 PnL — demo_1 · trader_a
-────────────────────────
-Updated: 14:32:05 · Account snapshot: 18s ago
+💰 PnL — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
+Updated: 14:32:05 
 
 Account demo_1:
 Equity:        10,432.50 USDT
@@ -246,8 +247,8 @@ Realized — All traders:
 # View: Stats
 
 ```text
-📊 📉 Stats — demo_1 · trader_a
-────────────────────────
+Stats — demo_1 · trader_a
+- - - - - - - - - - - - - - - - - - - -
 Updated: 14:32:05
 
 Period          Trades   Win%      Net
@@ -344,8 +345,8 @@ Un dashboard creato nel topic `trader_a` ha scope fisso su `trader_a`; il filtro
 
 ```text
 [⚡ Active]  [✅ Closed]  [🚫 Blocked]
-[💰 PnL]     [📉 Stats]   [🔎 Filters]
-[🧹 Clear]   [🔄 Refresh]
+[💰 PnL]     [📉 Stats]   [🔄 Refresh]
+ [🔎 Filters     ] [🧹 Clear]
 [← Prev]     [Page 2/5]  [Next →]
 ```
 
@@ -374,7 +375,7 @@ Filters: trader_a · Open · Long
 
 ```text
 🔎 Filters — Active
-────────────────────────
+- - - - - - - - - - - - - - - - - - - -
 Trader: All traders
 Status: All statuses
 Side: All sides
@@ -428,7 +429,7 @@ Closing            -> CLOSE_PENDING
 
 ```text
 🔎 Filters — Closed
-────────────────────────
+- - - - - - - - - - - - - - - - - - - -
 Trader: All traders
 Exit: All exits
 Period: All time
@@ -476,7 +477,7 @@ Il periodo viene calcolato sulla data di chiusura.
 
 ```text
 🔎 Filters — Blocked
-────────────────────────
+- - - - - - - - - - - - - - - - - - - -
 Trader: All traders
 Type: All types
 Age: Any age
@@ -519,7 +520,7 @@ L’età si calcola da `blocked_at`; fallback su `updated_at`.
 
 ```text
 🔎 Filters — PnL
-────────────────────────
+- - - - - - - - - - - - - - - - - - - -
 Trader: All traders
 Period: All time
 
@@ -546,8 +547,8 @@ Regole PnL:
 Esempio:
 
 ```text
-📊 💰 PnL — demo_1
-────────────────────────
+💰 PnL — demo_1
+- - - - - - - - - - - - - - - - - - - -
 Filters: trader_a · Last 7d
 
 Account snapshot:
@@ -567,7 +568,7 @@ Net:            +130.00 USDT
 
 ```text
 🔎 Filters — Stats
-────────────────────────
+- - - - - - - - - - - - - - - - - - - -
 Trader: All traders
 Side: All sides
 
@@ -587,8 +588,8 @@ Il filtro `Side` è coerente:
 Esempio:
 
 ```text
-📊 📉 Stats — demo_1
-────────────────────────
+📉 Stats — demo_1
+- - - - - - - - - - - - - - - - - - - -
 Filters: trader_a · Long
 
 Period          Trades   Win%      Net

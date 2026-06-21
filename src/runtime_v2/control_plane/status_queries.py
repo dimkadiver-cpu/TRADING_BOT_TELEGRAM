@@ -40,6 +40,7 @@ class TradeRow:
     unrealized_pnl: float | None = None
     mark_price: float | None = None
     mark_captured_at: str | None = None
+    cum_realized_pnl: float | None = None
 
 
 @dataclass
@@ -367,7 +368,7 @@ class StatusQueries:
                 scope_frag, scope_params = _scope_where(scope)
                 active_placeholders = ",".join("?" * len(_ACTIVE_STATES))
                 rows = conn.execute(
-                    f"SELECT t.trade_chain_id, t.symbol, t.side, t.lifecycle_state, "
+                    f"SELECT t.trade_chain_id, t.account_id, t.symbol, t.side, t.lifecycle_state, "
                     f"COALESCE(t.current_stop_price, t.expected_stop_price), "
                     f"t.be_protection_status, t.entry_avg_price, t.open_position_qty "
                     f"FROM ops_trade_chains t "
@@ -379,7 +380,7 @@ class StatusQueries:
             else:
                 active_placeholders = ",".join("?" * len(_ACTIVE_STATES))
                 rows = conn.execute(
-                    f"SELECT trade_chain_id, symbol, side, lifecycle_state, "
+                    f"SELECT trade_chain_id, account_id, symbol, side, lifecycle_state, "
                     f"COALESCE(current_stop_price, expected_stop_price), "
                     f"be_protection_status, entry_avg_price, open_position_qty "
                     f"FROM ops_trade_chains "
@@ -388,53 +389,55 @@ class StatusQueries:
                     _ACTIVE_STATES,
                 ).fetchall()
 
-            # Fetch latest mark_price per (account_id, symbol) if table exists
-            mark_prices: dict[tuple[str, str], tuple[float, str]] = {}
-            if _table_exists(conn, "ops_market_snapshots"):
+            pos_snapshots: dict[
+                tuple[str, str, str],
+                tuple[float | None, float | None, float | None, str],
+            ] = {}
+            if _table_exists(conn, "ops_position_snapshots"):
                 account_id_filter = scope.account_id if scope else None
                 if account_id_filter:
                     snap_rows = conn.execute(
-                        "SELECT ms.symbol, ms.mark_price, ms.captured_at "
-                        "FROM ops_market_snapshots ms "
-                        "INNER JOIN ("
-                        "  SELECT symbol, MAX(captured_at) AS max_cap "
-                        "  FROM ops_market_snapshots "
-                        "  WHERE account_id=? "
-                        "  GROUP BY symbol"
-                        ") latest ON ms.symbol=latest.symbol AND ms.captured_at=latest.max_cap "
-                        "WHERE ms.account_id=?",
-                        (account_id_filter, account_id_filter),
+                        "SELECT account_id, symbol, side, mark_price, unrealized_pnl, "
+                        "cum_realized_pnl, captured_at "
+                        "FROM ops_position_snapshots "
+                        "WHERE account_id=?",
+                        (account_id_filter,),
                     ).fetchall()
                 else:
                     snap_rows = conn.execute(
-                        "SELECT ms.symbol, ms.mark_price, ms.captured_at "
-                        "FROM ops_market_snapshots ms "
-                        "INNER JOIN ("
-                        "  SELECT symbol, MAX(captured_at) AS max_cap "
-                        "  FROM ops_market_snapshots "
-                        "  GROUP BY symbol"
-                        ") latest ON ms.symbol=latest.symbol AND ms.captured_at=latest.max_cap",
+                        "SELECT account_id, symbol, side, mark_price, unrealized_pnl, "
+                        "cum_realized_pnl, captured_at "
+                        "FROM ops_position_snapshots",
                     ).fetchall()
-                for sym, mp, cap in snap_rows:
-                    if mp is not None:
-                        mark_prices[sym] = (float(mp), cap)
+                for account_id, sym, side_snap, mp, upl, crpnl, cap in snap_rows:
+                    pos_snapshots[(account_id, sym, side_snap)] = (
+                        float(mp) if mp is not None else None,
+                        float(upl) if upl is not None else None,
+                        float(crpnl) if crpnl is not None else None,
+                        cap,
+                    )
         finally:
             conn.close()
 
         trade_rows = []
         for r in rows:
-            chain_id, symbol, side, state, sl_price, be_status = r[0], r[1], r[2], r[3], r[4], r[5]
-            entry_avg_price: float | None = r[6]
-            open_position_qty: float | None = r[7]
+            chain_id, account_id, symbol, side, state, sl_price, be_status = (
+                r[0], r[1], r[2], r[3], r[4], r[5], r[6]
+            )
+            entry_avg_price: float | None = r[7]
+            open_position_qty: float | None = r[8]
 
             mark_price: float | None = None
             mark_captured_at: str | None = None
             unrealized_pnl: float | None = None
+            cum_realized_pnl: float | None = None
 
-            snap = mark_prices.get(symbol)
+            snap = pos_snapshots.get((account_id, symbol, side))
             if snap is not None:
-                mark_price, mark_captured_at = snap
-                if (
+                mark_price, snapshot_upl, cum_realized_pnl, mark_captured_at = snap
+                if snapshot_upl is not None:
+                    unrealized_pnl = snapshot_upl
+                elif (
                     mark_price is not None
                     and entry_avg_price is not None
                     and open_position_qty is not None
@@ -455,6 +458,7 @@ class StatusQueries:
                 unrealized_pnl=unrealized_pnl,
                 mark_price=mark_price,
                 mark_captured_at=mark_captured_at,
+                cum_realized_pnl=cum_realized_pnl,
             ))
 
         # Compute freshness age of the most-recent snapshot across all displayed trades

@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from src.runtime_v2.control_plane.scope_resolver import QueryScope
 from src.runtime_v2.control_plane.status_queries import StatusQueries
 
 
@@ -286,3 +287,106 @@ def test_get_pnl_without_snapshot_returns_counts_only(ops_db):
     assert view.open_count == 1
     assert view.partial_count == 0
     assert view.waiting_entry_count == 0
+
+
+def test_get_open_trades_reads_live_position_snapshot_by_account_symbol_side(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(
+            conn,
+            60,
+            "OPEN",
+            symbol="BTC/USDT:USDT",
+            side="LONG",
+            account_id="main",
+        )
+        conn.execute(
+            "INSERT INTO ops_position_snapshots "
+            "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+            " cum_realized_pnl, source, captured_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            ("main", "BTC/USDT:USDT", "LONG", 0.1, 65000.0, 500.0, 25.0,
+             "bulk_position_sync", "2026-06-20T10:00:00+00:00"),
+        )
+        conn.execute(
+            "INSERT INTO ops_position_snapshots "
+            "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+            " cum_realized_pnl, source, captured_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            ("main", "BTC/USDT:USDT", "SHORT", 0.2, 64000.0, -100.0, 5.0,
+             "bulk_position_sync", "2026-06-20T10:01:00+00:00"),
+        )
+        conn.execute(
+            "INSERT INTO ops_position_snapshots "
+            "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+            " cum_realized_pnl, source, captured_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            ("secondary", "BTC/USDT:USDT", "LONG", 0.3, 99999.0, 999.0, 99.0,
+             "bulk_position_sync", "2026-06-20T10:02:00+00:00"),
+        )
+    conn.close()
+
+    view = StatusQueries(ops_db).get_open_trades(QueryScope(account_id="main", trader_ids=None))
+
+    assert len(view.rows) == 1
+    row = view.rows[0]
+    assert row.mark_price == pytest.approx(65000.0)
+    assert row.unrealized_pnl == pytest.approx(500.0)
+    assert row.cum_realized_pnl == pytest.approx(25.0)
+    assert row.mark_captured_at == "2026-06-20T10:00:00+00:00"
+
+
+def test_get_open_trades_falls_back_to_calculated_upl_when_snapshot_has_no_upl(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(
+            conn,
+            61,
+            "OPEN",
+            symbol="ETH/USDT:USDT",
+            side="SHORT",
+            account_id="main",
+        )
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, open_position_qty=? "
+            "WHERE trade_chain_id=?",
+            (3100.0, 1.0, 61),
+        )
+        conn.execute(
+            "INSERT INTO ops_position_snapshots "
+            "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+            " cum_realized_pnl, source, captured_at) "
+            "VALUES (?,?,?,?,?,?,?,?,?)",
+            ("main", "ETH/USDT:USDT", "SHORT", 1.0, 3000.0, None, None,
+             "bulk_position_sync", "2026-06-20T10:03:00+00:00"),
+        )
+    conn.close()
+
+    view = StatusQueries(ops_db).get_open_trades(QueryScope(account_id="main", trader_ids=None))
+
+    row = next(r for r in view.rows if r.chain_id == 61)
+    assert row.mark_price == pytest.approx(3000.0)
+    assert row.unrealized_pnl == pytest.approx(100.0)
+    assert row.cum_realized_pnl is None
+
+
+def test_get_open_trades_keeps_row_when_live_snapshot_missing(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(
+            conn,
+            62,
+            "OPEN",
+            symbol="SOL/USDT:USDT",
+            side="LONG",
+            account_id="main",
+        )
+    conn.close()
+
+    view = StatusQueries(ops_db).get_open_trades(QueryScope(account_id="main", trader_ids=None))
+
+    row = next(r for r in view.rows if r.chain_id == 62)
+    assert row.mark_price is None
+    assert row.unrealized_pnl is None
+    assert row.cum_realized_pnl is None

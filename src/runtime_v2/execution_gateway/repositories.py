@@ -1020,24 +1020,46 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def insert_position_snapshot(
+    def upsert_position_snapshot(
         self,
         *,
         account_id: str,
         symbol: str,
         side: str,
+        qty: float | None,
+        mark_price: float | None,
+        unrealized_pnl: float | None,
+        cum_realized_pnl: float | None,
         source: str,
-        payload: dict,
+        captured_at: str,
     ) -> None:
-        """Insert a row in ops_position_snapshots for audit/traceability."""
-        now = _now()
+        """Store the latest position snapshot for an account/symbol/side tuple."""
         conn = sqlite3.connect(self._db)
         try:
             conn.execute(
                 "INSERT INTO ops_position_snapshots "
-                "(account_id, symbol, side, source, payload_json, captured_at) "
-                "VALUES (?,?,?,?,?,?)",
-                (account_id, symbol, side, source, json.dumps(payload), now),
+                "("
+                "account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+                "cum_realized_pnl, source, captured_at"
+                ") VALUES (?,?,?,?,?,?,?,?,?) "
+                "ON CONFLICT(account_id, symbol, side) DO UPDATE SET "
+                "qty=excluded.qty, "
+                "mark_price=excluded.mark_price, "
+                "unrealized_pnl=excluded.unrealized_pnl, "
+                "cum_realized_pnl=excluded.cum_realized_pnl, "
+                "source=excluded.source, "
+                "captured_at=excluded.captured_at",
+                (
+                    account_id,
+                    symbol,
+                    side,
+                    qty,
+                    mark_price,
+                    unrealized_pnl,
+                    cum_realized_pnl,
+                    source,
+                    captured_at,
+                ),
             )
             conn.commit()
         finally:

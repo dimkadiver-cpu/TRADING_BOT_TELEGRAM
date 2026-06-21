@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 
 from src.runtime_v2.execution_gateway.models import (
     AdapterCapabilities,
@@ -10,6 +11,16 @@ from src.runtime_v2.execution_gateway.models import (
     RawAdapterOrder,
     RawMarketSnapshot,
 )
+
+
+@dataclass(frozen=True)
+class RawPositionLive:
+    symbol: str
+    side: str
+    qty: float
+    mark_price: float | None = None
+    unrealized_pnl: float | None = None
+    cum_realized_pnl: float | None = None
 
 
 class ExecutionAdapter(ABC):
@@ -97,5 +108,12 @@ class ExecutionAdapter(ABC):
         """Return a normalized market snapshot for lifecycle risk/audit, or None if unavailable."""
         return None
 
+    def fetch_all_positions(
+        self,
+        execution_account_id: str,
+    ) -> list[RawPositionLive] | None:
+        """Return normalized live positions for the whole account, or None if unavailable."""
+        return None
 
-__all__ = ["ExecutionAdapter"]
+
+__all__ = ["ExecutionAdapter", "RawPositionLive"]

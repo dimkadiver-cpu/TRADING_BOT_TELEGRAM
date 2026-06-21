@@ -380,7 +380,88 @@ def _insert_open_chain(db_path, chain_id, symbol, side, open_qty):
     conn.close()
 
 
-def test_position_reconciliation_emits_close_full_filled(ops_db):
+def test_bulk_position_sync_writes_snapshot_rows(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [
+            RawPositionLive(
+                symbol="BTCUSDT",
+                side="LONG",
+                qty=0.5,
+                mark_price=70123.4,
+                unrealized_pnl=12.3,
+                cum_realized_pnl=4.5,
+            ),
+            RawPositionLive(
+                symbol="ETHUSDT",
+                side="SHORT",
+                qty=1.25,
+                mark_price=3512.6,
+                unrealized_pnl=-3.2,
+                cum_realized_pnl=8.9,
+            ),
+        ]
+    )
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    count = worker.run_bulk_position_sync()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+        "cum_realized_pnl, source "
+        "FROM ops_position_snapshots ORDER BY symbol, side"
+    ).fetchall()
+    conn.close()
+    assert rows == [
+        ("acc", "BTCUSDT", "LONG", 0.5, 70123.4, 12.3, 4.5, "bulk_position_sync"),
+        ("acc", "ETHUSDT", "SHORT", 1.25, 3512.6, -3.2, 8.9, "bulk_position_sync"),
+    ]
+
+
+def test_bulk_position_sync_returns_zero_when_adapter_returns_none(ops_db):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    adapter = MagicMock()
+    adapter.fetch_all_positions.return_value = None
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    count = worker.run_bulk_position_sync()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    snapshot_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_position_snapshots"
+    ).fetchone()[0]
+    event_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events"
+    ).fetchone()[0]
+    conn.close()
+    assert snapshot_count == 0
+    assert event_count == 0
+
+
+def test_bulk_position_sync_emits_close_full_filled_for_zero_qty_position(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
@@ -389,17 +470,19 @@ def test_position_reconciliation_emits_close_full_filled(ops_db):
 
     adapter = FakeAdapter(positions={})  # position qty = None for unknown keys → returns None
     # Override so BTC/USDT:USDT:long returns 0.0
-    adapter._positions["BTC/USDT:USDT:long"] = 0.0
+    adapter.set_position_live(
+        [RawPositionLive(symbol="BTC/USDT:USDT", side="long", qty=0.0)]
+    )
     repo = GatewayCommandRepository(ops_db)
     worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter,
                                      repo=repo, execution_account_id="acc")
 
     # First run: deferred — no reduce trade confirms the close, need consecutive confirmation.
-    first = worker.run_position_reconciliation()
+    first = worker.run_bulk_position_sync()
     assert first == 0
 
     # Second run: confirmed → emits CLOSE_FULL_FILLED.
-    count = worker.run_position_reconciliation()
+    count = worker.run_bulk_position_sync()
 
     assert count == 1
     conn = sqlite3.connect(ops_db)
@@ -411,22 +494,26 @@ def test_position_reconciliation_emits_close_full_filled(ops_db):
     assert events[0][0] == "CLOSE_FULL_FILLED"
     payload = json.loads(events[0][1])
     assert payload["filled_qty"] == 0.01
-    assert payload["source"] == "position_reconciliation"
+    assert payload["source"] == "bulk_position_sync"
 
 
-def test_position_reconciliation_no_event_if_position_still_open(ops_db):
+def test_bulk_position_sync_no_event_if_position_still_open(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     _insert_open_chain(ops_db, 21, "ETH/USDT:USDT", "long", 0.5)
 
-    adapter = FakeAdapter(positions={"ETH/USDT:USDT:long": 0.5})
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="ETH/USDT:USDT", side="long", qty=0.5)]
+    )
     repo = GatewayCommandRepository(ops_db)
     worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter,
                                      repo=repo, execution_account_id="acc")
 
-    count = worker.run_position_reconciliation()
+    count = worker.run_bulk_position_sync()
 
     assert count == 0
     conn = sqlite3.connect(ops_db)
@@ -435,19 +522,64 @@ def test_position_reconciliation_no_event_if_position_still_open(ops_db):
     assert event_count == 0
 
 
-def test_position_reconciliation_idempotent(ops_db):
+def test_bulk_position_sync_upserts_position_snapshot_when_details_available(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain(ops_db, 24, "BTCUSDT", "LONG", 0.5)
+
+    adapter = MagicMock()
+    adapter.fetch_all_positions.return_value = [
+        RawPositionLive(symbol="BTCUSDT", side="LONG", qty=0.5)
+    ]
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db,
+        adapter=adapter,
+        repo=repo,
+        execution_account_id="acc",
+    )
+
+    count = worker.run_bulk_position_sync()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT account_id, symbol, side, qty, mark_price, unrealized_pnl, "
+        "cum_realized_pnl, source "
+        "FROM ops_position_snapshots"
+    ).fetchone()
+    conn.close()
+    assert row == (
+        "acc",
+        "BTCUSDT",
+        "LONG",
+        0.5,
+        None,
+        None,
+        None,
+        "bulk_position_sync",
+    )
+
+
+def test_bulk_position_sync_idempotent(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     _insert_open_chain(ops_db, 22, "SOL/USDT:USDT", "short", 10.0)
-    adapter = FakeAdapter(positions={"SOL/USDT:USDT:short": 0.0})
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="SOL/USDT:USDT", side="short", qty=0.0)]
+    )
     repo = GatewayCommandRepository(ops_db)
     worker = ExchangeEventSyncWorker(ops_db_path=ops_db, adapter=adapter,
                                      repo=repo, execution_account_id="acc")
 
-    worker.run_position_reconciliation()
-    worker.run_position_reconciliation()
+    worker.run_bulk_position_sync()
+    worker.run_bulk_position_sync()
 
     conn = sqlite3.connect(ops_db)
     count = conn.execute(
@@ -457,13 +589,17 @@ def test_position_reconciliation_idempotent(ops_db):
     assert count == 1
 
 
-def test_position_reconciliation_second_run_reports_zero_new_items(ops_db):
+def test_bulk_position_sync_second_run_reports_zero_new_items(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
 
     _insert_open_chain(ops_db, 23, "XRP/USDT:USDT", "long", 100.0)
-    adapter = FakeAdapter(positions={"XRP/USDT:USDT:long": 0.0})
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="XRP/USDT:USDT", side="long", qty=0.0)]
+    )
     repo = GatewayCommandRepository(ops_db)
     worker = ExchangeEventSyncWorker(
         ops_db_path=ops_db,
@@ -472,9 +608,9 @@ def test_position_reconciliation_second_run_reports_zero_new_items(ops_db):
         execution_account_id="acc",
     )
 
-    first = worker.run_position_reconciliation()   # deferred (zero_count=1)
-    second = worker.run_position_reconciliation()  # emits (zero_count=2)
-    third = worker.run_position_reconciliation()   # idempotent (already CLOSED)
+    first = worker.run_bulk_position_sync()   # deferred (zero_count=1)
+    second = worker.run_bulk_position_sync()  # emits (zero_count=2)
+    third = worker.run_bulk_position_sync()   # idempotent (already CLOSED)
 
     assert first == 0
     assert second == 1
@@ -1053,7 +1189,8 @@ def test_run_reconciliation_marks_done_even_when_ws_already_inserted_event(ops_d
     assert len(wake_calls) == 1
 
 
-def test_position_reconciliation_records_fill_price_and_fee_from_rest(ops_db):
+def test_bulk_position_sync_records_fill_price_and_fee_from_rest(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
@@ -1061,7 +1198,7 @@ def test_position_reconciliation_records_fill_price_and_fee_from_rest(ops_db):
     _insert_open_chain(ops_db, 99, "BTCUSDT", "LONG", 0.131)
 
     adapter = FakeAdapter()
-    adapter._positions["BTCUSDT:LONG"] = 0.0
+    adapter.set_position_live([RawPositionLive(symbol="BTCUSDT", side="LONG", qty=0.0)])
     adapter.simulate_reduce_trade(
         "BTCUSDT",
         "LONG",
@@ -1078,7 +1215,7 @@ def test_position_reconciliation_records_fill_price_and_fee_from_rest(ops_db):
         repo=repo,
         execution_account_id="acc",
     )
-    n = worker.run_position_reconciliation()
+    n = worker.run_bulk_position_sync()
     assert n == 1
 
     conn = sqlite3.connect(ops_db)
@@ -1093,10 +1230,11 @@ def test_position_reconciliation_records_fill_price_and_fee_from_rest(ops_db):
     assert payload["fill_price"] == pytest.approx(73345.8)
     assert payload["exec_fee"] == pytest.approx(5.76)
     assert payload["fee_rate"] == pytest.approx(5.76 / (73345.8 * 0.131))
-    assert payload["source"] == "position_reconciliation"
+    assert payload["source"] == "bulk_position_sync"
 
 
-def test_position_reconciliation_falls_back_to_none_when_no_reduce_trades(ops_db):
+def test_bulk_position_sync_falls_back_to_none_when_no_reduce_trades(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
     from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
@@ -1104,7 +1242,7 @@ def test_position_reconciliation_falls_back_to_none_when_no_reduce_trades(ops_db
     _insert_open_chain(ops_db, 100, "ETHUSDT", "LONG", 1.0)
 
     adapter = FakeAdapter()
-    adapter._positions["ETHUSDT:LONG"] = 0.0
+    adapter.set_position_live([RawPositionLive(symbol="ETHUSDT", side="LONG", qty=0.0)])
 
     repo = GatewayCommandRepository(ops_db)
     worker = ExchangeEventSyncWorker(
@@ -1114,9 +1252,9 @@ def test_position_reconciliation_falls_back_to_none_when_no_reduce_trades(ops_db
         execution_account_id="acc",
     )
     # No reduce trade: first run defers, second run emits with fill_price=None.
-    first = worker.run_position_reconciliation()
+    first = worker.run_bulk_position_sync()
     assert first == 0
-    n = worker.run_position_reconciliation()
+    n = worker.run_bulk_position_sync()
     assert n == 1
 
     conn = sqlite3.connect(ops_db)
@@ -1394,7 +1532,7 @@ def test_funding_reconciliation_resolves_cross_account_chains(ops_db):
     assert row[0] == 82  # attributed to the worker's own account chain
 
 
-def test_position_reconciliation_ignores_other_account_chains(ops_db):
+def test_bulk_position_sync_ignores_other_account_chains(ops_db):
     """Worker for account 'acc' must not synthesize a close for a chain owned by
     another account: its adapter would report qty=0 for a position that lives
     on a different subaccount."""
@@ -1405,7 +1543,7 @@ def test_position_reconciliation_ignores_other_account_chains(ops_db):
     adapter = FakeAdapter(positions={"ETHUSDT:LONG": 0.0})
     worker = _make_funding_worker(ops_db, adapter)  # execution_account_id="acc"
 
-    count = worker.run_position_reconciliation()
+    count = worker.run_bulk_position_sync()
 
     assert count == 0
     conn = sqlite3.connect(ops_db)

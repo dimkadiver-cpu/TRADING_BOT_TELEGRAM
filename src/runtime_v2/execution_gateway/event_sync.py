@@ -90,39 +90,41 @@ class ExchangeEventSyncWorker:
 
         return processed
 
-    def run_position_reconciliation(self) -> int:
-        """Detect positions closed externally on the exchange (manual close or missed TP/SL)."""
+    def run_bulk_position_sync(self) -> int:
+        """Sync live positions in bulk and detect externally closed chains."""
+        positions = self._adapter.fetch_all_positions(self._execution_account_id)
+        if positions is None:
+            return 0
+
+        captured_at = datetime.now(timezone.utc).isoformat()
+        live_by_symbol_side = {}
+        for pos in positions:
+            self._repo.upsert_position_snapshot(
+                account_id=self._execution_account_id,
+                symbol=pos.symbol,
+                side=pos.side,
+                qty=pos.qty,
+                mark_price=pos.mark_price,
+                unrealized_pnl=pos.unrealized_pnl,
+                cum_realized_pnl=pos.cum_realized_pnl,
+                source="bulk_position_sync",
+                captured_at=captured_at,
+            )
+            live_by_symbol_side[(pos.symbol, pos.side)] = pos
+
         chains = self._get_open_chains()
         processed = 0
         for chain_id, symbol, side, open_qty in chains:
             try:
-                if hasattr(self._adapter, "get_position_qty_with_details"):
-                    qty, pos_details = self._adapter.get_position_qty_with_details(
-                        symbol=symbol,
-                        side=side,
-                        execution_account_id=self._execution_account_id,
-                    )
-                    if qty is not None:
-                        self._repo.insert_position_snapshot(
-                            account_id=self._execution_account_id,
-                            symbol=symbol,
-                            side=side,
-                            source="rest_reconciliation",
-                            payload=pos_details,
-                        )
-                else:
-                    qty = self._adapter.get_position_qty(
-                        symbol=symbol,
-                        side=side,
-                        execution_account_id=self._execution_account_id,
-                    )
-                if qty is None:
-                    self._position_zero_count.pop(chain_id, None)
-                    continue
+                live_pos = live_by_symbol_side.get((symbol, side))
+                qty = 0.0 if live_pos is None else float(live_pos.qty)
                 if qty > 0.0:
                     self._position_zero_count.pop(chain_id, None)
                     continue
-                if qty == 0.0 and open_qty > 0.0:
+                if open_qty <= 0.0:
+                    self._position_zero_count.pop(chain_id, None)
+                    continue
+                if qty == 0.0:
                     # Skip synthetic close if a real fill event already exists.
                     # The lifecycle will close the chain from the WS/REST fill path.
                     if self._repo.real_close_fill_exists(chain_id):
@@ -144,7 +146,7 @@ class ExchangeEventSyncWorker:
                             fill_price, exec_fee, fee_rate = _reduce_trade_stats(trades)
                         except Exception:
                             logger.warning(
-                                "could not fetch fill price for reconciliation close: chain=%s",
+                                "could not fetch fill price for bulk position sync close: chain=%s",
                                 chain_id,
                             )
 
@@ -173,20 +175,21 @@ class ExchangeEventSyncWorker:
                         "fill_price": fill_price,
                         "exec_fee": exec_fee,
                         "fee_rate": fee_rate,
-                        "source": "position_reconciliation",
+                        "source": "bulk_position_sync",
                     })
                     inserted = self._repo.insert_exchange_event(
                         chain_id, "CLOSE_FULL_FILLED", payload, idem_key
                     )
                     if inserted:
                         logger.info(
-                            "externally closed position detected: chain=%s %s %s qty=%s fill_price=%s",
+                            "externally closed position detected from bulk sync: "
+                            "chain=%s %s %s qty=%s fill_price=%s",
                             chain_id, symbol, side, open_qty, fill_price,
                         )
                         self._wake()
                         processed += 1
             except Exception:
-                logger.exception("position reconciliation error for chain %s", chain_id)
+                logger.exception("bulk position sync error for chain %s", chain_id)
         return processed
 
     def run_trade_based_reconciliation(self) -> int:

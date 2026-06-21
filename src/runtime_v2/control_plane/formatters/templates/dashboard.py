@@ -8,12 +8,14 @@ from src.runtime_v2.control_plane.formatters._blocks import (
     TemplateConfig,
 )
 from src.runtime_v2.control_plane.formatters._formatters import (
+    num,
     money_signed,
 )
 from src.runtime_v2.control_plane.formatters.templates._shared import (
     _cmd_header,
-    _render_trade_item,
     _side_emoji_str,
+    _pnl_str,
+    _protection_str,
 )
 
 
@@ -34,6 +36,37 @@ def _dash_header(emoji: str, view_key: str) -> list:
 # ---------------------------------------------------------------------------
 # ATTIVI view
 # ---------------------------------------------------------------------------
+
+def _render_dashboard_trade_item(row: dict, i: int, p: dict) -> list[str]:
+    chain_id = row.get("chain_id", "?")
+    symbol = row.get("symbol_display", row.get("symbol", "?"))
+    side = row.get("side", "?")
+    state = row.get("state", "?")
+    emoji = _side_emoji_str(side)
+    entry_price = row.get("entry_avg_price")
+    qty = row.get("open_position_qty")
+
+    line1 = f"#{chain_id}  {emoji} {symbol}  {side}   {state}"
+    parts2 = []
+    if entry_price is not None:
+        parts2.append(f"Entry: {num(entry_price)}")
+    parts2.append(_protection_str(row))
+    line2 = "    " + "  ".join(parts2) if parts2 else ""
+
+    parts3 = []
+    if qty is not None:
+        parts3.append(f"Qty: {num(qty)}")
+    parts3.append(_pnl_str(row))
+    cum_realized_pnl = row.get("cum_realized_pnl")
+    if cum_realized_pnl is not None and cum_realized_pnl != 0:
+        parts3.append(f"Real: {money_signed(cum_realized_pnl)}")
+    line3 = "    " + "  ".join(parts3)
+
+    result = [line1]
+    if line2.strip():
+        result.append(line2)
+    result.append(line3)
+    return result
 
 _ATTIVI_FRESHNESS_WARNING = ConditionalBlock(
     condition=lambda p: bool(p.get("_mark_stale")),
@@ -56,7 +89,7 @@ _ATTIVI_BLOCKS: list = [
     ),
     ConditionalBlock(
         condition=lambda p: bool(p.get("rows")),
-        blocks=[ListBlock(key="rows", item_renderer=_render_trade_item)],
+        blocks=[ListBlock(key="rows", item_renderer=_render_dashboard_trade_item)],
     ),
     _ATTIVI_FRESHNESS_WARNING,
 ]

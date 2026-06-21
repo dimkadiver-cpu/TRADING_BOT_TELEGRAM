@@ -21,7 +21,7 @@ class WebsocketConfig(BaseModel):
     enabled: bool = False
     poll_fallback_enabled: bool = True
     poll_fallback_period_seconds: int = 60
-    position_reconciliation_interval_seconds: int = 600
+    position_live_snapshot_interval_seconds: int = 60
 
 
 class ExecutionStrategyConfig(BaseModel):
