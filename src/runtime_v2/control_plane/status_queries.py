@@ -25,6 +25,7 @@ class StatusView:
     pending_commands: int
     failed_commands: int
     no_sl_count: int
+    by_account: list[dict] | None = None
 
 
 @dataclass
@@ -62,6 +63,16 @@ class TradesView:
 
 
 @dataclass
+class TradeEvent:
+    label: str
+    timestamp: str
+    source: str | None = None
+    event_type: str | None = None
+    reason: str | None = None
+    clean_log_link: str | None = None
+
+
+@dataclass
 class TradeDetail:
     chain_id: int
     symbol: str
@@ -72,7 +83,19 @@ class TradeDetail:
     entry_avg_price: float | None
     current_stop_price: float | None
     original_message_link: str | None = None
+    # Legacy — kept for backward compatibility with code not yet migrated
     last_events: list[str] = field(default_factory=list)
+    # New spec fields
+    events: list[TradeEvent] = field(default_factory=list)
+    entry_legs: list[dict] = field(default_factory=list)   # [{"price": str, "status": str}]
+    tp_legs: list[dict] = field(default_factory=list)
+    sl_price: str | None = None
+    has_be: bool = False
+    unrealized_pnl: float | None = None
+    cum_realized_pnl: float | None = None
+    final_result: dict | None = None  # {roi_net, ror, r_mult, pnl_net, pnl_gross, fees, funding}
+    is_actionable: bool = False
+    is_terminal: bool = False
 
 
 @dataclass
@@ -505,9 +528,9 @@ class StatusQueries:
                 ).fetchone()
             if row is None:
                 return None
-            events = conn.execute(
-                "SELECT created_at, event_type FROM ops_lifecycle_events "
-                "WHERE trade_chain_id=? ORDER BY event_id DESC LIMIT 3",
+            events_rows = conn.execute(
+                "SELECT created_at, event_type, payload_json FROM ops_lifecycle_events "
+                "WHERE trade_chain_id=? ORDER BY event_id ASC",
                 (chain_id,),
             ).fetchall()
             original_message_link = _build_telegram_message_link(row[11], row[12])
@@ -516,15 +539,111 @@ class StatusQueries:
                 current_stop_price = _extract_stop_price(row[10], row[9], row[8])
         finally:
             conn.close()
-        last_events = []
-        for created_at, etype in reversed(events):
-            hhmm = created_at[11:16] if created_at and len(created_at) >= 16 else ""
-            last_events.append(f"{hhmm} {etype}".strip())
+
+        _EVENT_LABEL_MAP = {
+            "SIGNAL_ACCEPTED": "SIGNAL ACCEPTED",
+            "ENTRY_OPENED": "ENTRY OPENED",
+            "ENTRY_PARTIALLY_FILLED": "ENTRY PARTIALLY FILLED",
+            "TP_FILLED": "TP1 FILLED",
+            "SL_MOVED_TO_BE": "SL MOVED TO BE",
+            "UPDATE_DONE": "UPDATE DONE",
+            "REVIEW_REQUIRED": "REVIEW REQUIRED",
+            "POSITION_CLOSED": "POSITION CLOSED",
+            "POSITION_CANCELLED": "POSITION CANCELLED",
+        }
+        structured_events: list[TradeEvent] = []
+        for created_at, etype, payload_json in events_rows:
+            label = _EVENT_LABEL_MAP.get(etype, etype.replace("_", " ") if etype else "EVENT")
+            ts = ""
+            if created_at and len(created_at) >= 16:
+                try:
+                    dt = datetime.fromisoformat(created_at.rstrip("Z"))
+                    ts = dt.strftime("%-d %b %H:%M:%S")
+                except Exception:
+                    try:
+                        dt = datetime.fromisoformat(created_at[:19])
+                        ts = dt.strftime("%d %b %H:%M:%S").lstrip("0")
+                    except Exception:
+                        ts = created_at[11:19] if len(created_at) >= 19 else created_at
+            source_val = None
+            event_type_val = None
+            reason_val = None
+            if payload_json:
+                try:
+                    pdata = json.loads(payload_json)
+                    source_val = pdata.get("source")
+                    event_type_val = pdata.get("update_type") or pdata.get("type")
+                    reason_val = pdata.get("reason") or pdata.get("error")
+                except Exception:
+                    pass
+            structured_events.append(TradeEvent(
+                label=label,
+                timestamp=ts,
+                source=source_val,
+                event_type=event_type_val,
+                reason=reason_val,
+                clean_log_link=None,
+            ))
+
+        # Legacy last_events (backward compat) — last 3, oldest first
+        last_events_legacy = [
+            f"{ev.timestamp} {ev.label}".strip() for ev in structured_events[-3:]
+        ] if structured_events else []
+
+        # Determine trade state flags
+        _TERMINAL_STATES = {"CLOSED", "CANCELLED_UNFILLED", "POSITION_CLOSED"}
+        _ACTIONABLE_STATES = {"OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY",
+                              "REVIEW_REQUIRED", "PARTIALLY_FILLED", "CLOSE_PENDING"}
+        state_val = row[5]
+        is_terminal = state_val in _TERMINAL_STATES
+        is_actionable = state_val in _ACTIONABLE_STATES
+
+        # Build entry_legs and tp_legs from management_plan_json
+        entry_legs: list[dict] = []
+        tp_legs: list[dict] = []
+        sl_price_str: str | None = None
+        has_be = False
+
+        try:
+            plan = json.loads(row[8] or "{}")
+            entries_raw = plan.get("entries") or plan.get("entry_levels") or []
+            for e in entries_raw:
+                price = e.get("price") or e.get("entry_price")
+                status = e.get("status", "pending")
+                if price is not None:
+                    entry_legs.append({"price": str(price), "status": status})
+            tps_raw = plan.get("tp_levels") or plan.get("take_profits") or []
+            for t in tps_raw:
+                price = t.get("price") or t.get("tp_price")
+                status = t.get("status", "pending")
+                if price is not None:
+                    tp_legs.append({"price": str(price), "status": status})
+        except Exception:
+            pass
+
+        if current_stop_price is not None:
+            sl_price_str = str(
+                int(current_stop_price)
+                if current_stop_price == int(current_stop_price)
+                else current_stop_price
+            )
+
         return TradeDetail(
             chain_id=row[0], symbol=row[1], side=row[2], trader_id=row[3],
-            account_id=row[4], state=row[5], entry_avg_price=row[6],
-            current_stop_price=current_stop_price, original_message_link=original_message_link,
-            last_events=last_events,
+            account_id=row[4], state=state_val, entry_avg_price=row[6],
+            current_stop_price=current_stop_price,
+            original_message_link=original_message_link,
+            last_events=last_events_legacy,
+            events=structured_events,
+            entry_legs=entry_legs,
+            tp_legs=tp_legs,
+            sl_price=sl_price_str,
+            has_be=has_be,
+            unrealized_pnl=None,
+            cum_realized_pnl=None,
+            final_result=None,
+            is_actionable=is_actionable,
+            is_terminal=is_terminal,
         )
 
     def get_health(self) -> HealthView:
@@ -1003,9 +1122,39 @@ class StatusQueries:
             conn.close()
         return count
 
+    def get_status_by_account(self, accounts: list[str]) -> list[dict]:
+        """Per ogni account, ritorna conteggi open/waiting/failed per il breakdown global scope."""
+        conn = self._connect()
+        try:
+            result = []
+            for acc in accounts:
+                open_c = conn.execute(
+                    "SELECT COUNT(*) FROM ops_trade_chains "
+                    "WHERE lifecycle_state='OPEN' AND account_id=?", (acc,)
+                ).fetchone()[0]
+                waiting_c = conn.execute(
+                    "SELECT COUNT(*) FROM ops_trade_chains "
+                    "WHERE lifecycle_state='WAITING_ENTRY' AND account_id=?", (acc,)
+                ).fetchone()[0]
+                failed_c = conn.execute(
+                    "SELECT COUNT(*) FROM ops_execution_commands ec "
+                    "JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
+                    "WHERE ec.status='FAILED' AND t.account_id=?", (acc,)
+                ).fetchone()[0]
+                result.append({
+                    "account_id": acc,
+                    "open_count": open_c,
+                    "waiting_count": waiting_c,
+                    "failed_commands": failed_c,
+                })
+        finally:
+            conn.close()
+        return result
+
 
 __all__ = [
-    "StatusQueries", "StatusView", "TradesView", "TradeRow", "CloseCandidate", "TradeDetail",
+    "StatusQueries", "StatusView", "TradesView", "TradeRow", "CloseCandidate",
+    "TradeEvent", "TradeDetail",
     "HealthView", "ControlView", "BlockInfo", "ReviewsView", "ReviewItem",
     "PnlView", "StatsView", "StatsRow", "ClosedTradesView", "ClosedTradeRow",
     "BlockedTradesView", "BlockedTradeRow",

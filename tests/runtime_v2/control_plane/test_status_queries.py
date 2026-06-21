@@ -390,3 +390,127 @@ def test_get_open_trades_keeps_row_when_live_snapshot_missing(ops_db):
     assert row.mark_price is None
     assert row.unrealized_pnl is None
     assert row.cum_realized_pnl is None
+
+
+# ---------------------------------------------------------------------------
+# Task 1: TradeEvent + TradeDetail extended fields + StatusView.by_account
+# ---------------------------------------------------------------------------
+
+def test_trade_event_dataclass():
+    from src.runtime_v2.control_plane.status_queries import TradeEvent
+    ev = TradeEvent(
+        label="SIGNAL ACCEPTED",
+        timestamp="14 Jun 09:10:00",
+        source="Signal",
+        event_type=None,
+        reason=None,
+        clean_log_link=None,
+    )
+    assert ev.label == "SIGNAL ACCEPTED"
+    assert ev.source == "Signal"
+    assert ev.clean_log_link is None
+
+
+def test_trade_detail_has_events_list(ops_db):
+    from src.runtime_v2.control_plane.status_queries import StatusQueries, TradeEvent
+    conn = sqlite3.connect(ops_db)
+    _add_chain(conn, 99, "OPEN")
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (99, 'ENTRY_OPENED', 'system', '{}', 'k_ev99', '2024-06-14T09:10:00Z')"
+    )
+    conn.commit()
+    conn.close()
+    q = StatusQueries(ops_db)
+    detail = q.get_trade(99)
+    assert detail is not None
+    assert hasattr(detail, "events")
+    assert isinstance(detail.events, list)
+    if detail.events:
+        ev = detail.events[0]
+        assert isinstance(ev, TradeEvent)
+        assert ev.label  # not empty
+
+
+def test_trade_detail_extended_fields(ops_db):
+    from src.runtime_v2.control_plane.status_queries import StatusQueries
+    conn = sqlite3.connect(ops_db)
+    _add_chain(conn, 100, "OPEN", sl=62000.0)
+    conn.commit()
+    conn.close()
+    q = StatusQueries(ops_db)
+    detail = q.get_trade(100)
+    assert detail is not None
+    assert hasattr(detail, "is_actionable")
+    assert hasattr(detail, "is_terminal")
+    assert hasattr(detail, "has_be")
+    assert hasattr(detail, "entry_legs")
+    assert hasattr(detail, "tp_legs")
+    assert isinstance(detail.is_actionable, bool)
+    assert isinstance(detail.is_terminal, bool)
+
+
+def test_trade_detail_last_events_backward_compat(ops_db):
+    """last_events list[str] must still be present for backward compatibility."""
+    from src.runtime_v2.control_plane.status_queries import StatusQueries
+    conn = sqlite3.connect(ops_db)
+    _add_chain(conn, 101, "OPEN")
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (101, 'ENTRY_OPENED', 'system', '{}', 'k_ev101', '2024-06-14T09:10:00Z')"
+    )
+    conn.commit()
+    conn.close()
+    q = StatusQueries(ops_db)
+    detail = q.get_trade(101)
+    assert detail is not None
+    assert hasattr(detail, "last_events")
+    assert isinstance(detail.last_events, list)
+
+
+def test_status_view_has_by_account():
+    from src.runtime_v2.control_plane.status_queries import StatusView
+    sv = StatusView(
+        updated_at="00:00:00",
+        control_mode="NONE",
+        new_entries_enabled=True,
+        sync_age_seconds=None,
+        open_count=0,
+        partial_count=0,
+        waiting_entry_count=0,
+        review_count=0,
+        pending_commands=0,
+        failed_commands=0,
+        no_sl_count=0,
+    )
+    assert hasattr(sv, "by_account")
+    assert sv.by_account is None
+
+
+def test_get_status_by_account(ops_db):
+    from src.runtime_v2.control_plane.status_queries import StatusQueries
+    conn = sqlite3.connect(ops_db)
+    _add_chain(conn, 200, "OPEN", account_id="acc_a")
+    _add_chain(conn, 201, "OPEN", account_id="acc_a")
+    _add_chain(conn, 202, "WAITING_ENTRY", account_id="acc_a")
+    _add_chain(conn, 203, "OPEN", account_id="acc_b")
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(trade_chain_id, command_type, status, idempotency_key, created_at, updated_at) "
+        "VALUES (200,'PLACE_ENTRY','FAILED','k200',?,?)", (_now(), _now()),
+    )
+    conn.commit()
+    conn.close()
+    q = StatusQueries(ops_db)
+    result = q.get_status_by_account(["acc_a", "acc_b"])
+    assert isinstance(result, list)
+    assert len(result) == 2
+    acc_a = next(r for r in result if r["account_id"] == "acc_a")
+    acc_b = next(r for r in result if r["account_id"] == "acc_b")
+    assert acc_a["open_count"] == 2
+    assert acc_a["waiting_count"] == 1
+    assert acc_a["failed_commands"] == 1
+    assert acc_b["open_count"] == 1
+    assert acc_b["waiting_count"] == 0
