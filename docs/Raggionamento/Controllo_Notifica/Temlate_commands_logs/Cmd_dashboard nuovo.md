@@ -63,8 +63,7 @@ Source: Signal
 Entry: 63,500 ✓ · 63,200 × · 62,800 ×
 TP:    64,000 ✓ · 65,200 · 66,500
 SL:    62,000 · BE: Yes
-uPnL:  +34.20 USDT
-rPnL:  +14.20 USDT
+uPnL:  +34.20 USDT  rPnL:  +14.20 USDT
 
 Actions: /trade 5 · /cancel 5 · /close 5
 - - - - - - - - - - - - - - - - - - - -

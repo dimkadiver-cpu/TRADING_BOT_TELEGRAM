@@ -81,9 +81,9 @@ class ExecutionRuntime:
     sync_workers: dict[str, ExchangeEventSyncWorker] | None = None
     ws_watchers: dict[str, BybitWsFillWatcher] | None = None
     reconciliation_intervals: dict[str, int] | None = None
-    position_reconciliation_intervals: dict[str, int] | None = None
+    position_live_snapshot_intervals: dict[str, int] | None = None
     poll_fallback_by_account: dict[str, bool] | None = None
-    position_reconciliation_interval_seconds: int = 600
+    position_live_snapshot_interval_seconds: int = 600
     poll_fallback_enabled: bool = True
     adapter_contexts: dict[str, AdapterExecutionContext] | None = None
 
@@ -182,7 +182,7 @@ def _build_execution_runtime(
     sync_workers: dict[str, ExchangeEventSyncWorker] = {}
     ws_watchers: dict[str, BybitWsFillWatcher] = {}
     reconciliation_intervals: dict[str, int] = {}
-    position_reconciliation_intervals: dict[str, int] = {}
+    position_live_snapshot_intervals: dict[str, int] = {}
     poll_fallback_by_account: dict[str, bool] = {}
     account_adapter_map: dict[str, str] = {}   # account_id → adapter_name
     adapter_cfg_map: dict[str, object] = {}    # adapter_name → AdapterConfig
@@ -212,7 +212,7 @@ def _build_execution_runtime(
         account_adapter_map[account_id] = route_adapter_name
         adapter_cfg_map[route_adapter_name] = route_adapter_cfg
         poll_fallback_by_account[account_id] = route_adapter_cfg.websocket.poll_fallback_enabled
-        position_reconciliation_intervals[account_id] = (
+        position_live_snapshot_intervals[account_id] = (
             route_adapter_cfg.websocket.position_live_snapshot_interval_seconds
         )
 
@@ -326,9 +326,9 @@ def _build_execution_runtime(
         sync_workers=sync_workers,
         ws_watchers=ws_watchers,
         reconciliation_intervals=reconciliation_intervals,
-        position_reconciliation_intervals=position_reconciliation_intervals,
+        position_live_snapshot_intervals=position_live_snapshot_intervals,
         poll_fallback_by_account=poll_fallback_by_account,
-        position_reconciliation_interval_seconds=adapter_cfg.websocket.position_live_snapshot_interval_seconds,
+        position_live_snapshot_interval_seconds=adapter_cfg.websocket.position_live_snapshot_interval_seconds,
         poll_fallback_enabled=adapter_cfg.websocket.poll_fallback_enabled,
         adapter_contexts=adapter_contexts,
     )

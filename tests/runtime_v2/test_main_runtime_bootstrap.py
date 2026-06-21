@@ -206,7 +206,7 @@ def test_build_execution_runtime_creates_sync_workers_and_watchers_for_all_route
         "main": 45,
         "account_nuovo": 60,
     }
-    assert runtime.position_reconciliation_intervals == {
+    assert runtime.position_live_snapshot_intervals == {
         "main": 60,
         "account_nuovo": 90,
     }
@@ -481,7 +481,7 @@ def test_close_execution_runtime_stops_all_watchers_and_closes_all_adapters():
             "bybit_nuovo": routed_adapter,
         },
         reconciliation_intervals={"main": 45, "account_nuovo": 60},
-        position_reconciliation_intervals={"main": 60, "account_nuovo": 90},
+        position_live_snapshot_intervals={"main": 60, "account_nuovo": 90},
         poll_fallback_by_account={"main": True, "account_nuovo": True},
     )
 
@@ -523,7 +523,7 @@ def test_run_reconciliation_periodically_uses_configured_interval():
     sync_worker.run_reconciliation.assert_not_called()
 
 
-def test_execution_runtime_has_position_reconciliation_interval():
+def test_execution_runtime_has_position_live_snapshot_interval():
     from main import ExecutionRuntime
     from unittest.mock import MagicMock
     rt = ExecutionRuntime(
@@ -532,10 +532,10 @@ def test_execution_runtime_has_position_reconciliation_interval():
         sync_worker=MagicMock(),
         ws_watcher=None,
         reconciliation_interval_seconds=None,
-        position_reconciliation_interval_seconds=120,
+        position_live_snapshot_interval_seconds=120,
         poll_fallback_enabled=False,
     )
-    assert rt.position_reconciliation_interval_seconds == 120
+    assert rt.position_live_snapshot_interval_seconds == 120
     assert rt.poll_fallback_enabled is False
 
 
