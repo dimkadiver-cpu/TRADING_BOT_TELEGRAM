@@ -47,11 +47,41 @@ def _build_scope_meta(scope: QueryScope) -> dict:
     return {"account_id": scope.account_id, "trader_id": trader_id}
 
 
+def _human_duration(seconds: float | None) -> str:
+    """Convert a duration in seconds to a human-readable string like '2h 34m'."""
+    if seconds is None or seconds < 0:
+        return "—"
+    seconds = int(seconds)
+    if seconds < 60:
+        return f"{seconds}s"
+    minutes = seconds // 60
+    if minutes < 60:
+        return f"{minutes}m"
+    hours = minutes // 60
+    rem_minutes = minutes % 60
+    if rem_minutes == 0:
+        return f"{hours}h"
+    return f"{hours}h {rem_minutes}m"
+
+
+def _parse_duration(created_at: str | None, closed_at: str | None) -> str:
+    """Compute human-readable duration between two ISO timestamps."""
+    if not created_at or not closed_at:
+        return "—"
+    try:
+        dt_start = datetime.fromisoformat(created_at.rstrip("Z"))
+        dt_end = datetime.fromisoformat(closed_at.rstrip("Z"))
+        delta = (dt_end - dt_start).total_seconds()
+        return _human_duration(delta)
+    except Exception:
+        return "—"
+
+
 # ---------------------------------------------------------------------------
 # Per-view payload builders
 # ---------------------------------------------------------------------------
 
-def _build_attivi_payload(
+def _build_active_payload(
     scope: QueryScope,
     queries: StatusQueries,
     page: int,
@@ -64,6 +94,11 @@ def _build_attivi_payload(
     # Paginate
     start = page * page_size
     page_rows = rows[start: start + page_size]
+
+    # page_display
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page_display = f"{page + 1}/{total_pages}"
+    is_global = scope.account_id is None
 
     # Mark snapshot staleness
     mark_stale = False
@@ -100,14 +135,26 @@ def _build_attivi_payload(
             "cum_realized_pnl": r.cum_realized_pnl,
             "mark_price": r.mark_price,
             "mark_captured_at": r.mark_captured_at,
+            # For global scope: trader_id and account_id must be in row dict.
+            # TradeRow does not carry them — use scope values as fallback;
+            # for global scope they will be "?" unless the query returns them.
+            "trader_id": getattr(r, "trader_id", None) or (
+                (scope.trader_ids[0] if scope.trader_ids and len(scope.trader_ids) == 1 else None)
+            ),
+            "account_id": getattr(r, "account_id", None) or scope.account_id,
         }
         for r in page_rows
     ]
 
     payload = {
         **_build_scope_meta(scope),
+        "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
         "rows": row_dicts,
+        "total": total,
+        "page_display": page_display,
+        "filters_str": None,
+        "is_global": is_global,
         "_mark_stale": mark_stale,
         "_mark_time": mark_time,
         "_mark_age": mark_age,
@@ -115,13 +162,28 @@ def _build_attivi_payload(
     return payload, total
 
 
-def _build_chiusi_payload(
+# Backward-compat alias
+def _build_attivi_payload(
+    scope: QueryScope,
+    queries: StatusQueries,
+    page: int,
+    page_size: int,
+) -> tuple[dict, int]:
+    return _build_active_payload(scope, queries, page, page_size)
+
+
+def _build_closed_payload(
     scope: QueryScope,
     queries: StatusQueries,
     page: int,
     page_size: int,
 ) -> tuple[dict, int]:
     view = queries.get_closed_trades(scope, page=page, page_size=page_size)
+
+    total = view.total_count
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page_display = f"{page + 1}/{total_pages}"
+    is_global = scope.account_id is None
 
     row_dicts = [
         {
@@ -130,40 +192,82 @@ def _build_chiusi_payload(
             "side": r.side,
             "closed_at": r.closed_at,
             "gross_pnl": r.gross_pnl,
+            "closed_reason": getattr(r, "closed_reason", None),
+            "duration": getattr(r, "duration", None) or _parse_duration(
+                getattr(r, "created_at", None),
+                r.closed_at,
+            ),
+            "trader_id": getattr(r, "trader_id", None),
+            "account_id": getattr(r, "account_id", None) or scope.account_id,
         }
         for r in view.rows
     ]
 
     payload = {
         **_build_scope_meta(scope),
+        "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
         "rows": row_dicts,
+        "total": total,
+        "page_display": page_display,
+        "filters_str": None,
+        "is_global": is_global,
     }
     return payload, view.total_count
 
 
-def _build_bloccati_payload(
+# Backward-compat alias
+def _build_chiusi_payload(
+    scope: QueryScope,
+    queries: StatusQueries,
+    page: int,
+    page_size: int,
+) -> tuple[dict, int]:
+    return _build_closed_payload(scope, queries, page, page_size)
+
+
+def _build_blocked_payload(
     scope: QueryScope,
     queries: StatusQueries,
 ) -> tuple[dict, int]:
     view = queries.get_blocked_trades(scope)
 
+    total = len(view.rows)
+    is_global = scope.account_id is None
+
     row_dicts = [
         {
             "chain_id": r.chain_id,
             "symbol": r.symbol,
+            "side": getattr(r, "side", "?"),
             "state": r.state,
             "reason": r.reason,
+            "blocked_at": getattr(r, "blocked_at", None),
+            "trader_id": getattr(r, "trader_id", None),
+            "account_id": getattr(r, "account_id", None) or scope.account_id,
         }
         for r in view.rows
     ]
 
     payload = {
         **_build_scope_meta(scope),
+        "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
         "rows": row_dicts,
+        "total": total,
+        "page_display": "1/1",
+        "filters_str": None,
+        "is_global": is_global,
     }
-    return payload, len(view.rows)
+    return payload, total
+
+
+# Backward-compat alias
+def _build_bloccati_payload(
+    scope: QueryScope,
+    queries: StatusQueries,
+) -> tuple[dict, int]:
+    return _build_blocked_payload(scope, queries)
 
 
 def _build_pnl_payload(
@@ -174,7 +278,12 @@ def _build_pnl_payload(
 
     payload = {
         **_build_scope_meta(scope),
+        "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
+        "total": 0,
+        "page_display": "1/1",
+        "filters_str": None,
+        "is_global": scope.account_id is None,
         "equity_usdt": view.equity_usdt,
         "available_balance_usdt": view.available_balance_usdt,
         "total_margin_used_usdt": view.total_margin_used_usdt,
@@ -206,7 +315,12 @@ def _build_stats_payload(
 
     payload = {
         **_build_scope_meta(scope),
+        "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
+        "total": 0,
+        "page_display": "1/1",
+        "filters_str": None,
+        "is_global": scope.account_id is None,
         "stats_rows": stats_rows,
         "best_chain_id": view.best_chain_id,
         "best_pnl": view.best_pnl,
@@ -232,21 +346,31 @@ def format_dashboard_view(
     """Render the text of a dashboard view.
 
     Returns (text, total_count) where total_count is used for pagination.
+    Accepts both English names (active/closed/blocked) and legacy Italian names
+    (attivi/chiusi/bloccati) for backward compatibility with existing tests.
     """
-    template_key = f"dashboard_{view_name}"
+    # Normalize legacy Italian names to English
+    _name_map = {
+        "attivi": "active",
+        "chiusi": "closed",
+        "bloccati": "blocked",
+    }
+    normalized = _name_map.get(view_name, view_name)
+
+    template_key = f"dashboard_{normalized}"
     template = DASHBOARD_TEMPLATE_REGISTRY.get(template_key)
     if template is None:
         raise ValueError(f"Unknown dashboard view: {view_name!r}")
 
-    if view_name == "attivi":
-        payload, total = _build_attivi_payload(scope, queries, page, page_size)
-    elif view_name == "chiusi":
-        payload, total = _build_chiusi_payload(scope, queries, page, page_size)
-    elif view_name == "bloccati":
-        payload, total = _build_bloccati_payload(scope, queries)
-    elif view_name == "pnl":
+    if normalized == "active":
+        payload, total = _build_active_payload(scope, queries, page, page_size)
+    elif normalized == "closed":
+        payload, total = _build_closed_payload(scope, queries, page, page_size)
+    elif normalized == "blocked":
+        payload, total = _build_blocked_payload(scope, queries)
+    elif normalized == "pnl":
         payload, total = _build_pnl_payload(scope, queries)
-    elif view_name == "stats":
+    elif normalized == "stats":
         payload, total = _build_stats_payload(scope, queries)
     else:
         raise ValueError(f"Unknown dashboard view: {view_name!r}")
@@ -267,15 +391,16 @@ def build_dashboard_keyboard(
 ):
     """Build InlineKeyboardMarkup for the dashboard.
 
-    current_view: "attivi", "chiusi", "bloccati", "pnl", "stats"
+    current_view: "active", "closed", "blocked", "pnl", "stats"
     page: 0-based current page
     total_count: total items (for pagination row)
     page_size: items per page (default 5)
 
-    Row 1: [⚡ Attivi]  [✅ Chiusi]  [🚫 Bloccati]
+    Row 1: [⚡ Active]  [✅ Closed]  [🚫 Blocked]
     Row 2: [💰 PnL]    [📉 Stats]   [🔄 Refresh]
-    Row 3 (conditional, only if total_count > page_size):
-      [← Prec] (se page>0) | [Pagina N/M] (noop) | [Succ →] (se non ultima pagina)
+    Row 3: [🔎 Filters]  [🧹 Clear]
+    Row 4 (conditional, only if total_count > page_size):
+      [← Prev] (if page>0) | [Page N/M] (noop) | [Next →] (if not last page)
 
     Lazy import of telegram to avoid breaking tests without python-telegram-bot.
     """
@@ -285,17 +410,21 @@ def build_dashboard_keyboard(
         return InlineKeyboardButton(label, callback_data=f"view:{view}")
 
     row1 = [
-        _tab("⚡ Attivi", "attivi"),
-        _tab("✅ Chiusi", "chiusi"),
-        _tab("🚫 Bloccati", "bloccati"),
+        _tab("⚡ Active",  "active"),
+        _tab("✅ Closed",  "closed"),
+        _tab("🚫 Blocked", "blocked"),
     ]
     row2 = [
         _tab("💰 PnL", "pnl"),
         _tab("📉 Stats", "stats"),
         InlineKeyboardButton("🔄 Refresh", callback_data="refresh"),
     ]
+    row3 = [
+        InlineKeyboardButton("🔎 Filters", callback_data="filters"),
+        InlineKeyboardButton("🧹 Clear", callback_data="clear"),
+    ]
 
-    keyboard = [row1, row2]
+    keyboard = [row1, row2, row3]
 
     if total_count > page_size:
         total_pages = (total_count + page_size - 1) // page_size
@@ -303,19 +432,19 @@ def build_dashboard_keyboard(
 
         if page > 0:
             pagination_row.append(
-                InlineKeyboardButton("← Prec", callback_data="page:prev")
+                InlineKeyboardButton("← Prev", callback_data="page:prev")
             )
 
         pagination_row.append(
             InlineKeyboardButton(
-                f"Pagina {page + 1}/{total_pages}",
+                f"Page {page + 1}/{total_pages}",
                 callback_data="noop",
             )
         )
 
         if page < total_pages - 1:
             pagination_row.append(
-                InlineKeyboardButton("Succ →", callback_data="page:next")
+                InlineKeyboardButton("Next →", callback_data="page:next")
             )
 
         keyboard.append(pagination_row)

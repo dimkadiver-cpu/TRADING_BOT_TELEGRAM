@@ -11,6 +11,7 @@ import pytest
 
 from src.runtime_v2.control_plane.dashboard_manager import DashboardManager, _matches_scope
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
+from src.runtime_v2.control_plane.status_queries import StatusQueries
 
 
 # ---------------------------------------------------------------------------
@@ -163,7 +164,7 @@ async def test_create_saves_to_db(tmp_path):
     assert row[0] == 99, f"message_id should be 99, got {row[0]}"
     assert row[1] == "acc1"
     assert row[2] is None  # account-level scope
-    assert row[3] == "attivi:0"
+    assert row[3] == "active:0"  # English view name after migration
 
 
 # ---------------------------------------------------------------------------
@@ -278,7 +279,7 @@ async def test_handle_callback_view(tmp_path):
     fake_query = MagicMock()
     fake_query.message = fake_message
 
-    await manager.handle_callback(fake_query, "view:chiusi")
+    await manager.handle_callback(fake_query, "view:closed")
 
     # Verify DB updated
     conn = sqlite3.connect(manager._db)
@@ -288,7 +289,7 @@ async def test_handle_callback_view(tmp_path):
     conn.close()
 
     assert row is not None
-    assert row[0] == "chiusi:0", f"Expected 'chiusi:0', got {row[0]!r}"
+    assert row[0] == "closed:0", f"Expected 'closed:0', got {row[0]!r}"
 
 
 # ---------------------------------------------------------------------------
@@ -375,3 +376,45 @@ async def test_on_trade_event_triggers_global_dashboard(tmp_path):
     await manager.on_trade_event(account_id="account_Z", trader_id="trader_z")
 
     manager._bot.edit_message_text.assert_awaited_once()
+
+
+# ---------------------------------------------------------------------------
+# Test 8: DashboardManager migrates Italian view names to English on boot
+# ---------------------------------------------------------------------------
+
+def test_dashboard_naming_migration(tmp_path):
+    """DashboardManager migrates 'attivi:0' → 'active:0' on boot (_ensure_table)."""
+    db_path = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db_path)
+    conn.execute("""
+        CREATE TABLE ops_dashboard_messages (
+            chat_id INTEGER NOT NULL,
+            thread_id INTEGER NOT NULL DEFAULT 0,
+            message_id INTEGER NOT NULL,
+            scope_account_id TEXT,
+            scope_trader_id TEXT,
+            current_view TEXT NOT NULL DEFAULT 'attivi:0',
+            updated_at TEXT,
+            PRIMARY KEY (chat_id, thread_id)
+        )
+    """)
+    conn.execute("INSERT INTO ops_dashboard_messages VALUES (1,0,42,NULL,NULL,'attivi:0',NULL)")
+    conn.execute("INSERT INTO ops_dashboard_messages VALUES (2,0,43,NULL,NULL,'chiusi:2',NULL)")
+    conn.execute("INSERT INTO ops_dashboard_messages VALUES (3,0,44,NULL,NULL,'bloccati:0',NULL)")
+    conn.commit()
+    conn.close()
+
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(spec=StatusQueries),
+        bot=None,
+    )
+    conn2 = sqlite3.connect(db_path)
+    rows = conn2.execute(
+        "SELECT chat_id, current_view FROM ops_dashboard_messages ORDER BY chat_id"
+    ).fetchall()
+    conn2.close()
+    assert rows[0][1] == "active:0"
+    assert rows[1][1] == "closed:2"
+    assert rows[2][1] == "blocked:0"

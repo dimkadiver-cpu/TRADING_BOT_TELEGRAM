@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 _THROTTLE_SECONDS = 5.0
-_DEFAULT_VIEW = "attivi"
+_DEFAULT_VIEW = "active"
 _DEFAULT_PAGE = 0
 _PAGE_SIZE = 5
 
@@ -122,7 +122,7 @@ class DashboardManager:
                         message_id        INTEGER NOT NULL,
                         scope_account_id  TEXT,
                         scope_trader_id   TEXT,
-                        current_view      TEXT NOT NULL DEFAULT 'attivi:0',
+                        current_view      TEXT NOT NULL DEFAULT 'active:0',
                         updated_at        TEXT,
                         PRIMARY KEY (chat_id, thread_id)
                     );
@@ -136,6 +136,21 @@ class DashboardManager:
                     """
                 )
                 logger.info("ops_dashboard_messages migrated: scope_account_id no longer NOT NULL")
+
+            # Migration IT→EN: rename legacy Italian view names to English
+            conn.execute(
+                """
+                UPDATE ops_dashboard_messages
+                SET current_view = REPLACE(REPLACE(REPLACE(current_view,
+                    'attivi', 'active'),
+                    'chiusi', 'closed'),
+                    'bloccati', 'blocked')
+                WHERE current_view LIKE '%attivi%'
+                   OR current_view LIKE '%chiusi%'
+                   OR current_view LIKE '%bloccati%'
+                """
+            )
+            conn.commit()
         finally:
             conn.close()
 

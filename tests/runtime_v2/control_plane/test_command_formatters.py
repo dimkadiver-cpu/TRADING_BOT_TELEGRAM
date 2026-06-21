@@ -322,8 +322,8 @@ def test_template_registry_contains_all_keys():
         "close_all_preview", "close_all_result_ok", "close_all_result_cancelled",
         "close_single_preview", "close_single_result_ok", "close_single_result_cancelled",
         "cancel_all_preview", "cancel_all_result_ok", "cancel_all_result_cancelled",
-        # dashboard
-        "dashboard_attivi", "dashboard_chiusi", "dashboard_bloccati",
+        # dashboard (English names after IT→EN migration)
+        "dashboard_active", "dashboard_closed", "dashboard_blocked",
         "dashboard_pnl", "dashboard_stats",
     }
     missing = expected_keys - set(TEMPLATE_REGISTRY.keys())

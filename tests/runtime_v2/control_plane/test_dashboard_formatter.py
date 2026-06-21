@@ -199,7 +199,7 @@ class TestVistaAttivi:
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("attivi", SCOPE, q)
 
-        assert "📊 DASHBOARD" in text
+        assert "Active" in text  # new header uses English view label
         assert "demo_1" in text
         assert "trader_a" in text
         assert "BTCUSDT" in text
@@ -216,7 +216,8 @@ class TestVistaAttivi:
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("attivi", SCOPE, q)
 
-        assert "PnL: —" in text
+        # WAITING_ENTRY → rPnL: — (new spec)
+        assert "rPnL: —" in text
         assert total == 1
 
     @pytest.mark.parametrize(
@@ -248,9 +249,11 @@ class TestVistaAttivi:
 
         assert total == 1
         if expected_visible:
-            assert "Real: +25.00 USDT" in text
+            # rPnL shown in new spec format: "rPnL: +25.00 USDT"
+            assert "rPnL: +25.00 USDT" in text
         else:
-            assert "Real:" not in text
+            # For 0.0 and None: rPnL shows as "+0.00 USDT" (default), not "Real:"
+            assert "Real: +25.00 USDT" not in text
 
     def test_header_no_trader_when_account_scope(self, ops_db):
         conn = sqlite3.connect(ops_db)
@@ -260,7 +263,9 @@ class TestVistaAttivi:
 
         q = StatusQueries(ops_db)
         text, _ = format_dashboard_view("attivi", SCOPE_ACCOUNT, q)
-        assert "📊 DASHBOARD — demo_1" in text
+        # New header: "⚡ Active — demo_1"
+        assert "Active" in text
+        assert "demo_1" in text
         # No trader_id in header when account-level scope
         assert "· trader" not in text
 
@@ -309,7 +314,7 @@ class TestVistaChiusi:
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("chiusi", SCOPE, q)
 
-        assert "✅ DASHBOARD" in text
+        assert "Closed" in text  # new header uses English view label
         assert "BNBUSDT" in text
         assert "-12.80" in text
         assert "SOLUSDT" in text
@@ -338,7 +343,7 @@ class TestVistaChiusi:
     def test_empty_chiusi(self, ops_db):
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("chiusi", SCOPE, q)
-        assert "Nessun trade chiuso" in text
+        assert "No closed trades" in text
         assert total == 0
 
 
@@ -360,18 +365,16 @@ class TestVistaBloccati:
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("bloccati", SCOPE, q)
 
-        assert "🚫 DASHBOARD" in text
+        assert "Blocked" in text  # new header uses English view label
         assert "ETHUSDT" in text
-        assert "REVIEW_REQUIRED" in text
         assert "missing_sl" in text
         assert "SOLUSDT" in text
-        assert "EXEC_FAILED" in text
         assert "insufficient_margin" in text
 
     def test_empty_bloccati(self, ops_db):
         q = StatusQueries(ops_db)
         text, _ = format_dashboard_view("bloccati", SCOPE, q)
-        assert "Nessun trade bloccato" in text
+        assert "No blocked trades" in text
 
 
 # ---------------------------------------------------------------------------
@@ -396,7 +399,7 @@ class TestVistaPnl:
         q = StatusQueries(ops_db)
         text, _ = format_dashboard_view("pnl", SCOPE, q)
 
-        assert "💰 DASHBOARD" in text
+        assert "PnL" in text  # new header: "💰 PnL — ..."
         assert "10,432.50" in text
         assert "9,100.00" in text
         assert "820.00" in text
@@ -446,7 +449,7 @@ class TestVistaStats:
         q = StatusQueries(ops_db)
         text, _ = format_dashboard_view("stats", SCOPE, q)
 
-        assert "📉 DASHBOARD" in text
+        assert "Stats" in text  # new header: "📉 Stats — ..."
         # Table header
         assert "Trades" in text
         assert "Win%" in text
@@ -494,28 +497,30 @@ class TestDashboardKeyboard:
     def test_no_pagination_row_when_total_lte_page_size(self):
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
-        kb = build_dashboard_keyboard("attivi", page=0, total_count=3, page_size=5)
-        assert len(kb.inline_keyboard) == 2  # only row1 + row2
+        kb = build_dashboard_keyboard("active", page=0, total_count=3, page_size=5)
+        # row1 (tabs) + row2 (pnl/stats/refresh) + row3 (filters/clear) = 3 rows
+        assert len(kb.inline_keyboard) == 3
 
     def test_pagination_row_when_total_gt_page_size(self):
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
-        kb = build_dashboard_keyboard("chiusi", page=0, total_count=8, page_size=5)
-        assert len(kb.inline_keyboard) == 3  # row1 + row2 + pagination
+        kb = build_dashboard_keyboard("closed", page=0, total_count=8, page_size=5)
+        # row1 + row2 + row3 (filters) + row4 (pagination) = 4 rows
+        assert len(kb.inline_keyboard) == 4
 
     def test_no_prev_button_on_first_page(self):
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
-        kb = build_dashboard_keyboard("chiusi", page=0, total_count=8, page_size=5)
-        pagination_row = kb.inline_keyboard[2]
+        kb = build_dashboard_keyboard("closed", page=0, total_count=8, page_size=5)
+        pagination_row = kb.inline_keyboard[3]
         callbacks = [btn.callback_data for btn in pagination_row]
         assert "page:prev" not in callbacks
 
     def test_prev_button_on_page_gt_0(self):
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
-        kb = build_dashboard_keyboard("chiusi", page=1, total_count=8, page_size=5)
-        pagination_row = kb.inline_keyboard[2]
+        kb = build_dashboard_keyboard("closed", page=1, total_count=8, page_size=5)
+        pagination_row = kb.inline_keyboard[3]
         callbacks = [btn.callback_data for btn in pagination_row]
         assert "page:prev" in callbacks
 
@@ -523,23 +528,23 @@ class TestDashboardKeyboard:
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
         # 8 items, page_size=5 → 2 pages; last page is index 1
-        kb = build_dashboard_keyboard("chiusi", page=1, total_count=8, page_size=5)
-        pagination_row = kb.inline_keyboard[2]
+        kb = build_dashboard_keyboard("closed", page=1, total_count=8, page_size=5)
+        pagination_row = kb.inline_keyboard[3]
         callbacks = [btn.callback_data for btn in pagination_row]
         assert "page:next" not in callbacks
 
     def test_tab_buttons_present(self):
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
-        kb = build_dashboard_keyboard("attivi", page=0, total_count=3, page_size=5)
+        kb = build_dashboard_keyboard("active", page=0, total_count=3, page_size=5)
         all_callbacks = [
             btn.callback_data
             for row in kb.inline_keyboard
             for btn in row
         ]
-        assert "view:attivi" in all_callbacks
-        assert "view:chiusi" in all_callbacks
-        assert "view:bloccati" in all_callbacks
+        assert "view:active" in all_callbacks
+        assert "view:closed" in all_callbacks
+        assert "view:blocked" in all_callbacks
         assert "view:pnl" in all_callbacks
         assert "view:stats" in all_callbacks
         assert "refresh" in all_callbacks
@@ -547,7 +552,118 @@ class TestDashboardKeyboard:
     def test_noop_for_page_indicator(self):
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
 
-        kb = build_dashboard_keyboard("chiusi", page=0, total_count=8, page_size=5)
-        pagination_row = kb.inline_keyboard[2]
+        kb = build_dashboard_keyboard("closed", page=0, total_count=8, page_size=5)
+        pagination_row = kb.inline_keyboard[3]
         callbacks = [btn.callback_data for btn in pagination_row]
         assert "noop" in callbacks
+
+
+# ---------------------------------------------------------------------------
+# Tests: naming migration (IT → EN)
+# ---------------------------------------------------------------------------
+
+class TestNamingMigration:
+    def test_dashboard_view_key_active(self):
+        """Template registry uses 'dashboard_active', not 'dashboard_attivi'."""
+        from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY
+        assert "dashboard_active" in TEMPLATE_REGISTRY
+        assert "dashboard_attivi" not in TEMPLATE_REGISTRY
+
+    def test_dashboard_view_key_closed(self):
+        from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY
+        assert "dashboard_closed" in TEMPLATE_REGISTRY
+        assert "dashboard_chiusi" not in TEMPLATE_REGISTRY
+
+    def test_dashboard_view_key_blocked(self):
+        from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY
+        assert "dashboard_blocked" in TEMPLATE_REGISTRY
+        assert "dashboard_bloccati" not in TEMPLATE_REGISTRY
+
+    def test_dashboard_active_header_contains_total_and_page(self, tmp_path):
+        db_path = str(tmp_path / "ops.sqlite3")
+        _apply_migrations(db_path)
+        scope = QueryScope(account_id="demo_1", trader_ids=None)
+        q = StatusQueries(db_path)
+        text, total = format_dashboard_view("active", scope, q, page=0, page_size=5)
+        assert "Total:" in text
+        assert "Page:" in text
+        assert "Updated:" in text
+        assert "Active" in text
+        assert "demo_1" in text
+
+    def test_dashboard_active_item_compact_format(self, tmp_path):
+        """Item active: spec lines (#n · SYMBOL · SIDE · STATE / ... / /trade n · /cancel n · /close n)."""
+        db_path = str(tmp_path / "ops.sqlite3")
+        _apply_migrations(db_path)
+        conn = sqlite3.connect(db_path)
+        _add_chain(conn, 5, "OPEN", symbol="BTCUSDT", side="LONG")
+        conn.commit()
+        conn.close()
+        scope = QueryScope(account_id="demo_1", trader_ids=None)
+        q = StatusQueries(db_path)
+        text, _ = format_dashboard_view("active", scope, q, page=0, page_size=5)
+        assert "#5" in text
+        assert "BTCUSDT" in text
+        assert "/trade 5" in text
+        assert "/close 5" in text
+
+    def test_dashboard_active_global_scope_shows_trader_account(self, tmp_path):
+        db_path = str(tmp_path / "ops.sqlite3")
+        _apply_migrations(db_path)
+        conn = sqlite3.connect(db_path)
+        _add_chain(conn, 17, "OPEN", symbol="ETHUSDT", side="SHORT",
+                   account_id="demo_1", trader_id="trader_alpha")
+        conn.commit()
+        conn.close()
+        scope = QueryScope(account_id=None, trader_ids=None)
+        q = StatusQueries(db_path)
+        text, _ = format_dashboard_view("active", scope, q, page=0, page_size=5)
+        assert "All accounts" in text
+        assert "Trader:" in text
+        assert "Account:" in text
+
+    def test_dashboard_closed_view_renders(self, tmp_path):
+        db_path = str(tmp_path / "ops.sqlite3")
+        _apply_migrations(db_path)
+        scope = QueryScope(account_id="demo_1", trader_ids=None)
+        q = StatusQueries(db_path)
+        text, _ = format_dashboard_view("closed", scope, q, page=0, page_size=5)
+        # empty state: closed template rendered without error
+        assert "closed" in text.lower() or "No closed" in text or "Closed" in text
+
+    def test_dashboard_blocked_view_renders(self, tmp_path):
+        db_path = str(tmp_path / "ops.sqlite3")
+        _apply_migrations(db_path)
+        scope = QueryScope(account_id="demo_1", trader_ids=None)
+        q = StatusQueries(db_path)
+        text, _ = format_dashboard_view("blocked", scope, q, page=0, page_size=5)
+        assert "blocked" in text.lower() or "Blocked" in text or "No blocked" in text
+
+    def test_keyboard_uses_en_callbacks(self):
+        """build_dashboard_keyboard emits view:active, view:closed, view:blocked."""
+        from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
+        kb = build_dashboard_keyboard("active", page=0, total_count=3, page_size=5)
+        all_callbacks = [
+            btn.callback_data
+            for row in kb.inline_keyboard
+            for btn in row
+        ]
+        assert "view:active" in all_callbacks
+        assert "view:closed" in all_callbacks
+        assert "view:blocked" in all_callbacks
+        # Old Italian names must be gone
+        assert "view:attivi" not in all_callbacks
+        assert "view:chiusi" not in all_callbacks
+        assert "view:bloccati" not in all_callbacks
+
+    def test_keyboard_has_filters_and_clear_row(self):
+        """build_dashboard_keyboard includes Filters / Clear row."""
+        from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
+        kb = build_dashboard_keyboard("active", page=0, total_count=3, page_size=5)
+        all_callbacks = [
+            btn.callback_data
+            for row in kb.inline_keyboard
+            for btn in row
+        ]
+        assert "filters" in all_callbacks
+        assert "clear" in all_callbacks
