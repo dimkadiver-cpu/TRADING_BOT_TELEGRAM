@@ -60,7 +60,7 @@ Updated: 14:32:05
 #5  BTC/USDT  LONG  PARTIALLY_CLOSED
 Source: Signal
 
-Entry: 63,500 ✓ · 63,200 × · 62,800 ×
+Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗
 TP:    64,000 ✓ · 65,200 · 66,500
 SL:    62,000 · BE: Yes
 uPnL:  +34.20 USDT  rPnL:  +14.20 USDT
@@ -83,7 +83,7 @@ Legenda:
 
 ```text
 ✓ = Filled
-× = Cancelled
+✗ = Cancelled
 nessun simbolo = Pending
 ```
 
