@@ -553,7 +553,8 @@ class StatusQueries:
                     "t.lifecycle_state, t.entry_avg_price, t.current_stop_price, "
                     "t.management_plan_json, t.risk_snapshot_json, t.plan_state_json, "
                     "COALESCE(t.source_chat_id, rm.source_chat_id), "
-                    "COALESCE(t.telegram_message_id, rm.telegram_message_id) "
+                    "COALESCE(t.telegram_message_id, rm.telegram_message_id), "
+                    "t.be_protection_status "
                     "FROM ops_trade_chains t "
                     "LEFT JOIN raw_messages rm ON t.raw_message_id = rm.raw_message_id "
                     "WHERE t.trade_chain_id=?",
@@ -564,7 +565,8 @@ class StatusQueries:
                     "SELECT trade_chain_id, symbol, side, trader_id, account_id, "
                     "lifecycle_state, entry_avg_price, current_stop_price, "
                     "management_plan_json, risk_snapshot_json, plan_state_json, "
-                    "source_chat_id, telegram_message_id "
+                    "source_chat_id, telegram_message_id, "
+                    "be_protection_status "
                     "FROM ops_trade_chains WHERE trade_chain_id=?",
                     (chain_id,),
                 ).fetchone()
@@ -640,7 +642,7 @@ class StatusQueries:
         entry_legs: list[dict] = []
         tp_legs: list[dict] = []
         sl_price_str: str | None = None
-        has_be = False  # not populated: be_protection_status not in SELECT — extend query when needed
+        has_be = (row[13] == "PROTECTED") if row[13] is not None else False
 
         try:
             plan = json.loads(row[8] or "{}")

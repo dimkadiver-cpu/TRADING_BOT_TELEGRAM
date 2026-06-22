@@ -165,6 +165,19 @@ def test_trade_detail_not_found():
     assert format_trade_detail(None) == "Trade not found."
 
 
+def test_trade_detail_has_be_reflected_in_output():
+    """has_be=True must show SL: — · BE: <price>, not SL: <price> · BE: No."""
+    detail = _make_detail(
+        state="OPEN",
+        sl_price="63,500",
+        has_be=True,
+    )
+    text = format_trade_detail(detail)
+    assert "BE: 63,500" in text
+    assert "SL:    —" in text
+    assert "BE: No" not in text
+
+
 def test_format_health():
     view = HealthView(
         updated_at="14:32:10",
