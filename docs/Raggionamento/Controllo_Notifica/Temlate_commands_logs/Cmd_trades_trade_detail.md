@@ -263,7 +263,7 @@ TP:    64,000 ✓ · 65,200 · 66,500
 SL:    62,000 · BE: No
 uPnL:  +34.20 USDT  rPnL:  +14.20 USDT
 - - - - - - - - - - - - - - - - - - - -
-Actions: /cancel #5 · /close #5
+Actions: /cancel_5 · /close_5
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
@@ -302,7 +302,7 @@ Entry: 63,500 · 63,200 · 62,800
 TP:    64,000 · 65,200 · 66,500
 SL:    62,000 · BE: No
 - - - - - - - - - - - - - - - - - - - -
-Actions: /cancel #5 · /close #5
+Actions: /cancel_5 · /close_5
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
@@ -416,7 +416,7 @@ TP:    2,180 · 2,220
 SL:    —
 uPnL:  -3.20 USDT  rPnL:  0.00 USDT
 - - - - - - - - - - - - - - - - - - - -
-Actions: /close #7
+Actions: /close_7
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 11:50:00

@@ -181,15 +181,15 @@ Total: 10   Page: 1/2   Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-/trade #5 · /cancel #5 · /close #5
+/trade_5 · /cancel_5 · /close_5
 - - - - - - - - - - - - - - - - - - - -
 #6 · BTC/USDT · LONG · OPEN
 uPnL: +11.40 USDT  rPnL: +0.00 USDT
-/trade #6 · /cancel #6 · /close #6
+/trade_6 · /cancel_6 · /close_6
 - - - - - - - - - - - - - - - - - - - -
 #7 · SOL/USDT · LONG · WAITING_ENTRY
 rPnL: —
-/trade #7 · /cancel #7 · /close #7
+/trade_7 · /cancel_7 · /close_7
 ```
 
 ### Regole `Active`
@@ -217,17 +217,17 @@ Order: Updated desc
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 Trader: trader_devos_crypto · Account: demo_2
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-/trade #5 · /cancel #5 · /close #5
+/trade_5 · /cancel_5 · /close_5
 - - - - - - - - - - - - - - - - - - - -
 #17 · ETH/USDT · SHORT · OPEN
 Trader: trader_alpha · Account: demo_1
 uPnL: -3.20 USDT  rPnL: -0.20 USDT
-/trade #17 · /cancel #17 · /close #17
+/trade_17 · /cancel_17 · /close_17
 - - - - - - - - - - - - - - - - - - - -
 #22 · SOL/USDT · LONG · WAITING_ENTRY
 Trader: trader_beta · Account: demo_3
 rPnL: —
-/trade #22 · /cancel #22 · /close #22
+/trade_22 · /cancel_22 · /close_22
 ```
 
 ### Regole `Active` in global scope
