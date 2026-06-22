@@ -584,7 +584,10 @@ class StatusQueries:
 
         structured_events: list[TradeEvent] = []
         for created_at, etype, payload_json in events_rows:
-            label = _EVENT_LABEL_MAP.get(etype, etype.replace("_", " ") if etype else "EVENT")
+            # Only show user-facing events — skip internal lifecycle noise
+            if etype not in _EVENT_LABEL_MAP:
+                continue
+            label = _EVENT_LABEL_MAP[etype]
             ts = ""
             if created_at and len(created_at) >= 16:
                 try:
@@ -615,6 +618,13 @@ class StatusQueries:
                 reason=reason_val,
                 clean_log_link=None,
             ))
+
+        # Attach original message link to the first SIGNAL ACCEPTED event
+        if original_message_link:
+            for ev in structured_events:
+                if ev.label == "SIGNAL ACCEPTED":
+                    ev.clean_log_link = original_message_link
+                    break
 
         # Legacy last_events (backward compat) — last 3, oldest first
         last_events_legacy = [
