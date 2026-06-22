@@ -126,6 +126,14 @@ class FooterBlock:
 class TemplateConfig:
     blocks: list
     payload_transform: Callable[[dict], dict] | None = None
+    parse_mode: str | None = None
+
+
+@dataclass(frozen=True)
+class FormattedOutput:
+    """Carries both rendered text and the parse_mode required to send it."""
+    text: str
+    parse_mode: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -165,6 +173,12 @@ def render_template(
     lines: list[str] = []
     _render_blocks(blocks, p, lines)
     return _finalize(lines)
+
+
+def render_config(config: TemplateConfig, payload: dict) -> FormattedOutput:
+    """Render a TemplateConfig and return text + parse_mode as FormattedOutput."""
+    text = render_template(config.blocks, payload, transform=config.payload_transform)
+    return FormattedOutput(text=text, parse_mode=config.parse_mode)
 
 
 def _render_blocks(blocks: list, p: dict, lines: list[str]) -> None:
@@ -287,7 +301,7 @@ def _render_table(block: TableBlock, p: dict, lines: list[str]) -> None:
 __all__ = [
     "SeparatorBlock", "StaticBlock", "DerivedBlock", "HeaderBlock",
     "FieldBlock", "SectionBlock", "TableBlock", "ConditionalBlock", "BranchBlock",
-    "ListBlock", "FooterBlock", "TemplateConfig",
+    "ListBlock", "FooterBlock", "TemplateConfig", "FormattedOutput",
     "_SEP", "_BULLET",
-    "render_template",
+    "render_template", "render_config",
 ]

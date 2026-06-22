@@ -2,6 +2,61 @@
 
 ---
 
+## 2026-06-22 — Fix comandi `/trade N`, `/cancel N`, `/close N` da topic clean_log
+
+### Step completato
+
+Comandi dash (`trade_N`, `cancel_N`, `close_N`) ora autorizzati anche dai topic clean_log, non solo dal topic commands. Questo permette di usare questi comandi dalla dashboard pinnata in un topic clean_log.
+
+**Root cause:** `auth.py` aveva `_DASHBOARD_ALLOWED_FROM_CLEAN_LOG = frozenset({"dashboard"})` — solo `/dashboard` era permesso dai topic clean_log. I comandi dash venivano bloccati con `wrong_topic` prima di raggiungere il dispatch.
+
+**Fix:** Aggiunto `_DASH_ACTION_RE = re.compile(r'^(trade|cancel|close)_\d+$')` e aggiornata la condizione in `validate()` per permettere anche i match di questo pattern dai thread clean_log.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/auth.py` | Modificato | +regex `_DASH_ACTION_RE`, condizione elif aggiornata |
+
+### Validazione
+
+- Modifica logica puntuale, nessuna regressione di auth su commands topic (invariato).
+- Pattern `^(trade|cancel|close)_\d+$` copre tutti i comandi dash standard.
+
+### Rischi aperti
+
+- Nessun nuovo rischio introdotto. La whitelist per clean_log è ora `dashboard` + `trade/cancel/close_N`.
+
+---
+
+## 2026-06-22 — Bug fix multipli `/trade #n`: label eventi, ROI, clean_log links, HTML parse_mode
+
+### Step completato
+
+Implementati fix per tutti i bug osservati in `osservazioni.md`:
+
+1. **Label eventi corrette** — `PENDING_ENTRY_CANCELLED` → "ENTRY CANCELLED" (era "POSITION CANCELLED"); rimossa entry morta `SL_MOVED_TO_BE`; `STOP_MOVE_CONFIRMED` con `is_breakeven=True` mostra "UPDATE DONE" con `event_type_val="BE_MOVE"`; `SL_FILLED` con `close_reason="BREAKEVEN_AFTER_TP"` mostra "POSITION CLOSED"; `TP_FILLED` mostra "TP{level} FILLED".
+
+2. **ROI non n/a** — Query aggiornata per selezionare `peak_margin_used` (row[17]); calcolo ROI/RoR/R aggiunto.
+
+3. **Clean_log links** — Colonna `sent_message_id` aggiunta a `ops_notification_outbox` via runtime migration in `notification_dispatcher.py`; link recuperati per evento dalla tabella outbox in `get_trade()`; mapping `_LIFECYCLE_TO_CLEAN_LOG_NOTIF` aggiunto.
+
+4. **Links cliccabili (HTML)** — `parse_mode="HTML"` dichiarato in `TemplateConfig`; propagato via `render_config` → `FormattedOutput` → `_DispatchResult.parse_mode` → `send_kwargs`. `_render_event` usa `<a href="...">clean_log</a>` e `html.escape()` su tutti i campi dinamici.
+
+5. **`/cancel` su trade non WAITING_ENTRY** — Check cambiato da `trade.state != "WAITING_ENTRY"` a verifica entry_legs con status non filled/cancelled.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/status_queries.py` | Modificato | Label map, ROI calc, clean_log links query |
+| `src/runtime_v2/control_plane/notification_dispatcher.py` | Modificato | `sent_message_id` column, `_mark_sent` update |
+| `src/runtime_v2/control_plane/telegram_bot.py` | Modificato | `parse_mode` propagation, `/cancel` check |
+| `src/runtime_v2/control_plane/formatters/_blocks.py` | Modificato | `TemplateConfig.parse_mode`, `FormattedOutput`, `render_config` |
+| `src/runtime_v2/control_plane/formatters/trade_detail.py` | Modificato | HTML format, `html.escape()`, `render_config` |
+
+---
+
 ## 2026-06-22 — Fix template visivo `/trade #n`: allineamento al design doc
 
 ### Step completato

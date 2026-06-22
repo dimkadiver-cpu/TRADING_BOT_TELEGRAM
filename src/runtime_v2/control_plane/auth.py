@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass
 from typing import Literal
 
@@ -8,6 +9,7 @@ from src.runtime_v2.control_plane.models import ControlPlaneConfig
 AuthDecision = Literal["OK", "IGNORE", "REJECT_UNAUTHORIZED"]
 
 _DASHBOARD_ALLOWED_FROM_CLEAN_LOG = frozenset({"dashboard"})
+_DASH_ACTION_RE = re.compile(r'^(trade|cancel|close)_\d+$')
 
 
 @dataclass(frozen=True)
@@ -51,11 +53,11 @@ class AuthValidator:
         if self._delivery_mode == "supergroup_topics":
             if thread_id == self._commands_thread_id:
                 pass  # all commands allowed from commands topic
-            elif (
+            elif thread_id in self._clean_log_thread_ids and (
                 command_name in _DASHBOARD_ALLOWED_FROM_CLEAN_LOG
-                and thread_id in self._clean_log_thread_ids
+                or _DASH_ACTION_RE.match(command_name or "")
             ):
-                pass  # /dashboard allowed from any clean_log topic
+                pass  # /dashboard and trade/cancel/close_N allowed from any clean_log topic
             else:
                 return AuthResult("IGNORE", "wrong_topic")
 

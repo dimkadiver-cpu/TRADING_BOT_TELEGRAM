@@ -55,6 +55,7 @@ class TelegramBotSender:
         text: str,
         silent: bool = False,
         reply_to_message_id: str | None = None,
+        parse_mode: str | None = None,
     ) -> str | None:
         kwargs: dict = {
             "chat_id": chat_id,
@@ -65,6 +66,8 @@ class TelegramBotSender:
             kwargs["message_thread_id"] = thread_id
         if reply_to_message_id is not None:
             kwargs["reply_to_message_id"] = int(reply_to_message_id)
+        if parse_mode is not None:
+            kwargs["parse_mode"] = parse_mode
         msg = await self._bot.send_message(**kwargs)
         return str(msg.message_id)
 

@@ -106,6 +106,7 @@ class RouteResult:
     decision: str
     reply_text: str | None
     keyboard: object | None = None  # InlineKeyboardMarkup | None
+    parse_mode: str | None = None
 
 
 @dataclass(frozen=True)
@@ -114,6 +115,7 @@ class _DispatchResult:
     decision: str = "EXECUTED"
     reject_reason: str | None = None
     keyboard: object | None = None  # InlineKeyboardMarkup | None
+    parse_mode: str | None = None
 
 
 _READONLY_COMMANDS = frozenset(
@@ -288,7 +290,7 @@ class CommandRouter:
                 status=dispatch_result.decision,
                 reject_reason=dispatch_result.reject_reason,
             )
-            return RouteResult(dispatch_result.decision, dispatch_result.reply_text, dispatch_result.keyboard)
+            return RouteResult(dispatch_result.decision, dispatch_result.reply_text, dispatch_result.keyboard, dispatch_result.parse_mode)
         except Exception:
             logger.exception("command handler failed: %s", command_text)
             self._audit.update_status(request_id, status="FAILED")
@@ -543,7 +545,8 @@ class CommandRouter:
             chain_id = int(chain_id_str)
 
             if base_cmd == "trade":
-                return _DispatchResult(format_trade_detail(self._service.get_trade(chain_id)))
+                _td = format_trade_detail(self._service.get_trade(chain_id))
+                return _DispatchResult(_td.text, parse_mode=_td.parse_mode)
 
             trade = self._service.get_trade(chain_id)
             if trade is None:
@@ -836,6 +839,8 @@ class TelegramControlBot:
             send_kwargs["message_thread_id"] = message.message_thread_id
         if result.keyboard is not None:
             send_kwargs["reply_markup"] = result.keyboard
+        if result.parse_mode is not None:
+            send_kwargs["parse_mode"] = result.parse_mode
         try:
             await asyncio.wait_for(
                 context.bot.send_message(**send_kwargs),

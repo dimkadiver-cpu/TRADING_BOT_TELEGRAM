@@ -1,15 +1,17 @@
 from __future__ import annotations
 
+import html
 from datetime import datetime, timezone
 
 from src.runtime_v2.control_plane.formatters._blocks import (
     ConditionalBlock,
     DerivedBlock,
+    FormattedOutput,
     ListBlock,
     SeparatorBlock,
     StaticBlock,
     TemplateConfig,
-    render_template,
+    render_config,
 )
 from src.runtime_v2.control_plane.formatters._formatters import (
     money_signed,
@@ -31,23 +33,23 @@ def _fmt_leg(leg: dict) -> str:
 
 
 def _render_event(ev: dict, i: int, p: dict) -> list[str]:
-    label = ev.get("label", "EVENT")
-    ts = ev.get("timestamp", "")
+    label = html.escape(ev.get("label", "EVENT"))
+    ts = html.escape(ev.get("timestamp", ""))
     lines = [""] if i > 0 else []
     lines.append(f"• {label} · {ts}")
     if ev.get("event_type"):
-        lines.append(f"  Type: {ev['event_type']}")
+        lines.append(f"  Type: {html.escape(str(ev['event_type']))}")
     if ev.get("reason"):
-        lines.append(f"  Reason: {ev['reason']}")
+        lines.append(f"  Reason: {html.escape(str(ev['reason']))}")
     if ev.get("note"):
-        lines.append(f"  Note: {ev['note']}")
+        lines.append(f"  Note: {html.escape(str(ev['note']))}")
     source = ev.get("source")
     link = ev.get("clean_log_link")
     if source:
         if link:
-            lines.append(f"  Source: {source} → [clean_log]({link})")
+            lines.append(f"  Source: {html.escape(source)} → <a href=\"{link}\">clean_log</a>")
         else:
-            lines.append(f"  Source: {source}")
+            lines.append(f"  Source: {html.escape(source)}")
     return lines
 
 
@@ -77,8 +79,8 @@ _TRADE_DETAIL_BLOCKS: list = [
     ),
     SeparatorBlock(),
     # 2. Meta
-    DerivedBlock(text_fn=lambda p: f"Trader: {p['trader_id']}"),
-    DerivedBlock(text_fn=lambda p: f"Exchange Account: {p['account_id']}"),
+    DerivedBlock(text_fn=lambda p: f"Trader: {html.escape(str(p['trader_id']))}"),
+    DerivedBlock(text_fn=lambda p: f"Exchange Account: {html.escape(str(p['account_id']))}"),
     DerivedBlock(text_fn=lambda p: f"Updated: {p['updated_at']}"),
     SeparatorBlock(),
     # 3. Order structure
@@ -191,12 +193,12 @@ _TRADE_DETAIL_BLOCKS: list = [
     ),
 ]
 
-_TEMPLATE_TRADE_DETAIL = TemplateConfig(_TRADE_DETAIL_BLOCKS, payload_transform=None)
+_TEMPLATE_TRADE_DETAIL = TemplateConfig(_TRADE_DETAIL_BLOCKS, payload_transform=None, parse_mode="HTML")
 
 
-def format_trade_detail(detail: TradeDetail | None) -> str:
+def format_trade_detail(detail: TradeDetail | None) -> FormattedOutput:
     if detail is None:
-        return "Trade not found."
+        return FormattedOutput(text="Trade not found.")
 
     updated_at = datetime.now(timezone.utc).strftime("%H:%M:%S")
 
@@ -232,7 +234,7 @@ def format_trade_detail(detail: TradeDetail | None) -> str:
         "is_terminal": detail.is_terminal,
         "events": events_payload,
     }
-    return render_template(_TEMPLATE_TRADE_DETAIL.blocks, payload)
+    return render_config(_TEMPLATE_TRADE_DETAIL, payload)
 
 
 __all__ = ["format_trade_detail"]
