@@ -202,7 +202,7 @@ class TestVistaAttivi:
         assert "Active" in text  # new header uses English view label
         assert "demo_1" in text
         assert "trader_a" in text
-        assert "BTCUSDT" in text
+        assert "BTC/USDT" in text
         assert "OPEN" in text
         assert "+12.40" in text  # (64740 - 63500) * 0.01 * 1 = 12.40
         assert total == 1
@@ -280,13 +280,13 @@ class TestVistaAttivi:
         text, total = format_dashboard_view("attivi", SCOPE_ACCOUNT, q, page=0, page_size=5)
         assert total == 7
         # Page 0 has 5 items
-        assert "COIN1USDT" in text
-        assert "COIN5USDT" in text
-        assert "COIN6USDT" not in text
+        assert "COIN1/USDT" in text
+        assert "COIN5/USDT" in text
+        assert "COIN6/USDT" not in text
 
         text2, _ = format_dashboard_view("attivi", SCOPE_ACCOUNT, q, page=1, page_size=5)
-        assert "COIN6USDT" in text2
-        assert "COIN7USDT" in text2
+        assert "COIN6/USDT" in text2
+        assert "COIN7/USDT" in text2
 
 
 # ---------------------------------------------------------------------------
@@ -315,9 +315,9 @@ class TestVistaChiusi:
         text, total = format_dashboard_view("chiusi", SCOPE, q)
 
         assert "Closed" in text  # new header uses English view label
-        assert "BNBUSDT" in text
+        assert "BNB/USDT" in text
         assert "-12.80" in text
-        assert "SOLUSDT" in text
+        assert "SOL/USDT" in text
         assert "+34.50" in text
         assert total == 2
 
@@ -366,9 +366,9 @@ class TestVistaBloccati:
         text, total = format_dashboard_view("bloccati", SCOPE, q)
 
         assert "Blocked" in text  # new header uses English view label
-        assert "ETHUSDT" in text
+        assert "ETH/USDT" in text
         assert "missing_sl" in text
-        assert "SOLUSDT" in text
+        assert "SOL/USDT" in text
         assert "insufficient_margin" in text
 
     def test_empty_bloccati(self, ops_db):
@@ -603,9 +603,9 @@ class TestNamingMigration:
         q = StatusQueries(db_path)
         text, _ = format_dashboard_view("active", scope, q, page=0, page_size=5)
         assert "#5" in text
-        assert "BTCUSDT" in text
-        assert "/trade 5" in text
-        assert "/close 5" in text
+        assert "BTC/USDT" in text
+        assert "/trade #5" in text
+        assert "/close #5" in text
 
     def test_dashboard_active_global_scope_shows_trader_account(self, tmp_path):
         db_path = str(tmp_path / "ops.sqlite3")

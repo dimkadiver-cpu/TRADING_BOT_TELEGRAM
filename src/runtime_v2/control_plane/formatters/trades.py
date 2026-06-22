@@ -28,11 +28,9 @@ def _trades_to_payload(view: TradesView, scope: QueryScope | None) -> dict:
             "cum_realized_pnl": r.cum_realized_pnl,
             "mark_price": r.mark_price,
             "mark_captured_at": r.mark_captured_at,
-            # current_stop_price not on TradeRow — use has_sl/has_be flags only
             "current_stop_price": None,
-            # trader_id / account_id not on TradeRow yet — placeholder for global scope
-            "trader_id": None,
-            "account_id": None,
+            "trader_id": r.trader_id,
+            "account_id": r.account_id,
         })
 
     mark_time: str | None = None
@@ -63,6 +61,7 @@ def _trades_to_payload(view: TradesView, scope: QueryScope | None) -> dict:
         ),
         "is_global": is_global,
         "updated_at": view.updated_at,
+        "total": view.total,
         "rows": rows,
         "_mark_time": mark_time,
         "_mark_age": mark_age,

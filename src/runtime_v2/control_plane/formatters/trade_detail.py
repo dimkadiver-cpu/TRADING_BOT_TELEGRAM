@@ -158,7 +158,7 @@ _TRADE_DETAIL_BLOCKS: list = [
             SeparatorBlock(),
             DerivedBlock(
                 text_fn=lambda p: (
-                    f"Actions: /cancel {p['chain_id']} · /close {p['chain_id']}"
+                    f"Actions: /cancel #{p['chain_id']} · /close #{p['chain_id']}"
                 )
             ),
         ],

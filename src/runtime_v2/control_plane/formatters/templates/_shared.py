@@ -8,6 +8,7 @@ Extracted here to avoid a circular import:
 from __future__ import annotations
 
 from src.runtime_v2.control_plane.formatters._blocks import (
+    _SEP,
     DerivedBlock,
     SeparatorBlock,
 )
@@ -59,7 +60,7 @@ def _render_trade_item(row: dict, i: int, p: dict) -> list[str]:
     state = row.get("state", "?")
     is_global = p.get("is_global", False)
 
-    lines = [f"#{cid} · {symbol} · {side} · {state}"]
+    lines = [_SEP, f"#{cid} · {symbol} · {side} · {state}"]
 
     if is_global:
         trader = row.get("trader_id") or p.get("trader_id") or "?"
@@ -72,11 +73,10 @@ def _render_trade_item(row: dict, i: int, p: dict) -> list[str]:
         upnl = row.get("unrealized_pnl")
         rpnl = row.get("cum_realized_pnl")
         upnl_str = money_signed(upnl) if upnl is not None else "—"
-        # rPnL starts at 0 for live trades; uPnL unknown without mark price
         rpnl_str = money_signed(rpnl) if rpnl is not None else "+0.00 USDT"
         lines.append(f"uPnL: {upnl_str}  rPnL: {rpnl_str}")
 
-    lines.append(f"Details: /trade {cid}")
+    lines.append(f"Details: /trade #{cid}")
     return lines
 
 

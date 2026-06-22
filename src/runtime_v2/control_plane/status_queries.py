@@ -57,6 +57,8 @@ class TradeRow:
     mark_price: float | None = None
     mark_captured_at: str | None = None
     cum_realized_pnl: float | None = None
+    trader_id: str | None = None
+    account_id: str | None = None
 
 
 @dataclass
@@ -201,6 +203,10 @@ class ClosedTradeRow:
     side: str
     closed_at: str | None
     gross_pnl: float | None
+    trader_id: str | None = None
+    account_id: str | None = None
+    created_at: str | None = None
+    closed_reason: str | None = None
 
 
 @dataclass
@@ -218,6 +224,10 @@ class BlockedTradeRow:
     symbol: str
     state: str          # "REVIEW_REQUIRED" or "EXEC_FAILED"
     reason: str | None
+    trader_id: str | None = None
+    account_id: str | None = None
+    side: str | None = None
+    blocked_at: str | None = None
 
 
 @dataclass
@@ -408,7 +418,7 @@ class StatusQueries:
                 scope_frag, scope_params = _scope_where(scope)
                 active_placeholders = ",".join("?" * len(_ACTIVE_STATES))
                 rows = conn.execute(
-                    f"SELECT t.trade_chain_id, t.account_id, t.symbol, t.side, t.lifecycle_state, "
+                    f"SELECT t.trade_chain_id, t.account_id, t.trader_id, t.symbol, t.side, t.lifecycle_state, "
                     f"COALESCE(t.current_stop_price, t.expected_stop_price), "
                     f"t.be_protection_status, t.entry_avg_price, t.open_position_qty "
                     f"FROM ops_trade_chains t "
@@ -420,7 +430,7 @@ class StatusQueries:
             else:
                 active_placeholders = ",".join("?" * len(_ACTIVE_STATES))
                 rows = conn.execute(
-                    f"SELECT trade_chain_id, account_id, symbol, side, lifecycle_state, "
+                    f"SELECT trade_chain_id, account_id, trader_id, symbol, side, lifecycle_state, "
                     f"COALESCE(current_stop_price, expected_stop_price), "
                     f"be_protection_status, entry_avg_price, open_position_qty "
                     f"FROM ops_trade_chains "
@@ -461,11 +471,11 @@ class StatusQueries:
 
         trade_rows = []
         for r in rows:
-            chain_id, account_id, symbol, side, state, sl_price, be_status = (
-                r[0], r[1], r[2], r[3], r[4], r[5], r[6]
+            chain_id, account_id, trader_id, symbol, side, state, sl_price, be_status = (
+                r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]
             )
-            entry_avg_price: float | None = r[7]
-            open_position_qty: float | None = r[8]
+            entry_avg_price: float | None = r[8]
+            open_position_qty: float | None = r[9]
 
             mark_price: float | None = None
             mark_captured_at: str | None = None
@@ -499,6 +509,8 @@ class StatusQueries:
                 mark_price=mark_price,
                 mark_captured_at=mark_captured_at,
                 cum_realized_pnl=cum_realized_pnl,
+                trader_id=trader_id,
+                account_id=account_id,
             ))
 
         # Compute freshness age of the most-recent snapshot across all displayed trades
@@ -997,12 +1009,17 @@ class StatusQueries:
             ).fetchone()[0]
 
             rows = conn.execute(
-                f"SELECT trade_chain_id, symbol, side, "
-                f"COALESCE({closed_at_expr}, updated_at) as closed_at, "
-                f"cumulative_gross_pnl "
-                f"FROM ops_trade_chains "
-                f"WHERE lifecycle_state='CLOSED' AND {scope_frag} "
-                f"ORDER BY {closed_at_expr} DESC, trade_chain_id DESC "
+                f"SELECT t.trade_chain_id, t.symbol, t.side, t.trader_id, t.account_id, t.created_at, "
+                f"COALESCE(t.{closed_at_expr}, t.updated_at) as closed_at, "
+                f"t.cumulative_gross_pnl, "
+                f"(SELECT json_extract(le.payload_json, '$.reason') "
+                f" FROM ops_lifecycle_events le "
+                f" WHERE le.trade_chain_id = t.trade_chain_id "
+                f" AND le.event_type IN ('POSITION_CLOSED','POSITION_CANCELLED','SL_HIT','TP_HIT') "
+                f" ORDER BY le.event_id DESC LIMIT 1) as close_reason "
+                f"FROM ops_trade_chains t "
+                f"WHERE t.lifecycle_state='CLOSED' AND {scope_frag} "
+                f"ORDER BY t.{closed_at_expr} DESC, t.trade_chain_id DESC "
                 f"LIMIT ? OFFSET ?",
                 [*scope_params, page_size, offset],
             ).fetchall()
@@ -1014,8 +1031,12 @@ class StatusQueries:
                 chain_id=r[0],
                 symbol=r[1],
                 side=r[2],
-                closed_at=r[3],
-                gross_pnl=float(r[4]) if r[4] is not None else None,
+                closed_at=r[6],
+                gross_pnl=float(r[7]) if r[7] is not None else None,
+                trader_id=r[3],
+                account_id=r[4],
+                created_at=r[5],
+                closed_reason=r[8],
             )
             for r in rows
         ]
@@ -1035,22 +1056,25 @@ class StatusQueries:
 
             # REVIEW_REQUIRED chains in scope
             review_rows = conn.execute(
-                f"SELECT trade_chain_id, symbol FROM ops_trade_chains "
+                f"SELECT trade_chain_id, symbol, trader_id, account_id, side FROM ops_trade_chains "
                 f"WHERE lifecycle_state='REVIEW_REQUIRED' AND {scope_frag} "
                 f"ORDER BY trade_chain_id",
                 scope_params,
             ).fetchall()
 
-            # Reason for REVIEW_REQUIRED from lifecycle events
-            reasons = dict(conn.execute(
-                "SELECT trade_chain_id, payload_json FROM ops_lifecycle_events "
+            # Reason + blocked_at for REVIEW_REQUIRED from lifecycle events
+            reason_data: dict[int, tuple[str | None, str | None]] = {}
+            for row in conn.execute(
+                "SELECT trade_chain_id, payload_json, created_at FROM ops_lifecycle_events "
                 "WHERE event_type='REVIEW_REQUIRED' AND trade_chain_id IS NOT NULL "
                 "ORDER BY event_id"
-            ).fetchall())
+            ).fetchall():
+                reason_data[row[0]] = (row[1], row[2])
 
             # Chains with EXEC_FAILED commands in scope
             exec_failed_rows = conn.execute(
-                f"SELECT DISTINCT t.trade_chain_id, t.symbol, ec.payload_json "
+                f"SELECT DISTINCT t.trade_chain_id, t.symbol, t.trader_id, t.account_id, t.side, "
+                f"ec.payload_json, ec.created_at "
                 f"FROM ops_execution_commands ec "
                 f"JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
                 f"WHERE ec.status='FAILED' AND {t_frag} "
@@ -1065,36 +1089,60 @@ class StatusQueries:
         # Track chain_ids already added
         seen: set[int] = set()
 
-        for cid, symbol in review_rows:
+        for cid, symbol, trader_id, account_id, side in review_rows:
             reason: str | None = None
-            raw = reasons.get(cid)
-            if raw:
+            blocked_at: str | None = None
+            raw_payload, raw_at = reason_data.get(cid, (None, None))
+            if raw_payload:
                 try:
-                    reason = json.loads(raw).get("reason")
+                    reason = json.loads(raw_payload).get("reason")
                 except Exception:
                     pass
+            if raw_at and len(raw_at) >= 16:
+                try:
+                    from datetime import datetime as _dt
+                    dt = _dt.fromisoformat(raw_at.rstrip("Z"))
+                    blocked_at = dt.strftime("%-d %b %H:%M")
+                except Exception:
+                    blocked_at = raw_at[:16]
             result_rows.append(BlockedTradeRow(
                 chain_id=cid,
                 symbol=symbol,
                 state="REVIEW_REQUIRED",
                 reason=reason,
+                trader_id=trader_id,
+                account_id=account_id,
+                side=side,
+                blocked_at=blocked_at,
             ))
             seen.add(cid)
 
-        for cid, symbol, payload_json in exec_failed_rows:
+        for cid, symbol, trader_id, account_id, side, payload_json, created_at in exec_failed_rows:
             if cid in seen:
                 continue
             reason = None
+            blocked_at = None
             if payload_json:
                 try:
                     reason = json.loads(payload_json).get("reason") or json.loads(payload_json).get("error")
                 except Exception:
                     pass
+            if created_at and len(created_at) >= 16:
+                try:
+                    from datetime import datetime as _dt
+                    dt = _dt.fromisoformat(created_at.rstrip("Z"))
+                    blocked_at = dt.strftime("%-d %b %H:%M")
+                except Exception:
+                    blocked_at = created_at[:16]
             result_rows.append(BlockedTradeRow(
                 chain_id=cid,
                 symbol=symbol,
                 state="EXEC_FAILED",
                 reason=reason,
+                trader_id=trader_id,
+                account_id=account_id,
+                side=side,
+                blocked_at=blocked_at,
             ))
             seen.add(cid)
 

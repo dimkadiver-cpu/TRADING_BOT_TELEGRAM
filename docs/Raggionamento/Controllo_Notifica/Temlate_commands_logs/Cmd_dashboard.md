@@ -9,10 +9,10 @@ Serve a:
 - vedere subito cosa richiede attenzione;
 - navigare tra `Active`, `Closed`, `Blocked`, `PnL`, `Stats`;
 - applicare filtri e paginazione senza generare spam;
-- aprire il dettaglio completo di un trade con `/trade n`.
+- aprire il dettaglio completo di un trade con `/trade #n`.
 
-`/dashboard` non sostituisce `/trade n`.
-Il dashboard riassume. Il dettaglio audit e` delegato a `/trade n`.
+`/dashboard` non sostituisce `/trade #n`.
+Il dashboard riassume. Il dettaglio audit e` delegato a `/trade #n`.
 
 ---
 
@@ -23,7 +23,7 @@ Il dashboard riassume. Il dettaglio audit e` delegato a `/trade n`.
 - header compatto e uniforme su tutte le viste;
 - item per-trade compressi in `3 righe`, massimo `4` se serve;
 - i dettagli lunghi di `entry / tp / sl / eventi` non stanno nel dashboard;
-- ogni trade deve portare naturalmente a `Details: /trade n` oppure ad azioni dirette.
+- ogni trade deve portare naturalmente a `Details: /trade #n` oppure ad azioni dirette.
 
 ---
 
@@ -181,15 +181,15 @@ Total: 10   Page: 1/2   Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-/trade 5 · /cancel 5 · /close 5
+/trade #5 · /cancel #5 · /close #5
 - - - - - - - - - - - - - - - - - - - -
 #6 · BTC/USDT · LONG · OPEN
 uPnL: +11.40 USDT  rPnL: +0.00 USDT
-/trade 6 · /cancel 6 · /close 6
+/trade #6 · /cancel #6 · /close #6
 - - - - - - - - - - - - - - - - - - - -
 #7 · SOL/USDT · LONG · WAITING_ENTRY
 rPnL: —
-/trade 7 · /cancel 7 · /close 7
+/trade #7 · /cancel #7 · /close #7
 ```
 
 ### Regole `Active`
@@ -217,17 +217,17 @@ Order: Updated desc
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 Trader: trader_devos_crypto · Account: demo_2
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-/trade 5 · /cancel 5 · /close 5
+/trade #5 · /cancel #5 · /close #5
 - - - - - - - - - - - - - - - - - - - -
 #17 · ETH/USDT · SHORT · OPEN
 Trader: trader_alpha · Account: demo_1
 uPnL: -3.20 USDT  rPnL: -0.20 USDT
-/trade 17 · /cancel 17 · /close 17
+/trade #17 · /cancel #17 · /close #17
 - - - - - - - - - - - - - - - - - - - -
 #22 · SOL/USDT · LONG · WAITING_ENTRY
 Trader: trader_beta · Account: demo_3
 rPnL: —
-/trade 22 · /cancel 22 · /close 22
+/trade #22 · /cancel #22 · /close #22
 ```
 
 ### Regole `Active` in global scope
@@ -274,21 +274,21 @@ Total: 10   Page: 1/2   Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
 #22 · BTC/USDT · LONG · STOP_LOSS
 Net PnL: -3.20 USDT · ⏱ 2h 34m
-Details: /trade 22
+Details: /trade #22
 - - - - - - - - - - - - - - - - - - - -
 #18 · SOL/USDT · LONG · TP_COMPLETE
 Net PnL: +34.50 USDT · ⏱ 4h 45m
-Details: /trade 18
+Details: /trade #18
 - - - - - - - - - - - - - - - - - - - -
 #24 · ETH/USDT · LONG · CANCELLED_UNFILLED
 PnL: No fill
-Details: /trade 24
+Details: /trade #24
 ```
 
 ### Regole `Closed`
 
 - la quarta colonna e` il motivo terminale, non solo lo stato generico
-- `Details: /trade n` sempre presente
+- `Details: /trade #n` sempre presente
 - `CANCELLED_UNFILLED` e` visibile qui
 - per `CANCELLED_UNFILLED`:
   - niente durata obbligatoria
@@ -306,12 +306,12 @@ Order: Closed desc
 #22 · BTC/USDT · LONG · STOP_LOSS
 Trader: trader_devos_crypto · Account: demo_2
 Net PnL: -3.20 USDT · ⏱ 2h 34m
-Details: /trade 22
+Details: /trade #22
 - - - - - - - - - - - - - - - - - - - -
 #31 · ETH/USDT · SHORT · TP_COMPLETE
 Trader: trader_alpha · Account: demo_1
 Net PnL: +18.50 USDT · ⏱ 1h 12m
-Details: /trade 31
+Details: /trade #31
 ```
 
 ### Empty state
@@ -341,14 +341,14 @@ Total: 1   Page: 1/1   Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
 #7 · ETH/USDT · LONG
 Blocked: 14 Jun 11:52 · Reason: missing_sl
-Details: /trade 7
+Details: /trade #7
 ```
 
 ### Regole `Blocked`
 
 - niente testo superfluo
 - `Reason` e` obbligatoria se disponibile
-- `Details: /trade n` sempre presente
+- `Details: /trade #n` sempre presente
 - se utile, il blocco puo` usare 4 righe max, ma il target e` 3 righe
 
 ### Template `Blocked` — global scope
@@ -363,7 +363,7 @@ Order: Blocked desc
 #7 · ETH/USDT · LONG
 Trader: trader_devos_crypto · Account: demo_2
 Blocked: 14 Jun 11:52 · Reason: missing_sl
-Details: /trade 7
+Details: /trade #7
 ```
 
 ### Empty state
@@ -674,13 +674,13 @@ Side: All sides
 
 ---
 
-## Relazione con `/trade n`
+## Relazione con `/trade #n`
 
 Ogni vista per-trade del dashboard deve poter condurre al dettaglio completo:
 
-- in `Active`: tramite `/trade n` tra le azioni
-- in `Closed`: tramite `Details: /trade n`
-- in `Blocked`: tramite `Details: /trade n`
+- in `Active`: tramite `/trade #n` tra le azioni
+- in `Closed`: tramite `Details: /trade #n`
+- in `Blocked`: tramite `Details: /trade #n`
 
 Il dashboard non contiene:
 
@@ -689,7 +689,7 @@ Il dashboard non contiene:
 - link ai `clean_log`
 - final result esteso
 
-Tutto questo vive in `/trade n`.
+Tutto questo vive in `/trade #n`.
 
 Nel `global scope`, il dashboard resta una vista di supervisione:
 
@@ -726,7 +726,7 @@ Nel `global scope`, il dashboard resta una vista di supervisione:
 4. Lo scope non puo` essere espanso dai filtri.
 5. L'header mostra sempre `Total + Page + Updated`, e `Filters` se presenti.
 6. Gli item `Active`, `Closed`, `Blocked` rispettano il formato compatto 3 righe target.
-7. `Closed` e `Blocked` puntano sempre a `Details: /trade n`.
+7. `Closed` e `Blocked` puntano sempre a `Details: /trade #n`.
 8. `PnL` e `Stats` restano viste aggregate.
 9. La paginazione e` calcolata dopo i filtri.
 10. Nessun edit Telegram viene inviato se render e keyboard non cambiano.

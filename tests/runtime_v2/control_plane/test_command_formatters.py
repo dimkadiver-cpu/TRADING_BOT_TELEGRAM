@@ -157,9 +157,9 @@ def test_trades_mark_snapshot_line():
         mark_snapshot_max_age_seconds=18.0,
     )
     text = format_trades(view)
-    assert "Mark snapshot" in text
+    assert "Mark:" in text
     assert "14:31:47" in text
-    assert "18s fa" in text
+    assert "18s" in text
 
 
 def test_trades_freshness_warning_when_stale():
@@ -351,7 +351,7 @@ def test_trades_format_spec_compact():
     assert "#5 · BTC/USDT · LONG · OPEN" in text
     assert "uPnL:" in text
     assert "rPnL:" in text
-    assert "Details: /trade 5" in text
+    assert "Details: /trade #5" in text
     # Old entry/sl structure must not appear
     assert "Entry:" not in text
     assert "SL:" not in text

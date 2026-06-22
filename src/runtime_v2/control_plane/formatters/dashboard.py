@@ -135,13 +135,8 @@ def _build_active_payload(
             "cum_realized_pnl": r.cum_realized_pnl,
             "mark_price": r.mark_price,
             "mark_captured_at": r.mark_captured_at,
-            # For global scope: trader_id and account_id must be in row dict.
-            # TradeRow does not carry them — use scope values as fallback;
-            # for global scope they will be "?" unless the query returns them.
-            "trader_id": getattr(r, "trader_id", None) or (
-                (scope.trader_ids[0] if scope.trader_ids and len(scope.trader_ids) == 1 else None)
-            ),
-            "account_id": getattr(r, "account_id", None) or scope.account_id,
+            "trader_id": r.trader_id or (scope.trader_ids[0] if scope.trader_ids and len(scope.trader_ids) == 1 else None),
+            "account_id": r.account_id or scope.account_id,
         }
         for r in page_rows
     ]
@@ -192,13 +187,10 @@ def _build_closed_payload(
             "side": r.side,
             "closed_at": r.closed_at,
             "gross_pnl": r.gross_pnl,
-            "closed_reason": getattr(r, "closed_reason", None),
-            "duration": getattr(r, "duration", None) or _parse_duration(
-                getattr(r, "created_at", None),
-                r.closed_at,
-            ),
-            "trader_id": getattr(r, "trader_id", None),
-            "account_id": getattr(r, "account_id", None) or scope.account_id,
+            "closed_reason": r.closed_reason,
+            "duration": _parse_duration(r.created_at, r.closed_at),
+            "trader_id": r.trader_id,
+            "account_id": r.account_id or scope.account_id,
         }
         for r in view.rows
     ]
@@ -249,12 +241,12 @@ def _build_blocked_payload(
         {
             "chain_id": r.chain_id,
             "symbol": r.symbol,
-            "side": getattr(r, "side", "?"),
+            "side": r.side or "?",
             "state": r.state,
             "reason": r.reason,
-            "blocked_at": getattr(r, "blocked_at", None),
-            "trader_id": getattr(r, "trader_id", None),
-            "account_id": getattr(r, "account_id", None) or scope.account_id,
+            "blocked_at": r.blocked_at,
+            "trader_id": r.trader_id,
+            "account_id": r.account_id or scope.account_id,
         }
         for r in page_rows
     ]

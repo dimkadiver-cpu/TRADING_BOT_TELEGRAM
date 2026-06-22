@@ -61,7 +61,7 @@ def test_format_trades_rows():
     assert "BTC/USDT" in text
     # New spec-compact format: no SL/Entry lines in list view
     assert "#145 · BTC/USDT · LONG · OPEN" in text
-    assert "Details: /trade 145" in text
+    assert "Details: /trade #145" in text
 
 
 def test_format_trade_detail():
@@ -120,7 +120,7 @@ def test_trade_detail_pnl_section_open_trade():
 def test_trade_detail_actions_present_when_actionable():
     text = format_trade_detail(_make_detail(is_actionable=True))
     assert "Actions:" in text
-    assert "/cancel 5" in text or "/close 5" in text
+    assert "/cancel #5" in text or "/close #5" in text
 
 
 def test_trade_detail_no_actions_when_terminal():

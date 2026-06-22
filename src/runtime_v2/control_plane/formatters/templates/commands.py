@@ -32,8 +32,8 @@ _FRESHNESS_WARNING = ConditionalBlock(
 _TRADES_BLOCKS: list = [
     *_cmd_header("📊", "TRADES"),
     DerivedBlock(text_fn=lambda p: (
-        "Updated: " + p.get("updated_at", "n/a")
-        + (f"  |  Mark snapshot: {p['_mark_time']} ({p['_mark_age']}s fa)"
+        f"Total: {p.get('total', 0)}   Updated: {p.get('updated_at', 'n/a')}"
+        + (f"  |  Mark: {p['_mark_time']} ({p['_mark_age']}s)"
            if p.get("_mark_time") else "")
     )),
     SeparatorBlock(),

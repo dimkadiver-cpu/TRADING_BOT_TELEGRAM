@@ -11,6 +11,7 @@ from src.runtime_v2.control_plane.formatters._formatters import (
     num,
     money_signed,
 )
+from src.runtime_v2.control_plane.formatters.display import display_symbol
 from src.runtime_v2.control_plane.formatters.templates._shared import (
     _cmd_header,
     _side_emoji_str,
@@ -57,14 +58,14 @@ def _dash_header_full(emoji: str, view_label: str) -> list:
 
 def _render_active_item(row: dict, i: int, p: dict) -> list[str]:
     cid = row.get("chain_id", "?")
-    symbol = row.get("symbol", "?")
+    symbol = display_symbol(row.get("symbol") or "?")
     side = row.get("side", "?")
     state = row.get("state", "?")
-    lines = [f"#{cid} · {symbol} · {side} · {state}"]
+    lines = [_SEP, f"#{cid} · {symbol} · {side} · {state}"]
 
     if p.get("is_global"):
-        trader = row.get("trader_id", "?")
-        account = row.get("account_id", "?")
+        trader = row.get("trader_id") or "?"
+        account = row.get("account_id") or "?"
         lines.append(f"Trader: {trader} · Account: {account}")
 
     upnl = row.get("unrealized_pnl")
@@ -76,7 +77,7 @@ def _render_active_item(row: dict, i: int, p: dict) -> list[str]:
     else:
         lines.append("rPnL: —")
 
-    lines.append(f"/trade {cid} · /cancel {cid} · /close {cid}")
+    lines.append(f"/trade #{cid} · /cancel #{cid} · /close #{cid}")
     return lines
 
 
@@ -109,19 +110,24 @@ TEMPLATE_DASHBOARD_ACTIVE = TemplateConfig(_ACTIVE_BLOCKS, payload_transform=Non
 
 def _render_closed_item(row: dict, i: int, p: dict) -> list[str]:
     cid = row.get("chain_id", "?")
-    symbol = row.get("symbol", "?")
+    symbol = display_symbol(row.get("symbol") or "?")
     side = row.get("side", "?")
-    reason = row.get("closed_reason") or "CLOSED"
-    lines = [f"#{cid} · {symbol} · {side} · {reason}"]
+    reason = row.get("closed_reason")
+    first_line = f"#{cid} · {symbol} · {side}"
+    if reason:
+        first_line += f" · {reason}"
+    lines = [_SEP, first_line]
 
     if p.get("is_global"):
-        lines.append(f"Trader: {row.get('trader_id', '?')} · Account: {row.get('account_id', '?')}")
+        trader = row.get("trader_id") or "?"
+        account = row.get("account_id") or "?"
+        lines.append(f"Trader: {trader} · Account: {account}")
 
     pnl = row.get("gross_pnl")
     pnl_str = money_signed(pnl) if pnl is not None else "—"
     duration = row.get("duration") or "—"
     lines.append(f"Net PnL: {pnl_str} · ⏱ {duration}")
-    lines.append(f"Details: /trade {cid}")
+    lines.append(f"Details: /trade #{cid}")
     return lines
 
 
@@ -146,17 +152,19 @@ TEMPLATE_DASHBOARD_CLOSED = TemplateConfig(_CLOSED_BLOCKS, payload_transform=Non
 
 def _render_blocked_item(row: dict, i: int, p: dict) -> list[str]:
     cid = row.get("chain_id", "?")
-    symbol = row.get("symbol", "?")
+    symbol = display_symbol(row.get("symbol") or "?")
     side = row.get("side", "?")
-    lines = [f"#{cid} · {symbol} · {side}"]
+    lines = [_SEP, f"#{cid} · {symbol} · {side}"]
 
     if p.get("is_global"):
-        lines.append(f"Trader: {row.get('trader_id', '?')} · Account: {row.get('account_id', '?')}")
+        trader = row.get("trader_id") or "?"
+        account = row.get("account_id") or "?"
+        lines.append(f"Trader: {trader} · Account: {account}")
 
     blocked_at = row.get("blocked_at") or "—"
     reason = row.get("reason") or "—"
     lines.append(f"Blocked: {blocked_at} · Reason: {reason}")
-    lines.append(f"Details: /trade {cid}")
+    lines.append(f"Details: /trade #{cid}")
     return lines
 
 

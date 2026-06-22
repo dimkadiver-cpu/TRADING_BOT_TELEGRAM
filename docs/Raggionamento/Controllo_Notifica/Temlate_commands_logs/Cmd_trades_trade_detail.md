@@ -1,11 +1,11 @@
-# `/trades` e `/trade n` — Template e funzionalita`
+# `/trades` e `/trade #n` — Template e funzionalita`
 
 ## Scopo
 
 Questa spec definisce due livelli complementari:
 
 - `/trades` = vista lista sintetica;
-- `/trade n` = vista audit completa del singolo trade.
+- `/trade #n` = vista audit completa del singolo trade.
 
 ### Principio
 
@@ -13,12 +13,12 @@ Questa spec definisce due livelli complementari:
 /trades
 -> serve a trovare rapidamente il trade giusto.
 
-/trade n
+/trade #n
 -> serve a capire tutto quello che e` successo su quel trade.
 ```
 
 Il modello non e` solo "lista + dettaglio".
-`/trade n` e` la rappresentazione narrativa del ciclo di vita del trade, dalla ricezione del segnale fino a chiusura, cancellazione o blocco.
+`/trade #n` e` la rappresentazione narrativa del ciclo di vita del trade, dalla ricezione del segnale fino a chiusura, cancellazione o blocco.
 
 ---
 
@@ -27,7 +27,7 @@ Il modello non e` solo "lista + dettaglio".
 - stesso scope del topic corrente: account oppure trader
 - nel `commands` topic generale e` supportato anche `global scope`
 - output sempre testuale
-- `/trade n` resta un singolo messaggio, non una vista navigabile
+- `/trade #n` resta un singolo messaggio, non una vista navigabile
 - quando esiste, ogni evento deve avere il riferimento al `clean_log`
 - `Source: Signal` deve essere link al `clean_log` del segnale di origine
 - anche gli altri eventi devono linkare il relativo `clean_log` quando disponibile
@@ -41,7 +41,7 @@ Il modello non e` solo "lista + dettaglio".
 `/trades` mostra la lista sintetica dei trade nel perimetro corrente.
 
 Non e` una vista audit.
-Deve ottimizzare scansione, riconoscimento e salto rapido a `/trade n`.
+Deve ottimizzare scansione, riconoscimento e salto rapido a `/trade #n`.
 
 ### Scope supportati
 
@@ -78,15 +78,15 @@ Total: 3   Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
 #5 · BTC/USDT · LONG · OPEN
 uPnL: +12.40 USDT  rPnL: +0.00 USDT
-Details: /trade 5
+Details: /trade #5
 - - - - - - - - - - - - - - - - - - - -
 #7 · ETH/USDT · SHORT · OPEN
 uPnL: -3.20 USDT  rPnL: -0.20 USDT
-Details: /trade 7
+Details: /trade #7
 - - - - - - - - - - - - - - - - - - - -
 #9 · SOL/USDT · LONG · WAITING_ENTRY
 rPnL: —
-Details: /trade 9
+Details: /trade #9
 ```
 
 ### Regole `/trades`
@@ -96,7 +96,7 @@ Details: /trade 9
 - niente `entry / tp / sl`
 - niente timeline eventi
 - niente azioni inline nella lista, salvo futura scelta esplicita
-- la CTA primaria e` `Details: /trade n`
+- la CTA primaria e` `Details: /trade #n`
 
 ---
 
@@ -109,7 +109,7 @@ Total: 1   Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-Details: /trade 5
+Details: /trade #5
 ```
 
 ---
@@ -135,7 +135,7 @@ Order: Updated desc
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 Trader: trader_devos_crypto · Account: demo_2
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-Details: /trade 5
+Details: /trade #5
 ```
 
 ### Esempio completo
@@ -150,17 +150,17 @@ Order: Updated desc
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 Trader: trader_devos_crypto · Account: demo_2
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-Details: /trade 5
+Details: /trade #5
 - - - - - - - - - - - - - - - - - - - -
 #17 · ETH/USDT · SHORT · OPEN
 Trader: trader_alpha · Account: demo_1
 uPnL: -3.20 USDT  rPnL: -0.20 USDT
-Details: /trade 17
+Details: /trade #17
 - - - - - - - - - - - - - - - - - - - -
 #22 · SOL/USDT · LONG · WAITING_ENTRY
 Trader: trader_beta · Account: demo_3
 rPnL: —
-Details: /trade 22
+Details: /trade #22
 ```
 
 ### Regole `global scope`
@@ -185,12 +185,12 @@ Order: Chain updated desc
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
 Trader: trader_devos_crypto · Account: demo_2
 uPnL: +34.20 USDT  rPnL: +14.20 USDT
-Details: /trade 5
+Details: /trade #5
 - - - - - - - - - - - - - - - - - - - -
 #44 · XRP/USDT · SHORT · OPEN
 Trader: trader_gamma · Account: demo_1
 uPnL: +4.10 USDT  rPnL: +0.00 USDT
-Details: /trade 44
+Details: /trade #44
 ```
 
 ---
@@ -207,11 +207,11 @@ No trades in scope.
 
 ---
 
-## `/trade n`
+## `/trade #n`
 
 ## Scopo
 
-`/trade n` e` il dettaglio completo del trade.
+`/trade #n` e` il dettaglio completo del trade.
 
 Deve rendere leggibile:
 
@@ -225,7 +225,7 @@ Deve rendere leggibile:
 
 ## Struttura fissa
 
-Ogni `/trade n` usa questo ordine:
+Ogni `/trade #n` usa questo ordine:
 
 ```text
 1. Titolo trade
@@ -236,20 +236,20 @@ Ogni `/trade n` usa questo ordine:
 6. Timeline eventi
 ```
 
-## Comportamento `/trade n` in global scope
+## Comportamento `/trade #n` in global scope
 
-`/trade n` non cambia struttura in global scope.
+`/trade #n` non cambia struttura in global scope.
 
 Una volta aperto il dettaglio di una chain, il messaggio torna sempre mono-trade e deve mostrare chiaramente:
 
 - `Trader`
 - `Exchange Account`
 
-Quindi il global scope impatta `/trades`, ma non richiede un template diverso per `/trade n`.
+Quindi il global scope impatta `/trades`, ma non richiede un template diverso per `/trade #n`.
 
 ---
 
-## `/trade n` — trade aperto / partial
+## `/trade #n` — trade aperto / partial
 
 ```text
 #5 · BTC/USDT · LONG · PARTIALLY_CLOSED
@@ -263,7 +263,7 @@ TP:    64,000 ✓ · 65,200 · 66,500
 SL:    62,000 · BE: No
 uPnL:  +34.20 USDT  rPnL:  +14.20 USDT
 - - - - - - - - - - - - - - - - - - - -
-Actions: /cancel 5 · /close 5
+Actions: /cancel #5 · /close #5
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
@@ -286,7 +286,7 @@ Events:
 
 ---
 
-## `/trade n` — `WAITING_ENTRY`
+## `/trade #n` — `WAITING_ENTRY`
 
 ```text
 #5 · BTC/USDT · LONG · WAITING_ENTRY
@@ -299,7 +299,7 @@ Entry: 63,500 · 63,200 · 62,800
 TP:    64,000 · 65,200 · 66,500
 SL:    62,000 · BE: No
 - - - - - - - - - - - - - - - - - - - -
-Actions: /cancel 5 · /close 5
+Actions: /cancel #5 · /close #5
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
@@ -315,7 +315,7 @@ Events:
 
 ---
 
-## `/trade n` — position closed
+## `/trade #n` — position closed
 
 ```text
 #5 · BTC/USDT · LONG · POSITION CLOSED
@@ -336,13 +336,17 @@ Fees: -2.06 USDT · Funding: +0.03 USDT
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
   Source: Signal -> clean_log
+  - - - - - - - - - - - - - - - - - - - -
 • ENTRY OPENED · 14 Jun 09:10:00
   Source: exchange -> clean_log
+  - - - - - - - - - - - - - - - - - - - -
 • TP1 FILLED · 14 Jun 09:10:01
   Source: exchange -> clean_log
+  - - - - - - - - - - - - - - - - - - - -
 • UPDATE DONE · 14 Jun 09:10:02
   Type: CANCEL_PENDING
   Source: operation_rules -> clean_log
+  - - - - - - - - - - - - - - - - - - - -
 • POSITION CLOSED · 14 Jun 09:10:02
   Reason: FINAL TP FILLED
   Source: exchange -> clean_log
@@ -357,7 +361,7 @@ Events:
 
 ---
 
-## `/trade n` — cancelled without fill
+## `/trade #n` — cancelled without fill
 
 ```text
 #24 · ETH/USDT · LONG · CANCELLED_UNFILLED
@@ -393,7 +397,7 @@ Events:
 
 ---
 
-## `/trade n` — blocked / review required
+## `/trade #n` — blocked / review required
 
 ```text
 #7 · ETH/USDT · LONG · REVIEW_REQUIRED
@@ -407,7 +411,7 @@ TP:    2,180 · 2,220
 SL:    —
 uPnL:  -3.20 USDT  rPnL:  0.00 USDT
 - - - - - - - - - - - - - - - - - - - -
-Actions: /close 7
+Actions: /close #7
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 11:50:00
@@ -506,10 +510,10 @@ Selector trader:
 
 ## Criteri di accettazione
 
-1. `/trades` mostra solo informazione sintetica, con CTA naturale a `/trade n`.
+1. `/trades` mostra solo informazione sintetica, con CTA naturale a `/trade #n`.
 2. Ogni item `/trades` usa il formato compatto a 3 righe target.
-3. `/trade n` resta un singolo messaggio completo.
-4. `/trade n` mostra sempre meta info, struttura ordine e timeline eventi.
+3. `/trade #n` resta un singolo messaggio completo.
+4. `/trade #n` mostra sempre meta info, struttura ordine e timeline eventi.
 5. I trade aperti mostrano metriche correnti e azioni disponibili.
 6. I trade chiusi o cancellati non mostrano azioni e usano `Final Result`.
 7. `WAITING_ENTRY` non mostra PnL come se la posizione fosse aperta.
