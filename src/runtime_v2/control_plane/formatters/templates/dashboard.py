@@ -83,7 +83,7 @@ def _render_active_item(row: dict, i: int, p: dict) -> list[str]:
     else:
         lines.append("rPnL: —")
 
-    lines.append(f"/trade #{cid} · /cancel #{cid} · /close #{cid}")
+    lines.append(f"/trade_{cid} · /cancel_{cid} · /close_{cid}")
     return lines
 
 
@@ -141,7 +141,7 @@ def _render_closed_item(row: dict, i: int, p: dict) -> list[str]:
         pnl_str = money_signed(pnl) if pnl is not None else "—"
         duration = row.get("duration") or "—"
         lines.append(f"Net PnL: {pnl_str} · ⏱ {duration}")
-    lines.append(f"Details: /trade #{cid}")
+    lines.append(f"Details: /trade_{cid}")
     return lines
 
 
@@ -178,7 +178,7 @@ def _render_blocked_item(row: dict, i: int, p: dict) -> list[str]:
     blocked_at = row.get("blocked_at") or "—"
     reason = row.get("reason") or "—"
     lines.append(f"Blocked: {blocked_at} · Reason: {reason}")
-    lines.append(f"Details: /trade #{cid}")
+    lines.append(f"Details: /trade_{cid}")
     return lines
 
 

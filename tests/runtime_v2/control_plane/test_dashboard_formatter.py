@@ -604,8 +604,8 @@ class TestNamingMigration:
         text, _ = format_dashboard_view("active", scope, q, page=0, page_size=5)
         assert "#5" in text
         assert "BTC/USDT" in text
-        assert "/trade #5" in text
-        assert "/close #5" in text
+        assert "/trade_5" in text
+        assert "/close_5" in text
 
     def test_dashboard_active_global_scope_shows_trader_account(self, tmp_path):
         db_path = str(tmp_path / "ops.sqlite3")

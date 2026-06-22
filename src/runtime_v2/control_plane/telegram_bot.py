@@ -3,10 +3,14 @@ from __future__ import annotations
 import asyncio
 import contextlib
 import logging
+import re
 import secrets
 import time
 from dataclasses import dataclass, field
 from typing import Literal
+
+# Dashboard shortcut commands: /trade_N, /cancel_N, /close_N
+_DASH_CMD_RE = re.compile(r'^(trade|cancel|close)_(\d+)$')
 
 from src.runtime_v2.control_plane.audit_store import CommandAuditStore
 from src.runtime_v2.control_plane.auth import AuthValidator
@@ -253,7 +257,7 @@ class CommandRouter:
                 reject_reason="unauthorized_user",
             )
             return RouteResult("REJECT_UNAUTHORIZED", None)
-        if command_name not in self._allowed_commands():
+        if command_name not in self._allowed_commands() and not _DASH_CMD_RE.match(command_name):
             self._record(
                 request_id=request_id,
                 chat_id=chat_id,
@@ -531,6 +535,81 @@ class CommandRouter:
                 chains_payload=chains_payload, scope_label=sl, open_count=open_count,
             )
             return _DispatchResult(text, keyboard=_emergency_keyboard("cancel_all", token))
+
+        # Dashboard shortcut: /trade_N, /close_N, /cancel_N
+        m = _DASH_CMD_RE.match(command_name)
+        if m:
+            base_cmd, chain_id_str = m.group(1), m.group(2)
+            chain_id = int(chain_id_str)
+
+            if base_cmd == "trade":
+                return _DispatchResult(format_trade_detail(self._service.get_trade(chain_id)))
+
+            trade = self._service.get_trade(chain_id)
+            if trade is None:
+                return _DispatchResult(
+                    f"Trade #{chain_id} not found.",
+                    decision="REJECTED",
+                    reject_reason="not_found",
+                )
+
+            from src.runtime_v2.control_plane.scope_resolver import QueryScope as _QS
+            eff_scope = _QS(
+                account_id=trade.account_id,
+                trader_ids=[trade.trader_id] if trade.trader_id else None,
+            )
+            candidate = CloseCandidate(
+                chain_id=chain_id,
+                symbol=trade.symbol,
+                side=trade.side,
+                state=trade.state,
+                trader_id=trade.trader_id or "",
+                account_id=trade.account_id or "",
+            )
+            chains_payload = _candidates_to_payload([candidate])
+            sl = _scope_label_from_scope(eff_scope)
+
+            if base_cmd == "close":
+                if trade.state not in {"OPEN", "PARTIALLY_CLOSED"}:
+                    return _DispatchResult(
+                        f"Trade #{chain_id} is {trade.state} — not closeable.",
+                        decision="REJECTED",
+                        reject_reason="invalid_state",
+                    )
+                cfg = EMERGENCY_REGISTRY["close_single_preview"]
+                payload = {
+                    "scope_label": sl, "total": 1,
+                    "chains": chains_payload, "symbol": trade.symbol,
+                }
+                text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+                token = _make_token()
+                self._pending[token] = _PendingAction(
+                    kind="close_single", scope=eff_scope,
+                    candidates=[candidate],
+                    chains_payload=chains_payload, scope_label=sl, open_count=0,
+                )
+                return _DispatchResult(text, keyboard=_emergency_keyboard("close_single", token))
+
+            if base_cmd == "cancel":
+                if trade.state != "WAITING_ENTRY":
+                    return _DispatchResult(
+                        f"Trade #{chain_id} is {trade.state} — not cancellable (must be WAITING_ENTRY).",
+                        decision="REJECTED",
+                        reject_reason="invalid_state",
+                    )
+                cfg = EMERGENCY_REGISTRY["cancel_all_preview"]
+                payload = {
+                    "scope_label": sl, "total": 1,
+                    "chains": chains_payload, "open_count": 0,
+                }
+                text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
+                token = _make_token()
+                self._pending[token] = _PendingAction(
+                    kind="cancel_all", scope=eff_scope,
+                    candidates=[candidate],
+                    chains_payload=chains_payload, scope_label=sl, open_count=0,
+                )
+                return _DispatchResult(text, keyboard=_emergency_keyboard("cancel_all", token))
 
         return _DispatchResult("Comando non riconosciuto.", decision="REJECTED")
 
