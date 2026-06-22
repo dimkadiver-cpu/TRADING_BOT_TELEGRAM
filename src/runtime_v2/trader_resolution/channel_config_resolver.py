@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Literal
 
 import yaml
 
@@ -28,6 +28,9 @@ def _parse_topic_id(value: object) -> int | None:
     return topic_id
 
 
+SignalMessageType = Literal["ANY", "INLINE_BUTTONS_ONLY"]
+
+
 @dataclass(slots=True, frozen=True)
 class ChannelEntry:
     chat_id: str
@@ -41,6 +44,7 @@ class ChannelEntry:
     resolution_max_depth: int        # default 5; used only when trader_id is None
     resolution_mode: str = "default"
     pattern_group: str | None = None
+    signal_message_type: SignalMessageType = "ANY"
 
 
 class ChannelConfigResolver:
@@ -78,6 +82,11 @@ class ChannelConfigResolver:
                 raise ValueError(
                     f"invalid resolution.mode for chat_id={chat_id}, topic_id={topic_id}: {resolution_mode!r}"
                 )
+            signal_message_type = str(raw.get("signal_message_type", "ANY")).strip() or "ANY"
+            if signal_message_type not in {"ANY", "INLINE_BUTTONS_ONLY"}:
+                raise ValueError(
+                    f"invalid signal_message_type for chat_id={chat_id}, topic_id={topic_id}: {signal_message_type!r}"
+                )
             pattern_group_raw = resolution.get("pattern_group")
             pattern_group = str(pattern_group_raw).strip() if pattern_group_raw else None
             entry = ChannelEntry(
@@ -92,6 +101,7 @@ class ChannelConfigResolver:
                 resolution_max_depth=max_depth,
                 resolution_mode=resolution_mode,
                 pattern_group=pattern_group,
+                signal_message_type=signal_message_type,
             )
             index[(chat_id, topic_id)] = entry
         self._index = index

@@ -434,6 +434,20 @@ async def _run_lifecycle_workers(
             logger.exception("lifecycle worker error")
 
 
+async def _run_reconciliation_periodically(
+    *,
+    sync_worker,
+    interval_seconds: int,
+    logger,
+) -> None:
+    while True:
+        await asyncio.sleep(interval_seconds)
+        try:
+            sync_worker.run_reconciliation()
+        except Exception:
+            logger.exception("reconciliation worker error")
+
+
 async def _start_control_bot(bot, logger) -> None:
     first = True
     while True:
@@ -591,6 +605,7 @@ async def _async_main(
         command_repo=command_repo,
         snapshot_repo=snapshot_repo,
         control_repo=control_repo,
+        channel_resolver=channel_resolver,
     )
     timeout_worker = TimeoutWorker(ops_db_path=ops_db_path, chain_repo=chain_repo)
     lifecycle_event_worker = LifecycleEventWorker(

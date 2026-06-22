@@ -23,6 +23,7 @@ class TelegramIncomingMessage:
     reply_to_message_id: int | None = None
     acquisition_status: str = "ACQUIRED_ELIGIBLE"
     source_topic_id: int | None = None
+    message_presentation_type: str = "PLAIN"
     has_media: bool = False
     media_kind: str | None = None
     media_mime_type: str | None = None
@@ -73,6 +74,7 @@ class RawMessageIngestionService:
                 acquired_at=utc_now_iso(),
                 acquisition_status=incoming.acquisition_status,
                 source_topic_id=incoming.source_topic_id,
+                message_presentation_type=incoming.message_presentation_type,
                 has_media=incoming.has_media,
                 media_kind=incoming.media_kind,
                 media_mime_type=incoming.media_mime_type,

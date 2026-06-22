@@ -39,6 +39,8 @@ def _render_event(ev: dict, i: int, p: dict) -> list[str]:
         lines.append(f"  Type: {ev['event_type']}")
     if ev.get("reason"):
         lines.append(f"  Reason: {ev['reason']}")
+    if ev.get("note"):
+        lines.append(f"  Note: {ev['note']}")
     source = ev.get("source")
     link = ev.get("clean_log_link")
     if source:
@@ -47,6 +49,12 @@ def _render_event(ev: dict, i: int, p: dict) -> list[str]:
         else:
             lines.append(f"  Source: {source}")
     return lines
+
+
+_STATE_DISPLAY = {
+    "CLOSED": "POSITION CLOSED",
+    "POSITION_CLOSED": "POSITION CLOSED",
+}
 
 
 def _fmt_actions(state: str, chain_id: int) -> str:
@@ -63,7 +71,8 @@ _TRADE_DETAIL_BLOCKS: list = [
     DerivedBlock(
         text_fn=lambda p: (
             f"#{p['chain_id']} · {display_symbol(p['symbol'])} "
-            f"· {p['side']} · {p['state']}"
+            f"· {p['side']} · "
+            f"{_STATE_DISPLAY.get(p['state'], p['state'])}"
         )
     ),
     SeparatorBlock(),
@@ -112,6 +121,7 @@ _TRADE_DETAIL_BLOCKS: list = [
             and not p.get("is_terminal")
         ),
         blocks=[
+            SeparatorBlock(),
             DerivedBlock(
                 text_fn=lambda p: (
                     f"uPnL:  {money_signed(p.get('unrealized_pnl'))}  "
@@ -197,6 +207,7 @@ def format_trade_detail(detail: TradeDetail | None) -> str:
             "source": ev.source,
             "event_type": ev.event_type,
             "reason": ev.reason,
+            "note": ev.note,
             "clean_log_link": ev.clean_log_link,
         }
         for ev in (detail.events or [])

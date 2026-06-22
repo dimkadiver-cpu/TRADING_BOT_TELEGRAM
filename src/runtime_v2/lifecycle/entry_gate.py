@@ -88,6 +88,12 @@ class UpdateGateResult:
     review_events: list[LifecycleEvent]
 
 
+@dataclass(slots=True, frozen=True)
+class SignalAdmissionContext:
+    signal_message_type: str = "ANY"
+    message_presentation_type: str = "PLAIN"
+
+
 _ATTACHED_PROTECTION_MODES = frozenset({"UNIFIED_PLAN", "D_POSITION_TPSL"})
 
 
@@ -611,7 +617,9 @@ class LifecycleEntryGate:
         enriched: EnrichedCanonicalMessage,
         open_chains: list[TradeChain],
         control_mode: ControlMode,
+        admission: SignalAdmissionContext | None = None,
     ) -> SignalGateResult:
+        admission = admission or SignalAdmissionContext()
         eid = enriched.enrichment_id
 
         if control_mode in ("BLOCK_NEW_ENTRIES", "FULL_STOP"):
@@ -620,6 +628,12 @@ class LifecycleEntryGate:
         signal = enriched.enriched_signal
         if signal is None or not signal.symbol or not signal.side:
             return self._reject_signal(eid, "missing_symbol_or_side")
+
+        if (
+            admission.signal_message_type == "INLINE_BUTTONS_ONLY"
+            and admission.message_presentation_type != "INLINE_BUTTONS"
+        ):
+            return self._skip_signal(eid, "signal_message_type_mismatch")
 
         if not self._port.symbol_exists(enriched.account_id, signal.symbol):
             return self._reject_signal(eid, "unknown_symbol")
@@ -740,6 +754,23 @@ class LifecycleEntryGate:
             source_id=str(eid),
             payload_json=json.dumps(ev_payload),
             idempotency_key=f"signal_rejected:{eid}",
+        )
+        return SignalGateResult(
+            trade_chain=None,
+            lifecycle_events=[event],
+            execution_commands=[],
+            account_snapshot=None,
+            market_snapshot=None,
+            review_reason=reason,
+        )
+
+    def _skip_signal(self, eid: int | None, reason: str) -> SignalGateResult:
+        event = LifecycleEvent(
+            event_type="SIGNAL_SKIPPED",
+            source_type="enrichment",
+            source_id=str(eid),
+            payload_json=json.dumps({"reason": reason, "source": "runtime"}),
+            idempotency_key=f"signal_skipped:{eid}",
         )
         return SignalGateResult(
             trade_chain=None,
@@ -2030,6 +2061,7 @@ class LifecycleGateWorker:
         command_repo,
         snapshot_repo,
         control_repo,
+        channel_resolver=None,
     ) -> None:
         self._parser_db = parser_db_path
         self._ops_db = ops_db_path
@@ -2039,6 +2071,7 @@ class LifecycleGateWorker:
         self._command_repo = command_repo
         self._snapshot_repo = snapshot_repo
         self._control_repo = control_repo
+        self._channel_resolver = channel_resolver
 
     def run_once(self, batch_size: int = 50) -> int:
         rows = self._fetch_pending(batch_size)
@@ -2238,7 +2271,8 @@ class LifecycleGateWorker:
         control_mode = self._control_repo.get_effective_mode(account_id, trader_id, symbol, side)
 
         if primary_class == "SIGNAL":
-            result = self._gate.process_signal(enriched, open_chains, control_mode)
+            admission = self._build_signal_admission_context(raw_message_id)
+            result = self._gate.process_signal(enriched, open_chains, control_mode, admission)
             self._persist_signal(enriched, result)
         else:
             active_cmds = {
@@ -2251,6 +2285,30 @@ class LifecycleGateWorker:
                 tg_id_to_raw_id=tg_id_to_raw_id,
             )
             self._persist_update(enriched, result)
+
+    def _build_signal_admission_context(self, raw_message_id: int) -> SignalAdmissionContext:
+        conn = _sqlite3.connect(self._parser_db)
+        try:
+            row = conn.execute(
+                "SELECT source_chat_id, source_topic_id, message_presentation_type "
+                "FROM raw_messages WHERE raw_message_id=?",
+                (raw_message_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        if row is None:
+            return SignalAdmissionContext()
+        message_presentation_type = str(row[2] or "PLAIN")
+        if self._channel_resolver is None:
+            return SignalAdmissionContext(message_presentation_type=message_presentation_type)
+        entry = self._channel_resolver.lookup(
+            str(row[0]),
+            int(row[1]) if row[1] is not None else None,
+        )
+        return SignalAdmissionContext(
+            signal_message_type=(entry.signal_message_type if entry is not None else "ANY"),
+            message_presentation_type=message_presentation_type,
+        )
 
     def _persist_signal(self, enriched: EnrichedCanonicalMessage, result: SignalGateResult) -> None:
         now = datetime.now(timezone.utc).isoformat()
@@ -2626,4 +2684,5 @@ class LifecycleGateWorker:
 __all__ = [
     "LifecycleEntryGate", "LifecycleGateWorker",
     "SignalGateResult", "UpdateGateResult", "UpdateChainResult",
+    "SignalAdmissionContext",
 ]

@@ -47,7 +47,8 @@ def _schema_with_topic(conn: sqlite3.Connection) -> None:
           message_ts TEXT NOT NULL,
           acquired_at TEXT NOT NULL,
           acquisition_status TEXT NOT NULL DEFAULT 'ACQUIRED',
-          source_topic_id INTEGER
+          source_topic_id INTEGER,
+          message_presentation_type TEXT NOT NULL DEFAULT 'PLAIN'
         );
         CREATE UNIQUE INDEX idx_raw_messages_dedup
         ON raw_messages(source_chat_id, telegram_message_id);
@@ -62,6 +63,7 @@ def _record(
     source_chat_id: str = "chat-1",
     telegram_message_id: int = 1,
     source_topic_id: int | None = None,
+    message_presentation_type: str = "PLAIN",
 ) -> RawMessageRecord:
     return RawMessageRecord(
         source_chat_id=source_chat_id,
@@ -69,6 +71,7 @@ def _record(
         message_ts="2026-04-20T10:00:00+00:00",
         acquired_at="2026-04-20T10:00:01+00:00",
         source_topic_id=source_topic_id,
+        message_presentation_type=message_presentation_type,
     )
 
 
@@ -89,6 +92,22 @@ def test_save_and_get_with_topic_id(tmp_path) -> None:
     stored = store.get_by_source_and_message_id("chat-1", 1)
     assert stored is not None
     assert stored.source_topic_id == 3
+
+
+def test_save_and_get_with_message_presentation_type(tmp_path) -> None:
+    db_path = str(tmp_path / "db.sqlite3")
+    with sqlite3.connect(db_path) as conn:
+        _schema_with_topic(conn)
+
+    store = RawMessageStore(db_path=db_path)
+    result = store.save_with_id(
+        _record(source_topic_id=3, message_presentation_type="INLINE_BUTTONS")
+    )
+
+    assert result.saved is True
+    stored = store.get_by_source_and_message_id("chat-1", 1)
+    assert stored is not None
+    assert stored.message_presentation_type == "INLINE_BUTTONS"
 
 
 def test_save_and_get_with_topic_id_none(tmp_path) -> None:
@@ -144,6 +163,19 @@ def test_get_on_legacy_schema_returns_topic_id_none(tmp_path) -> None:
     stored = store.get_by_source_and_message_id("chat-1", 1)
     assert stored is not None
     assert stored.source_topic_id is None
+
+
+def test_get_on_legacy_schema_returns_presentation_type_plain(tmp_path) -> None:
+    db_path = str(tmp_path / "legacy.sqlite3")
+    with sqlite3.connect(db_path) as conn:
+        _schema_without_topic(conn)
+
+    store = RawMessageStore(db_path=db_path)
+    store.save_with_id(_record(source_topic_id=5, message_presentation_type="INLINE_BUTTONS"))
+
+    stored = store.get_by_source_and_message_id("chat-1", 1)
+    assert stored is not None
+    assert stored.message_presentation_type == "PLAIN"
 
 
 # ---------------------------------------------------------------------------

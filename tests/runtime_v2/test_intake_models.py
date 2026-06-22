@@ -25,6 +25,7 @@ def _make_envelope(**overrides) -> RawMessageEnvelope:
         acquisition_mode="live",
         acquisition_status="ACQUIRED",
         processing_status="pending",
+        message_presentation_type="PLAIN",
         source_trader_id=None,
         resolved_trader_id=None,
         resolution_method=None,
@@ -49,6 +50,7 @@ def test_raw_ingest_item_construction():
         raw_text="BUY BTC",
         message_ts=_TS,
         acquisition_mode="live",
+        message_presentation_type="PLAIN",
         has_media=False,
         media_kind=None,
         media_mime_type=None,
@@ -58,11 +60,36 @@ def test_raw_ingest_item_construction():
     assert item.acquisition_mode == "live"
 
 
+def test_raw_ingest_item_supports_message_presentation_type():
+    item = RawIngestItem(
+        source_chat_id="-100123",
+        source_chat_title="Test",
+        source_type="channel",
+        source_topic_id=3,
+        telegram_message_id=456,
+        reply_to_message_id=None,
+        raw_text="BUY BTC",
+        message_ts=_TS,
+        acquisition_mode="live",
+        message_presentation_type="INLINE_BUTTONS",
+        has_media=False,
+        media_kind=None,
+        media_mime_type=None,
+        media_filename=None,
+    )
+    assert item.message_presentation_type == "INLINE_BUTTONS"
+
+
 def test_raw_message_envelope_valid():
     env = _make_envelope()
     assert env.raw_message_id == 1
     assert env.acquisition_status == "ACQUIRED"
     assert env.processing_status == "pending"
+
+
+def test_raw_message_envelope_exposes_message_presentation_type():
+    env = _make_envelope(message_presentation_type="PLAIN")
+    assert env.message_presentation_type == "PLAIN"
 
 
 def test_raw_message_envelope_rejects_invalid_acquisition_status():

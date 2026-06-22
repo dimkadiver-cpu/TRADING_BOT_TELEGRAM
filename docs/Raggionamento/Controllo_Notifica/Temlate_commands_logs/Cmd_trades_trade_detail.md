@@ -425,7 +425,7 @@ Events:
 
 ---
 
-## `/trade #n` — position closed
+## `/trade #n` — position closed_a
 
 ```text
 #5 · BTC/USDT · LONG · POSITION CLOSED
@@ -459,6 +459,44 @@ Events:
 
 • POSITION CLOSED · 14 Jun 09:25:00
   Reason: FINAL TP FILLED
+  Source: exchange → [clean_log](url)
+```
+
+
+## `/trade #n` — position closed_b
+
+```text
+#5 · BTC/USDT · LONG · POSITION CLOSED
+- - - - - - - - - - - - - - - - - - - -
+Trader: trader_devos_crypto
+Exchange Account: demo_2
+Updated: 14:32:05
+- - - - - - - - - - - - - - - - - - - -
+Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗
+TP:    64,000 ✓ · 65,200 ✓
+SL:    62,000 · BE: 63,500
+- - - - - - - - - - - - - - - - - - - -
+Final Result:
+ROI net: +3.67% · RoR: +9.12% · R: +0.22R
+PnL net: +44.17 USDT · PnL gross: +45.20 USDT
+Fees: -2.06 USDT · Funding: +0.03 USDT
+- - - - - - - - - - - - - - - - - - - -
+Events:
+• SIGNAL ACCEPTED · 14 Jun 09:10:00
+  Source: Signal → [clean_log](url)
+
+• ENTRY OPENED · 14 Jun 09:10:05
+  Source: exchange → [clean_log](url)
+
+• TP1 FILLED · 14 Jun 09:15:20
+  Source: exchange → [clean_log](url)
+
+• UPDATE DONE · 14 Jun 09:20:00
+  Type: CANCEL_PENDING
+  Source: operation_rules → [clean_log](url)
+
+• POSITION CLOSED · 14 Jun 09:25:00
+  Reason: BREAKEVEN_AFTER_TP
   Source: exchange → [clean_log](url)
 ```
 
@@ -594,9 +632,12 @@ Se il `clean_log` non e` ancora disponibile, l'evento resta visibile come testo 
 - `ENTRY OPENED`
 - `ENTRY PARTIALLY FILLED`
 - `TP1 FILLED` / `TP2 FILLED` / ...
+- `PARTIAL CLOSE` — chiusura parziale manuale; da `CLOSE_PARTIAL_FILLED`
 - `SL MOVED TO BE`
+- `SL UPDATED` — movimento SL generico (non BE); da `STOP_MOVE_CONFIRMED` senza `is_breakeven`
 - `UPDATE DONE`
 - `REVIEW REQUIRED`
+- `SL HIT` — posizione chiusa per stop loss; da `SL_FILLED`
 - `POSITION CLOSED`
 - `POSITION CANCELLED`
 

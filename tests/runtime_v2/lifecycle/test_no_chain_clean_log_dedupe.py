@@ -120,3 +120,23 @@ def test_different_message_notifies_again(ops_conn):
     )
     ops_conn.commit()
     assert _count_rows(ops_conn) == 2
+
+
+def test_signal_skipped_does_not_project_clean_log(ops_conn):
+    _write_no_chain_signal_clean_log(
+        ops_conn,
+        _enriched(1),
+        [
+            LifecycleEvent(
+                event_type="SIGNAL_SKIPPED",
+                source_type="enrichment",
+                source_id="1",
+                payload_json='{"reason":"signal_message_type_mismatch","source":"runtime"}',
+                idempotency_key="signal_skipped:1",
+            )
+        ],
+        src_chat_id="-100123",
+        tg_msg_id=7306,
+    )
+    ops_conn.commit()
+    assert _count_rows(ops_conn) == 0

@@ -50,6 +50,7 @@ class RawMessageRepository:
             message_ts=item.message_ts.isoformat(),
             acquired_at=datetime.now(timezone.utc).isoformat(),
             acquisition_status="ACQUIRED",
+            message_presentation_type=item.message_presentation_type,
             has_media=item.has_media,
             media_kind=item.media_kind,
             media_mime_type=item.media_mime_type,
@@ -108,6 +109,21 @@ class RawMessageRepository:
     def update_raw_text(self, raw_message_id: int, raw_text: str) -> None:
         self._update_column(raw_message_id, "raw_text", raw_text)
 
+    def update_message_content(
+        self,
+        raw_message_id: int,
+        *,
+        raw_text: str,
+        message_presentation_type: str,
+    ) -> None:
+        conn = sqlite3.connect(self._db_path)
+        conn.execute(
+            "UPDATE raw_messages SET raw_text=?, message_presentation_type=? WHERE raw_message_id=?",
+            (raw_text, message_presentation_type, raw_message_id),
+        )
+        conn.commit()
+        conn.close()
+
     def get_chain_node(self, source_chat_id: str, telegram_message_id: int) -> ChainNode | None:
         """Read the minimal fields needed for reply-chain resolution."""
         conn = sqlite3.connect(self._db_path)
@@ -153,6 +169,11 @@ class RawMessageRepository:
             acquisition_mode=row["acquisition_mode"] if "acquisition_mode" in keys else "live",
             acquisition_status=row["acquisition_status"] or "ACQUIRED",
             processing_status=row["processing_status"] or "pending",
+            message_presentation_type=(
+                row["message_presentation_type"]
+                if "message_presentation_type" in keys
+                else "PLAIN"
+            ),
             source_trader_id=row["source_trader_id"],
             resolved_trader_id=row["resolved_trader_id"] if "resolved_trader_id" in keys else None,
             resolution_method=row["resolution_method"] if "resolution_method" in keys else None,

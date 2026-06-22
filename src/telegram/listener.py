@@ -445,7 +445,11 @@ class TelegramListener:
             run_context=run_context,
             applied_to_current=True,
         )
-        self._raw_repo.update_raw_text(raw_message_id, new_text)
+        self._raw_repo.update_message_content(
+            raw_message_id,
+            raw_text=new_text,
+            message_presentation_type=_resolve_message_presentation_type(message),
+        )
         self._status_store.update(raw_message_id, "pending")
         reply_to_message_id = extract_real_reply_to_message_id(
             message,
@@ -831,6 +835,10 @@ def _as_utc(dt: datetime) -> datetime:
     return dt.astimezone(timezone.utc)
 
 
+def _resolve_message_presentation_type(message: Message) -> str:
+    return "INLINE_BUTTONS" if getattr(message, "reply_markup", None) is not None else "PLAIN"
+
+
 def _build_incoming(
     *,
     message: Message,
@@ -855,6 +863,7 @@ def _build_incoming(
         message_ts=message.date or datetime.now(timezone.utc),
         acquisition_status=acquisition_status,
         source_topic_id=source_topic_id,
+        message_presentation_type=_resolve_message_presentation_type(message),
     )
 
 

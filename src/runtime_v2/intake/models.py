@@ -11,6 +11,7 @@ ProcessingStatusV2 = Literal[
     "pending", "processing", "done", "failed", "blacklisted", "review", "skipped"
 ]
 AcquisitionMode = Literal["live", "catchup", "import"]
+MessagePresentationType = Literal["PLAIN", "INLINE_BUTTONS"]
 
 
 @dataclass(slots=True, frozen=True)
@@ -31,6 +32,7 @@ class RawIngestItem:
     raw_text: str | None
     message_ts: datetime
     acquisition_mode: AcquisitionMode
+    message_presentation_type: MessagePresentationType
     has_media: bool
     media_kind: str | None
     media_mime_type: str | None
@@ -57,6 +59,7 @@ class RawMessageEnvelope(BaseModel):
     acquisition_mode: AcquisitionMode
     acquisition_status: AcquisitionStatus
     processing_status: ProcessingStatusV2
+    message_presentation_type: MessagePresentationType = "PLAIN"
     source_trader_id: str | None
     resolved_trader_id: str | None
     resolution_method: str | None

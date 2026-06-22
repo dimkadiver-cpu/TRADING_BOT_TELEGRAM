@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sqlite3
 import logging
 from pathlib import Path
 from types import SimpleNamespace
@@ -379,6 +380,161 @@ def test_build_lifecycle_entry_gate_uses_simple_attached_strategy(monkeypatch, t
     )
 
     assert gate._simple_attached_enabled is True
+
+
+def test_async_main_passes_channel_resolver_to_lifecycle_gate_worker(monkeypatch, tmp_path):
+    import main as app_main
+
+    captured = {}
+
+    class StopBootstrap(Exception):
+        pass
+
+    monkeypatch.setattr(app_main, "setup_logging", lambda **kwargs: logging.getLogger("test"))
+    monkeypatch.setattr(app_main, "apply_migrations", lambda **kwargs: 0)
+    monkeypatch.setenv("TELEGRAM_API_ID", "12345")
+    monkeypatch.setenv("TELEGRAM_API_HASH", "abcde")
+    monkeypatch.setattr(app_main, "load_channels_config", lambda path: SimpleNamespace(channels=[]))
+    monkeypatch.setattr(app_main, "build_ingestion_service", lambda **kwargs: MagicMock(name="ingestion"))
+    monkeypatch.setattr(app_main, "build_processing_status_store", lambda **kwargs: MagicMock(name="status"))
+    monkeypatch.setattr(app_main, "RawMessageRepository", lambda **kwargs: MagicMock(name="raw_repo"))
+    channel_resolver = MagicMock(name="channel_resolver")
+    monkeypatch.setattr(app_main, "ChannelConfigResolver", lambda **kwargs: channel_resolver)
+    monkeypatch.setattr(app_main, "CanonicalMessageRepository", lambda **kwargs: MagicMock(name="canonical_repo"))
+    monkeypatch.setattr(app_main.sqlite3, "connect", lambda *args, **kwargs: MagicMock(name="sqlite_conn"))
+    monkeypatch.setattr(app_main, "ParserRunStore", lambda conn: SimpleNamespace(create_run=lambda **kwargs: 1))
+    monkeypatch.setattr(app_main, "ParserResultV2Store", lambda conn: MagicMock(name="result_v2_store"))
+    monkeypatch.setattr(app_main, "ParserPipelineProcessor", lambda **kwargs: MagicMock(name="parser_pipeline"))
+    monkeypatch.setattr(app_main, "SignalEnrichmentProcessor", lambda **kwargs: MagicMock(name="enrichment_processor"))
+    monkeypatch.setattr(app_main, "OperationConfigLoader", lambda path: MagicMock(name="config_loader"))
+    monkeypatch.setattr(app_main, "EnrichedCanonicalMessageRepository", lambda *args, **kwargs: MagicMock(name="enriched_repo"))
+    monkeypatch.setattr(app_main, "TextPatternCatalog", lambda path: SimpleNamespace(all_trader_ids=set()))
+    monkeypatch.setattr(app_main, "TraderResolver", lambda **kwargs: MagicMock(name="trader_resolver"))
+    monkeypatch.setattr(app_main, "TradeChainRepository", lambda *args, **kwargs: MagicMock(name="chain_repo"))
+    monkeypatch.setattr(app_main, "LifecycleEventRepository", lambda *args, **kwargs: MagicMock(name="event_repo"))
+    monkeypatch.setattr(app_main, "ExecutionCommandRepository", lambda *args, **kwargs: MagicMock(name="command_repo"))
+    monkeypatch.setattr(app_main, "ControlStateRepository", lambda *args, **kwargs: MagicMock(name="control_repo"))
+    monkeypatch.setattr(app_main, "SnapshotRepository", lambda *args, **kwargs: MagicMock(name="snapshot_repo"))
+    monkeypatch.setattr(app_main, "ExchangeEventRepository", lambda *args, **kwargs: MagicMock(name="exchange_event_repo"))
+    monkeypatch.setattr(app_main, "_build_execution_runtime", lambda **kwargs: None)
+    monkeypatch.setattr(app_main, "_collect_runtime_known_symbols", lambda *args, **kwargs: None)
+    monkeypatch.setattr(app_main, "_build_exchange_port", lambda **kwargs: MagicMock(name="exchange_port"))
+    monkeypatch.setattr(app_main, "_build_lifecycle_entry_gate", lambda **kwargs: MagicMock(name="entry_gate"))
+
+    def fake_gate_worker(**kwargs):
+        captured.update(kwargs)
+        raise StopBootstrap
+
+    monkeypatch.setattr(app_main, "LifecycleGateWorker", fake_gate_worker)
+
+    with pytest.raises(StopBootstrap):
+        asyncio.run(
+            app_main._async_main(
+                parser_db_path=str(tmp_path / "parser.sqlite3"),
+                migrations_dir=str(tmp_path / "migrations"),
+                ops_db_path=str(tmp_path / "ops.sqlite3"),
+                ops_migrations_dir=str(tmp_path / "ops_migrations"),
+                log_path=str(tmp_path / "bot.log"),
+                root_dir=tmp_path,
+            )
+        )
+
+    assert captured["channel_resolver"] is channel_resolver
+
+
+def test_lifecycle_gate_worker_passes_signal_admission_context_to_gate(tmp_path, monkeypatch):
+    from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker, SignalAdmissionContext
+    from src.runtime_v2.signal_enrichment.models import (
+        EnrichedEntryLeg,
+        EnrichedSignalPayload,
+        ManagementPlanConfig,
+    )
+
+    parser_db_path = tmp_path / "parser.sqlite3"
+    ops_db_path = tmp_path / "ops.sqlite3"
+
+    with sqlite3.connect(parser_db_path) as conn:
+        conn.execute(
+            """
+            CREATE TABLE raw_messages (
+                raw_message_id INTEGER PRIMARY KEY,
+                source_chat_id TEXT NOT NULL,
+                source_topic_id INTEGER,
+                message_presentation_type TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            INSERT INTO raw_messages (
+                raw_message_id, source_chat_id, source_topic_id, message_presentation_type
+            ) VALUES (?, ?, ?, ?)
+            """,
+            (100, "-1009999999999", 9, "INLINE_BUTTONS"),
+        )
+        conn.commit()
+
+    signal = EnrichedSignalPayload(
+        symbol="BTC/USDT",
+        side="LONG",
+        entry_structure="ONE_SHOT",
+        entries=[
+            EnrichedEntryLeg(
+                sequence=1,
+                entry_type="LIMIT",
+                price=Price(raw="50000", value=50000.0),
+                weight=1.0,
+            )
+        ],
+        take_profits=[TakeProfit(sequence=1, price=Price(raw="51000", value=51000.0))],
+        stop_loss=StopLoss(price=Price(raw="49000", value=49000.0)),
+    )
+    row = (
+        1,
+        10,
+        100,
+        "trader_a",
+        "acc_1",
+        "SIGNAL",
+        "PASS",
+        signal.model_dump_json(),
+        None,
+        ManagementPlanConfig().model_dump_json(),
+        "{}",
+    )
+
+    gate = MagicMock(name="gate")
+    gate.process_signal.return_value = MagicMock(name="signal_result")
+    chain_repo = MagicMock(name="chain_repo")
+    chain_repo.get_active_by_trader.return_value = []
+    control_repo = MagicMock(name="control_repo")
+    control_repo.get_effective_mode.return_value = "NONE"
+    channel_resolver = MagicMock(name="channel_resolver")
+    channel_resolver.lookup.return_value = SimpleNamespace(signal_message_type="INLINE_BUTTONS_ONLY")
+
+    monkeypatch.setattr(LifecycleGateWorker, "_persist_signal", lambda self, enriched, result: None)
+
+    worker = LifecycleGateWorker(
+        parser_db_path=str(parser_db_path),
+        ops_db_path=str(ops_db_path),
+        gate=gate,
+        chain_repo=chain_repo,
+        event_repo=MagicMock(name="event_repo"),
+        command_repo=MagicMock(name="command_repo"),
+        snapshot_repo=MagicMock(name="snapshot_repo"),
+        control_repo=control_repo,
+        channel_resolver=channel_resolver,
+    )
+
+    worker._process_row(row)
+
+    channel_resolver.lookup.assert_called_once_with("-1009999999999", 9)
+    gate.process_signal.assert_called_once()
+    _, _, _, admission = gate.process_signal.call_args.args
+    assert isinstance(admission, SignalAdmissionContext)
+    assert admission.signal_message_type == "INLINE_BUTTONS_ONLY"
+    assert admission.message_presentation_type == "INLINE_BUTTONS"
 
 
 def test_build_exchange_port_uses_live_port_when_runtime_has_adapters(monkeypatch, tmp_path):

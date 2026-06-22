@@ -18,12 +18,22 @@ class FakeRawRepo:
     def __init__(self) -> None:
         self.rows: dict[tuple[str, int], tuple[int, str | None]] = {}
         self.text_updates: list[tuple[int, str]] = []
+        self.content_updates: list[tuple[int, str, str]] = []
 
     def get_id_and_text(self, source_chat_id: str, telegram_message_id: int):
         return self.rows.get((source_chat_id, telegram_message_id))
 
     def update_raw_text(self, raw_message_id: int, raw_text: str) -> None:
         self.text_updates.append((raw_message_id, raw_text))
+
+    def update_message_content(
+        self,
+        raw_message_id: int,
+        *,
+        raw_text: str,
+        message_presentation_type: str,
+    ) -> None:
+        self.content_updates.append((raw_message_id, raw_text, message_presentation_type))
 
 
 class FakeStatusStore:
@@ -121,8 +131,11 @@ def test_edit_of_never_acquired_message_is_ingested_as_new():
     listener, raw_repo, status_store, ingestion = _make_listener(
         chain_exists=lambda _rid: False,
     )
-    _run(listener._handle_edited_message(FakeEvent(FakeMessage(10, "LONG AVAXUSDT entry 30"))))
+    message = FakeMessage(10, "LONG AVAXUSDT entry 30")
+    message.reply_markup = object()
+    _run(listener._handle_edited_message(FakeEvent(message)))
     assert len(ingestion.calls) == 1
+    assert ingestion.calls[0].message_presentation_type == "INLINE_BUTTONS"
     item = listener._queue.get_nowait()
     assert item.acquisition_mode == "edit"
     assert item.raw_text == "LONG AVAXUSDT entry 30"
@@ -152,14 +165,38 @@ def test_edit_of_rejected_signal_is_reprocessed():
     )
     edit_ts = datetime(2026, 6, 11, 14, 0, 0, tzinfo=timezone.utc)
     message = FakeMessage(10, "LONG BTCUSDT entry 60000", edit_date=edit_ts)
+    message.reply_markup = object()
     _run(listener._handle_edited_message(FakeEvent(message)))
 
-    assert raw_repo.text_updates == [(55, "LONG BTCUSDT entry 60000")]
+    assert raw_repo.content_updates == [(55, "LONG BTCUSDT entry 60000", "INLINE_BUTTONS")]
+    assert raw_repo.text_updates == []
     assert status_store.updates == [(55, "pending")]
     item = listener._queue.get_nowait()
     assert item.raw_message_id == 55
     assert item.acquisition_mode == "edit"
     assert item.run_context == f"edit:{int(edit_ts.timestamp())}"
+
+
+def test_already_acquired_edit_branch_updates_presentation_type_without_reingest() -> None:
+    raw_repo = FakeRawRepo()
+    raw_repo.rows[("-100123", 10)] = (55, "LONG BTCUSTD entry 60000")
+    listener, _, status_store, ingestion = _make_listener(
+        raw_repo=raw_repo,
+        chain_exists=lambda _rid: False,
+    )
+    edit_ts = datetime(2026, 6, 11, 14, 0, 0, tzinfo=timezone.utc)
+    message = FakeMessage(10, "LONG BTCUSDT entry 60000", edit_date=edit_ts)
+    message.reply_markup = object()
+
+    _run(listener._handle_edited_message(FakeEvent(message)))
+
+    assert ingestion.calls == []
+    assert raw_repo.content_updates == [(55, "LONG BTCUSDT entry 60000", "INLINE_BUTTONS")]
+    assert raw_repo.text_updates == []
+    assert status_store.updates == [(55, "pending")]
+    item = listener._queue.get_nowait()
+    assert item.raw_message_id == 55
+    assert item.acquisition_mode == "edit"
 
 
 def test_edit_of_message_with_existing_chain_is_skipped():

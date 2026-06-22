@@ -14,13 +14,35 @@ _ACTIVE_STATES = ("OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY", "REVIEW_REQUIRED"
 _EVENT_LABEL_MAP = {
     "SIGNAL_ACCEPTED": "SIGNAL ACCEPTED",
     "ENTRY_OPENED": "ENTRY OPENED",
+    "ENTRY_FILLED": "ENTRY OPENED",
     "ENTRY_PARTIALLY_FILLED": "ENTRY PARTIALLY FILLED",
-    "TP_FILLED": "TP1 FILLED",
+    "TP_FILLED": "TP FILLED",          # overridden per-event using tp_level from payload
     "SL_MOVED_TO_BE": "SL MOVED TO BE",
+    "STOP_MOVE_CONFIRMED": "SL UPDATED",  # overridden to "SL MOVED TO BE" when is_breakeven
     "UPDATE_DONE": "UPDATE DONE",
     "REVIEW_REQUIRED": "REVIEW REQUIRED",
-    "POSITION_CLOSED": "POSITION CLOSED",
-    "POSITION_CANCELLED": "POSITION CANCELLED",
+    "SL_FILLED": "SL HIT",
+    "CLOSE_PARTIAL_FILLED": "PARTIAL CLOSE",
+    "CLOSE_FULL_FILLED": "POSITION CLOSED",
+    "LIQUIDATION_FILLED": "POSITION CLOSED",
+    "PENDING_ENTRY_CANCELLED": "POSITION CANCELLED",
+}
+
+_EVENT_SOURCE_MAP: dict[str, str] = {
+    "SIGNAL_ACCEPTED": "Signal",
+    "ENTRY_OPENED": "exchange",
+    "ENTRY_FILLED": "exchange",
+    "ENTRY_PARTIALLY_FILLED": "exchange",
+    "TP_FILLED": "exchange",
+    "SL_FILLED": "exchange",
+    "CLOSE_PARTIAL_FILLED": "exchange",
+    "CLOSE_FULL_FILLED": "exchange",
+    "LIQUIDATION_FILLED": "exchange",
+    "PENDING_ENTRY_CANCELLED": "exchange",
+    "SL_MOVED_TO_BE": "operation_rules",
+    "STOP_MOVE_CONFIRMED": "operation_rules",
+    "UPDATE_DONE": "operation_rules",
+    "REVIEW_REQUIRED": "system",
 }
 _TERMINAL_STATES = {"CLOSED", "CANCELLED_UNFILLED", "POSITION_CLOSED"}
 _ACTIONABLE_STATES = {"OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY",
@@ -86,6 +108,7 @@ class TradeEvent:
     source: str | None = None
     event_type: str | None = None
     reason: str | None = None
+    note: str | None = None
     clean_log_link: str | None = None
 
 
@@ -554,7 +577,8 @@ class StatusQueries:
                     "t.management_plan_json, t.risk_snapshot_json, t.plan_state_json, "
                     "COALESCE(t.source_chat_id, rm.source_chat_id), "
                     "COALESCE(t.telegram_message_id, rm.telegram_message_id), "
-                    "t.be_protection_status "
+                    "t.be_protection_status, "
+                    "t.cumulative_gross_pnl, t.cumulative_fees, t.cumulative_funding "
                     "FROM ops_trade_chains t "
                     "LEFT JOIN raw_messages rm ON t.raw_message_id = rm.raw_message_id "
                     "WHERE t.trade_chain_id=?",
@@ -566,7 +590,8 @@ class StatusQueries:
                     "lifecycle_state, entry_avg_price, current_stop_price, "
                     "management_plan_json, risk_snapshot_json, plan_state_json, "
                     "source_chat_id, telegram_message_id, "
-                    "be_protection_status "
+                    "be_protection_status, "
+                    "cumulative_gross_pnl, cumulative_fees, cumulative_funding "
                     "FROM ops_trade_chains WHERE trade_chain_id=?",
                     (chain_id,),
                 ).fetchone()
@@ -581,6 +606,26 @@ class StatusQueries:
             current_stop_price = row[7]
             if current_stop_price is None:
                 current_stop_price = _extract_stop_price(row[10], row[9], row[8])
+
+            # Live PnL from position snapshot (non-terminal trades only)
+            _state_inner = row[5]
+            _is_terminal_inner = _state_inner in _TERMINAL_STATES
+            _unrealized_pnl: float | None = None
+            _cum_realized_pnl: float | None = None
+            if not _is_terminal_inner and _table_exists(conn, "ops_position_snapshots"):
+                _snap = conn.execute(
+                    "SELECT unrealized_pnl, cum_realized_pnl FROM ops_position_snapshots "
+                    "WHERE account_id=? AND symbol=? AND side=? LIMIT 1",
+                    (row[4], row[1], row[2]),
+                ).fetchone()
+                if _snap:
+                    _unrealized_pnl = float(_snap[0]) if _snap[0] is not None else None
+                    _cum_realized_pnl = float(_snap[1]) if _snap[1] is not None else None
+
+            # Cumulative PnL columns for final_result (terminal trades)
+            _cum_gross_pnl_raw = row[14]
+            _cum_fees_raw = row[15]
+            _cum_funding_raw = row[16]
         finally:
             conn.close()
 
@@ -604,20 +649,37 @@ class StatusQueries:
             source_val = None
             event_type_val = None
             reason_val = None
+            note_val = None
+            pdata: dict = {}
             if payload_json:
                 try:
                     pdata = json.loads(payload_json)
                     source_val = pdata.get("source")
                     event_type_val = pdata.get("update_type") or pdata.get("type")
-                    reason_val = pdata.get("reason") or pdata.get("error")
+                    reason_val = (
+                        pdata.get("reason")
+                        or pdata.get("close_reason")
+                        or pdata.get("cancel_reason")
+                        or pdata.get("error")
+                    )
+                    note_val = pdata.get("note")
                 except Exception:
                     pass
+            if not source_val:
+                source_val = _EVENT_SOURCE_MAP.get(etype)
+            # Dynamic label overrides
+            if etype == "TP_FILLED":
+                level = pdata.get("tp_level")
+                label = f"TP{level} FILLED" if level else "TP FILLED"
+            elif etype == "STOP_MOVE_CONFIRMED" and pdata.get("is_breakeven"):
+                label = "SL MOVED TO BE"
             structured_events.append(TradeEvent(
                 label=label,
                 timestamp=ts,
                 source=source_val,
                 event_type=event_type_val,
                 reason=reason_val,
+                note=note_val,
                 clean_log_link=None,
             ))
 
@@ -638,35 +700,59 @@ class StatusQueries:
         is_terminal = state_val in _TERMINAL_STATES
         is_actionable = state_val in _ACTIONABLE_STATES
 
-        # Build entry_legs and tp_legs from management_plan_json
+        # Build final_result for terminal trades
+        final_result: dict | None = None
+        if is_terminal and _cum_gross_pnl_raw is not None:
+            pnl_gross_f = float(_cum_gross_pnl_raw)
+            fees_f = float(_cum_fees_raw) if _cum_fees_raw is not None else 0.0
+            funding_f = float(_cum_funding_raw) if _cum_funding_raw is not None else 0.0
+            final_result = {
+                "roi_net": None,
+                "ror": None,
+                "r_mult": None,
+                "pnl_net": pnl_gross_f - fees_f - funding_f,
+                "pnl_gross": pnl_gross_f,
+                "fees": -fees_f,
+                "funding": funding_f,
+            }
+
+        # Build entry_legs and tp_legs from plan_state_json
         entry_legs: list[dict] = []
         tp_legs: list[dict] = []
         sl_price_str: str | None = None
         has_be = (row[13] == "PROTECTED") if row[13] is not None else False
 
         try:
-            plan = json.loads(row[8] or "{}")
-            entries_raw = plan.get("entries") or plan.get("entry_levels") or []
-            for e in entries_raw:
-                price = e.get("price") or e.get("entry_price")
-                status = e.get("status", "pending")
-                if price is not None:
-                    entry_legs.append({"price": str(price), "status": status})
-            tps_raw = plan.get("tp_levels") or plan.get("take_profits") or []
-            for t in tps_raw:
-                price = t.get("price") or t.get("tp_price")
-                status = t.get("status", "pending")
-                if price is not None:
-                    tp_legs.append({"price": str(price), "status": status})
+            plan_state = json.loads(row[10] or "{}")
+            for leg in plan_state.get("legs") or []:
+                raw_price = leg.get("price")
+                if raw_price is None:
+                    continue
+                status_raw = (leg.get("status") or "pending").upper()
+                leg_status = (
+                    "filled" if status_raw == "FILLED"
+                    else "cancelled" if status_raw == "CANCELLED"
+                    else "pending"
+                )
+                entry_legs.append({"price": f"{float(raw_price):.8g}", "status": leg_status})
+            all_tp_prices = list(plan_state.get("intermediate_tps") or [])
+            final_tp = plan_state.get("final_tp")
+            if final_tp is not None:
+                all_tp_prices.append(final_tp)
+            filled_count = int(plan_state.get("_filled_tp_count") or 0)
+            for i, tp_price in enumerate(all_tp_prices):
+                if i < filled_count:
+                    tp_status = "filled"
+                elif is_terminal:
+                    tp_status = "cancelled"
+                else:
+                    tp_status = "pending"
+                tp_legs.append({"price": f"{float(tp_price):.8g}", "status": tp_status})
         except Exception:
             pass
 
         if current_stop_price is not None:
-            sl_price_str = str(
-                int(current_stop_price)
-                if current_stop_price == int(current_stop_price)
-                else current_stop_price
-            )
+            sl_price_str = f"{current_stop_price:.8g}"
 
         return TradeDetail(
             chain_id=row[0], symbol=row[1], side=row[2], trader_id=row[3],
@@ -679,9 +765,9 @@ class StatusQueries:
             tp_legs=tp_legs,
             sl_price=sl_price_str,
             has_be=has_be,
-            unrealized_pnl=None,
-            cum_realized_pnl=None,
-            final_result=None,
+            unrealized_pnl=_unrealized_pnl,
+            cum_realized_pnl=_cum_realized_pnl,
+            final_result=final_result,
             is_actionable=is_actionable,
             is_terminal=is_terminal,
         )

@@ -97,6 +97,7 @@ def test_lookup_parser_profile_defaults_to_trader_id(resolver):
     entry = resolver.lookup("-1002222222222", topic_id=None)
     assert entry is not None
     assert entry.parser_profile == "trader_c"
+    assert entry.signal_message_type == "ANY"
 
 
 def test_global_blacklist_match(resolver):
@@ -260,3 +261,28 @@ channels:
     p.write_text(yaml_content, encoding="utf-8")
     with pytest.raises(ValueError, match="invalid channel entry 'Broken': chat_id is missing"):
         ChannelConfigResolver(p)
+
+
+def test_lookup_signal_message_type_defaults_to_any(resolver):
+    entry = resolver.lookup("-1002222222222", topic_id=None)
+    assert entry is not None
+    assert entry.signal_message_type == "ANY"
+
+
+def test_lookup_signal_message_type_reads_inline_buttons_only(tmp_path):
+    yaml_content = """
+channels:
+  - chat_id: -1009999999999
+    topic_id: 9
+    label: "InlineOnly"
+    active: true
+    trader_id: trader_a
+    signal_message_type: INLINE_BUTTONS_ONLY
+    blacklist: []
+"""
+    p = tmp_path / "channels.yaml"
+    p.write_text(yaml_content, encoding="utf-8")
+    resolver = ChannelConfigResolver(p)
+    entry = resolver.lookup("-1009999999999", topic_id=9)
+    assert entry is not None
+    assert entry.signal_message_type == "INLINE_BUTTONS_ONLY"

@@ -733,6 +733,14 @@ class LifecycleEventProcessor:
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         fill_payload = _normalized_fill_payload(ep.model_dump(), default_qty=fill_qty)
+        if ep.source:
+            fill_payload["source"] = ep.source
+        if ep.source == "trader_update":
+            fill_payload["close_reason"] = "TRADER_COMMAND"
+        elif chain.be_protection_status == "PROTECTED":
+            fill_payload["close_reason"] = "BREAKEVEN_AFTER_TP"
+        else:
+            fill_payload["close_reason"] = "STOP_LOSS"
         return EventProcessorResult(
             new_lifecycle_state="CLOSED",
             new_be_protection_status=None,
@@ -765,7 +773,7 @@ class LifecycleEventProcessor:
             fill_payload["source"] = ep.source
         if ep.command_id is not None:
             if ep.source == "trader_update":
-                fill_payload["close_reason"] = "TRADER_UPDATE"
+                fill_payload["close_reason"] = "USER_MANUAL_CLOSE"
             else:
                 fill_payload["close_reason"] = "MANUAL_CLOSE"
         return EventProcessorResult(
@@ -840,6 +848,8 @@ class LifecycleEventProcessor:
         eid = exchange_event.exchange_event_id
         chain_id = chain.trade_chain_id
         fill_payload = _normalized_fill_payload(ep.model_dump(), default_qty=fill_qty)
+        fill_payload["close_reason"] = "LIQUIDATION"
+        fill_payload["source"] = "exchange"
         return EventProcessorResult(
             new_lifecycle_state="CLOSED",
             new_be_protection_status=None,

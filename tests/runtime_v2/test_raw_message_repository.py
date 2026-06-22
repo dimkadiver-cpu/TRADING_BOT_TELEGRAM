@@ -18,6 +18,16 @@ def _apply_migrations(db_path: str) -> None:
     conn.close()
 
 
+def _apply_migrations_without_presentation_type(db_path: str) -> None:
+    conn = sqlite3.connect(db_path)
+    for f in sorted(Path("db/migrations").glob("*.sql")):
+        if f.name >= "031_raw_message_presentation_type.sql":
+            continue
+        conn.executescript(f.read_text())
+    conn.commit()
+    conn.close()
+
+
 @pytest.fixture
 def db_path(tmp_path):
     path = str(tmp_path / "test.db")
@@ -41,6 +51,7 @@ def _make_item(chat_id: str = "-100123", msg_id: int = 456, mode: str = "live") 
         raw_text="BUY BTC",
         message_ts=_TS,
         acquisition_mode=mode,
+        message_presentation_type="PLAIN",
         has_media=False,
         media_kind=None,
         media_mime_type=None,
@@ -66,6 +77,21 @@ def test_save_raw_dedup_same_id(repo):
 def test_save_raw_catchup_mode(repo):
     env = repo.save_raw(_make_item(mode="catchup"))
     assert env.acquisition_mode == "catchup"
+
+
+def test_save_raw_persists_message_presentation_type(repo):
+    env = repo.save_raw(_make_item())
+    assert env.message_presentation_type == "PLAIN"
+
+
+def test_save_raw_legacy_schema_falls_back_to_plain(tmp_path):
+    db_path = str(tmp_path / "legacy.db")
+    _apply_migrations_without_presentation_type(db_path)
+    repo = RawMessageRepository(db_path=db_path)
+
+    env = repo.save_raw(_make_item())
+
+    assert env.message_presentation_type == "PLAIN"
 
 
 def test_set_blacklisted(repo):
@@ -126,6 +152,20 @@ def test_update_raw_text(repo):
     repo.update_raw_text(env.raw_message_id, "BUY ETH")
     updated = repo.get_by_id(env.raw_message_id)
     assert updated.raw_text == "BUY ETH"
+
+
+def test_update_message_content_updates_text_and_presentation_type(repo):
+    env = repo.save_raw(_make_item(chat_id="-100123", msg_id=456))
+
+    repo.update_message_content(
+        env.raw_message_id,
+        raw_text="BUY ETH",
+        message_presentation_type="INLINE_BUTTONS",
+    )
+
+    updated = repo.get_by_id(env.raw_message_id)
+    assert updated.raw_text == "BUY ETH"
+    assert updated.message_presentation_type == "INLINE_BUTTONS"
 
 
 def test_get_chain_node_returns_none_for_unknown(repo):

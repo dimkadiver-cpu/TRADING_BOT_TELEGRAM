@@ -19,6 +19,7 @@ class RawMessageRecord:
     reply_to_message_id: int | None = None
     acquisition_status: str = "ACQUIRED"
     source_topic_id: int | None = None
+    message_presentation_type: str = "PLAIN"
     has_media: bool = False
     media_kind: str | None = None
     media_mime_type: str | None = None
@@ -35,6 +36,7 @@ class StoredRawMessage:
     raw_text: str | None
     reply_to_message_id: int | None = None
     source_topic_id: int | None = None
+    message_presentation_type: str = "PLAIN"
     has_media: bool = False
     media_kind: str | None = None
     media_mime_type: str | None = None
@@ -83,6 +85,7 @@ class RawMessageStore:
         ]
         for column_name, value in [
             ("source_topic_id", record.source_topic_id),
+            ("message_presentation_type", record.message_presentation_type),
             ("has_media", 1 if record.has_media else 0),
             ("media_kind", record.media_kind),
             ("media_mime_type", record.media_mime_type),
@@ -124,6 +127,7 @@ class RawMessageStore:
     ) -> StoredRawMessage | None:
         available_columns = self._table_columns("raw_messages")
         include_topic = "source_topic_id" in available_columns
+        include_presentation = "message_presentation_type" in available_columns
         include_media = {
             "has_media",
             "media_kind",
@@ -138,6 +142,8 @@ class RawMessageStore:
         )
         if include_topic:
             select_cols += ", source_topic_id"
+        if include_presentation:
+            select_cols += ", message_presentation_type"
         if include_media:
             select_cols += ", has_media, media_kind, media_mime_type, media_filename, media_blob"
 
@@ -156,6 +162,10 @@ class RawMessageStore:
             if include_topic:
                 source_topic_id = int(row[idx]) if row[idx] is not None else None
                 idx += 1
+            message_presentation_type = "PLAIN"
+            if include_presentation:
+                message_presentation_type = str(row[idx] or "PLAIN")
+                idx += 1
             return StoredRawMessage(
                 raw_message_id=int(row[0]),
                 source_chat_id=row[1],
@@ -164,6 +174,7 @@ class RawMessageStore:
                 raw_text=row[4],
                 reply_to_message_id=int(row[5]) if row[5] is not None else None,
                 source_topic_id=source_topic_id,
+                message_presentation_type=message_presentation_type,
                 has_media=bool(row[idx]) if include_media else False,
                 media_kind=row[idx + 1] if include_media else None,
                 media_mime_type=row[idx + 2] if include_media else None,

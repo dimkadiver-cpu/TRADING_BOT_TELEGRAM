@@ -329,6 +329,40 @@ def test_gate_signal_reject_event_has_no_chain():
     assert len(reject_events) == 1
 
 
+def test_gate_signal_inline_only_plain_message_is_silently_skipped():
+    from src.runtime_v2.lifecycle.entry_gate import SignalAdmissionContext
+
+    gate = _make_gate()
+    enriched = _make_enriched_signal()
+    admission = SignalAdmissionContext(
+        signal_message_type="INLINE_BUTTONS_ONLY",
+        message_presentation_type="PLAIN",
+    )
+
+    result = gate.process_signal(enriched, [], "NONE", admission)
+
+    assert result.trade_chain is None
+    assert result.execution_commands == []
+    assert result.review_reason == "signal_message_type_mismatch"
+    assert [e.event_type for e in result.lifecycle_events] == ["SIGNAL_SKIPPED"]
+
+
+def test_gate_signal_inline_only_inline_buttons_is_accepted():
+    from src.runtime_v2.lifecycle.entry_gate import SignalAdmissionContext
+
+    gate = _make_gate()
+    enriched = _make_enriched_signal()
+    admission = SignalAdmissionContext(
+        signal_message_type="INLINE_BUTTONS_ONLY",
+        message_presentation_type="INLINE_BUTTONS",
+    )
+
+    result = gate.process_signal(enriched, [], "NONE", admission)
+
+    assert result.trade_chain is not None
+    assert "SIGNAL_ACCEPTED" in [e.event_type for e in result.lifecycle_events]
+
+
 # ── UPDATE path tests ──────────────────────────────────────────────────────────
 
 def _make_update_enriched(

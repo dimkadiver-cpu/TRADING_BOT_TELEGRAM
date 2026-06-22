@@ -2,13 +2,15 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+import logging
 from unittest.mock import MagicMock
 
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult, ParserJobStatus
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
 from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
 from src.telegram.channel_config import ChannelsConfig
-from src.telegram.listener import TelegramListener, _QueueItem
+from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
+from src.telegram.listener import TelegramListener, _QueueItem, _build_incoming
 
 
 def _make_config() -> ChannelsConfig:
@@ -100,6 +102,7 @@ def _make_envelope():
         acquisition_mode="live",
         acquisition_status="ACQUIRED",
         processing_status="done",
+        message_presentation_type="PLAIN",
         source_trader_id=None,
         resolved_trader_id=None,
         resolution_method=None,
@@ -193,3 +196,73 @@ def test_process_item_logs_warning_on_failed_parse() -> None:
 
     logger.warning.assert_called_once()
     assert "parse failed" in logger.warning.call_args[0][0]
+
+
+def test_build_incoming_marks_plain_message() -> None:
+    message = MagicMock()
+    message.id = 42
+    message.message = "BUY BTCUSDT"
+    message.date = datetime.now(timezone.utc)
+    message.reply_markup = None
+    message.reply_to = None
+
+    incoming = _build_incoming(
+        message=message,
+        source_chat_id="-100123",
+        chat_title="Test",
+        chat_username=None,
+        trader_id=None,
+        acquisition_status="ACQUIRED_ELIGIBLE",
+        source_topic_id=None,
+    )
+
+    assert incoming.message_presentation_type == "PLAIN"
+
+
+def test_build_incoming_marks_inline_buttons_message() -> None:
+    message = MagicMock()
+    message.id = 42
+    message.message = "BUY BTCUSDT"
+    message.date = datetime.now(timezone.utc)
+    message.reply_markup = MagicMock()
+    message.reply_to = None
+
+    incoming = _build_incoming(
+        message=message,
+        source_chat_id="-100123",
+        chat_title="Test",
+        chat_username=None,
+        trader_id=None,
+        acquisition_status="ACQUIRED_ELIGIBLE",
+        source_topic_id=None,
+    )
+
+    assert incoming.message_presentation_type == "INLINE_BUTTONS"
+
+
+def test_ingest_passes_message_presentation_type_to_store_record() -> None:
+    store = MagicMock()
+    store.save_with_id.return_value = MagicMock(saved=True, raw_message_id=77)
+    service = RawMessageIngestionService(store=store, revision_store=None, logger=logging.getLogger("test"))
+
+    result = service.ingest(
+        TelegramIncomingMessage(
+            source_chat_id="-100123",
+            source_chat_title="Test",
+            source_type="channel",
+            source_trader_id=None,
+            telegram_message_id=42,
+            reply_to_message_id=None,
+            raw_text="BUY BTCUSDT",
+            message_ts=datetime.now(timezone.utc),
+            acquisition_status="ACQUIRED_ELIGIBLE",
+            source_topic_id=None,
+            message_presentation_type="INLINE_BUTTONS",
+        )
+    )
+
+    assert result.saved is True
+    assert result.raw_message_id == 77
+    store.save_with_id.assert_called_once()
+    record = store.save_with_id.call_args[0][0]
+    assert record.message_presentation_type == "INLINE_BUTTONS"
