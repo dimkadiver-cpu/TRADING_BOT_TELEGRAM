@@ -28,6 +28,10 @@ from src.runtime_v2.control_plane.formatters.status import format_status
 from src.runtime_v2.control_plane.formatters.trade_detail import format_trade_detail
 from src.runtime_v2.control_plane.formatters.trades import format_trades
 from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY as EMERGENCY_REGISTRY
+from src.runtime_v2.control_plane.emergency_close import (
+    _is_unfiltered_global,
+    GLOBAL_SCOPE_SAFETY_MSG,
+)
 from src.runtime_v2.control_plane.models import ControlPlaneConfig
 from src.runtime_v2.control_plane.notification_dispatcher import build_telegram_request
 from src.runtime_v2.control_plane.service import RuntimeControlService
@@ -440,6 +444,9 @@ class CommandRouter:
             default_scope = _QS(account_id=self._config.default_account, trader_ids=None)
             trader_override = args[0] if args else None
             effective_scope = _override_trader(default_scope, trader_override)
+            if _is_unfiltered_global(effective_scope, trader_override):
+                return _DispatchResult(GLOBAL_SCOPE_SAFETY_MSG, decision="REJECTED",
+                                       reject_reason="global_scope_unfiltered")
             candidates = self._service.get_open_for_close(effective_scope)
             sl = _scope_label_from_scope(effective_scope)
             chains_payload = _candidates_to_payload(candidates)
@@ -468,6 +475,9 @@ class CommandRouter:
                     reject_reason="invalid_arguments",
                 )
             effective_scope = _override_trader(default_scope, trader_arg)
+            if _is_unfiltered_global(effective_scope, trader_arg):
+                return _DispatchResult(GLOBAL_SCOPE_SAFETY_MSG, decision="REJECTED",
+                                       reject_reason="global_scope_unfiltered")
             candidates = [
                 c for c in self._service.get_open_for_close(effective_scope)
                 if c.symbol.upper() == symbol_arg.upper()
@@ -497,6 +507,9 @@ class CommandRouter:
             default_scope = _QS(account_id=self._config.default_account, trader_ids=None)
             trader_override = args[0] if args else None
             effective_scope = _override_trader(default_scope, trader_override)
+            if _is_unfiltered_global(effective_scope, trader_override):
+                return _DispatchResult(GLOBAL_SCOPE_SAFETY_MSG, decision="REJECTED",
+                                       reject_reason="global_scope_unfiltered")
             candidates = self._service.get_waiting_for_cancel(effective_scope)
             open_count = self._service.get_open_count_excluding_waiting(effective_scope)
             sl = _scope_label_from_scope(effective_scope)

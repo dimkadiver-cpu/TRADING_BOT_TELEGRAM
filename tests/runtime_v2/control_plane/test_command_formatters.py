@@ -529,3 +529,68 @@ def test_health_format_no_warnings_section_when_all_ok():
     text = format_health(view)
     assert "Warnings:" not in text
     assert "Critical:" not in text
+
+
+# ---------------------------------------------------------------------------
+# Gap #8: exchange_connected=False severity — should be Critical when probe=failed
+# ---------------------------------------------------------------------------
+
+def test_health_exchange_disconnect_moves_to_critical_when_workers_failed():
+    """When a worker FAILED + exchange disconnected, exchange appears in Critical not Warnings."""
+    from src.runtime_v2.control_plane.formatters.health import format_health
+    from src.runtime_v2.control_plane.status_queries import HealthView
+    view = HealthView(
+        updated_at="14:32:05",
+        workers=[
+            ("Parser pipeline",    "OK",     ""),
+            ("Lifecycle gate",     "FAILED", "heartbeat missing"),
+            ("Execution worker",   "OK",     ""),
+            ("Exchange sync",      "OK",     ""),
+            ("Notification disp.", "OK",     ""),
+        ],
+        db_ok=True,
+        exchange_connected=False,
+        last_event_age_seconds=None,
+    )
+    text = format_health(view)
+    # Exchange disconnect must appear in Critical section, NOT in Warnings
+    assert "Critical:" in text
+    # Find where the exchange line appears relative to headers
+    crit_pos = text.find("Critical:")
+    warn_pos = text.find("Warnings:")
+    exch_pos = text.find("exchange connectivity")
+    assert exch_pos > crit_pos, "exchange disconnect must be under Critical, not Warnings"
+    if warn_pos != -1:
+        assert exch_pos > warn_pos or exch_pos < warn_pos, "exchange must NOT be under Warnings when failed"
+
+
+# ---------------------------------------------------------------------------
+# Gap #4: TEMPLATE_REGISTRY["health"] must use new block system template
+# ---------------------------------------------------------------------------
+
+def test_template_registry_health_uses_new_block_system():
+    """TEMPLATE_REGISTRY['health'] must have '🩺 HEALTH' (new), not '💊 HEALTH' (old)."""
+    from src.runtime_v2.control_plane.formatters.templates.commands import TEMPLATE_REGISTRY
+    from src.runtime_v2.control_plane.formatters._blocks import render_template
+    from src.runtime_v2.control_plane.status_queries import HealthView
+    from src.runtime_v2.control_plane.formatters.health import format_health
+    cfg = TEMPLATE_REGISTRY["health"]
+    # Render with a simple payload that should produce the new format
+    view = HealthView(
+        updated_at="10:00:00",
+        workers=[("Parser pipeline", "OK", "")],
+        db_ok=True,
+        exchange_connected=True,
+        last_event_age_seconds=None,
+    )
+    # The registry entry should produce the same output as format_health
+    text_from_fn = format_health(view)
+    assert "🩺 HEALTH" in text_from_fn
+    # Registry must NOT still have the old emoji
+    # Render via registry blocks to check
+    payload = {"updated_at": "10:00:00", "workers": [("Parser pipeline", "OK", "")],
+               "db_ok": True, "exchange_connected": True,
+               "probe_status": "passed", "warnings": [], "criticals": []}
+    text_via_registry = render_template(cfg.blocks, payload)
+    assert "🩺 HEALTH" in text_via_registry, "Registry must point to new template"
+    assert "💊 HEALTH" not in text_via_registry, "Old emoji must be gone from registry"

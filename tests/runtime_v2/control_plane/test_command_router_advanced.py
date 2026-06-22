@@ -211,3 +211,61 @@ def test_logs_command_clamps_requested_lines(ops_db, tmp_path):
     assert "line 4" in res.reply_text
     assert "line 5" in res.reply_text
     assert "line 1" not in res.reply_text
+
+
+# ---------------------------------------------------------------------------
+# Gap #1 + #6: Safety check wiring for close_all, cancel_all, close
+# ---------------------------------------------------------------------------
+
+from unittest.mock import patch as _patch
+
+
+def test_close_all_wires_global_scope_safety(ops_db):
+    """close_all deve chiamare il safety check; se scope è global, restituisce safety message."""
+    from src.runtime_v2.control_plane.emergency_close import GLOBAL_SCOPE_SAFETY_MSG
+    router = _router(ops_db)
+    with _patch("src.runtime_v2.control_plane.telegram_bot._is_unfiltered_global", return_value=True):
+        res = router.route(
+            command_text="/close_all",
+            message_id=200,
+            chat_id=-100999,
+            thread_id=101,
+            user_id=42,
+            username="op",
+        )
+    assert GLOBAL_SCOPE_SAFETY_MSG in res.reply_text
+    assert res.decision == "REJECTED"
+
+
+def test_cancel_all_wires_global_scope_safety(ops_db):
+    """cancel_all deve chiamare il safety check; se scope è global, restituisce safety message."""
+    from src.runtime_v2.control_plane.emergency_close import GLOBAL_SCOPE_SAFETY_MSG
+    router = _router(ops_db)
+    with _patch("src.runtime_v2.control_plane.telegram_bot._is_unfiltered_global", return_value=True):
+        res = router.route(
+            command_text="/cancel_all",
+            message_id=201,
+            chat_id=-100999,
+            thread_id=101,
+            user_id=42,
+            username="op",
+        )
+    assert GLOBAL_SCOPE_SAFETY_MSG in res.reply_text
+    assert res.decision == "REJECTED"
+
+
+def test_close_wires_global_scope_safety(ops_db):
+    """/close deve rifiutare in global scope non filtrato."""
+    from src.runtime_v2.control_plane.emergency_close import GLOBAL_SCOPE_SAFETY_MSG
+    router = _router(ops_db)
+    with _patch("src.runtime_v2.control_plane.telegram_bot._is_unfiltered_global", return_value=True):
+        res = router.route(
+            command_text="/close BTCUSDT",
+            message_id=202,
+            chat_id=-100999,
+            thread_id=101,
+            user_id=42,
+            username="op",
+        )
+    assert GLOBAL_SCOPE_SAFETY_MSG in res.reply_text
+    assert res.decision == "REJECTED"

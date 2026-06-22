@@ -699,3 +699,90 @@ async def test_selector_all_removes_filter(tmp_path):
         filters = json.loads(raw)
         assert "trader" not in filters
     # else None is fine
+
+
+# ---------------------------------------------------------------------------
+# Gap #5: clear_view callback must reset filters (button emits "clear_view")
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_clear_view_callback_resets_filters_and_rerenders(tmp_path):
+    """handle_callback('clear_view') resets filters_json and re-renders the dashboard.
+
+    Currently 'clear_view' falls through to the unhandled else branch and does
+    nothing — RED state.
+    """
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=77)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+    _patch_render_view(mgr)
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (600,0,77,NULL,NULL,'active:0','{}',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    # Pre-set a filter
+    mgr._update_filters_json(600, 0, '{"trader": "trader_a"}')
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 600
+    fake_message.message_thread_id = None
+    fake_message.message_id = 77
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "clear_view")
+
+    filters = mgr._get_filters_json(600, 0)
+    assert filters is None, f"'clear_view' must reset filters, got {filters!r}"
+    bot.edit_message_text.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Gap #7: selector_panel:* callback must show sub-panel (currently falls through)
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_selector_panel_account_callback_calls_edit(tmp_path):
+    """handle_callback('selector_panel:account') must call bot.edit_message_text.
+
+    Currently 'selector_panel:account' falls through to the unhandled else branch
+    and does nothing — RED state.
+    """
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=88)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=MagicMock(),
+        bot=bot,
+    )
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (700,0,88,NULL,NULL,'active:0','{}',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 700
+    fake_message.message_thread_id = None
+    fake_message.message_id = 88
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "selector_panel:account")
+
+    # Must have called edit_message_text to show the selector sub-panel
+    bot.edit_message_text.assert_called_once()

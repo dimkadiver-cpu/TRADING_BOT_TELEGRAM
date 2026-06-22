@@ -23,7 +23,8 @@ def _warnings(view: HealthView) -> list[str]:
     for name, status, detail in view.workers:
         if status == "WARNING":
             result.append(f"  - {name.lower()}: {detail or 'degraded'}")
-    if not view.exchange_connected:
+    has_failed = any(w[1] == "FAILED" for w in view.workers)
+    if not view.exchange_connected and not has_failed and view.db_ok:
         result.append("  - exchange connectivity degraded")
     return result
 
@@ -35,6 +36,9 @@ def _criticals(view: HealthView) -> list[str]:
             result.append(f"  - {name.lower()}: {detail or 'failed'}")
     if not view.db_ok:
         result.append("  - database unreachable")
+    has_failed = any(w[1] == "FAILED" for w in view.workers)
+    if not view.exchange_connected and (has_failed or not view.db_ok):
+        result.append("  - exchange connectivity degraded")
     return result
 
 
@@ -75,7 +79,7 @@ _HEALTH_BLOCKS: list = [
     ),
 ]
 
-_TEMPLATE_HEALTH = TemplateConfig(_HEALTH_BLOCKS, payload_transform=None)
+TEMPLATE_HEALTH = TemplateConfig(_HEALTH_BLOCKS, payload_transform=None)
 
 
 def format_health(view: HealthView) -> str:
@@ -91,7 +95,7 @@ def format_health(view: HealthView) -> str:
         "warnings": warnings,
         "criticals": criticals,
     }
-    return render_template(_TEMPLATE_HEALTH.blocks, payload)
+    return render_template(TEMPLATE_HEALTH.blocks, payload)
 
 
-__all__ = ["format_health"]
+__all__ = ["format_health", "TEMPLATE_HEALTH"]

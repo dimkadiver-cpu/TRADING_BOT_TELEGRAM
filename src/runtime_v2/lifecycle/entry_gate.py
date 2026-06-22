@@ -32,6 +32,29 @@ logger = logging.getLogger(__name__)
 GLOBAL_SCOPES = frozenset({"ALL_POSITIONS", "ALL_OPEN", "ALL_REMAINING"})
 
 
+def _norm_signal_id(value: str | None) -> str | None:
+    if value is None:
+        return None
+    normalized = value.strip().lstrip("#").strip().lower()
+    return normalized or None
+
+
+def _normalize_signal_ids(values: list[str] | None) -> list[str]:
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for value in values or []:
+        norm = _norm_signal_id(value)
+        if norm is None or norm in seen:
+            continue
+        normalized.append(norm)
+        seen.add(norm)
+    return normalized
+
+
+def _split_external_signal_ids(value: str | None) -> set[str]:
+    return set(_normalize_signal_ids(value.split("|") if value else []))
+
+
 def _find_leg_snap(legs_snap: list[dict], sequence: int) -> dict | None:
     for snap in legs_snap or []:
         if snap.get("sequence") == sequence:
@@ -971,7 +994,12 @@ class LifecycleEntryGate:
             return [c for c in trader_chains if c.symbol in symbols] if symbols else []
 
         # SINGLE_SIGNAL or UNKNOWN — try symbol matching then explicit_ids then telegram IDs
-        if tag.targeting.symbols:
+        if (
+            tag.targeting.symbols
+            and not tag.targeting.explicit_ids
+            and not tag.targeting.telegram_message_ids
+            and tag.targeting.reply_to_message_id is None
+        ):
             matched = [c for c in trader_chains if c.symbol in tag.targeting.symbols]
             if len(matched) == 1:
                 return matched
@@ -981,10 +1009,12 @@ class LifecycleEntryGate:
         if tag.targeting.explicit_ids:
             matched = [
                 c for c in trader_chains
-                if str(c.canonical_message_id) in tag.targeting.explicit_ids
+                if _split_external_signal_ids(c.external_signal_id) & set(_normalize_signal_ids(tag.targeting.explicit_ids))
             ]
-            if matched:
+            if len(matched) == 1:
                 return matched
+            if len(matched) > 1:
+                return None
 
         tg_ids_to_check = list(tag.targeting.telegram_message_ids)
         if tag.targeting.reply_to_message_id is not None:
@@ -2229,6 +2259,7 @@ class LifecycleGateWorker:
         tg_msg_id: int | None = None
         parse_status: str | None = None
         parse_warnings: list[str] = []
+        external_signal_id: str | None = None
         try:
             pconn = _sqlite3.connect(self._parser_db)
             try:
@@ -2239,7 +2270,7 @@ class LifecycleGateWorker:
                 if rm_row:
                     src_chat_id, tg_msg_id = rm_row[0], rm_row[1]
                 cm_row = pconn.execute(
-                    "SELECT parse_status, warnings_json FROM canonical_messages WHERE canonical_message_id=?",
+                    "SELECT parse_status, warnings_json, diagnostics_json FROM canonical_messages WHERE canonical_message_id=?",
                     (enriched.canonical_message_id,),
                 ).fetchone()
                 if cm_row:
@@ -2249,6 +2280,13 @@ class LifecycleGateWorker:
                             parse_warnings = json.loads(cm_row[1] or "[]") or []
                         except Exception:
                             parse_warnings = []
+                    try:
+                        diagnostics = json.loads(cm_row[2] or "{}") or {}
+                    except Exception:
+                        diagnostics = {}
+                    explicit_ids = _normalize_signal_ids(diagnostics.get("signal_explicit_ids"))
+                    if explicit_ids:
+                        external_signal_id = "|".join(explicit_ids)
             finally:
                 pconn.close()
         except Exception:
@@ -2279,9 +2317,9 @@ class LifecycleGateWorker:
                             open_position_qty, closed_position_qty, last_position_sync_at,
                             execution_mode, risk_already_realized, risk_remaining,
                             plan_state_json, source_chat_id, telegram_message_id,
-                            initial_risk_amount, peak_margin_used,
+                            external_signal_id, initial_risk_amount, peak_margin_used,
                             created_at, updated_at
-                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
                         """,
                         (
                             c.source_enrichment_id, c.canonical_message_id, c.raw_message_id,
@@ -2296,7 +2334,7 @@ class LifecycleGateWorker:
                             c.last_position_sync_at.isoformat() if c.last_position_sync_at else None,
                             c.execution_mode, c.risk_already_realized, c.risk_remaining,
                             c.plan_state_json, src_chat_id, tg_msg_id,
-                            initial_risk_amount, None,
+                            external_signal_id, initial_risk_amount, None,
                             now, now,
                         ),
                     )

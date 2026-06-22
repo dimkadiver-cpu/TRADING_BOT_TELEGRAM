@@ -3903,14 +3903,13 @@ def test_explicit_id_matches_any_persisted_id():
     assert matched == [target]
 
 
-def test_explicit_id_falls_back_to_canonical_message_id():
-    # chain pre-migrazione 014: external_signal_id NULL, match su canonical_message_id
+def test_explicit_id_does_not_fall_back_to_canonical_message_id():
     gate = _make_gate()
     target = _make_chain_for_targeting(10, 2, None)
     other = _make_chain_for_targeting(11, 4, None)
     tag = _make_targeting_tag(["2"])
     matched = gate._resolve_targets(_make_enriched_for_targeting(), [target, other], tag)
-    assert matched == [target]
+    assert matched is None
 
 
 def test_explicit_id_not_found_falls_through_to_telegram_ids():
@@ -3934,6 +3933,79 @@ def test_explicit_id_ambiguous_goes_to_review():
     tag = _make_targeting_tag(["#SIG001"])
     matched = gate._resolve_targets(_make_enriched_for_targeting(), [a, b], tag)
     assert matched is None
+
+
+def test_reply_target_wins_before_symbol_match_for_single_signal():
+    gate = _make_gate()
+    by_reply = _make_chain_for_targeting(10, 2, "sig001", raw_message_id=3)
+    by_symbol = _make_chain_for_targeting(11, 4, "sig999", raw_message_id=7)
+    by_symbol.symbol = "ETH/USDT"
+    tag = _make_targeting_tag([], reply_to=100)
+    tag.targeting.symbols = {"ETH/USDT"}
+    matched = gate._resolve_targets(
+        _make_enriched_for_targeting(), [by_reply, by_symbol], tag,
+        tg_id_to_raw_id={100: 3},
+    )
+    assert matched == [by_reply]
+
+
+def test_worker_persists_external_signal_id_from_canonical_diagnostics(tmp_path):
+    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker
+    from src.runtime_v2.lifecycle.repositories import (
+        ControlStateRepository, ExecutionCommandRepository,
+        LifecycleEventRepository, SnapshotRepository, TradeChainRepository,
+    )
+
+    parser_db = str(tmp_path / "parser.sqlite3")
+    ops_db = str(tmp_path / "ops.sqlite3")
+    _core_apply(parser_db, "db/migrations")
+    _core_apply(ops_db, "db/ops_migrations")
+
+    pconn = sqlite3.connect(parser_db)
+    pconn.execute(
+        "INSERT INTO raw_messages"
+        " (raw_message_id, source_chat_id, telegram_message_id, reply_to_message_id,"
+        "  message_ts, acquired_at)"
+        " VALUES (100, 'chat1', 50, NULL, '2026-01-01', '2026-01-01')"
+    )
+    pconn.execute(
+        """
+        INSERT INTO canonical_messages (
+            canonical_message_id, raw_message_id, run_context, parser_profile, schema_version,
+            primary_class, parse_status, primary_intent, confidence, canonical_json,
+            warnings_json, diagnostics_json, parsed_at
+        ) VALUES (10, 100, 'live', 'trader_a', 'v2', 'SIGNAL', 'PARSED', 'ENTER_LONG',
+                  0.9, '{}', '[]', ?, '2026-01-01T00:00:00+00:00')
+        """,
+        (json.dumps({"signal_explicit_ids": ["#SIG001", "sig002"]}),),
+    )
+    pconn.commit()
+    pconn.close()
+
+    gate = _make_gate()
+    enriched = _make_enriched_signal(enrichment_id=1)
+    result = gate.process_signal(enriched, [], "NONE")
+
+    worker = LifecycleGateWorker(
+        parser_db_path=parser_db,
+        ops_db_path=ops_db,
+        gate=gate,
+        chain_repo=TradeChainRepository(ops_db),
+        event_repo=LifecycleEventRepository(ops_db),
+        command_repo=ExecutionCommandRepository(ops_db),
+        snapshot_repo=SnapshotRepository(ops_db),
+        control_repo=ControlStateRepository(ops_db),
+    )
+    worker._persist_signal(enriched, result)
+
+    oconn = sqlite3.connect(ops_db)
+    row = oconn.execute(
+        "SELECT external_signal_id FROM ops_trade_chains WHERE source_enrichment_id=1"
+    ).fetchone()
+    oconn.close()
+
+    assert row == ("sig001|sig002",)
 
 
 # ── UPDATE symbol canonicalization + hedge side resolution ────────────────────

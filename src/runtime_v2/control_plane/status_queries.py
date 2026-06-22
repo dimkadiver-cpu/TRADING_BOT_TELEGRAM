@@ -661,16 +661,34 @@ class StatusQueries:
             last_event_ts = conn.execute(
                 "SELECT MAX(received_at) FROM ops_exchange_events"
             ).fetchone()[0]
+            lifecycle_ts = conn.execute(
+                "SELECT MAX(created_at) FROM ops_lifecycle_events"
+            ).fetchone()[0]
+            exec_ts = conn.execute(
+                "SELECT MAX(updated_at) FROM ops_execution_commands"
+            ).fetchone()[0]
         finally:
             conn.close()
+
         age = _age_seconds(last_event_ts)
         sync_status = "OK" if (age is None or age < 60) else "WARNING"
+
+        _STALE_THRESHOLD = 300  # 5 minutes — worker is considered idle/stale
+
+        def _probe(ts: str | None, label: str) -> tuple[str, str, str]:
+            a = _age_seconds(ts)
+            if a is None:
+                return (label, "OK", "")
+            if a > _STALE_THRESHOLD:
+                return (label, "WARNING", f"last event {int(a)}s ago")
+            return (label, "OK", "")
+
         workers = [
-            ("Parser pipeline", "OK", ""),
-            ("Lifecycle gate", "OK", ""),
-            ("Execution worker", "OK", ""),
+            _probe(None, "Parser pipeline"),  # no dedicated table yet — treat as OK
+            _probe(lifecycle_ts, "Lifecycle gate"),
+            _probe(exec_ts, "Execution worker"),
             ("Exchange sync", sync_status, f"last event {int(age)}s ago" if age is not None else "no events"),
-            ("Notification disp.", "OK", ""),
+            _probe(None, "Notification disp."),  # no timestamp col in outbox — treat as OK
         ]
         return HealthView(
             updated_at=_now_iso(),

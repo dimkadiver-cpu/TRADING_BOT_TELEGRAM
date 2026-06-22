@@ -2705,3 +2705,54 @@ rispetto a cambi di prodotto intenzionali, verificati nella git history.
   (work-in-progress su live trading / `bybit_paper`, causa delle 3 failure).
   LASCIATE INTATTE — da rivedere a parte.
 - Lo scope ALL_LONG/ALL_SHORT già filtra per side; lo scope SYMBOL ora coerente.
+
+---
+
+## 2026-06-22 — Code review gaps: 8 fix da revisione control-plane dashboard-commands
+
+### Step completato
+
+Dopo la code review del lavoro sul piano `2026-06-21-control-plane-dashboard-commands`,
+8 gap confermati (CONFIRMED/PLAUSIBLE) sono stati corretti in TDD.
+
+### Gap e fix
+
+| # | Gap | Layer | Fix |
+|---|-----|-------|-----|
+| 1/6 | Safety block mai chiamato in close_all/cancel_all/close | `telegram_bot.py` | Import `_is_unfiltered_global` + check prima di fetch candidati |
+| 2/7 | `selector_panel:*` callback non gestito (else→return) | `dashboard_manager.py` | Nuovo handler `selector_panel:` + metodo `_show_selector_values_panel` |
+| 3 | Workers health hardcoded "OK" | `status_queries.py` | `_probe(ts, label)` query MAX(created_at/updated_at) su lifecycle_events + execution_commands |
+| 4 | `TEMPLATE_REGISTRY["health"]` punta al vecchio template (💊) | `templates/commands.py` | Import `TEMPLATE_HEALTH` da `health.py`; rimosse _HEALTH_BLOCKS duplicate |
+| 5 | Bottone "Clear view" emette `"clear"` ma `"clear_view"` mancante | `dashboard_manager.py` | Handler accetta `"clear"` OR `"clear_view"` |
+| 8 | exchange_connected=False sempre in Warnings, mai in Critical | `formatters/health.py` | Exchange va in Critical quando ci sono worker FAILED o db_ok=False |
+
+### File toccati
+
+| File | Stato |
+|------|-------|
+| `src/runtime_v2/control_plane/telegram_bot.py` | Modificato |
+| `src/runtime_v2/control_plane/formatters/health.py` | Modificato |
+| `src/runtime_v2/control_plane/formatters/templates/commands.py` | Modificato |
+| `src/runtime_v2/control_plane/status_queries.py` | Modificato |
+| `src/runtime_v2/control_plane/dashboard_manager.py` | Modificato |
+| `tests/runtime_v2/control_plane/test_command_router_advanced.py` | +3 test (#1/#6) |
+| `tests/runtime_v2/control_plane/test_command_formatters.py` | +2 test (#4/#8) |
+| `tests/runtime_v2/control_plane/test_status_queries.py` | +3 test (#3) |
+| `tests/runtime_v2/control_plane/test_dashboard_manager.py` | +2 test (#5/#7) |
+
+### Validazione
+
+- TDD: tutti i test scritti in RED, poi GREEN.
+- `tests/runtime_v2/control_plane/`: **588 passed** (prima 578, +10 nuovi test).
+- Primary signal: PASSED.
+- Secondary signal: zero regressioni nel perimetro control_plane.
+- Note: 70 failure in `tests/runtime_v2/lifecycle/` sono preesistenti
+  (work-in-progress utente, file unstaged in git status).
+
+### Rischi aperti
+
+- Parser pipeline e Notification disp. probes ancora hardcoded OK (`_probe(None, ...)`):
+  nessuna colonna timestamp adatta trovata senza tabella dedicata.
+- I bottoni "selector_panel" nel filters panel ora emettono il prefisso corretto,
+  ma il bottone "Clear view" continua a emettere `"clear"` (backwards-compatible);
+  non rinominato nel testo — solo il handler è esteso.

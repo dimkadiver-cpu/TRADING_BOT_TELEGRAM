@@ -299,30 +299,10 @@ TEMPLATE_CONTROL = TemplateConfig(_CONTROL_BLOCKS, payload_transform=None)
 
 
 # ---------------------------------------------------------------------------
-# HEALTH template (passthrough — format_health stays as-is, but alias here)
+# HEALTH template — delegates to health.py (block system template)
 # ---------------------------------------------------------------------------
 
-_HEALTH_BLOCKS: list = [
-    StaticBlock("💊 HEALTH"),
-    SeparatorBlock(),
-    DerivedBlock(text_fn=lambda p: f"Updated: {p.get('updated_at', 'n/a')}"),
-    StaticBlock(""),
-    StaticBlock("Workers:"),
-    ListBlock(
-        key="workers",
-        item_renderer=lambda w, i, p: [
-            f"{w[0]}: {w[1]}" + (f" — {w[2]}" if w[2] else "")
-        ],
-    ),
-    StaticBlock(""),
-    StaticBlock("DB:"),
-    DerivedBlock(text_fn=lambda p: f"ops.sqlite3: {'OK' if p.get('db_ok') else 'ERROR'}"),
-    StaticBlock(""),
-    StaticBlock("Exchange:"),
-    DerivedBlock(text_fn=lambda p: f"Connected: {'YES' if p.get('exchange_connected') else 'NO'}"),
-]
-
-TEMPLATE_HEALTH = TemplateConfig(_HEALTH_BLOCKS, payload_transform=None)
+from src.runtime_v2.control_plane.formatters.health import TEMPLATE_HEALTH
 
 
 # ---------------------------------------------------------------------------

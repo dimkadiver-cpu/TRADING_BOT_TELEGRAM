@@ -514,3 +514,80 @@ def test_get_status_by_account(ops_db):
     assert acc_a["failed_commands"] == 1
     assert acc_b["open_count"] == 1
     assert acc_b["waiting_count"] == 0
+
+
+# ---------------------------------------------------------------------------
+# Gap #3: real health probes — workers should reflect table staleness
+# ---------------------------------------------------------------------------
+
+def test_get_health_lifecycle_gate_warns_when_stale(ops_db):
+    """Lifecycle gate returns WARNING when ops_lifecycle_events has no recent entry."""
+    import sqlite3
+    # Insert a lifecycle event with a timestamp 10 minutes old (600s) — past any reasonable threshold
+    old_ts = "2000-01-01T00:00:00+00:00"
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, idempotency_key, created_at) "
+        "VALUES (1,'OPEN_TRADE','manual','k1',?)",
+        (old_ts,),
+    )
+    conn.commit()
+    conn.close()
+
+    q = StatusQueries(ops_db)
+    view = q.get_health()
+    lifecycle_worker = next(w for w in view.workers if "Lifecycle" in w[0] or "lifecycle" in w[0].lower())
+    assert lifecycle_worker[1] == "WARNING", (
+        f"Lifecycle gate should be WARNING when last event is stale, got {lifecycle_worker[1]}"
+    )
+
+
+def test_get_health_execution_worker_warns_when_stale(ops_db):
+    """Execution worker returns WARNING when ops_execution_commands has no recent update."""
+    import sqlite3
+    old_ts = "2000-01-01T00:00:00+00:00"
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(trade_chain_id, command_type, status, idempotency_key, created_at, updated_at) "
+        "VALUES (1,'PLACE_ENTRY','DONE','k1',?,?)",
+        (old_ts, old_ts),
+    )
+    conn.commit()
+    conn.close()
+
+    q = StatusQueries(ops_db)
+    view = q.get_health()
+    exec_worker = next(w for w in view.workers if "Execution" in w[0])
+    assert exec_worker[1] == "WARNING", (
+        f"Execution worker should be WARNING when last command update is stale, got {exec_worker[1]}"
+    )
+
+
+def test_get_health_workers_ok_when_recent(ops_db):
+    """Workers return OK when events are recent (just now)."""
+    import sqlite3
+    now = datetime.now(timezone.utc).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, idempotency_key, created_at) "
+        "VALUES (1,'OPEN_TRADE','manual','k1',?)",
+        (now,),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(trade_chain_id, command_type, status, idempotency_key, created_at, updated_at) "
+        "VALUES (1,'PLACE_ENTRY','DONE','k1',?,?)",
+        (now, now),
+    )
+    conn.commit()
+    conn.close()
+
+    q = StatusQueries(ops_db)
+    view = q.get_health()
+    lifecycle_worker = next(w for w in view.workers if "Lifecycle" in w[0] or "lifecycle" in w[0].lower())
+    exec_worker = next(w for w in view.workers if "Execution" in w[0])
+    assert lifecycle_worker[1] == "OK"
+    assert exec_worker[1] == "OK"

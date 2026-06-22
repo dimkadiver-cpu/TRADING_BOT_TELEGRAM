@@ -386,13 +386,24 @@ class DashboardManager:
                 scope=scope,
             )
             return
-        elif callback_data == "clear":
+        elif callback_data in ("clear", "clear_view"):
             self._clear_filters(chat_id, thread_id)
             new_view = current_view_name
             new_page = 0
         elif callback_data == "selector:back":
             new_view = current_view_name
             new_page = current_page
+        elif callback_data.startswith("selector_panel:"):
+            filter_type = callback_data[len("selector_panel:"):]
+            await self._show_selector_values_panel(
+                callback_query=callback_query,
+                chat_id=chat_id,
+                thread_id=thread_id,
+                stored_message_id=stored_message_id,
+                filter_type=filter_type,
+                current_view_name=current_view_name,
+            )
+            return
         elif callback_data.startswith("selector:"):
             parts = callback_data.split(":", 2)
             if len(parts) == 3:
@@ -477,6 +488,72 @@ class DashboardManager:
             InlineKeyboardButton("🧹 Clear view", callback_data="clear"),
             InlineKeyboardButton("← Back", callback_data="selector:back"),
         ])
+
+        keyboard = InlineKeyboardMarkup(rows)
+        if self._bot:
+            try:
+                await self._bot.edit_message_text(
+                    chat_id=chat_id,
+                    message_id=stored_message_id,
+                    text=text,
+                    reply_markup=keyboard,
+                )
+            except Exception:  # noqa: BLE001
+                pass
+
+    async def _show_selector_values_panel(
+        self,
+        *,
+        callback_query,
+        chat_id: int,
+        thread_id: int,
+        stored_message_id: int,
+        filter_type: str,
+        current_view_name: str,
+    ) -> None:
+        """Show a sub-panel listing concrete values for the given filter_type."""
+        from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
+
+        label_map = {
+            "account": "Account",
+            "trader": "Trader",
+            "status": "Status",
+            "side": "Side",
+            "period": "Period",
+        }
+        label = label_map.get(filter_type, filter_type.capitalize())
+        text = f"🔎 Select {label}"
+
+        rows: list[list[InlineKeyboardButton]] = []
+
+        # Static values for non-DB filter types
+        static_values: dict[str, list[str]] = {
+            "status": ["OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY", "REVIEW_REQUIRED"],
+            "side": ["LONG", "SHORT"],
+            "period": ["today", "week", "month"],
+        }
+
+        if filter_type in static_values:
+            values = static_values[filter_type]
+        else:
+            # Query DB for distinct values
+            conn = self._connect()
+            try:
+                col = "account_id" if filter_type == "account" else "trader_id"
+                db_rows = conn.execute(
+                    f"SELECT DISTINCT {col} FROM ops_trade_chains WHERE {col} IS NOT NULL"
+                    " ORDER BY 1 LIMIT 20"
+                ).fetchall()
+                values = [r[0] for r in db_rows]
+            except Exception:  # noqa: BLE001
+                values = []
+            finally:
+                conn.close()
+
+        rows.append([InlineKeyboardButton("All", callback_data=f"selector:{filter_type}:all")])
+        for v in values:
+            rows.append([InlineKeyboardButton(str(v), callback_data=f"selector:{filter_type}:{v}")])
+        rows.append([InlineKeyboardButton("← Back", callback_data="filters")])
 
         keyboard = InlineKeyboardMarkup(rows)
         if self._bot:
