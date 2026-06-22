@@ -438,7 +438,7 @@ class StatusQueries:
                     f"FROM ops_trade_chains t "
                     f"WHERE t.lifecycle_state IN ({state_ph}) "
                     f"AND {scope_frag} {side_sql_t} "
-                    f"ORDER BY t.trade_chain_id",
+                    f"ORDER BY t.trade_chain_id DESC",
                     [*active_states, *scope_params, *side_params],
                 ).fetchall()
             else:
@@ -448,7 +448,7 @@ class StatusQueries:
                     f"be_protection_status, entry_avg_price, open_position_qty "
                     f"FROM ops_trade_chains "
                     f"WHERE lifecycle_state IN ({state_ph}) {side_sql} "
-                    f"ORDER BY trade_chain_id",
+                    f"ORDER BY trade_chain_id DESC",
                     [*active_states, *side_params],
                 ).fetchall()
 
@@ -1152,14 +1152,23 @@ class StatusQueries:
                 [*scope_params, *side_params],
             ).fetchall()
 
-            # Reason + blocked_at for REVIEW_REQUIRED from lifecycle events
+            # Reason + blocked_at for REVIEW_REQUIRED from lifecycle events.
+            # Primary: dedicated REVIEW_REQUIRED event. Fallback: most recent event with a reason.
             reason_data: dict[int, tuple[str | None, str | None]] = {}
             for row in conn.execute(
                 "SELECT trade_chain_id, payload_json, created_at FROM ops_lifecycle_events "
-                "WHERE event_type='REVIEW_REQUIRED' AND trade_chain_id IS NOT NULL "
+                "WHERE trade_chain_id IS NOT NULL "
                 "ORDER BY event_id"
             ).fetchall():
-                reason_data[row[0]] = (row[1], row[2])
+                cid_r, pjson, cat = row[0], row[1], row[2]
+                # Prefer REVIEW_REQUIRED event; only overwrite with fallback if not already set
+                if pjson:
+                    try:
+                        reason_candidate = json.loads(pjson).get("reason")
+                    except Exception:
+                        reason_candidate = None
+                    if reason_candidate:
+                        reason_data[cid_r] = (pjson, cat)
 
             # Chains with EXEC_FAILED commands in scope
             exec_failed_rows = conn.execute(

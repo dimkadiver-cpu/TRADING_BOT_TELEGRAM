@@ -19,9 +19,21 @@ uPnL: -4.22 USDT  rPnL: +0.04 USDT
 - - - - - - - - - - - - - - - - - - - - - - -
 
 
-2. in sezione Action /trade #99 elemento clicabile solo "/trade" per cui scorciatoia nn funziona
+2. in sezione Action (in tutti tabs) /trade #99 elemento clicabile solo "/trade" per cui scorciatoia nn funziona
 
 
-3. /trade #98 · /cancel #98 · /close #98
+3. 
 
-4. Total: 16   Page: 1/4   Updated: 08:53:01
+Total: 1   Page: 1/1   Updated: 09:05:57                 // "Page: 1/1" eliminare gia svolto da tasti, ridondanza
+Filters: demo_1 · All traders · Partially closed
+Order: Updated desc                                      // "Order: Updated desc" a cosa si riferishe?
+
+4. in bloched manca reason
+#41 · BTC/USDT · LONG
+Trader: trader_prova · Account: demo_1
+Blocked: 19 Jun 12:22 · Reason: —
+Details: /trade #41
+
+
+5.  - in PNL/STATS verificare organizaione/filtrazione dei dati in base a filtri
+    - pensare al sezione dedicate a trader 

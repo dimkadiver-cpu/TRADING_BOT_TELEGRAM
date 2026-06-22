@@ -66,7 +66,8 @@ def _render_active_item(row: dict, i: int, p: dict) -> list[str]:
     symbol = display_symbol(row.get("symbol") or "?")
     side = row.get("side", "?")
     state = row.get("state", "?")
-    lines = [_SEP, f"#{cid} · {symbol} · {side} · {state}"]
+    lines = [_SEP] if i > 0 else []
+    lines.append(f"#{cid} · {symbol} · {side} · {state}")
 
     if p.get("is_global"):
         trader = row.get("trader_id") or "?"
@@ -126,7 +127,7 @@ def _render_closed_item(row: dict, i: int, p: dict) -> list[str]:
         first_line += f" · {reason}"
     elif is_cancelled:
         first_line += " · CANCELLED_UNFILLED"
-    lines = [_SEP, first_line]
+    lines = [_SEP, first_line] if i > 0 else [first_line]
 
     if p.get("is_global"):
         trader = row.get("trader_id") or "?"
@@ -167,7 +168,7 @@ def _render_blocked_item(row: dict, i: int, p: dict) -> list[str]:
     cid = row.get("chain_id", "?")
     symbol = display_symbol(row.get("symbol") or "?")
     side = row.get("side", "?")
-    lines = [_SEP, f"#{cid} · {symbol} · {side}"]
+    lines = [_SEP, f"#{cid} · {symbol} · {side}"] if i > 0 else [f"#{cid} · {symbol} · {side}"]
 
     if p.get("is_global"):
         trader = row.get("trader_id") or "?"

@@ -279,14 +279,14 @@ class TestVistaAttivi:
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("attivi", SCOPE_ACCOUNT, q, page=0, page_size=5)
         assert total == 7
-        # Page 0 has 5 items
-        assert "COIN1/USDT" in text
-        assert "COIN5/USDT" in text
-        assert "COIN6/USDT" not in text
+        # Page 0 has 5 items — DESC order (newest chain_id first): COIN7..COIN3
+        assert "COIN7/USDT" in text
+        assert "COIN3/USDT" in text
+        assert "COIN2/USDT" not in text
 
         text2, _ = format_dashboard_view("attivi", SCOPE_ACCOUNT, q, page=1, page_size=5)
-        assert "COIN6/USDT" in text2
-        assert "COIN7/USDT" in text2
+        assert "COIN2/USDT" in text2
+        assert "COIN1/USDT" in text2
 
 
 # ---------------------------------------------------------------------------
