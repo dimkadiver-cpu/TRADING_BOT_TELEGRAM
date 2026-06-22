@@ -124,7 +124,13 @@ class ExecutionGateway:
             idempotency_key=idempotency_key,
         )
 
-    def _review_and_cancel_chain(self, cmd: ExecutionCommand, *, reason: str) -> None:
+    def _review_and_cancel_chain(
+        self,
+        cmd: ExecutionCommand,
+        *,
+        reason: str,
+        execution_account_id: str | None = None,
+    ) -> None:
         """Mark command REVIEW_REQUIRED then cancel chain if no entry command remains active.
 
         Used for permanent technical failures where retrying identically would produce
@@ -132,7 +138,11 @@ class ExecutionGateway:
         intentional safety gates (live_trading_*) where REVIEW_REQUIRED is a hold state
         while the operator fixes config — those must NOT cancel the chain.
         """
-        self._repo.mark_review_required(cmd.command_id, reason=reason)
+        self._repo.mark_review_required(
+            cmd.command_id,
+            reason=reason,
+            execution_account_id=execution_account_id,
+        )
         self._repo.cancel_chain_if_all_entries_failed(
             cmd.trade_chain_id, cmd.command_type, reason=reason
         )
@@ -149,19 +159,25 @@ class ExecutionGateway:
         adapter = self._adapters.get(routing.adapter)
         if adapter is None:
             self._review_and_cancel_chain(
-                cmd, reason=f"adapter_not_found:{routing.adapter}"
+                cmd,
+                reason=f"adapter_not_found:{routing.adapter}",
+                execution_account_id=routing.execution_account_id,
             )
             return
 
         if adapter_cfg.mode == "live":
             if not adapter_cfg.live_safety.allow_live_trading:
                 self._repo.mark_review_required(
-                    cmd.command_id, reason="live_trading_not_allowed_in_config"
+                    cmd.command_id,
+                    reason="live_trading_not_allowed_in_config",
+                    execution_account_id=routing.execution_account_id,
                 )
                 return
             if os.environ.get("TSB_ALLOW_LIVE_TRADING") != "YES_I_UNDERSTAND":
                 self._repo.mark_review_required(
-                    cmd.command_id, reason="live_trading_env_gate_not_set"
+                    cmd.command_id,
+                    reason="live_trading_env_gate_not_set",
+                    execution_account_id=routing.execution_account_id,
                 )
                 return
 
@@ -169,7 +185,9 @@ class ExecutionGateway:
         cap_field = _CAPABILITY_MAP.get(cmd.command_type)
         if cap_field and not getattr(adapter.get_capabilities(), cap_field, False):
             self._review_and_cancel_chain(
-                cmd, reason=f"capability_missing:{cap_field}"
+                cmd,
+                reason=f"capability_missing:{cap_field}",
+                execution_account_id=routing.execution_account_id,
             )
             return
 
@@ -181,7 +199,9 @@ class ExecutionGateway:
             mark_price = adapter.fetch_mark_price(symbol, routing.execution_account_id)
             if mark_price is None:
                 self._review_and_cancel_chain(
-                    cmd, reason="deferred_market_no_mark_price"
+                    cmd,
+                    reason="deferred_market_no_mark_price",
+                    execution_account_id=routing.execution_account_id,
                 )
                 return
             risk_amount_leg = float(payload["risk_amount"])
@@ -189,7 +209,9 @@ class ExecutionGateway:
             risk_dist = abs(mark_price - sl_price_val)
             if risk_dist == 0.0:
                 self._review_and_cancel_chain(
-                    cmd, reason="deferred_market_zero_risk_distance"
+                    cmd,
+                    reason="deferred_market_zero_risk_distance",
+                    execution_account_id=routing.execution_account_id,
                 )
                 return
             computed_qty = risk_amount_leg / risk_dist
@@ -215,7 +237,9 @@ class ExecutionGateway:
             filled_entry_qty = self._repo.get_chain_filled_entry_qty(cmd.trade_chain_id)
             if filled_entry_qty is None or filled_entry_qty <= 0.0:
                 self._repo.mark_review_required(
-                    cmd.command_id, reason="filled_entry_qty_unavailable_for_partial_tp"
+                    cmd.command_id,
+                    reason="filled_entry_qty_unavailable_for_partial_tp",
+                    execution_account_id=routing.execution_account_id,
                 )
                 return
             close_pct = float(payload["close_pct"])
@@ -230,7 +254,9 @@ class ExecutionGateway:
             open_qty = self._repo.get_chain_open_position_qty(cmd.trade_chain_id)
             if open_qty is None or open_qty <= 0.0:
                 self._repo.mark_review_required(
-                    cmd.command_id, reason="open_position_qty_unavailable_for_close"
+                    cmd.command_id,
+                    reason="open_position_qty_unavailable_for_close",
+                    execution_account_id=routing.execution_account_id,
                 )
                 return
             if cmd.command_type == "CLOSE_PARTIAL":
@@ -319,7 +345,12 @@ class ExecutionGateway:
                 connector=adapter_cfg.connector,
             )
         except Exception as e:
-            self._handle_error(cmd, adapter_cfg, e)
+            self._handle_error(
+                cmd,
+                adapter_cfg,
+                e,
+                execution_account_id=routing.execution_account_id,
+            )
             return
 
         if not result.success:
@@ -328,13 +359,16 @@ class ExecutionGateway:
                 self._repo.reject_entry_as_signal(cmd.command_id, reason=reason)
                 return
             self._repo.mark_failed(cmd.command_id, reason=reason)
-            cancelled = self._repo.cancel_chain_if_all_entries_failed(
+            self._repo.write_command_failed_tech_log(
+                cmd.command_id,
+                cmd.trade_chain_id,
+                cmd.command_type,
+                reason=reason,
+                execution_account_id=routing.execution_account_id,
+            )
+            self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=reason
             )
-            if not cancelled and cmd.command_type not in _ENTRY_TYPES:
-                self._repo.write_command_failed_tech_log(
-                    cmd.command_id, cmd.trade_chain_id, cmd.command_type, reason=reason
-                )
             return
 
         self._repo.mark_sent(
@@ -367,7 +401,14 @@ class ExecutionGateway:
     # (float("nan"), campo vuoto) che sono errori transitori e devono essere ritentati.
     _PERMANENT_EXC = (KeyError, TypeError, AttributeError, IndexError)
 
-    def _handle_error(self, cmd: ExecutionCommand, adapter_cfg: AdapterConfig, exc: Exception) -> None:
+    def _handle_error(
+        self,
+        cmd: ExecutionCommand,
+        adapter_cfg: AdapterConfig,
+        exc: Exception,
+        *,
+        execution_account_id: str | None = None,
+    ) -> None:
         error_str = str(exc)
         retry_cfg = adapter_cfg.retry
         current_retry = self._repo.get_retry_count(cmd.command_id)
@@ -380,16 +421,19 @@ class ExecutionGateway:
                     cmd.command_id, type(exc).__name__, error_str,
                 )
             self._repo.mark_failed(cmd.command_id, reason=error_str)
+            self._repo.write_command_failed_tech_log(
+                cmd.command_id,
+                cmd.trade_chain_id,
+                cmd.command_type,
+                reason=error_str,
+                execution_account_id=execution_account_id or cmd.execution_account_id,
+            )
             cancelled = self._repo.cancel_chain_if_all_entries_failed(
                 cmd.trade_chain_id, cmd.command_type, reason=error_str
             )
             if cmd.command_type == "CANCEL_PENDING_ENTRY":
                 self._repo.write_cancel_entry_failed_lifecycle(
                     cmd.command_id, cmd.trade_chain_id, attempts=current_retry + 1
-                )
-            elif not cancelled and cmd.command_type not in _ENTRY_TYPES:
-                self._repo.write_command_failed_tech_log(
-                    cmd.command_id, cmd.trade_chain_id, cmd.command_type, reason=error_str
                 )
             return
 

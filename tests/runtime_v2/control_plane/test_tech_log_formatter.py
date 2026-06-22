@@ -81,6 +81,8 @@ def test_gateway_review_required_fields():
         "description": "Comando bloccato in REVIEW_REQUIRED.",
         "command_type": "PLACE_ENTRY",
         "chain_id": 42,
+        "trader_id": "trader_b",
+        "execution_account_id": "demo_1",
         "reason": "capability_missing:can_place_limit_entry",
         "action": "intervento manuale richiesto",
         "source": "execution_gateway",
@@ -88,6 +90,8 @@ def test_gateway_review_required_fields():
     assert "⚠️ GATEWAY: REVIEW REQUIRED" in text
     assert "Command: PLACE_ENTRY" in text
     assert "#42" in text
+    assert "Trader: trader_b" in text
+    assert "Exchange Account: demo_1" in text
     assert "capability_missing" in text
 
 
@@ -95,12 +99,16 @@ def test_gateway_command_failed_fields():
     text = _render("GATEWAY_COMMAND_FAILED", {
         "command_type": "SET_SL",
         "chain_id": 42,
+        "trader_id": "trader_b",
+        "execution_account_id": "demo_1",
         "reason": "KeyError: 'order_id'",
         "source": "execution_gateway",
     })
     assert "🛑 GATEWAY: COMMAND FAILED" in text
     assert "Command: SET_SL" in text
     assert "#42" in text
+    assert "Trader: trader_b" in text
+    assert "Exchange Account: demo_1" in text
     assert "KeyError" in text
     assert "Source: execution_gateway" in text
 

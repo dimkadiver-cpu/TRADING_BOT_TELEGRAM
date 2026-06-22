@@ -49,6 +49,39 @@ class GatewayCommandRepository:
     def __init__(self, db_path: str) -> None:
         self._db = db_path
 
+    @staticmethod
+    def _get_command_context(
+        conn: sqlite3.Connection,
+        command_id: int,
+    ) -> dict[str, object | None]:
+        row = conn.execute(
+            "SELECT c.trade_chain_id, c.command_type, c.execution_account_id, "
+            "t.trader_id, t.account_id, t.symbol, t.side "
+            "FROM ops_execution_commands c "
+            "LEFT JOIN ops_trade_chains t ON t.trade_chain_id = c.trade_chain_id "
+            "WHERE c.command_id=?",
+            (command_id,),
+        ).fetchone()
+        if row is None:
+            return {
+                "trade_chain_id": None,
+                "command_type": None,
+                "execution_account_id": None,
+                "trader_id": None,
+                "account_id": None,
+                "symbol": None,
+                "side": None,
+            }
+        return {
+            "trade_chain_id": row[0],
+            "command_type": row[1],
+            "execution_account_id": row[2] or row[4],
+            "trader_id": row[3],
+            "account_id": row[4],
+            "symbol": row[5],
+            "side": row[6],
+        }
+
     def get_pending_batch(self, limit: int = 100) -> list[ExecutionCommand]:
         conn = sqlite3.connect(self._db)
         try:
@@ -297,21 +330,32 @@ class GatewayCommandRepository:
             conn.close()
 
     def write_command_failed_tech_log(
-        self, command_id: int, trade_chain_id: int, command_type: str, *, reason: str
+        self,
+        command_id: int,
+        trade_chain_id: int,
+        command_type: str,
+        *,
+        reason: str,
+        execution_account_id: str | None = None,
     ) -> None:
-        """Write TECH_LOG for permanent failure of a non-entry command (SL, TP, CANCEL)."""
+        """Write TECH_LOG for a terminal gateway command failure."""
         from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
         conn = sqlite3.connect(self._db)
         try:
             with conn:
+                ctx = self._get_command_context(conn, command_id)
                 write_tech_log_event(
                     conn,
                     notification_type="GATEWAY_COMMAND_FAILED",
                     payload={
                         "level":        "ERROR",
                         "command_id":   command_id,
-                        "command_type": command_type,
-                        "chain_id":     trade_chain_id,
+                        "command_type": command_type or ctx["command_type"],
+                        "chain_id":     trade_chain_id or ctx["trade_chain_id"],
+                        "trader_id":    ctx["trader_id"],
+                        "execution_account_id": execution_account_id or ctx["execution_account_id"],
+                        "symbol":       ctx["symbol"],
+                        "side":         ctx["side"],
                         "reason":       reason,
                         "source":       "execution_gateway",
                     },
@@ -340,7 +384,8 @@ class GatewayCommandRepository:
         try:
             with conn:
                 chain_row = conn.execute(
-                    "SELECT lifecycle_state, symbol, side FROM ops_trade_chains WHERE trade_chain_id=?",
+                    "SELECT lifecycle_state, trader_id, symbol, side, account_id "
+                    "FROM ops_trade_chains WHERE trade_chain_id=?",
                     (trade_chain_id,),
                 ).fetchone()
                 if not chain_row or chain_row[0] not in ("WAITING_ENTRY", "CREATED"):
@@ -384,8 +429,10 @@ class GatewayCommandRepository:
                         "level": "ERROR",
                         "description": "Tutti i comandi PLACE_ENTRY falliti. Catena cancellata.",
                         "chain_id": trade_chain_id,
-                        "symbol":   chain_row[1],
-                        "side":     chain_row[2],
+                        "trader_id": chain_row[1],
+                        "execution_account_id": chain_row[4],
+                        "symbol":   chain_row[2],
+                        "side":     chain_row[3],
                         "reason":   reason,
                         "action":   "intervento manuale richiesto",
                         "source":   "execution_gateway",
@@ -397,7 +444,13 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
-    def mark_review_required(self, command_id: int, *, reason: str) -> None:
+    def mark_review_required(
+        self,
+        command_id: int,
+        *,
+        reason: str,
+        execution_account_id: str | None = None,
+    ) -> None:
         from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
         now = _now()
         result = {"error": None, "reason": reason}
@@ -409,11 +462,7 @@ class GatewayCommandRepository:
                     "result_payload_json=?, updated_at=? WHERE command_id=?",
                     (json.dumps(result), now, command_id),
                 )
-                cmd_row = conn.execute(
-                    "SELECT trade_chain_id, command_type FROM ops_execution_commands "
-                    "WHERE command_id=?",
-                    (command_id,),
-                ).fetchone()
+                ctx = self._get_command_context(conn, command_id)
                 write_tech_log_event(
                     conn,
                     notification_type="GATEWAY_REVIEW_REQUIRED",
@@ -421,8 +470,12 @@ class GatewayCommandRepository:
                         "level":        "WARNING",
                         "description":  "Comando bloccato in REVIEW_REQUIRED.",
                         "command_id":   command_id,
-                        "command_type": cmd_row[1] if cmd_row else None,
-                        "chain_id":     cmd_row[0] if cmd_row else None,
+                        "command_type": ctx["command_type"],
+                        "chain_id":     ctx["trade_chain_id"],
+                        "trader_id":    ctx["trader_id"],
+                        "execution_account_id": execution_account_id or ctx["execution_account_id"],
+                        "symbol":       ctx["symbol"],
+                        "side":         ctx["side"],
                         "reason":       reason,
                         "action":       "intervento manuale richiesto",
                         "source":       "execution_gateway",

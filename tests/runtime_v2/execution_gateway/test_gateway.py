@@ -1594,3 +1594,87 @@ def test_bybit_delisting_entry_failure_becomes_signal_rejected(ops_db):
     assert outbox_rows[1][0] == "SIGNAL_REJECTED"
     reject_payload = json.loads(outbox_rows[1][2])
     assert reject_payload["reason"] == "retCode=30228: No new positions during delisting."
+
+
+def test_place_entry_failure_projects_gateway_command_failed_tech_log(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 2101, cmd_type="PLACE_ENTRY", payload={
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_type": "LIMIT",
+        "price": 50000.0,
+        "qty": 0.02,
+        "sequence": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo_1": FakeAdapter(fail_on={"PLACE_ENTRY"})},
+        repo=repo,
+    )
+
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 2101)
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox "
+        "WHERE destination='TECH_LOG' AND notification_type='GATEWAY_COMMAND_FAILED' "
+        "ORDER BY notification_id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    payload = json.loads(row[1])
+    assert row[0] == "GATEWAY_COMMAND_FAILED"
+    assert payload["command_id"] == 2101
+    assert payload["command_type"] == "PLACE_ENTRY"
+    assert payload["chain_id"] == 1
+    assert payload["trader_id"] == "trader_a"
+    assert payload["execution_account_id"] == "demo_1"
+
+
+def test_review_required_projects_gateway_review_required_with_context(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.models import AdapterCapabilities
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_cmd(ops_db, 2102, cmd_type="CLOSE_PARTIAL", payload={
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "qty": 0.01,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo": FakeAdapter(
+            capabilities=AdapterCapabilities(close_partial=False)
+        )},
+        repo=repo,
+    )
+
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 2102)
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox "
+        "WHERE destination='TECH_LOG' AND notification_type='GATEWAY_REVIEW_REQUIRED' "
+        "ORDER BY notification_id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    payload = json.loads(row[1])
+    assert row[0] == "GATEWAY_REVIEW_REQUIRED"
+    assert payload["command_id"] == 2102
+    assert payload["command_type"] == "CLOSE_PARTIAL"
+    assert payload["chain_id"] == 1
+    assert payload["trader_id"] == "trader_a"
+    assert payload["execution_account_id"] == "demo_1"
