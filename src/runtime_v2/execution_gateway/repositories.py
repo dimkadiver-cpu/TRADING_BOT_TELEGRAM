@@ -222,7 +222,10 @@ class GatewayCommandRepository:
         result_payload: dict | None = None,
     ) -> bool:
         """Convert a pre-fill entry execution failure into a final SIGNAL_REJECTED outcome."""
-        from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+        from src.runtime_v2.control_plane.outbox_writer import (
+            project_clean_log_for_chain,
+            write_tech_log_event,
+        )
 
         now = _now()
         conn = sqlite3.connect(self._db)
@@ -292,6 +295,25 @@ class GatewayCommandRepository:
                     ),
                 )
                 project_clean_log_for_chain(conn, trade_chain_id)
+                ctx = self._get_command_context(conn, command_id)
+                write_tech_log_event(
+                    conn,
+                    notification_type="GATEWAY_COMMAND_FAILED",
+                    payload={
+                        "level": "ERROR",
+                        "command_id": command_id,
+                        "command_type": command_type,
+                        "chain_id": trade_chain_id,
+                        "trader_id": ctx["trader_id"],
+                        "execution_account_id": ctx["execution_account_id"],
+                        "symbol": ctx["symbol"],
+                        "side": ctx["side"],
+                        "reason": reason,
+                        "source": "execution_gateway",
+                    },
+                    dedupe_key=f"gw_cmd_failed:{command_id}",
+                    priority="HIGH",
+                )
             return True
         finally:
             conn.close()

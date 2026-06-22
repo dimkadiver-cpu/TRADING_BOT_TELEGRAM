@@ -30,6 +30,7 @@ def _dash_header_full(emoji: str, view_label: str) -> list:
     ─────────────────────────────────────
     Total: 10   Page: 1/2   Updated: 14:32:05
     [Filters: ...]   ← only if filters_str is set
+    [Order: ...]     ← only if order_str is set (global scope)
     ─────────────────────────────────────
     """
     return [
@@ -47,6 +48,10 @@ def _dash_header_full(emoji: str, view_label: str) -> list:
         ConditionalBlock(
             condition=lambda p: bool(p.get("filters_str")),
             blocks=[DerivedBlock(text_fn=lambda p: f"Filters: {p['filters_str']}")],
+        ),
+        ConditionalBlock(
+            condition=lambda p: bool(p.get("order_str")),
+            blocks=[DerivedBlock(text_fn=lambda p: f"Order: {p['order_str']}")],
         ),
         SeparatorBlock(),
     ]
@@ -113,9 +118,14 @@ def _render_closed_item(row: dict, i: int, p: dict) -> list[str]:
     symbol = display_symbol(row.get("symbol") or "?")
     side = row.get("side", "?")
     reason = row.get("closed_reason")
+    state = row.get("lifecycle_state")
+    is_cancelled = state == "CANCELLED_UNFILLED"
+
     first_line = f"#{cid} · {symbol} · {side}"
     if reason:
         first_line += f" · {reason}"
+    elif is_cancelled:
+        first_line += " · CANCELLED_UNFILLED"
     lines = [_SEP, first_line]
 
     if p.get("is_global"):
@@ -123,10 +133,13 @@ def _render_closed_item(row: dict, i: int, p: dict) -> list[str]:
         account = row.get("account_id") or "?"
         lines.append(f"Trader: {trader} · Account: {account}")
 
-    pnl = row.get("gross_pnl")
-    pnl_str = money_signed(pnl) if pnl is not None else "—"
-    duration = row.get("duration") or "—"
-    lines.append(f"Net PnL: {pnl_str} · ⏱ {duration}")
+    if is_cancelled:
+        lines.append("PnL: No fill")
+    else:
+        pnl = row.get("gross_pnl")
+        pnl_str = money_signed(pnl) if pnl is not None else "—"
+        duration = row.get("duration") or "—"
+        lines.append(f"Net PnL: {pnl_str} · ⏱ {duration}")
     lines.append(f"Details: /trade #{cid}")
     return lines
 
@@ -190,19 +203,21 @@ TEMPLATE_DASHBOARD_BLOCKED = TemplateConfig(_BLOCKED_BLOCKS, payload_transform=N
 def _pnl_account_lines(p: dict) -> str:
     parts = []
     if p.get("equity_usdt") is not None:
-        parts.append(f"  Equity:    {p['equity_usdt']:,.2f} USDT")
+        parts.append(f"Equity:        {p['equity_usdt']:,.2f} USDT")
     if p.get("available_balance_usdt") is not None:
-        parts.append(f"  Balance:    {p['available_balance_usdt']:,.2f} USDT")
+        parts.append(f"Balance:        {p['available_balance_usdt']:,.2f} USDT")
     if p.get("total_margin_used_usdt") is not None:
-        parts.append(f"  Margin:       {p['total_margin_used_usdt']:,.2f} USDT")
-    return "\n".join(parts) if parts else "  n/a"
+        parts.append(f"Margin used:       {p['total_margin_used_usdt']:,.2f} USDT")
+    return "\n".join(parts) if parts else "n/a"
 
 
 def _pnl_realized_label(p: dict) -> str:
+    if p.get("is_global"):
+        return "Realized — All accounts:"
     trader_id = p.get("trader_id")
     if trader_id:
-        return f"Realizzato ({trader_id}):"
-    return "Realizzato:"
+        return f"Realized — {trader_id}:"
+    return "Realized:"
 
 
 def _pnl_realized_lines(p: dict) -> str:
@@ -214,26 +229,57 @@ def _pnl_realized_lines(p: dict) -> str:
         parts.append(f"  Fees:        {p['total_fees']:.2f} USDT")
     if p.get("pnl_net") is not None:
         sign = "+" if p["pnl_net"] >= 0 else ""
-        parts.append(f"  Netto:      {sign}{p['pnl_net']:.2f} USDT")
+        parts.append(f"  Net:        {sign}{p['pnl_net']:.2f} USDT")
     return "\n".join(parts) if parts else "  n/a"
 
 
-def _dash_header_pnl(emoji: str, view_label: str) -> list:
-    """PNL/Stats views use the same full header."""
-    return _dash_header_full(emoji, view_label)
+def _pnl_by_account_lines(p: dict) -> str:
+    rows = p.get("by_account") or []
+    lines = []
+    for r in rows:
+        acc_id = r.get("account_id", "?")
+        net = r.get("net_pnl", 0.0)
+        sign = "+" if net >= 0 else ""
+        open_c = r.get("open_count", 0)
+        lines.append(f"{acc_id} · Net: {sign}{net:.2f} USDT · Open: {open_c}")
+    return "\n".join(lines) if lines else "n/a"
 
 
 _PNL_BLOCKS: list = [
-    *_dash_header_pnl("💰", "PnL"),
-    StaticBlock("Account:"),
-    DerivedBlock(text_fn=_pnl_account_lines),
-    SeparatorBlock(),
+    *_dash_header_full("💰", "PnL"),
+    # Non-global: show account snapshot
+    ConditionalBlock(
+        condition=lambda p: not p.get("is_global"),
+        blocks=[
+            StaticBlock("Account snapshot:"),
+            DerivedBlock(text_fn=_pnl_account_lines),
+            SeparatorBlock(),
+        ],
+    ),
+    # Global: show accounts in scope summary
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("is_global")),
+        blocks=[
+            DerivedBlock(text_fn=lambda p: f"Accounts in scope: {p.get('accounts_in_scope', 0)}"),
+            StaticBlock("Snapshot mode: per-account latest"),
+            SeparatorBlock(),
+        ],
+    ),
     DerivedBlock(text_fn=_pnl_realized_label),
     DerivedBlock(text_fn=_pnl_realized_lines),
     SeparatorBlock(),
     DerivedBlock(text_fn=lambda p: (
-        f"Open: {p.get('open_count', 0)}  |  Waiting: {p.get('waiting_entry_count', 0)}"
+        f"Open: {p.get('open_count', 0)} · Waiting entry: {p.get('waiting_entry_count', 0)}"
     )),
+    # Global: by_account breakdown
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("by_account")),
+        blocks=[
+            SeparatorBlock(),
+            StaticBlock("By account:"),
+            DerivedBlock(text_fn=_pnl_by_account_lines),
+        ],
+    ),
 ]
 
 TEMPLATE_DASHBOARD_PNL = TemplateConfig(_PNL_BLOCKS, payload_transform=None)
@@ -276,14 +322,29 @@ def _fmt_trade_count(value: object) -> str:
 _STATS_TABLE = TableBlock(
     rows_key="stats_rows",
     columns=[
-        ("", "label", 10, str),
+        ("Period", "label", 10, str),
         ("Trades", "trade_count", 6, _fmt_trade_count),
         ("Win%", "win_pct", 5, _fmt_win_pct),
-        ("Netto", "pnl_net", 9, _fmt_signed_float),
+        ("Net", "pnl_net", 9, _fmt_signed_float),
     ],
     show_header=True,
     fallback="—",
 )
+
+
+def _stats_by_account_lines(p: dict) -> str:
+    rows = p.get("by_account") or []
+    lines = []
+    for r in rows:
+        acc_id = r.get("account_id", "?")
+        tc = r.get("trade_count", 0)
+        wp = r.get("win_pct")
+        win_str = f"{wp:.0f}%" if wp is not None else "—"
+        net = r.get("net_pnl", 0.0)
+        sign = "+" if net >= 0 else ""
+        lines.append(f"{acc_id} · Trades: {tc} · Win%: {win_str} · Net: {sign}{net:.2f}")
+    return "\n".join(lines) if lines else "n/a"
+
 
 _STATS_BLOCKS: list = [
     *_dash_header_full("📉", "Stats"),
@@ -307,6 +368,14 @@ _STATS_BLOCKS: list = [
                 if p.get("worst_pnl") is not None
                 else f"Worst: #{p['worst_chain_id']}"
             )),
+        ],
+    ),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("by_account")),
+        blocks=[
+            SeparatorBlock(),
+            StaticBlock("By account:"),
+            DerivedBlock(text_fn=_stats_by_account_lines),
         ],
     ),
 ]

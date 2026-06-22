@@ -217,7 +217,7 @@ class TestScopeIsolation:
 
         q = StatusQueries(ops_db)
         stats = q.get_stats(SCOPE_A)
-        total_row = next(r for r in stats.rows if r.label == "Totale")
+        total_row = next(r for r in stats.rows if r.label == "All time")
         assert total_row.trade_count == 2
         # best PnL is account_A chain 50 = 100.0, NOT 999.0 from B
         assert stats.best_pnl == 100.0
@@ -389,7 +389,7 @@ class TestStatsBucketing:
 
         q = StatusQueries(ops_db)
         stats = q.get_stats(SCOPE_A)
-        today_row = next(r for r in stats.rows if r.label == "Oggi")
+        today_row = next(r for r in stats.rows if r.label == "Today")
         assert today_row.trade_count == 1
         assert abs(today_row.pnl_net - 50.0) < 0.001
 
@@ -404,7 +404,7 @@ class TestStatsBucketing:
 
         q = StatusQueries(ops_db)
         stats = q.get_stats(SCOPE_A)
-        d7_row = next(r for r in stats.rows if r.label == "7 giorni")
+        d7_row = next(r for r in stats.rows if r.label == "Last 7d")
         assert d7_row.trade_count == 1
 
     def test_total_bucket_includes_all(self, ops_db):
@@ -418,7 +418,7 @@ class TestStatsBucketing:
 
         q = StatusQueries(ops_db)
         stats = q.get_stats(SCOPE_A)
-        total_row = next(r for r in stats.rows if r.label == "Totale")
+        total_row = next(r for r in stats.rows if r.label == "All time")
         assert total_row.trade_count == 3
 
     def test_win_pct_calculation(self, ops_db):
@@ -432,14 +432,14 @@ class TestStatsBucketing:
 
         q = StatusQueries(ops_db)
         stats = q.get_stats(SCOPE_A)
-        total_row = next(r for r in stats.rows if r.label == "Totale")
+        total_row = next(r for r in stats.rows if r.label == "All time")
         assert total_row.win_pct is not None
         assert abs(total_row.win_pct - (2 / 3 * 100)) < 0.01
 
     def test_win_pct_none_when_no_trades(self, ops_db):
         q = StatusQueries(ops_db)
         stats = q.get_stats(SCOPE_A)
-        total_row = next(r for r in stats.rows if r.label == "Totale")
+        total_row = next(r for r in stats.rows if r.label == "All time")
         assert total_row.win_pct is None
         assert total_row.trade_count == 0
 
@@ -801,7 +801,7 @@ def test_get_stats_global_scope_aggregates_all_accounts(tmp_path):
     global_scope = QueryScope(account_id=None, trader_ids=None)
     view = sq.get_stats(global_scope)
 
-    totale = next(r for r in view.rows if r.label == "Totale")
+    totale = next(r for r in view.rows if r.label == "All time")
     assert totale.trade_count == 2
 
 

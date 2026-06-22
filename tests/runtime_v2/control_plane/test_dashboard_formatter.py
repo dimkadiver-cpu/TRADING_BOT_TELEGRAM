@@ -403,10 +403,10 @@ class TestVistaPnl:
         assert "10,432.50" in text
         assert "9,100.00" in text
         assert "820.00" in text
-        assert "Realizzato (trader_a):" in text
+        assert "Realized — trader_a:" in text
         assert "+142.60" in text
         assert "Open: 1" in text
-        assert "Waiting: 1" in text
+        assert "Waiting entry: 1" in text
 
     def test_realized_label_account_level(self, ops_db):
         conn = sqlite3.connect(ops_db)
@@ -418,8 +418,8 @@ class TestVistaPnl:
         text, _ = format_dashboard_view("pnl", SCOPE_ACCOUNT, q)
 
         # account-level scope → no trader_id in label
-        assert "Realizzato:" in text
-        assert "Realizzato (trader_a):" not in text
+        assert "Realized:" in text
+        assert "Realized — trader_a:" not in text
 
 
 # ---------------------------------------------------------------------------
@@ -453,12 +453,12 @@ class TestVistaStats:
         # Table header
         assert "Trades" in text
         assert "Win%" in text
-        assert "Netto" in text
+        assert "Net" in text
         # Labels
-        assert "Oggi" in text
-        assert "7 giorni" in text or "7" in text
-        assert "30 giorni" in text or "30" in text
-        assert "Totale" in text
+        assert "Today" in text
+        assert "Last 7d" in text
+        assert "Last 30d" in text
+        assert "All time" in text
 
     def test_shows_best_and_worst(self, ops_db):
         conn = sqlite3.connect(ops_db)

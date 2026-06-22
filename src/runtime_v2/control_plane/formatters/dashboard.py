@@ -148,7 +148,8 @@ def _build_active_payload(
         "rows": row_dicts,
         "total": total,
         "page_display": page_display,
-        "filters_str": None,
+        "filters_str": "All accounts · All traders" if is_global else None,
+        "order_str": "Updated desc" if is_global else None,
         "is_global": is_global,
         "_mark_stale": mark_stale,
         "_mark_time": mark_time,
@@ -187,6 +188,7 @@ def _build_closed_payload(
             "side": r.side,
             "closed_at": r.closed_at,
             "gross_pnl": r.gross_pnl,
+            "lifecycle_state": r.lifecycle_state,
             "closed_reason": r.closed_reason,
             "duration": _parse_duration(r.created_at, r.closed_at),
             "trader_id": r.trader_id,
@@ -202,7 +204,8 @@ def _build_closed_payload(
         "rows": row_dicts,
         "total": total,
         "page_display": page_display,
-        "filters_str": None,
+        "filters_str": "All accounts · All traders" if is_global else None,
+        "order_str": "Closed desc" if is_global else None,
         "is_global": is_global,
     }
     return payload, view.total_count
@@ -258,7 +261,8 @@ def _build_blocked_payload(
         "rows": row_dicts,
         "total": total,
         "page_display": page_display,
-        "filters_str": None,
+        "filters_str": "All accounts · All traders" if is_global else None,
+        "order_str": "Blocked desc" if is_global else None,
         "is_global": is_global,
     }
     return payload, total
@@ -277,15 +281,18 @@ def _build_pnl_payload(
     queries: StatusQueries,
 ) -> tuple[dict, int]:
     view = queries.get_pnl(scope)
+    is_global = scope.account_id is None
+    accounts_in_scope = view.accounts_in_scope or 0
 
     payload = {
         **_build_scope_meta(scope),
         "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
-        "total": 0,
+        "total": accounts_in_scope if is_global else 1,
         "page_display": "1/1",
-        "filters_str": None,
-        "is_global": scope.account_id is None,
+        "filters_str": "All accounts · All traders" if is_global else None,
+        "order_str": "Net desc" if is_global else None,
+        "is_global": is_global,
         "equity_usdt": view.equity_usdt,
         "available_balance_usdt": view.available_balance_usdt,
         "total_margin_used_usdt": view.total_margin_used_usdt,
@@ -294,6 +301,8 @@ def _build_pnl_payload(
         "pnl_net": view.pnl_net,
         "open_count": view.open_count,
         "waiting_entry_count": view.waiting_entry_count,
+        "accounts_in_scope": view.accounts_in_scope,
+        "by_account": view.by_account,
     }
     return payload, 0
 
@@ -303,6 +312,8 @@ def _build_stats_payload(
     queries: StatusQueries,
 ) -> tuple[dict, int]:
     view = queries.get_stats(scope)
+    is_global = scope.account_id is None
+    accounts_in_scope = len(view.by_account) if view.by_account else 0
 
     stats_rows = [
         {
@@ -319,10 +330,11 @@ def _build_stats_payload(
         **_build_scope_meta(scope),
         "account_id": scope.account_id or "All accounts",
         "updated_at": view.updated_at,
-        "total": 0,
+        "total": accounts_in_scope if is_global else 0,
         "page_display": "1/1",
-        "filters_str": None,
-        "is_global": scope.account_id is None,
+        "filters_str": "All accounts · All traders" if is_global else None,
+        "order_str": "Net desc" if is_global else None,
+        "is_global": is_global,
         "stats_rows": stats_rows,
         "best_chain_id": view.best_chain_id,
         "best_pnl": view.best_pnl,
@@ -330,6 +342,7 @@ def _build_stats_payload(
         "worst_chain_id": view.worst_chain_id,
         "worst_pnl": view.worst_pnl,
         "worst_symbol": None,
+        "by_account": view.by_account,
     }
     return payload, 0
 

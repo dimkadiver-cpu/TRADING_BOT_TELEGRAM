@@ -268,10 +268,13 @@ Actions: /cancel #5 · /close #5
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
   Source: Signal -> clean_log
+                                          // separatore una riga vuota
 • ENTRY OPENED · 14 Jun 09:10:00
   Source: exchange -> clean_log
+
 • TP1 FILLED · 14 Jun 09:10:01
   Source: exchange -> clean_log
+
 • UPDATE DONE · 14 Jun 09:10:02
   Type: CANCEL_PENDING
   Source: operation_rules -> clean_log
@@ -336,17 +339,17 @@ Fees: -2.06 USDT · Funding: +0.03 USDT
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
   Source: Signal -> clean_log
-  - - - - - - - - - - - - - - - - - - - -
+
 • ENTRY OPENED · 14 Jun 09:10:00
   Source: exchange -> clean_log
-  - - - - - - - - - - - - - - - - - - - -
+
 • TP1 FILLED · 14 Jun 09:10:01
   Source: exchange -> clean_log
-  - - - - - - - - - - - - - - - - - - - -
+
 • UPDATE DONE · 14 Jun 09:10:02
   Type: CANCEL_PENDING
   Source: operation_rules -> clean_log
-  - - - - - - - - - - - - - - - - - - - -
+
 • POSITION CLOSED · 14 Jun 09:10:02
   Reason: FINAL TP FILLED
   Source: exchange -> clean_log
@@ -380,9 +383,11 @@ PnL: No fill
 Events:
 • SIGNAL ACCEPTED · 14 Jun 16:12:00
   Source: Signal -> clean_log
+
 • UPDATE DONE · 14 Jun 16:14:10
   Type: CANCEL_PENDING
   Source: operation_rules -> clean_log
+
 • POSITION CANCELLED · 14 Jun 16:14:12
   Reason: CANCEL_PENDING
   Source: exchange -> clean_log
@@ -416,8 +421,10 @@ Actions: /close #7
 Events:
 • SIGNAL ACCEPTED · 14 Jun 11:50:00
   Source: Signal -> clean_log
+
 • ENTRY OPENED · 14 Jun 11:52:00
   Source: exchange -> clean_log
+
 • REVIEW REQUIRED · 14 Jun 11:52:05
   Reason: missing_sl
   Source: system -> clean_log

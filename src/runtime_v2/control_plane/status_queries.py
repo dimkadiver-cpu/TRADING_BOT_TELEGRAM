@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
 
 _ACTIVE_STATES = ("OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY", "REVIEW_REQUIRED",
-                  "BE_MOVE_PENDING", "PROTECTED_BE")
+                  "BE_MOVE_PENDING", "PROTECTED_BE", "PARTIALLY_FILLED", "CLOSE_PENDING")
 
 _EVENT_LABEL_MAP = {
     "SIGNAL_ACCEPTED": "SIGNAL ACCEPTED",
@@ -173,6 +173,8 @@ class PnlView:
     fees_usdt: float | None = None     # solo cumulative_fees
     funding_usdt: float | None = None  # solo cumulative_funding
     pnl_net: float | None = None
+    by_account: list[dict] | None = None
+    accounts_in_scope: int | None = None
 
 
 @dataclass
@@ -194,6 +196,7 @@ class StatsView:
     worst_chain_id: int | None = None
     worst_pnl: float | None = None
     worst_symbol: str | None = None
+    by_account: list[dict] | None = None
 
 
 @dataclass
@@ -207,6 +210,7 @@ class ClosedTradeRow:
     account_id: str | None = None
     created_at: str | None = None
     closed_reason: str | None = None
+    lifecycle_state: str | None = None
 
 
 @dataclass
@@ -890,6 +894,31 @@ class StatusQueries:
                 fees_usdt = float(closed_row[2]) if closed_row[2] is not None else 0.0
                 funding_usdt = float(closed_row[3]) if closed_row[3] is not None else 0.0
                 pnl_net = gross_pnl - (total_fees or 0.0)
+
+            # Global scope: per-account breakdown
+            by_account: list[dict] | None = None
+            accounts_in_scope: int | None = None
+            if scope is not None and scope.account_id is None:
+                acc_rows = conn.execute(
+                    "SELECT DISTINCT account_id FROM ops_trade_chains WHERE account_id IS NOT NULL"
+                ).fetchall()
+                account_ids = [r[0] for r in acc_rows]
+                accounts_in_scope = len(account_ids)
+                by_account = []
+                for acc_id in account_ids:
+                    net_row = conn.execute(
+                        "SELECT SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
+                        "FROM ops_trade_chains WHERE lifecycle_state='CLOSED' AND account_id=?",
+                        (acc_id,)
+                    ).fetchone()
+                    net_pnl_acc = float(net_row[0]) if net_row and net_row[0] is not None else 0.0
+                    open_c = conn.execute(
+                        "SELECT COUNT(*) FROM ops_trade_chains "
+                        "WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED') AND account_id=?",
+                        (acc_id,)
+                    ).fetchone()[0]
+                    by_account.append({"account_id": acc_id, "net_pnl": net_pnl_acc, "open_count": open_c})
+                by_account.sort(key=lambda x: x["net_pnl"], reverse=True)
         finally:
             conn.close()
 
@@ -910,6 +939,8 @@ class StatusQueries:
             fees_usdt=fees_usdt,
             funding_usdt=funding_usdt,
             pnl_net=pnl_net,
+            by_account=by_account,
+            accounts_in_scope=accounts_in_scope,
         )
 
     def get_stats(self, scope: QueryScope) -> StatsView:
@@ -963,17 +994,45 @@ class StatusQueries:
                 f"ORDER BY cumulative_gross_pnl ASC LIMIT 1",
                 scope_params,
             ).fetchone()
+
+            # Global scope: per-account stats breakdown
+            by_account_stats: list[dict] | None = None
+            if scope.account_id is None:
+                acc_rows = conn.execute(
+                    "SELECT DISTINCT account_id FROM ops_trade_chains WHERE account_id IS NOT NULL"
+                ).fetchall()
+                account_ids = [r[0] for r in acc_rows]
+                by_account_stats = []
+                for acc_id in account_ids:
+                    acc_row = conn.execute(
+                        "SELECT COUNT(*), "
+                        "SUM(CASE WHEN cumulative_gross_pnl > 0 THEN 1 ELSE 0 END), "
+                        "SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
+                        "FROM ops_trade_chains WHERE lifecycle_state='CLOSED' AND account_id=?",
+                        (acc_id,)
+                    ).fetchone()
+                    cnt = acc_row[0] or 0
+                    wins = acc_row[1] or 0
+                    net_pnl_acc = float(acc_row[2]) if acc_row[2] is not None else 0.0
+                    win_pct_acc = (wins / cnt * 100.0) if cnt > 0 else None
+                    by_account_stats.append({
+                        "account_id": acc_id,
+                        "trade_count": cnt,
+                        "win_pct": win_pct_acc,
+                        "net_pnl": net_pnl_acc,
+                    })
+                by_account_stats.sort(key=lambda x: x["net_pnl"], reverse=True)
         finally:
             conn.close()
 
         rows = [
-            StatsRow(label="Oggi", trade_count=today_count, win_pct=today_win,
+            StatsRow(label="Today", trade_count=today_count, win_pct=today_win,
                      pnl_net=today_pnl, fees=today_fees),
-            StatsRow(label="7 giorni", trade_count=d7_count, win_pct=d7_win,
+            StatsRow(label="Last 7d", trade_count=d7_count, win_pct=d7_win,
                      pnl_net=d7_pnl, fees=d7_fees),
-            StatsRow(label="30 giorni", trade_count=d30_count, win_pct=d30_win,
+            StatsRow(label="Last 30d", trade_count=d30_count, win_pct=d30_win,
                      pnl_net=d30_pnl, fees=d30_fees),
-            StatsRow(label="Totale", trade_count=tot_count, win_pct=tot_win,
+            StatsRow(label="All time", trade_count=tot_count, win_pct=tot_win,
                      pnl_net=tot_pnl, fees=tot_fees),
         ]
         return StatsView(
@@ -985,6 +1044,7 @@ class StatusQueries:
             worst_chain_id=worst_row[0] if worst_row else None,
             worst_pnl=float(worst_row[1]) if worst_row and worst_row[1] is not None else None,
             worst_symbol=worst_row[2] if worst_row else None,
+            by_account=by_account_stats,
         )
 
     def get_closed_trades(
@@ -993,6 +1053,8 @@ class StatusQueries:
         page: int = 0,
         page_size: int = 5,
     ) -> ClosedTradesView:
+        _CLOSED_STATES = ("CLOSED", "CANCELLED_UNFILLED")
+        closed_placeholders = ",".join("?" * len(_CLOSED_STATES))
         conn = self._connect()
         try:
             scope_frag, scope_params = _scope_where(scope)
@@ -1004,24 +1066,24 @@ class StatusQueries:
 
             total_count = conn.execute(
                 f"SELECT COUNT(*) FROM ops_trade_chains "
-                f"WHERE lifecycle_state='CLOSED' AND {scope_frag}",
-                scope_params,
+                f"WHERE lifecycle_state IN ({closed_placeholders}) AND {scope_frag}",
+                [*_CLOSED_STATES, *scope_params],
             ).fetchone()[0]
 
             rows = conn.execute(
                 f"SELECT t.trade_chain_id, t.symbol, t.side, t.trader_id, t.account_id, t.created_at, "
                 f"COALESCE(t.{closed_at_expr}, t.updated_at) as closed_at, "
-                f"t.cumulative_gross_pnl, "
+                f"t.cumulative_gross_pnl, t.lifecycle_state, "
                 f"(SELECT json_extract(le.payload_json, '$.reason') "
                 f" FROM ops_lifecycle_events le "
                 f" WHERE le.trade_chain_id = t.trade_chain_id "
                 f" AND le.event_type IN ('POSITION_CLOSED','POSITION_CANCELLED','SL_HIT','TP_HIT') "
                 f" ORDER BY le.event_id DESC LIMIT 1) as close_reason "
                 f"FROM ops_trade_chains t "
-                f"WHERE t.lifecycle_state='CLOSED' AND {scope_frag} "
+                f"WHERE t.lifecycle_state IN ({closed_placeholders}) AND {scope_frag} "
                 f"ORDER BY t.{closed_at_expr} DESC, t.trade_chain_id DESC "
                 f"LIMIT ? OFFSET ?",
-                [*scope_params, page_size, offset],
+                [*_CLOSED_STATES, *scope_params, page_size, offset],
             ).fetchall()
         finally:
             conn.close()
@@ -1033,10 +1095,11 @@ class StatusQueries:
                 side=r[2],
                 closed_at=r[6],
                 gross_pnl=float(r[7]) if r[7] is not None else None,
+                lifecycle_state=r[8],
+                closed_reason=r[9],
                 trader_id=r[3],
                 account_id=r[4],
                 created_at=r[5],
-                closed_reason=r[8],
             )
             for r in rows
         ]

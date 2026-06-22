@@ -1560,7 +1560,7 @@ def test_bybit_delisting_entry_failure_becomes_signal_rejected(ops_db):
     repo = GatewayCommandRepository(ops_db)
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"bybit_demo": DelistingAdapter()},
+        adapter_registry={"bybit_demo_1": DelistingAdapter()},
         repo=repo,
     )
 
@@ -1592,8 +1592,12 @@ def test_bybit_delisting_entry_failure_becomes_signal_rejected(ops_db):
     assert outbox_rows[0][0] == "SIGNAL_ACCEPTED"
     assert outbox_rows[0][1] == "SUPPRESSED"
     assert outbox_rows[1][0] == "SIGNAL_REJECTED"
+    assert outbox_rows[2][0] == "GATEWAY_COMMAND_FAILED"
     reject_payload = json.loads(outbox_rows[1][2])
     assert reject_payload["reason"] == "retCode=30228: No new positions during delisting."
+    tech_payload = json.loads(outbox_rows[2][2])
+    assert tech_payload["chain_id"] == 1
+    assert tech_payload["command_type"] == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
 
 
 def test_place_entry_failure_projects_gateway_command_failed_tech_log(ops_db):

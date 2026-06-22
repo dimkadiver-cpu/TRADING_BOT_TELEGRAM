@@ -939,3 +939,51 @@ async def test_tech_log_keeps_existing_link_without_overriding_it(ops_db):
     assert sent == 1
     assert len(sender.sent) == 1
     assert "https://t.me/c/111/222" in sender.sent[0]["text"]
+
+
+@pytest.mark.asyncio
+async def test_signal_rejected_then_gateway_tech_log_links_to_that_clean_log(ops_db):
+    sender = FakeSender()
+    disp = _dispatcher(ops_db, sender)
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        write_clean_log_event(
+            conn,
+            notification_type="SIGNAL_REJECTED",
+            chain_id=72,
+            payload={
+                "chain_id": 72,
+                "symbol": "BTC/USDT",
+                "side": "LONG",
+                "trader_id": "trader_b",
+                "account_id": "main",
+                "reason": "exchange_rejected",
+                "source": "runtime",
+            },
+            priority="HIGH",
+            dedupe_key="clean:sigrej:72",
+        )
+        write_tech_log_event(
+            conn,
+            notification_type="GATEWAY_COMMAND_FAILED",
+            payload={
+                "level": "ERROR",
+                "command_type": "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+                "chain_id": 72,
+                "trader_id": "trader_b",
+                "execution_account_id": "demo_1",
+                "reason": "retCode=30228",
+                "source": "execution_gateway",
+            },
+            dedupe_key="tech:sigrej:72",
+            priority="HIGH",
+        )
+    conn.close()
+
+    sent = await disp.drain_once()
+
+    assert sent == 2
+    assert len(sender.sent) == 2
+    assert "SIGNAL REJECTED" in sender.sent[0]["text"]
+    assert "GATEWAY: COMMAND FAILED" in sender.sent[1]["text"]
+    assert "https://t.me/c/999/101" in sender.sent[1]["text"]
