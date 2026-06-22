@@ -227,3 +227,36 @@ def test_format_reviews():
     assert "#151" in text
     assert "SOL/USDT" in text
     assert "missing_sl" in text
+
+
+# Task 3: Actions matrix per stato
+def test_trade_detail_actions_waiting_entry_only_cancel():
+    """WAITING_ENTRY must show only /cancel_n, not /close_n."""
+    detail = _make_detail(
+        state="WAITING_ENTRY",
+        is_actionable=True, is_terminal=False,
+        unrealized_pnl=None, cum_realized_pnl=None,
+    )
+    text = format_trade_detail(detail)
+    assert "/cancel_5" in text
+    assert "/close_5" not in text
+
+
+def test_trade_detail_actions_review_required_only_close():
+    """REVIEW_REQUIRED must show only /close_n, not /cancel_n."""
+    detail = _make_detail(
+        state="REVIEW_REQUIRED",
+        is_actionable=True, is_terminal=False,
+        sl_price=None,
+    )
+    text = format_trade_detail(detail)
+    assert "/close_5" in text
+    assert "/cancel_5" not in text
+
+
+def test_trade_detail_actions_open_has_both():
+    """OPEN must show /cancel_n · /close_n."""
+    detail = _make_detail(state="OPEN", is_actionable=True, is_terminal=False)
+    text = format_trade_detail(detail)
+    assert "/cancel_5" in text
+    assert "/close_5" in text

@@ -49,6 +49,15 @@ def _render_event(ev: dict, i: int, p: dict) -> list[str]:
     return lines
 
 
+def _fmt_actions(state: str, chain_id: int) -> str:
+    if state == "WAITING_ENTRY":
+        return f"Actions: /cancel_{chain_id}"
+    if state == "REVIEW_REQUIRED":
+        return f"Actions: /close_{chain_id}"
+    # OPEN, PARTIALLY_CLOSED and other actionable states
+    return f"Actions: /cancel_{chain_id} · /close_{chain_id}"
+
+
 _TRADE_DETAIL_BLOCKS: list = [
     # 1. Header
     DerivedBlock(
@@ -151,15 +160,13 @@ _TRADE_DETAIL_BLOCKS: list = [
             StaticBlock("PnL: No fill"),
         ],
     ),
-    # 5. Actions — only if actionable and not terminal
+    # 5. Actions — matrice per stato
     ConditionalBlock(
         condition=lambda p: bool(p.get("is_actionable")) and not p.get("is_terminal"),
         blocks=[
             SeparatorBlock(),
             DerivedBlock(
-                text_fn=lambda p: (
-                    f"Actions: /cancel_{p['chain_id']} · /close_{p['chain_id']}"
-                )
+                text_fn=lambda p: _fmt_actions(p["state"], p["chain_id"])
             ),
         ],
     ),
