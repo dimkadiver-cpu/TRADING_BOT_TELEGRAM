@@ -102,7 +102,7 @@ _ACTIVE_BLOCKS: list = [
     ),
     ConditionalBlock(
         condition=lambda p: bool(p.get("rows")),
-        blocks=[ListBlock(key="rows", item_renderer=_render_active_item)],
+        blocks=[ListBlock(key="rows", item_renderer=_render_active_item, index_start=0)],
     ),
     _ACTIVE_FRESHNESS_WARNING,
 ]
@@ -153,7 +153,7 @@ _CLOSED_BLOCKS: list = [
     ),
     ConditionalBlock(
         condition=lambda p: bool(p.get("rows")),
-        blocks=[ListBlock(key="rows", item_renderer=_render_closed_item)],
+        blocks=[ListBlock(key="rows", item_renderer=_render_closed_item, index_start=0)],
     ),
 ]
 
@@ -190,7 +190,7 @@ _BLOCKED_BLOCKS: list = [
     ),
     ConditionalBlock(
         condition=lambda p: bool(p.get("rows")),
-        blocks=[ListBlock(key="rows", item_renderer=_render_blocked_item)],
+        blocks=[ListBlock(key="rows", item_renderer=_render_blocked_item, index_start=0)],
     ),
 ]
 
