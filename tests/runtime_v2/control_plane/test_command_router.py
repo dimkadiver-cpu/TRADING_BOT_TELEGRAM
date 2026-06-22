@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import sqlite3
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import pytest
 
@@ -145,6 +146,8 @@ def test_help_lists_commands(ops_db):
     assert "/pnl" in res.reply_text
     assert "/debug_on [<duration>]" in res.reply_text
     assert "/debug_off" in res.reply_text
+    assert "/clear_topic" in res.reply_text
+    assert "/clear_all_topic" in res.reply_text
 
 
 def test_trade_with_id_arg(ops_db):
@@ -219,6 +222,274 @@ def test_version(ops_db):
     )
     assert "VERSION" in res.reply_text
     assert "v2" in res.reply_text
+
+
+def test_clear_topic_from_arbitrary_thread_returns_confirmation_keyboard(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    res = router.route(
+        command_text="/clear_topic",
+        message_id=90,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    assert res.decision == "EXECUTED"
+    assert "topic" in (res.reply_text or "").lower()
+    assert res.keyboard is not None
+    token, pending = next(iter(router._pending.items()))
+    assert token
+    assert pending.kind == "clear_topic"
+    assert pending.topic_id == 999
+    assert pending.command_message_id == 90
+
+
+def test_clear_all_topic_from_arbitrary_thread_returns_confirmation_keyboard(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    res = router.route(
+        command_text="/clear_all_topic",
+        message_id=91,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    assert res.decision == "EXECUTED"
+    assert "topic" in (res.reply_text or "").lower()
+    assert res.keyboard is not None
+    token, pending = next(iter(router._pending.items()))
+    assert token
+    assert pending.kind == "clear_all_topic"
+    assert pending.topic_id == 999
+    assert pending.command_message_id == 91
+
+
+def test_clear_topic_callback_confirm_invokes_cleanup_service(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    cleanup.try_clear_topic.return_value = True
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_topic",
+        message_id=92,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    token = next(iter(router._pending.keys()))
+    cb = router.handle_callback(
+        callback_data=f"clear_topic:confirm:{token}",
+        user_id=42,
+        chat_id=-100999,
+        message_id=93,
+        thread_id=999,
+        created_by="42",
+    )
+
+    cleanup.try_clear_topic.assert_called_once_with(
+        chat_id=-100999,
+        topic_id=999,
+        command_message_id=92,
+        preview_message_id=93,
+    )
+    assert cb.delete_message is True
+    assert cb.reply_text == ""
+
+
+def test_clear_all_topic_callback_confirm_invokes_cleanup_service(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    cleanup.try_clear_all_topics.return_value = True
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_all_topic",
+        message_id=93,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    token = next(iter(router._pending.keys()))
+    cb = router.handle_callback(
+        callback_data=f"clear_all_topic:confirm:{token}",
+        user_id=42,
+        chat_id=-100999,
+        message_id=94,
+        thread_id=999,
+        created_by="42",
+    )
+
+    cleanup.try_clear_all_topics.assert_called_once_with(
+        chat_id=-100999,
+        origin_topic_id=999,
+        command_message_id=93,
+        preview_message_id=94,
+    )
+    assert cb.delete_message is True
+    assert cb.reply_text == ""
+
+
+def test_clear_topic_callback_cancel_does_not_invoke_cleanup_service(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_topic",
+        message_id=94,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    token = next(iter(router._pending.keys()))
+    cb = router.handle_callback(
+        callback_data=f"clear_topic:cancel:{token}",
+        user_id=42,
+        chat_id=-100999,
+        message_id=95,
+        thread_id=999,
+        created_by="42",
+    )
+
+    cleanup.try_clear_topic.assert_not_called()
+    assert cb.delete_message is True
+    assert cb.reply_text == ""
+
+
+def test_clear_topic_callback_confirm_reports_failure_when_cleanup_service_returns_false(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    cleanup.try_clear_topic.return_value = False
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_topic",
+        message_id=96,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    token = next(iter(router._pending.keys()))
+    cb = router.handle_callback(
+        callback_data=f"clear_topic:confirm:{token}",
+        user_id=42,
+        chat_id=-100999,
+        message_id=97,
+        thread_id=999,
+        created_by="42",
+    )
+
+    cleanup.try_clear_topic.assert_called_once_with(
+        chat_id=-100999,
+        topic_id=999,
+        command_message_id=96,
+        preview_message_id=97,
+    )
+    assert cb.delete_message is False
+    assert "non eseguito" in cb.answer_text.lower()
+    assert "non eseguito" in cb.reply_text.lower()
+
+
+def test_clear_all_topic_callback_confirm_reports_failure_when_cleanup_service_returns_false(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    cleanup.try_clear_all_topics.return_value = False
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_all_topic",
+        message_id=98,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    token = next(iter(router._pending.keys()))
+    cb = router.handle_callback(
+        callback_data=f"clear_all_topic:confirm:{token}",
+        user_id=42,
+        chat_id=-100999,
+        message_id=99,
+        thread_id=999,
+        created_by="42",
+    )
+
+    cleanup.try_clear_all_topics.assert_called_once_with(
+        chat_id=-100999,
+        origin_topic_id=999,
+        command_message_id=98,
+        preview_message_id=99,
+    )
+    assert cb.delete_message is False
+    assert "non eseguito" in cb.answer_text.lower()
+    assert "non eseguito" in cb.reply_text.lower()
 
 
 # ── Gap 1: wrong-topic audit / wrong-chat no-audit ────────────────────────────

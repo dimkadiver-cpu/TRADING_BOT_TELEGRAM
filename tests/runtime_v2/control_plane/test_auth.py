@@ -50,6 +50,52 @@ def test_wrong_topic_ignored():
     assert res.reason == "wrong_topic"
 
 
+def test_clear_topic_allowed_from_arbitrary_forum_thread():
+    v = AuthValidator(_config_with_per_trader())
+    res = v.validate(
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        command_name="clear_topic",
+    )
+    assert res.decision == "OK"
+
+
+def test_clear_all_topic_allowed_from_arbitrary_forum_thread():
+    v = AuthValidator(_config_with_per_trader())
+    res = v.validate(
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        command_name="clear_all_topic",
+    )
+    assert res.decision == "OK"
+
+
+def test_clear_topic_wrong_chat_still_ignored():
+    v = AuthValidator(_config_with_per_trader())
+    res = v.validate(
+        chat_id=-1,
+        thread_id=999,
+        user_id=42,
+        command_name="clear_topic",
+    )
+    assert res.decision == "IGNORE"
+    assert res.reason == "wrong_chat"
+
+
+def test_clear_all_topic_unauthorized_user_rejected():
+    v = AuthValidator(_config_with_per_trader())
+    res = v.validate(
+        chat_id=-100999,
+        thread_id=999,
+        user_id=77,
+        command_name="clear_all_topic",
+    )
+    assert res.decision == "REJECT_UNAUTHORIZED"
+    assert res.reason == "unauthorized_user"
+
+
 def test_unauthorized_user_rejected():
     v = AuthValidator(_config())
     res = v.validate(chat_id=-100999, thread_id=101, user_id=7)

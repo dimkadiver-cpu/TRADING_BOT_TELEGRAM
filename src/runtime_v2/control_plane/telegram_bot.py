@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import inspect
 import logging
 import re
 import secrets
@@ -48,12 +49,14 @@ _PENDING_TTL = 300  # 5 minuti
 
 @dataclass
 class _PendingAction:
-    kind: Literal["close_all", "close_single", "cancel_all"]
-    scope: "QueryScope"  # type: ignore[name-defined]  # forward ref from scope_resolver
-    candidates: list[CloseCandidate]
-    chains_payload: list[dict]
-    scope_label: str
-    open_count: int
+    kind: Literal["close_all", "close_single", "cancel_all", "clear_topic", "clear_all_topic"]
+    scope: "QueryScope | None" = None  # type: ignore[name-defined]  # forward ref from scope_resolver
+    candidates: list[CloseCandidate] = field(default_factory=list)
+    chains_payload: list[dict] = field(default_factory=list)
+    scope_label: str = ""
+    open_count: int = 0
+    topic_id: int | None = None
+    command_message_id: int | None = None
     created_at: float = field(default_factory=time.time)
 
     def is_expired(self) -> bool:
@@ -95,6 +98,8 @@ Emergenza (⚠️ destructivi — chiedono conferma):
 /close_all [trader]       - chiude tutte le posizioni aperte
 /close [trader] <symbol>  - chiude posizioni su un simbolo
 /cancel_all [trader]      - cancella tutti gli ordini WAITING_ENTRY
+/clear_topic              - svuota il topic corrente del forum
+/clear_all_topic          - svuota tutti i topic del supergruppo
 
 Dashboard:
 /stats     - statistiche trades
@@ -123,7 +128,7 @@ _READONLY_COMMANDS = frozenset(
      "version", "stats", "dashboard"}
 )
 _CONTROL_COMMANDS = frozenset({"pause", "resume", "start", "block", "unblock"})
-_EMERGENCY_COMMANDS = frozenset({"close_all", "close", "cancel_all"})
+_EMERGENCY_COMMANDS = frozenset({"close_all", "close", "cancel_all", "clear_topic", "clear_all_topic"})
 _ADVANCED_COMMANDS = frozenset({"pnl", "logs", "debug_on", "debug_off"})
 _ALLOWED_COMMANDS = _READONLY_COMMANDS | _CONTROL_COMMANDS | _EMERGENCY_COMMANDS | _ADVANCED_COMMANDS
 
@@ -144,6 +149,20 @@ def _emergency_keyboard(kind: str, token: str):
 def _now_hms() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).strftime("%H:%M:%S")
+
+
+def _run_maybe_awaitable(result):
+    if inspect.isawaitable(result):
+        return asyncio.run(result)
+    return result
+
+
+def _topic_cleanup_failure_result() -> CallbackResult:
+    return CallbackResult(
+        "⚠️ Topic cleanup non eseguito. Riprova.",
+        delete_message=False,
+        answer_text="⚠️ Topic cleanup non eseguito",
+    )
 
 
 def _scope_label_from_scope(scope: "QueryScope") -> str:  # type: ignore[name-defined]
@@ -202,12 +221,14 @@ class CommandRouter:
         auth: AuthValidator,
         audit: CommandAuditStore,
         service: RuntimeControlService,
+        topic_cleanup=None,
         scope_resolver=None,  # ScopeResolver | None
     ) -> None:
         self._config = config
         self._auth = auth
         self._audit = audit
         self._service = service
+        self._topic_cleanup = topic_cleanup
         self._scope_resolver = scope_resolver
         self._debug_max_seconds = config.get_account(None).topics.tech_log.debug_max_duration_minutes * 60
         self._pending: dict[str, _PendingAction] = {}
@@ -284,7 +305,13 @@ class CommandRouter:
             status="ACCEPTED",
         )
         try:
-            dispatch_result = self._dispatch(command_name, args, created_by=str(user_id), thread_id=thread_id)
+            dispatch_result = self._dispatch(
+                command_name,
+                args,
+                created_by=str(user_id),
+                thread_id=thread_id,
+                command_message_id=message_id,
+            )
             self._audit.update_status(
                 request_id,
                 status=dispatch_result.decision,
@@ -306,6 +333,7 @@ class CommandRouter:
         *,
         created_by: str,
         thread_id: int | None = None,
+        command_message_id: int | None = None,
     ) -> _DispatchResult:
         # Resolve scope for the current thread context
         scope = None
@@ -538,6 +566,46 @@ class CommandRouter:
             )
             return _DispatchResult(text, keyboard=_emergency_keyboard("cancel_all", token))
 
+        if command_name == "clear_topic":
+            if self._topic_cleanup is None:
+                return _DispatchResult(
+                    "Topic cleanup non disponibile.",
+                    decision="REJECTED",
+                    reject_reason="not_available",
+                )
+            if thread_id is None:
+                return _DispatchResult("", decision="IGNORE", reject_reason="wrong_topic")
+            token = _make_token()
+            self._pending[token] = _PendingAction(
+                kind="clear_topic",
+                topic_id=thread_id,
+                command_message_id=command_message_id,
+            )
+            return _DispatchResult(
+                "⚠️ Clear topic corrente?\nConferma per cancellare tutti i messaggi del thread.",
+                keyboard=_emergency_keyboard("clear_topic", token),
+            )
+
+        if command_name == "clear_all_topic":
+            if self._topic_cleanup is None:
+                return _DispatchResult(
+                    "Topic cleanup non disponibile.",
+                    decision="REJECTED",
+                    reject_reason="not_available",
+                )
+            if thread_id is None:
+                return _DispatchResult("", decision="IGNORE", reject_reason="wrong_topic")
+            token = _make_token()
+            self._pending[token] = _PendingAction(
+                kind="clear_all_topic",
+                topic_id=thread_id,
+                command_message_id=command_message_id,
+            )
+            return _DispatchResult(
+                "⚠️ Clear tutti i topic del supergruppo?\nConferma per una pulizia completa.",
+                keyboard=_emergency_keyboard("clear_all_topic", token),
+            )
+
         # Dashboard shortcut: /trade_N, /close_N, /cancel_N
         m = _DASH_CMD_RE.match(command_name)
         if m:
@@ -652,6 +720,8 @@ class CommandRouter:
         now = _now_hms()
 
         if action == "cancel":
+            if kind in {"clear_topic", "clear_all_topic"}:
+                return CallbackResult("", delete_message=True, answer_text="❌ Annullato")
             result_key = f"{kind}_result_cancelled"
             cfg = EMERGENCY_REGISTRY[result_key]
             payload = {
@@ -693,6 +763,34 @@ class CommandRouter:
                 "executed_at": now,
                 "open_count": pending.open_count,
             }
+        elif kind == "clear_topic":
+            if self._topic_cleanup is None or pending.topic_id is None or pending.command_message_id is None:
+                return CallbackResult("", delete_message=True, answer_text="⚠️ Topic cleanup non disponibile")
+            started = _run_maybe_awaitable(
+                self._topic_cleanup.try_clear_topic(
+                    chat_id=chat_id,
+                    topic_id=pending.topic_id,
+                    command_message_id=pending.command_message_id,
+                    preview_message_id=message_id,
+                )
+            )
+            if started is False:
+                return _topic_cleanup_failure_result()
+            return CallbackResult("", delete_message=True, answer_text="🧹")
+        elif kind == "clear_all_topic":
+            if self._topic_cleanup is None or pending.topic_id is None or pending.command_message_id is None:
+                return CallbackResult("", delete_message=True, answer_text="⚠️ Topic cleanup non disponibile")
+            started = _run_maybe_awaitable(
+                self._topic_cleanup.try_clear_all_topics(
+                    chat_id=chat_id,
+                    origin_topic_id=pending.topic_id,
+                    command_message_id=pending.command_message_id,
+                    preview_message_id=message_id,
+                )
+            )
+            if started is False:
+                return _topic_cleanup_failure_result()
+            return CallbackResult("", delete_message=True, answer_text="🧹")
         else:
             return CallbackResult("Tipo non valido.", answer_text="⚠️")
 
@@ -867,7 +965,7 @@ class TelegramControlBot:
         parts = callback_data.split(":", 2)
         is_emergency = (
             len(parts) == 3
-            and parts[0] in ("close_all", "close_single", "cancel_all")
+            and parts[0] in ("close_all", "close_single", "cancel_all", "clear_topic", "clear_all_topic")
             and parts[1] in ("confirm", "cancel")
         )
 

@@ -172,3 +172,22 @@ def test_build_control_plane_passes_known_trader_ids_to_topic_router(tmp_path):
 
     assert cp is not None
     assert topic_router_kwargs["known_trader_ids"] == {"trader_a", "trader_b"}
+
+
+def test_build_control_plane_accepts_telethon_client_and_wires_topic_cleanup(tmp_path):
+    config_file = _write_config(tmp_path, mode="auto")
+    db_path = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db_path)
+    fake_client = MagicMock(name="telethon_client")
+
+    with patch("telegram.Bot", return_value=MagicMock()):
+        cp = build_control_plane(
+            config_path=str(config_file),
+            ops_db_path=db_path,
+            log_path=None,
+            telethon_client=fake_client,
+        )
+
+    assert cp is not None
+    assert cp.bot._router._topic_cleanup is not None
+    assert cp.bot._router._topic_cleanup._client is fake_client

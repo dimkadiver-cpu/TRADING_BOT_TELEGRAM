@@ -9,6 +9,7 @@ from src.runtime_v2.control_plane.models import ControlPlaneConfig
 AuthDecision = Literal["OK", "IGNORE", "REJECT_UNAUTHORIZED"]
 
 _DASHBOARD_ALLOWED_FROM_CLEAN_LOG = frozenset({"dashboard"})
+_TOPIC_CLEANUP_COMMANDS = frozenset({"clear_topic", "clear_all_topic"})
 _DASH_ACTION_RE = re.compile(r'^(trade|cancel|close)_\d+$')
 
 
@@ -51,7 +52,9 @@ class AuthValidator:
 
         # In private_bot mode thread_id is not sent by Telegram and is ignored here.
         if self._delivery_mode == "supergroup_topics":
-            if thread_id == self._commands_thread_id:
+            if command_name in _TOPIC_CLEANUP_COMMANDS and thread_id is not None:
+                pass  # topic cleanup is allowed from any forum topic in the configured chat
+            elif thread_id == self._commands_thread_id:
                 pass  # all commands allowed from commands topic
             elif thread_id in self._clean_log_thread_ids and (
                 command_name in _DASHBOARD_ALLOWED_FROM_CLEAN_LOG
