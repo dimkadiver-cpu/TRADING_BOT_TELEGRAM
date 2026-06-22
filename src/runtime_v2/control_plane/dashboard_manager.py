@@ -278,11 +278,21 @@ class DashboardManager:
         finally:
             conn.close()
 
+    def _get_parsed_filters(self, chat_id: int, thread_id: int) -> dict | None:
+        raw = self._get_filters_json(chat_id, thread_id)
+        if not raw:
+            return None
+        try:
+            return json.loads(raw)
+        except Exception:
+            return None
+
     def _render_view(
         self,
         scope: QueryScope,
         view: str,
         page: int,
+        filters: dict | None = None,
     ) -> tuple[str, object]:
         """Call format_dashboard_view + build_dashboard_keyboard."""
         from src.runtime_v2.control_plane.formatters.dashboard import (
@@ -291,7 +301,7 @@ class DashboardManager:
         )
 
         text, total_count = format_dashboard_view(
-            view, scope, self._queries, page=page, page_size=_PAGE_SIZE
+            view, scope, self._queries, page=page, page_size=_PAGE_SIZE, filters=filters
         )
         keyboard = build_dashboard_keyboard(view, page, total_count, page_size=_PAGE_SIZE)
         return text, keyboard
@@ -427,7 +437,8 @@ class DashboardManager:
         new_current_view = _encode_view(new_view, new_page)
         self._update_current_view(chat_id, thread_id, new_current_view)
 
-        text, keyboard = self._render_view(scope, new_view, new_page)
+        filters = self._get_parsed_filters(chat_id, thread_id)
+        text, keyboard = self._render_view(scope, new_view, new_page, filters)
 
         if self._bot is None:
             return
@@ -665,7 +676,8 @@ class DashboardManager:
         view_name, page = _parse_view(current_view_str)
 
         try:
-            text, keyboard = self._render_view(scope, view_name, page)
+            filters = self._get_parsed_filters(chat_id, thread_id)
+            text, keyboard = self._render_view(scope, view_name, page, filters)
         except Exception:
             logger.exception("_do_refresh: render failed chat=%s thread=%s", chat_id, thread_id)
             return

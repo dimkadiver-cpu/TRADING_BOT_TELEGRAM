@@ -133,7 +133,7 @@ def _patch_render_view(manager: DashboardManager):
     async def _noop(*args, **kwargs):
         pass
 
-    def patched(scope, view, page):
+    def patched(scope, view, page, filters=None):
         return (f"[{view} page={page}]", fake_keyboard)
 
     manager._render_view = patched  # type: ignore[method-assign]

@@ -13,6 +13,57 @@ from src.runtime_v2.control_plane.status_queries import StatusQueries
 
 _RECONCILIATION_INTERVAL_SECONDS = 120.0
 
+_PERIOD_LABELS = {
+    "today": "Today",
+    "week": "Last 7d",
+    "month": "Last 30d",
+}
+
+
+def _effective_scope(scope: QueryScope, filters: dict | None) -> QueryScope:
+    """Narrow scope by account/trader filters — cannot expand beyond original scope."""
+    if not filters:
+        return scope
+    account = filters.get("account")
+    trader = filters.get("trader")
+    eff_account = scope.account_id
+    if account:
+        if scope.account_id is None or scope.account_id == account:
+            eff_account = account
+    eff_traders = scope.trader_ids
+    if trader:
+        if scope.trader_ids is None or trader in scope.trader_ids:
+            eff_traders = [trader]
+    if eff_account == scope.account_id and eff_traders == scope.trader_ids:
+        return scope
+    return QueryScope(account_id=eff_account, trader_ids=eff_traders)
+
+
+def _build_filters_str(is_global: bool, filters: dict | None) -> str | None:
+    parts: list[str] = []
+    f = filters or {}
+    account = f.get("account")
+    trader = f.get("trader")
+    side = f.get("side")
+    period = f.get("period")
+    status = f.get("status")
+
+    if is_global:
+        parts.append(account or "All accounts")
+        parts.append(trader or "All traders")
+    else:
+        if trader:
+            parts.append(trader)
+
+    if side:
+        parts.append(side.capitalize())
+    if period:
+        parts.append(_PERIOD_LABELS.get(period, period))
+    if status:
+        parts.append(status.replace("_", " ").lower().capitalize())
+
+    return " · ".join(parts) if parts else None
+
 
 def _now_hms() -> str:
     return datetime.now(timezone.utc).strftime("%H:%M:%S")
@@ -86,8 +137,12 @@ def _build_active_payload(
     queries: StatusQueries,
     page: int,
     page_size: int,
+    filters: dict | None = None,
 ) -> tuple[dict, int]:
-    view = queries.get_open_trades(scope)
+    is_global = scope.account_id is None
+    query_scope = _effective_scope(scope, filters)
+    f = filters or {}
+    view = queries.get_open_trades(query_scope, side=f.get("side"), status=f.get("status"))
     rows = view.rows
 
     total = view.total
@@ -98,7 +153,6 @@ def _build_active_payload(
     # page_display
     total_pages = max(1, (total + page_size - 1) // page_size)
     page_display = f"{page + 1}/{total_pages}"
-    is_global = scope.account_id is None
 
     # Mark snapshot staleness
     mark_stale = False
@@ -148,7 +202,7 @@ def _build_active_payload(
         "rows": row_dicts,
         "total": total,
         "page_display": page_display,
-        "filters_str": "All accounts · All traders" if is_global else None,
+        "filters_str": _build_filters_str(is_global, filters),
         "order_str": "Updated desc" if is_global else None,
         "is_global": is_global,
         "_mark_stale": mark_stale,
@@ -173,13 +227,19 @@ def _build_closed_payload(
     queries: StatusQueries,
     page: int,
     page_size: int,
+    filters: dict | None = None,
 ) -> tuple[dict, int]:
-    view = queries.get_closed_trades(scope, page=page, page_size=page_size)
+    is_global = scope.account_id is None
+    query_scope = _effective_scope(scope, filters)
+    f = filters or {}
+    view = queries.get_closed_trades(
+        query_scope, page=page, page_size=page_size,
+        side=f.get("side"), period=f.get("period"),
+    )
 
     total = view.total_count
     total_pages = max(1, (total + page_size - 1) // page_size)
     page_display = f"{page + 1}/{total_pages}"
-    is_global = scope.account_id is None
 
     row_dicts = [
         {
@@ -204,7 +264,7 @@ def _build_closed_payload(
         "rows": row_dicts,
         "total": total,
         "page_display": page_display,
-        "filters_str": "All accounts · All traders" if is_global else None,
+        "filters_str": _build_filters_str(is_global, filters),
         "order_str": "Closed desc" if is_global else None,
         "is_global": is_global,
     }
@@ -226,11 +286,14 @@ def _build_blocked_payload(
     queries: StatusQueries,
     page: int = 0,
     page_size: int = 5,
+    filters: dict | None = None,
 ) -> tuple[dict, int]:
-    view = queries.get_blocked_trades(scope)
+    is_global = scope.account_id is None
+    query_scope = _effective_scope(scope, filters)
+    f = filters or {}
+    view = queries.get_blocked_trades(query_scope, side=f.get("side"))
 
     total = len(view.rows)
-    is_global = scope.account_id is None
 
     # Paginate
     start = page * page_size
@@ -261,7 +324,7 @@ def _build_blocked_payload(
         "rows": row_dicts,
         "total": total,
         "page_display": page_display,
-        "filters_str": "All accounts · All traders" if is_global else None,
+        "filters_str": _build_filters_str(is_global, filters),
         "order_str": "Blocked desc" if is_global else None,
         "is_global": is_global,
     }
@@ -279,9 +342,11 @@ def _build_bloccati_payload(
 def _build_pnl_payload(
     scope: QueryScope,
     queries: StatusQueries,
+    filters: dict | None = None,
 ) -> tuple[dict, int]:
-    view = queries.get_pnl(scope)
     is_global = scope.account_id is None
+    query_scope = _effective_scope(scope, filters)
+    view = queries.get_pnl(query_scope)
     accounts_in_scope = view.accounts_in_scope or 0
 
     payload = {
@@ -290,7 +355,7 @@ def _build_pnl_payload(
         "updated_at": view.updated_at,
         "total": accounts_in_scope if is_global else 1,
         "page_display": "1/1",
-        "filters_str": "All accounts · All traders" if is_global else None,
+        "filters_str": _build_filters_str(is_global, filters),
         "order_str": "Net desc" if is_global else None,
         "is_global": is_global,
         "equity_usdt": view.equity_usdt,
@@ -310,9 +375,12 @@ def _build_pnl_payload(
 def _build_stats_payload(
     scope: QueryScope,
     queries: StatusQueries,
+    filters: dict | None = None,
 ) -> tuple[dict, int]:
-    view = queries.get_stats(scope)
     is_global = scope.account_id is None
+    query_scope = _effective_scope(scope, filters)
+    f = filters or {}
+    view = queries.get_stats(query_scope, side=f.get("side"))
     accounts_in_scope = len(view.by_account) if view.by_account else 0
 
     stats_rows = [
@@ -332,7 +400,7 @@ def _build_stats_payload(
         "updated_at": view.updated_at,
         "total": accounts_in_scope if is_global else 0,
         "page_display": "1/1",
-        "filters_str": "All accounts · All traders" if is_global else None,
+        "filters_str": _build_filters_str(is_global, filters),
         "order_str": "Net desc" if is_global else None,
         "is_global": is_global,
         "stats_rows": stats_rows,
@@ -357,6 +425,7 @@ def format_dashboard_view(
     queries: StatusQueries,
     page: int = 0,
     page_size: int = 5,
+    filters: dict | None = None,
 ) -> tuple[str, int]:
     """Render the text of a dashboard view.
 
@@ -378,15 +447,15 @@ def format_dashboard_view(
         raise ValueError(f"Unknown dashboard view: {view_name!r}")
 
     if normalized == "active":
-        payload, total = _build_active_payload(scope, queries, page, page_size)
+        payload, total = _build_active_payload(scope, queries, page, page_size, filters)
     elif normalized == "closed":
-        payload, total = _build_closed_payload(scope, queries, page, page_size)
+        payload, total = _build_closed_payload(scope, queries, page, page_size, filters)
     elif normalized == "blocked":
-        payload, total = _build_blocked_payload(scope, queries, page, page_size)
+        payload, total = _build_blocked_payload(scope, queries, page, page_size, filters)
     elif normalized == "pnl":
-        payload, total = _build_pnl_payload(scope, queries)
+        payload, total = _build_pnl_payload(scope, queries, filters)
     elif normalized == "stats":
-        payload, total = _build_stats_payload(scope, queries)
+        payload, total = _build_stats_payload(scope, queries, filters)
     else:
         raise ValueError(f"Unknown dashboard view: {view_name!r}")
 

@@ -415,32 +415,41 @@ class StatusQueries:
             no_sl_count=no_sl,
         )
 
-    def get_open_trades(self, scope: QueryScope | None = None) -> TradesView:
+    def get_open_trades(
+        self,
+        scope: QueryScope | None = None,
+        side: str | None = None,
+        status: str | None = None,
+    ) -> TradesView:
         conn = self._connect()
         try:
+            active_states = (status,) if status else _ACTIVE_STATES
+            state_ph = ",".join("?" * len(active_states))
+            side_sql_t = "AND t.side=?" if side else ""
+            side_sql = "AND side=?" if side else ""
+            side_params = [side] if side else []
+
             if scope is not None:
                 scope_frag, scope_params = _scope_where(scope)
-                active_placeholders = ",".join("?" * len(_ACTIVE_STATES))
                 rows = conn.execute(
                     f"SELECT t.trade_chain_id, t.account_id, t.trader_id, t.symbol, t.side, t.lifecycle_state, "
                     f"COALESCE(t.current_stop_price, t.expected_stop_price), "
                     f"t.be_protection_status, t.entry_avg_price, t.open_position_qty "
                     f"FROM ops_trade_chains t "
-                    f"WHERE t.lifecycle_state IN ({active_placeholders}) "
-                    f"AND {scope_frag} "
+                    f"WHERE t.lifecycle_state IN ({state_ph}) "
+                    f"AND {scope_frag} {side_sql_t} "
                     f"ORDER BY t.trade_chain_id",
-                    [*_ACTIVE_STATES, *scope_params],
+                    [*active_states, *scope_params, *side_params],
                 ).fetchall()
             else:
-                active_placeholders = ",".join("?" * len(_ACTIVE_STATES))
                 rows = conn.execute(
                     f"SELECT trade_chain_id, account_id, trader_id, symbol, side, lifecycle_state, "
                     f"COALESCE(current_stop_price, expected_stop_price), "
                     f"be_protection_status, entry_avg_price, open_position_qty "
                     f"FROM ops_trade_chains "
-                    f"WHERE lifecycle_state IN ({active_placeholders}) "
+                    f"WHERE lifecycle_state IN ({state_ph}) {side_sql} "
                     f"ORDER BY trade_chain_id",
-                    _ACTIVE_STATES,
+                    [*active_states, *side_params],
                 ).fetchall()
 
             pos_snapshots: dict[
@@ -943,10 +952,13 @@ class StatusQueries:
             accounts_in_scope=accounts_in_scope,
         )
 
-    def get_stats(self, scope: QueryScope) -> StatsView:
+    def get_stats(self, scope: QueryScope, side: str | None = None) -> StatsView:
         conn = self._connect()
         try:
             scope_frag, scope_params = _scope_where(scope)
+
+            side_sql = "AND side=?" if side else ""
+            side_params = [side] if side else []
 
             def _stats_for_window(date_filter_sql: str, date_params: list) -> tuple[int, int, float, float, float | None]:
                 row = conn.execute(
@@ -956,8 +968,8 @@ class StatusQueries:
                     f"SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding), "
                     f"SUM(cumulative_fees + cumulative_funding) "
                     f"FROM ops_trade_chains "
-                    f"WHERE lifecycle_state='CLOSED' AND {scope_frag} {date_filter_sql}",
-                    [*scope_params, *date_params],
+                    f"WHERE lifecycle_state='CLOSED' AND {scope_frag} {date_filter_sql} {side_sql}",
+                    [*scope_params, *date_params, *side_params],
                 ).fetchone()
                 count = row[0] or 0
                 wins = row[1] or 0
@@ -984,15 +996,15 @@ class StatusQueries:
             # Best / worst chain by cumulative_gross_pnl (all time, in scope)
             best_row = conn.execute(
                 f"SELECT trade_chain_id, cumulative_gross_pnl, symbol FROM ops_trade_chains "
-                f"WHERE lifecycle_state='CLOSED' AND {scope_frag} "
+                f"WHERE lifecycle_state='CLOSED' AND {scope_frag} {side_sql} "
                 f"ORDER BY cumulative_gross_pnl DESC LIMIT 1",
-                scope_params,
+                [*scope_params, *side_params],
             ).fetchone()
             worst_row = conn.execute(
                 f"SELECT trade_chain_id, cumulative_gross_pnl, symbol FROM ops_trade_chains "
-                f"WHERE lifecycle_state='CLOSED' AND {scope_frag} "
+                f"WHERE lifecycle_state='CLOSED' AND {scope_frag} {side_sql} "
                 f"ORDER BY cumulative_gross_pnl ASC LIMIT 1",
-                scope_params,
+                [*scope_params, *side_params],
             ).fetchone()
 
             # Global scope: per-account stats breakdown
@@ -1005,11 +1017,11 @@ class StatusQueries:
                 by_account_stats = []
                 for acc_id in account_ids:
                     acc_row = conn.execute(
-                        "SELECT COUNT(*), "
-                        "SUM(CASE WHEN cumulative_gross_pnl > 0 THEN 1 ELSE 0 END), "
-                        "SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
-                        "FROM ops_trade_chains WHERE lifecycle_state='CLOSED' AND account_id=?",
-                        (acc_id,)
+                        f"SELECT COUNT(*), "
+                        f"SUM(CASE WHEN cumulative_gross_pnl > 0 THEN 1 ELSE 0 END), "
+                        f"SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
+                        f"FROM ops_trade_chains WHERE lifecycle_state='CLOSED' AND account_id=? {side_sql}",
+                        [acc_id, *side_params],
                     ).fetchone()
                     cnt = acc_row[0] or 0
                     wins = acc_row[1] or 0
@@ -1052,6 +1064,8 @@ class StatusQueries:
         scope: QueryScope,
         page: int = 0,
         page_size: int = 5,
+        side: str | None = None,
+        period: str | None = None,
     ) -> ClosedTradesView:
         _CLOSED_STATES = ("CLOSED", "CANCELLED_UNFILLED")
         closed_placeholders = ",".join("?" * len(_CLOSED_STATES))
@@ -1064,10 +1078,19 @@ class StatusQueries:
             columns = {row[1] for row in conn.execute("PRAGMA table_info(ops_trade_chains)")}
             closed_at_expr = "closed_at" if "closed_at" in columns else "updated_at"
 
+            side_sql = "AND t.side=?" if side else ""
+            side_params = [side] if side else []
+            _period_map = {
+                "today": f"AND date(COALESCE(t.{closed_at_expr}, t.updated_at)) = date('now')",
+                "week": f"AND COALESCE(t.{closed_at_expr}, t.updated_at) >= datetime('now', '-7 days')",
+                "month": f"AND COALESCE(t.{closed_at_expr}, t.updated_at) >= datetime('now', '-30 days')",
+            }
+            period_sql = _period_map.get(period, "") if period else ""
+
             total_count = conn.execute(
-                f"SELECT COUNT(*) FROM ops_trade_chains "
-                f"WHERE lifecycle_state IN ({closed_placeholders}) AND {scope_frag}",
-                [*_CLOSED_STATES, *scope_params],
+                f"SELECT COUNT(*) FROM ops_trade_chains t "
+                f"WHERE t.lifecycle_state IN ({closed_placeholders}) AND {scope_frag} {side_sql} {period_sql}",
+                [*_CLOSED_STATES, *scope_params, *side_params],
             ).fetchone()[0]
 
             rows = conn.execute(
@@ -1080,10 +1103,10 @@ class StatusQueries:
                 f" AND le.event_type IN ('POSITION_CLOSED','POSITION_CANCELLED','SL_HIT','TP_HIT') "
                 f" ORDER BY le.event_id DESC LIMIT 1) as close_reason "
                 f"FROM ops_trade_chains t "
-                f"WHERE t.lifecycle_state IN ({closed_placeholders}) AND {scope_frag} "
+                f"WHERE t.lifecycle_state IN ({closed_placeholders}) AND {scope_frag} {side_sql} {period_sql} "
                 f"ORDER BY t.{closed_at_expr} DESC, t.trade_chain_id DESC "
                 f"LIMIT ? OFFSET ?",
-                [*_CLOSED_STATES, *scope_params, page_size, offset],
+                [*_CLOSED_STATES, *scope_params, *side_params, page_size, offset],
             ).fetchall()
         finally:
             conn.close()
@@ -1111,18 +1134,22 @@ class StatusQueries:
             page_size=page_size,
         )
 
-    def get_blocked_trades(self, scope: QueryScope) -> BlockedTradesView:
+    def get_blocked_trades(self, scope: QueryScope, side: str | None = None) -> BlockedTradesView:
         conn = self._connect()
         try:
             scope_frag, scope_params = _scope_where(scope)
             t_frag, t_params = _scope_where(scope, 't')
 
+            side_sql = "AND side=?" if side else ""
+            side_sql_t = "AND t.side=?" if side else ""
+            side_params = [side] if side else []
+
             # REVIEW_REQUIRED chains in scope
             review_rows = conn.execute(
                 f"SELECT trade_chain_id, symbol, trader_id, account_id, side FROM ops_trade_chains "
-                f"WHERE lifecycle_state='REVIEW_REQUIRED' AND {scope_frag} "
+                f"WHERE lifecycle_state='REVIEW_REQUIRED' AND {scope_frag} {side_sql} "
                 f"ORDER BY trade_chain_id",
-                scope_params,
+                [*scope_params, *side_params],
             ).fetchall()
 
             # Reason + blocked_at for REVIEW_REQUIRED from lifecycle events
@@ -1140,9 +1167,9 @@ class StatusQueries:
                 f"ec.payload_json, ec.created_at "
                 f"FROM ops_execution_commands ec "
                 f"JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
-                f"WHERE ec.status='FAILED' AND {t_frag} "
+                f"WHERE ec.status='FAILED' AND {t_frag} {side_sql_t} "
                 f"ORDER BY t.trade_chain_id",
-                t_params,
+                [*t_params, *side_params],
             ).fetchall()
         finally:
             conn.close()

@@ -23,3 +23,5 @@ uPnL: -4.22 USDT  rPnL: +0.04 USDT
 
 
 3. /trade #98 · /cancel #98 · /close #98
+
+4. Total: 16   Page: 1/4   Updated: 08:53:01
