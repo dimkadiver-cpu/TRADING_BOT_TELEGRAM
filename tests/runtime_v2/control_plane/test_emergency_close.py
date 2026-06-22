@@ -126,3 +126,73 @@ def test_execute_close_empty_is_noop():
     count = svc.execute_close([], created_by="42")
     assert count == 0
     os.unlink(db)
+
+
+# ---------------------------------------------------------------------------
+# Fixtures
+# ---------------------------------------------------------------------------
+
+import pytest
+
+@pytest.fixture
+def ops_db():
+    path = _make_db()
+    yield path
+    try:
+        os.unlink(path)
+    except FileNotFoundError:
+        pass
+
+
+# ---------------------------------------------------------------------------
+# Safety: global unfiltered scope must be rejected
+# ---------------------------------------------------------------------------
+
+def test_close_all_refused_in_global_scope_without_filter(ops_db):
+    """close_all deve rifiutare in global scope senza trader/account filter."""
+    from src.runtime_v2.control_plane.emergency_close import (
+        build_close_all_preview,
+        GLOBAL_SCOPE_SAFETY_MSG,
+    )
+    global_scope = QueryScope(account_id=None, trader_ids=None)
+    result = build_close_all_preview(global_scope, ops_db, trader_filter=None)
+    assert result is not None
+    assert GLOBAL_SCOPE_SAFETY_MSG in result
+
+
+def test_close_all_allowed_in_global_scope_with_trader_filter(ops_db):
+    """close_all è permesso in global scope se è presente un trader filter."""
+    from src.runtime_v2.control_plane.emergency_close import (
+        build_close_all_preview,
+        GLOBAL_SCOPE_SAFETY_MSG,
+    )
+    global_scope = QueryScope(account_id=None, trader_ids=["trader_a"])
+    result = build_close_all_preview(global_scope, ops_db, trader_filter="trader_a")
+    # result può essere None (nessuna chain) ma NON il safety message
+    if result is not None:
+        assert GLOBAL_SCOPE_SAFETY_MSG not in result
+
+
+def test_cancel_all_refused_in_global_scope_without_filter(ops_db):
+    """cancel_all deve rifiutare in global scope senza trader/account filter."""
+    from src.runtime_v2.control_plane.emergency_close import (
+        build_cancel_all_preview,
+        GLOBAL_SCOPE_SAFETY_MSG,
+    )
+    global_scope = QueryScope(account_id=None, trader_ids=None)
+    result = build_cancel_all_preview(global_scope, ops_db, trader_filter=None)
+    assert result is not None
+    assert GLOBAL_SCOPE_SAFETY_MSG in result
+
+
+def test_close_all_allowed_with_account_scope(ops_db):
+    """close_all è permesso quando account_id è specificato (account scope)."""
+    from src.runtime_v2.control_plane.emergency_close import (
+        build_close_all_preview,
+        GLOBAL_SCOPE_SAFETY_MSG,
+    )
+    account_scope = QueryScope(account_id="demo_1", trader_ids=None)
+    result = build_close_all_preview(account_scope, ops_db, trader_filter=None)
+    # Deve procedere (non safety message) — result può essere stringa con lista o None
+    if result is not None:
+        assert GLOBAL_SCOPE_SAFETY_MSG not in result
