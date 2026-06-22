@@ -21,6 +21,7 @@ from src.runtime_v2.control_plane.service import RuntimeControlService
 from src.runtime_v2.control_plane.snapshot_store import SnapshotStore
 from src.runtime_v2.control_plane.startup import StartupPlan, resolve_startup
 from src.runtime_v2.control_plane.telegram_bot import CommandRouter, TelegramControlBot
+from src.runtime_v2.control_plane.topic_cleanup import TopicCleanupService
 from src.runtime_v2.control_plane.topic_router import TopicRouter
 
 
@@ -47,6 +48,8 @@ def build_control_plane(
     ops_db_path: str,
     log_path: str | None,
     known_trader_ids: set[str] | None = None,
+    telethon_client=None,
+    position_sync_fn=None,  # Callable[[str | None], None] — injected from main to sync positions on Refresh
 ) -> ControlPlane | None:
     try:
         config = load_control_plane_config(config_path)
@@ -67,7 +70,18 @@ def build_control_plane(
     )
     auth = AuthValidator(config)
     audit = CommandAuditStore(ops_db_path)
-    router = CommandRouter(config=config, auth=auth, audit=audit, service=service)
+    topic_cleanup = (
+        TopicCleanupService(telethon_client)
+        if telethon_client is not None
+        else None
+    )
+    router = CommandRouter(
+        config=config,
+        auth=auth,
+        audit=audit,
+        service=service,
+        topic_cleanup=topic_cleanup,
+    )
     scope_resolver = ScopeResolver(config)
 
     # DashboardManager created before bot — bot wired via set_bot() after creation
@@ -76,6 +90,7 @@ def build_control_plane(
         scope_resolver=scope_resolver,
         queries=service._queries,
         bot=None,  # wired below after bot creation
+        position_sync_fn=position_sync_fn,
     )
 
     bot = TelegramControlBot(

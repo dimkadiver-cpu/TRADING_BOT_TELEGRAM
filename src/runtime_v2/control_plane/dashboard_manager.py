@@ -64,11 +64,13 @@ class DashboardManager:
         scope_resolver: ScopeResolver,
         queries: StatusQueries,
         bot,  # Bot telegram (lazy — can be None in tests)
+        position_sync_fn=None,  # Callable[[str | None], None] — syncs live positions on demand
     ) -> None:
         self._db = ops_db_path
         self._scope_resolver = scope_resolver
         self._queries = queries
         self._bot = bot
+        self._position_sync_fn = position_sync_fn
 
         # Throttle state: (chat_id, thread_id) → last_edit_time
         self._last_edit: dict[tuple[int, int], float] = {}
@@ -674,6 +676,14 @@ class DashboardManager:
             scope = QueryScope(account_id=scope_account_id, trader_ids=None)
 
         view_name, page = _parse_view(current_view_str)
+
+        if self._position_sync_fn is not None:
+            try:
+                await asyncio.get_running_loop().run_in_executor(
+                    None, self._position_sync_fn, scope_account_id
+                )
+            except Exception:
+                logger.warning("_do_refresh: position sync failed chat=%s thread=%s", chat_id, thread_id)
 
         try:
             filters = self._get_parsed_filters(chat_id, thread_id)

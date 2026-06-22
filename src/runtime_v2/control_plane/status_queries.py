@@ -472,7 +472,8 @@ class StatusQueries:
                 rows = conn.execute(
                     f"SELECT t.trade_chain_id, t.account_id, t.trader_id, t.symbol, t.side, t.lifecycle_state, "
                     f"COALESCE(t.current_stop_price, t.expected_stop_price), "
-                    f"t.be_protection_status, t.entry_avg_price, t.open_position_qty "
+                    f"t.be_protection_status, t.entry_avg_price, t.open_position_qty, "
+                    f"t.cumulative_gross_pnl, t.cumulative_fees, t.cumulative_funding "
                     f"FROM ops_trade_chains t "
                     f"WHERE t.lifecycle_state IN ({state_ph}) "
                     f"AND {scope_frag} {side_sql_t} "
@@ -483,7 +484,8 @@ class StatusQueries:
                 rows = conn.execute(
                     f"SELECT trade_chain_id, account_id, trader_id, symbol, side, lifecycle_state, "
                     f"COALESCE(current_stop_price, expected_stop_price), "
-                    f"be_protection_status, entry_avg_price, open_position_qty "
+                    f"be_protection_status, entry_avg_price, open_position_qty, "
+                    f"cumulative_gross_pnl, cumulative_fees, cumulative_funding "
                     f"FROM ops_trade_chains "
                     f"WHERE lifecycle_state IN ({state_ph}) {side_sql} "
                     f"ORDER BY trade_chain_id DESC",
@@ -492,14 +494,14 @@ class StatusQueries:
 
             pos_snapshots: dict[
                 tuple[str, str, str],
-                tuple[float | None, float | None, float | None, str],
+                tuple[float | None, float | None, str],
             ] = {}
             if _table_exists(conn, "ops_position_snapshots"):
                 account_id_filter = scope.account_id if scope else None
                 if account_id_filter:
                     snap_rows = conn.execute(
                         "SELECT account_id, symbol, side, mark_price, unrealized_pnl, "
-                        "cum_realized_pnl, captured_at "
+                        "captured_at "
                         "FROM ops_position_snapshots "
                         "WHERE account_id=?",
                         (account_id_filter,),
@@ -507,14 +509,13 @@ class StatusQueries:
                 else:
                     snap_rows = conn.execute(
                         "SELECT account_id, symbol, side, mark_price, unrealized_pnl, "
-                        "cum_realized_pnl, captured_at "
+                        "captured_at "
                         "FROM ops_position_snapshots",
                     ).fetchall()
-                for account_id, sym, side_snap, mp, upl, crpnl, cap in snap_rows:
+                for account_id, sym, side_snap, mp, upl, cap in snap_rows:
                     pos_snapshots[(account_id, sym, side_snap)] = (
                         float(mp) if mp is not None else None,
                         float(upl) if upl is not None else None,
-                        float(crpnl) if crpnl is not None else None,
                         cap,
                     )
         finally:
@@ -527,15 +528,21 @@ class StatusQueries:
             )
             entry_avg_price: float | None = r[8]
             open_position_qty: float | None = r[9]
+            chain_gross: float | None = float(r[10]) if r[10] is not None else None
+            chain_fees: float | None = float(r[11]) if r[11] is not None else None
+            chain_funding: float | None = float(r[12]) if r[12] is not None else None
 
             mark_price: float | None = None
             mark_captured_at: str | None = None
             unrealized_pnl: float | None = None
             cum_realized_pnl: float | None = None
 
+            if chain_gross is not None:
+                cum_realized_pnl = chain_gross - (chain_fees or 0.0) - (chain_funding or 0.0)
+
             snap = pos_snapshots.get((account_id, symbol, side))
             if snap is not None:
-                mark_price, snapshot_upl, cum_realized_pnl, mark_captured_at = snap
+                mark_price, snapshot_upl, mark_captured_at = snap
                 if snapshot_upl is not None:
                     unrealized_pnl = snapshot_upl
                 elif (
@@ -631,18 +638,24 @@ class StatusQueries:
             _cum_realized_pnl: float | None = None
             if not _is_terminal_inner and _table_exists(conn, "ops_position_snapshots"):
                 _snap = conn.execute(
-                    "SELECT unrealized_pnl, cum_realized_pnl FROM ops_position_snapshots "
+                    "SELECT unrealized_pnl FROM ops_position_snapshots "
                     "WHERE account_id=? AND symbol=? AND side=? LIMIT 1",
                     (row[4], row[1], row[2]),
                 ).fetchone()
                 if _snap:
                     _unrealized_pnl = float(_snap[0]) if _snap[0] is not None else None
-                    _cum_realized_pnl = float(_snap[1]) if _snap[1] is not None else None
 
             # Cumulative PnL columns for final_result (terminal trades)
             _cum_gross_pnl_raw = row[14]
             _cum_fees_raw = row[15]
             _cum_funding_raw = row[16]
+
+            if not _is_terminal_inner and _cum_gross_pnl_raw is not None:
+                _cum_realized_pnl = (
+                    float(_cum_gross_pnl_raw)
+                    - (float(_cum_fees_raw) if _cum_fees_raw else 0.0)
+                    - (float(_cum_funding_raw) if _cum_funding_raw else 0.0)
+                )
             _peak_margin_used_raw = row[17] if len(row) > 17 else None
 
             # Clean-log links: query outbox for sent_message_id per notification_type

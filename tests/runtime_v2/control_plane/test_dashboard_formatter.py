@@ -221,16 +221,17 @@ class TestVistaAttivi:
         assert total == 1
 
     @pytest.mark.parametrize(
-        ("cum_realized_pnl", "expected_visible"),
+        ("chain_gross_pnl", "expected_visible"),
         [(25.0, True), (0.0, False), (None, False)],
     )
-    def test_cum_realized_pnl_visibility(self, ops_db, cum_realized_pnl, expected_visible):
+    def test_cum_realized_pnl_visibility(self, ops_db, chain_gross_pnl, expected_visible):
         conn = sqlite3.connect(ops_db)
         with conn:
             _add_chain(
                 conn, 10, "OPEN",
                 symbol="BTCUSDT", side="LONG",
                 entry_avg_price=63500.0, open_position_qty=0.01,
+                cumulative_gross_pnl=chain_gross_pnl if chain_gross_pnl is not None else 0.0,
             )
             _add_position_snapshot(
                 conn,
@@ -240,7 +241,6 @@ class TestVistaAttivi:
                 qty=0.01,
                 mark_price=64740.0,
                 unrealized_pnl=12.4,
-                cum_realized_pnl=cum_realized_pnl,
             )
         conn.close()
 
@@ -249,11 +249,10 @@ class TestVistaAttivi:
 
         assert total == 1
         if expected_visible:
-            # rPnL shown in new spec format: "rPnL: +25.00 USDT"
+            # rPnL from chain: cumulative_gross_pnl - fees - funding = 25.00 - 0 - 0
             assert "rPnL: +25.00 USDT" in text
         else:
-            # For 0.0 and None: rPnL shows as "+0.00 USDT" (default), not "Real:"
-            assert "Real: +25.00 USDT" not in text
+            assert "rPnL: +25.00 USDT" not in text
 
     def test_header_no_trader_when_account_scope(self, ops_db):
         conn = sqlite3.connect(ops_db)

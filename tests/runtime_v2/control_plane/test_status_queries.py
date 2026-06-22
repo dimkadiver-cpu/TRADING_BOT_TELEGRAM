@@ -301,6 +301,11 @@ def test_get_open_trades_reads_live_position_snapshot_by_account_symbol_side(ops
             account_id="main",
         )
         conn.execute(
+            "UPDATE ops_trade_chains SET cumulative_gross_pnl=?, cumulative_fees=? "
+            "WHERE trade_chain_id=?",
+            (30.0, 5.0, 60),
+        )
+        conn.execute(
             "INSERT INTO ops_position_snapshots "
             "(account_id, symbol, side, qty, mark_price, unrealized_pnl, "
             " cum_realized_pnl, source, captured_at) "
@@ -332,6 +337,7 @@ def test_get_open_trades_reads_live_position_snapshot_by_account_symbol_side(ops
     row = view.rows[0]
     assert row.mark_price == pytest.approx(65000.0)
     assert row.unrealized_pnl == pytest.approx(500.0)
+    # rPnL from chain: gross(30) - fees(5) - funding(0) = 25.0
     assert row.cum_realized_pnl == pytest.approx(25.0)
     assert row.mark_captured_at == "2026-06-20T10:00:00+00:00"
 
@@ -368,7 +374,7 @@ def test_get_open_trades_falls_back_to_calculated_upl_when_snapshot_has_no_upl(o
     row = next(r for r in view.rows if r.chain_id == 61)
     assert row.mark_price == pytest.approx(3000.0)
     assert row.unrealized_pnl == pytest.approx(100.0)
-    assert row.cum_realized_pnl is None
+    assert row.cum_realized_pnl == pytest.approx(0.0)
 
 
 def test_get_open_trades_keeps_row_when_live_snapshot_missing(ops_db):
@@ -389,7 +395,7 @@ def test_get_open_trades_keeps_row_when_live_snapshot_missing(ops_db):
     row = next(r for r in view.rows if r.chain_id == 62)
     assert row.mark_price is None
     assert row.unrealized_pnl is None
-    assert row.cum_realized_pnl is None
+    assert row.cum_realized_pnl == pytest.approx(0.0)
 
 
 # ---------------------------------------------------------------------------

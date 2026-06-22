@@ -616,6 +616,17 @@ async def _async_main(
         exchange_event_repo=exchange_event_repo,
     )
 
+    def _position_sync_fn(account_id: str | None) -> None:
+        workers = execution_runtime.sync_workers if execution_runtime else None
+        if not workers:
+            return
+        targets = (
+            [workers[account_id]] if account_id and account_id in workers
+            else list(workers.values())
+        )
+        for w in targets:
+            w.run_bulk_position_sync()
+
     _cp = build_control_plane(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
         ops_db_path=ops_db_path,
@@ -624,6 +635,7 @@ async def _async_main(
             {ch.trader_id for ch in channels_config.channels if ch.trader_id}
             | pattern_catalog.all_trader_ids
         ),
+        position_sync_fn=_position_sync_fn,
     )
     control_bot = _cp.bot if _cp is not None else None
     cp_dispatcher = _cp.dispatcher if _cp is not None else None
