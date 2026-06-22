@@ -811,6 +811,30 @@ class CcxtBybitAdapter(ExecutionAdapter):
                     error=f"tp{sequence}: retCode={ret_code}: {ret_msg}",
                 )
 
+        # Bybit cancels the Full-mode SL implicitly when switching to Partial TP mode.
+        # Re-apply the SL explicitly so the position stays protected.
+        if preserve_sl and active_stop_loss is not None:
+            sl_body = {
+                "category": "linear",
+                "symbol": self._normalize_bybit_symbol(symbol),
+                "positionIdx": position_idx,
+                "tpslMode": "Full",
+                "stopLoss": str(active_stop_loss),
+                "slTriggerBy": "MarkPrice",
+            }
+            try:
+                resp = self._exchange.private_post_v5_position_trading_stop(sl_body)
+            except Exception as exc:
+                logger.warning("rebuild_partial_tps: sl re-apply failed: %s", exc)
+            else:
+                ret_code, ret_msg = self._parse_trading_stop_retcode(resp)
+                if ret_code != 0:
+                    logger.warning(
+                        "rebuild_partial_tps: sl re-apply retCode=%s msg=%s",
+                        ret_code,
+                        ret_msg,
+                    )
+
         return AdapterResult(success=True)
 
     def _get_attached_order_status_from_positions(

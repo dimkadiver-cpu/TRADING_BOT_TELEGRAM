@@ -616,6 +616,9 @@ async def _async_main(
         exchange_event_repo=exchange_event_repo,
     )
 
+    client = TelegramClient(session_name, api_id, api_hash)
+    await client.start()
+
     def _position_sync_fn(account_id: str | None) -> None:
         workers = execution_runtime.sync_workers if execution_runtime else None
         if not workers:
@@ -635,6 +638,7 @@ async def _async_main(
             {ch.trader_id for ch in channels_config.channels if ch.trader_id}
             | pattern_catalog.all_trader_ids
         ),
+        telethon_client=client,
         position_sync_fn=_position_sync_fn,
     )
     control_bot = _cp.bot if _cp is not None else None
@@ -659,8 +663,6 @@ async def _async_main(
     )
     watcher.start()
 
-    client = TelegramClient(session_name, api_id, api_hash)
-    await client.start()
     try:
         listener.register_handlers(client)
         logger.info("telegram listener started | parser_db=%s | ops_db=%s", parser_db_path, ops_db_path)
