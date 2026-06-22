@@ -1,39 +1,43 @@
-in dashboards:
+## `/trade #n` — position closed
+
+```text
+#5 · BTC/USDT · LONG · POSITION CLOSED
+- - - - - - - - - - - - - - - - - - - -
+Trader: trader_devos_crypto
+Exchange Account: demo_2
+Updated: 14:32:05
+- - - - - - - - - - - - - - - - - - - -
+Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗      // descizione 1 sezione dedicata al setup inizia
+TP:    64,000 ✓ · 65,200 ✓
+SL:    62,000 · BE: No
+- - - - - - - - - - - - - - - - - - - -
+Final Result:                                 // descizione 2 
+ROI net: +3.67% · RoR: +9.12% · R: +0.22R
+PnL net: +44.17 USDT · PnL gross: +45.20 USDT
+Fees: -2.06 USDT · Funding: +0.03 USDT
+- - - - - - - - - - - - - - - - - - - -
+Events:                                     // descizione 3 
+• SIGNAL ACCEPTED · 14 Jun 09:10:00
+  Source: Signal -> clean_log
+
+• ENTRY OPENED · 14 Jun 09:10:00
+  Source: exchange -> clean_log
+
+• TP1 FILLED · 14 Jun 09:10:01
+  Source: exchange -> clean_log
+
+• UPDATE DONE · 14 Jun 09:10:02
+  Type: CANCEL_PENDING
+  Source: operation_rules -> clean_log
+
+• POSITION CLOSED · 14 Jun 09:10:02
+  Reason: FINAL TP FILLED
+  Source: exchange -> clean_log
+
+Descizione 1:  sezione dedicata al setup inizia riassunto dei dati e avenimenti mediante ✗ e ✓ ( ✗ cancellato, ✓ filato/colpito)
+ se abbimo 
+Descizione 2: sezione dedicata al risultato finale, visisbile  solo se la posione e chiusa
 
 
-1.
-⚡ Active — All accounts
-- - - - - - - - - - - - - - - - - - - - - - -
-Total: 15   Page: 3/3   Updated: 08:14:09
-- - - - - - - - - - - - - - - - - - - - - - -   
-- - - - - - - - - - - - - - - - - - - - - - - // un separaore di piu 
-#94 · HYPE/USDT · LONG · OPEN
-Trader: trader_devos_crypto · Account: demo_2
-uPnL: -0.99 USDT  rPnL: -96.08 USDT
-/trade #94 · /cancel #94 · /close #94
-- - - - - - - - - - - - - - - - - - - - - - -
-#97 · XLM/USDT · SHORT · OPEN
-Trader: trader_devos_crypto · Account: demo_2
-uPnL: -4.22 USDT  rPnL: +0.04 USDT
-/trade #97 · /cancel #97 · /close #97
-- - - - - - - - - - - - - - - - - - - - - - -
-
-
-2. in sezione Action (in tutti tabs) /trade #99 elemento clicabile solo "/trade" per cui scorciatoia nn funziona
-
-
-3. 
-
-Total: 1   Page: 1/1   Updated: 09:05:57                 // "Page: 1/1" eliminare gia svolto da tasti, ridondanza
-Filters: demo_1 · All traders · Partially closed
-Order: Updated desc                                      // "Order: Updated desc" a cosa si riferishe?
-
-4. in bloched manca reason
-#41 · BTC/USDT · LONG
-Trader: trader_prova · Account: demo_1
-Blocked: 19 Jun 12:22 · Reason: —
-Details: /trade #41
-
-
-5.  - in PNL/STATS verificare organizaione/filtrazione dei dati in base a filtri
-    - pensare al sezione dedicate a trader 
+Descizione 3: qui vego registrati solo eventi principali per qule è previsto il clean/tech log, altri eventi interni non segnalare, meglio definire glia la list?
+> clean_log dovrebbe essere un meta link che porta a Clean/tech log dedicato

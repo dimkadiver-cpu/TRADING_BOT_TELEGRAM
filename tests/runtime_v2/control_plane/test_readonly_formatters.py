@@ -289,3 +289,11 @@ def test_trade_detail_event_no_link_shows_source_only():
     assert "Source: Signal" in text
     assert "→" not in text
     assert "clean_log" not in text
+
+
+def test_trade_detail_be_active_no_price_shows_dash():
+    """When has_be=True but sl_price is None, must show BE: — not BE: None."""
+    detail = _make_detail(state="OPEN", sl_price=None, has_be=True)
+    text = format_trade_detail(detail)
+    assert "BE: None" not in text
+    assert "BE: —" in text

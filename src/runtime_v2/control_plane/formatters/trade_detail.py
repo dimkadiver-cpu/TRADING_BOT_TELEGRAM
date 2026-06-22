@@ -95,7 +95,7 @@ _TRADE_DETAIL_BLOCKS: list = [
     ),
     DerivedBlock(
         text_fn=lambda p: (
-            f"SL:    — · BE: {p['sl_price']}"
+            f"SL:    — · BE: {p['sl_price'] or '—'}"
             if p.get("has_be")
             else (
                 f"SL:    {p['sl_price']} · BE: No"

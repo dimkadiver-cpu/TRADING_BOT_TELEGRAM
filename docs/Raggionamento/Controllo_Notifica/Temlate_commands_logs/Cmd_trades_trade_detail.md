@@ -220,21 +220,50 @@ Deve rendere leggibile:
 - struttura ordini;
 - metriche correnti o finali;
 - azioni ancora disponibili;
-- cronologia completa degli eventi;
+- cronologia completa degli eventi principali;
 - collegamento ai `clean_log` sorgente.
 
 ## Struttura fissa
 
-Ogni `/trade #n` usa questo ordine:
+Ogni `/trade #n` usa questo ordine di 6 sezioni. Le sezioni condizionali compaiono solo se applicabili allo stato corrente:
 
 ```text
-1. Titolo trade
-2. Meta info
-3. Struttura ordine (entry / tp / sl / be)
-4. Stato economico corrente oppure final result
-5. Actions, solo se il trade e` ancora azionabile
-6. Timeline eventi
+1. Titolo trade          → sempre presente
+2. Meta info             → sempre presente
+3. Setup ordine          → sempre presente (Entry / TP / SL / BE)
+4. Stato economico       → condizionale (vedi regole)
+5. Actions               → solo se il trade e` azionabile
+6. Timeline eventi       → sempre presente
 ```
+
+### Regole condizionali per sezione economica
+
+| Stato | Sezione economica |
+|---|---|
+| `WAITING_ENTRY` | assente |
+| `OPEN` | `uPnL` e `rPnL` live |
+| `PARTIALLY_CLOSED` | `uPnL` e `rPnL` live |
+| `REVIEW_REQUIRED` | `uPnL` e `rPnL` live |
+| `POSITION_CLOSED` | `Final Result` con metriche complete |
+| `CANCELLED_UNFILLED` | `Final Result: PnL: No fill` |
+
+La sezione economica non compare mai vuota: o mostra metriche live, o mostra il risultato finale, o e` assente.
+
+### Matrice azioni per stato
+
+| Stato | `/cancel_n` | `/close_n` |
+|---|---|---|
+| `WAITING_ENTRY` | ✓ | ✗ |
+| `OPEN` | ✓ | ✓ |
+| `PARTIALLY_CLOSED` | ✓ | ✓ |
+| `REVIEW_REQUIRED` | ✗ | ✓ |
+| `POSITION_CLOSED` | ✗ | ✗ |
+| `CANCELLED_UNFILLED` | ✗ | ✗ |
+
+- `/cancel_n` = ci sono ordini pending da cancellare
+- `/close_n` = c'e` una posizione aperta da chiudere
+- ordine fisso: `/cancel_n` sempre prima di `/close_n`
+- se nessuna azione e` disponibile, la sezione Actions non compare
 
 ## Comportamento `/trade #n` in global scope
 
@@ -246,6 +275,80 @@ Una volta aperto il dettaglio di una chain, il messaggio torna sempre mono-trade
 - `Exchange Account`
 
 Quindi il global scope impatta `/trades`, ma non richiede un template diverso per `/trade #n`.
+
+---
+
+## Sezione 2 — Setup ordine
+
+I livelli Entry, TP e SL usano tre stati visivi:
+
+| Marcatore | Significato |
+|---|---|
+| ✓ | filled / colpito |
+| ✗ | cancellato / saltato |
+| *(nessuno)* | pending / ancora aperto |
+
+### BE (Break Even)
+
+- Inattivo → `BE: No`
+- Attivo → `SL: — · BE: <prezzo>` (SL originale scompare, prezzo BE esplicito)
+
+### Esempi setup per stato
+
+```text
+// WAITING_ENTRY — tutto pending, nessun marcatore
+Entry: 63,500 · 63,200 · 62,800
+TP:    64,000 · 65,200 · 66,500
+SL:    62,000 · BE: No
+
+// OPEN / PARTIALLY_CLOSED — mix ✓ ✗ e pending
+Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗
+TP:    64,000 ✓ · 65,200 · 66,500
+SL:    62,000 · BE: No
+
+// BE attivo
+Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗
+TP:    64,000 ✓ · 65,200 · 66,500
+SL:    — · BE: 63,500
+
+// REVIEW_REQUIRED — SL mancante
+Entry: 2,140 ✓
+TP:    2,180 · 2,220
+SL:    —
+
+// CANCELLED_UNFILLED — nessun fill, nessun marcatore
+Entry: 2,140 · 2,120
+TP:    2,180 · 2,220
+SL:    2,090 · BE: No
+```
+
+---
+
+## `/trade #n` — `WAITING_ENTRY`
+
+```text
+#9 · BTC/USDT · LONG · WAITING_ENTRY
+- - - - - - - - - - - - - - - - - - - -
+Trader: trader_devos_crypto
+Exchange Account: demo_2
+Updated: 14:32:05
+- - - - - - - - - - - - - - - - - - - -
+Entry: 63,500 · 63,200 · 62,800
+TP:    64,000 · 65,200 · 66,500
+SL:    62,000 · BE: No
+- - - - - - - - - - - - - - - - - - - -
+Actions: /cancel_9
+- - - - - - - - - - - - - - - - - - - -
+Events:
+• SIGNAL ACCEPTED · 14 Jun 09:10:00
+  Source: Signal → [clean_log](url)
+```
+
+### Regole `WAITING_ENTRY`
+
+- sezione economica assente
+- `Actions`: solo `/cancel_n`
+- nessun marcatore ✓/✗ nei livelli
 
 ---
 
@@ -261,60 +364,64 @@ Updated: 14:32:05
 Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗
 TP:    64,000 ✓ · 65,200 · 66,500
 SL:    62,000 · BE: No
+- - - - - - - - - - - - - - - - - - - -
 uPnL:  +34.20 USDT  rPnL:  +14.20 USDT
 - - - - - - - - - - - - - - - - - - - -
 Actions: /cancel_5 · /close_5
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
-  Source: Signal -> clean_log
-                                          // separatore una riga vuota
-• ENTRY OPENED · 14 Jun 09:10:00
-  Source: exchange -> clean_log
+  Source: Signal → [clean_log](url)
 
-• TP1 FILLED · 14 Jun 09:10:01
-  Source: exchange -> clean_log
+• ENTRY OPENED · 14 Jun 09:10:05
+  Source: exchange → [clean_log](url)
 
-• UPDATE DONE · 14 Jun 09:10:02
+• TP1 FILLED · 14 Jun 09:15:20
+  Source: exchange → [clean_log](url)
+
+• UPDATE DONE · 14 Jun 09:20:00
   Type: CANCEL_PENDING
-  Source: operation_rules -> clean_log
+  Source: operation_rules → [clean_log](url)
 ```
 
-### Regole
+### Regole trade aperto
 
 - `Updated` = ultimo aggiornamento utile del trade
-- se il trade e` ancora aperto, mostrare `uPnL` e `rPnL`
-- `Actions` presente solo se il trade e` ancora azionabile
-- ogni evento deve contenere il link al relativo `clean_log` quando disponibile
+- `uPnL` e `rPnL` live
+- `Actions`: `/cancel_n · /close_n`
 
 ---
 
-## `/trade #n` — `WAITING_ENTRY`
+## `/trade #n` — trade aperto con BE attivo
 
 ```text
-#5 · BTC/USDT · LONG · WAITING_ENTRY
+#5 · BTC/USDT · LONG · OPEN
 - - - - - - - - - - - - - - - - - - - -
 Trader: trader_devos_crypto
 Exchange Account: demo_2
 Updated: 14:32:05
 - - - - - - - - - - - - - - - - - - - -
-Entry: 63,500 · 63,200 · 62,800
-TP:    64,000 · 65,200 · 66,500
-SL:    62,000 · BE: No
+Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗
+TP:    64,000 ✓ · 65,200 · 66,500
+SL:    — · BE: 63,500
+- - - - - - - - - - - - - - - - - - - -
+uPnL:  +18.40 USDT  rPnL:  +14.20 USDT
 - - - - - - - - - - - - - - - - - - - -
 Actions: /cancel_5 · /close_5
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
-  Source: Signal -> clean_log
+  Source: Signal → [clean_log](url)
+
+• ENTRY OPENED · 14 Jun 09:10:05
+  Source: exchange → [clean_log](url)
+
+• TP1 FILLED · 14 Jun 09:15:20
+  Source: exchange → [clean_log](url)
+
+• SL MOVED TO BE · 14 Jun 09:16:00
+  Source: operation_rules → [clean_log](url)
 ```
-
-### Regole `WAITING_ENTRY`
-
-- niente `uPnL`
-- niente `rPnL` obbligatorio
-- la sezione economica puo` essere omessa del tutto
-- `Actions` resta visibile se il trade e` cancellabile/chiudibile
 
 ---
 
@@ -338,29 +445,28 @@ Fees: -2.06 USDT · Funding: +0.03 USDT
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 09:10:00
-  Source: Signal -> clean_log
+  Source: Signal → [clean_log](url)
 
-• ENTRY OPENED · 14 Jun 09:10:00
-  Source: exchange -> clean_log
+• ENTRY OPENED · 14 Jun 09:10:05
+  Source: exchange → [clean_log](url)
 
-• TP1 FILLED · 14 Jun 09:10:01
-  Source: exchange -> clean_log
+• TP1 FILLED · 14 Jun 09:15:20
+  Source: exchange → [clean_log](url)
 
-• UPDATE DONE · 14 Jun 09:10:02
+• UPDATE DONE · 14 Jun 09:20:00
   Type: CANCEL_PENDING
-  Source: operation_rules -> clean_log
+  Source: operation_rules → [clean_log](url)
 
-• POSITION CLOSED · 14 Jun 09:10:02
+• POSITION CLOSED · 14 Jun 09:25:00
   Reason: FINAL TP FILLED
-  Source: exchange -> clean_log
+  Source: exchange → [clean_log](url)
 ```
 
 ### Regole trade chiuso
 
 - niente `Actions`
 - niente `uPnL / rPnL` correnti
-- la sezione economica viene sostituita da `Final Result`
-- `Final Result` e` la sezione primaria per la performance del trade
+- `Final Result` sostituisce la sezione economica
 
 ---
 
@@ -382,23 +488,23 @@ PnL: No fill
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 16:12:00
-  Source: Signal -> clean_log
+  Source: Signal → [clean_log](url)
 
 • UPDATE DONE · 14 Jun 16:14:10
   Type: CANCEL_PENDING
-  Source: operation_rules -> clean_log
+  Source: operation_rules → [clean_log](url)
 
 • POSITION CANCELLED · 14 Jun 16:14:12
   Reason: CANCEL_PENDING
-  Source: exchange -> clean_log
+  Source: exchange → [clean_log](url)
 ```
 
 ### Regole `CANCELLED_UNFILLED`
 
-- e` terminale
+- stato terminale
 - niente `Actions`
-- niente metriche PnL reali di posizione
-- il risultato finale e` esplicitamente `No fill`
+- niente marcatori ✓/✗ nei livelli (nessun fill avvenuto)
+- `Final Result: PnL: No fill`
 
 ---
 
@@ -414,21 +520,28 @@ Updated: 14:32:05
 Entry: 2,140 ✓
 TP:    2,180 · 2,220
 SL:    —
+- - - - - - - - - - - - - - - - - - - -
 uPnL:  -3.20 USDT  rPnL:  0.00 USDT
 - - - - - - - - - - - - - - - - - - - -
 Actions: /close_7
 - - - - - - - - - - - - - - - - - - - -
 Events:
 • SIGNAL ACCEPTED · 14 Jun 11:50:00
-  Source: Signal -> clean_log
+  Source: Signal → [clean_log](url)
 
 • ENTRY OPENED · 14 Jun 11:52:00
-  Source: exchange -> clean_log
+  Source: exchange → [clean_log](url)
 
 • REVIEW REQUIRED · 14 Jun 11:52:05
   Reason: missing_sl
-  Source: system -> clean_log
+  Source: system → [clean_log](url)
 ```
+
+### Regole `REVIEW_REQUIRED`
+
+- posizione aperta: mostra `uPnL` e `rPnL`
+- `Actions`: solo `/close_n` (non cancellabile in stato review)
+- `SL: —` se SL mancante (trigger del review)
 
 ---
 
@@ -437,14 +550,16 @@ Events:
 ## Principi
 
 - ordine cronologico crescente
+- compaiono solo gli eventi con `is_main_event: true` nel log
+- gli eventi interni senza flag non vengono mostrati
 - ogni evento e` una unita` audit autonoma
-- ogni evento deve essere comprensibile anche fuori dal contesto del trade summary
+- riga vuota tra eventi
 
 ## Campi minimi evento
 
 ```text
 • <EVENT LABEL> · <timestamp>
-  Source: <source> -> clean_log
+  Source: <sorgente> → [clean_log](url)
 ```
 
 ## Campi opzionali
@@ -455,13 +570,30 @@ Events:
   Note: <extra detail>
 ```
 
-## Eventi tipici attesi
+## Fallback link assente
+
+Se il `clean_log` non e` ancora disponibile, l'evento resta visibile come testo senza link:
+
+```text
+• ENTRY OPENED · 14 Jun 09:10:05
+  Source: exchange
+```
+
+## Sorgenti possibili
+
+| Source | Significato |
+|---|---|
+| `Signal` | segnale di origine ricevuto |
+| `exchange` | evento proveniente dall'exchange |
+| `operation_rules` | aggiornamento eseguito dalle regole operative |
+| `system` | evento generato internamente dal sistema |
+
+## Eventi principali attesi
 
 - `SIGNAL ACCEPTED`
 - `ENTRY OPENED`
 - `ENTRY PARTIALLY FILLED`
-- `TP1 FILLED`
-- `TP2 FILLED`
+- `TP1 FILLED` / `TP2 FILLED` / ...
 - `SL MOVED TO BE`
 - `UPDATE DONE`
 - `REVIEW REQUIRED`
@@ -474,7 +606,14 @@ Events:
 
 ## Requisito
 
-Ogni evento deve puntare al suo messaggio `clean_log` quando esiste.
+Ogni evento con `is_main_event: true` deve puntare al suo `clean_log` con un link inline cliccabile:
+
+```text
+Source: Signal → [clean_log](url)
+Source: exchange → [clean_log](url)
+```
+
+Il `clean_log` e` un meta-link che apre il messaggio di log dedicato nel topic appropriato.
 
 In particolare:
 
@@ -485,7 +624,7 @@ In particolare:
 
 ## Fallback
 
-Se il link non esiste ancora, l'evento resta visibile come testo.
+Se il link non esiste ancora, l'evento resta visibile come testo senza link.
 Il documento UI pero` assume come target finale la disponibilita` del link.
 
 ---
@@ -521,8 +660,12 @@ Selector trader:
 2. Ogni item `/trades` usa il formato compatto a 3 righe target.
 3. `/trade #n` resta un singolo messaggio completo.
 4. `/trade #n` mostra sempre meta info, struttura ordine e timeline eventi.
-5. I trade aperti mostrano metriche correnti e azioni disponibili.
+5. I trade aperti mostrano `uPnL` / `rPnL` live e le azioni disponibili secondo la matrice stati.
 6. I trade chiusi o cancellati non mostrano azioni e usano `Final Result`.
-7. `WAITING_ENTRY` non mostra PnL come se la posizione fosse aperta.
-8. Ogni evento della timeline linka il relativo `clean_log` quando disponibile.
-9. `Source: Signal` e` obbligatoriamente collegato al `clean_log` sorgente.
+7. `WAITING_ENTRY` non mostra sezione economica e ha solo `/cancel_n` come azione.
+8. `REVIEW_REQUIRED` ha solo `/close_n` come azione.
+9. BE attivo mostra `SL: — · BE: <prezzo>`.
+10. La timeline mostra solo eventi con `is_main_event: true` nel log.
+11. Ogni evento della timeline linka il relativo `clean_log` con link inline cliccabile.
+12. `Source: Signal` e` obbligatoriamente collegato al `clean_log` sorgente.
+13. Se il `clean_log` non e` disponibile, l'evento resta senza link (nessun testo placeholder).
