@@ -53,6 +53,14 @@ channels:
     parser_profile: trader_3       # Opzionale — override del profilo parser
     blacklist: []     # estendere qui solo per rumore specifico del canale
 
+  - chat_id: -1003722628653
+    topic_id: 8691
+    label: "TRADER_FX"  # canale reale attivo concordato
+    active: false  # disattivato per test, da attivare quando serve
+    trader_id: trader_fX   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
+    parser_profile:        # Opzionale — override del profilo parser
+    blacklist: []     # estendere qui solo per rumore specifico del canale
+
 
   # Topic multi-trader: trader risolto dinamicamente via aliases/pattern_group/reply-chain.
   - chat_id: -1003722628653
@@ -91,7 +99,7 @@ channels:
     active: true  # disattivato per test, da attivare quando serve
     trader_id: trader_devos_crypto   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
     parser_profile: trader_devos_crypto       # Opzionale — override del profilo parser
-    signal_message_type: inline_buttons       # Opzionale — topic con inline buttons richiesti
+    signal_message_type: inline_buttons       # Opzionale any/inline_buttons — topic con inline buttons richiesti
     blacklist: []     # estendere qui solo per rumore specifico del canale  
 
 # Esempio disattivato per nuovi canali privati:

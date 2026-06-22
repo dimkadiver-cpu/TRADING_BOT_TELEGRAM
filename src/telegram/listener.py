@@ -315,19 +315,35 @@ class TelegramListener:
         if not self._is_allowed_message(chat_id_raw, topic_id):
             if chat_id_raw is not None and self._config.entries_for_chat(chat_id_raw):
                 self._logger.info(
-                    "message skipped by topic scope | chat=%s topic=%s msg_id=%s",
+                    "message skipped by topic scope | chat=%s topic=%s msg_id=%s "
+                    "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
+                    "reply_to_msg_id=%s reply_to_top_id=%s",
                     chat_id_raw,
                     topic_id,
                     message.id,
+                    bool(message.message),
+                    len(message.message or ""),
+                    bool(message.media),
+                    getattr(message, "reply_markup", None) is not None,
+                    _reply_to_msg_id(message),
+                    _reply_to_top_id(message),
                 )
             return
 
         if _is_media_only(message):
             self._logger.info(
-                "media_only_skipped | chat=%s topic=%s msg_id=%s",
+                "media_only_skipped | chat=%s topic=%s msg_id=%s "
+                "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
+                "reply_to_msg_id=%s reply_to_top_id=%s",
                 chat_id_raw,
                 topic_id,
                 message.id,
+                bool(message.message),
+                len(message.message or ""),
+                bool(message.media),
+                getattr(message, "reply_markup", None) is not None,
+                _reply_to_msg_id(message),
+                _reply_to_top_id(message),
             )
             return
 
@@ -375,6 +391,20 @@ class TelegramListener:
 
         if existing is None:
             # Never acquired live (es. foto senza caption) → ingest come nuovo.
+            self._logger.info(
+                "edit_seen_without_existing_raw | chat=%s topic=%s msg_id=%s "
+                "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
+                "reply_to_msg_id=%s reply_to_top_id=%s",
+                source_chat_id,
+                topic_id,
+                message.id,
+                bool(new_text),
+                len(new_text),
+                bool(getattr(message, "media", None)),
+                getattr(message, "reply_markup", None) is not None,
+                _reply_to_msg_id(message),
+                _reply_to_top_id(message),
+            )
             chat_title = getattr(event.chat, "title", None) or getattr(event.chat, "username", None)
             chat_username = getattr(event.chat, "username", None)
             await self._ingest_and_enqueue(
@@ -493,6 +523,12 @@ class TelegramListener:
         for telegram_message_id in deleted_ids:
             existing = self._raw_repo.get_id_and_text(source_chat_id, int(telegram_message_id))
             if existing is None:
+                self._logger.info(
+                    "deleted message without stored raw | chat=%s msg_id=%s run_context=%s",
+                    source_chat_id,
+                    telegram_message_id,
+                    run_context,
+                )
                 continue
 
             raw_message_id, old_text = existing
@@ -827,6 +863,18 @@ class TelegramListener:
 
 def _is_media_only(message: Message) -> bool:
     return message.media is not None and not bool(message.message)
+
+
+def _reply_to_msg_id(message: Message) -> int | None:
+    reply_to = getattr(message, "reply_to", None)
+    value = getattr(reply_to, "reply_to_msg_id", None)
+    return int(value) if isinstance(value, int) else None
+
+
+def _reply_to_top_id(message: Message) -> int | None:
+    reply_to = getattr(message, "reply_to", None)
+    value = getattr(reply_to, "reply_to_top_id", None)
+    return int(value) if isinstance(value, int) else None
 
 
 def _as_utc(dt: datetime) -> datetime:

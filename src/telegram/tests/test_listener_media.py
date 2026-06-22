@@ -74,6 +74,8 @@ async def test_media_only_message_is_skipped() -> None:
     # Nothing ingested, nothing queued
     lst._ingestion.ingest.assert_not_called()
     assert lst._queue.qsize() == 0
+    lst._logger.info.assert_called_once()
+    assert "media_only_skipped" in lst._logger.info.call_args[0][0]
 
 
 @pytest.mark.asyncio
@@ -94,3 +96,19 @@ async def test_media_with_caption_is_processed() -> None:
 
     lst._ingestion.ingest.assert_called_once()
     assert lst._queue.qsize() == 1
+
+
+@pytest.mark.asyncio
+async def test_deleted_message_without_raw_is_logged() -> None:
+    lst = _make_listener()
+    lst._raw_repo.get_id_and_text.return_value = None
+
+    event = MagicMock()
+    event.chat_id = -100123
+    event.deleted_ids = [77]
+    event.deleted_at = None
+
+    await lst._handle_deleted_message(event)
+
+    lst._logger.info.assert_called_once()
+    assert "deleted message without stored raw" in lst._logger.info.call_args[0][0]

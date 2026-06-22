@@ -1,43 +1,46 @@
-## `/trade #n` — position closed
+Osservazioni:
 
-```text
-#5 · BTC/USDT · LONG · POSITION CLOSED
-- - - - - - - - - - - - - - - - - - - -
+
+- estendere "/cancel" "/close" "/trade n." ache per i tipic specifici
+
+- in trade_detail, quando clicco "/cancel_110"  esce "Trade#110 is OPEN — not cancellable (must be WAITING_ENTRY)." in Entry: 0.7173 ✓ · 0.7189 ✓ · 0.737309 · 0.755717. Sarebbe icoretto, dovrebee controllare se cisono entry pending e non lo stato
+
+- Events:
+
+#94 · HYPE/USDT · LONG · POSITION CLOSED
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 Trader: trader_devos_crypto
 Exchange Account: demo_2
-Updated: 14:32:05
-- - - - - - - - - - - - - - - - - - - -
-Entry: 63,500 ✓ · 63,200 ✗ · 62,800 ✗      // descizione 1 sezione dedicata al setup inizia
-TP:    64,000 ✓ · 65,200 ✓
-SL:    62,000 · BE: No
-- - - - - - - - - - - - - - - - - - - -
-Final Result:                                 // descizione 2 
-ROI net: +3.67% · RoR: +9.12% · R: +0.22R
-PnL net: +44.17 USDT · PnL gross: +45.20 USDT
-Fees: -2.06 USDT · Funding: +0.03 USDT
-- - - - - - - - - - - - - - - - - - - -
-Events:                                     // descizione 3 
-• SIGNAL ACCEPTED · 14 Jun 09:10:00
-  Source: Signal -> clean_log
+Updated: 17:19:03
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Entry: 68.593 ✓ · 68.222 ✓ · 66.53357 ✓ · 64.84515 ✗
+TP:    68.935965 ✓ · 69.27893 ✓ · 69.96486 ✗ · 70.65079 ✗ · 71.33672 ✗ · 72.02265 ✗ · 72.70858 ✗ · 73.39451 ✗
+SL:    — · BE: 67.794101
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Final Result:
+ROI net: n/a  · RoR: n/a  · R: n/a                   // mancano i dati 
+PnL net: +2.57 USDT  · PnL gross: +3.12 USDT
+Fees: -0.55 USDT  · Funding: +0.00 USDT
+- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+Events:
+• SIGNAL ACCEPTED · 22 Jun 01:25:45
+  Source: Signal → [clean_log](https://t.me/c/2535735230/147810)
 
-• ENTRY OPENED · 14 Jun 09:10:00
-  Source: exchange -> clean_log
+• ENTRY OPENED · 22 Jun 01:26:42
+  Source: exchange          // manca  "clean_log" con link
 
-• TP1 FILLED · 14 Jun 09:10:01
-  Source: exchange -> clean_log
+• TP1 FILLED · 22 Jun 13:26:22        // manca  "clean_log" con link
+  Source: exchange
 
-• UPDATE DONE · 14 Jun 09:10:02
-  Type: CANCEL_PENDING
-  Source: operation_rules -> clean_log
+• POSITION CANCELLED · 22 Jun 13:26:56      // sarebbe incoretto dobrebbe essee "update_done" con type
+  Reason: auto_cancel_averaging             
+  Source: exchange
 
-• POSITION CLOSED · 14 Jun 09:10:02
-  Reason: FINAL TP FILLED
-  Source: exchange -> clean_log
+• TP2 FILLED · 22 Jun 13:30:22
+  Source: exchange                   // manca  "clean_log" con link
 
-Descizione 1:  sezione dedicata al setup inizia riassunto dei dati e avenimenti mediante ✗ e ✓ ( ✗ cancellato, ✓ filato/colpito)
- se abbimo 
-Descizione 2: sezione dedicata al risultato finale, visisbile  solo se la posione e chiusa
+• SL MOVED TO BE · 22 Jun 13:30:23    // sarebbe incoretto dobrebbe essee "update_done" con type
+  Source: operation_rules             // manca  "clean_log" con link
 
-
-Descizione 3: qui vego registrati solo eventi principali per qule è previsto il clean/tech log, altri eventi interni non segnalare, meglio definire glia la list?
-> clean_log dovrebbe essere un meta link che porta a Clean/tech log dedicato
+• SL HIT · 22 Jun 15:49:01            //  sarebbe incoretto dobrebbe essee "Position_cosed" con reason: BREAKEVEN_AFTER_TP
+  Source: exchange                    // manca  "clean_log" con link

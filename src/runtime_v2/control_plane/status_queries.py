@@ -17,15 +17,14 @@ _EVENT_LABEL_MAP = {
     "ENTRY_FILLED": "ENTRY OPENED",
     "ENTRY_PARTIALLY_FILLED": "ENTRY PARTIALLY FILLED",
     "TP_FILLED": "TP FILLED",          # overridden per-event using tp_level from payload
-    "SL_MOVED_TO_BE": "SL MOVED TO BE",
-    "STOP_MOVE_CONFIRMED": "SL UPDATED",  # overridden to "SL MOVED TO BE" when is_breakeven
+    "STOP_MOVE_CONFIRMED": "SL UPDATED",  # overridden to "UPDATE DONE" when is_breakeven
     "UPDATE_DONE": "UPDATE DONE",
     "REVIEW_REQUIRED": "REVIEW REQUIRED",
     "SL_FILLED": "SL HIT",
     "CLOSE_PARTIAL_FILLED": "PARTIAL CLOSE",
     "CLOSE_FULL_FILLED": "POSITION CLOSED",
     "LIQUIDATION_FILLED": "POSITION CLOSED",
-    "PENDING_ENTRY_CANCELLED": "POSITION CANCELLED",
+    "PENDING_ENTRY_CANCELLED": "ENTRY CANCELLED",
 }
 
 _EVENT_SOURCE_MAP: dict[str, str] = {
@@ -39,7 +38,6 @@ _EVENT_SOURCE_MAP: dict[str, str] = {
     "CLOSE_FULL_FILLED": "exchange",
     "LIQUIDATION_FILLED": "exchange",
     "PENDING_ENTRY_CANCELLED": "exchange",
-    "SL_MOVED_TO_BE": "operation_rules",
     "STOP_MOVE_CONFIRMED": "operation_rules",
     "UPDATE_DONE": "operation_rules",
     "REVIEW_REQUIRED": "system",
@@ -47,6 +45,23 @@ _EVENT_SOURCE_MAP: dict[str, str] = {
 _TERMINAL_STATES = {"CLOSED", "CANCELLED_UNFILLED", "POSITION_CLOSED"}
 _ACTIONABLE_STATES = {"OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY",
                       "REVIEW_REQUIRED", "PARTIALLY_FILLED", "CLOSE_PENDING"}
+
+# Maps lifecycle event_type → outbox notification_type for CLEAN_LOG link lookup
+_LIFECYCLE_TO_CLEAN_LOG_NOTIF: dict[str, str] = {
+    "SIGNAL_ACCEPTED": "SIGNAL_ACCEPTED",
+    "ENTRY_FILLED": "ENTRY_OPENED",
+    "ENTRY_OPENED": "ENTRY_OPENED",
+    "TP_FILLED": "TP_FILLED",
+    "SL_FILLED": "SL_FILLED",
+    "CLOSE_FULL_FILLED": "POSITION_CLOSED",
+    "ENTRY_UPDATED": "ENTRY_UPDATED",
+    "CLOSE_PARTIAL_FILLED": "PARTIAL_CLOSE_EXECUTED",
+    "PENDING_ENTRY_CANCELLED": "ENTRY_CANCELLED",
+    "UPDATE_DONE": "UPDATE_DONE",
+    "LIQUIDATION_FILLED": "LIQUIDATION_CLOSED",
+    "STOP_MOVE_CONFIRMED": "STOP_MOVED",
+    "REVIEW_REQUIRED": "REVIEW_REQUIRED",
+}
 
 
 @dataclass
@@ -578,7 +593,8 @@ class StatusQueries:
                     "COALESCE(t.source_chat_id, rm.source_chat_id), "
                     "COALESCE(t.telegram_message_id, rm.telegram_message_id), "
                     "t.be_protection_status, "
-                    "t.cumulative_gross_pnl, t.cumulative_fees, t.cumulative_funding "
+                    "t.cumulative_gross_pnl, t.cumulative_fees, t.cumulative_funding, "
+                    "t.peak_margin_used "
                     "FROM ops_trade_chains t "
                     "LEFT JOIN raw_messages rm ON t.raw_message_id = rm.raw_message_id "
                     "WHERE t.trade_chain_id=?",
@@ -591,7 +607,8 @@ class StatusQueries:
                     "management_plan_json, risk_snapshot_json, plan_state_json, "
                     "source_chat_id, telegram_message_id, "
                     "be_protection_status, "
-                    "cumulative_gross_pnl, cumulative_fees, cumulative_funding "
+                    "cumulative_gross_pnl, cumulative_fees, cumulative_funding, "
+                    "peak_margin_used "
                     "FROM ops_trade_chains WHERE trade_chain_id=?",
                     (chain_id,),
                 ).fetchone()
@@ -626,6 +643,39 @@ class StatusQueries:
             _cum_gross_pnl_raw = row[14]
             _cum_fees_raw = row[15]
             _cum_funding_raw = row[16]
+            _peak_margin_used_raw = row[17] if len(row) > 17 else None
+
+            # Clean-log links: query outbox for sent_message_id per notification_type
+            _clean_log_links: dict = {}
+            _tracking_chat_id: str | None = None
+            if _table_exists(conn, "ops_clean_log_tracking"):
+                _tr = conn.execute(
+                    "SELECT telegram_chat_id FROM ops_clean_log_tracking WHERE trade_chain_id=?",
+                    (chain_id,),
+                ).fetchone()
+                if _tr and _tr[0]:
+                    _tracking_chat_id = str(_tr[0]).removeprefix("-100")
+            if _tracking_chat_id:
+                _outbox_cols = {r[1] for r in conn.execute("PRAGMA table_info(ops_notification_outbox)")}
+                if "sent_message_id" in _outbox_cols:
+                    try:
+                        _orows = conn.execute(
+                            "SELECT notification_type, sent_message_id "
+                            "FROM ops_notification_outbox "
+                            "WHERE destination='CLEAN_LOG' AND chain_id=? "
+                            "  AND sent_message_id IS NOT NULL "
+                            "ORDER BY notification_id ASC",
+                            (chain_id,),
+                        ).fetchall()
+                        from collections import deque as _deque
+                        for _ntype, _mid in _orows:
+                            if _ntype not in _clean_log_links:
+                                _clean_log_links[_ntype] = _deque()
+                            _clean_log_links[_ntype].append(
+                                f"https://t.me/c/{_tracking_chat_id}/{_mid}"
+                            )
+                    except Exception:
+                        pass
         finally:
             conn.close()
 
@@ -672,7 +722,15 @@ class StatusQueries:
                 level = pdata.get("tp_level")
                 label = f"TP{level} FILLED" if level else "TP FILLED"
             elif etype == "STOP_MOVE_CONFIRMED" and pdata.get("is_breakeven"):
-                label = "SL MOVED TO BE"
+                label = "UPDATE DONE"
+                event_type_val = "BE_MOVE"
+            elif etype == "SL_FILLED" and pdata.get("close_reason") == "BREAKEVEN_AFTER_TP":
+                label = "POSITION CLOSED"
+            # Assign clean_log link from outbox (pop from deque to handle repeated types)
+            _notif_type = _LIFECYCLE_TO_CLEAN_LOG_NOTIF.get(etype)
+            _ev_link: str | None = None
+            if _notif_type and _notif_type in _clean_log_links and _clean_log_links[_notif_type]:
+                _ev_link = _clean_log_links[_notif_type].popleft()
             structured_events.append(TradeEvent(
                 label=label,
                 timestamp=ts,
@@ -680,13 +738,13 @@ class StatusQueries:
                 event_type=event_type_val,
                 reason=reason_val,
                 note=note_val,
-                clean_log_link=None,
+                clean_log_link=_ev_link,
             ))
 
-        # Attach original message link to the first SIGNAL ACCEPTED event
+        # Fallback: attach original signal link to SIGNAL ACCEPTED if outbox didn't cover it
         if original_message_link:
             for ev in structured_events:
-                if ev.label == "SIGNAL ACCEPTED":
+                if ev.label == "SIGNAL ACCEPTED" and ev.clean_log_link is None:
                     ev.clean_log_link = original_message_link
                     break
 
@@ -706,11 +764,21 @@ class StatusQueries:
             pnl_gross_f = float(_cum_gross_pnl_raw)
             fees_f = float(_cum_fees_raw) if _cum_fees_raw is not None else 0.0
             funding_f = float(_cum_funding_raw) if _cum_funding_raw is not None else 0.0
+            pnl_net_f = pnl_gross_f - fees_f - funding_f
+            try:
+                _risk_snap = json.loads(row[9] or "{}")
+                _initial_risk = float(_risk_snap["risk_amount"]) if _risk_snap.get("risk_amount") else None
+            except Exception:
+                _initial_risk = None
+            _peak_margin = float(_peak_margin_used_raw) if _peak_margin_used_raw is not None else None
+            roi_net = round(pnl_net_f / _peak_margin * 100.0, 4) if _peak_margin and _peak_margin > 0 else None
+            ror = round(pnl_net_f / _initial_risk * 100.0, 4) if _initial_risk and _initial_risk > 0 else None
+            r_mult = round(pnl_net_f / _initial_risk, 2) if _initial_risk and _initial_risk > 0 else None
             final_result = {
-                "roi_net": None,
-                "ror": None,
-                "r_mult": None,
-                "pnl_net": pnl_gross_f - fees_f - funding_f,
+                "roi_net": roi_net,
+                "ror": ror,
+                "r_mult": r_mult,
+                "pnl_net": pnl_net_f,
                 "pnl_gross": pnl_gross_f,
                 "fees": -fees_f,
                 "funding": funding_f,

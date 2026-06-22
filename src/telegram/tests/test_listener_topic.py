@@ -211,6 +211,8 @@ async def test_handle_topic_specific_message_wrong_topic_rejected() -> None:
 
     lst._ingestion.ingest.assert_not_called()
     assert lst._queue.qsize() == 0
+    lst._logger.info.assert_called_once()
+    assert "message skipped by topic scope" in lst._logger.info.call_args[0][0]
 
 
 @pytest.mark.asyncio

@@ -591,11 +591,15 @@ class CommandRouter:
                 return _DispatchResult(text, keyboard=_emergency_keyboard("close_single", token))
 
             if base_cmd == "cancel":
-                if trade.state != "WAITING_ENTRY":
+                _pending_entries = [
+                    leg for leg in (trade.entry_legs or [])
+                    if leg.get("status") not in ("filled", "cancelled")
+                ]
+                if not _pending_entries:
                     return _DispatchResult(
-                        f"Trade #{chain_id} is {trade.state} — not cancellable (must be WAITING_ENTRY).",
+                        f"Trade #{chain_id} is {trade.state} — no pending entries to cancel.",
                         decision="REJECTED",
-                        reject_reason="invalid_state",
+                        reject_reason="no_pending_entries",
                     )
                 cfg = EMERGENCY_REGISTRY["cancel_all_preview"]
                 payload = {
