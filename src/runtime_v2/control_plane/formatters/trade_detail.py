@@ -33,7 +33,7 @@ def _fmt_leg(leg: dict) -> str:
 def _render_event(ev: dict, i: int, p: dict) -> list[str]:
     label = ev.get("label", "EVENT")
     ts = ev.get("timestamp", "")
-    lines = [""] if i > 0 else []  # blank line between events
+    lines = [""] if i > 0 else []
     lines.append(f"• {label} · {ts}")
     if ev.get("event_type"):
         lines.append(f"  Type: {ev['event_type']}")
@@ -42,10 +42,10 @@ def _render_event(ev: dict, i: int, p: dict) -> list[str]:
     source = ev.get("source")
     link = ev.get("clean_log_link")
     if source:
-        source_part = f"Source: {source}"
         if link:
-            source_part += f" -> {link}"
-        lines.append(f"  {source_part}")
+            lines.append(f"  Source: {source} → [clean_log]({link})")
+        else:
+            lines.append(f"  Source: {source}")
     return lines
 
 

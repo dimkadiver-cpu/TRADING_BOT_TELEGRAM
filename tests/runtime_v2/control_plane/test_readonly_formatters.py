@@ -260,3 +260,32 @@ def test_trade_detail_actions_open_has_both():
     text = format_trade_detail(detail)
     assert "/cancel_5" in text
     assert "/close_5" in text
+
+
+# Task 4: Event link clean_log inline format
+def test_trade_detail_event_link_inline_format():
+    """clean_log_link must appear as Telegram inline link → [clean_log](url)."""
+    detail = _make_detail(events=[
+        TradeEvent(
+            label="SIGNAL ACCEPTED", timestamp="14 Jun 09:10:00",
+            source="Signal", event_type=None, reason=None,
+            clean_log_link="https://t.me/c/123456/789",
+        ),
+    ])
+    text = format_trade_detail(detail)
+    assert "→ [clean_log](https://t.me/c/123456/789)" in text
+
+
+def test_trade_detail_event_no_link_shows_source_only():
+    """Without clean_log_link, must show 'Source: Signal' with no arrow or 'clean_log'."""
+    detail = _make_detail(events=[
+        TradeEvent(
+            label="SIGNAL ACCEPTED", timestamp="14 Jun 09:10:00",
+            source="Signal", event_type=None, reason=None,
+            clean_log_link=None,
+        ),
+    ])
+    text = format_trade_detail(detail)
+    assert "Source: Signal" in text
+    assert "→" not in text
+    assert "clean_log" not in text
