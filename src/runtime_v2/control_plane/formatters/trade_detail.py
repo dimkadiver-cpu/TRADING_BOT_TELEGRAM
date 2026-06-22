@@ -90,7 +90,7 @@ _TRADE_DETAIL_BLOCKS: list = [
             DerivedBlock(
                 text_fn=lambda p: (
                     f"SL:    {p['sl_price']}"
-                    + ("  · BE: set" if p.get("has_be") else "  · BE: No")
+                    + (" · BE: set" if p.get("has_be") else " · BE: No")
                 )
             )
         ],
@@ -103,11 +103,10 @@ _TRADE_DETAIL_BLOCKS: list = [
             and not p.get("is_terminal")
         ),
         blocks=[
-            SeparatorBlock(),
             DerivedBlock(
                 text_fn=lambda p: (
-                    f"uPnL: {money_signed(p.get('unrealized_pnl'))}  "
-                    f"rPnL: {money_signed(p.get('cum_realized_pnl', 0.0))}"
+                    f"uPnL:  {money_signed(p.get('unrealized_pnl'))}  "
+                    f"rPnL:  {money_signed(p.get('cum_realized_pnl', 0.0))}"
                 )
             ),
         ],
@@ -170,7 +169,7 @@ _TRADE_DETAIL_BLOCKS: list = [
         blocks=[
             SeparatorBlock(),
             StaticBlock("Events:"),
-            ListBlock(key="events", item_renderer=_render_event),
+            ListBlock(key="events", item_renderer=_render_event, index_start=0),
         ],
     ),
 ]

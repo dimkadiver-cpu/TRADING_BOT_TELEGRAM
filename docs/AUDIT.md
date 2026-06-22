@@ -2,6 +2,41 @@
 
 ---
 
+## 2026-06-22 — Fix template visivo `/trade #n`: allineamento al design doc
+
+### Step completato
+
+Allineati 4 discrepanze visive tra il render reale di `format_trade_detail()` e il design in
+`docs/Raggionamento/Controllo_Notifica/Temlate_commands_logs/Cmd_trades_trade_detail.md`.
+
+**Discrepanze corrette:**
+
+1. **Separatore extra tra SL e uPnL** — `SeparatorBlock()` rimosso dalla sezione 4a.
+   Design: SL → uPnL consecutivi (nessun separatore tra loro). Il separatore prima delle Actions (sezione 5) è rimasto corretto.
+
+2. **Spaziatura SL** — `"  · BE:"` → `" · BE:"` (singolo spazio prima del `·`, come da design `SL:    62,000 · BE: No`).
+
+3. **Formato uPnL/rPnL** — `"uPnL: "` → `"uPnL:  "` e `"rPnL: "` → `"rPnL:  "` (2 spazi dopo i due punti per allineamento colonna, come da design `uPnL:  +34.20 USDT  rPnL:  +14.20 USDT`).
+
+4. **Riga vuota prima del primo evento** — `ListBlock` ha `index_start=1` (default), quindi il primo evento riceveva `i=1>0` e veniva prepeso di riga vuota. Fix: `index_start=0`.
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/control_plane/formatters/trade_detail.py` | Modificato | 4 fix puntuali |
+
+### Validazione
+
+- `pytest tests/runtime_v2/control_plane/test_readonly_formatters.py`: **21 passed** (nessuna regressione)
+- Render manuale verificato: output corrisponde al design doc per il caso PARTIALLY_CLOSED.
+
+### Rischi aperti
+
+- `Source: exchange -> clean_log` per eventi non-signal: `clean_log_link` è `None` per tutti gli eventi tranne `SIGNAL ACCEPTED`. Richiede infrastruttura per tracciare i `telegram_message_id` dei clean_log per ogni evento — non implementabile senza schema DB.
+
+---
+
 ## 2026-06-19 — Fix mirato: lentezza notifiche/comandi (root-link spin)
 
 ### Diagnosi
