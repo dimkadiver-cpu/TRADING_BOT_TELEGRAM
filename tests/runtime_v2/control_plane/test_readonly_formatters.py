@@ -178,6 +178,19 @@ def test_trade_detail_has_be_reflected_in_output():
     assert "BE: No" not in text
 
 
+def test_trade_detail_sl_missing_shows_dash():
+    """When sl_price is None, SL line must show '—' with no BE: No."""
+    detail = _make_detail(
+        state="REVIEW_REQUIRED",
+        sl_price=None,
+        has_be=False,
+        is_actionable=True,
+    )
+    text = format_trade_detail(detail)
+    assert "SL:    —" in text
+    assert "BE: No" not in text
+
+
 def test_format_health():
     view = HealthView(
         updated_at="14:32:10",

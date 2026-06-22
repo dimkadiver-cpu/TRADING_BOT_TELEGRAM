@@ -84,16 +84,16 @@ _TRADE_DETAIL_BLOCKS: list = [
             )
         ],
     ),
-    ConditionalBlock(
-        condition=lambda p: bool(p.get("sl_price")),
-        blocks=[
-            DerivedBlock(
-                text_fn=lambda p: (
-                    f"SL:    {p['sl_price']}"
-                    + (" · BE: set" if p.get("has_be") else " · BE: No")
-                )
+    DerivedBlock(
+        text_fn=lambda p: (
+            f"SL:    — · BE: {p['sl_price']}"
+            if p.get("has_be")
+            else (
+                f"SL:    {p['sl_price']} · BE: No"
+                if p.get("sl_price")
+                else "SL:    —"
             )
-        ],
+        )
     ),
     # 4a. Economic state — open/actionable, not WAITING_ENTRY/PARTIALLY_FILLED, not terminal
     ConditionalBlock(
