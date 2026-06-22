@@ -1,6 +1,7 @@
 # tests/runtime_v2/control_plane/test_command_router.py
 from __future__ import annotations
 
+import asyncio
 import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock
@@ -490,6 +491,86 @@ def test_clear_all_topic_callback_confirm_reports_failure_when_cleanup_service_r
     assert cb.delete_message is False
     assert "non eseguito" in cb.answer_text.lower()
     assert "non eseguito" in cb.reply_text.lower()
+
+
+def test_clear_topic_callback_confirm_async_invokes_cleanup_service(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    cleanup.try_clear_topic.return_value = True
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_topic",
+        message_id=100,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    cb = asyncio.run(
+        router.handle_callback_async(
+            callback_data=f"clear_topic:confirm:{next(iter(router._pending.keys()))}",
+            user_id=42,
+            chat_id=-100999,
+            message_id=101,
+            thread_id=999,
+            created_by="42",
+        )
+    )
+
+    cleanup.try_clear_topic.assert_called_once_with(
+        chat_id=-100999,
+        topic_id=999,
+        command_message_id=100,
+        preview_message_id=101,
+    )
+    assert cb.delete_message is True
+    assert cb.reply_text == ""
+
+
+def test_clear_all_topic_callback_cancel_async_does_not_invoke_cleanup_service(ops_db):
+    cfg = _config()
+    service = RuntimeControlService(ops_db_path=ops_db)
+    cleanup = MagicMock()
+    router = CommandRouter(
+        config=cfg,
+        auth=AuthValidator(cfg),
+        audit=CommandAuditStore(ops_db),
+        service=service,
+        topic_cleanup=cleanup,
+    )
+
+    router.route(
+        command_text="/clear_all_topic",
+        message_id=102,
+        chat_id=-100999,
+        thread_id=999,
+        user_id=42,
+        username="op",
+    )
+
+    cb = asyncio.run(
+        router.handle_callback_async(
+            callback_data=f"clear_all_topic:cancel:{next(iter(router._pending.keys()))}",
+            user_id=42,
+            chat_id=-100999,
+            message_id=103,
+            thread_id=999,
+            created_by="42",
+        )
+    )
+
+    cleanup.try_clear_all_topics.assert_not_called()
+    assert cb.delete_message is True
+    assert cb.reply_text == ""
 
 
 # ── Gap 1: wrong-topic audit / wrong-chat no-audit ────────────────────────────

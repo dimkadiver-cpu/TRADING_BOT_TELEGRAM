@@ -157,6 +157,12 @@ def _run_maybe_awaitable(result):
     return result
 
 
+async def _await_maybe_awaitable(result):
+    if inspect.isawaitable(result):
+        return await result
+    return result
+
+
 def _topic_cleanup_failure_result() -> CallbackResult:
     return CallbackResult(
         "⚠️ Topic cleanup non eseguito. Riprova.",
@@ -797,6 +803,76 @@ class CommandRouter:
         text = render_template(cfg.blocks, payload, transform=cfg.payload_transform)
         return CallbackResult(text, answer_text="✅ Eseguito")
 
+    async def handle_callback_async(
+        self,
+        *,
+        callback_data: str,
+        user_id: int,
+        chat_id: int,
+        message_id: int,
+        thread_id: int | None,
+        created_by: str,
+    ) -> CallbackResult:
+        parts = callback_data.split(":", 2)
+        if len(parts) != 3:
+            return CallbackResult("Callback non valido.", answer_text="⚠️ Callback non valido")
+        kind, action, token = parts
+        if action not in ("confirm", "cancel"):
+            return CallbackResult("Azione non valida.", answer_text="⚠️")
+
+        pending = self._pending.get(token)
+        if pending is None:
+            return CallbackResult("", delete_message=False, answer_text="⏱ Azione scaduta — reinvia il comando.")
+
+        if pending.is_expired():
+            del self._pending[token]
+            return CallbackResult("", delete_message=True, answer_text="⏱ Azione scaduta — reinvia il comando.")
+
+        if kind != pending.kind:
+            return CallbackResult("Azione non valida.", answer_text="⚠️")
+
+        if kind not in {"clear_topic", "clear_all_topic"}:
+            return await asyncio.to_thread(
+                self.handle_callback,
+                callback_data=callback_data,
+                user_id=user_id,
+                chat_id=chat_id,
+                message_id=message_id,
+                thread_id=thread_id,
+                created_by=created_by,
+            )
+
+        del self._pending[token]
+
+        if action == "cancel":
+            return CallbackResult("", delete_message=True, answer_text="❌ Annullato")
+
+        if self._topic_cleanup is None or pending.topic_id is None or pending.command_message_id is None:
+            return CallbackResult("", delete_message=True, answer_text="⚠️ Topic cleanup non disponibile")
+
+        if kind == "clear_topic":
+            started = await _await_maybe_awaitable(
+                self._topic_cleanup.try_clear_topic(
+                    chat_id=chat_id,
+                    topic_id=pending.topic_id,
+                    command_message_id=pending.command_message_id,
+                    preview_message_id=message_id,
+                )
+            )
+        else:
+            started = await _await_maybe_awaitable(
+                self._topic_cleanup.try_clear_all_topics(
+                    chat_id=chat_id,
+                    origin_topic_id=pending.topic_id,
+                    command_message_id=pending.command_message_id,
+                    preview_message_id=message_id,
+                )
+            )
+
+        if started is False:
+            return _topic_cleanup_failure_result()
+        return CallbackResult("", delete_message=True, answer_text="🧹")
+
     def _record(
         self,
         *,
@@ -970,8 +1046,7 @@ class TelegramControlBot:
         )
 
         if is_emergency:
-            result = await asyncio.to_thread(
-                self._router.handle_callback,
+            result = await self._router.handle_callback_async(
                 callback_data=callback_data,
                 user_id=user.id,
                 chat_id=query.message.chat_id if query.message else 0,
