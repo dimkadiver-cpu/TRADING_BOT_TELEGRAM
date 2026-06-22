@@ -380,7 +380,7 @@ git commit -m "feat: normalize telegram message presentation type"
 def test_lookup_signal_message_type_defaults_to_any(resolver):
     entry = resolver.lookup("-1002222222222", topic_id=None)
     assert entry is not None
-    assert entry.signal_message_type == "ANY"
+    assert entry.signal_message_type == "any"
 
 
 def test_lookup_signal_message_type_reads_inline_buttons_only(tmp_path):
@@ -391,7 +391,7 @@ channels:
     label: "InlineOnly"
     active: true
     trader_id: trader_a
-    signal_message_type: INLINE_BUTTONS_ONLY
+    signal_message_type: inline_buttons
     blacklist: []
 """
     p = tmp_path / "channels.yaml"
@@ -399,7 +399,7 @@ channels:
     resolver = ChannelConfigResolver(p)
     entry = resolver.lookup("-1009999999999", topic_id=9)
     assert entry is not None
-    assert entry.signal_message_type == "INLINE_BUTTONS_ONLY"
+    assert entry.signal_message_type == "inline_buttons"
 ```
 
 - [ ] **Step 2: Run the failing config tests**
@@ -416,7 +416,7 @@ Expected: failures because `ChannelEntry` has no `signal_message_type`.
 
 ```python
 # src/runtime_v2/trader_resolution/channel_config_resolver.py
-SignalMessageType = Literal["ANY", "INLINE_BUTTONS_ONLY"]
+SignalMessageType = Literal["any", "inline_buttons"]
 
 
 @dataclass(slots=True, frozen=True)
@@ -425,13 +425,13 @@ class ChannelEntry:
     resolution_max_depth: int
     resolution_mode: str = "default"
     pattern_group: str | None = None
-    signal_message_type: SignalMessageType = "ANY"
+    signal_message_type: SignalMessageType = "any"
 ```
 
 ```python
 # src/runtime_v2/trader_resolution/channel_config_resolver.py
-signal_message_type = str(raw.get("signal_message_type", "ANY")).strip() or "ANY"
-if signal_message_type not in {"ANY", "INLINE_BUTTONS_ONLY"}:
+signal_message_type = str(raw.get("signal_message_type", "any")).strip() or "any"
+if signal_message_type not in {"any", "inline_buttons"}:
     raise ValueError(
         f"invalid signal_message_type for chat_id={chat_id}, topic_id={topic_id}: {signal_message_type!r}"
     )
@@ -445,7 +445,7 @@ signal_message_type=signal_message_type,
 # src/runtime_v2/lifecycle/entry_gate.py
 @dataclass(slots=True, frozen=True)
 class SignalAdmissionContext:
-    signal_message_type: str = "ANY"
+    signal_message_type: str = "any"
     message_presentation_type: str = "PLAIN"
 ```
 
@@ -473,7 +473,7 @@ def _build_signal_admission_context(self, raw_message_id: int) -> SignalAdmissio
         return SignalAdmissionContext()
     entry = self._channel_resolver.lookup(str(row[0]), int(row[1]) if row[1] is not None else None)
     return SignalAdmissionContext(
-        signal_message_type=(entry.signal_message_type if entry is not None else "ANY"),
+        signal_message_type=(entry.signal_message_type if entry is not None else "any"),
         message_presentation_type=str(row[2] or "PLAIN"),
     )
 ```
@@ -543,7 +543,7 @@ def test_gate_signal_inline_only_plain_message_is_silently_skipped():
     gate = _make_gate()
     enriched = _make_enriched_signal()
     admission = SignalAdmissionContext(
-        signal_message_type="INLINE_BUTTONS_ONLY",
+        signal_message_type="inline_buttons",
         message_presentation_type="PLAIN",
     )
 
@@ -559,7 +559,7 @@ def test_gate_signal_inline_only_inline_buttons_is_accepted():
     gate = _make_gate()
     enriched = _make_enriched_signal()
     admission = SignalAdmissionContext(
-        signal_message_type="INLINE_BUTTONS_ONLY",
+        signal_message_type="inline_buttons",
         message_presentation_type="INLINE_BUTTONS",
     )
 
@@ -624,7 +624,7 @@ def process_signal(
 ) -> SignalGateResult:
     admission = admission or SignalAdmissionContext()
     if (
-        admission.signal_message_type == "INLINE_BUTTONS_ONLY"
+        admission.signal_message_type == "inline_buttons"
         and admission.message_presentation_type != "INLINE_BUTTONS"
     ):
         return self._skip_signal(enriched.enrichment_id, "signal_message_type_mismatch")
@@ -701,15 +701,15 @@ git commit -m "feat: silently skip mismatched signal message types"
     active: true
     trader_id: trader_a
     parser_profile: trader_a
-    signal_message_type: ANY
+    signal_message_type: any
     blacklist: []
 ```
 
 ```yaml
 # Inline-only topics can opt in explicitly
 # signal_message_type:
-#   ANY                -> default behavior
-#   INLINE_BUTTONS_ONLY -> only reposted messages with inline buttons can open chains
+#   any                -> default behavior
+#   inline_buttons     -> only reposted messages with inline buttons can open chains
 ```
 
 - [ ] **Step 2: Add one durable README note about the policy**
@@ -717,7 +717,7 @@ git commit -m "feat: silently skip mismatched signal message types"
 ```markdown
 # README.md
 - `channels.yaml` now supports optional `signal_message_type` per channel/topic.
-- `INLINE_BUTTONS_ONLY` preserves raw + parse but blocks chain creation for plain Telegram posts without inline buttons.
+- `inline_buttons` preserves raw + parse but blocks chain creation for plain Telegram posts without inline buttons.
 ```
 
 - [ ] **Step 3: Run the full focused regression suite**
@@ -764,4 +764,3 @@ No spec gaps found.
 - Config policy name: `signal_message_type` everywhere.
 - Worker-to-gate context: `SignalAdmissionContext` everywhere.
 - Silent internal event: `SIGNAL_SKIPPED` everywhere.
-

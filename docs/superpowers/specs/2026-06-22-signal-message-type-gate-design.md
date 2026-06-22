@@ -48,14 +48,14 @@ Questo metadato viene propagato in:
 
 `channels.yaml` aggiunge una policy opzionale per canale/topic:
 
-- `signal_message_type: ANY`
-- `signal_message_type: INLINE_BUTTONS_ONLY`
+- `signal_message_type: any`
+- `signal_message_type: inline_buttons`
 
 Semantica:
 
 - se la chiave non e` presente, il comportamento resta invariato;
-- `ANY` equivale al comportamento attuale;
-- `INLINE_BUTTONS_ONLY` permette la nascita di una chain solo se il raw osservato ha `message_presentation_type=INLINE_BUTTONS`.
+- `any` equivale al comportamento attuale;
+- `inline_buttons` permette la nascita di una chain solo se il raw osservato ha `message_presentation_type=INLINE_BUTTONS`.
 
 La regola resta nel resolver di configurazione topic/canale, non nel parser e non nel dominio del segnale canonico.
 
@@ -80,9 +80,9 @@ Il controllo viene applicato dopo parse/enrichment e prima della creazione della
 
 Comportamento:
 
-- policy `ANY` -> nessun cambiamento;
-- policy `INLINE_BUTTONS_ONLY` + `INLINE_BUTTONS` -> il segnale segue il flusso normale;
-- policy `INLINE_BUTTONS_ONLY` + `PLAIN` -> skip silenzioso.
+- policy `any` -> nessun cambiamento;
+- policy `inline_buttons` + `INLINE_BUTTONS` -> il segnale segue il flusso normale;
+- policy `inline_buttons` + `PLAIN` -> skip silenzioso.
 
 Skip silenzioso significa:
 
@@ -106,7 +106,7 @@ Il codice va registrato nel punto piu` vicino alla decisione runtime, senza intr
 
 ## Flusso desiderato
 
-Scenario con topic configurato `INLINE_BUTTONS_ONLY`:
+Scenario con topic configurato `inline_buttons`:
 
 1. arriva un primo messaggio `PLAIN`;
 2. raw persistito con `message_presentation_type=PLAIN`;
@@ -150,7 +150,7 @@ Done significa che il sistema distingue tra segnale semanticamente valido e segn
 Criteri osservabili:
 
 1. un topic senza `signal_message_type` continua a comportarsi come oggi;
-2. un topic `INLINE_BUTTONS_ONLY` persiste e parsa un `SIGNAL` `PLAIN`, ma non crea chain;
+2. un topic `inline_buttons` persiste e parsa un `SIGNAL` `PLAIN`, ma non crea chain;
 3. lo stesso contenuto ripubblicato come nuovo messaggio con bottoni inline crea la chain;
 4. il mismatch non genera `clean_log` o notifiche utente aggiuntive;
 5. il runtime mantiene una traccia interna con reason code `signal_message_type_mismatch`.
@@ -172,8 +172,8 @@ Segnali secondari:
 - test unit della normalizzazione `Telegram -> message_presentation_type`;
 - test repository/envelope per il nuovo campo raw;
 - test config resolver per `signal_message_type`;
-- test `LifecycleEntryGate` per il caso `INLINE_BUTTONS_ONLY + PLAIN`;
-- test di non regressione per il default `ANY`.
+- test `LifecycleEntryGate` per il caso `inline_buttons + PLAIN`;
+- test di non regressione per il default `any`.
 
 Non e` richiesto in questa fase introdurre una suite end-to-end piu` larga se i test mirati coprono il punto di ownership.
 

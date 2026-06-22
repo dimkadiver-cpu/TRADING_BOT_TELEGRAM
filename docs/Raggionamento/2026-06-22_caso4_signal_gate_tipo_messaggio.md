@@ -38,16 +38,16 @@ Semantica desiderata:
 Direzione minima proposta in config:
 
 ```yaml
-signal_message_type: ANY
+signal_message_type: any
 ```
 
 oppure
 
 ```yaml
-signal_message_type: INLINE_BUTTONS_ONLY
+signal_message_type: inline_buttons
 ```
 
-`INLINE_BUTTONS_ONLY` significa:
+`inline_buttons` significa:
 
 - il raw viene acquisito;
 - il parser produce comunque il canonico;
@@ -113,7 +113,7 @@ Motivi:
 
 ## Comportamento desiderato
 
-Scenario con topic configurato come `INLINE_BUTTONS_ONLY`:
+Scenario con topic configurato come `inline_buttons`:
 
 1. arriva il primo messaggio semplice;
 2. raw persistito;
@@ -166,7 +166,7 @@ Questo evita ambiguita` future durante audit e debugging.
 ### Livello 2 — gate operativo signal
 
 - leggere la regola del topic;
-- se il topic richiede `INLINE_BUTTONS_ONLY` e il raw non ha quel tipo:
+- se il topic richiede `inline_buttons` e il raw non ha quel tipo:
   - non creare chain;
   - non eseguire il signal;
   - lasciare invariati raw e parse.
@@ -195,7 +195,7 @@ Questo evita ambiguita` future durante audit e debugging.
 Per il Caso 4, la soluzione minima corretta e`:
 
 1. aggiungere in persistenza raw un metadato `message_type`;
-2. introdurre config per topic `signal_message_type`;
+2. introdurre config per topic `signal_message_type` con valori `any` / `inline_buttons`;
 3. applicare il blocco **dopo il parse** e **prima della creazione chain**;
 4. non mettere questa logica nel parser.
 

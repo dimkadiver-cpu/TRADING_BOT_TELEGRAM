@@ -28,7 +28,7 @@ def _parse_topic_id(value: object) -> int | None:
     return topic_id
 
 
-SignalMessageType = Literal["ANY", "INLINE_BUTTONS_ONLY"]
+SignalMessageType = Literal["any", "inline_buttons"]
 
 
 @dataclass(slots=True, frozen=True)
@@ -44,7 +44,7 @@ class ChannelEntry:
     resolution_max_depth: int        # default 5; used only when trader_id is None
     resolution_mode: str = "default"
     pattern_group: str | None = None
-    signal_message_type: SignalMessageType = "ANY"
+    signal_message_type: SignalMessageType = "any"
 
 
 class ChannelConfigResolver:
@@ -82,8 +82,8 @@ class ChannelConfigResolver:
                 raise ValueError(
                     f"invalid resolution.mode for chat_id={chat_id}, topic_id={topic_id}: {resolution_mode!r}"
                 )
-            signal_message_type = str(raw.get("signal_message_type", "ANY")).strip() or "ANY"
-            if signal_message_type not in {"ANY", "INLINE_BUTTONS_ONLY"}:
+            signal_message_type = str(raw.get("signal_message_type", "any")).strip() or "any"
+            if signal_message_type not in {"any", "inline_buttons"}:
                 raise ValueError(
                     f"invalid signal_message_type for chat_id={chat_id}, topic_id={topic_id}: {signal_message_type!r}"
                 )

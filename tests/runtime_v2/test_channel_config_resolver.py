@@ -97,7 +97,7 @@ def test_lookup_parser_profile_defaults_to_trader_id(resolver):
     entry = resolver.lookup("-1002222222222", topic_id=None)
     assert entry is not None
     assert entry.parser_profile == "trader_c"
-    assert entry.signal_message_type == "ANY"
+    assert entry.signal_message_type == "any"
 
 
 def test_global_blacklist_match(resolver):
@@ -266,7 +266,7 @@ channels:
 def test_lookup_signal_message_type_defaults_to_any(resolver):
     entry = resolver.lookup("-1002222222222", topic_id=None)
     assert entry is not None
-    assert entry.signal_message_type == "ANY"
+    assert entry.signal_message_type == "any"
 
 
 def test_lookup_signal_message_type_reads_inline_buttons_only(tmp_path):
@@ -277,7 +277,7 @@ channels:
     label: "InlineOnly"
     active: true
     trader_id: trader_a
-    signal_message_type: INLINE_BUTTONS_ONLY
+    signal_message_type: inline_buttons
     blacklist: []
 """
     p = tmp_path / "channels.yaml"
@@ -285,4 +285,4 @@ channels:
     resolver = ChannelConfigResolver(p)
     entry = resolver.lookup("-1009999999999", topic_id=9)
     assert entry is not None
-    assert entry.signal_message_type == "INLINE_BUTTONS_ONLY"
+    assert entry.signal_message_type == "inline_buttons"

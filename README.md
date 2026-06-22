@@ -202,4 +202,4 @@ python parser_test/scripts/watch_parser.py --trader trader_3
 - `docs/AUDIT.md` — log step completati, file toccati, rischi aperti
 - `config/execution.yaml` — configurazione adapter e strategy
 - `config/operation_config.yaml` — regole signal enrichment
-- `config/channels.yaml` — canali Telegram attivi
+- `config/channels.yaml` — canali Telegram attivi; supporta `signal_message_type` per topic (`any` default, `inline_buttons` per segnali con inline buttons)

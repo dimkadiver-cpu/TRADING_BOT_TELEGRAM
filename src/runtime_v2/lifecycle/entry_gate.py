@@ -90,7 +90,7 @@ class UpdateGateResult:
 
 @dataclass(slots=True, frozen=True)
 class SignalAdmissionContext:
-    signal_message_type: str = "ANY"
+    signal_message_type: str = "any"
     message_presentation_type: str = "PLAIN"
 
 
@@ -629,10 +629,7 @@ class LifecycleEntryGate:
         if signal is None or not signal.symbol or not signal.side:
             return self._reject_signal(eid, "missing_symbol_or_side")
 
-        if (
-            admission.signal_message_type == "INLINE_BUTTONS_ONLY"
-            and admission.message_presentation_type != "INLINE_BUTTONS"
-        ):
+        if admission.signal_message_type == "inline_buttons" and admission.message_presentation_type != "INLINE_BUTTONS":
             return self._skip_signal(eid, "signal_message_type_mismatch")
 
         if not self._port.symbol_exists(enriched.account_id, signal.symbol):
@@ -2306,7 +2303,7 @@ class LifecycleGateWorker:
             int(row[1]) if row[1] is not None else None,
         )
         return SignalAdmissionContext(
-            signal_message_type=(entry.signal_message_type if entry is not None else "ANY"),
+            signal_message_type=(entry.signal_message_type if entry is not None else "any"),
             message_presentation_type=message_presentation_type,
         )
 

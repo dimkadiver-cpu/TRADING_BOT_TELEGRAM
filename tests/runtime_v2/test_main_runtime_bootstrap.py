@@ -511,7 +511,7 @@ def test_lifecycle_gate_worker_passes_signal_admission_context_to_gate(tmp_path,
     control_repo = MagicMock(name="control_repo")
     control_repo.get_effective_mode.return_value = "NONE"
     channel_resolver = MagicMock(name="channel_resolver")
-    channel_resolver.lookup.return_value = SimpleNamespace(signal_message_type="INLINE_BUTTONS_ONLY")
+    channel_resolver.lookup.return_value = SimpleNamespace(signal_message_type="inline_buttons")
 
     monkeypatch.setattr(LifecycleGateWorker, "_persist_signal", lambda self, enriched, result: None)
 
@@ -533,7 +533,7 @@ def test_lifecycle_gate_worker_passes_signal_admission_context_to_gate(tmp_path,
     gate.process_signal.assert_called_once()
     _, _, _, admission = gate.process_signal.call_args.args
     assert isinstance(admission, SignalAdmissionContext)
-    assert admission.signal_message_type == "INLINE_BUTTONS_ONLY"
+    assert admission.signal_message_type == "inline_buttons"
     assert admission.message_presentation_type == "INLINE_BUTTONS"
 
 

@@ -335,7 +335,7 @@ def test_gate_signal_inline_only_plain_message_is_silently_skipped():
     gate = _make_gate()
     enriched = _make_enriched_signal()
     admission = SignalAdmissionContext(
-        signal_message_type="INLINE_BUTTONS_ONLY",
+        signal_message_type="inline_buttons",
         message_presentation_type="PLAIN",
     )
 
@@ -353,7 +353,7 @@ def test_gate_signal_inline_only_inline_buttons_is_accepted():
     gate = _make_gate()
     enriched = _make_enriched_signal()
     admission = SignalAdmissionContext(
-        signal_message_type="INLINE_BUTTONS_ONLY",
+        signal_message_type="inline_buttons",
         message_presentation_type="INLINE_BUTTONS",
     )
 

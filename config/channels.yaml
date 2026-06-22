@@ -61,6 +61,7 @@ channels:
     active: false
     trader_id: null           # null = risoluzione dinamica (pattern extractor)
     parser_profile: strategy_parser     # profilo condiviso da tutte le strategie del topic
+    signal_message_type: inline_buttons  # opzionale; topic che richiede repost con inline buttons
     resolution: 
       mode:  default  # Valori supportati: default | patterns_only. default = flusso standard aliases -> text_patterns -> reply_chain -> links; patterns_only = solo text_patterns.
       pattern_group: multi_strategy_ru
@@ -90,6 +91,7 @@ channels:
     active: true  # disattivato per test, da attivare quando serve
     trader_id: trader_devos_crypto   # canale multi-trader: trader_a / trader_b / trader_c / trader_d / trader_3
     parser_profile: trader_devos_crypto       # Opzionale — override del profilo parser
+    signal_message_type: inline_buttons       # Opzionale — topic con inline buttons richiesti
     blacklist: []     # estendere qui solo per rumore specifico del canale  
 
 # Esempio disattivato per nuovi canali privati:
