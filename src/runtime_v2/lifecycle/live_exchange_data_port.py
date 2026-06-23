@@ -100,6 +100,7 @@ class LiveExchangeDataPort(ExchangeDataPort):
         computed_open_risk = self._compute_total_open_risk_usdt(account_id)
         resolved = self._resolve_adapter(account_id)
         if resolved is None:
+            # FALLBACK snapshots are persisted for audit but excluded from all PnL read paths
             return self._fallback.get_account_state(account_id).model_copy(
                 update={
                     "total_open_risk_usdt": computed_open_risk,
@@ -110,6 +111,7 @@ class LiveExchangeDataPort(ExchangeDataPort):
         adapter, execution_account_id = resolved
         raw = adapter.fetch_account_snapshot(execution_account_id)
         if raw is None:
+            # FALLBACK snapshots are persisted for audit but excluded from all PnL read paths
             return self._fallback.get_account_state(account_id).model_copy(
                 update={
                     "total_open_risk_usdt": computed_open_risk,

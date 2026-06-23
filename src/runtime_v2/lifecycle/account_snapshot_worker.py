@@ -37,14 +37,17 @@ class AccountSnapshotWorker:
             self._pending_refresh.clear()
             for account_id in pending:
                 await self._fetch_one(account_id)
-            # then run all-accounts periodic pass
-            await self._fetch_all()
+            # periodic all-accounts pass — skip accounts already fetched this cycle
+            just_fetched = set(pending)
+            await self._fetch_all(skip=just_fetched)
 
     def trigger(self, account_id: str) -> None:
         self._pending_refresh.add(account_id)
 
-    async def _fetch_all(self) -> None:
+    async def _fetch_all(self, skip: set[str] | None = None) -> None:
         for account_id in self._account_ids:
+            if skip and account_id in skip:
+                continue
             await self._fetch_one(account_id)
 
     async def _fetch_one(self, account_id: str) -> None:

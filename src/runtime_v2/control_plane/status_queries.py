@@ -1001,6 +1001,7 @@ class StatusQueries:
         try:
             if scope is not None and scope.account_id is not None:
                 # Single-account scope: fetch the latest OK snapshot for this account
+                # FALLBACK/FAILED records are diagnostic-only; STALE is signalled by captured_at age
                 snapshot = conn.execute(
                     "SELECT account_id, equity_usdt, available_balance_usdt, "
                     "total_open_risk_usdt, total_margin_used_usdt, source, captured_at, "
@@ -1088,6 +1089,7 @@ class StatusQueries:
                 snap_rows = conn.execute(
                     """
                     WITH ranked AS (
+                        -- FALLBACK/FAILED records are diagnostic-only; STALE is signalled by captured_at age
                         SELECT account_id, equity_usdt, available_balance_usdt,
                                total_open_risk_usdt, total_margin_used_usdt,
                                account_unrealized_pnl_usdt, source, captured_at,

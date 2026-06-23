@@ -106,3 +106,44 @@ async def test_worker_trigger_deduplicates_same_account():
         await worker._fetch_one(account_id)
     # should have been fetched exactly once despite two trigger() calls
     assert port.get_account_state.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_fetch_all_skip_avoids_double_fetch():
+    """_fetch_all(skip=...) must not fetch accounts in the skip set."""
+    port = MagicMock()
+    port.get_account_state.side_effect = lambda acc: _make_snapshot(acc)
+    repo = _make_repo()
+    worker = AccountSnapshotWorker(
+        port=port, repository=repo,
+        account_ids=["acc1", "acc2", "acc3"],
+        interval_seconds=999,
+    )
+    # acc1 was already fetched this cycle (e.g. via pending drain)
+    await worker._fetch_all(skip={"acc1"})
+    fetched = [call[0][0] for call in port.get_account_state.call_args_list]
+    assert "acc1" not in fetched
+    assert "acc2" in fetched
+    assert "acc3" in fetched
+    assert port.get_account_state.call_count == 2
+
+
+@pytest.mark.asyncio
+async def test_run_no_double_fetch_on_global_refresh():
+    """When all accounts are in pending, _fetch_all should make 0 additional calls."""
+    port = MagicMock()
+    port.get_account_state.side_effect = lambda acc: _make_snapshot(acc)
+    repo = _make_repo()
+    worker = AccountSnapshotWorker(
+        port=port, repository=repo,
+        account_ids=["acc1", "acc2"],
+        interval_seconds=999,
+    )
+    # Simulate one loop iteration manually (no asyncio.sleep)
+    pending = ["acc1", "acc2"]
+    for account_id in pending:
+        await worker._fetch_one(account_id)
+    just_fetched = set(pending)
+    await worker._fetch_all(skip=just_fetched)
+    # All accounts were in skip set — total calls should be exactly 2
+    assert port.get_account_state.call_count == 2

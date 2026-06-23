@@ -456,6 +456,7 @@ class SnapshotRepository:
 
     def get_latest_account_snapshot(self, account_id: str) -> dict | None:
         conn = sqlite3.connect(self._db_path)
+        # FALLBACK/FAILED records are diagnostic-only; STALE is signalled by captured_at age
         try:
             row = conn.execute(
                 f"SELECT {_SNAPSHOT_COLS} FROM ops_account_snapshots "
@@ -473,6 +474,7 @@ class SnapshotRepository:
             rows = conn.execute(
                 f"""
                 WITH ranked AS (
+                    -- FALLBACK/FAILED records are diagnostic-only; STALE is signalled by captured_at age
                     SELECT {_SNAPSHOT_COLS},
                         ROW_NUMBER() OVER (
                             PARTITION BY account_id
