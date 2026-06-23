@@ -13,9 +13,12 @@ class AccountStateSnapshot(BaseModel):
     available_balance_usdt: float | None = None
     total_open_risk_usdt: float | None = None
     total_margin_used_usdt: float | None = None
+    account_unrealized_pnl_usdt: float | None = None
     captured_at: datetime
     source: str
     payload_json: str = "{}"
+    snapshot_status: str = "OK"
+    error_code: str | None = None
 
 
 class SymbolMarketSnapshot(BaseModel):
