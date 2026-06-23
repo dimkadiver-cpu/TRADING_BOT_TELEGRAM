@@ -193,6 +193,9 @@ class ReviewsView:
     items: list[ReviewItem] = field(default_factory=list)
 
 
+SNAPSHOT_STALE_SECONDS = 180
+
+
 @dataclass
 class PnlView:
     updated_at: str
@@ -213,6 +216,11 @@ class PnlView:
     pnl_net: float | None = None
     by_account: list[dict] | None = None
     accounts_in_scope: int | None = None
+    account_unrealized_pnl_usdt: float | None = None
+    snapshot_age_seconds: float | None = None
+    snapshot_stale: bool = False
+    accounts_fresh: int | None = None
+    accounts_stale: int | None = None
 
 
 @dataclass
@@ -985,32 +993,28 @@ class StatusQueries:
         return ReviewsView(updated_at=_now_iso(), items=items)
 
     def get_pnl(self, scope: QueryScope | None = None) -> PnlView:
+        is_global_scope = (scope is None) or (scope is not None and scope.account_id is None)
         conn = self._connect()
         try:
             if scope is not None:
                 if scope.account_id is not None:
                     snapshot = conn.execute(
                         "SELECT account_id, equity_usdt, available_balance_usdt, "
-                        "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
+                        "total_open_risk_usdt, total_margin_used_usdt, source, captured_at, "
+                        "account_unrealized_pnl_usdt "
                         "FROM ops_account_snapshots "
-                        "WHERE account_id=? "
+                        "WHERE account_id=? AND snapshot_status='OK' "
                         "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
                         "LIMIT 1",
                         (scope.account_id,),
                     ).fetchone()
                 else:
-                    # Scope globale: snapshot più recente tra tutti gli account
-                    snapshot = conn.execute(
-                        "SELECT account_id, equity_usdt, available_balance_usdt, "
-                        "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
-                        "FROM ops_account_snapshots "
-                        "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
-                        "LIMIT 1"
-                    ).fetchone()
+                    snapshot = None  # globale: handled via CTE below
             else:
                 snapshot = conn.execute(
                     "SELECT account_id, equity_usdt, available_balance_usdt, "
-                    "total_open_risk_usdt, total_margin_used_usdt, source, captured_at "
+                    "total_open_risk_usdt, total_margin_used_usdt, source, captured_at, "
+                    "account_unrealized_pnl_usdt "
                     "FROM ops_account_snapshots "
                     "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
                     "LIMIT 1"
@@ -1083,17 +1087,82 @@ class StatusQueries:
                 funding_usdt = float(closed_row[3]) if closed_row[3] is not None else 0.0
                 pnl_net = gross_pnl - (total_fees or 0.0)
 
-            # Global scope: per-account breakdown
+            # Global scope: CTE latest-per-account + freshness aggregation
             by_account: list[dict] | None = None
             accounts_in_scope: int | None = None
-            if scope is not None and scope.account_id is None:
+            accounts_fresh: int | None = None
+            accounts_stale: int | None = None
+            # For global scope, equity_usdt/available_balance_usdt/total_margin_used_usdt/
+            # account_unrealized_pnl_usdt are aggregated from fresh snapshots only.
+            global_equity_usdt: float | None = None
+            global_available_balance_usdt: float | None = None
+            global_total_margin_used_usdt: float | None = None
+            global_account_unrealized_pnl_usdt: float | None = None
+
+            if is_global_scope:
+                snap_rows = conn.execute(
+                    """
+                    WITH ranked AS (
+                        SELECT account_id, equity_usdt, available_balance_usdt,
+                               total_open_risk_usdt, total_margin_used_usdt,
+                               account_unrealized_pnl_usdt, source, captured_at,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY account_id
+                                   ORDER BY datetime(captured_at) DESC, snapshot_id DESC
+                               ) AS rn
+                        FROM ops_account_snapshots
+                        WHERE snapshot_status = 'OK'
+                    )
+                    SELECT account_id, equity_usdt, available_balance_usdt,
+                           total_open_risk_usdt, total_margin_used_usdt,
+                           account_unrealized_pnl_usdt, source, captured_at
+                    FROM ranked WHERE rn = 1
+                    """
+                ).fetchall()
+
+                fresh_count = 0
+                stale_count = 0
+                eq_sum = av_sum = mg_sum = upl_sum = 0.0
+                has_any_fresh = False
+
+                for r in snap_rows:
+                    age = _age_seconds(r[7])
+                    is_stale = age is None or age > SNAPSHOT_STALE_SECONDS
+                    if is_stale:
+                        stale_count += 1
+                    else:
+                        fresh_count += 1
+                        if r[1] is not None:
+                            eq_sum += r[1]
+                        if r[2] is not None:
+                            av_sum += r[2]
+                        if r[4] is not None:
+                            mg_sum += r[4]
+                        if r[5] is not None:
+                            upl_sum += r[5]
+                        has_any_fresh = True
+
+                accounts_fresh = fresh_count
+                accounts_stale = stale_count
+
+                if has_any_fresh:
+                    global_equity_usdt = eq_sum
+                    global_available_balance_usdt = av_sum
+                    global_total_margin_used_usdt = mg_sum
+                    global_account_unrealized_pnl_usdt = upl_sum
+
+                # Build per-account snapshot index for by_account
+                snap_index = {r[0]: r for r in snap_rows}
+
+                # Collect account_ids from trade chains (for trade counts)
                 acc_rows = conn.execute(
                     "SELECT DISTINCT account_id FROM ops_trade_chains WHERE account_id IS NOT NULL"
                 ).fetchall()
-                account_ids = [r[0] for r in acc_rows]
-                accounts_in_scope = len(account_ids)
+                # Merge: include accounts from snapshots too
+                all_account_ids = list({r[0] for r in acc_rows} | set(snap_index.keys()))
+                accounts_in_scope = len(all_account_ids)
                 by_account = []
-                for acc_id in account_ids:
+                for acc_id in all_account_ids:
                     net_row = conn.execute(
                         "SELECT SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
                         "FROM ops_trade_chains WHERE lifecycle_state='CLOSED' AND account_id=?",
@@ -1105,20 +1174,73 @@ class StatusQueries:
                         "WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED') AND account_id=?",
                         (acc_id,)
                     ).fetchone()[0]
-                    by_account.append({"account_id": acc_id, "net_pnl": net_pnl_acc, "open_count": open_c})
+                    snap_r = snap_index.get(acc_id)
+                    age = _age_seconds(snap_r[7]) if snap_r else None
+                    is_stale_acc = age is None or age > SNAPSHOT_STALE_SECONDS
+                    by_account.append({
+                        "account_id": acc_id,
+                        "net_pnl": net_pnl_acc,
+                        "open_count": open_c,
+                        "equity_usdt": snap_r[1] if snap_r else None,
+                        "age_seconds": age,
+                        "stale": is_stale_acc,
+                    })
                 by_account.sort(key=lambda x: x["net_pnl"], reverse=True)
         finally:
             conn.close()
 
+        # Single account scope: compute age/stale from snapshot
+        snap_age: float | None = None
+        snap_stale = False
+        snap_unrealized_pnl: float | None = None
+        if not is_global_scope:
+            snap_age = _age_seconds(snapshot[6]) if snapshot else None
+            snap_stale = snap_age is not None and snap_age > SNAPSHOT_STALE_SECONDS
+            snap_unrealized_pnl = snapshot[7] if snapshot else None
+
+        # Resolve equity fields:
+        # - scope is None (legacy): equity from latest single snapshot (backward compat)
+        # - scope.account_id is None (explicit global): equity from CTE fresh-only aggregate
+        # - single account scope: equity from single account snapshot
+        explicit_global_scope = (scope is not None and scope.account_id is None)
+        if explicit_global_scope:
+            _equity_usdt = global_equity_usdt
+            _available_balance_usdt = global_available_balance_usdt
+            _total_margin_used_usdt = global_total_margin_used_usdt
+            _account_unrealized_pnl_usdt = global_account_unrealized_pnl_usdt
+            _account_id = None
+            _captured_at = None
+            _source = None
+            _total_open_risk_usdt = None
+        elif scope is None:
+            # Legacy: use single latest snapshot regardless of staleness
+            _equity_usdt = snapshot[1] if snapshot else None
+            _available_balance_usdt = snapshot[2] if snapshot else None
+            _total_open_risk_usdt = snapshot[3] if snapshot else None
+            _total_margin_used_usdt = snapshot[4] if snapshot else None
+            _account_id = snapshot[0] if snapshot else None
+            _captured_at = snapshot[6] if snapshot else None
+            _source = snapshot[5] if snapshot else None
+            _account_unrealized_pnl_usdt = snapshot[7] if snapshot else None
+        else:
+            _equity_usdt = snapshot[1] if snapshot else None
+            _available_balance_usdt = snapshot[2] if snapshot else None
+            _total_open_risk_usdt = snapshot[3] if snapshot else None
+            _total_margin_used_usdt = snapshot[4] if snapshot else None
+            _account_id = snapshot[0] if snapshot else None
+            _captured_at = snapshot[6] if snapshot else None
+            _source = snapshot[5] if snapshot else None
+            _account_unrealized_pnl_usdt = snap_unrealized_pnl
+
         return PnlView(
             updated_at=_now_iso(),
-            account_id=snapshot[0] if snapshot else None,
-            captured_at=snapshot[6] if snapshot else None,
-            source=snapshot[5] if snapshot else None,
-            equity_usdt=snapshot[1] if snapshot else None,
-            available_balance_usdt=snapshot[2] if snapshot else None,
-            total_open_risk_usdt=snapshot[3] if snapshot else None,
-            total_margin_used_usdt=snapshot[4] if snapshot else None,
+            account_id=_account_id,
+            captured_at=_captured_at,
+            source=_source,
+            equity_usdt=_equity_usdt,
+            available_balance_usdt=_available_balance_usdt,
+            total_open_risk_usdt=_total_open_risk_usdt,
+            total_margin_used_usdt=_total_margin_used_usdt,
             open_count=open_count,
             partial_count=partial_count,
             waiting_entry_count=waiting_count,
@@ -1129,6 +1251,11 @@ class StatusQueries:
             pnl_net=pnl_net,
             by_account=by_account,
             accounts_in_scope=accounts_in_scope,
+            account_unrealized_pnl_usdt=_account_unrealized_pnl_usdt,
+            snapshot_age_seconds=snap_age,
+            snapshot_stale=snap_stale,
+            accounts_fresh=accounts_fresh,
+            accounts_stale=accounts_stale,
         )
 
     def get_stats(self, scope: QueryScope, side: str | None = None) -> StatsView:

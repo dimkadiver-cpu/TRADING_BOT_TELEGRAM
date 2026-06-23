@@ -597,3 +597,92 @@ def test_get_health_workers_ok_when_recent(ops_db):
     exec_worker = next(w for w in view.workers if "Execution" in w[0])
     assert lifecycle_worker[1] == "OK"
     assert exec_worker[1] == "OK"
+
+
+# ---------------------------------------------------------------------------
+# Task 9: PnlView snapshot freshness + CTE per-account global scope
+# ---------------------------------------------------------------------------
+
+def _add_snapshot(conn, account_id, equity, captured_at, status="OK"):
+    conn.execute(
+        "INSERT INTO ops_account_snapshots "
+        "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
+        "total_margin_used_usdt, account_unrealized_pnl_usdt, source, captured_at, "
+        "payload_json, snapshot_status, error_code) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (account_id, equity, equity * 0.9, 5.0, 10.0, equity * 0.01,
+         "ccxt_bybit:demo", captured_at, "{}", status, None),
+    )
+
+
+def test_get_pnl_global_uses_cte_per_account(ops_db):
+    """Globale deve restituire latest snapshot per OGNI account, non LIMIT 1 globale."""
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 100, "OPEN", account_id="demo_1")
+        _add_chain(conn, 101, "OPEN", account_id="demo_2")
+        _add_snapshot(conn, "demo_1", 1000.0, "2026-06-23T10:00:00+00:00")
+        _add_snapshot(conn, "demo_2", 2000.0, "2026-06-23T09:00:00+00:00")  # più vecchio
+
+    view = StatusQueries(ops_db).get_pnl()
+    # Entrambi gli account devono apparire in by_account
+    assert view.by_account is not None
+    accs = {r["account_id"] for r in view.by_account}
+    assert "demo_1" in accs
+    assert "demo_2" in accs
+
+
+def test_get_pnl_global_excludes_stale_from_aggregate(ops_db):
+    """Account stale non contribuisce ai totali live dell'aggregato."""
+    from datetime import timedelta
+    fresh_time = (datetime.now(timezone.utc) - timedelta(seconds=30)).isoformat()
+    stale_time = (datetime.now(timezone.utc) - timedelta(seconds=300)).isoformat()
+
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_snapshot(conn, "demo_1", 1000.0, fresh_time)
+        _add_snapshot(conn, "demo_2", 500.0,  stale_time)
+
+    view = StatusQueries(ops_db).get_pnl()
+    assert view.accounts_fresh == 1
+    assert view.accounts_stale == 1
+    # Il totale equity deve includere solo demo_1
+    assert view.equity_usdt == pytest.approx(1000.0)
+
+
+def test_get_pnl_account_scope_includes_unrealized_pnl(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_snapshot(conn, "demo_1", 1000.0, "2026-06-23T10:00:00+00:00")
+
+    view = StatusQueries(ops_db).get_pnl(
+        scope=QueryScope(account_id="demo_1", trader_ids=None)
+    )
+    assert view.account_unrealized_pnl_usdt == pytest.approx(10.0)  # 1000 * 0.01
+
+
+def test_get_pnl_account_scope_returns_snapshot_age(ops_db):
+    from datetime import timedelta
+    recent = (datetime.now(timezone.utc) - timedelta(seconds=45)).isoformat()
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_snapshot(conn, "demo_1", 1000.0, recent)
+
+    view = StatusQueries(ops_db).get_pnl(
+        scope=QueryScope(account_id="demo_1", trader_ids=None)
+    )
+    assert view.snapshot_age_seconds is not None
+    assert 40 < view.snapshot_age_seconds < 60
+
+
+def test_get_pnl_stale_snapshot_sets_flag(ops_db):
+    from datetime import timedelta
+    old = (datetime.now(timezone.utc) - timedelta(seconds=300)).isoformat()
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_snapshot(conn, "demo_1", 1000.0, old)
+
+    view = StatusQueries(ops_db).get_pnl(
+        scope=QueryScope(account_id="demo_1", trader_ids=None)
+    )
+    assert view.snapshot_stale is True
