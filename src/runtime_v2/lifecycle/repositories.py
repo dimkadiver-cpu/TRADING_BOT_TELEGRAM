@@ -414,13 +414,17 @@ class SnapshotRepository:
                 """
                 INSERT INTO ops_account_snapshots (
                     account_id, equity_usdt, available_balance_usdt,
-                    total_open_risk_usdt, total_margin_used_usdt, source, captured_at, payload_json
-                ) VALUES (?,?,?,?,?,?,?,?)
+                    total_open_risk_usdt, total_margin_used_usdt,
+                    account_unrealized_pnl_usdt, source, captured_at,
+                    payload_json, snapshot_status, error_code
+                ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
                 """,
                 (
                     account_id, snap.equity_usdt, snap.available_balance_usdt,
                     snap.total_open_risk_usdt, snap.total_margin_used_usdt,
+                    snap.account_unrealized_pnl_usdt,
                     snap.source, snap.captured_at.isoformat(), snap.payload_json,
+                    snap.snapshot_status, snap.error_code,
                 ),
             )
             conn.commit()

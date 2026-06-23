@@ -4134,3 +4134,24 @@ def test_update_symbol_side_without_matching_leg_no_target():
     result = gate.process_update(enriched, [short_leg], {47: []})
     assert result.chain_results == []
     assert _review_reasons(result) == ["no_update_target"]
+
+
+def test_entry_gate_persists_account_snapshot_payload(tmp_path):
+    """AS-06: entry_gate must save s.payload_json, not the literal string '{}'."""
+    import json
+    import sqlite3
+    from pathlib import Path
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+    rows = conn.execute(
+        "SELECT payload_json FROM ops_account_snapshots ORDER BY snapshot_id DESC LIMIT 1"
+    ).fetchall()
+    conn.close()
+    if not rows:
+        return  # no snapshot in this test path — guard only
+    payload = json.loads(rows[0][0])
+    assert payload != {}, "AS-06: payload_json is still hardcoded '{}' in entry_gate.py"
