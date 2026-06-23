@@ -100,14 +100,24 @@ class LiveExchangeDataPort(ExchangeDataPort):
         computed_open_risk = self._compute_total_open_risk_usdt(account_id)
         resolved = self._resolve_adapter(account_id)
         if resolved is None:
+            # FALLBACK snapshots are persisted for audit but excluded from all PnL read paths
             return self._fallback.get_account_state(account_id).model_copy(
-                update={"total_open_risk_usdt": computed_open_risk}
+                update={
+                    "total_open_risk_usdt": computed_open_risk,
+                    "source": "fallback_static",
+                    "snapshot_status": "FALLBACK",
+                }
             )
         adapter, execution_account_id = resolved
         raw = adapter.fetch_account_snapshot(execution_account_id)
         if raw is None:
+            # FALLBACK snapshots are persisted for audit but excluded from all PnL read paths
             return self._fallback.get_account_state(account_id).model_copy(
-                update={"total_open_risk_usdt": computed_open_risk}
+                update={
+                    "total_open_risk_usdt": computed_open_risk,
+                    "source": "fallback_static",
+                    "snapshot_status": "FALLBACK",
+                }
             )
         assert isinstance(raw, RawAccountSnapshot)
         return AccountStateSnapshot(
@@ -116,9 +126,11 @@ class LiveExchangeDataPort(ExchangeDataPort):
             available_balance_usdt=raw.available_balance_usdt,
             total_open_risk_usdt=computed_open_risk,
             total_margin_used_usdt=raw.total_margin_used_usdt,
+            account_unrealized_pnl_usdt=raw.account_unrealized_pnl_usdt,
             captured_at=self._now(),
             source=raw.source,
             payload_json=self._to_payload_json(raw.payload),
+            snapshot_status="OK",
         )
 
     def get_symbol_market_state(self, account_id: str, symbol: str) -> SymbolMarketSnapshot:

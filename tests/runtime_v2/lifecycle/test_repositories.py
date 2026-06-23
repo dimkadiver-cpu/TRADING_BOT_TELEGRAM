@@ -311,6 +311,124 @@ def test_snapshot_repo_persists_payload_json(ops_db):
     assert market_payload == '{"ticker": {"markPrice": 50000.0}}'
 
 
+def test_save_account_persists_payload_json(tmp_path):
+    import json
+    from datetime import datetime, timezone
+    from pathlib import Path
+
+    import sqlite3
+
+    from src.runtime_v2.lifecycle.ports import AccountStateSnapshot
+    from src.runtime_v2.lifecycle.repositories import SnapshotRepository
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+    conn.close()
+
+    repo = SnapshotRepository(db)
+    snap = AccountStateSnapshot(
+        account_id="demo_1",
+        equity_usdt=1000.0,
+        available_balance_usdt=900.0,
+        total_margin_used_usdt=100.0,
+        account_unrealized_pnl_usdt=42.5,
+        captured_at=datetime.now(timezone.utc),
+        source="ccxt_bybit:demo",
+        payload_json=json.dumps({"field_origins": {"equity_usdt": "bybit.totalEquity"}, "total": {"USDT": 1000.0}}),
+        snapshot_status="OK",
+    )
+    repo.save_account(snap, "demo_1")
+
+    conn = sqlite3.connect(db)
+    row = conn.execute(
+        "SELECT payload_json, account_unrealized_pnl_usdt, snapshot_status, error_code "
+        "FROM ops_account_snapshots ORDER BY snapshot_id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+
+    payload = json.loads(row[0])
+    assert payload != {}
+    assert "field_origins" in payload
+    assert abs(row[1] - 42.5) < 1e-9
+    assert row[2] == "OK"
+    assert row[3] is None
+
+
+# --- SnapshotRepository — get_latest ---
+
+def _insert_snapshot(conn, account_id, equity, captured_at, status="OK"):
+    conn.execute(
+        "INSERT INTO ops_account_snapshots "
+        "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
+        "total_margin_used_usdt, account_unrealized_pnl_usdt, source, captured_at, "
+        "payload_json, snapshot_status, error_code) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        (account_id, equity, equity * 0.9, 10.0, 5.0, None,
+         "ccxt_bybit:demo", captured_at, "{}", status, None),
+    )
+
+
+def test_get_latest_account_snapshot_returns_most_recent_ok(tmp_path):
+    import sqlite3
+    from pathlib import Path
+    from src.runtime_v2.lifecycle.repositories import SnapshotRepository
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    _insert_snapshot(conn, "demo_1", 1000.0, "2026-06-23T10:00:00+00:00")
+    _insert_snapshot(conn, "demo_1", 1200.0, "2026-06-23T10:01:00+00:00")
+    _insert_snapshot(conn, "demo_1", 500.0, "2026-06-23T10:02:00+00:00", status="FAILED")
+    conn.commit(); conn.close()
+
+    repo = SnapshotRepository(db)
+    snap = repo.get_latest_account_snapshot("demo_1")
+    assert snap is not None
+    assert snap["equity_usdt"] == 1200.0   # FAILED ignorato, prende l'ultimo OK
+    assert snap["snapshot_status"] == "OK"
+
+
+def test_get_latest_account_snapshot_returns_none_when_missing(tmp_path):
+    import sqlite3
+    from pathlib import Path
+    from src.runtime_v2.lifecycle.repositories import SnapshotRepository
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit(); conn.close()
+
+    repo = SnapshotRepository(db)
+    assert repo.get_latest_account_snapshot("demo_1") is None
+
+
+def test_get_latest_account_snapshots_all_returns_one_per_account(tmp_path):
+    import sqlite3
+    from pathlib import Path
+    from src.runtime_v2.lifecycle.repositories import SnapshotRepository
+
+    db = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    _insert_snapshot(conn, "demo_1", 1000.0, "2026-06-23T10:00:00+00:00")
+    _insert_snapshot(conn, "demo_1", 1200.0, "2026-06-23T10:01:00+00:00")
+    _insert_snapshot(conn, "demo_2", 500.0,  "2026-06-23T10:00:30+00:00")
+    conn.commit(); conn.close()
+
+    repo = SnapshotRepository(db)
+    snaps = repo.get_latest_account_snapshots_all()
+    assert len(snaps) == 2
+    by_acc = {s["account_id"]: s for s in snaps}
+    assert by_acc["demo_1"]["equity_usdt"] == 1200.0
+    assert by_acc["demo_2"]["equity_usdt"] == 500.0
+
+
 # --- ExchangeEventRepository ---
 
 def test_exchange_event_repo_get_new_and_mark(ops_db):

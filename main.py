@@ -43,6 +43,7 @@ from src.runtime_v2.lifecycle.ports import ExchangeDataPort
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
+from src.runtime_v2.lifecycle.account_snapshot_worker import AccountSnapshotWorker
 from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
 from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
@@ -589,6 +590,23 @@ async def _async_main(
         execution_runtime=execution_runtime,
         known_symbols=known_symbols,
     )
+
+    # Account snapshot worker — periodic balance fetch per account
+    _account_ids: list[str] = (
+        list(execution_runtime.sync_workers.keys())
+        if execution_runtime is not None and execution_runtime.sync_workers
+        else []
+    )
+    _account_snapshot_worker: AccountSnapshotWorker | None = None
+    if _account_ids and isinstance(exchange_port, LiveExchangeDataPort):
+        _account_snapshot_worker = AccountSnapshotWorker(
+            port=exchange_port,
+            repository=snapshot_repo,
+            account_ids=_account_ids,
+            interval_seconds=60,
+            stale_after_seconds=180,
+        )
+
     risk_engine = RiskCapacityEngine()
     entry_gate = _build_lifecycle_entry_gate(
         root_dir=root_dir,
@@ -630,6 +648,11 @@ async def _async_main(
         )
         for w in targets:
             w.run_bulk_position_sync()
+        # Trigger account snapshot refresh
+        if _account_snapshot_worker is not None:
+            trigger_ids = [account_id] if account_id else _account_ids
+            for acc in trigger_ids:
+                _account_snapshot_worker.trigger(acc)
 
     _cp = build_control_plane(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
@@ -682,6 +705,11 @@ async def _async_main(
             )
         )
 
+        account_snapshot_task = None
+        if _account_snapshot_worker is not None:
+            account_snapshot_task = asyncio.create_task(_account_snapshot_worker.run())
+            logger.info("account snapshot worker started | accounts=%s", _account_ids)
+
         cp_dispatcher_task = None
         if cp_dispatcher is not None:
             cp_dispatcher_task = asyncio.create_task(cp_dispatcher.run())
@@ -729,6 +757,8 @@ async def _async_main(
         finally:
             worker_task.cancel()
             lifecycle_task.cancel()
+            if account_snapshot_task is not None:
+                account_snapshot_task.cancel()
             if cp_dispatcher_task is not None:
                 cp_dispatcher_task.cancel()
             if control_bot_task is not None:

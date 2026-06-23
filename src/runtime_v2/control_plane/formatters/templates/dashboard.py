@@ -202,13 +202,35 @@ TEMPLATE_DASHBOARD_BLOCKED = TemplateConfig(_BLOCKED_BLOCKS, payload_transform=N
 # ---------------------------------------------------------------------------
 
 def _pnl_account_lines(p: dict) -> str:
+    from datetime import datetime
     parts = []
+    captured_at = p.get("captured_at")
+    age = p.get("snapshot_age_seconds")
+    source = p.get("source")
+    stale = p.get("snapshot_stale", False)
+
+    if captured_at:
+        try:
+            dt = datetime.fromisoformat(captured_at)
+            time_str = dt.strftime("%H:%M:%S") + " UTC"
+        except ValueError:
+            time_str = captured_at
+        age_str = f"age {int(age)}s" if age is not None else "age ?"
+        stale_str = " · STALE" if stale else ""
+        source_str = f" · {source}" if source else ""
+        parts.append(f"Snapshot: {time_str} · {age_str}{source_str}{stale_str}")
+
     if p.get("equity_usdt") is not None:
         parts.append(f"Equity:        {p['equity_usdt']:,.2f} USDT")
     if p.get("available_balance_usdt") is not None:
-        parts.append(f"Balance:        {p['available_balance_usdt']:,.2f} USDT")
+        parts.append(f"Available:     {p['available_balance_usdt']:,.2f} USDT")
     if p.get("total_margin_used_usdt") is not None:
-        parts.append(f"Margin used:       {p['total_margin_used_usdt']:,.2f} USDT")
+        parts.append(f"Margin used:   {p['total_margin_used_usdt']:,.2f} USDT")
+    if p.get("account_unrealized_pnl_usdt") is not None:
+        sign = "+" if p["account_unrealized_pnl_usdt"] >= 0 else ""
+        parts.append(f"uPnL live:     {sign}{p['account_unrealized_pnl_usdt']:.2f} USDT")
+    if p.get("total_open_risk_usdt") is not None:
+        parts.append(f"Open risk*:    {p['total_open_risk_usdt']:.2f} USDT")
     return "\n".join(parts) if parts else "n/a"
 
 
@@ -242,7 +264,14 @@ def _pnl_by_account_lines(p: dict) -> str:
         net = r.get("net_pnl", 0.0)
         sign = "+" if net >= 0 else ""
         open_c = r.get("open_count", 0)
-        lines.append(f"{acc_id} · Net: {sign}{net:.2f} USDT · Open: {open_c}")
+        age = r.get("age_seconds")
+        stale = r.get("stale", False)
+        if stale:
+            age_str = f"{int(age)}s ago" if age is not None else "?"
+            lines.append(f"{acc_id} · STALE · last {age_str}")
+        else:
+            age_str = f" · age {int(age)}s" if age is not None else ""
+            lines.append(f"{acc_id} · Net: {sign}{net:.2f} USDT · Open: {open_c}{age_str}")
     return "\n".join(lines) if lines else "n/a"
 
 
@@ -257,12 +286,40 @@ _PNL_BLOCKS: list = [
             SeparatorBlock(),
         ],
     ),
-    # Global: show accounts in scope summary
+    # Global: show accounts in scope summary with freshness counts and STALE warning
     ConditionalBlock(
         condition=lambda p: bool(p.get("is_global")),
         blocks=[
             DerivedBlock(text_fn=lambda p: f"Accounts in scope: {p.get('accounts_in_scope', 0)}"),
             StaticBlock("Snapshot mode: per-account latest"),
+            ConditionalBlock(
+                condition=lambda p: (
+                    p.get("accounts_fresh") is not None or p.get("accounts_stale") is not None
+                ),
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: (
+                        f"Snapshots: {p.get('accounts_fresh', 0)} fresh · {p.get('accounts_stale', 0)} stale"
+                    )),
+                ],
+            ),
+            ConditionalBlock(
+                condition=lambda p: p.get("account_unrealized_pnl_usdt") is not None,
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: (
+                        f"uPnL aggregate: +{p['account_unrealized_pnl_usdt']:.2f} USDT"
+                        if p["account_unrealized_pnl_usdt"] >= 0
+                        else f"uPnL aggregate: {p['account_unrealized_pnl_usdt']:.2f} USDT"
+                    )),
+                ],
+            ),
+            ConditionalBlock(
+                condition=lambda p: bool(p.get("accounts_stale")),
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: (
+                        f"⚠️ STALE: {p['accounts_stale']} account(s) with stale data"
+                    )),
+                ],
+            ),
             SeparatorBlock(),
         ],
     ),

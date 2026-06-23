@@ -368,6 +368,14 @@ def _build_pnl_payload(
         "waiting_entry_count": view.waiting_entry_count,
         "accounts_in_scope": view.accounts_in_scope,
         "by_account": view.by_account,
+        "captured_at": view.captured_at,
+        "source": view.source,
+        "account_unrealized_pnl_usdt": view.account_unrealized_pnl_usdt,
+        "snapshot_age_seconds": view.snapshot_age_seconds,
+        "snapshot_stale": view.snapshot_stale,
+        "total_open_risk_usdt": view.total_open_risk_usdt,
+        "accounts_fresh": view.accounts_fresh,
+        "accounts_stale": view.accounts_stale,
     }
     return payload, 0
 

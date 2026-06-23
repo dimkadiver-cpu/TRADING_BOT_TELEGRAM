@@ -806,10 +806,15 @@ def test_get_stats_global_scope_aggregates_all_accounts(tmp_path):
 
 
 def test_get_pnl_global_scope_uses_latest_snapshot_across_all_accounts(tmp_path):
-    """Global scope get_pnl must return the most-recent snapshot across ALL accounts."""
+    """Global scope get_pnl must include every account in by_account, using latest snapshot per account."""
+    from datetime import datetime, timezone, timedelta
     db_path = str(tmp_path / "ops.db")
     _apply_migrations(db_path)
     conn = sqlite3.connect(db_path)
+
+    # Use fresh timestamps so both accounts contribute to the equity aggregate
+    fresh_1 = (datetime.now(timezone.utc) - timedelta(seconds=20)).isoformat()
+    fresh_2 = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
 
     # Insert snapshots for two different accounts; demo_2 snapshot is newer
     conn.execute(
@@ -817,14 +822,14 @@ def test_get_pnl_global_scope_uses_latest_snapshot_across_all_accounts(tmp_path)
         "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
         " total_margin_used_usdt, source, captured_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        ("demo_1", 1000.0, 900.0, 50.0, 100.0, "ws", "2026-01-01T10:00:00+00:00"),
+        ("demo_1", 1000.0, 900.0, 50.0, 100.0, "ws", fresh_1),
     )
     conn.execute(
         "INSERT INTO ops_account_snapshots "
         "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
         " total_margin_used_usdt, source, captured_at) "
         "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        ("demo_2", 5000.0, 4500.0, 200.0, 500.0, "ws", "2026-01-01T11:00:00+00:00"),
+        ("demo_2", 5000.0, 4500.0, 200.0, 500.0, "ws", fresh_2),
     )
     conn.commit()
     conn.close()
@@ -833,6 +838,12 @@ def test_get_pnl_global_scope_uses_latest_snapshot_across_all_accounts(tmp_path)
     global_scope = QueryScope(account_id=None, trader_ids=None)
     view = sq.get_pnl(global_scope)
 
-    # Should return demo_2 snapshot (more recent)
-    assert view.account_id == "demo_2"
-    assert view.equity_usdt == 5000.0
+    # Global CTE scope: account_id is None (aggregate, not single account)
+    assert view.account_id is None
+    # Equity is aggregated from all fresh accounts: 1000 + 5000 = 6000
+    assert view.equity_usdt == pytest.approx(6000.0)
+    # Both accounts must appear in by_account
+    assert view.by_account is not None
+    accs = {r["account_id"] for r in view.by_account}
+    assert "demo_1" in accs
+    assert "demo_2" in accs

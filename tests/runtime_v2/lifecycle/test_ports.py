@@ -204,11 +204,77 @@ def test_live_port_falls_back_to_static_defaults_when_adapter_has_no_snapshot():
     market = port.get_symbol_market_state("acc_1", "ETHUSDT")
 
     assert account.account_id == "acc_1"
-    assert account.source == "static_default"
+    assert account.source == "fallback_static"
     assert account.equity_usdt is None
     assert market.symbol == "ETHUSDT"
     assert market.source == "static_default"
     assert market.mark_price is None
+
+
+def test_live_port_propagates_unrealized_pnl(tmp_path):
+    from unittest.mock import MagicMock
+    from src.runtime_v2.execution_gateway.models import RawAccountSnapshot
+    from src.runtime_v2.lifecycle.live_exchange_data_port import LiveExchangeDataPort
+
+    mock_adapter = MagicMock()
+    mock_adapter.fetch_account_snapshot.return_value = RawAccountSnapshot(
+        equity_usdt=1000.0,
+        available_balance_usdt=900.0,
+        total_margin_used_usdt=100.0,
+        account_unrealized_pnl_usdt=42.5,
+        field_origins={"equity_usdt": "bybit.totalEquity"},
+        payload={"field_origins": {"equity_usdt": "bybit.totalEquity"}},
+        source="ccxt_bybit:demo",
+    )
+    db = str(tmp_path / "ops.sqlite3")
+    import sqlite3
+    from pathlib import Path
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit(); conn.close()
+
+    from src.runtime_v2.execution_gateway.models import ExecutionConfig
+    exec_config = MagicMock()
+    exec_config.resolve_routing.return_value = (MagicMock(adapter="bybit", execution_account_id="bybit_demo"), None)
+
+    port = LiveExchangeDataPort(
+        execution_config=exec_config,
+        adapter_registry={"bybit": mock_adapter},
+        ops_db_path=db,
+    )
+    snap = port.get_account_state("demo_1")
+    assert snap.account_unrealized_pnl_usdt == 42.5
+    assert snap.snapshot_status == "OK"
+    assert snap.error_code is None
+    import json
+    payload = json.loads(snap.payload_json)
+    assert "field_origins" in payload
+
+
+def test_live_port_fallback_sets_fallback_status(tmp_path):
+    from unittest.mock import MagicMock
+    from src.runtime_v2.lifecycle.live_exchange_data_port import LiveExchangeDataPort
+
+    db = str(tmp_path / "ops.sqlite3")
+    import sqlite3
+    from pathlib import Path
+    conn = sqlite3.connect(db)
+    for f in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit(); conn.close()
+
+    exec_config = MagicMock()
+    exec_config.resolve_routing.side_effect = Exception("no adapter")
+
+    port = LiveExchangeDataPort(
+        execution_config=exec_config,
+        adapter_registry={},
+        ops_db_path=db,
+    )
+    snap = port.get_account_state("demo_1")
+    assert snap.snapshot_status == "FALLBACK"
+    assert snap.source == "fallback_static"
 
 
 def _make_live_port_db(chains: list[tuple[str, str, str, float | None, str]]) -> str:

@@ -2454,13 +2454,16 @@ class LifecycleGateWorker:
                         INSERT INTO ops_account_snapshots (
                             account_id, equity_usdt, available_balance_usdt,
                             total_open_risk_usdt, total_margin_used_usdt,
-                            source, captured_at, payload_json
-                        ) VALUES (?,?,?,?,?,?,?,?)
+                            account_unrealized_pnl_usdt, source, captured_at,
+                            payload_json, snapshot_status, error_code
+                        ) VALUES (?,?,?,?,?,?,?,?,?,?,?)
                         """,
                         (
                             enriched.account_id, s.equity_usdt, s.available_balance_usdt,
                             s.total_open_risk_usdt, s.total_margin_used_usdt,
-                            s.source, s.captured_at.isoformat(), "{}",
+                            s.account_unrealized_pnl_usdt,
+                            s.source, s.captured_at.isoformat(), s.payload_json,
+                            s.snapshot_status, s.error_code,
                         ),
                     )
 
@@ -2476,7 +2479,7 @@ class LifecycleGateWorker:
                         (
                             enriched.account_id, s.symbol, s.mark_price, s.bid, s.ask,
                             s.min_order_size, s.price_precision, s.qty_precision,
-                            s.source, s.captured_at.isoformat(), "{}",
+                            s.source, s.captured_at.isoformat(), s.payload_json,
                         ),
                     )
                 if chain_id is not None:

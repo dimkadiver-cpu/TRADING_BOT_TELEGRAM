@@ -153,6 +153,8 @@ class RawAccountSnapshot(BaseModel):
     available_balance_usdt: float | None = None
     total_open_risk_usdt: float | None = None
     total_margin_used_usdt: float | None = None
+    account_unrealized_pnl_usdt: float | None = None
+    field_origins: dict[str, str] = Field(default_factory=dict)
     payload: dict = Field(default_factory=dict)
     source: str
 

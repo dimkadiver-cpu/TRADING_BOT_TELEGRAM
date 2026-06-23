@@ -207,3 +207,48 @@ def test_new_lifecycle_event_types_are_valid():
         idempotency_key="test:2",
     )
     assert e2.event_type == "NOOP_CANCEL_CONFIRMED_POSITION_UNRESOLVED"
+
+
+def test_raw_account_snapshot_new_fields():
+    from src.runtime_v2.execution_gateway.models import RawAccountSnapshot
+    snap = RawAccountSnapshot(source="ccxt_bybit:demo")
+    assert snap.account_unrealized_pnl_usdt is None
+    assert snap.field_origins == {}
+
+
+def test_raw_account_snapshot_field_origins():
+    from src.runtime_v2.execution_gateway.models import RawAccountSnapshot
+    snap = RawAccountSnapshot(
+        source="ccxt_bybit:demo",
+        account_unrealized_pnl_usdt=84.3,
+        field_origins={"equity_usdt": "bybit.totalEquity"},
+    )
+    assert snap.account_unrealized_pnl_usdt == 84.3
+    assert snap.field_origins["equity_usdt"] == "bybit.totalEquity"
+
+
+def test_account_state_snapshot_new_fields():
+    from src.runtime_v2.lifecycle.ports import AccountStateSnapshot
+    from datetime import datetime, timezone
+    snap = AccountStateSnapshot(
+        account_id="demo_1",
+        captured_at=datetime.now(timezone.utc),
+        source="ccxt_bybit:demo",
+    )
+    assert snap.account_unrealized_pnl_usdt is None
+    assert snap.snapshot_status == "OK"
+    assert snap.error_code is None
+
+
+def test_account_state_snapshot_failed_status():
+    from src.runtime_v2.lifecycle.ports import AccountStateSnapshot
+    from datetime import datetime, timezone
+    snap = AccountStateSnapshot(
+        account_id="demo_1",
+        captured_at=datetime.now(timezone.utc),
+        source="fallback_static",
+        snapshot_status="FAILED",
+        error_code="TimeoutError",
+    )
+    assert snap.snapshot_status == "FAILED"
+    assert snap.error_code == "TimeoutError"

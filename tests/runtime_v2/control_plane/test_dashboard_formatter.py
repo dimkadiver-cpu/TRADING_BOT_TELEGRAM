@@ -486,6 +486,110 @@ class TestVistaStats:
 
 
 # ---------------------------------------------------------------------------
+# Tests: snapshot freshness — Task 10
+# ---------------------------------------------------------------------------
+
+def test_pnl_account_lines_shows_snapshot_metadata():
+    from src.runtime_v2.control_plane.formatters.templates.dashboard import _pnl_account_lines
+    p = {
+        "captured_at": "2026-06-23T14:32:05+00:00",
+        "source": "ccxt_bybit:demo",
+        "snapshot_age_seconds": 18.0,
+        "snapshot_stale": False,
+        "equity_usdt": 7220.50,
+        "available_balance_usdt": 5180.20,
+        "total_margin_used_usdt": 704.80,
+        "account_unrealized_pnl_usdt": 62.40,
+        "total_open_risk_usdt": 145.0,
+    }
+    result = _pnl_account_lines(p)
+    assert "14:32:05" in result
+    assert "age 18s" in result
+    assert "ccxt_bybit:demo" in result
+    assert "7,220.50" in result
+    assert "62.40" in result
+
+
+def test_pnl_account_lines_shows_stale():
+    from src.runtime_v2.control_plane.formatters.templates.dashboard import _pnl_account_lines
+    p = {
+        "captured_at": "2026-06-23T10:00:00+00:00",
+        "source": "ccxt_bybit:demo",
+        "snapshot_age_seconds": 300.0,
+        "snapshot_stale": True,
+        "equity_usdt": 1000.0,
+    }
+    result = _pnl_account_lines(p)
+    assert "STALE" in result
+
+
+def test_pnl_by_account_lines_shows_stale_account():
+    from src.runtime_v2.control_plane.formatters.templates.dashboard import _pnl_by_account_lines
+    p = {
+        "by_account": [
+            {"account_id": "demo_1", "net_pnl": 100.0, "open_count": 2, "age_seconds": 18.0, "stale": False},
+            {"account_id": "demo_2", "net_pnl": 50.0,  "open_count": 1, "age_seconds": 300.0, "stale": True},
+        ]
+    }
+    result = _pnl_by_account_lines(p)
+    assert "demo_1" in result
+    assert "age 18s" in result
+    assert "demo_2" in result
+    assert "STALE" in result
+
+
+def test_pnl_build_payload_passes_snapshot_fields(ops_db):
+    from src.runtime_v2.control_plane.formatters.dashboard import _build_pnl_payload
+    from src.runtime_v2.control_plane.status_queries import StatusQueries
+    from src.runtime_v2.control_plane.scope_resolver import QueryScope
+    from datetime import timedelta
+
+    fresh = (datetime.now(timezone.utc) - timedelta(seconds=18)).isoformat()
+    conn = sqlite3.connect(ops_db)
+    conn.execute(
+        "INSERT INTO ops_account_snapshots "
+        "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
+        "total_margin_used_usdt, account_unrealized_pnl_usdt, source, captured_at, "
+        "payload_json, snapshot_status) VALUES (?,?,?,?,?,?,?,?,?,?)",
+        ("demo_1", 7220.50, 5180.20, 145.0, 704.80, 62.40, "ccxt_bybit:demo", fresh, "{}", "OK"),
+    )
+    conn.commit(); conn.close()
+
+    scope = QueryScope(account_id="demo_1", trader_ids=None)
+    queries = StatusQueries(ops_db)
+    payload, _ = _build_pnl_payload(scope, queries)
+    assert payload["account_unrealized_pnl_usdt"] == pytest.approx(62.40)
+    assert payload["snapshot_age_seconds"] is not None
+    assert payload["snapshot_stale"] is False
+    assert payload["captured_at"] is not None
+    assert payload["source"] == "ccxt_bybit:demo"
+
+
+def test_pnl_global_scope_shows_stale_warning():
+    from src.runtime_v2.control_plane.formatters.templates.dashboard import _PNL_BLOCKS
+    from src.runtime_v2.control_plane.formatters._blocks import render_template
+
+    p = {
+        "is_global": True,
+        "accounts_in_scope": 3,
+        "accounts_fresh": 2,
+        "accounts_stale": 1,
+        "account_unrealized_pnl_usdt": 150.0,
+        "captured_at": None,
+        "total": 0,
+        "page_display": "1/1",
+        "updated_at": "14:32:05",
+        "open_count": 0,
+        "waiting_entry_count": 0,
+    }
+    result = render_template(_PNL_BLOCKS, p)
+    assert "Snapshots:" in result
+    assert "2 fresh" in result
+    assert "1 stale" in result
+    assert "STALE" in result
+
+
+# ---------------------------------------------------------------------------
 # Tests: keyboard
 # ---------------------------------------------------------------------------
 

@@ -1571,3 +1571,138 @@ def test_fetch_recent_funding_executions_returns_empty_on_error():
         symbol="ONDOUSDT", execution_account_id="acc"
     )
     assert rows == []
+
+
+# ── helpers per account snapshot tests ───────────────────────────────────────
+
+def _make_unified_balance(
+    total_equity="12420.50",
+    total_available="9180.20",
+    total_initial_margin="1104.80",
+    total_perp_upl="84.30",
+    total_position_im="950.00",
+    total_order_im="154.80",
+):
+    return {
+        "total": {"USDT": 12420.50},
+        "free": {"USDT": 9180.20},
+        "used": {"USDT": 1104.80},
+        "USDT": {"total": 12420.50, "free": 9180.20, "used": 1104.80},
+        "info": {
+            "result": {
+                "list": [
+                    {
+                        "totalEquity": total_equity,
+                        "totalAvailableBalance": total_available,
+                        "totalInitialMargin": total_initial_margin,
+                        "totalPerpUPL": total_perp_upl,
+                        "totalPositionIM": total_position_im,
+                        "totalOrderIM": total_order_im,
+                        "coin": [
+                            {
+                                "coin": "USDT",
+                                "equity": "99999.00",
+                                "availableToWithdraw": "8000.00",
+                                "walletBalance": "11000.00",
+                            }
+                        ],
+                    }
+                ]
+            }
+        },
+    }
+
+
+def test_fetch_account_snapshot_uses_account_wide_fields():
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = _make_unified_balance()
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap is not None
+    assert snap.equity_usdt == 12420.50
+    assert snap.available_balance_usdt == 9180.20
+    assert snap.total_margin_used_usdt == 1104.80
+    assert snap.account_unrealized_pnl_usdt == 84.30
+
+
+def test_fetch_account_snapshot_field_origins_primary():
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = _make_unified_balance()
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap.field_origins["equity_usdt"] == "bybit.totalEquity"
+    assert snap.field_origins["available_balance_usdt"] == "bybit.totalAvailableBalance"
+    assert snap.field_origins["total_margin_used_usdt"] == "bybit.totalInitialMargin"
+    assert snap.field_origins["account_unrealized_pnl_usdt"] == "bybit.totalPerpUPL"
+
+
+def test_fetch_account_snapshot_preserves_zero_equity():
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = _make_unified_balance(total_equity="0.0")
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap is not None
+    assert snap.equity_usdt == 0.0
+
+
+def test_fetch_account_snapshot_preserves_zero_margin():
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = _make_unified_balance(total_initial_margin="0.0")
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap is not None
+    assert snap.total_margin_used_usdt == 0.0
+
+
+def test_fetch_account_snapshot_fallback_coin_when_no_account_wide():
+    balance = {
+        "total": {}, "free": {}, "used": {},
+        "info": {
+            "result": {
+                "list": [
+                    {
+                        "coin": [
+                            {"coin": "USDT", "equity": "5000.00", "availableToWithdraw": "4500.00"}
+                        ]
+                    }
+                ]
+            }
+        },
+    }
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = balance
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap is not None
+    assert snap.equity_usdt == 5000.00
+    assert snap.field_origins["equity_usdt"] == "bybit.coin.USDT.equity"
+
+
+def test_fetch_account_snapshot_margin_fallback_sum_im():
+    balance = _make_unified_balance(total_initial_margin=None)
+    # Remove totalInitialMargin
+    balance["info"]["result"]["list"][0].pop("totalInitialMargin", None)
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = balance
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap is not None
+    assert snap.total_margin_used_usdt == pytest.approx(950.00 + 154.80)
+    assert "totalPositionIM+totalOrderIM" in snap.field_origins["total_margin_used_usdt"]
+
+
+def test_fetch_account_snapshot_returns_none_on_exception():
+    exchange = MagicMock()
+    exchange.fetch_balance.side_effect = Exception("network error")
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert snap is None
+
+
+def test_fetch_account_snapshot_payload_contains_field_origins():
+    exchange = MagicMock()
+    exchange.fetch_balance.return_value = _make_unified_balance()
+    adapter = _make_adapter(exchange)
+    snap = adapter.fetch_account_snapshot("bybit_demo")
+    assert "field_origins" in snap.payload
+    assert snap.payload["field_origins"]["equity_usdt"] == "bybit.totalEquity"
