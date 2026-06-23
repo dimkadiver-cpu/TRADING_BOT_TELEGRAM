@@ -88,27 +88,21 @@ async def test_worker_account_a_failure_does_not_stop_account_b():
 
 
 @pytest.mark.asyncio
-async def test_worker_no_concurrent_fetch_same_account():
-    fetch_count = {"demo_1": 0}
-    in_flight = {"demo_1": False}
-
-    async def slow_fetch(acc):
-        assert not in_flight[acc], "Concurrent fetch detected!"
-        in_flight[acc] = True
-        await asyncio.sleep(0.01)
-        fetch_count[acc] += 1
-        in_flight[acc] = False
-        return _make_snapshot(acc)
-
-    port = MagicMock()
+async def test_worker_trigger_deduplicates_same_account():
+    port = _make_port(account_id="acc1")
     repo = _make_repo()
     worker = AccountSnapshotWorker(
         port=port, repository=repo,
-        account_ids=["demo_1"],
+        account_ids=[],
         interval_seconds=999,
     )
-    # Manually call _fetch_one while it's "in flight"
-    worker._in_flight.add("demo_1")
-    worker.trigger("demo_1")  # should add to pending, not start new fetch
-    assert "demo_1" in worker._pending_refresh
-    worker._in_flight.discard("demo_1")
+    # trigger same account twice before the loop drains
+    worker.trigger("acc1")
+    worker.trigger("acc1")
+    # drain manually: drain pending and fetch
+    pending = list(worker._pending_refresh)
+    worker._pending_refresh.clear()
+    for account_id in pending:
+        await worker._fetch_one(account_id)
+    # should have been fetched exactly once despite two trigger() calls
+    assert port.get_account_state.call_count == 1

@@ -27,33 +27,27 @@ class AccountSnapshotWorker:
         self._interval = interval_seconds
         self._stale_after = stale_after_seconds
         self._pending_refresh: set[str] = set()
-        self._in_flight: set[str] = set()
 
     async def run(self) -> None:
         await self._fetch_all()
         while True:
             await asyncio.sleep(self._interval)
+            # drain pending refreshes first
+            pending = list(self._pending_refresh)
+            self._pending_refresh.clear()
+            for account_id in pending:
+                await self._fetch_one(account_id)
+            # then run all-accounts periodic pass
             await self._fetch_all()
 
     def trigger(self, account_id: str) -> None:
-        if account_id in self._in_flight:
-            self._pending_refresh.add(account_id)
-        else:
-            try:
-                loop = asyncio.get_running_loop()
-                loop.create_task(self._fetch_one(account_id))
-            except RuntimeError:
-                pass  # nessun loop attivo — ignorare (bootstrap non ancora avviato)
+        self._pending_refresh.add(account_id)
 
     async def _fetch_all(self) -> None:
         for account_id in self._account_ids:
             await self._fetch_one(account_id)
 
     async def _fetch_one(self, account_id: str) -> None:
-        if account_id in self._in_flight:
-            self._pending_refresh.add(account_id)
-            return
-        self._in_flight.add(account_id)
         try:
             snap = await asyncio.get_running_loop().run_in_executor(
                 None, self._port.get_account_state, account_id
@@ -73,15 +67,6 @@ class AccountSnapshotWorker:
                 self._repository.save_account(failed_snap, account_id)
             except Exception:
                 pass
-        finally:
-            self._in_flight.discard(account_id)
-            if account_id in self._pending_refresh:
-                self._pending_refresh.discard(account_id)
-                try:
-                    loop = asyncio.get_running_loop()
-                    loop.create_task(self._fetch_one(account_id))
-                except RuntimeError:
-                    pass
 
 
 __all__ = ["AccountSnapshotWorker"]
