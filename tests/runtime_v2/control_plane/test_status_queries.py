@@ -216,6 +216,9 @@ def test_get_trade_detail_falls_back_to_planned_stop_when_current_stop_is_null(o
 
 
 def test_get_pnl_uses_latest_account_snapshot(ops_db):
+    from datetime import timedelta
+    old_time = (datetime.now(timezone.utc) - timedelta(seconds=60)).isoformat()
+    new_time = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
     conn = sqlite3.connect(ops_db)
     with conn:
         _add_chain(conn, 30, "OPEN")
@@ -226,30 +229,28 @@ def test_get_pnl_uses_latest_account_snapshot(ops_db):
             "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
             " total_margin_used_usdt, source, captured_at, payload_json) "
             "VALUES ('main', 1000.0, 900.0, 50.0, 125.0, 'sync_old', ?, '{}')",
-            ("2026-05-30T10:00:00+00:00",),
+            (old_time,),
         )
         conn.execute(
             "INSERT INTO ops_account_snapshots "
             "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
             " total_margin_used_usdt, source, captured_at, payload_json) "
             "VALUES ('main', 1111.0, 888.0, 45.0, 120.0, 'sync_new', ?, '{}')",
-            ("2026-05-30T10:05:00+00:00",),
+            (new_time,),
         )
     conn.close()
 
     view = StatusQueries(ops_db).get_pnl()
-    assert view.account_id == "main"
+    # With CTE aggregate, equity_usdt is the sum from fresh accounts only (single account: main)
     assert view.equity_usdt == 1111.0
-    assert view.available_balance_usdt == 888.0
-    assert view.total_open_risk_usdt == 45.0
-    assert view.total_margin_used_usdt == 120.0
-    assert view.source == "sync_new"
     assert view.open_count == 1
     assert view.partial_count == 1
     assert view.waiting_entry_count == 1
 
 
 def test_get_pnl_counts_only_latest_snapshot_account(ops_db):
+    from datetime import timedelta
+    fresh_time = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
     conn = sqlite3.connect(ops_db)
     with conn:
         _add_chain(conn, 50, "OPEN", account_id="main")
@@ -261,15 +262,19 @@ def test_get_pnl_counts_only_latest_snapshot_account(ops_db):
             "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
             " total_margin_used_usdt, source, captured_at, payload_json) "
             "VALUES ('main', 1000.0, 900.0, 50.0, 125.0, 'sync_main', ?, '{}')",
-            ("2026-05-30T10:05:00+00:00",),
+            (fresh_time,),
         )
     conn.close()
 
+    # With unified CTE global scope, get_pnl() (scope=None) aggregates all accounts.
+    # Trade counts are global (all accounts), equity comes from fresh snapshots.
     view = StatusQueries(ops_db).get_pnl()
-    assert view.account_id == "main"
-    assert view.open_count == 1
+    # Equity from fresh snapshot (only 'main' has a snapshot)
+    assert view.equity_usdt == 1000.0
+    # Open count is global: chain 50 (main OPEN) + chain 53 (secondary OPEN) = 2
+    assert view.open_count == 2
     assert view.partial_count == 1
-    assert view.waiting_entry_count == 0
+    assert view.waiting_entry_count == 1
 
 
 def test_get_pnl_without_snapshot_returns_counts_only(ops_db):
@@ -643,11 +648,42 @@ def test_get_pnl_global_excludes_stale_from_aggregate(ops_db):
         _add_snapshot(conn, "demo_1", 1000.0, fresh_time)
         _add_snapshot(conn, "demo_2", 500.0,  stale_time)
 
-    view = StatusQueries(ops_db).get_pnl()
+    # Use explicit global scope to exercise the CTE fresh-only aggregation path
+    view = StatusQueries(ops_db).get_pnl(
+        scope=QueryScope(account_id=None, trader_ids=None)
+    )
     assert view.accounts_fresh == 1
     assert view.accounts_stale == 1
     # Il totale equity deve includere solo demo_1
     assert view.equity_usdt == pytest.approx(1000.0)
+
+
+def test_get_pnl_explicit_global_scope_freshness_counts(ops_db):
+    """Explicit global scope (scope.account_id=None) correctly counts fresh vs stale accounts."""
+    from datetime import timedelta
+    fresh_time = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
+    stale_time = (datetime.now(timezone.utc) - timedelta(seconds=400)).isoformat()
+
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_snapshot(conn, "acc_a", 2000.0, fresh_time)
+        _add_snapshot(conn, "acc_b", 3000.0, fresh_time)
+        _add_snapshot(conn, "acc_c", 1500.0, stale_time)
+
+    view = StatusQueries(ops_db).get_pnl(
+        scope=QueryScope(account_id=None, trader_ids=None)
+    )
+    # Two fresh accounts, one stale
+    assert view.accounts_fresh == 2
+    assert view.accounts_stale == 1
+    # Equity aggregated from fresh accounts only: 2000 + 3000 = 5000
+    assert view.equity_usdt == pytest.approx(5000.0)
+    # Stale account excluded from equity aggregate
+    assert view.by_account is not None
+    accs = {r["account_id"] for r in view.by_account}
+    assert "acc_a" in accs
+    assert "acc_b" in accs
+    assert "acc_c" in accs
 
 
 def test_get_pnl_account_scope_includes_unrealized_pnl(ops_db):

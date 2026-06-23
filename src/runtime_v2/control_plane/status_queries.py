@@ -993,32 +993,28 @@ class StatusQueries:
         return ReviewsView(updated_at=_now_iso(), items=items)
 
     def get_pnl(self, scope: QueryScope | None = None) -> PnlView:
-        is_global_scope = (scope is None) or (scope is not None and scope.account_id is None)
+        # Normalise: legacy scope=None is treated identically to explicit global scope.
+        # This eliminates the hybrid path that ran the CTE for freshness counts but
+        # used a staleness-blind LIMIT 1 SELECT for equity.
+        is_global_scope = (scope is None) or (scope.account_id is None)
         conn = self._connect()
         try:
-            if scope is not None:
-                if scope.account_id is not None:
-                    snapshot = conn.execute(
-                        "SELECT account_id, equity_usdt, available_balance_usdt, "
-                        "total_open_risk_usdt, total_margin_used_usdt, source, captured_at, "
-                        "account_unrealized_pnl_usdt "
-                        "FROM ops_account_snapshots "
-                        "WHERE account_id=? AND snapshot_status='OK' "
-                        "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
-                        "LIMIT 1",
-                        (scope.account_id,),
-                    ).fetchone()
-                else:
-                    snapshot = None  # globale: handled via CTE below
-            else:
+            if scope is not None and scope.account_id is not None:
+                # Single-account scope: fetch the latest OK snapshot for this account
                 snapshot = conn.execute(
                     "SELECT account_id, equity_usdt, available_balance_usdt, "
                     "total_open_risk_usdt, total_margin_used_usdt, source, captured_at, "
                     "account_unrealized_pnl_usdt "
                     "FROM ops_account_snapshots "
+                    "WHERE account_id=? AND snapshot_status='OK' "
                     "ORDER BY datetime(captured_at) DESC, snapshot_id DESC "
-                    "LIMIT 1"
+                    "LIMIT 1",
+                    (scope.account_id,),
                 ).fetchone()
+            else:
+                # Global scope (scope is None OR scope.account_id is None): CTE handles equity
+                snapshot = None
+
             account_id = snapshot[0] if snapshot else None
 
             if scope is not None:
@@ -1043,33 +1039,22 @@ class StatusQueries:
                     scope_params,
                 ).fetchone()
             else:
-                if account_id is not None:
-                    def _count(state: str) -> int:
-                        return conn.execute(
-                            "SELECT COUNT(*) FROM ops_trade_chains "
-                            "WHERE lifecycle_state=? AND account_id=?",
-                            (state, account_id),
-                        ).fetchone()[0]
-                else:
-                    def _count(state: str) -> int:
-                        return conn.execute(
-                            "SELECT COUNT(*) FROM ops_trade_chains WHERE lifecycle_state=?",
-                            (state,),
-                        ).fetchone()[0]
+                # Legacy scope=None: global counts and PnL (all accounts)
+                def _count(state: str) -> int:
+                    return conn.execute(
+                        "SELECT COUNT(*) FROM ops_trade_chains WHERE lifecycle_state=?",
+                        (state,),
+                    ).fetchone()[0]
 
-                if account_id is not None:
-                    closed_row = conn.execute(
-                        "SELECT "
-                        "SUM(cumulative_gross_pnl), "
-                        "SUM(cumulative_fees + cumulative_funding), "
-                        "SUM(cumulative_fees), "
-                        "SUM(cumulative_funding) "
-                        "FROM ops_trade_chains "
-                        "WHERE lifecycle_state='CLOSED' AND account_id=?",
-                        (account_id,),
-                    ).fetchone()
-                else:
-                    closed_row = None
+                closed_row = conn.execute(
+                    "SELECT "
+                    "SUM(cumulative_gross_pnl), "
+                    "SUM(cumulative_fees + cumulative_funding), "
+                    "SUM(cumulative_fees), "
+                    "SUM(cumulative_funding) "
+                    "FROM ops_trade_chains "
+                    "WHERE lifecycle_state='CLOSED'"
+                ).fetchone()
 
             open_count = _count("OPEN")
             partial_count = _count("PARTIALLY_CLOSED")
@@ -1199,11 +1184,9 @@ class StatusQueries:
             snap_unrealized_pnl = snapshot[7] if snapshot else None
 
         # Resolve equity fields:
-        # - scope is None (legacy): equity from latest single snapshot (backward compat)
-        # - scope.account_id is None (explicit global): equity from CTE fresh-only aggregate
+        # - global scope (scope is None OR scope.account_id is None): equity from CTE fresh-only aggregate
         # - single account scope: equity from single account snapshot
-        explicit_global_scope = (scope is not None and scope.account_id is None)
-        if explicit_global_scope:
+        if is_global_scope:
             _equity_usdt = global_equity_usdt
             _available_balance_usdt = global_available_balance_usdt
             _total_margin_used_usdt = global_total_margin_used_usdt
@@ -1212,16 +1195,6 @@ class StatusQueries:
             _captured_at = None
             _source = None
             _total_open_risk_usdt = None
-        elif scope is None:
-            # Legacy: use single latest snapshot regardless of staleness
-            _equity_usdt = snapshot[1] if snapshot else None
-            _available_balance_usdt = snapshot[2] if snapshot else None
-            _total_open_risk_usdt = snapshot[3] if snapshot else None
-            _total_margin_used_usdt = snapshot[4] if snapshot else None
-            _account_id = snapshot[0] if snapshot else None
-            _captured_at = snapshot[6] if snapshot else None
-            _source = snapshot[5] if snapshot else None
-            _account_unrealized_pnl_usdt = snapshot[7] if snapshot else None
         else:
             _equity_usdt = snapshot[1] if snapshot else None
             _available_balance_usdt = snapshot[2] if snapshot else None
