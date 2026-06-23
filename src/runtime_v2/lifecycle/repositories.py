@@ -401,6 +401,29 @@ class ControlStateRepository:
         return max(applicable, key=lambda m: _CONTROL_MODE_SEVERITY.get(m, 0))  # type: ignore[return-value]
 
 
+_SNAPSHOT_COLS = (
+    "account_id, equity_usdt, available_balance_usdt, "
+    "total_open_risk_usdt, total_margin_used_usdt, "
+    "account_unrealized_pnl_usdt, source, captured_at, "
+    "snapshot_status, error_code"
+)
+
+
+def _row_to_snapshot_dict(row) -> dict:
+    return {
+        "account_id": row[0],
+        "equity_usdt": row[1],
+        "available_balance_usdt": row[2],
+        "total_open_risk_usdt": row[3],
+        "total_margin_used_usdt": row[4],
+        "account_unrealized_pnl_usdt": row[5],
+        "source": row[6],
+        "captured_at": row[7],
+        "snapshot_status": row[8],
+        "error_code": row[9],
+    }
+
+
 class SnapshotRepository:
     def __init__(self, db_path: str) -> None:
         self._db_path = db_path
@@ -430,6 +453,40 @@ class SnapshotRepository:
             conn.commit()
         finally:
             conn.close()
+
+    def get_latest_account_snapshot(self, account_id: str) -> dict | None:
+        conn = sqlite3.connect(self._db_path)
+        try:
+            row = conn.execute(
+                f"SELECT {_SNAPSHOT_COLS} FROM ops_account_snapshots "
+                "WHERE account_id=? AND snapshot_status='OK' "
+                "ORDER BY datetime(captured_at) DESC, snapshot_id DESC LIMIT 1",
+                (account_id,),
+            ).fetchone()
+        finally:
+            conn.close()
+        return _row_to_snapshot_dict(row) if row else None
+
+    def get_latest_account_snapshots_all(self) -> list[dict]:
+        conn = sqlite3.connect(self._db_path)
+        try:
+            rows = conn.execute(
+                f"""
+                WITH ranked AS (
+                    SELECT {_SNAPSHOT_COLS},
+                        ROW_NUMBER() OVER (
+                            PARTITION BY account_id
+                            ORDER BY datetime(captured_at) DESC, snapshot_id DESC
+                        ) AS rn
+                    FROM ops_account_snapshots
+                    WHERE snapshot_status = 'OK'
+                )
+                SELECT {_SNAPSHOT_COLS} FROM ranked WHERE rn = 1 ORDER BY account_id
+                """
+            ).fetchall()
+        finally:
+            conn.close()
+        return [_row_to_snapshot_dict(r) for r in rows]
 
     def save_market(self, snap, account_id: str) -> None:
         from src.runtime_v2.lifecycle.ports import SymbolMarketSnapshot
