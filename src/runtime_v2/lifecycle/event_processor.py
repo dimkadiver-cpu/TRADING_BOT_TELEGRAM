@@ -539,7 +539,7 @@ class LifecycleEventProcessor:
         if fill_qty == 0.0 and ep.is_final is not None:
             is_final = ep.is_final
         else:
-            is_final = new_open <= 0.0
+            is_final = new_open < 1e-9
         new_state: LifecycleState = "CLOSED" if is_final else "PARTIALLY_CLOSED"
         new_closed = chain.closed_position_qty + fill_qty
         events: list[LifecycleEvent] = []
@@ -720,7 +720,7 @@ class LifecycleEventProcessor:
             current_stop_price=None,
             lifecycle_events=events,
             execution_commands=commands,
-            new_open_position_qty=new_open,
+            new_open_position_qty=0.0 if is_final else new_open,
             new_closed_position_qty=new_closed,
             new_plan_state_json=new_plan_state_json,
         )

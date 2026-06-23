@@ -67,9 +67,17 @@ def load_pending_entry_client_order_ids(
           AND command_type IN ('PLACE_ENTRY', 'PLACE_ENTRY_WITH_ATTACHED_TPSL')
           AND status IN ('PENDING', 'SENT', 'ACK')
           AND client_order_id IS NOT NULL
+          AND client_order_id NOT IN (
+              SELECT json_extract(payload_json, '$.entry_client_order_id')
+              FROM ops_execution_commands
+              WHERE trade_chain_id = ?
+                AND command_type = 'CANCEL_PENDING_ENTRY'
+                AND status IN ('PENDING', 'SENT', 'ACK', 'DONE')
+                AND json_extract(payload_json, '$.entry_client_order_id') IS NOT NULL
+          )
         ORDER BY command_id
         """,
-        (trade_chain_id,),
+        (trade_chain_id, trade_chain_id),
     ).fetchall()
     return [str(row[0]) for row in rows if row and row[0]]
 

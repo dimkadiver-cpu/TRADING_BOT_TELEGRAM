@@ -538,6 +538,47 @@ def test_tp_filled_final_closes_state():
     assert result.new_lifecycle_state == "CLOSED"
 
 
+def test_tp_filled_closes_chain_when_open_qty_is_floating_point_residue():
+    """Riproduce chain 9: sottrazioni incrementali 3.2 - 0.4×8 accumulano errore verso l'alto.
+    Dopo 7 TP il open_qty è 0.4000...0006 (non 0.4 esatto), l'8° TP lascia residuo 5e-16 > 0.
+    Il bot deve riconoscere is_final=True e chiudere la chain."""
+    from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
+    from src.runtime_v2.lifecycle.models import TradeChain, ExchangeEvent
+    proc = LifecycleEventProcessor()
+    # Simula l'accumulo reale: sette sottrazioni incrementali da 3.2 lasciano
+    # open_qty = 0.4000000000000006 (non 0.4 esatto)
+    open_qty_after_7_tps = 3.2
+    for _ in range(7):
+        open_qty_after_7_tps = max(open_qty_after_7_tps - 0.4, 0.0)
+    # = 0.4000000000000006 su CPython — l'8° TP da 0.4 lascia residuo positivo ~5e-16
+    assert open_qty_after_7_tps > 0.4, "precondizione: accumulo FP verso l'alto"
+
+    chain = TradeChain(
+        trade_chain_id=9, source_enrichment_id=1, canonical_message_id=2,
+        raw_message_id=3, trader_id="t1", account_id="acc1",
+        symbol="INTCUSDT", side="SHORT", lifecycle_state="PARTIALLY_CLOSED",
+        entry_mode="LADDER",
+        management_plan_json="{}",
+        entry_avg_price=30.0,
+        open_position_qty=open_qty_after_7_tps,
+        filled_entry_qty=3.2,
+        closed_position_qty=7 * 0.4,
+    )
+    ev = ExchangeEvent(
+        exchange_event_id=99,
+        trade_chain_id=9,
+        event_type="TP_FILLED",
+        payload_json='{"fill_price": 31.0, "filled_qty": 0.4, "tp_level": 8}',
+        idempotency_key="tp_filled:9:99",
+    )
+    result = proc.process(ev, chain, [])
+    assert result.new_lifecycle_state == "CLOSED", (
+        f"expected CLOSED got {result.new_lifecycle_state!r} "
+        f"(open_qty_after_7={open_qty_after_7_tps!r})"
+    )
+    assert result.new_open_position_qty == 0.0
+
+
 def test_sl_filled_closes_chain_and_zeroes_open_qty():
     from src.runtime_v2.lifecycle.event_processor import LifecycleEventProcessor
     from src.runtime_v2.lifecycle.models import ExchangeEvent

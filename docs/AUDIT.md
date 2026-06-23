@@ -2,6 +2,41 @@
 
 ---
 
+## 2026-06-23 — Anomalie DB trader_devos_crypto: 3 bug identificati, 2 fixati
+
+### Step completati
+
+**1. Fix double-cancel `CANCEL_PENDING_ENTRY` (invalid_order)** ✅  
+Race condition tra Path A (`entry_gate`, `cancel_pending_for_close:chain_id:cmid`) e Path B (`event_processor`, `cancel_on_close:chain_id`): idempotency key diversa → DB non bloccava il duplicato.  
+Fix: `load_pending_entry_client_order_ids` in `cancel_expander.py` esclude via NOT IN subquery le entry già puntate da un CANCEL_PENDING_ENTRY in stato PENDING/SENT/ACK/DONE.  
+Test: 5 nuovi test aggiunti, 12/12 pass.
+
+**2. Fix floating point residuo chain 9 INTCUSDT SHORT** ✅  
+`3.2 - 8*0.4` via sottrazioni incrementali `max(x-0.4, 0.0)` lascia residuo `5.55e-16 > 0` → `is_final` mai True → catena rimane in PARTIALLY_CLOSED.  
+Fix: `event_processor.py` line ~542: `is_final = new_open < 1e-9` (epsilon check); `new_open_position_qty=0.0 if is_final else new_open`.  
+Test: `test_tp_filled_closes_chain_when_open_qty_is_floating_point_residue` aggiunto, 75/75 pass.
+
+**3. Root cause chain 38 BTCUSDT REBUILD_PARTIAL_TPS FAILED** (identificato, non fixato)  
+- Fill parziale 0.002 BTC ÷ 8 TPs = 0.00025 BTC < minimo Bybit 0.001 BTC → `10001 "number of contracts exceeds minimum limit allowed"`
+- `PostFillProtectionRebuilder` non valida `tp_qty >= min_order_size` prima di emettere il comando
+- `min_order_size = 1e-06` in DB per BTCUSDT (sbagliato): Bybit demo restituisce `basePrecision = 0.000001` come `qtyStep` invece del vero minimo `0.001`; il bot non intercetta l'anomalia a priori
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/lifecycle/cancel_expander.py` | Modificato | NOT IN subquery in `load_pending_entry_client_order_ids` |
+| `tests/runtime_v2/lifecycle/test_cancel_expander.py` | Modificato | +helper `_insert_cancel_entry_cmd`, +5 test |
+| `src/runtime_v2/lifecycle/event_processor.py` | Modificato | `is_final = new_open < 1e-9`, force `new_open=0.0` quando final |
+| `tests/runtime_v2/lifecycle/test_event_processor.py` | Modificato | +test floating point residuo TP fill |
+
+### Rischi aperti
+
+- `PostFillProtectionRebuilder` non verifica `min_order_size` pre-emissione → REBUILD_PARTIAL_TPS fallisce silenziosamente su simboli con fill piccoli rispetto al minimo exchange
+- Bybit demo restituisce `qtyStep = basePrecision = 1e-06` per BTCUSDT → `min_order_size` in DB non riflette il vero minimo (0.001 BTC) → ogni controllo basato su quel valore è inutile per BTCUSDT demo
+
+---
+
 ## 2026-06-22 — Fix comandi `/trade N`, `/cancel N`, `/close N` da topic clean_log
 
 ### Step completato
