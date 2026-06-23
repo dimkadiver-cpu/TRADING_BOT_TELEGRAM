@@ -286,12 +286,40 @@ _PNL_BLOCKS: list = [
             SeparatorBlock(),
         ],
     ),
-    # Global: show accounts in scope summary
+    # Global: show accounts in scope summary with freshness counts and STALE warning
     ConditionalBlock(
         condition=lambda p: bool(p.get("is_global")),
         blocks=[
             DerivedBlock(text_fn=lambda p: f"Accounts in scope: {p.get('accounts_in_scope', 0)}"),
             StaticBlock("Snapshot mode: per-account latest"),
+            ConditionalBlock(
+                condition=lambda p: (
+                    p.get("accounts_fresh") is not None or p.get("accounts_stale") is not None
+                ),
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: (
+                        f"Snapshots: {p.get('accounts_fresh', 0)} fresh · {p.get('accounts_stale', 0)} stale"
+                    )),
+                ],
+            ),
+            ConditionalBlock(
+                condition=lambda p: p.get("account_unrealized_pnl_usdt") is not None,
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: (
+                        f"uPnL aggregate: +{p['account_unrealized_pnl_usdt']:.2f} USDT"
+                        if p["account_unrealized_pnl_usdt"] >= 0
+                        else f"uPnL aggregate: {p['account_unrealized_pnl_usdt']:.2f} USDT"
+                    )),
+                ],
+            ),
+            ConditionalBlock(
+                condition=lambda p: bool(p.get("accounts_stale")),
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: (
+                        f"⚠️ STALE: {p['accounts_stale']} account(s) with stale data"
+                    )),
+                ],
+            ),
             SeparatorBlock(),
         ],
     ),

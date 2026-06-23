@@ -489,26 +489,6 @@ class TestVistaStats:
 # Tests: snapshot freshness — Task 10
 # ---------------------------------------------------------------------------
 
-def _make_pnl_view_with_snapshot(captured_at, stale=False, age=18.0):
-    from src.runtime_v2.control_plane.status_queries import PnlView
-    return PnlView(
-        updated_at="2026-06-23T14:32:23+00:00",
-        account_id="demo_1",
-        captured_at=captured_at,
-        source="ccxt_bybit:demo",
-        equity_usdt=7220.50,
-        available_balance_usdt=5180.20,
-        total_open_risk_usdt=145.0,
-        total_margin_used_usdt=704.80,
-        account_unrealized_pnl_usdt=62.40,
-        open_count=4,
-        partial_count=0,
-        waiting_entry_count=2,
-        snapshot_age_seconds=age,
-        snapshot_stale=stale,
-    )
-
-
 def test_pnl_account_lines_shows_snapshot_metadata():
     from src.runtime_v2.control_plane.formatters.templates.dashboard import _pnl_account_lines
     p = {
@@ -562,7 +542,6 @@ def test_pnl_build_payload_passes_snapshot_fields(ops_db):
     from src.runtime_v2.control_plane.formatters.dashboard import _build_pnl_payload
     from src.runtime_v2.control_plane.status_queries import StatusQueries
     from src.runtime_v2.control_plane.scope_resolver import QueryScope
-    from unittest.mock import patch
     from datetime import timedelta
 
     fresh = (datetime.now(timezone.utc) - timedelta(seconds=18)).isoformat()
@@ -584,6 +563,30 @@ def test_pnl_build_payload_passes_snapshot_fields(ops_db):
     assert payload["snapshot_stale"] is False
     assert payload["captured_at"] is not None
     assert payload["source"] == "ccxt_bybit:demo"
+
+
+def test_pnl_global_scope_shows_stale_warning():
+    from src.runtime_v2.control_plane.formatters.templates.dashboard import _PNL_BLOCKS
+    from src.runtime_v2.control_plane.formatters._blocks import render_template
+
+    p = {
+        "is_global": True,
+        "accounts_in_scope": 3,
+        "accounts_fresh": 2,
+        "accounts_stale": 1,
+        "account_unrealized_pnl_usdt": 150.0,
+        "captured_at": None,
+        "total": 0,
+        "page_display": "1/1",
+        "updated_at": "14:32:05",
+        "open_count": 0,
+        "waiting_entry_count": 0,
+    }
+    result = render_template(_PNL_BLOCKS, p)
+    assert "Snapshots:" in result
+    assert "2 fresh" in result
+    assert "1 stale" in result
+    assert "STALE" in result
 
 
 # ---------------------------------------------------------------------------
