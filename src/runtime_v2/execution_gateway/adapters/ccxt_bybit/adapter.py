@@ -501,43 +501,80 @@ class CcxtBybitAdapter(ExecutionAdapter):
         total = balance.get("total") if isinstance(balance.get("total"), dict) else {}
         free = balance.get("free") if isinstance(balance.get("free"), dict) else {}
         used = balance.get("used") if isinstance(balance.get("used"), dict) else {}
-        usdt_wallet = balance.get("USDT") if isinstance(balance.get("USDT"), dict) else {}
         info = balance.get("info") if isinstance(balance.get("info"), dict) else {}
 
-        account_row = None
+        account_row: dict = {}
+        coin_row: dict = {}
         for row in (((info.get("result") or {}).get("list")) or []):
-            if not isinstance(row, dict):
-                continue
-            coins = row.get("coin") or []
-            if not isinstance(coins, list):
-                continue
-            for coin_row in coins:
-                if isinstance(coin_row, dict) and coin_row.get("coin") == "USDT":
-                    account_row = coin_row
-                    break
-            if account_row is not None:
+            if isinstance(row, dict):
+                account_row = row
+                for cr in (row.get("coin") or []):
+                    if isinstance(cr, dict) and cr.get("coin") == "USDT":
+                        coin_row = cr
+                        break
                 break
 
+        field_origins: dict[str, str] = {}
+
+        # equity_usdt — prefer totalEquity (account-wide), fallback coin USDT equity
+        equity = _safe_float(account_row.get("totalEquity"))
+        if equity is not None:
+            field_origins["equity_usdt"] = "bybit.totalEquity"
+        else:
+            equity = _safe_float(coin_row.get("equity"))
+            if equity is not None:
+                field_origins["equity_usdt"] = "bybit.coin.USDT.equity"
+            else:
+                v = _safe_float(total.get("USDT"))
+                if v is not None:
+                    equity = v
+                    field_origins["equity_usdt"] = "ccxt.total.USDT"
+
+        # available_balance_usdt — prefer totalAvailableBalance, fallback ccxt free
+        available = _safe_float(account_row.get("totalAvailableBalance"))
+        if available is not None:
+            field_origins["available_balance_usdt"] = "bybit.totalAvailableBalance"
+        else:
+            v = _safe_float(free.get("USDT"))
+            if v is not None:
+                available = v
+                field_origins["available_balance_usdt"] = "ccxt.free.USDT"
+
+        # total_margin_used_usdt — prefer totalInitialMargin, fallback sum IM
+        margin = _safe_float(account_row.get("totalInitialMargin"))
+        if margin is not None:
+            field_origins["total_margin_used_usdt"] = "bybit.totalInitialMargin"
+        else:
+            pos_im = _safe_float(account_row.get("totalPositionIM"))
+            ord_im = _safe_float(account_row.get("totalOrderIM"))
+            if pos_im is not None and ord_im is not None:
+                margin = pos_im + ord_im
+                field_origins["total_margin_used_usdt"] = "bybit.totalPositionIM+totalOrderIM"
+            elif pos_im is not None:
+                margin = pos_im
+                field_origins["total_margin_used_usdt"] = "bybit.totalPositionIM"
+            else:
+                v = _safe_float(used.get("USDT"))
+                if v is not None:
+                    margin = v
+                    field_origins["total_margin_used_usdt"] = "ccxt.used.USDT"
+
+        # account_unrealized_pnl_usdt — totalPerpUPL only
+        upl = _safe_float(account_row.get("totalPerpUPL"))
+        if upl is not None:
+            field_origins["account_unrealized_pnl_usdt"] = "bybit.totalPerpUPL"
+
+        payload = dict(balance)
+        payload["field_origins"] = field_origins
+
         return RawAccountSnapshot(
-            equity_usdt=(
-                _safe_float(usdt_wallet.get("total"))
-                or _safe_float(total.get("USDT"))
-                or _safe_float(account_row.get("equity") if account_row else None)
-            ),
-            available_balance_usdt=(
-                _safe_float(usdt_wallet.get("free"))
-                or _safe_float(free.get("USDT"))
-                or _safe_float(account_row.get("availableToWithdraw") if account_row else None)
-                or _safe_float(account_row.get("walletBalance") if account_row else None)
-            ),
+            equity_usdt=equity,
+            available_balance_usdt=available,
             total_open_risk_usdt=None,
-            total_margin_used_usdt=(
-                _safe_float(usdt_wallet.get("used"))
-                or _safe_float(used.get("USDT"))
-                or _safe_float(account_row.get("totalPositionIM") if account_row else None)
-                or _safe_float(account_row.get("totalOrderIM") if account_row else None)
-            ),
-            payload=balance,
+            total_margin_used_usdt=margin,
+            account_unrealized_pnl_usdt=upl,
+            field_origins=field_origins,
+            payload=payload,
             source=f"ccxt_bybit:{self._mode}",
         )
 
