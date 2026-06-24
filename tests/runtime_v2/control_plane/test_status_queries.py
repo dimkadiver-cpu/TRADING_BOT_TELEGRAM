@@ -1114,3 +1114,24 @@ def test_get_pnl_by_trader_risk_none_when_no_risk_json(ops_db):
     assert view.by_trader is not None
     for t in view.by_trader:
         assert t["risk_usdt"] is None
+
+
+# ---------------------------------------------------------------------------
+# Task 3: by_account Avail/Margin
+# ---------------------------------------------------------------------------
+
+def test_get_pnl_by_account_includes_avail_and_margin(ops_db):
+    from datetime import timedelta
+    fresh_time = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        # _add_snapshot: available = equity*0.9, margin = 10.0 (hardcoded)
+        _add_snapshot(conn, "acc_a", 1000.0, fresh_time)
+        _add_chain_pnl(conn, 1, "OPEN", account_id="acc_a")
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl()
+    assert view.by_account is not None
+    acc_a = next(r for r in view.by_account if r["account_id"] == "acc_a")
+    assert acc_a["available_usdt"] == pytest.approx(900.0)   # equity * 0.9
+    assert acc_a["margin_usdt"] == pytest.approx(10.0)

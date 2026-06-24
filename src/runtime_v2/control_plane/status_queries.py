@@ -1429,7 +1429,8 @@ class StatusQueries:
                         "account_id": acc_id,
                         "net_pnl": net_pnl_acc,
                         "open_count": open_c,
-                        "equity_usdt": snap_r[1] if snap_r else None,
+                        "available_usdt": snap_r[2] if snap_r else None,
+                        "margin_usdt": snap_r[4] if snap_r else None,
                         "age_seconds": age,
                         "stale": is_stale_acc,
                     })
