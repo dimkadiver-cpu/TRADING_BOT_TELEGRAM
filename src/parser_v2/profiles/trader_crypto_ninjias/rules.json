@@ -9,6 +9,7 @@
   "extraction_markers": {},
   "primary_intent_precedence": [
     "MOVE_STOP_TO_BE",
+    "CLOSE_PARTIAL",
     "CANCEL_PENDING",
     "CLOSE_FULL",
     "EXIT_BE",

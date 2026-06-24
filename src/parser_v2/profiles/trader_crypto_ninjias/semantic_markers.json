@@ -33,6 +33,16 @@
       "strong": ["move sl to entry"],
       "weak": []
     },
+    "CLOSE_PARTIAL": {
+      "strong_patterns": [
+        "(?i)\\bclose\\s+\\d+(?:[.,]\\d+)?\\s*%\\s*(?:profit|vol|volume|order)\\b",
+        "(?i)\\bclose\\s+\\d+(?:[.,]\\d+)?\\s*%\\s+and\\s+move\\s+sl\\s+to\\s+entry\\b",
+        "(?i)\\bclose\\s+\\d+(?:[.,]\\d+)?\\s*%\\s+then\\s+move\\s+sl\\s+to\\s+entry\\b",
+        "(?i)\\bclose\\s+\\d+(?:[.,]\\d+)?\\s*%\\b",
+        "(?i)\\bclose\\s+\\d+(?:[.,]\\d+)?\\s*-\\s*\\d+(?:[.,]\\d+)?\\s*%\\s*profit\\b"
+      ],
+      "weak": []
+    },
     "CLOSE_FULL": {
       "strong": ["close at entry", "close order at entry"],
       "weak": []
@@ -96,6 +106,10 @@
   "target_hint_markers": {
     "symbol": {
       "strong": ["usdt"],
+      "weak": []
+    },
+    "ALL_POSITIONS": {
+      "strong": ["all order", "all orders"],
       "weak": []
     }
   },

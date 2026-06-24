@@ -199,6 +199,50 @@ def test_cancel_entry_limit_is_cancel_pending_update():
     assert result.target_action_groups[0].actions[0].cancel_pending.cancel_scope_hint == "ALL_PENDING"
 
 
+def test_close_partial_and_move_stop_can_coexist_in_single_update():
+    result = _parse("ENA close 30% profit and move sl to entry", reply_to=5604)
+    assert result.primary_class == "UPDATE"
+    assert result.primary_intent == "MOVE_STOP_TO_BE"
+    assert len(result.target_action_groups) == 1
+    actions = result.target_action_groups[0].actions
+    action_types = {action.action_type for action in actions}
+    assert action_types == {"CLOSE", "SET_STOP"}
+    close_action = next(action for action in actions if action.action_type == "CLOSE")
+    assert close_action.close is not None
+    assert close_action.close.close_scope == "PARTIAL"
+    assert close_action.close.fraction == pytest.approx(0.3)
+
+
+def test_close_partial_supports_volume_wording():
+    result = _parse("PENGUU close 20% volume then move sl to entry", reply_to=775)
+    assert result.primary_class == "UPDATE"
+    assert len(result.target_action_groups) == 1
+    close_action = next(
+        action
+        for action in result.target_action_groups[0].actions
+        if action.action_type == "CLOSE"
+    )
+    assert close_action.close is not None
+    assert close_action.close.close_scope == "PARTIAL"
+    assert close_action.close.fraction == pytest.approx(0.2)
+
+
+def test_all_orders_promotes_global_scope_but_everyone_does_not():
+    result = _parse("Everyone move sl to entry and close 30% profit all order")
+    assert result.primary_class == "UPDATE"
+    assert len(result.target_action_groups) == 1
+    assert result.target_action_groups[0].targeting.scope_hint == "ALL_POSITIONS"
+    assert result.target_action_groups[0].targeting.target_source == "GLOBAL_SCOPE"
+
+
+def test_everyone_without_all_orders_does_not_become_global_scope():
+    result = _parse("everyone can close 50% vol then move sl to entry")
+    assert result.primary_class == "UPDATE"
+    assert len(result.target_action_groups) == 1
+    assert result.target_action_groups[0].targeting.scope_hint == "UNKNOWN"
+    assert result.target_action_groups[0].targeting.target_source == "UNKNOWN"
+
+
 def test_hit_be_is_report():
     result = _parse("WLD hit BE", reply_to=9350)
     assert result.primary_class == "REPORT"

@@ -5,6 +5,7 @@ import re
 from src.parser_v2.contracts.entities import (
     CancelPendingEntities,
     CloseFullEntities,
+    ClosePartialEntities,
     ExitBeEntities,
     InfoOnlyEntities,
     MoveStopToBEEntities,
@@ -19,6 +20,7 @@ from src.parser_v2.contracts.parsed_message import ParsedIntent
 
 _MANUAL_TP_LEVEL_RE = re.compile(r"\bhit\s+tp(?P<level>\d+)\b", re.IGNORECASE)
 _AUTO_TP_LEVEL_RE = re.compile(r"take-profit\s+target\s+(?P<level>\d+)", re.IGNORECASE)
+_PERCENT_RE = re.compile(r"(?P<pct>\d+(?:[.,]\d+)?)\s*%")
 
 
 class IntentEntityExtractor:
@@ -85,6 +87,15 @@ def _close_full_entities(ev: MarkerEvidence, text: NormalizedText) -> CloseFullE
     return CloseFullEntities(close_price=None)
 
 
+def _close_partial_entities(ev: MarkerEvidence, text: NormalizedText) -> ClosePartialEntities:
+    fraction = None
+    match = _PERCENT_RE.search(ev.marker)
+    if match is not None:
+        raw_value = match.group("pct").replace(",", ".")
+        fraction = float(raw_value) / 100.0
+    return ClosePartialEntities(fraction=fraction, close_price=None)
+
+
 def _move_stop_to_be_entities(ev: MarkerEvidence, text: NormalizedText) -> MoveStopToBEEntities:
     return MoveStopToBEEntities()
 
@@ -106,6 +117,7 @@ def _info_only_entities(ev: MarkerEvidence, text: NormalizedText) -> InfoOnlyEnt
 
 _ENTITY_BUILDERS = {
     "MOVE_STOP_TO_BE": _move_stop_to_be_entities,
+    "CLOSE_PARTIAL": _close_partial_entities,
     "CANCEL_PENDING": _cancel_pending_entities,
     "TP_HIT": _tp_hit_entities,
     "SL_HIT": _sl_hit_entities,

@@ -9,7 +9,7 @@ Questo profilo e' costruito sui pattern realmente osservati nel DB e oggi copre 
 - nuovi segnali `LONG` / `SHORT`
 - varianti `RISK ORDER`, `RISK ORDER - SMALL VOL`, `LONG MARKET`, `LONG LIMIT`, `LONG SWING`
 - report di esito (`TP_HIT`, `SL_HIT`, `EXIT_BE`, `REPORT_RESULT`)
-- alcuni update operativi (`MOVE_STOP_TO_BE`, `CLOSE_FULL`, `CANCEL_PENDING`)
+- alcuni update operativi (`MOVE_STOP_TO_BE`, `CLOSE_PARTIAL`, `CLOSE_FULL`, `CANCEL_PENDING`)
 - messaggi di hold o promo come `INFO`
 
 ## Strutture Di Segnale Estratte
@@ -270,7 +270,26 @@ Output atteso:
 - `primary_intent=CLOSE_FULL`
 - action canonica `CLOSE/FULL`
 
-### 3. Cancel entry limit
+### 3. Close partial con percentuale esplicita
+
+Esempi:
+
+```text
+ENA close 30% profit and move sl to entry
+PENGUU close 20% volume then move sl to entry
+Everyone move sl to entry and close 30% profit all order
+```
+
+Output atteso:
+
+- `primary_class=UPDATE`
+- intent `CLOSE_PARTIAL` con `fraction` estratta dalla percentuale
+- action canonica `CLOSE/PARTIAL`
+- puo' convivere nello stesso messaggio con `MOVE_STOP_TO_BE`
+- `everyone` non viene trattato come scope globale
+- solo `all order` / `all orders` promuove `scope_hint=ALL_POSITIONS`
+
+### 4. Cancel entry limit
 
 Esempio:
 

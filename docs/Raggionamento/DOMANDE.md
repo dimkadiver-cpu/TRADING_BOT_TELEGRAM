@@ -7,7 +7,7 @@ DA FARE:
 
 3. Sistemare events in /trade #, logica 
 
-
+4. Dashbord: vivedere metriche(), closed, pnl non corrisponde a quello Nel è gross
 
 4. Rivedere i messaggi di Clean_log, per erroti/ridondanze/ordine della comparsa/ template dei separatore
     - mancanza di "fee rate" sporadico:
