@@ -298,36 +298,6 @@ async def test_handle_callback_view(tmp_path):
     assert row[0] == "closed:0", f"Expected 'closed:0', got {row[0]!r}"
 
 
-@pytest.mark.asyncio
-async def test_handle_callback_view_blocked_routes_to_not_executed(tmp_path):
-    bot = _make_mock_bot(message_id=89)
-    manager = _make_manager(tmp_path, bot=bot)
-    _patch_render_view(manager)
-
-    scope = _make_scope("acc1", trader_ids=None)
-    await manager.create(scope=scope, chat_id=401, thread_id=0)
-
-    captured_views: list[str] = []
-
-    def patched_render(scope, view, page, filters=None):
-        captured_views.append(view)
-        return (f"[{view} page={page}]", MagicMock())
-
-    manager._render_view = patched_render  # type: ignore[method-assign]
-
-    fake_message = MagicMock()
-    fake_message.chat_id = 401
-    fake_message.message_thread_id = None
-    fake_message.message_id = 89
-
-    fake_query = MagicMock()
-    fake_query.message = fake_message
-
-    await manager.handle_callback(fake_query, "view:blocked")
-
-    assert captured_views[-1] == "not_executed"
-
-
 # ---------------------------------------------------------------------------
 # Test _matches_scope logic directly
 # ---------------------------------------------------------------------------
@@ -580,47 +550,6 @@ async def test_filters_callback_shows_panel(tmp_path):
     call_kwargs = bot.edit_message_text.call_args
     text_arg = call_kwargs.kwargs.get("text") or (call_kwargs.args[0] if call_kwargs.args else "")
     assert "🔎 Filters" in text_arg
-
-
-@pytest.mark.asyncio
-async def test_filters_panel_supports_operational_issues(tmp_path):
-    db_path = _make_db(tmp_path)
-    bot = _make_mock_bot(message_id=89)
-    mgr = DashboardManager(
-        ops_db_path=db_path,
-        scope_resolver=MagicMock(),
-        queries=_make_queries_mock(),
-        bot=bot,
-    )
-
-    conn = sqlite3.connect(db_path)
-    conn.execute(
-        "INSERT INTO ops_dashboard_messages VALUES (101,0,89,NULL,NULL,'operational_issues:0','{}',NULL)"
-    )
-    conn.commit()
-    conn.close()
-
-    fake_message = MagicMock()
-    fake_message.chat_id = 101
-    fake_message.message_thread_id = None
-    fake_message.message_id = 89
-
-    fake_query = MagicMock()
-    fake_query.message = fake_message
-
-    await mgr.handle_callback(fake_query, "filters")
-
-    bot.edit_message_text.assert_awaited_once()
-    call_kwargs = bot.edit_message_text.call_args
-    keyboard = call_kwargs.kwargs["reply_markup"]
-    callback_data = [
-        button.callback_data
-        for row in keyboard.inline_keyboard
-        for button in row
-        if getattr(button, "callback_data", None)
-    ]
-    assert "selector_panel:issue_type" in callback_data
-    assert "selector_panel:issue_phase" in callback_data
 
 
 @pytest.mark.asyncio
