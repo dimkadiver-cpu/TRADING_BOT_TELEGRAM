@@ -17,6 +17,12 @@ from src.parser_v2.core.symbol_normalizer import normalize_symbol
 
 _T = TypeVar("_T")
 
+# Cyrillic lookalike letters → Latin equivalents (uppercase keys, applied after .upper()).
+# Mirrors the same map in trader_a/signal_extractor.py.
+_CYRILLIC_TO_LATIN = str.maketrans({
+    "С": "C", "А": "A", "Е": "E", "В": "B", "О": "O",
+    "Р": "P", "Х": "X", "К": "K", "М": "M", "Т": "T", "Н": "H",
+})
 
 TELEGRAM_LINK_RE = re.compile(
     r"\b(?:https?://)?t\.me/(?:c/\d+|[a-zA-Z0-9_]+)/\d+\b",
@@ -185,12 +191,16 @@ def _extract_symbols(text: str, markers: SemanticMarkers) -> Iterable[str]:
     marker_values = [m.lower() for m in _marker_values(symbol_markers) if m]
     if not marker_values:
         return []
+    # Transliterate Cyrillic lookalikes (e.g. С→C) before tokenizing so that
+    # tickers like #IСPUSDT (where С=U+0421) are not split at the Cyrillic char.
+    scan_text = text.upper().translate(_CYRILLIC_TO_LATIN)
     symbols: list[str] = []
-    for match in TOKEN_RE.finditer(text):
+    for match in TOKEN_RE.finditer(scan_text):
         token = match.group(0).lstrip("#").strip(".,;:!?()[]{}")
         if not token:
             continue
-        if any(marker in token and len(token) > len(marker) for marker in marker_values):
+        token_lower = token.lower()
+        if any(marker in token_lower and len(token_lower) > len(marker) for marker in marker_values):
             normalized = normalize_symbol(token)
             if normalized is not None:
                 symbols.append(normalized)
