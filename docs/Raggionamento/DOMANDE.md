@@ -1,6 +1,7 @@
 DA FARE:
 1. Fare un sistema estendere il sistema di operation rules (vedi cornix) per seganli
 
+é possinle che uando interagisco con il dash board e lui invia messaggi si ha [WARNING] CLEAN_LOG_ROOT_MISSING
 
 2. Rivedere la riconciliazione // sembra che perde odini filati mentre spento
 
@@ -11,7 +12,11 @@ DA FARE:
 4. Rivedere i messaggi di Clean_log, per erroti/ridondanze/ordine della comparsa/ template dei separatore
     - mancanza di "fee rate" sporadico:
                     📊 #5 — ENTRY OPENED non ce, 📊 #22 — ENTRY OPENED ce , motivo? 
-    - in tech_log ⚠️ LISTENER: EDIT SKIPPED aggingere riverimento alla chain creata (Signal acettato) far vedere i messagggi? fre il confonto? gestire differenze???
+    - in tech_log:
+        a. ⚠️ LISTENER: EDIT SKIPPED aggingere riverimento alla chain creata (Signal acettato) far vedere i messagggi? fre il confonto? gestire differenze???
+        b. [WARNING] CLEAN_LOG_ROOT_MISSING
+           ────────────────
+           Evento clean-log inviato senza link: signal root mancante.
 
     - 🛡️ #25 — STOP MOVED non deve comparire, gia presente in ✅ #25 — UPDATE DONE
 

@@ -179,9 +179,24 @@ class EventClassifier:
                 is_actionable=False,
             )
 
+        link = raw.order_link_id
+        normalized_status = (raw.order_status or "").lower()
+        if normalized_status in {"filled", "closed"} and link:
+            entry = self._known.get(link)
+            if entry is not None:
+                chain_id, role, _seq = entry
+                event_type, source, tp_level = self._event_from_role(role, raw)
+                return ClassifiedEvent(
+                    raw=raw,
+                    event_type=event_type,
+                    source=source,
+                    trade_chain_id=chain_id,
+                    tp_level=tp_level,
+                    is_actionable=(event_type != "UNKNOWN"),
+                )
+
         # Non-cancelled order status update (New, PartiallyFilled, Filled, etc.)
         # These are placement/update confirmations — audit only, not actionable.
-        link = raw.order_link_id
         chain_id: int | None = None
         if link:
             entry = self._known.get(link)

@@ -1,0 +1,103 @@
+{
+  "language": "en",
+  "field_markers": {
+    "symbol": {
+      "strong": ["$"],
+      "weak": []
+    },
+    "entry": {
+      "strong": ["entry market", "entry limit"],
+      "weak": ["entry "]
+    },
+    "stop_loss": {
+      "strong": ["sl:"],
+      "weak": [" sl "]
+    },
+    "take_profit": {
+      "strong": ["tp1", "tp2", "tp3", "tp4", "tp5"],
+      "weak": []
+    }
+  },
+  "side_markers": {
+    "LONG": {
+      "strong": ["long -", "long limit -"],
+      "weak_patterns": ["(?i)^\\s*[a-z0-9]{2,20}\\s+long\\b"]
+    },
+    "SHORT": {
+      "strong": ["short -"],
+      "weak_patterns": ["(?i)^\\s*[a-z0-9]{2,20}\\s+short\\b"]
+    }
+  },
+  "intent_markers": {
+    "MOVE_STOP_TO_BE": {
+      "strong": ["move sl to entry"],
+      "weak": []
+    },
+    "CLOSE_FULL": {
+      "strong": ["close at entry", "close order at entry"],
+      "weak": []
+    },
+    "CANCEL_PENDING": {
+      "strong": [
+        "cancel entry limit",
+        "close entry limit",
+        "cancel limit"
+      ],
+      "weak": []
+    },
+    "TP_HIT": {
+      "strong": ["all targets achieved"],
+      "strong_patterns": [
+        "(?i)\\bhit\\s+tp\\d+\\b",
+        "(?i)take-profit\\s+target\\s+\\d+",
+        "(?i)\\bhit\\s+full\\s+tp\\b"
+      ],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong_patterns": [
+        "(?i)\\b(?:hit|sweep)\\s+sl\\b"
+      ],
+      "weak": []
+    },
+    "EXIT_BE": {
+      "strong": ["hit be"],
+      "weak": []
+    },
+    "REPORT_RESULT": {
+      "strong_patterns": [
+        "(?i)^\\s*#?[a-z0-9]{1,20}(?:/usdt)?\\s+hit\\s+(?:tp\\d+|full\\s+tp)\\s*\\+\\s*-?\\d+(?:\\.\\d+)?r\\b",
+        "(?i)^\\s*#?[a-z0-9]{1,20}(?:/usdt)?\\s*\\+\\s*-?\\d+(?:\\.\\d+)?r\\b",
+        "(?i)\\bclose\\s*-?\\d+(?:\\.\\d+)?r\\b"
+      ],
+      "weak": []
+    }
+  },
+  "info_markers": {
+    "STATUS_HOLD": {
+      "strong": ["keep holding", "still hold and wait"],
+      "weak": []
+    },
+    "PROMO": {
+      "strong": [
+        "livestream",
+        "cornix group",
+        "cornix channel",
+        "private group access",
+        "flash sale",
+        "payment bot",
+        "contact @",
+        "coming soon",
+        "terms & policy"
+      ],
+      "weak": []
+    }
+  },
+  "target_hint_markers": {
+    "symbol": {
+      "strong": ["usdt"],
+      "weak": []
+    }
+  },
+  "ignore_markers": []
+}

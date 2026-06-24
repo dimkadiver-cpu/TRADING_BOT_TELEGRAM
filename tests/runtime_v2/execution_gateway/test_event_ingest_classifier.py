@@ -247,6 +247,25 @@ class TestPriority3StructuralInference:
 
 class TestWatchOrdersStream:
 
+    def test_classify_filled_entry_from_watch_orders(self):
+        """watch_orders, Filled, orderLinkId=known_entry -> ENTRY_FILLED, bot_command."""
+        clf = EventClassifier(known_order_link_ids=KNOWN_IDS)
+        raw = _raw(
+            source_stream="watch_orders",
+            order_status="Filled",
+            order_link_id="bot-entry-1",
+            create_type="CreateByUser",
+            closed_size=0.0,
+            pos_qty=0.1,
+            exec_qty=0.1,
+            leaves_qty=0.0,
+            cum_exec_qty=0.1,
+        )
+        result = clf.classify(raw)
+        assert result.event_type == "ENTRY_FILLED"
+        assert result.source == "manual_command"
+        assert result.trade_chain_id == 10
+
     def test_classify_pending_entry_cancelled(self):
         """watch_orders, Cancelled, orderLinkId=known_entry → PENDING_ENTRY_CANCELLED, bot_command."""
         clf = EventClassifier(known_order_link_ids=KNOWN_IDS)
