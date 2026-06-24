@@ -147,3 +147,69 @@ async def test_run_no_double_fetch_on_global_refresh():
     await worker._fetch_all(skip=just_fetched)
     # All accounts were in skip set — total calls should be exactly 2
     assert port.get_account_state.call_count == 2
+
+
+# ---------------------------------------------------------------------------
+# Task 5: on_snapshot_saved callback
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_callback_called_on_ok_snapshot():
+    port = _make_port(account_id="demo_1")   # returns snapshot with status="OK"
+    repo = _make_repo()
+    called_with: list[str] = []
+    worker = AccountSnapshotWorker(
+        port=port, repository=repo,
+        account_ids=["demo_1"],
+        interval_seconds=999,
+        on_snapshot_saved=lambda acc_id: called_with.append(acc_id),
+    )
+    await worker._fetch_one("demo_1")
+    assert called_with == ["demo_1"]
+
+
+@pytest.mark.asyncio
+async def test_callback_not_called_on_failed_snapshot():
+    port = _make_port(account_id="demo_1")
+    port.get_account_state.return_value = _make_snapshot("demo_1", status="FAILED")
+    repo = _make_repo()
+    called_with: list[str] = []
+    worker = AccountSnapshotWorker(
+        port=port, repository=repo,
+        account_ids=["demo_1"],
+        interval_seconds=999,
+        on_snapshot_saved=lambda acc_id: called_with.append(acc_id),
+    )
+    await worker._fetch_one("demo_1")
+    assert called_with == []
+
+
+@pytest.mark.asyncio
+async def test_callback_not_called_on_port_exception():
+    port = _make_port(raise_exc=RuntimeError("network error"))
+    repo = _make_repo()
+    called_with: list[str] = []
+    worker = AccountSnapshotWorker(
+        port=port, repository=repo,
+        account_ids=["demo_1"],
+        interval_seconds=999,
+        on_snapshot_saved=lambda acc_id: called_with.append(acc_id),
+    )
+    await worker._fetch_one("demo_1")
+    assert called_with == []
+
+
+@pytest.mark.asyncio
+async def test_callback_error_does_not_crash_worker():
+    port = _make_port(account_id="demo_1")
+    repo = _make_repo()
+    def _bad_callback(acc_id: str) -> None:
+        raise ValueError("oops")
+    worker = AccountSnapshotWorker(
+        port=port, repository=repo,
+        account_ids=["demo_1"],
+        interval_seconds=999,
+        on_snapshot_saved=_bad_callback,
+    )
+    # Must not raise
+    await worker._fetch_one("demo_1")

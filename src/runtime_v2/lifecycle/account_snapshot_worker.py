@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Callable
 from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
@@ -20,6 +21,7 @@ class AccountSnapshotWorker:
         account_ids: list[str],
         interval_seconds: int = _DEFAULT_INTERVAL,
         stale_after_seconds: int = _DEFAULT_STALE_AFTER,
+        on_snapshot_saved: Callable[[str], None] | None = None,
     ) -> None:
         self._port = port
         self._repository = repository
@@ -27,6 +29,7 @@ class AccountSnapshotWorker:
         self._interval = interval_seconds
         self._stale_after = stale_after_seconds
         self._pending_refresh: set[str] = set()
+        self._on_snapshot_saved = on_snapshot_saved
 
     async def run(self) -> None:
         await self._fetch_all()
@@ -56,6 +59,14 @@ class AccountSnapshotWorker:
                 None, self._port.get_account_state, account_id
             )
             self._repository.save_account(snap, account_id)
+            if snap.snapshot_status == "OK" and self._on_snapshot_saved is not None:
+                try:
+                    self._on_snapshot_saved(account_id)
+                except Exception as exc:
+                    logger.warning(
+                        "AccountSnapshotWorker: on_snapshot_saved callback error for %s: %s",
+                        account_id, exc,
+                    )
         except Exception as exc:
             logger.warning("AccountSnapshotWorker: failed for %s: %s", account_id, exc)
             from src.runtime_v2.lifecycle.ports import AccountStateSnapshot
