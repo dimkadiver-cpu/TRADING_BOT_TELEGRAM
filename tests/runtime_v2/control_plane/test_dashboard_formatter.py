@@ -157,6 +157,72 @@ def _add_lifecycle_event(
     )
 
 
+def _add_signal_only_rejected_event(
+    conn: sqlite3.Connection,
+    *,
+    source_id: int,
+    reason: str,
+    account_id: str = "demo_1",
+    trader_id: str = "trader_a",
+    symbol: str = "ETHUSDT",
+    side: str = "LONG",
+) -> None:
+    import json
+
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, source_id, payload_json, idempotency_key, created_at) "
+        "VALUES (NULL,?,?,?,?,?,?)",
+        (
+            "SIGNAL_REJECTED",
+            "test",
+            source_id,
+            json.dumps(
+                {
+                    "reason": reason,
+                    "account_id": account_id,
+                    "trader_id": trader_id,
+                    "symbol": symbol,
+                    "side": side,
+                }
+            ),
+            f"signal_only_{source_id}",
+            _now(),
+        ),
+    )
+
+
+def _add_operational_issue_chain(
+    conn: sqlite3.Connection,
+    chain_id: int,
+    *,
+    command_type: str = "MOVE_STOP",
+    reason: str = "exchange_rejected",
+) -> None:
+    import json
+
+    _add_chain(conn, chain_id, "OPEN", symbol="SOLUSDT", side="SHORT")
+    conn.execute(
+        "UPDATE ops_trade_chains SET filled_entry_qty=1.0, open_position_qty=1.0 "
+        "WHERE trade_chain_id=?",
+        (chain_id,),
+    )
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(trade_chain_id, command_type, status, idempotency_key, payload_json, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (
+            chain_id,
+            command_type,
+            "FAILED",
+            f"fmt_{chain_id}_{command_type}",
+            json.dumps({"reason": reason}),
+            _now(),
+            _now(),
+        ),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -364,7 +430,7 @@ class TestVistaBloccati:
         q = StatusQueries(ops_db)
         text, total = format_dashboard_view("bloccati", SCOPE, q)
 
-        assert "Blocked" in text  # new header uses English view label
+        assert "Not executed" in text  # new header uses English view label
         assert "ETH/USDT" in text
         assert "missing_sl" in text
         assert "SOL/USDT" in text
@@ -373,7 +439,76 @@ class TestVistaBloccati:
     def test_empty_bloccati(self, ops_db):
         q = StatusQueries(ops_db)
         text, _ = format_dashboard_view("bloccati", SCOPE, q)
-        assert "No blocked trades" in text
+        assert "No not executed trades" in text
+
+
+# ---------------------------------------------------------------------------
+# Tests: vista not executed / operational issues
+# ---------------------------------------------------------------------------
+
+class TestVistaNotExecutedOperationalIssues:
+    def test_not_executed_renders_signal_only_reference_and_reason(self, ops_db):
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_signal_only_rejected_event(
+                conn,
+                source_id=104,
+                reason="risk_limit_exceeded",
+                account_id="demo_1",
+                trader_id="trader_a",
+                symbol="ETHUSDT",
+                side="LONG",
+            )
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        text, total = format_dashboard_view("not_executed", SCOPE_ACCOUNT, q)
+
+        assert "#S-104" in text
+        assert "REJECTED" in text
+        assert "Reason: risk_limit_exceeded" in text
+        assert "At:" in text
+        assert total == 1
+
+    def test_operational_issues_renders_trade_reference_and_command(self, ops_db):
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_operational_issue_chain(conn, 22, command_type="MOVE_STOP")
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        text, total = format_dashboard_view("operational_issues", SCOPE_ACCOUNT, q)
+
+        assert "#22" in text
+        assert "MOVE_STOP" in text
+        assert "Operational issues" in text
+        assert total == 1
+
+    def test_blocked_alias_routes_to_not_executed_view(self, ops_db):
+        conn = sqlite3.connect(ops_db)
+        with conn:
+            _add_chain(conn, 33, "CANCELLED", symbol="XRPUSDT", side="LONG")
+            conn.execute(
+                "INSERT INTO ops_execution_commands "
+                "(trade_chain_id, command_type, status, idempotency_key, payload_json, created_at, updated_at) "
+                "VALUES (?,?,?,?,?,?,?)",
+                (
+                    33,
+                    "PLACE_ENTRY",
+                    "FAILED",
+                    "alias_blocked",
+                    '{"reason":"insufficient_margin"}',
+                    _now(),
+                    _now(),
+                ),
+            )
+        conn.close()
+
+        q = StatusQueries(ops_db)
+        result_blocked = format_dashboard_view("blocked", SCOPE_ACCOUNT, q)
+        result_not_executed = format_dashboard_view("not_executed", SCOPE_ACCOUNT, q)
+
+        assert result_blocked == result_not_executed
 
 
 # ---------------------------------------------------------------------------
@@ -399,11 +534,14 @@ class TestVistaPnl:
         text, _ = format_dashboard_view("pnl", SCOPE, q)
 
         assert "PnL" in text  # new header: "💰 PnL — ..."
-        assert "10,432.50" in text
+        # equity removed; balance and margin appear as Available / Margin in use
         assert "9,100.00" in text
         assert "820.00" in text
+        assert "Equity" not in text
         assert "Realized — trader_a:" in text
-        assert "+142.60" in text
+        # pnl_net = gross - fees = 142.60 - 11.20 = 131.40
+        assert "131.40" in text
+        assert "Closed:" in text
         assert "Open: 1" in text
         assert "Waiting entry: 1" in text
 
@@ -416,8 +554,8 @@ class TestVistaPnl:
         q = StatusQueries(ops_db)
         text, _ = format_dashboard_view("pnl", SCOPE_ACCOUNT, q)
 
-        # account-level scope → no trader_id in label
-        assert "Realized:" in text
+        # account-level scope with no trader filter → label uses account_id
+        assert "Realized — demo_1:" in text
         assert "Realized — trader_a:" not in text
 
 
@@ -496,18 +634,20 @@ def test_pnl_account_lines_shows_snapshot_metadata():
         "source": "ccxt_bybit:demo",
         "snapshot_age_seconds": 18.0,
         "snapshot_stale": False,
-        "equity_usdt": 7220.50,
         "available_balance_usdt": 5180.20,
         "total_margin_used_usdt": 704.80,
+        "futures_wallet_usdt": 5885.0,
         "account_unrealized_pnl_usdt": 62.40,
         "total_open_risk_usdt": 145.0,
     }
     result = _pnl_account_lines(p)
     assert "14:32:05" in result
     assert "age 18s" in result
-    assert "ccxt_bybit:demo" in result
-    assert "7,220.50" in result
+    assert "5,180.20" in result
+    assert "5,885.00" in result
     assert "62.40" in result
+    # equity must NOT appear
+    assert "Equity" not in result
 
 
 def test_pnl_account_lines_shows_stale():
@@ -517,7 +657,9 @@ def test_pnl_account_lines_shows_stale():
         "source": "ccxt_bybit:demo",
         "snapshot_age_seconds": 300.0,
         "snapshot_stale": True,
-        "equity_usdt": 1000.0,
+        "available_balance_usdt": 1000.0,
+        "total_margin_used_usdt": None,
+        "futures_wallet_usdt": 1000.0,
     }
     result = _pnl_account_lines(p)
     assert "STALE" in result
@@ -586,7 +728,8 @@ def test_pnl_global_scope_shows_stale_warning():
     assert "Snapshots:" in result
     assert "2 fresh" in result
     assert "1 stale" in result
-    assert "STALE" in result
+    # The new design surfaces stale count in the Snapshots line (not a separate STALE warning block)
+    assert "Accounts: 3" in result
 
 
 # ---------------------------------------------------------------------------
@@ -647,7 +790,7 @@ class TestDashboardKeyboard:
         ]
         assert "view:active" in all_callbacks
         assert "view:closed" in all_callbacks
-        assert "view:blocked" in all_callbacks
+        assert "view:not_executed" in all_callbacks
         assert "view:pnl" in all_callbacks
         assert "view:stats" in all_callbacks
         assert "refresh" in all_callbacks
@@ -740,10 +883,10 @@ class TestNamingMigration:
         scope = QueryScope(account_id="demo_1", trader_ids=None)
         q = StatusQueries(db_path)
         text, _ = format_dashboard_view("blocked", scope, q, page=0, page_size=5)
-        assert "blocked" in text.lower() or "Blocked" in text or "No blocked" in text
+        assert "Not executed" in text or "No not executed" in text
 
     def test_keyboard_uses_en_callbacks(self):
-        """build_dashboard_keyboard emits view:active, view:closed, view:blocked."""
+        """build_dashboard_keyboard emits view:active, view:closed, view:not_executed."""
         from src.runtime_v2.control_plane.formatters.dashboard import build_dashboard_keyboard
         kb = build_dashboard_keyboard("active", page=0, total_count=3, page_size=5)
         all_callbacks = [
@@ -753,7 +896,7 @@ class TestNamingMigration:
         ]
         assert "view:active" in all_callbacks
         assert "view:closed" in all_callbacks
-        assert "view:blocked" in all_callbacks
+        assert "view:not_executed" in all_callbacks
         # Old Italian names must be gone
         assert "view:attivi" not in all_callbacks
         assert "view:chiusi" not in all_callbacks
@@ -770,3 +913,186 @@ class TestNamingMigration:
         ]
         assert "filters" in all_callbacks
         assert "clear" in all_callbacks
+
+
+# ---------------------------------------------------------------------------
+# Task 4: PNL template rewrite
+# ---------------------------------------------------------------------------
+
+from src.runtime_v2.control_plane.formatters.templates.dashboard import (
+    _pnl_account_lines,
+    _pnl_realized_lines,
+    _pnl_realized_label,
+    _pnl_by_trader_lines,
+    _pnl_by_account_lines,
+)
+
+
+def test_pnl_account_lines_shows_futures_wallet():
+    p = {
+        "available_balance_usdt": 1234.0,
+        "total_margin_used_usdt": 456.0,
+        "futures_wallet_usdt": 1690.0,
+        "account_unrealized_pnl_usdt": 12.34,
+        "total_open_risk_usdt": 123.0,
+        "captured_at": "2026-06-24T14:32:05+00:00",
+        "snapshot_age_seconds": 45.0,
+        "snapshot_stale": False,
+        "account_id": "demo_1",
+    }
+    text = _pnl_account_lines(p)
+    assert "Available:" in text
+    assert "Margin in use:" in text
+    assert "Futures wallet:" in text
+    assert "1,690.00" in text
+    assert "Open risk*:" in text
+    assert "Snapshot:" in text
+    # equity must NOT appear
+    assert "Equity" not in text
+
+
+def test_pnl_account_lines_stale_marker():
+    p = {
+        "available_balance_usdt": 100.0,
+        "total_margin_used_usdt": 50.0,
+        "futures_wallet_usdt": 150.0,
+        "account_unrealized_pnl_usdt": None,
+        "total_open_risk_usdt": None,
+        "captured_at": "2026-06-24T14:28:41+00:00",
+        "snapshot_age_seconds": 213.0,
+        "snapshot_stale": True,
+        "account_id": "demo_1",
+    }
+    text = _pnl_account_lines(p)
+    assert "STALE" in text
+
+
+def test_pnl_account_lines_no_snapshot():
+    p = {
+        "available_balance_usdt": None,
+        "total_margin_used_usdt": None,
+        "futures_wallet_usdt": None,
+        "account_unrealized_pnl_usdt": None,
+        "total_open_risk_usdt": None,
+        "captured_at": None,
+        "snapshot_age_seconds": None,
+        "snapshot_stale": False,
+        "account_id": "demo_1",
+    }
+    text = _pnl_account_lines(p)
+    assert "nessun snapshot" in text
+
+
+def test_pnl_realized_lines_shows_closed_and_partial():
+    p = {"pnl_net": 890.20, "partial_pnl_net": 45.80}
+    text = _pnl_realized_lines(p)
+    assert "Closed:" in text
+    assert "Partial open:" in text
+    assert "Totale:" in text
+    assert "936.00" in text
+
+
+def test_pnl_realized_lines_omits_partial_when_zero():
+    p = {"pnl_net": 100.0, "partial_pnl_net": None}
+    text = _pnl_realized_lines(p)
+    assert "Closed:" in text
+    assert "Partial open:" not in text
+    assert "Totale:" in text
+
+
+def test_pnl_realized_lines_no_trades():
+    p = {"pnl_net": None, "partial_pnl_net": None}
+    text = _pnl_realized_lines(p)
+    assert "Nessun trade chiuso" in text
+
+
+def test_pnl_realized_label_global():
+    assert _pnl_realized_label({"is_global": True}) == "Realized — All accounts:"
+
+
+def test_pnl_realized_label_single_trader():
+    assert _pnl_realized_label({"is_global": False, "trader_id": "trader_a", "by_trader": None}) == "Realized — trader_a:"
+
+
+def test_pnl_realized_label_multi_trader():
+    p = {
+        "is_global": False,
+        "trader_id": None,
+        "by_trader": [
+            {"trader_id": "trader_a", "open_count": 0, "risk_usdt": None, "closed_pnl": 0.0, "partial_pnl": 0.0},
+            {"trader_id": "trader_b", "open_count": 0, "risk_usdt": None, "closed_pnl": 0.0, "partial_pnl": 0.0},
+        ],
+        "account_id": "demo_1",
+    }
+    label = _pnl_realized_label(p)
+    assert label == "Realized — trader_a, trader_b:"
+
+
+def test_pnl_realized_label_account_wide():
+    p = {"is_global": False, "trader_id": None, "by_trader": None, "account_id": "demo_1"}
+    assert _pnl_realized_label(p) == "Realized — demo_1:"
+
+
+def test_pnl_by_trader_lines_format():
+    p = {
+        "by_trader": [
+            {"trader_id": "trader_a", "open_count": 3, "risk_usdt": 120.0, "closed_pnl": 890.20, "partial_pnl": 45.80},
+            {"trader_id": "trader_b", "open_count": 2, "risk_usdt": None,  "closed_pnl": 234.50, "partial_pnl": 0.0},
+        ]
+    }
+    text = _pnl_by_trader_lines(p)
+    assert "trader_a" in text
+    assert "Open: 3" in text
+    assert "Risk: 120.00" in text
+    assert "Closed: +890.20" in text
+    assert "Partial: +45.80" in text
+    assert "trader_b" in text
+    # trader_b has no risk_usdt — must not appear
+    assert "Risk:" not in text.split("trader_b")[1].split("\n")[0]
+    # trader_b partial is 0 — must not appear
+    assert "Partial:" not in text.split("trader_b")[1].split("\n")[0]
+
+
+def test_pnl_by_account_lines_format():
+    p = {
+        "by_account": [
+            {"account_id": "demo_1", "net_pnl": 890.20, "available_usdt": 1450.0, "margin_usdt": 890.0, "age_seconds": 32.0, "stale": False},
+            {"account_id": "demo_2", "net_pnl": 344.30, "available_usdt": None,   "margin_usdt": None,  "age_seconds": 18.0, "stale": False},
+            {"account_id": "demo_3", "net_pnl": 156.80, "available_usdt": None,   "margin_usdt": None,  "age_seconds": 240.0, "stale": True},
+        ]
+    }
+    text = _pnl_by_account_lines(p)
+    assert "demo_1" in text
+    assert "Avail: 1450" in text
+    assert "Margin: 890" in text
+    assert "Net: +890.20" in text
+    assert "demo_3" in text
+    assert "STALE" in text
+    assert "4m ago" in text   # 240s → 4m
+
+
+def test_pnl_payload_includes_futures_wallet_and_excludes_equity(tmp_path):
+    """Integration: format_dashboard_view builds PNL payload with futures_wallet and no equity."""
+    _apply_migrations(str(tmp_path / "ops.sqlite3"))
+    db_path = str(tmp_path / "ops.sqlite3")
+    from datetime import timedelta
+    fresh_time = (datetime.now(timezone.utc) - timedelta(seconds=10)).isoformat()
+    conn = sqlite3.connect(db_path)
+    with conn:
+        conn.execute(
+            "INSERT INTO ops_account_snapshots "
+            "(account_id, equity_usdt, available_balance_usdt, total_open_risk_usdt, "
+            "total_margin_used_usdt, account_unrealized_pnl_usdt, source, captured_at, "
+            "payload_json, snapshot_status, error_code) "
+            "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            ("demo_1", 2000.0, 1500.0, 50.0, 500.0, 20.0, "ccxt_bybit:demo", fresh_time, "{}", "OK", None)
+        )
+    conn.close()
+
+    queries = StatusQueries(db_path)
+    scope = QueryScope(account_id="demo_1", trader_ids=None)
+    text, _ = format_dashboard_view("pnl", scope, queries)
+    assert "Futures wallet" in text
+    assert "1,500" in text  # available
+    assert "500" in text    # margin
+    assert "Equity" not in text

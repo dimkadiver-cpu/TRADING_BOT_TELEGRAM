@@ -47,6 +47,10 @@ def _build_filters_str(is_global: bool, filters: dict | None) -> str | None:
     side = f.get("side")
     period = f.get("period")
     status = f.get("status")
+    not_executed_outcome = f.get("not_executed_outcome")
+    not_executed_phase = f.get("not_executed_phase")
+    issue_type = f.get("issue_type")
+    issue_phase = f.get("issue_phase")
 
     if is_global:
         parts.append(account or "All accounts")
@@ -61,6 +65,14 @@ def _build_filters_str(is_global: bool, filters: dict | None) -> str | None:
         parts.append(_PERIOD_LABELS.get(period, period))
     if status:
         parts.append(status.replace("_", " ").lower().capitalize())
+    if not_executed_outcome:
+        parts.append(str(not_executed_outcome))
+    if not_executed_phase:
+        parts.append(str(not_executed_phase))
+    if issue_type:
+        parts.append(str(issue_type))
+    if issue_phase:
+        parts.append(str(issue_phase))
 
     return " · ".join(parts) if parts else None
 
@@ -281,7 +293,7 @@ def _build_chiusi_payload(
     return _build_closed_payload(scope, queries, page, page_size)
 
 
-def _build_blocked_payload(
+def _build_not_executed_payload(
     scope: QueryScope,
     queries: StatusQueries,
     page: int = 0,
@@ -291,7 +303,12 @@ def _build_blocked_payload(
     is_global = scope.account_id is None
     query_scope = _effective_scope(scope, filters)
     f = filters or {}
-    view = queries.get_blocked_trades(query_scope, side=f.get("side"))
+    view = queries.get_not_executed_trades(
+        query_scope,
+        side=f.get("side"),
+        outcome=f.get("not_executed_outcome"),
+        phase=f.get("not_executed_phase"),
+    )
 
     total = len(view.rows)
 
@@ -305,12 +322,17 @@ def _build_blocked_payload(
 
     row_dicts = [
         {
-            "chain_id": r.chain_id,
+            "reference": r.reference,
+            "trade_chain_id": r.trade_chain_id,
+            "signal_reference": r.signal_reference,
             "symbol": r.symbol,
             "side": r.side or "?",
-            "state": r.state,
+            "outcome": r.outcome,
+            "phase": r.phase,
             "reason": r.reason,
-            "blocked_at": r.blocked_at,
+            "command_type": r.command_type,
+            "occurred_at": r.occurred_at,
+            "details_command": r.details_command,
             "trader_id": r.trader_id,
             "account_id": r.account_id or scope.account_id,
         }
@@ -325,18 +347,64 @@ def _build_blocked_payload(
         "total": total,
         "page_display": page_display,
         "filters_str": _build_filters_str(is_global, filters),
-        "order_str": "Blocked desc" if is_global else None,
+        "order_str": "Latest desc" if is_global else None,
         "is_global": is_global,
     }
     return payload, total
 
 
-# Backward-compat alias
-def _build_bloccati_payload(
+def _build_operational_issues_payload(
     scope: QueryScope,
     queries: StatusQueries,
+    page: int = 0,
+    page_size: int = 5,
+    filters: dict | None = None,
 ) -> tuple[dict, int]:
-    return _build_blocked_payload(scope, queries)
+    is_global = scope.account_id is None
+    query_scope = _effective_scope(scope, filters)
+    f = filters or {}
+    view = queries.get_operational_issues(
+        query_scope,
+        side=f.get("side"),
+        issue_type=f.get("issue_type"),
+        phase=f.get("issue_phase"),
+    )
+
+    total = len(view.rows)
+    start = page * page_size
+    page_rows = view.rows[start: start + page_size]
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page_display = f"{page + 1}/{total_pages}"
+
+    row_dicts = [
+        {
+            "trade_chain_id": r.trade_chain_id,
+            "symbol": r.symbol,
+            "side": r.side or "?",
+            "issue_type": r.issue_type,
+            "phase": r.phase,
+            "reason": r.reason,
+            "command_type": r.command_type,
+            "occurred_at": r.occurred_at,
+            "details_command": r.details_command,
+            "trader_id": r.trader_id,
+            "account_id": r.account_id or scope.account_id,
+        }
+        for r in page_rows
+    ]
+
+    payload = {
+        **_build_scope_meta(scope),
+        "account_id": scope.account_id or "All accounts",
+        "updated_at": view.updated_at,
+        "rows": row_dicts,
+        "total": total,
+        "page_display": page_display,
+        "filters_str": _build_filters_str(is_global, filters),
+        "order_str": "Latest desc" if is_global else None,
+        "is_global": is_global,
+    }
+    return payload, total
 
 
 def _build_pnl_payload(
@@ -358,12 +426,21 @@ def _build_pnl_payload(
         "filters_str": _build_filters_str(is_global, filters),
         "order_str": "Net desc" if is_global else None,
         "is_global": is_global,
-        "equity_usdt": view.equity_usdt,
+        # equity_usdt removed — use futures_wallet_usdt instead
         "available_balance_usdt": view.available_balance_usdt,
         "total_margin_used_usdt": view.total_margin_used_usdt,
+        "futures_wallet_usdt": (
+            (view.available_balance_usdt or 0.0) + (view.total_margin_used_usdt or 0.0)
+            if (view.available_balance_usdt is not None or view.total_margin_used_usdt is not None)
+            else None
+        ),
         "gross_pnl": view.gross_pnl,
         "total_fees": view.total_fees,
         "pnl_net": view.pnl_net,
+        "partial_pnl": view.partial_pnl,
+        "partial_fees": view.partial_fees,
+        "partial_pnl_net": view.partial_pnl_net,
+        "by_trader": view.by_trader,
         "open_count": view.open_count,
         "waiting_entry_count": view.waiting_entry_count,
         "accounts_in_scope": view.accounts_in_scope,
@@ -438,14 +515,13 @@ def format_dashboard_view(
     """Render the text of a dashboard view.
 
     Returns (text, total_count) where total_count is used for pagination.
-    Accepts both English names (active/closed/blocked) and legacy Italian names
-    (attivi/chiusi/bloccati) for backward compatibility with existing tests.
+    Accepts both English names and legacy aliases for backward compatibility.
     """
-    # Normalize legacy Italian names to English
     _name_map = {
         "attivi": "active",
         "chiusi": "closed",
-        "bloccati": "blocked",
+        "bloccati": "not_executed",
+        "blocked": "not_executed",
     }
     normalized = _name_map.get(view_name, view_name)
 
@@ -458,8 +534,10 @@ def format_dashboard_view(
         payload, total = _build_active_payload(scope, queries, page, page_size, filters)
     elif normalized == "closed":
         payload, total = _build_closed_payload(scope, queries, page, page_size, filters)
-    elif normalized == "blocked":
-        payload, total = _build_blocked_payload(scope, queries, page, page_size, filters)
+    elif normalized == "not_executed":
+        payload, total = _build_not_executed_payload(scope, queries, page, page_size, filters)
+    elif normalized == "operational_issues":
+        payload, total = _build_operational_issues_payload(scope, queries, page, page_size, filters)
     elif normalized == "pnl":
         payload, total = _build_pnl_payload(scope, queries, filters)
     elif normalized == "stats":
@@ -483,7 +561,7 @@ def build_dashboard_keyboard(
 ):
     """Build InlineKeyboardMarkup for the dashboard.
 
-    current_view: "active", "closed", "blocked", "pnl", "stats"
+    current_view: "active", "closed", "not_executed", "operational_issues", "pnl", "stats"
     page: 0-based current page
     total_count: total items (for pagination row)
     page_size: items per page (default 5)
@@ -502,18 +580,19 @@ def build_dashboard_keyboard(
         return InlineKeyboardButton(label, callback_data=f"view:{view}")
 
     row1 = [
-        _tab("⚡ Active",  "active"),
-        _tab("✅ Closed",  "closed"),
-        _tab("🚫 Blocked", "blocked"),
+        _tab("Active", "active"),
+        _tab("Closed", "closed"),
+        _tab("Not executed", "not_executed"),
     ]
     row2 = [
-        _tab("💰 PnL", "pnl"),
-        _tab("📉 Stats", "stats"),
-        InlineKeyboardButton("🔄 Refresh", callback_data="refresh"),
+        _tab("Operational issues", "operational_issues"),
+        _tab("PnL", "pnl"),
+        _tab("Stats", "stats"),
     ]
     row3 = [
-        InlineKeyboardButton("🔎 Filters", callback_data="filters"),
-        InlineKeyboardButton("🧹 Clear", callback_data="clear"),
+        InlineKeyboardButton("Refresh", callback_data="refresh"),
+        InlineKeyboardButton("Filters", callback_data="filters"),
+        InlineKeyboardButton("Clear", callback_data="clear"),
     ]
 
     keyboard = [row1, row2, row3]

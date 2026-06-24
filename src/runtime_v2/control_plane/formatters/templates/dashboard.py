@@ -198,17 +198,119 @@ TEMPLATE_DASHBOARD_BLOCKED = TemplateConfig(_BLOCKED_BLOCKS, payload_transform=N
 
 
 # ---------------------------------------------------------------------------
+# Not executed / operational issues views
+# ---------------------------------------------------------------------------
+
+def _render_not_executed_item(row: dict, i: int, p: dict) -> list[str]:
+    reference = row.get("reference") or "#?"
+    symbol = display_symbol(row.get("symbol") or "?")
+    side = row.get("side", "?")
+    outcome = row.get("outcome") or "UNKNOWN"
+    lines = [_SEP, f"{reference} · {symbol} · {side} · {outcome}"] if i > 0 else [f"{reference} · {symbol} · {side} · {outcome}"]
+
+    if p.get("is_global"):
+        trader = row.get("trader_id") or "?"
+        account = row.get("account_id") or "?"
+        lines.append(f"Trader: {trader} · Account: {account}")
+
+    phase = row.get("phase") or "Unknown"
+    reason = row.get("reason") or "—"
+    occurred_at = row.get("occurred_at") or "—"
+    command_type = row.get("command_type")
+    details = [f"Phase: {phase}"]
+    if command_type:
+        details.append(f"Command: {command_type}")
+    details.extend([f"Reason: {reason}", f"At: {occurred_at}"])
+    lines.append(" · ".join(details))
+    trade_chain_id = row.get("trade_chain_id")
+    if trade_chain_id is not None:
+        lines.append(f"Details: /trade_{trade_chain_id}")
+    return lines
+
+
+def _render_operational_issue_item(row: dict, i: int, p: dict) -> list[str]:
+    trade_chain_id = row.get("trade_chain_id", "?")
+    symbol = display_symbol(row.get("symbol") or "?")
+    side = row.get("side", "?")
+    command_type = row.get("command_type") or row.get("details_command") or "UNKNOWN"
+    lines = [_SEP, f"#{trade_chain_id} · {symbol} · {side} · {command_type}"] if i > 0 else [f"#{trade_chain_id} · {symbol} · {side} · {command_type}"]
+
+    if p.get("is_global"):
+        trader = row.get("trader_id") or "?"
+        account = row.get("account_id") or "?"
+        lines.append(f"Trader: {trader} · Account: {account}")
+
+    issue_type = row.get("issue_type") or "UNKNOWN"
+    phase = row.get("phase") or "Unknown"
+    reason = row.get("reason") or "—"
+    occurred_at = row.get("occurred_at") or "—"
+    lines.append(f"Type: {issue_type} · Phase: {phase} · Reason: {reason} · At: {occurred_at}")
+    lines.append(f"Details: /trade_{trade_chain_id}")
+    return lines
+
+
+_NOT_EXECUTED_BLOCKS: list = [
+    *_dash_header_full("🚫", "Not executed"),
+    ConditionalBlock(
+        condition=lambda p: not p.get("rows"),
+        blocks=[StaticBlock("No not executed trades.")],
+    ),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("rows")),
+        blocks=[ListBlock(key="rows", item_renderer=_render_not_executed_item, index_start=0)],
+    ),
+]
+
+
+_OPERATIONAL_ISSUES_BLOCKS: list = [
+    *_dash_header_full("⚠️", "Operational issues"),
+    ConditionalBlock(
+        condition=lambda p: not p.get("rows"),
+        blocks=[StaticBlock("No operational issues.")],
+    ),
+    ConditionalBlock(
+        condition=lambda p: bool(p.get("rows")),
+        blocks=[ListBlock(key="rows", item_renderer=_render_operational_issue_item, index_start=0)],
+    ),
+]
+
+
+TEMPLATE_DASHBOARD_NOT_EXECUTED = TemplateConfig(_NOT_EXECUTED_BLOCKS, payload_transform=None)
+TEMPLATE_DASHBOARD_OPERATIONAL_ISSUES = TemplateConfig(_OPERATIONAL_ISSUES_BLOCKS, payload_transform=None)
+
+
+# ---------------------------------------------------------------------------
 # PNL view
 # ---------------------------------------------------------------------------
 
 def _pnl_account_lines(p: dict) -> str:
     from datetime import datetime
-    parts = []
+    available = p.get("available_balance_usdt")
+    margin = p.get("total_margin_used_usdt")
+    futures_wallet = p.get("futures_wallet_usdt")
+    upnl = p.get("account_unrealized_pnl_usdt")
+    risk = p.get("total_open_risk_usdt")
     captured_at = p.get("captured_at")
     age = p.get("snapshot_age_seconds")
-    source = p.get("source")
     stale = p.get("snapshot_stale", False)
 
+    if available is None and margin is None and captured_at is None:
+        return "  n/a — nessun snapshot disponibile"
+
+    parts = []
+    if available is not None:
+        parts.append(f"  Available:      {available:>12,.2f} USDT")
+    if margin is not None:
+        parts.append(f"  Margin in use:  {margin:>12,.2f} USDT")
+    if available is not None or margin is not None:
+        parts.append(f"  {'─' * 29}")
+    if futures_wallet is not None:
+        parts.append(f"  Futures wallet: {futures_wallet:>12,.2f} USDT")
+    if upnl is not None:
+        sign = "+" if upnl >= 0 else ""
+        parts.append(f"  uPnL live:      {sign}{upnl:>11.2f} USDT")
+    if risk is not None:
+        parts.append(f"  Open risk*:     {risk:>12.2f} USDT")
     if captured_at:
         try:
             dt = datetime.fromisoformat(captured_at)
@@ -217,43 +319,63 @@ def _pnl_account_lines(p: dict) -> str:
             time_str = captured_at
         age_str = f"age {int(age)}s" if age is not None else "age ?"
         stale_str = " · STALE" if stale else ""
-        source_str = f" · {source}" if source else ""
-        parts.append(f"Snapshot: {time_str} · {age_str}{source_str}{stale_str}")
+        parts.append(f"  Snapshot: {time_str} · {age_str}{stale_str}")
 
-    if p.get("equity_usdt") is not None:
-        parts.append(f"Equity:        {p['equity_usdt']:,.2f} USDT")
-    if p.get("available_balance_usdt") is not None:
-        parts.append(f"Available:     {p['available_balance_usdt']:,.2f} USDT")
-    if p.get("total_margin_used_usdt") is not None:
-        parts.append(f"Margin used:   {p['total_margin_used_usdt']:,.2f} USDT")
-    if p.get("account_unrealized_pnl_usdt") is not None:
-        sign = "+" if p["account_unrealized_pnl_usdt"] >= 0 else ""
-        parts.append(f"uPnL live:     {sign}{p['account_unrealized_pnl_usdt']:.2f} USDT")
-    if p.get("total_open_risk_usdt") is not None:
-        parts.append(f"Open risk*:    {p['total_open_risk_usdt']:.2f} USDT")
-    return "\n".join(parts) if parts else "n/a"
+    return "\n".join(parts) if parts else "  n/a — nessun snapshot disponibile"
 
 
 def _pnl_realized_label(p: dict) -> str:
     if p.get("is_global"):
         return "Realized — All accounts:"
+    by_trader = p.get("by_trader")
+    if by_trader and len(by_trader) >= 2:
+        names = ", ".join(t["trader_id"] for t in by_trader)
+        return f"Realized — {names}:"
     trader_id = p.get("trader_id")
     if trader_id:
         return f"Realized — {trader_id}:"
-    return "Realized:"
+    account_id = p.get("account_id") or ""
+    return f"Realized — {account_id}:"
 
 
 def _pnl_realized_lines(p: dict) -> str:
+    pnl_net = p.get("pnl_net")
+    partial_pnl_net = p.get("partial_pnl_net")
+
+    has_closed = pnl_net is not None
+    has_partial = partial_pnl_net is not None and partial_pnl_net != 0.0
+
+    if not has_closed and not has_partial:
+        return "  Nessun trade chiuso."
+
     parts = []
-    if p.get("gross_pnl") is not None:
-        sign = "+" if p["gross_pnl"] >= 0 else ""
-        parts.append(f"  Gross:      {sign}{p['gross_pnl']:.2f} USDT")
-    if p.get("total_fees") is not None:
-        parts.append(f"  Fees:        {p['total_fees']:.2f} USDT")
-    if p.get("pnl_net") is not None:
-        sign = "+" if p["pnl_net"] >= 0 else ""
-        parts.append(f"  Net:        {sign}{p['pnl_net']:.2f} USDT")
-    return "\n".join(parts) if parts else "  n/a"
+    if has_closed:
+        sign = "+" if pnl_net >= 0 else ""
+        parts.append(f"  Closed:        {sign}{pnl_net:.2f} USDT")
+    if has_partial:
+        sign = "+" if partial_pnl_net >= 0 else ""
+        parts.append(f"  Partial open:   {sign}{partial_pnl_net:.2f} USDT")
+    totale = (pnl_net or 0.0) + (partial_pnl_net or 0.0)
+    parts.append(f"  {'─' * 29}")
+    sign = "+" if totale >= 0 else ""
+    parts.append(f"  Totale:        {sign}{totale:.2f} USDT")
+    return "\n".join(parts)
+
+
+def _pnl_by_trader_lines(p: dict) -> str:
+    rows = p.get("by_trader") or []
+    lines = []
+    for t in rows:
+        parts = [t["trader_id"], f"Open: {t['open_count']}"]
+        if t.get("risk_usdt") is not None:
+            parts.append(f"Risk: {t['risk_usdt']:.2f}")
+        sign = "+" if t["closed_pnl"] >= 0 else ""
+        parts.append(f"Closed: {sign}{t['closed_pnl']:.2f}")
+        if t["partial_pnl"] != 0.0:
+            sign = "+" if t["partial_pnl"] >= 0 else ""
+            parts.append(f"Partial: {sign}{t['partial_pnl']:.2f}")
+        lines.append("  " + " · ".join(parts))
+    return "\n".join(lines)
 
 
 def _pnl_by_account_lines(p: dict) -> str:
@@ -263,43 +385,67 @@ def _pnl_by_account_lines(p: dict) -> str:
         acc_id = r.get("account_id", "?")
         net = r.get("net_pnl", 0.0)
         sign = "+" if net >= 0 else ""
-        open_c = r.get("open_count", 0)
         age = r.get("age_seconds")
         stale = r.get("stale", False)
+        available = r.get("available_usdt")
+        margin = r.get("margin_usdt")
+
         if stale:
-            age_str = f"{int(age)}s ago" if age is not None else "?"
-            lines.append(f"{acc_id} · STALE · last {age_str}")
+            if age is not None and age >= 60:
+                age_human = f"{int(age // 60)}m ago"
+            elif age is not None:
+                age_human = f"{int(age)}s ago"
+            else:
+                age_human = "?"
+            lines.append(f"{acc_id} · STALE · last {age_human} · Net: {sign}{net:.2f}")
         else:
-            age_str = f" · age {int(age)}s" if age is not None else ""
-            lines.append(f"{acc_id} · Net: {sign}{net:.2f} USDT · Open: {open_c}{age_str}")
+            parts = [acc_id]
+            if available is not None:
+                parts.append(f"Avail: {available:.0f}")
+            if margin is not None:
+                parts.append(f"Margin: {margin:.0f}")
+            parts.append(f"Net: {sign}{net:.2f}")
+            if age is not None:
+                parts.append(f"age {int(age)}s")
+            lines.append(" · ".join(parts))
     return "\n".join(lines) if lines else "n/a"
 
 
 _PNL_BLOCKS: list = [
     *_dash_header_full("💰", "PnL"),
-    # Non-global: show account snapshot
+    # Non-global: show account snapshot with dynamic header
     ConditionalBlock(
         condition=lambda p: not p.get("is_global"),
         blocks=[
-            StaticBlock("Account snapshot:"),
+            DerivedBlock(text_fn=lambda p: f"Account snapshot ({p.get('account_id')}):"),
             DerivedBlock(text_fn=_pnl_account_lines),
             SeparatorBlock(),
         ],
     ),
-    # Global: show accounts in scope summary with freshness counts and STALE warning
+    # Global: summary line + financial aggregates
     ConditionalBlock(
         condition=lambda p: bool(p.get("is_global")),
         blocks=[
-            DerivedBlock(text_fn=lambda p: f"Accounts in scope: {p.get('accounts_in_scope', 0)}"),
-            StaticBlock("Snapshot mode: per-account latest"),
+            DerivedBlock(text_fn=lambda p: (
+                f"Accounts: {p.get('accounts_in_scope', 0)} · "
+                f"Snapshots: {p.get('accounts_fresh', 0)} fresh · {p.get('accounts_stale', 0)} stale"
+            )),
             ConditionalBlock(
-                condition=lambda p: (
-                    p.get("accounts_fresh") is not None or p.get("accounts_stale") is not None
-                ),
+                condition=lambda p: p.get("futures_wallet_usdt") is not None,
                 blocks=[
-                    DerivedBlock(text_fn=lambda p: (
-                        f"Snapshots: {p.get('accounts_fresh', 0)} fresh · {p.get('accounts_stale', 0)} stale"
-                    )),
+                    DerivedBlock(text_fn=lambda p: f"Futures wallet: {p['futures_wallet_usdt']:,.2f} USDT   (fresh only)"),
+                ],
+            ),
+            ConditionalBlock(
+                condition=lambda p: p.get("available_balance_usdt") is not None,
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: f"Available:      {p['available_balance_usdt']:,.2f} USDT"),
+                ],
+            ),
+            ConditionalBlock(
+                condition=lambda p: p.get("total_margin_used_usdt") is not None,
+                blocks=[
+                    DerivedBlock(text_fn=lambda p: f"Margin in use:  {p['total_margin_used_usdt']:,.2f} USDT"),
                 ],
             ),
             ConditionalBlock(
@@ -312,19 +458,20 @@ _PNL_BLOCKS: list = [
                     )),
                 ],
             ),
-            ConditionalBlock(
-                condition=lambda p: bool(p.get("accounts_stale")),
-                blocks=[
-                    DerivedBlock(text_fn=lambda p: (
-                        f"⚠️ STALE: {p['accounts_stale']} account(s) with stale data"
-                    )),
-                ],
-            ),
             SeparatorBlock(),
         ],
     ),
     DerivedBlock(text_fn=_pnl_realized_label),
     DerivedBlock(text_fn=_pnl_realized_lines),
+    # By trader: only when 2+ traders in scope
+    ConditionalBlock(
+        condition=lambda p: len(p.get("by_trader") or []) >= 2,
+        blocks=[
+            StaticBlock(""),
+            StaticBlock("By trader:"),
+            DerivedBlock(text_fn=_pnl_by_trader_lines),
+        ],
+    ),
     SeparatorBlock(),
     DerivedBlock(text_fn=lambda p: (
         f"Open: {p.get('open_count', 0)} · Waiting entry: {p.get('waiting_entry_count', 0)}"
@@ -448,7 +595,9 @@ TEMPLATE_DASHBOARD_STATS = TemplateConfig(_STATS_BLOCKS, payload_transform=None)
 DASHBOARD_TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "dashboard_active":  TEMPLATE_DASHBOARD_ACTIVE,
     "dashboard_closed":  TEMPLATE_DASHBOARD_CLOSED,
-    "dashboard_blocked": TEMPLATE_DASHBOARD_BLOCKED,
+    "dashboard_not_executed": TEMPLATE_DASHBOARD_NOT_EXECUTED,
+    "dashboard_operational_issues": TEMPLATE_DASHBOARD_OPERATIONAL_ISSUES,
+    "dashboard_blocked": TEMPLATE_DASHBOARD_NOT_EXECUTED,
     "dashboard_pnl":     TEMPLATE_DASHBOARD_PNL,
     "dashboard_stats":   TEMPLATE_DASHBOARD_STATS,
 }
@@ -458,6 +607,8 @@ __all__ = [
     "TEMPLATE_DASHBOARD_ACTIVE",
     "TEMPLATE_DASHBOARD_CLOSED",
     "TEMPLATE_DASHBOARD_BLOCKED",
+    "TEMPLATE_DASHBOARD_NOT_EXECUTED",
+    "TEMPLATE_DASHBOARD_OPERATIONAL_ISSUES",
     "TEMPLATE_DASHBOARD_PNL",
     "TEMPLATE_DASHBOARD_STATS",
 ]
