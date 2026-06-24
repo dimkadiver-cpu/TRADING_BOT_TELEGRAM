@@ -423,7 +423,7 @@ def test_dashboard_naming_migration(tmp_path):
     conn2.close()
     assert rows[0][1] == "active:0"
     assert rows[1][1] == "closed:2"
-    assert rows[2][1] == "blocked:0"
+    assert rows[2][1] == "not_executed:0"
 
 
 # ---------------------------------------------------------------------------

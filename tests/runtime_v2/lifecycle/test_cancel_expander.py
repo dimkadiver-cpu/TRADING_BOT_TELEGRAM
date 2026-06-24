@@ -281,6 +281,55 @@ def test_expand_cancel_only_skips_covered_entries_partial(tmp_path):
     assert payload["entry_client_order_id"] == "tsb:10:2:entry:4"
 
 
+def _insert_place_entry_cmd_with_sequence(conn, cmd_id, chain_id, client_order_id, sequence, status="SENT"):
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(command_id, trade_chain_id, command_type, status, payload_json, "
+        "idempotency_key, client_order_id, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?)",
+        (cmd_id, chain_id, "PLACE_ENTRY", status,
+         json.dumps({"sequence": sequence}),
+         f"place_entry:{chain_id}:leg{sequence}", client_order_id, now, now),
+    )
+
+
+def _insert_entry_filled_event(conn, event_id, chain_id, filled_leg_sequence):
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(event_id, trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (event_id, chain_id, "ENTRY_FILLED", "exchange_event",
+         json.dumps({"filled_leg_sequence": filled_leg_sequence, "fill_price": 1.0953, "filled_qty": 100.0}),
+         f"entry_filled:{chain_id}:{filled_leg_sequence}", now),
+    )
+
+
+def test_load_pending_excludes_entry_with_filled_lifecycle_event_race_condition(tmp_path):
+    """Race condition: entry in status SENT ma già confermata FILLED in ops_lifecycle_events
+    (il DB command non è ancora DONE) — non deve essere inclusa nel cancel batch."""
+    from src.runtime_v2.lifecycle.cancel_expander import load_pending_entry_client_order_ids
+    db = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db)
+    conn = sqlite3.connect(db)
+    # Leg 1: SENT (non ancora DONE in DB), ma exchange ha già confermato fill
+    _insert_place_entry_cmd_with_sequence(conn, 1, 10, "tsb:10:1:entry:1", sequence=1, status="SENT")
+    # Leg 2: SENT, non ancora filled
+    _insert_place_entry_cmd_with_sequence(conn, 2, 10, "tsb:10:2:entry:2", sequence=2, status="SENT")
+    # Lifecycle conferma fill di leg 1
+    _insert_entry_filled_event(conn, 200, 10, filled_leg_sequence=1)
+    conn.commit()
+
+    ids = load_pending_entry_client_order_ids(conn, 10)
+    conn.close()
+
+    # Leg 1 deve essere esclusa nonostante status SENT
+    assert ids == ["tsb:10:2:entry:2"]
+
+
 def test_expand_cancel_resolves_plan_placeholder_to_real_client_order_id(tmp_path):
     """Placeholder plan-level `place_entry...` deve diventare il reale `tsb:...`."""
     from src.runtime_v2.lifecycle.cancel_expander import expand_cancel_pending_commands

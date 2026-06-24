@@ -1,52 +1,91 @@
 DA FARE:
-1. Verificare il motivo della estrazione errata:
-[24/06/2026 13:20] BOT_DEMO_LIVE: ❌ — SIGNAL REJECTED
-- - - - - - - - - - - - - - -
-P/USDT — 📉 SHORT
-- - - - - - - - - - - - - - -
-Entry: Market ~2.173
-SL: 2.224
-TP: 1.995
-- - - - - - - - - - - - - - -
-Trader: trader_a
-Exchange Account: demo_1
-Rejected: unknown_symbol
-- - - - - - - - - - - - - - -
-Source: trader_signal
-https://t.me/c/3722628653/8909
+1. Fare un sistema estendere il sistema di operation rules (vedi cornix) per seganli
 
 
-2. Verificare mancanza di recezione del segnale: 
-https://t.me/devo_crypto_Signals/143166 (07.39) 
+2. Rivedere la riconciliazione // sembra che perde odini filati mentre spento
 
 3. Sistemare events in /trade #, logica 
 
-4. rivedere la riconciliazione // sembra che perde odini filati mentre spento
 
-5. Rivedere i messaggi di Clean_log, per erroti/ ridondanze/ ordine della comparsa/ template dei separatore
 
-6. Dashbord:
-    PNL - rivedere il refresh, e le metriche e come li calcola, e scope im base alla posiozione
+4. Rivedere i messaggi di Clean_log, per erroti/ridondanze/ordine della comparsa/ template dei separatore
+    - mancanza di "fee rate" sporadico:
+                    📊 #5 — ENTRY OPENED non ce, 📊 #22 — ENTRY OPENED ce , motivo? 
+    - in tech_log ⚠️ LISTENER: EDIT SKIPPED aggingere riverimento alla chain creata (Signal acettato) far vedere i messagggi? fre il confonto? gestire differenze???
 
-7. Vedere impostazioni della leva in config e come la usa   "risk_leverage_exceeds_account_max_leverage"
+    - 🛡️ #25 — STOP MOVED non deve comparire, gia presente in ✅ #25 — UPDATE DONE
 
-8. sistemare dashbord "bloccaati"
+Veridicare, motico Posion closed sehnata come stop_loss ma in realta E BE
 
-9. verificare /block ho messo "BTC" ma non ha blocato
-
-10. vedi errore:  Update_done ha cancellato 3 entry. pemdenti
-
-🛑 GATEWAY: COMMAND FAILED
+[24/06/2026 16:14] BOT_DEMO_LIVE: ✅ #25 — UPDATE DONE
 - - - - - - - - - - - - - - -
-Command: CANCEL_PENDING_ENTRY
-Chain: #13
-Trader: trader_devos_crypto
-Exchange Account: demo_2
-Reason: invalid_order
+SOL/USDT — 📉 SHORT
+https://t.me/c/4240829081/3536
 - - - - - - - - - - - - - - -
-Source: execution_gateway
-https://t.me/c/4240829081/3440
+Operation:
+▪️ MOVE_SL_TO_BE
+Changed:
+▪️ SL: 69.45 → 68.85 *
+- - - - - - - - - - - - - - -
+* BE
+- - - - - - - - - - - - - - -
+Source: trader_update
+https://t.me/c/3722628653/8928
+[24/06/2026 16:14] BOT_DEMO_LIVE: 🛡️ #25 — STOP MOVED
+- - - - - - - - - - - - - - -
+SOL/USDT — 📉 SHORT
+https://t.me/c/4240829081/3536
+- - - - - - - - - - - - - - -
+New SL: 68.85
+Breakeven protection active
+- - - - - - - - - - - - - - -
+Source: exchange
+[24/06/2026 16:14] BOT_DEMO_LIVE: 🛑 #25 — POSITION CLOSED
+- - - - - - - - - - - - - - -
+SOL/USDT — 📉 SHORT
+https://t.me/c/4240829081/3536
+- - - - - - - - - - - - - - -
+Close reason: STOP_LOSS
+- - - - - - - - - - - - - - -
+SL: 68.85
+Qty: 70.4
+PnL: +0.00 USDT
+Fee rate: 0.055%
+Fee: 2.67 USDT
+- - - - - - - - - - - - - - -
+Final Result:
+ROI net: -1.10%
+RoR: -10.66%
+R: -0.11R
+Total PnL net: -5.33 USDT
+Gross PnL: +0.00 USDT
+Fees: -5.33 USDT
+Funding: +0.00 USDT
+- - - - - - - - - - - - - - -
+Source: exchange_auto
 
-11. Fare un sistema estendere il sistema di operation rules (vedi cornix) per seganli
+- ordine:
+    - 
 
-12. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+5. Dashbord:
+    - PNL - rivedere il refresh, e le metriche e come li calcola, e scope im base alla posiozione. // in corso
+    - Sistemare dashbord "blocati" // in corso
+
+
+

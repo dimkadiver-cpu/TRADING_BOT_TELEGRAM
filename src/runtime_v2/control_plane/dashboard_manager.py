@@ -45,11 +45,18 @@ def _parse_view(current_view: str) -> tuple[str, int]:
     """Parse 'view_name:page' → (view_name, page). Defaults to ('attivi', 0)."""
     if ":" in current_view:
         view_part, page_part = current_view.rsplit(":", 1)
+        view_part = {
+            "blocked": "not_executed",
+            "bloccati": "not_executed",
+        }.get(view_part, view_part)
         try:
             return view_part, int(page_part)
         except ValueError:
             return view_part, 0
-    return current_view, 0
+    return {
+        "blocked": "not_executed",
+        "bloccati": "not_executed",
+    }.get(current_view, current_view), 0
 
 
 def _encode_view(view_name: str, page: int) -> str:
@@ -149,7 +156,7 @@ class DashboardManager:
                 SET current_view = REPLACE(REPLACE(REPLACE(current_view,
                     'attivi', 'active'),
                     'chiusi', 'closed'),
-                    'bloccati', 'blocked')
+                    'bloccati', 'not_executed')
                 WHERE current_view LIKE '%attivi%'
                    OR current_view LIKE '%chiusi%'
                    OR current_view LIKE '%bloccati%'
@@ -473,10 +480,16 @@ class DashboardManager:
         """Edit the dashboard message to show a filter selector panel."""
         from telegram import InlineKeyboardButton, InlineKeyboardMarkup  # noqa: PLC0415
 
+        current_view_name = {
+            "blocked": "not_executed",
+            "bloccati": "not_executed",
+        }.get(current_view_name, current_view_name)
+
         view_labels = {
             "active": "Active",
             "closed": "Closed",
-            "blocked": "Blocked",
+            "not_executed": "Not executed",
+            "operational_issues": "Operational issues",
             "pnl": "PnL",
             "stats": "Stats",
         }
@@ -485,13 +498,23 @@ class DashboardManager:
 
         rows: list[list[InlineKeyboardButton]] = []
 
-        if current_view_name in ("active", "closed", "blocked", "pnl", "stats"):
+        if current_view_name in ("active", "closed", "not_executed", "operational_issues", "pnl", "stats"):
             rows.append([
                 InlineKeyboardButton("Account ▸", callback_data="selector_panel:account"),
                 InlineKeyboardButton("Trader ▸", callback_data="selector_panel:trader"),
             ])
         if current_view_name == "active":
             rows.append([InlineKeyboardButton("Status ▸", callback_data="selector_panel:status")])
+        if current_view_name == "not_executed":
+            rows.append([
+                InlineKeyboardButton("Outcome ▸", callback_data="selector_panel:not_executed_outcome"),
+                InlineKeyboardButton("Phase ▸", callback_data="selector_panel:not_executed_phase"),
+            ])
+        if current_view_name == "operational_issues":
+            rows.append([
+                InlineKeyboardButton("Issue type ▸", callback_data="selector_panel:issue_type"),
+                InlineKeyboardButton("Issue phase ▸", callback_data="selector_panel:issue_phase"),
+            ])
         if current_view_name in ("active", "stats"):
             rows.append([InlineKeyboardButton("Side ▸", callback_data="selector_panel:side")])
         if current_view_name in ("closed", "pnl"):
@@ -533,6 +556,10 @@ class DashboardManager:
             "status": "Status",
             "side": "Side",
             "period": "Period",
+            "not_executed_outcome": "Outcome",
+            "not_executed_phase": "Phase",
+            "issue_type": "Issue type",
+            "issue_phase": "Issue phase",
         }
         label = label_map.get(filter_type, filter_type.capitalize())
         text = f"🔎 Select {label}"
@@ -544,6 +571,10 @@ class DashboardManager:
             "status": ["OPEN", "PARTIALLY_CLOSED", "WAITING_ENTRY", "REVIEW_REQUIRED"],
             "side": ["LONG", "SHORT"],
             "period": ["today", "week", "month"],
+            "not_executed_outcome": ["Rejected", "Entry not executed"],
+            "not_executed_phase": ["Validation", "Policy", "Risk", "Manual review", "Entry submission"],
+            "issue_type": ["Review required", "Command failed"],
+            "issue_phase": ["Protection", "Breakeven", "Take profit", "Close", "Sync", "Entry cancel"],
         }
 
         if filter_type in static_values:

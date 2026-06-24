@@ -14,8 +14,8 @@ from src.runtime_v2.control_plane.override_store import OverrideStore
 from src.runtime_v2.control_plane.scope_resolver import QueryScope
 from src.runtime_v2.control_plane.status_queries import (
     BlockedTradesView, ClosedTradesView, ControlView, HealthView,
-    ReviewsView, StatusView, StatusQueries, PnlView, StatsView,
-    TradeDetail, TradesView,
+    NotExecutedView, OperationalIssuesView, ReviewsView, StatusView,
+    StatusQueries, PnlView, StatsView, TradeDetail, TradesView,
 )
 
 @dataclass
@@ -128,6 +128,12 @@ class RuntimeControlService:
 
     def get_blocked_trades(self, scope: QueryScope) -> BlockedTradesView:
         return self._queries.get_blocked_trades(scope)
+
+    def get_not_executed_trades(self, scope: QueryScope) -> NotExecutedView:
+        return self._queries.get_not_executed_trades(scope)
+
+    def get_operational_issues(self, scope: QueryScope) -> OperationalIssuesView:
+        return self._queries.get_operational_issues(scope)
 
     def get_open_for_close(self, scope: QueryScope) -> list:
         return self._queries.get_open_for_close(scope)

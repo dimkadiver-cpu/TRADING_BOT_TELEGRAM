@@ -173,7 +173,11 @@ class SignalEnrichmentProcessor:
     def _symbol_in_policy_values(symbol: str, configured_symbols: Iterable[str]) -> bool:
         if not symbol:
             return False
-        return any(to_raw_symbol(candidate) == symbol for candidate in configured_symbols)
+        for candidate in configured_symbols:
+            raw = to_raw_symbol(candidate)
+            if raw and (raw == symbol or symbol.startswith(raw)):
+                return True
+        return False
 
     @staticmethod
     def _symbol_policy_range(

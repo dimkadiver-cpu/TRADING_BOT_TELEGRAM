@@ -75,9 +75,16 @@ def load_pending_entry_client_order_ids(
                 AND status IN ('PENDING', 'SENT', 'ACK', 'DONE')
                 AND json_extract(payload_json, '$.entry_client_order_id') IS NOT NULL
           )
+          AND json_extract(payload_json, '$.sequence') NOT IN (
+              SELECT json_extract(le.payload_json, '$.filled_leg_sequence')
+              FROM ops_lifecycle_events le
+              WHERE le.trade_chain_id = ?
+                AND le.event_type = 'ENTRY_FILLED'
+                AND json_extract(le.payload_json, '$.filled_leg_sequence') IS NOT NULL
+          )
         ORDER BY command_id
         """,
-        (trade_chain_id, trade_chain_id),
+        (trade_chain_id, trade_chain_id, trade_chain_id),
     ).fetchall()
     return [str(row[0]) for row in rows if row and row[0]]
 

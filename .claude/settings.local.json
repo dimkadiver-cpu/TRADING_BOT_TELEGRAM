@@ -214,7 +214,9 @@
       "Bash(echo \"PID=$!\")",
       "Read(//c/TeleSignalBot/**)",
       "Bash(xargs grep -l \"log\\\\|Log\\\\|LOG\")",
-      "Skill(code-review)"
+      "Skill(code-review)",
+      "PowerShell(& \"C:\\\\Program Files\\\\SQLite\\\\sqlite3.exe\" \"db\\\\Test_live\\\\db\\\\parser.sqlite3\" \"SELECT id, raw_message_id, symbol, raw_text FROM parsed_signals WHERE raw_message_id = 107;\" 2>&1)",
+      "PowerShell(& \"C:\\\\Program Files\\\\SQLite\\\\sqlite3.exe\" \"db\\\\Test_live\\\\db\\\\parser.sqlite3\" \"SELECT id, message_text FROM raw_messages WHERE id = 107;\" 2>&1)"
     ]
   }
 }
