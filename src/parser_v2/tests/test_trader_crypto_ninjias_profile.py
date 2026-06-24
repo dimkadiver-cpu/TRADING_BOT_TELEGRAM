@@ -94,6 +94,8 @@ def test_risk_order_with_entry_and_duplicate_tp_numbers_is_parsed():
     assert result.signal.symbol == "DYDXUSDT"
     assert result.signal.side == "LONG"
     assert result.signal.entry_structure == "TWO_STEP"
+    assert result.signal.entries[0].entry_type == "MARKET"
+    assert result.signal.entries[1].entry_type == "LIMIT"
     assert result.signal.entries[0].price.value == pytest.approx(0.1025)
     assert result.signal.entries[1].price.value == pytest.approx(0.0980)
     assert [tp.sequence for tp in result.signal.take_profits] == [1, 2, 3]
@@ -114,6 +116,24 @@ def test_risk_order_market_single_entry_single_tp_is_one_shot():
     assert result.signal.entries[0].entry_type == "MARKET"
     assert result.signal.take_profits[0].sequence == 1
     assert result.signal.take_profits[0].price.value == pytest.approx(0.4529)
+
+
+def test_entry_market_now_is_treated_as_market():
+    result = _parse(
+        "SHORT - $TIA\n\n"
+        "- Entry market(now): 0.1325\n"
+        "- Entry limit: 0.1228\n"
+        "- SL: 0.1167\n\n"
+        "TP1: 0.1545\n"
+        "TP2: 0.1888\n"
+    )
+    assert result.primary_class == "SIGNAL"
+    assert result.parse_status == "PARSED"
+    assert result.signal is not None
+    assert result.signal.entries[0].entry_type == "MARKET"
+    assert result.signal.entries[0].price.value == pytest.approx(0.1325)
+    assert result.signal.entries[1].entry_type == "LIMIT"
+    assert result.signal.entries[1].price.value == pytest.approx(0.1228)
 
 
 def test_risk_order_range_entry_becomes_two_step_limits():

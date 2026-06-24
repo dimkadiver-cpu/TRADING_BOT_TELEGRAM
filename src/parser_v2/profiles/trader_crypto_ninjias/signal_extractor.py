@@ -21,7 +21,10 @@ _ENTRY_RANGE_RE = re.compile(
     r"entry\s*:?\s*(?P<low>\d[\d,]*(?:\.\d+)?)\s*-\s*(?P<high>\d[\d,]*(?:\.\d+)?)",
     re.IGNORECASE,
 )
-_ENTRY_MARKET_RE = re.compile(r"entry\s+market\s*:?\s*(?P<price>\d[\d,]*(?:\.\d+)?)", re.IGNORECASE)
+_ENTRY_MARKET_RE = re.compile(
+    r"entry\s+market(?:\s*\(\s*now\s*\))?\s*:?\s*(?P<price>\d[\d,]*(?:\.\d+)?)",
+    re.IGNORECASE,
+)
 _ENTRY_LIMIT_RE = re.compile(r"entry\s+limit\s*:?\s*(?P<price>\d[\d,]*(?:\.\d+)?)", re.IGNORECASE)
 _ENTRY_LIMIT_INDEXED_RE = re.compile(
     r"entry\s+limit\s*(?P<index>\d+)\s*:?\s*(?P<price>\d[\d,]*(?:\.\d+)?)",
@@ -184,9 +187,11 @@ def _extract_entries(text: str) -> list[EntryLeg]:
 
 
 def _default_entry_type_from_header(text: str) -> str:
+    if _ENTRY_LIMIT_RE.search(text):
+        return "MARKET"
     header_match = _STANDARD_HEADER_RE.search(text)
     if header_match is None:
-        return "LIMIT"
+        return "MARKET"
     header_side = header_match.group("side").lower()
     return "MARKET" if "market" in header_side else "LIMIT"
 

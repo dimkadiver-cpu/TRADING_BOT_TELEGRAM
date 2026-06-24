@@ -104,7 +104,7 @@ Output atteso:
 - `primary_class=SIGNAL`
 - `symbol=DYDXUSDT`
 - `side=LONG`
-- `Entry:` viene trattata come entry primaria
+- `Entry:` viene trattata come entry primaria `MARKET` quando nello stesso messaggio esiste una `Entry limit:`
 - `Entry limit:` viene trattata come seconda entry
 - `entry_structure=TWO_STEP`
 - i TP duplicati vengono rinumerati in sequenza quando la ladder continua chiaramente
@@ -127,6 +127,7 @@ Output atteso:
 - `primary_class=SIGNAL`
 - `entry_structure=ONE_SHOT`
 - se l'header contiene `MARKET`, la entry primaria viene marcata `MARKET`
+- anche `Entry market(now):` viene trattata come `MARKET`
 - `TP:` senza numero viene normalizzato come `TP1`
 
 ### 6. Segnale `RISK ORDER` con range su `Entry:`
