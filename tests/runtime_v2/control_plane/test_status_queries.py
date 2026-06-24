@@ -1,6 +1,7 @@
 # tests/runtime_v2/control_plane/test_status_queries.py
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,6 +29,65 @@ def _apply_raw_messages_migration(db_path: str) -> None:
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
+
+
+def _add_signal_only_event(
+    conn,
+    *,
+    source_id,
+    event_type,
+    reason,
+    account_id=None,
+    trader_id=None,
+    symbol=None,
+    side=None,
+):
+    payload = {
+        "reason": reason,
+        "account_id": account_id,
+        "trader_id": trader_id,
+        "symbol": symbol,
+        "side": side,
+    }
+    ts = _now()
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(trade_chain_id, event_type, source_type, source_id, payload_json, idempotency_key, created_at) "
+        "VALUES (NULL,?,?,?,?,?,?)",
+        (
+            event_type,
+            "signal",
+            str(source_id),
+            json.dumps(payload),
+            f"signal_only_{source_id}_{event_type}",
+            ts,
+        ),
+    )
+
+
+def _add_command(
+    conn,
+    *,
+    chain_id,
+    command_type,
+    status,
+    payload="{}",
+):
+    ts = _now()
+    conn.execute(
+        "INSERT INTO ops_execution_commands "
+        "(trade_chain_id, command_type, status, idempotency_key, payload_json, created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (
+            chain_id,
+            command_type,
+            status,
+            f"{chain_id}:{command_type}:{status}:{ts}",
+            payload,
+            ts,
+            ts,
+        ),
+    )
 
 
 @pytest.fixture
@@ -166,6 +226,202 @@ def test_reviews(ops_db):
     q = StatusQueries(ops_db)
     items = q.get_reviews().items
     assert any(it.chain_id == 10 for it in items)
+
+
+# ---------------------------------------------------------------------------
+# Task 1: Not executed / Operational issues classification
+# ---------------------------------------------------------------------------
+
+
+def test_get_not_executed_includes_signal_rejected_without_chain(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_signal_only_event(
+            conn,
+            source_id=104,
+            event_type="SIGNAL_REJECTED",
+            reason="risk_limit_exceeded",
+            account_id="demo_1",
+            trader_id="trader_a",
+            symbol="ETH/USDT",
+            side="LONG",
+        )
+        _add_signal_only_event(
+            conn,
+            source_id=105,
+            event_type="SIGNAL_REJECTED",
+            reason="risk_limit_exceeded",
+            account_id="demo_2",
+            trader_id="trader_b",
+            symbol="ETH/USDT",
+            side="LONG",
+        )
+    conn.close()
+
+    scope = QueryScope(account_id="demo_1", trader_ids=None)
+    rows = StatusQueries(ops_db).get_not_executed_trades(
+        scope
+    ).rows
+    operational = StatusQueries(ops_db).get_operational_issues(scope).rows
+
+    assert len(rows) == 1
+    row = rows[0]
+    assert row.reference == "#S-104"
+    assert row.outcome == "REJECTED"
+    assert row.trade_chain_id is None
+    assert all(getattr(item, "reference", None) != "#S-105" for item in rows)
+    assert all(getattr(item, "reference", None) != "#S-104" for item in operational)
+
+
+def test_get_not_executed_includes_failed_entry_without_ack_or_fill(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 22, "WAITING_ENTRY", symbol="SOL/USDT", side="SHORT", account_id="acct_a")
+        _add_command(
+            conn,
+            chain_id=22,
+            command_type="PLACE_ENTRY",
+            status="FAILED",
+            payload=json.dumps({"reason": "insufficient_margin"}),
+        )
+        _add_chain(conn, 23, "WAITING_ENTRY", symbol="SOL/USDT", side="SHORT", account_id="acct_b")
+        _add_command(
+            conn,
+            chain_id=23,
+            command_type="PLACE_ENTRY",
+            status="FAILED",
+            payload=json.dumps({"reason": "insufficient_margin"}),
+        )
+    conn.close()
+
+    scope = QueryScope(account_id="acct_a", trader_ids=None)
+    rows = StatusQueries(ops_db).get_not_executed_trades(
+        scope
+    ).rows
+    operational = StatusQueries(ops_db).get_operational_issues(scope).rows
+
+    assert any(
+        row.trade_chain_id == 22
+        and row.command_type == "PLACE_ENTRY"
+        and row.reason == "insufficient_margin"
+        for row in rows
+    )
+    assert all(row.trade_chain_id != 23 for row in rows)
+    assert all(row.trade_chain_id != 22 for row in operational)
+
+
+def test_get_not_executed_excludes_acknowledged_waiting_entry(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 30, "WAITING_ENTRY")
+        _add_command(conn, chain_id=30, command_type="PLACE_ENTRY", status="ACK")
+    conn.close()
+
+    rows = StatusQueries(ops_db).get_not_executed_trades(
+        QueryScope(account_id=None, trader_ids=None)
+    ).rows
+    operational = StatusQueries(ops_db).get_operational_issues(
+        QueryScope(account_id=None, trader_ids=None)
+    ).rows
+
+    assert all(row.trade_chain_id != 30 for row in rows)
+    assert all(row.trade_chain_id != 30 for row in operational)
+
+
+def test_get_operational_issues_includes_post_entry_move_stop_failure(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 44, "OPEN", symbol="BTC/USDT", side="LONG")
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, filled_entry_qty=?, open_position_qty=? "
+            "WHERE trade_chain_id=?",
+            (50000.0, 1.0, 1.0, 44),
+        )
+        _add_command(conn, chain_id=44, command_type="PLACE_ENTRY", status="ACK")
+        _add_command(
+            conn,
+            chain_id=44,
+            command_type="MOVE_STOP",
+            status="FAILED",
+            payload=json.dumps({"reason": "exchange_rejected"}),
+        )
+    conn.close()
+
+    scope = QueryScope(account_id=None, trader_ids=None)
+    rows = StatusQueries(ops_db).get_operational_issues(
+        scope
+    ).rows
+    not_executed = StatusQueries(ops_db).get_not_executed_trades(scope).rows
+
+    assert any(
+        row.trade_chain_id == 44
+        and row.command_type == "MOVE_STOP"
+        and row.reason == "exchange_rejected"
+        for row in rows
+    )
+    assert all(row.trade_chain_id != 44 for row in not_executed)
+
+
+def test_review_required_pre_entry_goes_to_not_executed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 50, "REVIEW_REQUIRED", symbol="LTC/USDT", side="LONG")
+        conn.execute(
+            "INSERT INTO ops_lifecycle_events "
+            "(trade_chain_id, event_type, source_type, source_id, payload_json, idempotency_key, created_at) "
+            "VALUES (50,'REVIEW_REQUIRED','test',NULL,?, 'rr_pre', ?)",
+            (json.dumps({"reason": "manual_review_required"}), _now()),
+        )
+    conn.close()
+
+    not_executed = StatusQueries(ops_db).get_not_executed_trades(
+        QueryScope(account_id=None, trader_ids=None)
+    ).rows
+    operational = StatusQueries(ops_db).get_operational_issues(
+        QueryScope(account_id=None, trader_ids=None)
+    ).rows
+
+    assert any(
+        row.trade_chain_id == 50
+        and row.reason == "manual_review_required"
+        for row in not_executed
+    )
+    assert all(row.trade_chain_id != 50 for row in operational)
+
+
+def test_review_required_post_entry_goes_to_operational_issues(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain(conn, 51, "OPEN", symbol="SOL/USDT", side="SHORT")
+        conn.execute(
+            "UPDATE ops_trade_chains "
+            "SET entry_avg_price=?, filled_entry_qty=?, open_position_qty=? "
+            "WHERE trade_chain_id=?",
+            (42000.0, 1.0, 1.0, 51),
+        )
+        _add_command(conn, chain_id=51, command_type="PLACE_ENTRY", status="ACK")
+        conn.execute(
+            "INSERT INTO ops_lifecycle_events "
+            "(trade_chain_id, event_type, source_type, source_id, payload_json, idempotency_key, created_at) "
+            "VALUES (51,'REVIEW_REQUIRED','test',NULL,?, 'rr_post', ?)",
+            (json.dumps({"reason": "missing_protective_stop"}), _now()),
+        )
+    conn.close()
+
+    operational = StatusQueries(ops_db).get_operational_issues(
+        QueryScope(account_id=None, trader_ids=None)
+    ).rows
+    not_executed = StatusQueries(ops_db).get_not_executed_trades(
+        QueryScope(account_id=None, trader_ids=None)
+    ).rows
+
+    assert any(
+        row.trade_chain_id == 51
+        and row.reason == "missing_protective_stop"
+        for row in operational
+    )
+    assert all(row.trade_chain_id != 51 for row in not_executed)
 
 
 def test_get_trade_detail(ops_db):
@@ -722,3 +978,70 @@ def test_get_pnl_stale_snapshot_sets_flag(ops_db):
         scope=QueryScope(account_id="demo_1", trader_ids=None)
     )
     assert view.snapshot_stale is True
+
+
+def _add_chain_pnl(
+    conn,
+    cid: int,
+    state: str,
+    *,
+    account_id: str = "main",
+    trader_id: str = "trader_a",
+    gross_pnl: float = 0.0,
+    fees: float = 0.0,
+    funding: float = 0.0,
+    risk_snapshot_json: str = "{}",
+) -> None:
+    now = _now()
+    conn.execute(
+        "INSERT INTO ops_trade_chains "
+        "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+        " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+        " current_stop_price, management_plan_json, risk_snapshot_json, plan_state_json, "
+        " cumulative_gross_pnl, cumulative_fees, cumulative_funding, "
+        " created_at, updated_at) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+        (cid, cid, cid, cid, trader_id, account_id, "BTC/USDT", "LONG", state, "ONE_SHOT",
+         None, "{}", risk_snapshot_json, "{}",
+         gross_pnl, fees, funding, now, now),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Task 1: partial PnL (PARTIALLY_CLOSED trades)
+# ---------------------------------------------------------------------------
+
+def test_get_pnl_partial_pnl_populated_from_partially_closed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "PARTIALLY_CLOSED", gross_pnl=100.0, fees=5.0, funding=2.0)
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl(scope=QueryScope(account_id="main", trader_ids=None))
+    assert view.partial_pnl == pytest.approx(100.0)
+    assert view.partial_fees == pytest.approx(7.0)   # fees + funding
+    assert view.partial_pnl_net == pytest.approx(93.0)
+
+
+def test_get_pnl_partial_pnl_none_when_no_partially_closed(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "CLOSED", gross_pnl=50.0, fees=1.0, funding=0.5)
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl(scope=QueryScope(account_id="main", trader_ids=None))
+    assert view.partial_pnl is None
+    assert view.partial_pnl_net is None
+
+
+def test_get_pnl_partial_pnl_global_scope(ops_db):
+    """Global scope (scope=None legacy path) also computes partial_pnl."""
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "PARTIALLY_CLOSED", account_id="acc_a", gross_pnl=200.0, fees=10.0)
+        _add_chain_pnl(conn, 2, "PARTIALLY_CLOSED", account_id="acc_b", gross_pnl=50.0, fees=3.0)
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl()
+    assert view.partial_pnl == pytest.approx(250.0)
+    assert view.partial_pnl_net == pytest.approx(237.0)

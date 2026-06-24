@@ -214,6 +214,9 @@ class PnlView:
     fees_usdt: float | None = None     # solo cumulative_fees
     funding_usdt: float | None = None  # solo cumulative_funding
     pnl_net: float | None = None
+    partial_pnl: float | None = None
+    partial_fees: float | None = None
+    partial_pnl_net: float | None = None
     by_account: list[dict] | None = None
     accounts_in_scope: int | None = None
     account_unrealized_pnl_usdt: float | None = None
@@ -286,6 +289,82 @@ class BlockedTradesView:
     rows: list[BlockedTradeRow]
 
 
+@dataclass
+class NotExecutedRow:
+    reference: str
+    trade_chain_id: int | None
+    signal_reference: int | None
+    account_id: str | None
+    trader_id: str | None
+    symbol: str | None
+    side: str | None
+    outcome: str
+    phase: str
+    reason: str | None
+    command_type: str | None
+    occurred_at: str
+    details_command: str
+
+
+@dataclass
+class NotExecutedView:
+    updated_at: str
+    rows: list[NotExecutedRow]
+
+
+@dataclass
+class OperationalIssueRow:
+    trade_chain_id: int
+    account_id: str | None
+    trader_id: str | None
+    symbol: str | None
+    side: str | None
+    issue_type: str
+    phase: str
+    reason: str | None
+    command_type: str | None
+    occurred_at: str
+    details_command: str
+
+
+@dataclass
+class OperationalIssuesView:
+    updated_at: str
+    rows: list[OperationalIssueRow]
+
+
+@dataclass
+class _IssueCandidate:
+    kind: str
+    command_type: str | None
+    reason: str | None
+    occurred_at: str
+    phase: str
+    details_command: str
+
+
+@dataclass
+class _ChainIssueEvidence:
+    trade_chain_id: int
+    account_id: str | None
+    trader_id: str | None
+    symbol: str | None
+    side: str | None
+    lifecycle_state: str
+    filled_entry_qty: float
+    open_position_qty: float
+    entry_acknowledged: bool = False
+    first_entry_evidence_at: str | None = None
+    latest_pre_entry_review: _IssueCandidate | None = None
+    latest_post_entry_review: _IssueCandidate | None = None
+    latest_entry_failure: _IssueCandidate | None = None
+    latest_operational_failure: _IssueCandidate | None = None
+
+
+_ENTRY_COMMAND_TYPES = {"PLACE_ENTRY", "PLACE_ENTRY_WITH_ATTACHED_TPSL"}
+_ENTRY_ACK_STATUSES = {"ACK", "WAITING_POSITION", "DONE"}
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%H:%M:%S")
 
@@ -338,6 +417,112 @@ def _extract_stop_price(*json_blobs: str | None) -> float | None:
             except (TypeError, ValueError):
                 continue
     return None
+
+
+def _parse_json_blob(blob: str | None) -> dict:
+    if not blob:
+        return {}
+    try:
+        data = json.loads(blob)
+    except Exception:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _extract_reason(blob: str | None) -> str | None:
+    data = _parse_json_blob(blob)
+    value = data.get("reason") or data.get("error")
+    if value is None:
+        return None
+    return str(value)
+
+
+def _extract_command_reason(
+    result_payload_json: str | None,
+    payload_json: str | None = None,
+) -> str | None:
+    return _extract_reason(result_payload_json) or _extract_reason(payload_json)
+
+
+def _command_effective_timestamp(
+    *,
+    status: str,
+    created_at: str | None,
+    updated_at: str | None,
+    acknowledged_at: str | None,
+    completed_at: str | None,
+) -> str:
+    if status in _ENTRY_ACK_STATUSES:
+        return acknowledged_at or completed_at or updated_at or created_at or ""
+    if status == "FAILED":
+        return completed_at or updated_at or created_at or ""
+    return updated_at or created_at or ""
+
+
+def _entry_evidence_present(evidence: _ChainIssueEvidence) -> bool:
+    return (
+        evidence.entry_acknowledged
+        or evidence.filled_entry_qty > 0
+        or evidence.open_position_qty > 0
+    )
+
+
+def _matches_scope_values(
+    scope: QueryScope,
+    *,
+    account_id: str | None,
+    trader_id: str | None,
+) -> bool:
+    if scope.account_id is None and scope.trader_ids is None:
+        return True
+    if scope.account_id != account_id:
+        return False
+    if scope.trader_ids is None:
+        return True
+    return trader_id in scope.trader_ids
+
+
+def _phase_for_signal_event(event_type: str) -> str:
+    return {
+        "SIGNAL_REJECTED": "Risk",
+        "REVIEW_REQUIRED": "Manual review",
+    }.get(event_type, "Validation")
+
+
+def _phase_for_command(command_type: str | None) -> str:
+    return {
+        "PLACE_ENTRY": "Entry submission",
+        "PLACE_ENTRY_WITH_ATTACHED_TPSL": "Entry submission",
+        "MOVE_STOP": "Protection",
+        "MOVE_STOP_TO_BREAKEVEN": "Breakeven",
+        "PLACE_TP": "Take profit",
+        "CLOSE_FULL": "Close",
+        "CLOSE_PARTIAL": "Close",
+        "CANCEL_ENTRY": "Entry cancel",
+    }.get(command_type or "", "Operations")
+
+
+def _latest_candidate(*candidates: _IssueCandidate | None) -> _IssueCandidate | None:
+    present = [candidate for candidate in candidates if candidate is not None]
+    if not present:
+        return None
+    return max(present, key=lambda candidate: candidate.occurred_at)
+
+
+def _earliest_timestamp(*timestamps: str | None) -> str | None:
+    present = [timestamp for timestamp in timestamps if timestamp]
+    if not present:
+        return None
+    return min(present)
+
+
+def _review_is_post_entry(
+    evidence: _ChainIssueEvidence,
+    candidate: _IssueCandidate,
+) -> bool:
+    if evidence.first_entry_evidence_at:
+        return evidence.first_entry_evidence_at <= candidate.occurred_at
+    return False
 
 
 def _scope_where(scope: QueryScope, table_alias: str = "") -> tuple[str, list]:
@@ -1039,6 +1224,14 @@ class StatusQueries:
                     f"WHERE lifecycle_state='CLOSED' AND {scope_frag}",
                     scope_params,
                 ).fetchone()
+                partial_row = conn.execute(
+                    f"SELECT "
+                    f"SUM(cumulative_gross_pnl), "
+                    f"SUM(cumulative_fees + cumulative_funding) "
+                    f"FROM ops_trade_chains "
+                    f"WHERE lifecycle_state='PARTIALLY_CLOSED' AND {scope_frag}",
+                    scope_params,
+                ).fetchone()
             else:
                 # Legacy scope=None: global counts and PnL (all accounts)
                 def _count(state: str) -> int:
@@ -1056,6 +1249,13 @@ class StatusQueries:
                     "FROM ops_trade_chains "
                     "WHERE lifecycle_state='CLOSED'"
                 ).fetchone()
+                partial_row = conn.execute(
+                    "SELECT "
+                    "SUM(cumulative_gross_pnl), "
+                    "SUM(cumulative_fees + cumulative_funding) "
+                    "FROM ops_trade_chains "
+                    "WHERE lifecycle_state='PARTIALLY_CLOSED'"
+                ).fetchone()
 
             open_count = _count("OPEN")
             partial_count = _count("PARTIALLY_CLOSED")
@@ -1072,6 +1272,14 @@ class StatusQueries:
                 fees_usdt = float(closed_row[2]) if closed_row[2] is not None else 0.0
                 funding_usdt = float(closed_row[3]) if closed_row[3] is not None else 0.0
                 pnl_net = gross_pnl - (total_fees or 0.0)
+
+            partial_pnl: float | None = None
+            partial_fees: float | None = None
+            partial_pnl_net: float | None = None
+            if partial_row and partial_row[0] is not None:
+                partial_pnl = float(partial_row[0])
+                partial_fees = float(partial_row[1]) if partial_row[1] is not None else 0.0
+                partial_pnl_net = partial_pnl - (partial_fees or 0.0)
 
             # Global scope: CTE latest-per-account + freshness aggregation
             by_account: list[dict] | None = None
@@ -1224,6 +1432,9 @@ class StatusQueries:
             fees_usdt=fees_usdt,
             funding_usdt=funding_usdt,
             pnl_net=pnl_net,
+            partial_pnl=partial_pnl,
+            partial_fees=partial_fees,
+            partial_pnl_net=partial_pnl_net,
             by_account=by_account,
             accounts_in_scope=accounts_in_scope,
             account_unrealized_pnl_usdt=_account_unrealized_pnl_usdt,
@@ -1415,6 +1626,319 @@ class StatusQueries:
             page_size=page_size,
         )
 
+    def _load_chain_issue_evidence(
+        self,
+        conn: sqlite3.Connection,
+        scope: QueryScope,
+        *,
+        side: str | None = None,
+    ) -> dict[int, _ChainIssueEvidence]:
+        scope_frag, scope_params = _scope_where(scope)
+        side_sql = "AND side=?" if side else ""
+        side_params = [side] if side else []
+
+        chain_rows = conn.execute(
+            "SELECT trade_chain_id, account_id, trader_id, symbol, side, lifecycle_state, "
+            "COALESCE(filled_entry_qty, 0), COALESCE(open_position_qty, 0) "
+            "FROM ops_trade_chains "
+            f"WHERE {scope_frag} {side_sql}",
+            [*scope_params, *side_params],
+        ).fetchall()
+        evidence_by_chain = {
+            row[0]: _ChainIssueEvidence(
+                trade_chain_id=row[0],
+                account_id=row[1],
+                trader_id=row[2],
+                symbol=row[3],
+                side=row[4],
+                lifecycle_state=row[5],
+                filled_entry_qty=float(row[6] or 0.0),
+                open_position_qty=float(row[7] or 0.0),
+            )
+            for row in chain_rows
+        }
+        if not evidence_by_chain:
+            return evidence_by_chain
+
+        chain_ids = list(evidence_by_chain)
+        placeholders = ",".join("?" * len(chain_ids))
+
+        for row in conn.execute(
+            "SELECT trade_chain_id, command_type, status, payload_json, result_payload_json, "
+            "created_at, updated_at, acknowledged_at, completed_at "
+            "FROM ops_execution_commands "
+            f"WHERE trade_chain_id IN ({placeholders}) "
+            "ORDER BY created_at, command_id",
+            chain_ids,
+        ).fetchall():
+            (
+                chain_id,
+                command_type,
+                status,
+                payload_json,
+                result_payload_json,
+                created_at,
+                updated_at,
+                acknowledged_at,
+                completed_at,
+            ) = row
+            evidence = evidence_by_chain.get(chain_id)
+            if evidence is None:
+                continue
+            effective_at = _command_effective_timestamp(
+                status=status,
+                created_at=created_at,
+                updated_at=updated_at,
+                acknowledged_at=acknowledged_at,
+                completed_at=completed_at,
+            )
+            if (
+                command_type in _ENTRY_COMMAND_TYPES
+                and status in _ENTRY_ACK_STATUSES
+            ):
+                evidence.entry_acknowledged = True
+                evidence.first_entry_evidence_at = _earliest_timestamp(
+                    evidence.first_entry_evidence_at,
+                    effective_at,
+                )
+            if status != "FAILED":
+                continue
+            candidate = _IssueCandidate(
+                kind="COMMAND_FAILED",
+                command_type=command_type,
+                reason=_extract_command_reason(result_payload_json, payload_json),
+                occurred_at=effective_at,
+                phase=_phase_for_command(command_type),
+                details_command=command_type or "UNKNOWN_COMMAND",
+            )
+            if command_type in _ENTRY_COMMAND_TYPES:
+                evidence.latest_entry_failure = _latest_candidate(
+                    evidence.latest_entry_failure,
+                    candidate,
+                )
+            else:
+                evidence.latest_operational_failure = _latest_candidate(
+                    evidence.latest_operational_failure,
+                    candidate,
+                )
+
+        for row in conn.execute(
+            "SELECT trade_chain_id, event_type, created_at "
+            "FROM ops_lifecycle_events "
+            f"WHERE trade_chain_id IN ({placeholders}) "
+            "AND event_type IN ('ENTRY_OPENED', 'ENTRY_FILLED', 'ENTRY_PARTIALLY_FILLED') "
+            "ORDER BY created_at, event_id",
+            chain_ids,
+        ).fetchall():
+            chain_id, _event_type, created_at = row
+            evidence = evidence_by_chain.get(chain_id)
+            if evidence is None:
+                continue
+            evidence.first_entry_evidence_at = _earliest_timestamp(
+                evidence.first_entry_evidence_at,
+                created_at,
+            )
+
+        for row in conn.execute(
+            "SELECT trade_chain_id, event_type, payload_json, created_at "
+            "FROM ops_lifecycle_events "
+            f"WHERE trade_chain_id IN ({placeholders}) "
+            "AND event_type='REVIEW_REQUIRED' "
+            "ORDER BY created_at, event_id",
+            chain_ids,
+        ).fetchall():
+            chain_id, event_type, payload_json, created_at = row
+            evidence = evidence_by_chain.get(chain_id)
+            if evidence is None:
+                continue
+            candidate = _IssueCandidate(
+                kind="REVIEW_REQUIRED",
+                command_type=None,
+                reason=_extract_reason(payload_json),
+                occurred_at=created_at,
+                phase=_phase_for_signal_event(event_type),
+                details_command="REVIEW_REQUIRED",
+            )
+            if _review_is_post_entry(evidence, candidate):
+                evidence.latest_post_entry_review = _latest_candidate(
+                    evidence.latest_post_entry_review,
+                    candidate,
+                )
+            else:
+                evidence.latest_pre_entry_review = _latest_candidate(
+                    evidence.latest_pre_entry_review,
+                    candidate,
+                )
+
+        return evidence_by_chain
+
+    def get_not_executed_trades(
+        self,
+        scope: QueryScope,
+        *,
+        side: str | None = None,
+        outcome: str | None = None,
+        phase: str | None = None,
+    ) -> NotExecutedView:
+        conn = self._connect()
+        try:
+            rows: list[NotExecutedRow] = []
+            seen_signals: set[str] = set()
+            seen_chains: set[int] = set()
+
+            for row in conn.execute(
+                "SELECT source_id, payload_json, created_at "
+                "FROM ops_lifecycle_events "
+                "WHERE trade_chain_id IS NULL AND event_type='SIGNAL_REJECTED' "
+                "ORDER BY created_at DESC, event_id DESC",
+            ).fetchall():
+                source_id, payload_json, created_at = row
+                payload = _parse_json_blob(payload_json)
+                account_id = payload.get("account_id")
+                trader_id = payload.get("trader_id")
+                symbol = payload.get("symbol")
+                signal_side = payload.get("side")
+                if not _matches_scope_values(
+                    scope,
+                    account_id=account_id,
+                    trader_id=trader_id,
+                ):
+                    continue
+                if side and signal_side != side:
+                    continue
+                signal_reference = None
+                if source_id is not None:
+                    try:
+                        signal_reference = int(source_id)
+                    except (TypeError, ValueError):
+                        signal_reference = None
+                reference = f"#S-{source_id}" if source_id is not None else "#S-?"
+                if reference in seen_signals:
+                    continue
+                row_outcome = "REJECTED"
+                row_phase = _phase_for_signal_event("SIGNAL_REJECTED")
+                if outcome and row_outcome != outcome:
+                    continue
+                if phase and row_phase != phase:
+                    continue
+                rows.append(
+                    NotExecutedRow(
+                        reference=reference,
+                        trade_chain_id=None,
+                        signal_reference=signal_reference,
+                        account_id=account_id,
+                        trader_id=trader_id,
+                        symbol=symbol,
+                        side=signal_side,
+                        outcome=row_outcome,
+                        phase=row_phase,
+                        reason=_extract_reason(payload_json),
+                        command_type=None,
+                        occurred_at=created_at,
+                        details_command="SIGNAL_REJECTED",
+                    )
+                )
+                seen_signals.add(reference)
+
+            evidence_by_chain = self._load_chain_issue_evidence(conn, scope, side=side)
+            for chain_id, evidence in evidence_by_chain.items():
+                if chain_id in seen_chains:
+                    continue
+                if _entry_evidence_present(evidence):
+                    continue
+
+                candidate = _latest_candidate(
+                    evidence.latest_pre_entry_review,
+                    evidence.latest_entry_failure,
+                )
+                if candidate is None:
+                    continue
+
+                row_outcome = (
+                    "REVIEW_REQUIRED"
+                    if candidate.kind == "REVIEW_REQUIRED"
+                    else "NOT_EXECUTED"
+                )
+                if outcome and row_outcome != outcome:
+                    continue
+                if phase and candidate.phase != phase:
+                    continue
+                rows.append(
+                    NotExecutedRow(
+                        reference=f"#{chain_id}",
+                        trade_chain_id=chain_id,
+                        signal_reference=None,
+                        account_id=evidence.account_id,
+                        trader_id=evidence.trader_id,
+                        symbol=evidence.symbol,
+                        side=evidence.side,
+                        outcome=row_outcome,
+                        phase=candidate.phase,
+                        reason=candidate.reason,
+                        command_type=candidate.command_type,
+                        occurred_at=candidate.occurred_at,
+                        details_command=candidate.details_command,
+                    )
+                )
+                seen_chains.add(chain_id)
+        finally:
+            conn.close()
+
+        rows.sort(key=lambda item: item.occurred_at, reverse=True)
+        return NotExecutedView(updated_at=_now_iso(), rows=rows)
+
+    def get_operational_issues(
+        self,
+        scope: QueryScope,
+        *,
+        side: str | None = None,
+        issue_type: str | None = None,
+        phase: str | None = None,
+    ) -> OperationalIssuesView:
+        conn = self._connect()
+        try:
+            evidence_by_chain = self._load_chain_issue_evidence(conn, scope, side=side)
+        finally:
+            conn.close()
+
+        rows: list[OperationalIssueRow] = []
+        for chain_id, evidence in evidence_by_chain.items():
+            if not _entry_evidence_present(evidence):
+                continue
+
+            candidate = _latest_candidate(
+                evidence.latest_post_entry_review,
+                evidence.latest_operational_failure,
+                evidence.latest_entry_failure,
+            )
+            if candidate is None:
+                continue
+
+            row_issue_type = candidate.kind
+            if issue_type and row_issue_type != issue_type:
+                continue
+            if phase and candidate.phase != phase:
+                continue
+
+            rows.append(
+                OperationalIssueRow(
+                    trade_chain_id=chain_id,
+                    account_id=evidence.account_id,
+                    trader_id=evidence.trader_id,
+                    symbol=evidence.symbol,
+                    side=evidence.side,
+                    issue_type=row_issue_type,
+                    phase=candidate.phase,
+                    reason=candidate.reason,
+                    command_type=candidate.command_type,
+                    occurred_at=candidate.occurred_at,
+                    details_command=candidate.details_command,
+                )
+            )
+
+        rows.sort(key=lambda item: item.occurred_at, reverse=True)
+        return OperationalIssuesView(updated_at=_now_iso(), rows=rows)
+
     def get_blocked_trades(self, scope: QueryScope, side: str | None = None) -> BlockedTradesView:
         conn = self._connect()
         try:
@@ -1425,7 +1949,6 @@ class StatusQueries:
             side_sql_t = "AND t.side=?" if side else ""
             side_params = [side] if side else []
 
-            # REVIEW_REQUIRED chains in scope
             review_rows = conn.execute(
                 f"SELECT trade_chain_id, symbol, trader_id, account_id, side FROM ops_trade_chains "
                 f"WHERE lifecycle_state='REVIEW_REQUIRED' AND {scope_frag} {side_sql} "
@@ -1433,8 +1956,6 @@ class StatusQueries:
                 [*scope_params, *side_params],
             ).fetchall()
 
-            # Reason + blocked_at for REVIEW_REQUIRED from lifecycle events.
-            # Primary: dedicated REVIEW_REQUIRED event. Fallback: most recent event with a reason.
             reason_data: dict[int, tuple[str | None, str | None]] = {}
             for row in conn.execute(
                 "SELECT trade_chain_id, payload_json, created_at FROM ops_lifecycle_events "
@@ -1442,7 +1963,6 @@ class StatusQueries:
                 "ORDER BY event_id"
             ).fetchall():
                 cid_r, pjson, cat = row[0], row[1], row[2]
-                # Prefer REVIEW_REQUIRED event; only overwrite with fallback if not already set
                 if pjson:
                     try:
                         reason_candidate = json.loads(pjson).get("reason")
@@ -1451,10 +1971,9 @@ class StatusQueries:
                     if reason_candidate:
                         reason_data[cid_r] = (pjson, cat)
 
-            # Chains with EXEC_FAILED commands in scope
             exec_failed_rows = conn.execute(
                 f"SELECT DISTINCT t.trade_chain_id, t.symbol, t.trader_id, t.account_id, t.side, "
-                f"ec.payload_json, ec.created_at "
+                f"ec.payload_json, ec.result_payload_json, ec.created_at, ec.updated_at, ec.completed_at "
                 f"FROM ops_execution_commands ec "
                 f"JOIN ops_trade_chains t ON t.trade_chain_id = ec.trade_chain_id "
                 f"WHERE ec.status='FAILED' AND {t_frag} {side_sql_t} "
@@ -1465,8 +1984,6 @@ class StatusQueries:
             conn.close()
 
         result_rows: list[BlockedTradeRow] = []
-
-        # Track chain_ids already added
         seen: set[int] = set()
 
         for cid, symbol, trader_id, account_id, side in review_rows:
@@ -1497,23 +2014,31 @@ class StatusQueries:
             ))
             seen.add(cid)
 
-        for cid, symbol, trader_id, account_id, side, payload_json, created_at in exec_failed_rows:
+        for (
+            cid,
+            symbol,
+            trader_id,
+            account_id,
+            side,
+            payload_json,
+            result_payload_json,
+            created_at,
+            updated_at,
+            completed_at,
+        ) in exec_failed_rows:
             if cid in seen:
                 continue
-            reason = None
+            reason = _extract_command_reason(result_payload_json, payload_json)
             blocked_at = None
-            if payload_json:
-                try:
-                    reason = json.loads(payload_json).get("reason") or json.loads(payload_json).get("error")
-                except Exception:
-                    pass
-            if created_at and len(created_at) >= 16:
+            effective_at = completed_at or updated_at or created_at
+            raw_blocked_at = effective_at or created_at
+            if raw_blocked_at and len(raw_blocked_at) >= 16:
                 try:
                     from datetime import datetime as _dt
-                    dt = _dt.fromisoformat(created_at.rstrip("Z"))
+                    dt = _dt.fromisoformat(raw_blocked_at.rstrip("Z"))
                     blocked_at = dt.strftime("%-d %b %H:%M")
                 except Exception:
-                    blocked_at = created_at[:16]
+                    blocked_at = raw_blocked_at[:16]
             result_rows.append(BlockedTradeRow(
                 chain_id=cid,
                 symbol=symbol,
@@ -1611,4 +2136,6 @@ __all__ = [
     "HealthView", "ControlView", "BlockInfo", "ReviewsView", "ReviewItem",
     "PnlView", "StatsView", "StatsRow", "ClosedTradesView", "ClosedTradeRow",
     "BlockedTradesView", "BlockedTradeRow",
+    "NotExecutedView", "NotExecutedRow",
+    "OperationalIssuesView", "OperationalIssueRow",
 ]
