@@ -369,11 +369,13 @@ def _pnl_by_trader_lines(p: dict) -> str:
         parts = [t["trader_id"], f"Open: {t['open_count']}"]
         if t.get("risk_usdt") is not None:
             parts.append(f"Risk: {t['risk_usdt']:.2f}")
-        sign = "+" if t["closed_pnl"] >= 0 else ""
-        parts.append(f"Closed: {sign}{t['closed_pnl']:.2f}")
-        if t["partial_pnl"] != 0.0:
-            sign = "+" if t["partial_pnl"] >= 0 else ""
-            parts.append(f"Partial: {sign}{t['partial_pnl']:.2f}")
+        closed = t.get("closed_pnl") or 0.0
+        sign = "+" if closed >= 0 else ""
+        parts.append(f"Closed: {sign}{closed:.2f}")
+        partial = t.get("partial_pnl") or 0.0
+        if partial != 0.0:
+            sign = "+" if partial >= 0 else ""
+            parts.append(f"Partial: {sign}{partial:.2f}")
         lines.append("  " + " · ".join(parts))
     return "\n".join(lines)
 
