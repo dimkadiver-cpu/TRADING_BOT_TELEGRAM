@@ -75,6 +75,12 @@ def _make_queries_mock() -> MagicMock:
     queries.get_blocked_trades.return_value = BlockedTradesView(
         updated_at="12:00:00", rows=[]
     )
+    queries.get_not_executed_trades.return_value = MagicMock(
+        updated_at="12:00:00", rows=[]
+    )
+    queries.get_operational_issues.return_value = MagicMock(
+        updated_at="12:00:00", rows=[]
+    )
     return queries
 
 
@@ -290,6 +296,36 @@ async def test_handle_callback_view(tmp_path):
 
     assert row is not None
     assert row[0] == "closed:0", f"Expected 'closed:0', got {row[0]!r}"
+
+
+@pytest.mark.asyncio
+async def test_handle_callback_view_blocked_routes_to_not_executed(tmp_path):
+    bot = _make_mock_bot(message_id=89)
+    manager = _make_manager(tmp_path, bot=bot)
+    _patch_render_view(manager)
+
+    scope = _make_scope("acc1", trader_ids=None)
+    await manager.create(scope=scope, chat_id=401, thread_id=0)
+
+    captured_views: list[str] = []
+
+    def patched_render(scope, view, page, filters=None):
+        captured_views.append(view)
+        return (f"[{view} page={page}]", MagicMock())
+
+    manager._render_view = patched_render  # type: ignore[method-assign]
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 401
+    fake_message.message_thread_id = None
+    fake_message.message_id = 89
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await manager.handle_callback(fake_query, "view:blocked")
+
+    assert captured_views[-1] == "not_executed"
 
 
 # ---------------------------------------------------------------------------
@@ -547,6 +583,47 @@ async def test_filters_callback_shows_panel(tmp_path):
 
 
 @pytest.mark.asyncio
+async def test_filters_panel_supports_operational_issues(tmp_path):
+    db_path = _make_db(tmp_path)
+    bot = _make_mock_bot(message_id=89)
+    mgr = DashboardManager(
+        ops_db_path=db_path,
+        scope_resolver=MagicMock(),
+        queries=_make_queries_mock(),
+        bot=bot,
+    )
+
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "INSERT INTO ops_dashboard_messages VALUES (101,0,89,NULL,NULL,'operational_issues:0','{}',NULL)"
+    )
+    conn.commit()
+    conn.close()
+
+    fake_message = MagicMock()
+    fake_message.chat_id = 101
+    fake_message.message_thread_id = None
+    fake_message.message_id = 89
+
+    fake_query = MagicMock()
+    fake_query.message = fake_message
+
+    await mgr.handle_callback(fake_query, "filters")
+
+    bot.edit_message_text.assert_awaited_once()
+    call_kwargs = bot.edit_message_text.call_args
+    keyboard = call_kwargs.kwargs["reply_markup"]
+    callback_data = [
+        button.callback_data
+        for row in keyboard.inline_keyboard
+        for button in row
+        if getattr(button, "callback_data", None)
+    ]
+    assert "selector_panel:issue_type" in callback_data
+    assert "selector_panel:issue_phase" in callback_data
+
+
+@pytest.mark.asyncio
 async def test_clear_callback_resets_filters_and_rerenders(tmp_path):
     """handle_callback('clear') resets filters_json and re-renders the dashboard."""
     db_path = _make_db(tmp_path)
@@ -786,3 +863,91 @@ async def test_selector_panel_account_callback_calls_edit(tmp_path):
 
     # Must have called edit_message_text to show the selector sub-panel
     bot.edit_message_text.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# Task 6: on_snapshot_event
+# ---------------------------------------------------------------------------
+
+@pytest.mark.asyncio
+async def test_on_snapshot_event_refreshes_pnl_dashboard_in_scope(tmp_path):
+    bot = _make_mock_bot(message_id=77)
+    manager = _make_manager(tmp_path, bot=bot)
+    _patch_render_view(manager)
+
+    scope = _make_scope("acc1")
+    await manager.create(scope=scope, chat_id=500, thread_id=0)
+
+    # Switch to pnl view manually
+    conn = sqlite3.connect(manager._db)
+    conn.execute("UPDATE ops_dashboard_messages SET current_view='pnl:0' WHERE chat_id=500")
+    conn.commit()
+    conn.close()
+
+    bot.edit_message_text.reset_mock()
+    manager._last_edit.clear()
+
+    await manager.on_snapshot_event(account_id="acc1")
+    assert bot.edit_message_text.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_on_snapshot_event_skips_non_pnl_views(tmp_path):
+    bot = _make_mock_bot(message_id=78)
+    manager = _make_manager(tmp_path, bot=bot)
+    _patch_render_view(manager)
+
+    scope = _make_scope("acc1")
+    await manager.create(scope=scope, chat_id=501, thread_id=0)
+    # Dashboard is in default 'active:0' view — not pnl
+
+    bot.edit_message_text.reset_mock()
+    manager._last_edit.clear()
+
+    await manager.on_snapshot_event(account_id="acc1")
+    assert bot.edit_message_text.call_count == 0, "active view must not be refreshed on snapshot event"
+
+
+@pytest.mark.asyncio
+async def test_on_snapshot_event_skips_different_account(tmp_path):
+    bot = _make_mock_bot(message_id=79)
+    manager = _make_manager(tmp_path, bot=bot)
+    _patch_render_view(manager)
+
+    scope = _make_scope("acc1")
+    await manager.create(scope=scope, chat_id=502, thread_id=0)
+
+    conn = sqlite3.connect(manager._db)
+    conn.execute("UPDATE ops_dashboard_messages SET current_view='pnl:0' WHERE chat_id=502")
+    conn.commit()
+    conn.close()
+
+    bot.edit_message_text.reset_mock()
+    manager._last_edit.clear()
+
+    # Snapshot event for a different account
+    await manager.on_snapshot_event(account_id="acc_other")
+    assert bot.edit_message_text.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_on_snapshot_event_refreshes_global_scope_pnl_dashboard(tmp_path):
+    bot = _make_mock_bot(message_id=80)
+    # Global scope: account_id=None
+    manager = _make_manager(tmp_path, bot=bot, scope=_make_global_scope())
+    _patch_render_view(manager)
+
+    global_scope = _make_global_scope()
+    await manager.create(scope=global_scope, chat_id=503, thread_id=0)
+
+    conn = sqlite3.connect(manager._db)
+    conn.execute("UPDATE ops_dashboard_messages SET current_view='pnl:0' WHERE chat_id=503")
+    conn.commit()
+    conn.close()
+
+    bot.edit_message_text.reset_mock()
+    manager._last_edit.clear()
+
+    # Global dashboard has scope_account_id=NULL → refreshed for any account
+    await manager.on_snapshot_event(account_id="any_account")
+    assert bot.edit_message_text.call_count == 1

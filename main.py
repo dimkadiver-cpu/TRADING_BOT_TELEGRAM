@@ -669,6 +669,15 @@ async def _async_main(
     cp_dispatcher = _cp.dispatcher if _cp is not None else None
     cp_service = _cp.service if _cp is not None else None
 
+    # Wire account snapshot worker → dashboard PNL auto-refresh
+    if _account_snapshot_worker is not None and _cp is not None:
+        _cp_dashboard_manager = _cp.dashboard_manager
+
+        def _on_snap(account_id: str) -> None:
+            asyncio.create_task(_cp_dashboard_manager.on_snapshot_event(account_id))
+
+        _account_snapshot_worker._on_snapshot_saved = _on_snap
+
     if _cp is not None and _cp.startup_plan.apply_global_block:
         cp_service.pause(scope_value=None, created_by="startup")
         logger.info("control plane: startup mode '%s' — global block applied", _cp.startup_plan.mode)

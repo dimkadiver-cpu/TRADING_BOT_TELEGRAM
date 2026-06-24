@@ -40,6 +40,7 @@ class ControlPlane:
     dispatcher: TelegramNotificationDispatcher
     snapshot_store: SnapshotStore
     startup_plan: StartupPlan
+    dashboard_manager: DashboardManager
 
 
 def build_control_plane(
@@ -131,6 +132,7 @@ def build_control_plane(
         dispatcher=dispatcher,
         snapshot_store=snapshot_store,
         startup_plan=startup_plan,
+        dashboard_manager=dashboard_manager,
     )
 
 

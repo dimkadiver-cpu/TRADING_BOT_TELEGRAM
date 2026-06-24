@@ -627,6 +627,48 @@ class DashboardManager:
                     self._pending_tasks[key] = task
                 # else: already a pending task — it will pick up the latest current_view when it fires
 
+    async def on_snapshot_event(self, account_id: str) -> None:
+        """Update PNL dashboards in scope for account_id after a new OK snapshot.
+        Only dashboards with current_view == 'pnl' are refreshed.
+        """
+        rows = self._get_all_dashboards()
+        for chat_id, thread_id, message_id, scope_account_id, scope_trader_id, current_view_str in rows:
+            view_name, _ = _parse_view(current_view_str)
+            if view_name != "pnl":
+                continue
+            if scope_account_id is not None and scope_account_id != account_id:
+                continue
+
+            key = (chat_id, thread_id)
+            now = time.monotonic()
+            last = self._last_edit.get(key, 0.0)
+            elapsed = now - last
+
+            if elapsed >= _THROTTLE_SECONDS:
+                await self._do_refresh(
+                    chat_id=chat_id,
+                    thread_id=thread_id,
+                    message_id=message_id,
+                    scope_account_id=scope_account_id,
+                    scope_trader_id=scope_trader_id,
+                    current_view_str=current_view_str,
+                )
+            else:
+                if key not in self._pending_tasks or self._pending_tasks[key].done():
+                    delay = _THROTTLE_SECONDS - elapsed
+                    task = asyncio.get_running_loop().create_task(
+                        self._deferred_refresh(
+                            delay=delay,
+                            chat_id=chat_id,
+                            thread_id=thread_id,
+                            message_id=message_id,
+                            scope_account_id=scope_account_id,
+                            scope_trader_id=scope_trader_id,
+                            current_view_str=current_view_str,
+                        )
+                    )
+                    self._pending_tasks[key] = task
+
     async def _deferred_refresh(
         self,
         *,
