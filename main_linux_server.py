@@ -42,6 +42,7 @@ from src.runtime_v2.lifecycle.ports import ExchangeDataPort
 from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
+from src.runtime_v2.lifecycle.account_snapshot_worker import AccountSnapshotWorker
 from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
 from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
@@ -616,6 +617,22 @@ async def _async_main(
         exchange_event_repo=exchange_event_repo,
     )
 
+    # Account snapshot worker — periodic balance fetch per account
+    _account_ids: list[str] = (
+        list(execution_runtime.sync_workers.keys())
+        if execution_runtime is not None and execution_runtime.sync_workers
+        else []
+    )
+    _account_snapshot_worker: AccountSnapshotWorker | None = None
+    if _account_ids and isinstance(exchange_port, LiveExchangeDataPort):
+        _account_snapshot_worker = AccountSnapshotWorker(
+            port=exchange_port,
+            repository=snapshot_repo,
+            account_ids=_account_ids,
+            interval_seconds=60,
+            stale_after_seconds=180,
+        )
+
     client = TelegramClient(session_name, api_id, api_hash)
     await client.start()
 
@@ -629,6 +646,11 @@ async def _async_main(
         )
         for w in targets:
             w.run_bulk_position_sync()
+        # Trigger account snapshot refresh
+        if _account_snapshot_worker is not None:
+            trigger_ids = [account_id] if account_id else _account_ids
+            for acc in trigger_ids:
+                _account_snapshot_worker.trigger(acc)
 
     _cp = build_control_plane(
         config_path=str(root_dir / "config" / "telegram_control.yaml"),
@@ -644,6 +666,15 @@ async def _async_main(
     control_bot = _cp.bot if _cp is not None else None
     cp_dispatcher = _cp.dispatcher if _cp is not None else None
     cp_service = _cp.service if _cp is not None else None
+
+    # Wire account snapshot worker → dashboard PNL auto-refresh
+    if _account_snapshot_worker is not None and _cp is not None:
+        _cp_dashboard_manager = _cp.dashboard_manager
+
+        def _on_snap(account_id: str) -> None:
+            asyncio.create_task(_cp_dashboard_manager.on_snapshot_event(account_id))
+
+        _account_snapshot_worker._on_snapshot_saved = _on_snap
 
     if _cp is not None and _cp.startup_plan.apply_global_block:
         cp_service.pause(scope_value=None, created_by="startup")
@@ -680,6 +711,11 @@ async def _async_main(
                 logger=logger,
             )
         )
+
+        account_snapshot_task = None
+        if _account_snapshot_worker is not None:
+            account_snapshot_task = asyncio.create_task(_account_snapshot_worker.run())
+            logger.info("account snapshot worker started | accounts=%s", _account_ids)
 
         cp_dispatcher_task = None
         if cp_dispatcher is not None:
@@ -728,6 +764,8 @@ async def _async_main(
         finally:
             worker_task.cancel()
             lifecycle_task.cancel()
+            if account_snapshot_task is not None:
+                account_snapshot_task.cancel()
             if cp_dispatcher_task is not None:
                 cp_dispatcher_task.cancel()
             if control_bot_task is not None:
