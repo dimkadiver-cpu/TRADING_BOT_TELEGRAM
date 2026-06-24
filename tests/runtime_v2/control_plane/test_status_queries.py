@@ -1045,3 +1045,72 @@ def test_get_pnl_partial_pnl_global_scope(ops_db):
     view = StatusQueries(ops_db).get_pnl()
     assert view.partial_pnl == pytest.approx(250.0)
     assert view.partial_pnl_net == pytest.approx(237.0)
+
+
+# ---------------------------------------------------------------------------
+# Task 2: by_trader breakdown
+# ---------------------------------------------------------------------------
+
+def test_get_pnl_by_trader_none_for_single_trader(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "CLOSED", account_id="demo_1", trader_id="trader_a", gross_pnl=100.0)
+        _add_chain_pnl(conn, 2, "OPEN",   account_id="demo_1", trader_id="trader_a")
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl(scope=QueryScope(account_id="demo_1", trader_ids=None))
+    assert view.by_trader is None
+
+
+def test_get_pnl_by_trader_included_for_two_traders(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "CLOSED",           account_id="demo_1", trader_id="trader_a", gross_pnl=100.0, fees=5.0)
+        _add_chain_pnl(conn, 2, "OPEN",             account_id="demo_1", trader_id="trader_a")
+        _add_chain_pnl(conn, 3, "CLOSED",           account_id="demo_1", trader_id="trader_b", gross_pnl=200.0, fees=8.0)
+        _add_chain_pnl(conn, 4, "PARTIALLY_CLOSED", account_id="demo_1", trader_id="trader_b", gross_pnl=30.0,  fees=1.0)
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl(scope=QueryScope(account_id="demo_1", trader_ids=None))
+    assert view.by_trader is not None
+    assert len(view.by_trader) == 2
+
+    by_id = {t["trader_id"]: t for t in view.by_trader}
+    ta = by_id["trader_a"]
+    assert ta["open_count"] == 1
+    assert ta["closed_pnl"] == pytest.approx(95.0)   # 100 - 5
+    assert ta["partial_pnl"] == pytest.approx(0.0)
+
+    tb = by_id["trader_b"]
+    assert tb["open_count"] == 1
+    assert tb["closed_pnl"] == pytest.approx(192.0)  # 200 - 8
+    assert tb["partial_pnl"] == pytest.approx(29.0)  # 30 - 1
+
+
+def test_get_pnl_by_trader_risk_from_risk_snapshot_json(ops_db):
+    risk_json_a = '{"risk_amount": 120.0}'
+    risk_json_b = '{"risk_amount": 80.0}'
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "OPEN", account_id="demo_1", trader_id="trader_a", risk_snapshot_json=risk_json_a)
+        _add_chain_pnl(conn, 2, "OPEN", account_id="demo_1", trader_id="trader_b", risk_snapshot_json=risk_json_b)
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl(scope=QueryScope(account_id="demo_1", trader_ids=None))
+    assert view.by_trader is not None
+    by_id = {t["trader_id"]: t for t in view.by_trader}
+    assert by_id["trader_a"]["risk_usdt"] == pytest.approx(120.0)
+    assert by_id["trader_b"]["risk_usdt"] == pytest.approx(80.0)
+
+
+def test_get_pnl_by_trader_risk_none_when_no_risk_json(ops_db):
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _add_chain_pnl(conn, 1, "OPEN", account_id="demo_1", trader_id="trader_a")
+        _add_chain_pnl(conn, 2, "OPEN", account_id="demo_1", trader_id="trader_b")
+    conn.close()
+
+    view = StatusQueries(ops_db).get_pnl(scope=QueryScope(account_id="demo_1", trader_ids=None))
+    assert view.by_trader is not None
+    for t in view.by_trader:
+        assert t["risk_usdt"] is None

@@ -224,6 +224,7 @@ class PnlView:
     snapshot_stale: bool = False
     accounts_fresh: int | None = None
     accounts_stale: int | None = None
+    by_trader: list[dict] | None = None
 
 
 @dataclass
@@ -1232,6 +1233,57 @@ class StatusQueries:
                     f"WHERE lifecycle_state='PARTIALLY_CLOSED' AND {scope_frag}",
                     scope_params,
                 ).fetchone()
+                # by_trader: per-trader breakdown, only for single-account non-global scope
+                _by_trader: list[dict] | None = None
+                if scope.account_id is not None:
+                    distinct_traders = conn.execute(
+                        f"SELECT DISTINCT trader_id FROM ops_trade_chains WHERE {scope_frag}",
+                        scope_params,
+                    ).fetchall()
+                    trader_ids_in_scope = [r[0] for r in distinct_traders if r[0] is not None]
+                    if len(trader_ids_in_scope) >= 2:
+                        by_trader_list: list[dict] = []
+                        for tid in trader_ids_in_scope:
+                            oc = conn.execute(
+                                "SELECT COUNT(*) FROM ops_trade_chains "
+                                "WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED') "
+                                "AND account_id=? AND trader_id=?",
+                                (scope.account_id, tid),
+                            ).fetchone()[0]
+                            cp = conn.execute(
+                                "SELECT SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
+                                "FROM ops_trade_chains "
+                                "WHERE lifecycle_state='CLOSED' AND account_id=? AND trader_id=?",
+                                (scope.account_id, tid),
+                            ).fetchone()
+                            pp = conn.execute(
+                                "SELECT SUM(cumulative_gross_pnl - cumulative_fees - cumulative_funding) "
+                                "FROM ops_trade_chains "
+                                "WHERE lifecycle_state='PARTIALLY_CLOSED' AND account_id=? AND trader_id=?",
+                                (scope.account_id, tid),
+                            ).fetchone()
+                            risk_rows = conn.execute(
+                                "SELECT risk_snapshot_json FROM ops_trade_chains "
+                                "WHERE lifecycle_state IN ('OPEN','PARTIALLY_CLOSED','WAITING_ENTRY') "
+                                "AND account_id=? AND trader_id=? AND risk_snapshot_json IS NOT NULL",
+                                (scope.account_id, tid),
+                            ).fetchall()
+                            risk_total: float | None = None
+                            for rrow in risk_rows:
+                                try:
+                                    v = json.loads(rrow[0]).get("risk_amount")
+                                    if v is not None:
+                                        risk_total = (risk_total or 0.0) + float(v)
+                                except Exception:
+                                    pass
+                            by_trader_list.append({
+                                "trader_id": tid,
+                                "open_count": oc,
+                                "risk_usdt": risk_total,
+                                "closed_pnl": float(cp[0]) if cp and cp[0] is not None else 0.0,
+                                "partial_pnl": float(pp[0]) if pp and pp[0] is not None else 0.0,
+                            })
+                        _by_trader = by_trader_list
             else:
                 # Legacy scope=None: global counts and PnL (all accounts)
                 def _count(state: str) -> int:
@@ -1256,6 +1308,7 @@ class StatusQueries:
                     "FROM ops_trade_chains "
                     "WHERE lifecycle_state='PARTIALLY_CLOSED'"
                 ).fetchone()
+                _by_trader = None
 
             open_count = _count("OPEN")
             partial_count = _count("PARTIALLY_CLOSED")
@@ -1442,6 +1495,7 @@ class StatusQueries:
             snapshot_stale=snap_stale,
             accounts_fresh=accounts_fresh,
             accounts_stale=accounts_stale,
+            by_trader=_by_trader,
         )
 
     def get_stats(self, scope: QueryScope, side: str | None = None) -> StatsView:
