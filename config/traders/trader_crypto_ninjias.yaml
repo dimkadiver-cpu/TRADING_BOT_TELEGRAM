@@ -1,0 +1,105 @@
+# config/trader_crypto_ninjias.yaml
+  account:
+    id: "demo_2"      # deve corrispondere alla chiave in account_routing
+    capital_base_usdt: 10000.0
+    max_leverage: 30
+    max_capital_at_risk_pct: 100.0
+    hard_max_per_signal_risk_pct: 2.0
+
+  enabled: true  # Profilo default attivo.
+  hedge_mode: true  # true = puo' coesistere LONG/SHORT sullo stesso simbolo.
+
+  signal_policy:
+    accepted_entry_structures:
+      - ONE_SHOT
+      - TWO_STEP
+      - RANGE
+      - LADDER
+
+    market_execution:
+      mode: tolerance  # Valori supportati: tolerance | free.
+      tolerance_pct: 0.5  # Scostamento massimo ammesso per MARKET standard.
+      range_tolerance_pct: 0.2  # Scostamento massimo ammesso per segnali RANGE.
+
+    # MARKET.range non esiste: RANGE richiede leg LIMIT e il loader lo valida esplicitamente.
+    entry_split:
+      LIMIT:
+        single:
+          weights: {E1: 1.0}  # Pesi allocazione per entry LIMIT singola.
+        range:
+          split_mode: midpoint  # Valori supportati: endpoints | firstpoint | lastpoint | midpoint.
+          weights: {E1: 0.50, E2: 0.50}  # Pesi delle due leg RANGE.
+        averaging:
+          weights: {E1: 0.70, E2: 0.30}  # Pesi averaging LIMIT.
+        ladder:
+          weights: {E1: 0.40, E2: 0.30, E3: 0.20, E4: 0.10}  # Pesi ladder LIMIT.
+      MARKET:
+        single:
+          weights: {E1: 1.0}  # Pesi entry MARKET singola.
+        averaging:
+          weights: {E1: 0.70, E2: 0.30}  # Pesi averaging MARKET.
+
+    tp:
+      use_tp_count: null  # null = usa i TP parsati; intero = forza il numero TP effettivi.
+
+    sl:
+      use_original_sl: true  # true = preserva SL del segnale originale.
+      require_sl: true  # true = blocca/review segnali senza SL.
+
+    price_corrections:
+      enabled: false  # Correzioni prezzo automatiche.
+      round_to_tick: false  # Arrotonda i prezzi al tick size.
+      clamp_to_exchange_precision: false  # Adatta i prezzi alla precisione exchange.
+
+    price_sanity:
+      enabled: false  # Abilita range sanity check per simbolo.
+      symbol_ranges: {}  # Mappa simbolo -> [min_price, max_price].
+
+  # Ammissione update Telegram (source_intent da parser_v2, senza prefisso U_)
+  update_admission:
+    MOVE_STOP: true  # Consente update di spostamento SL numerico.
+    MOVE_STOP_TO_BE: false  # Consente update move-to-breakeven.
+    CLOSE_FULL: true  # Consente chiusura totale.
+    CLOSE_PARTIAL: true  # Consente chiusura parziale.
+    CANCEL_PENDING: true  # Consente cancellazione ordini pending.
+    ADD_ENTRY: false  # Consente aggiunta nuove entry.
+    REENTER: false  # Consente rientro dopo chiusura.
+    MODIFY_ENTRY: true  # Consente modifica livelli entry.
+    MODIFY_TARGETS: false  # Consente modifica take profit.
+    INVALIDATE_SETUP: true  # Consente invalidazione setup/chain.
+
+  management_plan:
+    be_trigger: tp2  # Valori supportati: null | tp1 | tp2 | tp3.
+    be_fee_correction_enabled: false  # true = breakeven fee-aware.
+    be_fee_fallback_profile: null  # Profilo fee fallback se i dati exchange non bastano.
+    close_distribution:
+      mode: equal  # Valori supportati: table | equal.
+      table:
+        1: [100]
+        2: [50, 50]
+        3: [30, 30, 40]
+        4: [25, 25, 25, 25]
+        5: [20, 20, 20, 20, 20]
+        6: [20, 20, 20, 20, 10, 10]
+
+    cancel_pending_by_engine: true  # true = il motore genera cancel automatici.
+    cancel_pending_on_timeout: true  # true = cancella pending dopo timeout.
+    pending_timeout_hours: 24  # Timeout pending in ore.
+    cancel_averaging_pending_after: tp1  # Valori supportati: null | tp1 | tp2.
+    cancel_unfilled_pending_after: null  # Valori supportati: null | tp1 | tp2. //da implimentare
+    risk_freed_by_be: true  # true = il BE libera capacita' rischio residua.
+    protective_sl_mode: exchange_native_first  # Valori supportati: exchange_native_first | bot_managed. (NON USATO)
+    market_convert_mode: cancel_subsequent  # Valori supportati: cancel_subsequent | keep_subsequent. Comportamento quando MODIFY_ENTRY senza leg esplicita converte leg1 a MARKET.
+
+  risk:
+    mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
+    risk_pct_of_capital: 0.5  # Usato quando mode=risk_pct_of_capital.
+    risk_usdt_fixed: 10.0  # Usato quando mode=risk_usdt_fixed.
+    capital_base_mode: static_config  # Valori supportati: static_config | live_equity.
+    capital_base_usdt: 10000.0  # Base capitale locale se non si usa equity live.
+    leverage: 20  # Leva operativa da usare per aprire la posizione.
+    use_trader_risk_hint: true  # true = usa eventuale hint rischio dal segnale/trader.
+    risk_hint_range_mode: min_value  # Valori: min_value | max_value | midpoint.
+    max_capital_at_risk_per_trader_pct: 10.0  # Cap di rischio totale per trader.
+    max_concurrent_trades: 10  # Numero massimo chain aperte contemporanee per trader.
+    max_concurrent_same_symbol: 2  # Numero massimo trade contemporanei sullo stesso simbolo.
