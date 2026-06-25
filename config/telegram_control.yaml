@@ -71,7 +71,7 @@ per_account:
       commands:
         thread_id: null           # i comandi passano da thread 4 (demo_1) — nessun thread separato
 
- demo_3:
+  demo_3:
     chat_id: -1004240829081      # stesso supergroup di demo_1
 
     topics:
