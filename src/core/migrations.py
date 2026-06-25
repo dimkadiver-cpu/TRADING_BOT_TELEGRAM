@@ -20,6 +20,28 @@ def _read_migration_files(migrations_dir: Path) -> Iterable[tuple[int, Path]]:
         yield int(stem[0:3]), path
 
 
+def _execute_migration(conn: sqlite3.Connection, sql_script: str) -> None:
+    """Execute a migration script statement by statement.
+
+    ALTER TABLE ADD COLUMN statements are allowed to fail with
+    'duplicate column name' so that migrations adding columns that were
+    previously created at runtime (e.g. via _ensure_outbox_schema) do not
+    crash on databases that already have those columns.
+    """
+    # Split on semicolons, preserving comment-only lines as no-ops
+    for raw in sql_script.split(";"):
+        stmt = raw.strip()
+        if not stmt or stmt.startswith("--"):
+            continue
+        is_add_column = stmt.upper().replace("\n", " ").startswith("ALTER TABLE") and "ADD COLUMN" in stmt.upper()
+        try:
+            conn.execute(stmt)
+        except sqlite3.OperationalError as exc:
+            if is_add_column and "duplicate column name" in str(exc).lower():
+                continue
+            raise
+
+
 def apply_migrations(db_path: str, migrations_dir: str) -> int:
     migrations_path = Path(migrations_dir)
     migrations_path.mkdir(parents=True, exist_ok=True)
@@ -44,7 +66,7 @@ def apply_migrations(db_path: str, migrations_dir: str) -> int:
             if version in known_versions:
                 continue
             sql_script = migration_file.read_text(encoding="utf-8")
-            conn.executescript(sql_script)
+            _execute_migration(conn, sql_script)
             conn.execute(
                 "INSERT INTO schema_migrations(version, applied_at) VALUES(?, ?)",
                 (version, utc_now_iso()),
