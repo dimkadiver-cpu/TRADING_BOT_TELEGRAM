@@ -36,6 +36,25 @@ def _reduce_trade_stats(trades: list) -> tuple[float | None, float | None, float
     return fill_price, total_fee, fee_rate
 
 
+def _pick_trades_for_qty(trades: list, target_qty: float) -> list:
+    """Return the most-recent prefix of trades whose cumulative qty reaches target_qty.
+
+    Trades are assumed to be sorted descending by time (most recent first).
+    Stops accumulating once we have enough qty to explain the target close size,
+    so that unrelated historical trades don't distort the weighted-average price.
+    """
+    if not trades or target_qty <= _PARTIAL_CLOSE_MIN_DELTA:
+        return trades
+    picked: list = []
+    cumulative = 0.0
+    for t in trades:
+        picked.append(t)
+        cumulative += float(t.amount)
+        if cumulative >= target_qty - _PARTIAL_CLOSE_MIN_DELTA:
+            break
+    return picked
+
+
 _POSITION_ZERO_CONFIRM_REQUIRED = 2  # consecutive REST zeros before synthetic close
 _PARTIAL_CLOSE_MIN_DELTA = 1e-8     # minimum qty difference to trigger partial-close detection
 
@@ -63,6 +82,16 @@ class ExchangeEventSyncWorker:
 
     def run_once(self) -> int:
         return self.run_reconciliation()
+
+    def bootstrap_zero_counts(self) -> None:
+        """Seed _position_zero_count so one run_bulk_position_sync call at startup is enough.
+
+        The consecutive-zero confirmation counter starts at zero on every boot. Calling this
+        once before the startup bulk sync pre-seeds the counter to REQUIRED-1, so the first
+        (and only) startup sync call crosses the threshold instead of requiring two calls.
+        """
+        for chain_id, _, _, _ in self._get_open_chains():
+            self._position_zero_count.setdefault(chain_id, _POSITION_ZERO_CONFIRM_REQUIRED - 1)
 
     def run_reconciliation(self) -> int:
         active = self._repo.get_sent_or_ack()
@@ -98,7 +127,7 @@ class ExchangeEventSyncWorker:
             return 0
 
         captured_at = datetime.now(timezone.utc).isoformat()
-        live_by_symbol_side = {}
+        live_by_symbol_side: dict[tuple[str, str], object] = {}
         for pos in positions:
             self._repo.upsert_position_snapshot(
                 account_id=self._execution_account_id,
@@ -115,6 +144,13 @@ class ExchangeEventSyncWorker:
 
         chains = self._get_open_chains()
         processed = 0
+
+        # Batch-fetch reduce trades for partial-close candidates (one REST call per
+        # unique symbol+side instead of one per chain) — Fix #6.
+        reduce_trades_cache = self._prefetch_reduce_trades_for_partial_closes(
+            chains, live_by_symbol_side
+        )
+
         for chain_id, symbol, side, open_qty in chains:
             try:
                 live_pos = live_by_symbol_side.get((symbol, side))
@@ -124,12 +160,14 @@ class ExchangeEventSyncWorker:
                     # Detect partial close that happened during bot downtime:
                     # live qty is smaller than DB-tracked qty but position still open.
                     if open_qty > 0.0 and (open_qty - qty) > _PARTIAL_CLOSE_MIN_DELTA:
+                        cached = reduce_trades_cache.get((symbol, side))
                         if self._generate_synthetic_partial_close(
                             chain_id=chain_id,
                             symbol=symbol,
                             side=side,
                             open_qty=open_qty,
                             live_qty=qty,
+                            cached_trades=cached,
                         ):
                             processed += 1
                     continue
@@ -143,24 +181,9 @@ class ExchangeEventSyncWorker:
                         self._position_zero_count.pop(chain_id, None)
                         continue
 
-                    # Attempt to recover fill price from recent reduce trades (REST safety net)
-                    fill_price: float | None = None
-                    exec_fee: float | None = None
-                    fee_rate: float | None = None
-                    if hasattr(self._adapter, "fetch_recent_reduce_trades"):
-                        try:
-                            trades = self._adapter.fetch_recent_reduce_trades(
-                                symbol=symbol,
-                                side=side,
-                                execution_account_id=self._execution_account_id,
-                                limit=50,
-                            )
-                            fill_price, exec_fee, fee_rate = _reduce_trade_stats(trades)
-                        except Exception:
-                            logger.warning(
-                                "could not fetch fill price for bulk position sync close: chain=%s",
-                                chain_id,
-                            )
+                    fill_price, exec_fee, fee_rate = self._resolve_reduce_trade_stats(
+                        symbol=symbol, side=side, target_qty=open_qty
+                    )
 
                     # If no reduce trade confirms the close, require consecutive zero reads
                     # to guard against transient REST API returning empty positions (false zero).
@@ -182,8 +205,11 @@ class ExchangeEventSyncWorker:
 
                     self._position_zero_count.pop(chain_id, None)
                     idem_key = f"CLOSE_FULL_FILLED:ext:{chain_id}"
+                    # filled_qty=None: let the lifecycle use chain.open_position_qty at
+                    # processing time so that a preceding CLOSE_PARTIAL_FILLED event (which
+                    # reduces open_position_qty) prevents double-counting — Fix #4.
                     payload = json.dumps({
-                        "filled_qty": open_qty,
+                        "filled_qty": None,
                         "fill_price": fill_price,
                         "exec_fee": exec_fee,
                         "fee_rate": fee_rate,
@@ -328,6 +354,125 @@ class ExchangeEventSyncWorker:
     # Private helpers
     # ------------------------------------------------------------------
 
+    def _resolve_reduce_trade_stats(
+        self,
+        symbol: str,
+        side: str,
+        target_qty: float,
+        cached_trades: list | None = None,
+    ) -> tuple[float | None, float | None, float | None]:
+        """Fetch and aggregate reduce-trade stats for a position close.
+
+        Uses cached_trades when provided; otherwise fetches from the adapter.
+        Filters to the most-recent trades that cumulatively explain target_qty,
+        preventing unrelated historical closes from distorting the fill price.
+        """
+        if cached_trades is None:
+            if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
+                return None, None, None
+            try:
+                cached_trades = self._adapter.fetch_recent_reduce_trades(
+                    symbol=symbol,
+                    side=side,
+                    execution_account_id=self._execution_account_id,
+                    limit=50,
+                )
+            except Exception:
+                logger.warning(
+                    "could not fetch reduce trades for %s %s", symbol, side
+                )
+                return None, None, None
+        if not cached_trades:
+            return None, None, None
+        return _reduce_trade_stats(_pick_trades_for_qty(cached_trades, target_qty))
+
+    def _prefetch_reduce_trades_for_partial_closes(
+        self,
+        chains: list[tuple[int, str, str, float]],
+        live_by_symbol_side: dict,
+    ) -> dict[tuple[str, str], list]:
+        """Batch-fetch reduce trades for all partial-close candidates.
+
+        Returns a dict keyed by (symbol, side) so each chain can look up
+        its trades without making a separate REST call per chain.
+        """
+        if not hasattr(self._adapter, "fetch_recent_reduce_trades"):
+            return {}
+
+        needed: set[tuple[str, str]] = set()
+        for chain_id, symbol, side, open_qty in chains:
+            live_pos = live_by_symbol_side.get((symbol, side))
+            qty = 0.0 if live_pos is None else float(live_pos.qty)  # type: ignore[union-attr]
+            if qty > 0.0 and open_qty > 0.0 and (open_qty - qty) > _PARTIAL_CLOSE_MIN_DELTA:
+                needed.add((symbol, side))
+
+        cache: dict[tuple[str, str], list] = {}
+        for symbol, side in needed:
+            try:
+                trades = self._adapter.fetch_recent_reduce_trades(
+                    symbol=symbol,
+                    side=side,
+                    execution_account_id=self._execution_account_id,
+                    limit=50,
+                )
+                cache[(symbol, side)] = trades or []
+            except Exception:
+                logger.warning(
+                    "could not prefetch reduce trades for partial close: %s %s", symbol, side
+                )
+                cache[(symbol, side)] = []
+        return cache
+
+    def _generate_synthetic_partial_close(
+        self,
+        *,
+        chain_id: int,
+        symbol: str,
+        side: str,
+        open_qty: float,
+        live_qty: float,
+        cached_trades: list | None = None,
+    ) -> bool:
+        """Emit a synthetic CLOSE_PARTIAL_FILLED when the live position is smaller than DB qty.
+
+        The idempotency key encodes the exact qty transition so re-runs are safe.
+        After the lifecycle processes this event and updates open_position_qty, subsequent
+        runs will see open_qty == live_qty and stop generating new events.
+        cached_trades: pre-fetched reduce trades from the batch call in run_bulk_position_sync.
+        """
+        closed_qty = open_qty - live_qty
+        idem_key = (
+            f"CLOSE_PARTIAL_FILLED:ext:{chain_id}:"
+            f"from:{open_qty:.8g}:to:{live_qty:.8g}"
+        )
+
+        fill_price, exec_fee, fee_rate = self._resolve_reduce_trade_stats(
+            symbol=symbol,
+            side=side,
+            target_qty=closed_qty,
+            cached_trades=cached_trades,
+        )
+
+        payload = json.dumps({
+            "filled_qty": closed_qty,
+            "closed_size": closed_qty,
+            "fill_price": fill_price,
+            "exec_fee": exec_fee,
+            "fee_rate": fee_rate,
+            "source": "bulk_position_sync_partial",
+        })
+        inserted = self._repo.insert_exchange_event(
+            chain_id, "CLOSE_PARTIAL_FILLED", payload, idem_key
+        )
+        if inserted:
+            logger.info(
+                "partial close detected from bulk sync: "
+                "chain=%s %s %s open_qty=%s live_qty=%s closed_qty=%s fill_price=%s",
+                chain_id, symbol, side, open_qty, live_qty, closed_qty, fill_price,
+            )
+            self._wake()
+        return inserted
+
     def _save_fill_event(self, client_order_id: str, raw) -> bool:
         """Build fill event and delegate to repo.insert_exchange_event() — no inline SQLite."""
         try:
@@ -439,65 +584,6 @@ class ExchangeEventSyncWorker:
         return self._repo.insert_exchange_event(
             coid.trade_chain_id, "PENDING_ENTRY_CANCELLED_CONFIRMED", payload, idem_key
         )
-
-    def _generate_synthetic_partial_close(
-        self,
-        *,
-        chain_id: int,
-        symbol: str,
-        side: str,
-        open_qty: float,
-        live_qty: float,
-    ) -> bool:
-        """Emit a synthetic CLOSE_PARTIAL_FILLED when the live position is smaller than DB qty.
-
-        The idempotency key encodes the exact qty transition so re-runs are safe.
-        After the lifecycle processes this event and updates open_position_qty, subsequent
-        runs will see open_qty == live_qty and stop generating new events.
-        """
-        closed_qty = open_qty - live_qty
-        idem_key = (
-            f"CLOSE_PARTIAL_FILLED:ext:{chain_id}:"
-            f"from:{open_qty:.8g}:to:{live_qty:.8g}"
-        )
-
-        fill_price: float | None = None
-        exec_fee: float | None = None
-        fee_rate: float | None = None
-        if hasattr(self._adapter, "fetch_recent_reduce_trades"):
-            try:
-                trades = self._adapter.fetch_recent_reduce_trades(
-                    symbol=symbol,
-                    side=side,
-                    execution_account_id=self._execution_account_id,
-                    limit=50,
-                )
-                fill_price, exec_fee, fee_rate = _reduce_trade_stats(trades)
-            except Exception:
-                logger.warning(
-                    "could not fetch reduce trades for partial close detection: chain=%s",
-                    chain_id,
-                )
-
-        payload = json.dumps({
-            "filled_qty": closed_qty,
-            "closed_size": closed_qty,
-            "fill_price": fill_price,
-            "exec_fee": exec_fee,
-            "fee_rate": fee_rate,
-            "source": "bulk_position_sync_partial",
-        })
-        inserted = self._repo.insert_exchange_event(
-            chain_id, "CLOSE_PARTIAL_FILLED", payload, idem_key
-        )
-        if inserted:
-            logger.info(
-                "partial close detected from bulk sync: "
-                "chain=%s %s %s open_qty=%s live_qty=%s closed_qty=%s fill_price=%s",
-                chain_id, symbol, side, open_qty, live_qty, closed_qty, fill_price,
-            )
-            self._wake()
-        return inserted
 
     def _get_open_chains(self) -> list[tuple[int, str, str, float]]:
         """Returns (chain_id, symbol, side, open_qty) for OPEN/PARTIALLY_CLOSED chains belonging to this account."""

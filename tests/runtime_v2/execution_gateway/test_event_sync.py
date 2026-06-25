@@ -493,7 +493,9 @@ def test_bulk_position_sync_emits_close_full_filled_for_zero_qty_position(ops_db
     assert len(events) == 1
     assert events[0][0] == "CLOSE_FULL_FILLED"
     payload = json.loads(events[0][1])
-    assert payload["filled_qty"] == 0.01
+    # filled_qty=None: lifecycle uses chain.open_position_qty at processing time so that
+    # a preceding CLOSE_PARTIAL_FILLED (which reduces open_position_qty) prevents double-counting.
+    assert payload["filled_qty"] is None
     assert payload["source"] == "bulk_position_sync"
 
 
@@ -1753,3 +1755,188 @@ def test_bulk_position_sync_partial_close_no_duplicate_wake_on_second_run(ops_db
     worker.run_bulk_position_sync()
 
     assert len(wake_calls) == 1
+
+
+# ---------------------------------------------------------------------------
+# Fix #3 – _pick_trades_for_qty filters out stale historical trades
+# ---------------------------------------------------------------------------
+
+def test_pick_trades_for_qty_stops_at_target():
+    """_pick_trades_for_qty should stop accumulating once cumulative qty reaches target."""
+    from src.runtime_v2.execution_gateway.event_sync import _pick_trades_for_qty
+    from unittest.mock import MagicMock
+
+    t1 = MagicMock(amount=0.3)
+    t2 = MagicMock(amount=0.2)
+    t3 = MagicMock(amount=0.5)  # should not be included if target=0.5
+
+    result = _pick_trades_for_qty([t1, t2, t3], target_qty=0.5)
+    assert result == [t1, t2]   # 0.3 + 0.2 = 0.5 → stops before t3
+
+
+def test_pick_trades_for_qty_takes_all_when_under_target():
+    from src.runtime_v2.execution_gateway.event_sync import _pick_trades_for_qty
+    from unittest.mock import MagicMock
+
+    t1 = MagicMock(amount=0.1)
+    t2 = MagicMock(amount=0.2)
+    result = _pick_trades_for_qty([t1, t2], target_qty=1.0)
+    assert result == [t1, t2]
+
+
+def test_pick_trades_for_qty_returns_all_on_empty_target():
+    from src.runtime_v2.execution_gateway.event_sync import _pick_trades_for_qty
+    from unittest.mock import MagicMock
+
+    trades = [MagicMock(amount=0.5)]
+    assert _pick_trades_for_qty(trades, target_qty=0.0) == trades
+    assert _pick_trades_for_qty([], target_qty=0.5) == []
+
+
+def test_partial_close_fill_price_uses_only_recent_trades_matching_closed_qty(ops_db):
+    """fill_price must reflect only the trades that sum to closed_qty, not all 50."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 210, "BTCUSDT", "LONG", 1.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="BTCUSDT", side="LONG", qty=0.7)]
+    )
+    # Add an old trade (stale price 50000) then the recent one (70000) that closed 0.3
+    # The stale trade should NOT be included: target_qty=0.3, first trade covers it entirely.
+    adapter.simulate_reduce_trade("BTCUSDT", "LONG", price=70000.0, amount=0.3, trade_id="t-recent", fee=2.1)
+    adapter.simulate_reduce_trade("BTCUSDT", "LONG", price=50000.0, amount=0.7, trade_id="t-old", fee=3.5)
+
+    worker = _make_worker(ops_db, adapter)
+    count = worker.run_bulk_position_sync()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=210 AND event_type='CLOSE_PARTIAL_FILLED'"
+    ).fetchone()
+    conn.close()
+    payload = json.loads(row[0])
+    # fill_price should be 70000 (only the 0.3 recent trade), not a blend with 50000
+    assert payload["fill_price"] == pytest.approx(70000.0)
+
+
+# ---------------------------------------------------------------------------
+# Fix #4 – CLOSE_FULL_FILLED uses filled_qty=None
+# ---------------------------------------------------------------------------
+
+def test_bulk_position_sync_close_full_filled_has_null_filled_qty(ops_db):
+    """CLOSE_FULL_FILLED payload must carry filled_qty=None so the lifecycle uses
+    chain.open_position_qty at processing time (prevents double-counting after a
+    preceding CLOSE_PARTIAL_FILLED event reduces open_position_qty)."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 211, "ETHUSDT", "LONG", 1.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live([RawPositionLive(symbol="ETHUSDT", side="LONG", qty=0.0)])
+    adapter.simulate_reduce_trade("ETHUSDT", "LONG", price=3000.0, amount=1.0, trade_id="t-close")
+
+    worker = _make_worker(ops_db, adapter)
+    count = worker.run_bulk_position_sync()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=211 AND event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload["filled_qty"] is None
+    assert payload["fill_price"] == pytest.approx(3000.0)
+
+
+# ---------------------------------------------------------------------------
+# Fix #6 – batch reduce-trade fetch (one REST call per symbol+side)
+# ---------------------------------------------------------------------------
+
+def test_bulk_position_sync_batches_reduce_trade_calls_per_symbol_side(ops_db):
+    """Two open chains on the same symbol+side must result in exactly one
+    fetch_recent_reduce_trades call, not one per chain."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+    from unittest.mock import MagicMock, patch
+
+    _insert_open_chain(ops_db, 220, "BTCUSDT", "LONG", 1.0)
+    _insert_open_chain(ops_db, 221, "BTCUSDT", "LONG", 0.5)
+
+    adapter = MagicMock()
+    adapter.fetch_all_positions.return_value = [
+        RawPositionLive(symbol="BTCUSDT", side="LONG", qty=0.8),
+    ]
+    adapter.fetch_recent_reduce_trades.return_value = []
+
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc"
+    )
+    worker.run_bulk_position_sync()
+
+    # Only one REST call for (BTCUSDT, LONG) regardless of how many chains exist
+    calls = [c for c in adapter.fetch_recent_reduce_trades.call_args_list
+             if c.kwargs.get("symbol") == "BTCUSDT"]
+    assert len(calls) == 1
+
+
+# ---------------------------------------------------------------------------
+# Fix #7 – bootstrap_zero_counts seeds the counter for startup
+# ---------------------------------------------------------------------------
+
+def test_bootstrap_zero_counts_allows_single_call_to_trigger_synthetic_close(ops_db):
+    """After bootstrap_zero_counts(), a single run_bulk_position_sync() is enough
+    to emit the synthetic CLOSE_FULL_FILLED (no second call needed)."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 230, "SOLUSDT", "LONG", 10.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live([RawPositionLive(symbol="SOLUSDT", side="LONG", qty=0.0)])
+
+    worker = _make_worker(ops_db, adapter)
+    worker.bootstrap_zero_counts()
+    count = worker.run_bulk_position_sync()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    n = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events "
+        "WHERE trade_chain_id=230 AND event_type='CLOSE_FULL_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert n == 1
+
+
+def test_bootstrap_zero_counts_does_not_override_existing_count(ops_db):
+    """bootstrap_zero_counts must use setdefault — it must not overwrite a counter
+    that was already incremented by a previous run_bulk_position_sync call."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import _POSITION_ZERO_CONFIRM_REQUIRED
+
+    _insert_open_chain(ops_db, 231, "XRPUSDT", "LONG", 50.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live([RawPositionLive(symbol="XRPUSDT", side="LONG", qty=0.0)])
+
+    worker = _make_worker(ops_db, adapter)
+    # First call: increments counter to 1
+    worker.run_bulk_position_sync()
+    # bootstrap must not reset counter to REQUIRED-1 (which is also 1 for REQUIRED=2)
+    worker.bootstrap_zero_counts()
+    # Second call: counter should reach REQUIRED → emits
+    count = worker.run_bulk_position_sync()
+
+    assert count == 1
