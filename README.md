@@ -32,8 +32,7 @@ Due database separati:
 
 ```
 TeleSignalBot/
-├── main.py                       → entrypoint runtime_v2
-├── main_linux_server.py          → entrypoint per Linux
+├── main.py                       → entrypoint runtime_v2 (cross-platform: Windows + Linux)
 ├── CLAUDE.md                     → istruzioni per Claude Code
 ├── config/
 │   ├── channels.yaml             → canali Telegram e trader attivi

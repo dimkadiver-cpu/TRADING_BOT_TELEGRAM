@@ -41,7 +41,7 @@ echo "==> Configure sparse checkout"
 git sparse-checkout init --no-cone || true
 
 cat > .git/info/sparse-checkout <<'EOF'
-/main_linux_server.py
+/main.py
 /requirements.txt
 /README.md
 /.gitignore
@@ -51,12 +51,6 @@ cat > .git/info/sparse-checkout <<'EOF'
 /db/ops_migrations/
 /scripts/
 EOF
-
-echo "==> Pull latest code"
-git fetch origin "$BRANCH"
-git reset --hard "origin/$BRANCH"
-echo "==> Remove generated main.py before pull"
-rm -f "$APP_DIR/main.py"
 
 echo "==> Pull latest code"
 git fetch origin "$BRANCH"
@@ -76,13 +70,6 @@ mkdir -p "$APP_DIR/config"
 
 [ -f "$TMP_DIR/config/telegram_control.yaml" ] && \
   cp -a "$TMP_DIR/config/telegram_control.yaml" "$APP_DIR/config/telegram_control.yaml"
-
-echo "==> Apply Linux main"
-cp -f "$APP_DIR/main_linux_server.py" "$APP_DIR/main.py"
-
-cmp -s "$APP_DIR/main_linux_server.py" "$APP_DIR/main.py" \
-  && echo "OK: main.py = main_linux_server.py" \
-  || { echo "ERROR: main.py differs from main_linux_server.py"; exit 1; }
 
 echo "==> Install/update requirements"
 "$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt"
