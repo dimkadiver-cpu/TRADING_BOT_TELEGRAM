@@ -7,7 +7,6 @@ truststore.inject_into_ssl()
 
 import argparse
 import asyncio
-import ctypes
 import os
 import sqlite3
 import sys
@@ -590,23 +589,6 @@ async def _async_main(
         execution_runtime=execution_runtime,
         known_symbols=known_symbols,
     )
-
-    # Account snapshot worker — periodic balance fetch per account
-    _account_ids: list[str] = (
-        list(execution_runtime.sync_workers.keys())
-        if execution_runtime is not None and execution_runtime.sync_workers
-        else []
-    )
-    _account_snapshot_worker: AccountSnapshotWorker | None = None
-    if _account_ids and isinstance(exchange_port, LiveExchangeDataPort):
-        _account_snapshot_worker = AccountSnapshotWorker(
-            port=exchange_port,
-            repository=snapshot_repo,
-            account_ids=_account_ids,
-            interval_seconds=60,
-            stale_after_seconds=180,
-        )
-
     risk_engine = RiskCapacityEngine()
     entry_gate = _build_lifecycle_entry_gate(
         root_dir=root_dir,
@@ -634,6 +616,22 @@ async def _async_main(
         command_repo=command_repo,
         exchange_event_repo=exchange_event_repo,
     )
+
+    # Account snapshot worker — periodic balance fetch per account
+    _account_ids: list[str] = (
+        list(execution_runtime.sync_workers.keys())
+        if execution_runtime is not None and execution_runtime.sync_workers
+        else []
+    )
+    _account_snapshot_worker: AccountSnapshotWorker | None = None
+    if _account_ids and isinstance(exchange_port, LiveExchangeDataPort):
+        _account_snapshot_worker = AccountSnapshotWorker(
+            port=exchange_port,
+            repository=snapshot_repo,
+            account_ids=_account_ids,
+            interval_seconds=60,
+            stale_after_seconds=180,
+        )
 
     client = TelegramClient(session_name, api_id, api_hash)
     await client.start()
@@ -803,21 +801,42 @@ async def _async_main(
         _close_execution_runtime(execution_runtime)
 
 
-_instance_mutex = None
-_MUTEX_NAME = "Global\\TeleSignalBot_SingleInstance"
+_instance_lock_handle = None
+_LOCK_FILE_PATH = Path(__file__).resolve().with_name(".telesignalbot.lock")
 
 
 def _acquire_instance_lock() -> None:
-    global _instance_mutex
-    kernel32 = ctypes.windll.kernel32
-    _instance_mutex = kernel32.CreateMutexW(None, True, _MUTEX_NAME)
-    if kernel32.GetLastError() == 183:  # ERROR_ALREADY_EXISTS
+    """
+    Prevent multiple bot instances from running at the same time.
+
+    Windows: uses msvcrt file locking.
+    Linux/macOS: uses fcntl flock.
+    """
+    global _instance_lock_handle
+
+    _instance_lock_handle = open(_LOCK_FILE_PATH, "w", encoding="utf-8")
+
+    try:
+        if os.name == "nt":
+            import msvcrt
+
+            msvcrt.locking(_instance_lock_handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(_instance_lock_handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
         print(
             "ERRORE: un'altra istanza di main.py è già in esecuzione.\n"
             "Termina il processo precedente prima di avviarne uno nuovo.",
             file=sys.stderr,
         )
         sys.exit(1)
+
+    _instance_lock_handle.seek(0)
+    _instance_lock_handle.truncate()
+    _instance_lock_handle.write(str(os.getpid()))
+    _instance_lock_handle.flush()
 
 
 def main() -> None:
