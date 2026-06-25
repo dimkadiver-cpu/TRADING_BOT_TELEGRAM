@@ -912,6 +912,7 @@ def test_build_execution_runtime_wires_bulk_position_sync_callback(monkeypatch, 
     worker.run_bulk_position_sync.assert_called_once_with()
     worker.run_trade_based_reconciliation.assert_called_once_with()
     worker.run_protective_orders_reconciliation.assert_called_once_with()
+    worker.run_funding_reconciliation.assert_called_once_with()
     assert not worker.run_position_reconciliation.called
 
 
