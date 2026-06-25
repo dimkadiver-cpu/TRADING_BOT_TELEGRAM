@@ -93,13 +93,13 @@
 
   risk:
     mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
-    risk_pct_of_capital: 0.5  # Usato quando mode=risk_pct_of_capital.
+    risk_pct_of_capital: 1  # Usato quando mode=risk_pct_of_capital.
     risk_usdt_fixed: 10.0  # Usato quando mode=risk_usdt_fixed.
     capital_base_mode: static_config  # Valori supportati: static_config | live_equity.
     capital_base_usdt: 10000.0  # Base capitale locale se non si usa equity live.
     leverage: 20  # Leva operativa da usare per aprire la posizione.
     use_trader_risk_hint: true  # true = usa eventuale hint rischio dal segnale/trader.
     risk_hint_range_mode: min_value  # Valori: min_value | max_value | midpoint.
-    max_capital_at_risk_per_trader_pct: 10.0  # Cap di rischio totale per trader.
-    max_concurrent_trades: 10  # Numero massimo chain aperte contemporanee per trader.
-    max_concurrent_same_symbol: 2  # Numero massimo trade contemporanei sullo stesso simbolo.
+    max_capital_at_risk_per_trader_pct: 100.0  # Cap di rischio totale per trader.
+    max_concurrent_trades: 50  # Numero massimo chain aperte contemporanee per trader.
+    max_concurrent_same_symbol: 1  # Numero massimo trade contemporanei sullo stesso simbolo.
