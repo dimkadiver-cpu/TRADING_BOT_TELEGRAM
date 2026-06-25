@@ -225,6 +225,9 @@ def _render_not_executed_item(row: dict, i: int, p: dict) -> list[str]:
     trade_chain_id = row.get("trade_chain_id")
     if trade_chain_id is not None:
         lines.append(f"Details: /trade_{trade_chain_id}")
+    clean_log_link = row.get("clean_log_link")
+    if clean_log_link:
+        lines.append(f"Clean log: {clean_log_link}")
     return lines
 
 

@@ -623,27 +623,48 @@ class LifecycleEntryGate:
         eid = enriched.enrichment_id
 
         if control_mode in ("BLOCK_NEW_ENTRIES", "FULL_STOP"):
-            return self._reject_signal(eid, "control_mode:new_entries_paused")
+            return self._reject_signal(
+                eid, "control_mode:new_entries_paused",
+                account_id=enriched.account_id, trader_id=enriched.trader_id,
+            )
 
         signal = enriched.enriched_signal
         if signal is None or not signal.symbol or not signal.side:
-            return self._reject_signal(eid, "missing_symbol_or_side")
+            return self._reject_signal(
+                eid, "missing_symbol_or_side",
+                account_id=enriched.account_id, trader_id=enriched.trader_id,
+                symbol=signal.symbol if signal else None,
+                side=signal.side if signal else None,
+            )
 
         if admission.signal_message_type == "inline_buttons" and admission.message_presentation_type != "INLINE_BUTTONS":
             return self._skip_signal(eid, "signal_message_type_mismatch")
 
         if not self._port.symbol_exists(enriched.account_id, signal.symbol):
-            return self._reject_signal(eid, "unknown_symbol")
+            return self._reject_signal(
+                eid, "unknown_symbol",
+                account_id=enriched.account_id, trader_id=enriched.trader_id,
+                symbol=signal.symbol, side=signal.side,
+            )
 
         if not signal.entries:
-            return self._reject_signal(eid, "no_entry_legs")
+            return self._reject_signal(
+                eid, "no_entry_legs",
+                account_id=enriched.account_id, trader_id=enriched.trader_id,
+                symbol=signal.symbol, side=signal.side,
+            )
 
         account_snapshot = self._port.get_account_state(enriched.account_id)
         market_snapshot = self._port.get_symbol_market_state(enriched.account_id, signal.symbol)
 
         decision = self._risk.validate(enriched, open_chains, account_snapshot, market_snapshot)
         if not decision.passed:
-            return self._reject_signal(eid, decision.reason or "risk_check_failed", risk_snapshot=decision.risk_snapshot)
+            return self._reject_signal(
+                eid, decision.reason or "risk_check_failed",
+                risk_snapshot=decision.risk_snapshot,
+                account_id=enriched.account_id, trader_id=enriched.trader_id,
+                symbol=signal.symbol, side=signal.side,
+            )
 
         management_plan = enriched.management_plan or ManagementPlanConfig()
         timeout_at = None
@@ -739,9 +760,27 @@ class LifecycleEntryGate:
             review_reason=None,
         )
 
-    def _reject_signal(self, eid: int | None, reason: str, risk_snapshot: dict | None = None) -> SignalGateResult:
+    def _reject_signal(
+        self,
+        eid: int | None,
+        reason: str,
+        risk_snapshot: dict | None = None,
+        *,
+        account_id: str | None = None,
+        trader_id: str | None = None,
+        symbol: str | None = None,
+        side: str | None = None,
+    ) -> SignalGateResult:
         source = "trader_signal" if reason in _SIGNAL_CONTENT_REJECT_REASONS else "runtime"
         ev_payload: dict = {"reason": reason, "source": source}
+        if account_id is not None:
+            ev_payload["account_id"] = account_id
+        if trader_id is not None:
+            ev_payload["trader_id"] = trader_id
+        if symbol is not None:
+            ev_payload["symbol"] = symbol
+        if side is not None:
+            ev_payload["side"] = side
         if risk_snapshot:
             ev_payload["capital"] = risk_snapshot.get("capital")
             ev_payload["risk_amount"] = risk_snapshot.get("risk_amount")
