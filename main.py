@@ -236,8 +236,10 @@ def _build_execution_runtime(
         def _make_pos_recon(ws=workers):
             def _pos_recon():
                 for w in ws:
-                    w.run_bulk_position_sync()
+                    # trade_based must run before bulk so that real_close_fill_exists()
+                    # finds TP_FILLED and skips the redundant synthetic CLOSE_FULL_FILLED.
                     w.run_trade_based_reconciliation()
+                    w.run_bulk_position_sync()
                     w.run_protective_orders_reconciliation()
             return _pos_recon
 
@@ -752,8 +754,8 @@ async def _async_main(
                 logger.warning("startup snapshot save failed (non-critical)")
 
         if execution_runtime is not None:
-            try:
-                for worker in (execution_runtime.sync_workers or {}).values():
+            for worker in (execution_runtime.sync_workers or {}).values():
+                try:
                     # 1. Reconcile tracked orders (fills / cancellations via client_order_id).
                     worker.run_reconciliation()
                     # 2. Recover TP_FILLED events from recent reduce trades BEFORE the bulk
@@ -761,14 +763,14 @@ async def _async_main(
                     #    and avoid the CLOSE_FULL_FILLED vs TP_FILLED semantic mismatch.
                     worker.run_trade_based_reconciliation()
                     # 3. Bulk position snapshot — detects full closes (qty=0) and partial closes
-                    #    (0 < live_qty < db_qty). Run twice so the consecutive-zero confirmation
-                    #    counter (_position_zero_count) reaches its threshold in one startup pass.
-                    worker.run_bulk_position_sync()
+                    #    (0 < live_qty < db_qty). Seed the consecutive-zero counter first so a
+                    #    single call is sufficient to cross the confirmation threshold.
+                    worker.bootstrap_zero_counts()
                     worker.run_bulk_position_sync()
                     # 4. Detect position-level TPs that were externally cancelled during downtime.
                     worker.run_protective_orders_reconciliation()
-            except Exception:
-                logger.warning("startup reconciliation failed (non-critical)")
+                except Exception:
+                    logger.warning("startup reconciliation failed for worker (non-critical)", exc_info=True)
 
         try:
             await client.run_until_disconnected()
