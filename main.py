@@ -241,6 +241,7 @@ def _build_execution_runtime(
                     w.run_trade_based_reconciliation()
                     w.run_bulk_position_sync()
                     w.run_protective_orders_reconciliation()
+                    w.run_funding_reconciliation()
             return _pos_recon
 
         ctx = AdapterExecutionContext(
@@ -769,6 +770,8 @@ async def _async_main(
                     worker.run_bulk_position_sync()
                     # 4. Detect position-level TPs that were externally cancelled during downtime.
                     worker.run_protective_orders_reconciliation()
+                    # 5. Recover funding executions lost during downtime.
+                    worker.run_funding_reconciliation()
                 except Exception:
                     logger.warning("startup reconciliation failed for worker (non-critical)", exc_info=True)
 

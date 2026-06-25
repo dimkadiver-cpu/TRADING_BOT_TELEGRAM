@@ -2,6 +2,43 @@
 
 ---
 
+## 2026-06-25 — Verifica sistema di riconciliazione: implementato `run_funding_reconciliation`
+
+### Stato del sistema di riconciliazione
+
+Il sistema di riconciliazione in `ExchangeEventSyncWorker` (`src/runtime_v2/execution_gateway/event_sync.py`) è composto da 4 percorsi:
+
+| Metodo | Scopo | Stato |
+|---|---|---|
+| `run_reconciliation()` | Poll REST ordini SENT/ACK → fill o cancel | ✅ Funzionante, 52/52 test verdi |
+| `run_bulk_position_sync()` | REST posizioni bulk → close sintetico o partial close | ✅ Funzionante, include partial-close fix #3/#4/#6/#7 |
+| `run_trade_based_reconciliation()` | REST recenti reduce-trade → TP_FILLED mancato | ✅ Funzionante |
+| `run_funding_reconciliation()` | REST funding executions → FUNDING_SETTLED mancato | ❌ → **implementato in questa sessione** |
+
+### Step completato
+
+**Implementazione `run_funding_reconciliation`** ✅  
+Il metodo era richiesto da 7 test già scritti (`test_event_sync.py` L1360–1534) ma assente dal sorgente (`AttributeError`).  
+Logica: per ogni simbolo delle chain aperte dell'account, fetch `fetch_recent_funding_executions`; mappa side Bybit ("Buy"→LONG, "Sell"→SHORT); salta fee==0.0; risolve chain via `resolve_chain_for_fill(..., account_id=)` (skip se ambigua o mancante); inserisce `FUNDING_SETTLED` con idem key `fill:{exec_id}` (compatibile con chiave WS).
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/runtime_v2/execution_gateway/event_sync.py` | Modificato | +metodo `run_funding_reconciliation` (65 righe) |
+
+### Validazione
+
+- **Primary signal:** 59/59 test `tests/runtime_v2/execution_gateway/test_event_sync.py` verdi (erano 52/59 — 7 FAILED).
+- **Secondary:** nessuna regressione su test preesistenti.
+
+### Rischi aperti
+
+- `run_funding_reconciliation` non è ancora chiamato nel loop principale (`adapter_context.py` o `workers.py`) — verificare integrazione nel ciclo periodico del runtime.
+- La tabella `ops_position_snapshots` viene aggiornata solo da `run_bulk_position_sync`; se il runtime non chiama questo metodo periodicamente le snapshot possono diventare stale.
+
+---
+
 ## 2026-06-23 — Anomalie DB trader_devos_crypto: 3 bug identificati, 2 fixati
 
 ### Step completati
