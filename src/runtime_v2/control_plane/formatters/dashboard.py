@@ -335,6 +335,7 @@ def _build_not_executed_payload(
             "details_command": r.details_command,
             "trader_id": r.trader_id,
             "account_id": r.account_id or scope.account_id,
+            "clean_log_link": r.clean_log_link,
         }
         for r in page_rows
     ]

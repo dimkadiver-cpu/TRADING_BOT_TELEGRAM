@@ -305,6 +305,7 @@ class NotExecutedRow:
     command_type: str | None
     occurred_at: str
     details_command: str
+    clean_log_link: str | None = None
 
 
 @dataclass
@@ -1841,12 +1842,34 @@ class StatusQueries:
             seen_signals: set[str] = set()
             seen_chains: set[int] = set()
 
-            for row in conn.execute(
+            rejected_event_rows = conn.execute(
                 "SELECT source_id, payload_json, created_at "
                 "FROM ops_lifecycle_events "
                 "WHERE trade_chain_id IS NULL AND event_type='SIGNAL_REJECTED' "
                 "ORDER BY created_at DESC, event_id DESC",
-            ).fetchall():
+            ).fetchall()
+
+            # Build source_id → clean_log_link map in a single query
+            _rej_source_ids = [
+                r[0] for r in rejected_event_rows if r[0] is not None
+            ]
+            _clean_log_link_by_source: dict[str, str] = {}
+            if _rej_source_ids:
+                _placeholders = ",".join("?" * len(_rej_source_ids))
+                _keys = [f"clean:signal_rejected:{sid}" for sid in _rej_source_ids]
+                _key_placeholders = ",".join("?" * len(_keys))
+                for _dk, _msg_id, _chat_id in conn.execute(
+                    f"SELECT dedupe_key, sent_message_id, sent_chat_id "
+                    f"FROM ops_notification_outbox "
+                    f"WHERE dedupe_key IN ({_key_placeholders}) AND status='SENT'",
+                    _keys,
+                ).fetchall():
+                    if _msg_id and _chat_id:
+                        _normalized = str(_chat_id).removeprefix("-100")
+                        _sid = _dk.removeprefix("clean:signal_rejected:")
+                        _clean_log_link_by_source[_sid] = f"https://t.me/c/{_normalized}/{_msg_id}"
+
+            for row in rejected_event_rows:
                 source_id, payload_json, created_at = row
                 payload = _parse_json_blob(payload_json)
                 account_id = payload.get("account_id")
@@ -1891,6 +1914,7 @@ class StatusQueries:
                         command_type=None,
                         occurred_at=created_at,
                         details_command="SIGNAL_REJECTED",
+                        clean_log_link=_clean_log_link_by_source.get(str(source_id)) if source_id else None,
                     )
                 )
                 seen_signals.add(reference)

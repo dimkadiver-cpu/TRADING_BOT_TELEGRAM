@@ -160,7 +160,7 @@ class TelegramNotificationDispatcher:
             conn.close()
 
     def _ensure_outbox_schema(self) -> None:
-        """Add sent_message_id column to ops_notification_outbox if missing."""
+        """Add sent_message_id / sent_chat_id columns to ops_notification_outbox if missing."""
         conn = sqlite3.connect(self._ops_db)
         try:
             cols = {row[1] for row in conn.execute("PRAGMA table_info(ops_notification_outbox)")}
@@ -168,7 +168,11 @@ class TelegramNotificationDispatcher:
                 conn.execute(
                     "ALTER TABLE ops_notification_outbox ADD COLUMN sent_message_id TEXT DEFAULT NULL"
                 )
-                conn.commit()
+            if "sent_chat_id" not in cols:
+                conn.execute(
+                    "ALTER TABLE ops_notification_outbox ADD COLUMN sent_chat_id TEXT DEFAULT NULL"
+                )
+            conn.commit()
         except Exception:
             pass
         finally:
@@ -187,12 +191,19 @@ class TelegramNotificationDispatcher:
         finally:
             conn.close()
 
-    def _mark_sent(self, notification_id: int, sent_message_id: str | None = None) -> None:
+    def _mark_sent(
+        self,
+        notification_id: int,
+        sent_message_id: str | None = None,
+        sent_chat_id: str | None = None,
+    ) -> None:
         conn = sqlite3.connect(self._ops_db)
         try:
             conn.execute(
-                "UPDATE ops_notification_outbox SET status='SENT', sent_at=?, sent_message_id=? WHERE notification_id=?",
-                (_now(), sent_message_id, notification_id),
+                "UPDATE ops_notification_outbox "
+                "SET status='SENT', sent_at=?, sent_message_id=?, sent_chat_id=? "
+                "WHERE notification_id=?",
+                (_now(), sent_message_id, sent_chat_id, notification_id),
             )
             conn.commit()
         finally:
@@ -564,7 +575,7 @@ class TelegramNotificationDispatcher:
                         asyncio.create_task(
                             self._on_clean_log_sent(account_id_str, trader_id_str)
                         )
-                self._mark_sent(notification_id, sent_message_id)
+                self._mark_sent(notification_id, sent_message_id, sent_chat_id=str(chat_id) if chat_id is not None else None)
                 sent += 1
             except Exception as exc:  # noqa: BLE001
                 logger.warning("notification %s send failed: %s", notification_id, exc)
