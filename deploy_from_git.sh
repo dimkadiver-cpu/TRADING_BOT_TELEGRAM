@@ -18,15 +18,6 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 # Preserve .env
 [ -f "$APP_DIR/.env" ] && cp -a "$APP_DIR/.env" "$TMP_DIR/.env"
 
-# Preserve only selected config files
-mkdir -p "$TMP_DIR/config"
-
-[ -f "$APP_DIR/config/channels.yaml" ] && \
-  cp -a "$APP_DIR/config/channels.yaml" "$TMP_DIR/config/channels.yaml"
-
-[ -f "$APP_DIR/config/telegram_control.yaml" ] && \
-  cp -a "$APP_DIR/config/telegram_control.yaml" "$TMP_DIR/config/telegram_control.yaml"
-
 cd "$APP_DIR"
 
 echo "==> Ensure git repo"
@@ -61,15 +52,6 @@ echo "==> Restore server-specific files"
 
 # Restore .env
 [ -f "$TMP_DIR/.env" ] && cp -a "$TMP_DIR/.env" "$APP_DIR/.env"
-
-# Restore only selected config files
-mkdir -p "$APP_DIR/config"
-
-[ -f "$TMP_DIR/config/channels.yaml" ] && \
-  cp -a "$TMP_DIR/config/channels.yaml" "$APP_DIR/config/channels.yaml"
-
-[ -f "$TMP_DIR/config/telegram_control.yaml" ] && \
-  cp -a "$TMP_DIR/config/telegram_control.yaml" "$APP_DIR/config/telegram_control.yaml"
 
 echo "==> Install/update requirements"
 "$VENV_DIR/bin/pip" install -r "$APP_DIR/requirements.txt"
