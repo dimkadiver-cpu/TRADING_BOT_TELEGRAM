@@ -299,6 +299,85 @@ class ExchangeEventSyncWorker:
 
         return processed
 
+    def run_funding_reconciliation(self) -> int:
+        """Poll recent funding executions via REST — safety net for FUNDING_SETTLED events
+        lost during WS downtime.
+
+        For each open chain's symbol, fetches recent funding executions from the adapter and
+        inserts a FUNDING_SETTLED event using the exchange exec_id as idempotency key
+        (``fill:{exec_id}``), so WS and REST paths deduplicate automatically.
+        Skips zero-fee executions and ambiguous attributions (multiple open chains on the
+        same symbol+side for this account).
+        """
+        if not hasattr(self._adapter, "fetch_recent_funding_executions"):
+            return 0
+
+        open_chains = self._get_open_chains()
+        if not open_chains:
+            return 0
+
+        symbols: set[str] = {symbol for _, symbol, _, _ in open_chains}
+        processed = 0
+
+        for symbol in symbols:
+            try:
+                executions = self._adapter.fetch_recent_funding_executions(
+                    symbol=symbol,
+                    execution_account_id=self._execution_account_id,
+                    limit=50,
+                )
+            except Exception:
+                logger.exception("fetch_recent_funding_executions error for %s", symbol)
+                continue
+            if not executions:
+                continue
+
+            for exec in executions:
+                if exec.exec_fee == 0.0:
+                    continue
+
+                bybit_side = (exec.side or "").lower()
+                if bybit_side == "buy":
+                    position_side = "LONG"
+                elif bybit_side == "sell":
+                    position_side = "SHORT"
+                else:
+                    logger.warning(
+                        "funding reconciliation: unrecognised side '%s' for %s exec %s — skipping",
+                        exec.side, symbol, exec.exec_id,
+                    )
+                    continue
+
+                chain_id = self._repo.resolve_chain_for_fill(
+                    symbol, position_side, account_id=self._execution_account_id
+                )
+                if chain_id is None:
+                    logger.warning(
+                        "funding reconciliation: ambiguous or missing chain for %s %s "
+                        "— skipping exec %s",
+                        symbol, position_side, exec.exec_id,
+                    )
+                    continue
+
+                idem_key = f"fill:{exec.exec_id}"
+                payload = json.dumps({
+                    "exec_fee": exec.exec_fee,
+                    "exchange_event_id": exec.exec_id,
+                    "exchange_time": exec.exchange_time,
+                    "source": "funding_reconciliation",
+                })
+                inserted = self._repo.insert_exchange_event(
+                    chain_id, "FUNDING_SETTLED", payload, idem_key
+                )
+                if inserted:
+                    logger.info(
+                        "FUNDING_SETTLED from funding reconciliation: chain=%s %s exec_id=%s fee=%s",
+                        chain_id, symbol, exec.exec_id, exec.exec_fee,
+                    )
+                    processed += 1
+
+        return processed
+
     def run_protective_orders_reconciliation(self) -> int:
         """Detect when a position-level TP was externally cancelled (no fill occurred)."""
         if not hasattr(self._adapter, "fetch_position_details"):
