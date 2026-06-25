@@ -1575,3 +1575,181 @@ def test_trade_based_reconciliation_ignores_other_account_chains(ops_db):
     ).fetchone()[0]
     conn.close()
     assert rows == 0
+
+
+# ---------------------------------------------------------------------------
+# Partial close detection (Gap 3 fix)
+# ---------------------------------------------------------------------------
+
+def _make_worker(ops_db, adapter):
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    repo = GatewayCommandRepository(ops_db)
+    return ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo, execution_account_id="acc"
+    )
+
+
+def test_bulk_position_sync_emits_partial_close_when_live_qty_less_than_db(ops_db):
+    """If live position qty < DB open_position_qty (both > 0), a synthetic
+    CLOSE_PARTIAL_FILLED event must be generated."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 200, "BTCUSDT", "LONG", 1.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="BTCUSDT", side="LONG", qty=0.6)]
+    )
+    adapter.simulate_reduce_trade("BTCUSDT", "LONG", price=70000.0, amount=0.4, trade_id="t-partial-1", fee=2.8)
+
+    worker = _make_worker(ops_db, adapter)
+    count = worker.run_bulk_position_sync()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT event_type, payload_json FROM ops_exchange_events WHERE trade_chain_id=200"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    assert row[0] == "CLOSE_PARTIAL_FILLED"
+    payload = json.loads(row[1])
+    assert abs(payload["filled_qty"] - 0.4) < 1e-8
+    assert abs(payload["closed_size"] - 0.4) < 1e-8
+    assert payload["fill_price"] == 70000.0
+    assert payload["source"] == "bulk_position_sync_partial"
+
+
+def test_bulk_position_sync_partial_close_idempotent(ops_db):
+    """Running bulk_position_sync multiple times with the same live qty must
+    insert exactly one CLOSE_PARTIAL_FILLED event."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 201, "ETHUSDT", "SHORT", 2.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="ETHUSDT", side="SHORT", qty=1.0)]
+    )
+
+    worker = _make_worker(ops_db, adapter)
+    worker.run_bulk_position_sync()
+    worker.run_bulk_position_sync()
+
+    conn = sqlite3.connect(ops_db)
+    count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events "
+        "WHERE trade_chain_id=201 AND event_type='CLOSE_PARTIAL_FILLED'"
+    ).fetchone()[0]
+    conn.close()
+    assert count == 1
+
+
+def test_bulk_position_sync_no_partial_close_when_qty_unchanged(ops_db):
+    """If live qty equals DB open_position_qty, no CLOSE_PARTIAL_FILLED is generated."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 202, "SOLUSDT", "LONG", 5.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="SOLUSDT", side="LONG", qty=5.0)]
+    )
+
+    worker = _make_worker(ops_db, adapter)
+    count = worker.run_bulk_position_sync()
+
+    assert count == 0
+    conn = sqlite3.connect(ops_db)
+    event_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_exchange_events WHERE trade_chain_id=202"
+    ).fetchone()[0]
+    conn.close()
+    assert event_count == 0
+
+
+def test_bulk_position_sync_partial_close_no_fill_price_when_no_reduce_trades(ops_db):
+    """If no reduce trades are available, fill_price is None but the event is still emitted."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+
+    _insert_open_chain(ops_db, 203, "XRPUSDT", "SHORT", 100.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="XRPUSDT", side="SHORT", qty=60.0)]
+    )
+    # No reduce trades → fill_price will be None
+
+    worker = _make_worker(ops_db, adapter)
+    count = worker.run_bulk_position_sync()
+
+    assert count == 1
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_exchange_events "
+        "WHERE trade_chain_id=203 AND event_type='CLOSE_PARTIAL_FILLED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload["fill_price"] is None
+    assert abs(payload["filled_qty"] - 40.0) < 1e-8
+
+
+def test_bulk_position_sync_partial_close_wake_callback_fired(ops_db):
+    """wake_callback must be fired when a new partial close event is inserted."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain(ops_db, 204, "DOGEUSDT", "LONG", 1000.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="DOGEUSDT", side="LONG", qty=500.0)]
+    )
+
+    wake_calls = []
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo,
+        execution_account_id="acc",
+        wake_callback=lambda: wake_calls.append(1),
+    )
+    worker.run_bulk_position_sync()
+
+    assert len(wake_calls) == 1
+
+
+def test_bulk_position_sync_partial_close_no_duplicate_wake_on_second_run(ops_db):
+    """Second run with same live qty must not fire wake_callback again (idempotent event)."""
+    from src.runtime_v2.execution_gateway.adapters.base import RawPositionLive
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.event_sync import ExchangeEventSyncWorker
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _insert_open_chain(ops_db, 205, "LTCUSDT", "SHORT", 50.0)
+
+    adapter = FakeAdapter()
+    adapter.set_position_live(
+        [RawPositionLive(symbol="LTCUSDT", side="SHORT", qty=30.0)]
+    )
+
+    wake_calls = []
+    repo = GatewayCommandRepository(ops_db)
+    worker = ExchangeEventSyncWorker(
+        ops_db_path=ops_db, adapter=adapter, repo=repo,
+        execution_account_id="acc",
+        wake_callback=lambda: wake_calls.append(1),
+    )
+    worker.run_bulk_position_sync()
+    worker.run_bulk_position_sync()
+
+    assert len(wake_calls) == 1

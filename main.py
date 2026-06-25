@@ -754,8 +754,19 @@ async def _async_main(
         if execution_runtime is not None:
             try:
                 for worker in (execution_runtime.sync_workers or {}).values():
+                    # 1. Reconcile tracked orders (fills / cancellations via client_order_id).
                     worker.run_reconciliation()
+                    # 2. Recover TP_FILLED events from recent reduce trades BEFORE the bulk
+                    #    position sync so that real_close_fill_exists() can skip synthetic closes
+                    #    and avoid the CLOSE_FULL_FILLED vs TP_FILLED semantic mismatch.
+                    worker.run_trade_based_reconciliation()
+                    # 3. Bulk position snapshot — detects full closes (qty=0) and partial closes
+                    #    (0 < live_qty < db_qty). Run twice so the consecutive-zero confirmation
+                    #    counter (_position_zero_count) reaches its threshold in one startup pass.
                     worker.run_bulk_position_sync()
+                    worker.run_bulk_position_sync()
+                    # 4. Detect position-level TPs that were externally cancelled during downtime.
+                    worker.run_protective_orders_reconciliation()
             except Exception:
                 logger.warning("startup reconciliation failed (non-critical)")
 
