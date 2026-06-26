@@ -216,7 +216,10 @@
       "Bash(xargs grep -l \"log\\\\|Log\\\\|LOG\")",
       "Skill(code-review)",
       "PowerShell(& \"C:\\\\Program Files\\\\SQLite\\\\sqlite3.exe\" \"db\\\\Test_live\\\\db\\\\parser.sqlite3\" \"SELECT id, raw_message_id, symbol, raw_text FROM parsed_signals WHERE raw_message_id = 107;\" 2>&1)",
-      "PowerShell(& \"C:\\\\Program Files\\\\SQLite\\\\sqlite3.exe\" \"db\\\\Test_live\\\\db\\\\parser.sqlite3\" \"SELECT id, message_text FROM raw_messages WHERE id = 107;\" 2>&1)"
+      "PowerShell(& \"C:\\\\Program Files\\\\SQLite\\\\sqlite3.exe\" \"db\\\\Test_live\\\\db\\\\parser.sqlite3\" \"SELECT id, message_text FROM raw_messages WHERE id = 107;\" 2>&1)",
+      "PowerShell($gstackPath = \"$env:USERPROFILE\\\\.claude\\\\skills\\\\gstack\"; if \\(Test-Path $gstackPath\\) { Write-Host \"✓ gstack è installato in: $gstackPath\"; Get-ChildItem $gstackPath | Select-Object Name } else { Write-Host \"✗ gstack NON è installato\"; Write-Host \"Posizione attesa: $gstackPath\" })",
+      "PowerShell(& \"$env:USERPROFILE\\\\.claude\\\\skills\\\\gstack\\\\bin\\\\gstack\" office-hours 2>&1 | Select-Object -First 50)",
+      "Bash(grep -niE \"notification_type|TEMPLATE_REGISTRY|\\\\\"[A-Z_]{4,}\\\\\":|'[A-Z_]{4,}'\" src/runtime_v2/control_plane/formatters/templates/clean_log.py)"
     ]
   }
 }
