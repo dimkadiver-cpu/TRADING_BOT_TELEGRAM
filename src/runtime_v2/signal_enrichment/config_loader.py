@@ -21,6 +21,11 @@ from src.runtime_v2.signal_enrichment.models import (
     MarketExecutionConfig,
     PriceCorrectionsConfig,
     PriceSanityConfig,
+    ReshapeEntriesConfig,
+    ReshapeMatchConfig,
+    ReshapeStopLossConfig,
+    ReshapeTakeProfitsConfig,
+    ReshapeTemplateConfig,
     RiskConfig,
     SignalPolicyConfig,
     SlConfig,
@@ -49,6 +54,7 @@ class OperationConfigLoader:
         self._config_dir = Path(config_dir)
         self._global_raw: dict = {}
         self._mtimes: dict[str, float] = {}
+        self._reshape_templates: dict[str, ReshapeTemplateConfig] = {}
         self._load()
 
     # ── Public API ────────────────────────────────────────────────────────────
@@ -82,11 +88,14 @@ class OperationConfigLoader:
 
     def reload_if_changed(self) -> bool:
         op_path = self._config_dir / "operation_config.yaml"
+        tpl_path = self._config_dir / "setup_reshape_templates.yaml"
         try:
-            mtime = op_path.stat().st_mtime
+            op_mtime = op_path.stat().st_mtime
         except FileNotFoundError:
             return False
-        if mtime == self._mtimes.get("operation_config", 0.0):
+        tpl_mtime = tpl_path.stat().st_mtime if tpl_path.exists() else 0.0
+        if (op_mtime == self._mtimes.get("operation_config", 0.0)
+                and tpl_mtime == self._mtimes.get("setup_reshape_templates", 0.0)):
             return False
         try:
             self._load()
@@ -104,6 +113,19 @@ class OperationConfigLoader:
         self._validate_global(raw)
         self._global_raw = raw
         self._mtimes["operation_config"] = op_path.stat().st_mtime
+
+        templates_path = self._config_dir / "setup_reshape_templates.yaml"
+        self._reshape_templates = {}
+        if templates_path.exists():
+            with templates_path.open(encoding="utf-8") as f:
+                tpl_raw = yaml.safe_load(f) or {}
+            for tpl in tpl_raw.get("templates", []):
+                cfg = self._build_reshape_template(tpl)
+                self._reshape_templates[cfg.id] = cfg
+            self._mtimes["setup_reshape_templates"] = templates_path.stat().st_mtime
+
+        # Validate all reshape references at load time (fail-fast)
+        self._validate_reshape_references(raw)
 
     def _validate_global(self, raw: dict) -> None:
         self._validate_market_entry_split(
@@ -128,6 +150,59 @@ class OperationConfigLoader:
             raise ConfigLoadError(
                 "entry_split.MARKET.range is invalid: RANGE structure requires LIMIT legs only"
             )
+
+    def _validate_reshape_references(self, raw: dict) -> None:
+        """Fail-fast: any registered trader with setup_mode=reshape must reference a known template id."""
+        for trader_id in raw.get("registered_traders", []):
+            trader_raw = self._load_trader_raw(trader_id)
+            setup_mode = trader_raw.get("setup_mode", "passthrough")
+            if setup_mode == "reshape":
+                template_id = (trader_raw.get("setup_reshape") or {}).get("template")
+                if not template_id:
+                    raise ConfigLoadError(
+                        f"Trader '{trader_id}' has setup_mode=reshape but no setup_reshape.template"
+                    )
+                if template_id not in self._reshape_templates:
+                    raise ConfigLoadError(
+                        f"Trader '{trader_id}' references unknown reshape template id '{template_id}'"
+                    )
+
+    @staticmethod
+    def _build_reshape_template(raw: dict) -> ReshapeTemplateConfig:
+        match_raw = raw.get("match", {})
+        entries_raw = raw.get("entries", {})
+        sl_raw = raw.get("stop_loss", {})
+        tp_raw = raw.get("take_profits", {})
+        return ReshapeTemplateConfig(
+            id=raw["id"],
+            enabled=raw.get("enabled", True),
+            match=ReshapeMatchConfig(
+                entry_structure=match_raw["entry_structure"],
+                normalized_entry_count=match_raw.get("normalized_entry_count"),
+                min_entry_count=match_raw.get("min_entry_count"),
+                min_tp_count=match_raw.get("min_tp_count"),
+            ),
+            entries=ReshapeEntriesConfig(
+                mode=entries_raw["mode"],
+                indexes=entries_raw.get("indexes", []),
+                n=entries_raw.get("n"),
+            ),
+            stop_loss=ReshapeStopLossConfig(
+                mode=sl_raw["mode"],
+                entry=sl_raw.get("entry"),
+                pct=sl_raw.get("pct"),
+            ),
+            take_profits=ReshapeTakeProfitsConfig(
+                mode=tp_raw["mode"],
+                indexes=tp_raw.get("indexes", []),
+                n=tp_raw.get("n"),
+                desired_rr=tp_raw.get("desired_rr", []),
+                strategy=tp_raw.get("strategy", "nearest_unique"),
+                max_rr_deviation_abs=tp_raw.get("max_rr_deviation_abs", 0.35),
+                on_missing_target=tp_raw.get("on_missing_target", "REJECT"),
+            ),
+            on_failure=raw.get("on_failure", "REJECT"),
+        )
 
     @staticmethod
     def _build_account_config(account_raw: dict) -> AccountConfig | None:
@@ -208,6 +283,14 @@ class OperationConfigLoader:
 
         account = self._build_account_config(effective_account_raw)
 
+        # Resolve reshape setup mode
+        setup_mode = merged.get("setup_mode", "passthrough")
+        setup_reshape_template: ReshapeTemplateConfig | None = None
+        if setup_mode == "reshape":
+            template_id = (merged.get("setup_reshape") or {}).get("template")
+            if template_id and template_id in self._reshape_templates:
+                setup_reshape_template = self._reshape_templates[template_id]
+
         return EffectiveEnrichmentConfig(
             trader_id=trader_id,
             enabled=merged.get("enabled", True),
@@ -219,6 +302,8 @@ class OperationConfigLoader:
             management_plan=management_plan,
             risk=RiskConfig(**merged.get("risk", {})),
             account=account,
+            setup_mode=setup_mode,
+            setup_reshape_template=setup_reshape_template,
         )
 
 
