@@ -175,6 +175,19 @@ def _build_signal_notes(p: dict) -> list[str]:
     realigned = p.get("entry_sequence_realigned") or {}
     if realigned.get("original") and realigned.get("normalized"):
         notes.append(f"Entry - Reordered by side ({realigned.get('side')})")
+
+    reshaped = p.get("reshaped") or {}
+    if reshaped.get("rule_id"):
+        notes.append(f"Setup - Reshaped by rule '{reshaped['rule_id']}'")
+
+    reshape_rejected = p.get("reshape_rejected") or {}
+    rr_phase = reshape_rejected.get("phase")
+    rr_id = reshape_rejected.get("rule_id")
+    if rr_id and rr_phase == "no_match":
+        notes.append(f"Setup - Reshape rule '{rr_id}' did not match")
+    elif rr_id and rr_phase == "invalid_output":
+        notes.append(f"Setup - Reshape failed by rule '{rr_id}'")
+
     return notes
 
 
