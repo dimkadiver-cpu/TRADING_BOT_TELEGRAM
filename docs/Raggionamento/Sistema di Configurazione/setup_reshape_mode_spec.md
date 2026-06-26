@@ -2,8 +2,8 @@
 
 **Cos'è:** una **feature opzionale, per-trader, a fianco del sistema esistente**. Non sostituisce e non rompe la pipeline attuale. Quando attiva per un trader, ridefinisce i *ruoli* del setup (quali prezzi sono Entry / SL / TP); tutto il resto — pesi, distribuzione %, realign, sizing, lifecycle — resta il sistema attuale e si applica al setup ridefinito.
 
-**Stato:** specifica di design (intervista 2026-06-25).
-**Reference:** `setup_reshaping_rr_reasoning.md` (principio), `operation_config_logic.md` (stato), `config_reshaping_design.md` (design tecnico/integrazione).
+**Stato:** specifica di design (intervista 2026-06-25/26). Documento unico della fetta #1 (design + implementazione).
+**Reference:** `setup_reshaping_rr_reasoning.md` (principio), `operation_config_logic.md` (stato attuale config), `cornix_trading_configurations_logic.md` (mappa feature).
 
 ---
 
@@ -52,7 +52,7 @@ parsed signal (immutabile, audit)
 [1-5] gate esistenti: blacklist, structure, SL, TP trim
       │
       ▼
-┌─────────────────────────────────────────────┐
+┌───────────────────────────────────────────────┐
 │  setup_mode == reshape ?                      │
 └───────────────┬───────────────┬───────────────┘
             passthrough        reshape
@@ -105,56 +105,56 @@ take_profits.mode: keep_all | drop | count | by_rr
 | take_profits | `count` | `n: 4` | tieni i primi N |
 | take_profits | `by_rr` | `desired_rr`, `max_rr_deviation_abs`, … | selezione per RR (anchor = media ponderata) |
 
+Gli esempi §4.2–4.4 sono **definizioni di template**: vivono nella libreria globale `setup_reshape_templates` (§4.5); il trader li richiama con `use: [id]`, non li riscrive.
+
 ### 4.2 Esempio — ibrido pieno con stato esplicito
 
 ```yaml
-# config/traders/<id>.yaml
-setup_mode: reshape
-
-setup_reshape:
-  rules:
-    - id: ladder_4_aggressive        # ← l'id compare nel clean log e nell'audit
-      enabled: true
-      match:
-        entry_structure: LADDER
-        normalized_entry_count: 4
-      entries:
-        mode: drop
-        indexes: [E1]                # E2,E3 restano; E4 consumata come SL sotto
-      stop_loss:
-        mode: from_entry
-        entry: E4                    # E4 → SL, SL0 archiviato
-      take_profits:
-        mode: by_rr
-        desired_rr: [1.0, 1.5, 2.5, 3.5]
-        strategy: nearest_unique
-        max_rr_deviation_abs: 0.35
-        on_missing_target: REVIEW
-      on_failure: REJECT
+# operation_config.yaml → setup_reshape_templates
+- id: ladder_4_aggressive          # ← l'id compare nel clean log e nell'audit
+  enabled: true
+  match:
+    entry_structure: LADDER
+    normalized_entry_count: 4
+  entries:
+    mode: drop
+    indexes: [E1]                  # E2,E3 restano; E4 consumata come SL sotto
+  stop_loss:
+    mode: from_entry
+    entry: E4                      # E4 → SL, SL0 archiviato
+  take_profits:
+    mode: by_rr
+    desired_rr: [1.0, 1.5, 2.5, 3.5]
+    strategy: nearest_unique
+    max_rr_deviation_abs: 0.35
+    on_missing_target: REJECT
+  on_failure: REJECT
 ```
 
 ### 4.3 Esempio — tocco minimo (solo entry, tutto il resto invariato ma esplicito)
 
 ```yaml
-    - id: skip_first_entry
-      enabled: true
-      match: { entry_structure: LADDER, normalized_entry_count: 4 }
-      entries:      { mode: drop, indexes: [E1] }
-      stop_loss:    { mode: original }          # scritto, stato esplicito
-      take_profits: { mode: keep_all }          # scritto, stato esplicito
-      on_failure: REJECT
+# operation_config.yaml → setup_reshape_templates
+- id: skip_first_entry
+  enabled: true
+  match: { entry_structure: LADDER, normalized_entry_count: 4 }
+  entries:      { mode: drop, indexes: [E1] }
+  stop_loss:    { mode: original }          # scritto, stato esplicito
+  take_profits: { mode: keep_all }          # scritto, stato esplicito
+  on_failure: REJECT
 ```
 
 ### 4.4 Esempio — esclusione TP specifica
 
 ```yaml
-    - id: ladder_drop_noisy_tps
-      enabled: true
-      match: { entry_structure: LADDER, normalized_entry_count: 4 }
-      entries:      { mode: keep_last, n: 2 }   # tiene E3,E4 (le due più lontane)
-      stop_loss:    { mode: original }
-      take_profits: { mode: drop, indexes: [1, 2, 4] }   # via TP1,TP2,TP4
-      on_failure: REJECT
+# operation_config.yaml → setup_reshape_templates
+- id: ladder_drop_noisy_tps
+  enabled: true
+  match: { entry_structure: LADDER, normalized_entry_count: 4 }
+  entries:      { mode: keep_last, n: 2 }   # tiene E3,E4 (le due più lontane)
+  stop_loss:    { mode: original }
+  take_profits: { mode: drop, indexes: [1, 2, 4] }   # via TP1,TP2,TP4
+  on_failure: REJECT
 ```
 
 Note:
@@ -392,7 +392,7 @@ Il setup originale resta **immutabile** come record. Il reshape aggiunge un reco
 
 ```json
 {
-  "reshape_rule_id": "ladder_4_to_2_entries_stop",
+  "reshape_rule_id": "ladder_4_aggressive",
   "roles": {
     "discarded":   [{ "source": "E1", "price": 100, "reason": "initial_entry_skipped" }],
     "entries":     [{ "source": "E2", "price": 98 }, { "source": "E3", "price": 96 }],
@@ -400,7 +400,7 @@ Il setup originale resta **immutabile** come record. Il reshape aggiunge un reco
   },
   "rr": { "anchor": 97.4, "stop": 94, "r_unit": 3.4 },
   "tp_selection": {
-    "mode": "select_existing_by_rr",
+    "mode": "by_rr",
     "selected":  [{ "price": 100, "rr": 0.76 }, { "price": 102, "rr": 1.35 },
                   { "price": 106, "rr": 2.53 }, { "price": 110, "rr": 3.71 }],
     "discarded": [98, 104, 108, 112]
@@ -505,3 +505,106 @@ Gli invarianti restano gli stessi; cambia solo se l'esito è rifiuto automatico 
 | Realign side / sizing / leverage | flusso normale (esistente) |
 | BE / auto-cancel / timeout | flusso normale (esistente), **legacy `tp1`**; `rr_threshold` = fetta lifecycle futura |
 | Setup originale | immutabile, solo audit |
+
+---
+
+## 10. Implementazione — ancoraggi al codice (verificati)
+
+### 10.1 Punto di integrazione
+
+`src/runtime_v2/signal_enrichment/processor.py::_process_signal`. Sequenza con il nuovo stadio:
+
+```
+1 blacklist global
+2 blacklist trader
+3 entry structure accettata
+4 SL richiesto
+5 TP trim (use_tp_count)
+   ── se setup_mode == reshape ──────────────────────────
+   N  realign side-aware (anticipato: indici E1..En stabili)
+   R  reshape: entries/stop_loss/take_profits (mode espliciti)
+        → match? no = passthrough · sì = ridefinizione
+        → validazione invarianti (§7) → REJECT su incoerenza
+   ──────────────────────────────────────────────────────
+6 entry_split pesi (sul setup ridefinito) + realign        ← flusso normale
+7 price sanity
+8 build EnrichedSignalPayload (+ reshaped: {rule_id, audit})
+```
+
+**Ordine obbligatorio reshape mode:** `realign → reshape → pesi`. Oggi il processor fa `_apply_entry_weights()` poi `_realign_limit_entries_by_side()`; in reshape mode il realign va **anticipato prima del reshape**, i pesi si applicano al setup ridefinito. In passthrough l'ordine attuale resta invariato.
+
+### 10.2 Livelli dati (mapping al codice)
+
+```
+parsed      → CanonicalParseResult.canonical_message.signal   (immutabile, già esiste)
+normalized  → output realign side-aware                       (già esiste, effimero)
+reshaped    → NUOVO: EnrichedSignalPayload.reshaped           (campo additivo)
+execution   → lifecycle/execution_plan.py                     (già esiste)
+```
+
+`parsed` non viene mai sovrascritto (resta nel record canonical). `reshaped` è additivo nel payload enriched → nessuna migrazione DB.
+
+### 10.3 Moduli nuovi (puri, no DB / no exchange)
+
+```
+src/runtime_v2/signal_enrichment/reshaping/
+  ├── setup_reshaper.py     # orchestratore: match → applica blocchi (entries/stop_loss/tp) → valida
+  ├── tp_rr_selector.py     # anchor (planned_weighted_average), R, RR per TP, nearest_unique, tolleranza
+  └── reshape_validator.py  # invarianti §7 → reason_code (REJECT)
+```
+
+3 sole classi, input dataclass → output dataclass. Sotto soglia di complessità.
+
+### 10.4 Loader
+
+`src/runtime_v2/signal_enrichment/config_loader.py`:
+- risolve `setup_reshape_templates` (libreria globale) e l'espansione `use: [id]` per-trader (lookup al load);
+- `use: [id]` con id assente → **fail-fast** al load;
+- `policy_version` reso **trader-aware** (`get_policy_version(trader_id)` / su `policy_snapshot`): il reshape rende la policy trader-specifica, l'hash deve rifletterlo (oggi è globale → audit ambiguo, vedi `operation_config_logic.md` §2.6).
+
+---
+
+## 11. Change-surface (campi categoria C toccati direttamente)
+
+Solo i campi che il reshape tocca rientrano in questa fetta; il resto della config hygiene resta fetta #2:
+- **`policy_version` trader-aware** — vedi §10.4. Unico cambiamento che tocca l'audit storico → va versionato.
+- **Validazione pesi entry** (correlata, opzionale) — il reshape cambia *quale* blocco pesi si applica (es. 2 entry → `averaging`); la lacuna esistente `{E1:1, E2:-1}` (somma 0, non normalizzata) resta un rischio del flusso normale. Si può chiudere qui o lasciare in fetta #2.
+
+---
+
+## 12. Implementation tasks
+
+- [ ] **T1 (P1)** — `reshaping/setup_reshaper.py` — match + applicazione blocchi entries/stop_loss/take_profits. Verify: `test_setup_reshaper.py`.
+- [ ] **T2 (P1)** — `reshaping/tp_rr_selector.py` — anchor, R, RR, nearest_unique, tolleranza. Verify: `test_tp_rr_selector.py`.
+- [ ] **T3 (P1)** — `reshaping/reshape_validator.py` — invarianti §7 → reason_code. Verify: `test_reshape_validator.py`.
+- [ ] **T4 (P1)** — `models.py` — `EnrichedSignalPayload.reshaped` (campo audit additivo). Verify: model load test.
+- [ ] **T5 (P1)** — `processor.py` — stadio reshape, ordine `realign→reshape→pesi`, `on_failure → REJECT`. Verify: integration enrichment.
+- [ ] **T6 (P2)** — `config_loader.py` — `setup_reshape_templates` + `use:[id]` (fail-fast) + `policy_version(trader_id)`. Verify: loader test.
+- [ ] **T7 (P2)** — `operation_config.yaml` + `config/traders/<id>.yaml` — libreria template + `setup_mode`/`use` (default passthrough). Verify: load + snapshot.
+- [ ] **T8 (P2)** — clean log: una riga in `_build_signal_notes` (`Setup - Reshaped by rule '<id>'`). Verify: snapshot clean log.
+
+**Parallelizzazione:** Lane A = `reshaping/` (T1–T3, indipendente); Lane B = loader (T6, indipendente); Lane C = integrazione `processor` + `models` + clean log (T4/T5/T8, dipende da A e B).
+
+**Fuori da questi task (rinviato):** BE/auto-cancel `rr_threshold` (`be_move_resolver.py`, `event_processor.py`) → fetta lifecycle. In v1 resta `tp1` legacy.
+
+### Test (framework pytest, rilevato da `parser_test/` e test esistenti)
+
+```
+test_setup_reshaper.py   : LONG/SHORT 4 entry ordinate+disordinate; 3/5 entry → no match;
+                           drop/keep_last/keep_only; from_entry lato giusto/sbagliato
+test_tp_rr_selector.py   : 8 TP/4 target nearest_unique; due target stesso TP; nessun TP in tolleranza;
+                           by_rr vs count vs drop[indici]
+test_reshape_validator.py: ogni invariante §7 → reason_code (Rejected); 0 entry / 0 TP / R≤0 /
+                           SL lato sbagliato / SL=entry / TP non profittevole
+integration (processor)  : ordine realign→reshape→pesi; passthrough invariato; reshaped nel payload;
+                           size corretta dopo reshape (pesi dal flusso normale)
+```
+
+---
+
+## 13. Rollout
+
+- **Inerte di default:** ogni trader è `setup_mode: passthrough` finché non si imposta `reshape` + `use:[id]`. Zero impatto sui 12 trader registrati.
+- **Nessuna migrazione DB:** `reshaped` è additivo nel payload enriched.
+- **Audit:** il fix `policy_version` trader-aware è l'unico cambiamento che tocca l'audit storico → versionare.
+- **Reversibile:** rimettere `setup_mode: passthrough` su un trader lo riporta al comportamento attuale, immediatamente.
