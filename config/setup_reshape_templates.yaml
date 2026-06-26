@@ -1,0 +1,75 @@
+# config/setup_reshape_templates.yaml
+# Template catalog for setup_mode: reshape.
+# Traders reference templates by id only: setup_reshape.template: <id>
+#
+# Vocabolario blocchi:
+#   entries.mode      : keep | drop | keep_only | keep_last | keep_first
+#   stop_loss.mode    : original | from_entry | from_distance_pct
+#   take_profits.mode : keep_all | drop | count | by_rr
+#   on_failure        : REJECT  (default; unica modalita' v1)
+#
+# Indici entry Ex = side-normalized (E1 = entry piu' vicina al prezzo).
+# Indici TP   = ordine parsato del segnale (1 = primo TP parsato).
+# Match:
+#   normalized_entry_count = cardinalita' esatta richiesta
+#   min_entry_count        = cardinalita' minima richiesta
+#   min_tp_count           = numero minimo di TP parsati originali
+
+templates:
+
+  # Template 1 — LADDER 4 entry, AGGRESSIVO.
+  # Scarta E1, tiene E2/E3 operative, E4 -> Stop Loss (SL0 archiviato),
+  # riduce gli 8 TP a 4 selezionati per RR.
+  - id: ladder_4_aggressive
+    enabled: true
+    match:
+      entry_structure: LADDER
+      normalized_entry_count: 4   # esattamente 4 entry dopo normalizzazione
+      min_tp_count: 8             # almeno 8 TP parsati originali
+    entries:
+      mode: drop                  # scarta gli indici elencati
+      indexes: [E1]               # E1 scartata; E2,E3,E4 proseguono
+    stop_loss:
+      mode: from_entry            # un'entry diventa lo SL effettivo
+      entry: E4                   # E4 (piu' lontana) -> SL; SL0 archiviato come audit
+    take_profits:
+      mode: by_rr                 # seleziona i TP esistenti piu' vicini a target RR
+      desired_rr: [1.0, 1.5, 2.5, 3.5]
+      strategy: nearest_unique    # ogni TP sorgente scelto al massimo una volta
+      max_rr_deviation_abs: 0.35  # TP valido solo se entro +-0.35R dal target
+      on_missing_target: REJECT   # target senza TP in tolleranza -> rifiuta
+    on_failure: REJECT
+
+  # Template 2 — LADDER 4 entry, CONSERVATIVO.
+  # Tiene le due entry piu' lontane, mantiene lo SL originale, primi 4 TP.
+  - id: ladder_4_keep_sl
+    enabled: true
+    match:
+      entry_structure: LADDER
+      normalized_entry_count: 4
+      min_tp_count: 8
+    entries:
+      mode: keep_last             # tiene le ultime N entry in ordine normalizzato
+      n: 2                        # E3,E4 operative; E1,E2 scartate
+    stop_loss:
+      mode: original              # SL del segnale invariato
+    take_profits:
+      mode: count                 # tiene i primi N TP parsati
+      n: 4
+    on_failure: REJECT
+
+  # Template 3 — RANGE, TP-only.
+  # Non tocca entry o SL; riduce solo i TP quando il segnale RANGE ne porta molti.
+  - id: range_tp_reduce
+    enabled: true
+    match:
+      entry_structure: RANGE
+      min_tp_count: 8
+    entries:
+      mode: keep                  # tutte le entry invariate
+    stop_loss:
+      mode: original              # SL invariato
+    take_profits:
+      mode: count
+      n: 4
+    on_failure: REJECT

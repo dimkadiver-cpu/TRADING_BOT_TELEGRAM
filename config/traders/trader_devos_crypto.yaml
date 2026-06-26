@@ -1,4 +1,7 @@
 # config/trader_3.yaml
+
+  setup_mode: passthrough   # reshape: disabled by default; set to reshape + template:<id> to activate
+
   account:
     id: "demo_2"      # deve corrispondere alla chiave in account_routing
     capital_base_usdt: 10000.0
