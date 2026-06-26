@@ -1,7 +1,8 @@
-# config/trader_3.yaml
+# config/trader_devos_crypto.yaml
 
-  setup_mode: passthrough   # reshape: disabled by default; set to reshape + template:<id> to activate
-
+  setup_mode: reshape
+  setup_reshape:
+    template: ladder_4_aggressive
   account:
     id: "demo_2"      # deve corrispondere alla chiave in account_routing
     capital_base_usdt: 10000.0
