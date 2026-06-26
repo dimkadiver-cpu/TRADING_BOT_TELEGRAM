@@ -14,9 +14,13 @@ from src.runtime_v2.signal_enrichment.models import (
     EnrichedSignalPayload,
     EnrichmentLogEntry,
     RangeDerivation,
+    ReshapeAudit,
+    ReshapeRejectionInfo,
 )
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+from src.runtime_v2.signal_enrichment.reshaping.setup_reshaper import apply_reshape
 from src.runtime_v2.symbols import to_raw_symbol
+from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +53,7 @@ class SignalEnrichmentProcessor:
                                           lifecycle_processed=True)
         else:
             policy_snapshot = config.model_dump()
-            policy_version = self._config.get_policy_version()
+            policy_version = self._config.get_policy_version(trader_id)
             enriched = self._route(result, config, policy_snapshot, policy_version)
 
         saved = self._repo.save(enriched)
@@ -111,48 +115,86 @@ class SignalEnrichmentProcessor:
             if signal.stop_loss is None or signal.stop_loss.price is None:
                 return block("missing_stop_loss")
 
-        # 5. TP trim
-        take_profits = list(signal.take_profits)
-        original_tp_count: int | None = None
-        use_tp_count = config.signal_policy.tp.use_tp_count
-        if use_tp_count is not None and len(take_profits) > use_tp_count:
-            original_tp_count = len(take_profits)
-            take_profits = take_profits[:use_tp_count]
-            log.append(EnrichmentLogEntry(
-                check="tp_count_trimmed",
-                original=str(original_tp_count),
-                result=str(use_tp_count),
-            ))
+        reshape_mode = config.setup_mode == "reshape" and config.setup_reshape_template is not None
 
-        # 6. Entry split weights
-        entries, normalized_structure, range_derivation, range_logs = self._apply_entry_weights(signal, config)
-        log.extend(range_logs)
-        entries, entry_sequence_realigned, reorder_logs = self._realign_limit_entries_by_side(entries, signal.side)
-        log.extend(reorder_logs)
+        if reshape_mode:
+            # In reshape mode: realign first (so E1..En are stable), then reshape.
+            # use_tp_count trim is bypassed — reshape owns TP cardinality.
+            raw_entries, _, _, _ = self._apply_entry_weights(signal, config)
+            realigned_entries, _, _ = self._realign_limit_entries_by_side(raw_entries, signal.side)
 
-        # 7. Price sanity (se abilitata)
-        if config.signal_policy.price_sanity.enabled:
-            ranges = self._symbol_policy_range(
-                symbol,
-                config.signal_policy.price_sanity.symbol_ranges,
+            signal_entries_for_reshape = [
+                (f"E{leg.sequence}", leg.price.value)
+                for leg in realigned_entries
+                if leg.price is not None
+            ]
+            weights_map = {
+                f"E{leg.sequence}": leg.weight
+                for leg in realigned_entries
+            }
+            sl_price = signal.stop_loss.price.value if signal.stop_loss and signal.stop_loss.price else None
+            tp_prices_original = [tp.price.value for tp in signal.take_profits]
+
+            reshape_result = apply_reshape(
+                signal_entries=signal_entries_for_reshape,
+                signal_sl_price=sl_price,
+                signal_tp_prices=tp_prices_original,
+                signal_entry_structure=str(signal.entry_structure),
+                signal_side=str(signal.side),
+                template=config.setup_reshape_template,
+                weights_map=weights_map,
             )
-            if ranges and len(ranges) == 2:
-                for tp in take_profits:
-                    if not (ranges[0] <= tp.price.value <= ranges[1]):
-                        return block("price_out_of_range")
 
-        enriched_signal = EnrichedSignalPayload(
-            symbol=symbol or None,
-            side=signal.side,
-            entry_structure=normalized_structure,
-            entries=entries,
-            take_profits=take_profits,
-            stop_loss=signal.stop_loss,
-            range_derivation=range_derivation,
-            risk_hint=signal.risk_hint,
-            entry_sequence_realigned=entry_sequence_realigned,
-            original_tp_count=original_tp_count,
-        )
+            if isinstance(reshape_result, ReshapeRejectionInfo):
+                return self._make_block_reshape(
+                    result, config, policy_snapshot, policy_version, log, reshape_result
+                )
+
+            reshaped_audit: ReshapeAudit = reshape_result
+
+            enriched_signal = self._build_reshaped_payload(
+                symbol, signal, realigned_entries, reshaped_audit, config
+            )
+        else:
+            # 5. TP trim (passthrough only)
+            take_profits = list(signal.take_profits)
+            original_tp_count: int | None = None
+            use_tp_count = config.signal_policy.tp.use_tp_count
+            if use_tp_count is not None and len(take_profits) > use_tp_count:
+                original_tp_count = len(take_profits)
+                take_profits = take_profits[:use_tp_count]
+                log.append(EnrichmentLogEntry(
+                    check="tp_count_trimmed",
+                    original=str(original_tp_count),
+                    result=str(use_tp_count),
+                ))
+
+            # 6. Entry split weights + realign
+            entries, normalized_structure, range_derivation, range_logs = self._apply_entry_weights(signal, config)
+            log.extend(range_logs)
+            entries, entry_sequence_realigned, reorder_logs = self._realign_limit_entries_by_side(entries, signal.side)
+            log.extend(reorder_logs)
+
+            # 7. Price sanity
+            if config.signal_policy.price_sanity.enabled:
+                ranges = self._symbol_policy_range(symbol, config.signal_policy.price_sanity.symbol_ranges)
+                if ranges and len(ranges) == 2:
+                    for tp in take_profits:
+                        if not (ranges[0] <= tp.price.value <= ranges[1]):
+                            return block("price_out_of_range")
+
+            enriched_signal = EnrichedSignalPayload(
+                symbol=symbol or None,
+                side=signal.side,
+                entry_structure=normalized_structure,
+                entries=entries,
+                take_profits=take_profits,
+                stop_loss=signal.stop_loss,
+                range_derivation=range_derivation,
+                risk_hint=signal.risk_hint,
+                entry_sequence_realigned=entry_sequence_realigned,
+                original_tp_count=original_tp_count,
+            )
 
         return EnrichedCanonicalMessage(
             canonical_message_id=result.canonical_message_id,
@@ -167,6 +209,64 @@ class SignalEnrichmentProcessor:
             policy_snapshot=policy_snapshot,
             policy_version=policy_version,
             lifecycle_processed=False,
+        )
+
+    def _make_block_reshape(
+        self,
+        result: CanonicalParseResult,
+        config: EffectiveEnrichmentConfig,
+        policy_snapshot: dict,
+        policy_version: str,
+        log: list[EnrichmentLogEntry],
+        rejection: ReshapeRejectionInfo,
+    ) -> EnrichedCanonicalMessage:
+        return self._make_outcome(
+            result, "BLOCK", rejection.reason_code, lifecycle_processed=True,
+            log=log, policy_snapshot=policy_snapshot, policy_version=policy_version,
+            config=config,
+        )
+
+    def _build_reshaped_payload(
+        self,
+        symbol: str,
+        signal,
+        realigned_legs: list[EnrichedEntryLeg],
+        audit: ReshapeAudit,
+        config: EffectiveEnrichmentConfig,
+    ) -> EnrichedSignalPayload:
+        operative_sources = {e.source for e in audit.operative_entries}
+        operative_legs = [
+            leg for leg in realigned_legs
+            if f"E{leg.sequence}" in operative_sources
+        ]
+
+        new_sl_price = audit.stop_loss.price
+        new_sl = StopLoss(price=Price(raw=str(new_sl_price), value=new_sl_price))
+
+        new_tps = [
+            TakeProfit(
+                sequence=i + 1,
+                price=Price(raw=str(t.price), value=t.price),
+            )
+            for i, t in enumerate(audit.tp_selection.selected)
+        ]
+
+        n_operative = len(operative_legs)
+        if n_operative == 1:
+            derived_structure = "ONE_SHOT"
+        elif n_operative == 2:
+            derived_structure = "TWO_STEP"
+        else:
+            derived_structure = "LADDER"
+
+        return EnrichedSignalPayload(
+            symbol=symbol or None,
+            side=signal.side,
+            entry_structure=derived_structure,
+            entries=operative_legs,
+            take_profits=new_tps,
+            stop_loss=new_sl,
+            reshaped=audit,
         )
 
     @staticmethod
