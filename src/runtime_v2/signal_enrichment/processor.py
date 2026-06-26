@@ -128,10 +128,6 @@ class SignalEnrichmentProcessor:
                 for leg in realigned_entries
                 if leg.price is not None
             ]
-            weights_map = {
-                f"E{leg.sequence}": leg.weight
-                for leg in realigned_entries
-            }
             sl_price = signal.stop_loss.price.value if signal.stop_loss and signal.stop_loss.price else None
             tp_prices_original = [tp.price.value for tp in signal.take_profits]
 
@@ -142,7 +138,7 @@ class SignalEnrichmentProcessor:
                 signal_entry_structure=str(signal.entry_structure),
                 signal_side=str(signal.side),
                 template=config.setup_reshape_template,
-                weights_map=weights_map,
+                limit_split_config=config.signal_policy.entry_split.LIMIT,
             )
 
             if isinstance(reshape_result, ReshapeRejectionInfo):
@@ -153,8 +149,16 @@ class SignalEnrichmentProcessor:
             reshaped_audit: ReshapeAudit = reshape_result
 
             enriched_signal = self._build_reshaped_payload(
-                symbol, signal, realigned_entries, reshaped_audit, config
+                symbol, signal, realigned_entries, reshaped_audit
             )
+
+            # Finding 4: price_sanity check on reshaped TPs (mirrors passthrough branch)
+            if config.signal_policy.price_sanity.enabled:
+                ranges = self._symbol_policy_range(symbol, config.signal_policy.price_sanity.symbol_ranges)
+                if ranges and len(ranges) == 2:
+                    for tp in enriched_signal.take_profits:
+                        if not (ranges[0] <= tp.price.value <= ranges[1]):
+                            return block("price_out_of_range")
         else:
             # 5. TP trim (passthrough only)
             take_profits = list(signal.take_profits)
@@ -220,10 +224,32 @@ class SignalEnrichmentProcessor:
         log: list[EnrichmentLogEntry],
         rejection: ReshapeRejectionInfo,
     ) -> EnrichedCanonicalMessage:
-        return self._make_outcome(
-            result, "BLOCK", rejection.reason_code, lifecycle_processed=True,
-            log=log, policy_snapshot=policy_snapshot, policy_version=policy_version,
-            config=config,
+        trader_id = self._resolve_trader_id(result)
+        signal = result.canonical_message.signal
+        sym = to_raw_symbol(signal.symbol) or ""
+        # Attach a minimal payload so the formatter can surface reshape_rejected info.
+        rejected_payload = EnrichedSignalPayload(
+            symbol=sym or None,
+            side=signal.side,
+            entry_structure=None,
+            entries=[],
+            take_profits=[],
+            stop_loss=None,
+            reshape_rejected=rejection,
+        )
+        return EnrichedCanonicalMessage(
+            canonical_message_id=result.canonical_message_id,
+            raw_message_id=result.raw_message_id,
+            trader_id=trader_id,
+            account_id=config.account_id,
+            primary_class=result.primary_class,
+            enrichment_decision="BLOCK",
+            reason_code=rejection.reason_code,
+            enriched_signal=rejected_payload,
+            enrichment_log=log,
+            policy_snapshot=policy_snapshot,
+            policy_version=policy_version,
+            lifecycle_processed=True,
         )
 
     def _build_reshaped_payload(
@@ -232,13 +258,20 @@ class SignalEnrichmentProcessor:
         signal,
         realigned_legs: list[EnrichedEntryLeg],
         audit: ReshapeAudit,
-        config: EffectiveEnrichmentConfig,
     ) -> EnrichedSignalPayload:
         operative_sources = {e.source for e in audit.operative_entries}
         operative_legs = [
             leg for leg in realigned_legs
             if f"E{leg.sequence}" in operative_sources
         ]
+
+        # Finding 2: renormalize surviving leg weights to sum to 1.0
+        total_w = sum(leg.weight for leg in operative_legs)
+        if total_w > 0 and abs(total_w - 1.0) > 0.001:
+            operative_legs = [
+                leg.model_copy(update={"weight": leg.weight / total_w})
+                for leg in operative_legs
+            ]
 
         new_sl_price = audit.stop_loss.price
         new_sl = StopLoss(price=Price(raw=str(new_sl_price), value=new_sl_price))

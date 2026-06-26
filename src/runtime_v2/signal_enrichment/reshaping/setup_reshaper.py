@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from src.runtime_v2.signal_enrichment.models import (
+    LimitEntrySplitConfig,
     ReshapeAudit,
     ReshapeAuditDiscarded,
     ReshapeAuditEntry,
@@ -26,13 +27,14 @@ def apply_reshape(
     signal_entry_structure: str,
     signal_side: str,
     template: ReshapeTemplateConfig,
-    weights_map: dict[str, float],
+    limit_split_config: LimitEntrySplitConfig,
 ) -> ReshapeAudit | ReshapeRejectionInfo:
     """Apply a reshape template to a signal.
 
     signal_entries must be already realigned (E1 = nearest to price for side).
     signal_tp_prices must be the original parsed TPs, before any use_tp_count trim.
-    weights_map keys are "E1", "E2", etc. from the flusso normale config.
+    limit_split_config is the LIMIT entry split config; weights for the reshaped
+    structure are derived from it based on the operative entry count.
     """
     rule_id = template.id
 
@@ -57,9 +59,9 @@ def apply_reshape(
     if not operative:
         return ReshapeRejectionInfo(rule_id=rule_id, phase="invalid_output", reason_code="reshape_no_operative_entry")
 
-    # Weights are positional: operative[0] → "E1", operative[1] → "E2", etc.
-    # weights_map contains the weights that the flusso normale will assign to the
-    # resulting structure (positional keys), read-only.
+    # Derive weights for the resulting operative structure (not the original structure).
+    # N=1 → single weights, N=2 → averaging weights, N≥3 → ladder weights (renormalized to N).
+    weights_map = _weights_for_n_operative(limit_split_config, len(operative))
     operative_with_weights = [
         (price, weights_map.get(f"E{i + 1}", 0.0))
         for i, (key, price) in enumerate(operative)
@@ -181,6 +183,25 @@ def _apply_entries(
         return operative, discarded
 
     return None, "reshape_unknown_entries_mode"
+
+
+def _weights_for_n_operative(limit_split: LimitEntrySplitConfig, n: int) -> dict[str, float]:
+    """Derive positional weights for N operative entries from the split config.
+
+    Uses single weights for N=1, averaging weights for N=2, and ladder weights
+    (renormalized to N entries) for N≥3.
+    """
+    if n == 1:
+        raw = dict(limit_split.single.weights)
+    elif n == 2:
+        raw = dict(limit_split.averaging.weights)
+    else:
+        raw = dict(limit_split.ladder.weights)
+    result = {f"E{i + 1}": raw.get(f"E{i + 1}", 0.0) for i in range(n)}
+    total = sum(result.values())
+    if total > 0 and abs(total - 1.0) > 0.001:
+        result = {k: v / total for k, v in result.items()}
+    return result
 
 
 def _apply_stop_loss(

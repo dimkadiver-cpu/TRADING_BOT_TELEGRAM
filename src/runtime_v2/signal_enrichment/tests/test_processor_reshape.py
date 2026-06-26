@@ -186,6 +186,11 @@ def test_reshape_no_match_blocks_signal(tmp_path):
     enriched = proc.process(result)
     assert enriched.enrichment_decision == "BLOCK"
     assert "reshape" in enriched.reason_code
+    # reshape_rejected must be surfaced on the signal payload so the formatter can render it
+    assert enriched.enriched_signal is not None
+    assert enriched.enriched_signal.reshape_rejected is not None
+    assert enriched.enriched_signal.reshape_rejected.rule_id == "ladder_4_aggressive"
+    assert enriched.enriched_signal.reshape_rejected.phase == "no_match"
 
 
 def test_passthrough_unchanged(tmp_path):

@@ -1,5 +1,8 @@
 import pytest
 from src.runtime_v2.signal_enrichment.models import (
+    EntryRangeConfig,
+    EntryWeightsConfig,
+    LimitEntrySplitConfig,
     ReshapeAudit,
     ReshapeRejectionInfo,
     ReshapeTemplateConfig,
@@ -9,6 +12,16 @@ from src.runtime_v2.signal_enrichment.models import (
     ReshapeTakeProfitsConfig,
 )
 from src.runtime_v2.signal_enrichment.reshaping.setup_reshaper import apply_reshape
+
+
+def _limit_split_config() -> LimitEntrySplitConfig:
+    """Honest LIMIT split config matching the processor's test config."""
+    return LimitEntrySplitConfig(
+        single=EntryWeightsConfig(weights={"E1": 1.0}),
+        range=EntryRangeConfig(split_mode="endpoints", weights={"E1": 0.5, "E2": 0.5}),
+        averaging=EntryWeightsConfig(weights={"E1": 0.70, "E2": 0.30}),
+        ladder=EntryWeightsConfig(weights={"E1": 0.40, "E2": 0.30, "E3": 0.20, "E4": 0.10}),
+    )
 
 
 def _ladder_4_aggressive() -> ReshapeTemplateConfig:
@@ -29,7 +42,6 @@ def _ladder_4_aggressive() -> ReshapeTemplateConfig:
 
 
 LADDER_ENTRIES = [("E1", 100.0), ("E2", 98.0), ("E3", 96.0), ("E4", 94.0)]
-LADDER_WEIGHTS = {"E1": 0.70, "E2": 0.30, "E3": 0.20, "E4": 0.10}
 LADDER_SL = 92.0
 LADDER_TPS = [98.0, 100.0, 102.0, 104.0, 106.0, 108.0, 110.0, 112.0]
 
@@ -43,7 +55,7 @@ def test_full_reshape_spec_example():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=_ladder_4_aggressive(),
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeAudit)
     assert result.rule_id == "ladder_4_aggressive"
@@ -75,7 +87,7 @@ def test_no_match_wrong_structure_is_rejected():
         signal_entry_structure="RANGE",  # doesn't match LADDER
         signal_side="LONG",
         template=_ladder_4_aggressive(),
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeRejectionInfo)
     assert result.phase == "no_match"
@@ -83,7 +95,6 @@ def test_no_match_wrong_structure_is_rejected():
 
 def test_no_match_wrong_entry_count():
     entries_3 = [("E1", 100.0), ("E2", 98.0), ("E3", 96.0)]
-    weights_3 = {"E1": 0.50, "E2": 0.30, "E3": 0.20}
     result = apply_reshape(
         signal_entries=entries_3,
         signal_sl_price=94.0,
@@ -91,7 +102,7 @@ def test_no_match_wrong_entry_count():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=_ladder_4_aggressive(),  # requires normalized_entry_count=4
-        weights_map=weights_3,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeRejectionInfo)
     assert result.phase == "no_match"
@@ -106,7 +117,7 @@ def test_no_match_insufficient_tp_count():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=_ladder_4_aggressive(),
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeRejectionInfo)
     assert result.phase == "no_match"
@@ -128,7 +139,7 @@ def test_keep_last_n_entries():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=template,
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeAudit)
     operative_prices = [e.price for e in result.operative_entries]
@@ -155,7 +166,7 @@ def test_keep_only_specific_entries():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=template,
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeAudit)
     operative_prices = [e.price for e in result.operative_entries]
@@ -179,7 +190,7 @@ def test_invalid_output_rejected():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=template,
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeRejectionInfo)
     assert result.phase == "invalid_output"
@@ -202,7 +213,7 @@ def test_tp_drop_by_indexes():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=template,
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeAudit)
     # Dropped indexes 1,2,4 (1-based): 98, 100, 104 removed; kept: 102, 106, 108, 110, 112
@@ -220,7 +231,7 @@ def test_disabled_template_no_match():
         signal_entry_structure="LADDER",
         signal_side="LONG",
         template=template,
-        weights_map=LADDER_WEIGHTS,
+        limit_split_config=_limit_split_config(),
     )
     assert isinstance(result, ReshapeRejectionInfo)
     assert result.phase == "no_match"
