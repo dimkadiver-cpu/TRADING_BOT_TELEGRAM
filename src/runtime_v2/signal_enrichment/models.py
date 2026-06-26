@@ -10,6 +10,98 @@ from src.parser_v2.contracts.entities import Price, RiskHint, StopLoss, TakeProf
 from src.parser_v2.contracts.enums import EntryRole, EntryStructure, EntryType, MessageClass, Side
 
 
+# ── Reshape config models ──────────────────────────────────────────────────────
+
+class ReshapeMatchConfig(BaseModel):
+    entry_structure: str
+    normalized_entry_count: int | None = None
+    min_entry_count: int | None = None
+    min_tp_count: int | None = None
+
+
+class ReshapeEntriesConfig(BaseModel):
+    mode: Literal["keep", "drop", "keep_only", "keep_last", "keep_first"]
+    indexes: list[str] = Field(default_factory=list)
+    n: int | None = None
+
+
+class ReshapeStopLossConfig(BaseModel):
+    mode: Literal["original", "from_entry", "from_distance_pct"]
+    entry: str | None = None
+    pct: float | None = None
+
+
+class ReshapeTakeProfitsConfig(BaseModel):
+    mode: Literal["keep_all", "drop", "count", "by_rr"]
+    indexes: list[int] = Field(default_factory=list)
+    n: int | None = None
+    desired_rr: list[float] = Field(default_factory=list)
+    strategy: str = "nearest_unique"
+    max_rr_deviation_abs: float = 0.35
+    on_missing_target: Literal["REJECT"] = "REJECT"
+
+
+class ReshapeTemplateConfig(BaseModel):
+    id: str
+    enabled: bool = True
+    match: ReshapeMatchConfig
+    entries: ReshapeEntriesConfig
+    stop_loss: ReshapeStopLossConfig
+    take_profits: ReshapeTakeProfitsConfig
+    on_failure: Literal["REJECT"] = "REJECT"
+
+
+# ── Reshape audit models ───────────────────────────────────────────────────────
+
+class ReshapeAuditEntry(BaseModel):
+    source: str
+    price: float
+
+
+class ReshapeAuditDiscarded(BaseModel):
+    source: str
+    price: float
+    reason: str
+
+
+class ReshapeAuditStopLoss(BaseModel):
+    source: str | None = None
+    price: float
+    replaced_original: float | None = None
+
+
+class ReshapeAuditTpSelected(BaseModel):
+    price: float
+    rr: float | None = None
+
+
+class ReshapeAuditRr(BaseModel):
+    anchor: float
+    stop: float
+    r_unit: float
+
+
+class ReshapeAuditTpSelection(BaseModel):
+    mode: str
+    selected: list[ReshapeAuditTpSelected]
+    discarded: list[float]
+
+
+class ReshapeAudit(BaseModel):
+    rule_id: str
+    discarded_entries: list[ReshapeAuditDiscarded] = Field(default_factory=list)
+    operative_entries: list[ReshapeAuditEntry] = Field(default_factory=list)
+    stop_loss: ReshapeAuditStopLoss
+    rr: ReshapeAuditRr | None = None
+    tp_selection: ReshapeAuditTpSelection
+
+
+class ReshapeRejectionInfo(BaseModel):
+    rule_id: str
+    phase: Literal["no_match", "invalid_output"]
+    reason_code: str
+
+
 # ── Config models ──────────────────────────────────────────────────────────────
 
 class MarketExecutionConfig(BaseModel):
@@ -127,6 +219,8 @@ class EffectiveEnrichmentConfig(BaseModel):
     management_plan: ManagementPlanConfig
     risk: RiskConfig
     account: AccountConfig | None = None
+    setup_mode: Literal["passthrough", "reshape"] = "passthrough"
+    setup_reshape_template: ReshapeTemplateConfig | None = None
 
 
 # ── Enrichment models ──────────────────────────────────────────────────────────
@@ -164,6 +258,8 @@ class EnrichedSignalPayload(BaseModel):
     entry_sequence_realigned: EntrySequenceRealignment | None = None
     # Set only when policy use_tp_count trimmed the parsed TPs (original count).
     original_tp_count: int | None = None
+    reshaped: ReshapeAudit | None = None
+    reshape_rejected: ReshapeRejectionInfo | None = None
 
 
 class EnrichmentLogEntry(BaseModel):
@@ -195,6 +291,11 @@ class EnrichedCanonicalMessage(BaseModel):
 
 
 __all__ = [
+    "ReshapeMatchConfig", "ReshapeEntriesConfig", "ReshapeStopLossConfig",
+    "ReshapeTakeProfitsConfig", "ReshapeTemplateConfig",
+    "ReshapeAuditEntry", "ReshapeAuditDiscarded", "ReshapeAuditStopLoss",
+    "ReshapeAuditTpSelected", "ReshapeAuditRr", "ReshapeAuditTpSelection",
+    "ReshapeAudit", "ReshapeRejectionInfo",
     "MarketExecutionConfig", "EntryWeightsConfig", "EntryRangeConfig",
     "LimitEntrySplitConfig", "MarketEntrySplitConfig", "EntrySplitConfig",
     "TpConfig", "SlConfig", "PriceCorrectionsConfig", "PriceSanityConfig",
