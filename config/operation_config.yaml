@@ -57,6 +57,7 @@ defaults:
   enabled: true  # Profilo default attivo.
   gate_mode: block  # Valori supportati: block | warn.
   hedge_mode: true  # true = puo' coesistere LONG/SHORT sullo stesso simbolo.
+  setup_mode: passthrough  # Valori supportati: passthrough | reshape. Override per-trader in config/traders/<id>.yaml.
 
   signal_policy:
     accepted_entry_structures:
