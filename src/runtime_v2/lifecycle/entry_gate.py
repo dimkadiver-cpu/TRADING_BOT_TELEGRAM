@@ -698,6 +698,10 @@ class LifecycleEntryGate:
             }
         if signal.entry_sequence_realigned is not None:
             extra_plan["entry_sequence_realigned"] = signal.entry_sequence_realigned.model_dump()
+        if signal.reshaped is not None:
+            extra_plan["reshaped"] = signal.reshaped.model_dump()
+        if signal.reshape_rejected is not None:
+            extra_plan["reshape_rejected"] = signal.reshape_rejected.model_dump()
         close_pcts = self._get_close_pcts(management_plan, len(signal.take_profits))
         if close_pcts:
             extra_plan["close_pcts"] = close_pcts

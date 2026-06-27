@@ -1217,3 +1217,62 @@ def test_projection_entry_then_sl_same_chain_both_stored_with_correct_chain_id(o
     assert entry_row[0] < sl_row[0], (
         "ENTRY_OPENED notification_id must be lower than SL_FILLED so it dispatches first"
     )
+
+
+# ---------------------------------------------------------------------------
+# Reshape note propagation: reshaped/reshape_rejected in plan_state_json
+# must reach the SIGNAL_ACCEPTED clean-log payload so _build_signal_notes
+# can render the "Setup - Reshaped by rule '...'" note.
+# ---------------------------------------------------------------------------
+
+def test_signal_accepted_payload_includes_reshaped(ops_db):
+    reshaped = {
+        "rule_id": "ladder_4_3_Tprofit",
+        "discarded_entries": [],
+        "operative_entries": [],
+        "stop_loss": {"price": 0.666, "source": "E4", "replaced_original": 0.67},
+        "rr": None,
+        "tp_selection": {"mode": "drop", "selected": [], "discarded": []},
+    }
+    plan_json = json.dumps({"reshaped": reshaped})
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 3001)
+        conn.execute(
+            "UPDATE ops_trade_chains SET plan_state_json=? WHERE trade_chain_id=?",
+            (plan_json, 3001),
+        )
+        _seed_event(conn, 3001, "SIGNAL_ACCEPTED", "sig:3001:1", {})
+        project_clean_log_for_chain(conn, 3001)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='SIGNAL_ACCEPTED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload.get("reshaped", {}).get("rule_id") == "ladder_4_3_Tprofit", (
+        f"reshaped.rule_id missing from SIGNAL_ACCEPTED payload: {payload}"
+    )
+
+
+def test_signal_accepted_payload_includes_reshape_rejected(ops_db):
+    reshape_rejected = {"rule_id": "ladder_4_aggressive", "phase": "no_match", "reason_code": "reshape_no_match"}
+    plan_json = json.dumps({"reshape_rejected": reshape_rejected})
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        _seed_chain(conn, 3002)
+        conn.execute(
+            "UPDATE ops_trade_chains SET plan_state_json=? WHERE trade_chain_id=?",
+            (plan_json, 3002),
+        )
+        _seed_event(conn, 3002, "SIGNAL_ACCEPTED", "sig:3002:1", {})
+        project_clean_log_for_chain(conn, 3002)
+    row = conn.execute(
+        "SELECT payload_json FROM ops_notification_outbox WHERE notification_type='SIGNAL_ACCEPTED'"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[0])
+    assert payload.get("reshape_rejected", {}).get("rule_id") == "ladder_4_aggressive", (
+        f"reshape_rejected.rule_id missing from SIGNAL_ACCEPTED payload: {payload}"
+    )

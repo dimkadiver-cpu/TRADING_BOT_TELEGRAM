@@ -374,6 +374,10 @@ def _build_payload(
             payload["tp_trimmed"] = plan["tp_trimmed"]
         if plan.get("entry_sequence_realigned"):
             payload["entry_sequence_realigned"] = plan["entry_sequence_realigned"]
+        if plan.get("reshaped"):
+            payload["reshaped"] = plan["reshaped"]
+        if plan.get("reshape_rejected"):
+            payload["reshape_rejected"] = plan["reshape_rejected"]
         return payload
 
     if notification_type == "ENTRY_OPENED":
