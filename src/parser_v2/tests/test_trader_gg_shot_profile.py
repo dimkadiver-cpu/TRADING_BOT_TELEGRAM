@@ -113,3 +113,14 @@ def test_two_day_analysis_message_is_info():
     )
     assert result.primary_class == "INFO"
     assert result.parse_status == "PARSED"
+
+
+def test_closed_at_the_entrance_is_close_full_update():
+    result = _parse("Closed at the entrance #NEO", reply_to=8245)
+    assert result.primary_class == "UPDATE"
+    assert result.primary_intent == "CLOSE_FULL"
+    assert len(result.target_action_groups) == 1
+    assert result.target_action_groups[0].targeting.reply_to_message_id == 8245
+    assert result.target_action_groups[0].actions[0].action_type == "CLOSE"
+    assert result.target_action_groups[0].actions[0].close is not None
+    assert result.target_action_groups[0].actions[0].close.close_scope == "FULL"

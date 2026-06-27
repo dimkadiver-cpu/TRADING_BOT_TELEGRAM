@@ -8,6 +8,7 @@
   "disambiguation": [],
   "extraction_markers": {},
   "primary_intent_precedence": [
+    "CLOSE_FULL",
     "SL_HIT",
     "TP_HIT",
     "INFO_ONLY"
@@ -15,4 +16,3 @@
   "convergence": {},
   "default_entry_type": "LIMIT"
 }
-

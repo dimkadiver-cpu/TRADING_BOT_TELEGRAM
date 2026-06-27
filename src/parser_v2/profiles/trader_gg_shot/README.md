@@ -9,6 +9,7 @@ Questo profilo e' costruito sui pattern realmente osservati nel DB e oggi copre 
 - nuovi segnali `📩 ... Entry Zone`
 - report strutturati `📬 Report on ...`
 - reply report compatti `#SYM first/two/three/all targets done`
+- un update operativo `Closed at the entrance #SYM`
 - market analysis, daily report e promo come `INFO`
 
 ## Strutture Di Segnale Estratte
@@ -98,6 +99,23 @@ Vengono degradati a `INFO` messaggi come:
 - `Daily report`
 - promo / bot / mini app / website update
 
+## Update Supportati
+
+### 1. Close full at entry
+
+Esempio:
+
+```text
+Closed at the entrance #NEO
+```
+
+Output atteso:
+
+- `primary_class=UPDATE`
+- `primary_intent=CLOSE_FULL`
+- action canonica `CLOSE/FULL`
+- targeting via `reply_to_message_id` del messaggio parent
+
 ## Non Ancora Coperti
 
 Questi pattern sono volutamente lasciati fuori perche' nel contratto attuale non sono ancora modellati in modo affidabile:
@@ -105,6 +123,9 @@ Questi pattern sono volutamente lasciati fuori perche' nel contratto attuale non
 - report ultra-compatti tipo `#BTC 66600 ✅ +180%`
 - post multi-symbol tipo `#AR #CAKE #FARTCOIN all targets done`
 - update operativi impliciti basati solo sul reply chain
+- `cancel pending` standalone
+- `move stop to BE` standalone
+- chiusure parziali standalone
 
 ## Validazione Rapida
 
@@ -123,4 +144,3 @@ C:\TeleSignalBot\.venv\Scripts\python.exe parser_test\scripts\replay_parser_v2.p
   --parser-profile auto `
   --force-reparse
 ```
-

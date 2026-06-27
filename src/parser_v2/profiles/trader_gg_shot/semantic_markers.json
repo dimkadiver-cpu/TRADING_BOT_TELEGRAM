@@ -29,6 +29,10 @@
     }
   },
   "intent_markers": {
+    "CLOSE_FULL": {
+      "strong": ["closed at the entrance"],
+      "weak": []
+    },
     "TP_HIT": {
       "strong_patterns": [
         "(?i)\\b(?:first|one|two|three|all)\\s+targets?\\s+done\\b"
