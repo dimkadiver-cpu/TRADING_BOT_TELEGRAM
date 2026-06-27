@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from datetime import datetime, timedelta, timezone
+from unittest.mock import ANY, MagicMock
 
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.ingestion import IngestionResult
@@ -140,6 +141,41 @@ def test_edit_of_never_acquired_message_is_ingested_as_new():
     assert item.acquisition_mode == "edit"
     assert item.raw_text == "LONG AVAXUSDT entry 30"
     assert item.run_context == "live"
+
+
+def test_edit_of_never_acquired_message_logs_event_lag_telemetry():
+    logger = MagicMock()
+    listener, _, _, _ = _make_listener(
+        chain_exists=lambda _rid: False,
+    )
+    listener._logger = logger
+    message_ts = datetime(2026, 6, 27, 11, 43, 16, tzinfo=timezone.utc)
+    edit_ts = datetime(2026, 6, 27, 12, 25, 56, tzinfo=timezone.utc)
+    message = FakeMessage(10, "LONG AVAXUSDT entry 30", date=message_ts, edit_date=edit_ts)
+    message.reply_markup = object()
+
+    _run(listener._handle_edited_message(FakeEvent(message)))
+
+    logger.info.assert_any_call(
+        "edit_seen_without_existing_raw | chat=%s topic=%s msg_id=%s "
+        "event_type=%s event_received_at=%s message_ts=%s edit_ts=%s lag_seconds=%.3f "
+        "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
+        "reply_to_msg_id=%s reply_to_top_id=%s",
+        "-100123",
+        None,
+        10,
+        "MessageEdited",
+        ANY,
+        "2026-06-27T11:43:16+00:00",
+        "2026-06-27T12:25:56+00:00",
+        ANY,
+        True,
+        22,
+        False,
+        True,
+        None,
+        None,
+    )
 
 
 def test_edit_with_unchanged_text_is_skipped():

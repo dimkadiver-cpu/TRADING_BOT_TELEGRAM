@@ -135,6 +135,14 @@ class FakeAdapter(ExecutionAdapter):
         side: str,
         execution_account_id: str,
     ) -> float | None:
+        self.calls.append(
+            {
+                "action": "get_position_qty",
+                "symbol": symbol,
+                "side": side,
+                "execution_account_id": execution_account_id,
+            }
+        )
         return self._positions.get(f"{symbol}:{side}")
 
     def fetch_mark_price(self, symbol: str, execution_account_id: str) -> float | None:

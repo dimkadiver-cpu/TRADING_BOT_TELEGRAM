@@ -3,11 +3,14 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 import logging
+import sqlite3
 from unittest.mock import MagicMock
 
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult, ParserJobStatus
 from src.runtime_v2.trader_resolution.channel_config_resolver import ChannelEntry
 from src.runtime_v2.trader_resolution.models import ResolvedTraderContext
+from src.storage.raw_message_revisions import RawMessageRevisionStore
+from src.storage.raw_messages import RawMessageStore
 from src.telegram.channel_config import ChannelsConfig
 from src.telegram.ingestion import RawMessageIngestionService, TelegramIncomingMessage
 from src.telegram.listener import TelegramListener, _QueueItem, _build_incoming
@@ -213,6 +216,7 @@ def test_build_incoming_marks_plain_message() -> None:
         chat_username=None,
         trader_id=None,
         acquisition_status="ACQUIRED_ELIGIBLE",
+        acquisition_mode="live",
         source_topic_id=None,
     )
 
@@ -234,6 +238,7 @@ def test_build_incoming_marks_inline_buttons_message() -> None:
         chat_username=None,
         trader_id=None,
         acquisition_status="ACQUIRED_ELIGIBLE",
+        acquisition_mode="live",
         source_topic_id=None,
     )
 
@@ -266,3 +271,89 @@ def test_ingest_passes_message_presentation_type_to_store_record() -> None:
     store.save_with_id.assert_called_once()
     record = store.save_with_id.call_args[0][0]
     assert record.message_presentation_type == "INLINE_BUTTONS"
+
+
+def test_ingest_persists_acquisition_mode_and_revision_run_context(tmp_path) -> None:
+    db_path = tmp_path / "raw.sqlite3"
+    with sqlite3.connect(db_path) as conn:
+        conn.executescript(
+            """
+            CREATE TABLE raw_messages (
+                raw_message_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source_chat_id TEXT NOT NULL,
+                source_chat_title TEXT,
+                source_type TEXT,
+                source_trader_id TEXT,
+                telegram_message_id INTEGER NOT NULL,
+                reply_to_message_id INTEGER,
+                raw_text TEXT,
+                message_ts TEXT NOT NULL,
+                acquired_at TEXT NOT NULL,
+                acquisition_status TEXT,
+                acquisition_mode TEXT,
+                source_topic_id INTEGER,
+                message_presentation_type TEXT DEFAULT 'PLAIN'
+            );
+            CREATE UNIQUE INDEX idx_raw_messages_dedup
+            ON raw_messages(source_chat_id, telegram_message_id);
+
+            CREATE TABLE raw_message_revisions (
+                revision_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                raw_message_id INTEGER NOT NULL,
+                source_chat_id TEXT NOT NULL,
+                telegram_message_id INTEGER NOT NULL,
+                revision_kind TEXT NOT NULL,
+                run_context TEXT NOT NULL,
+                raw_text TEXT,
+                message_ts TEXT NOT NULL,
+                revision_ts TEXT NOT NULL,
+                telegram_edit_ts TEXT,
+                acquisition_status TEXT,
+                reply_to_message_id INTEGER,
+                source_topic_id INTEGER,
+                has_media INTEGER NOT NULL DEFAULT 0,
+                media_kind TEXT,
+                media_mime_type TEXT,
+                media_filename TEXT,
+                applied_to_current INTEGER NOT NULL DEFAULT 1
+            );
+            """
+        )
+
+    service = RawMessageIngestionService(
+        store=RawMessageStore(str(db_path)),
+        revision_store=RawMessageRevisionStore(str(db_path)),
+        logger=logging.getLogger("test"),
+    )
+
+    result = service.ingest(
+        TelegramIncomingMessage(
+            source_chat_id="-100123",
+            source_chat_title="Test",
+            source_type="channel",
+            source_trader_id=None,
+            telegram_message_id=42,
+            reply_to_message_id=None,
+            raw_text="BUY BTCUSDT",
+            message_ts=datetime.now(timezone.utc),
+            acquisition_status="ACQUIRED_ELIGIBLE",
+            acquisition_mode="edit",
+            source_topic_id=None,
+            message_presentation_type="INLINE_BUTTONS",
+        )
+    )
+
+    assert result.saved is True
+    assert result.raw_message_id is not None
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute(
+            "SELECT acquisition_mode FROM raw_messages WHERE raw_message_id = ?",
+            (result.raw_message_id,),
+        ).fetchone()
+        revision = conn.execute(
+            "SELECT revision_kind, run_context FROM raw_message_revisions WHERE raw_message_id = ?",
+            (result.raw_message_id,),
+        ).fetchone()
+
+    assert row == ("edit",)
+    assert revision == ("initial", "edit")

@@ -218,8 +218,8 @@ def _set_open_position_qty(db_path: str, chain_id: int, qty: float) -> None:
     conn.close()
 
 
-def test_close_full_resolves_qty_from_open_position(ops_db):
-    """CLOSE_FULL without qty in payload resolves qty from open_position_qty."""
+def test_close_full_prefers_live_exchange_qty_over_open_position(ops_db):
+    """CLOSE_FULL without qty in payload prefers live exchange qty over DB open_position_qty."""
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
     from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
@@ -230,9 +230,10 @@ def test_close_full_resolves_qty_from_open_position(ops_db):
         "symbol": "BTC/USDT", "side": "LONG",
     })
     repo = GatewayCommandRepository(ops_db)
+    fake = FakeAdapter(positions={"BTC/USDT:LONG": 122.456})
     gw = ExecutionGateway(
         config=ExecutionConfigLoader("config/execution.yaml").load(),
-        adapter_registry={"bybit_demo": FakeAdapter()},
+        adapter_registry={"bybit_demo_1": fake},
         repo=repo,
     )
     cmd = repo.get_pending_batch()[0]
@@ -244,6 +245,41 @@ def test_close_full_resolves_qty_from_open_position(ops_db):
     ).fetchone()
     conn.close()
     assert row[0] == "SENT"
+    place_calls = [c for c in fake.calls if c["action"] == "place_order"]
+    assert place_calls, "Expected at least one place_order call"
+    assert abs(place_calls[-1]["payload"]["qty"] - 122.456) < 1e-9
+
+
+def test_close_full_falls_back_to_open_position_when_live_qty_unavailable(ops_db):
+    """CLOSE_FULL falls back to DB open_position_qty when live exchange qty is unavailable."""
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _set_open_position_qty(ops_db, chain_id=1, qty=122.3)
+    _insert_cmd(ops_db, 2011, cmd_type="CLOSE_FULL", payload={
+        "symbol": "BTC/USDT", "side": "LONG",
+    })
+    repo = GatewayCommandRepository(ops_db)
+    fake = FakeAdapter()
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo_1": fake},
+        repo=repo,
+    )
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 2011)
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT status FROM ops_execution_commands WHERE command_id=2011"
+    ).fetchone()
+    conn.close()
+    assert row[0] == "SENT"
+    place_calls = [c for c in fake.calls if c["action"] == "place_order"]
+    assert place_calls, "Expected at least one place_order call"
+    assert abs(place_calls[-1]["payload"]["qty"] - 122.3) < 1e-9
 
 
 def test_close_partial_resolves_qty_from_fraction(ops_db):

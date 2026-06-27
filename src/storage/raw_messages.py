@@ -182,6 +182,17 @@ class RawMessageStore:
                 media_blob=row[idx + 4] if include_media else None,
             )
 
+    def update_acquisition_mode(self, raw_message_id: int, acquisition_mode: str) -> None:
+        available_columns = self._table_columns("raw_messages")
+        if "acquisition_mode" not in available_columns:
+            return
+        with sqlite3.connect(self._db_path) as conn:
+            conn.execute(
+                "UPDATE raw_messages SET acquisition_mode = ? WHERE raw_message_id = ?",
+                (acquisition_mode, raw_message_id),
+            )
+            conn.commit()
+
     def _table_columns(self, table_name: str) -> set[str]:
         with sqlite3.connect(self._db_path) as conn:
             return {str(row[1]) for row in conn.execute(f"PRAGMA table_info({table_name})")}

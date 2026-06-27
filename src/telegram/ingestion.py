@@ -22,6 +22,7 @@ class TelegramIncomingMessage:
     source_trader_id: str | None = None
     reply_to_message_id: int | None = None
     acquisition_status: str = "ACQUIRED_ELIGIBLE"
+    acquisition_mode: str = "live"
     source_topic_id: int | None = None
     message_presentation_type: str = "PLAIN"
     has_media: bool = False
@@ -82,6 +83,11 @@ class RawMessageIngestionService:
                 media_blob=incoming.media_blob,
             )
             save_result = self._store.save_with_id(record)
+            if save_result.raw_message_id is not None:
+                self._store.update_acquisition_mode(
+                    save_result.raw_message_id,
+                    incoming.acquisition_mode,
+                )
             if (
                 save_result.saved
                 and save_result.raw_message_id is not None
@@ -100,7 +106,7 @@ class RawMessageIngestionService:
                     media_kind=incoming.media_kind,
                     media_mime_type=incoming.media_mime_type,
                     media_filename=incoming.media_filename,
-                    run_context="live",
+                    run_context=incoming.acquisition_mode,
                 )
             if not save_result.saved:
                 self._logger.info(

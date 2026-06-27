@@ -311,16 +311,23 @@ class TelegramListener:
         message: Message = event.message
         chat_id_raw = int(event.chat_id) if event.chat_id is not None else None
         topic_id = self._extract_topic_id(chat_id_raw, message)
+        observed_at = datetime.now(timezone.utc)
 
         if not self._is_allowed_message(chat_id_raw, topic_id):
             if chat_id_raw is not None and self._config.entries_for_chat(chat_id_raw):
                 self._logger.info(
                     "message skipped by topic scope | chat=%s topic=%s msg_id=%s "
+                    "event_type=%s event_received_at=%s message_ts=%s edit_ts=%s lag_seconds=%.3f "
                     "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
                     "reply_to_msg_id=%s reply_to_top_id=%s",
                     chat_id_raw,
                     topic_id,
                     message.id,
+                    "NewMessage",
+                    _isoformat_utc(observed_at),
+                    _isoformat_utc(message.date),
+                    _isoformat_utc(getattr(message, "edit_date", None)),
+                    _message_lag_seconds(message=message, observed_at=observed_at),
                     bool(message.message),
                     len(message.message or ""),
                     bool(message.media),
@@ -333,11 +340,17 @@ class TelegramListener:
         if _is_media_only(message):
             self._logger.info(
                 "media_only_skipped | chat=%s topic=%s msg_id=%s "
+                "event_type=%s event_received_at=%s message_ts=%s edit_ts=%s lag_seconds=%.3f "
                 "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
                 "reply_to_msg_id=%s reply_to_top_id=%s",
                 chat_id_raw,
                 topic_id,
                 message.id,
+                "NewMessage",
+                _isoformat_utc(observed_at),
+                _isoformat_utc(message.date),
+                _isoformat_utc(getattr(message, "edit_date", None)),
+                _message_lag_seconds(message=message, observed_at=observed_at),
                 bool(message.message),
                 len(message.message or ""),
                 bool(message.media),
@@ -357,6 +370,8 @@ class TelegramListener:
             chat_username=chat_username,
             acquisition_mode=acquisition_mode,
             source_topic_id=topic_id,
+            observed_at=observed_at,
+            event_type="NewMessage",
         )
 
     async def _handle_edited_message(self, event: events.MessageEdited.Event) -> None:
@@ -367,6 +382,7 @@ class TelegramListener:
         message: Message = event.message
         chat_id_raw = int(event.chat_id) if event.chat_id is not None else None
         topic_id = self._extract_topic_id(chat_id_raw, message)
+        observed_at = datetime.now(timezone.utc)
 
         if not self._is_allowed_message(chat_id_raw, topic_id):
             return
@@ -393,11 +409,17 @@ class TelegramListener:
             # Never acquired live (es. foto senza caption) → ingest come nuovo.
             self._logger.info(
                 "edit_seen_without_existing_raw | chat=%s topic=%s msg_id=%s "
+                "event_type=%s event_received_at=%s message_ts=%s edit_ts=%s lag_seconds=%.3f "
                 "has_text=%s text_len=%s has_media=%s has_reply_markup=%s "
                 "reply_to_msg_id=%s reply_to_top_id=%s",
                 source_chat_id,
                 topic_id,
                 message.id,
+                "MessageEdited",
+                _isoformat_utc(observed_at),
+                _isoformat_utc(message.date),
+                _isoformat_utc(getattr(message, "edit_date", None)),
+                _message_lag_seconds(message=message, observed_at=observed_at),
                 bool(new_text),
                 len(new_text),
                 bool(getattr(message, "media", None)),
@@ -414,6 +436,8 @@ class TelegramListener:
                 chat_username=chat_username,
                 acquisition_mode="edit",
                 source_topic_id=topic_id,
+                observed_at=observed_at,
+                event_type="MessageEdited",
             )
             return
 
@@ -686,9 +710,12 @@ class TelegramListener:
         chat_username: str | None,
         acquisition_mode: str,
         source_topic_id: int | None = None,
+        observed_at: datetime | None = None,
+        event_type: str = "NewMessage",
     ) -> None:
         source_chat_id = str(chat_id) if chat_id is not None else "unknown"
         raw_text = message.message or ""
+        observed_at = observed_at or datetime.now(timezone.utc)
 
         if self._is_blacklisted(raw_text, chat_id, source_topic_id):
             self._logger.info(
@@ -706,6 +733,7 @@ class TelegramListener:
                     chat_username=chat_username,
                     trader_id=None,
                     acquisition_status="BLACKLISTED",
+                    acquisition_mode=acquisition_mode,
                     source_topic_id=source_topic_id,
                 )
             )
@@ -721,6 +749,7 @@ class TelegramListener:
                 chat_username=chat_username,
                 trader_id=None,
                 acquisition_status="ACQUIRED_ELIGIBLE",
+                acquisition_mode=acquisition_mode,
                 source_topic_id=source_topic_id,
             )
         )
@@ -758,12 +787,23 @@ class TelegramListener:
             )
         )
         self._logger.info(
-            "raw acquired | chat=%s topic=%s msg_id=%s mode=%s raw_message_id=%s",
+            "raw acquired | chat=%s topic=%s msg_id=%s mode=%s raw_message_id=%s "
+            "event_type=%s event_received_at=%s message_ts=%s edit_ts=%s lag_seconds=%.3f "
+            "has_text=%s text_len=%s has_media=%s has_reply_markup=%s",
             source_chat_id,
             source_topic_id,
             message.id,
             acquisition_mode,
             ingestion.raw_message_id,
+            event_type,
+            _isoformat_utc(observed_at),
+            _isoformat_utc(message.date),
+            _isoformat_utc(getattr(message, "edit_date", None)),
+            _message_lag_seconds(message=message, observed_at=observed_at),
+            bool(raw_text),
+            len(raw_text),
+            bool(getattr(message, "media", None)),
+            getattr(message, "reply_markup", None) is not None,
         )
 
     def _process_item(self, item: _QueueItem) -> None:
@@ -895,6 +935,7 @@ def _build_incoming(
     chat_username: str | None,
     trader_id: str | None,
     acquisition_status: str,
+    acquisition_mode: str,
     source_topic_id: int | None = None,
 ) -> TelegramIncomingMessage:
     return TelegramIncomingMessage(
@@ -910,6 +951,7 @@ def _build_incoming(
         raw_text=message.message,
         message_ts=message.date or datetime.now(timezone.utc),
         acquisition_status=acquisition_status,
+        acquisition_mode=acquisition_mode,
         source_topic_id=source_topic_id,
         message_presentation_type=_resolve_message_presentation_type(message),
     )
@@ -930,3 +972,16 @@ def _known_topic_ids(entries: Iterable[object]) -> set[int]:
         for topic_id in [getattr(entry, "topic_id", None)]
         if isinstance(topic_id, int)
     }
+
+
+def _isoformat_utc(value: datetime | None) -> str | None:
+    if value is None or not isinstance(value, datetime):
+        return None
+    return _as_utc(value).isoformat(timespec="seconds")
+
+
+def _message_lag_seconds(*, message: Message, observed_at: datetime) -> float:
+    message_ts = getattr(message, "date", None)
+    if message_ts is None or not isinstance(message_ts, datetime):
+        return 0.0
+    return max(0.0, (observed_at - _as_utc(message_ts)).total_seconds())

@@ -252,19 +252,32 @@ class ExecutionGateway:
         # ── Resolve qty for CLOSE_FULL / CLOSE_PARTIAL ───────────────────────
         if cmd.command_type in {"CLOSE_FULL", "CLOSE_PARTIAL"} and "qty" not in payload:
             open_qty = self._repo.get_chain_open_position_qty(cmd.trade_chain_id)
-            if open_qty is None or open_qty <= 0.0:
-                self._repo.mark_review_required(
-                    cmd.command_id,
-                    reason="open_position_qty_unavailable_for_close",
-                    execution_account_id=routing.execution_account_id,
-                )
-                return
             if cmd.command_type == "CLOSE_PARTIAL":
+                if open_qty is None or open_qty <= 0.0:
+                    self._repo.mark_review_required(
+                        cmd.command_id,
+                        reason="open_position_qty_unavailable_for_close",
+                        execution_account_id=routing.execution_account_id,
+                    )
+                    return
                 fraction = float(payload.get("fraction", 0.5))
                 payload = {k: v for k, v in payload.items() if k != "fraction"}
                 payload["qty"] = round(open_qty * fraction, 8)
             else:  # CLOSE_FULL
-                payload["qty"] = open_qty
+                live_qty = adapter.get_position_qty(
+                    symbol=symbol,
+                    side=payload.get("side", ""),
+                    execution_account_id=routing.execution_account_id,
+                )
+                resolved_qty = live_qty if live_qty is not None and live_qty > 0.0 else open_qty
+                if resolved_qty is None or resolved_qty <= 0.0:
+                    self._repo.mark_review_required(
+                        cmd.command_id,
+                        reason="open_position_qty_unavailable_for_close",
+                        execution_account_id=routing.execution_account_id,
+                    )
+                    return
+                payload["qty"] = resolved_qty
 
         if (
             cmd.command_type == "REBUILD_PARTIAL_TPS"

@@ -348,16 +348,24 @@ class ExchangeEventSyncWorker:
                     )
                     continue
 
-                chain_id = self._repo.resolve_chain_for_fill(
+                open_chains = self._repo.get_open_chains_for_symbol(
                     symbol, position_side, account_id=self._execution_account_id
                 )
-                if chain_id is None:
-                    logger.warning(
-                        "funding reconciliation: ambiguous or missing chain for %s %s "
-                        "— skipping exec %s",
+                if len(open_chains) == 0:
+                    logger.debug(
+                        "funding reconciliation: no open chain for %s %s "
+                        "— skipping exec %s (likely historical from closed position)",
                         symbol, position_side, exec.exec_id,
                     )
                     continue
+                if len(open_chains) > 1:
+                    logger.warning(
+                        "funding reconciliation: ambiguous chain for %s %s "
+                        "(%d open chains) — skipping exec %s",
+                        symbol, position_side, len(open_chains), exec.exec_id,
+                    )
+                    continue
+                chain_id = open_chains[0]
 
                 idem_key = f"fill:{exec.exec_id}"
                 payload = json.dumps({
