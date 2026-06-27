@@ -370,6 +370,8 @@ def _build_payload(
             payload["range_derivation"] = plan["range_derivation"]
         if plan.get("risk_hint_applied"):
             payload["risk_hint_applied"] = plan["risk_hint_applied"]
+        if plan.get("leverage_hint_applied"):
+            payload["leverage_hint_applied"] = plan["leverage_hint_applied"]
         if plan.get("tp_trimmed"):
             payload["tp_trimmed"] = plan["tp_trimmed"]
         if plan.get("entry_sequence_realigned"):

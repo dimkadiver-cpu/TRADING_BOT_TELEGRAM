@@ -148,6 +148,7 @@ defaults:
     capital_base_usdt: 10000.0  # Base capitale locale se non si usa equity live.
     leverage: 10  # Leva operativa da usare per aprire la posizione.
     use_trader_risk_hint: true  # true = usa eventuale hint rischio dal segnale/trader.
+    use_trader_leverage_hint: false  # true = usa eventuale hint leva dal segnale/parser.
     risk_hint_range_mode: min_value  # Valori: min_value | max_value | midpoint. Usato quando risk_hint e' un range.
     max_capital_at_risk_per_trader_pct: 100.0  # Cap di rischio totale per trader.
     max_concurrent_trades: 50  # Numero massimo chain aperte contemporanee per trader.

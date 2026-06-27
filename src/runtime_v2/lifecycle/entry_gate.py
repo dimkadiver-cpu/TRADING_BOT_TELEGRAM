@@ -691,6 +691,8 @@ class LifecycleEntryGate:
             extra_plan["range_derivation"] = signal.range_derivation.model_dump()
         if decision.hint_applied is not None:
             extra_plan["risk_hint_applied"] = decision.hint_applied
+        if decision.leverage_hint_applied is not None:
+            extra_plan["leverage_hint_applied"] = decision.leverage_hint_applied
         if signal.original_tp_count is not None and signal.original_tp_count > len(signal.take_profits):
             extra_plan["tp_trimmed"] = {
                 "original": signal.original_tp_count,

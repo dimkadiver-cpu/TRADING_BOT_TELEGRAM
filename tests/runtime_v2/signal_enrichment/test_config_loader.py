@@ -81,6 +81,7 @@ def _minimal_global_config(overrides: dict | None = None) -> dict:
                 "capital_base_usdt": 1000.0,
                 "leverage": 1,
                 "use_trader_risk_hint": False,
+                "use_trader_leverage_hint": False,
                 "max_capital_at_risk_per_trader_pct": 5.0,
                 "max_concurrent_trades": 5,
                 "max_concurrent_same_symbol": 1,
@@ -129,6 +130,23 @@ def test_trader_override_merges_tp_count(config_dir):
     # trader_b should still have null
     cfg_b = loader.get_effective_config("trader_b")
     assert cfg_b.signal_policy.tp.use_tp_count is None
+
+
+def test_trader_override_reads_use_trader_leverage_hint(config_dir):
+    trader_yaml = config_dir / "traders" / "trader_a.yaml"
+    _write_yaml(trader_yaml, {"risk": {"use_trader_leverage_hint": True}})
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    loader = OperationConfigLoader(str(config_dir))
+    cfg = loader.get_effective_config("trader_a")
+    assert cfg.risk.use_trader_leverage_hint is True
+
+
+def test_default_effective_config_reads_use_trader_leverage_hint_as_false(config_dir):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+
+    loader = OperationConfigLoader(str(config_dir))
+    cfg = loader.get_effective_config("trader_b")
+    assert cfg.risk.use_trader_leverage_hint is False
 
 
 def test_management_plan_reads_fee_aware_be_flags(config_dir):

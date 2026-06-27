@@ -29,6 +29,24 @@ def _resolve_risk_hint(hint: RiskHint, mode: str) -> float | None:
     return None
 
 
+def _resolve_effective_leverage(
+    configured_leverage: int,
+    leverage_hint: float | None,
+) -> tuple[float, int, dict | None]:
+    """Return raw/effective leverage values and optional metadata when parser hint is present."""
+    if leverage_hint is None:
+        return float(configured_leverage), configured_leverage, None
+
+    effective_leverage = int(leverage_hint)
+    return leverage_hint, effective_leverage, {
+        "hint_used": True,
+        "hint_raw": str(leverage_hint),
+        "hint_effective": effective_leverage,
+        "configured_leverage": configured_leverage,
+        "effective_leverage": effective_leverage,
+    }
+
+
 @dataclass
 class RiskDecision:
     passed: bool
@@ -37,6 +55,7 @@ class RiskDecision:
     leverage: int | None = None
     risk_snapshot: dict = field(default_factory=dict)
     hint_applied: dict | None = None
+    leverage_hint_applied: dict | None = None
 
 
 class RiskCapacityEngine:
@@ -60,6 +79,10 @@ class RiskCapacityEngine:
         risk = config.risk
         symbol = signal.symbol or ""
         side = signal.side or ""
+        raw_effective_leverage, effective_leverage, leverage_hint_applied = _resolve_effective_leverage(
+            risk.leverage,
+            signal.leverage_hint if risk.use_trader_leverage_hint else None,
+        )
 
         trader_chains = [c for c in open_chains if c.trader_id == enriched.trader_id]
 
@@ -155,7 +178,13 @@ class RiskCapacityEngine:
 
         # ── max_leverage guard ────────────────────────────────────────────────
         if config.account is not None:
-            if risk.leverage > config.account.max_leverage:
+            if leverage_hint_applied is not None and raw_effective_leverage > config.account.max_leverage:
+                return RiskDecision(
+                    passed=False,
+                    reason="signal_leverage_hint_exceeds_account_max_leverage",
+                    leverage_hint_applied=leverage_hint_applied,
+                )
+            if effective_leverage > config.account.max_leverage:
                 return RiskDecision(
                     passed=False,
                     reason="risk_leverage_exceeds_account_max_leverage",
@@ -193,7 +222,7 @@ class RiskCapacityEngine:
             size_usdt: float | None = risk_amount / risk_distance * entry_price  # type: ignore[operator]
         else:
             size_usdt = None
-        leverage = risk.leverage
+        leverage = effective_leverage
 
         risk_snapshot = {
             "capital": capital,
@@ -216,6 +245,7 @@ class RiskCapacityEngine:
             leverage=leverage,
             risk_snapshot=risk_snapshot,
             hint_applied=hint_applied,
+            leverage_hint_applied=leverage_hint_applied,
         )
 
 

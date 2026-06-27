@@ -624,6 +624,58 @@ def _make_parse_result_with_risk_hint(
     )
 
 
+def _make_parse_result_with_leverage_hint(
+    leverage_hint_value: float,
+    *,
+    risk_hint_value: float | None = None,
+    trader_id: str = "trader_a",
+    canonical_message_id: int = 43,
+    raw_message_id: int = 430,
+):
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage, SignalPayload
+    from src.parser_v2.contracts.entities import EntryLeg, Price, RiskHint, TakeProfit, StopLoss
+    from src.parser_v2.contracts.context import RawContext
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+    import datetime
+
+    entries = [EntryLeg(sequence=1, entry_type="LIMIT", price=Price(raw="50000", value=50000.0))]
+    take_profits = [TakeProfit(sequence=1, price=Price(raw="51000", value=51000.0))]
+    stop_loss = StopLoss(price=Price(raw="49000", value=49000.0))
+    risk_hint = RiskHint(raw=f"{risk_hint_value}%", value=risk_hint_value) if risk_hint_value is not None else None
+
+    try:
+        signal = SignalPayload(
+            completeness="COMPLETE",
+            symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+            entries=entries, take_profits=take_profits, stop_loss=stop_loss,
+            risk_hint=risk_hint,
+            leverage_hint=leverage_hint_value,
+        )
+    except Exception:
+        signal = SignalPayload(
+            symbol="BTC/USDT", side="LONG", entry_structure="ONE_SHOT",
+            entries=entries, take_profits=take_profits, stop_loss=stop_loss,
+            risk_hint=risk_hint,
+            leverage_hint=leverage_hint_value,
+        )
+
+    canonical = CanonicalMessage(
+        parser_profile=trader_id, primary_class="SIGNAL",
+        parse_status="PARSED", confidence=1.0,
+        signal=signal, raw_context=RawContext(raw_text="test"),
+    )
+    return CanonicalParseResult(
+        raw_message_id=raw_message_id,
+        canonical_message_id=canonical_message_id,
+        parser_profile=trader_id,
+        primary_class="SIGNAL",
+        parse_status="PARSED",
+        canonical_message=canonical,
+        warnings=[],
+        parsed_at=datetime.datetime.now(datetime.timezone.utc),
+    )
+
+
 def test_processor_propagates_risk_hint_to_enriched_signal(processor):
     result = _make_parse_result_with_risk_hint(risk_hint_value=1.5)
     enriched = processor.process(result)
@@ -631,6 +683,89 @@ def test_processor_propagates_risk_hint_to_enriched_signal(processor):
     assert enriched.enriched_signal.risk_hint is not None
     assert enriched.enriched_signal.risk_hint.value == 1.5
     assert enriched.enriched_signal.risk_hint.raw == "1.5%"
+
+
+def test_processor_propagates_leverage_hint_to_enriched_signal(processor):
+    result = _make_parse_result_with_leverage_hint(leverage_hint_value=3.0)
+    enriched = processor.process(result)
+    assert enriched.enriched_signal is not None
+    assert enriched.enriched_signal.leverage_hint == 3.0
+
+
+def test_processor_propagates_leverage_hint_in_reshape_path(tmp_path, monkeypatch):
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.models import (
+        ReshapeAudit,
+        ReshapeAuditEntry,
+        ReshapeAuditRr,
+        ReshapeAuditStopLoss,
+        ReshapeAuditTpSelected,
+        ReshapeAuditTpSelection,
+    )
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+
+    cfg = _minimal_global_config()
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    with (tmp_path / "traders" / "trader_a.yaml").open("w") as f:
+        yaml.dump({"setup_mode": "reshape", "setup_reshape": {"template": "reshape_tpl"}}, f)
+    with (tmp_path / "setup_reshape_templates.yaml").open("w") as f:
+        yaml.dump(
+            {
+                "templates": [
+                    {
+                        "id": "reshape_tpl",
+                        "enabled": True,
+                        "match": {"entry_structure": "ONE_SHOT", "normalized_entry_count": 1, "min_tp_count": 1},
+                        "entries": {"mode": "keep"},
+                        "stop_loss": {"mode": "original"},
+                        "take_profits": {"mode": "keep_all"},
+                        "on_failure": "REJECT",
+                    }
+                ]
+            },
+            f,
+        )
+
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+    )
+
+    audit = ReshapeAudit(
+        rule_id="reshape_tpl",
+        operative_entries=[ReshapeAuditEntry(source="E1", price=50000.0)],
+        stop_loss=ReshapeAuditStopLoss(source="E1", price=49000.0),
+        rr=ReshapeAuditRr(anchor=50000.0, stop=49000.0, r_unit=1000.0),
+        tp_selection=ReshapeAuditTpSelection(
+            mode="keep_all",
+            selected=[ReshapeAuditTpSelected(price=51000.0)],
+            discarded=[],
+        ),
+    )
+
+    reshape_calls = []
+
+    def _fake_apply_reshape(*args, **kwargs):
+        reshape_calls.append((args, kwargs))
+        return audit
+
+    monkeypatch.setattr("src.runtime_v2.signal_enrichment.processor.apply_reshape", _fake_apply_reshape)
+
+    result = _make_parse_result_with_leverage_hint(leverage_hint_value=3.0, risk_hint_value=1.5)
+    enriched = proc.process(result)
+    assert len(reshape_calls) == 1
+    assert enriched.enriched_signal is not None
+    assert enriched.enriched_signal.reshaped is not None
+    assert enriched.enriched_signal.reshaped.rule_id == "reshape_tpl"
+    assert enriched.enriched_signal.risk_hint is not None
+    assert enriched.enriched_signal.risk_hint.value == 1.5
+    assert enriched.enriched_signal.leverage_hint == 3.0
 
 
 def test_processor_risk_hint_is_none_when_absent(processor):

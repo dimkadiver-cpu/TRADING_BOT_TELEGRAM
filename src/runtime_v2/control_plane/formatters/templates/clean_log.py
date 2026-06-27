@@ -169,6 +169,8 @@ def _build_signal_notes(p: dict) -> list[str]:
             notes.append(f"Entry - {mode} [{num(min_p)}-{num(max_p)}]")
     if p.get("risk_hint_applied"):
         notes.append("Risk - Reduced by trader")
+    if p.get("leverage_hint_applied"):
+        notes.append("Leverage - Overridden by trader")
     trim = p.get("tp_trimmed") or {}
     if trim.get("original") is not None and trim.get("used") is not None:
         notes.append(f"TP - Reduced by policy ({trim['original']} → {trim['used']})")

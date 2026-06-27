@@ -370,6 +370,70 @@ def test_outbox_writer_signal_accepted_enriches_from_chain(tmp_path):
     assert p["side"] == "LONG"
 
 
+def test_outbox_writer_signal_accepted_passes_through_leverage_hint_applied(tmp_path):
+    import sqlite3
+    import json
+    from pathlib import Path
+    from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
+
+    db_path = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(db_path)
+    migrations_dir = Path("db/ops_migrations")
+    for f in sorted(migrations_dir.glob("*.sql")):
+        conn.executescript(f.read_text(encoding="utf-8"))
+    conn.commit()
+
+    now = "2026-05-30T12:00:00+00:00"
+    base_plan = {
+        "stop_loss": 62000.0,
+        "final_tp": 71000.0,
+        "intermediate_tps": [68000.0],
+        "legs": [
+            {
+                "sequence": 1, "entry_type": "LIMIT",
+                "price": 65000.0, "status": "PENDING", "weight": 1.0,
+            }
+        ],
+    }
+    risk = json.dumps({"capital": 10000.0, "risk_amount": 50.0, "leverage": 5})
+
+    def project(chain_id: int, plan_state: dict) -> dict:
+        with conn:
+            conn.execute(
+                "INSERT INTO ops_trade_chains "
+                "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
+                " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
+                " management_plan_json, plan_state_json, risk_snapshot_json, "
+                " created_at, updated_at) "
+                "VALUES (?, ?, ?, ?, 'trader_a', 'main', 'BTC/USDT', 'LONG', "
+                "        'WAITING_ENTRY', 'ONE_SHOT', '{}', ?, ?, ?, ?)",
+                (chain_id, chain_id, chain_id, chain_id,
+                 json.dumps(plan_state), risk, now, now),
+            )
+            conn.execute(
+                "INSERT INTO ops_lifecycle_events "
+                "(trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+                "VALUES (?, 'SIGNAL_ACCEPTED', 'enrichment', '{}', ?, ?)",
+                (chain_id, f"sa:{chain_id}", now),
+            )
+
+        project_clean_log_for_chain(conn, chain_id)
+
+        row = conn.execute(
+            "SELECT payload_json FROM ops_notification_outbox "
+            "WHERE notification_type='SIGNAL_ACCEPTED' AND chain_id=?",
+            (chain_id,),
+        ).fetchone()
+        assert row is not None
+        return json.loads(row[0])
+
+    with_hint = project(11, {**base_plan, "leverage_hint_applied": {"original": 10, "used": 5}})
+    without_hint = project(12, base_plan)
+
+    assert with_hint["leverage_hint_applied"] == {"original": 10, "used": 5}
+    assert "leverage_hint_applied" not in without_hint
+
+
 def test_footer_adds_separator_before_link():
     text = format_clean_log("SIGNAL_ACCEPTED", {
         "chain_id": 145,
@@ -869,6 +933,30 @@ def test_signal_accepted_no_tp_trim_no_note():
         "source": "original_message",
     })
     assert "Reduced by policy" not in text
+
+
+def test_signal_accepted_leverage_override_note():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 14, "symbol": "BTC/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "tps": [68000.0],
+        "leverage_hint_applied": {"original": 10, "used": 5},
+        "source": "original_message",
+    })
+    assert "Notes:" in text
+    assert "Leverage - Overridden by trader" in text
+
+
+def test_signal_accepted_no_leverage_override_no_note():
+    text = format_clean_log("SIGNAL_ACCEPTED", {
+        "chain_id": 15, "symbol": "BTC/USDT", "side": "LONG",
+        "entries": [{"sequence": 1, "entry_type": "LIMIT", "price": 65000.0}],
+        "sl": 62000.0,
+        "tps": [68000.0],
+        "source": "original_message",
+    })
+    assert "Overridden by trader" not in text
 
 
 def test_signal_accepted_entry_sequence_realigned_note():

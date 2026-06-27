@@ -20,7 +20,7 @@ from src.runtime_v2.signal_enrichment.models import (
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
 from src.runtime_v2.signal_enrichment.reshaping.setup_reshaper import apply_reshape
 from src.runtime_v2.symbols import to_raw_symbol
-from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
+from src.parser_v2.contracts.entities import Price, RiskHint, StopLoss, TakeProfit
 
 logger = logging.getLogger(__name__)
 
@@ -149,7 +149,12 @@ class SignalEnrichmentProcessor:
             reshaped_audit: ReshapeAudit = reshape_result
 
             enriched_signal = self._build_reshaped_payload(
-                symbol, signal, realigned_entries, reshaped_audit
+                symbol,
+                signal,
+                realigned_entries,
+                reshaped_audit,
+                signal.risk_hint,
+                signal.leverage_hint,
             )
 
             # Finding 4: price_sanity check on reshaped TPs (mirrors passthrough branch)
@@ -196,6 +201,7 @@ class SignalEnrichmentProcessor:
                 stop_loss=signal.stop_loss,
                 range_derivation=range_derivation,
                 risk_hint=signal.risk_hint,
+                leverage_hint=signal.leverage_hint,
                 entry_sequence_realigned=entry_sequence_realigned,
                 original_tp_count=original_tp_count,
             )
@@ -258,6 +264,8 @@ class SignalEnrichmentProcessor:
         signal,
         realigned_legs: list[EnrichedEntryLeg],
         audit: ReshapeAudit,
+        risk_hint: RiskHint | None,
+        leverage_hint: float | None,
     ) -> EnrichedSignalPayload:
         operative_sources = {e.source for e in audit.operative_entries}
         operative_legs = [
@@ -299,6 +307,8 @@ class SignalEnrichmentProcessor:
             entries=operative_legs,
             take_profits=new_tps,
             stop_loss=new_sl,
+            risk_hint=risk_hint,
+            leverage_hint=leverage_hint,
             reshaped=audit,
         )
 

@@ -35,11 +35,14 @@ def _make_enriched_signal(
     range_derivation: dict | None = None,
     capital_base_usdt: float = 1000.0,
     risk_pct: float = 1.0,
+    leverage: int = 1,
     max_concurrent_trades: int = 5,
     max_concurrent_same_symbol: int = 1,
     be_trigger: str | None = None,
     risk_hint=None,
+    leverage_hint: float | None = None,
     use_trader_risk_hint: bool = False,
+    use_trader_leverage_hint: bool = False,
     original_tp_count: int | None = None,
     entry_sequence_realigned: dict | None = None,
 ):
@@ -93,6 +96,7 @@ def _make_enriched_signal(
             else None
         ),
         risk_hint=risk_hint,
+        leverage_hint=leverage_hint,
         original_tp_count=original_tp_count,
         entry_sequence_realigned=entry_sequence_realigned,
     )
@@ -119,10 +123,11 @@ def _make_enriched_signal(
         risk=RiskConfig(
             mode="risk_pct_of_capital", risk_pct_of_capital=risk_pct,
             capital_base_mode="static_config", capital_base_usdt=capital_base_usdt,
-            leverage=1, max_capital_at_risk_per_trader_pct=50.0,
+            leverage=leverage, max_capital_at_risk_per_trader_pct=50.0,
             max_concurrent_trades=max_concurrent_trades,
             max_concurrent_same_symbol=max_concurrent_same_symbol,
             use_trader_risk_hint=use_trader_risk_hint,
+            use_trader_leverage_hint=use_trader_leverage_hint,
         ),
     )
     return EnrichedCanonicalMessage(
@@ -3891,6 +3896,48 @@ def test_gate_signal_no_risk_hint_applied_key_when_hint_absent():
     result = gate.process_signal(enriched, [], "NONE")
     plan = json.loads(result.trade_chain.plan_state_json)
     assert "risk_hint_applied" not in plan
+
+
+def test_gate_signal_copies_leverage_hint_applied_into_plan_state_json():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        leverage=5,
+        leverage_hint=3.0,
+        use_trader_leverage_hint=True,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert plan["leverage_hint_applied"] == {
+        "hint_used": True,
+        "hint_raw": "3.0",
+        "hint_effective": 3,
+        "configured_leverage": 5,
+        "effective_leverage": 3,
+    }
+
+
+def test_gate_signal_no_leverage_hint_applied_key_when_flag_false():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        leverage=5,
+        leverage_hint=3.0,
+        use_trader_leverage_hint=False,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert "leverage_hint_applied" not in plan
+
+
+def test_gate_signal_no_leverage_hint_applied_key_when_hint_absent():
+    gate = _make_gate()
+    enriched = _make_enriched_signal(
+        leverage=5,
+        leverage_hint=None,
+        use_trader_leverage_hint=True,
+    )
+    result = gate.process_signal(enriched, [], "NONE")
+    plan = json.loads(result.trade_chain.plan_state_json)
+    assert "leverage_hint_applied" not in plan
 
 
 # --- targeting per explicit_ids (_resolve_targets) ---

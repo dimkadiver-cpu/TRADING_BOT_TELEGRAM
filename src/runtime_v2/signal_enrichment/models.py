@@ -194,6 +194,7 @@ class RiskConfig(BaseModel):
     capital_base_usdt: float = 1000.0
     leverage: int = 1
     use_trader_risk_hint: bool = False
+    use_trader_leverage_hint: bool = False
     risk_hint_range_mode: Literal["min_value", "max_value", "midpoint"] = "min_value"
     max_capital_at_risk_per_trader_pct: float = 5.0
     max_concurrent_trades: int = 5
@@ -255,6 +256,7 @@ class EnrichedSignalPayload(BaseModel):
     stop_loss: StopLoss | None
     range_derivation: RangeDerivation | None = None
     risk_hint: RiskHint | None = None
+    leverage_hint: float | None = None
     entry_sequence_realigned: EntrySequenceRealignment | None = None
     # Set only when policy use_tp_count trimmed the parsed TPs (original count).
     original_tp_count: int | None = None
