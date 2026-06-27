@@ -2,7 +2,7 @@
 
   setup_mode: reshape
   setup_reshape:
-    template: ladder_4_aggressive
+    template: ladder_4_3_Tprofit
   account:
     id: "demo_2"      # deve corrispondere alla chiave in account_routing
     capital_base_usdt: 10000.0
