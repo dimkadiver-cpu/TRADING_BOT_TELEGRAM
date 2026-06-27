@@ -61,6 +61,8 @@ def select_tps_by_rr(
         selected.append(best_tp)
         available.discard(best_tp)
 
+    if all(price < anchor for price in selected):
+        return sorted(selected, reverse=True)
     return sorted(selected)
 
 
