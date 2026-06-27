@@ -39,6 +39,17 @@ execution:
       adapter: bybit_demo_3
       execution_account_id: demo_3  # Sostituire con il vero account ID Bybit del subaccount.
 
+    live_1:                         # Locale demo, instradato verso adapter demo.
+      adapter: bybit_live_1
+      execution_account_id: live_1
+
+    live_2:
+      adapter: bybit_live_2
+      execution_account_id: live_2  # Sostituire con il vero account ID Bybit del subaccount.
+
+    live_3:
+      adapter: bybit_live_3
+      execution_account_id: live_3  # Sostituire con il vero account ID Bybit del subaccount.
 
 
 
@@ -134,3 +145,100 @@ execution:
 
         live_safety:
           allow_live_trading: false
+
+    bybit_live_1:
+        type: ccxt_bybit
+        mode: demo  # Cambiare in live quando il subaccount è pronto.
+        connector: bybit
+
+        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_1    # Impostare con le credenziali del subaccount.
+        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_1
+
+        adjust_for_time_difference: true
+        recv_window_ms: 10000
+        time_sync_on_startup: true
+
+        strategy:
+          simple_attached_enabled: true
+          trigger_by: MarkPrice
+          one_tp_mode: FULL
+          multi_tp_mode: PARTIAL
+
+        websocket:
+          enabled: true
+          poll_fallback_enabled: true
+          poll_fallback_period_seconds: 60
+          position_live_snapshot_interval_seconds: 60
+
+        retry:
+          max_attempts: 3
+          backoff_seconds: [30, 90, 300]
+
+        live_safety:
+          allow_live_trading: false
+
+    bybit_live_3:
+        type: ccxt_bybit
+        mode: demo  # Cambiare in live quando il subaccount è pronto.
+        connector: bybit
+
+        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_3    # Impostare con le credenziali del subaccount.
+        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_3
+
+        adjust_for_time_difference: true
+        recv_window_ms: 10000
+        time_sync_on_startup: true
+
+        strategy:
+          simple_attached_enabled: true
+          trigger_by: MarkPrice
+          one_tp_mode: FULL
+          multi_tp_mode: PARTIAL
+
+        websocket:
+          enabled: true
+          poll_fallback_enabled: true
+          poll_fallback_period_seconds: 60
+          position_live_snapshot_interval_seconds: 60
+
+        retry:
+          max_attempts: 3
+          backoff_seconds: [30, 90, 300]
+
+        live_safety:
+          allow_live_trading: false
+
+          bybit_live_1:
+        type: ccxt_bybit
+        mode: demo  # Cambiare in live quando il subaccount è pronto.
+        connector: bybit
+
+        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_1    # Impostare con le credenziali del subaccount.
+        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_1
+
+        adjust_for_time_difference: true
+        recv_window_ms: 10000
+        time_sync_on_startup: true
+
+        strategy:
+          simple_attached_enabled: true
+          trigger_by: MarkPrice
+          one_tp_mode: FULL
+          multi_tp_mode: PARTIAL
+
+        websocket:
+          enabled: true
+          poll_fallback_enabled: true
+          poll_fallback_period_seconds: 60
+          position_live_snapshot_interval_seconds: 60
+
+        retry:
+          max_attempts: 3
+          backoff_seconds: [30, 90, 300]
+
+        live_safety:
+          allow_live_trading: false
+
+
+
+          

@@ -80,7 +80,7 @@ python parser_test/scripts/import_history.py ^
   --default-source-trader trader_a
 ```
 
-python parser_test/scripts/import_history.py --chat-id -1001573488012 --db-name trader_crypto_ninjias --default-source-trader trader_crypto_ninjias
+python parser_test/scripts/import_history.py --chat-id --1001175262142 --db-name trader_GG-Shot --default-source-trader trader_trader_GG-Shot --from-date 2026-01-01 --to-date 2026-06-27
 
 python parser_test/scripts/import_history.py --chat-id -1003722628653 --topic-id 3 --db-name trader_A_NOW --default-source-trader trader_a
 

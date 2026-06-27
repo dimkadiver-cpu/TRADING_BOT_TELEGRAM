@@ -1,0 +1,60 @@
+{
+  "language": "en",
+  "field_markers": {
+    "symbol": {
+      "strong": ["#"],
+      "weak": []
+    },
+    "entry": {
+      "strong": ["entry zone:"],
+      "weak": []
+    },
+    "stop_loss": {
+      "strong": ["stop-loss:"],
+      "weak": []
+    },
+    "take_profit": {
+      "strong": ["target 1:", "target 2:", "target 3:", "target 4:"],
+      "weak": []
+    }
+  },
+  "side_markers": {
+    "LONG": {
+      "strong": ["long entry zone:"],
+      "weak": []
+    },
+    "SHORT": {
+      "strong": ["short entry zone:"],
+      "weak": []
+    }
+  },
+  "intent_markers": {
+    "TP_HIT": {
+      "strong_patterns": [
+        "(?i)\\b(?:first|one|two|three|all)\\s+targets?\\s+done\\b"
+      ],
+      "weak": []
+    },
+    "SL_HIT": {
+      "strong": ["reaching stop-loss"],
+      "weak": []
+    }
+  },
+  "info_markers": {
+    "MARKET_ANALYSIS": {
+      "strong": ["market analysis", "2-day analysis", "validator #ma", "daily report"],
+      "weak": []
+    },
+    "PROMO": {
+      "strong": ["ggshot_bot", "mini app update", "official website", "free vip"],
+      "weak": []
+    }
+  },
+  "target_hint_markers": {
+    "symbol": {
+      "strong": ["usdt"],
+      "weak": []
+    }
+  },
+  "ignore_markers": []
+}

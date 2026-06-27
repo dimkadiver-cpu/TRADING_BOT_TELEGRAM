@@ -1,0 +1,18 @@
+{
+  "marker_resolution": {
+    "suppress_weak_inside_strong_same_intent": true,
+    "cross_intent_suppression": [],
+    "weak_context_exclusions": [],
+    "marker_context_exclusions": []
+  },
+  "disambiguation": [],
+  "extraction_markers": {},
+  "primary_intent_precedence": [
+    "SL_HIT",
+    "TP_HIT",
+    "INFO_ONLY"
+  ],
+  "convergence": {},
+  "default_entry_type": "LIMIT"
+}
+
