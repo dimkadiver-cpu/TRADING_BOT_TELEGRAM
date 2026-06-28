@@ -1,12 +1,21 @@
-"""Tests for Task 1: verify plumbing — event type, outbox map, template."""
-from src.runtime_v2.lifecycle.models import LifecycleEventType
-from src.runtime_v2.control_plane.outbox_writer import _CLEAN_LOG_EVENT_MAP
-from src.runtime_v2.control_plane.formatters.templates.clean_log import TEMPLATE_REGISTRY
+"""Tests for cancel_unfilled_pending_after: plumbing, DB query, and worker."""
+import json
+import sqlite3
+import typing
+from unittest.mock import MagicMock
 
+import pytest
+
+from src.runtime_v2.control_plane.formatters.templates.clean_log import TEMPLATE_REGISTRY
+from src.runtime_v2.control_plane.outbox_writer import _CLEAN_LOG_EVENT_MAP
+from src.runtime_v2.lifecycle.models import LifecycleEventType
+from src.runtime_v2.lifecycle.repositories import TradeChainRepository
+from src.runtime_v2.lifecycle.unfilled_price_watcher import UnfilledPriceWatcher, resolve_tp_threshold
+
+
+# ── Task 1: plumbing — event type, outbox map, template ──────────────────────
 
 def test_unfilled_tp_cancel_in_lifecycle_event_type():
-    # LifecycleEventType is a Literal — check its args
-    import typing
     args = typing.get_args(LifecycleEventType)
     assert "UNFILLED_TP_CANCEL" in args
 
@@ -19,13 +28,7 @@ def test_template_map_has_entry_cancelled_tp_reached():
     assert "ENTRY_CANCELLED_TP_REACHED" in TEMPLATE_REGISTRY
 
 
-# Task 2 tests: DB query for unfilled WAITING_ENTRY chains
-
-import json
-import sqlite3
-import pytest
-from src.runtime_v2.lifecycle.repositories import TradeChainRepository
-
+# ── Task 2: DB query for unfilled WAITING_ENTRY chains ───────────────────────
 
 def _make_ops_db(path: str) -> sqlite3.Connection:
     """Minimal ops DB schema for chain queries."""
@@ -152,13 +155,7 @@ def test_get_waiting_entry_unfilled_skips_filled_legs(tmp_path):
     assert result == []
 
 
-# Task 3 tests: UnfilledPriceWatcher worker
-
-from unittest.mock import MagicMock
-from src.runtime_v2.lifecycle.unfilled_price_watcher import UnfilledPriceWatcher, resolve_tp_threshold
-
-
-# ── Pure function: resolve_tp_threshold ──────────────────────────────────────
+# ── Task 3: UnfilledPriceWatcher worker ──────────────────────────────────────
 
 def test_resolve_threshold_tp1_from_intermediate():
     plan = {"intermediate_tps": [110.0, 120.0], "final_tp": 130.0}
@@ -184,8 +181,6 @@ def test_resolve_threshold_returns_none_when_no_tps():
     plan = {"intermediate_tps": [], "final_tp": None}
     assert resolve_tp_threshold(plan, "tp1") is None
 
-
-# ── Worker: run_once ──────────────────────────────────────────────────────────
 
 def _make_chain_mock(
     chain_id=1,
@@ -221,7 +216,6 @@ def _make_chain_mock(
 def _make_worker(tmp_path, chains, mark_price):
     db_path = str(tmp_path / "ops.db")
     conn = _make_ops_db(db_path)
-    # Insert the chain rows into DB so the worker can write events
     for ch in chains:
         conn.execute(
             """INSERT INTO ops_trade_chains
@@ -331,13 +325,17 @@ def test_run_once_idempotent_second_tick(tmp_path):
     chain = _make_chain_mock(side="LONG", final_tp=120.0)
     worker, db_path = _make_worker(tmp_path, [chain], mark_price=125.0)
 
-    worker.run_once()
-    # Second tick with same chain still in repo mock
+    count1 = worker.run_once()
+    assert count1 == 1
+
+    # Second tick: repo mock still returns same chain but INSERT OR IGNORE
+    # deduplicates — _emit_cancel returns False, run_once returns 0.
     count2 = worker.run_once()
-    # Idempotency key deduplicates — no new events
+    assert count2 == 0
+
     conn = sqlite3.connect(db_path)
     event_count = conn.execute(
         "SELECT COUNT(*) FROM ops_lifecycle_events WHERE event_type='UNFILLED_TP_CANCEL'"
     ).fetchone()[0]
     conn.close()
-    assert event_count == 1  # still exactly 1, not 2
+    assert event_count == 1

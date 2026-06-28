@@ -68,8 +68,8 @@ class UnfilledPriceWatcher:
             await asyncio.sleep(self._interval)
             await loop.run_in_executor(None, self.run_once)
 
-    def run_once(self) -> int:
-        chains = self._chain_repo.get_waiting_entry_with_unfilled_cancel_config()
+    def run_once(self, batch_size: int = 200) -> int:
+        chains = self._chain_repo.get_waiting_entry_with_unfilled_cancel_config(batch_size)
         if not chains:
             return 0
 
@@ -127,8 +127,7 @@ class UnfilledPriceWatcher:
         if not _is_triggered(mark_price, threshold, chain.side):
             return False
 
-        self._emit_cancel(chain_id, chain, tp_level, threshold, mark_price)
-        return True
+        return self._emit_cancel(chain_id, chain, tp_level, threshold, mark_price)
 
     def _emit_cancel(
         self,
@@ -137,7 +136,7 @@ class UnfilledPriceWatcher:
         tp_level: str,
         threshold: float,
         mark_price: float,
-    ) -> None:
+    ) -> bool:
         now = _now()
         idem_event = f"unfilled_tp_cancel:{chain_id}"
         payload = json.dumps({
@@ -149,6 +148,7 @@ class UnfilledPriceWatcher:
             "side": chain.side,
         })
 
+        event_inserted = False
         conn = sqlite3.connect(self._ops_db)
         try:
             with conn:
@@ -157,7 +157,7 @@ class UnfilledPriceWatcher:
                     "WHERE trade_chain_id=?",
                     (now, chain_id),
                 )
-                conn.execute(
+                cursor = conn.execute(
                     """
                     INSERT OR IGNORE INTO ops_lifecycle_events (
                         trade_chain_id, event_type, source_type,
@@ -167,6 +167,7 @@ class UnfilledPriceWatcher:
                     (chain_id, "UNFILLED_TP_CANCEL", "unfilled_price_watcher",
                      "WAITING_ENTRY", "EXPIRED", payload, idem_event, now),
                 )
+                event_inserted = cursor.rowcount > 0
                 # CANCEL_PENDING_ENTRY — fan-out to real orders (same as timeout worker)
                 entry_coids = load_pending_entry_client_order_ids(conn, chain_id)
                 if not entry_coids:
@@ -192,15 +193,18 @@ class UnfilledPriceWatcher:
                         (chain_id, "CANCEL_PENDING_ENTRY", "PENDING",
                          json.dumps(cmd_payload), idem_cmd, now, now),
                     )
-                project_clean_log_for_chain(conn, chain_id)
+                if event_inserted:
+                    project_clean_log_for_chain(conn, chain_id)
         finally:
             conn.close()
 
-        logger.info(
-            "unfilled_tp_cancel: chain=%s symbol=%s side=%s tp_level=%s "
-            "threshold=%.4f mark=%.4f",
-            chain_id, chain.symbol, chain.side, tp_level, threshold, mark_price,
-        )
+        if event_inserted:
+            logger.info(
+                "unfilled_tp_cancel: chain=%s symbol=%s side=%s tp_level=%s "
+                "threshold=%.4f mark=%.4f",
+                chain_id, chain.symbol, chain.side, tp_level, threshold, mark_price,
+            )
+        return event_inserted
 
 
 __all__ = ["UnfilledPriceWatcher", "resolve_tp_threshold"]
