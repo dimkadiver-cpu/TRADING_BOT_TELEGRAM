@@ -130,3 +130,194 @@ def test_get_waiting_entry_unfilled_skips_filled_legs(tmp_path):
     repo = TradeChainRepository(db_path)
     result = repo.get_waiting_entry_with_unfilled_cancel_config()
     assert result == []
+
+
+# Task 3 tests: UnfilledPriceWatcher worker
+
+from unittest.mock import MagicMock
+from src.runtime_v2.lifecycle.unfilled_price_watcher import UnfilledPriceWatcher, resolve_tp_threshold
+
+
+# ── Pure function: resolve_tp_threshold ──────────────────────────────────────
+
+def test_resolve_threshold_tp1_from_intermediate():
+    plan = {"intermediate_tps": [110.0, 120.0], "final_tp": 130.0}
+    assert resolve_tp_threshold(plan, "tp1") == 110.0
+
+
+def test_resolve_threshold_tp2_from_intermediate():
+    plan = {"intermediate_tps": [110.0, 120.0], "final_tp": 130.0}
+    assert resolve_tp_threshold(plan, "tp2") == 120.0
+
+
+def test_resolve_threshold_tp1_fallback_to_final():
+    plan = {"intermediate_tps": [], "final_tp": 115.0}
+    assert resolve_tp_threshold(plan, "tp1") == 115.0
+
+
+def test_resolve_threshold_tp2_fallback_to_final_when_only_one_intermediate():
+    plan = {"intermediate_tps": [110.0], "final_tp": 130.0}
+    assert resolve_tp_threshold(plan, "tp2") == 130.0
+
+
+def test_resolve_threshold_returns_none_when_no_tps():
+    plan = {"intermediate_tps": [], "final_tp": None}
+    assert resolve_tp_threshold(plan, "tp1") is None
+
+
+# ── Worker: run_once ──────────────────────────────────────────────────────────
+
+def _make_chain_mock(
+    chain_id=1,
+    symbol="BTC/USDT",
+    side="LONG",
+    account_id="acc1",
+    cancel_after="tp1",
+    cancel_by_engine=True,
+    intermediate_tps=None,
+    final_tp=120.0,
+    legs=None,
+):
+    chain = MagicMock()
+    chain.trade_chain_id = chain_id
+    chain.symbol = symbol
+    chain.side = side
+    chain.account_id = account_id
+    mp = {
+        "cancel_unfilled_pending_after": cancel_after,
+        "cancel_pending_by_engine": cancel_by_engine,
+    }
+    plan = {
+        "intermediate_tps": intermediate_tps or [],
+        "final_tp": final_tp,
+        "legs": legs or [{"sequence": 1, "status": "PENDING", "price": 100.0,
+                          "client_order_id": "place_entry_attached:1:leg1"}],
+    }
+    chain.management_plan_json = json.dumps(mp)
+    chain.plan_state_json = json.dumps(plan)
+    return chain
+
+
+def _make_worker(tmp_path, chains, mark_price):
+    db_path = str(tmp_path / "ops.db")
+    conn = _make_ops_db(db_path)
+    # Insert the chain rows into DB so the worker can write events
+    for ch in chains:
+        conn.execute(
+            """INSERT INTO ops_trade_chains
+               (trade_chain_id, symbol, side, lifecycle_state,
+                management_plan_json, plan_state_json, risk_snapshot_json,
+                execution_mode, created_at, updated_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?)""",
+            (ch.trade_chain_id, ch.symbol, ch.side, "WAITING_ENTRY",
+             ch.management_plan_json, ch.plan_state_json, "{}",
+             "D_POSITION_TPSL",
+             "2026-01-01T00:00:00+00:00", "2026-01-01T00:00:00+00:00"),
+        )
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ops_lifecycle_events (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_chain_id INTEGER, event_type TEXT, source_type TEXT,
+            previous_state TEXT, next_state TEXT, payload_json TEXT,
+            idempotency_key TEXT UNIQUE, created_at TEXT
+        )
+    """)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ops_execution_commands (
+            command_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_chain_id INTEGER, command_type TEXT, status TEXT,
+            payload_json TEXT, idempotency_key TEXT UNIQUE,
+            client_order_id TEXT, created_at TEXT, updated_at TEXT
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+    repo = MagicMock()
+    repo.get_waiting_entry_with_unfilled_cancel_config.return_value = chains
+
+    adapter = MagicMock()
+    adapter.fetch_mark_price.return_value = mark_price
+
+    worker = UnfilledPriceWatcher(
+        ops_db_path=db_path,
+        chain_repo=repo,
+        adapter=adapter,
+        execution_account_id="acc1",
+        interval_seconds=60,
+    )
+    return worker, db_path
+
+
+def test_run_once_cancels_long_chain_when_price_above_tp(tmp_path):
+    chain = _make_chain_mock(side="LONG", final_tp=120.0)
+    worker, db_path = _make_worker(tmp_path, [chain], mark_price=125.0)
+
+    count = worker.run_once()
+
+    assert count == 1
+    conn = sqlite3.connect(db_path)
+    events = conn.execute(
+        "SELECT event_type FROM ops_lifecycle_events WHERE trade_chain_id=1"
+    ).fetchall()
+    states = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()
+    conn.close()
+    assert any(e[0] == "UNFILLED_TP_CANCEL" for e in events)
+    assert states[0] == "EXPIRED"
+
+
+def test_run_once_does_not_cancel_long_chain_when_price_below_tp(tmp_path):
+    chain = _make_chain_mock(side="LONG", final_tp=120.0)
+    worker, db_path = _make_worker(tmp_path, [chain], mark_price=115.0)
+
+    count = worker.run_once()
+
+    assert count == 0
+    conn = sqlite3.connect(db_path)
+    state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+    assert state == "WAITING_ENTRY"
+
+
+def test_run_once_cancels_short_chain_when_price_below_tp(tmp_path):
+    chain = _make_chain_mock(side="SHORT", final_tp=80.0)
+    worker, db_path = _make_worker(tmp_path, [chain], mark_price=75.0)
+
+    count = worker.run_once()
+    assert count == 1
+
+
+def test_run_once_skips_when_cancel_pending_by_engine_false(tmp_path):
+    chain = _make_chain_mock(final_tp=120.0, cancel_by_engine=False)
+    worker, db_path = _make_worker(tmp_path, [chain], mark_price=125.0)
+
+    count = worker.run_once()
+    assert count == 0
+
+
+def test_run_once_skips_when_threshold_is_none(tmp_path):
+    chain = _make_chain_mock(final_tp=None)
+    worker, db_path = _make_worker(tmp_path, [chain], mark_price=125.0)
+
+    count = worker.run_once()
+    assert count == 0
+
+
+def test_run_once_idempotent_second_tick(tmp_path):
+    chain = _make_chain_mock(side="LONG", final_tp=120.0)
+    worker, db_path = _make_worker(tmp_path, [chain], mark_price=125.0)
+
+    worker.run_once()
+    # Second tick with same chain still in repo mock
+    count2 = worker.run_once()
+    # Idempotency key deduplicates — no new events
+    conn = sqlite3.connect(db_path)
+    event_count = conn.execute(
+        "SELECT COUNT(*) FROM ops_lifecycle_events WHERE event_type='UNFILLED_TP_CANCEL'"
+    ).fetchone()[0]
+    conn.close()
+    assert event_count == 1  # still exactly 1, not 2
