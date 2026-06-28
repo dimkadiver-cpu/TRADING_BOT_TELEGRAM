@@ -48,6 +48,7 @@ registered_traders:
   - rsi_intraday
   - trader_devos_crypto
   - trader_crypto_ninjias
+  - trader_gg_shot
 
 symbol_blacklist:
   global: []  # Simboli bloccati per tutti i trader.

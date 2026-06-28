@@ -86,7 +86,26 @@ per_account:
         operational_events: true
 
       commands:
-        thread_id: null           # i comandi passano da thread 4 (demo_1) — nessun thread separato        
+        thread_id: null           # i comandi passano da thread 4 (demo_1) — nessun thread separato  
+
+  live_1:
+    chat_id: -1004240829081      # stesso supergroup di demo_1
+
+    topics:
+      clean_log:
+        thread_id: null           # nessun topic fallback separato per demo_2
+        per_trader:
+          trader_crypto_ninjias: 4500
+
+      tech_log:
+        thread_id: 37             # condivide il tech_log con demo_1
+        min_level: INFO
+        operational_events: true
+
+      commands:
+        thread_id: null           # i comandi passano da thread 4 (demo_1) — nessun thread separato 
+        
+             
 
 # ─── NOTIFICHE ────────────────────────────────────────────────────────────────
 notifications:
