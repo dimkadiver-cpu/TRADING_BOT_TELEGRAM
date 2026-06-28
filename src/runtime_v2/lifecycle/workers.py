@@ -276,6 +276,7 @@ class TimeoutWorker:
                             json.dumps(payload), idempotency_key, now, now,
                         ),
                     )
+                project_clean_log_for_chain(conn, chain_id)
         finally:
             conn.close()
 
