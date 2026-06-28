@@ -7,6 +7,7 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 
+from src.runtime_v2.control_plane.outbox_writer import project_clean_log_for_chain
 from src.runtime_v2.lifecycle.cancel_expander import load_pending_entry_client_order_ids
 
 logger = logging.getLogger(__name__)
@@ -191,6 +192,7 @@ class UnfilledPriceWatcher:
                         (chain_id, "CANCEL_PENDING_ENTRY", "PENDING",
                          json.dumps(cmd_payload), idem_cmd, now, now),
                     )
+                project_clean_log_for_chain(conn, chain_id)
         finally:
             conn.close()
 

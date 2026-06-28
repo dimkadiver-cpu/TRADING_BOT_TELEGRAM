@@ -52,6 +52,26 @@ def _make_ops_db(path: str) -> sqlite3.Connection:
             last_projected_event_id INTEGER DEFAULT 0
         )
     """)
+    conn.execute("""
+        CREATE TABLE ops_notification_outbox (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_type TEXT NOT NULL,
+            destination TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            priority TEXT NOT NULL DEFAULT 'MEDIUM',
+            status TEXT NOT NULL DEFAULT 'PENDING',
+            dedupe_key TEXT NOT NULL UNIQUE,
+            attempts INTEGER NOT NULL DEFAULT 0,
+            last_error TEXT,
+            created_at TEXT NOT NULL,
+            sent_at TEXT,
+            send_after TEXT,
+            aggregation_group TEXT,
+            source_message_id TEXT,
+            account_id TEXT,
+            chain_id INTEGER
+        )
+    """)
     conn.commit()
     return conn
 
