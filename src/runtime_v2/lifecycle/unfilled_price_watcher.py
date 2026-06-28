@@ -7,6 +7,8 @@ import logging
 import sqlite3
 from datetime import datetime, timezone
 
+from src.runtime_v2.lifecycle.cancel_expander import load_pending_entry_client_order_ids
+
 logger = logging.getLogger(__name__)
 
 _DEFAULT_INTERVAL = 60
@@ -165,7 +167,6 @@ class UnfilledPriceWatcher:
                      "WAITING_ENTRY", "EXPIRED", payload, idem_event, now),
                 )
                 # CANCEL_PENDING_ENTRY — fan-out to real orders (same as timeout worker)
-                from src.runtime_v2.lifecycle.cancel_expander import load_pending_entry_client_order_ids
                 entry_coids = load_pending_entry_client_order_ids(conn, chain_id)
                 if not entry_coids:
                     entry_coids = [""]

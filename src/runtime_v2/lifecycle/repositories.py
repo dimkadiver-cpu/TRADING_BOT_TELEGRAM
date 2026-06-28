@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
 from datetime import datetime, timezone
 
@@ -9,6 +10,8 @@ from src.runtime_v2.lifecycle.models import (
     ControlMode, ExecutionCommand, ExchangeEvent,
     LifecycleEvent, TradeChain,
 )
+
+logger = logging.getLogger(__name__)
 
 _CONTROL_MODE_SEVERITY: dict[str, int] = {"NONE": 0, "BLOCK_NEW_ENTRIES": 1, "FULL_STOP": 2}
 
@@ -246,7 +249,8 @@ class TradeChainRepository:
                 legs = plan.get("legs", [])
                 if any(leg.get("status") == "FILLED" for leg in legs):
                     continue
-            except Exception:
+            except json.JSONDecodeError:
+                logger.warning("unfilled_cancel_config: malformed plan_state_json for chain %s — skipped", chain.trade_chain_id)
                 continue
             result.append(chain)
         return result
