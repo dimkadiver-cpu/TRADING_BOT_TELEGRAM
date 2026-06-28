@@ -87,7 +87,7 @@ dopo `mark_sent`.
 
 | Campo | Semantica | Note |
 |---|---|---|
-| `cancel_unfilled_pending_after` | Cancella entry non fillata se prezzo ha raggiunto livello TP | **Bloccato**: richiede price-watcher non presente nell'architettura. Lasciato nel modello come placeholder. |
+| `cancel_unfilled_pending_after` | Cancella entry non fillata se prezzo ha raggiunto livello TP | Implementato: `UnfilledPriceWatcher` in `src/runtime_v2/lifecycle/unfilled_price_watcher.py`. Worker periodico (default 60s). Evento: `UNFILLED_TP_CANCEL` → outbox `ENTRY_CANCELLED_TP_REACHED`. |
 | `risk_freed_by_be` | Libera rischio allocato quando BE scatta | Solo nel modello |
 | `protective_sl_mode` | `exchange_native_first` vs `bot_managed` | Solo nel modello |
 
@@ -98,7 +98,7 @@ dopo `mark_sent`.
 ### Funzionalità mancanti nel lifecycle
 
 - [x] `cancel_averaging_pending_after` — implementato in `event_processor._process_tp_filled`
-- [ ] `cancel_unfilled_pending_after` — **BLOCCATO**: richiede price-watcher
+- [x] `cancel_unfilled_pending_after` — implementato in `UnfilledPriceWatcher` (`unfilled_price_watcher.py`)
 - [x] `cancel_pending_by_engine` — implementato come gate globale in `event_processor`
 - [ ] `risk_freed_by_be` — aggiornare `risk_remaining` della chain quando BE scatta
 - [ ] `SET_STOP` su prezzo esplicito (non solo ENTRY) — ora va in REVIEW
