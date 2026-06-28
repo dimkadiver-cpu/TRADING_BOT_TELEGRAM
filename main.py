@@ -646,7 +646,7 @@ async def _async_main(
         cp_dispatcher_task = None
         if cp_service is not None:
             try:
-                cp_service.send_startup_notification()
+                cp_service.send_runtime_starting_notification()
                 if cp_dispatcher is not None:
                     await cp_dispatcher.drain_once()
             except Exception:
@@ -809,6 +809,12 @@ async def _async_main(
                     worker.run_funding_reconciliation()
                 except Exception:
                     logger.warning("startup reconciliation failed for worker (non-critical)", exc_info=True)
+
+        if cp_service is not None:
+            try:
+                cp_service.send_runtime_ready_notification()
+            except Exception:
+                logger.warning("runtime ready notification failed (non-critical)", exc_info=True)
 
         try:
             await client.run_until_disconnected()

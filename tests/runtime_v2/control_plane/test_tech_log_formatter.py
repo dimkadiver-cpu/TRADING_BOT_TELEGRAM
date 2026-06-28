@@ -9,14 +9,47 @@ def _render(notification_type: str, payload: dict) -> str:
     return render_template(config.blocks, payload, transform=config.payload_transform)
 
 
-def test_runtime_startup_header_and_fields():
+def test_runtime_starting_header_and_fields():
+    text = _render("RUNTIME_STARTING", {
+        "phase": "BOOTSTRAP",
+        "control_plane": "ACTIVE",
+        "runtime": "INITIALIZING",
+        "started_at": "2026-06-18 10:00:00 UTC",
+        "source": "runtime_main",
+    })
+    assert "🟡 RUNTIME: STARTING" in text
+    assert "Phase: BOOTSTRAP" in text
+    assert "Control plane: ACTIVE" in text
+    assert "Runtime: INITIALIZING" in text
+    assert "Started at: 2026-06-18 10:00:00 UTC" in text
+    assert "Source: runtime_main" in text
+
+
+def test_runtime_ready_header_and_fields():
+    text = _render("RUNTIME_READY", {
+        "phase": "RUNTIME READY",
+        "control_plane": "ACTIVE",
+        "runtime": "OPERATIONAL",
+        "started_at": "2026-06-18 10:00:00 UTC",
+        "source": "runtime_main",
+    })
+    assert "🟢 RUNTIME: OK" in text
+    assert "Phase: RUNTIME READY" in text
+    assert "Control plane: ACTIVE" in text
+    assert "Runtime: OPERATIONAL" in text
+    assert "Started at: 2026-06-18 10:00:00 UTC" in text
+    assert "Source: runtime_main" in text
+
+
+def test_runtime_startup_alias_renders_starting_status():
     text = _render("RUNTIME_STARTUP", {
         "started_at": "2026-06-18 10:00:00 UTC",
         "source": "runtime_main",
     })
-    assert "ℹ️ RUNTIME: AVVIATO" in text
-    assert "Started at: 2026-06-18 10:00:00 UTC" in text
-    assert "Source: runtime_main" in text
+    assert "🟡 RUNTIME: STARTING" in text
+    assert "Phase: BOOTSTRAP" in text
+    assert "Control plane: ACTIVE" in text
+    assert "Runtime: INITIALIZING" in text
 
 
 def test_runtime_shutdown_all_fields():
@@ -124,8 +157,10 @@ def test_gateway_command_failed_no_chain_id():
     assert "Reason: some error" in text
 
 
-def test_all_six_types_are_registered():
+def test_all_runtime_and_gateway_types_are_registered():
     expected = {
+        "RUNTIME_STARTING",
+        "RUNTIME_READY",
         "RUNTIME_STARTUP",
         "RUNTIME_SHUTDOWN",
         "LISTENER_EDIT_SKIPPED",
@@ -140,21 +175,29 @@ from src.runtime_v2.control_plane.formatters.tech_log import format_tech_log
 
 
 def test_format_tech_log_dispatches_to_template():
-    text = format_tech_log("RUNTIME_STARTUP", {
+    text = format_tech_log("RUNTIME_STARTING", {
+        "phase": "BOOTSTRAP",
+        "control_plane": "ACTIVE",
+        "runtime": "INITIALIZING",
         "started_at": "2026-06-18 10:00:00 UTC",
         "source": "runtime_main",
     })
-    assert "ℹ️ RUNTIME: AVVIATO" in text
+    assert "🟡 RUNTIME: STARTING" in text
 
 
 def test_format_tech_log_private_bot_prepends_system():
     text = format_tech_log(
-        "RUNTIME_STARTUP",
-        {"started_at": "2026-06-18 10:00:00 UTC"},
+        "RUNTIME_STARTING",
+        {
+            "phase": "BOOTSTRAP",
+            "control_plane": "ACTIVE",
+            "runtime": "INITIALIZING",
+            "started_at": "2026-06-18 10:00:00 UTC",
+        },
         delivery_mode="private_bot",
     )
     assert text.startswith("⚠️ --SYSTEM--\n")
-    assert "ℹ️ RUNTIME: AVVIATO" in text
+    assert "🟡 RUNTIME: STARTING" in text
 
 
 def test_format_tech_log_unknown_type_fallback():

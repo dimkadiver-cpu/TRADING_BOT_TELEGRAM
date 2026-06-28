@@ -552,8 +552,11 @@ def test_async_main_sends_startup_before_execution_runtime(monkeypatch, tmp_path
             await asyncio.Future()
 
     class FakeService:
-        def send_startup_notification(self):
-            events.append("service.send_startup_notification")
+        def send_runtime_starting_notification(self):
+            events.append("service.send_runtime_starting_notification")
+
+        def send_runtime_ready_notification(self):
+            events.append("service.send_runtime_ready_notification")
 
     monkeypatch.setattr(app_main, "setup_logging", lambda **kwargs: logging.getLogger("test"))
     monkeypatch.setattr(app_main, "apply_migrations", lambda **kwargs: 0)
@@ -597,7 +600,7 @@ def test_async_main_sends_startup_before_execution_runtime(monkeypatch, tmp_path
 
     def fake_build_execution_runtime(**kwargs):
         events.append("build_execution_runtime")
-        assert "service.send_startup_notification" in events
+        assert "service.send_runtime_starting_notification" in events
         assert "dispatcher.drain_once" in events
         return None
 
@@ -621,7 +624,7 @@ def test_async_main_sends_startup_before_execution_runtime(monkeypatch, tmp_path
             )
         )
 
-    assert events.index("service.send_startup_notification") < events.index("build_execution_runtime")
+    assert events.index("service.send_runtime_starting_notification") < events.index("build_execution_runtime")
     assert events.index("dispatcher.drain_once") < events.index("build_execution_runtime")
 
 

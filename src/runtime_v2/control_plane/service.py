@@ -291,26 +291,64 @@ class RuntimeControlService:
             blacklist=blacklist,
         )
 
-    def send_startup_notification(self) -> None:
-        """Write TECH_LOG startup notification to outbox."""
+    def _write_runtime_status_notification(
+        self,
+        *,
+        notification_type: str,
+        dedupe_prefix: str,
+        phase: str,
+        control_plane: str,
+        runtime: str,
+        priority: str,
+    ) -> None:
         from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
 
+        started_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         conn = sqlite3.connect(self._ops_db)
         try:
             with conn:
                 write_tech_log_event(
                     conn,
-                    notification_type="RUNTIME_STARTUP",
+                    notification_type=notification_type,
                     payload={
                         "level": "INFO",
-                        "started_at": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC"),
+                        "phase": phase,
+                        "control_plane": control_plane,
+                        "runtime": runtime,
+                        "started_at": started_at,
                         "source": "runtime_main",
                     },
-                    dedupe_key=f"startup:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
-                    priority="MEDIUM",
+                    dedupe_key=f"{dedupe_prefix}:{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}",
+                    priority=priority,
                 )
         finally:
             conn.close()
+
+    def send_runtime_starting_notification(self) -> None:
+        """Write TECH_LOG runtime-starting notification to outbox."""
+        self._write_runtime_status_notification(
+            notification_type="RUNTIME_STARTING",
+            dedupe_prefix="runtime_starting",
+            phase="BOOTSTRAP",
+            control_plane="ACTIVE",
+            runtime="INITIALIZING",
+            priority="MEDIUM",
+        )
+
+    def send_runtime_ready_notification(self) -> None:
+        """Write TECH_LOG runtime-ready notification to outbox."""
+        self._write_runtime_status_notification(
+            notification_type="RUNTIME_READY",
+            dedupe_prefix="runtime_ready",
+            phase="RUNTIME READY",
+            control_plane="ACTIVE",
+            runtime="OPERATIONAL",
+            priority="MEDIUM",
+        )
+
+    def send_startup_notification(self) -> None:
+        """Backward-compatible alias for runtime-starting notification."""
+        self.send_runtime_starting_notification()
 
     def send_shutdown_notification(self, *, reason: str = "SIGTERM") -> None:
         """Write TECH_LOG shutdown notification to outbox."""

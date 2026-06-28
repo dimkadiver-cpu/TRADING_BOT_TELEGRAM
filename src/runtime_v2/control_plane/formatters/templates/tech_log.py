@@ -17,9 +17,29 @@ def _tech_header(emoji: str, category: str, event_label: str) -> list:
     ]
 
 
+def _runtime_status_template(emoji: str, event_label: str) -> TemplateConfig:
+    return TemplateConfig([
+        *_tech_header(emoji, "RUNTIME", event_label),
+        FieldBlock("Phase", key="phase", fmt=text, optional=False, default="n/a"),
+        FieldBlock("Control plane", key="control_plane", fmt=text, optional=False, default="n/a"),
+        FieldBlock("Runtime", key="runtime", fmt=text, optional=False, default="n/a"),
+        FieldBlock("Started at", key="started_at", fmt=text, optional=False, default="n/a"),
+        SeparatorBlock(),
+        FooterBlock(default_source="runtime_main"),
+    ])
+
+
+_RUNTIME_STARTING = _runtime_status_template("🟡", "STARTING")
+
+_RUNTIME_READY = _runtime_status_template("🟢", "OK")
+
 _RUNTIME_STARTUP = TemplateConfig([
-    *_tech_header("ℹ️", "RUNTIME", "AVVIATO"),
+    *_tech_header("🟡", "RUNTIME", "STARTING"),
+    FieldBlock("Phase", key="phase", fmt=text, optional=False, default="BOOTSTRAP"),
+    FieldBlock("Control plane", key="control_plane", fmt=text, optional=False, default="ACTIVE"),
+    FieldBlock("Runtime", key="runtime", fmt=text, optional=False, default="INITIALIZING"),
     FieldBlock("Started at", key="started_at", fmt=text, optional=False, default="n/a"),
+    SeparatorBlock(),
     FooterBlock(default_source="runtime_main"),
 ])
 
@@ -90,6 +110,8 @@ _GATEWAY_COMMAND_FAILED = TemplateConfig([
 
 
 TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
+    "RUNTIME_STARTING":         _RUNTIME_STARTING,
+    "RUNTIME_READY":            _RUNTIME_READY,
     "RUNTIME_STARTUP":          _RUNTIME_STARTUP,
     "RUNTIME_SHUTDOWN":         _RUNTIME_SHUTDOWN,
     "LISTENER_EDIT_SKIPPED":    _LISTENER_EDIT_SKIPPED,

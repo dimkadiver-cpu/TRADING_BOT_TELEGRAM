@@ -24,9 +24,9 @@ def ops_db(tmp_path):
     return db_path
 
 
-def test_startup_notification_writes_to_outbox(ops_db):
+def test_runtime_starting_notification_writes_to_outbox(ops_db):
     service = RuntimeControlService(ops_db_path=ops_db)
-    service.send_startup_notification()
+    service.send_runtime_starting_notification()
 
     conn = sqlite3.connect(ops_db)
     row = conn.execute(
@@ -35,10 +35,34 @@ def test_startup_notification_writes_to_outbox(ops_db):
     conn.close()
 
     assert row is not None
-    assert row[0] == "RUNTIME_STARTUP"
+    assert row[0] == "RUNTIME_STARTING"
     assert row[1] == "TECH_LOG"
     p = json.loads(row[2])
     assert p["level"] == "INFO"
+    assert p["phase"] == "BOOTSTRAP"
+    assert p["control_plane"] == "ACTIVE"
+    assert p["runtime"] == "INITIALIZING"
+    assert "started_at" in p
+
+
+def test_runtime_ready_notification_writes_to_outbox(ops_db):
+    service = RuntimeControlService(ops_db_path=ops_db)
+    service.send_runtime_ready_notification()
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT notification_type, destination, payload_json FROM ops_notification_outbox"
+    ).fetchone()
+    conn.close()
+
+    assert row is not None
+    assert row[0] == "RUNTIME_READY"
+    assert row[1] == "TECH_LOG"
+    p = json.loads(row[2])
+    assert p["level"] == "INFO"
+    assert p["phase"] == "RUNTIME READY"
+    assert p["control_plane"] == "ACTIVE"
+    assert p["runtime"] == "OPERATIONAL"
     assert "started_at" in p
 
 
