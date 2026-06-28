@@ -177,13 +177,13 @@ execution:
         live_safety:
           allow_live_trading: false
 
-    bybit_live_3:
+    bybit_live_2:
         type: ccxt_bybit
         mode: demo  # Cambiare in live quando il subaccount è pronto.
         connector: bybit
 
-        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_3    # Impostare con le credenziali del subaccount.
-        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_3
+        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_2    # Impostare con le credenziali del subaccount.
+        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_2
 
         adjust_for_time_difference: true
         recv_window_ms: 10000
@@ -208,13 +208,13 @@ execution:
         live_safety:
           allow_live_trading: false
 
-          bybit_live_1:
+    bybit_live_3:
         type: ccxt_bybit
         mode: demo  # Cambiare in live quando il subaccount è pronto.
         connector: bybit
 
-        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_1    # Impostare con le credenziali del subaccount.
-        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_1
+        api_key_env: BYBIT_API_KEY_BYBIT_LIVE_3    # Impostare con le credenziali del subaccount.
+        api_secret_env: BYBIT_API_SECRET_BYBIT_LIVE_3
 
         adjust_for_time_difference: true
         recv_window_ms: 10000
