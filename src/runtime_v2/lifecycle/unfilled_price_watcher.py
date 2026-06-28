@@ -59,10 +59,11 @@ class UnfilledPriceWatcher:
         self._interval = interval_seconds
 
     async def run(self) -> None:
-        self.run_once()
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, self.run_once)
         while True:
             await asyncio.sleep(self._interval)
-            self.run_once()
+            await loop.run_in_executor(None, self.run_once)
 
     def run_once(self) -> int:
         chains = self._chain_repo.get_waiting_entry_with_unfilled_cancel_config()
