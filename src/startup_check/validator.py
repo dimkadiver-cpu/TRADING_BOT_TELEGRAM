@@ -658,7 +658,7 @@ def _check_control_plane(report: ValidationReport, root_dir: Path) -> None:
     if raw is None:
         return
 
-    if not raw.get("enabled", False):
+    if not raw.get("enabled", True):
         report.ok(section, "control plane disabilitato — verifiche credenziali saltate")
         return
 

@@ -2,6 +2,53 @@
 
 ---
 
+## 2026-06-28 — `--check-live`: verifica connettività Telegram topic + logging su bot.log
+
+### Step completato
+
+**Implementazione `--check-live`** ✅  
+Nuovo flag che esegue i check statici e poi verifica ogni destinazione Telegram configurata con send+delete. Output emesso sia su stdout (→ journald) sia su bot.log via logger precoce.
+
+### Comportamento
+
+```
+--check-config   → solo analisi statica, nessuna rete, exit
+--check-live     → analisi statica + send+delete per topic, exit
+(nessun flag)    → analisi statica; se OK, avvio bot
+--skip-checks    → avvio bot senza analisi
+```
+
+Per ogni `(chat_id, thread_id)` univoco da `telegram_control.yaml`:
+- Send OK + delete OK → ✅
+- Send OK + delete fail → ⚠️ (messaggio rimasto nel canale)
+- Send fail → ❌ (bot non nel gruppo / thread_id errato / token invalido)
+- Timeout → ⚠️ (rete lenta)
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/startup_check/live_check.py` | Creato | async send+delete per destinazioni da config |
+| `main.py` | Modificato | `--check-live` flag, `setup_logging` anticipato, `_log_report()` aggiunto |
+| `src/startup_check/validator.py` | Modificato | bugfix `raw.get("enabled", False)` → `True` (coerente con default Pydantic) |
+
+### Bugfix incluso
+
+`_check_control_plane` usava `raw.get("enabled", False)` ma `ControlPlaneConfig.enabled` ha default `True`. Se la chiave `enabled` era assente dal YAML, il check statico riportava erroneamente "disabilitato" mentre il runtime lo trattava come abilitato.
+
+### Validazione
+
+- `python -m py_compile main.py src/startup_check/live_check.py` → OK
+- `--check-config` → 0 errori, 6 warning; control plane ora rilevato come abilitato
+- `--check-live` → check statico OK, live check lancia 13 sonde parallele; "Chat not found" atteso in sviluppo (bot non nel gruppo)
+- I risultati appaiono sia su stdout/journald sia su bot.log tramite logger anticipato
+
+### Rischi aperti
+
+- Nessun rate limit esplicito tra le sonde (attualmente parallele): con molti topic potrebbe innescare Telegram flood control. Per il volume attuale (≤20) non è un problema.
+
+---
+
 ## 2026-06-28 — Miglioramento `run_startup_checks()`: 7 nuovi controlli aggiunti
 
 ### Step completato

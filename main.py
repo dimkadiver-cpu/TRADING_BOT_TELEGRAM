@@ -90,6 +90,15 @@ class ExecutionRuntime:
     adapter_contexts: dict[str, AdapterExecutionContext] | None = None
 
 
+def _log_report(logger, report) -> None:
+    """Emette ogni risultato del ValidationReport nel logger (→ bot.log)."""
+    import logging as _logging
+    level_map = {"OK": _logging.DEBUG, "WARNING": _logging.WARNING, "ERROR": _logging.ERROR}
+    for result in report.results:
+        lvl = level_map.get(result.severity.value, _logging.INFO)
+        logger.log(lvl, "[startup-check] [%s] %s", result.section, result.message)
+
+
 async def _wait_any(*events: asyncio.Event) -> None:
     """Ritorna appena uno qualsiasi degli eventi viene settato."""
     tasks = [asyncio.ensure_future(e.wait()) for e in events]
@@ -894,6 +903,10 @@ def main() -> None:
         help="Run configuration checks and exit (no bot startup).",
     )
     parser.add_argument(
+        "--check-live", action="store_true",
+        help="Run static checks then verify Telegram connectivity (send+delete per topic) and exit.",
+    )
+    parser.add_argument(
         "--skip-checks", action="store_true",
         help="Skip startup configuration checks.",
     )
@@ -902,14 +915,31 @@ def main() -> None:
     load_dotenv()
     root_dir = Path(__file__).resolve().parent
 
-    if args.check_config or not args.skip_checks:
+    log_path = os.getenv("LOG_PATH", str(root_dir / "logs" / "bot.log"))
+    logger = setup_logging(log_path=log_path, level=os.getenv("LOG_LEVEL", "INFO"))
+
+    if args.check_config or args.check_live or not args.skip_checks:
         from src.startup_check.validator import run_startup_checks
 
         report = run_startup_checks(root_dir)
-        if args.check_config or report.has_errors or report.warnings:
+        if args.check_config or args.check_live or report.has_errors or report.warnings:
             print(report.render())
+        _log_report(logger, report)
+
         if args.check_config:
             sys.exit(1 if report.has_errors else 0)
+
+        if args.check_live:
+            if report.has_errors:
+                logger.error("check-live: errori statici — live check saltato")
+                print("Errori statici — live check saltato.", file=sys.stderr)
+                sys.exit(1)
+            from src.startup_check.live_check import run_live_checks
+            live_report = asyncio.run(run_live_checks(root_dir))
+            print(live_report.render())
+            _log_report(logger, live_report)
+            sys.exit(1 if live_report.has_errors else 0)
+
         if report.has_errors:
             print(
                 "Avvio interrotto: correggi gli errori di configurazione segnalati sopra "
@@ -923,7 +953,7 @@ def main() -> None:
     migrations_dir = str(root_dir / "db" / "migrations")
     ops_db_path = os.getenv("OPS_DB_PATH", str(root_dir / "db" / "ops.sqlite3"))
     ops_migrations_dir = str(root_dir / "db" / "ops_migrations")
-    log_path = os.getenv("LOG_PATH", str(root_dir / "logs" / "bot.log"))
+    # log_path already set before startup checks; reuse it here
 
     if args.migrate:
         logger = setup_logging(log_path=log_path, level=os.getenv("LOG_LEVEL", "INFO"))
