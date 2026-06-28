@@ -145,6 +145,31 @@ Source: runtime
 
 ---
 
+## SETUP CANCELLED
+
+Setup annullato perché il prezzo ha superato il livello TP configurato senza che nessuna entry
+fosse mai fillata. Trigger: `unfilled_price_watcher`.
+
+```
+⛔ #12 — SETUP CANCELLED
+- - - - - - - - - - - - - - -
+BTC/USDT — 📈 LONG
+https://t.me/c/3897279123/480
+- - - - - - - - - - - - - - -
+Entry never filled. Price already crossed TP1.
+- - - - - - - - - - - - - - -
+Threshold: 42,000
+Mark price: 43,500
+- - - - - - - - - - - - - - -
+Source: unfilled_price_watcher
+```
+
+> `tp_level` dal payload → `p.get('tp_level', '?').lstrip('tp').upper()` (es. `"tp1"` → `"1"`).
+> `threshold_price` e `mark_price` dal payload → formattati con `fmt=num`.
+> `_UNFILLED_TP_CANCEL_BLOCKS`: `HeaderBlock` + `DerivedBlock` + 2x `FieldBlock` + `FooterBlock`.
+
+---
+
 ## Note implementative
 
 | Tipo | Trigger | `chain_id` | `symbol/side` | `signal_link` |
@@ -154,6 +179,7 @@ Source: runtime
 | `CANCEL_FAILED` | timeout_worker | sì | sì | sì (dal chain) |
 | `RECONCILIATION_WARNING` | runtime/worker | opzionale | opzionale | opzionale |
 | `RECONCILIATION_FIXED` | runtime/worker | opzionale | opzionale | opzionale |
+| `ENTRY_CANCELLED_TP_REACHED` | unfilled_price_watcher | sì | sì | sì (dal chain) |
 
 `signal_link` iniettato da `HeaderBlock` — letto da `payload["signal_link"]`, che viene dalla chain (link al segnale originale accettato). Presente su tutti gli eventi chain-specific.
 `RECONCILIATION_*` senza chain_id: `HeaderBlock` omette `#N`. Senza symbol: linea symbol/side assente.
