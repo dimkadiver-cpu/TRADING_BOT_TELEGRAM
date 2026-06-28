@@ -182,3 +182,29 @@ def test_attached_block_raises_if_sl_none():
             leverage=10, hedge_mode=False, position_idx=0,
             risk_snapshot={"legs": [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)]},
         )
+
+
+def test_two_step_sequences_starting_at_2_attaches_sl_to_first_leg():
+    """TWO_STEP signals have entries [seq=2, seq=3] — seq=1 never exists.
+    The first leg (lowest sequence) must still get PLACE_ENTRY_WITH_ATTACHED_TPSL."""
+    cmds = _cmds(
+        20,
+        [_leg(2, "LIMIT", 0.1455, 0.667), _leg(3, "LIMIT", 0.14172, 0.333)],
+        [_tp(1, 0.155), _tp(2, 0.165), _tp(3, 0.175), _tp(4, 0.185)],
+        [_snap(2, "LIMIT", 0.1455, 0.667, 220.25, "fixed", 0.667),
+         _snap(3, "LIMIT", 0.14172, 0.333, 110.1, "fixed", 0.333)],
+        sl=0.137939,
+    )
+    assert len(cmds) == 2
+    # First leg (seq=2) must be attached
+    assert cmds[0].command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
+    p0 = json.loads(cmds[0].payload_json)
+    assert p0["sequence"] == 2
+    assert p0["attached_tpsl"]["stop_loss"] == pytest.approx(0.137939)
+    assert p0["attached_tpsl"]["take_profit"] == pytest.approx(0.185)  # final TP
+    assert cmds[0].idempotency_key == "place_entry_attached:20:leg2"
+    # Second leg (seq=3) must be plain
+    assert cmds[1].command_type == "PLACE_ENTRY"
+    p1 = json.loads(cmds[1].payload_json)
+    assert p1["sequence"] == 3
+    assert "attached_tpsl" not in p1

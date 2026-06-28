@@ -268,9 +268,15 @@ class SignalEnrichmentProcessor:
         leverage_hint: float | None,
     ) -> EnrichedSignalPayload:
         operative_sources = {e.source for e in audit.operative_entries}
+        # Re-number from 1 so the first operative leg is always sequence=1,
+        # matching how new_tps are re-numbered below and ensuring
+        # EntryCommandFactory attaches SL to the correct first leg.
         operative_legs = [
-            leg for leg in realigned_legs
-            if f"E{leg.sequence}" in operative_sources
+            leg.model_copy(update={"sequence": i + 1})
+            for i, leg in enumerate(
+                leg for leg in realigned_legs
+                if f"E{leg.sequence}" in operative_sources
+            )
         ]
 
         # Finding 2: renormalize surviving leg weights to sum to 1.0

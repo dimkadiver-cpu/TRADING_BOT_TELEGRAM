@@ -11,9 +11,12 @@ class EntryCommandFactory:
     """Builds ExecutionCommand list from enriched entry legs and risk snapshot.
 
     Unified rule (all 8 cases):
-    - leg sequence == 1 → PLACE_ENTRY_WITH_ATTACHED_TPSL, tpsl_mode=FULL, SL + final TP attached
-    - leg sequence >  1 → PLACE_ENTRY (no attached TPSL)
+    - first leg (lowest sequence) → PLACE_ENTRY_WITH_ATTACHED_TPSL, tpsl_mode=FULL, SL + final TP attached
+    - subsequent legs → PLACE_ENTRY (no attached TPSL)
     Intermediate TPs are NOT emitted here (handled after fills).
+
+    NOTE: "first leg" is determined by sorted sequence order, NOT by sequence == 1.
+    TWO_STEP signals may have entries starting at sequence 2, 3, etc.
 
     NOTE: Payloads from this factory do not include 'execution_strategy'.
     The adapter must route solely on command_type (PLACE_ENTRY_WITH_ATTACHED_TPSL
@@ -51,10 +54,10 @@ class EntryCommandFactory:
 
         commands: list[ExecutionCommand] = []
 
-        for leg in sorted_entries:
+        for i, leg in enumerate(sorted_entries):
             snap = snap_by_seq.get(leg.sequence, {})
             is_deferred = snap.get("qty_mode") == "deferred_market"
-            is_attached = leg.sequence == 1
+            is_attached = (i == 0)
 
             # Common base payload fields
             payload: dict = {
