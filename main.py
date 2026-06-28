@@ -641,7 +641,7 @@ async def _async_main(
     _unfilled_price_watcher: UnfilledPriceWatcher | None = None
     if execution_runtime is not None and _account_ids:
         _primary_account_id = _account_ids[0]
-        _first_adapter_key = next(iter(execution_runtime.adapters), None)
+        _first_adapter_key = next(iter(execution_runtime.adapters or {}), None)
         _primary_adapter = (
             execution_runtime.adapters[_first_adapter_key]
             if _first_adapter_key
