@@ -569,94 +569,16 @@ async def _async_main(
     snapshot_repo = SnapshotRepository(ops_db_path)
     exchange_event_repo = ExchangeEventRepository(ops_db_path)
 
-    # PRD-05 execution gateway layer — built first to extract known symbols for entry gate
-    execution_runtime: ExecutionRuntime | None = None
-
-    try:
-        execution_runtime = _build_execution_runtime(
-            root_dir=root_dir,
-            ops_db_path=ops_db_path,
-            logger=logger,
-            wake_callback=_fill_wake_callback,
-        )
-    except Exception:
-        logger.exception("execution gateway init failed — gateway disabled")
-
-    # Symbol registry: shared across all adapters, loads in background (fail-open at startup)
-    symbol_registry = _build_symbol_registry(execution_runtime)
-
-    exchange_port = _build_exchange_port(
-        root_dir=root_dir,
-        ops_db_path=ops_db_path,
-        execution_runtime=execution_runtime,
-        symbol_registry=symbol_registry,
-    )
-    risk_engine = RiskCapacityEngine()
-    entry_gate = _build_lifecycle_entry_gate(
-        root_dir=root_dir,
-        risk_engine=risk_engine,
-        exchange_port=exchange_port,
-    )
-
-    gate_worker = LifecycleGateWorker(
-        parser_db_path=parser_db_path,
-        ops_db_path=ops_db_path,
-        gate=entry_gate,
-        chain_repo=chain_repo,
-        event_repo=event_repo,
-        command_repo=command_repo,
-        snapshot_repo=snapshot_repo,
-        control_repo=control_repo,
-        channel_resolver=channel_resolver,
-    )
-    timeout_worker = TimeoutWorker(ops_db_path=ops_db_path, chain_repo=chain_repo)
-    lifecycle_event_worker = LifecycleEventWorker(
-        ops_db_path=ops_db_path,
-        processor=LifecycleEventProcessor(),
-        chain_repo=chain_repo,
-        event_repo=event_repo,
-        command_repo=command_repo,
-        exchange_event_repo=exchange_event_repo,
-    )
-
-    # Account snapshot worker — periodic balance fetch per account
-    _account_ids: list[str] = (
-        list(execution_runtime.sync_workers.keys())
-        if execution_runtime is not None and execution_runtime.sync_workers
-        else []
-    )
-    _account_snapshot_worker: AccountSnapshotWorker | None = None
-    if _account_ids and isinstance(exchange_port, LiveExchangeDataPort):
-        _account_snapshot_worker = AccountSnapshotWorker(
-            port=exchange_port,
-            repository=snapshot_repo,
-            account_ids=_account_ids,
-            interval_seconds=60,
-            stale_after_seconds=180,
-        )
-
-    # Unfilled price watcher — cancel setups when price crosses TP without fill
-    _unfilled_price_watcher: UnfilledPriceWatcher | None = None
-    if execution_runtime is not None and _account_ids:
-        _primary_account_id = _account_ids[0]
-        _first_adapter_key = next(iter(execution_runtime.adapters or {}), None)
-        _primary_adapter = (
-            execution_runtime.adapters[_first_adapter_key]
-            if _first_adapter_key
-            else execution_runtime.adapter
-        )
-        _op_config_loader = OperationConfigLoader(config_dir, ops_db_path=ops_db_path)
-        _unfilled_interval = _op_config_loader.get_unfilled_price_check_interval()
-        _unfilled_price_watcher = UnfilledPriceWatcher(
-            ops_db_path=ops_db_path,
-            chain_repo=chain_repo,
-            adapter=_primary_adapter,
-            execution_account_id=_primary_account_id,
-            interval_seconds=_unfilled_interval,
-        )
-
     client = TelegramClient(session_name, api_id, api_hash)
     await client.start()
+
+    execution_runtime: ExecutionRuntime | None = None
+    symbol_registry: SymbolRegistry | None = None
+    _account_ids: list[str] = []
+    _account_snapshot_worker: AccountSnapshotWorker | None = None
+    _unfilled_price_watcher: UnfilledPriceWatcher | None = None
+    _unfilled_interval = 0
+    _primary_account_id: str | None = None
 
     def _position_sync_fn(account_id: str | None) -> None:
         workers = execution_runtime.sync_workers if execution_runtime else None
@@ -717,6 +639,102 @@ async def _async_main(
     watcher.start()
 
     try:
+        control_bot_task = None
+        if control_bot is not None:
+            control_bot_task = asyncio.create_task(_start_control_bot(control_bot, logger))
+
+        cp_dispatcher_task = None
+        if cp_service is not None:
+            try:
+                cp_service.send_startup_notification()
+                if cp_dispatcher is not None:
+                    await cp_dispatcher.drain_once()
+            except Exception:
+                logger.warning("startup notification failed (non-critical)", exc_info=True)
+
+        if cp_dispatcher is not None:
+            cp_dispatcher_task = asyncio.create_task(cp_dispatcher.run())
+            logger.info("control plane: notification dispatcher started")
+
+        try:
+            execution_runtime = _build_execution_runtime(
+                root_dir=root_dir,
+                ops_db_path=ops_db_path,
+                logger=logger,
+                wake_callback=_fill_wake_callback,
+            )
+        except Exception:
+            logger.exception("execution gateway init failed — gateway disabled")
+
+        # Symbol registry: shared across all adapters, loads in background (fail-open at startup)
+        symbol_registry = _build_symbol_registry(execution_runtime)
+
+        exchange_port = _build_exchange_port(
+            root_dir=root_dir,
+            ops_db_path=ops_db_path,
+            execution_runtime=execution_runtime,
+            symbol_registry=symbol_registry,
+        )
+        risk_engine = RiskCapacityEngine()
+        entry_gate = _build_lifecycle_entry_gate(
+            root_dir=root_dir,
+            risk_engine=risk_engine,
+            exchange_port=exchange_port,
+        )
+
+        gate_worker = LifecycleGateWorker(
+            parser_db_path=parser_db_path,
+            ops_db_path=ops_db_path,
+            gate=entry_gate,
+            chain_repo=chain_repo,
+            event_repo=event_repo,
+            command_repo=command_repo,
+            snapshot_repo=snapshot_repo,
+            control_repo=control_repo,
+            channel_resolver=channel_resolver,
+        )
+        timeout_worker = TimeoutWorker(ops_db_path=ops_db_path, chain_repo=chain_repo)
+        lifecycle_event_worker = LifecycleEventWorker(
+            ops_db_path=ops_db_path,
+            processor=LifecycleEventProcessor(),
+            chain_repo=chain_repo,
+            event_repo=event_repo,
+            command_repo=command_repo,
+            exchange_event_repo=exchange_event_repo,
+        )
+
+        _account_ids = (
+            list(execution_runtime.sync_workers.keys())
+            if execution_runtime is not None and execution_runtime.sync_workers
+            else []
+        )
+        if _account_ids and isinstance(exchange_port, LiveExchangeDataPort):
+            _account_snapshot_worker = AccountSnapshotWorker(
+                port=exchange_port,
+                repository=snapshot_repo,
+                account_ids=_account_ids,
+                interval_seconds=60,
+                stale_after_seconds=180,
+            )
+
+        if execution_runtime is not None and _account_ids:
+            _primary_account_id = _account_ids[0]
+            _first_adapter_key = next(iter(execution_runtime.adapters or {}), None)
+            _primary_adapter = (
+                execution_runtime.adapters[_first_adapter_key]
+                if _first_adapter_key
+                else execution_runtime.adapter
+            )
+            _op_config_loader = OperationConfigLoader(config_dir, ops_db_path=ops_db_path)
+            _unfilled_interval = _op_config_loader.get_unfilled_price_check_interval()
+            _unfilled_price_watcher = UnfilledPriceWatcher(
+                ops_db_path=ops_db_path,
+                chain_repo=chain_repo,
+                adapter=_primary_adapter,
+                execution_account_id=_primary_account_id,
+                interval_seconds=_unfilled_interval,
+            )
+
         listener.register_handlers(client)
         logger.info("telegram listener started | parser_db=%s | ops_db=%s", parser_db_path, ops_db_path)
         await listener.run_recovery(client)
@@ -751,21 +769,6 @@ async def _async_main(
                 "unfilled price watcher started | interval=%ds | account=%s",
                 _unfilled_interval, _primary_account_id,
             )
-
-        cp_dispatcher_task = None
-        if cp_dispatcher is not None:
-            cp_dispatcher_task = asyncio.create_task(cp_dispatcher.run())
-            logger.info("control plane: notification dispatcher started")
-
-        control_bot_task = None
-        if control_bot is not None:
-            control_bot_task = asyncio.create_task(_start_control_bot(control_bot, logger))
-
-        if cp_service is not None:
-            try:
-                cp_service.send_startup_notification()
-            except Exception:
-                logger.warning("startup notification failed (non-critical)")
 
         if _cp is not None:
             try:

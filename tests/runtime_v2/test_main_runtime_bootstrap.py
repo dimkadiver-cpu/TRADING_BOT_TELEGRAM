@@ -518,6 +518,113 @@ def test_async_main_passes_channel_resolver_to_lifecycle_gate_worker(monkeypatch
     assert captured["channel_resolver"] is channel_resolver
 
 
+def test_async_main_sends_startup_before_execution_runtime(monkeypatch, tmp_path):
+    import main as app_main
+
+    events: list[str] = []
+
+    class StopBootstrap(Exception):
+        pass
+
+    class FakeTelegramClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def start(self):
+            return None
+
+        async def disconnect(self):
+            return None
+
+    class FakeWatcher:
+        def start(self):
+            events.append("watcher.start")
+
+        def stop(self):
+            events.append("watcher.stop")
+
+    class FakeDispatcher:
+        async def drain_once(self):
+            events.append("dispatcher.drain_once")
+            return 1
+
+        async def run(self):
+            await asyncio.Future()
+
+    class FakeService:
+        def send_startup_notification(self):
+            events.append("service.send_startup_notification")
+
+    monkeypatch.setattr(app_main, "setup_logging", lambda **kwargs: logging.getLogger("test"))
+    monkeypatch.setattr(app_main, "apply_migrations", lambda **kwargs: 0)
+    monkeypatch.setenv("TELEGRAM_API_ID", "12345")
+    monkeypatch.setenv("TELEGRAM_API_HASH", "abcde")
+    monkeypatch.setattr(app_main, "load_channels_config", lambda path: SimpleNamespace(channels=[]))
+    monkeypatch.setattr(app_main, "build_ingestion_service", lambda **kwargs: MagicMock(name="ingestion"))
+    monkeypatch.setattr(app_main, "build_processing_status_store", lambda **kwargs: MagicMock(name="status"))
+    monkeypatch.setattr(app_main, "RawMessageRepository", lambda **kwargs: MagicMock(name="raw_repo"))
+    monkeypatch.setattr(app_main, "RawMessageRevisionStore", lambda **kwargs: MagicMock(name="revision_store"))
+    monkeypatch.setattr(app_main, "ChannelConfigResolver", lambda **kwargs: MagicMock(name="channel_resolver"))
+    monkeypatch.setattr(app_main, "CanonicalMessageRepository", lambda **kwargs: MagicMock(name="canonical_repo"))
+    monkeypatch.setattr(app_main.sqlite3, "connect", lambda *args, **kwargs: MagicMock(name="sqlite_conn"))
+    monkeypatch.setattr(app_main, "ParserRunStore", lambda conn: SimpleNamespace(create_run=lambda **kwargs: 1))
+    monkeypatch.setattr(app_main, "ParserResultV2Store", lambda conn: MagicMock(name="result_v2_store"))
+    monkeypatch.setattr(app_main, "ParserPipelineProcessor", lambda **kwargs: MagicMock(name="parser_pipeline"))
+    monkeypatch.setattr(app_main, "SignalEnrichmentProcessor", lambda **kwargs: MagicMock(name="enrichment_processor"))
+    monkeypatch.setattr(app_main, "OperationConfigLoader", lambda *args, **kwargs: MagicMock(name="config_loader"))
+    monkeypatch.setattr(app_main, "EnrichedCanonicalMessageRepository", lambda *args, **kwargs: MagicMock(name="enriched_repo"))
+    monkeypatch.setattr(app_main, "TextPatternCatalog", lambda path: SimpleNamespace(all_trader_ids=set()))
+    monkeypatch.setattr(app_main, "TraderResolver", lambda **kwargs: MagicMock(name="trader_resolver"))
+    chain_repo = MagicMock(name="chain_repo")
+    monkeypatch.setattr(app_main, "TradeChainRepository", lambda *args, **kwargs: chain_repo)
+    monkeypatch.setattr(app_main, "LifecycleEventRepository", lambda *args, **kwargs: MagicMock(name="event_repo"))
+    monkeypatch.setattr(app_main, "ExecutionCommandRepository", lambda *args, **kwargs: MagicMock(name="command_repo"))
+    monkeypatch.setattr(app_main, "ControlStateRepository", lambda *args, **kwargs: MagicMock(name="control_repo"))
+    monkeypatch.setattr(app_main, "SnapshotRepository", lambda *args, **kwargs: MagicMock(name="snapshot_repo"))
+    monkeypatch.setattr(app_main, "ExchangeEventRepository", lambda *args, **kwargs: MagicMock(name="exchange_event_repo"))
+    monkeypatch.setattr(app_main, "TelegramClient", FakeTelegramClient)
+    monkeypatch.setattr(app_main, "ChannelConfigWatcher", lambda **kwargs: FakeWatcher())
+
+    fake_cp = SimpleNamespace(
+        bot=None,
+        dispatcher=FakeDispatcher(),
+        service=FakeService(),
+        startup_plan=SimpleNamespace(apply_global_block=False, fell_back=False, mode="auto"),
+        dashboard_manager=MagicMock(name="dashboard_manager"),
+        snapshot_store=MagicMock(name="snapshot_store"),
+    )
+    monkeypatch.setattr(app_main, "build_control_plane", lambda **kwargs: fake_cp)
+
+    def fake_build_execution_runtime(**kwargs):
+        events.append("build_execution_runtime")
+        assert "service.send_startup_notification" in events
+        assert "dispatcher.drain_once" in events
+        return None
+
+    monkeypatch.setattr(app_main, "_build_execution_runtime", fake_build_execution_runtime)
+    monkeypatch.setattr(app_main, "_build_exchange_port", lambda **kwargs: MagicMock(name="exchange_port"))
+
+    def fake_build_lifecycle_entry_gate(**kwargs):
+        raise StopBootstrap
+
+    monkeypatch.setattr(app_main, "_build_lifecycle_entry_gate", fake_build_lifecycle_entry_gate)
+
+    with pytest.raises(StopBootstrap):
+        asyncio.run(
+            app_main._async_main(
+                parser_db_path=str(tmp_path / "parser.sqlite3"),
+                migrations_dir=str(tmp_path / "migrations"),
+                ops_db_path=str(tmp_path / "ops.sqlite3"),
+                ops_migrations_dir=str(tmp_path / "ops_migrations"),
+                log_path=str(tmp_path / "bot.log"),
+                root_dir=tmp_path,
+            )
+        )
+
+    assert events.index("service.send_startup_notification") < events.index("build_execution_runtime")
+    assert events.index("dispatcher.drain_once") < events.index("build_execution_runtime")
+
+
 def test_lifecycle_gate_worker_passes_signal_admission_context_to_gate(tmp_path, monkeypatch):
     from src.parser_v2.contracts.entities import Price, StopLoss, TakeProfit
     from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker, SignalAdmissionContext

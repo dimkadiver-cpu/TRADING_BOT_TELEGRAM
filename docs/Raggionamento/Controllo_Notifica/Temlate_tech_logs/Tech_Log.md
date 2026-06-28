@@ -1,20 +1,22 @@
   Ecco i 5 tipi esistenti con emoji, campi flat, e struttura output:
 
-  ---
-  RUNTIME_STARTUP ℹ️  RUNTIME: AVVIATO
-  started_at: 2026-06-18 10:00:00 UTC
-  ────────────────
+  🟡 RUNTIME: STARTING
+  - - - - - - - - - - -
+  Phase: BOOTSTRAP
+  Control plane: ACTIVE
+  Runtime: INITIALIZING
+  Started at: 2026-06-28 20:34:11 UTC
+  - - - - - - - - - - -
   Source: runtime_main
-  Payload flat: started_at
 
-  ---
-  RUNTIME_SHUTDOWN ℹ️  RUNTIME: SHUTDOWN
-  Reason: SIGTERM
-  Open chains: 3
-  Pending commands: 1
-  ────────────────
+  🟢 RUNTIME: OK
+ - - - - - - - - - - -
+  Phase: RUNTIME READY
+  Control plane: ACTIVE
+  Runtime: OPERATIONAL
+  Started at: 2026-06-28 20:34:11 UTC
+  - - - - - - - - - - -  
   Source: runtime_main
-  Payload flat: reason, open_chains, pending_commands
 
   ---
   LISTENER_EDIT_SKIPPED ⚠️  LISTENER: EDIT SKIPPED
@@ -61,4 +63,6 @@
   ────────────────
   Source: execution_gateway
   Payload flat: command_type, chain_id, command_id, reason
+
+ 
 
