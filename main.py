@@ -70,6 +70,7 @@ from src.telegram.listener import (
 )
 from src.telegram.pattern_extractors import TextPatternCatalog
 from src.telegram.trader_resolver import TraderResolver
+from src.runtime_v2.lifecycle.symbol_registry import SymbolRegistry
 
 
 @dataclass
@@ -128,30 +129,22 @@ def _parse_fallback_chat_ids(raw: str | None) -> set[int]:
     return values
 
 
-def _collect_runtime_known_symbols(
+def _build_symbol_registry(
     runtime: ExecutionRuntime | None,
-    logger,
-) -> frozenset[str] | None:
+    refresh_interval_seconds: int = 6 * 3600,
+) -> SymbolRegistry | None:
+    """Create a SymbolRegistry backed by the default adapter.
+
+    Uses a single adapter regardless of how many are configured — all Bybit
+    adapters expose the same market catalog, so one REST call is sufficient.
+    Returns None when no execution runtime is available.
+    """
     if runtime is None:
         return None
-    adapters = runtime.adapters or {"default": runtime.adapter}
-    merged: set[str] = set()
-    any_loaded = False
-    for adapter_name, adapter in adapters.items():
-        if not hasattr(adapter, "load_known_symbols"):
-            continue
-        try:
-            symbols = adapter.load_known_symbols()
-        except Exception:
-            logger.warning("load_known_symbols failed for adapter %s", adapter_name)
-            continue
-        if symbols is None:
-            continue
-        merged.update(symbols)
-        any_loaded = True
-    if not any_loaded:
+    adapter = runtime.adapter
+    if not hasattr(adapter, "load_known_symbols"):
         return None
-    return frozenset(merged)
+    return SymbolRegistry(adapter=adapter, refresh_interval_seconds=refresh_interval_seconds)
 
 
 def _build_execution_runtime(
@@ -370,17 +363,17 @@ def _build_exchange_port(
     root_dir: Path,
     ops_db_path: str,
     execution_runtime: ExecutionRuntime | None,
-    known_symbols: frozenset[str] | None,
+    symbol_registry: SymbolRegistry | None,
 ):
     if execution_runtime is None or not execution_runtime.adapters:
-        return StaticExchangeDataPort(known_symbols=known_symbols)
+        return StaticExchangeDataPort(symbol_registry=symbol_registry)
     execution_config_path = str(root_dir / "config" / "execution.yaml")
     exec_config = ExecutionConfigLoader(execution_config_path).load()
     return LiveExchangeDataPort(
         execution_config=exec_config,
         adapter_registry=execution_runtime.adapters,
         ops_db_path=ops_db_path,
-        known_symbols=known_symbols,
+        symbol_registry=symbol_registry,
     )
 
 
@@ -589,18 +582,14 @@ async def _async_main(
     except Exception:
         logger.exception("execution gateway init failed — gateway disabled")
 
-    # Load known symbols from exchange adapter (fail-open: None = no restriction)
-    known_symbols = _collect_runtime_known_symbols(execution_runtime, logger)
-    if known_symbols is not None:
-        logger.info("symbol whitelist loaded: %d symbols", len(known_symbols))
-    else:
-        logger.info("symbol whitelist unavailable — entry gate symbol check disabled")
+    # Symbol registry: shared across all adapters, loads in background (fail-open at startup)
+    symbol_registry = _build_symbol_registry(execution_runtime)
 
     exchange_port = _build_exchange_port(
         root_dir=root_dir,
         ops_db_path=ops_db_path,
         execution_runtime=execution_runtime,
-        known_symbols=known_symbols,
+        symbol_registry=symbol_registry,
     )
     risk_engine = RiskCapacityEngine()
     entry_gate = _build_lifecycle_entry_gate(
@@ -745,6 +734,11 @@ async def _async_main(
             )
         )
 
+        symbol_registry_task = None
+        if symbol_registry is not None:
+            symbol_registry_task = asyncio.create_task(symbol_registry.run())
+            logger.info("symbol registry started | adapter=%s | refresh_interval=6h", execution_runtime.adapter.__class__.__name__)
+
         account_snapshot_task = None
         if _account_snapshot_worker is not None:
             account_snapshot_task = asyncio.create_task(_account_snapshot_worker.run())
@@ -818,6 +812,8 @@ async def _async_main(
         finally:
             worker_task.cancel()
             lifecycle_task.cancel()
+            if symbol_registry_task is not None:
+                symbol_registry_task.cancel()
             if account_snapshot_task is not None:
                 account_snapshot_task.cancel()
             if unfilled_watcher_task is not None:

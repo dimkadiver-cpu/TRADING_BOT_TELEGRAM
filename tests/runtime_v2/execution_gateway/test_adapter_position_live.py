@@ -175,7 +175,7 @@ def test_ccxt_bybit_fetch_all_positions_maps_only_long_and_short_rows():
             cum_realized_pnl=9.0,
         ),
     ]
-    exchange.fetch_positions.assert_called_once_with()
+    exchange.fetch_positions.assert_called_once_with(params={"category": "linear"})
 
 
 def test_ccxt_bybit_fetch_all_positions_returns_none_and_warns_on_failure(caplog):

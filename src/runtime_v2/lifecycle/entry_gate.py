@@ -1056,9 +1056,24 @@ class LifecycleEntryGate:
         trader_chains = [c for c in open_chains if c.trader_id == enriched.trader_id]
 
         if scope == "ALL_SHORT":
-            return [c for c in trader_chains if c.side == "SHORT"]
+            candidates = [c for c in trader_chains if c.side == "SHORT"]
+            if tag.targeting.explicit_ids:
+                # explicit ID names a specific signal: narrow within scope, never broadcast
+                matched = [
+                    c for c in candidates
+                    if _split_external_signal_ids(c.external_signal_id) & set(_normalize_signal_ids(tag.targeting.explicit_ids))
+                ]
+                return matched  # [] if named signal not open among SHORT chains
+            return candidates
         if scope == "ALL_LONG":
-            return [c for c in trader_chains if c.side == "LONG"]
+            candidates = [c for c in trader_chains if c.side == "LONG"]
+            if tag.targeting.explicit_ids:
+                matched = [
+                    c for c in candidates
+                    if _split_external_signal_ids(c.external_signal_id) & set(_normalize_signal_ids(tag.targeting.explicit_ids))
+                ]
+                return matched
+            return candidates
         if scope in GLOBAL_SCOPES:
             return trader_chains
 
@@ -1079,7 +1094,8 @@ class LifecycleEntryGate:
             if len(matched) > 1:
                 return None
 
-        if tag.targeting.explicit_ids:
+        has_explicit_ids = bool(tag.targeting.explicit_ids)
+        if has_explicit_ids:
             matched = [
                 c for c in trader_chains
                 if _split_external_signal_ids(c.external_signal_id) & set(_normalize_signal_ids(tag.targeting.explicit_ids))
@@ -1088,6 +1104,7 @@ class LifecycleEntryGate:
                 return matched
             if len(matched) > 1:
                 return None
+            # 0 matches: named signal not open — may still fall through to telegram IDs
 
         tg_ids_to_check = list(tag.targeting.telegram_message_ids)
         if tag.targeting.reply_to_message_id is not None:
@@ -1101,6 +1118,12 @@ class LifecycleEntryGate:
             if raw_ids:
                 matched = [c for c in trader_chains if c.raw_message_id in raw_ids]
                 return matched  # [] if no chain matched — do NOT fall through to single-chain
+
+        # Single-chain last resort: only when no explicit identifier was given.
+        # If explicit_ids were present but unmatched, return [] rather than
+        # applying the update to an unrelated open chain.
+        if has_explicit_ids:
+            return []
 
         if len(trader_chains) > 1:
             return None

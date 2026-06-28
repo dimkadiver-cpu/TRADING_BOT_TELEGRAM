@@ -115,6 +115,11 @@ class SignalEnrichmentProcessor:
             if signal.stop_loss is None or signal.stop_loss.price is None:
                 return block("missing_stop_loss")
 
+        # 5. TP richiesti
+        if config.signal_policy.tp.require_tp:
+            if not signal.take_profits:
+                return block("missing_take_profit")
+
         reshape_mode = config.setup_mode == "reshape" and config.setup_reshape_template is not None
 
         if reshape_mode:

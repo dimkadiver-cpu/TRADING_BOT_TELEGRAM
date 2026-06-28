@@ -40,7 +40,7 @@ def _minimal_global_config() -> dict:
                         "averaging": {"weights": {"E1": 0.7, "E2": 0.3}},
                     },
                 },
-                "tp": {"use_tp_count": None},
+                "tp": {"use_tp_count": None, "require_tp": True},
                 "sl": {"use_original_sl": True, "require_sl": True},
                 "price_corrections": {"enabled": False, "round_to_tick": False, "clamp_to_exchange_precision": False},
                 "price_sanity": {"enabled": False, "symbol_ranges": {}},
@@ -487,6 +487,13 @@ def test_signal_without_tp_trim_has_no_original_tp_count(processor):
     enriched = processor.process(result)
     assert enriched.enrichment_decision == "PASS"
     assert enriched.enriched_signal.original_tp_count is None
+
+
+def test_missing_take_profit_is_blocked(processor):
+    result = _make_parse_result(tp_count=0)
+    enriched = processor.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "missing_take_profit"
 
 
 def test_signal_pass_has_management_plan(processor):

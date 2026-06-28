@@ -41,6 +41,7 @@ account:
 
     tp:
       use_tp_count: 4  # null = usa i TP parsati; intero = forza il numero TP effettivi.
+      require_tp: true  # true = blocca/review segnali senza TP.
 
     sl:
       use_original_sl: true  # true = preserva SL del segnale originale.

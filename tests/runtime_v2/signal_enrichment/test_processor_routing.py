@@ -62,7 +62,7 @@ def _make_processor(tmp_path):
                     "LIMIT": {"single": {"weights": {"E1": 1.0}}, "range": {"split_mode": "endpoints", "weights": {"E1": 0.5, "E2": 0.5}}, "averaging": {"weights": {"E1": 0.7, "E2": 0.3}}, "ladder": {"weights": {"E1": 0.5, "E2": 0.3, "E3": 0.2}}},
                     "MARKET": {"single": {"weights": {"E1": 1.0}}, "averaging": {"weights": {"E1": 0.7, "E2": 0.3}}},
                 },
-                "tp": {"use_tp_count": None}, "sl": {"use_original_sl": True, "require_sl": True},
+                "tp": {"use_tp_count": None, "require_tp": True}, "sl": {"use_original_sl": True, "require_sl": True},
                 "price_corrections": {"enabled": False, "round_to_tick": False, "clamp_to_exchange_precision": False},
                 "price_sanity": {"enabled": False, "symbol_ranges": {}},
             },

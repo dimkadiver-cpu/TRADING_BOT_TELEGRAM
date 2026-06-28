@@ -43,7 +43,7 @@ def _minimal_global_config(overrides: dict | None = None) -> dict:
                         "averaging": {"weights": {"E1": 0.7, "E2": 0.3}},
                     },
                 },
-                "tp": {"use_tp_count": None},
+                "tp": {"use_tp_count": None, "require_tp": True},
                 "sl": {"use_original_sl": True, "require_sl": True},
                 "price_corrections": {"enabled": False, "round_to_tick": False, "clamp_to_exchange_precision": False},
                 "price_sanity": {"enabled": False, "symbol_ranges": {}},
@@ -110,6 +110,7 @@ def test_load_defaults_for_registered_trader(config_dir):
     assert cfg.account_id == "main"
     assert cfg.gate_mode == "block"
     assert cfg.signal_policy.sl.require_sl is True
+    assert cfg.signal_policy.tp.require_tp is True
     assert cfg.update_admission["MOVE_STOP"] is True
     assert cfg.update_admission["MOVE_STOP_TO_BE"] is False
 
@@ -127,6 +128,7 @@ def test_trader_override_merges_tp_count(config_dir):
     loader = OperationConfigLoader(str(config_dir))
     cfg = loader.get_effective_config("trader_a")
     assert cfg.signal_policy.tp.use_tp_count == 2
+    assert cfg.signal_policy.tp.require_tp is True
     # trader_b should still have null
     cfg_b = loader.get_effective_config("trader_b")
     assert cfg_b.signal_policy.tp.use_tp_count is None

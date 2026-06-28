@@ -76,6 +76,11 @@ class CcxtBybitAdapter(ExecutionAdapter):
             ret_code = -1
         return ret_code, str((resp or {}).get("retMsg", ""))
 
+    def _fetch_linear_positions(self, symbols: list[str] | None = None) -> list[dict]:
+        if symbols is None:
+            return self._exchange.fetch_positions(params={"category": "linear"})
+        return self._exchange.fetch_positions(symbols, params={"category": "linear"})
+
     def __init__(
         self,
         api_key: str,
@@ -340,7 +345,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
         execution_account_id: str,
     ) -> float | None:
         try:
-            positions = self._exchange.fetch_positions([symbol])
+            positions = self._fetch_linear_positions([symbol])
             sides_found = [str(p.get("side") or "") for p in positions]
             for pos in positions:
                 if str(pos.get("side") or "").lower() == side.lower():
@@ -372,7 +377,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
         qty is None on exception (same semantics as get_position_qty).
         """
         try:
-            positions = self._exchange.fetch_positions([symbol])
+            positions = self._fetch_linear_positions([symbol])
             sides_found = [str(p.get("side") or "") for p in positions]
             for pos in positions:
                 if str(pos.get("side") or "").lower() == side.lower():
@@ -410,7 +415,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
     ) -> list[RawPositionLive] | None:
         del execution_account_id
         try:
-            positions = self._exchange.fetch_positions()
+            positions = self._fetch_linear_positions()
         except Exception as exc:
             logger.warning("fetch_all_positions failed: %s", exc)
             return None
@@ -732,7 +737,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
         Returns None if position not found or on error.
         """
         try:
-            positions = self._exchange.fetch_positions([symbol])
+            positions = self._fetch_linear_positions([symbol])
         except Exception as exc:
             logger.warning("fetch_position_details failed for %s %s: %s", symbol, side, exc)
             return None
@@ -778,7 +783,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
         preserve_full_tp = bool(extra_params.get("preserve_full_tp", True))
 
         try:
-            positions = self._exchange.fetch_positions([symbol])
+            positions = self._fetch_linear_positions([symbol])
         except Exception as exc:
             return AdapterResult(success=False, error=f"fetch_positions failed: {exc}")
 
@@ -895,7 +900,7 @@ class CcxtBybitAdapter(ExecutionAdapter):
             return None
 
         try:
-            positions = self._exchange.fetch_positions([symbol])
+            positions = self._fetch_linear_positions([symbol])
         except Exception as exc:
             logger.debug("fetch_positions fallback error: %s", exc)
             return None

@@ -578,7 +578,9 @@ def test_od_f1_2_fallback_returns_filled_when_position_closed():
 
     assert raw is not None
     assert raw.status == "FILLED"
-    exchange.fetch_positions.assert_called_once_with(["BTC/USDT:USDT"])
+    exchange.fetch_positions.assert_called_once_with(
+        ["BTC/USDT:USDT"], params={"category": "linear"}
+    )
 
 
 def test_od_f1_2_fallback_returns_none_when_position_still_open():
@@ -729,7 +731,9 @@ def test_get_position_qty_long():
     )
 
     assert qty == 0.03
-    exchange.fetch_positions.assert_called_once_with(["BTC/USDT:USDT"])
+    exchange.fetch_positions.assert_called_once_with(
+        ["BTC/USDT:USDT"], params={"category": "linear"}
+    )
 
 
 def test_get_position_qty_short():
@@ -1042,6 +1046,9 @@ def test_rebuild_partial_tps_cancels_only_non_full_qty_orders_and_recreates_each
     )
 
     assert result.success is True
+    exchange.fetch_positions.assert_called_once_with(
+        ["BTC/USDT:USDT"], params={"category": "linear"}
+    )
     exchange.cancel_order.assert_called_once_with("tp-partial-1", "BTC/USDT:USDT")
     assert exchange.private_post_v5_position_trading_stop.call_count == 2
     assert exchange.private_post_v5_position_trading_stop.call_args_list == [
@@ -1443,6 +1450,9 @@ def test_fetch_position_details_returns_tp_sl_from_info():
         symbol="PHAUSDT", side="SHORT", execution_account_id="acc"
     )
     assert pos is not None
+    exchange.fetch_positions.assert_called_once_with(
+        ["PHAUSDT"], params={"category": "linear"}
+    )
     assert pos.symbol == "PHAUSDT"
     assert pos.qty == 3871.5
     assert pos.take_profit == 0.05373

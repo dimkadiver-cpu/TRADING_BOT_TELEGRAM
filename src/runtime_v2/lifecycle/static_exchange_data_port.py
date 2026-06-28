@@ -1,12 +1,16 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from src.runtime_v2.lifecycle.ports import (
     AccountStateSnapshot, ExchangeDataPort, OrderSnapshot,
     PositionSnapshot, SymbolMarketSnapshot,
 )
 from src.runtime_v2.symbols import to_raw_symbol
+
+if TYPE_CHECKING:
+    from src.runtime_v2.lifecycle.symbol_registry import SymbolRegistry
 
 
 class StaticExchangeDataPort(ExchangeDataPort):
@@ -17,6 +21,7 @@ class StaticExchangeDataPort(ExchangeDataPort):
         orders: list[OrderSnapshot] | None = None,
         positions: list[PositionSnapshot] | None = None,
         known_symbols: frozenset[str] | None = None,
+        symbol_registry: SymbolRegistry | None = None,
     ) -> None:
         self._account = account_snapshot
         self._markets: dict[str, SymbolMarketSnapshot] = {}
@@ -26,6 +31,8 @@ class StaticExchangeDataPort(ExchangeDataPort):
             self._markets[normalized_symbol] = snapshot.model_copy(update={"symbol": snapshot_symbol})
         self._orders: list[OrderSnapshot] = orders or []
         self._positions: list[PositionSnapshot] = positions or []
+        self._registry = symbol_registry
+        # Legacy path: frozenset passed directly (kept for tests and static use-cases)
         self._known_symbols = (
             frozenset((to_raw_symbol(symbol) or symbol) for symbol in known_symbols)
             if known_symbols is not None
@@ -65,15 +72,20 @@ class StaticExchangeDataPort(ExchangeDataPort):
         return None
 
     def symbol_exists(self, account_id: str, symbol: str) -> bool:
+        if self._registry is not None:
+            return self._registry.symbol_exists(symbol)
+        # Legacy path: frozenset passed directly
         if self._known_symbols is None:
             return True  # fail-open: no symbol list loaded -> don't block signals
         lookup_symbol = to_raw_symbol(symbol) or symbol
         if lookup_symbol in self._known_symbols:
             return True
-        # Bare symbols from Telegram messages (e.g. "HYPE") may match USDT-quoted perpetuals ("HYPEUSDT")
         return (lookup_symbol + "USDT") in self._known_symbols
 
     def resolve_symbol(self, account_id: str, symbol: str) -> str:
+        if self._registry is not None:
+            return self._registry.resolve_symbol(symbol)
+        # Legacy path: frozenset passed directly
         if self._known_symbols is None:
             return symbol
         lookup = to_raw_symbol(symbol) or symbol

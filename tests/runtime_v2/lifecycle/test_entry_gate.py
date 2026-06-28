@@ -3990,7 +3990,9 @@ def test_explicit_id_does_not_fall_back_to_canonical_message_id():
     other = _make_chain_for_targeting(11, 4, None)
     tag = _make_targeting_tag(["2"])
     matched = gate._resolve_targets(_make_enriched_for_targeting(), [target, other], tag)
-    assert matched is None
+    # explicit_id "2" must not match by canonical_message_id; since it matches no
+    # external_signal_id, result is [] (signal not found) — no update applied
+    assert matched == []
 
 
 def test_explicit_id_not_found_falls_through_to_telegram_ids():

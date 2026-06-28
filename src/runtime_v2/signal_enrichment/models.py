@@ -138,6 +138,7 @@ class EntrySplitConfig(BaseModel):
 
 class TpConfig(BaseModel):
     use_tp_count: int | None = None
+    require_tp: bool = True
 
 
 class SlConfig(BaseModel):

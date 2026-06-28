@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import sqlite3
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from src.runtime_v2.execution_gateway.adapters.base import ExecutionAdapter
 from src.runtime_v2.execution_gateway.models import (
@@ -19,6 +20,9 @@ from src.runtime_v2.lifecycle.ports import (
 )
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 
+if TYPE_CHECKING:
+    from src.runtime_v2.lifecycle.symbol_registry import SymbolRegistry
+
 
 class LiveExchangeDataPort(ExchangeDataPort):
     """Lifecycle-facing exchange port backed by the configured execution adapters.
@@ -34,11 +38,15 @@ class LiveExchangeDataPort(ExchangeDataPort):
         adapter_registry: dict[str, ExecutionAdapter],
         ops_db_path: str,
         known_symbols: frozenset[str] | None = None,
+        symbol_registry: SymbolRegistry | None = None,
     ) -> None:
         self._execution_config = execution_config
         self._adapter_registry = adapter_registry
         self._ops_db_path = ops_db_path
-        self._fallback = StaticExchangeDataPort(known_symbols=known_symbols)
+        self._fallback = StaticExchangeDataPort(
+            known_symbols=known_symbols,
+            symbol_registry=symbol_registry,
+        )
 
     def _resolve_adapter(self, account_id: str) -> tuple[ExecutionAdapter, str] | None:
         try:
