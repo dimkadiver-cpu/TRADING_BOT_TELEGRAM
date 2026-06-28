@@ -8,6 +8,7 @@ from pathlib import Path
 
 import yaml
 
+from src.runtime_v2.control_plane.override_store import OverrideStore
 from src.runtime_v2.signal_enrichment.models import (
     AccountConfig,
     CloseDistributionConfig,
@@ -39,6 +40,15 @@ class ConfigLoadError(Exception):
     pass
 
 
+def _merge_unique_symbols(*groups: list[str]) -> list[str]:
+    merged: list[str] = []
+    for group in groups:
+        for symbol in group:
+            if symbol not in merged:
+                merged.append(symbol)
+    return merged
+
+
 def _deep_merge(base: dict, override: dict) -> dict:
     result = dict(base)
     for key, val in override.items():
@@ -50,8 +60,9 @@ def _deep_merge(base: dict, override: dict) -> dict:
 
 
 class OperationConfigLoader:
-    def __init__(self, config_dir: str) -> None:
+    def __init__(self, config_dir: str, ops_db_path: str | None = None) -> None:
         self._config_dir = Path(config_dir)
+        self._override_store = OverrideStore(ops_db_path) if ops_db_path else None
         self._global_raw: dict = {}
         self._mtimes: dict[str, float] = {}
         self._reshape_templates: dict[str, ReshapeTemplateConfig] = {}
@@ -66,14 +77,22 @@ class OperationConfigLoader:
         return self._merge(trader_id, self._global_raw, trader_raw)
 
     def get_symbol_blacklist_global(self) -> list[str]:
-        return self._global_raw.get("symbol_blacklist", {}).get("global", [])
+        config_values = self._global_raw.get("symbol_blacklist", {}).get("global", [])
+        override_values = []
+        if self._override_store is not None:
+            override_values = self._override_store.get_blacklist("GLOBAL", None)
+        return _merge_unique_symbols(config_values, override_values)
 
     def get_symbol_blacklist_for_trader(self, trader_id: str) -> list[str]:
-        return (
+        config_values = (
             self._global_raw.get("symbol_blacklist", {})
             .get("per_trader", {})
             .get(trader_id, [])
         )
+        override_values = []
+        if self._override_store is not None:
+            override_values = self._override_store.get_blacklist("PER_TRADER", trader_id)
+        return _merge_unique_symbols(config_values, override_values)
 
     def get_unfilled_price_check_interval(self) -> int:
         """Return unfilled_price_check_interval_seconds from global_safety, default 60."""

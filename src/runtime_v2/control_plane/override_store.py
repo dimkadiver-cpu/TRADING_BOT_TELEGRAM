@@ -4,6 +4,8 @@ import json
 import sqlite3
 from datetime import datetime, timezone
 
+from src.runtime_v2.symbols import symbols_equivalent, to_raw_symbol
+
 
 def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
@@ -110,7 +112,9 @@ class OverrideStore:
         symbol: str,
         created_by: str,
     ) -> list[str]:
-        normalized_symbol = symbol.upper()
+        normalized_symbol = to_raw_symbol(symbol)
+        if normalized_symbol is None:
+            return self.get_blacklist(scope_type, scope_value)
         return self._replace_symbols(
             scope_type=scope_type,
             scope_value=scope_value,
@@ -127,13 +131,15 @@ class OverrideStore:
         scope_value: str | None,
         symbol: str,
     ) -> list[str]:
-        normalized_symbol = symbol.upper()
+        normalized_symbol = to_raw_symbol(symbol)
+        if normalized_symbol is None:
+            return self.get_blacklist(scope_type, scope_value)
         return self._replace_symbols(
             scope_type=scope_type,
             scope_value=scope_value,
             created_by="system",
             transform=lambda current: [
-                value for value in current if value != normalized_symbol
+                value for value in current if not symbols_equivalent(value, normalized_symbol)
             ],
         )
 

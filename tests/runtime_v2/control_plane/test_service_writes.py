@@ -114,3 +114,32 @@ def test_block_symbol_per_trader(ops_db):
     svc = RuntimeControlService(ops_db_path=ops_db)
     svc.block_symbol(scope_value="trader_a", symbol="SOLUSDT", created_by="42")
     assert svc.get_control().blacklist_per_trader.get("trader_a") == ["SOLUSDT"]
+
+
+def test_block_symbol_normalizes_slash_and_case_input(ops_db):
+    svc = RuntimeControlService(ops_db_path=ops_db)
+    res = svc.block_symbol(scope_value=None, symbol=" btc/usdt ", created_by="42")
+    assert res.symbol == "BTCUSDT"
+    assert res.blacklist == ["BTCUSDT"]
+    assert svc.get_control().blacklist_global == ["BTCUSDT"]
+
+
+def test_unblock_symbol_normalizes_equivalent_input_forms(ops_db):
+    svc = RuntimeControlService(ops_db_path=ops_db)
+    svc.block_symbol(scope_value=None, symbol="BTCUSDT", created_by="42")
+    res = svc.unblock_symbol(scope_value=None, symbol="btc/usdt")
+    assert res.symbol == "BTCUSDT"
+    assert res.blacklist == []
+    assert svc.get_control().blacklist_global == []
+
+
+def test_block_symbol_base_asset_form_matches_equivalent_unblock_input(ops_db):
+    svc = RuntimeControlService(ops_db_path=ops_db)
+    res = svc.block_symbol(scope_value=None, symbol="btc", created_by="42")
+    assert res.symbol == "BTC"
+    assert svc.get_control().blacklist_global == ["BTC"]
+
+    res2 = svc.unblock_symbol(scope_value=None, symbol="BTC/USDT")
+    assert res2.symbol == "BTCUSDT"
+    assert res2.blacklist == []
+    assert svc.get_control().blacklist_global == []

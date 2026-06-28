@@ -293,6 +293,82 @@ def test_per_trader_blacklisted_raw_symbol_is_blocked(tmp_path):
     assert enriched.reason_code == "symbol_blacklisted_trader"
 
 
+def test_db_global_blacklist_override_is_blocked(tmp_path):
+    from src.runtime_v2.control_plane.service import RuntimeControlService
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+
+    parser_db_path = str(tmp_path / "parser.db")
+    _apply_migrations(parser_db_path)
+
+    ops_db_path = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(ops_db_path)
+    for migration in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(migration.read_text(encoding="utf-8"))
+    conn.commit()
+    conn.close()
+
+    RuntimeControlService(ops_db_path=ops_db_path).block_symbol(
+        scope_value=None,
+        symbol="BTC/USDT",
+        created_by="42",
+    )
+
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path), ops_db_path=ops_db_path),
+        repository=EnrichedCanonicalMessageRepository(parser_db_path),
+    )
+    result = _make_parse_result(symbol="BTC/USDT")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "symbol_blacklisted_global"
+
+
+def test_db_per_trader_blacklist_override_normalizes_base_asset_and_blocks_pair(tmp_path):
+    from src.runtime_v2.control_plane.service import RuntimeControlService
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+
+    parser_db_path = str(tmp_path / "parser.db")
+    _apply_migrations(parser_db_path)
+
+    ops_db_path = str(tmp_path / "ops.sqlite3")
+    conn = sqlite3.connect(ops_db_path)
+    for migration in sorted(Path("db/ops_migrations").glob("*.sql")):
+        conn.executescript(migration.read_text(encoding="utf-8"))
+    conn.commit()
+    conn.close()
+
+    RuntimeControlService(ops_db_path=ops_db_path).block_symbol(
+        scope_value="trader_a",
+        symbol="btc",
+        created_by="42",
+    )
+
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path), ops_db_path=ops_db_path),
+        repository=EnrichedCanonicalMessageRepository(parser_db_path),
+    )
+    result = _make_parse_result(symbol="BTCUSDT")
+    enriched = proc.process(result)
+    assert enriched.enrichment_decision == "BLOCK"
+    assert enriched.reason_code == "symbol_blacklisted_trader"
+
+
 def test_price_sanity_symbol_ranges_match_slash_style_config(tmp_path):
     from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
     from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository

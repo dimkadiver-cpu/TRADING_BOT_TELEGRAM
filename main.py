@@ -530,7 +530,7 @@ async def _async_main(
 
     config_dir = str(root_dir / "config")
     enrichment_processor = SignalEnrichmentProcessor(
-        config_loader=OperationConfigLoader(config_dir),
+        config_loader=OperationConfigLoader(config_dir, ops_db_path=ops_db_path),
         repository=EnrichedCanonicalMessageRepository(parser_db_path),
         on_pass=new_enriched_event.set,
     )
@@ -647,7 +647,7 @@ async def _async_main(
             if _first_adapter_key
             else execution_runtime.adapter
         )
-        _op_config_loader = OperationConfigLoader(config_dir)
+        _op_config_loader = OperationConfigLoader(config_dir, ops_db_path=ops_db_path)
         _unfilled_interval = _op_config_loader.get_unfilled_price_check_interval()
         _unfilled_price_watcher = UnfilledPriceWatcher(
             ops_db_path=ops_db_path,

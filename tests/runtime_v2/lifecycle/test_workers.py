@@ -115,9 +115,9 @@ def _insert_enriched(parser_db: str, enrichment_id: int, enriched) -> None:
         """
         INSERT INTO enriched_canonical_messages (
             enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,
-            primary_class, enrichment_decision, enriched_signal_json,
+            primary_class, enrichment_decision, reason_code, enriched_signal_json,
             management_plan_json, policy_snapshot_json, lifecycle_processed, created_at
-        ) VALUES (?,?,?,?,?,?,?,?,?,?,0,?)
+        ) VALUES (?,?,?,?,?,?,?,?,?,?,?,0,?)
         """,
         (
             enrichment_id,
@@ -127,6 +127,7 @@ def _insert_enriched(parser_db: str, enrichment_id: int, enriched) -> None:
             enriched.account_id,
             enriched.primary_class,
             enriched.enrichment_decision,
+            enriched.reason_code,
             enriched.enriched_signal.model_dump_json() if enriched.enriched_signal else None,
             enriched.management_plan.model_dump_json() if enriched.management_plan else "{}",
             json.dumps(enriched.policy_snapshot),
@@ -257,6 +258,45 @@ def test_worker_block_new_entries_produces_reject(dbs):
     conn.close()
     assert chains[0] == 0
     assert reject_events[0] == 1
+
+
+def test_worker_blacklisted_signal_block_produces_no_chain_reject_and_clean_log(dbs):
+    parser_db, ops_db = dbs
+    enriched = _make_enriched_signal(enrichment_id=5)
+    enriched.enrichment_decision = "BLOCK"
+    enriched.reason_code = "symbol_blacklisted_global"
+    _insert_enriched(parser_db, 5, enriched)
+
+    worker = _make_worker(parser_db, ops_db)
+    count = worker.run_once()
+    assert count == 1
+
+    parser_conn = sqlite3.connect(parser_db)
+    processed = parser_conn.execute(
+        "SELECT lifecycle_processed FROM enriched_canonical_messages WHERE enrichment_id=?",
+        (5,),
+    ).fetchone()[0]
+    parser_conn.close()
+
+    conn = sqlite3.connect(ops_db)
+    chains = conn.execute("SELECT COUNT(*) FROM ops_trade_chains").fetchone()[0]
+    reject_row = conn.execute(
+        "SELECT trade_chain_id, payload_json FROM ops_lifecycle_events WHERE event_type='SIGNAL_REJECTED'"
+    ).fetchone()
+    outbox_row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox "
+        "WHERE notification_type='SIGNAL_REJECTED'"
+    ).fetchone()
+    conn.close()
+
+    assert processed == 1
+    assert chains == 0
+    assert reject_row is not None
+    assert reject_row[0] is None
+    payload = json.loads(reject_row[1])
+    assert payload["reason"] == "symbol_blacklisted_global"
+    assert payload["symbol"] == "BTC/USDT"
+    assert outbox_row is not None
 
 
 def _make_chain_in_db(ops_db: str, *, trade_chain_id_hint: int, state: str,

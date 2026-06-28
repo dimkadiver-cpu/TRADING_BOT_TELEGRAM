@@ -17,6 +17,7 @@ from src.runtime_v2.control_plane.status_queries import (
     NotExecutedView, OperationalIssuesView, ReviewsView, StatusView,
     StatusQueries, PnlView, StatsView, TradeDetail, TradesView,
 )
+from src.runtime_v2.symbols import to_raw_symbol
 
 @dataclass
 class VersionInfo:
@@ -261,30 +262,32 @@ class RuntimeControlService:
         self, *, scope_value: str | None, symbol: str, created_by: str
     ) -> BlockResult:
         scope_type = "GLOBAL" if scope_value is None else "PER_TRADER"
+        normalized_symbol = to_raw_symbol(symbol) or symbol.upper().strip()
         blacklist = self._overrides.add_symbol(
             scope_type=scope_type,
             scope_value=scope_value,
-            symbol=symbol,
+            symbol=normalized_symbol,
             created_by=created_by,
         )
         return BlockResult(
             scope_type=scope_type,
             scope_value=scope_value,
-            symbol=symbol.upper(),
+            symbol=normalized_symbol,
             blacklist=blacklist,
         )
 
     def unblock_symbol(self, *, scope_value: str | None, symbol: str) -> UnblockResult:
         scope_type = "GLOBAL" if scope_value is None else "PER_TRADER"
+        normalized_symbol = to_raw_symbol(symbol) or symbol.upper().strip()
         blacklist = self._overrides.remove_symbol(
             scope_type=scope_type,
             scope_value=scope_value,
-            symbol=symbol,
+            symbol=normalized_symbol,
         )
         return UnblockResult(
             scope_type=scope_type,
             scope_value=scope_value,
-            symbol=symbol.upper(),
+            symbol=normalized_symbol,
             blacklist=blacklist,
         )
 

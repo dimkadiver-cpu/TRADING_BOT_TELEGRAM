@@ -19,7 +19,7 @@ from src.runtime_v2.signal_enrichment.models import (
 )
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
 from src.runtime_v2.signal_enrichment.reshaping.setup_reshaper import apply_reshape
-from src.runtime_v2.symbols import to_raw_symbol
+from src.runtime_v2.symbols import symbol_matches_policy, to_raw_symbol
 from src.parser_v2.contracts.entities import Price, RiskHint, StopLoss, TakeProfit
 
 logger = logging.getLogger(__name__)
@@ -323,8 +323,7 @@ class SignalEnrichmentProcessor:
         if not symbol:
             return False
         for candidate in configured_symbols:
-            raw = to_raw_symbol(candidate)
-            if raw and (raw == symbol or symbol.startswith(raw)):
+            if symbol_matches_policy(candidate, symbol):
                 return True
         return False
 

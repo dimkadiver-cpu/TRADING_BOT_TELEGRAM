@@ -2,6 +2,43 @@
 
 ---
 
+## 2026-06-28 — Miglioramento `run_startup_checks()`: 7 nuovi controlli aggiunti
+
+### Step completato
+
+**Estensione del validatore di avvio** ✅  
+Aggiunti 7 nuovi controlli a `src/startup_check/validator.py` per coprire gap identificati nell'analisi del sistema di controllo al lancio.
+
+### Nuovi controlli
+
+| Check | Sezione | Severità | Cosa rileva |
+|---|---|---|---|
+| `TELEGRAM_ALLOWED_CHAT_IDS` env | Variabili d'ambiente | WARNING | fallback attivo invece di channels.yaml |
+| `account_mode` valido | operation_config.yaml | ERROR | valore non in `{single, per_trader_subaccount}` |
+| `unfilled_price_check_interval_seconds` positivo | operation_config.yaml | ERROR | valore ≤ 0 che causa loop busy |
+| File orfani in `config/traders/` | operation_config.yaml | WARNING | yaml presenti ma trader non registrato |
+| Sezione dedicata `setup_reshape_templates.yaml` | setup_reshape_templates.yaml | ERROR/WARNING | YAML invalido, campi mancanti, ID duplicati |
+| ID duplicati nei template reshape | setup_reshape_templates.yaml | ERROR | secondo template sovrascrive silenziosamente il primo |
+| Trader registrati senza canali attivi | channels.yaml | WARNING | trader configurato ma non alimentato da nessun canale |
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `src/startup_check/validator.py` | Modificato | +`_check_reshape_templates()`, +`_VALID_ACCOUNT_MODES`, 7 nuovi check distribuiti in funzioni esistenti e nuove |
+
+### Validazione
+
+- **Primary signal:** `python -m src.startup_check` eseguito — 0 errori, 6 warning attesi e corretti sul repo corrente.
+- **Secondary:** `python -m py_compile src/startup_check/validator.py` OK.
+- I 6 warning rilevati: 3 trader registrati senza canali attivi (rsi_intraday, rsi_swing, sma_intraday), 1 trader senza file yaml (trader_prova), 1 canale non attivo con trader_id sconosciuto, 1 alias canale non attivo con parser_profile sconosciuto.
+
+### Rischi aperti
+
+- Nessun rischio introdotto: il validator è read-only, non modifica stato.
+
+---
+
 ## 2026-06-25 — Verifica sistema di riconciliazione: implementato `run_funding_reconciliation`
 
 ### Stato del sistema di riconciliazione

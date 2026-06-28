@@ -2016,6 +2016,10 @@ class LifecycleEntryGate:
 import sqlite3 as _sqlite3
 
 _NO_CHAIN_LOGGABLE_EVENTS = frozenset({"SIGNAL_REJECTED"})
+_ENRICHMENT_BLOCK_TO_SIGNAL_REJECT_REASONS = frozenset({
+    "symbol_blacklisted_global",
+    "symbol_blacklisted_trader",
+})
 
 
 def _write_no_chain_signal_clean_log(
@@ -2077,12 +2081,20 @@ def _write_no_chain_signal_clean_log(
             "source": ev_data.get("source", "runtime"),
             "link": link,
         }
+        dedupe_key = ":".join([
+            "clean_no_chain",
+            event.event_type,
+            str(enriched.raw_message_id),
+            str(payload["symbol"] or ""),
+            str(payload["side"] or ""),
+            str(payload["reason"] or "unknown"),
+        ])
         write_clean_log_event(
             conn,
             notification_type=event.event_type,
             chain_id=None,
             payload=payload,
-            dedupe_key=f"clean:{event.idempotency_key}",
+            dedupe_key=dedupe_key,
         )
 
 
@@ -2132,12 +2144,18 @@ class LifecycleGateWorker:
             return conn.execute(
                 """
                 SELECT enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,
-                       primary_class, enrichment_decision, enriched_signal_json,
+                       primary_class, enrichment_decision, reason_code, enriched_signal_json,
                        enriched_actions_json, management_plan_json, policy_snapshot_json
                 FROM enriched_canonical_messages
                 WHERE lifecycle_processed=0
-                  AND enrichment_decision='PASS'
-                  AND primary_class IN ('SIGNAL','UPDATE')
+                  AND (
+                        (enrichment_decision='PASS' AND primary_class IN ('SIGNAL','UPDATE'))
+                     OR (
+                            primary_class='SIGNAL'
+                        AND enrichment_decision='BLOCK'
+                        AND reason_code IN ('symbol_blacklisted_global', 'symbol_blacklisted_trader')
+                     )
+                  )
                 ORDER BY created_at
                 LIMIT ?
                 """,
@@ -2272,7 +2290,7 @@ class LifecycleGateWorker:
 
         (
             enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id,
-            primary_class, enrichment_decision, enriched_signal_json,
+            primary_class, enrichment_decision, reason_code, enriched_signal_json,
             enriched_actions_json, management_plan_json, policy_snapshot_json,
         ) = row
 
@@ -2299,6 +2317,7 @@ class LifecycleGateWorker:
             account_id=account_id,
             primary_class=primary_class,
             enrichment_decision=enrichment_decision,
+            reason_code=reason_code,
             enriched_signal=enriched_signal,
             enriched_actions=enriched_actions,
             management_plan=management_plan,
@@ -2314,7 +2333,20 @@ class LifecycleGateWorker:
 
         if primary_class == "SIGNAL":
             admission = self._build_signal_admission_context(raw_message_id)
-            result = self._gate.process_signal(enriched, open_chains, control_mode, admission)
+            if (
+                enrichment_decision == "BLOCK"
+                and reason_code in _ENRICHMENT_BLOCK_TO_SIGNAL_REJECT_REASONS
+            ):
+                result = self._gate._reject_signal(
+                    enrichment_id,
+                    reason_code,
+                    account_id=account_id,
+                    trader_id=trader_id,
+                    symbol=symbol or None,
+                    side=side or None,
+                )
+            else:
+                result = self._gate.process_signal(enriched, open_chains, control_mode, admission)
             self._persist_signal(enriched, result)
         else:
             active_cmds = {

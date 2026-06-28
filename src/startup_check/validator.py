@@ -139,6 +139,14 @@ def _check_env(report: ValidationReport, root_dir: Path) -> None:
             f"LOG_LEVEL={log_level!r} non riconosciuto (attesi: {', '.join(sorted(_VALID_LOG_LEVELS))})",
         )
 
+    fallback_ids = os.getenv("TELEGRAM_ALLOWED_CHAT_IDS")
+    if fallback_ids:
+        report.warn(
+            section,
+            "TELEGRAM_ALLOWED_CHAT_IDS impostata: il filtro canali usa il fallback env invece di "
+            "channels.yaml — migra i chat_id nel file di configurazione per rimuovere questo avviso",
+        )
+
     for name, default in (
         ("PARSER_DB_PATH", root_dir / "db" / "parser.sqlite3"),
         ("OPS_DB_PATH", root_dir / "db" / "ops.sqlite3"),
@@ -239,6 +247,9 @@ def _check_channels(report: ValidationReport, root_dir: Path) -> None:
 
     registered = set(_registered_traders(root_dir))
 
+    # Raccoglie tutti i trader ID coperti da canali attivi (per il cross-check inverso)
+    traders_covered_by_channels: set[str] = set()
+
     for entry in raw.get("channels") or []:
         if not isinstance(entry, dict):
             continue
@@ -248,12 +259,24 @@ def _check_channels(report: ValidationReport, root_dir: Path) -> None:
         suffix = "" if active else " (canale non attivo)"
 
         trader_id = entry.get("trader_id")
-        if trader_id is not None and registered and str(trader_id) not in registered:
-            emit(
-                section,
-                f"canale '{label}': trader_id '{trader_id}' non presente in "
-                f"operation_config.yaml:registered_traders{suffix}",
-            )
+        if trader_id is not None:
+            if registered and str(trader_id) not in registered:
+                emit(
+                    section,
+                    f"canale '{label}': trader_id '{trader_id}' non presente in "
+                    f"operation_config.yaml:registered_traders{suffix}",
+                )
+            if active:
+                traders_covered_by_channels.add(str(trader_id))
+
+        # Raccoglie anche i trader da aliases e pattern_group (canali attivi)
+        if active:
+            aliases = (entry.get("resolution") or {}).get("aliases") or {}
+            traders_covered_by_channels.update(str(v) for v in aliases.values() if v)
+            pattern_group = (entry.get("resolution") or {}).get("pattern_group")
+            if pattern_group:
+                groups = _load_text_pattern_groups(root_dir)
+                traders_covered_by_channels.update(groups.get(str(pattern_group), set()))
 
         profile = entry.get("parser_profile") or trader_id
         if profile is not None and canonicalize_trader_v2 is not None:
@@ -265,6 +288,15 @@ def _check_channels(report: ValidationReport, root_dir: Path) -> None:
                 )
             else:
                 _check_profile_files(report, root_dir, canonical, label=str(label), active=active)
+
+    # Cross-check inverso: trader registrati senza nessun canale attivo che li alimenta
+    for tid in sorted(registered):
+        if str(tid) not in traders_covered_by_channels:
+            report.warn(
+                section,
+                f"trader '{tid}' presente in registered_traders ma senza nessun canale attivo "
+                "configurato in channels.yaml — non riceverà mai segnali",
+            )
 
 
 def _check_profile_files(
@@ -287,6 +319,9 @@ def _check_profile_files(
             emit(section, f"profilo '{profile}': {filename} non è JSON valido — {exc}")
 
 
+_VALID_ACCOUNT_MODES = {"single", "per_trader_subaccount"}
+
+
 def _check_operation_config(report: ValidationReport, root_dir: Path) -> None:
     section = "operation_config.yaml"
     path = root_dir / "config" / "operation_config.yaml"
@@ -294,10 +329,37 @@ def _check_operation_config(report: ValidationReport, root_dir: Path) -> None:
     if raw is None:
         return
 
+    # account_mode deve essere un valore riconosciuto
+    account_mode = raw.get("account_mode", "single")
+    if account_mode not in _VALID_ACCOUNT_MODES:
+        report.error(
+            section,
+            f"account_mode='{account_mode}' non riconosciuto "
+            f"(valori validi: {', '.join(sorted(_VALID_ACCOUNT_MODES))})",
+        )
+    else:
+        report.ok(section, f"account_mode='{account_mode}' valido")
+
+    # unfilled_price_check_interval_seconds deve essere un intero positivo
+    interval = (raw.get("global_safety") or {}).get("unfilled_price_check_interval_seconds")
+    if interval is not None:
+        try:
+            if int(interval) <= 0:
+                raise ValueError
+            report.ok(section, f"unfilled_price_check_interval_seconds={interval} valido")
+        except (ValueError, TypeError):
+            report.error(
+                section,
+                f"global_safety.unfilled_price_check_interval_seconds={interval!r} "
+                "deve essere un intero positivo",
+            )
+
     registered = raw.get("registered_traders")
     if not isinstance(registered, list) or not registered:
         report.error(section, "registered_traders mancante o vuoto")
         return
+
+    registered_set = {str(t) for t in registered}
 
     try:
         from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
@@ -327,11 +389,74 @@ def _check_operation_config(report: ValidationReport, root_dir: Path) -> None:
 
     per_trader = (raw.get("symbol_blacklist") or {}).get("per_trader") or {}
     for trader_id in per_trader:
-        if str(trader_id) not in {str(t) for t in registered}:
+        if str(trader_id) not in registered_set:
             report.warn(
                 section,
                 f"symbol_blacklist.per_trader contiene '{trader_id}' che non è tra i registered_traders",
             )
+
+    # File orfani in config/traders/: presenti sul disco ma non registrati
+    traders_dir = root_dir / "config" / "traders"
+    if traders_dir.is_dir():
+        for trader_file in sorted(traders_dir.glob("*.yaml")):
+            stem = trader_file.stem
+            if stem not in registered_set:
+                report.warn(
+                    section,
+                    f"config/traders/{trader_file.name}: trader '{stem}' non presente in "
+                    "registered_traders — file ignorato dal runtime",
+                )
+
+
+def _check_reshape_templates(report: ValidationReport, root_dir: Path) -> None:
+    section = "setup_reshape_templates.yaml"
+    path = root_dir / "config" / "setup_reshape_templates.yaml"
+    if not path.exists():
+        report.ok(section, "file assente — nessun trader usa setup_mode=reshape")
+        return
+
+    raw = _check_file_parses(report, section, path)
+    if raw is None:
+        return
+
+    templates = raw.get("templates")
+    if not isinstance(templates, list):
+        report.error(section, "chiave top-level 'templates' mancante o non è una lista")
+        return
+    if not templates:
+        report.warn(section, "lista 'templates' vuota")
+        return
+
+    _TEMPLATE_REQUIRED = ("id", "match", "entries", "stop_loss", "take_profits")
+    seen_ids: dict[str, int] = {}
+
+    for i, tpl in enumerate(templates):
+        if not isinstance(tpl, dict):
+            report.error(section, f"template[{i}]: atteso mapping, trovato {type(tpl).__name__}")
+            continue
+
+        tpl_id = tpl.get("id")
+        label = f"template '{tpl_id}'" if tpl_id else f"template[{i}]"
+
+        # Campi obbligatori
+        for field_name in _TEMPLATE_REQUIRED:
+            if field_name not in tpl:
+                report.error(section, f"{label}: campo obbligatorio '{field_name}' mancante")
+
+        if tpl_id is None:
+            continue
+
+        # ID duplicati
+        tpl_id = str(tpl_id)
+        if tpl_id in seen_ids:
+            report.error(
+                section,
+                f"id '{tpl_id}' duplicato (prima occorrenza a template[{seen_ids[tpl_id]}]) — "
+                "il secondo sovrascrive silenziosamente il primo nel runtime",
+            )
+        else:
+            seen_ids[tpl_id] = i
+            report.ok(section, f"template '{tpl_id}': struttura base valida")
 
 
 def _check_execution_config(report: ValidationReport, root_dir: Path) -> None:
@@ -635,6 +760,7 @@ def run_startup_checks(root_dir: Path) -> ValidationReport:
     _check_directories(report, root_dir)
     _check_channels(report, root_dir)
     _check_operation_config(report, root_dir)
+    _check_reshape_templates(report, root_dir)
     _check_text_patterns(report, root_dir)
     _check_execution_config(report, root_dir)
     _check_account_routing(report, root_dir)
