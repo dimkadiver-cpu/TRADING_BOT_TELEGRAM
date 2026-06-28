@@ -79,6 +79,11 @@ def test_save_raw_catchup_mode(repo):
     assert env.acquisition_mode == "catchup"
 
 
+def test_save_raw_edit_mode(repo):
+    env = repo.save_raw(_make_item(mode="edit"))
+    assert env.acquisition_mode == "edit"
+
+
 def test_save_raw_persists_message_presentation_type(repo):
     env = repo.save_raw(_make_item())
     assert env.message_presentation_type == "PLAIN"

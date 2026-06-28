@@ -10,7 +10,7 @@ AcquisitionStatus = Literal["ACQUIRED", "ACQUIRED_ELIGIBLE", "BLACKLISTED", "MED
 ProcessingStatusV2 = Literal[
     "pending", "processing", "done", "failed", "blacklisted", "review", "skipped"
 ]
-AcquisitionMode = Literal["live", "catchup", "import"]
+AcquisitionMode = Literal["live", "catchup", "import", "edit"]
 MessagePresentationType = Literal["PLAIN", "INLINE_BUTTONS"]
 
 
