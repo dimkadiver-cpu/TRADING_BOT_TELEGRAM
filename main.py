@@ -43,6 +43,7 @@ from src.runtime_v2.lifecycle.risk_capacity import RiskCapacityEngine
 from src.runtime_v2.lifecycle.static_exchange_data_port import StaticExchangeDataPort
 from src.runtime_v2.lifecycle.workers import LifecycleEventWorker, TimeoutWorker
 from src.runtime_v2.lifecycle.account_snapshot_worker import AccountSnapshotWorker
+from src.runtime_v2.lifecycle.unfilled_price_watcher import UnfilledPriceWatcher
 from src.runtime_v2.execution_gateway.command_worker import ExecutionCommandWorker
 from src.runtime_v2.execution_gateway.adapters.ccxt_bybit.ws_fill_watcher import BybitWsFillWatcher
 from src.runtime_v2.execution_gateway.adapters.factory import build_adapter
@@ -636,6 +637,26 @@ async def _async_main(
             stale_after_seconds=180,
         )
 
+    # Unfilled price watcher — cancel setups when price crosses TP without fill
+    _unfilled_price_watcher: UnfilledPriceWatcher | None = None
+    if execution_runtime is not None and _account_ids:
+        _primary_account_id = _account_ids[0]
+        _first_adapter_key = next(iter(execution_runtime.adapters), None)
+        _primary_adapter = (
+            execution_runtime.adapters[_first_adapter_key]
+            if _first_adapter_key
+            else execution_runtime.adapter
+        )
+        _op_config_loader = OperationConfigLoader(config_dir)
+        _unfilled_interval = _op_config_loader.get_unfilled_price_check_interval()
+        _unfilled_price_watcher = UnfilledPriceWatcher(
+            ops_db_path=ops_db_path,
+            chain_repo=chain_repo,
+            adapter=_primary_adapter,
+            execution_account_id=_primary_account_id,
+            interval_seconds=_unfilled_interval,
+        )
+
     client = TelegramClient(session_name, api_id, api_hash)
     await client.start()
 
@@ -719,6 +740,14 @@ async def _async_main(
         if _account_snapshot_worker is not None:
             account_snapshot_task = asyncio.create_task(_account_snapshot_worker.run())
             logger.info("account snapshot worker started | accounts=%s", _account_ids)
+
+        unfilled_watcher_task = None
+        if _unfilled_price_watcher is not None:
+            unfilled_watcher_task = asyncio.create_task(_unfilled_price_watcher.run())
+            logger.info(
+                "unfilled price watcher started | interval=%ds | account=%s",
+                _unfilled_interval, _primary_account_id,
+            )
 
         cp_dispatcher_task = None
         if cp_dispatcher is not None:

@@ -75,6 +75,13 @@ class OperationConfigLoader:
             .get(trader_id, [])
         )
 
+    def get_unfilled_price_check_interval(self) -> int:
+        """Return unfilled_price_check_interval_seconds from global_safety, default 60."""
+        return int(
+            self._global_raw.get("global_safety", {})
+            .get("unfilled_price_check_interval_seconds", 60)
+        )
+
     def get_policy_version(self, trader_id: str | None = None) -> str:
         if trader_id is None:
             payload: dict | str = self._global_raw
