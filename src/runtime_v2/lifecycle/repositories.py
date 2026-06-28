@@ -220,6 +220,37 @@ class TradeChainRepository:
         finally:
             conn.close()
 
+    def get_waiting_entry_with_unfilled_cancel_config(self, batch_size: int = 200) -> list[TradeChain]:
+        """Return WAITING_ENTRY chains that have cancel_unfilled_pending_after set
+        and no FILLED legs in plan_state_json."""
+        conn = sqlite3.connect(self._db_path)
+        try:
+            rows = conn.execute(
+                f"""
+                SELECT {_CHAIN_COLS}
+                FROM ops_trade_chains
+                WHERE lifecycle_state = 'WAITING_ENTRY'
+                  AND json_extract(management_plan_json, '$.cancel_unfilled_pending_after') IS NOT NULL
+                LIMIT ?
+                """,
+                (batch_size,),
+            ).fetchall()
+        finally:
+            conn.close()
+
+        result = []
+        for row in rows:
+            chain = _chain_from_row(row)
+            try:
+                plan = json.loads(chain.plan_state_json or "{}")
+                legs = plan.get("legs", [])
+                if any(leg.get("status") == "FILLED" for leg in legs):
+                    continue
+            except Exception:
+                continue
+            result.append(chain)
+        return result
+
     def update_state(
         self,
         trade_chain_id: int,
