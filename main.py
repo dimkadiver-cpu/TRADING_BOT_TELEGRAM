@@ -811,6 +811,8 @@ async def _async_main(
             lifecycle_task.cancel()
             if account_snapshot_task is not None:
                 account_snapshot_task.cancel()
+            if unfilled_watcher_task is not None:
+                unfilled_watcher_task.cancel()
             if cp_dispatcher_task is not None:
                 cp_dispatcher_task.cancel()
             if control_bot_task is not None:
