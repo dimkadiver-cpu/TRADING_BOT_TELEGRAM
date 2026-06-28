@@ -543,6 +543,16 @@ _PENDING_TIMEOUT_BLOCKS: list = [
     FooterBlock(default_source="timeout_worker"),
 ]
 
+_UNFILLED_TP_CANCEL_BLOCKS: list = [
+    HeaderBlock(emoji="⛔", event_label="SETUP CANCELLED"),
+    DerivedBlock(text_fn=lambda p:
+        f"Entry never filled. Price already crossed TP{str(p.get('tp_level', '?')).lstrip('tp').upper()}."
+    ),
+    FieldBlock("Threshold", key="threshold_price", fmt=num),
+    FieldBlock("Mark price", key="mark_price",     fmt=num),
+    FooterBlock(default_source="unfilled_price_watcher"),
+]
+
 _REENTRY_BLOCKS: list = [
     HeaderBlock(emoji="🔄", event_label="REENTRY ACCEPTED"),
     FieldBlock("Previous chain",
@@ -687,6 +697,7 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "UPDATE_REJECTED":        TemplateConfig(_UPDATE_BLOCKS,            _t_update_rejected),
     "PARTIAL_CLOSE_EXECUTED": TemplateConfig(_PARTIAL_RESULT_BLOCKS,   _t_partial_close),
     "PENDING_ENTRY_EXPIRED":  TemplateConfig(_PENDING_TIMEOUT_BLOCKS),
+    "ENTRY_CANCELLED_TP_REACHED": TemplateConfig(_UNFILLED_TP_CANCEL_BLOCKS),
     "REENTRY_ACCEPTED":       TemplateConfig(_REENTRY_BLOCKS),
     "CANCEL_FAILED":          TemplateConfig(_CANCEL_FAILED_BLOCKS),
     "RECONCILIATION_WARNING": TemplateConfig(_RECONCILIATION_WARN_BLOCKS),

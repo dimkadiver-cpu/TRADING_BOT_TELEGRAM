@@ -28,6 +28,7 @@ _CLEAN_LOG_EVENT_MAP: dict[str, str] = {
     "UPDATE_REJECTED": "UPDATE_REJECTED",
     "LIQUIDATION_FILLED": "LIQUIDATION_CLOSED",
     "STOP_MOVE_CONFIRMED": "STOP_MOVED",
+    "UNFILLED_TP_CANCEL": "ENTRY_CANCELLED_TP_REACHED",
 }
 
 _SIGNAL_NOTIFICATION_TYPES: frozenset[str] = frozenset({
@@ -646,6 +647,16 @@ def _build_payload(
         return {
             **base,
             "source": ev.get("source", "timeout_worker"),
+            "link": ev.get("source_message_link"),
+        }
+
+    if notification_type == "ENTRY_CANCELLED_TP_REACHED":
+        return {
+            **base,
+            "tp_level": ev.get("tp_level"),
+            "threshold_price": ev.get("threshold_price"),
+            "mark_price": ev.get("mark_price"),
+            "source": ev.get("source", "unfilled_price_watcher"),
             "link": ev.get("source_message_link"),
         }
 

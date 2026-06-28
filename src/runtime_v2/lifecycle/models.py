@@ -46,6 +46,7 @@ LifecycleEventType = Literal[
     "CLOSE_FULL_FILLED", "CLOSE_PARTIAL_FILLED",
     "AUTO_CANCEL_AVERAGING_REQUESTED",
     "ENGINE_RULE_UPDATE_ACCEPTED",
+    "UNFILLED_TP_CANCEL",
 ]
 
 ExchangeEventType = Literal[
