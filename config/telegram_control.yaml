@@ -95,7 +95,7 @@ per_account:
       clean_log:
         thread_id: null           # nessun topic fallback separato per demo_2
         per_trader:
-          trader_crypto_ninjias: 4500
+          trader_gg_shot: 4500
 
       tech_log:
         thread_id: 37             # condivide il tech_log con demo_1
