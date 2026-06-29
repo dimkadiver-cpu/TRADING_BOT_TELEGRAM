@@ -3320,37 +3320,123 @@ def test_persist_update_saves_new_plan_state_json_to_db(tmp_path):
 def test_persist_update_writes_multi_chain_summary_for_two_chains(tmp_path):
     import json
     import sqlite3
-    from src.core.migrations import apply_migrations as _core_apply
+    from src.runtime_v2 import lifecycle as _lifecycle_pkg
     from src.runtime_v2.lifecycle.entry_gate import LifecycleGateWorker, UpdateChainResult, UpdateGateResult
     from src.runtime_v2.lifecycle.models import LifecycleEvent
 
     parser_db = str(tmp_path / "parser.sqlite3")
     ops_db = str(tmp_path / "ops.sqlite3")
-    _core_apply(parser_db, "db/migrations")
-    _core_apply(ops_db, "db/ops_migrations")
 
     pconn = sqlite3.connect(parser_db)
+    pconn.executescript(
+        """
+        CREATE TABLE raw_messages (
+            raw_message_id INTEGER PRIMARY KEY,
+            source_chat_id TEXT,
+            telegram_message_id INTEGER
+        );
+        """
+    )
+    pconn.execute(
+        "INSERT INTO raw_messages (raw_message_id, source_chat_id, telegram_message_id) VALUES (?,?,?)",
+        (50, "-1003927267771", 365),
+    )
+    pconn.execute(
+        "CREATE TABLE enriched_canonical_messages ("
+        "enrichment_id INTEGER PRIMARY KEY, canonical_message_id INTEGER, raw_message_id INTEGER, "
+        "trader_id TEXT, account_id TEXT, primary_class TEXT, enrichment_decision TEXT, "
+        "policy_snapshot_json TEXT, lifecycle_processed INTEGER, created_at TEXT)"
+    )
     pconn.execute(
         "INSERT INTO enriched_canonical_messages "
         "(enrichment_id, canonical_message_id, raw_message_id, trader_id, account_id, "
         " primary_class, enrichment_decision, policy_snapshot_json, lifecycle_processed, created_at) "
         "VALUES (?,?,?,?,?,?,?,?,0,datetime('now'))",
-        (5, 5, 5, "t1", "acc_1", "UPDATE", "PASS", "{}"),
+        (5, 5, 50, "t1", "acc_1", "UPDATE", "PASS", "{}"),
     )
     pconn.commit()
     pconn.close()
 
     oconn = sqlite3.connect(ops_db)
+    oconn.executescript(
+        """
+        CREATE TABLE ops_trade_chains (
+            trade_chain_id INTEGER PRIMARY KEY,
+            source_enrichment_id INTEGER,
+            canonical_message_id INTEGER,
+            raw_message_id INTEGER,
+            trader_id TEXT,
+            account_id TEXT,
+            symbol TEXT,
+            side TEXT,
+            lifecycle_state TEXT,
+            entry_mode TEXT,
+            management_plan_json TEXT,
+            risk_snapshot_json TEXT,
+            plan_state_json TEXT,
+            be_protection_status TEXT,
+            updated_at TEXT
+        );
+        CREATE TABLE ops_lifecycle_events (
+            event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_chain_id INTEGER,
+            event_type TEXT,
+            source_type TEXT,
+            source_id TEXT,
+            previous_state TEXT,
+            next_state TEXT,
+            payload_json TEXT,
+            idempotency_key TEXT UNIQUE,
+            created_at TEXT
+        );
+        CREATE TABLE ops_execution_commands (
+            command_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            trade_chain_id INTEGER,
+            command_type TEXT,
+            status TEXT,
+            payload_json TEXT,
+            idempotency_key TEXT UNIQUE,
+            created_at TEXT,
+            updated_at TEXT
+        );
+        CREATE TABLE ops_notification_outbox (
+            notification_id INTEGER PRIMARY KEY AUTOINCREMENT,
+            notification_type TEXT,
+            destination TEXT,
+            payload_json TEXT,
+            priority TEXT,
+            status TEXT,
+            dedupe_key TEXT UNIQUE,
+            attempts INTEGER,
+            created_at TEXT,
+            send_after TEXT,
+            aggregation_group TEXT,
+            source_message_id TEXT,
+            account_id TEXT,
+            chain_id INTEGER
+        );
+        CREATE TABLE ops_clean_log_tracking (
+            trade_chain_id INTEGER PRIMARY KEY,
+            clean_log_root_message_id TEXT,
+            clean_log_last_message_id TEXT,
+            telegram_chat_id TEXT,
+            telegram_thread_id TEXT,
+            last_clean_log_event_type TEXT,
+            last_clean_log_sent_at TEXT,
+            updated_at TEXT
+        );
+        """
+    )
     now = datetime.now(timezone.utc).isoformat()
     for chain_id, symbol in ((10, "BTC/USDT"), (11, "ETH/USDT")):
         oconn.execute(
             "INSERT INTO ops_trade_chains "
             "(trade_chain_id, source_enrichment_id, canonical_message_id, raw_message_id, "
             " trader_id, account_id, symbol, side, lifecycle_state, entry_mode, "
-            " management_plan_json, risk_snapshot_json, plan_state_json, created_at, updated_at) "
+            " management_plan_json, risk_snapshot_json, plan_state_json, be_protection_status, updated_at) "
             "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
             (chain_id, chain_id, chain_id, chain_id, "t1", "acc_1", symbol, "LONG",
-             "OPEN", "ONE_SHOT", "{}", "{}", "{}", now, now),
+             "OPEN", "ONE_SHOT", "{}", "{}", "{}", "UNPROTECTED", now),
         )
     oconn.commit()
     oconn.close()
@@ -3386,10 +3472,15 @@ def test_persist_update_writes_multi_chain_summary_for_two_chains(tmp_path):
         snapshot_repo=None,
         control_repo=None,
     )
-    worker._persist_update(
-        _make_update_enriched(canonical_message_id=5),
-        UpdateGateResult(chain_results=[_cr(10), _cr(11)], review_events=[]),
-    )
+    original_projector = _lifecycle_pkg.entry_gate.project_clean_log_for_chain
+    _lifecycle_pkg.entry_gate.project_clean_log_for_chain = lambda conn, chain_id: 0
+    try:
+        worker._persist_update(
+            _make_update_enriched(canonical_message_id=5, trader_id="t1"),
+            UpdateGateResult(chain_results=[_cr(10), _cr(11)], review_events=[]),
+        )
+    finally:
+        _lifecycle_pkg.entry_gate.project_clean_log_for_chain = original_projector
 
     conn = sqlite3.connect(ops_db)
     row = conn.execute(
@@ -3401,6 +3492,8 @@ def test_persist_update_writes_multi_chain_summary_for_two_chains(tmp_path):
     payload = json.loads(row[0])
     assert {chain["chain_id"] for chain in payload["chains"]} == {10, 11}
     assert all(chain["status"] == "DONE" for chain in payload["chains"])
+    assert payload["trader_id"] == "t1"
+    assert payload["account_id"] == "acc_1"
 
 
 def test_write_multi_chain_summary_builds_autosufficient_chain_payload(tmp_path):
@@ -3439,7 +3532,9 @@ def test_write_multi_chain_summary_builds_autosufficient_chain_payload(tmp_path)
             created_at TEXT,
             send_after TEXT,
             aggregation_group TEXT,
-            source_message_id TEXT
+            source_message_id TEXT,
+            account_id TEXT,
+            chain_id INTEGER
         );
         """
     )
@@ -3490,6 +3585,8 @@ def test_write_multi_chain_summary_builds_autosufficient_chain_payload(tmp_path)
         ],
         canonical_message_id=365,
         update_source_link="https://t.me/c/3927267771/365",
+        trader_id="trader_a",
+        account_id="demo_1",
     )
 
     row = conn.execute(
@@ -3501,6 +3598,8 @@ def test_write_multi_chain_summary_builds_autosufficient_chain_payload(tmp_path)
     assert "Entry_2: 61,192.03 -> cancelled" in payload["chains"][0]["display_lines"]
     assert payload["chains"][1]["display_lines"][0] == "Entry_2: SKIPPED - no pending averaging order"
     assert payload["link"] == "https://t.me/c/3927267771/365"
+    assert payload["trader_id"] == "trader_a"
+    assert payload["account_id"] == "demo_1"
 
 
 def test_write_multi_chain_summary_skips_immediate_emit_for_close_full(tmp_path):
@@ -3535,7 +3634,9 @@ def test_write_multi_chain_summary_skips_immediate_emit_for_close_full(tmp_path)
             created_at TEXT,
             send_after TEXT,
             aggregation_group TEXT,
-            source_message_id TEXT
+            source_message_id TEXT,
+            account_id TEXT,
+            chain_id INTEGER
         );
         """
     )
@@ -3564,12 +3665,20 @@ def test_write_multi_chain_summary_skips_immediate_emit_for_close_full(tmp_path)
         ],
         canonical_message_id=365,
         update_source_link='https://t.me/c/3927267771/365',
+        trader_id="trader_a",
+        account_id="demo_1",
     )
 
     row = conn.execute(
         "SELECT COUNT(*) FROM ops_notification_outbox WHERE notification_type='MULTI_CHAIN_SUMMARY'"
     ).fetchone()[0]
     assert row == 0
+    pending = conn.execute(
+        "SELECT payload_json FROM ops_pending_multi_chain_summaries WHERE canonical_message_id=365"
+    ).fetchone()
+    payload = json.loads(pending[0])
+    assert payload["trader_id"] == "trader_a"
+    assert payload["account_id"] == "demo_1"
 
 
 def test_market_entry_now_cancel_mode_full_roundtrip(tmp_path):

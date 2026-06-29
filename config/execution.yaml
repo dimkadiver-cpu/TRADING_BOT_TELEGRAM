@@ -42,6 +42,7 @@ execution:
     live_1:                         # Locale demo, instradato verso adapter demo.
       adapter: bybit_live_1
       execution_account_id: live_1
+      position_mode: one_way
 
     live_2:
       adapter: bybit_live_2

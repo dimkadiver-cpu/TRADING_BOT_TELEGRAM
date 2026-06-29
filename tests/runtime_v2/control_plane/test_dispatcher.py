@@ -569,6 +569,31 @@ def _config_per_trader(trader_thread: int = 77):
     )
 
 
+def _config_per_account_and_trader() -> ControlPlaneConfig:
+    return ControlPlaneConfig(
+        token="t",
+        default_account="main",
+        per_account={
+            "main": AccountConfig(
+                chat_id=-100999,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=101),
+                    tech_log=TechLogConfig(thread_id=102),
+                    clean_log=CleanLogConfig(thread_id=103, per_trader={"trader_a": 77}),
+                ),
+            ),
+            "demo_2": AccountConfig(
+                chat_id=-1004240829081,
+                topics=AccountTopicsConfig(
+                    commands=TopicConfig(thread_id=None),
+                    tech_log=TechLogConfig(thread_id=37),
+                    clean_log=CleanLogConfig(thread_id=None, per_trader={"trader_devos_crypto": 1024}),
+                ),
+            ),
+        },
+    )
+
+
 @pytest.mark.asyncio
 async def test_update_done_with_trader_id_routes_to_per_trader_thread(ops_db):
     """UPDATE_DONE payload must carry trader_id so the dispatcher routes to the per-trader thread."""
@@ -616,6 +641,49 @@ async def test_update_done_with_trader_id_routes_to_per_trader_thread(ops_db):
     assert sender.sent[0]["thread_id"] == 77, (
         "UPDATE_DONE must route to per-trader thread when trader_id is present in payload"
     )
+
+
+@pytest.mark.asyncio
+async def test_multi_chain_summary_routes_to_specific_account_and_trader_thread(ops_db):
+    cfg = _config_per_account_and_trader()
+    sender = FakeSender()
+    disp = TelegramNotificationDispatcher(
+        config=cfg,
+        ops_db_path=ops_db,
+        topic_router=TopicRouter(cfg),
+        sender=sender,
+    )
+    conn = sqlite3.connect(ops_db)
+    with conn:
+        now = datetime.now(timezone.utc).isoformat()
+        conn.execute(
+            "INSERT INTO ops_notification_outbox "
+            "(notification_type, destination, payload_json, priority, status, dedupe_key, attempts, created_at, account_id) "
+            "VALUES ('MULTI_CHAIN_SUMMARY', 'CLEAN_LOG', ?, 'MEDIUM', 'PENDING', 'test:mcs:route', 0, ?, ?)",
+            (
+                json.dumps({
+                    "summary_kind": "immediate",
+                    "requested_operations": ["Move SL to BE"],
+                    "chains": [
+                        {"chain_id": 42, "symbol": "BTC/USDT", "side": "LONG", "status": "DONE", "display_lines": []},
+                        {"chain_id": 43, "symbol": "ETH/USDT", "side": "LONG", "status": "DONE", "display_lines": []},
+                    ],
+                    "counts": {"done": 2, "partial": 0, "skipped": 0, "error": 0},
+                    "source": "trader_update",
+                    "trader_id": "trader_devos_crypto",
+                    "account_id": "demo_2",
+                }),
+                now,
+                "demo_2",
+            ),
+        )
+    conn.close()
+
+    await disp.drain_once()
+
+    assert len(sender.sent) == 1
+    assert sender.sent[0]["chat_id"] == -1004240829081
+    assert sender.sent[0]["thread_id"] == 1024
 
 
 @pytest.mark.asyncio

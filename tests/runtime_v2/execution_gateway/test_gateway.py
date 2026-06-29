@@ -160,6 +160,83 @@ def test_capability_missing_produces_review_required(ops_db):
     assert status == "REVIEW_REQUIRED"
 
 
+def test_one_way_routing_normalizes_hedge_payload_before_send(ops_db, tmp_path):
+    import yaml
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    cfg = {
+        "execution": {
+            "default_adapter": "fake",
+            "account_routing": {
+                "default": {
+                    "adapter": "fake",
+                    "execution_account_id": "acc_main",
+                    "position_mode": "one_way",
+                }
+            },
+            "adapters": {
+                "fake": {
+                    "type": "fake",
+                    "mode": "paper",
+                    "connector": "fake_connector",
+                }
+            },
+        }
+    }
+    config_path = tmp_path / "execution.yaml"
+    config_path.write_text(yaml.dump(cfg))
+
+    _insert_cmd(ops_db, 1004, payload={
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_type": "LIMIT",
+        "price": 50000.0,
+        "qty": 0.02,
+        "sequence": 1,
+        "leverage": 5,
+        "hedge_mode": True,
+        "position_idx": 1,
+    })
+    repo = GatewayCommandRepository(ops_db)
+    fake = FakeAdapter()
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader(str(config_path)).load(),
+        adapter_registry={"fake": fake},
+        repo=repo,
+    )
+
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 1004)
+    gw.process(cmd, account_id="acc_1")
+
+    set_leverage_calls = [c for c in fake.calls if c["action"] == "set_leverage"]
+    place_calls = [c for c in fake.calls if c["action"] == "place_order"]
+    assert set_leverage_calls
+    assert place_calls
+    assert set_leverage_calls[-1]["position_idx"] == 0
+    assert place_calls[-1]["payload"]["hedge_mode"] is False
+    assert place_calls[-1]["payload"]["position_idx"] == 0
+
+    conn = sqlite3.connect(ops_db)
+    row = conn.execute(
+        "SELECT notification_type, payload_json FROM ops_notification_outbox "
+        "WHERE destination='TECH_LOG' AND notification_type='GATEWAY_POSITION_MODE_NORMALIZED' "
+        "ORDER BY notification_id DESC LIMIT 1"
+    ).fetchone()
+    conn.close()
+    assert row is not None
+    payload = json.loads(row[1])
+    assert row[0] == "GATEWAY_POSITION_MODE_NORMALIZED"
+    assert payload["level"] == "WARNING"
+    assert payload["from_hedge_mode"] is True
+    assert payload["to_hedge_mode"] is False
+    assert payload["from_position_idx"] == 1
+    assert payload["to_position_idx"] == 0
+    assert payload["execution_account_id"] == "acc_main"
+
+
 def test_adapter_error_sets_retry(ops_db):
     from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
     from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader

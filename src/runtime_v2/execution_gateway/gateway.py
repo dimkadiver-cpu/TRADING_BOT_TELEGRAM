@@ -88,6 +88,19 @@ def _command_nonce(cmd: ExecutionCommand) -> str | None:
     return _base36(timestamp_ms)
 
 
+def _normalize_payload_for_position_mode(payload: dict, *, position_mode: str) -> dict:
+    if position_mode != "one_way":
+        return payload
+    hedge_mode = bool(payload.get("hedge_mode", False))
+    position_idx = int(payload.get("position_idx", 0))
+    if not hedge_mode and position_idx == 0:
+        return payload
+    normalized = dict(payload)
+    normalized["hedge_mode"] = False
+    normalized["position_idx"] = 0
+    return normalized
+
+
 class ExecutionGateway:
     def __init__(
         self,
@@ -191,7 +204,22 @@ class ExecutionGateway:
             )
             return
 
-        payload = json.loads(cmd.payload_json)
+        original_payload = json.loads(cmd.payload_json)
+        payload = _normalize_payload_for_position_mode(
+            original_payload,
+            position_mode=routing.position_mode,
+        )
+        if payload != original_payload:
+            self._repo.write_position_mode_normalized_tech_log(
+                cmd.command_id,
+                command_type=cmd.command_type,
+                execution_account_id=routing.execution_account_id,
+                configured_position_mode=routing.position_mode,
+                from_hedge_mode=bool(original_payload.get("hedge_mode", False)),
+                to_hedge_mode=bool(payload.get("hedge_mode", False)),
+                from_position_idx=int(original_payload.get("position_idx", 0)),
+                to_position_idx=int(payload.get("position_idx", 0)),
+            )
         symbol = payload.get("symbol", "")
 
         # ── Resolve deferred MARKET qty ───────────────────────────────────────

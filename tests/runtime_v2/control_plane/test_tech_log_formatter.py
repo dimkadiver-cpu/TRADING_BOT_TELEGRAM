@@ -157,6 +157,30 @@ def test_gateway_command_failed_no_chain_id():
     assert "Reason: some error" in text
 
 
+def test_gateway_position_mode_normalized_fields():
+    text = _render("GATEWAY_POSITION_MODE_NORMALIZED", {
+        "command_type": "PLACE_ENTRY_WITH_ATTACHED_TPSL",
+        "chain_id": 188,
+        "trader_id": "trader_gg_shot",
+        "execution_account_id": "live_1",
+        "configured_position_mode": "one_way",
+        "from_hedge_mode": True,
+        "to_hedge_mode": False,
+        "from_position_idx": 1,
+        "to_position_idx": 0,
+        "source": "execution_gateway",
+    })
+    assert "GATEWAY: POSITION MODE NORMALIZED" in text
+    assert "ordine convertito automaticamente" in text
+    assert "Command: PLACE_ENTRY_WITH_ATTACHED_TPSL" in text
+    assert "#188" in text
+    assert "Trader: trader_gg_shot" in text
+    assert "Exchange Account: live_1" in text
+    assert "Position mode: one_way" in text
+    assert "hedge_mode True -> False, position_idx 1 -> 0" in text
+    assert "Source: execution_gateway" in text
+
+
 def test_all_runtime_and_gateway_types_are_registered():
     expected = {
         "RUNTIME_STARTING",
@@ -167,6 +191,7 @@ def test_all_runtime_and_gateway_types_are_registered():
         "GATEWAY_ENTRY_ALL_FAILED",
         "GATEWAY_REVIEW_REQUIRED",
         "GATEWAY_COMMAND_FAILED",
+        "GATEWAY_POSITION_MODE_NORMALIZED",
     }
     assert expected == set(TEMPLATE_REGISTRY.keys())
 

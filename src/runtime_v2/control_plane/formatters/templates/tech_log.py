@@ -108,6 +108,36 @@ _GATEWAY_COMMAND_FAILED = TemplateConfig([
     FooterBlock(default_source="execution_gateway"),
 ])
 
+_GATEWAY_POSITION_MODE_NORMALIZED = TemplateConfig([
+    *_tech_header("âš ï¸", "GATEWAY", "POSITION MODE NORMALIZED"),
+    DerivedBlock(
+        text_fn=lambda p: (
+            "Account in one-way mode: ordine convertito automaticamente "
+            "da hedge mode a one-way prima dell'invio."
+        )
+    ),
+    FieldBlock("Command", key="command_type", fmt=text, optional=True),
+    FieldBlock(
+        "Chain",
+        value_fn=lambda p: f"#{p['chain_id']}" if p.get("chain_id") is not None else None,
+        fmt=text, optional=True,
+    ),
+    FieldBlock("Trader", key="trader_id", fmt=text, optional=True),
+    FieldBlock("Exchange Account", key="execution_account_id", fmt=text, optional=True),
+    FieldBlock("Position mode", key="configured_position_mode", fmt=text, optional=True),
+    FieldBlock(
+        "Normalization",
+        value_fn=lambda p: (
+            f"hedge_mode {p.get('from_hedge_mode')} -> {p.get('to_hedge_mode')}, "
+            f"position_idx {p.get('from_position_idx')} -> {p.get('to_position_idx')}"
+        ),
+        fmt=text,
+        optional=False,
+        default="n/a",
+    ),
+    FooterBlock(default_source="execution_gateway"),
+])
+
 
 TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "RUNTIME_STARTING":         _RUNTIME_STARTING,
@@ -118,4 +148,5 @@ TEMPLATE_REGISTRY: dict[str, TemplateConfig] = {
     "GATEWAY_ENTRY_ALL_FAILED": _GATEWAY_ENTRY_ALL_FAILED,
     "GATEWAY_REVIEW_REQUIRED":  _GATEWAY_REVIEW_REQUIRED,
     "GATEWAY_COMMAND_FAILED":   _GATEWAY_COMMAND_FAILED,
+    "GATEWAY_POSITION_MODE_NORMALIZED": _GATEWAY_POSITION_MODE_NORMALIZED,
 }

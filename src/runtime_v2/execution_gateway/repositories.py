@@ -387,6 +387,49 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def write_position_mode_normalized_tech_log(
+        self,
+        command_id: int,
+        *,
+        command_type: str,
+        execution_account_id: str,
+        configured_position_mode: str,
+        from_hedge_mode: bool,
+        to_hedge_mode: bool,
+        from_position_idx: int,
+        to_position_idx: int,
+    ) -> None:
+        from src.runtime_v2.control_plane.outbox_writer import write_tech_log_event
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                ctx = self._get_command_context(conn, command_id)
+                write_tech_log_event(
+                    conn,
+                    notification_type="GATEWAY_POSITION_MODE_NORMALIZED",
+                    payload={
+                        "level": "WARNING",
+                        "command_id": command_id,
+                        "command_type": command_type,
+                        "chain_id": ctx["trade_chain_id"],
+                        "trader_id": ctx["trader_id"],
+                        "execution_account_id": execution_account_id,
+                        "symbol": ctx["symbol"],
+                        "side": ctx["side"],
+                        "configured_position_mode": configured_position_mode,
+                        "from_hedge_mode": from_hedge_mode,
+                        "to_hedge_mode": to_hedge_mode,
+                        "from_position_idx": from_position_idx,
+                        "to_position_idx": to_position_idx,
+                        "source": "execution_gateway",
+                    },
+                    dedupe_key=f"gw_position_mode_normalized:{command_id}",
+                    priority="MEDIUM",
+                    account_id=str(execution_account_id),
+                )
+        finally:
+            conn.close()
+
     def cancel_chain_if_all_entries_failed(
         self, trade_chain_id: int, command_type: str, *, reason: str
     ) -> bool:

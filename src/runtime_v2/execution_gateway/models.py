@@ -66,6 +66,7 @@ class AccountRoutingEntry(BaseModel):
     model_config = ConfigDict(extra="forbid")
     adapter: str
     execution_account_id: str
+    position_mode: Literal["hedge", "one_way"] = "hedge"
 
 
 class ExecutionConfig(BaseModel):

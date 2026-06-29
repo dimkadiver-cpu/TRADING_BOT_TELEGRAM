@@ -439,6 +439,8 @@ def _write_pending_close_full_summary(
     source: str,
     update_source_link: str | None,
     canonical_message_id: int,
+    trader_id: str | None,
+    account_id: str | None,
 ) -> None:
     pending_chains = [
         {
@@ -467,6 +469,8 @@ def _write_pending_close_full_summary(
         "counts": {"done": done, "partial": partial, "skipped": skipped, "error": error},
         "source": source,
         "link": update_source_link,
+        "trader_id": trader_id,
+        "account_id": account_id,
     }
     conn.execute(
         "CREATE TABLE IF NOT EXISTS ops_pending_multi_chain_summaries "
@@ -484,6 +488,8 @@ def _write_multi_chain_summary(
     chain_results: list["UpdateChainResult"],
     canonical_message_id: int,
     update_source_link: str | None = None,
+    trader_id: str | None = None,
+    account_id: str | None = None,
 ) -> None:
     chains_by_id: dict[int, dict] = {}
     operations_seen: list[str] = []
@@ -561,6 +567,8 @@ def _write_multi_chain_summary(
             source,
             update_source_link,
             canonical_message_id,
+            trader_id,
+            account_id,
         )
         return
 
@@ -583,7 +591,10 @@ def _write_multi_chain_summary(
             "counts": {"done": done, "partial": partial, "skipped": skipped, "error": error},
             "source": source,
             "link": update_source_link,
+            "trader_id": trader_id,
+            "account_id": account_id,
         },
+        account_id=account_id,
         dedupe_key=f"clean:multi_summary:{canonical_message_id}",
     )
 
@@ -2758,7 +2769,14 @@ class LifecycleGateWorker:
                                 "update clean_log synthesis failed for chain %s", _chain_id
                             )
                 try:
-                    _write_multi_chain_summary(conn, result.chain_results, enriched.canonical_message_id, update_source_link)
+                    _write_multi_chain_summary(
+                        conn,
+                        result.chain_results,
+                        enriched.canonical_message_id,
+                        update_source_link,
+                        trader_id=enriched.trader_id,
+                        account_id=enriched.account_id,
+                    )
                 except Exception:
                     logger.exception(
                         "multi_chain_summary failed for canonical_message_id=%s",

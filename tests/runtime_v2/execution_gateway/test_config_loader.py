@@ -65,6 +65,34 @@ def test_resolve_routing_specific(tmp_path):
     config = ExecutionConfigLoader(str(p)).load()
     routing, _ = config.resolve_routing("acc_trader_a")
     assert routing.execution_account_id == "acc_a"
+    assert routing.position_mode == "hedge"
+
+
+def test_resolve_routing_reads_position_mode(tmp_path):
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    cfg = {
+        "execution": {
+            "default_adapter": "fake",
+            "account_routing": {
+                "default": {
+                    "adapter": "fake",
+                    "execution_account_id": "acc_main",
+                    "position_mode": "one_way",
+                }
+            },
+            "adapters": {
+                "fake": {
+                    "type": "fake", "mode": "paper",
+                    "connector": "fake_connector",
+                }
+            },
+        }
+    }
+    p = tmp_path / "execution.yaml"
+    p.write_text(yaml.dump(cfg))
+    config = ExecutionConfigLoader(str(p)).load()
+    routing, _ = config.resolve_routing("acc_unknown")
+    assert routing.position_mode == "one_way"
 
 
 def test_missing_default_routing_raises(tmp_path):
