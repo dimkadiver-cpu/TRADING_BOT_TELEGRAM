@@ -308,6 +308,19 @@ def _insert_entry_filled_event(conn, event_id, chain_id, filled_leg_sequence):
     )
 
 
+def _insert_entry_updated_event(conn, event_id, chain_id, filled_leg_sequence):
+    import datetime as dt
+    now = dt.datetime.now(dt.timezone.utc).isoformat()
+    conn.execute(
+        "INSERT INTO ops_lifecycle_events "
+        "(event_id, trade_chain_id, event_type, source_type, payload_json, idempotency_key, created_at) "
+        "VALUES (?,?,?,?,?,?,?)",
+        (event_id, chain_id, "ENTRY_UPDATED", "exchange_event",
+         json.dumps({"filled_leg_sequence": filled_leg_sequence, "fill_price": 1.0953, "filled_qty": 100.0}),
+         f"entry_updated:{chain_id}:{filled_leg_sequence}", now),
+    )
+
+
 def test_load_pending_excludes_entry_with_filled_lifecycle_event_race_condition(tmp_path):
     """Race condition: entry in status SENT ma già confermata FILLED in ops_lifecycle_events
     (il DB command non è ancora DONE) — non deve essere inclusa nel cancel batch."""
@@ -327,6 +340,23 @@ def test_load_pending_excludes_entry_with_filled_lifecycle_event_race_condition(
     conn.close()
 
     # Leg 1 deve essere esclusa nonostante status SENT
+    assert ids == ["tsb:10:2:entry:2"]
+
+
+def test_load_pending_excludes_entry_with_entry_updated_lifecycle_event(tmp_path):
+    """Una leg gia fillata via ENTRY_UPDATED non deve essere considerata ancora cancellabile."""
+    from src.runtime_v2.lifecycle.cancel_expander import load_pending_entry_client_order_ids
+    db = str(tmp_path / "ops.sqlite3")
+    _apply_migrations(db)
+    conn = sqlite3.connect(db)
+    _insert_place_entry_cmd_with_sequence(conn, 1, 10, "tsb:10:1:entry:1", sequence=1, status="SENT")
+    _insert_place_entry_cmd_with_sequence(conn, 2, 10, "tsb:10:2:entry:2", sequence=2, status="SENT")
+    _insert_entry_updated_event(conn, 201, 10, filled_leg_sequence=1)
+    conn.commit()
+
+    ids = load_pending_entry_client_order_ids(conn, 10)
+    conn.close()
+
     assert ids == ["tsb:10:2:entry:2"]
 
 

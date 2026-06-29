@@ -79,7 +79,7 @@ def load_pending_entry_client_order_ids(
               SELECT json_extract(le.payload_json, '$.filled_leg_sequence')
               FROM ops_lifecycle_events le
               WHERE le.trade_chain_id = ?
-                AND le.event_type = 'ENTRY_FILLED'
+                AND le.event_type IN ('ENTRY_FILLED', 'ENTRY_UPDATED')
                 AND json_extract(le.payload_json, '$.filled_leg_sequence') IS NOT NULL
           )
         ORDER BY command_id
