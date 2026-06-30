@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Centrale - Instance</title>
+    <link rel="stylesheet" href="./assets/styles.css">
+  </head>
+  <body>
+    <noscript>
+      <main class="app-shell">
+        <section class="panel">
+          <h1>Dashboard Centrale - Instance</h1>
+          <p class="muted">Questa pagina richiede JavaScript per caricare il dettaglio istanza dal dataset locale condiviso.</p>
+          <p><a href="./index.html">Torna alla fleet view</a></p>
+        </section>
+      </main>
+    </noscript>
+    <main class="app-shell" id="app"></main>
+    <script src="./assets/data.js"></script>
+    <script src="./assets/app.js"></script>
+    <script>
+      var root = document.getElementById("app");
+      var instanceId = getParam("id");
+      var sourceInstance = findInstance(instanceId);
+
+      function asRecord(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      }
+
+      function asArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function asText(value, fallback) {
+        var safeFallback = typeof fallback === "undefined" ? "n/a" : fallback;
+
+        if (typeof value === "string") {
+          var trimmed = value.trim();
+          return trimmed.length > 0 ? trimmed : safeFallback;
+        }
+
+        if (typeof value === "number" && isFinite(value)) {
+          return String(value);
+        }
+
+        return safeFallback;
+      }
+
+      function asCount(value) {
+        return typeof value === "number" && isFinite(value) ? value : 0;
+      }
+
+      function normalizeStatus(value, allowed, fallback) {
+        var normalized = asText(value, fallback).toLowerCase();
+        return allowed.indexOf(normalized) !== -1 ? normalized : fallback;
+      }
+
+      function renderLinkedList(items, buildItem) {
+        if (!items.length) {
+          return '<li class="muted">None</li>';
+        }
+
+        return items.map(buildItem).join("");
+      }
+
+      function renderTraderItem(trader) {
+        return [
+          "<li>",
+          '<a href="./trader.html?id=', encodeURIComponent(trader.id), '"><strong>', escapeHtml(trader.name), "</strong></a>",
+          " | ", escapeHtml(trader.sourceChannel),
+          '<span class="inline-meta"> | ', escapeHtml(trader.mappingStatus), " | ", escapeHtml(trader.profile), "</span>",
+          "</li>"
+        ].join("");
+      }
+
+      function renderTradeItem(trade) {
+        return [
+          "<li>",
+          '<a href="./trade.html?id=', encodeURIComponent(trade.id), '"><strong>', escapeHtml(trade.symbol), "</strong></a>",
+          " | ", escapeHtml(trade.side),
+          " | ", escapeHtml(trade.state),
+          '<span class="inline-meta"> | ', escapeHtml(trade.pnl), "</span>",
+          "</li>"
+        ].join("");
+      }
+
+      function buildPageHtml(instance, relatedTraders, relatedTrades, latestAlert, traderCount) {
+        return [
+          '<nav class="breadcrumbs" aria-label="Breadcrumb">',
+          '<a href="./index.html">Fleet</a>',
+          "<span>/</span>",
+          '<span aria-current="page">', escapeHtml(instance.name), "</span>",
+          "</nav>",
+
+          '<section class="hero">',
+          "<div>",
+          '<p class="eyebrow">Instance Detail</p>',
+          "<h2>Contesto operativo della singola istanza</h2>",
+          '<p class="subtitle">',
+          "Vista locale con stato dei sottosistemi, sintesi trading e collegamenti verso trader e trade chain.",
+          "</p>",
+          "</div>",
+          '<div class="hero-meta">',
+          '<div class="stat-card">',
+          '<div class="stat-label">Identity</div>',
+          "<div>", renderBadge(instance.status, statusClass(instance.status)), "</div>",
+          '<p class="stat-note">', escapeHtml(instance.type), " | ", escapeHtml(instance.server), "</p>",
+          "</div>",
+          '<div class="stat-card">',
+          '<div class="stat-label">Alert Severity</div>',
+          "<div>", renderBadge(instance.alertSeverity, severityClass(instance.alertSeverity)), "</div>",
+          '<p class="stat-note">', escapeHtml(latestAlert), "</p>",
+          "</div>",
+          "</div>",
+          "</section>",
+
+          '<div class="stack">',
+          '<section class="metric-grid">',
+          '<article class="stat-card">',
+          '<div class="stat-label">Heartbeat</div>',
+          '<div class="stat-value">', escapeHtml(instance.heartbeat), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Open Positions</div>',
+          '<div class="stat-value">', escapeHtml(String(instance.openPositions)), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Active Orders</div>',
+          '<div class="stat-value">', escapeHtml(String(instance.activeOrders)), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Traders</div>',
+          '<div class="stat-value">', escapeHtml(String(traderCount)), "</div>",
+          "</article>",
+          "</section>",
+
+          '<section class="layout-two">',
+          '<div class="stack">',
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Subsystems</p>',
+          '<h2 class="section-title">Salute dei sottosistemi</h2>',
+          "</div>",
+          "</div>",
+          '<div class="detail-grid">',
+          "<div>",
+          renderBadge("telegram listener", systemClass(instance.subsystems.telegram)),
+          '<p class="stat-note">', escapeHtml(instance.subsystems.telegram), "</p>",
+          "</div>",
+          "<div>",
+          renderBadge("parser", systemClass(instance.subsystems.parser)),
+          '<p class="stat-note">', escapeHtml(instance.subsystems.parser), "</p>",
+          "</div>",
+          "<div>",
+          renderBadge("lifecycle", systemClass(instance.subsystems.lifecycle)),
+          '<p class="stat-note">', escapeHtml(instance.subsystems.lifecycle), "</p>",
+          "</div>",
+          "<div>",
+          renderBadge("execution gateway", systemClass(instance.subsystems.execution)),
+          '<p class="stat-note">', escapeHtml(instance.subsystems.execution), "</p>",
+          "</div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Trading Summary</p>',
+          '<h2 class="section-title">Sintesi trading</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Open positions</span><strong>', escapeHtml(String(instance.openPositions)), "</strong></div>",
+          '<div class="key-row"><span>Active orders</span><strong>', escapeHtml(String(instance.activeOrders)), "</strong></div>",
+          '<div class="key-row"><span>Last fill</span><strong>', escapeHtml(instance.operations.lastFill), "</strong></div>",
+          '<div class="key-row"><span>PnL</span><strong>', escapeHtml(instance.pnl), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Traders</p>',
+          '<h2 class="section-title">Trader associati</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">',
+          renderLinkedList(relatedTraders, renderTraderItem),
+          "</ul>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Recent Trades</p>',
+          '<h2 class="section-title">Trade recenti</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">',
+          renderLinkedList(relatedTrades, renderTradeItem),
+          "</ul>",
+          "</section>",
+          "</div>",
+
+          '<div class="stack">',
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Identity</p>',
+          '<h2 class="section-title">Identita\' istanza</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Nome</span><strong>', escapeHtml(instance.name), "</strong></div>",
+          '<div class="key-row"><span>Tipo</span><strong>', escapeHtml(instance.type), "</strong></div>",
+          '<div class="key-row"><span>Stato</span><strong>', escapeHtml(instance.status), "</strong></div>",
+          '<div class="key-row"><span>Server</span><strong>', escapeHtml(instance.server), "</strong></div>",
+          '<div class="key-row"><span>Revisione</span><strong>', escapeHtml(instance.revision), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Operational Summary</p>',
+          '<h2 class="section-title">Summary operativo</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Heartbeat</span><strong>', escapeHtml(instance.heartbeat), "</strong></div>",
+          '<div class="key-row"><span>Last event</span><strong>', escapeHtml(instance.lastEvent), "</strong></div>",
+          '<div class="key-row"><span>Last deploy</span><strong>', escapeHtml(instance.operations.lastDeploy), "</strong></div>",
+          '<div class="key-row"><span>Last rollout</span><strong>', escapeHtml(instance.operations.lastRollout), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Open Alerts</p>',
+          '<h2 class="section-title">Alert aperti istanza</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(instance.alerts), "</ul>",
+          "</section>",
+          "</div>",
+          "</section>",
+          "</div>"
+        ].join("");
+      }
+
+      if (!sourceInstance) {
+        root.innerHTML = notFound("Instance");
+      } else {
+        var record = asRecord(sourceInstance);
+        var operations = asRecord(record.operations);
+        var subsystems = asRecord(record.subsystems);
+        var instance = {
+          id: asText(record.id, instanceId || "instance"),
+          name: asText(record.name, instanceId || "Istanza"),
+          type: asText(record.type, "UNKNOWN").toUpperCase(),
+          status: normalizeStatus(
+            record.status,
+            ["draft", "ready", "deployed", "active", "error"],
+            "draft"
+          ),
+          server: asText(record.server),
+          revision: asText(record.revision),
+          heartbeat: asText(record.heartbeat),
+          lastEvent: asText(record.lastEvent),
+          openPositions: asCount(record.openPositions),
+          activeOrders: asCount(record.activeOrders),
+          pnl: asText(record.pnl),
+          alertSeverity: normalizeStatus(
+            highestSeverityForInstance(asText(record.id, instanceId || "instance")),
+            ["info", "warning", "critical"],
+            "info"
+          ),
+          alerts: messagesForInstance(asText(record.id, instanceId || "instance"))
+            .map(function (item) {
+              return asText(item, "Alert detail unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+          operations: {
+            lastDeploy: asText(operations.lastDeploy),
+            lastRollout: asText(operations.lastRollout),
+            lastFill: asText(operations.lastFill),
+          },
+          subsystems: {
+            telegram: normalizeStatus(subsystems.telegram, ["healthy", "degraded", "down", "unknown", "stopped"], "unknown"),
+            parser: normalizeStatus(subsystems.parser, ["healthy", "degraded", "down", "unknown", "stopped"], "unknown"),
+            lifecycle: normalizeStatus(subsystems.lifecycle, ["healthy", "degraded", "down", "unknown", "stopped"], "unknown"),
+            execution: normalizeStatus(subsystems.execution, ["healthy", "degraded", "down", "unknown", "stopped"], "unknown"),
+          },
+        };
+        var relatedTraders = tradersForInstance(instance.id).map(function (item, index) {
+          var trader = asRecord(item);
+
+          return {
+            id: asText(trader.id, "trader-" + (index + 1)),
+            name: asText(trader.name, "Trader " + (index + 1)),
+            sourceChannel: asText(trader.sourceChannel),
+            mappingStatus: asText(trader.mappingStatus, "unknown"),
+            profile: asText(trader.profile),
+          };
+        });
+        var relatedTrades = tradesForInstance(instance.id).map(function (item, index) {
+          var trade = asRecord(item);
+
+          return {
+            id: asText(trade.id, "trade-" + (index + 1)),
+            symbol: asText(trade.symbol),
+            state: asText(trade.state, "unknown"),
+            pnl: asText(trade.pnl),
+            side: asText(trade.side, "n/a"),
+            traderId: asText(trade.traderId, ""),
+          };
+        });
+        var traderCount = relatedTraders.length;
+        var latestAlert = instance.alerts.length > 0 ? instance.alerts[0] : "Nessun alert aperto";
+
+        root.innerHTML = pageShell(
+          instance.name,
+          instance.type + " su " + instance.server + " | revisione " + instance.revision,
+          buildPageHtml(instance, relatedTraders, relatedTrades, latestAlert, traderCount)
+        );
+      }
+    </script>
+  </body>
+</html>

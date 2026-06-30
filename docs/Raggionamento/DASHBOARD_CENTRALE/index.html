@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Centrale - Fleet</title>
+    <link rel="stylesheet" href="./assets/styles.css">
+  </head>
+  <body>
+    <noscript>
+      <main class="app-shell">
+        <section class="panel">
+          <h1>Dashboard Centrale - Fleet</h1>
+          <p class="muted">Questa pagina richiede JavaScript per caricare la fleet view dal dataset locale condiviso.</p>
+          <p><a href="./instance.html?id=alpha_live">Apri un dettaglio istanza di esempio</a></p>
+        </section>
+      </main>
+    </noscript>
+    <div class="app-shell" id="app"></div>
+    <script src="./assets/data.js"></script>
+    <script src="./assets/app.js"></script>
+    <script>
+      const root = document.getElementById("app");
+      const data = getData();
+      const asRecord = (value) =>
+        value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      const asArray = (value) => (Array.isArray(value) ? value : []);
+      const asText = (value, fallback = "n/a") => {
+        if (typeof value === "string") {
+          const trimmed = value.trim();
+          return trimmed.length > 0 ? trimmed : fallback;
+        }
+
+        if (typeof value === "number" && Number.isFinite(value)) {
+          return String(value);
+        }
+
+        return fallback;
+      };
+      const asCount = (value) => (typeof value === "number" && Number.isFinite(value) ? value : 0);
+      const slugify = (value, fallback) => {
+        const slug = String(value || "")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-+|-+$/g, "");
+
+        return slug || fallback;
+      };
+      const normalizeSeverity = (value, hasAlerts) => {
+        const normalized = asText(value, hasAlerts ? "warning" : "info").toLowerCase();
+        return ["critical", "warning", "info"].includes(normalized)
+          ? normalized
+          : hasAlerts
+            ? "warning"
+            : "info";
+      };
+      const instances = asArray(data.instances)
+        .map((item, index) => {
+          const record = asRecord(item);
+          const id = asText(record.id, `instance-${index + 1}`);
+          const alerts = messagesForInstance(id)
+            .map((entry) => asText(entry, "Alert detail unavailable"))
+            .filter((entry) => entry !== "n/a");
+          const name = asText(record.name, id);
+          const type = asText(record.type, "unknown").toUpperCase();
+          const severity = normalizeSeverity(highestSeverityForInstance(id), alerts.length > 0);
+          const traderLabels = tradersForInstance(id).map((entry, traderIndex) =>
+            asText(asRecord(entry).name, `Trader ${traderIndex + 1}`)
+          );
+
+          return {
+            id,
+            rowId: `instance-row-${slugify(id, `row-${index + 1}`)}`,
+            name,
+            type,
+            revision: asText(record.revision),
+            status: asText(record.status, "unknown"),
+            server: asText(record.server),
+            traderLabels,
+            heartbeat: asText(record.heartbeat),
+            lastEvent: asText(record.lastEvent),
+            openPositions: asCount(record.openPositions),
+            activeOrders: asCount(record.activeOrders),
+            pnl: asText(record.pnl),
+            alertSeverity: severity,
+            alerts,
+          };
+        })
+        .filter((item) => item.id !== "n/a");
+      const alerts = allAlertEntries()
+        .map((item, index) => {
+          const record = asRecord(item);
+          const knownInstance = findInstance(asText(record.instanceId, ""));
+          return {
+            severity: normalizeSeverity(record.severity, true),
+            instanceId: asText(record.instanceId, `instance-${index + 1}`),
+            instanceName: knownInstance ? asText(knownInstance.name, asText(record.instanceId, "Unknown instance")) : asText(record.instanceId, "Unknown instance"),
+            instanceKnown: Boolean(knownInstance),
+            message: asText(record.message, "Alert detail unavailable"),
+            timestamp: asText(record.timestamp, "Unknown time"),
+          };
+        })
+        .filter((item) => item.message !== "Alert detail unavailable");
+      const rollouts = asArray(data.rollouts)
+        .map((item) => asText(item, ""))
+        .filter(Boolean);
+      const filter = (getParam("filter") || "all").toLowerCase();
+      const allowedFilters = new Set(["all", "live", "demo", "alerting"]);
+      const activeFilter = allowedFilters.has(filter) ? filter : "all";
+      const columnIds = {
+        instance: "fleet-col-instance",
+        status: "fleet-col-status",
+        server: "fleet-col-server",
+        traders: "fleet-col-traders",
+        heartbeat: "fleet-col-heartbeat",
+        activity: "fleet-col-activity",
+        orders: "fleet-col-orders",
+        pnl: "fleet-col-pnl",
+        alert: "fleet-col-alert",
+      };
+
+      const visibleInstances = instances.filter((item) => {
+        if (activeFilter === "live") {
+          return item.type === "LIVE";
+        }
+
+        if (activeFilter === "demo") {
+          return item.type === "DEMO";
+        }
+
+        if (activeFilter === "alerting") {
+          return Array.isArray(item.alerts) && item.alerts.length > 0;
+        }
+
+        return true;
+      });
+      const alertCount = alerts.length;
+      const totalInstances = instances.length;
+      const liveInstances = instances.filter((item) => item.type === "LIVE").length;
+      const demoInstances = instances.filter((item) => item.type === "DEMO").length;
+
+      const visibleRows =
+        visibleInstances.length === 0
+          ? '<tr><td class="empty-state-cell" colspan="9"><p class="empty-state">Nessuna istanza corrisponde al filtro selezionato.</p></td></tr>'
+          : visibleInstances
+              .map((item) => {
+                const traderList = item.traderLabels.length > 0 ? item.traderLabels.join(", ") : "n/a";
+                const alertSummary = item.alerts.length > 0 ? item.alerts[0] : "No open alerts";
+
+                return `
+                  <tr>
+                    <th id="${item.rowId}" scope="row" data-label="Instance">
+                      <div class="cell-main">
+                        <a href="./instance.html?id=${encodeURIComponent(item.id)}"><strong>${escapeHtml(item.name)}</strong></a>
+                        <span class="inline-meta">${escapeHtml(item.type)} &middot; ${escapeHtml(item.revision)}</span>
+                      </div>
+                    </th>
+                    <td headers="${columnIds.status} ${item.rowId}" data-label="Status">${renderBadge(item.status, statusClass(item.status))}</td>
+                    <td headers="${columnIds.server} ${item.rowId}" data-label="Server">${escapeHtml(item.server)}</td>
+                    <td headers="${columnIds.traders} ${item.rowId}" data-label="Traders">${escapeHtml(traderList)}</td>
+                    <td headers="${columnIds.heartbeat} ${item.rowId}" data-label="Heartbeat">${escapeHtml(item.heartbeat)}</td>
+                    <td headers="${columnIds.activity} ${item.rowId}" data-label="Activity">${escapeHtml(item.lastEvent)}</td>
+                    <td headers="${columnIds.orders} ${item.rowId}" data-label="Orders">${escapeHtml(`${item.openPositions} pos`)} &middot; ${escapeHtml(`${item.activeOrders} ord`)}</td>
+                    <td headers="${columnIds.pnl} ${item.rowId}" data-label="PnL">${escapeHtml(item.pnl)}</td>
+                    <td headers="${columnIds.alert} ${item.rowId}" data-label="Alert">
+                      <div class="cell-stack">
+                        ${renderBadge(item.alertSeverity, severityClass(item.alertSeverity))}
+                        <span class="inline-meta">${escapeHtml(alertSummary)}</span>
+                      </div>
+                    </td>
+                  </tr>
+                `;
+              })
+              .join("");
+
+      root.innerHTML = pageShell(
+        "Fleet Dashboard",
+        "Vista centrale multi-istanza per monitoraggio operativo, rollout e segnali di rischio.",
+        `
+          <nav class="breadcrumbs" aria-label="Breadcrumb">
+            <span aria-current="page">Fleet</span>
+          </nav>
+
+          <section class="hero">
+            <div>
+              <p class="eyebrow">Fleet Summary</p>
+              <h2>Control plane overview</h2>
+              <p class="subtitle">
+                La fleet view aggrega stato centrale, alerting e contesto operativo; il dettaglio profondo resta nelle singole istanze.
+              </p>
+            </div>
+            <div class="hero-meta">
+              <div class="stat-card">
+                <div class="stat-label">Current Revision</div>
+                <div class="stat-value">${escapeHtml(data.currentRevision || "n/a")}</div>
+                <p class="stat-note">Baseline condivisa del rilascio osservato dalla dashboard.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="summary-grid">
+            <article class="stat-card">
+              <div class="stat-label">Istanze Totali</div>
+              <div class="stat-value">${escapeHtml(String(totalInstances))}</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">LIVE</div>
+              <div class="stat-value">${escapeHtml(String(liveInstances))}</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">DEMO</div>
+              <div class="stat-value">${escapeHtml(String(demoInstances))}</div>
+            </article>
+            <article class="stat-card">
+              <div class="stat-label">Alert Aperti</div>
+              <div class="stat-value">${escapeHtml(String(alertCount))}</div>
+            </article>
+          </section>
+
+          <section class="layout-two">
+            <div class="panel">
+              <div class="panel-header">
+                <div>
+                  <p class="eyebrow">Fleet Inventory</p>
+                  <h2 class="section-title">Istanze monitorate</h2>
+                  <p class="subtitle">Filtro locale per stato operativo della fleet.</p>
+                </div>
+              </div>
+
+              <nav class="filter-group" aria-label="Filtri fleet">
+                <ul class="toolbar filter-list">
+                  <li><a class="filter-button ${activeFilter === "all" ? "active" : ""}" href="./index.html"${activeFilter === "all" ? ' aria-current="page"' : ""}>All</a></li>
+                  <li><a class="filter-button ${activeFilter === "live" ? "active" : ""}" href="./index.html?filter=live"${activeFilter === "live" ? ' aria-current="page"' : ""}>Live</a></li>
+                  <li><a class="filter-button ${activeFilter === "demo" ? "active" : ""}" href="./index.html?filter=demo"${activeFilter === "demo" ? ' aria-current="page"' : ""}>Demo</a></li>
+                  <li><a class="filter-button ${activeFilter === "alerting" ? "active" : ""}" href="./index.html?filter=alerting"${activeFilter === "alerting" ? ' aria-current="page"' : ""}>Alerting</a></li>
+                </ul>
+              </nav>
+
+              <table class="instance-table">
+                <caption class="sr-only">Tabella delle istanze monitorate della fleet con stato, server, trader, heartbeat, attivita', ordini, PnL e alert</caption>
+                <thead>
+                  <tr>
+                    <th id="${columnIds.instance}" scope="col">Instance</th>
+                    <th id="${columnIds.status}" scope="col">Status</th>
+                    <th id="${columnIds.server}" scope="col">Server</th>
+                    <th id="${columnIds.traders}" scope="col">Traders</th>
+                    <th id="${columnIds.heartbeat}" scope="col">Heartbeat</th>
+                    <th id="${columnIds.activity}" scope="col">Activity</th>
+                    <th id="${columnIds.orders}" scope="col">Orders</th>
+                    <th id="${columnIds.pnl}" scope="col">PnL</th>
+                    <th id="${columnIds.alert}" scope="col">Alert</th>
+                  </tr>
+                </thead>
+                <tbody>${visibleRows}</tbody>
+              </table>
+            </div>
+
+            <div class="stack">
+              <section class="panel alt">
+                <p class="eyebrow">Rollout</p>
+                <h2 class="section-title">Rollout recenti</h2>
+                <ul class="list-clean">${renderList(rollouts)}</ul>
+              </section>
+
+              <section class="panel alt">
+                <p class="eyebrow">Alerts</p>
+                <h2 class="section-title">Alert recenti</h2>
+                <ul class="list-clean">
+                  ${alerts
+                    .map(
+                      (alert) => `
+                        <li>
+                          <strong>${escapeHtml(alert.timestamp)}</strong> &middot;
+                          ${
+                            alert.instanceKnown
+                              ? `<a href="./instance.html?id=${encodeURIComponent(alert.instanceId)}">${escapeHtml(alert.instanceName)}</a>`
+                              : `<span>${escapeHtml(alert.instanceName)}</span>`
+                          }
+                          &middot; ${escapeHtml(alert.message)}
+                        </li>
+                      `
+                    )
+                    .join("")}
+                </ul>
+              </section>
+
+              <section class="panel alt">
+                <p class="eyebrow">Operational Notes</p>
+                <h2 class="section-title">Note operative</h2>
+                <ul class="list-clean">
+                  <li>Il canary path corrente passa da <strong>beta_demo</strong>.</li>
+                  <li><strong>gamma_live</strong> richiede ispezione del gateway di esecuzione.</li>
+                  <li><strong>omega_live</strong> e' deployata ma non ancora avviata.</li>
+                </ul>
+              </section>
+            </div>
+          </section>
+        `
+      );
+    </script>
+  </body>
+</html>

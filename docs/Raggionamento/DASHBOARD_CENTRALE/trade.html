@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Centrale - Trade</title>
+    <link rel="stylesheet" href="./assets/styles.css">
+  </head>
+  <body>
+    <noscript>
+      <main class="app-shell">
+        <section class="panel">
+          <h1>Dashboard Centrale - Trade</h1>
+          <p class="muted">Questa pagina richiede JavaScript per caricare il dettaglio trade dal dataset locale.</p>
+          <p><a href="./index.html">Torna alla fleet view</a></p>
+        </section>
+      </main>
+    </noscript>
+    <main class="app-shell" id="app"></main>
+    <script src="./assets/data.js"></script>
+    <script src="./assets/app.js"></script>
+    <script>
+      var root = document.getElementById("app");
+      var tradeId = getParam("id");
+      var sourceTrade = findTrade(tradeId);
+
+      function asRecord(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      }
+
+      function asArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function asText(value, fallback) {
+        var safeFallback = typeof fallback === "undefined" ? "n/a" : fallback;
+
+        if (typeof value === "string") {
+          var trimmed = value.trim();
+          return trimmed.length > 0 ? trimmed : safeFallback;
+        }
+
+        if (typeof value === "number" && isFinite(value)) {
+          return String(value);
+        }
+
+        return safeFallback;
+      }
+
+      function renderStateBadge(state) {
+        var normalized = asText(state, "unknown").toLowerCase();
+        var className = "status";
+
+        if (normalized === "open") {
+          className = statusClass("active");
+        } else if (normalized === "partially_realized") {
+          className = statusClass("ready");
+        } else if (normalized === "sync_error") {
+          className = statusClass("error");
+        }
+
+        return renderBadge(normalized.replace(/_/g, " "), className);
+      }
+
+      function renderSideBadge(side) {
+        var normalized = asText(side, "unknown").toUpperCase();
+        var className = normalized === "SHORT" ? severityClass("warning") : severityClass("info");
+        return renderBadge(normalized, className);
+      }
+
+      function buildContextLink(label, href, text) {
+        if (!href) {
+          return '<div class="key-row"><span>' + escapeHtml(label) + '</span><strong>' + escapeHtml(text) + "</strong></div>";
+        }
+
+        return [
+          '<div class="key-row"><span>', escapeHtml(label), "</span><strong>",
+          '<a href="', href, '">', escapeHtml(text), "</a>",
+          "</strong></div>"
+        ].join("");
+      }
+
+      function buildPageHtml(trade, parentInstance, parentTrader) {
+        var instanceName = parentInstance ? parentInstance.name : "Istanza non disponibile";
+        var traderName = parentTrader ? parentTrader.name : "Trader non disponibile";
+        var instanceId = parentInstance ? parentInstance.id : "";
+        var traderId = parentTrader ? parentTrader.id : "";
+
+        return [
+          '<nav class="breadcrumbs" aria-label="Breadcrumb">',
+          '<a href="./index.html">Fleet</a>',
+          "<span>/</span>",
+          instanceId
+            ? '<a href="./instance.html?id=' + encodeURIComponent(instanceId) + '">' + escapeHtml(instanceName) + "</a>"
+            : "<span>" + escapeHtml(instanceName) + "</span>",
+          "<span>/</span>",
+          traderId
+            ? '<a href="./trader.html?id=' + encodeURIComponent(traderId) + '">' + escapeHtml(traderName) + "</a>"
+            : "<span>" + escapeHtml(traderName) + "</span>",
+          "<span>/</span>",
+          '<span aria-current="page">', escapeHtml(trade.id), "</span>",
+          "</nav>",
+
+          '<section class="hero">',
+          "<div>",
+          '<p class="eyebrow">Trade Chain Detail</p>',
+          "<h2>Lifecycle sintetico della trade chain</h2>",
+          '<p class="subtitle">',
+          "La vista dettaglio mostra il contesto locale di esecuzione: ordini, fill, stato corrente e warning.",
+          "</p>",
+          "</div>",
+          '<div class="hero-meta">',
+          '<div class="stat-card">',
+          '<div class="stat-label">State</div>',
+          "<div>", trade.stateBadge, "</div>",
+          '<p class="stat-note">', escapeHtml(trade.symbol), " | ", escapeHtml(trade.account), "</p>",
+          "</div>",
+          '<div class="stat-card">',
+          '<div class="stat-label">Direction</div>',
+          "<div>", trade.sideBadge, "</div>",
+          '<p class="stat-note">Chain ', escapeHtml(trade.id), "</p>",
+          "</div>",
+          "</div>",
+          "</section>",
+
+          '<section class="metric-grid">',
+          '<article class="stat-card">',
+          '<div class="stat-label">PnL</div>',
+          '<div class="stat-value">', escapeHtml(trade.pnl), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Quantity</div>',
+          '<div class="stat-value">', escapeHtml(trade.quantity), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Exposure</div>',
+          '<div class="stat-value">', escapeHtml(trade.exposure), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Warnings</div>',
+          '<div class="stat-value">', escapeHtml(String(trade.warnings.length)), "</div>",
+          "</article>",
+          "</section>",
+
+          '<section class="layout-two">',
+          '<div class="stack">',
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Trade Identity</p>',
+          '<h2 class="section-title">Trade id, simbolo, lato e stato</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Trade ID</span><strong>', escapeHtml(trade.id), "</strong></div>",
+          '<div class="key-row"><span>Symbol</span><strong>', escapeHtml(trade.symbol), "</strong></div>",
+          '<div class="key-row"><span>Side</span><strong>', escapeHtml(trade.side), "</strong></div>",
+          '<div class="key-row"><span>State</span><strong>', escapeHtml(trade.state), "</strong></div>",
+          '<div class="key-row"><span>Account</span><strong>', escapeHtml(trade.account), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Lifecycle</p>',
+          '<h2 class="section-title">Timeline sintetica lifecycle</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(trade.lifecycle), "</ul>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Orders</p>',
+          '<h2 class="section-title">Ordini principali</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(trade.orders), "</ul>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Fills</p>',
+          '<h2 class="section-title">Fill recenti</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(trade.fills), "</ul>",
+          "</section>",
+          "</div>",
+
+          '<div class="stack">',
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Linked Context</p>',
+          '<h2 class="section-title">Account, istanza e trader collegati</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Account</span><strong>', escapeHtml(trade.account), "</strong></div>",
+          buildContextLink(
+            "Istanza",
+            instanceId ? "./instance.html?id=" + encodeURIComponent(instanceId) : "",
+            instanceName
+          ),
+          buildContextLink(
+            "Trader",
+            traderId ? "./trader.html?id=" + encodeURIComponent(traderId) : "",
+            traderName
+          ),
+          "</div>",
+          "</section>",
+
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Exposure</p>',
+          '<h2 class="section-title">PnL, qty ed esposizione sintetica</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>PnL</span><strong>', escapeHtml(trade.pnl), "</strong></div>",
+          '<div class="key-row"><span>Quantity</span><strong>', escapeHtml(trade.quantity), "</strong></div>",
+          '<div class="key-row"><span>Exposure</span><strong>', escapeHtml(trade.exposure), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Warnings</p>',
+          '<h2 class="section-title">Errori o warning eventuali</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(trade.warnings), "</ul>",
+          "</section>",
+          "</div>",
+          "</section>"
+        ].join("");
+      }
+
+      if (!sourceTrade) {
+        document.title = "Dashboard Centrale - Trade non trovato";
+        root.innerHTML = notFound("Trade");
+      } else {
+        var record = asRecord(sourceTrade);
+        var parentTrader = findTrader(asText(record.traderId, ""));
+        var parentInstance = findInstanceForTrade(asText(record.id, tradeId || "trade"));
+        var trade = {
+          id: asText(record.id, tradeId || "trade"),
+          traderId: asText(record.traderId, ""),
+          symbol: asText(record.symbol),
+          side: asText(record.side, "unknown").toUpperCase(),
+          sideBadge: renderSideBadge(record.side),
+          state: asText(record.state, "unknown"),
+          stateBadge: renderStateBadge(record.state),
+          account: asText(record.account),
+          pnl: asText(record.pnl),
+          quantity: asText(record.quantity),
+          exposure: asText(record.exposure),
+          lifecycle: asArray(record.lifecycle)
+            .map(function (item) {
+              return asText(item, "Lifecycle event unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+          orders: asArray(record.orders)
+            .map(function (item) {
+              return asText(item, "Order detail unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+          fills: asArray(record.fills)
+            .map(function (item) {
+              return asText(item, "Fill detail unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+          warnings: asArray(record.warnings)
+            .map(function (item) {
+              return asText(item, "Warning detail unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+        };
+
+        document.title = "Dashboard Centrale - Trade - " + trade.id;
+        root.innerHTML = pageShell(
+          trade.id,
+          trade.symbol + " " + trade.side + " | " + trade.state,
+          buildPageHtml(trade, parentInstance, parentTrader)
+        );
+      }
+    </script>
+  </body>
+</html>

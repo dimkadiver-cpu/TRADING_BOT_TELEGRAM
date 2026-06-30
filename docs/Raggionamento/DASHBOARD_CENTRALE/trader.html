@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Centrale - Trader</title>
+    <link rel="stylesheet" href="./assets/styles.css">
+  </head>
+  <body>
+    <noscript>
+      <main class="app-shell">
+        <section class="panel">
+          <h1>Dashboard Centrale - Trader</h1>
+          <p class="muted">Questa pagina richiede JavaScript per caricare il dettaglio trader dal dataset locale.</p>
+          <p><a href="./index.html">Torna alla fleet view</a></p>
+        </section>
+      </main>
+    </noscript>
+    <main class="app-shell" id="app"></main>
+    <script src="./assets/data.js"></script>
+    <script src="./assets/app.js"></script>
+    <script>
+      var root = document.getElementById("app");
+      var traderId = getParam("id");
+      var sourceTrader = findTrader(traderId);
+
+      function asRecord(value) {
+        return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+      }
+
+      function asArray(value) {
+        return Array.isArray(value) ? value : [];
+      }
+
+      function asText(value, fallback) {
+        var safeFallback = typeof fallback === "undefined" ? "n/a" : fallback;
+
+        if (typeof value === "string") {
+          var trimmed = value.trim();
+          return trimmed.length > 0 ? trimmed : safeFallback;
+        }
+
+        if (typeof value === "number" && isFinite(value)) {
+          return String(value);
+        }
+
+        return safeFallback;
+      }
+
+      function asCount(value) {
+        return typeof value === "number" && isFinite(value) ? value : 0;
+      }
+
+      function normalizeStatus(value, allowed, fallback) {
+        var normalized = asText(value, fallback).toLowerCase();
+        return allowed.indexOf(normalized) !== -1 ? normalized : fallback;
+      }
+
+      function renderLinkedList(items, buildItem) {
+        if (!items.length) {
+          return '<li class="muted">None</li>';
+        }
+
+        return items.map(buildItem).join("");
+      }
+
+      function renderMappingBadge(mappingStatus) {
+        var normalized = normalizeStatus(
+          mappingStatus,
+          ["active", "ready", "deployed", "degraded", "error", "draft"],
+          "draft"
+        );
+        var className =
+          normalized === "degraded"
+            ? systemClass("degraded")
+            : normalized === "error"
+              ? statusClass("error")
+              : statusClass(normalized);
+
+        return renderBadge(normalized, className);
+      }
+
+      function renderTradeStateBadge(state) {
+        var normalized = asText(state, "unknown").toLowerCase();
+        var className = "status";
+
+        if (normalized === "open") {
+          className = statusClass("active");
+        } else if (normalized === "partially_realized") {
+          className = statusClass("ready");
+        } else if (normalized === "sync_error") {
+          className = statusClass("error");
+        }
+
+        return renderBadge(normalized.replace(/_/g, " "), className);
+      }
+
+      function renderTradeItem(trade) {
+        return [
+          "<li>",
+          '<a href="./trade.html?id=', encodeURIComponent(trade.id), '"><strong>', escapeHtml(trade.id), "</strong></a>",
+          " | ", escapeHtml(trade.symbol),
+          " | ", trade.stateBadge,
+          '<span class="inline-meta"> | ', escapeHtml(trade.pnl), "</span>",
+          "</li>"
+        ].join("");
+      }
+
+      function buildPageHtml(trader, parentInstance, relatedTrades) {
+        var parentInstanceName = parentInstance ? parentInstance.name : "Istanza non disponibile";
+        var parentInstanceId = parentInstance ? parentInstance.id : "";
+        var parentInstanceMeta = parentInstance
+          ? parentInstance.server + " | " + parentInstance.revision
+          : "Contesto istanza non disponibile";
+
+        return [
+          '<nav class="breadcrumbs" aria-label="Breadcrumb">',
+          '<a href="./index.html">Fleet</a>',
+          "<span>/</span>",
+          parentInstanceId
+            ? '<a href="./instance.html?id=' + encodeURIComponent(parentInstanceId) + '">' + escapeHtml(parentInstanceName) + "</a>"
+            : "<span>" + escapeHtml(parentInstanceName) + "</span>",
+          "<span>/</span>",
+          '<span aria-current="page">', escapeHtml(trader.name), "</span>",
+          "</nav>",
+
+          '<section class="hero">',
+          "<div>",
+          '<p class="eyebrow">Trader Detail</p>',
+          "<h2>Sorgente segnali e qualita' parsing</h2>",
+          '<p class="subtitle">',
+          "Questa vista collega il profilo trader al contesto locale dell'istanza e alle trade chain recenti.",
+          "</p>",
+          "</div>",
+          '<div class="hero-meta">',
+          '<div class="stat-card">',
+          '<div class="stat-label">Mapping Status</div>',
+          "<div>", trader.mappingBadge, "</div>",
+          '<p class="stat-note">', escapeHtml(trader.profile), "</p>",
+          "</div>",
+          '<div class="stat-card">',
+          '<div class="stat-label">Source Channel</div>',
+          '<div class="stat-value">', escapeHtml(trader.sourceChannel), "</div>",
+          '<p class="stat-note">Segnali instradati verso ', escapeHtml(parentInstanceName), ".</p>",
+          "</div>",
+          "</div>",
+          "</section>",
+
+          '<section class="metric-grid">',
+          '<article class="stat-card">',
+          '<div class="stat-label">Parse Success</div>',
+          '<div class="stat-value">', escapeHtml(String(trader.parseStats.success)), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Parse Failed</div>',
+          '<div class="stat-value">', escapeHtml(String(trader.parseStats.failed)), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Recent Signals</div>',
+          '<div class="stat-value">', escapeHtml(String(trader.recentSignals.length)), "</div>",
+          "</article>",
+          '<article class="stat-card">',
+          '<div class="stat-label">Trade Chains</div>',
+          '<div class="stat-value">', escapeHtml(String(relatedTrades.length)), "</div>",
+          "</article>",
+          "</section>",
+
+          '<section class="layout-two">',
+          '<div class="stack">',
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Trader Identity</p>',
+          '<h2 class="section-title">Identita\' trader/profile</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Nome</span><strong>', escapeHtml(trader.name), "</strong></div>",
+          '<div class="key-row"><span>Profilo</span><strong>', escapeHtml(trader.profile), "</strong></div>",
+          '<div class="key-row"><span>Canale sorgente</span><strong>', escapeHtml(trader.sourceChannel), "</strong></div>",
+          '<div class="key-row"><span>Stato mapping</span><strong>', escapeHtml(trader.mappingStatus), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Recent Signals</p>',
+          '<h2 class="section-title">Ultimi segnali ricevuti</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(trader.recentSignals), "</ul>",
+          "</section>",
+
+          '<section class="panel">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Recent Trades</p>',
+          '<h2 class="section-title">Trade chain recenti collegate</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderLinkedList(relatedTrades, renderTradeItem), "</ul>",
+          "</section>",
+          "</div>",
+
+          '<div class="stack">',
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Parse Stats</p>',
+          '<h2 class="section-title">Ultimi parse riusciti e falliti</h2>',
+          "</div>",
+          "</div>",
+          '<div class="key-value">',
+          '<div class="key-row"><span>Success</span><strong>', escapeHtml(String(trader.parseStats.success)), "</strong></div>",
+          '<div class="key-row"><span>Failed</span><strong>', escapeHtml(String(trader.parseStats.failed)), "</strong></div>",
+          "</div>",
+          "</section>",
+
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Anomalies</p>',
+          '<h2 class="section-title">Anomalie parser/source recenti</h2>',
+          "</div>",
+          "</div>",
+          '<ul class="list-clean">', renderList(trader.anomalies), "</ul>",
+          "</section>",
+
+          '<section class="panel alt">',
+          '<div class="panel-header">',
+          "<div>",
+          '<p class="eyebrow">Parent Instance</p>',
+          '<h2 class="section-title">Istanza collegata</h2>',
+          "</div>",
+          "</div>",
+          '<p><strong>',
+          parentInstanceId
+            ? '<a href="./instance.html?id=' + encodeURIComponent(parentInstanceId) + '">' + escapeHtml(parentInstanceName) + "</a>"
+            : escapeHtml(parentInstanceName),
+          "</strong></p>",
+          '<p class="muted">', escapeHtml(parentInstanceMeta), "</p>",
+          "</section>",
+          "</div>",
+          "</section>"
+        ].join("");
+      }
+
+      if (!sourceTrader) {
+        document.title = "Dashboard Centrale - Trader non trovato";
+        root.innerHTML = notFound("Trader");
+      } else {
+        var record = asRecord(sourceTrader);
+        var parseStats = asRecord(record.parseStats);
+        var parentInstance = findInstance(asText(record.instanceId, ""));
+        var trader = {
+          id: asText(record.id, traderId || "trader"),
+          instanceId: asText(record.instanceId, ""),
+          name: asText(record.name, traderId || "Trader"),
+          profile: asText(record.profile),
+          sourceChannel: asText(record.sourceChannel),
+          mappingStatus: normalizeStatus(
+            record.mappingStatus,
+            ["active", "ready", "deployed", "degraded", "error", "draft"],
+            "draft"
+          ),
+          mappingBadge: renderMappingBadge(record.mappingStatus),
+          recentSignals: asArray(record.recentSignals)
+            .map(function (item) {
+              return asText(item, "Signal detail unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+          anomalies: asArray(record.anomalies)
+            .map(function (item) {
+              return asText(item, "Anomaly detail unavailable");
+            })
+            .filter(function (item) {
+              return item !== "n/a";
+            }),
+          parseStats: {
+            success: asCount(parseStats.success),
+            failed: asCount(parseStats.failed),
+          },
+        };
+        var relatedTrades = tradesForTrader(trader.id).map(function (item, index) {
+          var trade = asRecord(item);
+
+          return {
+            id: asText(trade.id, "trade-" + (index + 1)),
+            symbol: asText(trade.symbol),
+            state: asText(trade.state, "unknown"),
+            stateBadge: renderTradeStateBadge(trade.state),
+            pnl: asText(trade.pnl),
+          };
+        });
+
+        document.title = "Dashboard Centrale - Trader - " + trader.name;
+        root.innerHTML = pageShell(
+          trader.name,
+          trader.profile + " | " + trader.sourceChannel,
+          buildPageHtml(trader, parentInstance, relatedTrades)
+        );
+      }
+    </script>
+  </body>
+</html>
