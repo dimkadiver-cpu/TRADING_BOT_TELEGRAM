@@ -24,6 +24,7 @@ Il sistema deve supportare:
 - N istanze del bot, ciascuna con config, dati e credenziali proprie
 - scelta esplicita del tipo istanza in creazione: `DEMO` oppure `LIVE`
 - associazione tra istanza, fonti Telegram, trader/profile, account exchange e destinazioni Telegram
+- gestione scalabile di fonti con molti trader senza duplicazione massiva di alias, topic e binding
 - generazione automatica dei file di configurazione runtime
 - controllo centralizzato dello stato operativo delle istanze
 
@@ -46,8 +47,10 @@ Il workflow approvato e' semi-guidato: il sistema automatizza la preparazione e 
 5. Per ogni nuova fonte da gestire:
    - costruisce e valida il parser specifico del trader/fonte
    - aggiunge la fonte all'istanza
-   - associa uno o piu' trader/profile alla fonte
-   - associa ogni trader a un account exchange condiviso o dedicato
+   - seleziona uno o piu' trader/profile dal catalogo trader
+   - applica una policy account di default
+   - applica una policy Telegram di default
+   - definisce solo gli override locali necessari
 6. Il sistema prepara in automatico:
    - record centrali in `management.db`
    - struttura filesystem dell'istanza
@@ -97,6 +100,33 @@ Il principio operativo e' che l'operatore modifica lo **stato desiderato** dell'
 4. eseguire la validazione
 5. applicare il deploy della nuova configurazione
 6. riavviare l'istanza solo se richiesto dal tipo di modifica
+
+### Workflow scalabile per fonti con molti trader
+
+Per fonti che contengono molti trader il workflow non deve essere costruito come una configurazione piatta e manuale di:
+
+- alias per trader
+- pattern per trader
+- binding trader -> account
+- binding trader -> topic Telegram
+
+Il modello raccomandato e' invece:
+
+1. definire i trader una volta sola in un **catalogo trader**
+2. aggiungere la fonte come contenitore leggero
+3. associare alla fonte i trader ammessi
+4. applicare policy di default per account e Telegram
+5. mantenere espliciti solo gli override locali
+
+In questo modo l'operatore ragiona per intenzione:
+
+1. crea la fonte
+2. assegna il parser comune
+3. seleziona trader dal catalogo
+4. sceglie policy account
+5. sceglie policy Telegram
+6. rivede gli override
+7. conferma
 
 ### Obiettivo del workflow
 
@@ -148,6 +178,11 @@ tsbctl instance init
 # Modifica guidata istanza esistente
 tsbctl instance edit alpha_demo
 
+# Gestione catalogo trader
+tsbctl trader catalog add
+tsbctl trader catalog edit trader_a
+tsbctl trader catalog list
+
 # Riepilogo / diff / verifica
 tsbctl instance summary alpha_demo
 tsbctl diff alpha_demo
@@ -168,10 +203,12 @@ I comandi granulari restano disponibili per repair, automazione e casi speciali:
 tsbctl instance create --name alpha_demo --type DEMO --server vps1
 tsbctl telegram bind-group alpha_demo --chat-id -1001234567890 --bot-token-env CONTROL_BOT_ALPHA
 tsbctl source add alpha_demo --channel 12345 --label fonte_a
-tsbctl trader add alpha_demo --trader trader_a --source fonte_a
+tsbctl source attach-traders alpha_demo --source fonte_a --traders trader_a,trader_b
 tsbctl account add alpha_demo --account acc_alpha --provider BYBIT
-tsbctl trader bind-account alpha_demo --trader trader_a --account acc_alpha
-tsbctl telegram bind-topic alpha_demo --scope trader_a --topic 201 --role NOTIFY
+tsbctl source set-account-policy alpha_demo --source fonte_a --mode shared_account_per_source --account acc_alpha
+tsbctl source set-telegram-policy alpha_demo --source fonte_a --notify-mode per_source --default-topic 201
+tsbctl trader bind-account alpha_demo --trader trader_a --account acc_alpha --override
+tsbctl telegram bind-topic alpha_demo --scope trader_a --topic 211 --role NOTIFY
 tsbctl provision prepare alpha_demo
 tsbctl provision bybit alpha_demo
 tsbctl provision telegram alpha_demo
@@ -189,10 +226,10 @@ Oppure in forma esplicita:
 
 ```bash
 tsbctl source add alpha_demo --channel 55555 --label fonte_b
-tsbctl trader add alpha_demo --source fonte_b --trader trader_x
-tsbctl trader add alpha_demo --source fonte_b --trader trader_y
-tsbctl trader bind-account alpha_demo --trader trader_x --account acc_main
-tsbctl trader bind-account alpha_demo --trader trader_y --account acc_y
+tsbctl source attach-traders alpha_demo --source fonte_b --traders trader_x,trader_y
+tsbctl source set-account-policy alpha_demo --source fonte_b --mode shared_account_per_source --account acc_main
+tsbctl source set-telegram-policy alpha_demo --source fonte_b --notify-mode per_source --default-topic 220
+tsbctl trader bind-account alpha_demo --trader trader_y --account acc_y --override
 tsbctl telegram bind-topic alpha_demo --scope trader_x --topic 220 --role NOTIFY
 tsbctl telegram bind-topic alpha_demo --scope trader_y --topic 221 --role NOTIFY
 tsbctl instance summary alpha_demo
@@ -206,6 +243,8 @@ tsbctl deploy alpha_demo
   - avvia un wizard testuale che raccoglie i dati minimi per creare una nuova istanza coerente
 - `instance edit`
   - avvia un wizard testuale per modificare una istanza esistente senza ricrearla
+- `trader catalog add/edit/list`
+  - gestisce il catalogo centrale dei trader disponibili, con detection mode, alias e pattern
 - `instance summary`
   - mostra lo stato desiderato completo dell'istanza in modo leggibile
 - `diff`
@@ -214,16 +253,20 @@ tsbctl deploy alpha_demo
   - crea il record base dell'istanza e lo stato iniziale `draft`
 - `source add`
   - aggiunge una nuova fonte Telegram a una istanza esistente
-- `trader add`
-  - collega uno o piu' trader/profile a una fonte gia' registrata nell'istanza
+- `source attach-traders`
+  - associa alla fonte uno o piu' trader gia' presenti nel catalogo
+- `source set-account-policy`
+  - applica alla fonte una policy account di default
+- `source set-telegram-policy`
+  - applica alla fonte una policy Telegram di default
 - `account add`
   - registra un account exchange utilizzabile nell'istanza
 - `trader bind-account`
-  - collega ogni trader a un account exchange condiviso o dedicato
+  - definisce un override di binding trader -> account rispetto alla policy di default
 - `telegram bind-group`
   - collega all'istanza il gruppo Telegram e il bot di control plane da usare per notifiche e comandi
 - `telegram bind-topic`
-  - collega topic Telegram a scope di istanza, fonte, trader o account
+  - definisce un override di routing Telegram a scope di istanza, fonte, trader o account
 - `provision prepare`
   - genera struttura, YAML, `.env` placeholder e check preliminari
 - `provision bybit`
@@ -246,7 +289,10 @@ tsbctl deploy alpha_demo
 `management.db` e' il registro centrale di verita' per:
 - istanze
 - server target
-- mapping fonte/trader/account exchange
+- catalogo trader
+- membership fonte/trader
+- policy account e Telegram
+- override fonte/trader/account exchange
 - stato operativo
 - riferimenti alle credenziali
 - destinazioni Telegram
@@ -280,17 +326,19 @@ Il modello dati e operativo di riferimento e' il seguente:
 - **Istanza** = unita' autonoma di esecuzione del bot
 - **Fonte** = input Telegram gestito da una istanza
 - **Trader** = parser/profile/identita' logica risolta dentro l'istanza
+- **Catalogo trader** = definizione unica dei trader disponibili, con detection mode, alias e pattern
 - **Account exchange** = risorsa assegnabile a uno o piu' trader della stessa istanza
 - **Gruppo Telegram istanza** = destinazione di controllo e notifica dell'istanza
 
 Relazioni attese:
 
 - una istanza puo' avere piu' fonti
-- una fonte puo' avere uno o piu' trader
-- un trader e' sempre definito nel contesto di una istanza
+- una fonte puo' avere uno o piu' trader presi dal catalogo
+- il trader viene definito una volta sola nel catalogo e poi associato alle fonti
 - piu' trader della stessa istanza possono condividere lo stesso account exchange
 - un trader puo' anche avere un account exchange dedicato
 - ogni istanza ha il proprio gruppo Telegram, con eventuali topic separati per trader, account o funzione
+- account e Telegram devono supportare policy di default con override locali
 
 ---
 
@@ -403,18 +451,59 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | channel_id | TEXT | ID canale Telegram sorgente |
 | topic_id | INTEGER | topic sorgente opzionale |
 | channel_name | TEXT | label descrittiva |
+| parser_profile_common | TEXT | parser comune della fonte |
+| resolution_policy | TEXT | `alias` \| `pattern` \| `hybrid` |
+| pattern_group | TEXT | gruppo pattern di default per la fonte |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
-### `instance_traders`
+### `trader_catalog`
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| instance_id | INTEGER FK | -> `instances` |
+| trader_id | TEXT | es. `trader_a`, `trader_3` |
+| display_name | TEXT | label leggibile |
+| parser_profile | TEXT | profilo parser di default |
+| detection_mode | TEXT | `alias` \| `pattern` \| `hybrid` |
+| pattern_key | TEXT | chiave pattern predefinita |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+### `trader_aliases`
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| trader_catalog_id | INTEGER FK | -> `trader_catalog` |
+| alias_text | TEXT | tag o alias normalizzato |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+### `source_trader_memberships`
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
 | source_mapping_id | INTEGER FK | -> `source_mappings` |
-| trader_id | TEXT | es. `trader_a`, `trader_3` |
-| parser_profile | TEXT | profilo parser effettivo |
+| trader_catalog_id | INTEGER FK | -> `trader_catalog` |
+| detection_override | TEXT | override locale: `alias` \| `pattern` \| `hybrid` |
+| alias_override_json | TEXT | override alias locale opzionale |
+| pattern_override | TEXT | override pattern locale opzionale |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+### `source_account_policies`
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| instance_id | INTEGER FK | -> `instances` |
+| source_mapping_id | INTEGER FK | -> `source_mappings` |
+| mode | TEXT | `shared_account_per_source` \| `dedicated_account_per_trader` \| `reuse_existing_bindings` |
+| default_exchange_account_id | INTEGER FK | -> `exchange_accounts` |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
@@ -424,9 +513,24 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| instance_trader_id | INTEGER FK | -> `instance_traders` |
+| trader_catalog_id | INTEGER FK | -> `trader_catalog` |
 | exchange_account_id | INTEGER FK | -> `exchange_accounts` |
 | binding_mode | TEXT | `DEDICATED` \| `SHARED` |
+| is_override | BOOLEAN | true se supera la policy di default |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+### `telegram_policies`
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| instance_id | INTEGER FK | -> `instances` |
+| source_mapping_id | INTEGER FK | -> `source_mappings` |
+| notify_mode | TEXT | `per_source` \| `per_trader` \| `shared_instance` |
+| default_notify_thread_id | INTEGER | thread di default per notify |
+| control_thread_id | INTEGER | thread control di istanza o fonte |
+| tech_thread_id | INTEGER | thread tech di istanza o fonte |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
@@ -441,6 +545,7 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | role | TEXT | `NOTIFY` \| `CONTROL` \| `BOTH` |
 | scope_type | TEXT | `INSTANCE` \| `SOURCE` \| `TRADER` \| `ACCOUNT` |
 | scope_ref_id | INTEGER | FK logica verso la tabella rilevante per lo scope |
+| is_override | BOOLEAN | true se supera la policy Telegram di default |
 | label | TEXT | es. `trader_a - segnali` |
 | enabled | BOOLEAN | |
 
@@ -456,7 +561,7 @@ Il livello fleet dovra' poter leggere da `management.db` almeno:
 - inventory istanze
 - tipo `DEMO` o `LIVE`
 - server associato
-- source mapping, trader associati e binding account exchange
+- source mapping, trader associati, policy applicate e binding account exchange effettivi
 - stato operativo
 - revisione deployata
 - ultimo heartbeat
@@ -507,7 +612,7 @@ TeleSignalBot/
 - `crypto.py`
   - encrypt/decrypt con `TSB_MASTER_KEY`
 - `instance_provisioner.py`
-  - genera struttura, YAML e `.env` partendo da istanza, fonti, trader e binding account
+  - genera struttura, YAML e `.env` partendo da istanza, fonti, catalogo trader, policy e override effettivi
 - `bybit_provisioner.py`
   - crea o collega account/subaccount e API key
 - `telegram_provisioner.py`
