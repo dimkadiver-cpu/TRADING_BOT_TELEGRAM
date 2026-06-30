@@ -6,17 +6,24 @@
 
 ## Obiettivo operativo
 
-TeleSignalBot oggi gira come istanza singola su un server. L'obiettivo e' introdurre un workflow standard per aprire e gestire piu' istanze indipendenti partendo da un caso operativo preciso:
+TeleSignalBot oggi gira come istanza singola su un server. L'obiettivo e' introdurre un workflow standard per aprire e gestire piu' istanze indipendenti, dove ogni istanza rappresenta una unita' operativa autonoma con config, dati, credenziali e ciclo di trading propri.
 
-1. viene trovata una nuova fonte Telegram;
-2. viene costruito e validato il parser specifico;
-3. viene creata una nuova istanza dedicata a quella fonte;
-4. l'istanza viene preparata, validata, deployata e avviata con un processo semi-guidato.
+Un'istanza non e' necessariamente dedicata a una sola fonte. Una singola istanza puo' gestire:
+
+1. una o piu' fonti Telegram;
+2. uno o piu' trader/profile;
+3. uno o piu' account exchange;
+4. un proprio gruppo Telegram di controllo e notifica.
+
+Il workflow deve supportare sia:
+
+1. creazione di una nuova istanza autonoma;
+2. aggiunta di nuove fonti, trader o account exchange a una istanza gia' esistente.
 
 Il sistema deve supportare:
 - N istanze del bot, ciascuna con config, dati e credenziali proprie
 - scelta esplicita del tipo istanza in creazione: `DEMO` oppure `LIVE`
-- associazione tra istanza, fonte Telegram, trader/profile, account exchange e destinazioni Telegram
+- associazione tra istanza, fonti Telegram, trader/profile, account exchange e destinazioni Telegram
 - generazione automatica dei file di configurazione runtime
 - controllo centralizzato dello stato operativo delle istanze
 
@@ -28,36 +35,79 @@ Il workflow approvato e' semi-guidato: il sistema automatizza la preparazione e 
 
 ### Scenario base
 
-1. L'operatore trova una nuova fonte Telegram.
-2. Costruisce il parser specifico del trader/fonte.
-3. Valida il parser con replay e smoke test.
-4. Crea una nuova istanza scegliendo `DEMO` o `LIVE`.
-5. L'istanza nasce in stato `draft`.
-6. Associa all'istanza:
-   - trader/profile
-   - canale sorgente
+1. L'operatore decide se usare una istanza esistente oppure crearne una nuova.
+2. Se serve una nuova istanza, la crea scegliendo `DEMO` o `LIVE`.
+3. L'istanza nasce in stato `draft`.
+4. Associa all'istanza:
    - server target
-7. Il sistema prepara in automatico:
+   - gruppo Telegram dell'istanza
+   - bot Telegram dell'istanza
+   - eventuali credenziali Telethon dell'istanza
+5. Per ogni nuova fonte da gestire:
+   - costruisce e valida il parser specifico del trader/fonte
+   - aggiunge la fonte all'istanza
+   - associa uno o piu' trader/profile alla fonte
+   - associa ogni trader a un account exchange condiviso o dedicato
+6. Il sistema prepara in automatico:
    - record centrali in `management.db`
    - struttura filesystem dell'istanza
    - file YAML runtime
    - `.env` dell'istanza
-   - mapping iniziali delle sorgenti
-8. I passaggi sensibili vengono completati o confermati dall'operatore:
+   - mapping di fonti, trader e destinazioni
+7. I passaggi sensibili vengono completati o confermati dall'operatore:
    - provisioning Bybit
    - provisioning Telegram
-   - eventuali credenziali Telethon
-9. L'operatore esegue la validazione finale dell'istanza.
-10. Se la validazione passa, l'istanza va in `ready`.
-11. L'operatore esegue il deploy.
-12. Il deploy installa file e servizio sul server target e porta l'istanza in `deployed`.
-13. L'avvio finale e' esplicito: `start` porta l'istanza in `active`.
+8. L'operatore esegue la validazione finale dell'istanza.
+9. Se la validazione passa, l'istanza va in `ready`.
+10. L'operatore esegue il deploy.
+11. Il deploy installa file e servizio sul server target e porta l'istanza in `deployed`.
+12. L'avvio finale e' esplicito: `start` porta l'istanza in `active`.
+
+### Quando creare una nuova istanza
+
+La creazione di una nuova istanza e' giustificata quando serve isolamento operativo su almeno uno di questi assi:
+
+- database e stato runtime separati
+- file di configurazione separati
+- credenziali exchange separate
+- gruppo Telegram separato
+- bot Telegram separato
+- ciclo di deploy/start/stop separato
+
+Se invece una nuova fonte deve convivere nello stesso dominio operativo, la scelta preferita e' aggiungerla a una istanza esistente.
+
+### Modifica di una istanza esistente
+
+Una istanza gia' `active` deve poter essere evoluta senza essere ricreata da zero. Il caso operativo tipico e':
+
+1. esiste una istanza attiva;
+2. l'operatore vuole aggiungere una nuova fonte;
+3. la nuova fonte porta con se' uno o piu' trader;
+4. ogni trader viene collegato a un account exchange esistente o nuovo;
+5. vengono aggiunti o aggiornati i topic Telegram necessari;
+6. l'istanza viene rivalidata e ridistribuita.
+
+Il principio operativo e' che l'operatore modifica lo **stato desiderato** dell'istanza nel control plane, poi applica la differenza al runtime.
+
+### Workflow di edit raccomandato
+
+1. aprire l'istanza in modalita' `edit`
+2. aggiungere o modificare fonti, trader, account e destinazioni Telegram
+3. visualizzare un riepilogo o diff delle modifiche
+4. eseguire la validazione
+5. applicare il deploy della nuova configurazione
+6. riavviare l'istanza solo se richiesto dal tipo di modifica
 
 ### Obiettivo del workflow
 
 Questo flusso evita due errori opposti:
 - provisioning troppo manuale e frammentato;
 - automazione one-shot troppo opaca per credenziali, Telegram e go-live.
+
+L'interfaccia operativa raccomandata e' a due livelli:
+
+- **wizard guidati** per creazione e modifica ordinaria
+- **comandi tecnici granulari** per manutenzione, repair e automazione
 
 ---
 
@@ -92,41 +142,94 @@ La CLI `tsbctl` e' l'orchestratore del workflow. Il principio e' evitare un unic
 ### Comandi principali
 
 ```bash
-# Creazione istanza
-tsbctl instance create --name alpha_demo --type DEMO --server vps1
+# Creazione guidata istanza
+tsbctl instance init
 
-# Associazione fonte / trader
-tsbctl source add alpha_demo --trader trader_a --channel 12345
+# Modifica guidata istanza esistente
+tsbctl instance edit alpha_demo
 
-# Preparazione struttura e config
-tsbctl provision prepare alpha_demo
-
-# Provisioning sensibile
-tsbctl provision bybit alpha_demo
-tsbctl provision telegram alpha_demo
-
-# Validazione finale
+# Riepilogo / diff / verifica
+tsbctl instance summary alpha_demo
+tsbctl diff alpha_demo
 tsbctl validate alpha_demo
 
-# Deploy e avvio
+# Deploy e ciclo operativo
 tsbctl deploy alpha_demo
 tsbctl instance start alpha_demo
 tsbctl instance stop alpha_demo
 tsbctl instance status alpha_demo
 ```
 
+### Comandi tecnici di basso livello
+
+I comandi granulari restano disponibili per repair, automazione e casi speciali:
+
+```bash
+tsbctl instance create --name alpha_demo --type DEMO --server vps1
+tsbctl telegram bind-group alpha_demo --chat-id -1001234567890 --bot-token-env CONTROL_BOT_ALPHA
+tsbctl source add alpha_demo --channel 12345 --label fonte_a
+tsbctl trader add alpha_demo --trader trader_a --source fonte_a
+tsbctl account add alpha_demo --account acc_alpha --provider BYBIT
+tsbctl trader bind-account alpha_demo --trader trader_a --account acc_alpha
+tsbctl telegram bind-topic alpha_demo --scope trader_a --topic 201 --role NOTIFY
+tsbctl provision prepare alpha_demo
+tsbctl provision bybit alpha_demo
+tsbctl provision telegram alpha_demo
+```
+
+### Esempio di modifica di una istanza attiva
+
+Caso: aggiungere una nuova fonte con due trader a una istanza gia' attiva.
+
+```bash
+tsbctl instance edit alpha_demo
+```
+
+Oppure in forma esplicita:
+
+```bash
+tsbctl source add alpha_demo --channel 55555 --label fonte_b
+tsbctl trader add alpha_demo --source fonte_b --trader trader_x
+tsbctl trader add alpha_demo --source fonte_b --trader trader_y
+tsbctl trader bind-account alpha_demo --trader trader_x --account acc_main
+tsbctl trader bind-account alpha_demo --trader trader_y --account acc_y
+tsbctl telegram bind-topic alpha_demo --scope trader_x --topic 220 --role NOTIFY
+tsbctl telegram bind-topic alpha_demo --scope trader_y --topic 221 --role NOTIFY
+tsbctl instance summary alpha_demo
+tsbctl validate alpha_demo
+tsbctl deploy alpha_demo
+```
+
 ### Ruolo dei comandi
 
+- `instance init`
+  - avvia un wizard testuale che raccoglie i dati minimi per creare una nuova istanza coerente
+- `instance edit`
+  - avvia un wizard testuale per modificare una istanza esistente senza ricrearla
+- `instance summary`
+  - mostra lo stato desiderato completo dell'istanza in modo leggibile
+- `diff`
+  - mostra la differenza tra stato desiderato e stato attualmente deployato
 - `instance create`
-  - crea il record dell'istanza e lo stato iniziale `draft`
+  - crea il record base dell'istanza e lo stato iniziale `draft`
 - `source add`
-  - collega la nuova istanza alla fonte/trader da servire
+  - aggiunge una nuova fonte Telegram a una istanza esistente
+- `trader add`
+  - collega uno o piu' trader/profile a una fonte gia' registrata nell'istanza
+- `account add`
+  - registra un account exchange utilizzabile nell'istanza
+- `trader bind-account`
+  - collega ogni trader a un account exchange condiviso o dedicato
+- `telegram bind-group`
+  - collega all'istanza il gruppo Telegram e il bot di control plane da usare per notifiche e comandi
+- `telegram bind-topic`
+  - collega topic Telegram a scope di istanza, fonte, trader o account
 - `provision prepare`
   - genera struttura, YAML, `.env` placeholder e check preliminari
 - `provision bybit`
-  - crea o collega subaccount e credenziali exchange
+  - crea o collega account/subaccount e credenziali exchange
 - `provision telegram`
-  - crea o collega bot, gruppo e topic Telegram
+  - crea o collega bot, gruppo e topic Telegram dell'istanza
 - `validate`
   - controlla coerenza e completezza; se tutto e' corretto passa a `ready`
 - `deploy`
@@ -143,7 +246,7 @@ tsbctl instance status alpha_demo
 `management.db` e' il registro centrale di verita' per:
 - istanze
 - server target
-- mapping fonte/trader
+- mapping fonte/trader/account exchange
 - stato operativo
 - riferimenti alle credenziali
 - destinazioni Telegram
@@ -169,6 +272,25 @@ Il runtime del bot resta quasi invariato:
 - non dipende direttamente dalla semantica di onboarding.
 
 I dati di trading di dettaglio restano nei database `ops.sqlite3` delle singole istanze. Il control plane mantiene solo metadati, stato operativo e riferimenti sufficienti per una futura dashboard fleet-level con drill-down verso il dettaglio locale.
+
+### Modello concettuale
+
+Il modello dati e operativo di riferimento e' il seguente:
+
+- **Istanza** = unita' autonoma di esecuzione del bot
+- **Fonte** = input Telegram gestito da una istanza
+- **Trader** = parser/profile/identita' logica risolta dentro l'istanza
+- **Account exchange** = risorsa assegnabile a uno o piu' trader della stessa istanza
+- **Gruppo Telegram istanza** = destinazione di controllo e notifica dell'istanza
+
+Relazioni attese:
+
+- una istanza puo' avere piu' fonti
+- una fonte puo' avere uno o piu' trader
+- un trader e' sempre definito nel contesto di una istanza
+- piu' trader della stessa istanza possono condividere lo stesso account exchange
+- un trader puo' anche avere un account exchange dedicato
+- ogni istanza ha il proprio gruppo Telegram, con eventuali topic separati per trader, account o funzione
 
 ---
 
@@ -245,15 +367,16 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | created_at | DATETIME | |
 | updated_at | DATETIME | |
 
-### `bybit_subaccounts`
+### `exchange_accounts`
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| uid | TEXT | UID subaccount Bybit |
+| provider | TEXT | es. `BYBIT` |
+| uid | TEXT | UID account o subaccount exchange |
 | name | TEXT | es. `BOT_LIVE_X` |
-| parent_account | TEXT | account master Bybit |
+| parent_account | TEXT | account master exchange |
 | api_key_demo | TEXT | cifrato |
 | api_secret_demo | TEXT | cifrato |
 | api_key_live | TEXT | cifrato |
@@ -277,9 +400,33 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| trader_id | TEXT | es. `trader_a`, `trader_3` |
 | channel_id | TEXT | ID canale Telegram sorgente |
+| topic_id | INTEGER | topic sorgente opzionale |
 | channel_name | TEXT | label descrittiva |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+### `instance_traders`
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| instance_id | INTEGER FK | -> `instances` |
+| source_mapping_id | INTEGER FK | -> `source_mappings` |
+| trader_id | TEXT | es. `trader_a`, `trader_3` |
+| parser_profile | TEXT | profilo parser effettivo |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+### `trader_account_bindings`
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| instance_id | INTEGER FK | -> `instances` |
+| instance_trader_id | INTEGER FK | -> `instance_traders` |
+| exchange_account_id | INTEGER FK | -> `exchange_accounts` |
+| binding_mode | TEXT | `DEDICATED` \| `SHARED` |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
@@ -289,10 +436,11 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| source_mapping_id | INTEGER FK | -> `source_mappings` |
 | chat_id | TEXT | ID gruppo Telegram |
 | thread_id | INTEGER | ID topic nel supergroup |
 | role | TEXT | `NOTIFY` \| `CONTROL` \| `BOTH` |
+| scope_type | TEXT | `INSTANCE` \| `SOURCE` \| `TRADER` \| `ACCOUNT` |
+| scope_ref_id | INTEGER | FK logica verso la tabella rilevante per lo scope |
 | label | TEXT | es. `trader_a - segnali` |
 | enabled | BOOLEAN | |
 
@@ -308,7 +456,7 @@ Il livello fleet dovra' poter leggere da `management.db` almeno:
 - inventory istanze
 - tipo `DEMO` o `LIVE`
 - server associato
-- source mapping e trader associati
+- source mapping, trader associati e binding account exchange
 - stato operativo
 - revisione deployata
 - ultimo heartbeat
@@ -359,11 +507,11 @@ TeleSignalBot/
 - `crypto.py`
   - encrypt/decrypt con `TSB_MASTER_KEY`
 - `instance_provisioner.py`
-  - genera struttura, YAML e `.env`
+  - genera struttura, YAML e `.env` partendo da istanza, fonti, trader e binding account
 - `bybit_provisioner.py`
-  - crea o collega subaccount e API key
+  - crea o collega account/subaccount e API key
 - `telegram_provisioner.py`
-  - crea o collega gruppo e topic Telegram
+  - crea o collega gruppo e topic Telegram dell'istanza
 - `systemd_manager.py`
   - deploy, installazione e gestione del servizio
 - `cli.py`
@@ -399,51 +547,156 @@ In questo modello:
 
 ### Workflow tipico di upgrade
 
-1. aggiornare il clone condiviso in `repo/`
-2. aggiornare eventuali dipendenze richieste dalla nuova revisione
-3. applicare eventuali migrazioni compatibili
-4. riavviare in modo esplicito le istanze interessate
+1. verificare lo stato della repo condivisa
+2. aggiornare il clone condiviso in `repo/`
+3. aggiornare eventuali dipendenze richieste dalla nuova revisione
+4. applicare eventuali migrazioni compatibili
+5. pianificare il rollout verso le istanze interessate
+6. riavviare o riapplicare in modo esplicito le istanze selezionate
+
+### Regola fondamentale
+
+Aggiornare il codice condiviso **non** deve riavviare automaticamente tutte le istanze.
+
+La separazione corretta e':
+
+- `repo upgrade`
+  - aggiorna il codice condiviso disponibile sul server
+- `rollout`
+  - decide quali istanze passano alla nuova revisione e con quale ordine
+
+### Comandi raccomandati per la repo condivisa
+
+```bash
+tsbctl repo status
+tsbctl repo upgrade
+tsbctl repo upgrade --ref main
+tsbctl repo upgrade --ref <tag-or-commit>
+```
+
+#### `repo status`
+
+Deve mostrare almeno:
+
+- branch corrente
+- commit attuale della repo condivisa
+- ultimo commit disponibile da remoto
+- working tree pulita o dirty
+- timestamp ultimo upgrade
+
+#### `repo upgrade`
+
+Deve:
+
+- fare fetch/pull o checkout della revisione richiesta
+- mostrare chiaramente `from revision -> to revision`
+- fallire se la working tree sul server non e' pulita
+- registrare la nuova revisione target nel control plane
+- non riavviare automaticamente nessuna istanza
 
 ### Strategia raccomandata di rollout
 
 Il rollout standard non dovrebbe partire subito su tutte le istanze. La strategia raccomandata e':
 
 1. aggiornare il clone condiviso
-2. riavviare una sola istanza canary, preferibilmente `DEMO`
-3. verificare health check, log e comportamento base
-4. solo dopo eseguire il rollout sulle altre istanze
+2. generare un piano di rollout
+3. riavviare o aggiornare una sola istanza canary, preferibilmente `DEMO`
+4. verificare health check, log e comportamento base
+5. solo dopo eseguire il rollout sulle altre istanze
 
 Questo produce un flusso operativo del tipo:
 
 ```bash
+tsbctl repo status
 tsbctl repo upgrade
+tsbctl rollout plan
 tsbctl rollout restart alpha_demo
 tsbctl instance status alpha_demo
-tsbctl rollout restart --all
+tsbctl rollout apply --all
 ```
 
 L'obiettivo non e' impedire il rollout globale, ma evitare che un aggiornamento difettoso impatti tutte le istanze in un solo passaggio.
+
+### Comandi raccomandati per il rollout
+
+```bash
+tsbctl rollout plan
+tsbctl rollout status
+tsbctl rollout restart alpha_demo
+tsbctl rollout apply alpha_demo
+tsbctl rollout apply --group demo
+tsbctl rollout apply --all
+tsbctl rollout history
+tsbctl rollout diff alpha_demo
+tsbctl rollback alpha_demo --to <revision>
+```
+
+#### Significato operativo
+
+- `rollout plan`
+  - mostra quali istanze sono indietro rispetto alla revisione corrente della repo condivisa
+- `rollout restart`
+  - riavvia una istanza gia' compatibile con la config desiderata
+- `rollout apply`
+  - applica config aggiornata e riavvia se necessario
+- `rollout status`
+  - mostra lo stato del rollout corrente o dell'ultima revisione applicata
+- `rollout history`
+  - mostra gli eventi di rollout gia' eseguiti
+- `rollout diff`
+  - mostra differenza tra revisione/config attuale e target per una singola istanza
+- `rollback`
+  - riporta una istanza a una revisione precedente tracciata
+
+### Output atteso di `rollout plan`
+
+Per ogni istanza il piano dovrebbe mostrare almeno:
+
+- nome istanza
+- stato operativo
+- revisione corrente
+- revisione target
+- presenza di config drift
+- azione consigliata: `none`, `restart`, `apply`, `blocked`
+- eventuali warning o blocchi
+
+Esempio:
+
+```text
+INSTANCE     STATUS    CURRENT   TARGET    CONFIG_DRIFT   ACTION
+alpha_demo   active    a1b2c3    d4e5f6    no             restart
+alpha_live   active    a1b2c3    d4e5f6    yes            apply
+beta_live    active    d4e5f6    d4e5f6    no             none
+```
 
 ### Implicazioni
 
 - un update del codice puo' impattare tutte le istanze
 - onboarding di una nuova istanza e rollout di una nuova versione devono restare workflow distinti
 - lo stato operativo deve rendere visibile quale revisione e' effettivamente in uso
+- il control plane deve distinguere tra **revisione disponibile** e **revisione effettivamente in uso** per ogni istanza
 
 ### Estensioni consigliate
 
 Il control plane dovrebbe tracciare almeno:
 - `deployed_revision` per istanza
+- `target_revision` per istanza o per rollout
 - stato dell'ultimo deploy di configurazione
 - stato dell'ultimo rollout codice
+- esito dell'ultimo canary
+- storico rollback
 
 Comandi attesi in evoluzione:
 
 ```bash
+tsbctl repo status
 tsbctl repo upgrade
+tsbctl rollout plan
 tsbctl rollout restart alpha_demo
-tsbctl rollout restart --all
+tsbctl rollout apply --group demo
 tsbctl rollout apply --all
+tsbctl rollout history
+tsbctl rollback alpha_demo --to <revision>
 tsbctl instance status alpha_demo
 ```
 
@@ -513,18 +766,23 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 
 1. Introdurre `management.db` e il suo schema iniziale.
 2. Implementare cifratura e gestione della master key.
-3. Implementare `tsbctl instance create` e `source add`.
-4. Implementare `provision prepare`.
-5. Implementare `provision bybit` e `provision telegram`.
-6. Implementare `validate`.
-7. Implementare `deploy` e gestione del servizio.
-8. Applicare la modifica minima a `main.py` per `BOT_INSTANCE_NAME`.
+3. Implementare `tsbctl instance create` e binding del gruppo Telegram istanza.
+4. Implementare `source add`, `trader add` e `account bind`.
+5. Implementare `provision prepare`.
+6. Implementare `provision bybit` e `provision telegram`.
+7. Implementare `validate`.
+8. Implementare `deploy` e gestione del servizio.
+9. Applicare la modifica minima a `main.py` per `BOT_INSTANCE_NAME`.
 
 ---
 
 ## Decisioni fissate da questa revisione
 
-- il workflow e' **centrato sull'istanza**
+- l'istanza e' una **unita' operativa autonoma**
+- una istanza puo' essere **multi-fonte**
+- una fonte puo' servire **uno o piu' trader**
+- i trader possono usare account exchange **dedicati o condivisi**
+- ogni istanza ha un **proprio gruppo Telegram di controllo e notifica**
 - il provisioning e' **semi-guidato**
 - `DEMO` e `LIVE` sono **scelte esplicite in creazione**
 - `management.db` e' la **fonte di verita'**
