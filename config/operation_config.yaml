@@ -136,6 +136,7 @@ defaults:
         4: [25, 25, 25, 25]
         5: [20, 20, 20, 20, 20]
         6: [20, 20, 20, 20, 10, 10]
+        
     cancel_pending_by_engine: true  # true = il motore genera cancel automatici.
     cancel_pending_on_timeout: true  # true = cancella pending dopo timeout.
     pending_timeout_hours: 24  # Timeout pending in ore.
@@ -146,7 +147,7 @@ defaults:
     market_convert_mode: cancel_subsequent  # Valori supportati: cancel_subsequent | keep_subsequent. Comportamento quando MODIFY_ENTRY senza leg esplicita converte leg1 a MARKET.
     sl_trigger_by: MarkPrice  # Valori supportati: MarkPrice | LastPrice | IndexPrice.
     tp_trigger_by: MarkPrice  # Valori supportati: MarkPrice | LastPrice | IndexPrice.
-    cancel_subsequent_on_anchor_failure: false  # true = fallimento anchor entry blocca le entry successive ancora PENDING.
+    cancel_subsequent_on_anchor_failure: true  # true = fallimento anchor entry blocca le entry successive ancora PENDING.
 
   risk:
     mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.
