@@ -862,6 +862,7 @@ class LifecycleEntryGate:
             )
 
         factory = EntryCommandFactory()
+        management_plan = enriched.management_plan or ManagementPlanConfig()
         return factory.build_entry_commands(
             enrichment_id=eid,
             symbol=signal.symbol,
@@ -875,6 +876,7 @@ class LifecycleEntryGate:
                 signal.side, bool(decision.risk_snapshot.get("hedge_mode", False))
             ),
             risk_snapshot=decision.risk_snapshot,
+            management_plan=management_plan,
         )
 
     def _build_d_commands(
@@ -1413,6 +1415,7 @@ class LifecycleEntryGate:
                 hedge_mode=hedge_mode,
                 position_idx=position_idx,
                 risk_snapshot={"legs": [replacement_snap]},
+                management_plan=mp,
             )
         except Exception as exc:
             return self._review_chain(enriched, chain, f"market_entry_now_factory_error:{exc}")
@@ -1587,6 +1590,7 @@ class LifecycleEntryGate:
             hedge_mode=hedge_mode,
             position_idx=self.resolve_position_idx(chain.side, hedge_mode),
             risk_snapshot={"legs": [replacement_snap]},
+            management_plan=ManagementPlanConfig.model_validate_json(chain.management_plan_json),
         )
 
     def _apply_move_to_be(

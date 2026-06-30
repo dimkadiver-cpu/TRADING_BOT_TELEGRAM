@@ -400,6 +400,15 @@ class ExecutionGateway:
                 self._repo.reject_entry_as_signal(cmd.command_id, reason=reason)
                 return
             self._repo.mark_failed(cmd.command_id, reason=reason)
+            if (
+                cmd.command_type == "PLACE_ENTRY_WITH_ATTACHED_TPSL"
+                and self._repo.should_cancel_subsequent_on_anchor_failure(cmd.trade_chain_id)
+                and cmd.command_id is not None
+            ):
+                self._repo.cancel_pending_subsequent_entries(
+                    cmd.trade_chain_id,
+                    failed_command_id=cmd.command_id,
+                )
             self._repo.write_command_failed_tech_log(
                 cmd.command_id,
                 cmd.trade_chain_id,

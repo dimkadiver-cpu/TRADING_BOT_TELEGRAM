@@ -16,7 +16,12 @@ def _apply_migrations(db_path: str) -> None:
     conn.close()
 
 
-def _insert_chain(db_path: str, chain_id: int = 1, account_id: str = "acc_1") -> None:
+def _insert_chain(
+    db_path: str,
+    chain_id: int = 1,
+    account_id: str = "acc_1",
+    management_plan_json: str = "{}",
+) -> None:
     conn = sqlite3.connect(db_path)
     conn.execute(
         "INSERT INTO ops_trade_chains (trade_chain_id, source_enrichment_id, "
@@ -24,7 +29,7 @@ def _insert_chain(db_path: str, chain_id: int = 1, account_id: str = "acc_1") ->
         "lifecycle_state, entry_mode, management_plan_json, created_at, updated_at) "
         "VALUES (?,?,?,?,?,?,?,?,?,?,?,datetime('now'),datetime('now'))",
         (chain_id, 1, 10, 100, "trader_a", account_id,
-         "BTC/USDT", "LONG", "WAITING_ENTRY", "ONE_SHOT", "{}"),
+         "BTC/USDT", "LONG", "WAITING_ENTRY", "ONE_SHOT", management_plan_json),
     )
     conn.commit()
     conn.close()
@@ -65,6 +70,16 @@ def _insert_cmd_with_status(
         "idempotency_key, created_at, updated_at) VALUES (?,?,?,?,?,?,?,?)",
         (cmd_id, chain_id, cmd_type, status,
          json.dumps(payload or {}), f"idem:{cmd_id}", now, now),
+    )
+    conn.commit()
+    conn.close()
+
+
+def _update_chain_management_plan(db_path: str, chain_id: int, management_plan: dict) -> None:
+    conn = sqlite3.connect(db_path)
+    conn.execute(
+        "UPDATE ops_trade_chains SET management_plan_json=? WHERE trade_chain_id=?",
+        (json.dumps(management_plan), chain_id),
     )
     conn.commit()
     conn.close()
@@ -1753,6 +1768,62 @@ def test_place_entry_failure_projects_gateway_command_failed_tech_log(ops_db):
     assert payload["chain_id"] == 1
     assert payload["trader_id"] == "trader_a"
     assert payload["execution_account_id"] == "demo_1"
+
+
+def test_attached_entry_failure_can_cancel_subsequent_pending_entries(ops_db):
+    from src.runtime_v2.execution_gateway.adapters.fake import FakeAdapter
+    from src.runtime_v2.execution_gateway.config_loader import ExecutionConfigLoader
+    from src.runtime_v2.execution_gateway.gateway import ExecutionGateway
+    from src.runtime_v2.execution_gateway.repositories import GatewayCommandRepository
+
+    _update_chain_management_plan(
+        ops_db,
+        1,
+        {"cancel_subsequent_on_anchor_failure": True},
+    )
+    _insert_cmd(ops_db, 2201, cmd_type="PLACE_ENTRY_WITH_ATTACHED_TPSL", payload={
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_type": "LIMIT",
+        "price": 50000.0,
+        "qty": 0.02,
+        "sequence": 1,
+        "attached_tpsl": {
+            "mode": "FULL",
+            "take_profit": 51000.0,
+            "stop_loss": 49000.0,
+        },
+    })
+    _insert_cmd(ops_db, 2202, cmd_type="PLACE_ENTRY", payload={
+        "symbol": "BTC/USDT",
+        "side": "LONG",
+        "entry_type": "LIMIT",
+        "price": 48000.0,
+        "qty": 0.03,
+        "sequence": 2,
+    })
+
+    repo = GatewayCommandRepository(ops_db)
+    gw = ExecutionGateway(
+        config=ExecutionConfigLoader("config/execution.yaml").load(),
+        adapter_registry={"bybit_demo_1": FakeAdapter(fail_on={"PLACE_ENTRY_WITH_ATTACHED_TPSL"})},
+        repo=repo,
+    )
+
+    cmd = next(c for c in repo.get_pending_batch() if c.command_id == 2201)
+    gw.process(cmd, account_id="acc_1")
+
+    conn = sqlite3.connect(ops_db)
+    rows = conn.execute(
+        "SELECT command_id, status FROM ops_execution_commands WHERE command_id IN (2201, 2202) ORDER BY command_id"
+    ).fetchall()
+    chain_state = conn.execute(
+        "SELECT lifecycle_state FROM ops_trade_chains WHERE trade_chain_id=1"
+    ).fetchone()[0]
+    conn.close()
+
+    assert rows == [(2201, "FAILED"), (2202, "CANCELLED")]
+    assert chain_state == "CANCELLED"
 
 
 def test_review_required_projects_gateway_review_required_with_context(ops_db):

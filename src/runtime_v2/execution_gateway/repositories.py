@@ -430,6 +430,51 @@ class GatewayCommandRepository:
         finally:
             conn.close()
 
+    def should_cancel_subsequent_on_anchor_failure(self, trade_chain_id: int) -> bool:
+        conn = sqlite3.connect(self._db)
+        try:
+            row = conn.execute(
+                "SELECT management_plan_json FROM ops_trade_chains WHERE trade_chain_id=?",
+                (trade_chain_id,),
+            ).fetchone()
+            if not row or not row[0]:
+                return False
+            try:
+                payload = json.loads(row[0] or "{}")
+            except Exception:
+                return False
+            return bool(payload.get("cancel_subsequent_on_anchor_failure", False))
+        finally:
+            conn.close()
+
+    def cancel_pending_subsequent_entries(
+        self,
+        trade_chain_id: int,
+        *,
+        failed_command_id: int,
+    ) -> int:
+        """Cancel pending sibling entry commands after anchor entry failure.
+
+        Only affects PENDING PLACE_ENTRY / PLACE_ENTRY_WITH_ATTACHED_TPSL commands other
+        than the failed anchor command. SENT/ACK orders are left untouched because they
+        may already exist on the exchange and need an explicit cancel path.
+        """
+        now = _now()
+        conn = sqlite3.connect(self._db)
+        try:
+            with conn:
+                cursor = conn.execute(
+                    "UPDATE ops_execution_commands SET status='CANCELLED', updated_at=? "
+                    "WHERE trade_chain_id=? "
+                    "  AND command_type IN ('PLACE_ENTRY','PLACE_ENTRY_WITH_ATTACHED_TPSL') "
+                    "  AND status='PENDING' "
+                    "  AND command_id != ?",
+                    (now, trade_chain_id, failed_command_id),
+                )
+                return int(cursor.rowcount or 0)
+        finally:
+            conn.close()
+
     def cancel_chain_if_all_entries_failed(
         self, trade_chain_id: int, command_type: str, *, reason: str
     ) -> bool:

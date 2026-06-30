@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 from src.runtime_v2.lifecycle.models import ExecutionCommand
-from src.runtime_v2.signal_enrichment.models import EnrichedEntryLeg
+from src.runtime_v2.signal_enrichment.models import EnrichedEntryLeg, ManagementPlanConfig
 from src.parser_v2.contracts.entities import TakeProfit
 
 
@@ -37,9 +37,11 @@ class EntryCommandFactory:
         hedge_mode: bool,
         position_idx: int,
         risk_snapshot: dict,
+        management_plan: ManagementPlanConfig | None = None,
     ) -> list[ExecutionCommand]:
         # Sort entries by sequence so leg1 is always first regardless of input order
         sorted_entries = sorted(entries, key=lambda leg: leg.sequence)
+        management_plan = management_plan or ManagementPlanConfig()
 
         # Build snap lookup: sequence → snap dict
         snap_by_seq: dict[int, dict] = {
@@ -100,11 +102,11 @@ class EntryCommandFactory:
                 attached: dict = {
                     "mode": "FULL" if final_tp_price is not None else "SL_ONLY",
                     "stop_loss": sl_price,
-                    "sl_trigger_by": "MarkPrice",
+                    "sl_trigger_by": management_plan.sl_trigger_by,
                 }
                 if final_tp_price is not None:
                     attached["take_profit"] = final_tp_price
-                    attached["tp_trigger_by"] = "MarkPrice"
+                    attached["tp_trigger_by"] = management_plan.tp_trigger_by
                 payload["attached_tpsl"] = attached
 
                 command = ExecutionCommand(

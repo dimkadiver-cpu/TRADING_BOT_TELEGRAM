@@ -18,6 +18,8 @@
 # - management_plan.close_distribution.mode: distribuzione close parziali. Valori supportati: table, equal.
 # - management_plan.cancel_averaging_pending_after / cancel_unfilled_pending_after: trigger di cancellazione pending. Valori supportati: null, tp1, tp2.
 # - management_plan.protective_sl_mode: gestione SL protettivo. Valori supportati: exchange_native_first, bot_managed.
+# - management_plan.sl_trigger_by / tp_trigger_by: trigger price mode Bybit. Valori supportati: MarkPrice, LastPrice, IndexPrice.
+# - management_plan.cancel_subsequent_on_anchor_failure: true = se fallisce la leg anchor con TPSL attached, annulla le entry successive ancora PENDING.
 # - risk.mode: modello di sizing. Valori supportati: risk_pct_of_capital, risk_usdt_fixed.
 # - risk.capital_base_mode: fonte capitale per il sizing. Valori supportati: static_config, live_equity.
 
@@ -142,6 +144,9 @@ defaults:
     risk_freed_by_be: true  # true = il BE libera capacita' rischio residua.
     protective_sl_mode: exchange_native_first  # Valori supportati: exchange_native_first | bot_managed. (NON USATO)
     market_convert_mode: cancel_subsequent  # Valori supportati: cancel_subsequent | keep_subsequent. Comportamento quando MODIFY_ENTRY senza leg esplicita converte leg1 a MARKET.
+    sl_trigger_by: MarkPrice  # Valori supportati: MarkPrice | LastPrice | IndexPrice.
+    tp_trigger_by: MarkPrice  # Valori supportati: MarkPrice | LastPrice | IndexPrice.
+    cancel_subsequent_on_anchor_failure: false  # true = fallimento anchor entry blocca le entry successive ancora PENDING.
 
   risk:
     mode: risk_pct_of_capital  # Valori supportati: risk_pct_of_capital | risk_usdt_fixed.

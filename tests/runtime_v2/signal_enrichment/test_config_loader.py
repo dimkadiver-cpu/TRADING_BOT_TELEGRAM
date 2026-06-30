@@ -72,6 +72,10 @@ def _minimal_global_config(overrides: dict | None = None) -> dict:
                 "cancel_unfilled_pending_after": None,
                 "risk_freed_by_be": True,
                 "protective_sl_mode": "exchange_native_first",
+                "market_convert_mode": "cancel_subsequent",
+                "sl_trigger_by": "MarkPrice",
+                "tp_trigger_by": "MarkPrice",
+                "cancel_subsequent_on_anchor_failure": False,
             },
             "risk": {
                 "mode": "risk_pct_of_capital",
@@ -169,6 +173,26 @@ def test_management_plan_reads_fee_aware_be_flags(config_dir):
     assert cfg.management_plan.be_trigger == "tp2"
     assert cfg.management_plan.be_fee_correction_enabled is True
     assert cfg.management_plan.be_fee_fallback_profile == "bybit_linear"
+
+
+def test_management_plan_reads_trigger_modes_and_anchor_failure_policy(config_dir):
+    trader_yaml = config_dir / "traders" / "trader_a.yaml"
+    _write_yaml(
+        trader_yaml,
+        {
+            "management_plan": {
+                "sl_trigger_by": "LastPrice",
+                "tp_trigger_by": "IndexPrice",
+                "cancel_subsequent_on_anchor_failure": True,
+            }
+        },
+    )
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    loader = OperationConfigLoader(str(config_dir))
+    cfg = loader.get_effective_config("trader_a")
+    assert cfg.management_plan.sl_trigger_by == "LastPrice"
+    assert cfg.management_plan.tp_trigger_by == "IndexPrice"
+    assert cfg.management_plan.cancel_subsequent_on_anchor_failure is True
 
 
 def test_trader_override_update_admission(config_dir):

@@ -305,6 +305,12 @@ class OperationConfigLoader:
             cancel_unfilled_pending_after=mgmt_raw.get("cancel_unfilled_pending_after"),
             risk_freed_by_be=mgmt_raw.get("risk_freed_by_be", True),
             protective_sl_mode=mgmt_raw.get("protective_sl_mode", "exchange_native_first"),
+            market_convert_mode=mgmt_raw.get("market_convert_mode", "cancel_subsequent"),
+            sl_trigger_by=mgmt_raw.get("sl_trigger_by", "MarkPrice"),
+            tp_trigger_by=mgmt_raw.get("tp_trigger_by", "MarkPrice"),
+            cancel_subsequent_on_anchor_failure=mgmt_raw.get(
+                "cancel_subsequent_on_anchor_failure", False
+            ),
         )
 
         account = self._build_account_config(effective_account_raw)

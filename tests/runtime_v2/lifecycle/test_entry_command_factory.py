@@ -22,12 +22,14 @@ def _leg(seq, etype, price, weight):
 
 def _cmds(eid, entries, tps, snaps, sl=49000.0, symbol="BTC/USDT", side="LONG"):
     from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
     f = EntryCommandFactory()
     return f.build_entry_commands(
         enrichment_id=eid, symbol=symbol, side=side,
         entries=entries, take_profits=tps, sl_price=sl,
         leverage=10, hedge_mode=False, position_idx=0,
         risk_snapshot={"legs": snaps},
+        management_plan=ManagementPlanConfig(),
     )
 
 
@@ -157,6 +159,31 @@ def test_attached_block_trigger_fields():
     assert p["attached_tpsl"]["tp_trigger_by"] == "MarkPrice"
 
 
+def test_attached_block_uses_configured_trigger_fields():
+    from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
+    from src.runtime_v2.signal_enrichment.models import ManagementPlanConfig
+
+    cmds = EntryCommandFactory().build_entry_commands(
+        enrichment_id=12,
+        symbol="BTC/USDT",
+        side="LONG",
+        entries=[_leg(1, "LIMIT", 50000.0, 1.0)],
+        take_profits=[_tp(1, 51000.0)],
+        sl_price=49000.0,
+        leverage=10,
+        hedge_mode=False,
+        position_idx=0,
+        risk_snapshot={"legs": [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)]},
+        management_plan=ManagementPlanConfig(
+            sl_trigger_by="LastPrice",
+            tp_trigger_by="IndexPrice",
+        ),
+    )
+    p = json.loads(cmds[0].payload_json)
+    assert p["attached_tpsl"]["sl_trigger_by"] == "LastPrice"
+    assert p["attached_tpsl"]["tp_trigger_by"] == "IndexPrice"
+
+
 def test_deferred_leg_raises_if_sl_none():
     # seq=1 MARKET → hits attached guard first ("sl_price required for attached TPSL")
     from src.runtime_v2.lifecycle.entry_command_factory import EntryCommandFactory
@@ -168,6 +195,7 @@ def test_deferred_leg_raises_if_sl_none():
             sl_price=None,
             leverage=10, hedge_mode=False, position_idx=0,
             risk_snapshot={"legs": [_snap(1, "MARKET", None, 100.0, None, "deferred_market", 1.0)]},
+            management_plan=None,
         )
 
 
@@ -181,6 +209,7 @@ def test_attached_block_raises_if_sl_none():
             sl_price=None,
             leverage=10, hedge_mode=False, position_idx=0,
             risk_snapshot={"legs": [_snap(1, "LIMIT", 50000.0, 100.0, 0.01, "fixed", 1.0)]},
+            management_plan=None,
         )
 
 

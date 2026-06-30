@@ -185,6 +185,9 @@ class ManagementPlanConfig(BaseModel):
     risk_freed_by_be: bool = True
     protective_sl_mode: Literal["exchange_native_first", "bot_managed"] = "exchange_native_first"
     market_convert_mode: Literal["cancel_subsequent", "keep_subsequent"] = "cancel_subsequent"
+    sl_trigger_by: Literal["MarkPrice", "LastPrice", "IndexPrice"] = "MarkPrice"
+    tp_trigger_by: Literal["MarkPrice", "LastPrice", "IndexPrice"] = "MarkPrice"
+    cancel_subsequent_on_anchor_failure: bool = False
 
 
 class RiskConfig(BaseModel):
