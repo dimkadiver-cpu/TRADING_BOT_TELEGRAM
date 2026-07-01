@@ -97,40 +97,67 @@ dall'execution gateway).
 
 Il workflow approvato e' semi-guidato: il sistema automatizza la preparazione e la validazione, mentre i passaggi sensibili restano confermati o completati dall'operatore.
 
-### Scenario base
+### Due piani di lavoro
 
-1. L'operatore decide se usare una istanza esistente oppure crearne una nuova.
-2. Se serve una nuova istanza, la crea scegliendo `DEMO` o `LIVE` (isolamento rigido:
-   tutti gli account dell'istanza saranno dello stesso tipo).
-3. L'istanza nasce in stato `draft`.
-4. Associa all'istanza:
-   - server target
-   - gruppo Telegram dell'istanza **oppure** flag "istanza muta"
-   - bot Telegram dell'istanza (se non muta)
-   - eventuali credenziali Telethon dell'istanza (solo se introduce fonti nuove da ascoltare)
-5. Per ogni fonte da gestire:
-   - se la fonte **esiste gia'** (ascoltata da un'altra istanza): l'istanza vi si **iscrive**;
-   - se la fonte e' **nuova**: si registra la fonte, si costruisce/valida il parser,
-     si assegna il listener di ingestione, poi l'istanza vi si iscrive;
-   - seleziona uno o piu' trader/profile dal **catalogo globale**
-   - applica una policy account di default
-   - applica una policy Telegram di default (ignorata se l'istanza e' muta)
-   - definisce solo gli override locali necessari
-6. Il sistema prepara in automatico:
-   - record centrali in `management.db`
-   - struttura filesystem dell'istanza
-   - file YAML runtime
-   - `.env` dell'istanza
-   - mapping di fonti, trader, iscrizioni e destinazioni
-7. I passaggi sensibili vengono completati o confermati dall'operatore:
-   - claim degli account dal **pool** (il provisioning Bybit in bulk e' avvenuto prima, a parte)
-   - provisioning Telegram automatico (gruppo + topic), confermato dall'operatore
-8. L'operatore esegue la validazione finale dell'istanza.
-9. Se la validazione passa, l'istanza va in `ready`.
-10. L'operatore esegue il deploy.
-11. Il deploy installa file e servizi sul server target e porta l'istanza in `deployed`.
-    Per le fonti nuove installa anche il relativo servizio di ingestione.
-12. L'avvio finale e' esplicito: `start` porta l'istanza in `active`.
+Il flusso si divide in due piani con **blast radius diverso**, coerenti con
+l'architettura a due piani:
+
+- **Piano condiviso (setup)** - definisce gli oggetti globali: pool account, catalogo
+  trader, fonti. Operazioni **rare, lente, sensibili**; una modifica qui **impatta tutte
+  le istanze** che usano quell'oggetto.
+- **Piano istanza (assembly)** - costruisce una singola istanza **scegliendo** tra gli
+  oggetti gia' esistenti: iscrizione a fonti, claim account, policy, provisioning, deploy.
+  Operazioni **veloci e isolate** alla singola istanza.
+
+**Regola del confine (wizard netto).** Se durante l'assembly serve un oggetto che non
+esiste ancora (es. una fonte nuova), il wizard **si ferma**: prima lo crei nel piano
+condiviso, poi torni all'assembly. Non si creano oggetti globali "di nascosto" dentro la
+creazione di un'istanza, perche' sono operazioni che riguardano anche le altre istanze.
+
+### Piano condiviso - setup (prerequisiti)
+
+1. **Pool account** - `account provision` in bulk popola il pool (demo/live) in stato `available`.
+2. **Catalogo trader** - `trader catalog add` definisce ogni trader una volta (alias, pattern, profilo parser).
+3. **Fonti** - `source register`: canale + parser **della fonte** + `resolution` +
+   **membership trader** (quali trader porta) + assegnazione del listener di ingestione.
+
+> **Parser della fonte (Modello A, fedele al codice).** Il parser e' della **fonte**:
+> per una fonte a trader singolo defaulta al parser di quel trader; per una fonte
+> multi-trader e' **comune** a tutti i trader del topic. Per avere parser diversi per
+> trader si usano **fonti/topic separati** (come oggi). Il parser per-trader dentro la
+> stessa fonte multi-trader non e' supportato dal runtime attuale: eventuale estensione
+> futura.
+>
+> **Blast radius.** `source edit` e `trader catalog edit` modificano oggetti globali:
+> devono **avvisare "consumato da N istanze"** e richiedere conferma esplicita.
+
+### Piano istanza - assembly (scenario base)
+
+1. `instance create --type DEMO|LIVE --server ... [--muted]` -> stato `draft`.
+2. Associa gruppo/bot Telegram dell'istanza (oppure flag muta).
+3. **Iscrizione** alle fonti che l'istanza deve consumare (`source subscribe`). Se serve
+   una fonte nuova, il wizard si ferma (regola del confine): la crei nel piano condiviso,
+   poi riprendi.
+4. **Claim** degli account dal **pool** (solo del tipo giusto).
+5. **Policy account** per fonte + eventuale **binding trader -> account** (override).
+   *Questo e' per-istanza:* la stessa fonte, su istanze diverse, esegue su conti diversi.
+6. **Policy/destinazioni Telegram** (saltate se l'istanza e' muta).
+7. `provision prepare` genera in automatico: record in `management.db`, struttura
+   filesystem, YAML runtime, `.env`, mapping di iscrizioni e destinazioni.
+8. `provision telegram` crea in automatico gruppo + topic e cattura i `thread_id` (se non muta).
+9. `validate` controlla coerenza e completezza, incluse le **collisioni alias**; se passa -> `ready`.
+10. `deploy` installa esecutore + eventuali listener di fonti nuove -> `deployed`.
+11. `start` avvia esplicitamente -> `active`.
+
+### Cosa e' condiviso e cosa e' per-istanza
+
+Due regole che chiariscono la separazione:
+
+- **Membership trader -> fonte = globale** (definita sulla fonte, una volta).
+- **Binding trader -> account = per-istanza** (gli account sono claimati per-istanza).
+
+In breve: *chi c'e' nella fonte* e' condiviso; *dove viene eseguito* e' dell'istanza.
+Questo e' il fan-out del Modello B espresso nel workflow.
 
 ### Quando creare una nuova istanza
 
@@ -1179,6 +1206,13 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 - provisioning Telegram **completamente automatico** via **sessione utente Telethon
   dedicata** (il bot non puo' creare gruppi): crea gruppo + topic e cattura i `thread_id`,
   con throttling anti-flood; saltato per istanze `muted`
+- workflow a **due piani**: piano condiviso (pool, catalogo trader, fonti) e piano istanza
+  (iscrizione, claim, policy, deploy), con **wizard netto** (i prerequisiti si creano nel
+  piano condiviso, non "di nascosto" durante l'assembly)
+- **membership trader -> fonte globale**, **binding trader -> account per-istanza**;
+  parser **della fonte** (parser per-trader solo via fonti separate)
+- `source edit` / `trader catalog edit` devono avvisare **"consumato da N istanze"**
+  (blast radius delle modifiche globali)
 - ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
