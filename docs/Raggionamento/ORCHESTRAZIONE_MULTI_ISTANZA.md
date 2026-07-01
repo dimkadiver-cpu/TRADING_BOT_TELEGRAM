@@ -518,6 +518,61 @@ consumata da piu' esecutori. La cucitura esiste gia' nella pipeline `runtime_v2`
 
 ---
 
+## Sistema di configurazione
+
+Oggi la config e' **piatta e scritta a mano** dentro la repo (una sola `config/`, con
+detection, comportamento e wiring impastati). Nel modello scalabile diventa **generata e
+stratificata**, ma il **runtime non cambia**: carica le stesse forme di file dalla propria
+config dir e applica la **stessa logica di merge a 2 livelli** di oggi.
+
+### Classificazione dei file config
+
+| File | Categoria | Dove / come |
+|---|---|---|
+| `channels.yaml` | inventory/wiring | generato per-istanza da `management.db` |
+| `execution.yaml` | inventory/wiring + tuning | wiring da `management.db` + template adapter |
+| `telegram_control.yaml` | inventory/wiring | generato per-istanza da `management.db` |
+| `trader_aliases.json` | detection globale | generato dal catalogo trader; condiviso |
+| `text_patterns.yaml` | detection globale | condiviso (piano ingestione) |
+| `operation_config.yaml` | comportamento | generato per-istanza da **scheletro + override** |
+| `traders/<id>.yaml` | comportamento | generato per-istanza da **scheletro + override** |
+| `setup_reshape_templates.yaml`, `templates/` | template comportamentali | condivisi, riusati per nome |
+
+### Partizione per piano
+
+La config si divide seguendo i due piani del Modello B:
+
+- **Ingestione (capire il segnale), condivisa per fonte**: detection del trader (alias,
+  pattern) e `channels.yaml`. La detection **non e' mai stata** nel `traders/<id>.yaml`:
+  vive gia' in file globali (`trader_aliases.json`, `text_patterns.yaml`), che restano
+  condivisi quasi invariati.
+- **Esecuzione (fare trading), per istanza**: `operation_config.yaml`, `traders/<id>.yaml`
+  (comportamento), `execution.yaml`. Il `traders/<id>.yaml` di oggi e' gia' **quasi solo
+  comportamento** (risk, entry_split, management_plan, account): diventa per-istanza.
+
+### Precedenza e propagazione
+
+- **Due livelli, come oggi**: `operation_config` (default) -> override `traders/<id>.yaml`.
+  Il runtime mantiene la stessa logica di merge.
+- **N copie da uno scheletro**: `operation_config.yaml` era nato come **template generale
+  di default applicabile a tutti**, sovrascrivibile dal trader, con alcuni concetti
+  global-only (`global_safety`, `account_mode`, `symbol_blacklist.global`). Nel modello
+  scalabile ogni istanza ne riceve una **copia generata da uno scheletro comune**. Lo
+  scheletro **non e' un livello che si eredita**: e' un punto di partenza.
+- **Propagazione esplicita**: cambiare lo scheletro **non** tocca le istanze esistenti;
+  si applica **rigenerando + ridistribuendo** le istanze scelte, mostrando "N istanze
+  impattate" (coerente con "stato desiderato -> diff -> apply").
+- **`registered_traders` derivato**: non piu' elencato a mano, ma **dedotto** dai trader
+  che l'istanza consuma (via sottoscrizioni + membership delle sue fonti).
+
+### Il runtime non cambia
+
+L'esecutore carica `operation_config.yaml` + `traders/<id>.yaml` dalla propria config dir
+e applica il merge a 2 livelli **identico a oggi**. Cambia solo che la config e'
+**generata** invece che scritta a mano, e ne esistono **N copie** invece di una.
+
+---
+
 ## Principi architetturali
 
 - **Un solo repo clone** - il codice e' condiviso; le istanze differiscono per config, dati e credenziali
@@ -1384,6 +1439,11 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   permessi OS + disco cifrato, **backup cifrati** ed **export redatti**; niente Fernet/master
   key nel primo design (hardening futuro opzionale)
 - YAML e `.env` sono **artefatti generati**
+- sistema config **stratificato ma runtime invariato**: detection globale condivisa
+  (ingestione); comportamento (`operation_config`, `traders/<id>.yaml`) per-istanza,
+  generato da **scheletro + override** con precedenza **a 2 livelli come oggi** (niente
+  eredita' viva); `registered_traders` **derivato** dalle sottoscrizioni; propagazione
+  dello scheletro **esplicita**
 - il bot runtime resta **quasi invariato**
 - onboarding istanza e upgrade repo sono **workflow distinti**
 
