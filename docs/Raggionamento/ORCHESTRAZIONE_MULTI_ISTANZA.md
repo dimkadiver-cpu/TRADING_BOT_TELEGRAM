@@ -276,7 +276,8 @@ Il modello dati e operativo di riferimento e' il seguente:
 - **Istanza** = unita' autonoma di **esecuzione** del bot (esecutore + notificatore)
 - **Fonte** = input Telegram **globale**, ascoltato da un solo listener e condivisibile
   tra piu' istanze
-- **Trader** = parser/profile/identita' logica definita nel catalogo globale
+- **Trader** = identita' logica nel **registro magro** globale; detection (alias/pattern) e
+  comportamento (risk/entry/management) vivono nei file, non nel registro
 - **Catalogo trader** = definizione **globale e unica** dei trader disponibili, con
   detection, alias e pattern; riusabile da piu' istanze
 - **Account exchange** = risorsa assegnabile a uno o piu' trader della stessa istanza,
@@ -532,7 +533,7 @@ config dir e applica la **stessa logica di merge a 2 livelli** di oggi.
 | `channels.yaml` | inventory/wiring | generato per-istanza da `management.db` |
 | `execution.yaml` | inventory/wiring + tuning | wiring da `management.db` + template adapter |
 | `telegram_control.yaml` | inventory/wiring | generato per-istanza da `management.db` |
-| `trader_aliases.json` | detection globale | generato dal catalogo trader; condiviso |
+| `trader_aliases.json` | detection globale | file globale condiviso (**non** generato dal registro) |
 | `text_patterns.yaml` | detection globale | condiviso (piano ingestione) |
 | `operation_config.yaml` | comportamento | generato per-istanza da **scheletro + override** |
 | `traders/<id>.yaml` | comportamento | generato per-istanza da **scheletro + override** |
@@ -564,6 +565,16 @@ La config si divide seguendo i due piani del Modello B:
   impattate" (coerente con "stato desiderato -> diff -> apply").
 - **`registered_traders` derivato**: non piu' elencato a mano, ma **dedotto** dai trader
   che l'istanza consuma (via sottoscrizioni + membership delle sue fonti).
+  - Il runtime usa `registered_traders` come **gate**: solo i trader nel registro ricevono
+    config effettiva (`config_loader.py`) e la validazione incrocia canali, pattern e
+    blacklist con esso (`validator.py`). Il gate resta **identico**: `tsbctl` scrive la
+    lista derivata nella `operation_config.yaml` generata.
+  - Il **registro magro** in `management.db` (solo `trader_id` + `display_name`) e' la
+    **lista canonica** da cui `registered_traders` viene derivato.
+  - Poiche' `registered_traders`, `channels.yaml` e i pattern sono derivati dalla **stessa
+    membership**, le incoerenze che `validator.py` rincorre (trader nel canale ma non
+    registrato, pattern con trader non registrato, ...) diventano **impossibili per
+    costruzione**.
 
 ### Il runtime non cambia
 
@@ -789,54 +800,45 @@ Credenziali Telethon dei **listener di ingestione** (per fonte), non delle istan
 | phone | TEXT | segreto (file locale permissionato) |
 | session_string | TEXT | segreto (file locale permissionato) |
 
-### `trader_catalog`
+### `trader_catalog` (registro magro)
 
-Catalogo **globale**: nessun `instance_id`. Un trader si definisce una volta e si riusa.
+Registro **globale** e **magro**: solo l'identita' canonica del trader. Nessun
+`instance_id`. La **detection** (alias, pattern) e il **comportamento** (risk, entry,
+management) **non** stanno qui: vivono nei file globali (`trader_aliases.json`,
+`text_patterns.yaml`) e negli scheletri di comportamento. Il control plane governa
+*chi esiste e come si relaziona*, non *come si riconosce o come si comporta*.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | trader_id | TEXT UNIQUE | es. `trader_a`, `trader_3` |
 | display_name | TEXT | label leggibile |
-| parser_profile | TEXT | profilo parser di default |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
-### `trader_aliases`
-
-Alias di default del trader **globale**. Override per-fonte in `source_trader_memberships`.
-
-| Campo | Tipo | Note |
-|---|---|---|
-| id | INTEGER PK | |
-| trader_catalog_id | INTEGER FK | -> `trader_catalog` |
-| alias_text | TEXT | tag o alias normalizzato |
-| enabled | BOOLEAN | |
-| added_at | DATETIME | |
+> Alimenta il `registered_traders` per-istanza (gate del runtime) ed e' il bersaglio FK
+> della membership. Niente tabella `trader_aliases`: gli alias restano nei file globali.
 
 ### `source_trader_memberships`
 
-Quali trader del catalogo globale sono ammessi da una fonte. La risoluzione dentro la
-fonte considera **solo** gli alias/pattern dei trader di questo insieme (scoping per
-membership).
+**Relazione** pura: quali trader del registro sono ammessi da una fonte. E' l'ancora del
+fan-out e lo **scope** della risoluzione: la detection dentro una fonte considera **solo**
+gli alias/pattern dei trader di questo insieme.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | source_id | INTEGER FK | -> `sources` |
 | trader_catalog_id | INTEGER FK | -> `trader_catalog` |
-| alias_override_json | TEXT | override alias locale opzionale (vince sul globale) |
-| pattern_override | TEXT | override pattern locale opzionale |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
-> **Regola di risoluzione alias:**
-> 1. alias di default sul trader globale;
-> 2. `alias_override_json` per-fonte vince sul default;
-> 3. la risoluzione considera solo i trader ammessi dalla fonte (membership);
-> 4. `validate` deve **rilevare collisioni** di alias dentro l'insieme ammesso da una
->    fonte e bloccare: oggi un alias ambiguo passa silenzioso e puo' instradare il
->    segnale sul trader sbagliato.
+> **Regola di risoluzione alias/collisioni** (opera sui file globali, scopata alla membership):
+> 1. detection di default nei file globali (`trader_aliases.json`, `text_patterns.yaml`);
+> 2. eventuali override per-fonte nella detection della fonte (in `channels.yaml` generato);
+> 3. la risoluzione considera solo i trader **ammessi dalla fonte** (membership);
+> 4. `validate` legge i file globali incrociati con la membership e **blocca le collisioni**
+>    di alias dentro l'insieme ammesso (oggi un alias ambiguo passa silenzioso).
 
 ### `source_account_policies`
 
@@ -1401,7 +1403,8 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   control plane; topologia **un-writer / molti-reader** con poll + WAL
 - una istanza puo' essere **multi-fonte** (via iscrizione)
 - una fonte puo' servire **uno o piu' trader** dal catalogo globale
-- il **catalogo trader e' globale** (nessun `instance_id`)
+- il **registro trader e' globale e magro** (solo `trader_id` + `display_name`; nessun
+  `instance_id`): alimenta il gate `registered_traders`; detection e comportamento nei file
 - i trader possono usare account exchange **dedicati o condivisi**
 - **isolamento rigido `DEMO`/`LIVE`**: nessuna istanza mescola account demo e live;
   `exchange_accounts` ha **una sola coppia** di chiavi, `mode` derivato dal `type`
@@ -1428,8 +1431,8 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
   `resolution_mode default|patterns_only` (niente `alias|pattern|hybrid`)
-- alias: default sul **trader globale**, override **per-fonte**, risoluzione **scopata alla
-  membership**, collisioni **bloccate da `validate`**
+- alias/detection **nei file globali** (`trader_aliases.json`, `text_patterns.yaml`), non
+  nel registro; risoluzione **scopata alla membership**, collisioni **bloccate da `validate`**
 - il provisioning e' **semi-guidato**
 - `management.db` e' la **fonte di verita'** e **control plane**, non replica il dettaglio trading
 - **topologia control plane locale**: `management.db` e i segreti stanno sulla macchina di
