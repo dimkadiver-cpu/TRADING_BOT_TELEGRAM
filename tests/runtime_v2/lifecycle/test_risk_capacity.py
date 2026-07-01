@@ -292,6 +292,25 @@ class TestRiskCapacityEngine:
         assert decision.passed is False
         assert decision.reason == "zero_risk_distance"
 
+    def test_risk_engine_uses_corrected_numeric_prefix_prices_consistently(self) -> None:
+        enriched = _make_enriched(
+            symbol="1000PEPEUSDT",
+            side="SHORT",
+            entry_type="LIMIT",
+            entry_price=0.00226,
+            sl_price=0.00263,
+            tp_prices=[0.00192, 0.00158, 0.00085],
+            capital_base_usdt=1000.0,
+            risk_pct=1.0,
+        )
+        decision = self.engine.validate(enriched, [], None, _make_market_snapshot(mark_price=0.0022537))
+
+        assert decision.passed is True
+        assert decision.risk_snapshot["entry_price"] == pytest.approx(0.00226)
+        assert decision.risk_snapshot["risk_distance"] == pytest.approx(0.00037)
+        assert decision.risk_snapshot["legs"][0]["qty"] == pytest.approx(27027.027027, rel=1e-6)
+        assert decision.size_usdt == pytest.approx(61.081081, rel=1e-6)
+
 
 # ── deferred MARKET tests ──────────────────────────────────────────────────────
 

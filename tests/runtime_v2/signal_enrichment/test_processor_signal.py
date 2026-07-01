@@ -123,6 +123,57 @@ def _make_parse_result(
     )
 
 
+def _make_numeric_prefix_parse_result(
+    *,
+    canonical_message_id: int = 248,
+    raw_message_id: int = 3884,
+):
+    from src.parser_v2.contracts.canonical_message import CanonicalMessage, SignalPayload
+    from src.parser_v2.contracts.context import RawContext
+    from src.parser_v2.contracts.entities import EntryLeg, Price, StopLoss, TakeProfit
+    from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
+    import datetime
+
+    signal = SignalPayload(
+        completeness="COMPLETE",
+        symbol="1000PEPEUSDT",
+        side="SHORT",
+        entry_structure="ONE_SHOT",
+        entries=[
+            EntryLeg(
+                sequence=1,
+                entry_type="LIMIT",
+                price=Price(raw="0.00000226", value=0.00000226),
+            )
+        ],
+        stop_loss=StopLoss(price=Price(raw="0.00000263", value=0.00000263)),
+        take_profits=[
+            TakeProfit(sequence=1, price=Price(raw="0.00000192", value=0.00000192), label="TP1"),
+            TakeProfit(sequence=2, price=Price(raw="0.00000158", value=0.00000158), label="TP2"),
+            TakeProfit(sequence=3, price=Price(raw="0.00000085", value=0.00000085), label="TP3"),
+        ],
+    )
+    canonical = CanonicalMessage(
+        parser_profile="trader_a",
+        primary_class="SIGNAL",
+        parse_status="PARSED",
+        confidence=1.0,
+        signal=signal,
+        raw_context=RawContext(raw_text="1000PEPE test"),
+    )
+    return CanonicalParseResult(
+        raw_message_id=raw_message_id,
+        canonical_message_id=canonical_message_id,
+        parser_profile="trader_a",
+        resolved_trader_id=None,
+        primary_class="SIGNAL",
+        parse_status="PARSED",
+        canonical_message=canonical,
+        warnings=[],
+        parsed_at=datetime.datetime.now(datetime.timezone.utc),
+    )
+
+
 @pytest.fixture
 def processor(tmp_path):
     from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
@@ -510,6 +561,57 @@ def test_signal_pass_entry_weights_applied(processor):
     assert enriched.enriched_signal is not None
     assert len(enriched.enriched_signal.entries) == 1
     assert enriched.enriched_signal.entries[0].weight == 1.0
+
+
+def test_signal_applies_numeric_prefix_price_correction_from_market_snapshot(tmp_path):
+    from datetime import datetime, timezone
+
+    from src.runtime_v2.lifecycle.ports import SymbolMarketSnapshot
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+    from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
+    from src.runtime_v2.signal_enrichment.processor import SignalEnrichmentProcessor
+
+    cfg = _minimal_global_config()
+    cfg["defaults"]["signal_policy"]["price_corrections"] = {
+        "enabled": True,
+        "numeric_prefix_exchange_rescale": True,
+        "numeric_prefix_max_mark_deviation_ratio": 0.20,
+        "reject_on_unresolved_numeric_prefix_mismatch": True,
+        "round_to_tick": False,
+        "clamp_to_exchange_precision": False,
+    }
+    config_file = tmp_path / "operation_config.yaml"
+    with config_file.open("w") as f:
+        yaml.dump(cfg, f)
+    (tmp_path / "traders").mkdir()
+    db_path = str(tmp_path / "test.db")
+    _apply_migrations(db_path)
+
+    market_snapshot = SymbolMarketSnapshot(
+        symbol="1000PEPEUSDT",
+        mark_price=0.0022537,
+        bid=0.0022510,
+        ask=0.0022520,
+        min_order_size=100.0,
+        price_precision=6,
+        qty_precision=0,
+        captured_at=datetime.now(timezone.utc),
+        source="test",
+        payload_json="{}",
+    )
+    proc = SignalEnrichmentProcessor(
+        config_loader=OperationConfigLoader(str(tmp_path)),
+        repository=EnrichedCanonicalMessageRepository(db_path),
+        market_snapshot_provider=lambda account_id, symbol: market_snapshot,
+    )
+
+    enriched = proc.process(_make_numeric_prefix_parse_result())
+
+    assert enriched.enrichment_decision == "PASS"
+    assert enriched.enriched_signal is not None
+    assert enriched.enriched_signal.entries[0].price.value == pytest.approx(0.00226)
+    assert enriched.enriched_signal.stop_loss.price.value == pytest.approx(0.00263)
+    assert any(log.check == "numeric_prefix_exchange_rescale" for log in enriched.enrichment_log)
 
 
 def test_idempotency_same_canonical_message_id(processor):

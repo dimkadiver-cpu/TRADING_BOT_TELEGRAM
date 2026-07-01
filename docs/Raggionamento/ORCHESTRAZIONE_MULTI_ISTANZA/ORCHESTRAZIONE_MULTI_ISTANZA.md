@@ -123,7 +123,8 @@ Metterlo nel control plane creerebbe contesa in scrittura centrale a ogni segnal
 - Ogni **esecutore** e' un **reader**: legge `id > cursore_locale`, processa nel proprio
   `ops.sqlite3`, avanza il cursore locale.
 - **Wake**: poll dello shared DB a intervallo breve (`MAX(id) > cursore` e' banale); WAL
-  (gia' attivo, `017`) regge bene un writer + molti reader. Un canale di notifica e'
+  (gia' attivo: `db/migrations/001_init.sql` sul parser DB; `017_ops_enable_wal.sql` copre
+  l'ops DB) regge bene un writer + molti reader. Un canale di notifica e'
   un'ottimizzazione futura.
 
 ---
@@ -985,10 +986,19 @@ in istanze a isolamento rigido. Mappatura reale ricostruita dal codice
 
 | Account logico | Adapter | Trader | Mode reale |
 |---|---|---|---|
-| `demo_1` | `bybit_demo_1` | trader_a, trader_b, trader_c, trader_d, trader_3, trader_prova | demo |
-| `demo_2` | `bybit_demo_2` | trader_devos_crypto | demo |
-| `demo_3` | `bybit_demo_3` | trader_crypto_ninjias | demo |
+| `demo_1` | `bybit_demo_1` | trader_a, trader_b, trader_c, trader_d, trader_3, trader_prova* | demo |
+| `demo_2` | `bybit_demo_2` | trader_devos_crypto, rsi_swing, rsi_intraday, sma_intraday | demo |
+| `demo_3` | `bybit_demo_3` | trader_crypto_ninjias, trader_3_1 | demo |
 | `live_1` | `bybit_live_1` | trader_gg_shot | live (`allow_live_trading: false`) |
+
+\* `trader_prova` e' in `registered_traders` ma **non ha file** `traders/trader_prova.yaml`:
+gira sui soli default (account `demo_1`).
+
+**Decisione:** i profili di test (`trader_prova`, `rsi_swing`, `rsi_intraday`,
+`sma_intraday`) vengono **registrati nel catalogo globale** e migrati in `main_demo`
+come gli altri trader, con i binding account attuali (`demo_1` per `trader_prova`,
+`demo_2` per `rsi_*`/`sma_*`). Per `trader_prova` va creato il file
+`traders/trader_prova.yaml` mancante (oggi gira sui soli default).
 
 **Finestra favorevole:** `live_1` non e' realmente operativo (`allow_live_trading: false`),
 quindi la scomposizione avviene **prima** del go-live, senza book live aperti da spostare.
@@ -1374,11 +1384,13 @@ else:
 ```
 
 Stato attuale del codice: `main.py` usa `config_dir = str(root_dir / "config")` hardcoded,
-con `ops_db_path` e `parser_db_path` derivati da `root_dir`. La modifica va agganciata a
-questo punto, mantenendo la compatibilita' con il comportamento a istanza singola.
+ma i path dei DB sono **gia' overridabili via env**: `PARSER_DB_PATH` e `OPS_DB_PATH`
+(default `root_dir/db/parser.sqlite3` e `root_dir/db/ops.sqlite3`). La modifica minima
+riguarda quindi **solo la config dir**; per i DB il control plane scrive le env giuste
+nel `.env` generato, senza toccare il runtime.
 
-Sotto il Modello B, `parser_db_path` (segnale capito) puo' puntare al `parser.sqlite3`
-**condiviso della fonte**, mentre `ops_db_path` resta locale all'istanza. La risoluzione
+Sotto il Modello B, `PARSER_DB_PATH` (segnale capito) puo' puntare al `parser.sqlite3`
+**condiviso della fonte**, mentre `OPS_DB_PATH` resta locale all'istanza. La risoluzione
 di questi path e' compito del control plane, non del runtime.
 
 ---
@@ -1478,7 +1490,8 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   `instance_id`): alimenta il gate `registered_traders`; detection e comportamento nei file
 - i trader possono usare account exchange **dedicati o condivisi**
 - **isolamento rigido `DEMO`/`LIVE`**: nessuna istanza mescola account demo e live;
-  `exchange_accounts` ha **una sola coppia** di chiavi, `mode` derivato dal `type`
+  `exchange_accounts` ha **una sola coppia** di chiavi e `environment` DEMO/LIVE
+  **intrinseco** all'account (partiziona il pool)
 - modello account: `management.db` modella il **wiring** (account logico -> adapter ->
   credenziali); il **tuning comportamentale** vive nei template
 - account a **pool globale**: auto-provisioning Bybit in **bulk** (`account provision`),

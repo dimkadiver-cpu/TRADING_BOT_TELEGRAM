@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Callable, Iterable
 
+from src.runtime_v2.lifecycle.ports import SymbolMarketSnapshot
 from src.runtime_v2.parser_pipeline.models import CanonicalParseResult
 from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
 from src.runtime_v2.signal_enrichment.models import (
@@ -17,6 +18,7 @@ from src.runtime_v2.signal_enrichment.models import (
     ReshapeAudit,
     ReshapeRejectionInfo,
 )
+from src.runtime_v2.signal_enrichment.price_corrections import apply_price_corrections
 from src.runtime_v2.signal_enrichment.repository import EnrichedCanonicalMessageRepository
 from src.runtime_v2.signal_enrichment.reshaping.setup_reshaper import apply_reshape
 from src.runtime_v2.symbols import symbol_matches_policy, to_raw_symbol
@@ -31,10 +33,12 @@ class SignalEnrichmentProcessor:
         config_loader: OperationConfigLoader,
         repository: EnrichedCanonicalMessageRepository,
         on_pass: Callable[[], None] | None = None,
+        market_snapshot_provider: Callable[[str, str], SymbolMarketSnapshot | None] | None = None,
     ) -> None:
         self._config = config_loader
         self._repo = repository
         self._on_pass = on_pass
+        self._market_snapshot_provider = market_snapshot_provider
 
     def process(self, result: CanonicalParseResult) -> EnrichedCanonicalMessage:
         existing = self._repo.get_by_canonical_message_id(result.canonical_message_id)
@@ -119,6 +123,25 @@ class SignalEnrichmentProcessor:
         if config.signal_policy.tp.require_tp:
             if not signal.take_profits:
                 return block("missing_take_profit")
+
+        market_snapshot = self._get_market_snapshot(config.account_id, symbol)
+        price_correction_result = apply_price_corrections(
+            signal,
+            market_snapshot,
+            config.signal_policy.price_corrections,
+        )
+        for audit in price_correction_result.audits:
+            log.append(
+                EnrichmentLogEntry(
+                    check=audit.check,
+                    original=str(audit.details.get("entry_price_before")) if audit.details else None,
+                    result=str(audit.details.get("entry_price_after")) if audit.details else audit.check,
+                    detail=str(audit.details) if audit.details else None,
+                )
+            )
+        if price_correction_result.rejected:
+            return block(price_correction_result.reason_code or "price_correction_rejected")
+        signal = price_correction_result.signal
 
         reshape_mode = config.setup_mode == "reshape" and config.setup_reshape_template is not None
 
@@ -225,6 +248,25 @@ class SignalEnrichmentProcessor:
             policy_version=policy_version,
             lifecycle_processed=False,
         )
+
+    def _get_market_snapshot(
+        self,
+        account_id: str,
+        symbol: str,
+    ) -> SymbolMarketSnapshot | None:
+        if self._market_snapshot_provider is None:
+            return None
+        try:
+            return self._market_snapshot_provider(account_id, symbol)
+        except Exception:
+            logger.warning("signal enrichment market snapshot lookup failed for %s", symbol, exc_info=True)
+            return None
+
+    def set_market_snapshot_provider(
+        self,
+        provider: Callable[[str, str], SymbolMarketSnapshot | None] | None,
+    ) -> None:
+        self._market_snapshot_provider = provider
 
     def _make_block_reshape(
         self,

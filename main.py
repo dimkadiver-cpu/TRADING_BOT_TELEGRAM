@@ -675,6 +675,7 @@ async def _async_main(
             execution_runtime=execution_runtime,
             symbol_registry=symbol_registry,
         )
+        enrichment_processor.set_market_snapshot_provider(exchange_port.get_symbol_market_state)
         risk_engine = RiskCapacityEngine()
         entry_gate = _build_lifecycle_entry_gate(
             root_dir=root_dir,

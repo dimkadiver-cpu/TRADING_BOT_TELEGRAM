@@ -148,6 +148,9 @@ class SlConfig(BaseModel):
 
 class PriceCorrectionsConfig(BaseModel):
     enabled: bool = False
+    numeric_prefix_exchange_rescale: bool = False
+    numeric_prefix_max_mark_deviation_ratio: float = 0.20
+    reject_on_unresolved_numeric_prefix_mismatch: bool = True
     round_to_tick: bool = False
     clamp_to_exchange_precision: bool = False
 

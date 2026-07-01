@@ -155,6 +155,28 @@ def test_default_effective_config_reads_use_trader_leverage_hint_as_false(config
     assert cfg.risk.use_trader_leverage_hint is False
 
 
+def test_price_corrections_reads_numeric_prefix_fields(config_dir):
+    global_cfg = _minimal_global_config()
+    global_cfg["defaults"]["signal_policy"]["price_corrections"] = {
+        "enabled": True,
+        "numeric_prefix_exchange_rescale": True,
+        "numeric_prefix_max_mark_deviation_ratio": 0.2,
+        "reject_on_unresolved_numeric_prefix_mismatch": True,
+        "round_to_tick": False,
+        "clamp_to_exchange_precision": False,
+    }
+    _write_yaml(config_dir / "operation_config.yaml", global_cfg)
+    from src.runtime_v2.signal_enrichment.config_loader import OperationConfigLoader
+
+    loader = OperationConfigLoader(str(config_dir))
+    cfg = loader.get_effective_config("trader_a")
+    assert cfg is not None
+    assert cfg.signal_policy.price_corrections.enabled is True
+    assert cfg.signal_policy.price_corrections.numeric_prefix_exchange_rescale is True
+    assert cfg.signal_policy.price_corrections.numeric_prefix_max_mark_deviation_ratio == 0.2
+    assert cfg.signal_policy.price_corrections.reject_on_unresolved_numeric_prefix_mismatch is True
+
+
 def test_management_plan_reads_fee_aware_be_flags(config_dir):
     trader_yaml = config_dir / "traders" / "trader_a.yaml"
     _write_yaml(

@@ -518,6 +518,77 @@ def test_async_main_passes_channel_resolver_to_lifecycle_gate_worker(monkeypatch
     assert captured["channel_resolver"] is channel_resolver
 
 
+def test_async_main_wires_market_snapshot_provider_into_enrichment_processor(monkeypatch, tmp_path):
+    import main as app_main
+
+    class StopBootstrap(Exception):
+        pass
+
+    class FakeTelegramClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def start(self):
+            return None
+
+        async def disconnect(self):
+            return None
+
+    monkeypatch.setattr(app_main, "setup_logging", lambda **kwargs: logging.getLogger("test"))
+    monkeypatch.setattr(app_main, "apply_migrations", lambda **kwargs: 0)
+    monkeypatch.setenv("TELEGRAM_API_ID", "12345")
+    monkeypatch.setenv("TELEGRAM_API_HASH", "abcde")
+    monkeypatch.setattr(app_main, "load_channels_config", lambda path: SimpleNamespace(channels=[]))
+    monkeypatch.setattr(app_main, "build_ingestion_service", lambda **kwargs: MagicMock(name="ingestion"))
+    monkeypatch.setattr(app_main, "build_processing_status_store", lambda **kwargs: MagicMock(name="status"))
+    monkeypatch.setattr(app_main, "RawMessageRepository", lambda **kwargs: MagicMock(name="raw_repo"))
+    monkeypatch.setattr(app_main, "RawMessageRevisionStore", lambda **kwargs: MagicMock(name="revision_store"))
+    monkeypatch.setattr(app_main, "ChannelConfigResolver", lambda **kwargs: MagicMock(name="channel_resolver"))
+    monkeypatch.setattr(app_main, "CanonicalMessageRepository", lambda **kwargs: MagicMock(name="canonical_repo"))
+    monkeypatch.setattr(app_main.sqlite3, "connect", lambda *args, **kwargs: MagicMock(name="sqlite_conn"))
+    monkeypatch.setattr(app_main, "ParserRunStore", lambda conn: SimpleNamespace(create_run=lambda **kwargs: 1))
+    monkeypatch.setattr(app_main, "ParserResultV2Store", lambda conn: MagicMock(name="result_v2_store"))
+    monkeypatch.setattr(app_main, "ParserPipelineProcessor", lambda **kwargs: MagicMock(name="parser_pipeline"))
+    enrichment_processor = MagicMock(name="enrichment_processor")
+    monkeypatch.setattr(app_main, "SignalEnrichmentProcessor", lambda **kwargs: enrichment_processor)
+    monkeypatch.setattr(app_main, "OperationConfigLoader", lambda *args, **kwargs: MagicMock(name="config_loader"))
+    monkeypatch.setattr(app_main, "EnrichedCanonicalMessageRepository", lambda *args, **kwargs: MagicMock(name="enriched_repo"))
+    monkeypatch.setattr(app_main, "TextPatternCatalog", lambda path: SimpleNamespace(all_trader_ids=set()))
+    monkeypatch.setattr(app_main, "TraderResolver", lambda **kwargs: MagicMock(name="trader_resolver"))
+    monkeypatch.setattr(app_main, "TradeChainRepository", lambda *args, **kwargs: MagicMock(name="chain_repo"))
+    monkeypatch.setattr(app_main, "LifecycleEventRepository", lambda *args, **kwargs: MagicMock(name="event_repo"))
+    monkeypatch.setattr(app_main, "ExecutionCommandRepository", lambda *args, **kwargs: MagicMock(name="command_repo"))
+    monkeypatch.setattr(app_main, "ControlStateRepository", lambda *args, **kwargs: MagicMock(name="control_repo"))
+    monkeypatch.setattr(app_main, "SnapshotRepository", lambda *args, **kwargs: MagicMock(name="snapshot_repo"))
+    monkeypatch.setattr(app_main, "ExchangeEventRepository", lambda *args, **kwargs: MagicMock(name="exchange_event_repo"))
+    monkeypatch.setattr(app_main, "TelegramClient", FakeTelegramClient)
+    monkeypatch.setattr(app_main, "_build_execution_runtime", lambda **kwargs: None)
+    monkeypatch.setattr(app_main, "_build_symbol_registry", lambda execution_runtime: None)
+    exchange_port = MagicMock(name="exchange_port")
+    monkeypatch.setattr(app_main, "_build_exchange_port", lambda **kwargs: exchange_port)
+
+    def fake_build_lifecycle_entry_gate(**kwargs):
+        raise StopBootstrap
+
+    monkeypatch.setattr(app_main, "_build_lifecycle_entry_gate", fake_build_lifecycle_entry_gate)
+
+    with pytest.raises(StopBootstrap):
+        asyncio.run(
+            app_main._async_main(
+                parser_db_path=str(tmp_path / "parser.sqlite3"),
+                migrations_dir=str(tmp_path / "migrations"),
+                ops_db_path=str(tmp_path / "ops.sqlite3"),
+                ops_migrations_dir=str(tmp_path / "ops_migrations"),
+                log_path=str(tmp_path / "bot.log"),
+                root_dir=tmp_path,
+            )
+        )
+
+    enrichment_processor.set_market_snapshot_provider.assert_called_once_with(
+        exchange_port.get_symbol_market_state
+    )
+
+
 def test_async_main_sends_startup_before_execution_runtime(monkeypatch, tmp_path):
     import main as app_main
 

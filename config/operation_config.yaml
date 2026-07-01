@@ -102,7 +102,10 @@ defaults:
       require_sl: true  # true = blocca/review segnali senza SL.
 
     price_corrections:
-      enabled: false  # Correzioni prezzo automatiche.
+      enabled: false  # Abilita il motore di correzione prezzi.
+      numeric_prefix_exchange_rescale: false  # Corregge setup fuori scala per simboli tipo 1000PEPE usando il mark price exchange.
+      numeric_prefix_max_mark_deviation_ratio: 0.20  # Deviazione massima ammessa tra prezzo corretto e mark price per accettare la riscalatura.
+      reject_on_unresolved_numeric_prefix_mismatch: true  # Se il mismatch su simboli con prefisso numerico non e' correggibile in modo sicuro, blocca il segnale.
       round_to_tick: false  # Arrotonda i prezzi al tick size.
       clamp_to_exchange_precision: false  # Adatta i prezzi alla precisione exchange.
 
