@@ -582,6 +582,71 @@ L'esecutore carica `operation_config.yaml` + `traders/<id>.yaml` dalla propria c
 e applica il merge a 2 livelli **identico a oggi**. Cambia solo che la config e'
 **generata** invece che scritta a mano, e ne esistono **N copie** invece di una.
 
+### Scala: nessun file piatto gigante
+
+A scala reale (decine di fonti, alcune con decine di trader e topic), il modello **rimuove**
+il problema del file piatto, non lo aggrava:
+
+- l'**inventory** vive in `management.db` (righe indicizzate), navigato via UI con
+  ricerca/filtri/gruppi/bulk — non in un YAML da centinaia di voci;
+- la config **generata** di ogni istanza contiene solo il **suo sottoinsieme** di
+  fonti/trader: e' piccola; il file completo non esiste da nessuna parte;
+- il comportamento non esplode in file: **pochi scheletri + piccoli override**, non un file
+  pieno per trader.
+
+Output generato: puo' essere organizzato **per fonte** (`sources/<label>/...`) per
+leggibilita'/versionamento se si vuole ispezionarlo; il runtime puo' comunque leggere un
+file consolidato generato, quindi resta invariato. Cambiare la *struttura letta dal runtime*
+(es. `gruppo -> topics`) sarebbe una modifica al runtime, valutabile a parte.
+
+### Schema config come singola fonte di verita'
+
+Oggi la config e' parsata con `raw.get("campo", default)` sparsi (`config_loader.py`) +
+i commenti nei YAML come documentazione umana: **non esiste uno schema machine-readable**.
+Questo impedisce un editor UI auto-generato e lascia i default impliciti.
+
+Decisione: introdurre uno **schema config tipizzato** (Pydantic) come **singola fonte di
+verita'**. Il **formato file resta YAML** — "JSON Schema" e' il linguaggio di schema, non un
+obbligo di formato; lo YAML parsa allo stesso dict.
+
+```text
+config.yaml  --parse-->  dict  --valida-->  modello Pydantic (SSOT)
+                                                  |
+                                                  |-- runtime carica e valida
+                                                  |-- editor UI si genera da .model_json_schema()
+                                                  \-- validate = validazione di schema
+```
+
+Una definizione, tre usi: **runtime + editor + validate**. Aggiungi un campo al modello una
+volta -> il runtime lo accetta **e** l'editor lo mostra, senza toccare il codice dell'editor,
+senza drift. I commenti ricchi degli YAML attuali diventano metadati dello schema
+(`Field(description=..., enum=..., default=...)`). Lavoro reale: sostituire i `.get()` con i
+modelli; **nessuna migrazione di formato**.
+
+### Override per-trader
+
+L'override comportamentale di un trader in un'istanza (es. `setup_mode: reshape`,
+`template: ladder_4_3_Tprofit`, `risk: 2%`) e' scritto nella UI da un **editor generato dallo
+schema** e salvato come **blob opaco** per la coppia `(istanza, trader)`. `management.db`
+non *modella* i campi del comportamento: li **trasporta**. `tsbctl` fonde e genera
+`traders/<id>.yaml`. Il merge resta a **2 livelli** (`operation_config` + override trader);
+i `template` reshape restano riferimenti risolti dalla logica runtime esistente.
+
+### Applicare i cambiamenti: hot-reload vs restart
+
+Verificato nel codice:
+
+| Cambio | Effetto |
+|---|---|
+| Detection (`channels.yaml`) | **hot-reload** (`ChannelConfigWatcher`) |
+| Comportamento (`operation_config`, trader config) | **hot-reload** (`reload_if_changed()` chiamato in `signal_enrichment/processor.py`) |
+| Wiring esecuzione (`execution.yaml`: conti/adapter) | **restart** (connessioni all'avvio, nessun watcher) |
+
+Implicazione operativa: la maggior parte dei tweak per-trader (reshape, risk) si applica
+**a caldo, senza restart** e senza toccare posizioni aperte. Solo i cambi di **wiring**
+(aggiungi/togli conto, cambia adapter) richiedono restart. Il **diff** nella UI classifica
+il cambiamento e indica quale dei due.
+
 ---
 
 ## Principi architetturali
@@ -729,6 +794,16 @@ Fonte **globale**, con il proprio listener di ingestione. Non ha `instance_id`.
 > `alias|pattern|hybrid`, che non esiste nel runtime. `fixed` corrisponde a
 > `trader_id: <id>` in `channels.yaml`; `dynamic` corrisponde a `trader_id: null` con
 > `resolution.mode`.
+>
+> **Forme di fonte.** Una fonte e' una coppia `(channel_id, topic_id)`. Ne derivano tre casi:
+> canale **mono-trader** (1 fonte `fixed`); canale/topic **multi-trader** (1 fonte `dynamic`,
+> N trader via alias/pattern); **gruppo con un topic per trader** = **N fonti** che
+> condividono lo stesso `channel_id` (una per topic). La UI le **raggruppa** sotto il canale.
+>
+> **Selezione per-istanza.** La membership dice quali trader la fonte *puo'* portare; **quali**
+> un'istanza esegue e **su quale conto** e' per-istanza, espresso dai `trader_account_bindings`
+> (nessun binding = trader non eseguito in quell'istanza). Cosi' due istanze sulla stessa
+> fonte scelgono sottoinsiemi e conti diversi.
 
 ### `source_instance_subscriptions`
 
@@ -987,6 +1062,12 @@ La UI chiama **lo stesso core di provisioning della CLI** (`management/`). E' un
 **chiamante**, non una reimplementazione: nessuna logica duplicata, nessun drift. Tutto
 cio' che fa la UI e' esprimibile anche via `tsbctl`.
 
+### Forma tecnica
+
+Non e' una pagina statica: deve **scrivere** e orchestrare (SSH, Bybit, Telegram). E' una
+**web app locale** servita da `tsbctl ui` su **localhost**, accanto a `management.db` sulla
+macchina di controllo. Il backend e' il core `management/`; il front-end e' un chiamante.
+
 ### Le 4 tabelle umane
 
 Viste leggibili sulle tabelle DB (che restano implementazione). L'operatore ragiona in
@@ -1016,16 +1097,50 @@ il pool da cui si pesca in fase di creazione istanza.
 
 ### Flusso di creazione visuale
 
-Rispetta il **wizard netto** dei due piani:
+Rispetta il **wizard netto** dei due piani. Ogni step scrive lo **stato desiderato**;
+nulla tocca il runtime fino a `Deploy`.
 
-1. Nella tabella Istanze -> "Crea" apre un form: tipo/server, `muted` si/no.
-2. **Selezione fonti**: multi-select dalla tabella Fonti (solo iscrizione, non creazione).
-3. **Claim account**: multi-select dalle righe `available` del pool del tipo giusto.
-4. **Telegram**: gruppo/bot o muta.
-5. Se serve una fonte inesistente, la UI **rimanda alla tabella Fonti** per crearla nel
+1. **Identita'**: nome, tipo `DEMO`/`LIVE`, server, `muted` si/no.
+2. **Fonti (iscrizione)**: multi-select dalla tabella Fonti (solo iscrizione, non creazione).
+   Se serve una fonte inesistente, la UI **rimanda alla tabella Fonti** per crearla nel
    piano condiviso: non la crea di nascosto.
-6. `Validate` -> `Deploy` -> `Start` come pulsanti espliciti, che guidano la stessa
-   macchina a stati della CLI, mostrando il **diff** prima di applicare.
+3. **Selezione trader + conto** (per ogni fonte iscritta): la membership della fonte e'
+   globale, ma **quali** trader questa istanza esegue e **su quale conto** e' per-istanza.
+   Il pannello mostra i trader della fonte con spunta usa/non-usa e un menu conto per ognuno,
+   piu' una scorciatoia "tutti -> conto X" (la policy di default), con override per-trader:
+
+   ```text
+   USA?   TRADER        CONTO
+    [x]   trader_a   -> demo_1
+    [x]   trader_b   -> demo_1
+    [ ]   trader_c      (non usato in questa istanza)
+    [x]   trader_3   -> demo_2
+   ```
+
+   "USA? = no" = nessun binding -> quel trader non gira qui. Due istanze sulla stessa fonte
+   possono scegliere **sottoinsiemi diversi** su conti diversi (fan-out al livello del trader).
+4. **Claim account**: i conti si pescano dalle righe `available` del pool del tipo giusto.
+5. **Telegram**: gruppo/bot o muta.
+6. **Riepilogo + diff**: `Salva bozza` (draft, zero effetti) -> `Valida` (ready) ->
+   `Deploy` (prima volta che tocca il mondo: claim atomico, provisioning, push SSH) ->
+   `Start`. Pulsanti espliciti sulla stessa macchina a stati della CLI; `Deploy` su `LIVE`
+   chiede conferma.
+
+### Funzioni di scala
+
+A scala reale (es. ~15 fonti, alcune con decine di trader e topic), l'interfaccia **non**
+puo' essere una lista piatta. Le tabelle devono avere:
+
+- **Ricerca e filtri**: trova un trader, filtra per fonte, stato, conto, tipo.
+- **Raggruppamento gerarchico**: la tabella Fonti raggruppa i topic sotto il loro canale
+  (un gruppo Telegram con N topic-fonte si espande/collassa), con `#istanze` per gruppo.
+- **Azioni bulk**: "tutti i trader di questa fonte -> conto X", "abilita/disabilita tutti",
+  "applica scheletro Y a tutti" — per non ripetere N click.
+- **Paginazione**.
+
+Nota di scala: il file piatto gigante **non esiste** in questo modello. L'inventory vive in
+`management.db` (righe indicizzate), e la config **generata** di ogni istanza contiene solo
+il **suo sottoinsieme** di fonti/trader. Nessuno edita ne' legge un file da centinaia di voci.
 
 ### Fasatura
 
@@ -1140,154 +1255,105 @@ Il workflow di onboarding di una nuova istanza non coincide con il workflow di a
 - `deploy istanza`
   - prepara o aggiorna config, `.env` e binding di servizio di una singola istanza
 - `upgrade repo`
-  - aggiorna il codice condiviso usato da tutte le istanze e da tutti i listener
+  - aggiorna il clone di codice **su un server** (uno per server, non uno globale)
 
-### Modello iniziale raccomandato
+Il rollout e' guidato dalla **macchina di controllo locale** via SSH. Ogni server ha il
+proprio clone in `/opt/telesignalbot/repo/`, condiviso dai suoi esecutori e listener.
 
-Un solo clone condiviso:
+### Canary a livello server: DEMO prima, LIVE dopo
 
-```text
-/opt/telesignalbot/
-  repo/            <- codice condiviso
-  ingestion/       <- listener e parser.sqlite3 per fonte
-  instances/       <- config e ops.sqlite3 per istanza
-```
+Il canary **non e' per-istanza**: e' il **server DEMO**. Si raccomandano **due server**:
 
-In questo modello:
-- il codice viene aggiornato una volta sola in `repo/`
-- ogni istanza mantiene solo `config/`, `data/` e `.env`
-- ogni fonte mantiene solo il proprio `parser.sqlite3` e `.env`
-- i servizi puntano allo stesso codice ma con identificativo diverso
-  (`BOT_INSTANCE_NAME` per gli esecutori, identificativo fonte per i listener)
+- **server DEMO** = sandbox/canary: si prova qui il codice nuovo;
+- **server LIVE** = produzione: ci si passa **solo dopo** che DEMO ha validato.
 
-### Workflow tipico di upgrade
+Con un solo server, DEMO e LIVE condividerebbero lo stesso clone: aggiornarlo per testare
+esporrebbe il LIVE al codice nuovo al primo restart. Due server tengono il LIVE **intatto**
+durante i test.
 
-1. verificare lo stato della repo condivisa
-2. aggiornare il clone condiviso in `repo/`
-3. aggiornare eventuali dipendenze richieste dalla nuova revisione
-4. applicare eventuali migrazioni compatibili
-5. pianificare il rollout verso le istanze interessate
-6. riavviare o riapplicare in modo esplicito le istanze selezionate
-
-### Regola fondamentale
-
-Aggiornare il codice condiviso **non** deve riavviare automaticamente tutte le istanze.
-
-La separazione corretta e':
-
-- `repo upgrade`
-  - aggiorna il codice condiviso disponibile sul server
-- `rollout`
-  - decide quali istanze passano alla nuova revisione e con quale ordine
-
-### Comandi raccomandati per la repo condivisa
-
-```bash
-tsbctl repo status
-tsbctl repo upgrade
-tsbctl repo upgrade --ref main
-tsbctl repo upgrade --ref <tag-or-commit>
-```
-
-#### `repo status`
-
-Deve mostrare almeno:
-
-- branch corrente
-- commit attuale della repo condivisa
-- ultimo commit disponibile da remoto
-- working tree pulita o dirty
-- timestamp ultimo upgrade
-
-#### `repo upgrade`
-
-Deve:
-
-- fare fetch/pull o checkout della revisione richiesta
-- mostrare chiaramente `from revision -> to revision`
-- fallire se la working tree sul server non e' pulita
-- registrare la nuova revisione target nel control plane
-- non riavviare automaticamente nessuna istanza
-
-### Strategia raccomandata di rollout
-
-Il rollout standard non dovrebbe partire subito su tutte le istanze:
-
-1. aggiornare il clone condiviso
-2. generare un piano di rollout
-3. riavviare o aggiornare una sola istanza canary, preferibilmente `DEMO`
-4. verificare health check, log e comportamento base
-5. solo dopo eseguire il rollout sulle altre istanze
-
-```bash
-tsbctl repo status
-tsbctl repo upgrade
-tsbctl rollout plan
-tsbctl rollout restart alpha_demo
-tsbctl instance status alpha_demo
-tsbctl rollout apply --all
-```
-
-L'obiettivo non e' impedire il rollout globale, ma evitare che un aggiornamento difettoso impatti tutte le istanze in un solo passaggio.
-
-### Comandi raccomandati per il rollout
-
-```bash
-tsbctl rollout plan
-tsbctl rollout status
-tsbctl rollout restart alpha_demo
-tsbctl rollout apply alpha_demo
-tsbctl rollout apply --group demo
-tsbctl rollout apply --all
-tsbctl rollout history
-tsbctl rollout diff alpha_demo
-tsbctl rollback alpha_demo --to <revision>
-```
-
-#### Significato operativo
-
-- `rollout plan`
-  - mostra quali istanze sono indietro rispetto alla revisione corrente della repo condivisa
-- `rollout restart`
-  - riavvia una istanza gia' compatibile con la config desiderata
-- `rollout apply`
-  - applica config aggiornata e riavvia se necessario
-- `rollout status`
-  - mostra lo stato del rollout corrente o dell'ultima revisione applicata
-- `rollout history`
-  - mostra gli eventi di rollout gia' eseguiti
-- `rollout diff`
-  - mostra differenza tra revisione/config attuale e target per una singola istanza
-- `rollback`
-  - riporta una istanza a una revisione precedente tracciata
-
-### Output atteso di `rollout plan`
+Ogni server ha **un clone**, e i due possono stare a **revisioni diverse**:
 
 ```text
-INSTANCE     STATUS    CURRENT   TARGET    CONFIG_DRIFT   ACTION
-alpha_demo   active    a1b2c3    d4e5f6    no             restart
-alpha_live   active    a1b2c3    d4e5f6    yes            apply
-beta_live    active    d4e5f6    d4e5f6    no             none
+Server DEMO:  repo @ rev N+1    <- in test
+Server LIVE:  repo @ rev N       <- stabile, intatto
 ```
 
-### Implicazioni
+`management.db` (locale) traccia la revisione di ciascuno; quando DEMO valida, si **promuove**
+il LIVE.
 
-- un update del codice puo' impattare tutte le istanze e tutti i listener
-- onboarding di una nuova istanza e rollout di una nuova versione devono restare workflow distinti
-- lo stato operativo deve rendere visibile quale revisione e' effettivamente in uso
-- il control plane deve distinguere tra **revisione disponibile** e **revisione effettivamente in uso** per ogni istanza (`deployed_revision` vs `target_revision`)
+### Migrazioni: additive-only
 
-### Estensioni consigliate
+Il coordinamento sullo `parser.sqlite3` **condiviso** (letto da N esecutori, scritto da 1
+listener) si dissolve con una regola: **migrazioni dello shared DB solo additive** (aggiungi
+colonne/tabelle, mai rinominare/droppare/cambiare tipo).
 
-Il control plane dovrebbe tracciare almeno:
-- `deployed_revision` per istanza
-- `target_revision` per istanza o per rollout
-- stato dell'ultimo deploy di configurazione
-- stato dell'ultimo rollout codice
-- esito dell'ultimo canary
-- storico rollback
+- Una migrazione additiva **non rompe i lettori vecchi**: si migra lo shared DB e gli
+  esecutori ancora vecchi continuano a girare, si aggiornano con calma. Nessun downtime coordinato.
+- Coerente col codice attuale (le migrazioni sono gia' quasi tutte `ADD COLUMN`).
+- Le migrazioni **distruttive** sono un'eccezione rara dietro **riavvio coordinato** esplicito.
+- `ops.sqlite3` (per-istanza) migra al riavvio della singola istanza: isolato, facile.
 
-Questi comandi non fanno parte del primo onboarding minimo, ma il design deve lasciargli spazio.
+Ordine sicuro che ne deriva: **upgrade codice + migrazione additiva -> restart listener ->
+restart canary DEMO -> resto**, senza simultaneita'.
+
+### I quattro verbi (MVP)
+
+```bash
+tsbctl repo status <server>                    # revisione del clone vs remoto
+tsbctl repo upgrade <server> [--ref R]         # git pull + deps + migrazioni additive; NON riavvia
+tsbctl rollout plan                            # chi (istanze e listener) e' indietro / ha config drift
+tsbctl rollout apply <target> [--no-restart]   # riconcilia config + riavvia (target: istanza|listener|--all)
+tsbctl rollback <target> --to <rev>            # riconcilia a una revisione precedente
+```
+
+- `repo upgrade` rende il codice **disponibile** sul server, senza riavviare nulla; mostra
+  `from revision -> to revision`, fallisce se la working tree sul server e' dirty, registra
+  la revisione nel control plane locale.
+- `rollout apply` = **riconcilia il target al suo stato desiderato**: rigenera la config da
+  `management.db` locale se serve, la pusha via SSH, e riavvia il servizio sul codice corrente.
+
+Il concetto mentale e' uno solo: **`apply` = fai combaciare questo servizio col suo stato
+desiderato** (config + codice). `repo upgrade` mette il codice *a disposizione*; `apply`
+decide *chi* ci passa e *quando*.
+
+### Controllo del riavvio
+
+Per un bot di trading il **momento** del riavvio conta: non si riavvia un'istanza con
+**posizioni aperte** a meta' trade.
+
+- `rollout apply <target> --no-restart` prepara (config/codice pronti) **senza riavviare**:
+  riparti quando l'istanza e' **flat** o il mercato e' calmo
+  (`systemctl restart telesignalbot@<nome>`).
+- Su **LIVE**, `apply` chiede **conferma esplicita** (gate LIVE).
+
+### Flusso tipico
+
+```bash
+# 1. Testa su DEMO (canary)
+tsbctl repo upgrade demo-server
+tsbctl rollout apply demo_instance
+
+# 2. Promuovi su LIVE quando pronto
+tsbctl repo upgrade live-server
+tsbctl rollout apply live_instance --no-restart   # prepara
+# ...quando l'istanza e' flat...
+systemctl restart telesignalbot@live_instance
+```
+
+### Cosa traccia il control plane
+
+- `deployed_revision` vs `target_revision` per **server** e per istanza (revisione disponibile
+  vs effettivamente in uso)
+- esito dell'ultimo canary DEMO
+- stato dell'ultimo deploy di config e dell'ultimo upgrade codice
+
+`rollout plan` puo' **verificare** la revisione reale sul server via SSH contro quella
+registrata, per rilevare drift.
+
+### Fuori MVP (future)
+
+`rollout history`, `rollout diff`, targeting `--group`: utili in evoluzione, non nel primo
+design. Con `plan` + `apply` + `rollback` si copre il caso da operatore singolo.
 
 ---
 
@@ -1360,8 +1426,10 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 
 | Rischio | Severita' | Note |
 |---|---|---|
-| Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk |
-| Limiti Telegram su creazione gruppi/topic | Media | rischio limitazioni o ban se il volume e' alto |
+| Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk; creazione sequenziale con backoff |
+| Doppia rivendicazione di un account dal pool | Alta | due istanze sullo stesso conto = doppia esecuzione; mitigato da **claim atomico** `available -> assigned` |
+| Esecuzione su ambiente sbagliato (demo vs live) | Alta | mitigato per costruzione: `environment` intrinseco al pool + claim solo per tipo + gate `LIVE` |
+| Limiti Telegram / ban dell'utente Telethon di provisioning | Media | mitigato da **throttling** anti-flood; sessione utente **dedicata** separata dal listener |
 | Interpretazione divergente dello stesso segnale | Alta | risolto dal Modello B: ingestione unica per fonte |
 | Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore in `ops.sqlite3`, non nel control plane |
 | Head-of-line blocking su poison message | Media | mitigato da dead-letter dopo K retry + alert tech |
@@ -1369,7 +1437,10 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Backup di `management.db` | Alta | punto centrale di verita' + tutti i segreti; **backup cifrato** + export redatti; macchina non esposta |
 | Perdita del control node locale | Media | le istanze continuano a girare; mitigato da backup cifrati regolari |
 | Storage della chiave SSH | Media | path a file con permessi stretti, non contenuto nel DB |
-| Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze |
+| Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze; `rollout plan` verifica via SSH |
+| Migrazione distruttiva sullo shared `parser.sqlite3` | Alta | rompe i lettori vecchi; consentita solo con riavvio coordinato esplicito (default: additive-only) |
+| Riavvio di un'istanza con posizioni aperte | Media | mitigato da `rollout apply --no-restart` + riavvio quando l'istanza e' flat |
+| Segreti in chiaro nel `.env` per-istanza sui server | Media | residuo, come oggi; confine di protezione = control node non esposto; disco cifrato consigliato |
 | Collisione alias dentro una fonte | Media | `validate` deve bloccare; oggi passa silenzioso |
 
 ---
@@ -1423,10 +1494,14 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   parser **della fonte** (parser per-trader solo via fonti separate)
 - `source edit` / `trader catalog edit` devono avvisare **"consumato da N istanze"**
   (blast radius delle modifiche globali)
-- **UI di controllo dedicata** (Fase 2) a **4 tabelle umane** (Istanze, Account/pool,
-  Fonti, Trader), superficie di **scrittura** separata dalla dashboard di monitoring,
-  sopra lo **stesso core** della CLI; editing dello **stato desiderato + apply esplicito**,
-  blast-radius visibile, credenziali write-only, gate `LIVE`
+- **UI di controllo dedicata** (Fase 2): **web app locale** servita da `tsbctl ui` su
+  localhost, sopra lo **stesso core** della CLI (non statica: scrive e orchestra). **4
+  tabelle umane** (Istanze, Account/pool, Fonti, Trader) con **funzioni di scala** (ricerca,
+  filtri, raggruppamento per canale, azioni bulk); editing dello **stato desiderato + apply
+  esplicito**, blast-radius visibile, credenziali write-only, gate `LIVE`
+- **forme di fonte**: mono-trader (`fixed`), multi-trader (`dynamic`), gruppo con topic per
+  trader = **N fonti che condividono il canale**; **selezione per-istanza** dei trader di una
+  fonte e del conto per ognuno (via `trader_account_bindings`), abilitando fan-out a livello trader
 - ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
@@ -1447,7 +1522,17 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   generato da **scheletro + override** con precedenza **a 2 livelli come oggi** (niente
   eredita' viva); `registered_traders` **derivato** dalle sottoscrizioni; propagazione
   dello scheletro **esplicita**
+- **schema config come SSOT** (Pydantic): il **formato resta YAML**; una definizione ->
+  runtime (con validazione) + **editor UI auto-generato** + `validate`. Override per-trader
+  come **blob opaco** in `management.db` (trasportato, non modellato)
+- **hot-reload vs restart** (verificato): detection e comportamento si applicano **a caldo**
+  (`ChannelConfigWatcher`, `reload_if_changed()`); solo il **wiring** esecuzione (conti/adapter)
+  richiede restart; il diff lo classifica
 - il bot runtime resta **quasi invariato**
 - onboarding istanza e upgrade repo sono **workflow distinti**
+- rollout: **canary a livello server DEMO** (due server, un clone per server a revisioni
+  diverse), **migrazioni shared additive-only** (niente coordinamento), **quattro verbi**
+  (`repo upgrade`, `rollout plan`, `rollout apply --no-restart`, `rollback`), **conferma su
+  LIVE**; `repo upgrade` non riavvia mai, `apply` riconcilia allo stato desiderato
 
 Questa revisione definisce il workflow operativo tipico e l'architettura B. L'implementazione dovra' poi dettagliare contratti, validazioni e comportamento dei singoli comandi.
