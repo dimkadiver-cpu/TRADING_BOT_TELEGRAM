@@ -1311,8 +1311,10 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 
 | Rischio | Severita' | Note |
 |---|---|---|
-| Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk |
-| Limiti Telegram su creazione gruppi/topic | Media | rischio limitazioni o ban se il volume e' alto |
+| Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk; creazione sequenziale con backoff |
+| Doppia rivendicazione di un account dal pool | Alta | due istanze sullo stesso conto = doppia esecuzione; mitigato da **claim atomico** `available -> assigned` |
+| Esecuzione su ambiente sbagliato (demo vs live) | Alta | mitigato per costruzione: `environment` intrinseco al pool + claim solo per tipo + gate `LIVE` |
+| Limiti Telegram / ban dell'utente Telethon di provisioning | Media | mitigato da **throttling** anti-flood; sessione utente **dedicata** separata dal listener |
 | Interpretazione divergente dello stesso segnale | Alta | risolto dal Modello B: ingestione unica per fonte |
 | Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore in `ops.sqlite3`, non nel control plane |
 | Head-of-line blocking su poison message | Media | mitigato da dead-letter dopo K retry + alert tech |
@@ -1322,6 +1324,8 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Storage della chiave SSH | Media | path a file con permessi stretti, non contenuto nel DB |
 | Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze; `rollout plan` verifica via SSH |
 | Migrazione distruttiva sullo shared `parser.sqlite3` | Alta | rompe i lettori vecchi; consentita solo con riavvio coordinato esplicito (default: additive-only) |
+| Riavvio di un'istanza con posizioni aperte | Media | mitigato da `rollout apply --no-restart` + riavvio quando l'istanza e' flat |
+| Segreti in chiaro nel `.env` per-istanza sui server | Media | residuo, come oggi; confine di protezione = control node non esposto; disco cifrato consigliato |
 | Collisione alias dentro una fonte | Media | `validate` deve bloccare; oggi passa silenzioso |
 
 ---
