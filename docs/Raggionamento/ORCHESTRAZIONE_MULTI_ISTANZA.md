@@ -529,12 +529,47 @@ consumata da piu' esecutori. La cucitura esiste gia' nella pipeline `runtime_v2`
 - **Configurazione generata** - i file YAML sono artefatti derivati dal DB centrale;
   il tuning comportamentale vive in template, non in colonne DB
 - **Bot quasi invariato** - il runtime deve restare focalizzato sull'esecuzione
-- **Cifratura a riposo** - le credenziali in `management.db` devono essere cifrate
+- **Control plane locale** - `management.db` e i segreti stanno sulla macchina di
+  controllo; i server ricevono solo il `.env` della propria istanza al deploy
+- **Segreti protetti a livello file** - `management.db` come un `.env` (permessi stretti,
+  disco cifrato), backup cifrati ed export redatti; cifratura a livello campo come
+  hardening futuro
 - **Workflow semi-guidato** - automazione alta sui passaggi meccanici, controllo umano sui passaggi sensibili
 
 ---
 
+## Topologia: control plane locale, server solo runtime
+
+Il control plane vive sulla **macchina di controllo** dell'operatore (come uno stato
+Terraform); i server eseguono solo i workload.
+
+```text
+MACCHINA DI CONTROLLO (operatore)        SERVER TARGET (runtime)
+  management.db  (stato + segreti)          istanze/esecutori
+  tsbctl / UI di controllo          --SSH-> listener di ingestione
+                                            ops.sqlite3 / parser.sqlite3 / .env
+```
+
+Punto chiave: le **istanze in esecuzione non dipendono da `management.db`** per girare.
+Continuano a fare trading con la loro config locale anche a macchina di controllo spenta.
+`management.db` serve solo per **cambiare** le cose (creare/modificare/deployare).
+
+Caveat: con control node locale, creare/modificare/deployare e la UI richiedono la
+macchina accesa; adatto a **operatore singolo**. Per un team servira' un control node
+sempre acceso (fuori scope ora).
+
 ## Struttura filesystem proposta
+
+### Lato controllo (macchina dell'operatore)
+
+```text
+~/telesignalbot-control/
+  management.db                <- stato desiderato + segreti (chmod 600, non committato)
+  tsbctl                       <- CLI di orchestrazione
+  backups/                     <- export cifrati di management.db
+```
+
+### Lato server target (runtime)
 
 ```text
 /opt/telesignalbot/
@@ -542,7 +577,7 @@ consumata da piu' esecutori. La cucitura esiste gia' nella pipeline `runtime_v2`
   ingestion/                   <- piano di ingestione condiviso (per fonte)
     {source}/
       parser.sqlite3           <- segnale capito, condiviso tra le istanze iscritte
-      .env                     <- credenziali Telethon del listener
+      .env                     <- credenziali Telethon del listener (scritto al deploy)
   instances/
     {name}/
       config/
@@ -552,20 +587,18 @@ consumata da piu' esecutori. La cucitura esiste gia' nella pipeline `runtime_v2`
         traders/
       data/
         ops.sqlite3            <- dettaglio trading, locale
-      .env
-  management.db
-/etc/telesignalbot/
-  secrets.env                  <- TSB_MASTER_KEY, permessi stretti
+      .env                     <- segreti della sola istanza (scritto al deploy)
 ```
 
 ### Note
 
+- `management.db` e i segreti stanno **sulla macchina di controllo**, non sui server
 - l'ingestione di una fonte e' condivisa: un solo listener e un solo `parser.sqlite3` per fonte
-- ogni istanza-esecutore ha isolamento operativo su `ops.sqlite3`, config e credenziali
-- il codice viene aggiornato una volta sola sul clone condiviso
-- `management.db` resta separato dai DB runtime
-- se una fonte e' usata da una sola istanza, i due piani possono coabitare sullo stesso
-  server senza costi aggiuntivi
+- ogni istanza-esecutore ha isolamento operativo su `ops.sqlite3`, config e `.env`
+- il codice viene aggiornato una volta sola sul clone condiviso di ogni server
+- `tsbctl` decifra/legge i segreti in locale e scrive i `.env` sui server via SSH al deploy
+- se una fonte e' usata da una sola istanza, ingestione ed esecuzione possono coabitare
+  sullo stesso server senza costi aggiuntivi
 
 ---
 
@@ -582,7 +615,7 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | host | TEXT | IP o hostname |
 | ssh_user | TEXT | |
 | ssh_port | INTEGER | default 22 |
-| ssh_key | TEXT | cifrato - path o contenuto chiave privata |
+| ssh_key | TEXT | **path** a file chiave con permessi stretti (non il contenuto) |
 | status | TEXT | `active` \| `offline` \| `maintenance` |
 | notes | TEXT | |
 
@@ -598,7 +631,7 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | instance_dir | TEXT | `/opt/telesignalbot/instances/{name}/` |
 | systemd_unit | TEXT | `telesignalbot@{name}.service` |
 | muted | BOOLEAN | true = istanza senza gruppo Telegram |
-| tg_bot_token | TEXT | cifrato - null se muted |
+| tg_bot_token | TEXT | segreto (file locale permissionato) - null se muted |
 | tg_group_id | TEXT | gruppo Telegram principale dell'istanza - null se muted |
 | deployed_revision | TEXT | revisione codice effettivamente in uso |
 | target_revision | TEXT | revisione target per rollout |
@@ -666,8 +699,8 @@ in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento r
 | provider | TEXT | es. `BYBIT` |
 | execution_account_id | TEXT | UID account/subaccount lato exchange (identita' intrinseca) |
 | parent_account | TEXT | account master exchange |
-| api_key | TEXT | cifrato |
-| api_secret | TEXT | cifrato |
+| api_key | TEXT | segreto (file locale permissionato) |
+| api_secret | TEXT | segreto (file locale permissionato) |
 | ip_whitelist | TEXT | JSON array |
 | status | TEXT | `available` \| `assigned` \| `suspended` |
 | created_at | DATETIME | |
@@ -698,8 +731,8 @@ Credenziali Telethon dei **listener di ingestione** (per fonte), non delle istan
 |---|---|---|
 | id | INTEGER PK | |
 | source_id | INTEGER FK | -> `sources` |
-| phone | TEXT | cifrato |
-| session_string | TEXT | cifrato |
+| phone | TEXT | segreto (file locale permissionato) |
+| session_string | TEXT | segreto (file locale permissionato) |
 
 ### `trader_catalog`
 
@@ -920,7 +953,7 @@ il pool da cui si pesca in fase di creazione istanza.
    `validate` -> `deploy`. Nessun "click = cambio live".
 3. **Blast-radius visibile**: le tabelle Fonti/Trader mostrano `#istanze`; modificare un
    oggetto globale avvisa *"consumato da N istanze"* prima della conferma.
-4. **Credenziali mai mostrate**: campi write-only, cifrati; nessun segreto in chiaro nella UI.
+4. **Credenziali mai mostrate**: campi write-only, mai restituiti in lettura; nessun segreto visibile nella UI.
 5. **Gate LIVE**: azioni su istanze/account `LIVE` (deploy, start, claim dal pool live)
    richiedono conferma esplicita aggiuntiva.
 
@@ -958,7 +991,7 @@ TeleSignalBot/
     db/
       schema.py
       migrations/
-    crypto.py
+    secrets.py
     bybit_provisioner.py
     instance_provisioner.py
     ingestion_provisioner.py
@@ -971,8 +1004,9 @@ TeleSignalBot/
 
 - `db/schema.py`
   - definizione e migrazioni di `management.db`
-- `crypto.py`
-  - encrypt/decrypt con `TSB_MASTER_KEY`
+- `secrets.py`
+  - lettura segreti dal `management.db` locale, scrittura `.env` per-istanza al deploy,
+    backup cifrati ed export redatti
 - `instance_provisioner.py`
   - genera struttura, YAML e `.env` dell'**esecutore** partendo da istanza, iscrizioni,
     catalogo trader, policy e override effettivi
@@ -1226,26 +1260,42 @@ di questi path e' compito del control plane, non del runtime.
 
 ---
 
-## Cifratura e master key
+## Segreti e protezione
 
-### Meccanismo
+### Modello
 
-La cifratura dei segreti a riposo usa `cryptography.fernet`.
+I segreti (API key, token bot, session string Telethon) vivono **in chiaro dentro
+`management.db`**, che sta sulla **macchina di controllo locale**, non sui server (vedi
+Topologia). Non si usa cifratura a livello campo: `management.db` si tratta come si tratta
+oggi un `.env` (`chmod 600`, mai committato, mai lasciato in giro).
 
-### Campi da cifrare
+Perche' e' accettabile - anzi migliore di oggi: la copia **principale** di tutti i segreti
+si sposta **fuori dai server esposti a internet**, sulla macchina di controllo. I server
+mantengono solo il `.env` della propria istanza, scritto da `tsbctl` al deploy (come oggi).
 
-- `servers.ssh_key`
-- `instances.tg_bot_token`
-- `exchange_accounts.api_key`
-- `exchange_accounts.api_secret`
-- `telegram_credentials.phone`
-- `telegram_credentials.session_string`
+### Confine di protezione
 
-### Vincoli operativi
+Il rischio residuo e' uno: `management.db` e' **un unico file con tutti i segreti di tutte
+le istanze**. Due regole lo neutralizzano:
 
-- `TSB_MASTER_KEY` deve stare fuori dal repo
-- permessi stretti sul file che la contiene
-- rotazione chiave da prevedere come comando esplicito
+1. **Backup cifrato.** Ogni export/backup di `management.db` cifra il **file intero** al
+   momento del backup (tarball + passphrase), non i singoli campi. Un solo punto di controllo.
+2. **Export redatto.** La dashboard e il debug non hanno bisogno dei valori dei segreti:
+   le copie verso altre macchine si esportano **senza le colonne dei segreti**. Il file
+   che viaggia non porta chiavi.
+
+Con queste due regole, il DB grezzo non lascia mai la macchina di controllo in chiaro.
+
+### Chiave SSH
+
+`servers.ssh_key` e' preferibilmente un **path** a un file chiave con permessi stretti,
+**non** il contenuto nel DB. Non si centralizza la chiave SSH dentro `management.db`.
+
+### Estensione futura opzionale
+
+La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
+`MultiFernet`) resta come **hardening futuro**, non nel primo design. Se e quando servira'
+(es. control node condiviso in team), si aggiunge senza cambiare il modello dati.
 
 ---
 
@@ -1259,9 +1309,9 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 | Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore in `ops.sqlite3`, non nel control plane |
 | Head-of-line blocking su poison message | Media | mitigato da dead-letter dopo K retry + alert tech |
 | Contesa su `parser.sqlite3` condiviso | Media | WAL gia' attivo; a scala molto alta valutare un bus dedicato |
-| Backup di `management.db` | Alta | e' il punto centrale di verita' |
-| Rotazione master key | Media | da progettare e testare prima del live |
-| Storage della chiave SSH | Alta | meglio valutare path locale vs contenuto nel DB |
+| Backup di `management.db` | Alta | punto centrale di verita' + tutti i segreti; **backup cifrato** + export redatti; macchina non esposta |
+| Perdita del control node locale | Media | le istanze continuano a girare; mitigato da backup cifrati regolari |
+| Storage della chiave SSH | Media | path a file con permessi stretti, non contenuto nel DB |
 | Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze |
 | Collisione alias dentro una fonte | Media | `validate` deve bloccare; oggi passa silenzioso |
 
@@ -1270,7 +1320,7 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 ## Piano implementativo ad alto livello
 
 1. Introdurre `management.db` e il suo schema iniziale (istanze, sources, iscrizioni, catalogo globale).
-2. Implementare cifratura e gestione della master key.
+2. Implementare gestione segreti (file locale permissionato) e backup cifrati/export redatti.
 3. Implementare `tsbctl instance create` (con `--type` e `--muted`) e binding del gruppo Telegram istanza.
 4. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
 5. Implementare il **pool account**: `account provision` (bulk via API Bybit), `account claim` (atomico) e `trader bind-account`.
@@ -1327,6 +1377,12 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
   membership**, collisioni **bloccate da `validate`**
 - il provisioning e' **semi-guidato**
 - `management.db` e' la **fonte di verita'** e **control plane**, non replica il dettaglio trading
+- **topologia control plane locale**: `management.db` e i segreti stanno sulla macchina di
+  controllo dell'operatore; i server eseguono solo runtime e ricevono il `.env` per-istanza
+  al deploy; le istanze girano anche a control node spento
+- **segreti in chiaro in `management.db` locale** (trattato come un `.env`), protetti da
+  permessi OS + disco cifrato, **backup cifrati** ed **export redatti**; niente Fernet/master
+  key nel primo design (hardening futuro opzionale)
 - YAML e `.env` sono **artefatti generati**
 - il bot runtime resta **quasi invariato**
 - onboarding istanza e upgrade repo sono **workflow distinti**
