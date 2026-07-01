@@ -582,6 +582,23 @@ L'esecutore carica `operation_config.yaml` + `traders/<id>.yaml` dalla propria c
 e applica il merge a 2 livelli **identico a oggi**. Cambia solo che la config e'
 **generata** invece che scritta a mano, e ne esistono **N copie** invece di una.
 
+### Scala: nessun file piatto gigante
+
+A scala reale (decine di fonti, alcune con decine di trader e topic), il modello **rimuove**
+il problema del file piatto, non lo aggrava:
+
+- l'**inventory** vive in `management.db` (righe indicizzate), navigato via UI con
+  ricerca/filtri/gruppi/bulk — non in un YAML da centinaia di voci;
+- la config **generata** di ogni istanza contiene solo il **suo sottoinsieme** di
+  fonti/trader: e' piccola; il file completo non esiste da nessuna parte;
+- il comportamento non esplode in file: **pochi scheletri + piccoli override**, non un file
+  pieno per trader.
+
+Output generato: puo' essere organizzato **per fonte** (`sources/<label>/...`) per
+leggibilita'/versionamento se si vuole ispezionarlo; il runtime puo' comunque leggere un
+file consolidato generato, quindi resta invariato. Cambiare la *struttura letta dal runtime*
+(es. `gruppo -> topics`) sarebbe una modifica al runtime, valutabile a parte.
+
 ---
 
 ## Principi architetturali
@@ -729,6 +746,16 @@ Fonte **globale**, con il proprio listener di ingestione. Non ha `instance_id`.
 > `alias|pattern|hybrid`, che non esiste nel runtime. `fixed` corrisponde a
 > `trader_id: <id>` in `channels.yaml`; `dynamic` corrisponde a `trader_id: null` con
 > `resolution.mode`.
+>
+> **Forme di fonte.** Una fonte e' una coppia `(channel_id, topic_id)`. Ne derivano tre casi:
+> canale **mono-trader** (1 fonte `fixed`); canale/topic **multi-trader** (1 fonte `dynamic`,
+> N trader via alias/pattern); **gruppo con un topic per trader** = **N fonti** che
+> condividono lo stesso `channel_id` (una per topic). La UI le **raggruppa** sotto il canale.
+>
+> **Selezione per-istanza.** La membership dice quali trader la fonte *puo'* portare; **quali**
+> un'istanza esegue e **su quale conto** e' per-istanza, espresso dai `trader_account_bindings`
+> (nessun binding = trader non eseguito in quell'istanza). Cosi' due istanze sulla stessa
+> fonte scelgono sottoinsiemi e conti diversi.
 
 ### `source_instance_subscriptions`
 
@@ -987,6 +1014,12 @@ La UI chiama **lo stesso core di provisioning della CLI** (`management/`). E' un
 **chiamante**, non una reimplementazione: nessuna logica duplicata, nessun drift. Tutto
 cio' che fa la UI e' esprimibile anche via `tsbctl`.
 
+### Forma tecnica
+
+Non e' una pagina statica: deve **scrivere** e orchestrare (SSH, Bybit, Telegram). E' una
+**web app locale** servita da `tsbctl ui` su **localhost**, accanto a `management.db` sulla
+macchina di controllo. Il backend e' il core `management/`; il front-end e' un chiamante.
+
 ### Le 4 tabelle umane
 
 Viste leggibili sulle tabelle DB (che restano implementazione). L'operatore ragiona in
@@ -1016,16 +1049,50 @@ il pool da cui si pesca in fase di creazione istanza.
 
 ### Flusso di creazione visuale
 
-Rispetta il **wizard netto** dei due piani:
+Rispetta il **wizard netto** dei due piani. Ogni step scrive lo **stato desiderato**;
+nulla tocca il runtime fino a `Deploy`.
 
-1. Nella tabella Istanze -> "Crea" apre un form: tipo/server, `muted` si/no.
-2. **Selezione fonti**: multi-select dalla tabella Fonti (solo iscrizione, non creazione).
-3. **Claim account**: multi-select dalle righe `available` del pool del tipo giusto.
-4. **Telegram**: gruppo/bot o muta.
-5. Se serve una fonte inesistente, la UI **rimanda alla tabella Fonti** per crearla nel
+1. **Identita'**: nome, tipo `DEMO`/`LIVE`, server, `muted` si/no.
+2. **Fonti (iscrizione)**: multi-select dalla tabella Fonti (solo iscrizione, non creazione).
+   Se serve una fonte inesistente, la UI **rimanda alla tabella Fonti** per crearla nel
    piano condiviso: non la crea di nascosto.
-6. `Validate` -> `Deploy` -> `Start` come pulsanti espliciti, che guidano la stessa
-   macchina a stati della CLI, mostrando il **diff** prima di applicare.
+3. **Selezione trader + conto** (per ogni fonte iscritta): la membership della fonte e'
+   globale, ma **quali** trader questa istanza esegue e **su quale conto** e' per-istanza.
+   Il pannello mostra i trader della fonte con spunta usa/non-usa e un menu conto per ognuno,
+   piu' una scorciatoia "tutti -> conto X" (la policy di default), con override per-trader:
+
+   ```text
+   USA?   TRADER        CONTO
+    [x]   trader_a   -> demo_1
+    [x]   trader_b   -> demo_1
+    [ ]   trader_c      (non usato in questa istanza)
+    [x]   trader_3   -> demo_2
+   ```
+
+   "USA? = no" = nessun binding -> quel trader non gira qui. Due istanze sulla stessa fonte
+   possono scegliere **sottoinsiemi diversi** su conti diversi (fan-out al livello del trader).
+4. **Claim account**: i conti si pescano dalle righe `available` del pool del tipo giusto.
+5. **Telegram**: gruppo/bot o muta.
+6. **Riepilogo + diff**: `Salva bozza` (draft, zero effetti) -> `Valida` (ready) ->
+   `Deploy` (prima volta che tocca il mondo: claim atomico, provisioning, push SSH) ->
+   `Start`. Pulsanti espliciti sulla stessa macchina a stati della CLI; `Deploy` su `LIVE`
+   chiede conferma.
+
+### Funzioni di scala
+
+A scala reale (es. ~15 fonti, alcune con decine di trader e topic), l'interfaccia **non**
+puo' essere una lista piatta. Le tabelle devono avere:
+
+- **Ricerca e filtri**: trova un trader, filtra per fonte, stato, conto, tipo.
+- **Raggruppamento gerarchico**: la tabella Fonti raggruppa i topic sotto il loro canale
+  (un gruppo Telegram con N topic-fonte si espande/collassa), con `#istanze` per gruppo.
+- **Azioni bulk**: "tutti i trader di questa fonte -> conto X", "abilita/disabilita tutti",
+  "applica scheletro Y a tutti" — per non ripetere N click.
+- **Paginazione**.
+
+Nota di scala: il file piatto gigante **non esiste** in questo modello. L'inventory vive in
+`management.db` (righe indicizzate), e la config **generata** di ogni istanza contiene solo
+il **suo sottoinsieme** di fonti/trader. Nessuno edita ne' legge un file da centinaia di voci.
 
 ### Fasatura
 
@@ -1379,10 +1446,14 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   parser **della fonte** (parser per-trader solo via fonti separate)
 - `source edit` / `trader catalog edit` devono avvisare **"consumato da N istanze"**
   (blast radius delle modifiche globali)
-- **UI di controllo dedicata** (Fase 2) a **4 tabelle umane** (Istanze, Account/pool,
-  Fonti, Trader), superficie di **scrittura** separata dalla dashboard di monitoring,
-  sopra lo **stesso core** della CLI; editing dello **stato desiderato + apply esplicito**,
-  blast-radius visibile, credenziali write-only, gate `LIVE`
+- **UI di controllo dedicata** (Fase 2): **web app locale** servita da `tsbctl ui` su
+  localhost, sopra lo **stesso core** della CLI (non statica: scrive e orchestra). **4
+  tabelle umane** (Istanze, Account/pool, Fonti, Trader) con **funzioni di scala** (ricerca,
+  filtri, raggruppamento per canale, azioni bulk); editing dello **stato desiderato + apply
+  esplicito**, blast-radius visibile, credenziali write-only, gate `LIVE`
+- **forme di fonte**: mono-trader (`fixed`), multi-trader (`dynamic`), gruppo con topic per
+  trader = **N fonti che condividono il canale**; **selezione per-istanza** dei trader di una
+  fonte e del conto per ognuno (via `trader_account_bindings`), abilitando fan-out a livello trader
 - ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
