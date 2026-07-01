@@ -123,8 +123,8 @@ Il workflow approvato e' semi-guidato: il sistema automatizza la preparazione e 
    - `.env` dell'istanza
    - mapping di fonti, trader, iscrizioni e destinazioni
 7. I passaggi sensibili vengono completati o confermati dall'operatore:
-   - provisioning Bybit
-   - provisioning Telegram
+   - claim degli account dal **pool** (il provisioning Bybit in bulk e' avvenuto prima, a parte)
+   - provisioning Telegram automatico (gruppo + topic), confermato dall'operatore
 8. L'operatore esegue la validazione finale dell'istanza.
 9. Se la validazione passa, l'istanza va in `ready`.
 10. L'operatore esegue il deploy.
@@ -286,6 +286,11 @@ tsbctl trader catalog list
 tsbctl source register --channel 12345 --label fonte_a
 tsbctl source subscribe alpha_demo --source fonte_a
 
+# Pool account: creazione in bulk (staccata dalla creazione istanza)
+tsbctl account provision --count 20 --type DEMO --provider BYBIT
+tsbctl account pool list --type DEMO --status available
+tsbctl account claim alpha_demo --from-pool --count 3 --as demo_1,demo_2,demo_3
+
 # Riepilogo / diff / verifica
 tsbctl instance summary alpha_demo
 tsbctl diff alpha_demo
@@ -308,7 +313,9 @@ tsbctl telegram bind-group alpha_demo --chat-id -1001234567890 --bot-token-env C
 tsbctl source register --channel 12345 --label fonte_a --resolution dynamic --pattern-group multi_ru
 tsbctl source subscribe alpha_demo --source fonte_a
 tsbctl source attach-traders --source fonte_a --traders trader_a,trader_b
-tsbctl account add alpha_demo --account demo_1 --adapter bybit_demo_1 --provider BYBIT
+tsbctl account provision --count 20 --type DEMO --provider BYBIT   # bulk, popola il pool
+tsbctl account claim alpha_demo --from-pool --count 1 --as demo_1  # rivendica dal pool
+tsbctl account register --provider BYBIT --uid <uid> --env DEMO    # registrazione manuale (no API)
 tsbctl source set-account-policy alpha_demo --source fonte_a --mode shared_account_per_source --account demo_1
 tsbctl source set-telegram-policy alpha_demo --source fonte_a --notify-mode per_source --default-topic 201
 tsbctl trader bind-account alpha_demo --trader trader_a --account demo_1 --override
@@ -366,8 +373,14 @@ tsbctl deploy alpha_demo
   - applica alla fonte una policy account di default per l'istanza
 - `source set-telegram-policy`
   - applica alla fonte una policy Telegram di default per l'istanza
-- `account add`
-  - registra un account exchange utilizzabile nell'istanza (con adapter e wiring)
+- `account provision`
+  - crea in **bulk** subaccount + API key via API Bybit e popola il **pool** globale in stato `available` (operazione staccata dalla creazione istanza)
+- `account pool list`
+  - elenca gli account del pool per tipo e stato
+- `account claim`
+  - **rivendica** N account dal pool per un'istanza (set atomico di `instance_id` + nome logico), stato `assigned`
+- `account register`
+  - registra manualmente un account creato a mano su Bybit (percorso senza API, per casi speciali)
 - `trader bind-account`
   - definisce un override di binding trader -> account rispetto alla policy di default
 - `telegram bind-group`
@@ -575,26 +588,42 @@ Fan-out: quali istanze consumano quale fonte.
 
 ### `exchange_accounts`
 
-Isolamento rigido: **una sola coppia** di chiavi (il `mode` deriva da `instances.type`).
-Modella il **wiring** account logico -> adapter -> credenziali.
+Modello **pool**: gli account vengono creati in bulk (auto-provisioning Bybit) e vivono
+in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento rigido:
+**una sola coppia** di chiavi; il tipo demo/live e' **intrinseco** all'account
+(`environment`) e determina da quale pool un'istanza puo' pescare.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
-| instance_id | INTEGER FK | -> `instances` |
-| logical_account_id | TEXT | es. `demo_1`, `live_1` - chiave di routing |
-| adapter_name | TEXT | es. `bybit_demo_1` - wiring verso l'adapter |
+| instance_id | INTEGER FK NULL | -> `instances`; **null** finche' l'account e' nel pool |
+| environment | TEXT | `DEMO` \| `LIVE` - intrinseco, partiziona il pool |
+| logical_account_id | TEXT | es. `demo_1` - chiave di routing, **assegnata al claim** |
+| adapter_name | TEXT | es. `bybit_demo_1` - wiring verso l'adapter, assegnato al claim |
 | adapter_template | TEXT | template di tuning comportamentale da applicare |
 | connector | TEXT | es. `bybit` |
 | provider | TEXT | es. `BYBIT` |
-| execution_account_id | TEXT | UID account/subaccount lato exchange |
+| execution_account_id | TEXT | UID account/subaccount lato exchange (identita' intrinseca) |
 | parent_account | TEXT | account master exchange |
 | api_key | TEXT | cifrato |
 | api_secret | TEXT | cifrato |
 | ip_whitelist | TEXT | JSON array |
-| status | TEXT | `active` \| `suspended` |
+| status | TEXT | `available` \| `assigned` \| `suspended` |
 | created_at | DATETIME | |
 
+> **Identita' vs routing.** L'identita' exchange (`execution_account_id`, chiavi,
+> `connector`) e' intrinseca e nasce col pool. Il **nome logico di routing**
+> (`logical_account_id`) e l'`adapter_name` sono relativi all'istanza e vengono
+> assegnati **al momento del claim**, non alla creazione.
+>
+> **Claim atomico.** Il passaggio `available -> assigned` (set `instance_id` +
+> `logical_account_id`) deve essere atomico per evitare che due istanze rivendichino lo
+> stesso account.
+>
+> **Isolamento rigido gratis.** Poiche' `environment` e' intrinseco, un'istanza `DEMO`
+> puo' rivendicare solo account del pool `DEMO`. L'isolamento non e' una regola imposta:
+> emerge dai dati.
+>
 > Il **tuning comportamentale** dell'adapter (`strategy`, `websocket`, `retry`,
 > `live_safety`, `trigger_by`, ...) non e' modellato in colonne: vive in
 > `adapter_template` + eventuali override, per non trasformare `management.db` in un
@@ -825,9 +854,10 @@ TeleSignalBot/
 - `ingestion_provisioner.py`
   - genera struttura e servizio del **listener di ingestione** per fonte
 - `bybit_provisioner.py`
-  - crea o collega account/subaccount e API key
+  - crea in bulk subaccount + API key via API e popola il pool; percorsi distinti demo/live
 - `telegram_provisioner.py`
-  - crea o collega gruppo e topic Telegram dell'istanza
+  - crea in automatico gruppo + topic Telegram via **sessione utente Telethon dedicata**
+    e cattura i `thread_id`
 - `systemd_manager.py`
   - deploy, installazione e gestione dei servizi
 - `cli.py`
@@ -841,6 +871,47 @@ TeleSignalBot/
 Se un listener di fonte cade, restano al buio **solo** le istanze iscritte a quella
 fonte; l'esecuzione delle posizioni gia' aperte continua, perche' `ops.sqlite3` e' locale.
 Blast radius equivalente al modello monolitico.
+
+### Pool account (auto-provisioning Bybit)
+
+La creazione degli account e' **staccata** dalla creazione istanza e avviene in bulk.
+
+Flusso:
+
+1. `account provision --count N --type DEMO|LIVE` chiama l'API Bybit, crea subaccount +
+   API key, cifra le chiavi, salva in `exchange_accounts` con `status = available` e
+   `instance_id = NULL`.
+2. Alla creazione istanza, `account claim` rivendica N account **del tipo giusto** dal
+   pool (claim atomico), assegnando `logical_account_id` e `adapter_name`.
+
+Vincoli e accorgimenti:
+
+- **Percorsi distinti demo/live.** Il flusso live tocca conti reali e va dietro gate
+  esplicito (mai auto-creare account live senza conferma).
+- **Limiti Bybit.** Esiste un tetto al numero di subaccount e rate limit per tier
+  (da verificare); la creazione va **sequenziale con backoff**, non parallela.
+- **Registrazione manuale** (`account register`) resta come percorso alternativo senza API
+  per account creati a mano.
+
+### Provisioning Telegram automatico
+
+Vincolo di piattaforma: **un bot non puo' creare gruppi**. Il provisioning completo usa
+quindi una **sessione utente Telethon dedicata** (separata da quella che ascolta le fonti,
+per non mescolare i ruoli).
+
+Flusso di `provision telegram` (saltato per istanze `muted`):
+
+1. `CreateChannel(megagroup=True)` - crea il supergroup
+2. `ToggleForum` - abilita i topic
+3. aggiunge il bot dell'istanza e lo promuove admin (`EditAdmin`)
+4. `CreateForumTopic` per ogni trader/ruolo - **cattura i `thread_id`**
+5. salva `chat_id` + `thread_id` + bot token in `management.db`
+
+Vincoli:
+
+- **Flood limit Telegram.** La creazione di gruppi/topic va **throttlata**; a volume alto
+  puo' scattare `FloodWait` o restrizioni sull'account utente.
+- Il gruppo risulta di proprieta' dell'utente Telethon di provisioning, non del bot.
 
 ---
 
@@ -1076,7 +1147,7 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 2. Implementare cifratura e gestione della master key.
 3. Implementare `tsbctl instance create` (con `--type` e `--muted`) e binding del gruppo Telegram istanza.
 4. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
-5. Implementare `account add` con wiring adapter e `trader bind-account`.
+5. Implementare il **pool account**: `account provision` (bulk via API Bybit), `account claim` (atomico) e `trader bind-account`.
 6. Implementare `provision prepare` (esecutore + ingestione).
 7. Implementare `provision bybit` e `provision telegram`.
 8. Implementare `validate`, incluso il controllo collisioni alias per fonte.
@@ -1102,6 +1173,12 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
   `exchange_accounts` ha **una sola coppia** di chiavi, `mode` derivato dal `type`
 - modello account: `management.db` modella il **wiring** (account logico -> adapter ->
   credenziali); il **tuning comportamentale** vive nei template
+- account a **pool globale**: auto-provisioning Bybit in **bulk** (`account provision`),
+  account in stato `available`, poi **claim** atomico all'istanza; `environment` demo/live
+  intrinseco partiziona il pool e rende l'isolamento rigido una proprieta' dei dati
+- provisioning Telegram **completamente automatico** via **sessione utente Telethon
+  dedicata** (il bot non puo' creare gruppi): crea gruppo + topic e cattura i `thread_id`,
+  con throttling anti-flood; saltato per istanze `muted`
 - ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
