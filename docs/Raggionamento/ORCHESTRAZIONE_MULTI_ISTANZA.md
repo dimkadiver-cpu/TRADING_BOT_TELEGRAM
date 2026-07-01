@@ -849,6 +849,70 @@ Queste estensioni non devono introdurre una seconda fonte di verita' del dominio
 
 ---
 
+## UI di controllo (fleet + editing)
+
+Superficie **dedicata** di creazione/modifica delle istanze e delle associazioni.
+E' **complementare** alla dashboard di monitoring
+(`DASHBOARD_CENTRALE/2026-06-30-multi-instance-dashboard-monitoring-design.md`): quella
+**legge** (heartbeat, posizioni, errori runtime), questa **scrive** (inventory e config).
+Sono superfici distinte con auth diversa; possono condividere la shell ma non i permessi.
+
+### Principio non negoziabile
+
+La UI chiama **lo stesso core di provisioning della CLI** (`management/`). E' un
+**chiamante**, non una reimplementazione: nessuna logica duplicata, nessun drift. Tutto
+cio' che fa la UI e' esprimibile anche via `tsbctl`.
+
+### Le 4 tabelle umane
+
+Viste leggibili sulle tabelle DB (che restano implementazione). L'operatore ragiona in
+4 entita', non in 11.
+
+| Tabella | Colonne principali | Azioni |
+|---|---|---|
+| **Istanze** (home / fleet) | nome, tipo, stato, server, #fonti, #account, Telegram/muta, `deployed_revision`/`target_revision` | crea, apri riga -> dettaglio/edit |
+| **Account (pool)** | provider, `environment` DEMO/LIVE, `status` available/assigned, istanza, adapter, `execution_account_id` | provision (bulk), claim, suspend |
+| **Fonti** | label, canale, fixed/dynamic, trader (membership), parser, listener, **#istanze consumatrici** | register, edit (avviso blast-radius), attach-traders |
+| **Trader (catalogo)** | trader_id, display_name, parser, alias, **#fonti / #istanze** | add, edit (avviso blast-radius), alias |
+
+La tabella **Istanze** e' la vista d'insieme fleet. La tabella **Account** e' letteralmente
+il pool da cui si pesca in fase di creazione istanza.
+
+### Regole di sicurezza della UI
+
+1. **Core condiviso** UI <-> CLI: un solo percorso di provisioning.
+2. **Editing dello stato desiderato + apply esplicito**: le modifiche scrivono il
+   *desiderato* in `management.db`; **nulla tocca il runtime** finche' non si esegue
+   `validate` -> `deploy`. Nessun "click = cambio live".
+3. **Blast-radius visibile**: le tabelle Fonti/Trader mostrano `#istanze`; modificare un
+   oggetto globale avvisa *"consumato da N istanze"* prima della conferma.
+4. **Credenziali mai mostrate**: campi write-only, cifrati; nessun segreto in chiaro nella UI.
+5. **Gate LIVE**: azioni su istanze/account `LIVE` (deploy, start, claim dal pool live)
+   richiedono conferma esplicita aggiuntiva.
+
+### Flusso di creazione visuale
+
+Rispetta il **wizard netto** dei due piani:
+
+1. Nella tabella Istanze -> "Crea" apre un form: tipo/server, `muted` si/no.
+2. **Selezione fonti**: multi-select dalla tabella Fonti (solo iscrizione, non creazione).
+3. **Claim account**: multi-select dalle righe `available` del pool del tipo giusto.
+4. **Telegram**: gruppo/bot o muta.
+5. Se serve una fonte inesistente, la UI **rimanda alla tabella Fonti** per crearla nel
+   piano condiviso: non la crea di nascosto.
+6. `Validate` -> `Deploy` -> `Start` come pulsanti espliciti, che guidano la stessa
+   macchina a stati della CLI, mostrando il **diff** prima di applicare.
+
+### Fasatura
+
+- **Fase 1**: CLI (`tsbctl`) come interfaccia sorgente, scriptabile e testabile.
+- **Fase 2**: UI a tabelle sottile sopra lo stesso core.
+- Il **modello a 4 tabelle** si progetta da subito, perche' plasma anche la CLI
+  (`instance list`, `account pool list`, `source list`, `trader catalog list`,
+  `instance summary` sono gli equivalenti testuali delle 4 viste).
+
+---
+
 ## Provisioning tecnico
 
 ### Struttura codice proposta
@@ -1213,6 +1277,10 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
   parser **della fonte** (parser per-trader solo via fonti separate)
 - `source edit` / `trader catalog edit` devono avvisare **"consumato da N istanze"**
   (blast radius delle modifiche globali)
+- **UI di controllo dedicata** (Fase 2) a **4 tabelle umane** (Istanze, Account/pool,
+  Fonti, Trader), superficie di **scrittura** separata dalla dashboard di monitoring,
+  sopra lo **stesso core** della CLI; editing dello **stato desiderato + apply esplicito**,
+  blast-radius visibile, credenziali write-only, gate `LIVE`
 - ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
