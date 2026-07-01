@@ -91,6 +91,41 @@ Questa separazione e' gia' anticipata dal runtime attuale (`parser.sqlite3` e `o
 sono file distinti e la pipeline `runtime_v2` gia' separa il messaggio canonico
 dall'execution gateway).
 
+### Fan-out e cursore per esecutore
+
+Il pezzo runtime piu' delicato di B. Il problema: oggi la pipeline avanza uno **stato sul
+messaggio** (`raw_messages.processing_status`), che vale per **un solo** consumatore. Sotto
+fan-out lo stesso segnale enriched e' consumato da **N esecutori**: uno status sul messaggio
+non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-consumatore**.
+
+**Modello: high-water-mark + dead-letter.**
+
+- Ogni esecutore tiene un **cursore** per ogni fonte a cui e' iscritto: "ultimo id enriched
+  processato". Legge i segnali con `id > cursore ORDER BY id`, processa, avanza. E' lo
+  stesso idioma di `ops_trade_chains.last_projected_event_id` gia' presente nel runtime.
+- **Ordine stretto per fonte** = feature, non limite: un ingresso e il suo update/cancel
+  successivo devono applicarsi in ordine; l'high-water-mark lo impone.
+- **Semantica di fallimento sicura**: se il segnale N fallisce, il cursore **non avanza**,
+  l'esecutore ritenta N e non esegue nulla dopo N (mai eseguire l'update di una posizione
+  non aperta).
+- **Poison message**: se N e' permanentemente non processabile per un esecutore, dopo K
+  retry viene marcato **dead-letter** in una piccola lista locale, il cursore avanza e
+  parte un alert tech. High-water-mark per il caso normale, dead-letter per l'eccezione.
+
+**Dove vive il cursore.** Il cursore e' **stato runtime ad alta frequenza** e vive
+nell'**`ops.sqlite3` locale** dell'esecutore, **non** in `management.db`. La sottoscrizione
+(quale istanza consuma quale fonte) e' control-plane; il *progresso di consumo* e' runtime.
+Metterlo nel control plane creerebbe contesa in scrittura centrale a ogni segnale.
+
+**Topologia un-writer / molti-reader.**
+
+- Il **listener** della fonte e' l'unico **writer** del `parser.sqlite3` condiviso (id monotono).
+- Ogni **esecutore** e' un **reader**: legge `id > cursore_locale`, processa nel proprio
+  `ops.sqlite3`, avanza il cursore locale.
+- **Wake**: poll dello shared DB a intervallo breve (`MAX(id) > cursore` e' banale); WAL
+  (gia' attivo, `017`) regge bene un writer + molti reader. Un canale di notifica e'
+  un'ottimizzazione futura.
+
 ---
 
 ## Workflow tipico
@@ -605,13 +640,12 @@ Fan-out: quali istanze consumano quale fonte.
 | id | INTEGER PK | |
 | source_id | INTEGER FK | -> `sources` |
 | instance_id | INTEGER FK | -> `instances` |
-| cursor | TEXT | posizione consumata dall'esecutore sul segnale della fonte |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
-> `cursor` e' il **cursore per esecutore**: garantisce che un esecutore lento o
-> riavviato non salti ne' esegua due volte lo stesso segnale. Unico pezzo genuinamente
-> nuovo introdotto dal Modello B.
+> La sottoscrizione e' control-plane (chi consuma cosa). Il **cursore di consumo** NON
+> vive qui: e' stato runtime ad alta frequenza e sta nell'`ops.sqlite3` locale
+> dell'esecutore (vedi "Fan-out e cursore per esecutore").
 
 ### `exchange_accounts`
 
@@ -1222,7 +1256,8 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 | Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk |
 | Limiti Telegram su creazione gruppi/topic | Media | rischio limitazioni o ban se il volume e' alto |
 | Interpretazione divergente dello stesso segnale | Alta | risolto dal Modello B: ingestione unica per fonte |
-| Cursore per esecutore (fan-out) | Alta | senza cursore corretto un esecutore salta o duplica segnali |
+| Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore in `ops.sqlite3`, non nel control plane |
+| Head-of-line blocking su poison message | Media | mitigato da dead-letter dopo K retry + alert tech |
 | Contesa su `parser.sqlite3` condiviso | Media | WAL gia' attivo; a scala molto alta valutare un bus dedicato |
 | Backup di `management.db` | Alta | e' il punto centrale di verita' |
 | Rotazione master key | Media | da progettare e testare prima del live |
@@ -1256,6 +1291,9 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 - il segnale viene **capito una volta** e distribuito in **fan-out** (consistenza garantita)
 - l'account/esecutore e' **indirizzabile indipendentemente dal listener** (invariante)
 - split dati: **`parser.sqlite3` condiviso per fonte** / **`ops.sqlite3` locale per istanza**
+- fan-out via **cursore high-water-mark per esecutore** (+ dead-letter per poison message),
+  con **ordine stretto per fonte**; il cursore vive nell'**`ops.sqlite3` locale**, non nel
+  control plane; topologia **un-writer / molti-reader** con poll + WAL
 - una istanza puo' essere **multi-fonte** (via iscrizione)
 - una fonte puo' servire **uno o piu' trader** dal catalogo globale
 - il **catalogo trader e' globale** (nessun `instance_id`)
