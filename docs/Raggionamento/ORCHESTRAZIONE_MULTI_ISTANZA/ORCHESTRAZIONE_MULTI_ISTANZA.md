@@ -191,6 +191,15 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
 
 ### Piano condiviso - setup (prerequisiti)
 
+0. **Bootstrap (una tantum)** - prima di tutto il resto:
+   - `server add`: registra il server (host, utente; la chiave SSH deve essere gia'
+     autorizzata sul server - prerequisito manuale);
+   - `sistema create`: crea il Sistema (nome, server, tipo) e ne fa il primo deploy
+     (struttura directory, **clone del repo**, servizio di ingestione);
+   - `provider add`: carica le credenziali **master** del provider per ambiente
+     (`provider_credentials`), necessarie ad `account provision`;
+   - `telethon login`: genera le sessioni Telethon in modo **interattivo** (telefono +
+     codice di conferma): una per l'ingestione di ogni Sistema, una per il provisioning.
 1. **Pool account** - `account provision` in bulk popola il pool (demo/live) in stato `available`.
 2. **Catalogo trader** - `trader catalog add` definisce ogni trader una volta (alias, pattern, profilo parser).
 3. **Fonti** - `source register`: canale + parser **della fonte** + `resolution` +
@@ -386,6 +395,13 @@ La CLI `tsbctl` e' l'orchestratore del workflow. Il principio e' evitare un unic
 ### Comandi principali
 
 ```bash
+# Bootstrap control plane (una tantum)
+tsbctl server add --name vps1 --host 1.2.3.4 --ssh-user tsb --ssh-key ~/.ssh/tsb_vps1
+tsbctl sistema create --name demo --server vps1 --type DEMO   # struttura + clone + ingestione
+tsbctl provider add --provider BYBIT --env DEMO               # chiavi master via prompt
+tsbctl telethon login --role provisioning                     # interattivo (codice sul telefono)
+tsbctl telethon login --role ingestion --sistema demo         # interattivo
+
 # Creazione guidata istanza
 tsbctl instance init
 
@@ -396,6 +412,8 @@ tsbctl instance edit alpha_demo
 tsbctl trader catalog add
 tsbctl trader catalog edit trader_a
 tsbctl trader catalog list
+tsbctl trader catalog import --file traders.yaml        # bulk: N trader in un colpo
+tsbctl trader catalog import --from-existing-config     # seed dai file attuali (migrazione)
 
 # Gestione fonti globali e iscrizioni
 tsbctl source register --channel 12345 --label fonte_a
@@ -466,12 +484,30 @@ tsbctl deploy alpha_demo
 
 ### Ruolo dei comandi
 
+- `server add`
+  - registra un server target (host, utente SSH, path chiave; la chiave va autorizzata a mano)
+- `sistema create`
+  - crea il Sistema su un server (nome, tipo `DEMO`/`LIVE`) e ne esegue il primo deploy:
+    struttura directory, clone del repo, servizio di ingestione
+- `provider add`
+  - registra le credenziali master di un provider per ambiente (input segreti via prompt,
+    mai in argv)
+- `telethon login`
+  - flusso interattivo (telefono + codice) che genera e salva una sessione Telethon;
+    `--role ingestion --sistema X` per l'ingestione, `--role provisioning` per il
+    provisioning Telegram
 - `instance init`
   - avvia un wizard testuale che raccoglie i dati minimi per creare una nuova istanza-esecutore coerente
 - `instance edit`
   - avvia un wizard testuale per modificare una istanza esistente senza ricrearla
 - `trader catalog add/edit/list`
   - gestisce il catalogo **globale** dei trader disponibili, con detection, alias e pattern
+- `trader catalog import`
+  - popolamento **in bulk**: da file YAML/CSV (`trader_id, display_name, alias, ...`) per
+    fonti con molti trader, o `--from-existing-config` che semina il catalogo dai file
+    attuali (`trader_aliases.json`, `text_patterns.yaml`, `registered_traders`) in
+    migrazione. `display_name` defaulta da `trader_id` o dal primo alias. Mai inserimenti
+    uno-per-uno per canali multi-trader
 - `source register`
   - registra una fonte Telegram **globale** con il suo parser e la sua modalita' di risoluzione
 - `source subscribe`
@@ -532,8 +568,8 @@ tsbctl deploy alpha_demo
 - iscrizioni fonte/istanza
 - policy account e Telegram
 - override fonte/trader/account exchange
-- stato operativo
-- riferimenti alle credenziali
+- stato operativo e log delle operazioni (`control_events`)
+- riferimenti alle credenziali (accesso server, master provider, sessioni Telethon)
 - destinazioni Telegram
 
 `management.db` e' un control-plane database, non un database di trading.
@@ -587,8 +623,9 @@ config dir e applica la **stessa logica di merge a 2 livelli** di oggi.
 | `channels.yaml` | inventory/wiring | generato per-istanza da `management.db` |
 | `execution.yaml` | inventory/wiring + tuning | wiring da `management.db` + template adapter |
 | `telegram_control.yaml` | inventory/wiring | generato per-istanza da `management.db` |
-| `trader_aliases.json` | detection globale | file globale condiviso (**non** generato dal registro) |
-| `text_patterns.yaml` | detection globale | condiviso (piano ingestione) |
+| `trader_aliases.json` | detection | **generato per Sistema** dai frammenti di gruppo |
+| `text_patterns.yaml` | detection | **generato per Sistema** dai frammenti di gruppo |
+| `config/patterns/<gruppo>.yaml` | detection (sorgente) | **frammenti per pattern_group** (pattern + alias del gruppo), versionati nel repo |
 | `operation_config.yaml` | comportamento | generato per-istanza da **scheletro + override** |
 | `traders/<id>.yaml` | comportamento | generato per-istanza da **scheletro + override** |
 | `setup_reshape_templates.yaml`, `templates/` | template comportamentali | condivisi, riusati per nome |
@@ -598,9 +635,13 @@ config dir e applica la **stessa logica di merge a 2 livelli** di oggi.
 La config si divide seguendo i due piani del Modello B:
 
 - **Ingestione (capire il segnale), condivisa per Sistema**: detection del trader (alias,
-  pattern) e `channels.yaml`. La detection **non e' mai stata** nel `traders/<id>.yaml`:
-  vive gia' in file globali (`trader_aliases.json`, `text_patterns.yaml`), che restano
-  condivisi quasi invariati.
+  pattern) e `channels.yaml`. La detection **non e' mai stata** nel `traders/<id>.yaml`.
+  A scala (decine di fonti, centinaia di pattern) il file unico non regge: la **sorgente**
+  diventa un **frammento per pattern_group** (`config/patterns/<gruppo>.yaml`, con i
+  pattern e gli alias di quel gruppo, versionato nel repo); `tsbctl` **genera** per ogni
+  Sistema i `text_patterns.yaml`/`trader_aliases.json` consolidati con i **soli gruppi
+  delle fonti sottoscritte**. Il runtime resta invariato (legge gli stessi file di oggi);
+  l'operatore edita frammenti piccoli con diff puliti.
 - **Esecuzione (fare trading), per istanza**: `operation_config.yaml`, `traders/<id>.yaml`
   (comportamento), `execution.yaml`. Il `traders/<id>.yaml` di oggi e' gia' **quasi solo
   comportamento** (risk, entry_split, management_plan, account): diventa per-istanza.
@@ -765,6 +806,8 @@ sempre acceso (fuori scope ora).
       ingestion/
         parser.sqlite3         <- segnale capito, condiviso dentro il Sistema
         channels.yaml          <- canali ascoltati (derivati dalle sottoscrizioni)
+        text_patterns.yaml     <- generato: soli gruppi delle fonti sottoscritte
+        trader_aliases.json    <- generato: soli alias dei gruppi usati
         .env                   <- credenziali Telethon dell'ingestione (scritto al deploy)
       instances/
         {name}/
@@ -916,7 +959,8 @@ in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento r
 | parent_account | TEXT | account master exchange |
 | api_key | TEXT | segreto (file locale permissionato) |
 | api_secret | TEXT | segreto (file locale permissionato) |
-| ip_whitelist | TEXT | JSON array |
+| api_permissions | TEXT | JSON array, es. `["ContractTrade"]` - permessi minimi, **mai** withdraw/transfer |
+| ip_whitelist | TEXT | JSON array - assegnata/aggiornata **al claim** (IP del server del Sistema) |
 | status | TEXT | `available` \| `assigned` \| `suspended` |
 | created_at | DATETIME | |
 
@@ -938,16 +982,58 @@ in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento r
 > `adapter_template` + eventuali override, per non trasformare `management.db` in un
 > dump di config e non richiedere una migrazione DB per ogni tweak di strategia.
 
-### `telegram_credentials`
+### `provider_credentials`
 
-Credenziali Telethon dell'**ingestione** (una per Sistema), non delle istanze.
+Credenziali **master** del provider per il provisioning in bulk (`account provision`):
+la creazione di subaccount + API key richiede la chiave del master account, distinta
+per ambiente (endpoint demo e live diversi).
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
-| sistema_id | INTEGER FK | -> `sistemi` |
+| provider | TEXT | es. `BYBIT` |
+| environment | TEXT | `DEMO` \| `LIVE` - master ed endpoint distinti |
+| master_uid | TEXT | UID dell'account master lato exchange |
+| api_key | TEXT | segreto - chiave master con permesso gestione subaccount |
+| api_secret | TEXT | segreto |
+| endpoint | TEXT | es. `api.bybit.com` / `api-demo.bybit.com` |
+| enabled | BOOLEAN | |
+
+> `account provision --type DEMO` usa la riga `DEMO`; la riga `LIVE` sta dietro il
+> gate LIVE (mai auto-creare account live senza conferma esplicita).
+
+### `telegram_credentials`
+
+Credenziali Telethon: la sessione di **ingestione** (una per Sistema) e la sessione
+utente di **provisioning** (crea gruppi/topic, separata per non mescolare i ruoli).
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| sistema_id | INTEGER FK NULL | -> `sistemi`; **NULL** per la sessione di provisioning |
+| role | TEXT | `ingestion` \| `provisioning` |
+| api_id | TEXT | segreto - app Telethon (serve per creare nuove sessioni) |
+| api_hash | TEXT | segreto |
 | phone | TEXT | segreto (file locale permissionato) |
 | session_string | TEXT | segreto (file locale permissionato) |
+
+### `control_events`
+
+Log delle operazioni del control plane, scritto da `tsbctl`: alimenta le automazioni e
+le viste "ultimo deploy / ultimo rollout / ultimo errore". **Non** contiene heartbeat
+runtime: le istanze non scrivono su `management.db` (macchina di controllo anche spenta);
+il monitoring vivo appartiene alla dashboard (doc separato).
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| event_type | TEXT | `deploy` \| `upgrade` \| `rollout` \| `rollback` \| `validate` \| `provision` \| `error` |
+| target_type | TEXT | `instance` \| `sistema` \| `source` \| `account` |
+| target_ref_id | INTEGER | FK logica verso la tabella del target |
+| outcome | TEXT | `ok` \| `failed` |
+| detail | TEXT | messaggio/motivazione (es. esito canary, errore deploy) |
+| revision | TEXT | revisione coinvolta, se applicabile |
+| created_at | DATETIME | |
 
 ### `trader_catalog` (registro magro)
 
@@ -962,11 +1048,19 @@ management) **non** stanno qui: vivono nei file globali (`trader_aliases.json`,
 | id | INTEGER PK | |
 | trader_id | TEXT UNIQUE | es. `trader_a`, `trader_3` |
 | display_name | TEXT | label leggibile |
+| parser_profile | TEXT | **riferimento per nome** a un profilo parser nel codice del repo; default per le fonti `fixed` del trader |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
+> **Il parser e' codice, non dato.** Il profilo vive nel repo e si distribuisce via
+> `repo upgrade` (canary DEMO incluso); `parser_profile` e' solo il nome che lo riferisce,
+> come `adapter_template` per gli account. Ordine obbligato: prima il parser nel codice
+> (deployato), poi il trader che lo riferisce; `validate` controlla che il nome esista
+> nel codice del Sistema target.
+
 > Alimenta il `registered_traders` per-istanza (gate del runtime) ed e' il bersaglio FK
-> della membership. Niente tabella `trader_aliases`: gli alias restano nei file globali.
+> della membership. Niente tabella `trader_aliases`: gli alias vivono nei **frammenti di
+> gruppo** (`config/patterns/<gruppo>.yaml`), da cui si generano i file consolidati.
 
 ### `source_trader_memberships`
 
@@ -982,12 +1076,29 @@ gli alias/pattern dei trader di questo insieme.
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
-> **Regola di risoluzione alias/collisioni** (opera sui file globali, scopata alla membership):
-> 1. detection di default nei file globali (`trader_aliases.json`, `text_patterns.yaml`);
+> **Regola di risoluzione alias/collisioni** (opera sui frammenti di gruppo, scopata alla membership):
+> 1. detection di default nei frammenti di gruppo (`config/patterns/<gruppo>.yaml`), da cui
+>    si generano i `trader_aliases.json`/`text_patterns.yaml` consolidati del Sistema;
 > 2. eventuali override per-fonte nella detection della fonte (in `channels.yaml` generato);
 > 3. la risoluzione considera solo i trader **ammessi dalla fonte** (membership);
-> 4. `validate` legge i file globali incrociati con la membership e **blocca le collisioni**
+> 4. `validate` legge i frammenti incrociati con la membership e **blocca le collisioni**
 >    di alias dentro l'insieme ammesso (oggi un alias ambiguo passa silenzioso).
+> 5. **Collisioni cross-gruppo alla generazione**: i pattern sono scopati per gruppo dal
+>    runtime (mai in conflitto tra gruppi), ma `trader_aliases.json` consolidato e' una
+>    **mappa piatta**: se due gruppi consumati dallo stesso Sistema danno lo **stesso alias
+>    a trader diversi**, la generazione collide. `validate` blocca anche questo caso
+>    (controllo sull'insieme consolidato del Sistema); la soluzione e' spostare l'alias
+>    ambiguo nell'**override per-fonte** (punto 2), scopato al canale, invece che nella
+>    mappa globale. Stesso `trader_id` in piu' gruppi invece e' normale (trader in piu' fonti).
+>
+> **Convenzione per fonti risolte a pattern (`patterns_only`).** I `trader_id` sono codici
+> sintetici liberi: la convenzione raccomandata e' **prefisso-fonte + progressivo**
+> (`A1, A2, ...` per la fonte A; `B1, B2, ...` per la B), che rende l'unicita' globale
+> automatica. La firma reale del trader ("genio", "#", il formato del messaggio) vive
+> **dentro il pattern** del frammento, che punta al codice; `display_name` e' solo
+> leggibilita' (es. `"genio (A1)"`). Con `patterns_only` il runtime **non consulta gli
+> alias**: per queste fonti la mappa alias resta vuota e le collisioni cross-gruppo
+> (punto 5) non si applicano.
 
 ### `source_account_policies`
 
@@ -1079,7 +1190,9 @@ Farlo ora e' economico; farlo dopo, con posizioni live, e' rischioso.
 
 **Percorso di migrazione:**
 
-1. Registrare le **fonti globali** e i **trader nel catalogo globale** (una volta).
+1. Registrare le **fonti globali** e i **trader nel catalogo globale** (una volta) —
+   il catalogo si **semina automaticamente** dai file esistenti con
+   `trader catalog import --from-existing-config`, niente reinserimento manuale.
 2. Definire **due Sistemi** (`demo` e `live`, anche sullo stesso server) e almeno **due
    istanze**: `main_demo` nel Sistema `demo` (demo_1/2/3 + relativi trader) e `gg_live`
    nel Sistema `live` (live_1 + trader_gg_shot).
@@ -1160,12 +1273,17 @@ Viste leggibili sulle tabelle DB (che restano implementazione). L'operatore ragi
 | Tabella | Colonne principali | Azioni |
 |---|---|---|
 | **Istanze** (home / fleet) | nome, tipo, stato, sistema (server), #fonti, #account, Telegram/muta, revisione del Sistema + drift | crea, apri riga -> dettaglio/edit |
-| **Account (pool)** | provider, `environment` DEMO/LIVE, `status` available/assigned, istanza, adapter, `execution_account_id` | provision (bulk), claim, suspend |
+| **Account (pool)** | provider, `environment` DEMO/LIVE, `status` available/assigned, istanza, adapter, `execution_account_id` | provision (bulk), register (manuale), claim, suspend |
 | **Fonti** | label, canale, fixed/dynamic, trader (membership), parser, **#sistemi che la ascoltano**, **#istanze consumatrici** | register, edit (avviso blast-radius), attach-traders |
-| **Trader (catalogo)** | trader_id, display_name, parser, alias, **#fonti / #istanze** | add, edit (avviso blast-radius), alias |
+| **Trader (catalogo)** | trader_id, display_name, parser, alias, **#fonti / #istanze** | add, **import (bulk)**, edit (avviso blast-radius), alias |
 
 La tabella **Istanze** e' la vista d'insieme fleet. La tabella **Account** e' letteralmente
 il pool da cui si pesca in fase di creazione istanza.
+
+I **Sistemi** non sono una quinta tabella: sono pochi (tipicamente `demo` e `live`) e
+vivono come **raggruppamento** della tabella Istanze (le istanze raggruppate sotto il
+loro Sistema, con revisione e stato dell'ingestione a livello di gruppo). La gestione
+dei Sistemi (creazione, upgrade, rollout) passa dai comandi `repo`/`rollout`.
 
 ### Regole di sicurezza della UI
 
@@ -1184,7 +1302,8 @@ il pool da cui si pesca in fase di creazione istanza.
 Rispetta il **wizard netto** dei due piani. Ogni step scrive lo **stato desiderato**;
 nulla tocca il runtime fino a `Deploy`.
 
-1. **Identita'**: nome, tipo `DEMO`/`LIVE`, server, `muted` si/no.
+1. **Identita'**: nome, **Sistema** (che fissa tipo `DEMO`/`LIVE`, server e revisione),
+   `muted` si/no.
 2. **Fonti (iscrizione)**: multi-select dalla tabella Fonti (solo iscrizione, non creazione).
    Se serve una fonte inesistente, la UI **rimanda alla tabella Fonti** per crearla nel
    piano condiviso: non la crea di nascosto.
@@ -1220,6 +1339,12 @@ puo' essere una lista piatta. Le tabelle devono avere:
   (un gruppo Telegram con N topic-fonte si espande/collassa), con `#istanze` per gruppo.
 - **Azioni bulk**: "tutti i trader di questa fonte -> conto X", "abilita/disabilita tutti",
   "applica scheletro Y a tutti" — per non ripetere N click.
+- **Import con anteprima**: la tabella Trader ha un flusso di import bulk (upload file
+  YAML/CSV o incolla tabella; in migrazione, seed dalla config esistente). L'import mostra
+  un'**anteprima validata** prima di scrivere: righe nuove/aggiornate/duplicate e
+  **collisioni alias** contro il catalogo esistente; la conferma scrive solo lo stato
+  desiderato (stesso core di `trader catalog import`). Analogamente, `attach-traders`
+  sulla fonte accetta multi-selezione dal catalogo, non un trader per volta.
 - **Paginazione**.
 
 Nota di scala: il file piatto gigante **non esiste** in questo modello. L'inventory vive in
@@ -1232,7 +1357,8 @@ il **suo sottoinsieme** di fonti/trader. Nessuno edita ne' legge un file da cent
 - **Fase 2**: UI a tabelle sottile sopra lo stesso core.
 - Il **modello a 4 tabelle** si progetta da subito, perche' plasma anche la CLI
   (`instance list`, `account pool list`, `source list`, `trader catalog list`,
-  `instance summary` sono gli equivalenti testuali delle 4 viste).
+  `instance summary` sono gli equivalenti testuali delle 4 viste; `repo status`
+  e' l'equivalente della vista raggruppata per Sistema).
 
 ---
 
@@ -1270,7 +1396,8 @@ TeleSignalBot/
   - genera struttura, config derivata (canali dalle sottoscrizioni) e servizio
     dell'**ingestione** per Sistema
 - `bybit_provisioner.py`
-  - crea in bulk subaccount + API key via API e popola il pool; percorsi distinti demo/live
+  - crea in bulk subaccount + API key via API (usa le `provider_credentials` master
+    dell'ambiente giusto) e popola il pool; percorsi distinti demo/live
 - `telegram_provisioner.py`
   - crea in automatico gruppo + topic Telegram via **sessione utente Telethon dedicata**
     e cattura i `thread_id`
@@ -1296,10 +1423,13 @@ La creazione degli account e' **staccata** dalla creazione istanza e avviene in 
 Flusso:
 
 1. `account provision --count N --type DEMO|LIVE` chiama l'API Bybit, crea subaccount +
-   API key, cifra le chiavi, salva in `exchange_accounts` con `status = available` e
-   `instance_id = NULL`.
+   API key con **permessi minimi** (trade + lettura, **mai withdraw/transfer**: una chiave
+   compromessa non deve poter spostare fondi), salva in `exchange_accounts` con
+   `status = available` e `instance_id = NULL`.
 2. Alla creazione istanza, `account claim` rivendica N account **del tipo giusto** dal
-   pool (claim atomico), assegnando `logical_account_id` e `adapter_name`.
+   pool (claim atomico), assegnando `logical_account_id` e `adapter_name`; al claim/deploy
+   la **IP whitelist** della key viene impostata (via API modify) sull'IP del server del
+   Sistema dell'istanza - al provision l'account e' nel pool e il server non e' ancora noto.
 
 Vincoli e accorgimenti:
 
@@ -1307,14 +1437,19 @@ Vincoli e accorgimenti:
   esplicito (mai auto-creare account live senza conferma).
 - **Limiti Bybit.** Esiste un tetto al numero di subaccount e rate limit per tier
   (da verificare); la creazione va **sequenziale con backoff**, non parallela.
+- **Scadenza key senza IP.** Policy Bybit (da riverificare all'implementazione): le API
+  key **senza IP whitelist scadono dopo ~90 giorni**; quelle vincolate a IP non scadono.
+  Gli account che restano a lungo nel pool senza claim vanno quindi o vincolati subito a
+  un IP provvisorio, o monitorati per la scadenza (alert da `control_events`).
 - **Registrazione manuale** (`account register`) resta come percorso alternativo senza API
   per account creati a mano.
 
 ### Provisioning Telegram automatico
 
-Vincolo di piattaforma: **un bot non puo' creare gruppi**. Il provisioning completo usa
-quindi una **sessione utente Telethon dedicata** (separata da quella che ascolta le fonti,
-per non mescolare i ruoli).
+Vincoli di piattaforma: **un bot non puo' creare gruppi**, e **un bot non si puo' creare
+via API** (solo BotFather, a mano): il token del bot e' sempre un **input dell'operatore**.
+Il provisioning completo usa quindi una **sessione utente Telethon dedicata** (separata
+da quella che ascolta le fonti, per non mescolare i ruoli).
 
 Flusso di `provision telegram` (saltato per istanze `muted`):
 
@@ -1434,6 +1569,9 @@ systemctl restart telesignalbot@live_instance
 - esito dell'ultimo canary DEMO
 - stato dell'ultimo deploy di config e dell'ultimo upgrade codice
 
+Il supporto e' la tabella `control_events`: ogni verbo (`deploy`, `upgrade`, `rollout`,
+`rollback`) registra esito, target e revisione.
+
 `rollout plan` puo' **verificare** la revisione reale sul server via SSH contro quella
 registrata, per rilevare drift.
 
@@ -1520,6 +1658,7 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Rischio | Severita' | Note |
 |---|---|---|
 | Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk; creazione sequenziale con backoff |
+| Key API con permessi eccessivi o senza IP | Alta | permessi minimi alla creazione (mai withdraw/transfer); IP whitelist impostata al claim; key senza IP scadono ~90gg (pool da monitorare) |
 | Doppia rivendicazione di un account dal pool | Alta | due istanze sullo stesso conto = doppia esecuzione; mitigato da **claim atomico** `available -> assigned` |
 | Esecuzione su ambiente sbagliato (demo vs live) | Alta | mitigato per costruzione: `environment` intrinseco al pool + claim solo per tipo + gate `LIVE` |
 | Limiti Telegram / ban dell'utente Telethon di provisioning | Media | mitigato da **throttling** anti-flood; sessione utente **dedicata** separata dall'ingestione |
@@ -1537,7 +1676,7 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Migrazione distruttiva sullo shared `parser.sqlite3` | Alta | rompe i lettori vecchi; consentita solo con riavvio coordinato esplicito (default: additive-only); migra solo l'ingestione |
 | Riavvio di un'istanza con posizioni aperte | Media | mitigato da `rollout apply --no-restart` + riavvio quando l'istanza e' flat |
 | Segreti in chiaro nel `.env` per-istanza sui server | Media | residuo, come oggi; confine di protezione = control node non esposto; disco cifrato consigliato |
-| Collisione alias dentro una fonte | Media | `validate` deve bloccare; oggi passa silenzioso |
+| Collisione alias dentro una fonte o cross-gruppo (consolidato Sistema) | Media | `validate` blocca entrambi i casi; alias ambigui -> override per-fonte in `channels.yaml`; oggi passa silenzioso |
 
 ---
 
@@ -1545,17 +1684,19 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 
 1. Introdurre `management.db` e il suo schema iniziale (sistemi, istanze, sources, iscrizioni, catalogo globale).
 2. Implementare gestione segreti (file locale permissionato) e backup cifrati/export redatti.
-3. Implementare `tsbctl instance create` (con `--type` e `--muted`) e binding del gruppo Telegram istanza.
-4. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
-5. Implementare il **pool account**: `account provision` (bulk via API Bybit), `account claim` (atomico) e `trader bind-account`.
-6. Implementare `provision prepare` (esecutore + ingestione).
-7. Implementare `provision bybit` e `provision telegram`.
-8. Implementare `validate`, incluso il controllo collisioni alias per fonte.
-9. Implementare `deploy` e gestione delle due famiglie di servizi.
-10. Applicare la modifica minima a `main.py`: `BOT_INSTANCE_NAME` per la config dir e
+3. Implementare il bootstrap: `server add`, `sistema create` (struttura + clone +
+   servizio ingestione), `provider add`, `telethon login` (interattivo).
+4. Implementare `tsbctl instance create` (con `--type`, `--sistema` e `--muted`) e binding del gruppo Telegram istanza.
+5. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
+6. Implementare il **pool account**: `account provision` (bulk via API Bybit), `account claim` (atomico) e `trader bind-account`.
+7. Implementare `provision prepare` (esecutore + ingestione).
+8. Implementare `provision bybit` e `provision telegram`.
+9. Implementare `validate`, incluso il controllo collisioni alias per fonte.
+10. Implementare `deploy` e gestione delle due famiglie di servizi.
+11. Applicare la modifica minima a `main.py`: `BOT_INSTANCE_NAME` per la config dir e
     disattivazione delle migrazioni parser in modalita' esecutore (i path DB sono gia'
     pilotabili via `PARSER_DB_PATH`/`OPS_DB_PATH`).
-11. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
+12. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
 
 ---
 
@@ -1584,8 +1725,9 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   applicate **solo dall'ingestione** (gli esecutori aprono senza migrare)
 - una istanza puo' essere **multi-fonte** (via iscrizione)
 - una fonte puo' servire **uno o piu' trader** dal catalogo globale
-- il **registro trader e' globale e magro** (solo `trader_id` + `display_name`; nessun
-  `instance_id`): alimenta il gate `registered_traders`; detection e comportamento nei file
+- il **registro trader e' globale e magro** (`trader_id` + `display_name` + riferimento
+  `parser_profile` per nome; nessun `instance_id`): alimenta il gate `registered_traders`;
+  detection e comportamento nei file; i parser sono **codice** distribuito via `repo upgrade`
 - i trader possono usare account exchange **dedicati o condivisi**
 - **isolamento rigido `DEMO`/`LIVE`**: nessuna istanza mescola account demo e live;
   `exchange_accounts` ha **una sola coppia** di chiavi e `environment` DEMO/LIVE
@@ -1608,7 +1750,8 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 - **UI di controllo dedicata** (Fase 2): **web app locale** servita da `tsbctl ui` su
   localhost, sopra lo **stesso core** della CLI (non statica: scrive e orchestra). **4
   tabelle umane** (Istanze, Account/pool, Fonti, Trader) con **funzioni di scala** (ricerca,
-  filtri, raggruppamento per canale, azioni bulk); editing dello **stato desiderato + apply
+  filtri, raggruppamento per canale, azioni bulk); i Sistemi non sono una quinta tabella ma
+  il **raggruppamento** della vista Istanze; editing dello **stato desiderato + apply
   esplicito**, blast-radius visibile, credenziali write-only, gate `LIVE`
 - **forme di fonte**: mono-trader (`fixed`), multi-trader (`dynamic`), gruppo con topic per
   trader = **N fonti che condividono il canale**; **selezione per-istanza** dei trader di una
@@ -1617,12 +1760,20 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
   `resolution_mode default|patterns_only` (niente `alias|pattern|hybrid`)
-- alias/detection **nei file globali** (`trader_aliases.json`, `text_patterns.yaml`), non
-  nel registro; risoluzione **scopata alla membership**, collisioni **bloccate da `validate`**
+- alias/detection **nei frammenti per pattern_group** (`config/patterns/<gruppo>.yaml`,
+  versionati nel repo), non nel registro; `tsbctl` **genera per Sistema** i file consolidati
+  (`text_patterns.yaml`, `trader_aliases.json`) con i soli gruppi delle fonti sottoscritte
+  (runtime invariato); risoluzione **scopata alla membership**, collisioni **bloccate da
+  `validate`**
 - macchina a stati completata: `stop: active -> deployed` (coppia simmetrica con `start`);
   **l'edit non cambia stato**: crea **drift** visibile in `diff`/`rollout plan`
 - il provisioning e' **semi-guidato**
 - `management.db` e' la **fonte di verita'** e **control plane**, non replica il dettaglio trading
+- `management.db` contiene **tutti i dati per le automazioni**: accesso server (chiave SSH,
+  niente password), credenziali **master provider** per il provisioning subaccount
+  (`provider_credentials`, demo e live distinte), sessioni Telethon (ingestione per Sistema
+  + provisioning, con `api_id`/`api_hash`), log operazioni (`control_events`); l'heartbeat
+  runtime resta fuori (piano monitoring della dashboard)
 - **topologia control plane locale**: `management.db` e i segreti stanno sulla macchina di
   controllo dell'operatore; i server eseguono solo runtime e ricevono il `.env` per-istanza
   al deploy; le istanze girano anche a control node spento
