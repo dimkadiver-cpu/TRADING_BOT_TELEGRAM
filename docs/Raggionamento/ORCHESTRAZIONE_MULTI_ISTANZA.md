@@ -599,6 +599,54 @@ leggibilita'/versionamento se si vuole ispezionarlo; il runtime puo' comunque le
 file consolidato generato, quindi resta invariato. Cambiare la *struttura letta dal runtime*
 (es. `gruppo -> topics`) sarebbe una modifica al runtime, valutabile a parte.
 
+### Schema config come singola fonte di verita'
+
+Oggi la config e' parsata con `raw.get("campo", default)` sparsi (`config_loader.py`) +
+i commenti nei YAML come documentazione umana: **non esiste uno schema machine-readable**.
+Questo impedisce un editor UI auto-generato e lascia i default impliciti.
+
+Decisione: introdurre uno **schema config tipizzato** (Pydantic) come **singola fonte di
+verita'**. Il **formato file resta YAML** — "JSON Schema" e' il linguaggio di schema, non un
+obbligo di formato; lo YAML parsa allo stesso dict.
+
+```text
+config.yaml  --parse-->  dict  --valida-->  modello Pydantic (SSOT)
+                                                  |
+                                                  |-- runtime carica e valida
+                                                  |-- editor UI si genera da .model_json_schema()
+                                                  \-- validate = validazione di schema
+```
+
+Una definizione, tre usi: **runtime + editor + validate**. Aggiungi un campo al modello una
+volta -> il runtime lo accetta **e** l'editor lo mostra, senza toccare il codice dell'editor,
+senza drift. I commenti ricchi degli YAML attuali diventano metadati dello schema
+(`Field(description=..., enum=..., default=...)`). Lavoro reale: sostituire i `.get()` con i
+modelli; **nessuna migrazione di formato**.
+
+### Override per-trader
+
+L'override comportamentale di un trader in un'istanza (es. `setup_mode: reshape`,
+`template: ladder_4_3_Tprofit`, `risk: 2%`) e' scritto nella UI da un **editor generato dallo
+schema** e salvato come **blob opaco** per la coppia `(istanza, trader)`. `management.db`
+non *modella* i campi del comportamento: li **trasporta**. `tsbctl` fonde e genera
+`traders/<id>.yaml`. Il merge resta a **2 livelli** (`operation_config` + override trader);
+i `template` reshape restano riferimenti risolti dalla logica runtime esistente.
+
+### Applicare i cambiamenti: hot-reload vs restart
+
+Verificato nel codice:
+
+| Cambio | Effetto |
+|---|---|
+| Detection (`channels.yaml`) | **hot-reload** (`ChannelConfigWatcher`) |
+| Comportamento (`operation_config`, trader config) | **hot-reload** (`reload_if_changed()` chiamato in `signal_enrichment/processor.py`) |
+| Wiring esecuzione (`execution.yaml`: conti/adapter) | **restart** (connessioni all'avvio, nessun watcher) |
+
+Implicazione operativa: la maggior parte dei tweak per-trader (reshape, risk) si applica
+**a caldo, senza restart** e senza toccare posizioni aperte. Solo i cambi di **wiring**
+(aggiungi/togli conto, cambia adapter) richiedono restart. Il **diff** nella UI classifica
+il cambiamento e indica quale dei due.
+
 ---
 
 ## Principi architetturali
@@ -1474,6 +1522,12 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   generato da **scheletro + override** con precedenza **a 2 livelli come oggi** (niente
   eredita' viva); `registered_traders` **derivato** dalle sottoscrizioni; propagazione
   dello scheletro **esplicita**
+- **schema config come SSOT** (Pydantic): il **formato resta YAML**; una definizione ->
+  runtime (con validazione) + **editor UI auto-generato** + `validate`. Override per-trader
+  come **blob opaco** in `management.db` (trasportato, non modellato)
+- **hot-reload vs restart** (verificato): detection e comportamento si applicano **a caldo**
+  (`ChannelConfigWatcher`, `reload_if_changed()`); solo il **wiring** esecuzione (conti/adapter)
+  richiede restart; il diff lo classifica
 - il bot runtime resta **quasi invariato**
 - onboarding istanza e upgrade repo sono **workflow distinti**
 - rollout: **canary a livello server DEMO** (due server, un clone per server a revisioni
