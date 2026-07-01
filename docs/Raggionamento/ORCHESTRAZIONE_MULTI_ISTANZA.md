@@ -1,6 +1,11 @@
 # Orchestrazione Multi-Istanza - Design Spec
-**Data:** 2026-06-30
-**Stato:** In revisione
+**Data:** 2026-06-30 (rev. 2026-07-01)
+**Stato:** In revisione - architettura B approvata
+
+> Revisione 2026-07-01: adottato il **Modello B** (ingestione per-fonte + esecutori
+> per-istanza), isolamento rigido `DEMO`/`LIVE`, catalogo trader globale, modello
+> account allineato al runtime reale, vocabolario detection allineato al codice.
+> Le decisioni sono elencate nella sezione finale.
 
 ---
 
@@ -13,7 +18,7 @@ Un'istanza non e' necessariamente dedicata a una sola fonte. Una singola istanza
 1. una o piu' fonti Telegram;
 2. uno o piu' trader/profile;
 3. uno o piu' account exchange;
-4. un proprio gruppo Telegram di controllo e notifica.
+4. un proprio gruppo Telegram di controllo e notifica, **oppure nessuno** (istanza muta).
 
 Il workflow deve supportare sia:
 
@@ -22,11 +27,69 @@ Il workflow deve supportare sia:
 
 Il sistema deve supportare:
 - N istanze del bot, ciascuna con config, dati e credenziali proprie
-- scelta esplicita del tipo istanza in creazione: `DEMO` oppure `LIVE`
+- scelta esplicita del tipo istanza in creazione: `DEMO` oppure `LIVE`, con **isolamento rigido** (un'istanza non mescola account demo e live)
 - associazione tra istanza, fonti Telegram, trader/profile, account exchange e destinazioni Telegram
 - gestione scalabile di fonti con molti trader senza duplicazione massiva di alias, topic e binding
+- **condivisione di fonti e trader tra piu' istanze** senza duplicare l'ascolto Telegram
 - generazione automatica dei file di configurazione runtime
 - controllo centralizzato dello stato operativo delle istanze
+
+---
+
+## Architettura a due piani (Modello B)
+
+Questa e' la decisione architetturale portante della revisione. Il sistema separa
+**chi ascolta e capisce il segnale** da **chi lo esegue e notifica**.
+
+### Piano di ingestione (per fonte)
+
+- Ogni **fonte** Telegram e' ascoltata da **un solo** listener/parser, indipendentemente
+  da quante istanze la consumano.
+- L'ingestione produce il **segnale capito** (canonico/enriched, con trader risolto)
+  una volta sola.
+- Motivazione: un canale Telegram e' una risorsa esterna condivisa. Leggerlo N volte
+  significa (a) rischio di limitazioni/ban Telegram proporzionale al numero di istanze
+  gemelle, e soprattutto (b) rischio che due istanze **interpretino lo stesso messaggio
+  in modo diverso** (versioni parser o config pattern divergenti), eseguendo lo stesso
+  segnale in modi diversi su conti diversi. Questo e' un difetto di **consistenza**,
+  non una semplice inefficienza.
+
+### Piano di esecuzione (per istanza)
+
+- Ogni **istanza** e' un esecutore + notificatore, legato ai propri **account** e al
+  proprio (eventuale) gruppo Telegram.
+- Un'istanza si **iscrive** alle fonti che le interessano e riceve in **fan-out** il
+  segnale gia' capito.
+- Un'istanza "muta" (senza gruppo Telegram) e' in pratica **solo un esecutore** agganciato
+  all'ingestione di una fonte gia' ascoltata da un'altra istanza.
+
+### Regola di scaling
+
+> **I listener contano le fonti, gli esecutori contano le istanze.**
+
+Esempio: 5 istanze sulle fonti `{S1, S2}` e altre 5 sulle fonti `{S3, S4}` richiedono
+**4 listener** (uno per fonte), non 20, e **10 esecutori** (uno per istanza). Aggiungere
+una 6ª istanza a un gruppo esistente costa **zero listener** (le fonti sono gia' ascoltate)
+e **un esecutore**.
+
+### Invariante da preservare
+
+> **L'account/esecutore deve essere indirizzabile indipendentemente da chi ascolta.**
+> Il listener non deve mai "possedere" l'account.
+
+Finche' questo invariante regge, il modello dati resta relazionale e account-centrico,
+e l'evoluzione dell'infrastruttura di distribuzione (da DB condiviso a bus dedicato)
+resta un cambio di runtime, non una ri-modellazione.
+
+### Split dei dati
+
+- **`parser.sqlite3` (segnale capito)** -> **condiviso a livello di fonte**. Raw, canonical
+  ed enriched vivono qui, prodotti una volta.
+- **`ops.sqlite3` (ordini/posizioni/fill/PnL)** -> **locale per istanza/account**.
+
+Questa separazione e' gia' anticipata dal runtime attuale (`parser.sqlite3` e `ops.sqlite3`
+sono file distinti e la pipeline `runtime_v2` gia' separa il messaggio canonico
+dall'execution gateway).
 
 ---
 
@@ -37,57 +100,60 @@ Il workflow approvato e' semi-guidato: il sistema automatizza la preparazione e 
 ### Scenario base
 
 1. L'operatore decide se usare una istanza esistente oppure crearne una nuova.
-2. Se serve una nuova istanza, la crea scegliendo `DEMO` o `LIVE`.
+2. Se serve una nuova istanza, la crea scegliendo `DEMO` o `LIVE` (isolamento rigido:
+   tutti gli account dell'istanza saranno dello stesso tipo).
 3. L'istanza nasce in stato `draft`.
 4. Associa all'istanza:
    - server target
-   - gruppo Telegram dell'istanza
-   - bot Telegram dell'istanza
-   - eventuali credenziali Telethon dell'istanza
-5. Per ogni nuova fonte da gestire:
-   - costruisce e valida il parser specifico del trader/fonte
-   - aggiunge la fonte all'istanza
-   - seleziona uno o piu' trader/profile dal catalogo trader
+   - gruppo Telegram dell'istanza **oppure** flag "istanza muta"
+   - bot Telegram dell'istanza (se non muta)
+   - eventuali credenziali Telethon dell'istanza (solo se introduce fonti nuove da ascoltare)
+5. Per ogni fonte da gestire:
+   - se la fonte **esiste gia'** (ascoltata da un'altra istanza): l'istanza vi si **iscrive**;
+   - se la fonte e' **nuova**: si registra la fonte, si costruisce/valida il parser,
+     si assegna il listener di ingestione, poi l'istanza vi si iscrive;
+   - seleziona uno o piu' trader/profile dal **catalogo globale**
    - applica una policy account di default
-   - applica una policy Telegram di default
+   - applica una policy Telegram di default (ignorata se l'istanza e' muta)
    - definisce solo gli override locali necessari
 6. Il sistema prepara in automatico:
    - record centrali in `management.db`
    - struttura filesystem dell'istanza
    - file YAML runtime
    - `.env` dell'istanza
-   - mapping di fonti, trader e destinazioni
+   - mapping di fonti, trader, iscrizioni e destinazioni
 7. I passaggi sensibili vengono completati o confermati dall'operatore:
    - provisioning Bybit
    - provisioning Telegram
 8. L'operatore esegue la validazione finale dell'istanza.
 9. Se la validazione passa, l'istanza va in `ready`.
 10. L'operatore esegue il deploy.
-11. Il deploy installa file e servizio sul server target e porta l'istanza in `deployed`.
+11. Il deploy installa file e servizi sul server target e porta l'istanza in `deployed`.
+    Per le fonti nuove installa anche il relativo servizio di ingestione.
 12. L'avvio finale e' esplicito: `start` porta l'istanza in `active`.
 
 ### Quando creare una nuova istanza
 
 La creazione di una nuova istanza e' giustificata quando serve isolamento operativo su almeno uno di questi assi:
 
-- database e stato runtime separati
-- file di configurazione separati
-- credenziali exchange separate
-- gruppo Telegram separato
-- bot Telegram separato
+- account exchange separati (in particolare passaggio da `DEMO` a `LIVE`)
 - ciclo di deploy/start/stop separato
+- gruppo Telegram separato
+- stato di esecuzione separato (`ops.sqlite3` proprio)
 
-Se invece una nuova fonte deve convivere nello stesso dominio operativo, la scelta preferita e' aggiungerla a una istanza esistente.
+Nota: sotto il Modello B, **non** serve creare una nuova istanza solo per ascoltare una
+fonte gia' ascoltata. Se il caso e' "stesse fonti/trader, account diversi", si crea una
+nuova istanza-esecutore che si **iscrive** alle fonti esistenti (eventualmente muta).
 
 ### Modifica di una istanza esistente
 
 Una istanza gia' `active` deve poter essere evoluta senza essere ricreata da zero. Il caso operativo tipico e':
 
 1. esiste una istanza attiva;
-2. l'operatore vuole aggiungere una nuova fonte;
-3. la nuova fonte porta con se' uno o piu' trader;
+2. l'operatore vuole aggiungere una nuova fonte (nuova o gia' esistente);
+3. la fonte porta con se' uno o piu' trader dal catalogo;
 4. ogni trader viene collegato a un account exchange esistente o nuovo;
-5. vengono aggiunti o aggiornati i topic Telegram necessari;
+5. vengono aggiunti o aggiornati i topic Telegram necessari (se l'istanza non e' muta);
 6. l'istanza viene rivalidata e ridistribuita.
 
 Il principio operativo e' che l'operatore modifica lo **stato desiderato** dell'istanza nel control plane, poi applica la differenza al runtime.
@@ -95,7 +161,7 @@ Il principio operativo e' che l'operatore modifica lo **stato desiderato** dell'
 ### Workflow di edit raccomandato
 
 1. aprire l'istanza in modalita' `edit`
-2. aggiungere o modificare fonti, trader, account e destinazioni Telegram
+2. aggiungere o modificare fonti (iscrizioni), trader, account e destinazioni Telegram
 3. visualizzare un riepilogo o diff delle modifiche
 4. eseguire la validazione
 5. applicare il deploy della nuova configurazione
@@ -112,17 +178,17 @@ Per fonti che contengono molti trader il workflow non deve essere costruito come
 
 Il modello raccomandato e' invece:
 
-1. definire i trader una volta sola in un **catalogo trader**
-2. aggiungere la fonte come contenitore leggero
-3. associare alla fonte i trader ammessi
+1. definire i trader una volta sola nel **catalogo trader globale**
+2. registrare la fonte come contenitore leggero con il proprio listener
+3. associare alla fonte i trader ammessi (membership)
 4. applicare policy di default per account e Telegram
 5. mantenere espliciti solo gli override locali
 
 In questo modo l'operatore ragiona per intenzione:
 
-1. crea la fonte
+1. registra/riusa la fonte
 2. assegna il parser comune
-3. seleziona trader dal catalogo
+3. seleziona trader dal catalogo globale
 4. sceglie policy account
 5. sceglie policy Telegram
 6. rivede gli override
@@ -141,6 +207,37 @@ L'interfaccia operativa raccomandata e' a due livelli:
 
 ---
 
+## Modello concettuale
+
+Il modello dati e operativo di riferimento e' il seguente:
+
+- **Istanza** = unita' autonoma di **esecuzione** del bot (esecutore + notificatore)
+- **Fonte** = input Telegram **globale**, ascoltato da un solo listener e condivisibile
+  tra piu' istanze
+- **Trader** = parser/profile/identita' logica definita nel catalogo globale
+- **Catalogo trader** = definizione **globale e unica** dei trader disponibili, con
+  detection, alias e pattern; riusabile da piu' istanze
+- **Account exchange** = risorsa assegnabile a uno o piu' trader della stessa istanza,
+  con wiring account logico -> adapter -> credenziali
+- **Iscrizione (subscription)** = legame fonte -> istanza che abilita il fan-out del
+  segnale capito verso quell'istanza
+- **Gruppo Telegram istanza** = destinazione di controllo e notifica dell'istanza,
+  **opzionale** (istanza muta)
+
+Relazioni attese:
+
+- una istanza puo' avere piu' fonti (via iscrizione)
+- una fonte puo' essere consumata da piu' istanze
+- una fonte puo' avere uno o piu' trader presi dal catalogo globale (membership)
+- il trader viene definito una volta sola nel catalogo globale e poi associato alle fonti
+- piu' trader della stessa istanza possono condividere lo stesso account exchange
+- un trader puo' anche avere un account exchange dedicato
+- ogni istanza ha il proprio gruppo Telegram (o nessuno), con eventuali topic separati
+  per trader, account o funzione
+- account e Telegram devono supportare policy di default con override locali
+
+---
+
 ## Stati istanza
 
 Per il primo design bastano pochi stati operativi, leggibili e verificabili:
@@ -149,7 +246,7 @@ Per il primo design bastano pochi stati operativi, leggibili e verificabili:
 |---|---|
 | `draft` | istanza creata ma incompleta |
 | `ready` | configurazione completa e validata, pronta per deploy |
-| `deployed` | file e servizio installati sul server target |
+| `deployed` | file e servizi installati sul server target |
 | `active` | istanza avviata |
 | `error` | provisioning, validazione o deploy falliti |
 
@@ -161,7 +258,9 @@ Per il primo design bastano pochi stati operativi, leggibili e verificabili:
 - `start` puo' portare solo da `deployed` a `active`
 - errori in qualunque fase portano a `error` con motivazione tracciabile
 
-Gli stati devono riflettere il workflow operativo, non tutti i dettagli interni dei singoli task.
+Gli stati riflettono il ciclo di vita dell'**esecutore/istanza**. I servizi di ingestione
+per-fonte hanno un ciclo di vita proprio (vedi Provisioning tecnico) e non sono modellati
+come stati dell'istanza.
 
 ---
 
@@ -178,10 +277,14 @@ tsbctl instance init
 # Modifica guidata istanza esistente
 tsbctl instance edit alpha_demo
 
-# Gestione catalogo trader
+# Gestione catalogo trader globale
 tsbctl trader catalog add
 tsbctl trader catalog edit trader_a
 tsbctl trader catalog list
+
+# Gestione fonti globali e iscrizioni
+tsbctl source register --channel 12345 --label fonte_a
+tsbctl source subscribe alpha_demo --source fonte_a
 
 # Riepilogo / diff / verifica
 tsbctl instance summary alpha_demo
@@ -200,14 +303,15 @@ tsbctl instance status alpha_demo
 I comandi granulari restano disponibili per repair, automazione e casi speciali:
 
 ```bash
-tsbctl instance create --name alpha_demo --type DEMO --server vps1
+tsbctl instance create --name alpha_demo --type DEMO --server vps1 [--muted]
 tsbctl telegram bind-group alpha_demo --chat-id -1001234567890 --bot-token-env CONTROL_BOT_ALPHA
-tsbctl source add alpha_demo --channel 12345 --label fonte_a
-tsbctl source attach-traders alpha_demo --source fonte_a --traders trader_a,trader_b
-tsbctl account add alpha_demo --account acc_alpha --provider BYBIT
-tsbctl source set-account-policy alpha_demo --source fonte_a --mode shared_account_per_source --account acc_alpha
+tsbctl source register --channel 12345 --label fonte_a --resolution dynamic --pattern-group multi_ru
+tsbctl source subscribe alpha_demo --source fonte_a
+tsbctl source attach-traders --source fonte_a --traders trader_a,trader_b
+tsbctl account add alpha_demo --account demo_1 --adapter bybit_demo_1 --provider BYBIT
+tsbctl source set-account-policy alpha_demo --source fonte_a --mode shared_account_per_source --account demo_1
 tsbctl source set-telegram-policy alpha_demo --source fonte_a --notify-mode per_source --default-topic 201
-tsbctl trader bind-account alpha_demo --trader trader_a --account acc_alpha --override
+tsbctl trader bind-account alpha_demo --trader trader_a --account demo_1 --override
 tsbctl telegram bind-topic alpha_demo --scope trader_a --topic 211 --role NOTIFY
 tsbctl provision prepare alpha_demo
 tsbctl provision bybit alpha_demo
@@ -225,9 +329,10 @@ tsbctl instance edit alpha_demo
 Oppure in forma esplicita:
 
 ```bash
-tsbctl source add alpha_demo --channel 55555 --label fonte_b
-tsbctl source attach-traders alpha_demo --source fonte_b --traders trader_x,trader_y
-tsbctl source set-account-policy alpha_demo --source fonte_b --mode shared_account_per_source --account acc_main
+tsbctl source register --channel 55555 --label fonte_b --resolution dynamic --pattern-group multi_ru
+tsbctl source attach-traders --source fonte_b --traders trader_x,trader_y
+tsbctl source subscribe alpha_demo --source fonte_b
+tsbctl source set-account-policy alpha_demo --source fonte_b --mode shared_account_per_source --account demo_1
 tsbctl source set-telegram-policy alpha_demo --source fonte_b --notify-mode per_source --default-topic 220
 tsbctl trader bind-account alpha_demo --trader trader_y --account acc_y --override
 tsbctl telegram bind-topic alpha_demo --scope trader_x --topic 220 --role NOTIFY
@@ -240,27 +345,29 @@ tsbctl deploy alpha_demo
 ### Ruolo dei comandi
 
 - `instance init`
-  - avvia un wizard testuale che raccoglie i dati minimi per creare una nuova istanza coerente
+  - avvia un wizard testuale che raccoglie i dati minimi per creare una nuova istanza-esecutore coerente
 - `instance edit`
   - avvia un wizard testuale per modificare una istanza esistente senza ricrearla
 - `trader catalog add/edit/list`
-  - gestisce il catalogo centrale dei trader disponibili, con detection mode, alias e pattern
+  - gestisce il catalogo **globale** dei trader disponibili, con detection, alias e pattern
+- `source register`
+  - registra una fonte Telegram **globale** con il suo parser e la sua modalita' di risoluzione
+- `source subscribe`
+  - iscrive una istanza a una fonte esistente (abilita il fan-out del segnale capito)
+- `source attach-traders`
+  - associa alla fonte (membership) uno o piu' trader gia' presenti nel catalogo globale
 - `instance summary`
   - mostra lo stato desiderato completo dell'istanza in modo leggibile
 - `diff`
   - mostra la differenza tra stato desiderato e stato attualmente deployato
 - `instance create`
-  - crea il record base dell'istanza e lo stato iniziale `draft`
-- `source add`
-  - aggiunge una nuova fonte Telegram a una istanza esistente
-- `source attach-traders`
-  - associa alla fonte uno o piu' trader gia' presenti nel catalogo
+  - crea il record base dell'istanza-esecutore e lo stato iniziale `draft`
 - `source set-account-policy`
-  - applica alla fonte una policy account di default
+  - applica alla fonte una policy account di default per l'istanza
 - `source set-telegram-policy`
-  - applica alla fonte una policy Telegram di default
+  - applica alla fonte una policy Telegram di default per l'istanza
 - `account add`
-  - registra un account exchange utilizzabile nell'istanza
+  - registra un account exchange utilizzabile nell'istanza (con adapter e wiring)
 - `trader bind-account`
   - definisce un override di binding trader -> account rispetto alla policy di default
 - `telegram bind-group`
@@ -276,7 +383,7 @@ tsbctl deploy alpha_demo
 - `validate`
   - controlla coerenza e completezza; se tutto e' corretto passa a `ready`
 - `deploy`
-  - installa sul server target e porta a `deployed`
+  - installa sul server target (esecutore + eventuali listener di fonti nuove) e porta a `deployed`
 - `instance start`
   - esegue l'avvio esplicito e porta a `active`
 
@@ -287,10 +394,12 @@ tsbctl deploy alpha_demo
 ### Fonte di verita'
 
 `management.db` e' il registro centrale di verita' per:
-- istanze
+- istanze (esecutori)
 - server target
-- catalogo trader
+- catalogo trader globale
+- fonti globali e loro listener
 - membership fonte/trader
+- iscrizioni fonte/istanza
 - policy account e Telegram
 - override fonte/trader/account exchange
 - stato operativo
@@ -310,43 +419,40 @@ I file runtime del bot non sono fonte di verita'. Sono artefatti derivati:
 
 Questi file devono essere generati da `tsbctl` e non modificati a mano.
 
+### Split dei database runtime
+
+- **`parser.sqlite3`** -> segnale capito (raw, canonical, enriched). **Condiviso a livello
+  di fonte** tra le istanze iscritte.
+- **`ops.sqlite3`** -> dettaglio trading (ordini, posizioni, fill, trade chain).
+  **Locale per istanza/account.**
+
+Il control plane mantiene solo metadati, stato operativo e riferimenti sufficienti per
+una futura dashboard fleet-level con drill-down verso il dettaglio locale.
+
 ### Implicazione architetturale
 
 Il runtime del bot resta quasi invariato:
-- continua a leggere file di config e DB locali della singola istanza;
+- continua a leggere file di config e DB locali;
 - non conosce la logica di orchestrazione;
 - non dipende direttamente dalla semantica di onboarding.
 
-I dati di trading di dettaglio restano nei database `ops.sqlite3` delle singole istanze. Il control plane mantiene solo metadati, stato operativo e riferimenti sufficienti per una futura dashboard fleet-level con drill-down verso il dettaglio locale.
-
-### Modello concettuale
-
-Il modello dati e operativo di riferimento e' il seguente:
-
-- **Istanza** = unita' autonoma di esecuzione del bot
-- **Fonte** = input Telegram gestito da una istanza
-- **Trader** = parser/profile/identita' logica risolta dentro l'istanza
-- **Catalogo trader** = definizione unica dei trader disponibili, con detection mode, alias e pattern
-- **Account exchange** = risorsa assegnabile a uno o piu' trader della stessa istanza
-- **Gruppo Telegram istanza** = destinazione di controllo e notifica dell'istanza
-
-Relazioni attese:
-
-- una istanza puo' avere piu' fonti
-- una fonte puo' avere uno o piu' trader presi dal catalogo
-- il trader viene definito una volta sola nel catalogo e poi associato alle fonti
-- piu' trader della stessa istanza possono condividere lo stesso account exchange
-- un trader puo' anche avere un account exchange dedicato
-- ogni istanza ha il proprio gruppo Telegram, con eventuali topic separati per trader, account o funzione
-- account e Telegram devono supportare policy di default con override locali
+Sotto il Modello B, l'unica evoluzione runtime rilevante e' il **punto di consegna** del
+segnale capito: da consegna interna (esecutore locale) a pubblicazione condivisa
+consumata da piu' esecutori. La cucitura esiste gia' nella pipeline `runtime_v2`
+(messaggio canonico/enriched separato dall'execution gateway).
 
 ---
 
 ## Principi architetturali
 
 - **Un solo repo clone** - il codice e' condiviso; le istanze differiscono per config, dati e credenziali
+- **Due piani** - ingestione per-fonte e esecuzione per-istanza restano separati
+- **Fonte e trader globali** - definiti una volta, riusati da piu' istanze
+- **Account-centrico** - l'esecutore e' indirizzabile indipendentemente dal listener
+- **Isolamento rigido DEMO/LIVE** - un'istanza non mescola account demo e live
 - **Control plane centrale** - `management.db` governa inventory, stato e provisioning
-- **Configurazione generata** - i file YAML sono artefatti derivati dal DB centrale
+- **Configurazione generata** - i file YAML sono artefatti derivati dal DB centrale;
+  il tuning comportamentale vive in template, non in colonne DB
 - **Bot quasi invariato** - il runtime deve restare focalizzato sull'esecuzione
 - **Cifratura a riposo** - le credenziali in `management.db` devono essere cifrate
 - **Workflow semi-guidato** - automazione alta sui passaggi meccanici, controllo umano sui passaggi sensibili
@@ -358,16 +464,19 @@ Relazioni attese:
 ```text
 /opt/telesignalbot/
   repo/                        <- unico clone del codice
+  ingestion/                   <- piano di ingestione condiviso (per fonte)
+    {source}/
+      parser.sqlite3           <- segnale capito, condiviso tra le istanze iscritte
+      .env                     <- credenziali Telethon del listener
   instances/
     {name}/
       config/
         telegram_control.yaml
-        channels.yaml
+        channels.yaml          <- fonti a cui l'istanza e' iscritta
         execution.yaml
         traders/
       data/
-        parser.sqlite3
-        ops.sqlite3
+        ops.sqlite3            <- dettaglio trading, locale
       .env
   management.db
 /etc/telesignalbot/
@@ -376,9 +485,12 @@ Relazioni attese:
 
 ### Note
 
-- ogni istanza ha isolamento operativo a livello di config e dati
+- l'ingestione di una fonte e' condivisa: un solo listener e un solo `parser.sqlite3` per fonte
+- ogni istanza-esecutore ha isolamento operativo su `ops.sqlite3`, config e credenziali
 - il codice viene aggiornato una volta sola sul clone condiviso
-- `management.db` resta separato dai DB runtime delle istanze
+- `management.db` resta separato dai DB runtime
+- se una fonte e' usata da una sola istanza, i due piani possono coabitare sullo stesso
+  server senza costi aggiuntivi
 
 ---
 
@@ -406,72 +518,115 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | id | INTEGER PK | |
 | name | TEXT UNIQUE | es. `main_live`, `scalping_demo` |
 | server_id | INTEGER FK | -> `servers` |
-| type | TEXT | `LIVE` \| `DEMO` |
+| type | TEXT | `LIVE` \| `DEMO` - isolamento rigido |
 | status | TEXT | `draft` \| `ready` \| `deployed` \| `active` \| `error` |
 | instance_dir | TEXT | `/opt/telesignalbot/instances/{name}/` |
 | systemd_unit | TEXT | `telesignalbot@{name}.service` |
-| tg_bot_token | TEXT | cifrato |
-| tg_group_id | TEXT | gruppo Telegram principale dell'istanza |
+| muted | BOOLEAN | true = istanza senza gruppo Telegram |
+| tg_bot_token | TEXT | cifrato - null se muted |
+| tg_group_id | TEXT | gruppo Telegram principale dell'istanza - null se muted |
+| deployed_revision | TEXT | revisione codice effettivamente in uso |
+| target_revision | TEXT | revisione target per rollout |
 | created_at | DATETIME | |
 | updated_at | DATETIME | |
 
-### `exchange_accounts`
+### `sources`
+
+Fonte **globale**, con il proprio listener di ingestione. Non ha `instance_id`.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
-| instance_id | INTEGER FK | -> `instances` |
-| provider | TEXT | es. `BYBIT` |
-| uid | TEXT | UID account o subaccount exchange |
-| name | TEXT | es. `BOT_LIVE_X` |
-| parent_account | TEXT | account master exchange |
-| api_key_demo | TEXT | cifrato |
-| api_secret_demo | TEXT | cifrato |
-| api_key_live | TEXT | cifrato |
-| api_secret_live | TEXT | cifrato |
-| ip_whitelist | TEXT | JSON array |
-| created_at | DATETIME | |
-| status | TEXT | `active` \| `suspended` |
-
-### `telegram_credentials`
-
-| Campo | Tipo | Note |
-|---|---|---|
-| id | INTEGER PK | |
-| instance_id | INTEGER FK | -> `instances` |
-| phone | TEXT | cifrato |
-| session_string | TEXT | cifrato |
-
-### `source_mappings`
-
-| Campo | Tipo | Note |
-|---|---|---|
-| id | INTEGER PK | |
-| instance_id | INTEGER FK | -> `instances` |
+| label | TEXT UNIQUE | label descrittiva della fonte |
 | channel_id | TEXT | ID canale Telegram sorgente |
 | topic_id | INTEGER | topic sorgente opzionale |
-| channel_name | TEXT | label descrittiva |
 | parser_profile_common | TEXT | parser comune della fonte |
-| resolution_policy | TEXT | `alias` \| `pattern` \| `hybrid` |
-| pattern_group | TEXT | gruppo pattern di default per la fonte |
+| trader_binding | TEXT | `fixed` \| `dynamic` |
+| fixed_trader_catalog_id | INTEGER FK | -> `trader_catalog`, valorizzato solo se `fixed` |
+| resolution_mode | TEXT | solo se `dynamic`: `default` \| `patterns_only` |
+| pattern_group | TEXT | gruppo pattern per la risoluzione dinamica |
+| max_depth | INTEGER | profondita' reply-chain (default 5) |
+| signal_message_type | TEXT | `any` \| `inline_buttons` |
+| ingestion_server_id | INTEGER FK | -> `servers`, dove gira il listener |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
-### `trader_catalog`
+> Nota vocabolario: `trader_binding`/`resolution_mode` sostituiscono il precedente
+> `alias|pattern|hybrid`, che non esiste nel runtime. `fixed` corrisponde a
+> `trader_id: <id>` in `channels.yaml`; `dynamic` corrisponde a `trader_id: null` con
+> `resolution.mode`.
+
+### `source_instance_subscriptions`
+
+Fan-out: quali istanze consumano quale fonte.
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| source_id | INTEGER FK | -> `sources` |
+| instance_id | INTEGER FK | -> `instances` |
+| cursor | TEXT | posizione consumata dall'esecutore sul segnale della fonte |
+| enabled | BOOLEAN | |
+| added_at | DATETIME | |
+
+> `cursor` e' il **cursore per esecutore**: garantisce che un esecutore lento o
+> riavviato non salti ne' esegua due volte lo stesso segnale. Unico pezzo genuinamente
+> nuovo introdotto dal Modello B.
+
+### `exchange_accounts`
+
+Isolamento rigido: **una sola coppia** di chiavi (il `mode` deriva da `instances.type`).
+Modella il **wiring** account logico -> adapter -> credenziali.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| trader_id | TEXT | es. `trader_a`, `trader_3` |
+| logical_account_id | TEXT | es. `demo_1`, `live_1` - chiave di routing |
+| adapter_name | TEXT | es. `bybit_demo_1` - wiring verso l'adapter |
+| adapter_template | TEXT | template di tuning comportamentale da applicare |
+| connector | TEXT | es. `bybit` |
+| provider | TEXT | es. `BYBIT` |
+| execution_account_id | TEXT | UID account/subaccount lato exchange |
+| parent_account | TEXT | account master exchange |
+| api_key | TEXT | cifrato |
+| api_secret | TEXT | cifrato |
+| ip_whitelist | TEXT | JSON array |
+| status | TEXT | `active` \| `suspended` |
+| created_at | DATETIME | |
+
+> Il **tuning comportamentale** dell'adapter (`strategy`, `websocket`, `retry`,
+> `live_safety`, `trigger_by`, ...) non e' modellato in colonne: vive in
+> `adapter_template` + eventuali override, per non trasformare `management.db` in un
+> dump di config e non richiedere una migrazione DB per ogni tweak di strategia.
+
+### `telegram_credentials`
+
+Credenziali Telethon dei **listener di ingestione** (per fonte), non delle istanze.
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| source_id | INTEGER FK | -> `sources` |
+| phone | TEXT | cifrato |
+| session_string | TEXT | cifrato |
+
+### `trader_catalog`
+
+Catalogo **globale**: nessun `instance_id`. Un trader si definisce una volta e si riusa.
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| trader_id | TEXT UNIQUE | es. `trader_a`, `trader_3` |
 | display_name | TEXT | label leggibile |
 | parser_profile | TEXT | profilo parser di default |
-| detection_mode | TEXT | `alias` \| `pattern` \| `hybrid` |
-| pattern_key | TEXT | chiave pattern predefinita |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
 ### `trader_aliases`
+
+Alias di default del trader **globale**. Override per-fonte in `source_trader_memberships`.
 
 | Campo | Tipo | Note |
 |---|---|---|
@@ -483,17 +638,27 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 
 ### `source_trader_memberships`
 
+Quali trader del catalogo globale sono ammessi da una fonte. La risoluzione dentro la
+fonte considera **solo** gli alias/pattern dei trader di questo insieme (scoping per
+membership).
+
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
-| instance_id | INTEGER FK | -> `instances` |
-| source_mapping_id | INTEGER FK | -> `source_mappings` |
+| source_id | INTEGER FK | -> `sources` |
 | trader_catalog_id | INTEGER FK | -> `trader_catalog` |
-| detection_override | TEXT | override locale: `alias` \| `pattern` \| `hybrid` |
-| alias_override_json | TEXT | override alias locale opzionale |
+| alias_override_json | TEXT | override alias locale opzionale (vince sul globale) |
 | pattern_override | TEXT | override pattern locale opzionale |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
+
+> **Regola di risoluzione alias:**
+> 1. alias di default sul trader globale;
+> 2. `alias_override_json` per-fonte vince sul default;
+> 3. la risoluzione considera solo i trader ammessi dalla fonte (membership);
+> 4. `validate` deve **rilevare collisioni** di alias dentro l'insieme ammesso da una
+>    fonte e bloccare: oggi un alias ambiguo passa silenzioso e puo' instradare il
+>    segnale sul trader sbagliato.
 
 ### `source_account_policies`
 
@@ -501,7 +666,7 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| source_mapping_id | INTEGER FK | -> `source_mappings` |
+| source_id | INTEGER FK | -> `sources` |
 | mode | TEXT | `shared_account_per_source` \| `dedicated_account_per_trader` \| `reuse_existing_bindings` |
 | default_exchange_account_id | INTEGER FK | -> `exchange_accounts` |
 | enabled | BOOLEAN | |
@@ -522,17 +687,23 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 
 ### `telegram_policies`
 
+Ignorata per le istanze `muted`.
+
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | instance_id | INTEGER FK | -> `instances` |
-| source_mapping_id | INTEGER FK | -> `source_mappings` |
+| source_id | INTEGER FK | -> `sources` |
 | notify_mode | TEXT | `per_source` \| `per_trader` \| `shared_instance` |
-| default_notify_thread_id | INTEGER | thread di default per notify |
-| control_thread_id | INTEGER | thread control di istanza o fonte |
-| tech_thread_id | INTEGER | thread tech di istanza o fonte |
+| default_notify_thread_id | INTEGER | thread di default per notify (clean_log) |
+| control_thread_id | INTEGER | thread comandi (commands) |
+| tech_thread_id | INTEGER | thread tecnico (tech_log) |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
+
+> Allineamento al runtime: i tre ruoli-topic reali del bot sono `clean_log` (notify),
+> `tech_log` e `commands`. `default_notify_thread_id`/`tech_thread_id`/`control_thread_id`
+> mappano rispettivamente questi tre ruoli, coerenti con `telegram_control.yaml`.
 
 ### `telegram_destinations`
 
@@ -542,7 +713,7 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | instance_id | INTEGER FK | -> `instances` |
 | chat_id | TEXT | ID gruppo Telegram |
 | thread_id | INTEGER | ID topic nel supergroup |
-| role | TEXT | `NOTIFY` \| `CONTROL` \| `BOTH` |
+| role | TEXT | `NOTIFY` \| `CONTROL` \| `TECH` \| `BOTH` |
 | scope_type | TEXT | `INSTANCE` \| `SOURCE` \| `TRADER` \| `ACCOUNT` |
 | scope_ref_id | INTEGER | FK logica verso la tabella rilevante per lo scope |
 | is_override | BOOLEAN | true se supera la policy Telegram di default |
@@ -551,17 +722,52 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 
 ---
 
+## Migrazione dalla config esistente
+
+La config attuale e' **mista** (demo e live nella stessa installazione) e va scomposta
+in istanze a isolamento rigido. Mappatura reale ricostruita dal codice
+(`execution.yaml`, `telegram_control.yaml`, `channels.yaml`):
+
+| Account logico | Adapter | Trader | Mode reale |
+|---|---|---|---|
+| `demo_1` | `bybit_demo_1` | trader_a, trader_b, trader_c, trader_d, trader_3, trader_prova | demo |
+| `demo_2` | `bybit_demo_2` | trader_devos_crypto | demo |
+| `demo_3` | `bybit_demo_3` | trader_crypto_ninjias | demo |
+| `live_1` | `bybit_live_1` | trader_gg_shot | live (`allow_live_trading: false`) |
+
+**Finestra favorevole:** `live_1` non e' realmente operativo (`allow_live_trading: false`),
+quindi la scomposizione avviene **prima** del go-live, senza book live aperti da spostare.
+Farlo ora e' economico; farlo dopo, con posizioni live, e' rischioso.
+
+**Percorso di migrazione:**
+
+1. Registrare le **fonti globali** e i **trader nel catalogo globale** (una volta).
+2. Definire almeno **due istanze**: `main_demo` (`DEMO`: demo_1/2/3 + relativi trader) e
+   `gg_live` (`LIVE`: live_1 + trader_gg_shot).
+3. Iscrivere ciascuna istanza alle fonti che consuma.
+4. `tsbctl` genera per ciascuna il sottoinsieme di `channels.yaml` / `execution.yaml` /
+   `telegram_control.yaml`.
+5. **Nodo Telegram:** oggi tutti i `per_account` condividono lo **stesso supergroup**
+   (`-1004240829081`). Con "ogni istanza ha il proprio gruppo", l'istanza `LIVE` dovrebbe
+   avere gruppo/bot propri (oppure restare inizialmente `muted`). Decisione operativa da
+   prendere al momento della migrazione.
+6. Dati: l'istanza `DEMO` puo' ereditare l'`ops.sqlite3` esistente (storia quasi tutta
+   demo); l'istanza `LIVE` parte pulita.
+
+---
+
 ## Prerequisiti minimi per dashboard futura
 
-Questa spec non progetta la dashboard, ma deve lasciare i contratti minimi necessari per costruirla in seguito.
+Questa spec non progetta la dashboard, ma deve lasciare i contratti minimi necessari per costruirla in seguito. Rimane coerente con
+`docs/Raggionamento/DASHBOARD_CENTRALE/2026-06-30-multi-instance-dashboard-monitoring-design.md`.
 
 ### Dati centrali richiesti
 
 Il livello fleet dovra' poter leggere da `management.db` almeno:
 - inventory istanze
 - tipo `DEMO` o `LIVE`
-- server associato
-- source mapping, trader associati, policy applicate e binding account exchange effettivi
+- server associato (esecutore e listener)
+- fonti, iscrizioni, trader associati, policy applicate e binding account exchange effettivi
 - stato operativo
 - revisione deployata
 - ultimo heartbeat
@@ -572,6 +778,7 @@ Il livello fleet dovra' poter leggere da `management.db` almeno:
 
 - `management.db` non replica il dettaglio trading
 - `ops.sqlite3` resta la fonte di verita' per ordini, posizioni, fill e trade chain
+- `parser.sqlite3` resta la fonte di verita' per il segnale capito (per fonte)
 - la dashboard globale dovra' usare `management.db` per la navigazione e il controllo fleet-level
 - il drill-down di dettaglio dovra' interrogare la singola istanza o i suoi dati locali
 
@@ -600,6 +807,7 @@ TeleSignalBot/
     crypto.py
     bybit_provisioner.py
     instance_provisioner.py
+    ingestion_provisioner.py
     systemd_manager.py
     telegram_provisioner.py
     cli.py
@@ -612,15 +820,27 @@ TeleSignalBot/
 - `crypto.py`
   - encrypt/decrypt con `TSB_MASTER_KEY`
 - `instance_provisioner.py`
-  - genera struttura, YAML e `.env` partendo da istanza, fonti, catalogo trader, policy e override effettivi
+  - genera struttura, YAML e `.env` dell'**esecutore** partendo da istanza, iscrizioni,
+    catalogo trader, policy e override effettivi
+- `ingestion_provisioner.py`
+  - genera struttura e servizio del **listener di ingestione** per fonte
 - `bybit_provisioner.py`
   - crea o collega account/subaccount e API key
 - `telegram_provisioner.py`
   - crea o collega gruppo e topic Telegram dell'istanza
 - `systemd_manager.py`
-  - deploy, installazione e gestione del servizio
+  - deploy, installazione e gestione dei servizi
 - `cli.py`
   - espone il workflow via `tsbctl`
+
+### Due famiglie di servizi
+
+- `tsb-ingest@{source}` - listener/parser per fonte (piano di ingestione)
+- `telesignalbot@{instance}` - esecutore/notificatore per istanza (piano di esecuzione)
+
+Se un listener di fonte cade, restano al buio **solo** le istanze iscritte a quella
+fonte; l'esecuzione delle posizioni gia' aperte continua, perche' `ops.sqlite3` e' locale.
+Blast radius equivalente al modello monolitico.
 
 ---
 
@@ -633,22 +853,25 @@ Il workflow di onboarding di una nuova istanza non coincide con il workflow di a
 - `deploy istanza`
   - prepara o aggiorna config, `.env` e binding di servizio di una singola istanza
 - `upgrade repo`
-  - aggiorna il codice condiviso usato da tutte le istanze
+  - aggiorna il codice condiviso usato da tutte le istanze e da tutti i listener
 
 ### Modello iniziale raccomandato
 
-Per la prima versione il modello piu' semplice e' un solo clone condiviso:
+Un solo clone condiviso:
 
 ```text
 /opt/telesignalbot/
   repo/            <- codice condiviso
-  instances/       <- config e dati separati per istanza
+  ingestion/       <- listener e parser.sqlite3 per fonte
+  instances/       <- config e ops.sqlite3 per istanza
 ```
 
 In questo modello:
 - il codice viene aggiornato una volta sola in `repo/`
 - ogni istanza mantiene solo `config/`, `data/` e `.env`
-- i servizi delle istanze puntano allo stesso codice ma con `BOT_INSTANCE_NAME` diverso
+- ogni fonte mantiene solo il proprio `parser.sqlite3` e `.env`
+- i servizi puntano allo stesso codice ma con identificativo diverso
+  (`BOT_INSTANCE_NAME` per gli esecutori, identificativo fonte per i listener)
 
 ### Workflow tipico di upgrade
 
@@ -701,15 +924,13 @@ Deve:
 
 ### Strategia raccomandata di rollout
 
-Il rollout standard non dovrebbe partire subito su tutte le istanze. La strategia raccomandata e':
+Il rollout standard non dovrebbe partire subito su tutte le istanze:
 
 1. aggiornare il clone condiviso
 2. generare un piano di rollout
 3. riavviare o aggiornare una sola istanza canary, preferibilmente `DEMO`
 4. verificare health check, log e comportamento base
 5. solo dopo eseguire il rollout sulle altre istanze
-
-Questo produce un flusso operativo del tipo:
 
 ```bash
 tsbctl repo status
@@ -755,18 +976,6 @@ tsbctl rollback alpha_demo --to <revision>
 
 ### Output atteso di `rollout plan`
 
-Per ogni istanza il piano dovrebbe mostrare almeno:
-
-- nome istanza
-- stato operativo
-- revisione corrente
-- revisione target
-- presenza di config drift
-- azione consigliata: `none`, `restart`, `apply`, `blocked`
-- eventuali warning o blocchi
-
-Esempio:
-
 ```text
 INSTANCE     STATUS    CURRENT   TARGET    CONFIG_DRIFT   ACTION
 alpha_demo   active    a1b2c3    d4e5f6    no             restart
@@ -776,10 +985,10 @@ beta_live    active    d4e5f6    d4e5f6    no             none
 
 ### Implicazioni
 
-- un update del codice puo' impattare tutte le istanze
+- un update del codice puo' impattare tutte le istanze e tutti i listener
 - onboarding di una nuova istanza e rollout di una nuova versione devono restare workflow distinti
 - lo stato operativo deve rendere visibile quale revisione e' effettivamente in uso
-- il control plane deve distinguere tra **revisione disponibile** e **revisione effettivamente in uso** per ogni istanza
+- il control plane deve distinguere tra **revisione disponibile** e **revisione effettivamente in uso** per ogni istanza (`deployed_revision` vs `target_revision`)
 
 ### Estensioni consigliate
 
@@ -790,20 +999,6 @@ Il control plane dovrebbe tracciare almeno:
 - stato dell'ultimo rollout codice
 - esito dell'ultimo canary
 - storico rollback
-
-Comandi attesi in evoluzione:
-
-```bash
-tsbctl repo status
-tsbctl repo upgrade
-tsbctl rollout plan
-tsbctl rollout restart alpha_demo
-tsbctl rollout apply --group demo
-tsbctl rollout apply --all
-tsbctl rollout history
-tsbctl rollback alpha_demo --to <revision>
-tsbctl instance status alpha_demo
-```
 
 Questi comandi non fanno parte del primo onboarding minimo, ma il design deve lasciargli spazio.
 
@@ -825,7 +1020,13 @@ else:
     data_dir = Path(".local")
 ```
 
-Questo mantiene la compatibilita' con il comportamento attuale e sposta l'intelligenza nel control plane.
+Stato attuale del codice: `main.py` usa `config_dir = str(root_dir / "config")` hardcoded,
+con `ops_db_path` e `parser_db_path` derivati da `root_dir`. La modifica va agganciata a
+questo punto, mantenendo la compatibilita' con il comportamento a istanza singola.
+
+Sotto il Modello B, `parser_db_path` (segnale capito) puo' puntare al `parser.sqlite3`
+**condiviso della fonte**, mentre `ops_db_path` resta locale all'istanza. La risoluzione
+di questi path e' compito del control plane, non del runtime.
 
 ---
 
@@ -839,10 +1040,8 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 
 - `servers.ssh_key`
 - `instances.tg_bot_token`
-- `bybit_subaccounts.api_key_demo`
-- `bybit_subaccounts.api_secret_demo`
-- `bybit_subaccounts.api_key_live`
-- `bybit_subaccounts.api_secret_live`
+- `exchange_accounts.api_key`
+- `exchange_accounts.api_secret`
 - `telegram_credentials.phone`
 - `telegram_credentials.session_string`
 
@@ -860,40 +1059,59 @@ La cifratura dei segreti a riposo usa `cryptography.fernet`.
 |---|---|---|
 | Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk |
 | Limiti Telegram su creazione gruppi/topic | Media | rischio limitazioni o ban se il volume e' alto |
+| Interpretazione divergente dello stesso segnale | Alta | risolto dal Modello B: ingestione unica per fonte |
+| Cursore per esecutore (fan-out) | Alta | senza cursore corretto un esecutore salta o duplica segnali |
+| Contesa su `parser.sqlite3` condiviso | Media | WAL gia' attivo; a scala molto alta valutare un bus dedicato |
 | Backup di `management.db` | Alta | e' il punto centrale di verita' |
 | Rotazione master key | Media | da progettare e testare prima del live |
 | Storage della chiave SSH | Alta | meglio valutare path locale vs contenuto nel DB |
 | Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze |
+| Collisione alias dentro una fonte | Media | `validate` deve bloccare; oggi passa silenzioso |
 
 ---
 
 ## Piano implementativo ad alto livello
 
-1. Introdurre `management.db` e il suo schema iniziale.
+1. Introdurre `management.db` e il suo schema iniziale (istanze, sources, iscrizioni, catalogo globale).
 2. Implementare cifratura e gestione della master key.
-3. Implementare `tsbctl instance create` e binding del gruppo Telegram istanza.
-4. Implementare `source add`, `trader add` e `account bind`.
-5. Implementare `provision prepare`.
-6. Implementare `provision bybit` e `provision telegram`.
-7. Implementare `validate`.
-8. Implementare `deploy` e gestione del servizio.
-9. Applicare la modifica minima a `main.py` per `BOT_INSTANCE_NAME`.
+3. Implementare `tsbctl instance create` (con `--type` e `--muted`) e binding del gruppo Telegram istanza.
+4. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
+5. Implementare `account add` con wiring adapter e `trader bind-account`.
+6. Implementare `provision prepare` (esecutore + ingestione).
+7. Implementare `provision bybit` e `provision telegram`.
+8. Implementare `validate`, incluso il controllo collisioni alias per fonte.
+9. Implementare `deploy` e gestione delle due famiglie di servizi.
+10. Applicare la modifica minima a `main.py` per `BOT_INSTANCE_NAME` e path del `parser.sqlite3` condiviso.
+11. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
 
 ---
 
 ## Decisioni fissate da questa revisione
 
-- l'istanza e' una **unita' operativa autonoma**
-- una istanza puo' essere **multi-fonte**
-- una fonte puo' servire **uno o piu' trader**
+- l'istanza e' una **unita' operativa autonoma** di **esecuzione**
+- architettura **Modello B**: ingestione **per-fonte**, esecuzione **per-istanza**
+- una fonte e' **globale** e ascoltata da **un solo** listener, condivisibile tra istanze
+- il segnale viene **capito una volta** e distribuito in **fan-out** (consistenza garantita)
+- l'account/esecutore e' **indirizzabile indipendentemente dal listener** (invariante)
+- split dati: **`parser.sqlite3` condiviso per fonte** / **`ops.sqlite3` locale per istanza**
+- una istanza puo' essere **multi-fonte** (via iscrizione)
+- una fonte puo' servire **uno o piu' trader** dal catalogo globale
+- il **catalogo trader e' globale** (nessun `instance_id`)
 - i trader possono usare account exchange **dedicati o condivisi**
-- ogni istanza ha un **proprio gruppo Telegram di controllo e notifica**
+- **isolamento rigido `DEMO`/`LIVE`**: nessuna istanza mescola account demo e live;
+  `exchange_accounts` ha **una sola coppia** di chiavi, `mode` derivato dal `type`
+- modello account: `management.db` modella il **wiring** (account logico -> adapter ->
+  credenziali); il **tuning comportamentale** vive nei template
+- ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
+  (istanza **muted**)
+- vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
+  `resolution_mode default|patterns_only` (niente `alias|pattern|hybrid`)
+- alias: default sul **trader globale**, override **per-fonte**, risoluzione **scopata alla
+  membership**, collisioni **bloccate da `validate`**
 - il provisioning e' **semi-guidato**
-- `DEMO` e `LIVE` sono **scelte esplicite in creazione**
-- `management.db` e' la **fonte di verita'**
-- `management.db` e' **control plane**, non replica il dettaglio trading
+- `management.db` e' la **fonte di verita'** e **control plane**, non replica il dettaglio trading
 - YAML e `.env` sono **artefatti generati**
 - il bot runtime resta **quasi invariato**
 - onboarding istanza e upgrade repo sono **workflow distinti**
 
-Questa revisione definisce il workflow operativo tipico. L'implementazione dovra' poi dettagliare contratti, validazioni e comportamento dei singoli comandi.
+Questa revisione definisce il workflow operativo tipico e l'architettura B. L'implementazione dovra' poi dettagliare contratti, validazioni e comportamento dei singoli comandi.
