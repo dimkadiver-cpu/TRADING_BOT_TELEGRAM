@@ -1,11 +1,18 @@
 # Orchestrazione Multi-Istanza - Design Spec
 **Data:** 2026-06-30 (rev. 2026-07-01)
-**Stato:** In revisione - architettura B approvata
+**Stato:** In revisione - architettura B + Sistema approvati
 
 > Revisione 2026-07-01: adottato il **Modello B** (ingestione per-fonte + esecutori
 > per-istanza), isolamento rigido `DEMO`/`LIVE`, catalogo trader globale, modello
 > account allineato al runtime reale, vocabolario detection allineato al codice.
 > Le decisioni sono elencate nella sezione finale.
+>
+> Revisione 2026-07-01 (2ª passata, sfida al design): introdotto il **Sistema** come
+> unita' di deployment (`Server -> Sistema -> Istanza`). Ingestione **per-Sistema**
+> (una sessione Telethon, un `parser.sqlite3` per Sistema), canali ascoltati **derivati**
+> dalle sottoscrizioni, migrazioni dello shared DB applicate **solo dall'ingestione**,
+> regole del cursore fissate (no replay, idempotenza, retention), macchina a stati
+> completata (`stop`, drift), canary **per-Sistema** (un solo server basta).
 
 ---
 
@@ -41,18 +48,32 @@ Il sistema deve supportare:
 Questa e' la decisione architetturale portante della revisione. Il sistema separa
 **chi ascolta e capisce il segnale** da **chi lo esegue e notifica**.
 
-### Piano di ingestione (per fonte)
+### Gerarchia Server -> Sistema -> Istanza
 
-- Ogni **fonte** Telegram e' ascoltata da **un solo** listener/parser, indipendentemente
-  da quante istanze la consumano.
-- L'ingestione produce il **segnale capito** (canonico/enriched, con trader risolto)
-  una volta sola.
-- Motivazione: un canale Telegram e' una risorsa esterna condivisa. Leggerlo N volte
-  significa (a) rischio di limitazioni/ban Telegram proporzionale al numero di istanze
-  gemelle, e soprattutto (b) rischio che due istanze **interpretino lo stesso messaggio
-  in modo diverso** (versioni parser o config pattern divergenti), eseguendo lo stesso
-  segnale in modi diversi su conti diversi. Questo e' un difetto di **consistenza**,
-  non una semplice inefficienza.
+Il **Sistema** e' l'unita' di deployment: un clone del repo + un processo di ingestione +
+N istanze-esecutori, **tutti sullo stesso host**. E' il confine di condivisione: dentro il
+Sistema si condividono codice, `parser.sqlite3` e sessione Telethon; fuori, niente.
+Un Sistema e' tipato `DEMO` o `LIVE` e contiene solo istanze del proprio tipo. Piu'
+Sistemi possono coabitare sullo stesso server fisico, ognuno col proprio clone a
+revisione propria.
+
+### Piano di ingestione (per Sistema)
+
+- Ogni Sistema ha **un solo** processo di ingestione: una sessione Telethon che ascolta
+  **tutti** i canali derivati dalle sottoscrizioni delle sue istanze e scrive un unico
+  `parser.sqlite3` per Sistema. E' il runtime di oggi, promosso a servizio dedicato.
+- Dentro il Sistema, l'ingestione produce il **segnale capito** (canonico/enriched, con
+  trader risolto) **una volta sola**: nessuna interpretazione divergente possibile tra
+  le istanze dello stesso Sistema.
+- I canali ascoltati sono **derivati**: l'unione delle fonti sottoscritte dalle istanze
+  del Sistema. Nessuna assegnazione manuale fonte -> listener; la config di ingestione
+  e' generata, come `registered_traders`. Non puo' esistere un'istanza iscritta a una
+  fonte che il suo Sistema non ascolta.
+- **Tra Sistemi diversi** la stessa fonte puo' essere ascoltata piu' volte (un'ingestione
+  per Sistema): la doppia lettura e' accettata e tracciata — e' esattamente il meccanismo
+  del canary (il Sistema DEMO legge la stessa fonte del LIVE con codice piu' nuovo). Il
+  numero di Sistemi resta piccolo (tipicamente 2), quindi il rischio Telegram non scala
+  con le istanze.
 
 ### Piano di esecuzione (per istanza)
 
@@ -61,21 +82,21 @@ Questa e' la decisione architetturale portante della revisione. Il sistema separ
 - Un'istanza si **iscrive** alle fonti che le interessano e riceve in **fan-out** il
   segnale gia' capito.
 - Un'istanza "muta" (senza gruppo Telegram) e' in pratica **solo un esecutore** agganciato
-  all'ingestione di una fonte gia' ascoltata da un'altra istanza.
+  all'ingestione del proprio Sistema.
 
 ### Regola di scaling
 
-> **I listener contano le fonti, gli esecutori contano le istanze.**
+> **L'ingestione conta i Sistemi, gli esecutori contano le istanze.**
 
-Esempio: 5 istanze sulle fonti `{S1, S2}` e altre 5 sulle fonti `{S3, S4}` richiedono
-**4 listener** (uno per fonte), non 20, e **10 esecutori** (uno per istanza). Aggiungere
-una 6ª istanza a un gruppo esistente costa **zero listener** (le fonti sono gia' ascoltate)
-e **un esecutore**.
+Esempio: 10 istanze dentro lo stesso Sistema, distribuite su 4 fonti, richiedono
+**1 processo di ingestione** e **10 esecutori**. Aggiungere l'11ª istanza costa **zero
+ingestione** (al piu' un canale in piu' nello stesso processo) e **un esecutore**.
+Aggiungere un Sistema (es. il canary DEMO) costa un'ingestione.
 
 ### Invariante da preservare
 
 > **L'account/esecutore deve essere indirizzabile indipendentemente da chi ascolta.**
-> Il listener non deve mai "possedere" l'account.
+> L'ingestione non deve mai "possedere" l'account.
 
 Finche' questo invariante regge, il modello dati resta relazionale e account-centrico,
 e l'evoluzione dell'infrastruttura di distribuzione (da DB condiviso a bus dedicato)
@@ -83,9 +104,11 @@ resta un cambio di runtime, non una ri-modellazione.
 
 ### Split dei dati
 
-- **`parser.sqlite3` (segnale capito)** -> **condiviso a livello di fonte**. Raw, canonical
-  ed enriched vivono qui, prodotti una volta.
+- **`parser.sqlite3` (segnale capito)** -> **condiviso a livello di Sistema**. Raw, canonical
+  ed enriched vivono qui, prodotti una volta dall'ingestione del Sistema.
 - **`ops.sqlite3` (ordini/posizioni/fill/PnL)** -> **locale per istanza/account**.
+  **Nessuna potatura**: e' la storia contabile dell'istanza (audit, statistiche,
+  ricostruzione); un'eventuale archiviazione dei trade chiusi e' fuori dal primo design.
 
 Questa separazione e' gia' anticipata dal runtime attuale (`parser.sqlite3` e `ops.sqlite3`
 sono file distinti e la pipeline `runtime_v2` gia' separa il messaggio canonico
@@ -111,6 +134,18 @@ non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-c
 - **Poison message**: se N e' permanentemente non processabile per un esecutore, dopo K
   retry viene marcato **dead-letter** in una piccola lista locale, il cursore avanza e
   parte un alert tech. High-water-mark per il caso normale, dead-letter per l'eccezione.
+- **Cursore iniziale = `MAX(id)` al deploy (no replay)**: quando un'istanza si iscrive a
+  una fonte con storia, parte dai soli segnali futuri. Mai rieseguire segnali storici:
+  sarebbero ordini reali su trade morti.
+- **Idempotenza + avanzamento atomico**: l'esecutore registra l'esito e avanza il cursore
+  **nella stessa transazione** sul proprio `ops.sqlite3`; prima di eseguire controlla
+  l'identita' del segnale (base runtime: `014_ops_signal_identity`). Un segnale gia'
+  registrato non si riesegue, anche se il cursore e' rimasto indietro per un crash:
+  niente doppio ordine.
+- **Retention per eta' (solo parser DB)**: l'ingestione pota i segnali piu' vecchi di una
+  finestra generosa (es. 60 giorni), molto piu' larga del massimo ritardo di recupero di
+  un esecutore fermo. `min(cursori)` non e' praticabile: i cursori vivono negli
+  `ops.sqlite3` locali che l'ingestione non vede.
 
 **Dove vive il cursore.** Il cursore e' **stato runtime ad alta frequenza** e vive
 nell'**`ops.sqlite3` locale** dell'esecutore, **non** in `management.db`. La sottoscrizione
@@ -119,13 +154,17 @@ Metterlo nel control plane creerebbe contesa in scrittura centrale a ogni segnal
 
 **Topologia un-writer / molti-reader.**
 
-- Il **listener** della fonte e' l'unico **writer** del `parser.sqlite3` condiviso (id monotono).
+- L'**ingestione** del Sistema e' l'unica **writer** del `parser.sqlite3` condiviso (id
+  monotono); e' anche l'unica ad applicare le **migrazioni** dello shared DB (gli
+  esecutori aprono senza migrare).
 - Ogni **esecutore** e' un **reader**: legge `id > cursore_locale`, processa nel proprio
   `ops.sqlite3`, avanza il cursore locale.
 - **Wake**: poll dello shared DB a intervallo breve (`MAX(id) > cursore` e' banale); WAL
   (gia' attivo: `db/migrations/001_init.sql` sul parser DB; `017_ops_enable_wal.sql` copre
-  l'ops DB) regge bene un writer + molti reader. Un canale di notifica e'
-  un'ottimizzazione futura.
+  l'ops DB) regge bene un writer + molti reader. Il vincolo WAL (stesso host, stesso
+  filesystem locale) e' **garantito per costruzione**: ingestione ed esecutori dello
+  stesso Sistema coabitano per definizione. Un canale di notifica e' un'ottimizzazione
+  futura.
 
 ---
 
@@ -155,7 +194,8 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
 1. **Pool account** - `account provision` in bulk popola il pool (demo/live) in stato `available`.
 2. **Catalogo trader** - `trader catalog add` definisce ogni trader una volta (alias, pattern, profilo parser).
 3. **Fonti** - `source register`: canale + parser **della fonte** + `resolution` +
-   **membership trader** (quali trader porta) + assegnazione del listener di ingestione.
+   **membership trader** (quali trader porta). Nessuna assegnazione di listener:
+   l'ascolto e' **derivato** dalle sottoscrizioni (ingestione per Sistema).
 
 > **Parser della fonte (Modello A, fedele al codice).** Il parser e' della **fonte**:
 > per una fonte a trader singolo defaulta al parser di quel trader; per una fonte
@@ -169,7 +209,8 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
 
 ### Piano istanza - assembly (scenario base)
 
-1. `instance create --type DEMO|LIVE --server ... [--muted]` -> stato `draft`.
+1. `instance create --type DEMO|LIVE --sistema ... [--muted]` -> stato `draft`
+   (il tipo deve coincidere con quello del Sistema).
 2. Associa gruppo/bot Telegram dell'istanza (oppure flag muta).
 3. **Iscrizione** alle fonti che l'istanza deve consumare (`source subscribe`). Se serve
    una fonte nuova, il wizard si ferma (regola del confine): la crei nel piano condiviso,
@@ -182,7 +223,7 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
    filesystem, YAML runtime, `.env`, mapping di iscrizioni e destinazioni.
 8. `provision telegram` crea in automatico gruppo + topic e cattura i `thread_id` (se non muta).
 9. `validate` controlla coerenza e completezza, incluse le **collisioni alias**; se passa -> `ready`.
-10. `deploy` installa esecutore + eventuali listener di fonti nuove -> `deployed`.
+10. `deploy` installa l'esecutore e aggiorna l'ingestione del Sistema (canali derivati) -> `deployed`.
 11. `start` avvia esplicitamente -> `active`.
 
 ### Cosa e' condiviso e cosa e' per-istanza
@@ -242,7 +283,7 @@ Per fonti che contengono molti trader il workflow non deve essere costruito come
 Il modello raccomandato e' invece:
 
 1. definire i trader una volta sola nel **catalogo trader globale**
-2. registrare la fonte come contenitore leggero con il proprio listener
+2. registrare la fonte come contenitore leggero (l'ascolto e' derivato dalle sottoscrizioni)
 3. associare alla fonte i trader ammessi (membership)
 4. applicare policy di default per account e Telegram
 5. mantenere espliciti solo gli override locali
@@ -274,9 +315,12 @@ L'interfaccia operativa raccomandata e' a due livelli:
 
 Il modello dati e operativo di riferimento e' il seguente:
 
-- **Istanza** = unita' autonoma di **esecuzione** del bot (esecutore + notificatore)
-- **Fonte** = input Telegram **globale**, ascoltato da un solo listener e condivisibile
-  tra piu' istanze
+- **Sistema** = unita' di **deployment** su un host: clone del repo + ingestione +
+  istanze; tipato `DEMO`/`LIVE`; confine di condivisione di codice e `parser.sqlite3`
+- **Istanza** = unita' autonoma di **esecuzione** del bot (esecutore + notificatore),
+  appartiene a un Sistema
+- **Fonte** = input Telegram **globale** (catalogo), ascoltata dall'ingestione di ogni
+  Sistema che la consuma e condivisibile tra piu' istanze
 - **Trader** = identita' logica nel **registro magro** globale; detection (alias/pattern) e
   comportamento (risk/entry/management) vivono nei file, non nel registro
 - **Catalogo trader** = definizione **globale e unica** dei trader disponibili, con
@@ -320,11 +364,18 @@ Per il primo design bastano pochi stati operativi, leggibili e verificabili:
 - `validate` puo' portare da `draft` a `ready`
 - `deploy` puo' portare solo da `ready` a `deployed`
 - `start` puo' portare solo da `deployed` a `active`
+- `stop` riporta da `active` a `deployed` (installata, non in esecuzione):
+  start/stop e' una coppia simmetrica
 - errori in qualunque fase portano a `error` con motivazione tracciabile
 
-Gli stati riflettono il ciclo di vita dell'**esecutore/istanza**. I servizi di ingestione
-per-fonte hanno un ciclo di vita proprio (vedi Provisioning tecnico) e non sono modellati
-come stati dell'istanza.
+**L'edit non cambia stato.** Lo stato descrive il **runtime**, non la freschezza della
+config: modificare lo stato desiderato di un'istanza `active` crea **drift** (visibile in
+`diff` e `rollout plan`), non una regressione di stato; `deploy`/`apply` riallinea;
+`validate` su un'istanza gia' attiva e' solo un controllo, non una transizione.
+
+Gli stati riflettono il ciclo di vita dell'**esecutore/istanza**. L'ingestione per-Sistema
+ha un ciclo di vita proprio (vedi Provisioning tecnico) e non e' modellata
+come stato dell'istanza.
 
 ---
 
@@ -372,7 +423,7 @@ tsbctl instance status alpha_demo
 I comandi granulari restano disponibili per repair, automazione e casi speciali:
 
 ```bash
-tsbctl instance create --name alpha_demo --type DEMO --server vps1 [--muted]
+tsbctl instance create --name alpha_demo --type DEMO --sistema demo [--muted]
 tsbctl telegram bind-group alpha_demo --chat-id -1001234567890 --bot-token-env CONTROL_BOT_ALPHA
 tsbctl source register --channel 12345 --label fonte_a --resolution dynamic --pattern-group multi_ru
 tsbctl source subscribe alpha_demo --source fonte_a
@@ -460,7 +511,8 @@ tsbctl deploy alpha_demo
 - `validate`
   - controlla coerenza e completezza; se tutto e' corretto passa a `ready`
 - `deploy`
-  - installa sul server target (esecutore + eventuali listener di fonti nuove) e porta a `deployed`
+  - installa sul server target (esecutore + aggiornamento dell'ingestione del Sistema se
+    servono canali nuovi) e porta a `deployed`
 - `instance start`
   - esegue l'avvio esplicito e porta a `active`
 
@@ -474,7 +526,8 @@ tsbctl deploy alpha_demo
 - istanze (esecutori)
 - server target
 - catalogo trader globale
-- fonti globali e loro listener
+- sistemi (unita' di deployment) e loro revisioni
+- fonti globali
 - membership fonte/trader
 - iscrizioni fonte/istanza
 - policy account e Telegram
@@ -499,7 +552,7 @@ Questi file devono essere generati da `tsbctl` e non modificati a mano.
 ### Split dei database runtime
 
 - **`parser.sqlite3`** -> segnale capito (raw, canonical, enriched). **Condiviso a livello
-  di fonte** tra le istanze iscritte.
+  di Sistema** tra le sue istanze.
 - **`ops.sqlite3`** -> dettaglio trading (ordini, posizioni, fill, trade chain).
   **Locale per istanza/account.**
 
@@ -544,7 +597,7 @@ config dir e applica la **stessa logica di merge a 2 livelli** di oggi.
 
 La config si divide seguendo i due piani del Modello B:
 
-- **Ingestione (capire il segnale), condivisa per fonte**: detection del trader (alias,
+- **Ingestione (capire il segnale), condivisa per Sistema**: detection del trader (alias,
   pattern) e `channels.yaml`. La detection **non e' mai stata** nel `traders/<id>.yaml`:
   vive gia' in file globali (`trader_aliases.json`, `text_patterns.yaml`), che restano
   condivisi quasi invariati.
@@ -652,10 +705,12 @@ il cambiamento e indica quale dei due.
 
 ## Principi architetturali
 
-- **Un solo repo clone** - il codice e' condiviso; le istanze differiscono per config, dati e credenziali
-- **Due piani** - ingestione per-fonte e esecuzione per-istanza restano separati
+- **Un clone per Sistema** - il codice e' condiviso dentro il Sistema; le istanze
+  differiscono per config, dati e credenziali; Sistemi diversi possono stare a revisioni
+  diverse (canary)
+- **Due piani** - ingestione per-Sistema e esecuzione per-istanza restano separati
 - **Fonte e trader globali** - definiti una volta, riusati da piu' istanze
-- **Account-centrico** - l'esecutore e' indirizzabile indipendentemente dal listener
+- **Account-centrico** - l'esecutore e' indirizzabile indipendentemente dall'ingestione
 - **Isolamento rigido DEMO/LIVE** - un'istanza non mescola account demo e live
 - **Control plane centrale** - `management.db` governa inventory, stato e provisioning
 - **Configurazione generata** - i file YAML sono artefatti derivati dal DB centrale;
@@ -677,9 +732,8 @@ Terraform); i server eseguono solo i workload.
 
 ```text
 MACCHINA DI CONTROLLO (operatore)        SERVER TARGET (runtime)
-  management.db  (stato + segreti)          istanze/esecutori
-  tsbctl / UI di controllo          --SSH-> listener di ingestione
-                                            ops.sqlite3 / parser.sqlite3 / .env
+  management.db  (stato + segreti)          Sistemi (ingestione + esecutori)
+  tsbctl / UI di controllo          --SSH-> ops.sqlite3 / parser.sqlite3 / .env
 ```
 
 Punto chiave: le **istanze in esecuzione non dipendono da `management.db`** per girare.
@@ -705,32 +759,37 @@ sempre acceso (fuori scope ora).
 
 ```text
 /opt/telesignalbot/
-  repo/                        <- unico clone del codice
-  ingestion/                   <- piano di ingestione condiviso (per fonte)
-    {source}/
-      parser.sqlite3           <- segnale capito, condiviso tra le istanze iscritte
-      .env                     <- credenziali Telethon del listener (scritto al deploy)
-  instances/
-    {name}/
-      config/
-        telegram_control.yaml
-        channels.yaml          <- fonti a cui l'istanza e' iscritta
-        execution.yaml
-        traders/
-      data/
-        ops.sqlite3            <- dettaglio trading, locale
-      .env                     <- segreti della sola istanza (scritto al deploy)
+  sistemi/
+    {sistema}/                 <- unita' di deployment (es. demo, live)
+      repo/                    <- clone del codice del Sistema (revisione propria)
+      ingestion/
+        parser.sqlite3         <- segnale capito, condiviso dentro il Sistema
+        channels.yaml          <- canali ascoltati (derivati dalle sottoscrizioni)
+        .env                   <- credenziali Telethon dell'ingestione (scritto al deploy)
+      instances/
+        {name}/
+          config/
+            telegram_control.yaml
+            channels.yaml      <- fonti a cui l'istanza e' iscritta
+            execution.yaml
+            traders/
+          data/
+            ops.sqlite3        <- dettaglio trading, locale
+          .env                 <- segreti della sola istanza (scritto al deploy)
 ```
 
 ### Note
 
 - `management.db` e i segreti stanno **sulla macchina di controllo**, non sui server
-- l'ingestione di una fonte e' condivisa: un solo listener e un solo `parser.sqlite3` per fonte
+- l'ingestione e' per Sistema: una sessione Telethon e un solo `parser.sqlite3` per Sistema
+- ingestione ed esecutori dello stesso Sistema coabitano **per costruzione** sullo stesso
+  host: il vincolo WAL (filesystem locale) e' garantito dalla forma del modello
 - ogni istanza-esecutore ha isolamento operativo su `ops.sqlite3`, config e `.env`
-- il codice viene aggiornato una volta sola sul clone condiviso di ogni server
+- il codice viene aggiornato **per Sistema** (un clone per Sistema, revisioni indipendenti)
 - `tsbctl` decifra/legge i segreti in locale e scrive i `.env` sui server via SSH al deploy
-- se una fonte e' usata da una sola istanza, ingestione ed esecuzione possono coabitare
-  sullo stesso server senza costi aggiuntivi
+- Sistema `DEMO` e Sistema `LIVE` possono coabitare sullo stesso server: **un solo server
+  basta per partire**; separare i server resta la scelta raccomandata quando il LIVE va
+  in produzione seria (isolamento di guasto, contesa risorse, superficie di sicurezza)
 
 ---
 
@@ -751,28 +810,43 @@ Lo schema deve supportare il workflow approvato, non solo la persistenza tecnica
 | status | TEXT | `active` \| `offline` \| `maintenance` |
 | notes | TEXT | |
 
+### `sistemi`
+
+Unita' di deployment su un server: clone del repo + ingestione + istanze.
+
+| Campo | Tipo | Note |
+|---|---|---|
+| id | INTEGER PK | |
+| name | TEXT UNIQUE | es. `demo`, `live` |
+| server_id | INTEGER FK | -> `servers` (piu' Sistemi possono condividere il server) |
+| type | TEXT | `DEMO` \| `LIVE` - le istanze del Sistema sono solo del suo tipo |
+| sistema_dir | TEXT | `/opt/telesignalbot/sistemi/{name}/` |
+| deployed_revision | TEXT | revisione del clone del Sistema effettivamente in uso |
+| target_revision | TEXT | revisione target per rollout |
+| status | TEXT | `active` \| `maintenance` |
+| created_at | DATETIME | |
+
 ### `instances`
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
 | name | TEXT UNIQUE | es. `main_live`, `scalping_demo` |
-| server_id | INTEGER FK | -> `servers` |
-| type | TEXT | `LIVE` \| `DEMO` - isolamento rigido |
+| sistema_id | INTEGER FK | -> `sistemi` (il server si deriva dal Sistema) |
+| type | TEXT | `LIVE` \| `DEMO` - deve coincidere col tipo del Sistema |
 | status | TEXT | `draft` \| `ready` \| `deployed` \| `active` \| `error` |
-| instance_dir | TEXT | `/opt/telesignalbot/instances/{name}/` |
+| instance_dir | TEXT | `/opt/telesignalbot/sistemi/{sistema}/instances/{name}/` |
 | systemd_unit | TEXT | `telesignalbot@{name}.service` |
 | muted | BOOLEAN | true = istanza senza gruppo Telegram |
 | tg_bot_token | TEXT | segreto (file locale permissionato) - null se muted |
 | tg_group_id | TEXT | gruppo Telegram principale dell'istanza - null se muted |
-| deployed_revision | TEXT | revisione codice effettivamente in uso |
-| target_revision | TEXT | revisione target per rollout |
 | created_at | DATETIME | |
 | updated_at | DATETIME | |
 
 ### `sources`
 
-Fonte **globale**, con il proprio listener di ingestione. Non ha `instance_id`.
+Fonte **globale** (catalogo). Non ha `instance_id` ne' assegnazione di listener:
+l'ascolto e' derivato dalle sottoscrizioni delle istanze di ciascun Sistema.
 
 | Campo | Tipo | Note |
 |---|---|---|
@@ -787,7 +861,6 @@ Fonte **globale**, con il proprio listener di ingestione. Non ha `instance_id`.
 | pattern_group | TEXT | gruppo pattern per la risoluzione dinamica |
 | max_depth | INTEGER | profondita' reply-chain (default 5) |
 | signal_message_type | TEXT | `any` \| `inline_buttons` |
-| ingestion_server_id | INTEGER FK | -> `servers`, dove gira il listener |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
@@ -867,12 +940,12 @@ in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento r
 
 ### `telegram_credentials`
 
-Credenziali Telethon dei **listener di ingestione** (per fonte), non delle istanze.
+Credenziali Telethon dell'**ingestione** (una per Sistema), non delle istanze.
 
 | Campo | Tipo | Note |
 |---|---|---|
 | id | INTEGER PK | |
-| source_id | INTEGER FK | -> `sources` |
+| sistema_id | INTEGER FK | -> `sistemi` |
 | phone | TEXT | segreto (file locale permissionato) |
 | session_string | TEXT | segreto (file locale permissionato) |
 
@@ -1007,8 +1080,9 @@ Farlo ora e' economico; farlo dopo, con posizioni live, e' rischioso.
 **Percorso di migrazione:**
 
 1. Registrare le **fonti globali** e i **trader nel catalogo globale** (una volta).
-2. Definire almeno **due istanze**: `main_demo` (`DEMO`: demo_1/2/3 + relativi trader) e
-   `gg_live` (`LIVE`: live_1 + trader_gg_shot).
+2. Definire **due Sistemi** (`demo` e `live`, anche sullo stesso server) e almeno **due
+   istanze**: `main_demo` nel Sistema `demo` (demo_1/2/3 + relativi trader) e `gg_live`
+   nel Sistema `live` (live_1 + trader_gg_shot).
 3. Iscrivere ciascuna istanza alle fonti che consuma.
 4. `tsbctl` genera per ciascuna il sottoinsieme di `channels.yaml` / `execution.yaml` /
    `telegram_control.yaml`.
@@ -1031,7 +1105,7 @@ Questa spec non progetta la dashboard, ma deve lasciare i contratti minimi neces
 Il livello fleet dovra' poter leggere da `management.db` almeno:
 - inventory istanze
 - tipo `DEMO` o `LIVE`
-- server associato (esecutore e listener)
+- Sistema e server associati
 - fonti, iscrizioni, trader associati, policy applicate e binding account exchange effettivi
 - stato operativo
 - revisione deployata
@@ -1043,7 +1117,7 @@ Il livello fleet dovra' poter leggere da `management.db` almeno:
 
 - `management.db` non replica il dettaglio trading
 - `ops.sqlite3` resta la fonte di verita' per ordini, posizioni, fill e trade chain
-- `parser.sqlite3` resta la fonte di verita' per il segnale capito (per fonte)
+- `parser.sqlite3` resta la fonte di verita' per il segnale capito (per Sistema)
 - la dashboard globale dovra' usare `management.db` per la navigazione e il controllo fleet-level
 - il drill-down di dettaglio dovra' interrogare la singola istanza o i suoi dati locali
 
@@ -1085,9 +1159,9 @@ Viste leggibili sulle tabelle DB (che restano implementazione). L'operatore ragi
 
 | Tabella | Colonne principali | Azioni |
 |---|---|---|
-| **Istanze** (home / fleet) | nome, tipo, stato, server, #fonti, #account, Telegram/muta, `deployed_revision`/`target_revision` | crea, apri riga -> dettaglio/edit |
+| **Istanze** (home / fleet) | nome, tipo, stato, sistema (server), #fonti, #account, Telegram/muta, revisione del Sistema + drift | crea, apri riga -> dettaglio/edit |
 | **Account (pool)** | provider, `environment` DEMO/LIVE, `status` available/assigned, istanza, adapter, `execution_account_id` | provision (bulk), claim, suspend |
-| **Fonti** | label, canale, fixed/dynamic, trader (membership), parser, listener, **#istanze consumatrici** | register, edit (avviso blast-radius), attach-traders |
+| **Fonti** | label, canale, fixed/dynamic, trader (membership), parser, **#sistemi che la ascoltano**, **#istanze consumatrici** | register, edit (avviso blast-radius), attach-traders |
 | **Trader (catalogo)** | trader_id, display_name, parser, alias, **#fonti / #istanze** | add, edit (avviso blast-radius), alias |
 
 La tabella **Istanze** e' la vista d'insieme fleet. La tabella **Account** e' letteralmente
@@ -1193,7 +1267,8 @@ TeleSignalBot/
   - genera struttura, YAML e `.env` dell'**esecutore** partendo da istanza, iscrizioni,
     catalogo trader, policy e override effettivi
 - `ingestion_provisioner.py`
-  - genera struttura e servizio del **listener di ingestione** per fonte
+  - genera struttura, config derivata (canali dalle sottoscrizioni) e servizio
+    dell'**ingestione** per Sistema
 - `bybit_provisioner.py`
   - crea in bulk subaccount + API key via API e popola il pool; percorsi distinti demo/live
 - `telegram_provisioner.py`
@@ -1206,12 +1281,13 @@ TeleSignalBot/
 
 ### Due famiglie di servizi
 
-- `tsb-ingest@{source}` - listener/parser per fonte (piano di ingestione)
+- `tsb-ingest@{sistema}` - ingestione del Sistema (una sessione Telethon, canali derivati)
 - `telesignalbot@{instance}` - esecutore/notificatore per istanza (piano di esecuzione)
 
-Se un listener di fonte cade, restano al buio **solo** le istanze iscritte a quella
-fonte; l'esecuzione delle posizioni gia' aperte continua, perche' `ops.sqlite3` e' locale.
-Blast radius equivalente al modello monolitico.
+Se l'ingestione di un Sistema cade, restano al buio tutte le istanze del Sistema (blast
+radius equivalente al monolite di oggi); l'esecuzione delle posizioni gia' aperte continua,
+perche' `ops.sqlite3` e' locale. Uno split per-canale dell'ingestione e' un'evoluzione
+futura se il blast radius diventera' un problema.
 
 ### Pool account (auto-provisioning Bybit)
 
@@ -1265,60 +1341,61 @@ Il workflow di onboarding di una nuova istanza non coincide con il workflow di a
 - `deploy istanza`
   - prepara o aggiorna config, `.env` e binding di servizio di una singola istanza
 - `upgrade repo`
-  - aggiorna il clone di codice **su un server** (uno per server, non uno globale)
+  - aggiorna il clone di codice **di un Sistema** (uno per Sistema, non uno globale)
 
-Il rollout e' guidato dalla **macchina di controllo locale** via SSH. Ogni server ha il
-proprio clone in `/opt/telesignalbot/repo/`, condiviso dai suoi esecutori e listener.
+Il rollout e' guidato dalla **macchina di controllo locale** via SSH. Ogni Sistema ha il
+proprio clone in `/opt/telesignalbot/sistemi/{sistema}/repo/`, condiviso dai suoi
+esecutori e dalla sua ingestione.
 
-### Canary a livello server: DEMO prima, LIVE dopo
+### Canary a livello Sistema: DEMO prima, LIVE dopo
 
-Il canary **non e' per-istanza**: e' il **server DEMO**. Si raccomandano **due server**:
-
-- **server DEMO** = sandbox/canary: si prova qui il codice nuovo;
-- **server LIVE** = produzione: ci si passa **solo dopo** che DEMO ha validato.
-
-Con un solo server, DEMO e LIVE condividerebbero lo stesso clone: aggiornarlo per testare
-esporrebbe il LIVE al codice nuovo al primo restart. Due server tengono il LIVE **intatto**
-durante i test.
-
-Ogni server ha **un clone**, e i due possono stare a **revisioni diverse**:
+Il canary **non e' per-istanza**: e' il **Sistema DEMO**. Ogni Sistema ha **il proprio
+clone** a revisione propria, quindi il canary funziona anche con **un solo server fisico**:
 
 ```text
-Server DEMO:  repo @ rev N+1    <- in test
-Server LIVE:  repo @ rev N       <- stabile, intatto
+Sistema DEMO:  repo @ rev N+1    <- in test
+Sistema LIVE:  repo @ rev N      <- stabile, intatto
 ```
 
-`management.db` (locale) traccia la revisione di ciascuno; quando DEMO valida, si **promuove**
+Aggiornare il clone del Sistema DEMO non tocca in alcun modo il LIVE. `management.db`
+(locale) traccia la revisione di ciascun Sistema; quando DEMO valida, si **promuove**
 il LIVE.
+
+Un solo server basta per partire. Separare i server resta la scelta **raccomandata**
+quando il LIVE entra in produzione seria: isolamento di guasto, contesa risorse,
+superficie di sicurezza (le chiavi live non coabitano con codice sperimentale).
 
 ### Migrazioni: additive-only
 
-Il coordinamento sullo `parser.sqlite3` **condiviso** (letto da N esecutori, scritto da 1
-listener) si dissolve con una regola: **migrazioni dello shared DB solo additive** (aggiungi
-colonne/tabelle, mai rinominare/droppare/cambiare tipo).
+Il coordinamento sullo `parser.sqlite3` **condiviso** (letto da N esecutori, scritto
+dall'ingestione) si dissolve con una regola: **migrazioni dello shared DB solo additive**
+(aggiungi colonne/tabelle, mai rinominare/droppare/cambiare tipo).
 
 - Una migrazione additiva **non rompe i lettori vecchi**: si migra lo shared DB e gli
   esecutori ancora vecchi continuano a girare, si aggiornano con calma. Nessun downtime coordinato.
 - Coerente col codice attuale (le migrazioni sono gia' quasi tutte `ADD COLUMN`).
+- **Proprieta' delle migrazioni**: lo shared DB lo migra **solo l'ingestione** al proprio
+  boot; gli esecutori aprono senza migrare (oggi `main.py` migra il parser DB a ogni
+  avvio: in modalita' esecutore questo passo si disattiva).
 - Le migrazioni **distruttive** sono un'eccezione rara dietro **riavvio coordinato** esplicito.
 - `ops.sqlite3` (per-istanza) migra al riavvio della singola istanza: isolato, facile.
 
-Ordine sicuro che ne deriva: **upgrade codice + migrazione additiva -> restart listener ->
+Ordine sicuro che ne deriva: **upgrade codice + migrazione additiva -> restart ingestione ->
 restart canary DEMO -> resto**, senza simultaneita'.
 
 ### I quattro verbi (MVP)
 
 ```bash
-tsbctl repo status <server>                    # revisione del clone vs remoto
-tsbctl repo upgrade <server> [--ref R]         # git pull + deps + migrazioni additive; NON riavvia
-tsbctl rollout plan                            # chi (istanze e listener) e' indietro / ha config drift
-tsbctl rollout apply <target> [--no-restart]   # riconcilia config + riavvia (target: istanza|listener|--all)
+tsbctl repo status <sistema>                   # revisione del clone vs remoto
+tsbctl repo upgrade <sistema> [--ref R]        # git pull + deps + migrazioni additive; NON riavvia
+tsbctl rollout plan                            # chi (istanze e ingestioni) e' indietro / ha config drift
+tsbctl rollout apply <target> [--no-restart]   # riconcilia config + riavvia (target: istanza|ingestione|--all)
 tsbctl rollback <target> --to <rev>            # riconcilia a una revisione precedente
 ```
 
-- `repo upgrade` rende il codice **disponibile** sul server, senza riavviare nulla; mostra
-  `from revision -> to revision`, fallisce se la working tree sul server e' dirty, registra
-  la revisione nel control plane locale.
+- `repo upgrade` rende il codice **disponibile** nel clone del Sistema, senza riavviare
+  nulla; mostra `from revision -> to revision`, fallisce se la working tree e' dirty,
+  registra la revisione nel control plane locale.
 - `rollout apply` = **riconcilia il target al suo stato desiderato**: rigenera la config da
   `management.db` locale se serve, la pusha via SSH, e riavvia il servizio sul codice corrente.
 
@@ -1340,11 +1417,11 @@ Per un bot di trading il **momento** del riavvio conta: non si riavvia un'istanz
 
 ```bash
 # 1. Testa su DEMO (canary)
-tsbctl repo upgrade demo-server
+tsbctl repo upgrade demo
 tsbctl rollout apply demo_instance
 
 # 2. Promuovi su LIVE quando pronto
-tsbctl repo upgrade live-server
+tsbctl repo upgrade live
 tsbctl rollout apply live_instance --no-restart   # prepara
 # ...quando l'istanza e' flat...
 systemctl restart telesignalbot@live_instance
@@ -1352,8 +1429,8 @@ systemctl restart telesignalbot@live_instance
 
 ### Cosa traccia il control plane
 
-- `deployed_revision` vs `target_revision` per **server** e per istanza (revisione disponibile
-  vs effettivamente in uso)
+- `deployed_revision` vs `target_revision` per **Sistema** (revisione disponibile vs
+  effettivamente in uso dai suoi servizi)
 - esito dell'ultimo canary DEMO
 - stato dell'ultimo deploy di config e dell'ultimo upgrade codice
 
@@ -1389,9 +1466,13 @@ ma i path dei DB sono **gia' overridabili via env**: `PARSER_DB_PATH` e `OPS_DB_
 riguarda quindi **solo la config dir**; per i DB il control plane scrive le env giuste
 nel `.env` generato, senza toccare il runtime.
 
-Sotto il Modello B, `PARSER_DB_PATH` (segnale capito) puo' puntare al `parser.sqlite3`
-**condiviso della fonte**, mentre `OPS_DB_PATH` resta locale all'istanza. La risoluzione
+Sotto il Modello B, `PARSER_DB_PATH` (segnale capito) punta al `parser.sqlite3`
+**condiviso del Sistema**, mentre `OPS_DB_PATH` resta locale all'istanza. La risoluzione
 di questi path e' compito del control plane, non del runtime.
+
+Seconda modifica richiesta: in **modalita' esecutore** il runtime **non applica le
+migrazioni** al parser DB (oggi `main.py` le applica a ogni avvio). Lo shared DB e'
+migrato solo dall'ingestione, che ne e' l'unica writer.
 
 ---
 
@@ -1441,16 +1522,19 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Rate limit Bybit per creazione subaccount | Media | da verificare prima di provisioning in bulk; creazione sequenziale con backoff |
 | Doppia rivendicazione di un account dal pool | Alta | due istanze sullo stesso conto = doppia esecuzione; mitigato da **claim atomico** `available -> assigned` |
 | Esecuzione su ambiente sbagliato (demo vs live) | Alta | mitigato per costruzione: `environment` intrinseco al pool + claim solo per tipo + gate `LIVE` |
-| Limiti Telegram / ban dell'utente Telethon di provisioning | Media | mitigato da **throttling** anti-flood; sessione utente **dedicata** separata dal listener |
-| Interpretazione divergente dello stesso segnale | Alta | risolto dal Modello B: ingestione unica per fonte |
-| Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore in `ops.sqlite3`, non nel control plane |
+| Limiti Telegram / ban dell'utente Telethon di provisioning | Media | mitigato da **throttling** anti-flood; sessione utente **dedicata** separata dall'ingestione |
+| Interpretazione divergente dello stesso segnale | Alta | risolto dentro il Sistema (ingestione unica); tra Sistemi la doppia lettura e' voluta e tracciata (canary) |
+| Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore iniziale `MAX(id)` (no replay); cursore in `ops.sqlite3`, non nel control plane |
+| Doppia esecuzione dopo crash dell'esecutore | Alta | esito + avanzamento cursore nella stessa transazione + idempotenza su identita' segnale (`014_ops_signal_identity`) |
 | Head-of-line blocking su poison message | Media | mitigato da dead-letter dopo K retry + alert tech |
-| Contesa su `parser.sqlite3` condiviso | Media | WAL gia' attivo; a scala molto alta valutare un bus dedicato |
+| Contesa su `parser.sqlite3` condiviso | Media | WAL gia' attivo; stesso host garantito per costruzione (Sistema); a scala molto alta valutare un bus dedicato |
+| Ingestione del Sistema giu' | Media | tutte le istanze del Sistema al buio (come il monolite); posizioni aperte continuano su `ops.sqlite3` locale; split per-canale come evoluzione futura |
+| Crescita illimitata del `parser.sqlite3` | Bassa | retention per eta' lato ingestione (finestra >> massimo ritardo di recupero); `ops.sqlite3` mai potato (storia contabile) |
 | Backup di `management.db` | Alta | punto centrale di verita' + tutti i segreti; **backup cifrato** + export redatti; macchina non esposta |
 | Perdita del control node locale | Media | le istanze continuano a girare; mitigato da backup cifrati regolari |
 | Storage della chiave SSH | Media | path a file con permessi stretti, non contenuto nel DB |
 | Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze; `rollout plan` verifica via SSH |
-| Migrazione distruttiva sullo shared `parser.sqlite3` | Alta | rompe i lettori vecchi; consentita solo con riavvio coordinato esplicito (default: additive-only) |
+| Migrazione distruttiva sullo shared `parser.sqlite3` | Alta | rompe i lettori vecchi; consentita solo con riavvio coordinato esplicito (default: additive-only); migra solo l'ingestione |
 | Riavvio di un'istanza con posizioni aperte | Media | mitigato da `rollout apply --no-restart` + riavvio quando l'istanza e' flat |
 | Segreti in chiaro nel `.env` per-istanza sui server | Media | residuo, come oggi; confine di protezione = control node non esposto; disco cifrato consigliato |
 | Collisione alias dentro una fonte | Media | `validate` deve bloccare; oggi passa silenzioso |
@@ -1459,7 +1543,7 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 
 ## Piano implementativo ad alto livello
 
-1. Introdurre `management.db` e il suo schema iniziale (istanze, sources, iscrizioni, catalogo globale).
+1. Introdurre `management.db` e il suo schema iniziale (sistemi, istanze, sources, iscrizioni, catalogo globale).
 2. Implementare gestione segreti (file locale permissionato) e backup cifrati/export redatti.
 3. Implementare `tsbctl instance create` (con `--type` e `--muted`) e binding del gruppo Telegram istanza.
 4. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
@@ -1468,7 +1552,9 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 7. Implementare `provision bybit` e `provision telegram`.
 8. Implementare `validate`, incluso il controllo collisioni alias per fonte.
 9. Implementare `deploy` e gestione delle due famiglie di servizi.
-10. Applicare la modifica minima a `main.py` per `BOT_INSTANCE_NAME` e path del `parser.sqlite3` condiviso.
+10. Applicare la modifica minima a `main.py`: `BOT_INSTANCE_NAME` per la config dir e
+    disattivazione delle migrazioni parser in modalita' esecutore (i path DB sono gia'
+    pilotabili via `PARSER_DB_PATH`/`OPS_DB_PATH`).
 11. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
 
 ---
@@ -1476,14 +1562,26 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 ## Decisioni fissate da questa revisione
 
 - l'istanza e' una **unita' operativa autonoma** di **esecuzione**
-- architettura **Modello B**: ingestione **per-fonte**, esecuzione **per-istanza**
-- una fonte e' **globale** e ascoltata da **un solo** listener, condivisibile tra istanze
-- il segnale viene **capito una volta** e distribuito in **fan-out** (consistenza garantita)
-- l'account/esecutore e' **indirizzabile indipendentemente dal listener** (invariante)
-- split dati: **`parser.sqlite3` condiviso per fonte** / **`ops.sqlite3` locale per istanza**
+- gerarchia **Server -> Sistema -> Istanza**: il Sistema e' l'unita' di deployment
+  (clone del repo + ingestione + istanze, stesso host), tipato `DEMO`/`LIVE`; piu'
+  Sistemi possono coabitare sullo stesso server, ognuno a revisione propria
+- architettura **Modello B**: ingestione **per-Sistema**, esecuzione **per-istanza**
+- una fonte e' **globale** (catalogo); dentro un Sistema e' ascoltata **una sola volta**;
+  tra Sistemi la doppia lettura e' accettata e tracciata (e' il canary); i canali ascoltati
+  da un Sistema sono **derivati** dalle sottoscrizioni delle sue istanze (config generata,
+  nessuna assegnazione manuale fonte -> listener)
+- il segnale viene **capito una volta per Sistema** e distribuito in **fan-out** alle
+  istanze del Sistema (consistenza garantita per costruzione)
+- l'account/esecutore e' **indirizzabile indipendentemente dall'ingestione** (invariante)
+- split dati: **`parser.sqlite3` condiviso per Sistema** / **`ops.sqlite3` locale per
+  istanza** (mai potato: storia contabile)
 - fan-out via **cursore high-water-mark per esecutore** (+ dead-letter per poison message),
   con **ordine stretto per fonte**; il cursore vive nell'**`ops.sqlite3` locale**, non nel
-  control plane; topologia **un-writer / molti-reader** con poll + WAL
+  control plane; topologia **un-writer / molti-reader** con poll + WAL (stesso host
+  garantito dal Sistema); cursore iniziale **`MAX(id)`** al deploy (no replay);
+  **idempotenza** su identita' segnale con esito + avanzamento nella stessa transazione;
+  **retention per eta'** del parser DB lato ingestione; migrazioni dello shared DB
+  applicate **solo dall'ingestione** (gli esecutori aprono senza migrare)
 - una istanza puo' essere **multi-fonte** (via iscrizione)
 - una fonte puo' servire **uno o piu' trader** dal catalogo globale
 - il **registro trader e' globale e magro** (solo `trader_id` + `display_name`; nessun
@@ -1521,6 +1619,8 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   `resolution_mode default|patterns_only` (niente `alias|pattern|hybrid`)
 - alias/detection **nei file globali** (`trader_aliases.json`, `text_patterns.yaml`), non
   nel registro; risoluzione **scopata alla membership**, collisioni **bloccate da `validate`**
+- macchina a stati completata: `stop: active -> deployed` (coppia simmetrica con `start`);
+  **l'edit non cambia stato**: crea **drift** visibile in `diff`/`rollout plan`
 - il provisioning e' **semi-guidato**
 - `management.db` e' la **fonte di verita'** e **control plane**, non replica il dettaglio trading
 - **topologia control plane locale**: `management.db` e i segreti stanno sulla macchina di
@@ -1543,8 +1643,9 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   richiede restart; il diff lo classifica
 - il bot runtime resta **quasi invariato**
 - onboarding istanza e upgrade repo sono **workflow distinti**
-- rollout: **canary a livello server DEMO** (due server, un clone per server a revisioni
-  diverse), **migrazioni shared additive-only** (niente coordinamento), **quattro verbi**
+- rollout: **canary a livello Sistema DEMO** (un clone per Sistema, revisioni indipendenti;
+  un solo server basta per partire, server separati raccomandati in produzione),
+  **migrazioni shared additive-only** (niente coordinamento), **quattro verbi**
   (`repo upgrade`, `rollout plan`, `rollout apply --no-restart`, `rollback`), **conferma su
   LIVE**; `repo upgrade` non riavvia mai, `apply` riconcilia allo stato desiderato
 
