@@ -2,7 +2,7 @@
 **Data:** 2026-06-30 (rev. 2026-07-01)
 **Stato:** In revisione - architettura B + Sistema approvati
 
-> Revisione 2026-07-01: adottato il **Modello B** (ingestione per-fonte + esecutori
+> Revisione 2026-07-01: adottato il **Modello B** (ingestione per-Sistema + esecutori
 > per-istanza), isolamento rigido `DEMO`/`LIVE`, catalogo trader globale, modello
 > account allineato al runtime reale, vocabolario detection allineato al codice.
 > Le decisioni sono elencate nella sezione finale.
@@ -11,7 +11,8 @@
 > unita' di deployment (`Server -> Sistema -> Istanza`). Ingestione **per-Sistema**
 > (una sessione Telethon, un `parser.sqlite3` per Sistema), canali ascoltati **derivati**
 > dalle sottoscrizioni, migrazioni dello shared DB applicate **solo dall'ingestione**,
-> regole del cursore fissate (no replay, idempotenza, retention), macchina a stati
+> regole del consumo per-esecutore fissate (feed canonical condiviso, cursori locali,
+> idempotenza, backlog sicuro), macchina a stati
 > completata (`stop`, drift), canary **per-Sistema** (un solo server basta).
 
 ---
@@ -62,9 +63,12 @@ revisione propria.
 - Ogni Sistema ha **un solo** processo di ingestione: una sessione Telethon che ascolta
   **tutti** i canali derivati dalle sottoscrizioni delle sue istanze e scrive un unico
   `parser.sqlite3` per Sistema. E' il runtime di oggi, promosso a servizio dedicato.
-- Dentro il Sistema, l'ingestione produce il **segnale capito** (canonico/enriched, con
-  trader risolto) **una volta sola**: nessuna interpretazione divergente possibile tra
-  le istanze dello stesso Sistema.
+- Dentro il Sistema, l'ingestione produce il **segnale capito condiviso** (raw,
+  canonical, trader risolto) **una volta sola**: nessuna interpretazione divergente del
+  testo Telegram tra le istanze dello stesso Sistema.
+- L'**enrichment di esecuzione** (account, risk, management plan, policy snapshot) resta
+  **per-istanza**, perche' dipende da `operation_config.yaml`, `config/traders/<id>.yaml`
+  e dai binding account della singola istanza. Il feed condiviso non possiede account.
 - I canali ascoltati sono **derivati**: l'unione delle fonti sottoscritte dalle istanze
   del Sistema. Nessuna assegnazione manuale fonte -> listener; la config di ingestione
   e' generata, come `registered_traders`. Non puo' esistere un'istanza iscritta a una
@@ -104,9 +108,11 @@ resta un cambio di runtime, non una ri-modellazione.
 
 ### Split dei dati
 
-- **`parser.sqlite3` (segnale capito)** -> **condiviso a livello di Sistema**. Raw, canonical
-  ed enriched vivono qui, prodotti una volta dall'ingestione del Sistema.
-- **`ops.sqlite3` (ordini/posizioni/fill/PnL)** -> **locale per istanza/account**.
+- **`parser.sqlite3` (segnale capito condiviso)** -> **condiviso a livello di Sistema**.
+  Raw, canonical e risultati parser vivono qui, prodotti una volta dall'ingestione del
+  Sistema. Gli esecutori lo leggono come feed condiviso, ma non lo scrivono.
+- **`ops.sqlite3` (enrichment per-istanza + ordini/posizioni/fill/PnL)** -> **locale per
+  istanza/account**.
   **Nessuna potatura**: e' la storia contabile dell'istanza (audit, statistiche,
   ricostruzione); un'eventuale archiviazione dei trade chiusi e' fuori dal primo design.
 
@@ -114,14 +120,94 @@ Questa separazione e' gia' anticipata dal runtime attuale (`parser.sqlite3` e `o
 sono file distinti e la pipeline `runtime_v2` gia' separa il messaggio canonico
 dall'execution gateway).
 
-### Fan-out e cursore per esecutore
+### Fan-out, feed canonical e cursore per esecutore
+
+**Decisione aggiornata.** Nel Modello B l'ingestione per-Sistema produce il feed
+condiviso **canonical/trader-resolved**, non l'enrichment finale di esecuzione. Il feed
+degli esecutori e' una vista logica sulle tabelle esistenti:
+
+```text
+canonical_messages JOIN raw_messages
+```
+
+Il canonical contiene classe, intent e payload; `raw_messages` contiene fonte Telegram e
+trader risolto. L'esecutore legge solo candidati trading:
+
+- `parse_status IN ('PARSED', 'PARTIAL')`
+- `primary_class IN ('SIGNAL', 'UPDATE')`
+- `resolved_trader_id IS NOT NULL`
+- `source_key` sottoscritta dall'istanza
+
+`source_key` e' l'identita' runtime della fonte: `"{source_chat_id}:{source_topic_id_or_0}"`.
+Le PK e le label di `management.db` restano control-plane; il runtime consuma questa chiave
+derivata dai dati Telegram reali.
+
+**Enrichment per-istanza.** L'esecutore non consuma `enriched_canonical_messages` globale.
+Per ogni canonical candidato chiama un builder estratto dalla logica attuale:
+
+```python
+build_enriched_for_instance(canonical, raw_context, trader_id, source_key, config_loader, account_binding)
+```
+
+Il builder applica `operation_config.yaml`, `config/traders/<id>.yaml`, binding account,
+blacklist, risk e management plan dell'istanza, producendo l'`EnrichedCanonicalMessage`
+che il lifecycle sa gia' processare.
+
+**Stato locale dell'esecutore.** Cursori ed enrichment per-istanza vivono nell'`ops.sqlite3`
+locale, non in `management.db` e non nel `parser.sqlite3` condiviso. Il parser DB resta
+single-writer: l'ingestione scrive raw/canonical/parser results; gli esecutori leggono.
+
+Tabelle locali previste:
+
+```sql
+ops_instance_source_cursors (
+  source_key TEXT PRIMARY KEY,
+  last_canonical_message_id INTEGER NOT NULL DEFAULT 0,
+  resume_policy TEXT NOT NULL DEFAULT 'catch_up_available',
+  updated_at TEXT NOT NULL
+)
+
+ops_instance_enriched_events (
+  id INTEGER PRIMARY KEY,
+  canonical_message_id INTEGER NOT NULL,
+  raw_message_id INTEGER NOT NULL,
+  source_key TEXT NOT NULL,
+  trader_id TEXT,
+  account_id TEXT,
+  primary_class TEXT NOT NULL,
+  enrichment_decision TEXT NOT NULL,
+  reason_code TEXT,
+  enriched_payload_json TEXT,
+  status TEXT NOT NULL,
+  retry_count INTEGER NOT NULL DEFAULT 0,
+  last_error TEXT,
+  created_at TEXT NOT NULL,
+  processed_at TEXT,
+  UNIQUE(canonical_message_id)
+)
+```
+
+`status` minimo: `pending`, `processing`, `done`, `skipped`, `error`, `dead_letter`.
+Il cursore avanza solo dopo stato terminale (`done`, `skipped`, `dead_letter`). Uno stato
+`processing` vecchio puo' essere reclamato; `pending`/`error` sono ritentabili.
+
+**Backlog sicuro.** `recovery.max_hours` resta una policy dell'ingestione Telethon;
+`resume_policy` e' una policy dell'esecutore. Una nuova sottoscrizione parte live-only
+(`MAX(canonical_message_id)`), salvo comando esplicito diverso. Un `SIGNAL` arretrato oltre
+`max_signal_age_minutes` non apre trade; un `UPDATE/CLOSE` arretrato si applica solo se
+trova una chain aperta coerente, altrimenti diventa no-op/review terminale e il cursore
+avanza.
+
+**Nota legacy.** Il testo sotto descrive il problema storico del cursore globale; nella
+nuova implementazione multi-istanza `enriched_canonical_messages.lifecycle_processed` resta
+solo compatibilita' single-instance/legacy finche' il nuovo worker non sostituisce il flusso.
 
 Il pezzo runtime piu' delicato di B. Il problema: oggi la pipeline avanza uno **stato sul
 messaggio** (`raw_messages.processing_status`), che vale per **un solo** consumatore. Sotto
 fan-out lo stesso segnale enriched e' consumato da **N esecutori**: uno status sul messaggio
 non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-consumatore**.
 
-**Modello: high-water-mark + dead-letter.**
+**Legacy superato: high-water-mark su enriched globale.**
 
 - Ogni esecutore tiene un **cursore** per ogni fonte a cui e' iscritto: "ultimo id enriched
   processato". Legge i segnali con `id > cursore ORDER BY id`, processa, avanza. E' lo
@@ -134,7 +220,7 @@ non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-c
 - **Poison message**: se N e' permanentemente non processabile per un esecutore, dopo K
   retry viene marcato **dead-letter** in una piccola lista locale, il cursore avanza e
   parte un alert tech. High-water-mark per il caso normale, dead-letter per l'eccezione.
-- **Cursore iniziale = `MAX(id)` al deploy (no replay)**: quando un'istanza si iscrive a
+- **Cursore iniziale legacy = `MAX(id)` al deploy (no replay)**: quando un'istanza si iscrive a
   una fonte con storia, parte dai soli segnali futuri. Mai rieseguire segnali storici:
   sarebbero ordini reali su trade morti.
 - **Idempotenza + avanzamento atomico**: l'esecutore registra l'esito e avanza il cursore
@@ -152,14 +238,16 @@ nell'**`ops.sqlite3` locale** dell'esecutore, **non** in `management.db`. La sot
 (quale istanza consuma quale fonte) e' control-plane; il *progresso di consumo* e' runtime.
 Metterlo nel control plane creerebbe contesa in scrittura centrale a ogni segnale.
 
-**Topologia un-writer / molti-reader.**
+**Topologia un-writer / molti-reader (invariante mantenuto nel modello aggiornato).**
 
 - L'**ingestione** del Sistema e' l'unica **writer** del `parser.sqlite3` condiviso (id
   monotono); e' anche l'unica ad applicare le **migrazioni** dello shared DB (gli
   esecutori aprono senza migrare).
-- Ogni **esecutore** e' un **reader**: legge `id > cursore_locale`, processa nel proprio
-  `ops.sqlite3`, avanza il cursore locale.
-- **Wake**: poll dello shared DB a intervallo breve (`MAX(id) > cursore` e' banale); WAL
+- Ogni **esecutore** e' un **reader** del parser DB: nel modello aggiornato legge
+  `canonical_message_id > cursore_locale`, processa nel proprio `ops.sqlite3`, avanza il
+  cursore locale.
+- **Wake**: poll dello shared DB a intervallo breve (`MAX(canonical_message_id) > cursore`
+  e' banale); WAL
   (gia' attivo: `db/migrations/001_init.sql` sul parser DB; `017_ops_enable_wal.sql` copre
   l'ops DB) regge bene un writer + molti reader. Il vincolo WAL (stesso host, stesso
   filesystem locale) e' **garantito per costruzione**: ingestione ed esecutori dello
@@ -201,7 +289,9 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
    - `telethon login`: genera le sessioni Telethon in modo **interattivo** (telefono +
      codice di conferma): una per l'ingestione di ogni Sistema, una per il provisioning.
 1. **Pool account** - `account provision` in bulk popola il pool (demo/live) in stato `available`.
-2. **Catalogo trader** - `trader catalog add` definisce ogni trader una volta (alias, pattern, profilo parser).
+2. **Catalogo trader** - `trader catalog add` definisce ogni trader una volta
+   (`trader_id`, nome leggibile, profilo parser); alias e pattern restano nei frammenti
+   `config/patterns/<gruppo>.yaml`.
 3. **Fonti** - `source register`: canale + parser **della fonte** + `resolution` +
    **membership trader** (quali trader porta). Nessuna assegnazione di listener:
    l'ascolto e' **derivato** dalle sottoscrizioni (ingestione per Sistema).
@@ -239,11 +329,13 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
 
 Due regole che chiariscono la separazione:
 
-- **Membership trader -> fonte = globale** (definita sulla fonte, una volta).
-- **Binding trader -> account = per-istanza** (gli account sono claimati per-istanza).
+- **Membership trader -> fonte = globale** (definita sulla fonte, una volta): descrive
+  quali trader la fonte puo' produrre.
+- **Binding trader -> account = per-istanza** (gli account sono claimati per-istanza):
+  descrive quali trader sono davvero attivi nell'istanza e dove vengono eseguiti.
 
-In breve: *chi c'e' nella fonte* e' condiviso; *dove viene eseguito* e' dell'istanza.
-Questo e' il fan-out del Modello B espresso nel workflow.
+In breve: *chi puo' esserci nella fonte* e' condiviso; *quali trader uso e dove li
+eseguo* e' dell'istanza. Questo e' il fan-out del Modello B espresso nel workflow.
 
 ### Quando creare una nuova istanza
 
@@ -277,7 +369,7 @@ Il principio operativo e' che l'operatore modifica lo **stato desiderato** dell'
 2. aggiungere o modificare fonti (iscrizioni), trader, account e destinazioni Telegram
 3. visualizzare un riepilogo o diff delle modifiche
 4. eseguire la validazione
-5. applicare il deploy della nuova configurazione
+5. applicare la riconciliazione della nuova configurazione (`rollout apply`)
 6. riavviare l'istanza solo se richiesto dal tipo di modifica
 
 ### Workflow scalabile per fonti con molti trader
@@ -330,10 +422,11 @@ Il modello dati e operativo di riferimento e' il seguente:
   appartiene a un Sistema
 - **Fonte** = input Telegram **globale** (catalogo), ascoltata dall'ingestione di ogni
   Sistema che la consuma e condivisibile tra piu' istanze
-- **Trader** = identita' logica nel **registro magro** globale; detection (alias/pattern) e
-  comportamento (risk/entry/management) vivono nei file, non nel registro
-- **Catalogo trader** = definizione **globale e unica** dei trader disponibili, con
-  detection, alias e pattern; riusabile da piu' istanze
+- **Trader** = identita' runtime eseguibile nel **registro magro** globale; detection
+  (alias/pattern) e comportamento (risk/entry/management) vivono nei file, non nel registro
+- **Catalogo trader** = registro **globale, unico e magro** dei trader disponibili
+  (`trader_id`, `display_name`, riferimento `parser_profile`); alias e pattern vivono nei
+  frammenti versionati `config/patterns/<gruppo>.yaml`
 - **Account exchange** = risorsa assegnabile a uno o piu' trader della stessa istanza,
   con wiring account logico -> adapter -> credenziali
 - **Iscrizione (subscription)** = legame fonte -> istanza che abilita il fan-out del
@@ -345,8 +438,13 @@ Relazioni attese:
 
 - una istanza puo' avere piu' fonti (via iscrizione)
 - una fonte puo' essere consumata da piu' istanze
-- una fonte puo' avere uno o piu' trader presi dal catalogo globale (membership)
-- il trader viene definito una volta sola nel catalogo globale e poi associato alle fonti
+- una fonte puo' avere uno o piu' trader presi dal catalogo globale (membership): e' il
+  set **potenziale** di trader che la fonte puo' produrre
+- ogni istanza sceglie il sottoinsieme **attivo** dei trader della fonte tramite binding
+  `trader -> account`; nessun binding significa trader non eseguito in quella istanza
+- il trader viene definito una volta sola nel catalogo globale e poi associato alle fonti;
+  se la stessa persona/strategia deve avere account o comportamento separato per fonte, si
+  crea un `trader_id` distinto
 - piu' trader della stessa istanza possono condividere lo stesso account exchange
 - un trader puo' anche avere un account exchange dedicato
 - ogni istanza ha il proprio gruppo Telegram (o nessuno), con eventuali topic separati
@@ -430,7 +528,7 @@ tsbctl diff alpha_demo
 tsbctl validate alpha_demo
 
 # Deploy e ciclo operativo
-tsbctl deploy alpha_demo
+tsbctl rollout apply alpha_demo
 tsbctl instance start alpha_demo
 tsbctl instance stop alpha_demo
 tsbctl instance status alpha_demo
@@ -501,7 +599,8 @@ tsbctl deploy alpha_demo
 - `instance edit`
   - avvia un wizard testuale per modificare una istanza esistente senza ricrearla
 - `trader catalog add/edit/list`
-  - gestisce il catalogo **globale** dei trader disponibili, con detection, alias e pattern
+  - gestisce il catalogo **globale e magro** dei trader disponibili; alias e pattern restano
+    nei frammenti `config/patterns/<gruppo>.yaml`
 - `trader catalog import`
   - popolamento **in bulk**: da file YAML/CSV (`trader_id, display_name, alias, ...`) per
     fonti con molti trader, o `--from-existing-config` che semina il catalogo dai file
@@ -587,10 +686,11 @@ Questi file devono essere generati da `tsbctl` e non modificati a mano.
 
 ### Split dei database runtime
 
-- **`parser.sqlite3`** -> segnale capito (raw, canonical, enriched). **Condiviso a livello
-  di Sistema** tra le sue istanze.
-- **`ops.sqlite3`** -> dettaglio trading (ordini, posizioni, fill, trade chain).
-  **Locale per istanza/account.**
+- **`parser.sqlite3`** -> segnale capito condiviso (raw, canonical, parser results).
+  **Condiviso a livello di Sistema** tra le sue istanze; scritto dall'ingestione, letto
+  dagli esecutori.
+- **`ops.sqlite3`** -> enrichment per-istanza, cursori locali e dettaglio trading
+  (ordini, posizioni, fill, trade chain). **Locale per istanza/account.**
 
 Il control plane mantiene solo metadati, stato operativo e riferimenti sufficienti per
 una futura dashboard fleet-level con drill-down verso il dettaglio locale.
@@ -602,10 +702,11 @@ Il runtime del bot resta quasi invariato:
 - non conosce la logica di orchestrazione;
 - non dipende direttamente dalla semantica di onboarding.
 
-Sotto il Modello B, l'unica evoluzione runtime rilevante e' il **punto di consegna** del
-segnale capito: da consegna interna (esecutore locale) a pubblicazione condivisa
-consumata da piu' esecutori. La cucitura esiste gia' nella pipeline `runtime_v2`
-(messaggio canonico/enriched separato dall'execution gateway).
+Sotto il Modello B, l'evoluzione runtime rilevante e' lo split tra **feed canonical
+condiviso** e **enrichment di esecuzione per-istanza**. La cucitura esiste gia' nella
+pipeline `runtime_v2` (messaggio canonico separato dall'execution gateway), ma va estratta
+una funzione/servizio `build_enriched_for_instance` per riusare la logica oggi dentro il
+Signal Enrichment senza far decidere account/risk all'ingestione condivisa.
 
 ---
 
@@ -804,7 +905,7 @@ sempre acceso (fuori scope ora).
     {sistema}/                 <- unita' di deployment (es. demo, live)
       repo/                    <- clone del codice del Sistema (revisione propria)
       ingestion/
-        parser.sqlite3         <- segnale capito, condiviso dentro il Sistema
+        parser.sqlite3         <- raw/canonical/parser results, condiviso dentro il Sistema
         channels.yaml          <- canali ascoltati (derivati dalle sottoscrizioni)
         text_patterns.yaml     <- generato: soli gruppi delle fonti sottoscritte
         trader_aliases.json    <- generato: soli alias dei gruppi usati
@@ -817,7 +918,7 @@ sempre acceso (fuori scope ora).
             execution.yaml
             traders/
           data/
-            ops.sqlite3        <- dettaglio trading, locale
+            ops.sqlite3        <- cursori/enrichment per-istanza + dettaglio trading, locale
           .env                 <- segreti della sola istanza (scritto al deploy)
 ```
 
@@ -919,8 +1020,9 @@ l'ascolto e' derivato dalle sottoscrizioni delle istanze di ciascun Sistema.
 >
 > **Selezione per-istanza.** La membership dice quali trader la fonte *puo'* portare; **quali**
 > un'istanza esegue e **su quale conto** e' per-istanza, espresso dai `trader_account_bindings`
-> (nessun binding = trader non eseguito in quell'istanza). Cosi' due istanze sulla stessa
-> fonte scelgono sottoinsiemi e conti diversi.
+> (nessun binding = trader non eseguito in quell'istanza). Il binding e' per
+> `(istanza, trader)`: se la stessa persona/strategia deve essere separata per fonte,
+> account o comportamento, si crea un `trader_id` globale distinto.
 
 ### `source_instance_subscriptions`
 
@@ -1091,16 +1193,21 @@ gli alias/pattern dei trader di questo insieme.
 >    ambiguo nell'**override per-fonte** (punto 2), scopato al canale, invece che nella
 >    mappa globale. Stesso `trader_id` in piu' gruppi invece e' normale (trader in piu' fonti).
 >
-> **Convenzione per fonti risolte a pattern (`patterns_only`).** I `trader_id` sono codici
-> sintetici liberi: la convenzione raccomandata e' **prefisso-fonte + progressivo**
-> (`A1, A2, ...` per la fonte A; `B1, B2, ...` per la B), che rende l'unicita' globale
-> automatica. La firma reale del trader ("genio", "#", il formato del messaggio) vive
+> **Convenzione per fonti risolte a pattern (`patterns_only`).** I `trader_id` sono
+> identita' runtime globali: la convenzione raccomandata e' **`<source_slug>__<code>`**
+> (es. `vip_ru__a1`, `vip_ru__a2`, `scalping_room__b1`), non codici nudi tipo `A1`.
+> La firma reale del trader ("genio", "#", il formato del messaggio) vive
 > **dentro il pattern** del frammento, che punta al codice; `display_name` e' solo
-> leggibilita' (es. `"genio (A1)"`). Con `patterns_only` il runtime **non consulta gli
+> leggibilita' (es. `"genio (vip_ru__a1)"`). Con `patterns_only` il runtime **non consulta gli
 > alias**: per queste fonti la mappa alias resta vuota e le collisioni cross-gruppo
 > (punto 5) non si applicano.
 
 ### `source_account_policies`
+
+Policy account per fonte/istanza. Non e' la sorgente finale di verita' dei trader
+eseguiti: e' una scorciatoia/default del wizard per materializzare i binding
+`trader -> account`. La sorgente effettiva dell'esecuzione e' `trader_account_bindings`.
+Nessun binding per un trader significa: quel trader non e' attivo in quella istanza.
 
 | Campo | Tipo | Note |
 |---|---|---|
@@ -1113,6 +1220,12 @@ gli alias/pattern dei trader di questo insieme.
 | added_at | DATETIME | |
 
 ### `trader_account_bindings`
+
+Binding effettivo dei trader attivi nell'istanza. Il binding e' **per istanza + trader**,
+non per fonte: il `trader_id` e' l'identita' runtime eseguibile. Se la stessa persona o
+strategia deve essere distinta per fonte/account/comportamento, si crea un `trader_id`
+globale diverso (convenzione raccomandata: `<source_slug>__<code>`, es.
+`vip_ru__a1`, non `A1` nudo).
 
 | Campo | Tipo | Note |
 |---|---|---|
@@ -1159,6 +1272,31 @@ Ignorata per le istanze `muted`.
 | is_override | BOOLEAN | true se supera la policy Telegram di default |
 | label | TEXT | es. `trader_a - segnali` |
 | enabled | BOOLEAN | |
+
+### Vincoli minimi
+
+Vincoli DB o validazioni applicative obbligatorie:
+
+- `sistemi.name` UNIQUE
+- `instances.name` UNIQUE
+- `instances.type` deve coincidere con `sistemi.type` (validazione `tsbctl`)
+- `sources.label` UNIQUE
+- `sources(channel_id, topic_id)` UNIQUE, normalizzando `topic_id NULL` come topic assente
+- `source_instance_subscriptions(source_id, instance_id)` UNIQUE
+- `source_trader_memberships(source_id, trader_catalog_id)` UNIQUE
+- `trader_account_bindings(instance_id, trader_catalog_id)` UNIQUE
+- `exchange_accounts(instance_id, logical_account_id)` UNIQUE per account assegnati
+- `exchange_accounts.environment` deve coincidere con il tipo dell'istanza al claim
+- `telegram_destinations(instance_id, role, scope_type, scope_ref_id)` UNIQUE
+
+Validazioni operative collegate:
+
+- una subscription deve avere almeno un trader attivo/bindato, salvo modalita' esplicita
+  `listen_only`
+- un trader attivo deve avere account claimato dall'istanza e ambiente coerente
+- un `parser_profile` referenziato dal catalogo deve esistere nel codice del Sistema target
+- collisioni alias dentro la membership di una fonte e collisioni cross-gruppo nel
+  consolidato del Sistema devono bloccare `validate`
 
 ---
 
@@ -1210,7 +1348,8 @@ Farlo ora e' economico; farlo dopo, con posizioni live, e' rischioso.
 
 ## Prerequisiti minimi per dashboard futura
 
-Questa spec non progetta la dashboard, ma deve lasciare i contratti minimi necessari per costruirla in seguito. Rimane coerente con
+Questa spec non progetta la dashboard di monitoring, ma deve lasciare i contratti minimi
+necessari per costruirla in seguito. Rimane coerente con
 `docs/Raggionamento/DASHBOARD_CENTRALE/2026-06-30-multi-instance-dashboard-monitoring-design.md`.
 
 ### Dati centrali richiesti
@@ -1222,17 +1361,21 @@ Il livello fleet dovra' poter leggere da `management.db` almeno:
 - fonti, iscrizioni, trader associati, policy applicate e binding account exchange effettivi
 - stato operativo
 - revisione deployata
-- ultimo heartbeat
+- ultimo stato osservato dal control plane, se disponibile
 - ultimo deploy o rollout
 - ultimo errore critico
 
 ### Confine dei dati
 
-- `management.db` non replica il dettaglio trading
+- `management.db` non replica il dettaglio trading e non e' il monitoring runtime
 - `ops.sqlite3` resta la fonte di verita' per ordini, posizioni, fill e trade chain
 - `parser.sqlite3` resta la fonte di verita' per il segnale capito (per Sistema)
 - la dashboard globale dovra' usare `management.db` per la navigazione e il controllo fleet-level
-- il drill-down di dettaglio dovra' interrogare la singola istanza o i suoi dati locali
+- il drill-down di dettaglio dovra' interrogare la singola istanza, i suoi dati locali o
+  un collector/snapshot definito dalla spec dashboard
+
+La dashboard di monitoring e' una spec separata. Questo documento definisce solo inventory,
+riferimenti e stato di controllo necessari per sapere **dove** cercare i dati runtime.
 
 ### Estensioni future ammesse
 
@@ -1275,7 +1418,7 @@ Viste leggibili sulle tabelle DB (che restano implementazione). L'operatore ragi
 | **Istanze** (home / fleet) | nome, tipo, stato, sistema (server), #fonti, #account, Telegram/muta, revisione del Sistema + drift | crea, apri riga -> dettaglio/edit |
 | **Account (pool)** | provider, `environment` DEMO/LIVE, `status` available/assigned, istanza, adapter, `execution_account_id` | provision (bulk), register (manuale), claim, suspend |
 | **Fonti** | label, canale, fixed/dynamic, trader (membership), parser, **#sistemi che la ascoltano**, **#istanze consumatrici** | register, edit (avviso blast-radius), attach-traders |
-| **Trader (catalogo)** | trader_id, display_name, parser, alias, **#fonti / #istanze** | add, **import (bulk)**, edit (avviso blast-radius), alias |
+| **Trader (catalogo)** | trader_id, display_name, parser, alias risolti dai frammenti, **#fonti / #istanze** | add, **import (bulk)**, edit (avviso blast-radius), apri frammenti pattern |
 
 La tabella **Istanze** e' la vista d'insieme fleet. La tabella **Account** e' letteralmente
 il pool da cui si pesca in fase di creazione istanza.
@@ -1342,7 +1485,7 @@ puo' essere una lista piatta. Le tabelle devono avere:
 - **Import con anteprima**: la tabella Trader ha un flusso di import bulk (upload file
   YAML/CSV o incolla tabella; in migrazione, seed dalla config esistente). L'import mostra
   un'**anteprima validata** prima di scrivere: righe nuove/aggiornate/duplicate e
-  **collisioni alias** contro il catalogo esistente; la conferma scrive solo lo stato
+  **collisioni alias** contro i frammenti/pattern consolidati; la conferma scrive solo lo stato
   desiderato (stesso core di `trader catalog import`). Analogamente, `attach-traders`
   sulla fonte accetta multi-selezione dal catalogo, non un trader per volta.
 - **Paginazione**.
@@ -1584,7 +1727,9 @@ design. Con `plan` + `apply` + `rollback` si copre il caso da operatore singolo.
 
 ## Impatto minimo su `main.py`
 
-Il runtime non deve diventare il luogo dove vive la logica multi-istanza. La modifica minima prevista e':
+Il runtime non deve diventare il luogo dove vive la logica multi-istanza. `main.py` deve
+solo selezionare modalita', config dir e path DB; la logica nuova sta in servizi/worker
+dedicati. La modifica minima prevista e':
 
 ```python
 instance_name = os.environ.get("BOT_INSTANCE_NAME")
@@ -1611,6 +1756,11 @@ di questi path e' compito del control plane, non del runtime.
 Seconda modifica richiesta: in **modalita' esecutore** il runtime **non applica le
 migrazioni** al parser DB (oggi `main.py` le applica a ogni avvio). Lo shared DB e'
 migrato solo dall'ingestione, che ne e' l'unica writer.
+
+Modifica runtime collegata ma non da mettere in `main.py`: estrarre la logica di
+enrichment in `build_enriched_for_instance(...)` e introdurre un worker esecutore che legge
+il feed canonical condiviso (`canonical_messages JOIN raw_messages`) e scrive cursori /
+enrichment per-istanza nel proprio `ops.sqlite3`.
 
 ---
 
@@ -1663,10 +1813,10 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Esecuzione su ambiente sbagliato (demo vs live) | Alta | mitigato per costruzione: `environment` intrinseco al pool + claim solo per tipo + gate `LIVE` |
 | Limiti Telegram / ban dell'utente Telethon di provisioning | Media | mitigato da **throttling** anti-flood; sessione utente **dedicata** separata dall'ingestione |
 | Interpretazione divergente dello stesso segnale | Alta | risolto dentro il Sistema (ingestione unica); tra Sistemi la doppia lettura e' voluta e tracciata (canary) |
-| Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; cursore iniziale `MAX(id)` (no replay); cursore in `ops.sqlite3`, non nel control plane |
-| Doppia esecuzione dopo crash dell'esecutore | Alta | esito + avanzamento cursore nella stessa transazione + idempotenza su identita' segnale (`014_ops_signal_identity`) |
+| Cursore per esecutore (fan-out) | Alta | high-water-mark locale + dead-letter; ordine stretto per fonte; nuova sottoscrizione live-only; cursore in `ops.sqlite3`, non nel control plane |
+| Doppia esecuzione dopo crash dell'esecutore | Alta | `ops_instance_enriched_events` locale con `UNIQUE(canonical_message_id)`, stati terminali non riprocessati, idempotenza su identita' segnale (`014_ops_signal_identity`) |
 | Head-of-line blocking su poison message | Media | mitigato da dead-letter dopo K retry + alert tech |
-| Contesa su `parser.sqlite3` condiviso | Media | WAL gia' attivo; stesso host garantito per costruzione (Sistema); a scala molto alta valutare un bus dedicato |
+| Contesa su `parser.sqlite3` condiviso | Media | l'ingestione resta unica writer e gli esecutori sono reader; WAL gia' attivo; stesso host garantito per costruzione (Sistema); a scala molto alta valutare un bus dedicato |
 | Ingestione del Sistema giu' | Media | tutte le istanze del Sistema al buio (come il monolite); posizioni aperte continuano su `ops.sqlite3` locale; split per-canale come evoluzione futura |
 | Crescita illimitata del `parser.sqlite3` | Bassa | retention per eta' lato ingestione (finestra >> massimo ritardo di recupero); `ops.sqlite3` mai potato (storia contabile) |
 | Backup di `management.db` | Alta | punto centrale di verita' + tutti i segreti; **backup cifrato** + export redatti; macchina non esposta |
@@ -1689,14 +1839,23 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 4. Implementare `tsbctl instance create` (con `--type`, `--sistema` e `--muted`) e binding del gruppo Telegram istanza.
 5. Implementare `source register`, `source subscribe`, `source attach-traders` e `trader catalog`.
 6. Implementare il **pool account**: `account provision` (bulk via API Bybit), `account claim` (atomico) e `trader bind-account`.
-7. Implementare `provision prepare` (esecutore + ingestione).
-8. Implementare `provision bybit` e `provision telegram`.
-9. Implementare `validate`, incluso il controllo collisioni alias per fonte.
-10. Implementare `deploy` e gestione delle due famiglie di servizi.
-11. Applicare la modifica minima a `main.py`: `BOT_INSTANCE_NAME` per la config dir e
+7. Estrarre `build_enriched_for_instance` dalla logica attuale di `SignalEnrichmentProcessor`
+   e usarlo anche nel flusso single-instance legacy.
+8. Introdurre le tabelle locali in `ops.sqlite3`: `ops_instance_source_cursors` e
+   `ops_instance_enriched_events`.
+9. Implementare il worker esecutore multi-istanza: legge `canonical_messages JOIN raw_messages`,
+   filtra per `source_key`/trader attivi, chiama il builder, passa al lifecycle, avanza il
+   cursore locale.
+10. Implementare `provision prepare` (esecutore + ingestione).
+11. Implementare `provision bybit` e `provision telegram`.
+12. Implementare `validate`, incluso il controllo collisioni alias per fonte.
+13. Implementare `deploy` e gestione delle due famiglie di servizi.
+14. Applicare la modifica minima a `main.py`: `BOT_INSTANCE_NAME` per la config dir e
     disattivazione delle migrazioni parser in modalita' esecutore (i path DB sono gia'
     pilotabili via `PARSER_DB_PATH`/`OPS_DB_PATH`).
-12. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
+15. Mantenere `enriched_canonical_messages.lifecycle_processed` come compatibilita'
+    single-instance/legacy finche' il nuovo worker non sostituisce il flusso.
+16. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
 
 ---
 
@@ -1715,14 +1874,19 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   istanze del Sistema (consistenza garantita per costruzione)
 - l'account/esecutore e' **indirizzabile indipendentemente dall'ingestione** (invariante)
 - split dati: **`parser.sqlite3` condiviso per Sistema** / **`ops.sqlite3` locale per
-  istanza** (mai potato: storia contabile)
-- fan-out via **cursore high-water-mark per esecutore** (+ dead-letter per poison message),
-  con **ordine stretto per fonte**; il cursore vive nell'**`ops.sqlite3` locale**, non nel
-  control plane; topologia **un-writer / molti-reader** con poll + WAL (stesso host
-  garantito dal Sistema); cursore iniziale **`MAX(id)`** al deploy (no replay);
-  **idempotenza** su identita' segnale con esito + avanzamento nella stessa transazione;
-  **retention per eta'** del parser DB lato ingestione; migrazioni dello shared DB
-  applicate **solo dall'ingestione** (gli esecutori aprono senza migrare)
+  istanza**; il parser DB contiene raw/canonical/parser results ed e' scritto solo
+  dall'ingestione; l'ops DB locale contiene cursori, enrichment per-istanza e storia
+  contabile/trading
+- fan-out via feed canonical condiviso (`canonical_messages JOIN raw_messages`) letto dagli
+  esecutori; l'enrichment finale e' **per-istanza** tramite `build_enriched_for_instance`
+  (account, risk, management plan, policy snapshot)
+- consumo via **cursore high-water-mark locale per fonte** (+ dead-letter per poison
+  message), con **ordine stretto per fonte**; il cursore vive nell'**`ops.sqlite3` locale**,
+  non nel control plane; topologia **un-writer / molti-reader** sul parser DB con poll +
+  WAL (stesso host garantito dal Sistema); nuova sottoscrizione **live-only** di default;
+  backlog sicuro (`SIGNAL` stale non apre, `UPDATE` senza target diventa no-op/review);
+  migrazioni dello shared DB applicate **solo dall'ingestione** (gli esecutori aprono senza
+  migrare il parser DB)
 - una istanza puo' essere **multi-fonte** (via iscrizione)
 - una fonte puo' servire **uno o piu' trader** dal catalogo globale
 - il **registro trader e' globale e magro** (`trader_id` + `display_name` + riferimento
@@ -1754,8 +1918,9 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   il **raggruppamento** della vista Istanze; editing dello **stato desiderato + apply
   esplicito**, blast-radius visibile, credenziali write-only, gate `LIVE`
 - **forme di fonte**: mono-trader (`fixed`), multi-trader (`dynamic`), gruppo con topic per
-  trader = **N fonti che condividono il canale**; **selezione per-istanza** dei trader di una
-  fonte e del conto per ognuno (via `trader_account_bindings`), abilitando fan-out a livello trader
+  trader = **N fonti che condividono il canale**; la fonte definisce il set potenziale di
+  trader, mentre ogni istanza seleziona il sottoinsieme attivo e il conto per trader via
+  `trader_account_bindings`
 - ogni istanza ha un **proprio gruppo Telegram** di controllo e notifica, **oppure nessuno**
   (istanza **muted**)
 - vocabolario detection **allineato al codice**: `trader_binding fixed|dynamic` +
