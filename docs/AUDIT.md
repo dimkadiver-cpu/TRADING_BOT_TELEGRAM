@@ -2,6 +2,46 @@
 
 ---
 
+## 2026-07-02 — Revisione punto-per-punto ORCHESTRAZIONE_MULTI_ISTANZA (3ª passata)
+
+### Step completato
+
+**Revisione del design multi-istanza contro il codebase** ✅
+13 punti identificati (gap, contraddizioni, ambiguità), discussi uno a uno con l'utente e tutte le decisioni applicate al documento SSOT. Riferimenti al codice verificati (main.py:485/536/958-960, migrazioni 014/017/023/024/027, listener.py edit-flow, registry parser_v2).
+
+### Decisioni chiave
+
+1. Edit/delete sotto fan-out → decisione all'esecutore (proprie chain); feed include `run_context live + edit:%`
+2. Flusso legacy scrive sul parser DB → compatibile solo single-instance; worker prerequisito del multi-istanza
+3. Migrazione = fresh start (DB nuovi, nessuna eredità ops.sqlite3, nessun cutover cursori)
+4. Claim account al deploy (assembly = solo selezione)
+5. Cursore: prima iscrizione = live-only; riavvio = recupero con protezioni; rimosso `resume_policy`
+6. Macchina a stati: `apply` non cambia stato; `error` = operazione+motivo, uscita = rilancia
+7. Blacklist: testo = della fonte (`sources.text_blacklist`); simboli = per-istanza (+ per-trader + override runtime)
+8. Telethon: tutte le sessioni sullo stesso numero (rischio accettato)
+9. Sezione cursore ristrutturata (regole vigenti, non "legacy")
+10. Aggiornamenti = fermo coordinato per-Sistema (`sistema stop/start`); additive-only non più vincolante
+11. Alert su gap di retention (cursore < primo segnale disponibile)
+12. `parser_profile` = chiave canonica del registry parser_v2; validate via `list_parser_v2_profiles()`
+13. Telegram migrazione: nessun riuso, gruppi nuovi per tutte le istanze; muted = eccezione
+
+### File toccati
+
+| File | Stato | Note |
+|---|---|---|
+| `docs/Raggionamento/ORCHESTRAZIONE_MULTI_ISTANZA/ORCHESTRAZIONE_MULTI_ISTANZA.md` | Modificato | tutte le 13 decisioni applicate; header aggiornato a rev. 2026-07-02; follow-up: aggiunta colonna `sources.alias_overrides` (override alias per-fonte usati dal doc ma non modellati); precisato parser unico = parser_v2 (Legacy = archivio); aggiunto `exchange_accounts.position_mode` + `account provision --position-mode hedge` (hedge mode impostato alla creazione subaccount, registrato in DB) |
+
+### Validazione
+
+Solo documentazione, nessun codice runtime toccato. Verifiche fatte in lettura sul codebase per fondare ogni punto.
+
+### Rischi aperti
+
+- Le decisioni 1, 10, 11 introducono lavoro implementativo nuovo (semantica edit nel worker, verbi `sistema stop/start`, check gap retention) non ancora riflesso nel piano implementativo numerato del doc — da dettagliare quando si passa al piano.
+- ~~Convivenza due parser~~ **corretto 2026-07-02**: il parser attivo è uno solo (parser_v2); la pipeline runtime (`parser_pipeline/processor.py`) importa solo `parser_v2.core.runtime` + registry. `src/parser_v2/profiles/Legacy/` contiene solo copie storiche dei vecchi profili (riferimento/test), non un runtime parallelo.
+
+---
+
 ## 2026-06-28 — `--check-live`: verifica connettività Telegram topic + logging su bot.log
 
 ### Step completato

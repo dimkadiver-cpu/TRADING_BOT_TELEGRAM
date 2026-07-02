@@ -1,6 +1,6 @@
 # Orchestrazione Multi-Istanza - Design Spec
-**Data:** 2026-06-30 (rev. 2026-07-01)
-**Stato:** In revisione - architettura B + Sistema approvati
+**Data:** 2026-06-30 (rev. 2026-07-02)
+**Stato:** Rivisto - architettura B + Sistema approvati; revisione punto-per-punto del 2026-07-02 applicata
 
 > Revisione 2026-07-01: adottato il **Modello B** (ingestione per-Sistema + esecutori
 > per-istanza), isolamento rigido `DEMO`/`LIVE`, catalogo trader globale, modello
@@ -14,6 +14,16 @@
 > regole del consumo per-esecutore fissate (feed canonical condiviso, cursori locali,
 > idempotenza, backlog sicuro), macchina a stati
 > completata (`stop`, drift), canary **per-Sistema** (un solo server basta).
+>
+> Revisione 2026-07-02 (3ª passata, revisione punto-per-punto con l'utente): definita la
+> semantica **edit/delete sotto fan-out** (decisione all'esecutore), chiarito il vincolo
+> del flusso legacy sul parser DB, **fresh start** alla migrazione (nessuna eredita' di
+> `ops.sqlite3`), **claim account al deploy**, separati inizializzazione cursore e policy
+> di riavvio, completata la macchina a stati (`apply`, `error`), attribuite le blacklist
+> (testo=fonte, simboli=istanza), sessioni Telethon su un solo numero, aggiornamenti a
+> **fermo coordinato per-Sistema** (additive-only non piu' vincolante), alert su gap di
+> retention, `parser_profile` agganciato al **registry parser_v2**, migrazione Telegram
+> senza riuso (gruppi nuovi per tutte le istanze).
 
 ---
 
@@ -137,6 +147,27 @@ trader risolto. L'esecutore legge solo candidati trading:
 - `primary_class IN ('SIGNAL', 'UPDATE')`
 - `resolved_trader_id IS NOT NULL`
 - `source_key` sottoscritta dall'istanza
+- `run_context = 'live' OR run_context LIKE 'edit:%'` (i contesti `delete:` e altri
+  restano fuori dal feed di esecuzione)
+
+**Edit e delete sotto fan-out (decisione della revisione 2026-07-02).** Oggi il listener,
+su un messaggio editato, decide da solo se riprocessarlo consultando le trade chain
+(`ops.sqlite3`) — stato di **esecuzione per-istanza** che l'ingestione condivisa non puo'
+e non deve vedere: con N istanze la risposta "chain esistente?" e' diversa per ognuna.
+La regola nel Modello B:
+
+- l'**ingestione e' "stupida"**: su un edit registra sempre la revisione
+  (`raw_message_revisions`), aggiorna il raw e ri-parsa producendo un nuovo canonical con
+  `run_context = 'edit:<ts>'` — **senza mai consultare le chain** e senza decidere nulla;
+- la **decisione migra all'esecutore**: quando il worker incontra un canonical `edit:`,
+  controlla le **proprie** chain nel proprio `ops.sqlite3`: chain esistente -> skip +
+  notifica sul proprio gruppo (stesso comportamento di oggi, ma per-istanza); nessuna
+  chain -> applica l'edit come sostituzione del segnale originale. L'ordine per fonte del
+  cursore garantisce che l'edit arrivi dopo l'originale: la logica e' locale;
+- i canonical `delete:` non entrano nel feed di esecuzione (solo osservabilita', come oggi);
+- **regola di lettura**: gli esecutori consumano il `canonical_json` (snapshot immutabile);
+  **non devono mai rileggere `raw_text`** per decisioni di trading — il raw viene mutato
+  in place dagli edit ed e' dato condiviso sotto i cursori.
 
 `source_key` e' l'identita' runtime della fonte: `"{source_chat_id}:{source_topic_id_or_0}"`.
 Le PK e le label di `management.db` restano control-plane; il runtime consuma questa chiave
@@ -163,7 +194,6 @@ Tabelle locali previste:
 ops_instance_source_cursors (
   source_key TEXT PRIMARY KEY,
   last_canonical_message_id INTEGER NOT NULL DEFAULT 0,
-  resume_policy TEXT NOT NULL DEFAULT 'catch_up_available',
   updated_at TEXT NOT NULL
 )
 
@@ -191,12 +221,21 @@ ops_instance_enriched_events (
 Il cursore avanza solo dopo stato terminale (`done`, `skipped`, `dead_letter`). Uno stato
 `processing` vecchio puo' essere reclamato; `pending`/`error` sono ritentabili.
 
-**Backlog sicuro.** `recovery.max_hours` resta una policy dell'ingestione Telethon;
-`resume_policy` e' una policy dell'esecutore. Una nuova sottoscrizione parte live-only
-(`MAX(canonical_message_id)`), salvo comando esplicito diverso. Un `SIGNAL` arretrato oltre
-`max_signal_age_minutes` non apre trade; un `UPDATE/CLOSE` arretrato si applica solo se
-trova una chain aperta coerente, altrimenti diventa no-op/review terminale e il cursore
-avanza.
+**Backlog sicuro: due meccanismi distinti (chiariti nella revisione 2026-07-02).**
+`recovery.max_hours` resta una policy dell'ingestione Telethon. Per l'esecutore vanno
+tenuti separati due momenti che rispondono a domande diverse:
+
+1. **Prima iscrizione** (cursore inesistente): il cursore si inizializza **sempre** a
+   `MAX(canonical_message_id)` — live-only, niente replay della storia. Non e' una policy
+   configurabile: eventuale recupero storico solo con flag esplicito su `source subscribe`.
+2. **Riavvio** (cursore esistente): l'esecutore **recupera sempre il backlog** dal cursore
+   in poi, protetto dalle regole anti-stale: un `SIGNAL` arretrato oltre
+   `max_signal_age_minutes` non apre trade; un `UPDATE/CLOSE` arretrato si applica solo se
+   trova una chain aperta coerente, altrimenti diventa no-op/review terminale e il cursore
+   avanza.
+
+Il campo `resume_policy` della prima bozza (default ambiguo `catch_up_available`) e'
+rimosso: i due comportamenti sopra non sono configurazione, sono la semantica del cursore.
 
 **Nota legacy.** Il testo sotto descrive il problema storico del cursore globale; nella
 nuova implementazione multi-istanza `enriched_canonical_messages.lifecycle_processed` resta
@@ -207,11 +246,14 @@ messaggio** (`raw_messages.processing_status`), che vale per **un solo** consuma
 fan-out lo stesso segnale enriched e' consumato da **N esecutori**: uno status sul messaggio
 non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-consumatore**.
 
-**Legacy superato: high-water-mark su enriched globale.**
+**Regole di consumo per esecutore (high-water-mark).** *(In una prima versione il cursore
+era previsto sull'enriched globale; superato perche' l'enrichment e' per-istanza. Le regole
+seguenti sono **vigenti** e si applicano al feed canonical.)*
 
-- Ogni esecutore tiene un **cursore** per ogni fonte a cui e' iscritto: "ultimo id enriched
-  processato". Legge i segnali con `id > cursore ORDER BY id`, processa, avanza. E' lo
-  stesso idioma di `ops_trade_chains.last_projected_event_id` gia' presente nel runtime.
+- Ogni esecutore tiene un **cursore** per ogni fonte a cui e' iscritto: "ultimo
+  `canonical_message_id` processato". Legge i segnali con `id > cursore ORDER BY id`,
+  processa, avanza. E' lo stesso idioma di `ops_trade_chains.last_projected_event_id`
+  gia' presente nel runtime.
 - **Ordine stretto per fonte** = feature, non limite: un ingresso e il suo update/cancel
   successivo devono applicarsi in ordine; l'high-water-mark lo impone.
 - **Semantica di fallimento sicura**: se il segnale N fallisce, il cursore **non avanza**,
@@ -220,7 +262,7 @@ non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-c
 - **Poison message**: se N e' permanentemente non processabile per un esecutore, dopo K
   retry viene marcato **dead-letter** in una piccola lista locale, il cursore avanza e
   parte un alert tech. High-water-mark per il caso normale, dead-letter per l'eccezione.
-- **Cursore iniziale legacy = `MAX(id)` al deploy (no replay)**: quando un'istanza si iscrive a
+- **Cursore iniziale = `MAX(id)` al deploy (no replay)**: quando un'istanza si iscrive a
   una fonte con storia, parte dai soli segnali futuri. Mai rieseguire segnali storici:
   sarebbero ordini reali su trade morti.
 - **Idempotenza + avanzamento atomico**: l'esecutore registra l'esito e avanza il cursore
@@ -232,6 +274,12 @@ non basta (se α marca `done`, β non lo vede piu'). Serve una **posizione per-c
   finestra generosa (es. 60 giorni), molto piu' larga del massimo ritardo di recupero di
   un esecutore fermo. `min(cursori)` non e' praticabile: i cursori vivono negli
   `ops.sqlite3` locali che l'ingestione non vede.
+- **Alert su gap di retention**: se un'istanza resta ferma oltre la finestra, al risveglio
+  il suo cursore punta a segnali gia' potati. All'avvio il worker controlla per ogni fonte:
+  se `cursore < MIN(canonical_message_id disponibile)` -> **alert tech esplicito** ("fonte
+  X: gap di N segnali potati") e riparte dal primo disponibile. Il buco diventa visibile,
+  mai attraversato in silenzio (il rischio trading resta basso: quei segnali sarebbero
+  comunque scartati dalle protezioni anti-stale).
 
 **Dove vive il cursore.** Il cursore e' **stato runtime ad alta frequenza** e vive
 nell'**`ops.sqlite3` locale** dell'esecutore, **non** in `management.db`. La sottoscrizione
@@ -314,7 +362,11 @@ creazione di un'istanza, perche' sono operazioni che riguardano anche le altre i
 3. **Iscrizione** alle fonti che l'istanza deve consumare (`source subscribe`). Se serve
    una fonte nuova, il wizard si ferma (regola del confine): la crei nel piano condiviso,
    poi riprendi.
-4. **Claim** degli account dal **pool** (solo del tipo giusto).
+4. **Selezione** degli account dal **pool** (solo del tipo giusto). E' solo stato
+   desiderato: il **claim** effettivo (`available -> assigned`) avviene al `deploy`
+   (decisione 2026-07-02) — un draft abbandonato non blocca conti del pool. Se al deploy
+   il conto selezionato non e' piu' disponibile, il deploy fallisce con motivo chiaro e
+   si riseleziona.
 5. **Policy account** per fonte + eventuale **binding trader -> account** (override).
    *Questo e' per-istanza:* la stessa fonte, su istanze diverse, esegue su conti diversi.
 6. **Policy/destinazioni Telegram** (saltate se l'istanza e' muta).
@@ -469,11 +521,24 @@ Per il primo design bastano pochi stati operativi, leggibili e verificabili:
 
 - `instance create` crea sempre una nuova istanza in `draft`
 - `validate` puo' portare da `draft` a `ready`
-- `deploy` puo' portare solo da `ready` a `deployed`
+- `deploy` porta da `ready` a `deployed` (**primo deploy**); su un'istanza gia'
+  `deployed`/`active`, `rollout apply` **riconcilia senza cambiare stato** (l'istanza
+  resta `active` se era attiva, `deployed` se era ferma)
 - `start` puo' portare solo da `deployed` a `active`
 - `stop` riporta da `active` a `deployed` (installata, non in esecuzione):
   start/stop e' una coppia simmetrica
 - errori in qualunque fase portano a `error` con motivazione tracciabile
+
+**Semantica di `error` (chiarita nella revisione 2026-07-02).** `error` non e' uno stato
+di parcheggio: e' un'etichetta con memoria — *quale operazione* e' fallita (`validate`,
+`provision`, `deploy`) e *perche'* (registrato in `control_events`). Le cause sono errori
+del control plane (config incoerente, API Bybit/Telegram che rifiuta, SSH/server), mai
+eventi di trading: non e' successo nulla di irreversibile — l'istanza non girava, o
+continua a girare con la vecchia config. L'uscita e' sempre la stessa: correggere la causa
+e **rilanciare l'operazione fallita**; un'operazione rilanciata con successo riporta
+l'istanza allo stato che le compete. Caso deploy fallito a meta' su istanza attiva:
+`diff`/`rollout plan` mostra lo stato incoerente del server; `apply` e' **idempotente**
+(riconcilia allo stato desiderato), quindi ritentare e' sempre sicuro.
 
 **L'edit non cambia stato.** Lo stato descrive il **runtime**, non la freschezza della
 config: modificare lo stato desiderato di un'istanza `active` crea **drift** (visibile in
@@ -518,7 +583,7 @@ tsbctl source register --channel 12345 --label fonte_a
 tsbctl source subscribe alpha_demo --source fonte_a
 
 # Pool account: creazione in bulk (staccata dalla creazione istanza)
-tsbctl account provision --count 20 --type DEMO --provider BYBIT
+tsbctl account provision --count 20 --type DEMO --provider BYBIT --position-mode hedge
 tsbctl account pool list --type DEMO --status available
 tsbctl account claim alpha_demo --from-pool --count 3 --as demo_1,demo_2,demo_3
 
@@ -624,11 +689,12 @@ tsbctl deploy alpha_demo
 - `source set-telegram-policy`
   - applica alla fonte una policy Telegram di default per l'istanza
 - `account provision`
-  - crea in **bulk** subaccount + API key via API Bybit e popola il **pool** globale in stato `available` (operazione staccata dalla creazione istanza)
+  - crea in **bulk** subaccount + API key via API Bybit e popola il **pool** globale in stato `available` (operazione staccata dalla creazione istanza); con `--position-mode hedge` imposta subito la modalita' posizione via API e la registra in `exchange_accounts.position_mode`
 - `account pool list`
   - elenca gli account del pool per tipo e stato
 - `account claim`
-  - **rivendica** N account dal pool per un'istanza (set atomico di `instance_id` + nome logico), stato `assigned`
+  - **seleziona** N account dal pool per un'istanza (stato desiderato); il claim effettivo
+    (set atomico di `instance_id` + nome logico, stato `assigned`) viene eseguito da `deploy`
 - `account register`
   - registra manualmente un account creato a mano su Bybit (percorso senza API, per casi speciali)
 - `trader bind-account`
@@ -1005,6 +1071,8 @@ l'ascolto e' derivato dalle sottoscrizioni delle istanze di ciascun Sistema.
 | pattern_group | TEXT | gruppo pattern per la risoluzione dinamica |
 | max_depth | INTEGER | profondita' reply-chain (default 5) |
 | signal_message_type | TEXT | `any` \| `inline_buttons` |
+| alias_overrides | TEXT | JSON map `alias -> trader_id`: override di detection **scopati alla fonte** (il rimedio alle collisioni cross-gruppo); generati nel blocco `resolution.aliases` del `channels.yaml` |
+| text_blacklist | TEXT | JSON array di tag testuali (spam/rumore) filtrati dall'ingestione |
 | enabled | BOOLEAN | |
 | added_at | DATETIME | |
 
@@ -1017,6 +1085,19 @@ l'ascolto e' derivato dalle sottoscrizioni delle istanze di ciascun Sistema.
 > canale **mono-trader** (1 fonte `fixed`); canale/topic **multi-trader** (1 fonte `dynamic`,
 > N trader via alias/pattern); **gruppo con un topic per trader** = **N fonti** che
 > condividono lo stesso `channel_id` (una per topic). La UI le **raggruppa** sotto il canale.
+>
+> **Blacklist: chi possiede cosa (decisione 2026-07-02).** Esistono due blacklist di natura
+> diversa e la proprieta' va tenuta separata:
+> - **blacklist di testo = della fonte** (globale): tag di spam/rumore del canale, filtrati
+>   dall'ingestione *prima* del parse — "cos'e' rumore" e' un fatto del canale, uguale per
+>   chiunque lo ascolti (come il parser della fonte). Vive in `sources.text_blacklist`,
+>   finisce nel `channels.yaml` generato dell'ingestione e vale per tutto il Sistema;
+>   modificarla segue la regola del blast radius ("consumata da N istanze");
+> - **blacklist di simboli = per-istanza**: "cosa non tradare" lo decide l'istanza,
+>   applicata dall'esecutore nell'enrichment, con i suoi due livelli interni
+>   (`symbol_blacklist.global` dell'istanza + `symbol_blacklist.per_trader.<id>`, come
+>   oggi in `operation_config`) piu' gli **override runtime** via comandi Telegram, che
+>   restano nell'`ops.sqlite3` locale (comandi operativi, non stato desiderato).
 >
 > **Selezione per-istanza.** La membership dice quali trader la fonte *puo'* portare; **quali**
 > un'istanza esegue e **su quale conto** e' per-istanza, espresso dai `trader_account_bindings`
@@ -1058,6 +1139,7 @@ in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento r
 | connector | TEXT | es. `bybit` |
 | provider | TEXT | es. `BYBIT` |
 | execution_account_id | TEXT | UID account/subaccount lato exchange (identita' intrinseca) |
+| position_mode | TEXT | `one_way` \| `hedge` - impostato **alla creazione** via API (`account provision --position-mode`); proprieta' intrinseca dell'account, registrata qui |
 | parent_account | TEXT | account master exchange |
 | api_key | TEXT | segreto (file locale permissionato) |
 | api_secret | TEXT | segreto (file locale permissionato) |
@@ -1071,9 +1153,11 @@ in un pool globale finche' un'istanza non li **rivendica** (claim). Isolamento r
 > (`logical_account_id`) e l'`adapter_name` sono relativi all'istanza e vengono
 > assegnati **al momento del claim**, non alla creazione.
 >
-> **Claim atomico.** Il passaggio `available -> assigned` (set `instance_id` +
+> **Claim atomico, al deploy.** Il passaggio `available -> assigned` (set `instance_id` +
 > `logical_account_id`) deve essere atomico per evitare che due istanze rivendichino lo
-> stesso account.
+> stesso account. Avviene **dentro `deploy`** (decisione 2026-07-02): prima del deploy la
+> scelta dei conti e' solo stato desiderato — coerente col principio "nulla tocca il mondo
+> prima del deploy", stessa semantica per CLI e UI.
 >
 > **Isolamento rigido gratis.** Poiche' `environment` e' intrinseco, un'istanza `DEMO`
 > puo' rivendicare solo account del pool `DEMO`. L'isolamento non e' una regola imposta:
@@ -1119,6 +1203,14 @@ utente di **provisioning** (crea gruppi/topic, separata per non mescolare i ruol
 | phone | TEXT | segreto (file locale permissionato) |
 | session_string | TEXT | segreto (file locale permissionato) |
 
+> **Un solo numero per tutte le sessioni (decisione 2026-07-02).** Le sessioni di
+> ingestione dei vari Sistemi e la sessione di provisioning sono tutte **dispositivi
+> multi-device dello stesso account Telegram** (stesso `phone`). Vantaggi: zero SIM
+> aggiuntive, i canali privati gia' joinati sono visibili da tutte le sessioni.
+> Rischio accettato: destino condiviso — un ban/limitazione dell'account o un logout
+> globale (cambio password, terminate sessions) abbatte tutte le sessioni insieme.
+> Mitigazione: throttling anti-flood sul provisioning (l'unica attivita' "rumorosa").
+
 ### `control_events`
 
 Log delle operazioni del control plane, scritto da `tsbctl`: alimenta le automazioni e
@@ -1159,6 +1251,19 @@ management) **non** stanno qui: vivono nei file globali (`trader_aliases.json`,
 > come `adapter_template` per gli account. Ordine obbligato: prima il parser nel codice
 > (deployato), poi il trader che lo riferisce; `validate` controlla che il nome esista
 > nel codice del Sistema target.
+>
+> **Aggancio a parser_v2 (chiarito 2026-07-02).** **parser_v2 e' l'unico parser attivo del
+> runtime** (verificato: la pipeline `src/runtime_v2/parser_pipeline/processor.py` importa
+> esclusivamente `parser_v2.core.runtime` + registry; `src/parser_v2/profiles/Legacy/` e'
+> solo archivio storico dei vecchi profili, non un runtime parallelo — nessuna ambiguita'
+> su quale registry interrogare). Il contratto esiste gia' nel codice:
+> `parser_profile` e' una **chiave canonica** del registry parser_v2
+> (`src/parser_v2/profiles/registry.py`, mappa `_PROFILE_FACTORIES`, 11 profili
+> registrati); `validate` chiama `list_parser_v2_profiles()` sul clone del Sistema target.
+> Nel catalogo si scrivono **solo chiavi canoniche, mai gli alias** del registry
+> (`_ALIASES` e' tolleranza interna del runtime, non contratto). Gli internals di
+> parser_v2 (operation_rules, target_resolver, ...) restano fuori dal contratto:
+> l'unico aggancio e' il nome nel registry.
 
 > Alimenta il `registered_traders` per-istanza (gate del runtime) ed e' il bersaglio FK
 > della membership. Niente tabella `trader_aliases`: gli alias vivono nei **frammenti di
@@ -1337,12 +1442,20 @@ Farlo ora e' economico; farlo dopo, con posizioni live, e' rischioso.
 3. Iscrivere ciascuna istanza alle fonti che consuma.
 4. `tsbctl` genera per ciascuna il sottoinsieme di `channels.yaml` / `execution.yaml` /
    `telegram_control.yaml`.
-5. **Nodo Telegram:** oggi tutti i `per_account` condividono lo **stesso supergroup**
-   (`-1004240829081`). Con "ogni istanza ha il proprio gruppo", l'istanza `LIVE` dovrebbe
-   avere gruppo/bot propri (oppure restare inizialmente `muted`). Decisione operativa da
-   prendere al momento della migrazione.
-6. Dati: l'istanza `DEMO` puo' ereditare l'`ops.sqlite3` esistente (storia quasi tutta
-   demo); l'istanza `LIVE` parte pulita.
+5. **Nodo Telegram (deciso 2026-07-02): nessun riuso.** Oggi tutti i `per_account`
+   condividono lo **stesso supergroup** (`-1004240829081`). Alla migrazione ogni istanza
+   riceve un **gruppo nuovo** creato da `provision telegram` (bot propri via BotFather);
+   il supergroup attuale resta come **archivio storico**, fuori dal runtime. La migrazione
+   diventa cosi' anche il primo collaudo completo del provisioning Telegram automatico.
+   Nota operativa: un'istanza `muted` non ha canale comandi runtime (blacklist al volo,
+   pausa, interventi manuali) — resta controllabile solo nel ciclo di vita via `tsbctl`.
+   `muted` e' quindi un'**eccezione consapevole** per repliche usa-e-dimentica, non il
+   default; mutare/smutare e' reversibile (bind del gruppo + restart, cambio di wiring).
+6. **Dati (deciso 2026-07-02): fresh start.** Tutte le istanze partono con **DB nuovi**
+   (`ops.sqlite3` vuoto, cursori inizializzati live-only a `MAX(id)` come da regola
+   standard); il vecchio `ops.sqlite3` resta **archiviato come storia consultabile**,
+   fuori dal runtime. Nessun cutover di cursori dal flusso legacy: il problema non esiste
+   per costruzione.
 
 ---
 
@@ -1565,14 +1678,20 @@ La creazione degli account e' **staccata** dalla creazione istanza e avviene in 
 
 Flusso:
 
-1. `account provision --count N --type DEMO|LIVE` chiama l'API Bybit, crea subaccount +
-   API key con **permessi minimi** (trade + lettura, **mai withdraw/transfer**: una chiave
-   compromessa non deve poter spostare fondi), salva in `exchange_accounts` con
-   `status = available` e `instance_id = NULL`.
-2. Alla creazione istanza, `account claim` rivendica N account **del tipo giusto** dal
-   pool (claim atomico), assegnando `logical_account_id` e `adapter_name`; al claim/deploy
-   la **IP whitelist** della key viene impostata (via API modify) sull'IP del server del
-   Sistema dell'istanza - al provision l'account e' nel pool e il server non e' ancora noto.
+1. `account provision --count N --type DEMO|LIVE [--position-mode one_way|hedge]` chiama
+   l'API Bybit, crea subaccount + API key con **permessi minimi** (trade + lettura,
+   **mai withdraw/transfer**: una chiave compromessa non deve poter spostare fondi) e,
+   se richiesto, imposta subito la **modalita' posizione** (`hedge`) via API — cosi'
+   l'account entra nel pool gia' configurato, senza passaggi manuali post-claim. Salva in
+   `exchange_accounts` con `status = available`, `instance_id = NULL` e `position_mode`
+   registrato. *(Nota Bybit da verificare all'implementazione: lo switch position mode e'
+   per coin/simbolo, non un flag account-wide — il provisioner lo applica come default
+   sui perpetual USDT.)*
+2. In assembly l'operatore **seleziona** N account **del tipo giusto** dal pool (stato
+   desiderato); al **deploy** avviene il claim atomico (`available -> assigned`,
+   assegnazione di `logical_account_id` e `adapter_name`) e la **IP whitelist** della key
+   viene impostata (via API modify) sull'IP del server del Sistema dell'istanza - al
+   provision l'account e' nel pool e il server non e' ancora noto.
 
 Vincoli e accorgimenti:
 
@@ -1643,29 +1762,39 @@ Un solo server basta per partire. Separare i server resta la scelta **raccomanda
 quando il LIVE entra in produzione seria: isolamento di guasto, contesa risorse,
 superficie di sicurezza (le chiavi live non coabitano con codice sperimentale).
 
-### Migrazioni: additive-only
+### Aggiornamenti a fermo coordinato per-Sistema (decisione 2026-07-02)
 
-Il coordinamento sullo `parser.sqlite3` **condiviso** (letto da N esecutori, scritto
-dall'ingestione) si dissolve con una regola: **migrazioni dello shared DB solo additive**
-(aggiungi colonne/tabelle, mai rinominare/droppare/cambiare tipo).
+La procedura standard di aggiornamento codice e' il **fermo coordinato del Sistema
+intero**: stop di ingestione + tutte le istanze del Sistema -> `repo upgrade` (codice +
+migrazioni, a servizi fermi) -> restart di tutto. E' il modello operativo gia' in uso oggi
+(stop, pull, restart), esteso al Sistema. Il canary resta per-Sistema: fermare e aggiornare
+il Sistema `demo` non tocca in alcun modo il `live`, anche sullo stesso server.
 
-- Una migrazione additiva **non rompe i lettori vecchi**: si migra lo shared DB e gli
-  esecutori ancora vecchi continuano a girare, si aggiornano con calma. Nessun downtime coordinato.
-- Coerente col codice attuale (le migrazioni sono gia' quasi tutte `ADD COLUMN`).
-- **Proprieta' delle migrazioni**: lo shared DB lo migra **solo l'ingestione** al proprio
-  boot; gli esecutori aprono senza migrare (oggi `main.py` migra il parser DB a ogni
-  avvio: in modalita' esecutore questo passo si disattiva).
-- Le migrazioni **distruttive** sono un'eccezione rara dietro **riavvio coordinato** esplicito.
-- `ops.sqlite3` (per-istanza) migra al riavvio della singola istanza: isolato, facile.
-
-Ordine sicuro che ne deriva: **upgrade codice + migrazione additiva -> restart ingestione ->
-restart canary DEMO -> resto**, senza simultaneita'.
+- **Nessuna finestra mista** codice vecchio/nuovo: a Sistema fermo le migrazioni possono
+  essere anche **distruttive** senza rischio. La disciplina additive-only **non e' piu'
+  un vincolo** del primo design.
+- **La finestra di fermo e' gia' coperta dal design**: al restart gli esecutori recuperano
+  il backlog con le protezioni anti-stale (`SIGNAL` vecchio non apre, `UPDATE/CLOSE`
+  arretrato si applica solo su chain coerente). Vale la stessa logica del riavvio normale.
+- **Rischio accettato**: durante il fermo (tipicamente 1-2 minuti) le posizioni aperte
+  restano senza gestione — un TP/SL gestito dal bot in quella finestra non scatta finche'
+  il Sistema non riparte. E' lo stesso rischio del riavvio singolo di oggi, moltiplicato
+  per le istanze del Sistema.
+- **Proprieta' delle migrazioni (invariata)**: lo shared DB lo migra **solo l'ingestione**
+  al proprio boot (o `repo upgrade`); gli esecutori aprono **senza migrare** (oggi
+  `main.py` migra il parser DB a ogni avvio: in modalita' esecutore questo passo si
+  disattiva). `ops.sqlite3` (per-istanza) migra al riavvio della singola istanza.
+- **Rolling update = opzione futura, non MVP**: la meccanica `plan`/`apply` per singolo
+  target resta nel design (serve comunque per applicare *config* a una sola istanza), ma
+  non e' la procedura di aggiornamento codice. Se con molte istanze il fermo totale
+  diventasse oneroso, il rolling si riabilita — e **solo allora** servira' la disciplina
+  additive-only sulle migrazioni dello shared DB (con relativo check in `repo upgrade`).
 
 ### I quattro verbi (MVP)
 
 ```bash
 tsbctl repo status <sistema>                   # revisione del clone vs remoto
-tsbctl repo upgrade <sistema> [--ref R]        # git pull + deps + migrazioni additive; NON riavvia
+tsbctl repo upgrade <sistema> [--ref R]        # git pull + deps + migrazioni; NON riavvia (si usa dentro il fermo coordinato)
 tsbctl rollout plan                            # chi (istanze e ingestioni) e' indietro / ha config drift
 tsbctl rollout apply <target> [--no-restart]   # riconcilia config + riavvia (target: istanza|ingestione|--all)
 tsbctl rollback <target> --to <rev>            # riconcilia a una revisione precedente
@@ -1683,27 +1812,34 @@ decide *chi* ci passa e *quando*.
 
 ### Controllo del riavvio
 
-Per un bot di trading il **momento** del riavvio conta: non si riavvia un'istanza con
-**posizioni aperte** a meta' trade.
+Per l'**aggiornamento codice** vale la procedura standard a fermo coordinato (sezione
+sopra). Il controllo fine del riavvio resta utile per i **cambi di config** su una
+singola istanza:
 
-- `rollout apply <target> --no-restart` prepara (config/codice pronti) **senza riavviare**:
+- `rollout apply <target> --no-restart` prepara (config pronta) **senza riavviare**:
   riparti quando l'istanza e' **flat** o il mercato e' calmo
-  (`systemctl restart telesignalbot@<nome>`).
+  (`systemctl restart telesignalbot@<nome>`). Rilevante solo per i cambi che richiedono
+  restart (wiring `execution.yaml`); detection e comportamento sono hot-reload.
 - Su **LIVE**, `apply` chiede **conferma esplicita** (gate LIVE).
 
 ### Flusso tipico
 
 ```bash
-# 1. Testa su DEMO (canary)
-tsbctl repo upgrade demo
-tsbctl rollout apply demo_instance
+# 1. Testa su DEMO (canary): fermo coordinato del solo Sistema demo
+tsbctl sistema stop demo       # ferma ingestione + tutte le istanze del Sistema
+tsbctl repo upgrade demo       # git pull + deps + migrazioni (a Sistema fermo)
+tsbctl sistema start demo      # riavvia tutto; gli esecutori recuperano il backlog
 
-# 2. Promuovi su LIVE quando pronto
+# ...si valida sul demo (stesse fonti del live, segnali reali)...
+
+# 2. Promuovi su LIVE quando validato (gate LIVE: conferma esplicita)
+tsbctl sistema stop live
 tsbctl repo upgrade live
-tsbctl rollout apply live_instance --no-restart   # prepara
-# ...quando l'istanza e' flat...
-systemctl restart telesignalbot@live_instance
+tsbctl sistema start live
 ```
+
+`sistema stop <nome>` / `sistema start <nome>` sono i verbi del fermo coordinato:
+fermano/avviano in ordine sicuro l'ingestione e tutte le istanze del Sistema.
 
 ### Cosa traccia il control plane
 
@@ -1823,8 +1959,10 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
 | Perdita del control node locale | Media | le istanze continuano a girare; mitigato da backup cifrati regolari |
 | Storage della chiave SSH | Media | path a file con permessi stretti, non contenuto nel DB |
 | Drift tra DB centrale e server target | Alta | `validate` e `deploy` devono rilevare inconsistenze; `rollout plan` verifica via SSH |
-| Migrazione distruttiva sullo shared `parser.sqlite3` | Alta | rompe i lettori vecchi; consentita solo con riavvio coordinato esplicito (default: additive-only); migra solo l'ingestione |
-| Riavvio di un'istanza con posizioni aperte | Media | mitigato da `rollout apply --no-restart` + riavvio quando l'istanza e' flat |
+| Migrazione distruttiva sullo shared `parser.sqlite3` | Media | neutralizzata dalla procedura standard a **fermo coordinato per-Sistema** (nessun lettore attivo durante la migrazione); migra solo l'ingestione; additive-only torna necessario solo se si adotta il rolling update |
+| Posizioni senza gestione durante il fermo coordinato | Media | rischio accettato (finestra 1-2 min, come il riavvio singolo di oggi); recupero backlog + protezioni anti-stale al restart |
+| Edit di un segnale sotto fan-out | Media | decisione per-esecutore sulle proprie chain (skip+notifica se chain esiste, applica se no); ingestione sempre "stupida"; feed include `run_context edit:%` |
+| Riavvio di un'istanza con posizioni aperte (cambio config) | Media | mitigato da `rollout apply --no-restart` + riavvio quando l'istanza e' flat |
 | Segreti in chiaro nel `.env` per-istanza sui server | Media | residuo, come oggi; confine di protezione = control node non esposto; disco cifrato consigliato |
 | Collisione alias dentro una fonte o cross-gruppo (consolidato Sistema) | Media | `validate` blocca entrambi i casi; alias ambigui -> override per-fonte in `channels.yaml`; oggi passa silenzioso |
 
@@ -1855,6 +1993,12 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
     pilotabili via `PARSER_DB_PATH`/`OPS_DB_PATH`).
 15. Mantenere `enriched_canonical_messages.lifecycle_processed` come compatibilita'
     single-instance/legacy finche' il nuovo worker non sostituisce il flusso.
+    **Vincolo esplicito (2026-07-02):** il flusso legacy **scrive sul parser DB**
+    (`enriched_canonical_messages` vive li': `main.py:536`, `entry_gate.py`), quindi e'
+    compatibile **solo** con parser DB non condiviso (single-instance). Il worker
+    esecutore (step 9) e' **prerequisito** del primo deployment multi-istanza: nessun
+    Sistema puo' ospitare piu' di un'istanza prima. (Vincolo di fatto non stringente:
+    non e' previsto alcun deploy prima del completamento della nuova logica.)
 16. Eseguire la migrazione della config mista esistente in istanze a isolamento rigido.
 
 ---
@@ -1964,5 +2108,48 @@ La cifratura a livello campo (`cryptography.fernet` + master key + rotazione via
   **migrazioni shared additive-only** (niente coordinamento), **quattro verbi**
   (`repo upgrade`, `rollout plan`, `rollout apply --no-restart`, `rollback`), **conferma su
   LIVE**; `repo upgrade` non riavvia mai, `apply` riconcilia allo stato desiderato
+
+### Decisioni della revisione punto-per-punto (2026-07-02)
+
+Rassegna completa del documento contro il codebase, decisa punto per punto con l'utente:
+
+1. **Edit/delete sotto fan-out**: decisione all'**esecutore** (sulle proprie chain);
+   l'ingestione registra/ri-parsa sempre senza consultare stato di esecuzione; il feed
+   include `run_context live + edit:%` (mai `delete:`); gli esecutori non rileggono mai
+   `raw_text` per decisioni di trading.
+2. **Flusso legacy sul parser DB**: `enriched_canonical_messages` vive nel parser DB ->
+   legacy compatibile solo single-instance; il worker esecutore e' prerequisito del
+   multi-istanza.
+3. **Migrazione dati = fresh start**: DB nuovi per tutte le istanze, nessuna eredita' di
+   `ops.sqlite3` (resta archivio), nessun cutover cursori.
+4. **Claim account al deploy**: l'assembly registra solo la selezione (stato desiderato);
+   `available -> assigned` avviene atomicamente dentro `deploy`, stessa semantica CLI e UI.
+5. **Cursore: due meccanismi separati**: prima iscrizione = sempre live-only (`MAX(id)`);
+   riavvio = sempre recupero backlog con protezioni anti-stale; rimosso il campo
+   `resume_policy` col default ambiguo.
+6. **Macchina a stati completata**: `rollout apply` su istanza gia' deployata/attiva non
+   cambia stato (riconcilia); `error` = "operazione X fallita per motivo Y"
+   (`control_events`), uscita = correggi e rilancia; `apply` idempotente.
+7. **Blacklist attribuite**: testo = della fonte (globale, `sources.text_blacklist`,
+   blast radius); simboli = per-istanza (livelli istanza + per-trader, override runtime
+   nell'ops DB locale).
+8. **Telethon: un solo numero** per tutte le sessioni (ingestioni + provisioning);
+   rischio "destino condiviso" accettato; throttling sul provisioning.
+9. **Sezione cursore ristrutturata**: le regole (high-water-mark, dead-letter, MAX(id),
+   idempotenza, retention) sono vigenti sul feed canonical, non "legacy".
+10. **Aggiornamenti = fermo coordinato per-Sistema** (`sistema stop` -> `repo upgrade` ->
+    `sistema start`): niente rolling update nell'MVP, additive-only non piu' vincolante;
+    canary DEMO->LIVE invariato; rischio finestra senza gestione accettato.
+11. **Alert su gap di retention**: cursore piu' vecchio del primo segnale disponibile ->
+    alert tech esplicito + ripartenza dal primo disponibile; mai silenzioso.
+12. **`parser_profile` = chiave canonica del registry parser_v2**
+    (`src/parser_v2/profiles/registry.py`); `validate` usa `list_parser_v2_profiles()`;
+    mai alias nel catalogo. parser_v2 e' l'**unico parser attivo** del runtime
+    (`profiles/Legacy/` = solo archivio storico): un solo registry, nessuna convivenza.
+13. **Telegram alla migrazione: nessun riuso**: gruppi nuovi provisionati per ogni
+    istanza; supergroup attuale = archivio; `muted` = eccezione consapevole (nessun
+    canale comandi runtime), reversibile.
+
+---
 
 Questa revisione definisce il workflow operativo tipico e l'architettura B. L'implementazione dovra' poi dettagliare contratti, validazioni e comportamento dei singoli comandi.
